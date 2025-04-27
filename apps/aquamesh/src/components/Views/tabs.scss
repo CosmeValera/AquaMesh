@@ -1,0 +1,87 @@
+.react-tabs {
+  -webkit-tap-highlight-color: transparent;
+  margin: -56px 6px 0 6px;
+  background-color: #005A49;
+
+  &__tab-list {
+    display: flex;
+    align-items: flex-end;
+    align-self: stretch;
+    gap: 2px;
+
+    padding: 0;
+    margin: 0;
+    overflow-x: auto;
+    
+    &::-webkit-scrollbar {
+      height: 4px; /* Controls the scrollbar thickness */
+    }
+
+    & .react-tabs__tab {
+      background-color: var(--secondary-main);
+
+      & .react-tabs__tab--selected {
+        background-color: var(--primary-main);
+      }
+    }
+  }
+
+  &__tab {
+    width: 180px;
+    display: flex;
+    padding: 4px 4px 4px 8px;
+    align-items: center;
+    gap: 8px;
+
+    border-radius: 8px 8px 0px 0px;
+    color: var(--foreground-secondary);
+
+    transition: opacity 0.25s ease;
+
+    cursor: pointer;
+
+    .close {
+      cursor: pointer;
+    }
+
+    &:not(&--selected) {
+      // REVIEW does not match design (set Y offset to -16px instead of -8px and
+      // spread to 0px instead of -16px to actually see the shadow)
+      box-shadow: inset 0 -8px 8px rgba(0, 0, 0, 0.07);
+      opacity: 0.6;
+
+      &:hover {
+        opacity: 0.7;
+      }
+    }
+
+    &--selected {
+      cursor: default;
+    }
+
+    &--disabled {
+      /* REVIEW add disabled styles */
+      color: GrayText;
+      cursor: default;
+    }
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  &__tab-panel {
+    position: relative;
+    background: var(--background-bar-medium, #323353);
+    // NOTE use the whole viewport and substract (1) header's height, (2) main
+    // content's top padding, (3) tab bar height, and (4) main content's bottom
+    // padding
+    height: calc(100vh - 36px - 16px - 36px - 24px);
+
+    display: none;
+
+    &--selected {
+      display: block;
+    }
+  }
+}

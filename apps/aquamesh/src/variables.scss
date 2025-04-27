@@ -1,0 +1,89 @@
+body {
+  --common-black: #000000;
+  --common-white: #ffffff;
+  --common-clear: #FFFFFF0;
+
+  --primary-main: #00C49A;
+  --primary-light: #4ADCBE;
+  --primary-dark: #007C66;
+
+  --secondary-main: #009879;
+  --secondary-light: #00C49A;
+  --secondary-dark: #007C66;
+
+  --grey-50: #F9FAFA;
+  --grey-100: #F4F5F6;
+  --grey-200: #ECEEEF;
+  --grey-300: #DEE2E3;
+  --grey-400: #B7C0C2;
+  --grey-500: #96A2A6;
+  --grey-600: #6C7A7F;
+  --grey-700: #596569;
+  --grey-800: #3D4548;
+  --grey-900: #001026;
+  --grey-a100: #D3D8D9;
+  --grey-a200: #A4AEB2;
+  --grey-a400: #596569;
+  --grey-a700: #2D3334;
+
+  /* common aliases - updated to match green theme */
+  --foreground-primary: rgb(0, 131, 104);
+  --foreground-contrast-primary: #FFFFFFde;
+  --foreground-secondary: #ffffff9a;
+  --foreground-contrast-secondary: #FFFFFF99;
+  --foreground-disabled: #00102661;
+  --foreground-contrast-disabled: #FFFFFF61;
+
+  /* Background colors - converted to green theme */
+  --background-header: #005A49;
+  --background-bar-dark: #003D31; 
+  --background-bar-medium: #005A49;
+  --background-default: #006B58;
+  --background-light: #FFFFFF14;
+  --background-paper: #008368;
+
+  --action-active: #00C49A47;
+  --action-contrast-active: #FFFFFF7a;
+  --action-hover: #4ADCBE48;
+  --action-contrast-hover: #FFFFFF14;
+  --action-selected: #00C49A29;
+  --action-contrast-selected: #FFFFFF29;
+  --action-disabled: #00000042;
+  --action-contrast-disabled: #FFFFFF42;
+
+  --other-divider: #0000001F;
+  --other-outlined-border: #0000003B;
+  --other-backdrop-overlay: #00000080;
+  --other-filled-input-background: #00000017;
+  --other-standard-input-line: #0000006B;
+  --other-snackbar: #2D3334;
+
+  /* status & severity - mostly unchanged */
+  --critical-main: #E31B0C;
+  --critical-light: #F88078;
+  --critical-dark: #BA1408;
+
+  --serious-main: #ED6C02;
+  --serious-light: #FFB547;
+  --serious-dark: #BB5A00;
+
+  --caution-main: #FBE20E;
+  --caution-light: #FDF082;
+  --caution-dark: #B4A203;
+  --caution-contrast-text: #00000099;
+
+  --normal-main: #299E2E;
+  --normal-light: #7BC67E;
+  --normal-dark: #3B873E;
+
+  /* Standby also shifted to greenish */
+  --standby-main: #009879;
+  --standby-light: #00C49A;
+  --standby-dark: #007C66;
+
+  --off-main: #9EA7AD;
+  --off-light: #D6D9DC;
+  --off-dark: #6A7177;
+
+  --tabs-background: #FFFFFF14;
+}

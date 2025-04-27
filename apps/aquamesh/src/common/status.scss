@@ -1,0 +1,23 @@
+.centered {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  height: 100%;
+}
+
+.loader {
+  animation: l1 1.5s linear infinite alternate;
+}
+
+.icon-error {
+  font-size: 5rem;
+  opacity: 0.8;
+  color: #DF0024;
+}
+
+@keyframes l1 {
+  to { opacity: 0; }
+}

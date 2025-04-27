@@ -1,0 +1,95 @@
+.p-dialog {
+    border-radius: $borderRadius;
+    box-shadow: $overlayContainerShadow;
+    border: $overlayContentBorder;
+
+    .p-dialog-header {
+        border-bottom: $dialogHeaderBorder;
+        background: var(--background-header, #005A49);
+        color: $dialogHeaderTextColor;
+        padding: $dialogHeaderPadding;
+        border-top-right-radius: $borderRadius;
+        border-top-left-radius: $borderRadius;
+
+        .p-dialog-title {
+            font-weight: $dialogHeaderFontWeight;
+            font-size: $dialogHeaderFontSize;
+        }
+
+        .p-dialog-header-icon {
+            @include action-icon();
+            margin-right: $inlineSpacing;
+            
+            &:last-child {
+                margin-right: 0;
+            }            
+        }
+    }
+
+    .p-dialog-content {
+        background: var(--background-paper, #008368);
+        color: $panelContentTextColor;
+        padding: $dialogContentPadding;
+
+        &:last-of-type {
+            border-bottom-right-radius: $borderRadius;
+            border-bottom-left-radius: $borderRadius;
+        }
+    }
+
+    .p-dialog-footer {
+        border-top:  $dialogFooterBorder;
+        background: var(--background-default, #006B58);
+        color: $panelFooterTextColor;
+        padding: $dialogFooterPadding;
+        text-align: right;
+        border-bottom-right-radius: $borderRadius;
+        border-bottom-left-radius: $borderRadius;
+
+        button {
+            margin: 0 $inlineSpacing 0 0;
+            width: auto;
+        }
+    }
+
+    &.p-dialog-maximized {
+        .p-dialog-header, .p-dialog-content:last-of-type {
+            border-radius: 0;
+        }
+    }
+    
+
+    &.p-confirm-dialog {
+        .p-confirm-dialog-icon {
+            font-size: $primeIconFontSize * 2;
+            
+            &.p-icon {
+                width: $primeIconFontSize * 2;
+                height: $primeIconFontSize * 2;
+            }
+        }
+
+        .p-confirm-dialog-message {
+            margin-left: $inlineSpacing * 2;
+        }
+
+        button {
+            border-radius: 2rem;
+        }
+        
+        .p-confirm-dialog-accept {
+            background-color: var(--primary-main, #00C49A);
+            border-color: var(--primary-light, #4ADCBE);
+            
+            &:hover {
+                background-color: var(--primary-light, #4ADCBE);
+                border-color: var(--primary-light, #4ADCBE);
+            }
+            
+            &:active {
+                background-color: var(--secondary-main, #009879);
+                border-color: var(--secondary-main, #009879);
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+:root {
+  --font-family: inherit;
+  --font-size: 0.75rem;
+
+  /* Keeping icon, text and overflow variables as they may be used by other components */
+  --color-icon: var(--foreground-primary, #001026de);
+  --color-text: var(--foreground-primary, #001026de);
+  --color-overflow: var(--foreground-primary, #001026de);
+
+  /* Keeping tab unselected/selected colors as they may be used by other components */
+  --color-tab-unselected-background: #e0e0e0;
+  --color-tab-unselected: var(--foreground-secondary, #00102699);
+  --color-tab-selected-background: var(--background-paper, #353646);
+  --color-tab-selected: var(--foreground-primary, #001026de);
+
+  /* Keeping popup variables as they may be used by other components */
+  --color-popup-unselected: var(--foreground-primary, #001026de);
+  --color-popup-unselected-background: var(--background-paper, #353646);
+} 

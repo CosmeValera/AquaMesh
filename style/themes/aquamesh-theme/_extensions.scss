@@ -1,0 +1,56 @@
+/* Customizations to the designer theme should be defined here */
+
+/////////////////////////////////////////////
+//// GRID SYSTEM BASED ON CONTAINER SIZE ////
+/////////////////////////////////////////////
+// It's needed to have grid based on container because mfs do not depend on screen size //
+.grid {
+  container-type: inline-size;
+
+  // Extra Small (xs)
+  @for $i from 1 through 12 {
+    &>.cq-#{$i} {
+      width: calc(($i * 100cqw) / 12);
+    }
+
+    &>.cq-xs-#{$i} {
+      width: calc(($i * 100cqw) / 12);
+    }
+  }
+
+  // Small (sm)
+  @for $i from 1 through 12 {
+    &>.cq-sm-#{$i} {
+      @container (min-width: 576px) {
+        width: calc(($i * 100cqw) / 12);
+      }
+    }
+  }
+
+  // Medium (md)
+  @for $i from 1 through 12 {
+    &>.cq-md-#{$i} {
+      @container (min-width: 768px) {
+        width: calc(($i * 100cqw) / 12);
+      }
+    }
+  }
+
+  // Large (lg)
+  @for $i from 1 through 12 {
+    &>.cq-lg-#{$i} {
+      @container (min-width: 992px) {
+        width: calc(($i * 100cqw) / 12);
+      }
+    }
+  }
+
+  // Extra Large (xl)
+  @for $i from 1 through 12 {
+    &>.cq-xl-#{$i} {
+      @container (min-width: 1200px) {
+        width: calc(($i * 100cqw) / 12);
+      }
+    }
+  }
+}

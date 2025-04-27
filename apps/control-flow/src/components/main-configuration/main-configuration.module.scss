@@ -1,0 +1,22 @@
+.cf-button {
+  color: #030712 !important;
+  background: #34d399!important;
+  border: 1px solid #34d399!important;
+  padding: 0.75rem 1.25rem!important;
+  font-size: 1rem!important;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s!important;
+  border-radius: 2rem!important;
+  min-width: fit-content!important;
+
+  &.enhance {
+    color: #052e16!important;
+    background: #4ade80!important;
+    border: 1px solid #4ade80!important;
+  }
+  
+  &.danger {
+    color: #450a0a!important;
+    background: #f87171!important;
+    border: 1px solid #f87171!important;
+  }
+} 

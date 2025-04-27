@@ -1,0 +1,58 @@
+{
+  "name": "aquamesh-system-lens",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "webpack serve --mode development",
+    "start:live": "webpack serve --mode development --live-reload --hot",
+    "test": "vitest --run tests/handler.test.ts && npx playwright test",
+    "test:unit": "vitest tests/handler.test.ts",
+    "test:e2e": "npx playwright test",
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "build:start": "cd dist && PORT=3003 npx serve"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.8",
+    "@babel/plugin-transform-runtime": "^7.15.8",
+    "@babel/preset-env": "^7.15.8",
+    "@babel/preset-react": "^7.14.5",
+    "@babel/preset-typescript": "^7.10.4",
+    "@playwright/test": "^1.41.2",
+    "@types/node": "^20.11.18",
+    "@types/react": "^17.0.2",
+    "@types/react-dom": "^17.0.25",
+    "autoprefixer": "^10.1.0",
+    "babel-loader": "^8.2.2",
+    "css-loader": "^6.3.0",
+    "dotenv-webpack": "^8.0.1",
+    "html-webpack-plugin": "^5.3.2",
+    "msw": "^2.2.0",
+    "postcss": "^8.2.1",
+    "postcss-loader": "^4.1.0",
+    "sass": "^1.70.0",
+    "sass-loader": "^14.1.0",
+    "style-loader": "^3.3.0",
+    "typescript": "^4.5.2",
+    "vitest": "^1.2.2",
+    "webpack": "^5.57.1",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.3.1"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^6.1.2",
+    "chart.js": "^4.4.9",
+    "material-react-table": "2.11.1",
+    "primeflex": "^3.3.1",
+    "primeicons": "^6.0.1",
+    "primereact": "10.3.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
+}

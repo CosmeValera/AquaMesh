@@ -1,0 +1,24 @@
+[
+  {
+    "name": "Control Flow",
+    "items": [
+      {
+        "name": "Control Flow",
+        "component": "aquamesh_control_flow/ControlFlowMain",
+        "url": "http://localhost:3002/remoteEntry.js",
+        "customProps": { "aquamesh": "316"}
+      }
+    ]
+  },
+  {
+    "name": "System Lens",
+    "items": [
+      {
+        "name": "System Lens",
+        "component": "aquamesh_system_lens/SystemLensMain",
+        "url": "http://localhost:3001/remoteEntry.js",
+        "customProps": { "aquameshs": ["316"]}
+      }
+    ]
+  }
+]

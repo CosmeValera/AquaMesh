@@ -17,10 +17,15 @@ interface CustomProps {
   [key: string]: unknown;
 }
 
+// Create a custom event for widget updates
+export const WIDGET_STORAGE_UPDATED = 'widgetStorageUpdated'
+export const widgetStorageEvent = new CustomEvent(WIDGET_STORAGE_UPDATED)
+
 const useTopNavBarWidgets = () => {
   const [topNavBarWidgets, setTopNavBarWidgets] = useState<Panel[]>([])
 
-  useEffect(() => {
+  // Helper function to load widgets
+  const loadWidgets = () => {
     // Fetch built-in widgets from configuration
     fetch('/config/widgets.json')
       .then(response => response.json())
@@ -50,6 +55,24 @@ const useTopNavBarWidgets = () => {
         }
       })
       .catch(error => console.error('Error fetching widgets.json:', error))
+  }
+
+  useEffect(() => {
+    // Initial load
+    loadWidgets()
+    
+    // Set up event listener for widget storage updates
+    const handleWidgetUpdate = () => {
+      loadWidgets()
+    }
+    
+    // Add event listener
+    document.addEventListener(WIDGET_STORAGE_UPDATED, handleWidgetUpdate)
+    
+    // Clean up event listener on component unmount
+    return () => {
+      document.removeEventListener(WIDGET_STORAGE_UPDATED, handleWidgetUpdate)
+    }
   }, [])
 
   return { topNavBarWidgets }

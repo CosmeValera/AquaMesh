@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { 
   Box, 
   Typography, 
@@ -21,14 +21,43 @@ interface ComponentData {
 interface CustomWidgetProps {
   widgetId?: string
   components?: ComponentData[]
+  customProps?: {
+    widgetId?: string
+    components?: ComponentData[]
+  }
 }
 
 // Component that renders a saved widget
-const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propComponents }) => {
-  // Either use the provided components or fetch them from storage by ID
-  const components = propComponents || (widgetId ? 
-    WidgetStorage.getWidgetById(widgetId)?.components || [] 
-    : [])
+const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propComponents, customProps }) => {
+  const [widgetComponents, setWidgetComponents] = useState<ComponentData[]>([])
+  
+  // Determine which components to use
+  useEffect(() => {
+    // First try to get from direct props
+    if (propComponents && propComponents.length > 0) {
+      setWidgetComponents(propComponents)
+      return
+    }
+    
+    // Then try to get from custom props (from topNavBar)
+    if (customProps?.components && customProps.components.length > 0) {
+      setWidgetComponents(customProps.components)
+      return
+    }
+    
+    // Then try getting from widgetId directly
+    const directWidgetId = widgetId || customProps?.widgetId
+    if (directWidgetId) {
+      const widget = WidgetStorage.getWidgetById(directWidgetId)
+      if (widget && widget.components) {
+        setWidgetComponents(widget.components)
+        return
+      }
+    }
+    
+    // Default to empty array if nothing is found
+    setWidgetComponents([])
+  }, [widgetId, propComponents, customProps])
 
   // Function to render any component type
   const renderComponent = (component: ComponentData) => {
@@ -100,7 +129,10 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
     }
   }
 
-  if (!components || components.length === 0) {
+  // For debugging purposes
+  console.log('CustomWidget rendering with components:', widgetComponents)
+
+  if (!widgetComponents || widgetComponents.length === 0) {
     return (
       <Paper 
         sx={{ 
@@ -118,7 +150,7 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
 
   return (
     <Paper sx={{ p: 2, height: '100%', overflow: 'auto' }}>
-      {components.map(renderComponent)}
+      {widgetComponents.map(renderComponent)}
     </Paper>
   )
 }

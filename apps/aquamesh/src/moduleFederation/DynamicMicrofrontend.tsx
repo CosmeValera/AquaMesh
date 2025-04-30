@@ -8,6 +8,18 @@ import ModuleLoader from './ModuleLoader'
 // Import components
 import WidgetEditor from '../components/WidgetEditor/WidgetEditor'
 import CustomWidget from '../components/WidgetEditor/CustomWidget'
+import WidgetStorage from '../components/WidgetEditor/WidgetStorage'
+
+// Define the custom props type
+interface CustomWidgetProps {
+  widgetId?: string
+  components?: Array<{
+    id: string
+    type: string
+    props: Record<string, unknown>
+    children?: any[]
+  }>
+}
 
 export interface DynamicMicrofrontendProps {
   name: string
@@ -46,13 +58,27 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
     }
   }, [topNavBarWidgets, props.component, props.name])
 
+  // Debug the props and components
+  useEffect(() => {
+    if (props.component === 'CustomWidget') {
+      console.log('CustomWidget loaded with props:', props)
+      
+      // Verify the widget exists in storage
+      if (props.customProps && 'widgetId' in props.customProps) {
+        const widgetId = props.customProps.widgetId as string
+        const widget = WidgetStorage.getWidgetById(widgetId)
+        console.log('Widget from storage:', widget)
+      }
+    }
+  }, [props])
+
   // Return proper content for local components
   if (props.component === 'WidgetEditor') {
     return <WidgetEditor />
   }
   
   if (props.component === 'CustomWidget') {
-    return <CustomWidget {...props.customProps} />
+    return <CustomWidget customProps={props.customProps as CustomWidgetProps} />
   }
 
   return (

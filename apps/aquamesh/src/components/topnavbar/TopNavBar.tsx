@@ -190,28 +190,30 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
             open={Boolean(panelsAnchorEl)}
             onClose={handleClose}
           >
-            <MenuItem 
-              onClick={() => {
-                addComponent({
-                  id: `widget-editor-${Date.now()}`,
-                  name: "Widget Editor",
-                  component: "WidgetEditor",
-                })
-                handleClose()
-              }}
-              sx={{ 
-                borderBottom: '1px solid #eee',
-                display: 'flex',
-                alignItems: 'center',
-                color: 'primary.main',
-                fontWeight: 'bold'
-              }}
-            >
-              <ListItemIcon>
-                <CreateIcon fontSize="small" color="primary" />
-              </ListItemIcon>
-              Create Custom Widget
-            </MenuItem>
+            {userData.id === 'admin' && userData.role === 'ADMIN_ROLE' && (
+              <MenuItem 
+                onClick={() => {
+                  addComponent({
+                    id: `widget-editor-${Date.now()}`,
+                    name: "Widget Editor",
+                    component: "WidgetEditor",
+                  })
+                  handleClose()
+                }}
+                sx={{ 
+                  borderBottom: '1px solid #eee',
+                  display: 'flex',
+                  alignItems: 'center',
+                  color: 'primary.main',
+                  fontWeight: 'bold'
+                }}
+              >
+                <ListItemIcon>
+                  <CreateIcon fontSize="small" color="primary" />
+                </ListItemIcon>
+                Create Custom Widget
+              </MenuItem>
+            )}
             {topNavBarWidgets.map(topNavBarWidget => (
               <Box key={topNavBarWidget.name}>
                 <Typography sx={{ px: 2, py: 1, fontWeight: 'bold' }}>

@@ -19,12 +19,20 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
+import EditIcon from '@mui/icons-material/Edit';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import WidgetStorage, { CustomWidget } from './WidgetStorage';
 
 // Component types for the widget editor
@@ -32,12 +40,20 @@ interface ComponentData {
   id: string;
   type: string;
   props: Record<string, unknown>;
-  children?: string;
+  children?: ComponentData[];
+  parentId?: string;
 }
 
 interface WidgetData {
   name: string;
   components: ComponentData[];
+}
+
+interface EditComponentDialogProps {
+  open: boolean;
+  component: ComponentData | null;
+  onClose: () => void;
+  onSave: (component: ComponentData) => void;
 }
 
 // Types of components that can be added to the widget
@@ -69,11 +85,158 @@ const COMPONENT_TYPES = [
   }
 ];
 
+// Component edit dialog
+const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
+  open,
+  component,
+  onClose,
+  onSave
+}) => {
+  const [editedProps, setEditedProps] = useState<Record<string, unknown>>({});
+
+  useEffect(() => {
+    if (component) {
+      setEditedProps({...component.props});
+    }
+  }, [component]);
+
+  if (!component) return null;
+
+  const handleSave = () => {
+    const updatedComponent = {
+      ...component,
+      props: editedProps
+    };
+    onSave(updatedComponent);
+    onClose();
+  };
+
+  const renderPropsEdit = () => {
+    switch (component.type) {
+      case 'SwitchEnable':
+        return (
+          <>
+            <TextField
+              label="Label"
+              fullWidth
+              margin="normal"
+              value={editedProps.label as string || ''}
+              onChange={(e) => setEditedProps({...editedProps, label: e.target.value})}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(editedProps.defaultChecked)}
+                  onChange={(e) => setEditedProps({...editedProps, defaultChecked: e.target.checked})}
+                />
+              }
+              label="Default State"
+            />
+          </>
+        );
+      case 'FieldSet':
+        return (
+          <TextField
+            label="Legend"
+            fullWidth
+            margin="normal"
+            value={editedProps.legend as string || ''}
+            onChange={(e) => setEditedProps({...editedProps, legend: e.target.value})}
+          />
+        );
+      case 'Label':
+        return (
+          <TextField
+            label="Text"
+            fullWidth
+            margin="normal"
+            value={editedProps.text as string || ''}
+            onChange={(e) => setEditedProps({...editedProps, text: e.target.value})}
+          />
+        );
+      case 'Button':
+        return (
+          <>
+            <TextField
+              label="Button Text"
+              fullWidth
+              margin="normal"
+              value={editedProps.text as string || ''}
+              onChange={(e) => setEditedProps({...editedProps, text: e.target.value})}
+            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Variant</InputLabel>
+              <Select
+                value={editedProps.variant as string || 'contained'}
+                label="Variant"
+                onChange={(e) => setEditedProps({...editedProps, variant: e.target.value})}
+              >
+                <MenuItem value="contained">Contained</MenuItem>
+                <MenuItem value="outlined">Outlined</MenuItem>
+                <MenuItem value="text">Text</MenuItem>
+              </Select>
+            </FormControl>
+          </>
+        );
+      case 'TextField':
+        return (
+          <>
+            <TextField
+              label="Field Label"
+              fullWidth
+              margin="normal"
+              value={editedProps.label as string || ''}
+              onChange={(e) => setEditedProps({...editedProps, label: e.target.value})}
+            />
+            <TextField
+              label="Placeholder"
+              fullWidth
+              margin="normal"
+              value={editedProps.placeholder as string || ''}
+              onChange={(e) => setEditedProps({...editedProps, placeholder: e.target.value})}
+            />
+          </>
+        );
+      default:
+        return <Typography>No editable properties</Typography>;
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Edit {component.type}</DialogTitle>
+      <DialogContent>
+        {renderPropsEdit()}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSave} variant="contained" color="primary">Save</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 // Component that renders a preview of a component based on its type
-const ComponentPreview: React.FC<{ component: ComponentData, onEdit: (id: string) => void, onDelete: (id: string) => void }> = ({ 
+const ComponentPreview: React.FC<{ 
+  component: ComponentData
+  onEdit: (id: string) => void
+  onDelete: (id: string) => void
+  onMoveUp: (id: string) => void
+  onMoveDown: (id: string) => void
+  onAddInside: (parentId: string) => void
+  isFirst: boolean
+  isLast: boolean
+  level?: number
+}> = ({ 
   component, 
   onEdit,
-  onDelete
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+  onAddInside,
+  isFirst,
+  isLast,
+  level = 0
 }) => {
   const renderComponent = () => {
     switch (component.type) {
@@ -88,7 +251,26 @@ const ComponentPreview: React.FC<{ component: ComponentData, onEdit: (id: string
         return (
           <Box sx={{ border: '1px solid #ccc', p: 2, borderRadius: 1 }}>
             <Typography variant="subtitle2">{component.props.legend as string}</Typography>
-            <Typography variant="body2" color="text.secondary">Field Set Content</Typography>
+            {component.children && component.children.length > 0 ? (
+              <Box sx={{ ml: 2 }}>
+                {component.children.map((childComponent, index) => (
+                  <ComponentPreview
+                    key={childComponent.id}
+                    component={childComponent}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onMoveUp={onMoveUp}
+                    onMoveDown={onMoveDown}
+                    onAddInside={onAddInside}
+                    isFirst={index === 0}
+                    isLast={index === (component.children?.length || 0) - 1}
+                    level={level + 1}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">Field Set Content</Typography>
+            )}
           </Box>
         );
       case 'Label':
@@ -98,7 +280,7 @@ const ComponentPreview: React.FC<{ component: ComponentData, onEdit: (id: string
       case 'Button':
         return (
           <Button 
-            variant={'contained'} 
+            variant={component.props.variant as 'contained' | 'outlined' | 'text' || 'contained'} 
             size="small"
           >
             {component.props.text as string}
@@ -126,6 +308,7 @@ const ComponentPreview: React.FC<{ component: ComponentData, onEdit: (id: string
         p: 1,
         border: '1px dashed #ccc',
         borderRadius: 1,
+        marginLeft: level > 0 ? level * 2 : 0,
         '&:hover': {
           borderColor: 'primary.main',
           backgroundColor: 'rgba(0, 0, 0, 0.02)'
@@ -137,10 +320,36 @@ const ComponentPreview: React.FC<{ component: ComponentData, onEdit: (id: string
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
           {component.type}
         </Typography>
-        <IconButton size="small" onClick={() => onEdit(component.id)}>
-          <CloseIcon fontSize="small" />
+        {component.type === 'FieldSet' && (
+          <IconButton 
+            size="small" 
+            color="primary" 
+            onClick={() => onAddInside(component.id)}
+            title="Add component inside"
+          >
+            <AddCircleOutlineIcon fontSize="small" />
+          </IconButton>
+        )}
+        <IconButton 
+          size="small" 
+          disabled={isFirst} 
+          onClick={() => onMoveUp(component.id)}
+          title="Move up"
+        >
+          <KeyboardArrowUpIcon fontSize="small" />
         </IconButton>
-        <IconButton size="small" color="error" onClick={() => onDelete(component.id)}>
+        <IconButton 
+          size="small" 
+          disabled={isLast} 
+          onClick={() => onMoveDown(component.id)}
+          title="Move down"
+        >
+          <KeyboardArrowDownIcon fontSize="small" />
+        </IconButton>
+        <IconButton size="small" onClick={() => onEdit(component.id)} title="Edit">
+          <EditIcon fontSize="small" />
+        </IconButton>
+        <IconButton size="small" color="error" onClick={() => onDelete(component.id)} title="Delete">
           <DeleteIcon fontSize="small" />
         </IconButton>
       </Box>
@@ -153,8 +362,8 @@ const ComponentPreview: React.FC<{ component: ComponentData, onEdit: (id: string
 
 // Component palette item that can be dragged
 const ComponentPaletteItem: React.FC<{ 
-  type: string; 
-  label: string;
+  type: string
+  label: string
   onDragStart: (e: React.DragEvent, type: string) => void 
 }> = ({ type, label, onDragStart }) => {
   return (
@@ -188,6 +397,9 @@ const WidgetEditor: React.FC = () => {
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [savedWidgets, setSavedWidgets] = useState<CustomWidget[]>([]);
   const [showWidgetList, setShowWidgetList] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [currentEditComponent, setCurrentEditComponent] = useState<ComponentData | null>(null);
+  const [addToParentId, setAddToParentId] = useState<string | null>(null);
   const dropAreaRef = useRef<HTMLDivElement>(null);
 
   // Load saved widgets on component mount
@@ -200,7 +412,123 @@ const WidgetEditor: React.FC = () => {
     e.dataTransfer.setData('componentType', type);
   };
 
-  // Handle drop onto the widget container
+  // Find component by id including nested children
+  const findComponentById = (id: string, components: ComponentData[]): ComponentData | null => {
+    for (const component of components) {
+      if (component.id === id) {
+        return component;
+      }
+      
+      if (component.children && component.children.length > 0) {
+        const found = findComponentById(id, component.children);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    
+    return null;
+  };
+
+  // Get parent component containing a specific child
+  const findParentComponent = (childId: string, components: ComponentData[]): ComponentData | null => {
+    for (const component of components) {
+      if (component.children?.some(child => child.id === childId)) {
+        return component;
+      }
+      
+      if (component.children && component.children.length > 0) {
+        const found = findParentComponent(childId, component.children);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    
+    return null;
+  };
+
+  // Update a component in the nested structure
+  const updateComponentById = (id: string, updatedComponent: ComponentData, components: ComponentData[]): ComponentData[] => {
+    return components.map(component => {
+      if (component.id === id) {
+        return updatedComponent;
+      }
+      
+      if (component.children && component.children.length > 0) {
+        return {
+          ...component,
+          children: updateComponentById(id, updatedComponent, component.children)
+        };
+      }
+      
+      return component;
+    });
+  };
+
+  // Remove a component from the nested structure
+  const removeComponentById = (id: string, components: ComponentData[]): ComponentData[] => {
+    const filteredComponents = components.filter(component => component.id !== id);
+    
+    return filteredComponents.map(component => {
+      if (component.children && component.children.length > 0) {
+        return {
+          ...component,
+          children: removeComponentById(id, component.children)
+        };
+      }
+      
+      return component;
+    });
+  };
+
+  // Move a component up or down in its parent container
+  const moveComponent = (id: string, direction: 'up' | 'down', components: ComponentData[]): ComponentData[] => {
+    // If component is at the root level
+    const rootIndex = components.findIndex(c => c.id === id);
+    if (rootIndex !== -1) {
+      const newComponents = [...components];
+      
+      if (direction === 'up' && rootIndex > 0) {
+        [newComponents[rootIndex - 1], newComponents[rootIndex]] = 
+          [newComponents[rootIndex], newComponents[rootIndex - 1]];
+      } else if (direction === 'down' && rootIndex < components.length - 1) {
+        [newComponents[rootIndex], newComponents[rootIndex + 1]] = 
+          [newComponents[rootIndex + 1], newComponents[rootIndex]];
+      }
+      
+      return newComponents;
+    }
+    
+    // If component is nested
+    const parent = findParentComponent(id, components);
+    if (parent && parent.children) {
+      const childIndex = parent.children.findIndex(c => c.id === id);
+      
+      if (childIndex !== -1) {
+        const newChildren = [...parent.children];
+        
+        if (direction === 'up' && childIndex > 0) {
+          [newChildren[childIndex - 1], newChildren[childIndex]] = 
+            [newChildren[childIndex], newChildren[childIndex - 1]];
+        } else if (direction === 'down' && childIndex < newChildren.length - 1) {
+          [newChildren[childIndex], newChildren[childIndex + 1]] = 
+            [newChildren[childIndex + 1], newChildren[childIndex]];
+        }
+        
+        const updatedParent = {
+          ...parent,
+          children: newChildren
+        };
+        
+        return updateComponentById(parent.id, updatedParent, components);
+      }
+    }
+    
+    return components;
+  };
+
+  // Handle drop onto the widget container or a fieldset
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     
@@ -214,6 +542,27 @@ const WidgetEditor: React.FC = () => {
         props: { ...componentConfig.defaultProps }
       };
       
+      // If we're adding to a fieldset
+      if (addToParentId) {
+        const parent = findComponentById(addToParentId, widgetData.components);
+        
+        if (parent && parent.type === 'FieldSet') {
+          const updatedParent = {
+            ...parent,
+            children: [...(parent.children || []), newComponent]
+          };
+          
+          setWidgetData(prev => ({
+            ...prev,
+            components: updateComponentById(addToParentId, updatedParent, prev.components)
+          }));
+          
+          setAddToParentId(null);
+          return;
+        }
+      }
+      
+      // Otherwise add to the root level
       setWidgetData(prev => ({
         ...prev,
         components: [...prev.components, newComponent]
@@ -230,14 +579,50 @@ const WidgetEditor: React.FC = () => {
   const handleDeleteComponent = (id: string) => {
     setWidgetData(prev => ({
       ...prev,
-      components: prev.components.filter(c => c.id !== id)
+      components: removeComponentById(id, prev.components)
     }));
   };
 
-  // Handler for editing a component (currently just removes it)
+  // Handler for editing a component
   const handleEditComponent = (id: string) => {
-    // For now we'll just remove the component when the close button is clicked
-    handleDeleteComponent(id);
+    const component = findComponentById(id, widgetData.components);
+    if (component) {
+      setCurrentEditComponent(component);
+      setEditDialogOpen(true);
+    }
+  };
+
+  // Handler for saving edited component
+  const handleSaveComponent = (updatedComponent: ComponentData) => {
+    setWidgetData(prev => ({
+      ...prev,
+      components: updateComponentById(updatedComponent.id, updatedComponent, prev.components)
+    }));
+  };
+
+  // Handler for moving components up and down
+  const handleMoveComponent = (id: string, direction: 'up' | 'down') => {
+    setWidgetData(prev => ({
+      ...prev,
+      components: moveComponent(id, direction, prev.components)
+    }));
+  };
+
+  // Handler for adding components inside a fieldset
+  const handleAddInsideFieldset = (parentId: string) => {
+    setAddToParentId(parentId);
+    
+    // Scroll to component palette to make it obvious what to do next
+    const paletteEl = document.querySelector('[data-component-palette]');
+    if (paletteEl) {
+      paletteEl.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    setNotification({
+      open: true,
+      message: 'Select a component from the palette to add inside',
+      severity: 'info'
+    });
   };
 
   // Handler for saving the widget
@@ -303,6 +688,23 @@ const WidgetEditor: React.FC = () => {
     setNotification(prev => ({ ...prev, open: false }));
   };
 
+  // Render nested components recursively
+  const renderComponents = (components: ComponentData[]) => {
+    return components.map((component, index) => (
+      <ComponentPreview 
+        key={component.id} 
+        component={component} 
+        onEdit={handleEditComponent}
+        onDelete={handleDeleteComponent}
+        onMoveUp={(id) => handleMoveComponent(id, 'up')}
+        onMoveDown={(id) => handleMoveComponent(id, 'down')}
+        onAddInside={handleAddInsideFieldset}
+        isFirst={index === 0}
+        isLast={index === components.length - 1}
+      />
+    ));
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
@@ -338,6 +740,7 @@ const WidgetEditor: React.FC = () => {
         {/* Component palette - only visible in edit mode */}
         {editMode && (
           <Box 
+            data-component-palette
             sx={{ 
               width: 200, 
               p: 2, 
@@ -345,7 +748,20 @@ const WidgetEditor: React.FC = () => {
               overflowY: 'auto'
             }}
           >
-            <Typography variant="subtitle2" gutterBottom>Components</Typography>
+            <Typography variant="subtitle2" gutterBottom>
+              {addToParentId ? 'Add component inside FieldSet' : 'Components'}
+            </Typography>
+            {addToParentId && (
+              <Button 
+                variant="outlined" 
+                size="small" 
+                fullWidth 
+                onClick={() => setAddToParentId(null)}
+                sx={{ mb: 2 }}
+              >
+                Cancel
+              </Button>
+            )}
             <Divider sx={{ mb: 2 }} />
             
             {COMPONENT_TYPES.map((component) => (
@@ -362,16 +778,24 @@ const WidgetEditor: React.FC = () => {
         {/* Widget editing area */}
         <Box sx={{ flex: 1, p: 2, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           {/* Widget name field */}
-          <TextField
-            label="Widget Name"
-            value={widgetData.name}
-            onChange={(e) => setWidgetData(prev => ({ ...prev, name: e.target.value }))}
-            margin="normal"
-            variant="outlined"
-            size="small"
-            sx={{ mb: 2 }}
-            disabled={!editMode}
-          />
+          {editMode ? (
+            <TextField
+              label="Widget Name"
+              value={widgetData.name}
+              onChange={(e) => setWidgetData(prev => ({ ...prev, name: e.target.value }))}
+              margin="normal"
+              variant="outlined"
+              size="small"
+              sx={{ mb: 2 }}
+            />
+          ) : (
+            <Typography
+              variant="body1"
+              sx={{ mb: 2 }}
+            >
+              <strong>Widget Name:</strong> {widgetData.name}
+            </Typography>
+          )}
 
           {/* Drop area */}
           <Paper
@@ -379,7 +803,7 @@ const WidgetEditor: React.FC = () => {
             sx={{
               flex: 1,
               p: 2,
-              backgroundColor: editMode ? 'rgba(0, 0, 0, 0.02)' : 'white',
+              backgroundColor: editMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.04)',
               border: editMode ? '2px dashed #ccc' : '1px solid #e0e0e0',
               borderRadius: 1,
               minHeight: 200,
@@ -403,27 +827,26 @@ const WidgetEditor: React.FC = () => {
                     ? 'Drag and drop components here to create your widget' 
                     : 'This widget is empty. Switch to Edit mode to add components.'}
                 </Typography>
-                {editMode && (
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
-                    Or click on components in the palette
-                  </Typography>
-                )}
               </Box>
             ) : (
               <Box>
-                {widgetData.components.map((component) => (
-                  <ComponentPreview 
-                    key={component.id} 
-                    component={component} 
-                    onEdit={handleEditComponent}
-                    onDelete={handleDeleteComponent}
-                  />
-                ))}
+                {renderComponents(widgetData.components)}
               </Box>
             )}
           </Paper>
         </Box>
       </Box>
+
+      {/* Component Edit Dialog */}
+      <EditComponentDialog
+        open={editDialogOpen}
+        component={currentEditComponent}
+        onClose={() => {
+          setEditDialogOpen(false);
+          setCurrentEditComponent(null);
+        }}
+        onSave={handleSaveComponent}
+      />
 
       {/* Notification */}
       <Snackbar 
@@ -452,7 +875,7 @@ const WidgetEditor: React.FC = () => {
         <DialogContent>
           {savedWidgets.length === 0 ? (
             <Typography color="text.secondary" align="center" sx={{ my: 4 }}>
-              You haven't saved any custom widgets yet
+              You haven&apos;t saved any custom widgets yet
             </Typography>
           ) : (
             <List>

@@ -3,7 +3,8 @@ interface ComponentData {
   id: string
   type: string
   props: Record<string, unknown>
-  children?: string
+  children?: ComponentData[]
+  parentId?: string
 }
 
 export interface CustomWidget {

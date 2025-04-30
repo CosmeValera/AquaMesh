@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, lazy } from 'react'
 
 import useTopNavBarWidgets, { Item } from '../customHooks/useTopNavBarWidgets'
 
 import { useStore } from '../state/store'
 import ModuleLoader from './ModuleLoader'
+
+// Import WidgetEditor component
+import WidgetEditor from '../components/WidgetEditor/WidgetEditor'
+
+// Local components registry
+const LocalComponents: Record<string, React.FC> = {
+  WidgetEditor: WidgetEditor,
+}
 
 export interface DynamicMicrofrontendProps {
   name: string;
@@ -22,8 +30,13 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
 
   // const { keycloak } = useAuth()
 
-  // SET REMOTE from widgets.json
   useEffect(() => {
+    // First check if it's a local component
+    if (props.component === 'WidgetEditor') {
+      return
+    }
+    
+    // SET REMOTE from widgets.json
     const topNavBarWidget = topNavBarWidgets.find(topNavBarWidget =>
       topNavBarWidget.items.some(item => item.name === props.name)
     )
@@ -35,6 +48,12 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
       }
     }
   }, [topNavBarWidgets, props.component])
+
+  // Return proper content at the end of the component
+  if (props.component === 'WidgetEditor') {
+    const LocalComponent = LocalComponents[props.component]
+    return <LocalComponent />
+  }
 
   return (
     <>

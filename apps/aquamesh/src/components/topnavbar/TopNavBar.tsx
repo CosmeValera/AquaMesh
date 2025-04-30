@@ -15,9 +15,9 @@ import { useNavigate } from 'react-router-dom'
 
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import LogoutIcon from '@mui/icons-material/Logout'
-import TimeIcon from '@mui/icons-material/AccessTime'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import WidgetsIcon from '@mui/icons-material/Widgets'
+import CreateIcon from '@mui/icons-material/Create'
 
 import useTopNavBarWidgets from '../../customHooks/useTopNavBarWidgets'
 import { useLayout } from '../Layout/LayoutProvider'
@@ -190,6 +190,28 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
             open={Boolean(panelsAnchorEl)}
             onClose={handleClose}
           >
+            <MenuItem 
+              onClick={() => {
+                addComponent({
+                  id: `widget-editor-${Date.now()}`,
+                  name: "Widget Editor",
+                  component: "WidgetEditor",
+                })
+                handleClose()
+              }}
+              sx={{ 
+                borderBottom: '1px solid #eee',
+                display: 'flex',
+                alignItems: 'center',
+                color: 'primary.main',
+                fontWeight: 'bold'
+              }}
+            >
+              <ListItemIcon>
+                <CreateIcon fontSize="small" color="primary" />
+              </ListItemIcon>
+              Create Custom Widget
+            </MenuItem>
             {topNavBarWidgets.map(topNavBarWidget => (
               <Box key={topNavBarWidget.name}>
                 <Typography sx={{ px: 2, py: 1, fontWeight: 'bold' }}>

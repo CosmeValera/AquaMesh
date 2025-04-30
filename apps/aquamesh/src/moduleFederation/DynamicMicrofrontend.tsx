@@ -5,19 +5,16 @@ import useTopNavBarWidgets, { Item } from '../customHooks/useTopNavBarWidgets'
 import { useStore } from '../state/store'
 import ModuleLoader from './ModuleLoader'
 
-// Import WidgetEditor component
+// Import components
 import WidgetEditor from '../components/WidgetEditor/WidgetEditor'
-
-// Local components registry
-const LocalComponents: Record<string, React.FC> = {
-  WidgetEditor: WidgetEditor,
-}
+import CustomWidget from '../components/WidgetEditor/CustomWidget'
 
 export interface DynamicMicrofrontendProps {
-  name: string;
-  component: string;
-  width: number;
-  height: number;
+  name: string
+  component: string
+  width: number
+  height: number
+  customProps?: Record<string, unknown>
 }
 
 const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
@@ -31,8 +28,8 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
   // const { keycloak } = useAuth()
 
   useEffect(() => {
-    // First check if it's a local component
-    if (props.component === 'WidgetEditor') {
+    // Check if it's a local component first
+    if (props.component === 'WidgetEditor' || props.component === 'CustomWidget') {
       return
     }
     
@@ -47,12 +44,15 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
         setRemote(panelItem)
       }
     }
-  }, [topNavBarWidgets, props.component])
+  }, [topNavBarWidgets, props.component, props.name])
 
-  // Return proper content at the end of the component
+  // Return proper content for local components
   if (props.component === 'WidgetEditor') {
-    const LocalComponent = LocalComponents[props.component]
-    return <LocalComponent />
+    return <WidgetEditor />
+  }
+  
+  if (props.component === 'CustomWidget') {
+    return <CustomWidget {...props.customProps} />
   }
 
   return (

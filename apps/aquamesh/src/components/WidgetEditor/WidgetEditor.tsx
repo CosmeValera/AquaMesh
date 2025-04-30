@@ -85,6 +85,9 @@ const COMPONENT_TYPES = [
   }
 ];
 
+// Type for notification severity
+type NotificationSeverity = 'success' | 'error' | 'info' | 'warning'
+
 // Component edit dialog
 const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
   open,
@@ -227,6 +230,7 @@ const ComponentPreview: React.FC<{
   isFirst: boolean
   isLast: boolean
   level?: number
+  editMode: boolean
 }> = ({ 
   component, 
   onEdit,
@@ -236,7 +240,8 @@ const ComponentPreview: React.FC<{
   onAddInside,
   isFirst,
   isLast,
-  level = 0
+  level = 0,
+  editMode
 }) => {
   const renderComponent = () => {
     switch (component.type) {
@@ -249,10 +254,15 @@ const ComponentPreview: React.FC<{
         );
       case 'FieldSet':
         return (
-          <Box sx={{ border: '1px solid #ccc', p: 2, borderRadius: 1 }}>
+          <Box sx={{ 
+            border: '1px solid #ccc', 
+            p: 2, 
+            borderRadius: 1,
+            ...(editMode ? {} : { borderStyle: 'solid' })
+          }}>
             <Typography variant="subtitle2">{component.props.legend as string}</Typography>
             {component.children && component.children.length > 0 ? (
-              <Box sx={{ ml: 2 }}>
+              <Box sx={{ ml: editMode ? 2 : 0 }}>
                 {component.children.map((childComponent, index) => (
                   <ComponentPreview
                     key={childComponent.id}
@@ -264,7 +274,8 @@ const ComponentPreview: React.FC<{
                     onAddInside={onAddInside}
                     isFirst={index === 0}
                     isLast={index === (component.children?.length || 0) - 1}
-                    level={level + 1}
+                    level={editMode ? level + 1 : 0}
+                    editMode={editMode}
                   />
                 ))}
               </Box>
@@ -299,6 +310,15 @@ const ComponentPreview: React.FC<{
         return <Typography>Unknown component type</Typography>;
     }
   };
+
+  // In preview mode, only show the component without controls or dashed borders
+  if (!editMode) {
+    return (
+      <Box sx={{ mb: 1 }}>
+        {renderComponent()}
+      </Box>
+    );
+  }
 
   return (
     <Box 
@@ -394,7 +414,11 @@ const WidgetEditor: React.FC = () => {
     components: []
   });
   const [editMode, setEditMode] = useState(true);
-  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [notification, setNotification] = useState({ 
+    open: false, 
+    message: '', 
+    severity: 'success' as NotificationSeverity
+  });
   const [savedWidgets, setSavedWidgets] = useState<CustomWidget[]>([]);
   const [showWidgetList, setShowWidgetList] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -701,6 +725,7 @@ const WidgetEditor: React.FC = () => {
         onAddInside={handleAddInsideFieldset}
         isFirst={index === 0}
         isLast={index === components.length - 1}
+        editMode={editMode}
       />
     ));
   };

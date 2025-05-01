@@ -18,8 +18,8 @@ interface CustomProps {
 }
 
 // Create a custom event for widget updates
+// This is exported separately to avoid circular dependencies
 export const WIDGET_STORAGE_UPDATED = 'widgetStorageUpdated'
-export const widgetStorageEvent = new CustomEvent(WIDGET_STORAGE_UPDATED)
 
 const useTopNavBarWidgets = () => {
   const [topNavBarWidgets, setTopNavBarWidgets] = useState<Panel[]>([])

@@ -1,5 +1,5 @@
 // Utility class to manage custom widget storage and retrieval
-import { widgetStorageEvent } from '../../customHooks/useTopNavBarWidgets'
+import { WIDGET_STORAGE_UPDATED } from '../../customHooks/useTopNavBarWidgets'
 
 interface ComponentData {
   id: string
@@ -45,7 +45,7 @@ class WidgetStorage {
     this.saveToLocalStorage(widgets)
     
     // Dispatch event to notify other components
-    document.dispatchEvent(widgetStorageEvent)
+    document.dispatchEvent(new CustomEvent(WIDGET_STORAGE_UPDATED))
     
     return newWidget
   }
@@ -74,7 +74,7 @@ class WidgetStorage {
     this.saveToLocalStorage(widgets)
     
     // Dispatch event to notify other components
-    document.dispatchEvent(widgetStorageEvent)
+    document.dispatchEvent(new CustomEvent(WIDGET_STORAGE_UPDATED))
     
     return updatedWidget
   }
@@ -93,7 +93,7 @@ class WidgetStorage {
     this.saveToLocalStorage(newWidgets)
     
     // Dispatch event to notify other components
-    document.dispatchEvent(widgetStorageEvent)
+    document.dispatchEvent(new CustomEvent(WIDGET_STORAGE_UPDATED))
     
     return true
   }

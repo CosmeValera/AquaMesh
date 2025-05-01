@@ -20,6 +20,7 @@ interface ViewsContextType {
   removeView: (id: string) => void;
   addView: (view?: DefaultDashboard) => void;
   updateLayout: (model: Model) => void;
+  renameView: (id: string, newName: string) => void;
 }
 
 const ViewsContext = React.createContext<ViewsContextType | null>(null)
@@ -58,6 +59,17 @@ const ViewsProvider: React.FC<ViewsProviderProps> = (props) => {
     setViews(newOpenViews)
   }
   
+  const renameView = (id: string, newName: string) => {
+    const newOpenViews = openViews.map(view => {
+      if (view.id === id) {
+        return { ...view, name: newName };
+      }
+      return view;
+    });
+    
+    setViews(newOpenViews);
+  }
+  
   return (
     <ViewsContext.Provider
       {...props}
@@ -68,6 +80,7 @@ const ViewsProvider: React.FC<ViewsProviderProps> = (props) => {
         removeView,
         addView,
         updateLayout,
+        renameView,
       }}
     />
   )

@@ -17,7 +17,7 @@ import 'flexlayout-react/style/light.css'
 import './layout.scss'
 
 interface LayoutViewProps {
-  layout: ViewLayout;
+  layout?: ViewLayout;
   updateLayout: (model: Model) => void; 
 }
 
@@ -66,7 +66,7 @@ const LayoutView: React.FC<LayoutViewProps>= ({ layout, updateLayout }) => {
 
   const model = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const config: any = Object.assign({}, CONFIG, { layout })
+    const config: any = Object.assign({}, CONFIG, { layout: layout || {} })
     return Model.fromJson(config)
   }, [layout])
 

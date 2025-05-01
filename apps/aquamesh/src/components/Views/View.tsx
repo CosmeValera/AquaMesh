@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, Menu, MenuItem, Tooltip } from '@mui/material'
+import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, Tooltip } from '@mui/material'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 
 import { ReactComponent as AddIcon } from '../../icons/add.svg'
 import { ReactComponent as CloseIcon } from '../../icons/close.svg'
 import SaveIcon from '@mui/icons-material/Save'
-import MoreVertIcon from '@mui/icons-material/MoreVert'
 
 import LayoutView from '../Layout/Layout'
-
+import { ViewLayout } from '../../state/store'
 import { useViews } from './ViewsProvider'
 import './tabs.scss'
 
@@ -16,7 +15,7 @@ import './tabs.scss'
 interface SavedDashboard {
   id: string;
   name: string;
-  layout: any;
+  layout: ViewLayout;
   timestamp: number;
 }
 
@@ -24,40 +23,71 @@ interface SavedDashboard {
 const DashboardStorage = {
   getAll: (): SavedDashboard[] => {
     try {
-      const dashboards = localStorage.getItem('customDashboards');
-      return dashboards ? JSON.parse(dashboards) : [];
+      const dashboards = localStorage.getItem('customDashboards')
+      return dashboards ? JSON.parse(dashboards) : []
     } catch (error) {
-      console.error('Failed to parse saved dashboards', error);
-      return [];
+      console.error('Failed to parse saved dashboards', error)
+      return []
     }
   },
   
-  save: (name: string, layout: any): void => {
+  getByName: (name: string): SavedDashboard | null => {
     try {
-      const dashboards = DashboardStorage.getAll();
+      const dashboards = DashboardStorage.getAll()
+      return dashboards.find(dashboard => dashboard.name === name) || null
+    } catch (error) {
+      console.error('Failed to find dashboard by name', error)
+      return null
+    }
+  },
+  
+  save: (name: string, layout: ViewLayout): SavedDashboard => {
+    try {
+      const dashboards = DashboardStorage.getAll()
+      // Check if a dashboard with this name already exists and update it
+      const existingIndex = dashboards.findIndex(d => d.name === name)
+      
       const newDashboard: SavedDashboard = {
-        id: `dashboard-${Date.now()}`,
+        id: existingIndex >= 0 ? dashboards[existingIndex].id : `dashboard-${Date.now()}`,
         name,
         layout,
         timestamp: Date.now()
-      };
+      }
       
-      localStorage.setItem('customDashboards', JSON.stringify([...dashboards, newDashboard]));
+      if (existingIndex >= 0) {
+        dashboards[existingIndex] = newDashboard
+      } else {
+        dashboards.push(newDashboard)
+      }
+      
+      localStorage.setItem('customDashboards', JSON.stringify(dashboards))
+      return newDashboard
     } catch (error) {
-      console.error('Failed to save dashboard', error);
+      console.error('Failed to save dashboard', error)
+      throw error
     }
   },
   
   delete: (id: string): void => {
     try {
-      const dashboards = DashboardStorage.getAll();
-      const filteredDashboards = dashboards.filter(dashboard => dashboard.id !== id);
-      localStorage.setItem('customDashboards', JSON.stringify(filteredDashboards));
+      const dashboards = DashboardStorage.getAll()
+      const filteredDashboards = dashboards.filter(dashboard => dashboard.id !== id)
+      localStorage.setItem('customDashboards', JSON.stringify(filteredDashboards))
     } catch (error) {
-      console.error('Failed to delete dashboard', error);
+      console.error('Failed to delete dashboard', error)
     }
+  },
+  
+  // Check if the current layout is different from the saved one
+  hasChanges: (name: string, currentLayout?: ViewLayout): boolean => {
+    const savedDashboard = DashboardStorage.getByName(name)
+    if (!savedDashboard) { return true } // If no saved dashboard exists, then there are changes
+    if (!currentLayout) { return false } // If no current layout, no changes
+    
+    // Deep comparison between the current layout and saved layout
+    return JSON.stringify(currentLayout) !== JSON.stringify(savedDashboard.layout)
   }
-};
+}
 
 const Views = () => {
   const {
@@ -67,42 +97,60 @@ const Views = () => {
     removeView,
     addView,
     updateLayout,
+    renameView
   } = useViews()
   
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [dashboardName, setDashboardName] = useState('');
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [currentTabIndex, setCurrentTabIndex] = useState<number | null>(null);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [dashboardName, setDashboardName] = useState('')
+  const [currentTabIndex, setCurrentTabIndex] = useState<number | null>(null)
+  const [hasChanges, setHasChanges] = useState<Record<string, boolean>>({})
+
+  // Check if current views have changes compared to saved dashboards
+  useEffect(() => {
+    const changes: Record<string, boolean> = {}
+    
+    openViews.forEach((view, index) => {
+      changes[index] = DashboardStorage.hasChanges(view.name, view.layout)
+    })
+    
+    setHasChanges(changes)
+  }, [openViews])
 
   const handleSaveDialogOpen = (index: number) => {
-    setCurrentTabIndex(index);
-    setDashboardName(openViews[index]?.name || '');
-    setSaveDialogOpen(true);
-  };
+    setCurrentTabIndex(index)
+    setDashboardName(openViews[index]?.name || '')
+    setSaveDialogOpen(true)
+  }
 
   const handleSaveDialogClose = () => {
-    setSaveDialogOpen(false);
-    setDashboardName('');
-    setCurrentTabIndex(null);
-  };
+    setSaveDialogOpen(false)
+    setDashboardName('')
+    setCurrentTabIndex(null)
+  }
 
   const handleSaveDashboard = () => {
     if (currentTabIndex !== null && dashboardName.trim() !== '') {
-      const currentView = openViews[currentTabIndex];
-      DashboardStorage.save(dashboardName, currentView.layout);
-      handleSaveDialogClose();
+      const currentView = openViews[currentTabIndex]
+      try {
+        if (currentView.layout) {
+          DashboardStorage.save(dashboardName, currentView.layout)
+          
+          // Update the view name in the TabList
+          renameView(currentView.id, dashboardName)
+          
+          // Mark this view as no longer having changes
+          setHasChanges(prev => ({
+            ...prev,
+            [currentTabIndex]: false
+          }))
+        }
+        
+        handleSaveDialogClose()
+      } catch (error) {
+        console.error('Error saving dashboard:', error)
+      }
     }
-  };
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, index: number) => {
-    setMenuAnchorEl(event.currentTarget);
-    setCurrentTabIndex(index);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchorEl(null);
-    setCurrentTabIndex(null);
-  };
+  }
 
   return (
     <Box>
@@ -127,23 +175,25 @@ const Views = () => {
                 {view.name}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Tooltip title="Save Dashboard">
-                  <IconButton
-                    size="small"
-                    onClick={(ev) => {
-                      ev.stopPropagation();
-                      handleSaveDialogOpen(index);
-                    }}
-                    sx={{
-                      p: 0.5,
-                      mr: 0.5,
-                      color: 'primary.light',
-                      '&:hover': { color: 'primary.main' }
-                    }}
-                  >
-                    <SaveIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+                {hasChanges[index] && (
+                  <Tooltip title="Save Dashboard">
+                    <IconButton
+                      size="small"
+                      onClick={(ev) => {
+                        ev.stopPropagation()
+                        handleSaveDialogOpen(index)
+                      }}
+                      sx={{
+                        p: 0.5,
+                        mr: 0.5,
+                        color: 'primary.light',
+                        '&:hover': { color: 'primary.main' }
+                      }}
+                    >
+                      <SaveIcon sx={{ fontSize: 16 }}/>
+                    </IconButton>
+                  </Tooltip>
+                )}
                 <Box
                   className="close"
                   sx={{
@@ -217,7 +267,14 @@ const Views = () => {
               <Box sx={{ position: 'relative', flex: '1' }}>
                 <LayoutView
                   layout={view.layout}
-                  updateLayout={updateLayout}
+                  updateLayout={(model) => {
+                    updateLayout(model)
+                    // Mark this view as having changes after layout update
+                    setHasChanges(prev => ({
+                      ...prev,
+                      [selectedView]: true
+                    }))
+                  }}
                 />
               </Box>
             </Box>
@@ -253,22 +310,6 @@ const Views = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Tab Menu */}
-      <Menu
-        anchorEl={menuAnchorEl}
-        open={Boolean(menuAnchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={() => {
-          if (currentTabIndex !== null) {
-            handleSaveDialogOpen(currentTabIndex);
-            handleMenuClose();
-          }
-        }}>
-          Save Dashboard
-        </MenuItem>
-      </Menu>
     </Box>
   )
 }

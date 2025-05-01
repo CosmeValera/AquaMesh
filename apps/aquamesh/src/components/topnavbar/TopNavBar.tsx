@@ -10,6 +10,8 @@ import {
   Divider,
   Avatar,
   ListItemIcon,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 
@@ -57,6 +59,10 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   const { addView } = useViews()
   const navigate = useNavigate()
   
+  // Use theme and media query for responsive design
+  const theme = useTheme()
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+  
   // Load user data from localStorage on component mount
   useEffect(() => {
     const storedUserData = localStorage.getItem('userData')
@@ -94,19 +100,6 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
     navigate('/login')
   }
 
-  // Format current date and time
-  const formatDateTime = () => {
-    const now = new Date()
-    return now.toLocaleString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit', 
-      second: '2-digit'
-    })
-  }
-  
   // Create a view with predefined layout
   const createViewWithLayout = (viewName: string, layout: unknown) => {
     const newView: DefaultDashboard = {
@@ -123,7 +116,8 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
       position="static" 
       sx={{ 
         backgroundColor: 'background.header',
-        boxShadow: 2
+        boxShadow: 2,
+        height: '64px'
       }}
     >
       <Toolbar>
@@ -134,12 +128,12 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
           sx={{ 
             display: 'flex', 
             alignItems: 'center', 
-            fontWeight: 'bold', 
+            fontWeight: isTablet ? 'normal' : 'bold',
             color: 'foreground.contrastPrimary',
             mr: 4
           }}
         >
-          <Logo height="32px" width="32px" style={{ marginRight: '12px' }} />
+          <Logo height="32px" width="32px" style={{ marginRight: isTablet ? '4px' : '12px' }} />
           AquaMesh
         </Typography>
 
@@ -152,12 +146,14 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               color: 'foreground.contrastPrimary', 
               display: 'flex', 
               alignItems: 'center',
-              mx: 1
+              minWidth: isTablet ? '40px' : 'auto',
+              mx: isTablet ? 0.5 : 1,
+              px: isTablet ? 1 : 2,
             }}
             startIcon={<DashboardIcon />}
             endIcon={<KeyboardArrowDownIcon />}
           >
-            Dashboards
+            {!isTablet ? 'Dashboards' : 'D.'}
           </Button>
           <Menu
             anchorEl={viewsAnchorEl}
@@ -178,12 +174,14 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               color: 'foreground.contrastPrimary', 
               display: 'flex', 
               alignItems: 'center',
-              mx: 1
+              minWidth: isTablet ? '40px' : 'auto',
+              mx: isTablet ? 0.5 : 1,
+              px: isTablet ? 1 : 2,
             }}
             startIcon={<WidgetsIcon />}
             endIcon={<KeyboardArrowDownIcon />}
           >
-            Widgets
+            {!isTablet ? 'Widgets' : 'W.'}
           </Button>
           <Menu
             anchorEl={panelsAnchorEl}
@@ -214,13 +212,13 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                 Create Custom Widget
               </MenuItem>
             )}
-            {topNavBarWidgets.map(topNavBarWidget => (
+            {topNavBarWidgets.map((topNavBarWidget) => (
               <Box key={topNavBarWidget.name}>
                 <Typography sx={{ px: 2, py: 1, fontWeight: 'bold' }}>
                   {topNavBarWidget.name}
                 </Typography>
                 <Divider />
-                {topNavBarWidget.items.map(item => (
+                {topNavBarWidget.items.map((item) => (
                   <MenuItem 
                     key={item.name} 
                     onClick={() => {
@@ -241,8 +239,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
 
         {/* Right Side Elements */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-
-          <Divider orientation="vertical" flexItem sx={{ mx: 2, bgcolor: 'background.light' }} />
+          <Divider orientation="vertical" flexItem sx={{ mx: isTablet ? 1 : 2, bgcolor: 'background.light' }} />
 
           {/* User Menu */}
           <Button
@@ -250,29 +247,33 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
             sx={{ 
               color: 'foreground.contrastPrimary', 
               textTransform: 'none',
+              minWidth: isTablet ? '45px' : 'auto',
+              px: isTablet ? 0.5 : 2,
               display: 'flex'
             }}
-            endIcon={<KeyboardArrowDownIcon />}
+            endIcon={isTablet ? null : <KeyboardArrowDownIcon />}
           >
             <Avatar 
               sx={{ 
                 width: 32, 
                 height: 32, 
                 bgcolor: 'primary.main',
-                mr: 1,
+                mr: isTablet ? 0 : 1,
                 fontSize: '0.9rem'
               }}
             >
               {userData.id.substring(0, 2).toUpperCase()}
             </Avatar>
-            <Box sx={{ textAlign: 'left' }}>
-              <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
-                {userData.name}
-              </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.7, lineHeight: 1 }}>
-                {userData.role}
-              </Typography>
-            </Box>
+            {!isTablet && (
+              <Box sx={{ textAlign: 'left' }}>
+                <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
+                  {userData.name}
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.7, lineHeight: 1 }}>
+                  {userData.role}
+                </Typography>
+              </Box>
+            )}
           </Button>
           <Menu
             anchorEl={userAnchorEl}

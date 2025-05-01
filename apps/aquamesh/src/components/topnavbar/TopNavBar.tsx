@@ -26,20 +26,12 @@ import { useLayout } from '../Layout/LayoutProvider'
 import { ReactComponent as Logo } from '../../../public/logo.svg'
 import { useViews } from '../Views/ViewsProvider'
 import { DefaultDashboard } from '../Views/fixture'
-import DashboardOptions from './DashboardOptions'
 
 // Define user data type
 interface UserData {
   id: string
   name: string
   role: string
-}
-
-// Import Layout interface from DashboardOptions
-interface Layout {
-  type: 'row'
-  weight: number
-  children: any[] // Using any to avoid type conflicts with imported components
 }
 
 interface TopNavBarProps {
@@ -104,7 +96,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   const createViewWithLayout = (viewName: string, layout: unknown) => {
     const newView: DefaultDashboard = {
       name: viewName,
-      layout: layout as any
+      layout: layout
     }
     
     addView(newView)
@@ -159,12 +151,72 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
             anchorEl={viewsAnchorEl}
             open={Boolean(viewsAnchorEl)}
             onClose={handleClose}
+            PaperProps={{
+              sx: {
+                bgcolor: 'background.menu',
+                color: 'foreground.contrastPrimary',
+                width: '250px',
+                boxShadow: 3
+              }
+            }}
           >
-            <DashboardOptions 
-              topNavBarWidgets={topNavBarWidgets}
-              createViewWithLayout={createViewWithLayout}
-              handleClose={handleClose}
-            />
+            {/* Simple Dashboards Section */}
+            <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
+              Simple Dashboards
+            </Typography>
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+            <MenuItem 
+              onClick={() => createViewWithLayout('Control Flow View', { 
+                type: 'row', 
+                weight: 100, 
+                children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] }]
+              })}
+              sx={{ p: 1.5 }}
+            >
+              Control Flow View
+            </MenuItem>
+            <MenuItem 
+              onClick={() => createViewWithLayout('System Lens View', { 
+                type: 'row', 
+                weight: 100, 
+                children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }]
+              })}
+              sx={{ p: 1.5 }}
+            >
+              System Lens View
+            </MenuItem>
+
+            {/* Combined Dashboards Section */}
+            <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
+              Combined Dashboards
+            </Typography>
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+            <MenuItem 
+              onClick={() => createViewWithLayout('Combined View', { 
+                type: 'row', 
+                weight: 100, 
+                children: [
+                  { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] },
+                  { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }
+                ]
+              })}
+              sx={{ p: 1.5 }}
+            >
+              Combined View
+            </MenuItem>
+            <MenuItem 
+              onClick={() => createViewWithLayout('Control Flow + System Lens', { 
+                type: 'row', 
+                weight: 100, 
+                children: [
+                  { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] },
+                  { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }
+                ]
+              })}
+              sx={{ p: 1.5 }}
+            >
+              Control Flow + System Lens
+            </MenuItem>
           </Menu>
 
           {/* Panels/Widgets Menu */}
@@ -187,6 +239,14 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
             anchorEl={panelsAnchorEl}
             open={Boolean(panelsAnchorEl)}
             onClose={handleClose}
+            PaperProps={{
+              sx: {
+                bgcolor: 'background.menu',
+                color: 'foreground.contrastPrimary',
+                width: '250px',
+                boxShadow: 3
+              }
+            }}
           >
             {userData.id === 'admin' && userData.role === 'ADMIN_ROLE' && (
               <MenuItem 
@@ -199,11 +259,12 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                   handleClose()
                 }}
                 sx={{ 
-                  borderBottom: '1px solid #eee',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                   display: 'flex',
                   alignItems: 'center',
                   color: 'primary.main',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  p: 2
                 }}
               >
                 <ListItemIcon>
@@ -212,13 +273,15 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                 Create Custom Widget
               </MenuItem>
             )}
-            {topNavBarWidgets.map((topNavBarWidget) => (
+            
+            {/* Predefined Widgets Section */}
+            <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
+              Predefined Widgets
+            </Typography>
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+            {topNavBarWidgets.filter((widget: { name: string }) => !widget.name.includes('Custom')).map((topNavBarWidget: { name: string; items: Array<{ name: string; component: string }> }) => (
               <Box key={topNavBarWidget.name}>
-                <Typography sx={{ px: 2, py: 1, fontWeight: 'bold' }}>
-                  {topNavBarWidget.name}
-                </Typography>
-                <Divider />
-                {topNavBarWidget.items.map((item) => (
+                {topNavBarWidget.items.map((item: { name: string; component: string }) => (
                   <MenuItem 
                     key={item.name} 
                     onClick={() => {
@@ -228,6 +291,32 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                       })
                       handleClose()
                     }}
+                    sx={{ p: 1.5 }}
+                  >
+                    {item.name}
+                  </MenuItem>
+                ))}
+              </Box>
+            ))}
+            
+            {/* Custom Widgets Section */}
+            <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
+              Custom Widgets
+            </Typography>
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+            {topNavBarWidgets.filter((widget: { name: string }) => widget.name.includes('Custom')).map((topNavBarWidget: { name: string; items: Array<{ name: string; component: string }> }) => (
+              <Box key={topNavBarWidget.name}>
+                {topNavBarWidget.items.map((item: { name: string; component: string }) => (
+                  <MenuItem 
+                    key={item.name} 
+                    onClick={() => {
+                      addComponent({
+                        id: `panel-${Date.now()}`,
+                        ...item,
+                      })
+                      handleClose()
+                    }}
+                    sx={{ p: 1.5 }}
                   >
                     {item.name}
                   </MenuItem>

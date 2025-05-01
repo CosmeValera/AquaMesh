@@ -30,6 +30,7 @@ import { useViews } from '../Views/ViewsProvider'
 import { DefaultDashboard } from '../Views/fixture'
 import { Layout } from '../../types/types'
 import TutorialModal from '../tutorial/TutorialModal'
+import WidgetStorage from '../WidgetEditor/WidgetStorage'
 
 // Define user data type
 interface UserData {
@@ -67,7 +68,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   
   const { topNavBarWidgets } = useTopNavBarWidgets()
   const { addComponent } = useLayout()
-  const { addView } = useViews()
+  const { addView, openViews } = useViews()
   const navigate = useNavigate()
   
   // Use theme and media query for responsive design
@@ -115,6 +116,17 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
       setCustomDashboards(dashboards)
     } catch (error) {
       console.error('Failed to delete dashboard', error)
+    }
+  }
+  
+  // Delete a custom widget
+  const handleDeleteWidget = (widgetId: string, event: React.MouseEvent) => {
+    event.stopPropagation()
+    try {
+      WidgetStorage.deleteWidget(widgetId)
+      // The deletion will trigger a refresh via the WIDGET_STORAGE_UPDATED event
+    } catch (error) {
+      console.error('Failed to delete widget', error)
     }
   }
   
@@ -167,6 +179,28 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   // Toggle tutorial display on startup
   const handleToggleTutorialStartup = () => {
     setShowTutorialOnStartup(!showTutorialOnStartup)
+  }
+
+  // Helper function to ensure there's a view before adding a component
+  const ensureViewAndAddComponent = (componentConfig: {
+    id: string;
+    name: string;
+    component: string;
+    url?: string;
+    customProps?: Record<string, unknown>;
+  }) => {
+    // Check if there are any open views (dashboards)
+    if (openViews.length === 0) {
+      // If no views exist, create a default dashboard first
+      addView()
+      // Short delay to ensure the view is created before adding the component
+      setTimeout(() => {
+        addComponent(componentConfig)
+      }, 100)
+    } else {
+      // If views already exist, add the component directly
+      addComponent(componentConfig)
+    }
   }
 
   return (
@@ -351,7 +385,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               {userData.id === 'admin' && userData.role === 'ADMIN_ROLE' && (
                 <MenuItem 
                   onClick={() => {
-                    addComponent({
+                    ensureViewAndAddComponent({
                       id: `widget-editor-${Date.now()}`,
                       name: "Widget Editor",
                       component: "WidgetEditor",
@@ -386,7 +420,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                     <MenuItem 
                       key={item.name} 
                       onClick={() => {
-                        addComponent({
+                        ensureViewAndAddComponent({
                           id: `panel-${Date.now()}`,
                           ...item,
                         })
@@ -401,29 +435,45 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               ))}
               
               {/* Custom Widgets Section */}
-              <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
-                Custom Widgets
-              </Typography>
-              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-              {topNavBarWidgets.filter((widget: { name: string }) => widget.name.includes('Custom')).map((topNavBarWidget: { name: string; items: Array<{ name: string; component: string }> }) => (
-                <Box key={topNavBarWidget.name}>
-                  {topNavBarWidget.items.map((item: { name: string; component: string }) => (
-                    <MenuItem 
-                      key={item.name} 
-                      onClick={() => {
-                        addComponent({
-                          id: `panel-${Date.now()}`,
-                          ...item,
-                        })
-                        handleClose()
-                      }}
-                      sx={{ p: 1.5 }}
-                    >
-                      {item.name}
-                    </MenuItem>
-                  ))}
-                </Box>
-              ))}
+              {topNavBarWidgets.filter((widget: { name: string }) => widget.name.includes('Custom')) > 0 && (<>
+                <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
+                  Custom Widgets
+                </Typography>
+                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                {topNavBarWidgets.filter((widget: { name: string }) => widget.name.includes('Custom')).map((topNavBarWidget: { name: string; items: Array<{ name: string; component: string; customProps?: { widgetId?: string } }> }) => (
+                  <Box key={topNavBarWidget.name}>
+                    {topNavBarWidget.items.map((item: { name: string; component: string; customProps?: { widgetId?: string } }) => (
+                      <MenuItem 
+                        key={item.name} 
+                        onClick={() => {
+                          ensureViewAndAddComponent({
+                            id: `panel-${Date.now()}`,
+                            ...item,
+                          })
+                          handleClose()
+                        }}
+                        sx={{ 
+                          p: 1.5,
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}
+                      >
+                        {item.name}
+                        {item.component === 'CustomWidget' && item.customProps?.widgetId && (
+                          <ListItemIcon sx={{ ml: 2, minWidth: 'auto' }}>
+                            <DeleteIcon 
+                              fontSize="small" 
+                              onClick={(e) => item.customProps && item.customProps.widgetId && handleDeleteWidget(item.customProps.widgetId, e)}
+                              sx={{ color: 'error.main' }}
+                            />
+                          </ListItemIcon>
+                        )}
+                      </MenuItem>
+                    ))}
+                  </Box>
+                ))}
+              </>)}
             </Menu>
           </Box>
 

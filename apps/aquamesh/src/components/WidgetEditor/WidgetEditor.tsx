@@ -793,9 +793,24 @@ const WidgetEditor: React.FC = () => {
   const [addToParentId, setAddToParentId] = useState<string | null>(null)
   const dropAreaRef = useRef<HTMLDivElement>(null)
 
-  // Load saved widgets on component mount
+  // Load saved widgets on component mount and listen for widget storage update events
   useEffect(() => {
+    // Initial load of saved widgets
     setSavedWidgets(WidgetStorage.getAllWidgets())
+    
+    // Listen for widget storage updates (when widgets are deleted through TopNavBar)
+    const handleWidgetUpdate = () => {
+      console.log('WidgetEditor: Widget storage updated, reloading widgets')
+      setSavedWidgets(WidgetStorage.getAllWidgets())
+    }
+    
+    // Add event listener for widget storage updates
+    document.addEventListener('widgetStorageUpdated', handleWidgetUpdate)
+    
+    // Clean up event listener on component unmount
+    return () => {
+      document.removeEventListener('widgetStorageUpdated', handleWidgetUpdate)
+    }
   }, [])
 
   // Handle drag start from component palette

@@ -30,7 +30,6 @@ import SaveIcon from '@mui/icons-material/Save'
 import EditIcon from '@mui/icons-material/Edit'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import TextFieldsIcon from '@mui/icons-material/TextFields'
 import InputIcon from '@mui/icons-material/Input'
 import SmartButtonIcon from '@mui/icons-material/SmartButton'
@@ -61,6 +60,12 @@ interface EditComponentDialogProps {
   component: ComponentData | null
   onClose: () => void
   onSave: (component: ComponentData) => void
+}
+
+// Add a new interface for drop target info
+interface DropTarget {
+  id: string | null;
+  isHovering: boolean;
 }
 
 // Types of components that can be added to the widget
@@ -154,7 +159,9 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
     }
   }, [component])
 
-  if (!component) return null
+  if (!component) {
+    return null
+  }
 
   const handleSave = () => {
     const updatedComponent = {
@@ -484,6 +491,12 @@ const ComponentPreview: React.FC<{
   isLast: boolean
   level?: number
   editMode: boolean
+  isDragging: boolean
+  dropTarget: DropTarget
+  handleContainerDragEnter: (e: React.DragEvent, containerId: string) => void
+  handleContainerDragOver: (e: React.DragEvent) => void
+  handleContainerDragLeave: (e: React.DragEvent) => void
+  handleContainerDrop: (e: React.DragEvent, containerId: string) => void
 }> = ({
   component,
   onEdit,
@@ -495,6 +508,12 @@ const ComponentPreview: React.FC<{
   isLast,
   level = 0,
   editMode,
+  isDragging,
+  dropTarget,
+  handleContainerDragEnter,
+  handleContainerDragOver,
+  handleContainerDragLeave,
+  handleContainerDrop,
 }) => {
   const renderComponent = () => {
     switch (component.type) {
@@ -541,7 +560,22 @@ const ComponentPreview: React.FC<{
               </Typography>
             </Box>
             {!collapsed && (
-              <Box sx={{ ml: editMode ? 2 : 0 }}>
+              <Box 
+                sx={{ 
+                  ml: editMode ? 2 : 0,
+                  minHeight: 40,
+                  border: editMode && isDragging ? '2px dashed rgba(0, 188, 162, 0.5)' : 'none',
+                  borderRadius: 1,
+                  p: editMode && isDragging ? 1 : 0,
+                  backgroundColor: dropTarget.id === component.id && dropTarget.isHovering ? 
+                    'rgba(0, 188, 162, 0.1)' : 'transparent',
+                  transition: 'background-color 0.2s, border 0.2s'
+                }}
+                onDragEnter={(e) => editMode && handleContainerDragEnter(e, component.id)}
+                onDragOver={(e) => editMode && handleContainerDragOver(e)}
+                onDragLeave={(e) => editMode && handleContainerDragLeave(e)}
+                onDrop={(e) => editMode && handleContainerDrop(e, component.id)}
+              >
                 {component.children && component.children.length > 0 ? (
                   <Box sx={{ ml: editMode ? 2 : 0 }}>
                     {component.children.map((childComponent, index) => (
@@ -557,12 +591,18 @@ const ComponentPreview: React.FC<{
                         isLast={index === (component.children?.length || 0) - 1}
                         level={editMode ? level + 1 : 0}
                         editMode={editMode}
+                        isDragging={isDragging}
+                        dropTarget={dropTarget}
+                        handleContainerDragEnter={handleContainerDragEnter}
+                        handleContainerDragOver={handleContainerDragOver}
+                        handleContainerDragLeave={handleContainerDragLeave}
+                        handleContainerDrop={handleContainerDrop}
                       />
                     ))}
                   </Box>
                 ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    Field Set Content
+                  <Typography variant="body2" color="text.secondary" align="center">
+                    {isDragging ? 'Drop component here' : 'Empty container (Drag components here)'}
                   </Typography>
                 )}
               </Box>
@@ -638,8 +678,16 @@ const ComponentPreview: React.FC<{
               width: '100%',
               border: editMode ? '1px dashed #ccc' : 'none',
               p: 1,
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              minHeight: 60,
+              backgroundColor: dropTarget.id === component.id && dropTarget.isHovering ? 
+                'rgba(0, 188, 162, 0.1)' : 'transparent',
+              transition: 'background-color 0.2s'
             }}
+            onDragEnter={(e) => editMode && handleContainerDragEnter(e, component.id)}
+            onDragOver={(e) => editMode && handleContainerDragOver(e)}
+            onDragLeave={(e) => editMode && handleContainerDragLeave(e)}
+            onDrop={(e) => editMode && handleContainerDrop(e, component.id)}
           >
             {component.children && component.children.length > 0 ? (
               component.children.map((childComponent, index) => (
@@ -655,11 +703,17 @@ const ComponentPreview: React.FC<{
                   isLast={index === (component.children?.length || 0) - 1}
                   level={editMode ? level + 1 : 0}
                   editMode={editMode}
+                  isDragging={isDragging}
+                  dropTarget={dropTarget}
+                  handleContainerDragEnter={handleContainerDragEnter}
+                  handleContainerDragOver={handleContainerDragOver}
+                  handleContainerDragLeave={handleContainerDragLeave}
+                  handleContainerDrop={handleContainerDrop}
                 />
               ))
             ) : (
-              <Typography variant="body2" color="text.secondary">
-                Flex Container (Add components inside)
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ width: '100%' }}>
+                {isDragging ? 'Drop component here' : 'Empty container (Drag components here)'}
               </Typography>
             )}
           </Box>
@@ -675,8 +729,16 @@ const ComponentPreview: React.FC<{
               width: '100%',
               border: editMode ? '1px dashed #ccc' : 'none',
               p: 1,
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              minHeight: 60,
+              backgroundColor: dropTarget.id === component.id && dropTarget.isHovering ? 
+                'rgba(0, 188, 162, 0.1)' : 'transparent',
+              transition: 'background-color 0.2s'
             }}
+            onDragEnter={(e) => editMode && handleContainerDragEnter(e, component.id)}
+            onDragOver={(e) => editMode && handleContainerDragOver(e)}
+            onDragLeave={(e) => editMode && handleContainerDragLeave(e)}
+            onDrop={(e) => editMode && handleContainerDrop(e, component.id)}
           >
             {component.children && component.children.length > 0 ? (
               component.children.map((childComponent, index) => (
@@ -692,11 +754,17 @@ const ComponentPreview: React.FC<{
                   isLast={index === (component.children?.length || 0) - 1}
                   level={editMode ? level + 1 : 0}
                   editMode={editMode}
+                  isDragging={isDragging}
+                  dropTarget={dropTarget}
+                  handleContainerDragEnter={handleContainerDragEnter}
+                  handleContainerDragOver={handleContainerDragOver}
+                  handleContainerDragLeave={handleContainerDragLeave}
+                  handleContainerDrop={handleContainerDrop}
                 />
               ))
             ) : (
-              <Typography variant="body2" color="text.secondary">
-                Grid Container (Add components inside)
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ gridColumn: '1 / -1' }}>
+                {isDragging ? 'Drop component here' : 'Empty container (Drag components here)'}
               </Typography>
             )}
           </Box>
@@ -735,17 +803,6 @@ const ComponentPreview: React.FC<{
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
           {component.type}
         </Typography>
-        {['FieldSet', 'FlexBox', 'GridBox'].includes(component.type) && (
-          <Tooltip title="Add component inside">
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() => onAddInside(component.id)}
-            >
-              <AddCircleOutlineIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )}
         <Tooltip title="Move up">
           <span>
             <IconButton
@@ -908,8 +965,10 @@ const WidgetEditor: React.FC = () => {
     return savedValue ? JSON.parse(savedValue) : true;
   })
   
-  const [addToParentId, setAddToParentId] = useState<string | null>(null)
+  // Replace addToParentId with dropTarget state that tracks what container is being hovered
+  const [dropTarget, setDropTarget] = useState<DropTarget>({ id: null, isHovering: false })
   const dropAreaRef = useRef<HTMLDivElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   // Save settings to localStorage when they change
   useEffect(() => {
@@ -943,6 +1002,82 @@ const WidgetEditor: React.FC = () => {
   // Handle drag start from component palette
   const handleDragStart = (e: React.DragEvent, type: string) => {
     e.dataTransfer.setData('componentType', type)
+    setIsDragging(true)
+  }
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    setIsDragging(false)
+    setDropTarget({ id: null, isHovering: false })
+  }
+
+  // Handle drag enter for container components
+  const handleContainerDragEnter = (e: React.DragEvent, containerId: string) => {
+    e.preventDefault()
+    e.stopPropagation() // Prevent event bubbling to parent containers
+    
+    setDropTarget({
+      id: containerId,
+      isHovering: true
+    })
+  }
+
+  // Handle drag leave for container components
+  const handleContainerDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    
+    // Only clear if we're not entering a child element
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDropTarget({ id: null, isHovering: false })
+    }
+  }
+
+  // Handle drag over for container components
+  const handleContainerDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+  }
+
+  // Handle drop onto a container component
+  const handleContainerDrop = (e: React.DragEvent, containerId: string) => {
+    e.preventDefault()
+    e.stopPropagation() // Prevent event bubbling to parent containers
+
+    const componentType = e.dataTransfer.getData('componentType')
+    if (!componentType) return
+
+    const componentConfig = COMPONENT_TYPES.find(c => c.type === componentType)
+    if (!componentConfig) return
+
+    const newComponent: ComponentData = {
+      id: `${componentType}-${Date.now()}`,
+      type: componentType,
+      props: { ...componentConfig.defaultProps },
+    }
+
+    // Find the container by ID
+    const container = findComponentById(containerId, widgetData.components)
+    
+    if (container && ['FieldSet', 'FlexBox', 'GridBox'].includes(container.type)) {
+      const updatedContainer = {
+        ...container,
+        children: [...(container.children || []), newComponent]
+      }
+
+      setWidgetData(prev => ({
+        ...prev,
+        components: updateComponentById(containerId, updatedContainer, prev.components)
+      }))
+
+      setNotification({
+        open: true,
+        message: `Added ${componentConfig.label} to ${container.type}`,
+        severity: 'success'
+      })
+    }
+
+    setDropTarget({ id: null, isHovering: false })
+    setIsDragging(false)
   }
 
   // Find component by id including nested children
@@ -1097,7 +1232,7 @@ const WidgetEditor: React.FC = () => {
 
   // Handler for adding components inside a fieldset
   const handleAddInsideFieldset = (parentId: string) => {
-    setAddToParentId(parentId)
+    setDropTarget({ id: parentId, isHovering: false })
 
     // Scroll to component palette to make it obvious what to do next
     const paletteEl = document.querySelector('[data-component-palette]')
@@ -1132,45 +1267,15 @@ const WidgetEditor: React.FC = () => {
         props: { ...componentConfig.defaultProps },
       }
 
-      // If we're adding to a container component
-      if (addToParentId) {
-        const parent = findComponentById(addToParentId, widgetData.components)
-
-        if (parent && ['FieldSet', 'FlexBox', 'GridBox'].includes(parent.type)) {
-          const updatedParent = {
-            ...parent,
-            children: [...(parent.children || []), newComponent],
-          }
-
-          setWidgetData((prev) => ({
-            ...prev,
-            components: updateComponentById(
-              addToParentId,
-              updatedParent,
-              prev.components,
-            ),
-          }))
-
-          // If stay open is disabled, clear the parent ID
-          if (!stayOpen) {
-            setAddToParentId(null)
-          } else {
-            // If stay open is enabled, keep the parent ID and scroll back to the palette
-            const paletteEl = document.querySelector('[data-component-palette]')
-            if (paletteEl) {
-              paletteEl.scrollIntoView({ behavior: 'smooth' })
-            }
-          }
-          return
-        }
-      }
-
-      // Otherwise add to the root level
+      // Add to the root level
       setWidgetData((prev) => ({
         ...prev,
         components: [...prev.components, newComponent],
       }))
     }
+
+    setIsDragging(false)
+    setDropTarget({ id: null, isHovering: false })
   }
 
   // Prevent default behavior for dragover to allow drop
@@ -1292,6 +1397,12 @@ const WidgetEditor: React.FC = () => {
         isFirst={index === 0}
         isLast={index === components.length - 1}
         editMode={editMode}
+        isDragging={isDragging}
+        dropTarget={dropTarget}
+        handleContainerDragEnter={handleContainerDragEnter}
+        handleContainerDragOver={handleContainerDragOver}
+        handleContainerDragLeave={handleContainerDragLeave}
+        handleContainerDrop={handleContainerDrop}
       />
     ))
   }
@@ -1361,19 +1472,8 @@ const WidgetEditor: React.FC = () => {
             }}
           >
             <Typography variant="subtitle2" gutterBottom sx={{ color: 'foreground.contrastPrimary', fontWeight: 'bold', mb: 2 }}>
-              {addToParentId ? 'Add component inside' : 'Components'}
+              Components
             </Typography>
-            {addToParentId && (
-              <Button
-                variant="outlined"
-                size="small"
-                fullWidth
-                onClick={() => setAddToParentId(null)}
-                sx={{ mb: 1, color: 'primary.main', borderColor: 'primary.main' }}
-              >
-                Cancel
-              </Button>
-            )}
             <Divider sx={{ mb: 2, bgcolor: 'background.light' }} />
 
             {/* Group components by category */}
@@ -1463,7 +1563,9 @@ const WidgetEditor: React.FC = () => {
               flex: 1,
               p: 2,
               backgroundColor: editMode
-                ? 'rgba(0, 188, 162, 0.05)'
+                ? dropTarget.id === null && isDragging 
+                  ? 'rgba(0, 188, 162, 0.1)' 
+                  : 'rgba(0, 188, 162, 0.05)'
                 : 'rgba(0, 188, 162, 0.02)',
               border: editMode ? '2px dashed rgba(0, 188, 162, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: 1,
@@ -1471,9 +1573,11 @@ const WidgetEditor: React.FC = () => {
               overflowY: 'auto',
               color: 'foreground.contrastPrimary',
               boxShadow: 'none',
+              transition: 'background-color 0.2s'
             }}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
           >
             {widgetData.components.length === 0 ? (
               <Box
@@ -1490,10 +1594,12 @@ const WidgetEditor: React.FC = () => {
               >
                 <Typography variant="body1" sx={{ mb: 1, textAlign: 'center' }}>
                   {editMode
-                    ? 'Drag and drop components here'
+                    ? isDragging 
+                      ? 'Drop component here'
+                      : 'Drag and drop components here'
                     : 'No components added yet'}
                 </Typography>
-                {editMode && (
+                {editMode && !isDragging && (
                   <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.3)' }}>
                     Use the components panel on the left to build your widget
                   </Typography>
@@ -1618,22 +1724,6 @@ const WidgetEditor: React.FC = () => {
               <b>Recomendation:</b> Keep it enabled while you learn. Disable it when it's not necessary
             </Typography>
             
-            <Typography variant="h6" gutterBottom>Container Behavior</Typography>
-            
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={stayOpen}
-                  onChange={(e) => setStayOpen(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label="Stay in 'Add Component' Mode"
-            />
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mb: 1 }}>
-              When enabled, you can add multiple components to a container without having to click the "+" button each time.<br/>
-              <b>Recomendation:</b> This makes it faster to build complex layouts. Only disable it if you usually only add one component inside layout containers
-            </Typography>
           </Box>
         </DialogContent>
         <DialogActions>

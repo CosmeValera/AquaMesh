@@ -262,49 +262,30 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                 }
               }}
             >
-              {/* Simple Dashboards Section */}
+              {/* Predefined Dashboards Section */}
               <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
-                Simple Dashboards
+                Predefined Dashboards
               </Typography>
               <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
               <MenuItem 
-                onClick={() => createViewWithLayout('Control Flow View', { 
+                onClick={() => createViewWithLayout('Control Flow Dashboard', { 
                   type: 'row', 
                   weight: 100, 
                   children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] }]
                 })}
                 sx={{ p: 1.5 }}
               >
-                Control Flow View
+                Control Flow Dashboard
               </MenuItem>
               <MenuItem 
-                onClick={() => createViewWithLayout('System Lens View', { 
+                onClick={() => createViewWithLayout('System Lens Dashboard', { 
                   type: 'row', 
                   weight: 100, 
                   children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }]
                 })}
                 sx={{ p: 1.5 }}
               >
-                System Lens View
-              </MenuItem>
-
-              {/* Combined Dashboards Section */}
-              <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
-                Combined Dashboards
-              </Typography>
-              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-              <MenuItem 
-                onClick={() => createViewWithLayout('Combined View', { 
-                  type: 'row', 
-                  weight: 100, 
-                  children: [
-                    { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] },
-                    { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }
-                  ]
-                })}
-                sx={{ p: 1.5 }}
-              >
-                Combined View
+                System Lens Dashboard
               </MenuItem>
               <MenuItem 
                 onClick={() => createViewWithLayout('Control Flow + System Lens', { 

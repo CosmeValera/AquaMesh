@@ -39,6 +39,7 @@ import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
 import FlexibleIcon from '@mui/icons-material/Dashboard'
 import GridViewIcon from '@mui/icons-material/GridView'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import SettingsIcon from '@mui/icons-material/Settings'
 import WidgetStorage, { CustomWidget } from './WidgetStorage'
 
 // Component types for the widget editor
@@ -895,9 +896,29 @@ const WidgetEditor: React.FC = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [currentEditComponent, setCurrentEditComponent] =
     useState<ComponentData | null>(null)
-  const [stayOpen, setStayOpen] = useState<boolean>(true)
+  const [stayOpen, setStayOpen] = useState<boolean>(() => {
+    const savedValue = localStorage.getItem('widget-editor-stay-open');
+    return savedValue ? JSON.parse(savedValue) : true;
+  })
+  
+  // Settings state
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [showTooltips, setShowTooltips] = useState<boolean>(() => {
+    const savedValue = localStorage.getItem('widget-editor-show-tooltips');
+    return savedValue ? JSON.parse(savedValue) : true;
+  })
+  
   const [addToParentId, setAddToParentId] = useState<string | null>(null)
   const dropAreaRef = useRef<HTMLDivElement>(null)
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('widget-editor-stay-open', JSON.stringify(stayOpen));
+  }, [stayOpen]);
+  
+  useEffect(() => {
+    localStorage.setItem('widget-editor-show-tooltips', JSON.stringify(showTooltips));
+  }, [showTooltips]);
 
   // Load saved widgets on component mount and listen for widget storage update events
   useEffect(() => {
@@ -1290,6 +1311,14 @@ const WidgetEditor: React.FC = () => {
         <Typography variant="h6" sx={{ flex: 1, color: 'foreground.contrastPrimary' }}>
           Widget Editor
         </Typography>
+        <Tooltip title="Editor Settings">
+          <IconButton 
+            onClick={() => setShowSettingsModal(true)}
+            sx={{ mr: 1, color: 'primary.main' }}
+          >
+            <SettingsIcon />
+          </IconButton>
+        </Tooltip>
         <Button
           variant="contained"
           color="primary"
@@ -1335,29 +1364,15 @@ const WidgetEditor: React.FC = () => {
               {addToParentId ? 'Add component inside' : 'Components'}
             </Typography>
             {addToParentId && (
-              <>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  fullWidth
-                  onClick={() => setAddToParentId(null)}
-                  sx={{ mb: 1, color: 'primary.main', borderColor: 'primary.main' }}
-                >
-                  Cancel
-                </Button>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      size="small"
-                      checked={stayOpen}
-                      onChange={(e) => setStayOpen(e.target.checked)}
-                      color="primary"
-                    />
-                  }
-                  label="Open Mode"
-                  sx={{ mb: 1, display: 'flex', color: 'foreground.contrastPrimary' }}
-                />
-              </>
+              <Button
+                variant="outlined"
+                size="small"
+                fullWidth
+                onClick={() => setAddToParentId(null)}
+                sx={{ mb: 1, color: 'primary.main', borderColor: 'primary.main' }}
+              >
+                Cancel
+              </Button>
             )}
             <Divider sx={{ mb: 2, bgcolor: 'background.light' }} />
 
@@ -1382,7 +1397,7 @@ const WidgetEditor: React.FC = () => {
                     key={component.type}
                     type={component.type}
                     label={component.label}
-                    tooltip={component.tooltip || ''}
+                    tooltip={showTooltips ? component.tooltip || '' : ''}
                     icon={component.icon || InfoOutlinedIcon}
                     onDragStart={handleDragStart}
                   />
@@ -1573,6 +1588,56 @@ const WidgetEditor: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowWidgetList(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Settings Dialog */}
+      <Dialog
+        open={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Widget Editor Settings</DialogTitle>
+        <DialogContent>
+          <Box sx={{ py: 2 }}>
+            <Typography variant="h6" gutterBottom>Interface Options</Typography>
+            
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showTooltips}
+                  onChange={(e) => setShowTooltips(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Show Component Tooltips"
+            />
+            <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mb: 3 }}>
+              Display helpful tooltips when hovering over components and controls. <br/>
+              <b>Recomendation:</b> Keep it enabled while you learn. Disable it when it's not necessary
+            </Typography>
+            
+            <Typography variant="h6" gutterBottom>Container Behavior</Typography>
+            
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={stayOpen}
+                  onChange={(e) => setStayOpen(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Stay in 'Add Component' Mode"
+            />
+            <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mb: 1 }}>
+              When enabled, you can add multiple components to a container without having to click the "+" button each time.<br/>
+              <b>Recomendation:</b> This makes it faster to build complex layouts. Only disable it if you usually only add one component inside layout containers
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowSettingsModal(false)} variant="outlined">Close</Button>
         </DialogActions>
       </Dialog>
     </Box>

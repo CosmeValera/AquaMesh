@@ -61,6 +61,9 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   
   // Tutorial modal state
   const [tutorialOpen, setTutorialOpen] = useState(false)
+  const [showTutorialOnStartup, setShowTutorialOnStartup] = useState(() => {
+    return !localStorage.getItem('aquamesh-tutorial-shown')
+  })
   
   const { topNavBarWidgets } = useTopNavBarWidgets()
   const { addComponent } = useLayout()
@@ -87,11 +90,10 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
     loadSavedDashboards()
     
     // Check if tutorial should be shown
-    const tutorialShown = localStorage.getItem('aquamesh-tutorial-shown')
-    if (!tutorialShown) {
+    if (showTutorialOnStartup) {
       setTutorialOpen(true)
     }
-  }, [])
+  }, [showTutorialOnStartup])
 
   const loadSavedDashboards = () => {
     try {
@@ -160,6 +162,11 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   // Open tutorial modal
   const handleOpenTutorial = () => {
     setTutorialOpen(true)
+  }
+  
+  // Toggle tutorial display on startup
+  const handleToggleTutorialStartup = () => {
+    setShowTutorialOnStartup(!showTutorialOnStartup)
   }
 
   return (
@@ -431,6 +438,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                 mx: 1
               }}
               data-tutorial-id="help-button"
+              title="Open tutorial"
             >
               <HelpOutlineIcon />
             </Button>
@@ -491,6 +499,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
       <TutorialModal 
         open={tutorialOpen}
         onClose={() => setTutorialOpen(false)}
+        onShowOnStartupToggle={handleToggleTutorialStartup}
       />
     </>
   )

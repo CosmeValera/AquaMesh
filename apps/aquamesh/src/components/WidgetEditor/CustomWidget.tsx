@@ -216,8 +216,8 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
             flexDirection: component.props.direction as 'row' | 'column' | 'row-reverse' | 'column-reverse' || 'row',
             justifyContent: component.props.justifyContent as string || 'flex-start',
             alignItems: component.props.alignItems as string || 'center',
-            flexWrap: component.props.wrap as 'nowrap' | 'wrap' | 'wrap-reverse' || 'nowrap',
-            gap: (component.props.spacing as number || 0) * 8,
+            flexWrap: component.props.wrap as 'nowrap' | 'wrap' | 'wrap-reverse' || 'wrap',
+            gap: (component.props.spacing as number || 2),
             width: '100%',
             mb: 1
           }}
@@ -237,7 +237,8 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
           sx={{ 
             display: 'grid',
             gridTemplateColumns: `repeat(${component.props.columns as number || 2}, 1fr)`,
-            gap: (component.props.spacing as number || 0) * 8,
+            gridTemplateRows: `repeat(${component.props.rows as number || 1}, auto)`,
+            gap: (component.props.spacing as number || 2),
             width: '100%',
             mb: 1
           }}

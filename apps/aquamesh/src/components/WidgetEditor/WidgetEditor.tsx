@@ -57,6 +57,21 @@ interface EditComponentDialogProps {
 // Types of components that can be added to the widget
 const COMPONENT_TYPES = [
   {
+    type: 'Label',
+    label: 'Text Label',
+    defaultProps: { text: 'Label Text' },
+  },
+  {
+    type: 'TextField',
+    label: 'Text Field',
+    defaultProps: { label: 'Text Field', placeholder: 'Enter text...', defaultValue: '' },
+  },
+  {
+    type: 'Button',
+    label: 'Button',
+    defaultProps: { text: 'Button', variant: 'contained', showToast: true, toastMessage: 'Button clicked!', toastSeverity: 'info' },
+  },
+  {
     type: 'SwitchEnable',
     label: 'Switch',
     defaultProps: { label: 'Switch', defaultChecked: false },
@@ -67,21 +82,6 @@ const COMPONENT_TYPES = [
     defaultProps: { legend: 'Field Set', collapsed: false },
   },
   {
-    type: 'Label',
-    label: 'Text Label',
-    defaultProps: { text: 'Label Text' },
-  },
-  {
-    type: 'Button',
-    label: 'Button',
-    defaultProps: { text: 'Button', variant: 'contained', showToast: true, toastMessage: 'Button clicked!', toastSeverity: 'info' },
-  },
-  {
-    type: 'TextField',
-    label: 'Text Field',
-    defaultProps: { label: 'Text Field', placeholder: 'Enter text...', defaultValue: '' },
-  },
-  {
     type: 'FlexBox',
     label: 'Flex Container',
     defaultProps: { 
@@ -89,7 +89,7 @@ const COMPONENT_TYPES = [
       justifyContent: 'flex-start', 
       alignItems: 'center', 
       spacing: 0,
-      wrap: 'nowrap'
+      wrap: 'wrap'
     },
   },
   {
@@ -97,7 +97,8 @@ const COMPONENT_TYPES = [
     label: 'Grid Container',
     defaultProps: { 
       columns: 2, 
-      spacing: 0
+      rows: 1,
+      spacing: 2
     },
   },
 ]
@@ -357,14 +358,14 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
             <FormControl fullWidth margin="normal">
               <InputLabel>Wrap</InputLabel>
               <Select
-                value={(editedProps.wrap as string) || 'nowrap'}
+                value={(editedProps.wrap as string) || 'wrap'}
                 label="Wrap"
                 onChange={(e) =>
                   setEditedProps({ ...editedProps, wrap: e.target.value })
                 }
               >
-                <MenuItem value="nowrap">No Wrap</MenuItem>
                 <MenuItem value="wrap">Wrap</MenuItem>
+                <MenuItem value="nowrap">No Wrap</MenuItem>
                 <MenuItem value="wrap-reverse">Wrap Reverse</MenuItem>
               </Select>
             </FormControl>
@@ -396,12 +397,23 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
               }
             />
             <TextField
+              label="Rows"
+              type="number"
+              fullWidth
+              margin="normal"
+              inputProps={{ min: 1, max: 12, step: 1 }}
+              value={(editedProps.rows as number) || 1}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, rows: Number(e.target.value) })
+              }
+            />
+            <TextField
               label="Spacing"
               type="number"
               fullWidth
               margin="normal"
               inputProps={{ min: 0, max: 10, step: 1 }}
-              value={(editedProps.spacing as number) || 0}
+              value={(editedProps.spacing as number) || 2}
               onChange={(e) =>
                 setEditedProps({ ...editedProps, spacing: Number(e.target.value) })
               }
@@ -589,7 +601,7 @@ const ComponentPreview: React.FC<{
               justifyContent: component.props.justifyContent as string || 'flex-start',
               alignItems: component.props.alignItems as string || 'center',
               flexWrap: component.props.wrap as 'nowrap' | 'wrap' | 'wrap-reverse' || 'nowrap',
-              gap: (component.props.spacing as number || 0),
+              gap: (component.props.spacing as number || 2),
               width: '100%',
               border: editMode ? '1px dashed #ccc' : 'none',
               p: 1,
@@ -625,7 +637,8 @@ const ComponentPreview: React.FC<{
             sx={{
               display: 'grid',
               gridTemplateColumns: `repeat(${component.props.columns as number || 2}, 1fr)`,
-              gap: (component.props.spacing as number || 0),
+              gridTemplateRows: `repeat(${component.props.rows as number || 1}, auto)`,
+              gap: (component.props.spacing as number || 2),
               width: '100%',
               border: editMode ? '1px dashed #ccc' : 'none',
               p: 1,
@@ -776,6 +789,7 @@ const WidgetEditor: React.FC = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [currentEditComponent, setCurrentEditComponent] =
     useState<ComponentData | null>(null)
+  const [stayOpen, setStayOpen] = useState<boolean>(true)
   const [addToParentId, setAddToParentId] = useState<string | null>(null)
   const dropAreaRef = useRef<HTMLDivElement>(null)
 
@@ -955,7 +969,7 @@ const WidgetEditor: React.FC = () => {
 
     setNotification({
       open: true,
-      message: `Select a component from the palette to add inside ${parentType}`,
+      message: `Select a component from the palette to add inside ${parentType}${stayOpen ? ' (Stay Open Mode)' : ''}`,
       severity: 'info',
     })
   }
@@ -995,7 +1009,16 @@ const WidgetEditor: React.FC = () => {
             ),
           }))
 
-          setAddToParentId(null)
+          // If stay open is disabled, clear the parent ID
+          if (!stayOpen) {
+            setAddToParentId(null)
+          } else {
+            // If stay open is enabled, keep the parent ID and scroll back to the palette
+            const paletteEl = document.querySelector('[data-component-palette]')
+            if (paletteEl) {
+              paletteEl.scrollIntoView({ behavior: 'smooth' })
+            }
+          }
           return
         }
       }
@@ -1184,18 +1207,31 @@ const WidgetEditor: React.FC = () => {
             }}
           >
             <Typography variant="subtitle2" gutterBottom>
-              {addToParentId ? 'Add component inside FieldSet' : 'Components'}
+              {addToParentId ? 'Add component inside' : 'Components'}
             </Typography>
             {addToParentId && (
-              <Button
-                variant="outlined"
-                size="small"
-                fullWidth
-                onClick={() => setAddToParentId(null)}
-                sx={{ mb: 2 }}
-              >
-                Cancel
-              </Button>
+              <>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  onClick={() => setAddToParentId(null)}
+                  sx={{ mb: 1 }}
+                >
+                  Cancel
+                </Button>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      size="small"
+                      checked={stayOpen}
+                      onChange={(e) => setStayOpen(e.target.checked)}
+                    />
+                  }
+                  label="Open Mode"
+                  sx={{ mb: 1, display: 'flex' }}
+                />
+              </>
             )}
             <Divider sx={{ mb: 2 }} />
 

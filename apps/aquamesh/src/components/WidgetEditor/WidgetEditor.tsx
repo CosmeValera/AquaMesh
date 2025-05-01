@@ -1155,17 +1155,18 @@ const WidgetEditor: React.FC = () => {
   }
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.paper' }}>
       {/* Header */}
       <Box
         sx={{
           p: 2,
-          borderBottom: '1px solid #e0e0e0',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
+          bgcolor: 'background.header',
         }}
       >
-        <Typography variant="h6" sx={{ flex: 1 }}>
+        <Typography variant="h6" sx={{ flex: 1, color: 'foreground.contrastPrimary' }}>
           Widget Editor
         </Typography>
         <Button
@@ -1175,26 +1176,27 @@ const WidgetEditor: React.FC = () => {
           onClick={handleSaveWidget}
           sx={{ mr: 1 }}
         >
-          Save Widget
+          SAVE WIDGET
         </Button>
         <Button
           variant="outlined"
           onClick={() => setEditMode(!editMode)}
-          sx={{ mr: 1 }}
+          sx={{ mr: 1, color: 'primary.main', borderColor: 'primary.main' }}
         >
-          {editMode ? 'Preview' : 'Edit'}
+          {editMode ? 'PREVIEW' : 'EDIT'}
         </Button>
         <Button
           variant="outlined"
           color={savedWidgets.length === 0 ? 'secondary' : 'primary'}
           onClick={() => setShowWidgetList(true)}
+          sx={{ color: 'primary.main', borderColor: 'primary.main' }}
         >
-          My Widgets
+          MY WIDGETS
         </Button>
       </Box>
 
       {/* Main content */}
-      <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', bgcolor: 'background.default' }}>
         {/* Component palette - only visible in edit mode */}
         {editMode && (
           <Box
@@ -1202,11 +1204,13 @@ const WidgetEditor: React.FC = () => {
             sx={{
               width: 200,
               p: 2,
-              borderRight: '1px solid #e0e0e0',
+              borderRight: '1px solid rgba(255, 255, 255, 0.1)',
               overflowY: 'auto',
+              bgcolor: 'background.panel',
+              color: 'foreground.contrastPrimary',
             }}
           >
-            <Typography variant="subtitle2" gutterBottom>
+            <Typography variant="subtitle2" gutterBottom sx={{ color: 'foreground.contrastPrimary', fontWeight: 'bold', mb: 2 }}>
               {addToParentId ? 'Add component inside' : 'Components'}
             </Typography>
             {addToParentId && (
@@ -1216,7 +1220,7 @@ const WidgetEditor: React.FC = () => {
                   size="small"
                   fullWidth
                   onClick={() => setAddToParentId(null)}
-                  sx={{ mb: 1 }}
+                  sx={{ mb: 1, color: 'primary.main', borderColor: 'primary.main' }}
                 >
                   Cancel
                 </Button>
@@ -1226,14 +1230,15 @@ const WidgetEditor: React.FC = () => {
                       size="small"
                       checked={stayOpen}
                       onChange={(e) => setStayOpen(e.target.checked)}
+                      color="primary"
                     />
                   }
                   label="Open Mode"
-                  sx={{ mb: 1, display: 'flex' }}
+                  sx={{ mb: 1, display: 'flex', color: 'foreground.contrastPrimary' }}
                 />
               </>
             )}
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 2, bgcolor: 'background.light' }} />
 
             {COMPONENT_TYPES.map((component) => (
               <ComponentPaletteItem
@@ -1254,6 +1259,7 @@ const WidgetEditor: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             overflowY: 'auto',
+            bgcolor: 'background.default',
           }}
         >
           {/* Widget name field */}
@@ -1267,10 +1273,29 @@ const WidgetEditor: React.FC = () => {
               margin="normal"
               variant="outlined"
               size="small"
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'primary.light',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'primary.main',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: 'foreground.contrastSecondary',
+                },
+                '& .MuiOutlinedInput-input': {
+                  color: 'foreground.contrastPrimary',
+                },
+              }}
             />
           ) : (
-            <Typography variant="body1" sx={{ mb: 2 }}>
+            <Typography variant="body1" sx={{ mb: 2, color: 'foreground.contrastPrimary' }}>
               <strong>Widget Name:</strong> {widgetData.name}
             </Typography>
           )}
@@ -1282,12 +1307,14 @@ const WidgetEditor: React.FC = () => {
               flex: 1,
               p: 2,
               backgroundColor: editMode
-                ? 'rgba(255, 255, 255, 0.04)'
-                : 'rgba(0, 0, 0, 0.04)',
-              border: editMode ? '2px dashed #ccc' : '1px solid #e0e0e0',
+                ? 'rgba(0, 188, 162, 0.05)'
+                : 'rgba(0, 188, 162, 0.02)',
+              border: editMode ? '2px dashed rgba(0, 188, 162, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: 1,
               minHeight: 200,
               overflowY: 'auto',
+              color: 'foreground.contrastPrimary',
+              boxShadow: 'none',
             }}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -1297,19 +1324,27 @@ const WidgetEditor: React.FC = () => {
                 sx={{
                   height: '100%',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                   flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  color: 'rgba(255, 255, 255, 0.4)',
+                  pt: 4,
+                  pb: 4,
                 }}
               >
-                <Typography color="text.secondary" align="center">
+                <Typography variant="body1" sx={{ mb: 1, textAlign: 'center' }}>
                   {editMode
-                    ? 'Drag and drop components here to create your widget'
-                    : 'This widget is empty. Switch to Edit mode to add components.'}
+                    ? 'Drag and drop components here'
+                    : 'No components added yet'}
                 </Typography>
+                {editMode && (
+                  <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.3)' }}>
+                    Use the components panel on the left to build your widget
+                  </Typography>
+                )}
               </Box>
             ) : (
-              <Box>{renderComponents(widgetData.components)}</Box>
+              renderComponents(widgetData.components)
             )}
           </Paper>
         </Box>

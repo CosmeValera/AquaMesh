@@ -34,14 +34,15 @@ class WidgetStorage {
     const newWidget: CustomWidget = {
       id: `widget-${Date.now()}`,
       name: widget.name,
-      components: widget.components,
+      components: widget.components && Array.isArray(widget.components) ? 
+        [...widget.components] : [], // Ensure we have a proper array by creating a copy
       createdAt: now,
       updatedAt: now
     }
     
     // Add to the list and save
     widgets.push(newWidget)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(widgets))
+    this.saveToLocalStorage(widgets)
     
     // Dispatch event to notify other components
     document.dispatchEvent(widgetStorageEvent)
@@ -64,11 +65,13 @@ class WidgetStorage {
     const updatedWidget = {
       ...widgets[index],
       ...updates,
+      // Ensure components is a proper array if it's being updated
+      ...(updates.components ? { components: [...updates.components] } : {}),
       updatedAt: new Date().toISOString()
     }
     
     widgets[index] = updatedWidget
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(widgets))
+    this.saveToLocalStorage(widgets)
     
     // Dispatch event to notify other components
     document.dispatchEvent(widgetStorageEvent)
@@ -87,12 +90,25 @@ class WidgetStorage {
       return false
     }
     
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newWidgets))
+    this.saveToLocalStorage(newWidgets)
     
     // Dispatch event to notify other components
     document.dispatchEvent(widgetStorageEvent)
     
     return true
+  }
+  
+  /**
+   * Save widgets to localStorage with proper JSON handling
+   */
+  private saveToLocalStorage(widgets: CustomWidget[]): void {
+    try {
+      const serialized = JSON.stringify(widgets)
+      localStorage.setItem(STORAGE_KEY, serialized)
+      console.log('Saved widgets to localStorage:', widgets)
+    } catch (error) {
+      console.error('Failed to save widgets to localStorage:', error)
+    }
   }
   
   /**
@@ -105,7 +121,21 @@ class WidgetStorage {
     }
     
     try {
-      return JSON.parse(stored)
+      const parsed = JSON.parse(stored)
+      // Validate the parsed data
+      if (!Array.isArray(parsed)) {
+        console.error('Stored widgets is not an array')
+        return []
+      }
+      
+      // Validate each widget has required properties
+      return parsed.map(widget => ({
+        id: widget.id || `widget-${Date.now()}`,
+        name: widget.name || 'Unnamed Widget',
+        components: Array.isArray(widget.components) ? widget.components : [],
+        createdAt: widget.createdAt || new Date().toISOString(),
+        updatedAt: widget.updatedAt || new Date().toISOString()
+      }))
     } catch (error) {
       console.error('Failed to parse stored widgets', error)
       return []
@@ -117,7 +147,17 @@ class WidgetStorage {
    */
   getWidgetById(id: string): CustomWidget | null {
     const widgets = this.getAllWidgets()
-    return widgets.find(w => w.id === id) || null
+    const widget = widgets.find(w => w.id === id)
+    
+    if (!widget) {
+      return null
+    }
+    
+    // Ensure components is a proper array
+    return {
+      ...widget,
+      components: Array.isArray(widget.components) ? widget.components : []
+    }
   }
   
   /**
@@ -138,7 +178,7 @@ class WidgetStorage {
         return false
       }
       
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(widgets))
+      this.saveToLocalStorage(widgets)
       return true
     } catch (error) {
       console.error('Failed to import widgets', error)

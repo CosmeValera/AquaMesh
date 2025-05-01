@@ -10,15 +10,19 @@ import WidgetEditor from '../components/WidgetEditor/WidgetEditor'
 import CustomWidget from '../components/WidgetEditor/CustomWidget'
 import WidgetStorage from '../components/WidgetEditor/WidgetStorage'
 
+// Define the ComponentData type
+interface ComponentData {
+  id: string
+  type: string
+  props: Record<string, unknown>
+  children?: ComponentData[]
+  parentId?: string
+}
+
 // Define the custom props type
 interface CustomWidgetProps {
   widgetId?: string
-  components?: Array<{
-    id: string
-    type: string
-    props: Record<string, unknown>
-    children?: any[]
-  }>
+  components?: ComponentData[]
 }
 
 export interface DynamicMicrofrontendProps {
@@ -31,6 +35,7 @@ export interface DynamicMicrofrontendProps {
 
 const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
   const [remote, setRemote] = useState<Item>()
+  const [widgetData, setWidgetData] = useState<{ components?: ComponentData[] }>({})
 
   const { topNavBarWidgets } = useTopNavBarWidgets()
 
@@ -58,16 +63,28 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
     }
   }, [topNavBarWidgets, props.component, props.name])
 
-  // Debug the props and components
+  // Load widget data from storage when needed
   useEffect(() => {
     if (props.component === 'CustomWidget') {
-      console.log('CustomWidget loaded with props:', props)
+      console.log('DynamicMicrofrontend: CustomWidget loaded with props:', JSON.stringify(props, null, 2))
       
       // Verify the widget exists in storage
       if (props.customProps && 'widgetId' in props.customProps) {
         const widgetId = props.customProps.widgetId as string
         const widget = WidgetStorage.getWidgetById(widgetId)
-        console.log('Widget from storage:', widget)
+        console.log('DynamicMicrofrontend: Widget from storage:', JSON.stringify(widget, null, 2))
+        
+        if (widget && Array.isArray(widget.components) && widget.components.length > 0) {
+          console.log('DynamicMicrofrontend: Setting widget components from storage')
+          setWidgetData({
+            components: widget.components
+          })
+        } else if (props.customProps && 'components' in props.customProps) {
+          console.log('DynamicMicrofrontend: Using components from customProps')
+          setWidgetData({
+            components: props.customProps.components as ComponentData[]
+          })
+        }
       }
     }
   }, [props])
@@ -78,7 +95,20 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
   }
   
   if (props.component === 'CustomWidget') {
-    return <CustomWidget customProps={props.customProps as CustomWidgetProps} />
+    // Create a merged props object with both the original customProps and our loaded components
+    const customWidgetProps: CustomWidgetProps = {
+      ...(props.customProps as CustomWidgetProps),
+      ...(widgetData.components && { components: widgetData.components })
+    }
+    
+    console.log('DynamicMicrofrontend: Rendering CustomWidget with props:', JSON.stringify(customWidgetProps, null, 2))
+    
+    return <CustomWidget 
+      widgetId={customWidgetProps.widgetId} 
+      components={customWidgetProps.components}
+      customProps={props.customProps as { widgetId?: string, components?: ComponentData[] }}
+      name={props.name}
+    />
   }
 
   return (

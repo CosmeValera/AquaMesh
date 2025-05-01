@@ -6,8 +6,12 @@ import {
   Switch,
   FormControlLabel,
   TextField,
-  Button
+  Button,
+  Alert,
+  Collapse
 } from '@mui/material'
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import WidgetStorage from './WidgetStorage'
 
 interface ComponentData {
@@ -32,6 +36,17 @@ interface CustomWidgetProps {
 const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propComponents, customProps, name }) => {
   const [widgetComponents, setWidgetComponents] = useState<ComponentData[]>([])
   const [widgetName, setWidgetName] = useState<string>('')
+  const [toastState, setToastState] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info',
+  })
+  // Track collapsed state for fieldsets
+  const [collapsedFieldsets, setCollapsedFieldsets] = useState<Record<string, boolean>>({})
   
   // Determine which components to use
   useEffect(() => {    
@@ -80,6 +95,28 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
     setWidgetComponents([])
   }, [widgetId, propComponents, customProps, name])
 
+  // Show toast message
+  const showToast = (message: string, severity: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    setToastState({
+      open: true,
+      message,
+      severity,
+    })
+    
+    // Auto hide after 3 seconds
+    setTimeout(() => {
+      setToastState(prev => ({ ...prev, open: false }))
+    }, 3000)
+  }
+
+  // Toggle fieldset collapsed state
+  const toggleFieldsetCollapse = (componentId: string) => {
+    setCollapsedFieldsets(prev => ({
+      ...prev,
+      [componentId]: !prev[componentId]
+    }))
+  }
+
   // Function to render any component type
   const renderComponent = (component: ComponentData) => {
     switch (component.type) {
@@ -92,7 +129,8 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
           />
         </Box>
       )
-    case 'FieldSet':
+    case 'FieldSet': {
+      const isCollapsed = collapsedFieldsets[component.id] ?? Boolean(component.props.collapsed)
       return (
         <Box 
           key={component.id} 
@@ -103,16 +141,36 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
             mb: 1
           }}
         >
-          <Typography variant="subtitle2">{component.props.legend as string}</Typography>
-          {component.children && component.children.length > 0 ? (
-            <Box sx={{ mt: 1 }}>
-              {component.children.map(renderComponent)}
-            </Box>
-          ) : (
-            <Typography variant="body2" color="text.secondary">No content</Typography>
-          )}
+          <Box
+            onClick={() => toggleFieldsetCollapse(component.id)}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              mb: 1
+            }}
+          >
+            {isCollapsed ? (
+              <KeyboardArrowDownIcon fontSize="small" />
+            ) : (
+              <KeyboardArrowUpIcon fontSize="small" />
+            )}
+            <Typography variant="subtitle2" sx={{ ml: 0.5 }}>
+              {component.props.legend as string}
+            </Typography>
+          </Box>
+          <Collapse in={!isCollapsed}>
+            {component.children && component.children.length > 0 ? (
+              <Box sx={{ mt: 1 }}>
+                {component.children.map(renderComponent)}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">No content</Typography>
+            )}
+          </Collapse>
         </Box>
       )
+    }
     case 'Label':
       return (
         <Box key={component.id} sx={{ mb: 1 }}>
@@ -125,6 +183,13 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
           <Button 
             variant={component.props.variant as 'contained' | 'outlined' | 'text' || 'contained'} 
             size="small"
+            onClick={() => {
+              if (component.props.showToast) {
+                const message = component.props.toastMessage as string || 'Button clicked!'
+                const severity = component.props.toastSeverity as 'success' | 'error' | 'info' | 'warning' || 'info'
+                showToast(message, severity)
+              }
+            }}
           >
             {component.props.text as string}
           </Button>
@@ -136,11 +201,55 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
           <TextField 
             label={component.props.label as string} 
             placeholder={component.props.placeholder as string}
+            defaultValue={component.props.defaultValue as string || ''}
             size="small"
             fullWidth
           />
         </Box>
       )
+    case 'FlexBox': {
+      return (
+        <Box 
+          key={component.id} 
+          sx={{ 
+            display: 'flex',
+            flexDirection: component.props.direction as 'row' | 'column' | 'row-reverse' | 'column-reverse' || 'row',
+            justifyContent: component.props.justifyContent as string || 'flex-start',
+            alignItems: component.props.alignItems as string || 'center',
+            flexWrap: component.props.wrap as 'nowrap' | 'wrap' | 'wrap-reverse' || 'nowrap',
+            gap: (component.props.spacing as number || 0) * 8,
+            width: '100%',
+            mb: 1
+          }}
+        >
+          {component.children && component.children.length > 0 ? (
+            component.children.map(renderComponent)
+          ) : (
+            <Typography variant="body2" color="text.secondary">Empty Flex Container</Typography>
+          )}
+        </Box>
+      )
+    }
+    case 'GridBox': {
+      return (
+        <Box 
+          key={component.id} 
+          sx={{ 
+            display: 'grid',
+            gridTemplateColumns: `repeat(${component.props.columns as number || 2}, 1fr)`,
+            gap: (component.props.spacing as number || 0) * 8,
+            width: '100%',
+            mb: 1
+          }}
+        >
+          {component.children && component.children.length > 0 ? (
+            component.children.map(renderComponent)
+          ) : (
+            <Typography variant="body2" color="text.secondary">Empty Grid Container</Typography>
+          )}
+        </Box>
+      )
+    }
     default:
       return (
         <Box key={component.id}>
@@ -178,11 +287,29 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
   }
 
   return (
-    <Paper sx={{ p: 2, height: '100%', overflow: 'auto' }}>
+    <Paper sx={{ p: 2, height: '100%', overflow: 'auto', position: 'relative' }}>
       {widgetName && (
         <Typography variant="subtitle1" sx={{ mb: 2 }}>{widgetName}</Typography>
       )}
       {widgetComponents.map(renderComponent)}
+      
+      {/* Toast notification */}
+      {toastState.open && (
+        <Alert 
+          severity={toastState.severity} 
+          sx={{ 
+            position: 'absolute', 
+            bottom: 16, 
+            right: 16, 
+            zIndex: 9999,
+            boxShadow: 3,
+            maxWidth: 400
+          }}
+          onClose={() => setToastState(prev => ({ ...prev, open: false }))}
+        >
+          {toastState.message}
+        </Alert>
+      )}
     </Paper>
   )
 }

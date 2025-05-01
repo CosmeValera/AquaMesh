@@ -64,7 +64,7 @@ const COMPONENT_TYPES = [
   {
     type: 'FieldSet',
     label: 'Field Set',
-    defaultProps: { legend: 'Field Set' },
+    defaultProps: { legend: 'Field Set', collapsed: false },
   },
   {
     type: 'Label',
@@ -74,12 +74,31 @@ const COMPONENT_TYPES = [
   {
     type: 'Button',
     label: 'Button',
-    defaultProps: { text: 'Button', variant: 'contained' },
+    defaultProps: { text: 'Button', variant: 'contained', showToast: true, toastMessage: 'Button clicked!', toastSeverity: 'info' },
   },
   {
     type: 'TextField',
     label: 'Text Field',
-    defaultProps: { label: 'Text Field', placeholder: 'Enter text...' },
+    defaultProps: { label: 'Text Field', placeholder: 'Enter text...', defaultValue: '' },
+  },
+  {
+    type: 'FlexBox',
+    label: 'Flex Container',
+    defaultProps: { 
+      direction: 'row', 
+      justifyContent: 'flex-start', 
+      alignItems: 'center', 
+      spacing: 0,
+      wrap: 'nowrap'
+    },
+  },
+  {
+    type: 'GridBox',
+    label: 'Grid Container',
+    defaultProps: { 
+      columns: 2, 
+      spacing: 0
+    },
   },
 ]
 
@@ -144,15 +163,31 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
         )
       case 'FieldSet':
         return (
-          <TextField
-            label="Legend"
-            fullWidth
-            margin="normal"
-            value={(editedProps.legend as string) || ''}
-            onChange={(e) =>
-              setEditedProps({ ...editedProps, legend: e.target.value })
-            }
-          />
+          <>
+            <TextField
+              label="Legend"
+              fullWidth
+              margin="normal"
+              value={(editedProps.legend as string) || ''}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, legend: e.target.value })
+              }
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(editedProps.collapsed)}
+                  onChange={(e) =>
+                    setEditedProps({
+                      ...editedProps,
+                      collapsed: e.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Default Collapsed"
+            />
+          </>
         )
       case 'Label':
         return (
@@ -192,6 +227,48 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
                 <MenuItem value="text">Text</MenuItem>
               </Select>
             </FormControl>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(editedProps.showToast)}
+                  onChange={(e) =>
+                    setEditedProps({
+                      ...editedProps,
+                      showToast: e.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Show Toast on Click"
+            />
+            {editedProps.showToast && (
+              <>
+                <TextField
+                  label="Toast Message"
+                  fullWidth
+                  margin="normal"
+                  value={(editedProps.toastMessage as string) || ''}
+                  onChange={(e) =>
+                    setEditedProps({ ...editedProps, toastMessage: e.target.value })
+                  }
+                />
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>Toast Severity</InputLabel>
+                  <Select
+                    value={(editedProps.toastSeverity as string) || 'info'}
+                    label="Toast Severity"
+                    onChange={(e) =>
+                      setEditedProps({ ...editedProps, toastSeverity: e.target.value })
+                    }
+                  >
+                    <MenuItem value="info">Info</MenuItem>
+                    <MenuItem value="success">Success</MenuItem>
+                    <MenuItem value="warning">Warning</MenuItem>
+                    <MenuItem value="error">Error</MenuItem>
+                  </Select>
+                </FormControl>
+              </>
+            )}
           </>
         )
       case 'TextField':
@@ -213,6 +290,120 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
               value={(editedProps.placeholder as string) || ''}
               onChange={(e) =>
                 setEditedProps({ ...editedProps, placeholder: e.target.value })
+              }
+            />
+            <TextField
+              label="Default Value"
+              fullWidth
+              margin="normal"
+              value={(editedProps.defaultValue as string) || ''}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, defaultValue: e.target.value })
+              }
+            />
+          </>
+        )
+      case 'FlexBox':
+        return (
+          <>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Direction</InputLabel>
+              <Select
+                value={(editedProps.direction as string) || 'row'}
+                label="Direction"
+                onChange={(e) =>
+                  setEditedProps({ ...editedProps, direction: e.target.value })
+                }
+              >
+                <MenuItem value="row">Row</MenuItem>
+                <MenuItem value="column">Column</MenuItem>
+                <MenuItem value="row-reverse">Row Reverse</MenuItem>
+                <MenuItem value="column-reverse">Column Reverse</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Justify Content</InputLabel>
+              <Select
+                value={(editedProps.justifyContent as string) || 'flex-start'}
+                label="Justify Content"
+                onChange={(e) =>
+                  setEditedProps({ ...editedProps, justifyContent: e.target.value })
+                }
+              >
+                <MenuItem value="flex-start">Start</MenuItem>
+                <MenuItem value="center">Center</MenuItem>
+                <MenuItem value="flex-end">End</MenuItem>
+                <MenuItem value="space-between">Space Between</MenuItem>
+                <MenuItem value="space-around">Space Around</MenuItem>
+                <MenuItem value="space-evenly">Space Evenly</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Align Items</InputLabel>
+              <Select
+                value={(editedProps.alignItems as string) || 'center'}
+                label="Align Items"
+                onChange={(e) =>
+                  setEditedProps({ ...editedProps, alignItems: e.target.value })
+                }
+              >
+                <MenuItem value="flex-start">Start</MenuItem>
+                <MenuItem value="center">Center</MenuItem>
+                <MenuItem value="flex-end">End</MenuItem>
+                <MenuItem value="stretch">Stretch</MenuItem>
+                <MenuItem value="baseline">Baseline</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Wrap</InputLabel>
+              <Select
+                value={(editedProps.wrap as string) || 'nowrap'}
+                label="Wrap"
+                onChange={(e) =>
+                  setEditedProps({ ...editedProps, wrap: e.target.value })
+                }
+              >
+                <MenuItem value="nowrap">No Wrap</MenuItem>
+                <MenuItem value="wrap">Wrap</MenuItem>
+                <MenuItem value="wrap-reverse">Wrap Reverse</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Spacing"
+              type="number"
+              fullWidth
+              margin="normal"
+              inputProps={{ min: 0, max: 10, step: 1 }}
+              value={(editedProps.spacing as number) || 0}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, spacing: Number(e.target.value) })
+              }
+            />
+          </>
+        )
+      case 'GridBox':
+        return (
+          <>
+            <TextField
+              label="Columns"
+              type="number"
+              fullWidth
+              margin="normal"
+              inputProps={{ min: 1, max: 12, step: 1 }}
+              value={(editedProps.columns as number) || 2}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, columns: Number(e.target.value) })
+              }
+            />
+            <TextField
+              label="Spacing"
+              type="number"
+              fullWidth
+              margin="normal"
+              inputProps={{ min: 0, max: 10, step: 1 }}
+              value={(editedProps.spacing as number) || 0}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, spacing: Number(e.target.value) })
               }
             />
           </>
@@ -274,6 +465,9 @@ const ComponentPreview: React.FC<{
           />
         )
       case 'FieldSet':
+        const [collapsed, setCollapsed] = useState<boolean>(
+          Boolean(component.props.collapsed)
+        )
         return (
           <Box
             sx={{
@@ -283,31 +477,50 @@ const ComponentPreview: React.FC<{
               ...(editMode ? {} : { borderStyle: 'solid' }),
             }}
           >
-            <Typography variant="subtitle2">
-              {component.props.legend as string}
-            </Typography>
-            {component.children && component.children.length > 0 ? (
-              <Box sx={{ ml: editMode ? 2 : 0 }}>
-                {component.children.map((childComponent, index) => (
-                  <ComponentPreview
-                    key={childComponent.id}
-                    component={childComponent}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onMoveUp={onMoveUp}
-                    onMoveDown={onMoveDown}
-                    onAddInside={onAddInside}
-                    isFirst={index === 0}
-                    isLast={index === (component.children?.length || 0) - 1}
-                    level={editMode ? level + 1 : 0}
-                    editMode={editMode}
-                  />
-                ))}
-              </Box>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                Field Set Content
+            <Box
+              onClick={() => setCollapsed(!collapsed)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+                mb: 1
+              }}
+            >
+              {collapsed ? (
+                <KeyboardArrowDownIcon fontSize="small" />
+              ) : (
+                <KeyboardArrowUpIcon fontSize="small" />
+              )}
+              <Typography variant="subtitle2" sx={{ ml: 0.5 }}>
+                {component.props.legend as string}
               </Typography>
+            </Box>
+            {!collapsed && (
+              <Box sx={{ ml: editMode ? 2 : 0 }}>
+                {component.children && component.children.length > 0 ? (
+                  <Box sx={{ ml: editMode ? 2 : 0 }}>
+                    {component.children.map((childComponent, index) => (
+                      <ComponentPreview
+                        key={childComponent.id}
+                        component={childComponent}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        onMoveUp={onMoveUp}
+                        onMoveDown={onMoveDown}
+                        onAddInside={onAddInside}
+                        isFirst={index === 0}
+                        isLast={index === (component.children?.length || 0) - 1}
+                        level={editMode ? level + 1 : 0}
+                        editMode={editMode}
+                      />
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Field Set Content
+                  </Typography>
+                )}
+              </Box>
             )}
           </Box>
         )
@@ -318,25 +531,129 @@ const ComponentPreview: React.FC<{
           </Typography>
         )
       case 'Button':
+        const [showToastMsg, setShowToastMsg] = useState<boolean>(false)
+        const toastMessage = component.props.toastMessage as string || 'Button clicked!'
+        const toastSeverity = component.props.toastSeverity as 'info' | 'success' | 'warning' | 'error' || 'info'
+        
         return (
-          <Button
-            variant={
-              (component.props.variant as 'contained' | 'outlined' | 'text') ||
-              'contained'
-            }
-            size="small"
-          >
-            {component.props.text as string}
-          </Button>
+          <>
+            <Button
+              variant={
+                (component.props.variant as 'contained' | 'outlined' | 'text') ||
+                'contained'
+              }
+              size="small"
+              onClick={() => {
+                if (component.props.showToast) {
+                  setShowToastMsg(true)
+                  setTimeout(() => setShowToastMsg(false), 3000)
+                }
+              }}
+            >
+              {component.props.text as string}
+            </Button>
+            {showToastMsg && component.props.showToast && (
+              <Alert 
+                severity={toastSeverity}
+                sx={{ 
+                  position: 'fixed', 
+                  bottom: 16, 
+                  right: 16, 
+                  zIndex: 9999,
+                  boxShadow: 3,
+                  maxWidth: 400
+                }}
+                onClose={() => setShowToastMsg(false)}
+              >
+                {toastMessage}
+              </Alert>
+            )}
+          </>
         )
       case 'TextField':
         return (
           <TextField
             label={component.props.label as string}
             placeholder={component.props.placeholder as string}
+            defaultValue={component.props.defaultValue as string || ''}
             size="small"
             fullWidth
           />
+        )
+      case 'FlexBox':
+        return (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: component.props.direction as 'row' | 'column' | 'row-reverse' | 'column-reverse' || 'row',
+              justifyContent: component.props.justifyContent as string || 'flex-start',
+              alignItems: component.props.alignItems as string || 'center',
+              flexWrap: component.props.wrap as 'nowrap' | 'wrap' | 'wrap-reverse' || 'nowrap',
+              gap: (component.props.spacing as number || 0),
+              width: '100%',
+              border: editMode ? '1px dashed #ccc' : 'none',
+              p: 1,
+              boxSizing: 'border-box'
+            }}
+          >
+            {component.children && component.children.length > 0 ? (
+              component.children.map((childComponent, index) => (
+                <ComponentPreview
+                  key={childComponent.id}
+                  component={childComponent}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onMoveUp={onMoveUp}
+                  onMoveDown={onMoveDown}
+                  onAddInside={onAddInside}
+                  isFirst={index === 0}
+                  isLast={index === (component.children?.length || 0) - 1}
+                  level={editMode ? level + 1 : 0}
+                  editMode={editMode}
+                />
+              ))
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Flex Container (Add components inside)
+              </Typography>
+            )}
+          </Box>
+        )
+      case 'GridBox':
+        return (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${component.props.columns as number || 2}, 1fr)`,
+              gap: (component.props.spacing as number || 0),
+              width: '100%',
+              border: editMode ? '1px dashed #ccc' : 'none',
+              p: 1,
+              boxSizing: 'border-box'
+            }}
+          >
+            {component.children && component.children.length > 0 ? (
+              component.children.map((childComponent, index) => (
+                <ComponentPreview
+                  key={childComponent.id}
+                  component={childComponent}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onMoveUp={onMoveUp}
+                  onMoveDown={onMoveDown}
+                  onAddInside={onAddInside}
+                  isFirst={index === 0}
+                  isLast={index === (component.children?.length || 0) - 1}
+                  level={editMode ? level + 1 : 0}
+                  editMode={editMode}
+                />
+              ))
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Grid Container (Add components inside)
+              </Typography>
+            )}
+          </Box>
         )
       default:
         return <Typography>Unknown component type</Typography>
@@ -368,7 +685,7 @@ const ComponentPreview: React.FC<{
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
           {component.type}
         </Typography>
-        {component.type === 'FieldSet' && (
+        {['FieldSet', 'FlexBox', 'GridBox'].includes(component.type) && (
           <IconButton
             size="small"
             color="primary"
@@ -622,7 +939,28 @@ const WidgetEditor: React.FC = () => {
     return components
   }
 
-  // Handle drop onto the widget container or a fieldset
+  // Handler for adding components inside a fieldset
+  const handleAddInsideFieldset = (parentId: string) => {
+    setAddToParentId(parentId)
+
+    // Scroll to component palette to make it obvious what to do next
+    const paletteEl = document.querySelector('[data-component-palette]')
+    if (paletteEl) {
+      paletteEl.scrollIntoView({ behavior: 'smooth' })
+    }
+
+    // Get parent component type
+    const parent = findComponentById(parentId, widgetData.components)
+    const parentType = parent ? parent.type : ''
+
+    setNotification({
+      open: true,
+      message: `Select a component from the palette to add inside ${parentType}`,
+      severity: 'info',
+    })
+  }
+
+  // Handle drop onto the widget container or a container component
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
 
@@ -638,11 +976,11 @@ const WidgetEditor: React.FC = () => {
         props: { ...componentConfig.defaultProps },
       }
 
-      // If we're adding to a fieldset
+      // If we're adding to a container component
       if (addToParentId) {
         const parent = findComponentById(addToParentId, widgetData.components)
 
-        if (parent && parent.type === 'FieldSet') {
+        if (parent && ['FieldSet', 'FlexBox', 'GridBox'].includes(parent.type)) {
           const updatedParent = {
             ...parent,
             children: [...(parent.children || []), newComponent],
@@ -710,23 +1048,6 @@ const WidgetEditor: React.FC = () => {
       ...prev,
       components: moveComponent(id, direction, prev.components),
     }))
-  }
-
-  // Handler for adding components inside a fieldset
-  const handleAddInsideFieldset = (parentId: string) => {
-    setAddToParentId(parentId)
-
-    // Scroll to component palette to make it obvious what to do next
-    const paletteEl = document.querySelector('[data-component-palette]')
-    if (paletteEl) {
-      paletteEl.scrollIntoView({ behavior: 'smooth' })
-    }
-
-    setNotification({
-      open: true,
-      message: 'Select a component from the palette to add inside',
-      severity: 'info',
-    })
   }
 
   // Handler for saving the widget

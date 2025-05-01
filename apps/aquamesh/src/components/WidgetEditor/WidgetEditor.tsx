@@ -23,14 +23,22 @@ import {
   Select,
   InputLabel,
   FormControl,
+  Tooltip,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import SaveIcon from '@mui/icons-material/Save'
 import EditIcon from '@mui/icons-material/Edit'
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import TextFieldsIcon from '@mui/icons-material/TextFields'
+import InputIcon from '@mui/icons-material/Input'
+import SmartButtonIcon from '@mui/icons-material/SmartButton'
+import ToggleOnIcon from '@mui/icons-material/ToggleOn'
+import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
+import FlexibleIcon from '@mui/icons-material/Dashboard'
+import GridViewIcon from '@mui/icons-material/GridView'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import WidgetStorage, { CustomWidget } from './WidgetStorage'
 
 // Component types for the widget editor
@@ -56,30 +64,48 @@ interface EditComponentDialogProps {
 
 // Types of components that can be added to the widget
 const COMPONENT_TYPES = [
+  // UI Components
   {
     type: 'Label',
     label: 'Text Label',
     defaultProps: { text: 'Label Text' },
+    category: 'UI Components',
+    icon: TextFieldsIcon,
+    tooltip: 'Adds a static text label to display information'
   },
   {
     type: 'TextField',
     label: 'Text Field',
     defaultProps: { label: 'Text Field', placeholder: 'Enter text...', defaultValue: '' },
+    category: 'UI Components',
+    icon: InputIcon,
+    tooltip: 'Adds an input field for user text entry'
   },
   {
     type: 'Button',
     label: 'Button',
     defaultProps: { text: 'Button', variant: 'contained', showToast: true, toastMessage: 'Button clicked!', toastSeverity: 'info' },
+    category: 'UI Components',
+    icon: SmartButtonIcon,
+    tooltip: 'Adds a clickable button that can trigger actions like showing notifications'
   },
   {
     type: 'SwitchEnable',
     label: 'Switch',
     defaultProps: { label: 'Switch', defaultChecked: false },
+    category: 'UI Components',
+    icon: ToggleOnIcon,
+    tooltip: 'Adds an on/off toggle switch for boolean settings'
   },
+  
+  // Layout Containers
   {
     type: 'FieldSet',
     label: 'Field Set',
     defaultProps: { legend: 'Field Set', collapsed: false },
+    category: 'Layout Containers',
+    icon: ViewQuiltIcon,
+    tooltip: 'Creates a collapsible container that can be toggled open/closed to organize related components'
   },
   {
     type: 'FlexBox',
@@ -91,6 +117,9 @@ const COMPONENT_TYPES = [
       spacing: 0,
       wrap: 'wrap'
     },
+    category: 'Layout Containers',
+    icon: FlexibleIcon,
+    tooltip: 'Creates a flexible layout container using CSS Flexbox for responsive positioning of components'
   },
   {
     type: 'GridBox',
@@ -100,6 +129,9 @@ const COMPONENT_TYPES = [
       rows: 1,
       spacing: 2
     },
+    category: 'Layout Containers',
+    icon: GridViewIcon,
+    tooltip: 'Creates a grid layout container for organizing components in rows and columns'
   },
 ]
 
@@ -694,81 +726,155 @@ const ComponentPreview: React.FC<{
       }}
     >
       <Box display="flex" alignItems="center" sx={{ mb: 1 }}>
-        <DragIndicatorIcon sx={{ mr: 1, color: 'text.secondary' }} />
+        <Tooltip title={component.type}>
+          <Box sx={{ mr: 1, color: 'primary.main', display: 'flex' }}>
+            {getComponentIcon(component.type)}
+          </Box>
+        </Tooltip>
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
           {component.type}
         </Typography>
         {['FieldSet', 'FlexBox', 'GridBox'].includes(component.type) && (
+          <Tooltip title="Add component inside">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => onAddInside(component.id)}
+            >
+              <AddCircleOutlineIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+        <Tooltip title="Move up">
+          <span>
+            <IconButton
+              size="small"
+              disabled={isFirst}
+              onClick={() => onMoveUp(component.id)}
+              sx={{
+                color: 'primary.main',
+                bgcolor: isFirst ? undefined : 'rgba(0, 0, 0, 0.04)',
+                '&:hover': {
+                  bgcolor: 'rgba(0, 0, 0, 0.1)',
+                },
+              }}
+            >
+              <KeyboardArrowUpIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title="Move down">
+          <span>
+            <IconButton
+              size="small"
+              disabled={isLast}
+              onClick={() => onMoveDown(component.id)}
+              sx={{
+                color: 'primary.main',
+                bgcolor: isLast ? undefined : 'rgba(0, 0, 0, 0.04)',
+                '&:hover': {
+                  bgcolor: 'rgba(0, 0, 0, 0.1)',
+                },
+              }}
+            >
+              <KeyboardArrowDownIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title="Edit properties">
           <IconButton
             size="small"
-            color="primary"
-            onClick={() => onAddInside(component.id)}
-            title="Add component inside"
+            onClick={() => onEdit(component.id)}
+            sx={{
+              color: 'primary.main',
+              bgcolor: 'rgba(0, 0, 0, 0.04)',
+              '&:hover': {
+                bgcolor: 'rgba(0, 0, 0, 0.1)',
+              },
+            }}
           >
-            <AddCircleOutlineIcon fontSize="small" />
+            <EditIcon fontSize="small" />
           </IconButton>
-        )}
-        <IconButton
-          size="small"
-          disabled={isFirst}
-          onClick={() => onMoveUp(component.id)}
-          title="Move up"
-        >
-          <KeyboardArrowUpIcon fontSize="small" />
-        </IconButton>
-        <IconButton
-          size="small"
-          disabled={isLast}
-          onClick={() => onMoveDown(component.id)}
-          title="Move down"
-        >
-          <KeyboardArrowDownIcon fontSize="small" />
-        </IconButton>
-        <IconButton
-          size="small"
-          onClick={() => onEdit(component.id)}
-          title="Edit"
-        >
-          <EditIcon fontSize="small" />
-        </IconButton>
-        <IconButton
-          size="small"
-          color="error"
-          onClick={() => onDelete(component.id)}
-          title="Delete"
-        >
-          <DeleteIcon fontSize="small" />
-        </IconButton>
+        </Tooltip>
+        <Tooltip title="Delete component">
+          <IconButton
+            size="small"
+            color="error"
+            onClick={() => onDelete(component.id)}
+            sx={{
+              bgcolor: 'rgba(211, 47, 47, 0.04)',
+              '&:hover': {
+                bgcolor: 'rgba(211, 47, 47, 0.08)',
+              },
+            }}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Box>
       <Box sx={{ pl: 2 }}>{renderComponent()}</Box>
     </Box>
   )
 }
 
+// Get component icon based on type
+const getComponentIcon = (type: string) => {
+  const component = COMPONENT_TYPES.find(c => c.type === type);
+  if (component && component.icon) {
+    const IconComponent = component.icon;
+    return <IconComponent fontSize="small" />;
+  }
+  return <InfoOutlinedIcon fontSize="small" />;
+};
+
+// Group components by category
+const getComponentsByCategory = () => {
+  const categories: Record<string, typeof COMPONENT_TYPES> = {};
+  
+  COMPONENT_TYPES.forEach(component => {
+    const category = component.category || 'Other';
+    if (!categories[category]) {
+      categories[category] = [];
+    }
+    categories[category].push(component);
+  });
+  
+  return categories;
+};
+
 // Component palette item that can be dragged
 const ComponentPaletteItem: React.FC<{
   type: string
   label: string
+  tooltip: string
+  icon: React.ElementType
   onDragStart: (e: React.DragEvent, type: string) => void
-}> = ({ type, label, onDragStart }) => {
+}> = ({ type, label, tooltip, icon: Icon, onDragStart }) => {
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 1,
-        mb: 1,
-        cursor: 'grab',
-        border: '1px solid #e0e0e0',
-        '&:hover': {
-          backgroundColor: 'rgba(0, 0, 0, 0.04)',
-          borderColor: 'primary.light',
-        },
-      }}
-      draggable
-      onDragStart={(e) => onDragStart(e, type)}
-    >
-      <Typography variant="body2">{label}</Typography>
-    </Paper>
+    <Tooltip title={tooltip} placement="right" arrow>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 1,
+          mb: 1,
+          cursor: 'grab',
+          border: '1px solid #e0e0e0',
+          '&:hover': {
+            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+            borderColor: 'primary.light',
+          },
+          display: 'flex',
+          alignItems: 'center',
+        }}
+        draggable
+        onDragStart={(e) => onDragStart(e, type)}
+      >
+        <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
+          <Icon fontSize="small" />
+        </Box>
+        <Typography variant="body2">{label}</Typography>
+      </Paper>
+    </Tooltip>
   )
 }
 
@@ -1255,13 +1361,33 @@ const WidgetEditor: React.FC = () => {
             )}
             <Divider sx={{ mb: 2, bgcolor: 'background.light' }} />
 
-            {COMPONENT_TYPES.map((component) => (
-              <ComponentPaletteItem
-                key={component.type}
-                type={component.type}
-                label={component.label}
-                onDragStart={handleDragStart}
-              />
+            {/* Group components by category */}
+            {Object.entries(getComponentsByCategory()).map(([category, components]) => (
+              <Box key={category} sx={{ mb: 3 }}>
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ 
+                    mb: 1, 
+                    color: 'primary.main', 
+                    fontWeight: 'bold',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                    pb: 0.5
+                  }}
+                >
+                  {category}
+                </Typography>
+                
+                {components.map((component) => (
+                  <ComponentPaletteItem
+                    key={component.type}
+                    type={component.type}
+                    label={component.label}
+                    tooltip={component.tooltip || ''}
+                    icon={component.icon || InfoOutlinedIcon}
+                    onDragStart={handleDragStart}
+                  />
+                ))}
+              </Box>
             ))}
           </Box>
         )}

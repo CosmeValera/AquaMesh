@@ -382,33 +382,6 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                 }
               }}
             >
-              {userData.id === 'admin' && userData.role === 'ADMIN_ROLE' && (
-                <MenuItem 
-                  onClick={() => {
-                    ensureViewAndAddComponent({
-                      id: `widget-editor-${Date.now()}`,
-                      name: "Widget Editor",
-                      component: "WidgetEditor",
-                    })
-                    handleClose()
-                  }}
-                  sx={{ 
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    color: 'primary.main',
-                    fontWeight: 'bold',
-                    p: 2
-                  }}
-                  data-tutorial-id="create-widget-option"
-                >
-                  <ListItemIcon>
-                    <CreateIcon fontSize="small" color="primary" />
-                  </ListItemIcon>
-                  Create Custom Widget
-                </MenuItem>
-              )}
-              
               {/* Predefined Widgets Section */}
               <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
                 Predefined Widgets
@@ -435,46 +408,74 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               ))}
               
               {/* Custom Widgets Section */}
-              {topNavBarWidgets.filter((widget: { name: string }) => widget.name.includes('Custom')) > 0 && (<>
-                <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
-                  Custom Widgets
-                </Typography>
-                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-                {topNavBarWidgets.filter((widget: { name: string }) => widget.name.includes('Custom')).map((topNavBarWidget: { name: string; items: Array<{ name: string; component: string; customProps?: { widgetId?: string } }> }) => (
-                  <Box key={topNavBarWidget.name}>
-                    {topNavBarWidget.items.map((item: { name: string; component: string; customProps?: { widgetId?: string } }) => (
-                      <MenuItem 
-                        key={item.name} 
-                        onClick={() => {
-                          ensureViewAndAddComponent({
-                            id: `panel-${Date.now()}`,
-                            ...item,
-                          })
-                          handleClose()
-                        }}
-                        sx={{ 
-                          p: 1.5,
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          alignItems: 'center'
-                        }}
-                      >
-                        {item.name}
-                        {item.component === 'CustomWidget' && item.customProps?.widgetId && (
-                          <ListItemIcon sx={{ ml: 2, minWidth: 'auto' }}>
-                            <DeleteIcon 
-                              fontSize="small" 
-                              onClick={(e) => item.customProps && item.customProps.widgetId && handleDeleteWidget(item.customProps.widgetId, e)}
-                              sx={{ color: 'error.main' }}
-                            />
-                          </ListItemIcon>
-                        )}
-                      </MenuItem>
-                    ))}
-                  </Box>
-                ))}
-              </>)}
+              {topNavBarWidgets.filter((widget: { name: string }) => widget.name.includes('Custom')).length > 0 && (
+                <>
+                  <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
+                    Custom Widgets
+                  </Typography>
+                  <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  {topNavBarWidgets.filter((widget: { name: string }) => widget.name.includes('Custom')).map((topNavBarWidget: { name: string; items: Array<{ name: string; component: string; customProps?: { widgetId?: string } }> }) => (
+                    <Box key={topNavBarWidget.name}>
+                      {topNavBarWidget.items.map((item: { name: string; component: string; customProps?: { widgetId?: string } }) => (
+                        <MenuItem 
+                          key={item.name} 
+                          onClick={() => {
+                            ensureViewAndAddComponent({
+                              id: `panel-${Date.now()}`,
+                              ...item,
+                            })
+                            handleClose()
+                          }}
+                          sx={{ 
+                            p: 1.5,
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}
+                        >
+                          {item.name}
+                          {item.component === 'CustomWidget' && item.customProps?.widgetId && (
+                            <ListItemIcon sx={{ ml: 2, minWidth: 'auto' }}>
+                              <DeleteIcon 
+                                fontSize="small" 
+                                onClick={(e) => item.customProps && item.customProps.widgetId && handleDeleteWidget(item.customProps.widgetId, e)}
+                                sx={{ color: 'error.main' }}
+                              />
+                            </ListItemIcon>
+                          )}
+                        </MenuItem>
+                      ))}
+                    </Box>
+                  ))}
+                </>
+              )}
             </Menu>
+
+            {/* Create Custom Widget Button - New Top Level Button */}
+            {userData.id === 'admin' && userData.role === 'ADMIN_ROLE' && (
+              <Button
+                onClick={() => {
+                  ensureViewAndAddComponent({
+                    id: `widget-editor-${Date.now()}`,
+                    name: "Widget Editor",
+                    component: "WidgetEditor",
+                  })
+                  handleClose()
+                }}
+                sx={{ 
+                  color: 'foreground.contrastPrimary', 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  minWidth: isTablet ? '40px' : 'auto',
+                  mx: isTablet ? 0.5 : 1,
+                  px: isTablet ? 1 : 2,
+                }}
+                startIcon={<CreateIcon />}
+                data-tutorial-id="create-widget-button"
+              >
+                {!isTablet ? 'Create Widget' : 'C.W.'}
+              </Button>
+            )}
           </Box>
 
           {/* Right Side Elements */}

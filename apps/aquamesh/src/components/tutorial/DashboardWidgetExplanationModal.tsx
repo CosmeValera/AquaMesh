@@ -69,11 +69,11 @@ const DashboardWidgetExplanationModal: React.FC<DashboardWidgetExplanationModalP
               <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
                 <Box display="flex" alignItems="center" mb={2}>
                   <DashboardIcon color="primary" sx={{ fontSize: 32, mr: 2 }} />
-                  <Typography variant="h5" fontWeight="bold" color="primary.main">
+                  <Typography variant="h5" fontWeight="bold" color="#f9f9f9">
                     Dashboards
                   </Typography>
                 </Box>
-                <Typography variant="body1" paragraph>
+                <Typography variant="body1" paragraph color="#f9f9f9">
                   Dashboards are container layouts that organize multiple widgets into a cohesive view. 
                   Think of them as the canvas where you arrange your widgets.
                 </Typography>
@@ -84,21 +84,21 @@ const DashboardWidgetExplanationModal: React.FC<DashboardWidgetExplanationModalP
                     style={{ maxWidth: '100%', border: '1px solid #eee', borderRadius: '4px' }}
                   />
                 </Box>
-                <Typography variant="body1" paragraph sx={{marginTop: '1rem'}}>
+                <Typography variant="body1" paragraph sx={{marginTop: '1rem'}} color="#f9f9f9">
                   In regards to dashboards you can:
                 </Typography>
-                <Box component="ul" sx={{ pl: 2 }}>
-                  <Box component="li" sx={{ mb: 1 }}>
+                <Box component="ul" sx={{ pl: 2 }} >
+                  <Box component="li" sx={{ mb: 1 }} color="#f9f9f9">
                     <Typography variant="body1">
                       <strong>Use predefined dashboards</strong> with preset layouts
                     </Typography>
                   </Box>
-                  <Box component="li" sx={{ mb: 1 }}>
+                  <Box component="li" sx={{ mb: 1 }} color="#f9f9f9">
                     <Typography variant="body1">
                       <strong>Create custom dashboard layouts</strong> to fit your needs
                     </Typography>
                   </Box>
-                  <Box component="li" sx={{ mb: 1 }}>
+                  <Box component="li" sx={{ mb: 1 }} color="#f9f9f9">
                     <Typography variant="body1">
                       <strong>Save your dashboard configurations</strong> for future use
                     </Typography>
@@ -111,11 +111,11 @@ const DashboardWidgetExplanationModal: React.FC<DashboardWidgetExplanationModalP
               <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
                 <Box display="flex" alignItems="center" mb={2}>
                   <WidgetsIcon color="primary" sx={{ fontSize: 32, mr: 2 }} />
-                  <Typography variant="h5" fontWeight="bold" color="primary.main">
+                  <Typography variant="h5" fontWeight="bold" color="#f9f9f9">
                     Widgets
                   </Typography>
                 </Box>
-                <Typography variant="body1" paragraph>
+                <Typography variant="body1" paragraph color="#f9f9f9">
                   Widgets are individual components that display specific data, visualizations, or controls. 
                   Each widget serves a distinct purpose and can be added to dashboards.
                 </Typography>
@@ -126,23 +126,18 @@ const DashboardWidgetExplanationModal: React.FC<DashboardWidgetExplanationModalP
                     style={{ maxWidth: '100%', border: '1px solid #eee', borderRadius: '4px' }}
                   />
                 </Box>
-                <Typography variant="body1" paragraph sx={{marginTop: '1rem'}}>
+                <Typography variant="body1" paragraph sx={{marginTop: '1rem'}} color="#f9f9f9">
                 In regards to widgets you have:
                 </Typography>
                 <Box component="ul" sx={{ pl: 2 }}>
-                  <Box component="li" sx={{ mb: 1 }}>
+                  <Box component="li" sx={{ mb: 1 }} color="#f9f9f9">
                     <Typography variant="body1">
                       <strong>Predefined widgets</strong> like Control Flow and System Lens
                     </Typography>
                   </Box>
-                  <Box component="li" sx={{ mb: 1 }}>
+                  <Box component="li" sx={{ mb: 1 }} color="#f9f9f9">
                     <Typography variant="body1">
                       <strong>Custom widget creation</strong> with the Widget Editor
-                    </Typography>
-                  </Box>
-                  <Box component="li" sx={{ mb: 1 }}>
-                    <Typography variant="body1">
-                      <strong>Widget properties customization</strong> to tailor appearance and behavior
                     </Typography>
                   </Box>
                 </Box>

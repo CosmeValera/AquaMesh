@@ -27,7 +27,7 @@ interface TutorialModalProps {
 
 // Base64 placeholder images until real ones are created
 const placeholderImages = {
-  dashboardWidgetExplanation: '/images/dasboard_image_explanation.png',
+  dashboardWidgetExplanation: '/images/understanding_dashboards.png',
   predefinedDashboards: `/images/predefined_dashboards.png`,
   predefinedWidgets: `/images/predefined_widgets.png`,
   customWidgetCreation: `/images/widget_editor.png`
@@ -41,7 +41,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
 
   const options = [
     {
-      title: 'Understanding Dashboards & Widgets',
+      title: 'Understand Dashboards & Widgets',
       description: 'Learn the core concepts of AquaMesh: Dashboards are containers that organize multiple widgets into a layout. Widgets are individual components that display specific data or functionality.',
       icon: <InfoIcon fontSize="large" color="primary" />,
       buttonText: 'Learn more',
@@ -52,10 +52,21 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
       }
     },
     {
-      title: 'Use Predefined Dashboards & Widgets',
+      title: 'OPTION 1: Use Predefined Dashboards & Widgets',
       description: 'Choose from existing dashboards and add predefined widgets to visualize your data effectively.',
       icon: <DashboardIcon fontSize="large" color="primary" />,
-      image: placeholderImages.predefinedDashboards,
+      // Instead of a single image, we'll display two images
+      hasMultipleImages: true,
+      images: [
+        {
+          src: placeholderImages.predefinedDashboards,
+          alt: 'Predefined Dashboards illustration'
+        },
+        {
+          src: placeholderImages.predefinedWidgets,
+          alt: 'Predefined Widgets illustration'
+        }
+      ],
       // Instead of a single button, we'll render two buttons in the template
       hasMultipleButtons: true,
       buttons: [
@@ -84,7 +95,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
       ]
     },
     {
-      title: 'Create Custom Widgets & Dashboards',
+      title: 'OPTION 2: Create Custom Widgets & Dashboards',
       description: 'Design your own widgets with the Widget Editor and save custom dashboards that fit your specific needs.',
       icon: <CreateIcon fontSize="large" color="primary" />,
       buttonText: 'Open Widget Editor',
@@ -127,7 +138,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
       >
         <DialogTitle id="tutorial-dialog-title" sx={{ bgcolor: 'primary.main', color: 'white', pb: 1 }}>
           <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Typography variant="h5" component="div" fontWeight="bold">
+            <Typography variant="h5" component="div" fontWeight="bold" sx={{color: '#191919'}}>
               Welcome to AquaMesh
             </Typography>
             <IconButton
@@ -140,19 +151,15 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
           </Box>
         </DialogTitle>
         <DialogContent>
-          <Box my={3}>
-            <Typography variant="h6" gutterBottom>
-              Get started with these options:
-            </Typography>
-            
-            <Grid container spacing={3} sx={{ mt: 2 }}>
+          <Box my={3}>            
+            <Grid container spacing={4} sx={{ mt: 2 }}>
               {options.map((option, index) => (
                 <Grid item xs={12} key={index} className="tutorial-option">
                   <Paper
                     elevation={3}
                     sx={{
                       p: 3,
-                      height: '100%',
+                      width: '100%',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -169,10 +176,10 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                       <Box mb={2} display="flex" justifyContent="center">
                         {option.icon}
                       </Box>
-                      <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      <Typography variant="h6" fontWeight="bold" gutterBottom color="#f9f9f9">
                         {option.title}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" paragraph>
+                      <Typography variant="body2" color="text.secondary" paragraph color="#f9f9f9">
                         {option.description}
                       </Typography>
                       
@@ -181,23 +188,41 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                         sx={{ 
                           mt: 2, 
                           mb: 3, 
-                          width: '100%', 
-                          height: '180px',
-                          backgroundColor: 'rgba(0,0,0,0.03)',
-                          borderRadius: 1,
+                          maxWidth: '100%', 
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center'
+                          justifyContent: 'center',
                         }}
                       >
-                        {option.image ? (
+                        {option.hasMultipleImages ? (
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2 }}>
+                            {option.images.map((image, imgIndex) => (
+                              <img 
+                                key={imgIndex}
+                                src={image.src} 
+                                alt={image.alt}
+                                style={{ 
+                                  maxWidth: '48%', 
+                                  maxHeight: '100%',
+                                  objectFit: 'contain',
+                                  border: '1px solid rgb(238, 238, 238)',
+                                  borderRadius: '4px',
+                                  backgroundColor: 'background.paper'
+                                }}
+                              />
+                            ))}
+                          </Box>
+                        ) : option.image ? (
                           <img 
                             src={option.image} 
                             alt={`${option.title} illustration`}
                             style={{ 
                               maxWidth: '100%', 
                               maxHeight: '100%',
-                              objectFit: 'contain'
+                              objectFit: 'contain',
+                              border: '1px solid rgb(238, 238, 238)',
+                              borderRadius: '4px',
+                              backgroundColor: 'background.paper'
                             }}
                           />
                         ) : (
@@ -214,8 +239,8 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                             <Button 
                               key={btnIndex}
                               variant="contained" 
-                              color="primary" 
                               onClick={button.action}
+                              sx={{color:"#191919"}}
                             >
                               {button.text}
                             </Button>
@@ -226,7 +251,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                           variant="contained" 
                           color="primary" 
                           onClick={option.action}
-                          sx={{ mt: 2 }}
+                          sx={{ mt: 2, color: '#191919' }}
                         >
                           {option.buttonText}
                         </Button>
@@ -244,11 +269,13 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
               <Button 
                 onClick={() => {
                   localStorage.removeItem('aquamesh-tutorial-shown')
-                  if (onShowOnStartupToggle) onShowOnStartupToggle()
+                  if (onShowOnStartupToggle) { 
+                    onShowOnStartupToggle()
+                  }
                   onClose()
                 }} 
-                variant="outlined"
-                color="primary"
+                variant="text"
+                sx={{color: '#191919', ":hover": {background: '#00C49A99'}}}
               >
                 Show on startup
               </Button>
@@ -256,11 +283,13 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
               <Button 
                 onClick={() => {
                   localStorage.setItem('aquamesh-tutorial-shown', 'true')
-                  if (onShowOnStartupToggle) onShowOnStartupToggle()
+                  if (onShowOnStartupToggle) { 
+                    onShowOnStartupToggle()
+                  }
                   onClose()
                 }} 
-                variant="outlined"
-                color="primary"
+                variant="text"
+                sx={{color: '#191919', ":hover": {background: '#00C49A99'}}}
               >
                 Don&apos;t show again
               </Button>

@@ -47,7 +47,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             label="Show Component Tooltips"
           />
           <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mb: 3 }}>
-            Display helpful tooltips when hovering over components and controls. <br/>
+            Display helpful tooltips when hovering over components and controls. <br/><br/>
             <b>Recommendation:</b> Keep it enabled while you learn. Disable it when it&apos;s not necessary
           </Typography>
           

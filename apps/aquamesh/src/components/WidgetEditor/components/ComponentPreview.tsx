@@ -15,6 +15,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { ComponentPreviewProps } from '../types/types'
+import { getComponentIcon } from '../constants/componentTypes'
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   component,
@@ -34,8 +35,18 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   handleContainerDragLeave,
   handleContainerDrop,
 }) => {
-  const isContainer = ['FieldSet', 'FlexBox', 'GridBox'].includes(component.type)
   const isCurrentTarget = dropTarget.id === component.id && dropTarget.isHovering
+
+  // Get the component icon for display
+  const ComponentIcon = getComponentIcon(component.type)
+
+  // Toggle collapse state for fieldset
+  const handleToggleCollapse = (e: React.MouseEvent, fieldsetId: string) => {
+    e.stopPropagation()
+    // Find the component and toggle its collapsed state
+    // We use the existing edit functionality
+    onEdit(fieldsetId)
+  }
 
   // Render a preview of the component based on its type
   const renderComponent = () => {
@@ -66,7 +77,13 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             onDrop={(e) => handleContainerDrop(e, component.id)}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              {isCollapsed ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
+              <IconButton 
+                onClick={(e) => handleToggleCollapse(e, component.id)} 
+                size="small" 
+                sx={{ color: 'primary.main' }}
+              >
+                {isCollapsed ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
+              </IconButton>
               <Typography variant="h6" sx={{ ml: 1 }}>
                 {component.props.legend as string}
               </Typography>
@@ -105,7 +122,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                     textAlign: 'center',
                   }}
                 >
-                  {editMode ? 'Drag components here' : 'No content'}
+                  {isDragging ? 'Drop component here' : (editMode ? 'Drag components here' : 'No content')}
                 </Box>
               )}
             </Collapse>
@@ -120,6 +137,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
         return (
           <Button
             variant={(component.props.variant as 'contained' | 'outlined' | 'text') || 'contained'}
+            color="primary"
           >
             {component.props.text as string}
           </Button>
@@ -181,7 +199,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
               ))
             ) : (
               <Box sx={{ width: '100%', textAlign: 'center', color: 'text.secondary' }}>
-                {editMode ? 'Drag components here' : 'Empty Flex Container'}
+                {isDragging ? 'Drop component here' : (editMode ? 'Drag components here' : 'Empty Flex Container')}
               </Box>
             )}
           </Box>
@@ -191,7 +209,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: `repeat(${component.props.columns as number || 2}, 1fr)`,
+              gridTemplateColumns: `repeat(${component.props.columns as number || 1}, 1fr)`,
               gridTemplateRows: `repeat(${component.props.rows as number || 1}, auto)`,
               gap: (component.props.spacing as number) || 2,
               p: 2,
@@ -230,8 +248,16 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                 />
               ))
             ) : (
-              <Box sx={{ width: '100%', textAlign: 'center', color: 'text.secondary' }}>
-                {editMode ? 'Drag components here' : 'Empty Grid Container'}
+              <Box sx={{ 
+                width: '100%', 
+                height: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                textAlign: 'center', 
+                color: 'text.secondary' 
+              }}>
+                {isDragging ? 'Drop component here' : (editMode ? 'Drag components here' : 'Empty Grid Container')}
               </Box>
             )}
           </Box>
@@ -265,14 +291,17 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             p: 0.5,
           }}
         >
-          <Typography variant="caption" sx={{ mr: 'auto', color: 'text.secondary' }}>
-            {component.type}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', mr: 'auto', color: 'text.secondary' }}>
+            {ComponentIcon && <ComponentIcon fontSize="small" sx={{ mr: 0.5, opacity: 0.7 }} />}
+            <Typography variant="caption">
+              {component.type}
+            </Typography>
+          </Box>
           {!isFirst && (
             <IconButton
               size="small"
               onClick={() => onMoveUp(component.id)}
-              sx={{ p: 0.5 }}
+              sx={{ p: 0.5, color: 'primary.main' }}
             >
               <KeyboardArrowUpIcon fontSize="small" />
             </IconButton>
@@ -281,7 +310,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             <IconButton
               size="small"
               onClick={() => onMoveDown(component.id)}
-              sx={{ p: 0.5 }}
+              sx={{ p: 0.5, color: 'primary.main' }}
             >
               <KeyboardArrowDownIcon fontSize="small" />
             </IconButton>
@@ -289,14 +318,14 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
           <IconButton
             size="small"
             onClick={() => onEdit(component.id)}
-            sx={{ p: 0.5 }}
+            sx={{ p: 0.5, color: '#2196f3' }}
           >
             <EditIcon fontSize="small" />
           </IconButton>
           <IconButton
             size="small"
             onClick={() => onDelete(component.id)}
-            sx={{ p: 0.5 }}
+            sx={{ p: 0.5, color: '#f44336' }}
           >
             <DeleteIcon fontSize="small" />
           </IconButton>

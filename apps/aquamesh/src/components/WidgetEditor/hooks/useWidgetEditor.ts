@@ -245,10 +245,31 @@ export const useWidgetEditor = () => {
     })
   }
 
-  // Handle editing a component
+  // Handle editing a component or toggling FieldSet collapsed state
   const handleEditComponent = (id: string) => {
     const component = findComponentById(id, widgetData.components)
+    
     if (component) {
+      // If it's a FieldSet being toggled via the arrow icon
+      if (component.type === 'FieldSet' && !editDialogOpen) {
+        // Toggle collapsed state
+        const updatedComponent = {
+          ...component,
+          props: {
+            ...component.props,
+            collapsed: !(component.props.collapsed as boolean)
+          }
+        }
+        
+        setWidgetData(prev => ({
+          ...prev,
+          components: updateComponentById(id, updatedComponent, prev.components)
+        }))
+        
+        return
+      }
+      
+      // Normal component editing
       setCurrentEditComponent(component)
       setEditDialogOpen(true)
     }

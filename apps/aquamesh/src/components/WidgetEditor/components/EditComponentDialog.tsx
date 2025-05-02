@@ -302,7 +302,7 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
               fullWidth
               margin="normal"
               inputProps={{ min: 1, max: 12, step: 1 }}
-              value={(editedProps.columns as number) || 2}
+              value={(editedProps.columns as number) || 1}
               onChange={(e) =>
                 setEditedProps({ ...editedProps, columns: Number(e.target.value) })
               }

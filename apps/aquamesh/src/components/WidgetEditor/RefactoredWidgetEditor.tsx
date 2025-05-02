@@ -69,6 +69,9 @@ const WidgetEditor: React.FC = () => {
     setCurrentEditComponent,
   } = useWidgetEditor()
 
+  // Check if we're updating an existing widget
+  const isUpdating = savedWidgets.some(widget => widget.name === widgetData.name)
+
   // Render the component hierarchy
   const renderComponents = (components: ComponentData[]) => {
     return components.map((component, index) => (
@@ -116,14 +119,15 @@ const WidgetEditor: React.FC = () => {
         <Typography variant="h6" sx={{ flexGrow: 1, color: 'foreground.contrastPrimary' }}>
           Widget Editor
         </Typography>
-        <Button
-          size="small"
-          variant="outlined"
-          onClick={() => setShowWidgetList(true)}
-          sx={{ mr: 1 }}
-        >
-          Browse Widgets
-        </Button>
+        <Tooltip title="Settings">
+          <IconButton
+            size="small"
+            onClick={() => setShowSettingsModal(true)}
+            sx={{ color: 'text.secondary', marginInline: '0.75rem' }}
+          >
+            <SettingsIcon />
+          </IconButton>
+        </Tooltip>
         <Tooltip title="Edit mode">
           <Button
             size="small"
@@ -134,7 +138,7 @@ const WidgetEditor: React.FC = () => {
             {editMode ? 'Edit Mode' : 'Preview Mode'}
           </Button>
         </Tooltip>
-        <Tooltip title="Save widget">
+        <Tooltip title={isUpdating ? "Update widget" : "Save widget"}>
           <Button
             size="small"
             variant="contained"
@@ -143,18 +147,17 @@ const WidgetEditor: React.FC = () => {
             onClick={handleSaveWidget}
             sx={{ mr: 1 }}
           >
-            Save
+            {isUpdating ? 'UPDATE' : 'SAVE'}
           </Button>
         </Tooltip>
-        <Tooltip title="Settings">
-          <IconButton
-            size="small"
-            onClick={() => setShowSettingsModal(true)}
-            sx={{ color: 'text.secondary' }}
-          >
-            <SettingsIcon />
-          </IconButton>
-        </Tooltip>
+        <Button
+          size="small"
+          variant="contained"
+          onClick={() => setShowWidgetList(true)}
+          sx={{ mr: 1 }}
+        >
+          Browse Widgets
+        </Button>
       </Box>
 
       {/* Main content area */}

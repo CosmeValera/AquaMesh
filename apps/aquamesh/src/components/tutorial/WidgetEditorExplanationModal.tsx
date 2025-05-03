@@ -22,7 +22,6 @@ import InputIcon from '@mui/icons-material/Input'
 import SmartButtonIcon from '@mui/icons-material/SmartButton'
 import TextFieldsIcon from '@mui/icons-material/TextFields'
 import ToggleOnIcon from '@mui/icons-material/ToggleOn'
-import FileUploadIcon from '@mui/icons-material/FileUpload'
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
 import FlexibleIcon from '@mui/icons-material/Dashboard'
 
@@ -127,11 +126,6 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
           title: 'Switch',
           icon: <ToggleOnIcon />,
           content: 'A toggle switch that allows users to choose between on/off states for boolean values. Can be configured with custom labels and default states.'
-        },
-        {
-          title: 'Data Upload',
-          icon: <FileUploadIcon />,
-          content: 'A component that allows users to upload files like PDFs, images, and other data. Files can be previewed and managed directly within the widget.'
         }
       ]
     },

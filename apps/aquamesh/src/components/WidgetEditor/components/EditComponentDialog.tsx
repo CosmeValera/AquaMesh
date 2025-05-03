@@ -395,6 +395,90 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
             />
           </>
         )
+      case 'DataUpload':
+        return (
+          <>
+            <TextField
+              label="Label"
+              fullWidth
+              margin="normal"
+              value={(editedProps.label as string) || 'Upload File'}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, label: e.target.value })
+              }
+            />
+            <TextField
+              label="Accepted File Types"
+              fullWidth
+              margin="normal"
+              value={(editedProps.acceptedFileTypes as string) || 'image/*,application/pdf'}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, acceptedFileTypes: e.target.value })
+              }
+              helperText="Comma separated list of MIME types, e.g. 'image/*,application/pdf'"
+            />
+            <TextField
+              label="Max File Size (MB)"
+              type="number"
+              fullWidth
+              margin="normal"
+              inputProps={{ min: 1, max: 20, step: 1 }}
+              value={(editedProps.maxFileSize as number) || 5}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, maxFileSize: Number(e.target.value) })
+              }
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(editedProps.allowMultiple)}
+                  onChange={(e) =>
+                    setEditedProps({
+                      ...editedProps,
+                      allowMultiple: e.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Allow Multiple Files"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(editedProps.showCaptions)}
+                  onChange={(e) =>
+                    setEditedProps({
+                      ...editedProps,
+                      showCaptions: e.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Show Image Captions"
+            />
+            <TextField
+              label="Helper Text"
+              fullWidth
+              margin="normal"
+              value={(editedProps.helperText as string) || 'Upload PDF or images (max 5MB)'}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, helperText: e.target.value })
+              }
+            />
+            <TextField
+              label="Image Columns"
+              type="number"
+              fullWidth
+              margin="normal"
+              inputProps={{ min: 1, max: 6, step: 1 }}
+              value={(editedProps.columns as number) || 3}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, columns: Number(e.target.value) })
+              }
+              helperText="Number of columns to display images in (when files are uploaded)"
+            />
+          </>
+        )
       default:
         return <Typography>No editable properties</Typography>
     }

@@ -13,7 +13,6 @@ import {
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import WidgetStorage from './WidgetStorage'
-import DataUpload from './components/builtin/DataUpload'
 
 interface ComponentData {
   id: string
@@ -206,18 +205,6 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
           </Button>
         </Box>
       )
-    case 'DataUpload':
-      return (
-        <Box key={component.id} sx={{ mb: 1 }}>
-          <DataUpload 
-            label={component.props.label as string || 'Upload File'}
-            acceptedFileTypes={component.props.acceptedFileTypes as string || 'image/*,application/pdf'}
-            maxFileSize={component.props.maxFileSize as number || 5}
-            allowMultiple={component.props.allowMultiple as boolean || false}
-            helperText={component.props.helperText as string}
-          />
-        </Box>
-      )
     case 'TextField':
       return (
         <Box key={component.id} sx={{ mb: 1 }}>
@@ -275,9 +262,23 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
       )
     }
     default:
+      // Handle default case by showing a placeholder for unknown component types
       return (
-        <Box key={component.id}>
-          <Typography>Unknown component type: {component.type}</Typography>
+        <Box 
+          key={component.id} 
+          sx={{ 
+            p: 2, 
+            border: '1px dashed #ccc',
+            borderRadius: 1,
+            mb: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            minHeight: 80
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">Unknown component type: {component.type}</Typography>
         </Box>
       )
     }
@@ -285,7 +286,8 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
 
   // For debugging purposes
   console.log('CustomWidget rendering with components:', 
-    widgetComponents ? `Array(${widgetComponents.length})` : 'none')
+    widgetComponents ? `Array(${widgetComponents.length})` : 'none',
+    'Widget component types:', widgetComponents.map(c => c.type).join(', '))
 
   if (!widgetComponents || widgetComponents.length === 0) {
     return (

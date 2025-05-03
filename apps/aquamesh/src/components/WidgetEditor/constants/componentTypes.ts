@@ -5,7 +5,6 @@ import ToggleOnIcon from '@mui/icons-material/ToggleOn'
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
 import FlexibleIcon from '@mui/icons-material/Dashboard'
 import GridViewIcon from '@mui/icons-material/GridView'
-import FileUploadIcon from '@mui/icons-material/FileUpload'
 import { ComponentType } from '../types/types'
 
 // Types of components that can be added to the widget
@@ -42,20 +41,6 @@ export const COMPONENT_TYPES: ComponentType[] = [
     category: 'UI Components',
     icon: ToggleOnIcon,
     tooltip: 'Adds an on/off toggle switch for boolean settings'
-  },
-  {
-    type: 'DataUpload',
-    label: 'Data Upload',
-    defaultProps: { 
-      label: 'Upload File', 
-      acceptedFileTypes: 'image/*,application/pdf',
-      maxFileSize: 5,  // in MB
-      allowMultiple: false,
-      helperText: 'Upload PDF or images (max 5MB)'
-    },
-    category: 'UI Components',
-    icon: FileUploadIcon,
-    tooltip: 'Adds a file upload component for PDFs, images, and other data files'
   },
   
   // Layout Containers

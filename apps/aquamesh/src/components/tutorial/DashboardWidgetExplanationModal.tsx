@@ -50,7 +50,7 @@ const DashboardWidgetExplanationModal: React.FC<DashboardWidgetExplanationModalP
     >
       <DialogTitle id="explanation-dialog-title" sx={{ bgcolor: 'primary.main', color: 'white', pb: 1 }}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="h5" component="div" fontWeight="bold">
+          <Typography variant="h5" component="div" fontWeight="bold" color="#191919">
             Understanding Dashboards & Widgets
           </Typography>
           <IconButton

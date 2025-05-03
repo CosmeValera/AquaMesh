@@ -29,8 +29,8 @@ const ComponentPaletteItem: React.FC<ComponentPaletteItemProps> = ({
         draggable
         onDragStart={(e) => onDragStart(e, type)}
       >
-        <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-          <Icon fontSize="small" />
+        <Box sx={{ mr: 1, display: 'flex', alignItems: 'center', color:"#F9F9F9"}}>
+          <Icon fontSize="small"/>
         </Box>
         <Typography variant="body2">{label}</Typography>
       </Paper>

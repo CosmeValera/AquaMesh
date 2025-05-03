@@ -201,6 +201,7 @@ const WidgetEditor: React.FC = () => {
                     tooltip={showTooltips ? component.tooltip || '' : ''}
                     icon={component.icon || InfoOutlinedIcon}
                     onDragStart={handleDragStart}
+                    color="primary"
                   />
                 ))}
               </Box>

@@ -192,7 +192,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                       <Typography variant="h6" fontWeight="bold" gutterBottom color="#f9f9f9">
                         {option.title}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" paragraph color="#f9f9f9">
+                      <Typography variant="body2" paragraph color="#f9f9f9">
                         {option.description}
                       </Typography>
                       

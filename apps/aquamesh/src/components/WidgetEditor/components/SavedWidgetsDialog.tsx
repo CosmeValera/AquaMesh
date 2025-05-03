@@ -8,20 +8,17 @@ import {
   Typography,
   List,
   ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   IconButton,
   Box,
   Divider,
   Paper,
   Tooltip,
   Chip,
-  alpha,
-  useTheme,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import WidgetsIcon from '@mui/icons-material/Widgets'
 import EditIcon from '@mui/icons-material/Edit'
+import PreviewIcon from '@mui/icons-material/Visibility'
 import { CustomWidget } from '../WidgetStorage'
 
 interface SavedWidgetsDialogProps {
@@ -39,7 +36,18 @@ const SavedWidgetsDialog: React.FC<SavedWidgetsDialogProps> = ({
   onLoad,
   onDelete,
 }) => {
-  const theme = useTheme();
+  // Function to preview a widget (just load it)
+  const handlePreviewWidget = (widget: CustomWidget) => {
+    onLoad(widget)
+  }
+  
+  // Function to edit a widget (load with edit mode flag)
+  const handleEditWidget = (e: React.MouseEvent, widget: CustomWidget) => {
+    e.stopPropagation()
+    // Here we would pass an edit flag, but for now just call onLoad
+    // In a real implementation, you would modify the load function to accept an editMode parameter
+    onLoad(widget)
+  }
   
   return (
     <Dialog 
@@ -52,57 +60,51 @@ const SavedWidgetsDialog: React.FC<SavedWidgetsDialogProps> = ({
           borderRadius: 2,
           boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
           overflow: 'hidden',
+          bgcolor: '#00A389', // Teal background for the entire dialog
         }
       }}
     >
       <DialogTitle sx={{ 
-        bgcolor: 'primary.main', 
+        bgcolor: '#00BC9A', 
         color: 'white',
         display: 'flex',
         alignItems: 'center',
         py: 2,
       }}>
-        <WidgetsIcon sx={{ mr: 1.5 }} />
-        <Typography variant="h6" component="div" fontWeight="bold">
+        <WidgetsIcon sx={{ mr: 1.5, color: '#191919' }} />
+        <Typography variant="h6" component="div" fontWeight="bold" color="#191919">
           Custom Widgets Library
         </Typography>
       </DialogTitle>
       
-      <DialogContent sx={{ p: 3, bgcolor: 'background.paper' }}>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Load any of your saved widgets to modify them or create new ones based on existing designs.
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-        </Box>
-        
+      <DialogContent sx={{ p: 3, bgcolor: '#00A389', mt: '2rem'}}>        
         {widgets.length === 0 ? (
           <Paper 
             elevation={0} 
             sx={{ 
               p: 4, 
               textAlign: 'center',
-              bgcolor: alpha(theme.palette.primary.main, 0.05),
+              bgcolor: 'rgba(255, 255, 255, 0.1)',
               borderRadius: 2,
-              border: `1px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
+              border: '1px dashed rgba(255, 255, 255, 0.3)',
             }}
           >
             <WidgetsIcon 
               sx={{ 
                 fontSize: 48, 
                 mb: 2, 
-                color: alpha(theme.palette.primary.main, 0.5)
+                color: 'rgba(255, 255, 255, 0.6)'
               }} 
             />
-            <Typography color="text.secondary" variant="h6" gutterBottom>
+            <Typography color="white" variant="h6" gutterBottom>
               No Custom Widgets Yet
             </Typography>
-            <Typography color="text.secondary" variant="body2">
+            <Typography color="rgba(255, 255, 255, 0.7)" variant="body2">
               Start by creating and saving a widget using the editor
             </Typography>
           </Paper>
         ) : (
-          <List sx={{ p: 0 }}>
+          <List>
             {widgets.map((widget) => (
               <Paper
                 key={widget.id}
@@ -111,19 +113,20 @@ const SavedWidgetsDialog: React.FC<SavedWidgetsDialogProps> = ({
                   mb: 2,
                   overflow: 'hidden',
                   border: '1px solid',
-                  borderColor: 'divider',
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
                   borderRadius: 2,
                   transition: 'all 0.2s ease-in-out',
+                  bgcolor: '#00886F', // Darker teal for widget cards
                   '&:hover': {
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-                    borderColor: 'primary.main',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
                   },
                 }}
               >
                 <ListItem
                   button
-                  onClick={() => onLoad(widget)}
+                  onClick={() => handlePreviewWidget(widget)}
                   sx={{
                     p: 2,
                     display: 'flex',
@@ -135,8 +138,8 @@ const SavedWidgetsDialog: React.FC<SavedWidgetsDialogProps> = ({
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Box 
                         sx={{ 
-                          bgcolor: alpha(theme.palette.primary.main, 0.1),
-                          color: 'primary.main',
+                          bgcolor: 'rgba(255, 255, 255, 0.15)',
+                          color: 'white',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -149,31 +152,64 @@ const SavedWidgetsDialog: React.FC<SavedWidgetsDialogProps> = ({
                         <WidgetsIcon />
                       </Box>
                       <Box>
-                        <Typography variant="subtitle1" fontWeight="bold">
+                        <Typography variant="subtitle1" fontWeight="bold" color="white">
                           {widget.name}
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" color="rgba(255, 255, 255, 0.7)">
                             Last modified: {new Date(widget.updatedAt).toLocaleDateString()} at {new Date(widget.updatedAt).toLocaleTimeString()}
                           </Typography>
                           <Chip 
                             size="small" 
                             label={`${widget.components.length} components`} 
-                            sx={{ ml: 2, height: 20, fontSize: '0.7rem' }}
+                            sx={{ 
+                              ml: 2, 
+                              height: 20, 
+                              fontSize: '0.7rem',
+                              bgcolor: 'rgba(255, 255, 255, 0.15)',
+                              color: 'white'
+                            }}
                           />
                         </Box>
                       </Box>
                     </Box>
                     <Box>
+                      <Tooltip title="Preview Widget">
+                        <Button
+                          size="small"
+                          startIcon={<PreviewIcon />}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handlePreviewWidget(widget)
+                          }}
+                          sx={{ 
+                            mr: 1,
+                            color: 'white',
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            '&:hover': {
+                              borderColor: 'white',
+                              bgcolor: 'rgba(255, 255, 255, 0.1)'
+                            }
+                          }}
+                          variant="outlined"
+                        >
+                          Preview
+                        </Button>
+                      </Tooltip>
                       <Tooltip title="Edit Widget">
                         <Button
                           size="small"
                           startIcon={<EditIcon />}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onLoad(widget)
+                          onClick={(e) => handleEditWidget(e, widget)}
+                          sx={{ 
+                            mr: 1,
+                            bgcolor: '#00D1AB',
+                            color: '#191919',
+                            '&:hover': {
+                              bgcolor: '#00E4BC'
+                            }
                           }}
-                          sx={{ mr: 1 }}
+                          variant="contained"
                         >
                           Edit
                         </Button>
@@ -185,6 +221,12 @@ const SavedWidgetsDialog: React.FC<SavedWidgetsDialogProps> = ({
                           onClick={(e) => {
                             e.stopPropagation()
                             onDelete(widget.id)
+                          }}
+                          sx={{
+                            bgcolor: 'rgba(211, 47, 47, 0.1)',
+                            '&:hover': {
+                              bgcolor: 'rgba(211, 47, 47, 0.2)'
+                            }
                           }}
                         >
                           <DeleteIcon />
@@ -199,11 +241,18 @@ const SavedWidgetsDialog: React.FC<SavedWidgetsDialogProps> = ({
         )}
       </DialogContent>
       
-      <DialogActions sx={{ px: 3, py: 2, bgcolor: 'background.paper' }}>
+      <DialogActions sx={{ px: 3, py: 2, bgcolor: '#00A389' }}>
         <Button 
           onClick={onClose}
-          variant="outlined" 
+          variant="contained" 
           size="medium"
+          sx={{
+            bgcolor: 'rgba(255, 255, 255, 0.15)',
+            color: 'white',
+            '&:hover': {
+              bgcolor: 'rgba(255, 255, 255, 0.25)'
+            }
+          }}
         >
           Close
         </Button>

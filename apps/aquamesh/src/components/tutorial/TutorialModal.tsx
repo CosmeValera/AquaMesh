@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -38,6 +38,22 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [explanationModalOpen, setExplanationModalOpen] = useState(false)
   const tutorialShown = localStorage.getItem('aquamesh-tutorial-shown')
+  
+  // Check if user is admin
+  const [isAdmin, setIsAdmin] = useState(false)
+  
+  useEffect(() => {
+    // Check user role from localStorage
+    try {
+      const storedUserData = localStorage.getItem('userData')
+      if (storedUserData) {
+        const userData = JSON.parse(storedUserData)
+        setIsAdmin(userData.id === 'admin' && userData.role === 'ADMIN_ROLE')
+      }
+    } catch (error) {
+      console.error('Failed to parse user data', error)
+    }
+  }, [])
 
   const options = [
     {
@@ -52,7 +68,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
       }
     },
     {
-      title: 'OPTION 1: Use Predefined Dashboards & Widgets',
+      title: isAdmin ? 'OPTION 1: Use Predefined Dashboards & Widgets' : 'Use Predefined Dashboards & Widgets',
       description: 'Choose from existing dashboards and add predefined widgets to visualize your data effectively.',
       icon: <DashboardIcon fontSize="large" color="primary" />,
       // Instead of a single image, we'll display two images
@@ -94,29 +110,26 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
         }
       ]
     },
-    {
+  ]
+  
+  // Add Option 2 only for admin users
+  if (isAdmin) {
+    options.push({
       title: 'OPTION 2: Create Custom Widgets & Dashboards',
       description: 'Design your own widgets with the Widget Editor and save custom dashboards that fit your specific needs.',
       icon: <CreateIcon fontSize="large" color="primary" />,
       buttonText: 'Open Widget Editor',
       image: placeholderImages.customWidgetCreation,
       action: () => {
-        // Close modal and programmatically click create widget option
+        // Close modal and programmatically click the widget editor button directly
         onClose()
-        const widgetsButton = document.querySelector('[data-tutorial-id="widgets-button"]')
-        if (widgetsButton) {
-          (widgetsButton as HTMLElement).click()
-          // We need to wait for the menu to open before clicking the create widget option
-          setTimeout(() => {
-            const createWidgetOption = document.querySelector('[data-tutorial-id="create-widget-option"]')
-            if (createWidgetOption) {
-              (createWidgetOption as HTMLElement).click()
-            }
-          }, 100)
+        const createWidgetButton = document.querySelector('[data-tutorial-id="create-widget-button"]')
+        if (createWidgetButton) {
+          (createWidgetButton as HTMLElement).click()
         }
       }
-    }
-  ]
+    })
+  }
 
   return (
     <>

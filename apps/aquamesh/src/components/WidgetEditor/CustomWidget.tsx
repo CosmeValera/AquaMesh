@@ -13,6 +13,7 @@ import {
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import WidgetStorage from './WidgetStorage'
+import ChartPreview from './components/ChartPreview'
 
 interface ComponentData {
   id: string
@@ -187,7 +188,7 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
             onClick={() => {
               const clickAction = component.props.clickAction as string || 'toast'
               
-              if (clickAction === 'toast' && component.props.showToast) {
+              if (clickAction === 'toast') {
                 const message = component.props.toastMessage as string || 'Button clicked!'
                 const severity = component.props.toastSeverity as 'success' | 'error' | 'info' | 'warning' || 'info'
                 showToast(message, severity)
@@ -258,6 +259,90 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
           ) : (
             <Typography variant="body2" color="text.secondary">Empty Grid Container</Typography>
           )}
+        </Box>
+      )
+    }
+    case 'Chart': {
+      const chartData = component.props.data as string || '{}'
+      
+      // Parse the data - could be JSON or XML
+      let parsedData: {
+        labels: string[]
+        datasets: Array<{
+          label: string
+          data: number[]
+          backgroundColor?: string
+        }>
+      } = {
+        labels: [],
+        datasets: []
+      }
+      try {
+        if (chartData.trim().startsWith('<')) {
+          // Basic XML parsing for demo purposes
+          // In a real app, use a proper XML parser
+          const parser = new DOMParser()
+          const xmlDoc = parser.parseFromString(chartData, "text/xml")
+          // Simple conversion for demo
+          const series = xmlDoc.getElementsByTagName("series")
+          const labels = Array.from(xmlDoc.getElementsByTagName("label"))
+            .map(label => label.textContent || '')
+          
+          // Use only the first series or combine all series data into one
+          const allData: number[] = []
+          const firstSeries = series[0]
+          
+          if (firstSeries) {
+            // Extract data from the first series
+            allData.push(...Array.from(firstSeries.getElementsByTagName("value")).map(val => 
+              Number(val.textContent) || 0
+            ))
+          }
+          
+          parsedData = {
+            labels: labels,
+            datasets: [{
+              label: firstSeries ? (firstSeries.getAttribute("name") || "Sales") : "Sales",
+              data: allData,
+              backgroundColor: 'rgba(54, 162, 235, 0.5)'
+            }]
+          }
+        } else {
+          // Assume JSON
+          parsedData = JSON.parse(chartData) as typeof parsedData
+        }
+      } catch (error) {
+        console.error("Error parsing chart data:", error)
+        // Provide fallback sample data
+        parsedData = {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [{
+            label: 'Sales',
+            data: [30, 20, 15, 25, 10, 5],
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.8)',
+              'rgba(54, 162, 235, 0.8)',
+              'rgba(255, 206, 86, 0.8)',
+              'rgba(75, 192, 192, 0.8)',
+              'rgba(153, 102, 255, 0.8)',
+              'rgba(255, 159, 64, 0.8)'
+            ]
+          }]
+        }
+      }
+      
+      // Store the title and description as strings to avoid React type issues
+      const chartTitle = component.props.title ? String(component.props.title) : ''
+      const chartDescription = component.props.description ? String(component.props.description) : ''
+      
+      return (
+        <Box key={component.id} sx={{ mb: 2, width: '100%' }}>
+          <ChartPreview
+            chartType={component.props.chartType as string || 'pie'}
+            title={chartTitle}
+            description={chartDescription}
+            data={parsedData}
+          />
         </Box>
       )
     }

@@ -5,6 +5,7 @@ import ToggleOnIcon from '@mui/icons-material/ToggleOn'
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
 import FlexibleIcon from '@mui/icons-material/Dashboard'
 import GridViewIcon from '@mui/icons-material/GridView'
+import BarChartIcon from '@mui/icons-material/BarChart'
 import { ComponentType } from '../types/types'
 
 // Types of components that can be added to the widget
@@ -41,6 +42,36 @@ export const COMPONENT_TYPES: ComponentType[] = [
     category: 'UI Components',
     icon: ToggleOnIcon,
     tooltip: 'Adds an on/off toggle switch for boolean settings'
+  },
+  {
+    type: 'Chart',
+    label: 'Pie Chart',
+    defaultProps: { 
+      title: '', 
+      chartType: 'pie',
+      height: 400,
+      description: '',
+      data: `{
+        "labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+        "datasets": [
+          {
+            "label": "Sales",
+            "data": [30, 20, 15, 25, 10, 5],
+            "backgroundColor": [
+              "rgba(255, 99, 132, 0.8)",
+              "rgba(54, 162, 235, 0.8)",
+              "rgba(255, 206, 86, 0.8)",
+              "rgba(75, 192, 192, 0.8)",
+              "rgba(153, 102, 255, 0.8)",
+              "rgba(255, 159, 64, 0.8)"
+            ]
+          }
+        ]
+      }`
+    },
+    category: 'UI Components',
+    icon: BarChartIcon,
+    tooltip: 'Adds a pie chart visualization with JSON or XML data support'
   },
   
   // Layout Containers

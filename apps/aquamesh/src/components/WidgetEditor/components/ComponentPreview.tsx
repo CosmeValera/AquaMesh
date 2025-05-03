@@ -16,6 +16,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { ComponentPreviewProps } from '../types/types'
 import { getComponentIcon } from '../constants/componentTypes'
+import ChartPreview from './ChartPreview'
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   component,
@@ -262,6 +263,93 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             )}
           </Box>
         )
+      case 'Chart': {
+        const chartType = component.props.chartType as string || 'pie'
+        const title = component.props.title as string || ''
+        
+        // Parse data for the preview from the actual component data
+        let chartData: {
+          labels: string[]
+          datasets: Array<{
+            label: string
+            data: number[]
+            backgroundColor?: string | string[]
+          }>
+        } = {
+          labels: [],
+          datasets: []
+        }
+        
+        try {
+          const dataString = component.props.data as string || '{}'
+          if (dataString.trim().startsWith('<')) {
+            // Basic XML parsing for demo purposes
+            // In real app, would use proper XML parser
+            // For now we'll skip XML in the preview
+            chartData = {
+              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+              datasets: [{
+                label: 'Sales',
+                data: [30, 20, 15, 25, 10],
+                backgroundColor: [
+                  'rgba(255, 99, 132, 0.8)',
+                  'rgba(54, 162, 235, 0.8)',
+                  'rgba(255, 206, 86, 0.8)',
+                  'rgba(75, 192, 192, 0.8)',
+                  'rgba(153, 102, 255, 0.8)'
+                ]
+              }]
+            }
+          } else if (dataString.trim()) {
+            // Parse JSON data
+            chartData = JSON.parse(dataString)
+          } else {
+            // Use default data if not provided
+            chartData = {
+              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+              datasets: [{
+                label: 'Sales',
+                data: [30, 20, 15, 25, 10],
+                backgroundColor: [
+                  'rgba(255, 99, 132, 0.8)',
+                  'rgba(54, 162, 235, 0.8)',
+                  'rgba(255, 206, 86, 0.8)',
+                  'rgba(75, 192, 192, 0.8)',
+                  'rgba(153, 102, 255, 0.8)'
+                ]
+              }]
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing chart data:", error)
+          // Use default data on error
+          chartData = {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+            datasets: [{
+              label: 'Sales',
+              data: [30, 20, 15, 25, 10],
+              backgroundColor: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 206, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)'
+              ]
+            }]
+          }
+        }
+
+        return (
+          <Box sx={{ width: '100%' }}>
+            <ChartPreview
+              chartType={chartType}
+              title={title}
+              description={component.props.description as string}
+              data={chartData}
+            />
+          </Box>
+        )
+      }
       default:
         return <Typography>Unknown component type: {component.type}</Typography>
     }

@@ -13,8 +13,11 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
+  Box,
+  Divider,
 } from '@mui/material'
 import { EditComponentDialogProps } from '../types/types'
+import ChartPreview from './ChartPreview'
 
 const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
   open,
@@ -23,12 +26,102 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
   onSave,
 }) => {
   const [editedProps, setEditedProps] = useState<Record<string, unknown>>({})
+  // For chart preview - parsed data with proper typing
+  const [parsedChartData, setParsedChartData] = useState<{
+    labels: string[]
+    datasets: Array<{
+      label: string
+      data: number[]
+      backgroundColor?: string | string[]
+    }>
+  }>({
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+    datasets: [{
+      label: 'Sales',
+      data: [30, 20, 15, 25, 10],
+      backgroundColor: [
+        'rgba(255, 99, 132, 0.8)',
+        'rgba(54, 162, 235, 0.8)',
+        'rgba(255, 206, 86, 0.8)',
+        'rgba(75, 192, 192, 0.8)',
+        'rgba(153, 102, 255, 0.8)'
+      ]
+    }]
+  })
 
   useEffect(() => {
     if (component) {
       setEditedProps({ ...component.props })
+      
+      // Parse chart data if it's a chart component
+      if (component.type === 'Chart') {
+        try {
+          const chartData = component.props.data as string || '{}'
+          if (chartData.trim().startsWith('<')) {
+            // Basic XML parsing logic here if needed
+            // For now we'll skip XML support in the live preview
+            setParsedChartData({
+              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+              datasets: [{
+                label: 'Sales',
+                data: [30, 20, 15, 25, 10],
+                backgroundColor: [
+                  'rgba(255, 99, 132, 0.8)',
+                  'rgba(54, 162, 235, 0.8)',
+                  'rgba(255, 206, 86, 0.8)',
+                  'rgba(75, 192, 192, 0.8)',
+                  'rgba(153, 102, 255, 0.8)'
+                ]
+              }]
+            })
+          } else {
+            // Parse JSON data
+            const data = JSON.parse(chartData)
+            setParsedChartData(data)
+          }
+        } catch (error) {
+          console.error("Error parsing chart data:", error)
+          // Set default data on error
+          setParsedChartData({
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+            datasets: [{
+              label: 'Sales',
+              data: [30, 20, 15, 25, 10],
+              backgroundColor: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 206, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)'
+              ]
+            }]
+          })
+        }
+      }
     }
   }, [component])
+
+  // Update parsed chart data whenever edited props change
+  useEffect(() => {
+    if (component?.type === 'Chart') {
+      try {
+        const chartData = editedProps.data as string || '{}'
+        if (chartData.trim().startsWith('<')) {
+          // Skip XML for now in the live preview
+        } else if (chartData.trim()) {
+          // Only try to parse if there's actual data
+          const data = JSON.parse(chartData)
+          setParsedChartData(data)
+        }
+      } catch (error: unknown) {
+        // Silently fail during editing - this will happen as user types
+        // We'll keep the last valid parsed data
+        if (error instanceof Error) {
+          console.debug("Invalid JSON format while editing:", error.message)
+        }
+      }
+    }
+  }, [editedProps.data, component?.type])
 
   if (!component) {
     return null
@@ -395,6 +488,62 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
             />
           </>
         )
+      case 'Chart':
+        return (
+          <>
+            {/* Live Chart Preview */}
+            <Box sx={{ mb: 3, mt: 1 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>Live Preview</Typography>
+              <Box sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1, p: 1, bgcolor: 'rgba(0,0,0,0.02)' }}>
+                <ChartPreview
+                  chartType="pie"
+                  title={(editedProps.title as string) || ''}
+                  description={(editedProps.description as string) || ''}
+                  data={parsedChartData}
+                />
+              </Box>
+            </Box>
+            
+            <Divider sx={{ my: 2 }} />
+            
+            <TextField
+              label="Chart Title"
+              fullWidth
+              margin="normal"
+              value={(editedProps.title as string) || ''}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, title: e.target.value })
+              }
+            />
+            <TextField
+              label="Description"
+              fullWidth
+              margin="normal"
+              value={(editedProps.description as string) || ''}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, description: e.target.value })
+              }
+            />
+            <TextField
+              label="Chart Data (JSON or XML)"
+              fullWidth
+              multiline
+              rows={8}
+              margin="normal"
+              value={(editedProps.data as string) || '{}'}
+              onChange={(e) =>
+                setEditedProps({ ...editedProps, data: e.target.value })
+              }
+              helperText={
+                <span>
+                  JSON format example: {"{"}"labels": ["Jan", "Feb"], "datasets": [{"{"}"label": "Sales", "data": [20, 30], "backgroundColor": ["rgba(255, 99, 132, 0.8)", "rgba(54, 162, 235, 0.8)"]{"}"}]{"}"}
+                  <br />
+                  XML format also supported
+                </span>
+              }
+            />
+          </>
+        )
       case 'DataUpload':
         return (
           <>
@@ -486,7 +635,7 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Edit {component.type}</DialogTitle>
+      <DialogTitle>Edit {component.type === 'Chart' ? 'Pie Chart' : component.type}</DialogTitle>
       <DialogContent>{renderPropsEdit()}</DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>

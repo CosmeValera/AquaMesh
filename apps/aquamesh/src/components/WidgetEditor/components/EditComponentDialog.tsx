@@ -18,6 +18,7 @@ import {
 } from '@mui/material'
 import { EditComponentDialogProps } from '../types/types'
 import ChartPreview from './ChartPreview'
+import PieChartEditor from './PieChartEditor'
 
 const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
   open,
@@ -488,7 +489,52 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
             />
           </>
         )
-      case 'Chart':
+      case 'Chart': {
+        // Check if it's a pie chart
+        const isPieChart = Boolean(
+          (editedProps.chartType as string)?.toLowerCase() === 'pie' ||
+          ((editedProps.data as string) && (editedProps.data as string).includes('"type":"pie"'))
+        )
+        
+        // If it's a pie chart, use our new user-friendly PieChartEditor
+        if (isPieChart) {
+          return (
+            <>
+              <TextField
+                label="Chart Title"
+                fullWidth
+                margin="normal"
+                value={(editedProps.title as string) || ''}
+                onChange={(e) =>
+                  setEditedProps({ ...editedProps, title: e.target.value })
+                }
+              />
+              <TextField
+                label="Description"
+                fullWidth
+                margin="normal"
+                value={(editedProps.description as string) || ''}
+                onChange={(e) =>
+                  setEditedProps({ ...editedProps, description: e.target.value })
+                }
+              />
+              
+              <Divider sx={{ my: 2 }} />
+              
+              {/* User-friendly pie chart editor */}
+              <PieChartEditor 
+                initialData={(editedProps.data as string) || '{}'}
+                onChange={(jsonData) => 
+                  setEditedProps({ ...editedProps, data: jsonData })
+                }
+                title={(editedProps.title as string) || ''}
+                description={(editedProps.description as string) || ''}
+              />
+            </>
+          )
+        }
+        
+        // For other chart types, keep the existing code
         return (
           <>
             <TextField
@@ -543,6 +589,7 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
             </Box>
           </>
         )
+      }
       case 'DataUpload':
         return (
           <>

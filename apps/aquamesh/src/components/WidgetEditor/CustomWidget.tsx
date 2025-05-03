@@ -183,23 +183,34 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
         <Box key={component.id} sx={{ mb: 1 }}>
           <Button 
             variant={component.props.variant as 'contained' | 'outlined' | 'text' || 'contained'} 
-            size={component.props.size as 'small' | 'medium' | 'large' || 'small'}
+            size={component.props.size as 'small' | 'medium' | 'large' || 'medium'}
             color={component.props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' || 'primary'}
             onClick={() => {
               const clickAction = component.props.clickAction as string || 'toast'
               
-              if (clickAction === 'toast') {
+              if (clickAction === 'toast' && component.props.showToast !== false) {
                 const message = component.props.toastMessage as string || 'Button clicked!'
                 const severity = component.props.toastSeverity as 'success' | 'error' | 'info' | 'warning' || 'info'
                 showToast(message, severity)
               } else if (clickAction === 'openUrl') {
-                const url = component.props.url as string
-                if (url) {
-                  window.open(url, '_blank', 'noopener,noreferrer')
-                } else {
-                  showToast('No URL configured for this button', 'warning')
+                // Get URL prop and handle it safely
+                try {
+                  // Try to get the URL - handle various potential types
+                  let url = ''
+                  if (component.props.url) {
+                    url = String(component.props.url)
+                  }
+                  
+                  if (url) {
+                    window.open(url, '_blank', 'noopener,noreferrer')
+                  } else {
+                    showToast('No URL configured for this button', 'warning')
+                  }
+                } catch (error) {
+                  showToast('Error opening URL', 'error')
                 }
               }
+              // For 'none' action, do nothing
             }}
           >
             {component.props.text as string}

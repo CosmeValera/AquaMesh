@@ -332,7 +332,7 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
                 fullWidth
                 margin="normal"
                 placeholder="https://example.com"
-                value={(editedProps.url as string) || ''}
+                value={String(editedProps.url || '')}
                 onChange={(e) =>
                   setEditedProps({ ...editedProps, url: e.target.value })
                 }
@@ -491,21 +491,6 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
       case 'Chart':
         return (
           <>
-            {/* Live Chart Preview */}
-            <Box sx={{ mb: 3, mt: 1 }}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>Live Preview</Typography>
-              <Box sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1, p: 1, bgcolor: 'rgba(0,0,0,0.02)' }}>
-                <ChartPreview
-                  chartType="pie"
-                  title={(editedProps.title as string) || ''}
-                  description={(editedProps.description as string) || ''}
-                  data={parsedChartData}
-                />
-              </Box>
-            </Box>
-            
-            <Divider sx={{ my: 2 }} />
-            
             <TextField
               label="Chart Title"
               fullWidth
@@ -536,12 +521,26 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
               }
               helperText={
                 <span>
-                  JSON format example: {"{"}"labels": ["Jan", "Feb"], "datasets": [{"{"}"label": "Sales", "data": [20, 30], "backgroundColor": ["rgba(255, 99, 132, 0.8)", "rgba(54, 162, 235, 0.8)"]{"}"}]{"}"}
+                  JSON format example: {`{"labels": ["Jan", "Feb"], "datasets": [{"data": [20, 30], "backgroundColor": ["rgba(255, 99, 132, 0.8)", "rgba(54, 162, 235, 0.8)"]}]}`}
                   <br />
-                  XML format also supported
                 </span>
               }
             />
+            
+            <Divider sx={{ my: 2 }} />
+            
+            {/* Live Chart Preview */}
+            <Box sx={{ mb: 3, mt: 1 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>Live Preview</Typography>
+              <Box sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1, p: 1, bgcolor: 'rgba(0,0,0,0.02)' }}>
+                <ChartPreview
+                  chartType="pie"
+                  title={(editedProps.title as string) || ''}
+                  description={(editedProps.description as string) || ''}
+                  data={parsedChartData}
+                />
+              </Box>
+            </Box>
           </>
         )
       case 'DataUpload':

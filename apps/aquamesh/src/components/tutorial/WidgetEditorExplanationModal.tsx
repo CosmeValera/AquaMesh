@@ -24,6 +24,7 @@ import TextFieldsIcon from '@mui/icons-material/TextFields'
 import ToggleOnIcon from '@mui/icons-material/ToggleOn'
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
 import FlexibleIcon from '@mui/icons-material/Dashboard'
+import PieChartIcon from '@mui/icons-material/PieChart'
 
 interface WidgetEditorExplanationModalProps {
   open: boolean
@@ -126,6 +127,11 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
           title: 'Switch',
           icon: <ToggleOnIcon />,
           content: 'A toggle switch that allows users to choose between on/off states for boolean values. Can be configured with custom labels and default states.'
+        },
+        {
+          title: 'Pie Chart',
+          icon: <PieChartIcon />,
+          content: 'A data visualization component that displays proportional data using a circular chart. Supports custom colors, labels, and data values.'
         }
       ]
     },

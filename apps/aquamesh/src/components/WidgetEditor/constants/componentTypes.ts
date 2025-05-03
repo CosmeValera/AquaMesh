@@ -55,7 +55,6 @@ export const COMPONENT_TYPES: ComponentType[] = [
         "labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
         "datasets": [
           {
-            "label": "Sales",
             "data": [30, 20, 15, 25, 10, 5],
             "backgroundColor": [
               "rgba(255, 99, 132, 0.8)",
@@ -71,7 +70,7 @@ export const COMPONENT_TYPES: ComponentType[] = [
     },
     category: 'UI Components',
     icon: BarChartIcon,
-    tooltip: 'Adds a pie chart visualization with JSON or XML data support'
+    tooltip: 'Adds a pie chart visualization with JSON data'
   },
   
   // Layout Containers

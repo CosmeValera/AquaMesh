@@ -19,6 +19,7 @@ import {
 import { EditComponentDialogProps } from '../types/types'
 import ChartPreview from './ChartPreview'
 import PieChartEditor from './PieChartEditor'
+import ButtonEditor from './ButtonEditor'
 
 const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
   open,
@@ -208,139 +209,7 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
           />
         )
       case 'Button':
-        return (
-          <>
-            <TextField
-              label="Button Text"
-              fullWidth
-              margin="normal"
-              value={(editedProps.text as string) || ''}
-              onChange={(e) =>
-                setEditedProps({ ...editedProps, text: e.target.value })
-              }
-            />
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Variant</InputLabel>
-              <Select
-                value={(editedProps.variant as string) || 'contained'}
-                label="Variant"
-                onChange={(e) =>
-                  setEditedProps({ ...editedProps, variant: e.target.value })
-                }
-              >
-                <MenuItem value="contained">Contained</MenuItem>
-                <MenuItem value="outlined">Outlined</MenuItem>
-                <MenuItem value="text">Text</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Color</InputLabel>
-              <Select
-                value={(editedProps.color as string) || 'primary'}
-                label="Color"
-                onChange={(e) =>
-                  setEditedProps({ ...editedProps, color: e.target.value })
-                }
-              >
-                <MenuItem value="primary">Primary</MenuItem>
-                <MenuItem value="secondary">Secondary</MenuItem>
-                <MenuItem value="success">Success</MenuItem>
-                <MenuItem value="error">Error</MenuItem>
-                <MenuItem value="warning">Warning</MenuItem>
-                <MenuItem value="info">Info</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Size</InputLabel>
-              <Select
-                value={(editedProps.size as string) || 'medium'}
-                label="Size"
-                onChange={(e) =>
-                  setEditedProps({ ...editedProps, size: e.target.value })
-                }
-              >
-                <MenuItem value="small">Small</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="large">Large</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Click Action</InputLabel>
-              <Select
-                value={(editedProps.clickAction as string) || 'toast'}
-                label="Click Action"
-                onChange={(e) =>
-                  setEditedProps({ ...editedProps, clickAction: e.target.value })
-                }
-              >
-                <MenuItem value="toast">Show Toast</MenuItem>
-                <MenuItem value="openUrl">Open URL</MenuItem>
-                <MenuItem value="none">No Action</MenuItem>
-              </Select>
-            </FormControl>
-            
-            {(editedProps.clickAction === 'toast' || !editedProps.clickAction) && (
-              <>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={Boolean(editedProps.showToast)}
-                      onChange={(e) =>
-                        setEditedProps({
-                          ...editedProps,
-                          showToast: e.target.checked,
-                        })
-                      }
-                    />
-                  }
-                  label="Show Toast on Click"
-                />
-                
-                {Boolean(editedProps.showToast) && (
-                  <>
-                    <TextField
-                      label="Toast Message"
-                      fullWidth
-                      margin="normal"
-                      value={(editedProps.toastMessage as string) || ''}
-                      onChange={(e) =>
-                        setEditedProps({ ...editedProps, toastMessage: e.target.value })
-                      }
-                    />
-                    <FormControl fullWidth margin="normal">
-                      <InputLabel>Toast Severity</InputLabel>
-                      <Select
-                        value={(editedProps.toastSeverity as string) || 'info'}
-                        label="Toast Severity"
-                        onChange={(e) =>
-                          setEditedProps({ ...editedProps, toastSeverity: e.target.value })
-                        }
-                      >
-                        <MenuItem value="info">Info</MenuItem>
-                        <MenuItem value="success">Success</MenuItem>
-                        <MenuItem value="warning">Warning</MenuItem>
-                        <MenuItem value="error">Error</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </>
-                )}
-              </>
-            )}
-            
-            {editedProps.clickAction === 'openUrl' && (
-              <TextField
-                label="URL to Open"
-                fullWidth
-                margin="normal"
-                placeholder="https://example.com"
-                value={String(editedProps.url || '')}
-                onChange={(e) =>
-                  setEditedProps({ ...editedProps, url: e.target.value })
-                }
-              />
-            )}
-          </>
-        )
+        return <ButtonEditor props={editedProps} onChange={setEditedProps} />
       case 'TextField':
         return (
           <>

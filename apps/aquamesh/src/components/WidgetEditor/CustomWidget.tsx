@@ -14,6 +14,19 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import WidgetStorage from './WidgetStorage'
 import ChartPreview from './components/ChartPreview'
+import AddIcon from '@mui/icons-material/Add'
+import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import DeleteIcon from '@mui/icons-material/Delete'
+import LinkIcon from '@mui/icons-material/Link'
+import NotificationsIcon from '@mui/icons-material/Notifications'
+import CodeIcon from '@mui/icons-material/Code'
+import SettingsIcon from '@mui/icons-material/Settings'
+import PreviewIcon from '@mui/icons-material/Preview'
+import SendIcon from '@mui/icons-material/Send'
+import SaveIcon from '@mui/icons-material/Save'
+import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import ColorLensIcon from '@mui/icons-material/ColorLens'
 
 interface ComponentData {
   id: string
@@ -31,6 +44,23 @@ interface CustomWidgetProps {
     widgetId?: string
     components?: ComponentData[]
   }
+}
+
+// Icon mapping - must match ButtonEditor
+const AVAILABLE_ICONS: Record<string, React.ElementType> = {
+  add: AddIcon,
+  delete: DeleteIcon,
+  link: LinkIcon,
+  notification: NotificationsIcon,
+  code: CodeIcon,
+  settings: SettingsIcon,
+  preview: PreviewIcon,
+  openNew: OpenInNewIcon,
+  colorLens: ColorLensIcon,
+  send: SendIcon,
+  save: SaveIcon,
+  upload: CloudUploadIcon,
+  check: CheckCircleIcon
 }
 
 // Component that renders a saved widget
@@ -178,13 +208,41 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
           <Typography variant="body1">{component.props.text as string}</Typography>
         </Box>
       )
-    case 'Button':
+    case 'Button': {
+      // Get the icon component based on the iconName prop
+      const iconName = component.props.iconName as string || 'add'
+      const IconComponent = AVAILABLE_ICONS[iconName] || AddIcon
+      
       return (
         <Box key={component.id} sx={{ mb: 1 }}>
           <Button 
             variant={component.props.variant as 'contained' | 'outlined' | 'text' || 'contained'} 
             size={component.props.size as 'small' | 'medium' | 'large' || 'medium'}
             color={component.props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' || 'primary'}
+            fullWidth={Boolean(component.props.fullWidth)}
+            disabled={Boolean(component.props.disabled)}
+            className={component.props.className as string}
+            data-testid={component.props.dataTestId as string}
+            sx={{
+              margin: `${component.props.margin || 0}px`,
+              borderRadius: `${component.props.borderRadius || 4}px`,
+              fontWeight: component.props.fontWeight as number,
+              fontStyle: component.props.fontStyle as string,
+              textDecoration: component.props.textDecoration as string,
+              ...(component.props.customColor ? {
+                backgroundColor: component.props.variant === 'contained' ? component.props.customColor : 'transparent',
+                borderColor: component.props.customColor,
+                color: component.props.variant === 'contained' ? '#fff' : component.props.customColor,
+                '&:hover': {
+                  backgroundColor: component.props.variant === 'contained' 
+                    ? component.props.customHoverColor || component.props.customColor 
+                    : 'rgba(25, 118, 210, 0.04)',
+                  borderColor: component.props.customHoverColor || component.props.customColor
+                }
+              } : {})
+            }}
+            startIcon={component.props.showStartIcon ? <IconComponent /> : undefined}
+            endIcon={component.props.showEndIcon ? <OpenInNewIcon /> : undefined}
             onClick={() => {
               const clickAction = component.props.clickAction as string || 'toast'
               
@@ -206,7 +264,8 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
                   } else {
                     showToast('No URL configured for this button', 'warning')
                   }
-                } catch (error) {
+                } catch (err) {
+                  console.error('Error opening URL:', err)
                   showToast('Error opening URL', 'error')
                 }
               }
@@ -217,6 +276,7 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
           </Button>
         </Box>
       )
+    }
     case 'TextField':
       return (
         <Box key={component.id} sx={{ mb: 1 }}>
@@ -282,7 +342,7 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
         datasets: Array<{
           label: string
           data: number[]
-          backgroundColor?: string
+          backgroundColor?: string | string[]
         }>
       } = {
         labels: [],
@@ -337,7 +397,7 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
               'rgba(75, 192, 192, 0.8)',
               'rgba(153, 102, 255, 0.8)',
               'rgba(255, 159, 64, 0.8)'
-            ]
+            ] as string | string[]
           }]
         }
       }

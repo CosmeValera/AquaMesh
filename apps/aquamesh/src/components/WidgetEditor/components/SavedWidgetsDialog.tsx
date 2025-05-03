@@ -10,7 +10,6 @@ import {
   ListItem,
   IconButton,
   Box,
-  Divider,
   Paper,
   Tooltip,
   Chip,
@@ -25,7 +24,7 @@ interface SavedWidgetsDialogProps {
   open: boolean
   widgets: CustomWidget[]
   onClose: () => void
-  onLoad: (widget: CustomWidget) => void
+  onLoad: (widget: CustomWidget, editMode?: boolean) => void
   onDelete: (id: string) => void
 }
 
@@ -36,17 +35,17 @@ const SavedWidgetsDialog: React.FC<SavedWidgetsDialogProps> = ({
   onLoad,
   onDelete,
 }) => {
-  // Function to preview a widget (just load it)
+  // Function to preview a widget (load in view mode)
   const handlePreviewWidget = (widget: CustomWidget) => {
-    onLoad(widget)
+    // Pass false to explicitly set it to view mode
+    onLoad(widget, false)
   }
   
-  // Function to edit a widget (load with edit mode flag)
+  // Function to edit a widget (load in edit mode)
   const handleEditWidget = (e: React.MouseEvent, widget: CustomWidget) => {
     e.stopPropagation()
-    // Here we would pass an edit flag, but for now just call onLoad
-    // In a real implementation, you would modify the load function to accept an editMode parameter
-    onLoad(widget)
+    // Pass true to explicitly set it to edit mode
+    onLoad(widget, true)
   }
   
   return (

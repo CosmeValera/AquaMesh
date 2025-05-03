@@ -354,7 +354,7 @@ export const useWidgetEditor = () => {
   }
 
   // Handle loading a widget
-  const handleLoadWidget = (widget: CustomWidget) => {
+  const handleLoadWidget = (widget: CustomWidget, shouldEnterEditMode?: boolean) => {
     setWidgetData({
       name: widget.name,
       components: widget.components
@@ -362,9 +362,15 @@ export const useWidgetEditor = () => {
     
     setShowWidgetList(false)
     
+    // Set editor mode based on the passed parameter (true = edit mode, false = preview mode)
+    // If no parameter is provided, maintain current mode
+    if (shouldEnterEditMode !== undefined) {
+      setEditMode(shouldEnterEditMode)
+    }
+    
     setNotification({
       open: true,
-      message: `Widget "${widget.name}" loaded`,
+      message: `Widget "${widget.name}" loaded in ${shouldEnterEditMode ? 'edit' : 'preview'} mode`,
       severity: 'success'
     })
   }

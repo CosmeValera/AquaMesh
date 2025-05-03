@@ -18,6 +18,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard'
 import CreateIcon from '@mui/icons-material/Create'
 import InfoIcon from '@mui/icons-material/Info'
 import DashboardWidgetExplanationModal from './DashboardWidgetExplanationModal'
+import WidgetEditorExplanationModal from './WidgetEditorExplanationModal'
 
 interface TutorialModalProps {
   open: boolean
@@ -37,6 +38,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [explanationModalOpen, setExplanationModalOpen] = useState(false)
+  const [widgetEditorModalOpen, setWidgetEditorModalOpen] = useState(false)
   const tutorialShown = localStorage.getItem('aquamesh-tutorial-shown')
   
   // Check if user is admin
@@ -120,14 +122,28 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
       icon: <CreateIcon fontSize="large" color="primary" />,
       buttonText: 'Open Widget Editor',
       image: placeholderImages.customWidgetCreation,
-      action: () => {
-        // Close modal and programmatically click the widget editor button directly
-        onClose()
-        const createWidgetButton = document.querySelector('[data-tutorial-id="create-widget-button"]')
-        if (createWidgetButton) {
-          (createWidgetButton as HTMLElement).click()
+      // Instead of a single button, we'll render two buttons
+      hasMultipleButtons: true,
+      buttons: [
+        {
+          text: 'Learn More',
+          action: () => {
+            // Open the widget editor explanation modal
+            setWidgetEditorModalOpen(true)
+          }
+        },
+        {
+          text: 'Open Widget Editor',
+          action: () => {
+            // Close modal and programmatically click the widget editor button directly
+            onClose()
+            const createWidgetButton = document.querySelector('[data-tutorial-id="create-widget-button"]')
+            if (createWidgetButton) {
+              (createWidgetButton as HTMLElement).click()
+            }
+          }
         }
-      }
+      ]
     })
   }
 
@@ -323,6 +339,12 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
       <DashboardWidgetExplanationModal
         open={explanationModalOpen}
         onClose={() => setExplanationModalOpen(false)}
+      />
+
+      {/* The widget editor explanation modal */}
+      <WidgetEditorExplanationModal
+        open={widgetEditorModalOpen}
+        onClose={() => setWidgetEditorModalOpen(false)}
       />
     </>
   )

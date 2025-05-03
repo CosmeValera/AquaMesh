@@ -139,47 +139,111 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
                 <MenuItem value="text">Text</MenuItem>
               </Select>
             </FormControl>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(editedProps.showToast)}
-                  onChange={(e) =>
-                    setEditedProps({
-                      ...editedProps,
-                      showToast: e.target.checked,
-                    })
-                  }
-                />
-              }
-              label="Show Toast on Click"
-            />
-            {editedProps.showToast && (
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Color</InputLabel>
+              <Select
+                value={(editedProps.color as string) || 'primary'}
+                label="Color"
+                onChange={(e) =>
+                  setEditedProps({ ...editedProps, color: e.target.value })
+                }
+              >
+                <MenuItem value="primary">Primary</MenuItem>
+                <MenuItem value="secondary">Secondary</MenuItem>
+                <MenuItem value="success">Success</MenuItem>
+                <MenuItem value="error">Error</MenuItem>
+                <MenuItem value="warning">Warning</MenuItem>
+                <MenuItem value="info">Info</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Size</InputLabel>
+              <Select
+                value={(editedProps.size as string) || 'medium'}
+                label="Size"
+                onChange={(e) =>
+                  setEditedProps({ ...editedProps, size: e.target.value })
+                }
+              >
+                <MenuItem value="small">Small</MenuItem>
+                <MenuItem value="medium">Medium</MenuItem>
+                <MenuItem value="large">Large</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Click Action</InputLabel>
+              <Select
+                value={(editedProps.clickAction as string) || 'toast'}
+                label="Click Action"
+                onChange={(e) =>
+                  setEditedProps({ ...editedProps, clickAction: e.target.value })
+                }
+              >
+                <MenuItem value="toast">Show Toast</MenuItem>
+                <MenuItem value="openUrl">Open URL</MenuItem>
+                <MenuItem value="none">No Action</MenuItem>
+              </Select>
+            </FormControl>
+            
+            {(editedProps.clickAction === 'toast' || !editedProps.clickAction) && (
               <>
-                <TextField
-                  label="Toast Message"
-                  fullWidth
-                  margin="normal"
-                  value={(editedProps.toastMessage as string) || ''}
-                  onChange={(e) =>
-                    setEditedProps({ ...editedProps, toastMessage: e.target.value })
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={Boolean(editedProps.showToast)}
+                      onChange={(e) =>
+                        setEditedProps({
+                          ...editedProps,
+                          showToast: e.target.checked,
+                        })
+                      }
+                    />
                   }
+                  label="Show Toast on Click"
                 />
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Toast Severity</InputLabel>
-                  <Select
-                    value={(editedProps.toastSeverity as string) || 'info'}
-                    label="Toast Severity"
-                    onChange={(e) =>
-                      setEditedProps({ ...editedProps, toastSeverity: e.target.value })
-                    }
-                  >
-                    <MenuItem value="info">Info</MenuItem>
-                    <MenuItem value="success">Success</MenuItem>
-                    <MenuItem value="warning">Warning</MenuItem>
-                    <MenuItem value="error">Error</MenuItem>
-                  </Select>
-                </FormControl>
+                
+                {Boolean(editedProps.showToast) && (
+                  <>
+                    <TextField
+                      label="Toast Message"
+                      fullWidth
+                      margin="normal"
+                      value={(editedProps.toastMessage as string) || ''}
+                      onChange={(e) =>
+                        setEditedProps({ ...editedProps, toastMessage: e.target.value })
+                      }
+                    />
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel>Toast Severity</InputLabel>
+                      <Select
+                        value={(editedProps.toastSeverity as string) || 'info'}
+                        label="Toast Severity"
+                        onChange={(e) =>
+                          setEditedProps({ ...editedProps, toastSeverity: e.target.value })
+                        }
+                      >
+                        <MenuItem value="info">Info</MenuItem>
+                        <MenuItem value="success">Success</MenuItem>
+                        <MenuItem value="warning">Warning</MenuItem>
+                        <MenuItem value="error">Error</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </>
+                )}
               </>
+            )}
+            
+            {editedProps.clickAction === 'openUrl' && (
+              <TextField
+                label="URL to Open"
+                fullWidth
+                margin="normal"
+                placeholder="https://example.com"
+                value={(editedProps.url as string) || ''}
+                onChange={(e) =>
+                  setEditedProps({ ...editedProps, url: e.target.value })
+                }
+              />
             )}
           </>
         )

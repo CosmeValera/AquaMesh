@@ -13,6 +13,7 @@ import {
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import WidgetStorage from './WidgetStorage'
+import DataUpload from './components/builtin/DataUpload'
 
 interface ComponentData {
   id: string
@@ -182,17 +183,39 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
         <Box key={component.id} sx={{ mb: 1 }}>
           <Button 
             variant={component.props.variant as 'contained' | 'outlined' | 'text' || 'contained'} 
-            size="small"
+            size={component.props.size as 'small' | 'medium' | 'large' || 'small'}
+            color={component.props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' || 'primary'}
             onClick={() => {
-              if (component.props.showToast) {
+              const clickAction = component.props.clickAction as string || 'toast'
+              
+              if (clickAction === 'toast' && component.props.showToast) {
                 const message = component.props.toastMessage as string || 'Button clicked!'
                 const severity = component.props.toastSeverity as 'success' | 'error' | 'info' | 'warning' || 'info'
                 showToast(message, severity)
+              } else if (clickAction === 'openUrl') {
+                const url = component.props.url as string
+                if (url) {
+                  window.open(url, '_blank', 'noopener,noreferrer')
+                } else {
+                  showToast('No URL configured for this button', 'warning')
+                }
               }
             }}
           >
             {component.props.text as string}
           </Button>
+        </Box>
+      )
+    case 'DataUpload':
+      return (
+        <Box key={component.id} sx={{ mb: 1 }}>
+          <DataUpload 
+            label={component.props.label as string || 'Upload File'}
+            acceptedFileTypes={component.props.acceptedFileTypes as string || 'image/*,application/pdf'}
+            maxFileSize={component.props.maxFileSize as number || 5}
+            allowMultiple={component.props.allowMultiple as boolean || false}
+            helperText={component.props.helperText as string}
+          />
         </Box>
       )
     case 'TextField':

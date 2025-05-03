@@ -18,11 +18,13 @@ import PreviewIcon from '@mui/icons-material/Visibility'
 import SaveIcon from '@mui/icons-material/Save'
 import WidgetsIcon from '@mui/icons-material/Widgets'
 import GridViewIcon from '@mui/icons-material/GridView'
-import TableRowsIcon from '@mui/icons-material/TableRows'
-import FlexBoxIcon from '@mui/icons-material/ViewComfy'
-import ImageIcon from '@mui/icons-material/Image'
 import InputIcon from '@mui/icons-material/Input'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import SmartButtonIcon from '@mui/icons-material/SmartButton'
+import TextFieldsIcon from '@mui/icons-material/TextFields'
+import ToggleOnIcon from '@mui/icons-material/ToggleOn'
+import FileUploadIcon from '@mui/icons-material/FileUpload'
+import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
+import FlexibleIcon from '@mui/icons-material/Dashboard'
 
 interface WidgetEditorExplanationModalProps {
   open: boolean
@@ -69,7 +71,7 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
       ]
     },
     {
-      title: 'Toolbar Main Controls',
+      title: 'Toolbar Controls',
       subsections: [
         {
           title: 'Edit/Preview Mode',
@@ -104,21 +106,51 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
       ]
     },
     {
+      title: 'UI Components',
+      subsections: [
+        {
+          title: 'Text Label',
+          icon: <TextFieldsIcon />,
+          content: 'A static text display element for showing information. Can be configured with different styles, sizes, and colors.'
+        },
+        {
+          title: 'Text Field',
+          icon: <InputIcon />,
+          content: 'An input field for text entry. Supports single-line, multi-line, validation, and various styling options.'
+        },
+        {
+          title: 'Button',
+          icon: <SmartButtonIcon />,
+          content: 'A clickable button element that triggers actions. Configurable properties include button text, variant, colors, and ability to show toast notifications when clicked.'
+        },
+        {
+          title: 'Switch',
+          icon: <ToggleOnIcon />,
+          content: 'A toggle switch that allows users to choose between on/off states for boolean values. Can be configured with custom labels and default states.'
+        },
+        {
+          title: 'Data Upload',
+          icon: <FileUploadIcon />,
+          content: 'A component that allows users to upload files like PDFs, images, and other data. Files can be previewed and managed directly within the widget.'
+        }
+      ]
+    },
+    {
       title: 'Layout Components',
       subsections: [
         {
           title: 'Fieldset',
-          icon: <ExpandMoreIcon />,
+          icon: <ViewQuiltIcon />,
           content: 'A collapsible container that can group related components. Users can toggle the visibility of its contents, making it useful for organizing complex widgets.'
         },
         {
           title: 'Grid Layout',
-          icon: <TableRowsIcon />,
+          icon: <GridViewIcon />,
           content: 'Arranges components in a table-like grid with rows and columns. Useful for creating structured, tabular layouts with precise alignment.'
         },
         {
           title: 'Flex Layout',
-          icon: <FlexBoxIcon />,
+          icon: <FlexibleIcon />,
           content: 'A more dynamic layout system that allows components to grow, shrink, and reposition based on available space. Ideal for responsive designs that need to adapt to different screen sizes.'
         }
       ]
@@ -199,7 +231,12 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
               {section.subsections && (
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                   {section.subsections.map((subsection, subIdx) => (
-                    <Grid item xs={12} md={subsection.title === 'Grid Layout' || subsection.title === 'Flex Layout' || subsection.title === 'Fieldset' ? 6 : 4} key={subIdx}>
+                    <Grid 
+                      item 
+                      xs={12} 
+                      md={4} 
+                      key={subIdx}
+                    >
                       <Paper 
                         elevation={1} 
                         sx={{ 
@@ -261,7 +298,6 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
           size="large"
           startIcon={<EditIcon />}
           sx={{ 
-            mb: 2,
             bgcolor: '#00D1AB',
             color: '#191919',
             px: 3,

@@ -122,7 +122,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                     textAlign: 'center',
                   }}
                 >
-                  {isDragging ? 'Drop component here' : (editMode ? 'Drag components here' : 'No content')}
+                  {isDragging ? 'Drop component here' : (editMode ? 'Drag and drop components here' : 'No content')}
                 </Box>
               )}
             </Collapse>
@@ -199,7 +199,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
               ))
             ) : (
               <Box sx={{ width: '100%', textAlign: 'center', color: 'text.secondary' }}>
-                {isDragging ? 'Drop component here' : (editMode ? 'Drag components here' : 'Empty Flex Container')}
+                {isDragging ? 'Drop component here' : (editMode ? 'Drag and drop components here' : 'Empty Flex Container')}
               </Box>
             )}
           </Box>
@@ -257,7 +257,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                 textAlign: 'center', 
                 color: 'text.secondary' 
               }}>
-                {isDragging ? 'Drop component here' : (editMode ? 'Drag components here' : 'Empty Grid Container')}
+                {isDragging ? 'Drop component here' : (editMode ? 'Drag and drop components here' : 'Empty Grid Container')}
               </Box>
             )}
           </Box>

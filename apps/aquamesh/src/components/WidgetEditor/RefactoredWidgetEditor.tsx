@@ -12,6 +12,8 @@ import {
   Tooltip,
 } from '@mui/material'
 import SaveIcon from '@mui/icons-material/Save'
+import EditIcon from '@mui/icons-material/Edit'
+import DescriptionIcon from '@mui/icons-material/Description'
 import SettingsIcon from '@mui/icons-material/Settings'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import { getComponentsByCategory } from './constants/componentTypes'
@@ -128,14 +130,15 @@ const WidgetEditor: React.FC = () => {
             <SettingsIcon />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Edit mode">
+        <Tooltip title="Edit/Preview mode">
           <Button
             size="small"
-            variant={editMode ? 'contained' : 'outlined'}
+            variant={'contained'}
+            startIcon={editMode ? <DescriptionIcon /> :  <EditIcon /> }
             onClick={toggleEditMode}
             sx={{ mr: 1 }}
           >
-            {editMode ? 'Edit Mode' : 'Preview Mode'}
+            {editMode ? 'Preview Mode' :  'Edit Mode' }
           </Button>
         </Tooltip>
         <Tooltip title={isUpdating ? "Update widget" : "Save widget"}>

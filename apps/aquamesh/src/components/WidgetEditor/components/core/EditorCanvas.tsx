@@ -86,6 +86,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         handleContainerDragOver={handleContainerDragOver}
         handleContainerDragLeave={handleContainerDragLeave}
         handleContainerDrop={handleContainerDrop}
+        showWidgetName={editMode}
       />
     ))
   }

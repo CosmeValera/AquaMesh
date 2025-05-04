@@ -38,7 +38,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   handleContainerDragOver,
   handleContainerDragLeave,
   handleContainerDrop,
-  onToggleVisibility
+  onToggleVisibility,
+  showWidgetName
 }) => {
   const isCurrentTarget = dropTarget.id === component.id && dropTarget.isHovering
   const isHidden = Boolean(component.hidden)
@@ -147,6 +148,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                     handleContainerDragOver={handleContainerDragOver}
                     handleContainerDragLeave={handleContainerDragLeave}
                     handleContainerDrop={handleContainerDrop}
+                    onToggleVisibility={onToggleVisibility}
+                    showWidgetName={showWidgetName}
                   />
                 ))
               ) : (
@@ -281,6 +284,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                   handleContainerDragOver={handleContainerDragOver}
                   handleContainerDragLeave={handleContainerDragLeave}
                   handleContainerDrop={handleContainerDrop}
+                  onToggleVisibility={onToggleVisibility}
+                  showWidgetName={showWidgetName}
                 />
               ))
             ) : (
@@ -331,6 +336,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                   handleContainerDragOver={handleContainerDragOver}
                   handleContainerDragLeave={handleContainerDragLeave}
                   handleContainerDrop={handleContainerDrop}
+                  onToggleVisibility={onToggleVisibility}
+                  showWidgetName={showWidgetName}
                 />
               ))
             ) : (

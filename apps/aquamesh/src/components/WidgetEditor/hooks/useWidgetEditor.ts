@@ -328,7 +328,7 @@ export const useWidgetEditor = () => {
       setNotification({
         open: true,
         message: 'Component deleted',
-        severity: 'info'
+        severity: 'error'
       })
       
       setComponentToDelete(null)
@@ -494,17 +494,19 @@ export const useWidgetEditor = () => {
 
   // Handle deleting a saved widget
   const handleDeleteSavedWidget = (id: string) => {
-    // If delete widget confirmation is turned off, delete immediately
+    // If delete confirmation is turned off, delete immediately
     if (!showDeleteWidgetConfirmation) {
-      WidgetStorage.deleteWidget(id)
-      
-      setSavedWidgets(WidgetStorage.getAllWidgets())
-      
-      setNotification({
-        open: true,
-        message: 'Widget deleted',
-        severity: 'info'
-      })
+      const widget = WidgetStorage.getWidgetById(id)
+      if (widget) {
+        WidgetStorage.deleteWidget(id)
+        setSavedWidgets(WidgetStorage.getAllWidgets())
+        
+        setNotification({
+          open: true,
+          message: `Widget "${widget.name}" deleted`,
+          severity: 'error'
+        })
+      }
       return
     }
     
@@ -513,18 +515,20 @@ export const useWidgetEditor = () => {
     setDeleteConfirmOpen(true)
   }
   
-  // Actual delete widget function
+  // Confirm deleting a saved widget
   const confirmDeleteSavedWidget = () => {
     if (widgetToDelete) {
-      WidgetStorage.deleteWidget(widgetToDelete)
-      
-      setSavedWidgets(WidgetStorage.getAllWidgets())
-      
-      setNotification({
-        open: true,
-        message: 'Widget deleted',
-        severity: 'info'
-      })
+      const widget = WidgetStorage.getWidgetById(widgetToDelete)
+      if (widget) {
+        WidgetStorage.deleteWidget(widgetToDelete)
+        setSavedWidgets(WidgetStorage.getAllWidgets())
+        
+        setNotification({
+          open: true,
+          message: `Widget "${widget.name}" deleted`,
+          severity: 'error'
+        })
+      }
       
       setWidgetToDelete(null)
       setDeleteConfirmOpen(false)

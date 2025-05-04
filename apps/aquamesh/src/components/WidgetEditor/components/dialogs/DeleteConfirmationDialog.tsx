@@ -6,8 +6,13 @@ import {
   DialogActions,
   Button,
   Typography,
+  Box,
+  Paper,
+  IconButton,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
+import CloseIcon from '@mui/icons-material/Close'
 
 interface DeleteConfirmationDialogProps {
   open: boolean
@@ -39,20 +44,55 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
     >
       <DialogTitle 
         sx={{ 
-          bgcolor: 'error.dark', 
+          bgcolor: 'error.main', 
           color: 'error.contrastText',
           display: 'flex',
           alignItems: 'center',
-          gap: 1
+          gap: 1,
+          padding: '16px 24px',
+          position: 'relative'
         }}
       >
-        <DeleteIcon />
-        {title}
+        <WarningAmberIcon />
+        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+          {title}
+        </Typography>
+        <IconButton
+          sx={{ 
+            position: 'absolute', 
+            right: 8, 
+            top: 8,
+            color: 'inherit'
+          }}
+          onClick={onCancel}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
       <DialogContent sx={{ py: 3 }}>
-        <Typography variant="body1">{content}</Typography>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 2, 
+            bgcolor: 'error.light', 
+            color: 'error.contrastText',
+            borderRadius: 2,
+            mb: 2,
+            opacity: 0.8
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <DeleteIcon color="error" />
+            <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+              {content}
+            </Typography>
+          </Box>
+        </Paper>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          This action cannot be undone.
+        </Typography>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 3 }}>
+      <DialogActions sx={{ px: 3, pb: 3, display: 'flex', justifyContent: 'space-between' }}>
         <Button 
           onClick={onCancel} 
           variant="outlined"
@@ -65,6 +105,7 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
           onClick={onConfirm} 
           variant="contained"
           color="error"
+          startIcon={<DeleteIcon />}
           sx={{ px: 3 }}
         >
           Delete

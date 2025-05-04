@@ -45,6 +45,7 @@ interface CustomWidgetProps {
     widgetId?: string
     components?: ComponentData[]
   }
+  showWidgetName?: boolean
 }
 
 // Icon mapping - must match ButtonEditor
@@ -65,7 +66,7 @@ const AVAILABLE_ICONS: Record<string, React.ElementType> = {
 }
 
 // Component that renders a saved widget
-const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propComponents, customProps, name }) => {
+const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propComponents, customProps, name, showWidgetName = false }) => {
   const [widgetComponents, setWidgetComponents] = useState<ComponentData[]>([])
   const [widgetName, setWidgetName] = useState<string>('')
   const [toastState, setToastState] = useState<{
@@ -722,8 +723,8 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
 
   return (
     <Paper sx={{ p: 2, height: '100%', overflow: 'auto', position: 'relative' }}>
-      {widgetName && (
-        <Typography variant="subtitle1" sx={{ mb: 2 }}>{widgetName}</Typography>
+      {showWidgetName && widgetName && (
+        <Typography variant="subtitle1" sx={{ mb: 2 }}>Widget Name: {widgetName}</Typography>
       )}
       {renderComponents()}
       

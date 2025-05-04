@@ -13,8 +13,7 @@ import {
   useTheme,
   useMediaQuery,
   Fade,
-  Zoom,
-  Divider
+  Zoom
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import DashboardIcon from '@mui/icons-material/Dashboard'
@@ -316,7 +315,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                             justifyContent: 'center',
                           }}
                         >
-                          {option.hasMultipleImages ? (
+                          {option.hasMultipleImages && option.images ? (
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, gap: 2 }}>
                               {option.images.map((image, imgIndex) => (
                                 <img 
@@ -361,7 +360,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                         </Box>
                         
                         {/* Render either multiple buttons or a single button */}
-                        {option.hasMultipleButtons ? (
+                        {option.hasMultipleButtons && option.buttons ? (
                           <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 2, mt: 2 }}>
                             {option.buttons.map((button, btnIndex) => (
                               <Button 

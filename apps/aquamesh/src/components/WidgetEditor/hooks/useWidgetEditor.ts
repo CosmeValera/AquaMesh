@@ -34,6 +34,11 @@ export const useWidgetEditor = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [currentEditComponent, setCurrentEditComponent] = useState<ComponentData | null>(null)
   
+  // Confirmation dialogs for deletion
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [componentToDelete, setComponentToDelete] = useState<string | null>(null)
+  const [widgetToDelete, setWidgetToDelete] = useState<string | null>(null)
+  
   // Drag and drop state
   const [dropTarget, setDropTarget] = useState<DropTarget>({ id: null, isHovering: false })
   const dropAreaRef = useRef<HTMLDivElement>(null)
@@ -49,6 +54,14 @@ export const useWidgetEditor = () => {
     const savedValue = localStorage.getItem('widget-editor-show-tooltips')
     return savedValue ? JSON.parse(savedValue) : true
   })
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<boolean>(() => {
+    const savedValue = localStorage.getItem('widget-editor-delete-confirmation')
+    return savedValue ? JSON.parse(savedValue) : true
+  })
+  const [showComponentPaletteHelp, setShowComponentPaletteHelp] = useState<boolean>(() => {
+    const savedValue = localStorage.getItem('widget-editor-show-palette-help')
+    return savedValue ? JSON.parse(savedValue) : true
+  })
 
   // Save settings to localStorage when they change
   useEffect(() => {
@@ -58,6 +71,14 @@ export const useWidgetEditor = () => {
   useEffect(() => {
     localStorage.setItem('widget-editor-show-tooltips', JSON.stringify(showTooltips))
   }, [showTooltips])
+  
+  useEffect(() => {
+    localStorage.setItem('widget-editor-delete-confirmation', JSON.stringify(showDeleteConfirmation))
+  }, [showDeleteConfirmation])
+  
+  useEffect(() => {
+    localStorage.setItem('widget-editor-show-palette-help', JSON.stringify(showComponentPaletteHelp))
+  }, [showComponentPaletteHelp])
 
   // Load saved widgets on component mount and listen for widget storage update events
   useEffect(() => {
@@ -78,6 +99,41 @@ export const useWidgetEditor = () => {
       document.removeEventListener('widgetStorageUpdated', handleWidgetUpdate)
     }
   }, [])
+
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Save with Ctrl+S
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault()
+        handleSaveWidget()
+      }
+      
+      // Toggle edit mode with Ctrl+E
+      if (e.ctrlKey && e.key === 'e') {
+        e.preventDefault()
+        toggleEditMode()
+      }
+      
+      // Open widget list with Ctrl+O
+      if (e.ctrlKey && e.key === 'o') {
+        e.preventDefault()
+        setShowWidgetList(true)
+      }
+      
+      // Open settings with Ctrl+, (comma)
+      if (e.ctrlKey && e.key === ',') {
+        e.preventDefault()
+        setShowSettingsModal(true)
+      }
+    }
+    
+    document.addEventListener('keydown', handleKeyDown)
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [widgetData]) // Depend on widgetData to ensure handleSaveWidget has the latest data
 
   // Handle drag start from component palette
   const handleDragStart = (e: React.DragEvent, type: string) => {
@@ -233,16 +289,49 @@ export const useWidgetEditor = () => {
 
   // Handle deleting a component
   const handleDeleteComponent = (id: string) => {
-    setWidgetData(prev => ({
-      ...prev,
-      components: removeComponentById(id, prev.components)
-    }))
+    // If delete confirmation is turned off, delete immediately
+    if (!showDeleteConfirmation) {
+      setWidgetData(prev => ({
+        ...prev,
+        components: removeComponentById(id, prev.components)
+      }))
+      
+      setNotification({
+        open: true,
+        message: 'Component deleted',
+        severity: 'success'
+      })
+      return
+    }
     
-    setNotification({
-      open: true,
-      message: 'Component deleted',
-      severity: 'info'
-    })
+    // Otherwise show confirmation dialog
+    setComponentToDelete(id)
+    setDeleteConfirmOpen(true)
+  }
+  
+  // Actual delete component function
+  const confirmDeleteComponent = () => {
+    if (componentToDelete) {
+      setWidgetData(prev => ({
+        ...prev,
+        components: removeComponentById(componentToDelete, prev.components)
+      }))
+      
+      setNotification({
+        open: true,
+        message: 'Component deleted',
+        severity: 'info'
+      })
+      
+      setComponentToDelete(null)
+      setDeleteConfirmOpen(false)
+    }
+  }
+  
+  // Cancel delete
+  const cancelDeleteComponent = () => {
+    setComponentToDelete(null)
+    setDeleteConfirmOpen(false)
   }
 
   // Handle editing a component or toggling FieldSet collapsed state
@@ -274,26 +363,26 @@ export const useWidgetEditor = () => {
 
   // Handle toggling component visibility
   const handleToggleVisibility = (id: string) => {
-    const component = findComponentById(id, widgetData.components);
+    const component = findComponentById(id, widgetData.components)
     
     if (component) {
       const updatedComponent = {
         ...component,
         hidden: !component.hidden
-      };
+      }
       
       setWidgetData(prev => ({
         ...prev,
         components: updateComponentById(id, updatedComponent, prev.components)
-      }));
+      }))
       
       setNotification({
         open: true,
         message: `Component ${component.hidden ? 'shown' : 'hidden'}`,
         severity: 'info'
-      });
+      })
     }
-  };
+  }
 
   // Handle saving edited component
   const handleSaveComponent = (updatedComponent: ComponentData) => {
@@ -397,15 +486,26 @@ export const useWidgetEditor = () => {
 
   // Handle deleting a saved widget
   const handleDeleteSavedWidget = (id: string) => {
-    WidgetStorage.deleteWidget(id)
-    
-    setSavedWidgets(WidgetStorage.getAllWidgets())
-    
-    setNotification({
-      open: true,
-      message: 'Widget deleted',
-      severity: 'info'
-    })
+    setWidgetToDelete(id)
+    setDeleteConfirmOpen(true)
+  }
+  
+  // Actual delete widget function
+  const confirmDeleteSavedWidget = () => {
+    if (widgetToDelete) {
+      WidgetStorage.deleteWidget(widgetToDelete)
+      
+      setSavedWidgets(WidgetStorage.getAllWidgets())
+      
+      setNotification({
+        open: true,
+        message: 'Widget deleted',
+        severity: 'info'
+      })
+      
+      setWidgetToDelete(null)
+      setDeleteConfirmOpen(false)
+    }
   }
 
   // Handle closing the notification
@@ -439,6 +539,13 @@ export const useWidgetEditor = () => {
     setShowSettingsModal,
     showTooltips,
     setShowTooltips,
+    showDeleteConfirmation,
+    setShowDeleteConfirmation,
+    showComponentPaletteHelp,
+    setShowComponentPaletteHelp,
+    deleteConfirmOpen,
+    componentToDelete,
+    widgetToDelete,
     
     // Event handlers
     handleDragStart,
@@ -460,6 +567,9 @@ export const useWidgetEditor = () => {
     handleCloseNotification,
     toggleEditMode,
     handleToggleVisibility,
+    confirmDeleteComponent,
+    cancelDeleteComponent,
+    confirmDeleteSavedWidget,
     
     // Utility
     setEditDialogOpen,

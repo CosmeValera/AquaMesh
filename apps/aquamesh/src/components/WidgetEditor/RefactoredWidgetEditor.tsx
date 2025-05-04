@@ -10,6 +10,7 @@ import EditorToolbar from './components/EditorToolbar'
 import ComponentPalette from './components/ComponentPalette'
 import EditorCanvas from './components/EditorCanvas'
 import NotificationSystem from './components/NotificationSystem'
+import DeleteConfirmationDialog from './components/DeleteConfirmationDialog'
 
 // Main Widget Editor component
 const WidgetEditor: React.FC = () => {
@@ -31,6 +32,11 @@ const WidgetEditor: React.FC = () => {
     setShowSettingsModal,
     showTooltips,
     setShowTooltips,
+    showDeleteConfirmation,
+    setShowDeleteConfirmation,
+    showComponentPaletteHelp,
+    setShowComponentPaletteHelp,
+    deleteConfirmOpen,
     
     // Event handlers
     handleDragStart,
@@ -52,6 +58,11 @@ const WidgetEditor: React.FC = () => {
     handleCloseNotification,
     toggleEditMode,
     handleToggleVisibility,
+    confirmDeleteComponent,
+    cancelDeleteComponent,
+    confirmDeleteSavedWidget,
+    componentToDelete,
+    widgetToDelete,
     
     // Utility
     setEditDialogOpen,
@@ -109,6 +120,34 @@ const WidgetEditor: React.FC = () => {
   // Check if we're updating an existing widget
   const isUpdating = savedWidgets.some(widget => widget.name === widgetData.name)
 
+  // Set up delete confirmation content based on what's being deleted
+  const getDeleteConfirmationProps = () => {
+    if (componentToDelete) {
+      return {
+        title: "Delete Component?",
+        content: "Are you sure you want to delete this component? This action cannot be undone.",
+        onConfirm: confirmDeleteComponent,
+        onCancel: cancelDeleteComponent
+      }
+    } else if (widgetToDelete) {
+      const widgetName = savedWidgets.find(w => w.id === widgetToDelete)?.name || "widget"
+      return {
+        title: "Delete Widget?",
+        content: `Are you sure you want to delete "${widgetName}"? This action cannot be undone.`,
+        onConfirm: confirmDeleteSavedWidget,
+        onCancel: cancelDeleteComponent
+      }
+    }
+    return {
+      title: "Delete Item?",
+      content: "Are you sure you want to delete this item? This action cannot be undone.",
+      onConfirm: cancelDeleteComponent,
+      onCancel: cancelDeleteComponent
+    }
+  }
+
+  const deleteConfirmProps = getDeleteConfirmationProps()
+
   return (
     <Box
       sx={{
@@ -144,6 +183,7 @@ const WidgetEditor: React.FC = () => {
         {editMode && showSidebar && (
           <ComponentPalette 
             showTooltips={showTooltips}
+            showHelpText={showComponentPaletteHelp}
             handleDragStart={handleDragStart}
           />
         )}
@@ -206,6 +246,19 @@ const WidgetEditor: React.FC = () => {
         onClose={() => setShowSettingsModal(false)}
         showTooltips={showTooltips}
         onShowTooltipsChange={setShowTooltips}
+        showDeleteConfirmation={showDeleteConfirmation}
+        onShowDeleteConfirmationChange={setShowDeleteConfirmation}
+        showComponentPaletteHelp={showComponentPaletteHelp}
+        onShowComponentPaletteHelpChange={setShowComponentPaletteHelp}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteConfirmOpen}
+        title={deleteConfirmProps.title}
+        content={deleteConfirmProps.content}
+        onConfirm={deleteConfirmProps.onConfirm}
+        onCancel={deleteConfirmProps.onCancel}
       />
     </Box>
   )

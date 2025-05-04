@@ -12,7 +12,6 @@ import {
   Grid,
   Fade,
   Zoom,
-  Tooltip,
   Tab,
   Tabs
 } from '@mui/material'
@@ -511,24 +510,22 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
                 }}
               >
                 <Box display="flex" alignItems="center" mb={1}>
-                  <Tooltip title="Drag this component in the Widget Editor">
-                    <Box 
-                      sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        bgcolor: 'rgba(255, 255, 255, 0.15)',
-                        color: 'white',
-                        borderRadius: '50%',
-                        width: 36,
-                        height: 36,
-                        mr: 1.5,
-                        cursor: 'grab'
-                      }}
-                    >
-                      {subsection.icon}
-                    </Box>
-                  </Tooltip>
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      bgcolor: 'rgba(255, 255, 255, 0.15)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: 36,
+                      height: 36,
+                      mr: 1.5,
+                      cursor: 'grab'
+                    }}
+                  >
+                    {subsection.icon}
+                  </Box>
                   <Typography variant="subtitle1" fontWeight="bold" color="white">
                     {subsection.title}
                   </Typography>
@@ -567,24 +564,22 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
                 }}
               >
                 <Box display="flex" alignItems="center" mb={1}>
-                  <Tooltip title="Drag this component in the Widget Editor">
-                    <Box 
-                      sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        bgcolor: 'rgba(255, 255, 255, 0.15)',
-                        color: 'white',
-                        borderRadius: '50%',
-                        width: 36,
-                        height: 36,
-                        mr: 1.5,
-                        cursor: 'grab'
-                      }}
-                    >
-                      {subsection.icon}
-                    </Box>
-                  </Tooltip>
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      bgcolor: 'rgba(255, 255, 255, 0.15)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: 36,
+                      height: 36,
+                      mr: 1.5,
+                      cursor: 'grab'
+                    }}
+                  >
+                    {subsection.icon}
+                  </Box>
                   <Typography variant="subtitle1" fontWeight="bold" color="white">
                     {subsection.title}
                   </Typography>

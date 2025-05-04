@@ -5,7 +5,7 @@ import ToggleOnIcon from '@mui/icons-material/ToggleOn'
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
 import FlexibleIcon from '@mui/icons-material/Dashboard'
 import GridViewIcon from '@mui/icons-material/GridView'
-import BarChartIcon from '@mui/icons-material/BarChart'
+import PieChartIcon from '@mui/icons-material/PieChart'
 import { ComponentType } from '../types/types'
 
 // Types of components that can be added to the widget
@@ -69,7 +69,7 @@ export const COMPONENT_TYPES: ComponentType[] = [
       }`
     },
     category: 'UI Components',
-    icon: BarChartIcon,
+    icon: PieChartIcon,
     tooltip: 'Adds a pie chart visualization with JSON data'
   },
   

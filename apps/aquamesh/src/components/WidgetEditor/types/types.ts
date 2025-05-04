@@ -9,6 +9,7 @@ export interface ComponentData {
   props: Record<string, unknown>;
   children?: ComponentData[];
   parentId?: string;
+  hidden?: boolean;
 }
 
 // Widget data structure
@@ -48,6 +49,7 @@ export interface ComponentPreviewProps {
   onMoveUp: (id: string) => void;
   onMoveDown: (id: string) => void;
   onAddInside: (parentId: string) => void;
+  onToggleVisibility?: (id: string) => void;
   isFirst: boolean;
   isLast: boolean;
   level?: number;

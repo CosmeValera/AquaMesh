@@ -250,9 +250,8 @@ export const useWidgetEditor = () => {
     const component = findComponentById(id, widgetData.components)
     
     if (component) {
-      // If it's a FieldSet being toggled via the arrow icon
-      if (component.type === 'FieldSet' && !editDialogOpen) {
-        // Toggle collapsed state
+      // For FieldSets, clicking edit also toggles the collapsed state
+      if (component.type === 'FieldSet') {
         const updatedComponent = {
           ...component,
           props: {
@@ -265,15 +264,36 @@ export const useWidgetEditor = () => {
           ...prev,
           components: updateComponentById(id, updatedComponent, prev.components)
         }))
-        
-        return
+      } else {
+        // For other components, open the edit dialog
+        setCurrentEditComponent(component)
+        setEditDialogOpen(true)
       }
-      
-      // Normal component editing
-      setCurrentEditComponent(component)
-      setEditDialogOpen(true)
     }
   }
+
+  // Handle toggling component visibility
+  const handleToggleVisibility = (id: string) => {
+    const component = findComponentById(id, widgetData.components);
+    
+    if (component) {
+      const updatedComponent = {
+        ...component,
+        hidden: !component.hidden
+      };
+      
+      setWidgetData(prev => ({
+        ...prev,
+        components: updateComponentById(id, updatedComponent, prev.components)
+      }));
+      
+      setNotification({
+        open: true,
+        message: `Component ${component.hidden ? 'shown' : 'hidden'}`,
+        severity: 'info'
+      });
+    }
+  };
 
   // Handle saving edited component
   const handleSaveComponent = (updatedComponent: ComponentData) => {
@@ -439,6 +459,7 @@ export const useWidgetEditor = () => {
     handleDeleteSavedWidget,
     handleCloseNotification,
     toggleEditMode,
+    handleToggleVisibility,
     
     // Utility
     setEditDialogOpen,

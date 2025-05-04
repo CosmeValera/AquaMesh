@@ -65,6 +65,7 @@ const WidgetEditor: React.FC = () => {
     handleDeleteSavedWidget,
     handleCloseNotification,
     toggleEditMode,
+    handleToggleVisibility,
     
     // Utility
     setEditDialogOpen,
@@ -125,6 +126,7 @@ const WidgetEditor: React.FC = () => {
         onMoveUp={(id) => handleMoveComponent(id, 'up')}
         onMoveDown={(id) => handleMoveComponent(id, 'down')}
         onAddInside={handleAddInsideFieldset}
+        onToggleVisibility={handleToggleVisibility}
         isFirst={index === 0}
         isLast={index === components.length - 1}
         editMode={editMode}

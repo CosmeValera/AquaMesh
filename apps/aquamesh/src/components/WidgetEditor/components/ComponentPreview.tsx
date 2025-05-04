@@ -8,12 +8,15 @@ import {
   Switch,
   FormControlLabel,
   Button,
-  Collapse
+  Collapse,
+  Tooltip
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import { ComponentPreviewProps } from '../types/types'
 import { getComponentIcon } from '../constants/componentTypes'
 import ChartPreview from './ChartPreview'
@@ -35,8 +38,10 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   handleContainerDragOver,
   handleContainerDragLeave,
   handleContainerDrop,
+  onToggleVisibility
 }) => {
   const isCurrentTarget = dropTarget.id === component.id && dropTarget.isHovering
+  const isHidden = Boolean(component.hidden)
 
   // Get the component icon for display
   const ComponentIcon = getComponentIcon(component.type)
@@ -435,71 +440,115 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
     }
   }
 
+  // If component is hidden and not in edit mode, don't render
+  if (isHidden && !editMode) {
+    return null;
+  }
+
   return (
     <Paper
-      elevation={0}
+      elevation={1}
       sx={{
-        p: 1,
-        mb: 1,
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: 1,
         position: 'relative',
-        ml: level * 2,
-        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+        mb: 1,
+        p: 2,
+        bgcolor: isCurrentTarget 
+          ? 'rgba(0, 188, 162, 0.15)' 
+          : (isHidden ? 'rgba(0, 0, 0, 0.3)' : 'background.paper'),
+        borderStyle: isCurrentTarget ? 'dashed' : 'solid',
+        borderWidth: 1,
+        borderColor: isCurrentTarget 
+          ? 'primary.main' 
+          : (isHidden ? 'rgba(255, 0, 0, 0.4)' : 'divider'),
+        opacity: isHidden && editMode ? 0.5 : 1,
+        transition: 'background-color 0.3s, border-color 0.3s, opacity 0.3s',
       }}
+      onDragEnter={editMode ? (e) => handleContainerDragEnter(e, component.id) : undefined}
+      onDragOver={editMode ? handleContainerDragOver : undefined}
+      onDragLeave={editMode ? handleContainerDragLeave : undefined}
+      onDrop={editMode ? (e) => handleContainerDrop(e, component.id) : undefined}
     >
+      {/* Render the component controls in edit mode */}
       {editMode && (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            mb: 1,
-            bgcolor: 'rgba(0, 0, 0, 0.1)',
-            borderRadius: '4px',
-            p: 0.5,
+        <Box 
+          sx={{ 
+            position: 'absolute', 
+            top: 4, 
+            right: 4, 
+            display: 'flex', 
+            zIndex: 10,
+            bgcolor: 'background.paper',
+            borderRadius: 1,
+            boxShadow: 1
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', mr: 'auto', color: 'text.secondary' }}>
-            {ComponentIcon && <ComponentIcon fontSize="small" sx={{ mr: 0.5, opacity: 0.7 }} />}
-            <Typography variant="caption">
-              {component.type}
-            </Typography>
-          </Box>
-          {!isFirst && (
-            <IconButton
-              size="small"
-              onClick={() => onMoveUp(component.id)}
-              sx={{ p: 0.5, color: 'primary.main' }}
+          {/* Visibility toggle button */}
+          <Tooltip title={isHidden ? "Show component" : "Hide component"}>
+            <IconButton 
+              size="small" 
+              onClick={() => onToggleVisibility && onToggleVisibility(component.id)}
+              sx={{ color: isHidden ? 'error.light' : 'success.light' }}
             >
-              <KeyboardArrowUpIcon fontSize="small" />
+              {isHidden ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
             </IconButton>
-          )}
-          {!isLast && (
-            <IconButton
-              size="small"
-              onClick={() => onMoveDown(component.id)}
-              sx={{ p: 0.5, color: 'primary.main' }}
-            >
-              <KeyboardArrowDownIcon fontSize="small" />
-            </IconButton>
-          )}
-          <IconButton
-            size="small"
+          </Tooltip>
+          
+          <IconButton 
+            size="small" 
             onClick={() => onEdit(component.id)}
-            sx={{ p: 0.5, color: '#2196f3' }}
+            sx={{ color: 'info.light' }}
           >
             <EditIcon fontSize="small" />
           </IconButton>
-          <IconButton
-            size="small"
+          
+          {component.type !== 'FieldSet' && (
+            <>
+              {!isFirst && (
+                <IconButton 
+                  size="small" 
+                  onClick={() => onMoveUp(component.id)}
+                  sx={{ color: 'warning.light' }}
+                >
+                  <KeyboardArrowUpIcon fontSize="small" />
+                </IconButton>
+              )}
+              
+              {!isLast && (
+                <IconButton 
+                  size="small" 
+                  onClick={() => onMoveDown(component.id)}
+                  sx={{ color: 'warning.light' }}
+                >
+                  <KeyboardArrowDownIcon fontSize="small" />
+                </IconButton>
+              )}
+            </>
+          )}
+          
+          <IconButton 
+            size="small" 
             onClick={() => onDelete(component.id)}
-            sx={{ p: 0.5, color: '#f44336' }}
+            sx={{ color: 'error.main' }}
           >
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>
       )}
-      {renderComponent()}
+
+      {/* Component Type Label */}
+      {editMode && (
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          {ComponentIcon && <ComponentIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />}
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
+            {component.type} {isHidden && "(Hidden)"}
+          </Typography>
+        </Box>
+      )}
+
+      {/* Actual component preview */}
+      <Box sx={{ ml: level * 2 }}>
+        {renderComponent()}
+      </Box>
     </Paper>
   )
 }

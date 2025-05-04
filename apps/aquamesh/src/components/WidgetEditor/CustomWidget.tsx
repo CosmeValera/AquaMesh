@@ -675,6 +675,28 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
     widgetComponents ? `Array(${widgetComponents.length})` : 'none',
     'Widget component types:', widgetComponents.map(c => c.type).join(', '))
 
+  // Function to render the entire widget with its components
+  const renderComponents = () => {
+    if (!widgetComponents || widgetComponents.length === 0) {
+      return (
+        <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+          <Typography variant="body2" sx={{ opacity: 0.7, fontStyle: 'italic' }}>
+            No components found for this widget.
+          </Typography>
+        </Paper>
+      )
+    }
+    
+    return widgetComponents.map(component => {
+      // Skip rendering components that are marked as hidden
+      if (component.hidden) {
+        return null;
+      }
+      
+      return renderComponent(component);
+    })
+  }
+
   if (!widgetComponents || widgetComponents.length === 0) {
     return (
       <Paper 
@@ -703,7 +725,7 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
       {widgetName && (
         <Typography variant="subtitle1" sx={{ mb: 2 }}>{widgetName}</Typography>
       )}
-      {widgetComponents.map(renderComponent)}
+      {renderComponents()}
       
       {/* Toast notification */}
       {toastState.open && (

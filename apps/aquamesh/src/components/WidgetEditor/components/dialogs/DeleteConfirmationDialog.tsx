@@ -6,12 +6,9 @@ import {
   DialogActions,
   Button,
   Typography,
-  Box,
-  Paper,
-  IconButton,
+  IconButton
 } from '@mui/material'
-import DeleteIcon from '@mui/icons-material/Delete'
-import WarningAmberIcon from '@mui/icons-material/WarningAmber'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import CloseIcon from '@mui/icons-material/Close'
 
 interface DeleteConfirmationDialogProps {
@@ -38,77 +35,82 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
       PaperProps={{
         sx: {
           borderRadius: '12px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          bgcolor: 'background.paper'
         }
       }}
     >
       <DialogTitle 
         sx={{ 
-          bgcolor: 'error.main', 
-          color: 'error.contrastText',
+          bgcolor: 'error.main',
+          color: 'white',
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
-          padding: '16px 24px',
+          px: 3,
+          py: 1.5,
           position: 'relative'
         }}
       >
-        <WarningAmberIcon />
-        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+        <DeleteOutlineIcon sx={{ mr: 1.5, fontSize: 24, color: 'white' }} />
+        <Typography variant="h6" sx={{ fontWeight: 500 }}>
           {title}
         </Typography>
         <IconButton
+          size="small"
+          aria-label="close"
           sx={{ 
             position: 'absolute', 
-            right: 8, 
-            top: 8,
-            color: 'inherit'
+            right: 16, 
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: 'white'
           }}
           onClick={onCancel}
         >
-          <CloseIcon />
+          <CloseIcon fontSize="medium" />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ py: 3 }}>
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 2, 
-            bgcolor: 'error.light', 
-            color: 'error.contrastText',
-            borderRadius: 2,
-            mb: 2,
-            opacity: 0.8
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <DeleteIcon color="error" />
-            <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-              {content}
-            </Typography>
-          </Box>
-        </Paper>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+      
+      <DialogContent sx={{ px: 3, pb: 0, bgcolor: '#006d5c' }}>
+        <Typography variant="body1" color="white" sx={{ mb: 2, pt: 1.5, fontWeight: 400 }}>
+          {content}
+        </Typography>
+        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mt: 1 }}>
           This action cannot be undone.
         </Typography>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 3, display: 'flex', justifyContent: 'space-between' }}>
+      
+      <DialogActions sx={{ px: 3, py: 3, bgcolor: '#006d5c', justifyContent: 'center', gap: 2 }}>
         <Button 
           onClick={onCancel} 
           variant="outlined"
-          color="inherit"
-          sx={{ px: 3 }}
+          sx={{ 
+            px: 3, 
+            py: 1,
+            minWidth: 120,
+            color: 'white',
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            '&:hover': {
+              borderColor: 'white',
+              bgcolor: 'rgba(255, 255, 255, 0.05)'
+            }
+          }}
         >
-          Cancel
+          CANCEL
         </Button>
         <Button 
           onClick={onConfirm} 
           variant="contained"
           color="error"
-          startIcon={<DeleteIcon />}
-          sx={{ px: 3 }}
+          startIcon={<DeleteOutlineIcon />}
+          sx={{ 
+            px: 3, 
+            py: 1,
+            minWidth: 120,
+            fontWeight: 500
+          }}
         >
-          Delete
+          DELETE
         </Button>
       </DialogActions>
     </Dialog>

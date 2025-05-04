@@ -8,7 +8,8 @@ import {
   TextField,
   Button,
   Alert,
-  Collapse
+  Collapse,
+  InputAdornment
 } from '@mui/material'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
@@ -155,22 +156,90 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
       return (
         <Box key={component.id} sx={{ mb: 1 }}>
           <FormControlLabel
-            control={<Switch defaultChecked={component.props.defaultChecked as boolean} />}
+            control={
+              <Switch 
+                defaultChecked={component.props.defaultChecked as boolean}
+                disabled={Boolean(component.props.disabled)}
+                size={component.props.size as 'small' | 'medium'}
+                className={component.props.className as string}
+                sx={component.props.useCustomColor ? {
+                  color: component.props.customColor as string,
+                  '& .MuiSwitch-track': {
+                    backgroundColor: component.props.customTrackColor as string
+                  }
+                } : undefined}
+              />
+            }
             label={component.props.label as string}
+            labelPlacement={component.props.labelPlacement as 'end' | 'start' | 'top' | 'bottom' || 'end'}
+            onChange={(e) => {
+              if (component.props.showToast) {
+                const isChecked = (e.target as HTMLInputElement).checked
+                const message = isChecked 
+                  ? (component.props.onMessage as string || 'Switch turned ON')
+                  : (component.props.offMessage as string || 'Switch turned OFF')
+                const severity = component.props.toastSeverity as 'success' | 'error' | 'info' | 'warning' || 'info'
+                showToast(message, severity)
+              }
+            }}
           />
         </Box>
       )
     case 'FieldSet': {
       const isCollapsed = collapsedFieldsets[component.id] ?? Boolean(component.props.collapsed)
+      
+      // Generate fieldset styles
+      const fieldsetStyles: Record<string, any> = {
+        border: component.props.borderStyle 
+          ? `1px ${component.props.borderStyle as string} ${component.props.useCustomColor ? component.props.borderColor : '#ccc'}` 
+          : '1px solid #ccc',
+        p: component.props.padding !== undefined ? component.props.padding : 2,
+        borderRadius: component.props.borderRadius !== undefined ? component.props.borderRadius : 1,
+        mb: 1
+      }
+      
+      if (component.props.useCustomColor && component.props.backgroundColor) {
+        fieldsetStyles.backgroundColor = component.props.backgroundColor
+      }
+      
+      if (component.props.elevation) {
+        fieldsetStyles.boxShadow = 1
+      }
+      
+      // Generate legend styles
+      const legendStyles: Record<string, any> = {
+        ml: 0.5
+      }
+      
+      if (component.props.useCustomColor && component.props.legendColor) {
+        legendStyles.color = component.props.legendColor
+      }
+      
+      if (component.props.legendBold) {
+        legendStyles.fontWeight = 'bold'
+      }
+      
+      if (component.props.legendAlign) {
+        legendStyles.textAlign = component.props.legendAlign
+      }
+      
+      if (component.props.legendSize) {
+        switch(component.props.legendSize) {
+          case 'small':
+            legendStyles.fontSize = '0.875rem'
+            break
+          case 'large':
+            legendStyles.fontSize = '1.25rem'
+            break
+        }
+      }
+      
       return (
         <Box 
           key={component.id} 
-          sx={{ 
-            border: '1px solid #ccc', 
-            p: 2, 
-            borderRadius: 1,
-            mb: 1
-          }}
+          sx={fieldsetStyles}
+          data-testid={component.props.dataTestId as string}
+          aria-label={component.props.ariaLabel as string}
         >
           <Box
             onClick={() => toggleFieldsetCollapse(component.id)}
@@ -178,19 +247,32 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
               display: 'flex',
               alignItems: 'center',
               cursor: 'pointer',
-              mb: 1
+              mb: 1,
+              justifyContent: component.props.iconPosition === 'end' ? 'space-between' : 'flex-start'
             }}
           >
-            {isCollapsed ? (
-              <KeyboardArrowDownIcon fontSize="small" />
-            ) : (
-              <KeyboardArrowUpIcon fontSize="small" />
+            {component.props.iconPosition !== 'end' && (
+              isCollapsed ? (
+                <KeyboardArrowDownIcon fontSize="small" color={component.props.useCustomColor && component.props.legendColor ? "inherit" : "action"} />
+              ) : (
+                <KeyboardArrowUpIcon fontSize="small" color={component.props.useCustomColor && component.props.legendColor ? "inherit" : "action"} />
+              )
             )}
-            <Typography variant="subtitle2" sx={{ ml: 0.5 }}>
+            
+            <Typography variant="subtitle2" sx={legendStyles}>
               {component.props.legend as string}
             </Typography>
+            
+            {component.props.iconPosition === 'end' && (
+              isCollapsed ? (
+                <KeyboardArrowDownIcon fontSize="small" color={component.props.useCustomColor && component.props.legendColor ? "inherit" : "action"} />
+              ) : (
+                <KeyboardArrowUpIcon fontSize="small" color={component.props.useCustomColor && component.props.legendColor ? "inherit" : "action"} />
+              )
+            )}
           </Box>
-          <Collapse in={!isCollapsed}>
+          
+          <Collapse in={!isCollapsed} timeout={component.props.animated ? 'auto' : 0}>
             {component.children && component.children.length > 0 ? (
               <Box sx={{ mt: 1 }}>
                 {component.children.map(renderComponent)}
@@ -205,7 +287,24 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
     case 'Label':
       return (
         <Box key={component.id} sx={{ mb: 1 }}>
-          <Typography variant="body1">{component.props.text as string}</Typography>
+          <Typography 
+            variant={component.props.variant as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2' || 'body1'}
+            gutterBottom={Boolean(component.props.gutterBottom)}
+            noWrap={Boolean(component.props.noWrap)}
+            className={component.props.className as string}
+            data-testid={component.props.dataTestId as string}
+            sx={{
+              fontWeight: component.props.fontWeight as number,
+              fontStyle: component.props.fontStyle as string,
+              textDecoration: component.props.textDecoration as string,
+              textAlign: component.props.textAlign as 'left' | 'center' | 'right' | 'justify',
+              color: component.props.useCustomColor ? component.props.customColor as string : 'inherit',
+              // Apply any additional styles from JSON if provided
+              ...(component.props.styleJson ? JSON.parse(component.props.styleJson as string) : {})
+            }}
+          >
+            {component.props.text as string}
+          </Typography>
         </Box>
       )
     case 'Button': {
@@ -284,28 +383,89 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
             label={component.props.label as string} 
             placeholder={component.props.placeholder as string}
             defaultValue={component.props.defaultValue as string || ''}
-            size="small"
+            variant={component.props.variant as 'outlined' | 'filled' | 'standard'}
+            size={component.props.size as 'small' | 'medium' || 'small'}
+            type={component.props.type as string || 'text'}
+            required={Boolean(component.props.required)}
+            disabled={Boolean(component.props.disabled)}
+            error={Boolean(component.props.error)}
+            helperText={component.props.helperText as string}
+            multiline={Boolean(component.props.multiline)}
+            rows={component.props.multiline ? ((component.props.rows as number) || 3) : undefined}
             fullWidth
+            className={component.props.className as string}
+            autoFocus={Boolean(component.props.autoFocus)}
+            inputProps={{
+              'aria-label': component.props.ariaLabel as string,
+              'data-testid': component.props.dataTestId as string,
+              maxLength: component.props.maxLength as number,
+              minLength: component.props.minLength as number,
+              min: component.props.min as number,
+              max: component.props.max as number,
+              step: component.props.step as number
+            }}
+            InputProps={{
+              startAdornment: component.props.startAdornmentText ? (
+                <InputAdornment position="start">
+                  {component.props.startAdornmentText as string}
+                </InputAdornment>
+              ) : undefined,
+              endAdornment: component.props.endAdornmentText ? (
+                <InputAdornment position="end">
+                  {component.props.endAdornmentText as string}
+                </InputAdornment>
+              ) : undefined
+            }}
           />
         </Box>
       )
     case 'FlexBox': {
+      // Prepare the flexbox style object
+      const flexStyles = {
+        display: 'flex',
+        flexDirection: component.props.direction as 'row' | 'column' | 'row-reverse' | 'column-reverse' || 'row',
+        justifyContent: component.props.justifyContent as string || 'flex-start',
+        alignItems: component.props.alignItems as string || 'center',
+        flexWrap: component.props.wrap as 'nowrap' | 'wrap' | 'wrap-reverse' || 'wrap',
+        gap: (component.props.spacing as number || 2),
+        width: '100%',
+        mb: 1,
+        padding: component.props.padding as number,
+        minHeight: component.props.minHeight ? `${component.props.minHeight}px` : 'auto'
+      }
+      
+      // Add conditional styles
+      if (component.props.backgroundColor) {
+        flexStyles.backgroundColor = component.props.backgroundColor as string
+      }
+      
+      if (component.props.border) {
+        flexStyles.border = `1px ${component.props.border} ${component.props.borderColor || '#ccc'}`
+      }
+      
+      if (component.props.scrollable) {
+        flexStyles.overflow = 'auto'
+      }
+      
       return (
         <Box 
           key={component.id} 
-          sx={{ 
-            display: 'flex',
-            flexDirection: component.props.direction as 'row' | 'column' | 'row-reverse' | 'column-reverse' || 'row',
-            justifyContent: component.props.justifyContent as string || 'flex-start',
-            alignItems: component.props.alignItems as string || 'center',
-            flexWrap: component.props.wrap as 'nowrap' | 'wrap' | 'wrap-reverse' || 'wrap',
-            gap: (component.props.spacing as number || 2),
-            width: '100%',
-            mb: 1
-          }}
+          sx={flexStyles}
+          className={component.props.className as string}
+          data-testid={component.props.dataTestId as string}
         >
           {component.children && component.children.length > 0 ? (
-            component.children.map(renderComponent)
+            // Limit number of children if maxItems is set
+            component.children
+              .slice(0, component.props.maxItems ? Number(component.props.maxItems) : undefined)
+              .map(child => ({
+                ...child,
+                props: {
+                  ...child.props,
+                  ...(component.props.grow ? { flexGrow: 1 } : {})
+                }
+              }))
+              .map(renderComponent)
           ) : (
             <Typography variant="body2" color="text.secondary">Empty Flex Container</Typography>
           )}
@@ -313,20 +473,85 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
       )
     }
     case 'GridBox': {
+      // Prepare the grid style object
+      const gridStyles = {
+        display: 'grid',
+        gridTemplateColumns: `repeat(${component.props.columns as number || 2}, 1fr)`,
+        gridTemplateRows: component.props.autoRows 
+          ? 'auto' 
+          : `repeat(${component.props.rows as number || 1}, ${component.props.equalHeight ? '1fr' : 'auto'})`,
+        gap: (component.props.spacing as number || 2),
+        width: '100%',
+        mb: 1,
+        minHeight: component.props.minHeight ? `${component.props.minHeight}px` : 'auto'
+      }
+      
+      // Add conditional styles
+      if (component.props.useCustomColor && component.props.backgroundColor) {
+        gridStyles.backgroundColor = component.props.backgroundColor as string
+      }
+      
+      if (component.props.borderStyle) {
+        gridStyles.border = `1px ${component.props.borderStyle} ${component.props.useCustomColor ? component.props.borderColor : '#ccc'}`
+      }
+      
+      if (component.props.alignCenter) {
+        gridStyles.justifyItems = 'center'
+      }
+      
+      if (component.props.gridTemplateAreas) {
+        gridStyles.gridTemplateAreas = component.props.gridTemplateAreas as string
+      }
+      
+      // Apply responsive behavior if enabled
+      if (component.props.responsive) {
+        gridStyles['@media (max-width:600px)'] = {
+          gridTemplateColumns: '1fr',
+          gridTemplateRows: 'auto'
+        }
+      }
+      
       return (
         <Box 
           key={component.id} 
-          sx={{ 
-            display: 'grid',
-            gridTemplateColumns: `repeat(${component.props.columns as number || 2}, 1fr)`,
-            gridTemplateRows: `repeat(${component.props.rows as number || 1}, auto)`,
-            gap: (component.props.spacing as number || 2),
-            width: '100%',
-            mb: 1
-          }}
+          sx={gridStyles}
+          className={component.props.className as string}
+          data-testid={component.props.dataTestId as string}
         >
           {component.children && component.children.length > 0 ? (
-            component.children.map(renderComponent)
+            component.children.map((child, index) => {
+              // Apply cell styles if configured
+              const cellProps = { ...child.props }
+              
+              if (component.props.cellPadding) {
+                const padding = {
+                  'small': 1,
+                  'normal': 2,
+                  'large': 3
+                }[component.props.cellPadding as string] || 0
+                
+                cellProps.padding = padding
+              }
+              
+              if (component.props.borderStyle && component.props.borderStyle !== 'none') {
+                cellProps.border = `1px ${component.props.borderStyle} ${component.props.useCustomColor ? component.props.borderColor : '#ccc'}`
+                
+                if (component.props.borderRadius && component.props.borderRadius !== 'none') {
+                  const radius = {
+                    'small': 1,
+                    'medium': 2,
+                    'large': 4
+                  }[component.props.borderRadius as string] || 0
+                  
+                  cellProps.borderRadius = radius
+                }
+              }
+              
+              return renderComponent({
+                ...child,
+                props: cellProps
+              })
+            })
           ) : (
             <Typography variant="body2" color="text.secondary">Empty Grid Container</Typography>
           )}

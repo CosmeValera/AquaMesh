@@ -136,51 +136,64 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
     onClose()
   }
 
+  // Dedicated handler for prop changes from child editors
+  const handlePropsChange = (updatedChildProps: Record<string, unknown>) => {
+    setEditedProps(prevProps => ({
+      ...prevProps,
+      ...updatedChildProps
+    }));
+  };
+
   const renderPropsEdit = () => {
     switch (component.type) {
       case 'SwitchEnable':
-        return <SwitchEditor props={editedProps} onChange={setEditedProps} />
+        // Pass the new handler
+        return <SwitchEditor props={editedProps} onChange={handlePropsChange} /> 
       
       case 'FieldSet':
-        return <FieldSetEditor props={editedProps} onChange={setEditedProps} />
+        // Pass the new handler
+        return <FieldSetEditor props={editedProps} onChange={handlePropsChange} />
       
       case 'Label':
-        return <LabelEditor props={editedProps} onChange={setEditedProps} />
+        // Pass the new handler
+        return <LabelEditor props={editedProps} onChange={handlePropsChange} />
       
       case 'Button':
-        return <ButtonEditor props={editedProps} onChange={setEditedProps} />
+        // Pass the new handler
+        return <ButtonEditor props={editedProps} onChange={handlePropsChange} /> 
       
       case 'TextField':
-        return <TextFieldEditor props={editedProps} onChange={setEditedProps} />
+        // Pass the new handler
+        return <TextFieldEditor props={editedProps} onChange={handlePropsChange} />
       
       case 'FlexBox':
-        return <FlexBoxEditor props={editedProps} onChange={setEditedProps} />
+        // Pass the new handler
+        return <FlexBoxEditor props={editedProps} onChange={handlePropsChange} />
       
       case 'GridBox':
-        return <GridBoxEditor props={editedProps} onChange={setEditedProps} />
+        // Pass the new handler
+        return <GridBoxEditor props={editedProps} onChange={handlePropsChange} />
       
       case 'Chart': {
-        // Check if it's a pie chart
         const isPieChart = Boolean(
           (editedProps.chartType as string)?.toLowerCase() === 'pie' ||
           ((editedProps.data as string) && (editedProps.data as string).includes('"type":"pie"'))
-        )
+        );
         
-        // If it's a pie chart, use our new user-friendly PieChartEditor
         if (isPieChart) {
           return (
             <PieChartEditor 
               initialData={(editedProps.data as string) || '{}'}
+              // Update specific 'data' prop for PieChartEditor
               onChange={(jsonData) => 
-                setEditedProps({ ...editedProps, data: jsonData })
+                handlePropsChange({ data: jsonData })
               }
               title={(editedProps.title as string) || ''}
               description={(editedProps.description as string) || ''}
             />
-          )
+          );
         }
         
-        // For other chart types, keep the old editor for now
         return (
           <Box>
             <Typography variant="body1" sx={{ mb: 2 }}>
@@ -193,11 +206,11 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
               data={parsedChartData}
             />
           </Box>
-        )
+        );
       }
       
       default:
-        return <Typography>No editable properties</Typography>
+        return <Typography>No editable properties</Typography>;
     }
   }
 
@@ -205,23 +218,23 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
   const getDialogTitle = () => {
     switch (component.type) {
       case 'SwitchEnable':
-        return 'Edit Switch'
+        return 'Edit Switch';
       case 'FieldSet':
-        return 'Edit Field Set'
+        return 'Edit Field Set';
       case 'Label':
-        return 'Edit Text Label'
+        return 'Edit Text Label';
       case 'Button':
-        return 'Edit Button'
+        return 'Edit Button';
       case 'TextField':
-        return 'Edit Text Field'
+        return 'Edit Text Field';
       case 'FlexBox':
-        return 'Edit Flex Container'
+        return 'Edit Flex Container';
       case 'GridBox':
-        return 'Edit Grid Container'
+        return 'Edit Grid Container';
       case 'Chart':
-        return 'Edit Chart'
+        return 'Edit Chart';
       default:
-        return `Edit ${component.type}`
+        return `Edit ${component.type}`;
     }
   }
 

@@ -55,8 +55,40 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
       case 'SwitchEnable':
         return (
           <FormControlLabel
-            control={<Switch defaultChecked={component.props.defaultChecked as boolean} />}
+            control={
+              <Switch 
+                defaultChecked={component.props.defaultChecked as boolean}
+                disabled={Boolean(component.props.disabled)}
+                size={component.props.size as 'small' | 'medium'}
+                sx={component.props.useCustomColor ? {
+                  color: component.props.customColor as string,
+                  '& .MuiSwitch-track': {
+                    backgroundColor: component.props.customTrackColor as string
+                  }
+                } : undefined}
+                onChange={(e) => {
+                  if (component.props.showToast) {
+                    const isChecked = e.target.checked;
+                    const message = isChecked 
+                      ? (component.props.onMessage as string || 'Switch turned ON')
+                      : (component.props.offMessage as string || 'Switch turned OFF');
+                    const severity = component.props.toastSeverity as string || 'info';
+                    
+                    // Dispatch custom event for toast
+                    const customEvent = new CustomEvent('showWidgetToast', {
+                      detail: {
+                        message,
+                        severity
+                      },
+                      bubbles: true
+                    });
+                    document.dispatchEvent(customEvent);
+                  }
+                }}
+              />
+            }
             label={component.props.label as string}
+            labelPlacement={component.props.labelPlacement as 'end' | 'start' | 'top' | 'bottom' || 'end'}
           />
         )
       case 'FieldSet': {
@@ -132,13 +164,61 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
       }
       case 'Label':
         return (
-          <Typography variant="body1">{component.props.text as string}</Typography>
+          <Typography 
+            variant={(component.props.variant as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2') || 'body1'}
+            sx={{
+              fontWeight: component.props.fontWeight as number,
+              fontStyle: component.props.fontStyle as 'italic' | 'normal',
+              textDecoration: component.props.textDecoration as string,
+              textAlign: component.props.textAlign as 'left' | 'center' | 'right' | 'justify',
+              color: component.props.useCustomColor ? component.props.customColor as string : 'inherit',
+            }}
+          >
+            {component.props.text as string}
+          </Typography>
         )
       case 'Button':
         return (
           <Button
             variant={(component.props.variant as 'contained' | 'outlined' | 'text') || 'contained'}
-            color="primary"
+            color={(component.props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info') || 'primary'}
+            size={(component.props.size as 'small' | 'medium' | 'large') || 'medium'}
+            fullWidth={Boolean(component.props.fullWidth)}
+            onClick={() => {
+              // Handle toast functionality in preview/edit mode
+              if (component.props.clickAction === 'toast' && component.props.showToast !== false) {
+                const customEvent = new CustomEvent('showWidgetToast', {
+                  detail: {
+                    message: component.props.toastMessage as string || 'Button clicked!',
+                    severity: component.props.toastSeverity as string || 'info'
+                  },
+                  bubbles: true
+                });
+                document.dispatchEvent(customEvent);
+              } else if (component.props.clickAction === 'openUrl' && component.props.url) {
+                let url = component.props.url as string;
+                if (url && !url.match(/^https?:\/\//)) {
+                  url = `https://${url}`;
+                }
+                window.open(url, '_blank', 'noopener,noreferrer');
+              }
+            }}
+            sx={{
+              fontWeight: component.props.fontWeight as number,
+              fontStyle: component.props.fontStyle as string,
+              textDecoration: component.props.textDecoration as string,
+              ...(component.props.customColor ? {
+                backgroundColor: component.props.variant === 'contained' ? component.props.customColor : 'transparent',
+                borderColor: component.props.customColor,
+                color: component.props.variant === 'contained' ? '#fff' : component.props.customColor,
+                '&:hover': {
+                  backgroundColor: component.props.variant === 'contained' 
+                    ? component.props.customHoverColor || component.props.customColor 
+                    : 'rgba(25, 118, 210, 0.04)',
+                  borderColor: component.props.customHoverColor || component.props.customColor
+                }
+              } : {})
+            }}
           >
             {component.props.text as string}
           </Button>

@@ -71,6 +71,46 @@ const WidgetEditor: React.FC = () => {
     setCurrentEditComponent,
   } = useWidgetEditor()
 
+  // Toast state for component interactions
+  const [componentToast, setComponentToast] = React.useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info',
+  });
+
+  // Listen for custom toast events from components
+  React.useEffect(() => {
+    const handleComponentToast = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail) {
+        setComponentToast({
+          open: true,
+          message: customEvent.detail.message || 'Action performed',
+          severity: customEvent.detail.severity || 'info',
+        });
+      }
+    };
+
+    document.addEventListener('showWidgetToast', handleComponentToast);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('showWidgetToast', handleComponentToast);
+    };
+  }, []);
+
+  // Handle closing component toasts
+  const handleCloseComponentToast = () => {
+    setComponentToast({
+      ...componentToast,
+      open: false,
+    });
+  };
+
   // Check if we're updating an existing widget
   const isUpdating = savedWidgets.some(widget => widget.name === widgetData.name)
 
@@ -324,19 +364,27 @@ const WidgetEditor: React.FC = () => {
         onSave={handleSaveComponent}
       />
 
-      {/* Notification */}
+      {/* Widget editor notification */}
       <Snackbar
         open={notification.open}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseNotification} severity={notification.severity}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
+
+      {/* Component interaction toast */}
+      <Snackbar
+        open={componentToast.open}
+        autoHideDuration={3000}
+        onClose={handleCloseComponentToast}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert
-          onClose={handleCloseNotification}
-          severity={notification.severity}
-          sx={{ width: '100%' }}
-        >
-          {notification.message}
+        <Alert onClose={handleCloseComponentToast} severity={componentToast.severity}>
+          {componentToast.message}
         </Alert>
       </Snackbar>
 

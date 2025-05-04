@@ -15,18 +15,17 @@ import {
   Tab,
   IconButton,
   Button as MuiButton,
-  Collapse,
   Paper,
   Tooltip,
   Slider,
   InputAdornment,
+  Alert,
 } from '@mui/material'
 import FormatBoldIcon from '@mui/icons-material/FormatBold'
 import FormatItalicIcon from '@mui/icons-material/FormatItalic'
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
-import LinkIcon from '@mui/icons-material/Link'
 import NotificationsIcon from '@mui/icons-material/Notifications'
 import CodeIcon from '@mui/icons-material/Code'
 import SettingsIcon from '@mui/icons-material/Settings'
@@ -42,7 +41,6 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 const AVAILABLE_ICONS = {
   add: AddIcon,
   delete: DeleteIcon,
-  link: LinkIcon,
   notification: NotificationsIcon,
   code: CodeIcon,
   settings: SettingsIcon,
@@ -55,9 +53,36 @@ const AVAILABLE_ICONS = {
   check: CheckCircleIcon
 }
 
+// Define the props interface for type safety and linting
+interface ButtonProps {
+  text?: string;
+  variant?: 'contained' | 'outlined' | 'text';
+  size?: 'small' | 'medium' | 'large';
+  color?: 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info';
+  fullWidth?: boolean;
+  clickAction?: 'toast' | 'none';
+  showToast?: boolean;
+  toastMessage?: string;
+  toastSeverity?: 'info' | 'success' | 'warning' | 'error';
+  fontWeight?: number | string;
+  fontStyle?: 'normal' | 'italic';
+  textDecoration?: 'none' | 'underline';
+  customColor?: string;
+  customHoverColor?: string;
+  showStartIcon?: boolean;
+  iconName?: string;
+  showEndIcon?: boolean;
+  className?: string;
+  margin?: number;
+  borderRadius?: number;
+  disabled?: boolean;
+  dataTestId?: string;
+  [key: string]: unknown;
+}
+
 interface ButtonEditorProps {
-  props: Record<string, unknown>
-  onChange: (updatedProps: Record<string, unknown>) => void
+  props: ButtonProps
+  onChange: (updatedProps: ButtonProps) => void
 }
 
 // Tab panel component for organizing the editor
@@ -87,9 +112,9 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
   const [tabValue, setTabValue] = useState(0)
   
   // State for custom color picker
-  const [useCustomColor, setUseCustomColor] = useState(false)
-  const [customColor, setCustomColor] = useState('#1976d2')
-  const [customHoverColor, setCustomHoverColor] = useState('#1565c0')
+  const [useCustomColor, setUseCustomColor] = useState(Boolean(props.customColor))
+  const [customColor, setCustomColor] = useState(props.customColor || '#1976d2')
+  const [customHoverColor, setCustomHoverColor] = useState(props.customHoverColor || '#1565c0')
   
   // Typography states
   const [fontWeight, setFontWeight] = useState<number>(
@@ -106,13 +131,14 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
   
   // Initialize custom colors if they exist in props
   useEffect(() => {
-    if (props.customColor) {
-      setUseCustomColor(true)
-      setCustomColor(props.customColor as string)
-    }
-    
-    if (props.customHoverColor) {
-      setCustomHoverColor(props.customHoverColor as string)
+    const useCustColor = Boolean(props.customColor)
+    if (useCustColor) {
+      setCustomColor(props.customColor || '#1976d2')
+      setCustomHoverColor(props.customHoverColor || '#1565c0')
+    } else {
+      // Reset to defaults if custom color prop is removed
+      setCustomColor('#1976d2')
+      setCustomHoverColor('#1565c0')
     }
     
     // Set typography states based on props
@@ -120,6 +146,9 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
       const weight = Number(props.fontWeight)
       setFontWeight(weight)
       setIsBold(weight >= 600)
+    } else {
+      setFontWeight(400) // Default if not provided
+      setIsBold(false)
     }
     
     setIsItalic(Boolean(props.fontStyle === 'italic'))
@@ -128,8 +157,10 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
     // Set icon if it exists
     if (props.iconName && typeof props.iconName === 'string') {
       setSelectedIcon(props.iconName)
+    } else {
+      setSelectedIcon('add') // Default if not provided
     }
-  }, [])
+  }, [props]) // Rerun when any prop changes
   
   // Handle tab change
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -170,41 +201,48 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
   
   // Toggle custom color mode
   const handleCustomColorToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked
-    setUseCustomColor(checked)
-    
+    const checked = e.target.checked;
+    setUseCustomColor(checked); // Update local state immediately
     if (checked) {
-      // Apply custom colors
-      handleChange('customColor', customColor)
-      handleChange('customHoverColor', customHoverColor)
+      // Apply initial custom colors when toggled on
+      handleChange('customColor', customColor);
+      handleChange('customHoverColor', customHoverColor);
     } else {
-      // Remove custom colors
-      const newProps = { ...props }
-      delete newProps.customColor
-      delete newProps.customHoverColor
-      onChange(newProps)
+      // Explicitly set custom colors to undefined in props when toggled off
+      handleChange('customColor', undefined);
+      handleChange('customHoverColor', undefined);
+      // Also reset local color state immediately for consistency
+      setCustomColor('#1976d2'); // Reset to default or initial
+      setCustomHoverColor('#1565c0'); // Reset to default or initial
     }
-  }
+  };
   
   // Generic change handler
-  const handleChange = (name: string, value: unknown) => {
-    onChange({ ...props, [name]: value })
+  const handleChange = (name: keyof ButtonProps, value: unknown) => {
+    const updatedProps = { ...props, [name]: value };
+    onChange(updatedProps);
   }
   
   // Preview styles based on current props
-  const previewStyles = {
-    fontWeight: fontWeight,
-    fontStyle: isItalic ? 'italic' : 'normal',
-    textDecoration: hasUnderline ? 'underline' : 'none',
-    ...(useCustomColor && { 
-      backgroundColor: props.variant === 'contained' ? customColor : 'transparent',
-      borderColor: customColor,
-      color: props.variant === 'contained' ? '#fff' : customColor,
-      '&:hover': {
-        backgroundColor: props.variant === 'contained' ? customHoverColor : 'rgba(25, 118, 210, 0.04)',
-        borderColor: customHoverColor
-      }
-    })
+  const getPreviewStyles = () => {
+    const styles: React.CSSProperties = {
+      fontWeight: fontWeight,
+      fontStyle: isItalic ? 'italic' : 'normal',
+      textDecoration: hasUnderline ? 'underline' : 'none',
+      margin: props.margin ? `${props.margin}px` : undefined,
+      borderRadius: props.borderRadius !== undefined ? `${props.borderRadius}px` : undefined,
+      // Apply custom colors directly if useCustomColor is true *and* they are set
+      ...(useCustomColor && props.customColor && { 
+        backgroundColor: props.variant === 'contained' ? props.customColor : 'transparent',
+        borderColor: props.customColor,
+        color: props.variant === 'contained' ? '#fff' : props.customColor, // Basic contrast assumption
+        '&:hover': {
+          backgroundColor: props.variant === 'contained' ? props.customHoverColor || props.customColor : 'rgba(25, 118, 210, 0.04)', // Fallback for hover
+          borderColor: props.customHoverColor || props.customColor,
+        }
+      })
+    }
+    return styles
   }
   
   // Get the appropriate icon component
@@ -215,19 +253,37 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
   // Current icon component
   const CurrentIcon = getIconComponent(selectedIcon)
   
+  // Handle button click in preview
+  const handlePreviewClick = () => {
+    if (props.clickAction === 'toast' && props.showToast) {
+      const toastEvent = new CustomEvent('showWidgetToast', {
+        detail: {
+          message: props.toastMessage || 'Button Clicked!',
+          severity: props.toastSeverity || 'info',
+        },
+      })
+      document.dispatchEvent(toastEvent)
+    }
+    // If action is 'none', do nothing.
+  }
+  
   return (
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
       <Paper variant="outlined" sx={{ mb: 2, p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <MuiButton
-          variant={(props.variant as 'contained' | 'outlined' | 'text') || 'contained'}
-          color={(props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info') || 'primary'}
-          size={(props.size as 'small' | 'medium' | 'large') || 'medium'}
-          sx={previewStyles}
+          variant={props.variant || 'contained'}
+          color={useCustomColor ? undefined : (props.color || 'primary')}
+          size={props.size || 'medium'}
+          sx={getPreviewStyles()}
           endIcon={props.showEndIcon ? <OpenInNewIcon /> : undefined}
           startIcon={props.showStartIcon ? <CurrentIcon /> : undefined}
+          fullWidth={Boolean(props.fullWidth)}
+          disabled={Boolean(props.disabled)}
+          onClick={handlePreviewClick}
+          data-testid={props.dataTestId}
         >
-          {props.text as string || 'Button Text'}
+          {props.text || 'Button Text'}
         </MuiButton>
       </Paper>
       
@@ -253,7 +309,7 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
             <TextField
               label="Button Text"
               fullWidth
-              value={(props.text as string) || ''}
+              value={props.text || ''}
               onChange={(e) => handleChange('text', e.target.value)}
             />
           </Grid>
@@ -262,9 +318,9 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
             <FormControl fullWidth>
               <InputLabel>Variant</InputLabel>
               <Select
-                value={(props.variant as string) || 'contained'}
+                value={props.variant || 'contained'}
                 label="Variant"
-                onChange={(e) => handleChange('variant', e.target.value)}
+                onChange={(e) => handleChange('variant', e.target.value as ButtonProps['variant'])}
               >
                 <MenuItem value="contained">Contained</MenuItem>
                 <MenuItem value="outlined">Outlined</MenuItem>
@@ -277,9 +333,9 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
             <FormControl fullWidth>
               <InputLabel>Size</InputLabel>
               <Select
-                value={(props.size as string) || 'medium'}
+                value={props.size || 'medium'}
                 label="Size"
-                onChange={(e) => handleChange('size', e.target.value)}
+                onChange={(e) => handleChange('size', e.target.value as ButtonProps['size'])}
               >
                 <MenuItem value="small">Small</MenuItem>
                 <MenuItem value="medium">Medium</MenuItem>
@@ -292,9 +348,9 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
             <FormControl fullWidth>
               <InputLabel>Color</InputLabel>
               <Select
-                value={(props.color as string) || 'primary'}
+                value={props.color || 'primary'}
                 label="Color"
-                onChange={(e) => handleChange('color', e.target.value)}
+                onChange={(e) => handleChange('color', e.target.value as ButtonProps['color'])}
                 disabled={useCustomColor}
               >
                 <MenuItem value="primary">Primary</MenuItem>
@@ -328,39 +384,40 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
             <FormControl fullWidth>
               <InputLabel>Click Action</InputLabel>
               <Select
-                value={(props.clickAction as string) || 'toast'}
+                value={props.clickAction || 'none'}
                 label="Click Action"
-                onChange={(e) => handleChange('clickAction', e.target.value)}
+                onChange={(e) => handleChange('clickAction', e.target.value as ButtonProps['clickAction'])}
               >
                 <MenuItem value="toast">Show Toast</MenuItem>
-                <MenuItem value="openUrl">Open URL</MenuItem>
                 <MenuItem value="none">No Action</MenuItem>
               </Select>
             </FormControl>
           </Grid>
           
           {/* Toast Action Options */}
-          {(props.clickAction === 'toast' || !props.clickAction) && (
-            <>
+          {props.clickAction === 'toast' && (
+            <>              
+              {/* Conditionally render Toast specific options */}
               <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={Boolean(props.showToast)}
-                      onChange={(e) => handleChange('showToast', e.target.checked)}
-                    />
-                  }
-                  label="Show Toast on Click"
-                />
-              </Grid>
-              
+                 <FormControlLabel
+                   control={
+                     <Switch
+                       checked={Boolean(props.showToast)}
+                       onChange={(e) => handleChange('showToast', e.target.checked)}
+                     />
+                   }
+                   label="Show Toast on Click"
+                 />
+               </Grid>
+
+              {/* Only show message/severity if the toast switch is checked */}
               {Boolean(props.showToast) && (
                 <>
                   <Grid item xs={12}>
                     <TextField
                       label="Toast Message"
                       fullWidth
-                      value={(props.toastMessage as string) || ''}
+                      value={props.toastMessage || ''}
                       onChange={(e) => handleChange('toastMessage', e.target.value)}
                     />
                   </Grid>
@@ -369,9 +426,9 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
                     <FormControl fullWidth>
                       <InputLabel>Toast Severity</InputLabel>
                       <Select
-                        value={(props.toastSeverity as string) || 'info'}
+                        value={props.toastSeverity || 'info'}
                         label="Toast Severity"
-                        onChange={(e) => handleChange('toastSeverity', e.target.value)}
+                        onChange={(e) => handleChange('toastSeverity', e.target.value as ButtonProps['toastSeverity'])}
                       >
                         <MenuItem value="info">Info</MenuItem>
                         <MenuItem value="success">Success</MenuItem>
@@ -383,39 +440,6 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
                 </>
               )}
             </>
-          )}
-          
-          {/* URL Action Options */}
-          {props.clickAction === 'openUrl' && (
-            <Grid item xs={12}>
-              <TextField
-                label="URL to Open"
-                fullWidth
-                placeholder="https://example.com"
-                value={String(props.url || '')}
-                onChange={(e) => {
-                  let url = e.target.value;
-                  // Only add prefix if URL doesn't already have one and isn't empty
-                  if (url && !url.match(/^https?:\/\//)) {
-                    // Store just the raw URL value without modifying it in the field
-                    handleChange('url', url);
-                    // Also store the processed URL for proper opening
-                    handleChange('processedUrl', `https://${url}`);
-                  } else {
-                    handleChange('url', url);
-                    handleChange('processedUrl', url);
-                  }
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LinkIcon />
-                    </InputAdornment>
-                  ),
-                }}
-                helperText="Enter URL with or without http:// - we'll handle it for you"
-              />
-            </Grid>
           )}
         </Grid>
       </TabPanel>
@@ -433,6 +457,7 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
                 <IconButton 
                   color={isBold ? 'primary' : 'default'} 
                   onClick={toggleBold}
+                  aria-pressed={isBold}
                 >
                   <FormatBoldIcon />
                 </IconButton>
@@ -442,6 +467,7 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
                 <IconButton 
                   color={isItalic ? 'primary' : 'default'} 
                   onClick={toggleItalic}
+                  aria-pressed={isItalic}
                 >
                   <FormatItalicIcon />
                 </IconButton>
@@ -451,6 +477,7 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
                 <IconButton 
                   color={hasUnderline ? 'primary' : 'default'} 
                   onClick={toggleUnderline}
+                  aria-pressed={hasUnderline}
                 >
                   <FormatUnderlinedIcon />
                 </IconButton>
@@ -484,15 +511,18 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
           
           {/* Custom Color Toggle */}
           <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={useCustomColor}
-                  onChange={handleCustomColorToggle}
-                />
-              }
-              label="Use Custom Colors"
-            />
+            <Tooltip title="Use Custom Colors">
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={useCustomColor}
+                    onChange={handleCustomColorToggle}
+                  />
+                }
+                label="Use Custom Colors"
+                sx={{ ml: 0 }}
+              />
+            </Tooltip>
           </Grid>
           
           {/* Custom Color Pickers */}
@@ -612,6 +642,10 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
               }
               label="End Icon (Link)"
             />
+            {/* Tooltip explaining the end icon is fixed */}
+             <Typography variant="caption" display="block" color="text.secondary" sx={{mt: 1}}>
+                The end icon is currently fixed to <OpenInNewIcon fontSize="inherit" sx={{ verticalAlign: 'bottom' }} /> for link actions.
+             </Typography>
           </Grid>
         </Grid>
       </TabPanel>
@@ -623,7 +657,7 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
             <TextField
               label="Custom CSS Class"
               fullWidth
-              value={(props.className as string) || ''}
+              value={props.className || ''}
               onChange={(e) => handleChange('className', e.target.value)}
               placeholder="my-custom-button-class"
             />
@@ -635,8 +669,8 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
               type="number"
               inputProps={{ min: 0, max: 32 }}
               fullWidth
-              value={(props.margin as number) || 0}
-              onChange={(e) => handleChange('margin', Number(e.target.value))}
+              value={props.margin ?? ''}
+              onChange={(e) => handleChange('margin', e.target.value === '' ? undefined : Number(e.target.value))}
             />
           </Grid>
           
@@ -646,8 +680,8 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
               type="number"
               inputProps={{ min: 0, max: 24 }}
               fullWidth
-              value={(props.borderRadius as number) || 4}
-              onChange={(e) => handleChange('borderRadius', Number(e.target.value))}
+              value={props.borderRadius ?? ''}
+              onChange={(e) => handleChange('borderRadius', e.target.value === '' ? undefined : Number(e.target.value))}
             />
           </Grid>
           
@@ -667,7 +701,7 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
             <TextField
               label="Data Test ID"
               fullWidth
-              value={(props.dataTestId as string) || ''}
+              value={props.dataTestId || ''}
               onChange={(e) => handleChange('dataTestId', e.target.value)}
               placeholder="button-test-id"
               helperText="For automated testing"

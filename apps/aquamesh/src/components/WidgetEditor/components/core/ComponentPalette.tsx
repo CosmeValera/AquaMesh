@@ -123,7 +123,7 @@ const ComponentPalette = ({ showTooltips, showHelpText = true, handleDragStart }
               </ListSubheader>
               
               <Collapse in={expandedCategories[category]} timeout="auto">
-                <Box sx={{ px: 1 }}>
+                <Box sx={{ px: 1, pt: 1 }}>
                   {components.map((component) => (
                     <ComponentPaletteItem
                       key={component.type}

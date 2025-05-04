@@ -35,6 +35,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 interface WidgetEditorExplanationModalProps {
   open: boolean
   onClose: () => void
+  onCloseTutorial?: () => void
 }
 
 interface TabPanelProps {
@@ -77,7 +78,11 @@ function TabPanel(props: TabPanelProps) {
   )
 }
 
-const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> = ({ open, onClose }) => {
+const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> = ({ 
+  open, 
+  onClose, 
+  onCloseTutorial 
+}) => {
   const [tabValue, setTabValue] = useState(0)
   
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -88,6 +93,11 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
   const handleOpenWidgetEditor = () => {
     // Close this modal
     onClose()
+    
+    // Close the tutorial modal if the prop is provided
+    if (onCloseTutorial) {
+      onCloseTutorial()
+    }
     
     // Programmatically click the widget editor button
     const createWidgetButton = document.querySelector('[data-tutorial-id="create-widget-button"]')

@@ -518,6 +518,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
       <WidgetEditorExplanationModal
         open={widgetEditorModalOpen}
         onClose={() => setWidgetEditorModalOpen(false)}
+        onCloseTutorial={onClose}
       />
 
       {/* Add CSS for image hover effect */}

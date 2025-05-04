@@ -19,9 +19,26 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
 import NotificationsIcon from '@mui/icons-material/Notifications'
 
+// Define props interface
+interface SwitchProps {
+  label?: string;
+  defaultChecked?: boolean;
+  labelPlacement?: 'end' | 'start' | 'top' | 'bottom';
+  size?: 'small' | 'medium';
+  useCustomColor?: boolean;
+  customColor?: string; // thumb color
+  customTrackColor?: string; // track color
+  showToast?: boolean;
+  onMessage?: string;
+  offMessage?: string;
+  toastSeverity?: 'info' | 'success' | 'warning' | 'error';
+  disabled?: boolean;
+  [key: string]: unknown;
+}
+
 interface SwitchEditorProps {
-  props: Record<string, unknown>
-  onChange: (updatedProps: Record<string, unknown>) => void
+  props: SwitchProps; // Use defined interface
+  onChange: (updatedProps: SwitchProps) => void; // Use defined interface
 }
 
 // Tab panel component for organizing the editor
@@ -66,14 +83,16 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
   // Initialize state based on props
   useEffect(() => {
     setChecked(Boolean(props.defaultChecked))
-    setUseCustomColor(Boolean(props.useCustomColor))
-    
     if (props.customColor) {
       setCustomColor(props.customColor as string)
+    } else {
+      setCustomColor('#1976d2')
     }
     
     if (props.customTrackColor) {
       setCustomTrackColor(props.customTrackColor as string)
+    } else {
+      setCustomTrackColor('#90caf9')
     }
     
     if (props.size) {
@@ -107,11 +126,11 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
       handleChange('customColor', customColor)
       handleChange('customTrackColor', customTrackColor)
     } else {
-      const newProps = { ...props }
-      delete newProps.useCustomColor
-      delete newProps.customColor
-      delete newProps.customTrackColor
-      onChange(newProps)
+      handleChange('useCustomColor', undefined)
+      handleChange('customColor', undefined)
+      handleChange('customTrackColor', undefined)
+      setCustomColor('#1976d2')
+      setCustomTrackColor('#90caf9')
     }
   }
   

@@ -27,9 +27,30 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
 
+// Define props interface
+interface FieldSetProps {
+  legend?: string;
+  collapsed?: boolean;
+  legendAlign?: 'left' | 'center' | 'right';
+  iconPosition?: 'start' | 'end';
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'none';
+  borderRadius?: number;
+  padding?: number;
+  elevation?: boolean; // for shadow
+  useCustomColor?: boolean;
+  borderColor?: string;
+  legendColor?: string;
+  backgroundColor?: string;
+  legendBold?: boolean;
+  legendSize?: 'small' | 'medium' | 'large';
+  animated?: boolean;
+  saveState?: boolean; // for local storage
+  [key: string]: unknown;
+}
+
 interface FieldSetEditorProps {
-  props: Record<string, unknown>
-  onChange: (updatedProps: Record<string, unknown>) => void
+  props: FieldSetProps; // Use defined interface
+  onChange: (updatedProps: FieldSetProps) => void; // Use defined interface
 }
 
 // Tab panel component for organizing the editor
@@ -86,32 +107,44 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
     
     if (props.legendAlign) {
       setLegendAlign(props.legendAlign as string)
+    } else {
+      setLegendAlign('left')
     }
     
     if (props.borderStyle) {
       setBorderStyle(props.borderStyle as string)
+    } else {
+      setBorderStyle('solid')
     }
     
     if (typeof props.borderRadius === 'number') {
       setBorderRadius(props.borderRadius)
+    } else {
+      setBorderRadius(4)
     }
     
     if (typeof props.padding === 'number') {
       setPadding(props.padding)
+    } else {
+      setPadding(2)
     }
-    
-    setUseCustomColor(Boolean(props.useCustomColor))
     
     if (props.borderColor) {
       setBorderColor(props.borderColor as string)
+    } else {
+      setBorderColor('#cccccc')
     }
     
     if (props.legendColor) {
       setLegendColor(props.legendColor as string)
+    } else {
+      setLegendColor('#1976d2')
     }
     
     if (props.backgroundColor) {
       setBackgroundColor(props.backgroundColor as string)
+    } else {
+      setBackgroundColor('#ffffff')
     }
     
     if (props.iconPosition) {
@@ -145,12 +178,13 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
       handleChange('legendColor', legendColor)
       handleChange('backgroundColor', backgroundColor)
     } else {
-      const newProps = { ...props }
-      delete newProps.useCustomColor
-      delete newProps.borderColor
-      delete newProps.legendColor
-      delete newProps.backgroundColor
-      onChange(newProps)
+      handleChange('useCustomColor', undefined)
+      handleChange('borderColor', undefined)
+      handleChange('legendColor', undefined)
+      handleChange('backgroundColor', undefined)
+      setBorderColor('#cccccc')
+      setLegendColor('#1976d2')
+      setBackgroundColor('#ffffff')
     }
   }
   

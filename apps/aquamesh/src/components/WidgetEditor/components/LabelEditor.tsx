@@ -46,9 +46,13 @@ const DEFAULT_COLORS = [
   '#666666', // dark grey
 ]
 
+interface LabelProps {
+  [key: string]: unknown; 
+}
+
 interface LabelEditorProps {
-  props: Record<string, unknown>
-  onChange: (updatedProps: Record<string, unknown>) => void
+  props: LabelProps;
+  onChange: (updatedProps: LabelProps) => void;
 }
 
 // Tab panel component for organizing the editor
@@ -173,6 +177,9 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
       const weight = Number(props.fontWeight)
       setFontWeight(weight)
       setIsBold(weight >= 600)
+    } else {
+      setFontWeight(400)
+      setIsBold(false)
     }
     
     setIsItalic(Boolean(props.fontStyle === 'italic'))
@@ -180,12 +187,14 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
     
     if (props.textAlign) {
       setTextAlign(props.textAlign as string)
+    } else {
+      setTextAlign('left')
     }
-    
-    setUseCustomColor(Boolean(props.useCustomColor))
     
     if (props.customColor) {
       setCustomColor(props.customColor as string)
+    } else {
+      setCustomColor('#000000')
     }
   }, [props])
   
@@ -229,10 +238,9 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
       handleChange('useCustomColor', true)
       handleChange('customColor', customColor)
     } else {
-      const newProps = { ...props }
-      delete newProps.useCustomColor
-      delete newProps.customColor
-      onChange(newProps)
+      handleChange('useCustomColor', undefined)
+      handleChange('customColor', undefined)
+      setCustomColor('#000000')
     }
   }
   

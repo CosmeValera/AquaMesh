@@ -421,6 +421,12 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
               <IconButton 
                 color={isBold ? 'primary' : 'default'} 
                 onClick={toggleBold}
+                sx={{
+                  color: isBold ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
+                  }
+                }}
               >
                 <FormatBoldIcon />
               </IconButton>
@@ -428,6 +434,12 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
               <IconButton 
                 color={isItalic ? 'primary' : 'default'} 
                 onClick={toggleItalic}
+                sx={{
+                  color: isItalic ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
+                  }
+                }}
               >
                 <FormatItalicIcon />
               </IconButton>
@@ -435,6 +447,12 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
               <IconButton 
                 color={hasUnderline ? 'primary' : 'default'} 
                 onClick={toggleUnderline}
+                sx={{
+                  color: hasUnderline ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
+                  }
+                }}
               >
                 <FormatUnderlinedIcon />
               </IconButton>
@@ -471,6 +489,12 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
                   setTextAlign('left')
                   handleChange('textAlign', 'left')
                 }}
+                sx={{
+                  color: textAlign === 'left' ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
+                  }
+                }}
               >
                 <FormatAlignLeftIcon />
               </IconButton>
@@ -480,6 +504,12 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
                 onClick={() => {
                   setTextAlign('center')
                   handleChange('textAlign', 'center')
+                }}
+                sx={{
+                  color: textAlign === 'center' ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
+                  }
                 }}
               >
                 <FormatAlignCenterIcon />
@@ -491,6 +521,12 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
                   setTextAlign('right')
                   handleChange('textAlign', 'right')
                 }}
+                sx={{
+                  color: textAlign === 'right' ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
+                  }
+                }}
               >
                 <FormatAlignRightIcon />
               </IconButton>
@@ -500,6 +536,12 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
                 onClick={() => {
                   setTextAlign('justify')
                   handleChange('textAlign', 'justify')
+                }}
+                sx={{
+                  color: textAlign === 'justify' ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
+                  }
                 }}
               >
                 <FormatAlignJustifyIcon />

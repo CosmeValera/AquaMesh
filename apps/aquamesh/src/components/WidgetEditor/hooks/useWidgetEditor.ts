@@ -58,6 +58,10 @@ export const useWidgetEditor = () => {
     const savedValue = localStorage.getItem('widget-editor-delete-confirmation')
     return savedValue ? JSON.parse(savedValue) : true
   })
+  const [showDeleteWidgetConfirmation, setShowDeleteWidgetConfirmation] = useState<boolean>(() => {
+    const savedValue = localStorage.getItem('widget-editor-delete-widget-confirmation')
+    return savedValue ? JSON.parse(savedValue) : true
+  })
   const [showComponentPaletteHelp, setShowComponentPaletteHelp] = useState<boolean>(() => {
     const savedValue = localStorage.getItem('widget-editor-show-palette-help')
     return savedValue ? JSON.parse(savedValue) : true
@@ -75,6 +79,10 @@ export const useWidgetEditor = () => {
   useEffect(() => {
     localStorage.setItem('widget-editor-delete-confirmation', JSON.stringify(showDeleteConfirmation))
   }, [showDeleteConfirmation])
+  
+  useEffect(() => {
+    localStorage.setItem('widget-editor-delete-widget-confirmation', JSON.stringify(showDeleteWidgetConfirmation))
+  }, [showDeleteWidgetConfirmation])
   
   useEffect(() => {
     localStorage.setItem('widget-editor-show-palette-help', JSON.stringify(showComponentPaletteHelp))
@@ -486,6 +494,21 @@ export const useWidgetEditor = () => {
 
   // Handle deleting a saved widget
   const handleDeleteSavedWidget = (id: string) => {
+    // If delete widget confirmation is turned off, delete immediately
+    if (!showDeleteWidgetConfirmation) {
+      WidgetStorage.deleteWidget(id)
+      
+      setSavedWidgets(WidgetStorage.getAllWidgets())
+      
+      setNotification({
+        open: true,
+        message: 'Widget deleted',
+        severity: 'info'
+      })
+      return
+    }
+    
+    // Otherwise show confirmation dialog
     setWidgetToDelete(id)
     setDeleteConfirmOpen(true)
   }
@@ -541,6 +564,8 @@ export const useWidgetEditor = () => {
     setShowTooltips,
     showDeleteConfirmation,
     setShowDeleteConfirmation,
+    showDeleteWidgetConfirmation,
+    setShowDeleteWidgetConfirmation,
     showComponentPaletteHelp,
     setShowComponentPaletteHelp,
     deleteConfirmOpen,

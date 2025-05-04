@@ -37,6 +37,8 @@ const WidgetEditor: React.FC = () => {
     showComponentPaletteHelp,
     setShowComponentPaletteHelp,
     deleteConfirmOpen,
+    showDeleteWidgetConfirmation,
+    setShowDeleteWidgetConfirmation,
     
     // Event handlers
     handleDragStart,
@@ -250,6 +252,8 @@ const WidgetEditor: React.FC = () => {
         onShowDeleteConfirmationChange={setShowDeleteConfirmation}
         showComponentPaletteHelp={showComponentPaletteHelp}
         onShowComponentPaletteHelpChange={setShowComponentPaletteHelp}
+        showDeleteWidgetConfirmation={showDeleteWidgetConfirmation}
+        onShowDeleteWidgetConfirmationChange={setShowDeleteWidgetConfirmation}
       />
 
       {/* Delete Confirmation Dialog */}

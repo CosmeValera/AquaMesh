@@ -15,6 +15,7 @@ import {
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import WidgetsIcon from '@mui/icons-material/Widgets'
 
 interface SettingsDialogProps {
   open: boolean
@@ -25,6 +26,8 @@ interface SettingsDialogProps {
   onShowDeleteConfirmationChange: (value: boolean) => void
   showComponentPaletteHelp: boolean
   onShowComponentPaletteHelpChange: (value: boolean) => void
+  showDeleteWidgetConfirmation: boolean
+  onShowDeleteWidgetConfirmationChange: (value: boolean) => void
 }
 
 const SettingsDialog: React.FC<SettingsDialogProps> = ({
@@ -36,6 +39,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   onShowDeleteConfirmationChange,
   showComponentPaletteHelp,
   onShowComponentPaletteHelpChange,
+  showDeleteWidgetConfirmation,
+  onShowDeleteWidgetConfirmationChange,
 }) => {
   return (
     <Dialog
@@ -119,6 +124,27 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 />
                 <Typography variant="body2" color="text.secondary" sx={{ ml: 0, mb: 1 }}>
                   Show a confirmation dialog when deleting components. Disable for quicker editing.
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+          
+          <Paper elevation={0} sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
+              <WidgetsIcon sx={{ mr: 1.5, color: 'error.main', mt: 0.4 }} />
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={showDeleteWidgetConfirmation}
+                      onChange={(e) => onShowDeleteWidgetConfirmationChange(e.target.checked)}
+                      color="error"
+                    />
+                  }
+                  label={<Typography fontWeight="medium">Confirm Widget Deletion</Typography>}
+                />
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 0, mb: 1 }}>
+                  Show a confirmation dialog when deleting widgets from the library. Disable for quicker management.
                 </Typography>
               </Box>
             </Box>

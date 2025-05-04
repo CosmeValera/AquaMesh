@@ -1,11 +1,67 @@
 import React, { createContext, useContext, useState } from 'react'
-import { Snackbar, Alert, SnackbarOrigin } from '@mui/material'
-
-export type NotificationSeverity = 'success' | 'info' | 'warning' | 'error'
+import { SnackbarOrigin } from '@mui/material'
+import EnhancedNotification, { 
+  NotificationType, 
+  NotificationVariant 
+} from './EnhancedNotification'
 
 interface NotificationContextProps {
-  showNotification: (message: string, severity?: NotificationSeverity, position?: SnackbarOrigin) => void
+  /**
+   * Show a notification with the given message and options
+   */
+  showNotification: (options: NotificationOptions) => void
+
+  /**
+   * Close the notification
+   */
   closeNotification: () => void
+}
+
+export interface NotificationOptions {
+  /**
+   * The message to display
+   */
+  message: string
+  
+  /**
+   * Optional title for the notification
+   */
+  title?: string
+  
+  /**
+   * The type of notification
+   */
+  type?: NotificationType
+  
+  /**
+   * The variant of the alert
+   */
+  variant?: NotificationVariant
+  
+  /**
+   * Auto hide duration in milliseconds
+   */
+  autoHideDuration?: number
+  
+  /**
+   * Position of the notification
+   */
+  position?: SnackbarOrigin
+  
+  /**
+   * Transition type
+   */
+  transition?: 'slide' | 'grow' | 'fade'
+  
+  /**
+   * Direction for slide transition
+   */
+  slideDirection?: 'up' | 'down' | 'left' | 'right'
+  
+  /**
+   * Additional action component
+   */
+  action?: React.ReactNode
 }
 
 const NotificationContext = createContext<NotificationContextProps | undefined>(undefined)
@@ -19,25 +75,32 @@ export const useNotification = () => {
 }
 
 export const NotificationProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+  // Notification state
   const [open, setOpen] = useState(false)
-  const [message, setMessage] = useState('')
-  const [severity, setSeverity] = useState<NotificationSeverity>('info')
-  const [position, setPosition] = useState<SnackbarOrigin>({
-    vertical: 'bottom',
-    horizontal: 'center'
+  const [options, setOptions] = useState<NotificationOptions>({
+    message: '',
+    type: 'info',
+    variant: 'filled',
+    autoHideDuration: 5000,
+    position: { vertical: 'bottom', horizontal: 'center' },
+    transition: 'slide',
+    slideDirection: 'up'
   })
 
-  const showNotification = (
-    msg: string, 
-    sev: NotificationSeverity = 'info',
-    pos: SnackbarOrigin = { vertical: 'bottom', horizontal: 'center' }
-  ) => {
-    setMessage(msg)
-    setSeverity(sev)
-    setPosition(pos)
+  /**
+   * Show a notification with the given options
+   */
+  const showNotification = (newOptions: NotificationOptions) => {
+    setOptions({
+      ...options,
+      ...newOptions
+    })
     setOpen(true)
   }
 
+  /**
+   * Close the notification
+   */
   const closeNotification = () => {
     setOpen(false)
   }
@@ -45,27 +108,19 @@ export const NotificationProvider: React.FC<{children: React.ReactNode}> = ({ ch
   return (
     <NotificationContext.Provider value={{ showNotification, closeNotification }}>
       {children}
-      <Snackbar
+      <EnhancedNotification
         open={open}
-        autoHideDuration={4000}
+        message={options.message}
+        title={options.title}
+        type={options.type}
+        variant={options.variant}
+        autoHideDuration={options.autoHideDuration}
+        position={options.position}
+        transition={options.transition}
+        slideDirection={options.slideDirection}
         onClose={closeNotification}
-        anchorOrigin={position}
-      >
-        <Alert 
-          onClose={closeNotification} 
-          severity={severity}
-          variant="filled"
-          elevation={6}
-          sx={{ 
-            width: '100%',
-            '& .MuiAlert-icon': {
-              fontSize: '1.25rem'
-            }
-          }}
-        >
-          {message}
-        </Alert>
-      </Snackbar>
+        action={options.action}
+      />
     </NotificationContext.Provider>
   )
 }

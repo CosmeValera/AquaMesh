@@ -309,7 +309,7 @@ const SavedWidgetsDialog: React.FC<SavedWidgetsDialogProps> = ({
                 >
                   <ListItem
                     button
-                    onClick={() => handlePreviewWidget(widget)}
+                    onClick={(e) => handleEditWidget(e, widget)}
                     sx={{
                       p: 2,
                       display: 'flex',

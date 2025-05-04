@@ -226,8 +226,8 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               mr: 4
             }}
           >
-            <Logo height="32px" width="32px" style={{ marginRight: isTablet ? '4px' : '12px' }} />
-            AquaMesh
+            <Logo height="32px" width="32px" style={{ marginRight: isTablet ? '-28px' : '12px' }} />
+            {!isTablet && 'AquaMesh'}
           </Typography>
 
           {/* Main Navigation Items */}
@@ -454,7 +454,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                 startIcon={<CreateIcon />}
                 data-tutorial-id="create-widget-button"
               >
-                {!isTablet ? 'Create Widget' : 'C.W.'}
+                {!isTablet ? 'Create Widget' : ''}
               </Button>
             )}
           </Box>

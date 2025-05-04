@@ -47,15 +47,17 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
       }}
     >
       <Toolbar variant="dense">
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          onClick={toggleSidebar}
-          sx={{ mr: 2, color: showSidebar ? 'primary.main' : 'foreground.contrastSecondary' }}
-        >
-          <MenuIcon />
-        </IconButton>
+        {editMode && (
+          <IconButton
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            onClick={toggleSidebar}
+            sx={{ mr: 2, color: showSidebar ? 'primary.main' : 'foreground.contrastSecondary' }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
         
         <Typography 
           variant="h6" 

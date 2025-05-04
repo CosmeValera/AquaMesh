@@ -11,7 +11,10 @@ import {
   Paper,
   IconButton,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Fade,
+  Zoom,
+  Divider
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import DashboardIcon from '@mui/icons-material/Dashboard'
@@ -32,6 +35,30 @@ const placeholderImages = {
   predefinedDashboards: `/images/predefined_dashboards.png`,
   predefinedWidgets: `/images/predefined_widgets.png`,
   customWidgetCreation: `/images/widget_editor.png`
+}
+
+// Define interfaces for the tutorial options
+interface TutorialImage {
+  src: string;
+  alt: string;
+}
+
+interface ButtonOption {
+  text: string;
+  action: () => void;
+}
+
+interface TutorialOption {
+  title: string;
+  description: string;
+  icon: React.ReactElement;
+  buttonText?: string;
+  image?: string;
+  action?: () => void;
+  hasMultipleImages?: boolean;
+  images?: TutorialImage[];
+  hasMultipleButtons?: boolean;
+  buttons?: ButtonOption[];
 }
 
 const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnStartupToggle }) => {
@@ -57,7 +84,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
     }
   }, [])
 
-  const options = [
+  const options: TutorialOption[] = [
     {
       title: 'Understand Dashboards & Widgets',
       description: 'Learn the core concepts of AquaMesh: Dashboards are containers that organize multiple widgets into a layout. Widgets are individual components that display specific data or functionality.',
@@ -71,7 +98,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
     },
     {
       title: isAdmin ? 'OPTION 1: Use Predefined Dashboards & Widgets' : 'Use Predefined Dashboards & Widgets',
-      description: 'Choose from existing dashboards and add predefined widgets to visualize your data effectively.',
+      description: 'Choose from existing dashboards and add predefined widgets to visualize your data effectively. Open the DASHBOARDS or WIDGETS menu and select an option from the list.',
       icon: <DashboardIcon fontSize="large" color="primary" />,
       // Instead of a single image, we'll display two images
       hasMultipleImages: true,
@@ -118,7 +145,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
   if (isAdmin) {
     options.push({
       title: 'OPTION 2: Create Custom Widgets & Dashboards',
-      description: 'Design your own widgets with the Widget Editor and save custom dashboards that fit your specific needs.',
+      description: 'Design your own widgets with the Widget Editor and save custom dashboards that fit your specific needs. Drag and drop components, then save or browse your widgets.',
       icon: <CreateIcon fontSize="large" color="primary" />,
       buttonText: 'Open Widget Editor',
       image: placeholderImages.customWidgetCreation,
@@ -159,135 +186,230 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
           sx: {
             bgcolor: 'background.paper',
             boxShadow: 24,
-            borderRadius: 2,
-            overflow: 'hidden'
+            borderRadius: '16px',
+            overflow: 'hidden',
+            backgroundImage: 'linear-gradient(135deg, rgba(0, 196, 154, 0.05) 0%, rgba(0, 188, 162, 0.1) 100%)'
           }
         }}
         fullScreen={isMobile}
+        TransitionComponent={Fade}
+        transitionDuration={400}
       >
-        <DialogTitle id="tutorial-dialog-title" sx={{ bgcolor: 'primary.main', color: 'white', pb: 1 }}>
+        <DialogTitle id="tutorial-dialog-title" sx={{ 
+          bgcolor: 'primary.main', 
+          color: 'white', 
+          pb: 1,
+          backgroundImage: 'linear-gradient(90deg, #00BC9A 0%, #00A389 100%)'
+        }}>
           <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Typography variant="h5" component="div" fontWeight="bold" sx={{color: '#191919'}}>
+            <Typography 
+              variant="h5" 
+              component="div" 
+              fontWeight="bold" 
+              sx={{
+                color: '#191919',
+                textShadow: '0px 1px 2px rgba(255, 255, 255, 0.3)'
+              }}
+            >
               Welcome to AquaMesh
             </Typography>
             <IconButton
               aria-label="close"
               onClick={onClose}
-              sx={{ color: 'white' }}
+              sx={{ 
+                color: 'white',
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 255, 0.1)'
+                }
+              }}
             >
               <CloseIcon />
             </IconButton>
           </Box>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent 
+          sx={{ 
+            backgroundImage: 'radial-gradient(circle at 90% 10%, rgba(0, 188, 162, 0.1) 0%, transparent 60%)'
+          }}
+        >
           <Box my={3}>            
             <Grid container spacing={4} sx={{ mt: 2 }}>
               {options.map((option, index) => (
-                <Grid item xs={12} key={index} className="tutorial-option">
-                  <Paper
-                    elevation={3}
-                    sx={{
-                      p: 3,
-                      width: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      textAlign: 'center',
-                      transition: 'transform 0.2s, box-shadow 0.2s',
-                      '&:hover': {
-                        transform: 'translateY(-5px)',
-                        boxShadow: 6,
-                      },
-                      mb: 3
-                    }}
-                  >
-                    <Box sx={{ width: '100%' }}>
-                      <Box mb={2} display="flex" justifyContent="center">
-                        {option.icon}
-                      </Box>
-                      <Typography variant="h6" fontWeight="bold" gutterBottom color="#f9f9f9">
-                        {option.title}
-                      </Typography>
-                      <Typography variant="body2" paragraph color="#f9f9f9">
-                        {option.description}
-                      </Typography>
-                      
-                      {/* Image with arrows */}
-                      <Box 
-                        sx={{ 
-                          mt: 2, 
-                          mb: 3, 
-                          maxWidth: '100%', 
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        {option.hasMultipleImages ? (
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2 }}>
-                            {option.images.map((image, imgIndex) => (
-                              <img 
-                                key={imgIndex}
-                                src={image.src} 
-                                alt={image.alt}
-                                style={{ 
-                                  maxWidth: '48%', 
-                                  maxHeight: '100%',
-                                  objectFit: 'contain',
-                                  border: '1px solid rgb(238, 238, 238)',
-                                  borderRadius: '4px',
-                                  backgroundColor: 'background.paper'
+                <Zoom 
+                  in={open} 
+                  style={{ transitionDelay: `${index * 100}ms` }}
+                  key={index}
+                >
+                  <Grid item xs={12} className="tutorial-option">
+                    <Paper
+                      elevation={3}
+                      sx={{
+                        p: 3,
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                        transition: 'transform 0.3s, box-shadow 0.3s',
+                        '&:hover': {
+                          transform: 'translateY(-8px)',
+                          boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+                        },
+                        mb: 3,
+                        position: 'relative',
+                        overflow: 'hidden',
+                        backgroundImage: 'linear-gradient(135deg, rgba(0, 166, 137, 0.1) 0%, rgba(25, 25, 25, 0.2) 100%)',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: '4px',
+                          background: 'linear-gradient(90deg, #00BC9A 0%, #00D1AB 100%)',
+                        }
+                      }}
+                    >
+                      <Box sx={{ width: '100%' }}>
+                        <Box mb={2} display="flex" justifyContent="center">
+                          <div style={{ 
+                            background: 'rgba(0, 188, 162, 0.1)',
+                            borderRadius: '50%',
+                            width: '60px',
+                            height: '60px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+                          }}>
+                            {React.cloneElement(option.icon, {
+                              style: { fontSize: '32px', color: '#00BC9A' }
+                            })}
+                          </div>
+                        </Box>
+                        <Typography 
+                          variant="h6" 
+                          fontWeight="bold" 
+                          gutterBottom 
+                          color="#f9f9f9"
+                          sx={{ 
+                            background: 'linear-gradient(90deg, #00BC9A, #00D1AB)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            textShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)'
+                          }}
+                        >
+                          {option.title}
+                        </Typography>
+                        <Typography variant="body2" paragraph color="#f9f9f9" sx={{ minHeight: '48px' }}>
+                          {option.description}
+                        </Typography>
+                        
+                        {/* Image with arrows */}
+                        <Box 
+                          sx={{ 
+                            mt: 2, 
+                            mb: 3, 
+                            maxWidth: '100%', 
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {option.hasMultipleImages ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, gap: 2 }}>
+                              {option.images.map((image, imgIndex) => (
+                                <img 
+                                  key={imgIndex}
+                                  src={image.src} 
+                                  alt={image.alt}
+                                  style={{ 
+                                    maxWidth: '48%', 
+                                    maxHeight: '100%',
+                                    objectFit: 'contain',
+                                    border: '1px solid rgb(238, 238, 238)',
+                                    borderRadius: '8px',
+                                    backgroundColor: 'background.paper',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                                    transition: 'transform 0.2s ease',
+                                  }}
+                                  className="hover-scale-image"
+                                />
+                              ))}
+                            </Box>
+                          ) : option.image ? (
+                            <img 
+                              src={option.image} 
+                              alt={`${option.title} illustration`}
+                              style={{ 
+                                maxWidth: '100%', 
+                                maxHeight: '100%',
+                                objectFit: 'contain',
+                                border: '1px solid rgb(238, 238, 238)',
+                                borderRadius: '8px',
+                                backgroundColor: 'background.paper',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                                transition: 'transform 0.2s ease',
+                              }}
+                              className="hover-scale-image"
+                            />
+                          ) : (
+                            <Typography color="text.secondary">
+                              Illustration placeholder
+                            </Typography>
+                          )}
+                        </Box>
+                        
+                        {/* Render either multiple buttons or a single button */}
+                        {option.hasMultipleButtons ? (
+                          <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 2, mt: 2 }}>
+                            {option.buttons.map((button, btnIndex) => (
+                              <Button 
+                                key={btnIndex}
+                                variant={btnIndex === 0 ? "outlined" : "contained"} 
+                                onClick={button.action}
+                                sx={{
+                                  color: btnIndex === 0 ? "#00BC9A" : "#191919",
+                                  borderColor: btnIndex === 0 ? "#00BC9A" : "transparent",
+                                  boxShadow: btnIndex === 0 ? 'none' : '0 2px 8px rgba(0, 188, 162, 0.4)',
+                                  fontWeight: 'bold',
+                                  '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: btnIndex === 0 ? '0 2px 5px rgba(0, 188, 162, 0.3)' : '0 4px 12px rgba(0, 188, 162, 0.5)',
+                                    backgroundColor: btnIndex === 0 ? 'transparent' : '#00D1AB'
+                                  },
+                                  transition: 'all 0.2s ease'
                                 }}
-                              />
+                              >
+                                {button.text}
+                              </Button>
                             ))}
                           </Box>
-                        ) : option.image ? (
-                          <img 
-                            src={option.image} 
-                            alt={`${option.title} illustration`}
-                            style={{ 
-                              maxWidth: '100%', 
-                              maxHeight: '100%',
-                              objectFit: 'contain',
-                              border: '1px solid rgb(238, 238, 238)',
-                              borderRadius: '4px',
-                              backgroundColor: 'background.paper'
-                            }}
-                          />
                         ) : (
-                          <Typography color="text.secondary">
-                            Illustration placeholder
-                          </Typography>
+                          <Button 
+                            variant="contained" 
+                            color="primary" 
+                            onClick={option.action}
+                            sx={{ 
+                              mt: 2, 
+                              color: '#191919',
+                              fontWeight: 'bold',
+                              boxShadow: '0 2px 8px rgba(0, 188, 162, 0.4)',
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 4px 12px rgba(0, 188, 162, 0.5)',
+                                backgroundColor: '#00D1AB'
+                              },
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            {option.buttonText}
+                          </Button>
                         )}
                       </Box>
-                      
-                      {/* Render either multiple buttons or a single button */}
-                      {option.hasMultipleButtons ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 2, mt: 2 }}>
-                          {option.buttons.map((button, btnIndex) => (
-                            <Button 
-                              key={btnIndex}
-                              variant="contained" 
-                              onClick={button.action}
-                              sx={{color:"#191919"}}
-                            >
-                              {button.text}
-                            </Button>
-                          ))}
-                        </Box>
-                      ) : (
-                        <Button 
-                          variant="contained" 
-                          color="primary" 
-                          onClick={option.action}
-                          sx={{ mt: 2, color: '#191919' }}
-                        >
-                          {option.buttonText}
-                        </Button>
-                      )}
-                    </Box>
-                  </Paper>
-                </Grid>
+                    </Paper>
+                  </Grid>
+                </Zoom>
               ))}
             </Grid>
           </Box>
@@ -346,6 +468,18 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
         open={widgetEditorModalOpen}
         onClose={() => setWidgetEditorModalOpen(false)}
       />
+
+      {/* Add CSS for image hover effect */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .hover-scale-image {
+            transition: transform 0.3s ease;
+          }
+          .hover-scale-image:hover {
+            transform: scale(1.05);
+          }
+        `
+      }} />
     </>
   )
 }

@@ -9,7 +9,7 @@ import 'primeicons/primeicons.css';
 import './hide-overlay.scss';
 import './components/container-responsive.scss';
 
-import SystemLensProvider from './provider/SystemLensProvider';
+import { SystemLensProvider } from './provider/SystemLensProvider';
 import SystemOverviewPage from './pages/SystemOverviewPage';
 
 const Main = () => {
@@ -21,5 +21,8 @@ const Main = () => {
     </PrimeReactProvider>
   );
 };
+
+// Add a named export for the SystemLensMain component
+export const SystemLensMain = Main;
 
 export default Main; 

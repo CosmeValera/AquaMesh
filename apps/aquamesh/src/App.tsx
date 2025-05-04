@@ -22,6 +22,17 @@ import '../../../style/themes/aquamesh-theme/theme.scss'
 import './variables.scss'
 import './hide-overlay.scss'
 
+// Protected route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const userData = localStorage.getItem('userData')
+  
+  if (!userData) {
+    return <Navigate to="/login" replace />
+  }
+  
+  return <>{children}</>
+}
+
 const Dashboard = () => {
   const [menuOpen, setMenuOpen] = useState(false)
   
@@ -49,7 +60,11 @@ const App = () => {
               <CssBaseline />
               <Routes>
                 <Route path="/login" element={<Login />} />
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </LayoutProvider>

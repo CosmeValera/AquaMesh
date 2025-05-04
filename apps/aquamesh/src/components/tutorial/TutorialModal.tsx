@@ -411,6 +411,58 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                 </Zoom>
               ))}
             </Grid>
+            
+            {/* Admin access note for non-admin users */}
+            {!isAdmin && (
+              <Zoom in={open} style={{ transitionDelay: `${options.length * 100}ms` }}>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    p: 3,
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    mt: 2,
+                    background: 'linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(25, 25, 25, 0.2) 100%)',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '4px',
+                      background: 'linear-gradient(90deg, #FFC107 0%, #FF9800 100%)',
+                    },
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Box sx={{ width: '100%' }}>
+                    <InfoIcon fontSize="large" sx={{ color: '#FFC107' }} />
+                    <Typography 
+                      variant="h6" 
+                      fontWeight="bold" 
+                      gutterBottom 
+                      color="#f9f9f9"
+                      sx={{ 
+                        background: 'linear-gradient(90deg, #FFC107, #FF9800)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        textShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)'
+                      }}
+                    >
+                      Administrator Access Required
+                    </Typography>
+                    <Typography variant="body2" paragraph color="#f9f9f9">
+                      Some advanced features like the Widget Editor are only available to users with Administrator privileges. 
+                      To access these features, please log in with an Admin account.
+                    </Typography>
+                  </Box>
+                </Paper>
+              </Zoom>
+            )}
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3, justifyContent: 'flex-end' }}>
@@ -475,7 +527,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
             transition: transform 0.3s ease;
           }
           .hover-scale-image:hover {
-            transform: scale(1.05);
+            transform: scale(1.02);
           }
         `
       }} />

@@ -28,7 +28,7 @@ const userOptions: Record<string, UserData> = {
 }
 
 const Login: React.FC = () => {
-  const [selectedUser, setSelectedUser] = useState('admin')
+  const [selectedUser, setSelectedUser] = useState('viewer')
   const navigate = useNavigate()
 
   // Load the last selected user from localStorage if available

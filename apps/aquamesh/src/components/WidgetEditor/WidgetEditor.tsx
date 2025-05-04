@@ -250,6 +250,10 @@ const WidgetEditor: React.FC = () => {
         onShowTooltipsChange={setShowTooltips}
         showComponentPaletteHelp={showComponentPaletteHelp}
         onShowComponentPaletteHelpChange={setShowComponentPaletteHelp}
+        showDeleteConfirmation={showDeleteConfirmation}
+        onShowDeleteConfirmationChange={setShowDeleteConfirmation}
+        showDeleteWidgetConfirmation={showDeleteWidgetConfirmation}
+        onShowDeleteWidgetConfirmationChange={setShowDeleteWidgetConfirmation}
       />
 
       {/* Delete Confirmation Dialog */}

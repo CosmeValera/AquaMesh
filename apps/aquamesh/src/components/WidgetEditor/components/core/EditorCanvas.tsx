@@ -13,10 +13,18 @@ interface EditorCanvasProps {
   widgetData: {
     name: string;
     components: ComponentData[];
+    id?: string;
+    createdAt?: number;
+    updatedAt?: number;
+    version?: string;
   };
   setWidgetData: React.Dispatch<React.SetStateAction<{
     name: string;
     components: ComponentData[];
+    id?: string;
+    createdAt?: number;
+    updatedAt?: number;
+    version?: string;
   }>>;
   dropAreaRef: React.RefObject<HTMLDivElement>;
   handleDrop: (e: React.DragEvent) => void;

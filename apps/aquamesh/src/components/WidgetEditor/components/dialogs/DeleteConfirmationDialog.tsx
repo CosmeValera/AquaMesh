@@ -1,17 +1,13 @@
 import React from 'react'
 import {
   Dialog,
+  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
   Typography,
-  Box,
-  Paper,
-  Fade,
-  useTheme
 } from '@mui/material'
-import WarningIcon from '@mui/icons-material/Warning'
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
+import DeleteIcon from '@mui/icons-material/Delete'
 
 interface DeleteConfirmationDialogProps {
   open: boolean
@@ -26,86 +22,50 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
   title,
   content,
   onConfirm,
-  onCancel
+  onCancel,
 }) => {
-  const theme = useTheme()
-  
   return (
     <Dialog
       open={open}
       onClose={onCancel}
-      aria-labelledby="delete-confirmation-title"
-      aria-describedby="delete-confirmation-description"
-      maxWidth="sm"
+      maxWidth="xs"
       fullWidth
-      TransitionComponent={Fade}
       PaperProps={{
         sx: {
           borderRadius: '12px',
-          overflow: 'hidden',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)'
+          overflow: 'hidden'
         }
       }}
     >
-      <Paper
-        elevation={0}
-        sx={{
-          bgcolor: theme.palette.error.dark,
-          color: theme.palette.error.contrastText,
-          py: 2,
-          px: 3,
+      <DialogTitle 
+        sx={{ 
+          bgcolor: 'error.dark', 
+          color: 'error.contrastText',
           display: 'flex',
           alignItems: 'center',
-          gap: 2
+          gap: 1
         }}
       >
-        <WarningIcon fontSize="large" />
-        <Typography variant="h6" component="div" id="delete-confirmation-title" fontWeight="bold">
-          {title}
-        </Typography>
-      </Paper>
-      
-      <DialogContent sx={{ pt: 4, pb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <DeleteOutlineIcon sx={{ color: 'error.main', mr: 1.5, fontSize: 28 }} />
-          <Typography variant="body1" id="delete-confirmation-description">
-            {content}
-          </Typography>
-        </Box>
+        <DeleteIcon />
+        {title}
+      </DialogTitle>
+      <DialogContent sx={{ py: 3 }}>
+        <Typography variant="body1">{content}</Typography>
       </DialogContent>
-      
-      <DialogActions sx={{ px: 3, pb: 3, justifyContent: 'space-between' }}>
+      <DialogActions sx={{ px: 3, pb: 3 }}>
         <Button 
           onClick={onCancel} 
           variant="outlined"
           color="inherit"
-          sx={{ 
-            borderColor: 'divider',
-            color: 'text.secondary',
-            px: 3,
-            '&:hover': {
-              bgcolor: 'action.hover',
-              borderColor: 'divider'
-            }
-          }}
+          sx={{ px: 3 }}
         >
           Cancel
         </Button>
         <Button 
           onClick={onConfirm} 
-          variant="contained" 
+          variant="contained"
           color="error"
-          startIcon={<DeleteOutlineIcon />}
-          sx={{ 
-            px: 3,
-            '&:hover': {
-              bgcolor: 'error.dark',
-              transform: 'translateY(-2px)',
-              transition: 'all 0.2s'
-            },
-            boxShadow: 2
-          }}
-          autoFocus
+          sx={{ px: 3 }}
         >
           Delete
         </Button>

@@ -127,7 +127,7 @@ const WidgetEditor: React.FC = () => {
     if (componentToDelete) {
       return {
         title: "Delete Component?",
-        content: "Are you sure you want to delete this component? This action cannot be undone.",
+        content: "Are you sure you want to delete this component?",
         onConfirm: confirmDeleteComponent,
         onCancel: cancelDeleteComponent
       }
@@ -135,16 +135,16 @@ const WidgetEditor: React.FC = () => {
       const widgetName = savedWidgets.find(w => w.id === widgetToDelete)?.name || "widget"
       return {
         title: "Delete Widget?",
-        content: `Are you sure you want to delete "${widgetName}"? This action cannot be undone.`,
+        content: `Are you sure you want to delete "${widgetName}"?`,
         onConfirm: confirmDeleteSavedWidget,
         onCancel: cancelDeleteComponent
       }
     }
     return {
-      title: "Delete Item?",
-      content: "Are you sure you want to delete this item? This action cannot be undone.",
-      onConfirm: cancelDeleteComponent,
-      onCancel: cancelDeleteComponent
+      // title: "Delete Item?",
+      // content: "Are you sure you want to delete this item?",
+      // onConfirm: cancelDeleteComponent,
+      // onCancel: cancelDeleteComponent
     }
   }
 

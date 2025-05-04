@@ -10,27 +10,16 @@ import {
   FormControlLabel,
   Switch,
   Divider,
-  Grid,
-  Tabs,
-  Tab,
-  Paper,
-  IconButton,
-  Slider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button
+  Grid
 } from '@mui/material'
-import SettingsIcon from '@mui/icons-material/Settings'
-import ColorLensIcon from '@mui/icons-material/ColorLens'
-import FormatBoldIcon from '@mui/icons-material/FormatBold'
-import FormatItalicIcon from '@mui/icons-material/FormatItalic'
-import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined'
-import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft'
-import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter'
-import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight'
-import FormatAlignJustifyIcon from '@mui/icons-material/FormatAlignJustify'
+
+import {
+  ComponentPreview,
+  EditorTabs,
+  TextStylingControls,
+  TextAlignmentControls,
+  CustomColorControl
+} from '../shared/SharedEditorComponents'
 
 // Define some default colors for color picker
 const DEFAULT_COLORS = [
@@ -208,51 +197,44 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
     onChange({ ...props, [name]: value })
   }
   
-  // Toggle text formatting
-  const toggleBold = () => {
-    const newIsBold = !isBold
-    setIsBold(newIsBold)
-    const newWeight = newIsBold ? 700 : 400
-    setFontWeight(newWeight)
-    handleChange('fontWeight', newWeight)
-  }
-  
-  const toggleItalic = () => {
-    const newIsItalic = !isItalic
-    setIsItalic(newIsItalic)
-    handleChange('fontStyle', newIsItalic ? 'italic' : 'normal')
-  }
-  
-  const toggleUnderline = () => {
-    const newHasUnderline = !hasUnderline
-    setHasUnderline(newHasUnderline)
-    handleChange('textDecoration', newHasUnderline ? 'underline' : 'none')
-  }
-  
-  // Custom color toggle
-  const handleCustomColorToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked
-    setUseCustomColor(checked)
+  // Handle text style changes
+  const handleTextStyleChange = (prop: string, value: unknown) => {
+    handleChange(prop, value)
     
-    if (checked) {
+    // Update local state based on the changed property
+    if (prop === 'fontWeight') {
+      const weightValue = value as number
+      setFontWeight(weightValue)
+      setIsBold(weightValue >= 600)
+    } else if (prop === 'fontStyle') {
+      setIsItalic(value === 'italic')
+    } else if (prop === 'textDecoration') {
+      setHasUnderline(value === 'underline')
+    }
+  }
+  
+  // Handle text alignment change
+  const handleTextAlignChange = (align: string) => {
+    setTextAlign(align)
+    handleChange('textAlign', align)
+  }
+  
+  // Custom color handlers
+  const handleColorChange = (color: string) => {
+    setCustomColor(color)
+    handleChange('customColor', color)
+  }
+  
+  const handleCustomColorToggle = (useCustom: boolean) => {
+    setUseCustomColor(useCustom)
+    
+    if (useCustom) {
       handleChange('useCustomColor', true)
       handleChange('customColor', customColor)
     } else {
       handleChange('useCustomColor', undefined)
       handleChange('customColor', undefined)
-      setCustomColor('#000000')
     }
-  }
-  
-  // Open color picker
-  const openColorPicker = () => {
-    setColorPickerOpen(true)
-  }
-  
-  // Apply selected color
-  const applyColor = (color: string) => {
-    setCustomColor(color)
-    handleChange('customColor', color)
   }
   
   // Preview styles based on current settings
@@ -264,43 +246,32 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
     color: useCustomColor ? customColor : 'inherit'
   }
   
+  const editorTabs = [
+    { label: 'Content', id: 'label-content' },
+    { label: 'Typography', id: 'label-typography' }
+  ]
+  
   return (
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
-      <Paper 
-        variant="outlined" 
-        sx={{ 
-          mb: 2, 
-          p: 2, 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          minHeight: '80px'
-        }}
-      >
+      <ComponentPreview>
         <Typography
           variant={variant as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2'}
           sx={previewStyles}
         >
           {(props.text as string) || 'Label Text'}
         </Typography>
-      </Paper>
+      </ComponentPreview>
       
       {/* Tabs Navigation */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange} 
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          <Tab label="Content" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Typography" icon={<FormatBoldIcon fontSize="small" />} iconPosition="start" />
-        </Tabs>
-      </Box>
+      <EditorTabs 
+        value={tabValue} 
+        onChange={handleTabChange}
+        tabs={editorTabs}
+      />
       
       {/* Content Tab */}
-      <TabPanel value={tabValue} index={0}>
+      <TabPanel value={tabValue} index={0} id="label">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
@@ -320,59 +291,16 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
             </Typography>
           </Grid>
           
-          {/* Custom Color Toggle */}
+          {/* Custom Color Toggle and Picker */}
           <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={useCustomColor}
-                  onChange={handleCustomColorToggle}
-                />
-              }
+            <CustomColorControl
+              useCustomColor={useCustomColor}
+              customColor={customColor}
+              onColorChange={handleColorChange}
+              onToggleCustomColor={handleCustomColorToggle}
               label="Use Custom Color"
             />
           </Grid>
-          
-          {/* Custom Color Picker - Only show if useCustomColor is true */}
-          {useCustomColor && (
-            <Grid item xs={12}>
-              <Box>
-                <Typography variant="body2" gutterBottom>
-                  Text Color
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box 
-                    sx={{ 
-                      width: '36px', 
-                      height: '36px', 
-                      bgcolor: customColor,
-                      borderRadius: '4px',
-                      border: '1px solid rgba(0,0,0,0.2)',
-                      cursor: 'pointer' 
-                    }}
-                    onClick={openColorPicker}
-                  />
-                  <TextField 
-                    size="small" 
-                    value={customColor}
-                    onChange={(e) => {
-                      setCustomColor(e.target.value)
-                      handleChange('customColor', e.target.value)
-                    }}
-                    placeholder="#1976d2"
-                    variant="outlined"
-                    InputProps={{
-                      endAdornment: (
-                        <IconButton size="small" onClick={openColorPicker}>
-                          <ColorLensIcon fontSize="small" />
-                        </IconButton>
-                      )
-                    }}
-                  />
-                </Box>
-              </Box>
-            </Grid>
-          )}
           
           <Grid item xs={12}>
             <FormControlLabel
@@ -389,7 +317,7 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
       </TabPanel>
       
       {/* Typography Tab */}
-      <TabPanel value={tabValue} index={1}>
+      <TabPanel value={tabValue} index={1} id="label">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControl fullWidth>
@@ -417,147 +345,25 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
           </Grid>
           
           <Grid item xs={12}>
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <IconButton 
-                color={isBold ? 'primary' : 'default'} 
-                onClick={toggleBold}
-                sx={{
-                  color: isBold ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
-                  }
-                }}
-              >
-                <FormatBoldIcon />
-              </IconButton>
-              
-              <IconButton 
-                color={isItalic ? 'primary' : 'default'} 
-                onClick={toggleItalic}
-                sx={{
-                  color: isItalic ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
-                  }
-                }}
-              >
-                <FormatItalicIcon />
-              </IconButton>
-              
-              <IconButton 
-                color={hasUnderline ? 'primary' : 'default'} 
-                onClick={toggleUnderline}
-                sx={{
-                  color: hasUnderline ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
-                  }
-                }}
-              >
-                <FormatUnderlinedIcon />
-              </IconButton>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Typography gutterBottom>
-              Font Weight: {fontWeight}
-            </Typography>
-            <Slider
-              value={fontWeight}
-              min={100}
-              max={900}
-              step={100}
-              marks
-              onChange={(_e, value) => {
-                const newValue = Array.isArray(value) ? value[0] : value
-                setFontWeight(newValue)
-                setIsBold(newValue >= 600)
-                handleChange('fontWeight', newValue)
-              }}
+            {/* Text Styling Controls */}
+            <TextStylingControls
+              fontWeight={fontWeight}
+              isBold={isBold}
+              isItalic={isItalic}
+              hasUnderline={hasUnderline}
+              onChange={handleTextStyleChange}
             />
           </Grid>
           
           <Grid item xs={12}>
-            <Typography gutterBottom>
-              Text Alignment
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <IconButton 
-                color={textAlign === 'left' ? 'primary' : 'default'} 
-                onClick={() => {
-                  setTextAlign('left')
-                  handleChange('textAlign', 'left')
-                }}
-                sx={{
-                  color: textAlign === 'left' ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
-                  }
-                }}
-              >
-                <FormatAlignLeftIcon />
-              </IconButton>
-              
-              <IconButton 
-                color={textAlign === 'center' ? 'primary' : 'default'} 
-                onClick={() => {
-                  setTextAlign('center')
-                  handleChange('textAlign', 'center')
-                }}
-                sx={{
-                  color: textAlign === 'center' ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
-                  }
-                }}
-              >
-                <FormatAlignCenterIcon />
-              </IconButton>
-              
-              <IconButton 
-                color={textAlign === 'right' ? 'primary' : 'default'} 
-                onClick={() => {
-                  setTextAlign('right')
-                  handleChange('textAlign', 'right')
-                }}
-                sx={{
-                  color: textAlign === 'right' ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
-                  }
-                }}
-              >
-                <FormatAlignRightIcon />
-              </IconButton>
-              
-              <IconButton 
-                color={textAlign === 'justify' ? 'primary' : 'default'} 
-                onClick={() => {
-                  setTextAlign('justify')
-                  handleChange('textAlign', 'justify')
-                }}
-                sx={{
-                  color: textAlign === 'justify' ? 'primary.main' : 'rgba(255, 255, 255, 0.7)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
-                  }
-                }}
-              >
-                <FormatAlignJustifyIcon />
-              </IconButton>
-            </Box>
+            {/* Text Alignment Controls */}
+            <TextAlignmentControls
+              textAlign={textAlign}
+              onChange={handleTextAlignChange}
+            />
           </Grid>
         </Grid>
       </TabPanel>
-      
-      {/* Color Picker Modal */}
-      <ColorPickerModal
-        open={colorPickerOpen}
-        currentColor={customColor}
-        onClose={() => setColorPickerOpen(false)}
-        onSave={applyColor}
-      />
     </Box>
   )
 }

@@ -258,79 +258,41 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
           
           {/* Custom Color Pickers - Only show if useCustomColor is true */}
           {useCustomColor && (
-            <>
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <Typography variant="body2" gutterBottom>
-                    Switch Color (On)
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <input
-                      type="color"
-                      value={customColor}
-                      onChange={(e) => {
-                        setCustomColor(e.target.value)
-                        handleChange('customColor', e.target.value)
-                      }}
-                      style={{ 
-                        width: '36px', 
-                        height: '36px', 
-                        padding: 0, 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <TextField 
-                      size="small" 
-                      value={customColor}
-                      onChange={(e) => {
-                        setCustomColor(e.target.value)
-                        handleChange('customColor', e.target.value)
-                      }}
-                      placeholder="#1976d2"
-                      variant="outlined"
-                    />
-                  </Box>
+            <Grid item xs={12}>
+              <Box>
+                <Typography variant="body2" gutterBottom>
+                  Track Color
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <input
+                    type="color"
+                    value={customTrackColor}
+                    onChange={(e) => {
+                      setCustomTrackColor(e.target.value)
+                      handleChange('customTrackColor', e.target.value)
+                    }}
+                    style={{ 
+                      width: '36px', 
+                      height: '36px', 
+                      padding: 0, 
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <TextField 
+                    size="small" 
+                    value={customTrackColor}
+                    onChange={(e) => {
+                      setCustomTrackColor(e.target.value)
+                      handleChange('customTrackColor', e.target.value)
+                    }}
+                    placeholder="#90caf9"
+                    variant="outlined"
+                  />
                 </Box>
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <Typography variant="body2" gutterBottom>
-                    Track Color
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <input
-                      type="color"
-                      value={customTrackColor}
-                      onChange={(e) => {
-                        setCustomTrackColor(e.target.value)
-                        handleChange('customTrackColor', e.target.value)
-                      }}
-                      style={{ 
-                        width: '36px', 
-                        height: '36px', 
-                        padding: 0, 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <TextField 
-                      size="small" 
-                      value={customTrackColor}
-                      onChange={(e) => {
-                        setCustomTrackColor(e.target.value)
-                        handleChange('customTrackColor', e.target.value)
-                      }}
-                      placeholder="#90caf9"
-                      variant="outlined"
-                    />
-                  </Box>
-                </Box>
-              </Grid>
-            </>
+              </Box>
+            </Grid>
           )}
         </Grid>
       </TabPanel>

@@ -11,17 +11,11 @@ import {
   Switch,
   Divider,
   Grid,
-  Tabs,
-  Tab,
   IconButton,
   Button as MuiButton,
-  Paper,
   Tooltip,
   InputAdornment,
 } from '@mui/material'
-import FormatBoldIcon from '@mui/icons-material/FormatBold'
-import FormatItalicIcon from '@mui/icons-material/FormatItalic'
-import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import NotificationsIcon from '@mui/icons-material/Notifications'
@@ -35,6 +29,14 @@ import SaveIcon from '@mui/icons-material/Save'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { ButtonProps, ComponentEditorProps } from '../../types/types'
+
+import {
+  TabPanel,
+  ComponentPreview,
+  EditorTabs,
+  TextStylingControls,
+  DualColorPicker
+} from '../shared/SharedEditorComponents'
 
 // Icon mapping for selection
 const AVAILABLE_ICONS = {
@@ -50,28 +52,6 @@ const AVAILABLE_ICONS = {
   save: SaveIcon,
   upload: CloudUploadIcon,
   check: CheckCircleIcon
-}
-
-// Tab panel component for organizing the editor
-const TabPanel: React.FC<{ 
-  children: React.ReactNode
-  value: number
-  index: number 
-}> = ({ children, value, index }) => {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`button-tabpanel-${index}`}
-      aria-labelledby={`button-tab-${index}`}
-    >
-      {value === index && (
-        <Box sx={{ p: 2 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  )
 }
 
 const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onChange }) => {
@@ -134,43 +114,37 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
     setTabValue(newValue)
   }
   
-  // Update font styling
-  const toggleBold = () => {
-    const newIsBold = !isBold
-    setIsBold(newIsBold)
-    const newWeight = newIsBold ? 700 : 400
-    setFontWeight(newWeight)
-    handleChange('fontWeight', newWeight)
-  }
-  
-  const toggleItalic = () => {
-    const newIsItalic = !isItalic
-    setIsItalic(newIsItalic)
-    handleChange('fontStyle', newIsItalic ? 'italic' : 'normal')
-  }
-  
-  const toggleUnderline = () => {
-    const newHasUnderline = !hasUnderline
-    setHasUnderline(newHasUnderline)
-    handleChange('textDecoration', newHasUnderline ? 'underline' : 'none')
+  // Handle text style changes
+  const handleTextStyleChange = (prop: string, value: unknown) => {
+    handleChange(prop, value)
+    
+    // Update local state based on the changed property
+    if (prop === 'fontWeight') {
+      const weightValue = value as number
+      setFontWeight(weightValue)
+      setIsBold(weightValue >= 600)
+    } else if (prop === 'fontStyle') {
+      setIsItalic(value === 'italic')
+    } else if (prop === 'textDecoration') {
+      setHasUnderline(value === 'underline')
+    }
   }
   
   // Update custom colors
-  const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCustomColor(e.target.value)
-    handleChange('customColor', e.target.value)
+  const handlePrimaryColorChange = (color: string) => {
+    setCustomColor(color)
+    handleChange('customColor', color)
   }
   
-  const handleHoverColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCustomHoverColor(e.target.value)
-    handleChange('customHoverColor', e.target.value)
+  const handleHoverColorChange = (color: string) => {
+    setCustomHoverColor(color)
+    handleChange('customHoverColor', color)
   }
   
-  const handleCustomColorToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUseCustomColor = e.target.checked
-    setUseCustomColor(newUseCustomColor)
+  const handleCustomColorToggle = (useCustom: boolean) => {
+    setUseCustomColor(useCustom)
     
-    if (newUseCustomColor) {
+    if (useCustom) {
       handleChange('customColor', customColor)
       handleChange('customHoverColor', customHoverColor)
     } else {
@@ -197,6 +171,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
       fontStyle: isItalic ? 'italic' : 'normal',
       textDecoration: hasUnderline ? 'underline' : 'none',
       backgroundColor: useCustomColor ? customColor : undefined,
+      color: useCustomColor ? '#000000' : undefined, // Ensure text is black when using custom colors
       '&:hover': {
         backgroundColor: useCustomColor ? customHoverColor : undefined,
       }
@@ -205,7 +180,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
   
   // Get icon component for preview
   const getIconComponent = (iconName: string) => {
-    const IconComponent = AVAILABLE_ICONS[iconName] || AddIcon
+    const IconComponent = AVAILABLE_ICONS[iconName as keyof typeof AVAILABLE_ICONS] || AddIcon
     return <IconComponent fontSize="small" />
   }
   
@@ -217,29 +192,42 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
     }
   }
   
+  // Define tabs
+  const editorTabs = [
+    { label: 'Basic Settings', id: 'button-basic' },
+    { label: 'Styling', id: 'button-styling' },
+    { label: 'Icons', id: 'button-icons' },
+    { label: 'Advanced', id: 'button-advanced' }
+  ]
+  
   return (
     <Box sx={{ width: '100%' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange}
-          sx={{
-            '& .MuiTab-root': {
-              color: 'foreground.contrastSecondary',
-              '&.Mui-selected': {
-                color: 'primary.main',
-              }
-            }
-          }}
+      {/* Preview section */}
+      <ComponentPreview>
+        <MuiButton
+          variant={props.variant as 'contained' | 'outlined' | 'text' || 'contained'}
+          color={useCustomColor ? undefined : (props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' || 'primary')}
+          size={props.size as 'small' | 'medium' | 'large' || 'medium'}
+          fullWidth={Boolean(props.fullWidth)}
+          disabled={Boolean(props.disabled)}
+          onClick={handlePreviewClick}
+          startIcon={props.showStartIcon ? getIconComponent(selectedIcon) : undefined}
+          endIcon={props.showEndIcon ? getIconComponent(selectedIcon) : undefined}
+          sx={getPreviewStyles()}
         >
-          <Tab label="Basic Settings" id="button-tab-0" />
-          <Tab label="Styling" id="button-tab-1" />
-          <Tab label="Icons" id="button-tab-2" />
-          <Tab label="Advanced" id="button-tab-3" />
-        </Tabs>
-      </Box>
+          {props.text || 'Button'}
+        </MuiButton>
+      </ComponentPreview>
       
-      <TabPanel value={tabValue} index={0}>
+      {/* Tabs */}
+      <EditorTabs 
+        value={tabValue} 
+        onChange={handleTabChange}
+        tabs={editorTabs}
+      />
+      
+      {/* Basic Settings Tab */}
+      <TabPanel value={tabValue} index={0} id="button">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
@@ -253,7 +241,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
               sx={{
                 '& .MuiOutlinedInput-root': {
                   '& fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
                   },
                   '&:hover fieldset': {
                     borderColor: 'primary.light',
@@ -263,10 +251,10 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                   },
                 },
                 '& .MuiInputLabel-root': {
-                  color: 'foreground.contrastSecondary',
+                  color: '#191919',
                 },
                 '& .MuiOutlinedInput-input': {
-                  color: 'foreground.contrastPrimary',
+                  color: '#000000',
                 },
               }}
             />
@@ -282,7 +270,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                 label="Variant"
                 sx={{
                   '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
                   },
                   '&:hover .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'primary.light',
@@ -291,10 +279,10 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                     borderColor: 'primary.main',
                   },
                   '& .MuiSelect-select': {
-                    color: 'foreground.contrastPrimary',
+                    color: '#000000',
                   },
                   '& .MuiInputLabel-root': {
-                    color: 'foreground.contrastSecondary',
+                    color: '#191919',
                   },
                 }}
               >
@@ -316,7 +304,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                 disabled={useCustomColor}
                 sx={{
                   '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
                   },
                   '&:hover .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'primary.light',
@@ -325,10 +313,10 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                     borderColor: 'primary.main',
                   },
                   '& .MuiSelect-select': {
-                    color: 'foreground.contrastPrimary',
+                    color: '#000000',
                   },
                   '& .MuiInputLabel-root': {
-                    color: 'foreground.contrastSecondary',
+                    color: '#191919',
                   },
                 }}
               >
@@ -352,7 +340,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                 label="Size"
                 sx={{
                   '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
                   },
                   '&:hover .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'primary.light',
@@ -361,10 +349,10 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                     borderColor: 'primary.main',
                   },
                   '& .MuiSelect-select': {
-                    color: 'foreground.contrastPrimary',
+                    color: '#000000',
                   },
                   '& .MuiInputLabel-root': {
-                    color: 'foreground.contrastSecondary',
+                    color: '#191919',
                   },
                 }}
               >
@@ -384,7 +372,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                 />
               }
               label="Full Width"
-              sx={{ color: 'foreground.contrastPrimary' }}
+              sx={{ color: '#191919' }}
             />
           </Grid>
           
@@ -397,221 +385,92 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                 />
               }
               label="Disabled"
-              sx={{ color: 'foreground.contrastPrimary' }}
+              sx={{ color: '#191919' }}
             />
           </Grid>
         </Grid>
       </TabPanel>
       
-      <TabPanel value={tabValue} index={1}>
+      {/* Styling Tab */}
+      <TabPanel value={tabValue} index={1} id="button">
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <Paper elevation={0} sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.1)', mb: 2 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Text Styling
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Tooltip title="Bold">
-                  <IconButton 
-                    sx={{ 
-                      bgcolor: isBold ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                      color: 'foreground.contrastPrimary'
-                    }} 
-                    onClick={toggleBold}
-                  >
-                    <FormatBoldIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Italic">
-                  <IconButton 
-                    sx={{ 
-                      bgcolor: isItalic ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                      color: 'foreground.contrastPrimary'
-                    }} 
-                    onClick={toggleItalic}
-                  >
-                    <FormatItalicIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Underline">
-                  <IconButton 
-                    sx={{ 
-                      bgcolor: hasUnderline ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                      color: 'foreground.contrastPrimary'
-                    }} 
-                    onClick={toggleUnderline}
-                  >
-                    <FormatUnderlinedIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Paper>
+            {/* Text Styling Controls */}
+            <TextStylingControls
+              fontWeight={fontWeight}
+              isBold={isBold}
+              isItalic={isItalic}
+              hasUnderline={hasUnderline}
+              onChange={handleTextStyleChange}
+            />
           </Grid>
           
           <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={useCustomColor}
-                  onChange={handleCustomColorToggle}
-                />
-              }
-              label="Use Custom Colors"
-              sx={{ color: 'foreground.contrastPrimary', mb: 1 }}
+            {/* Color Controls */}
+            <DualColorPicker
+              useCustomColor={useCustomColor}
+              primaryColor={customColor}
+              secondaryColor={customHoverColor}
+              onToggleCustomColor={handleCustomColorToggle}
+              onPrimaryColorChange={handlePrimaryColorChange}
+              onSecondaryColorChange={handleHoverColorChange}
+              primaryLabel="Button Color"
+              secondaryLabel="Hover Color"
             />
-            
-            {useCustomColor && (
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Button Color"
-                    value={customColor}
-                    onChange={handleCustomColorChange}
-                    variant="outlined"
-                    margin="dense"
-                    size="small"
-                    type="color"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Box
-                            sx={{
-                              width: 16,
-                              height: 16,
-                              bgcolor: customColor,
-                              borderRadius: '2px',
-                              border: '1px solid rgba(255,255,255,0.3)'
-                            }}
-                          />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.2)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'primary.light',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'primary.main',
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: 'foreground.contrastSecondary',
-                      },
-                      '& .MuiOutlinedInput-input': {
-                        color: 'foreground.contrastPrimary',
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Hover Color"
-                    value={customHoverColor}
-                    onChange={handleHoverColorChange}
-                    variant="outlined"
-                    margin="dense"
-                    size="small"
-                    type="color"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Box
-                            sx={{
-                              width: 16,
-                              height: 16,
-                              bgcolor: customHoverColor,
-                              borderRadius: '2px',
-                              border: '1px solid rgba(255,255,255,0.3)'
-                            }}
-                          />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.2)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'primary.light',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'primary.main',
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: 'foreground.contrastSecondary',
-                      },
-                      '& .MuiOutlinedInput-input': {
-                        color: 'foreground.contrastPrimary',
-                      },
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            )}
           </Grid>
         </Grid>
       </TabPanel>
       
-      <TabPanel value={tabValue} index={2}>
+      {/* Icons Tab */}
+      <TabPanel value={tabValue} index={2} id="button">
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.showStartIcon)}
-                  onChange={(e) => handleChange('showStartIcon', e.target.checked)}
-                />
-              }
-              label="Show Start Icon"
-              sx={{ color: 'foreground.contrastPrimary', mb: 2 }}
-            />
-            
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.showEndIcon)}
-                  onChange={(e) => handleChange('showEndIcon', e.target.checked)}
-                />
-              }
-              label="Show End Icon"
-              sx={{ color: 'foreground.contrastPrimary', mb: 2, ml: 2 }}
-            />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={Boolean(props.showStartIcon)}
+                    onChange={(e) => handleChange('showStartIcon', e.target.checked)}
+                  />
+                }
+                label="Show Start Icon"
+                sx={{ color: '#191919' }}
+              />
+              
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={Boolean(props.showEndIcon)}
+                    onChange={(e) => handleChange('showEndIcon', e.target.checked)}
+                  />
+                }
+                label="Show End Icon"
+                sx={{ color: '#191919' }}
+              />
+            </Box>
           </Grid>
           
           {(props.showStartIcon || props.showEndIcon) && (
             <Grid item xs={12}>
-              <Typography variant="subtitle2" gutterBottom sx={{ color: 'foreground.contrastPrimary' }}>
-                Select Icon
+              <Typography variant="subtitle2" gutterBottom sx={{ color: '#191919', mt: 2 }}>
+                Select Icon:
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                {Object.entries(AVAILABLE_ICONS).map(([name, Icon]) => (
-                  <Tooltip key={name} title={name}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 1,
-                        borderRadius: 1,
-                        cursor: 'pointer',
-                        bgcolor: selectedIcon === name ? 'primary.dark' : 'rgba(255, 255, 255, 0.05)',
-                        '&:hover': {
-                          bgcolor: selectedIcon === name ? 'primary.dark' : 'rgba(255, 255, 255, 0.1)',
-                        },
-                      }}
+                {Object.entries(AVAILABLE_ICONS).map(([key, Icon]) => (
+                  <Tooltip key={key} title={key}>
+                    <IconButton
                       onClick={() => {
-                        setSelectedIcon(name)
-                        handleChange('iconName', name)
+                        setSelectedIcon(key)
+                        handleChange('iconName', key)
+                      }}
+                      sx={{
+                        bgcolor: selectedIcon === key ? 'rgba(0, 0, 0, 0.08)' : 'transparent',
+                        color: '#191919',
+                        border: selectedIcon === key ? '1px solid #757575' : '1px solid transparent',
                       }}
                     >
-                      <Icon sx={{ color: 'foreground.contrastPrimary' }} />
-                    </Paper>
+                      <Icon fontSize="small" />
+                    </IconButton>
                   </Tooltip>
                 ))}
               </Box>
@@ -620,7 +479,8 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
         </Grid>
       </TabPanel>
       
-      <TabPanel value={tabValue} index={3}>
+      {/* Advanced Tab */}
+      <TabPanel value={tabValue} index={3} id="button">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControlLabel
@@ -631,78 +491,42 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                 />
               }
               label="Show Toast on Click"
-              sx={{ color: 'foreground.contrastPrimary' }}
+              sx={{ color: '#191919' }}
             />
           </Grid>
           
           {props.showToast && (
-            <>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Toast Message"
-                  value={props.toastMessage || ''}
-                  onChange={(e) => handleChange('toastMessage', e.target.value)}
-                  variant="outlined"
-                  margin="dense"
-                  size="small"
-                  placeholder="Button clicked successfully!"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.2)',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.light',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'primary.main',
-                      },
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Toast Message"
+                value={props.toastMessage || ''}
+                onChange={(e) => handleChange('toastMessage', e.target.value)}
+                variant="outlined"
+                margin="dense"
+                size="small"
+                placeholder="Button clicked successfully!"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: 'rgba(0, 0, 0, 0.23)',
                     },
-                    '& .MuiInputLabel-root': {
-                      color: 'foreground.contrastSecondary',
+                    '&:hover fieldset': {
+                      borderColor: 'primary.light',
                     },
-                    '& .MuiOutlinedInput-input': {
-                      color: 'foreground.contrastPrimary',
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'primary.main',
                     },
-                  }}
-                />
-              </Grid>
-              
-              <Grid item xs={12}>
-                <FormControl fullWidth margin="dense" size="small" variant="outlined">
-                  <InputLabel id="toast-severity-label">Toast Severity</InputLabel>
-                  <Select
-                    labelId="toast-severity-label"
-                    value={props.toastSeverity || 'success'}
-                    onChange={(e) => handleChange('toastSeverity', e.target.value)}
-                    label="Toast Severity"
-                    sx={{
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'rgba(255, 255, 255, 0.2)',
-                      },
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'primary.light',
-                      },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'primary.main',
-                      },
-                      '& .MuiSelect-select': {
-                        color: 'foreground.contrastPrimary',
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: 'foreground.contrastSecondary',
-                      },
-                    }}
-                  >
-                    <MenuItem value="success">Success</MenuItem>
-                    <MenuItem value="info">Info</MenuItem>
-                    <MenuItem value="warning">Warning</MenuItem>
-                    <MenuItem value="error">Error</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </>
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#191919',
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: '#000000',
+                  },
+                }}
+              />
+            </Grid>
           )}
           
           <Grid item xs={12}>
@@ -720,7 +544,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
               sx={{
                 '& .MuiOutlinedInput-root': {
                   '& fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
                   },
                   '&:hover fieldset': {
                     borderColor: 'primary.light',
@@ -730,41 +554,19 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                   },
                 },
                 '& .MuiInputLabel-root': {
-                  color: 'foreground.contrastSecondary',
+                  color: '#191919',
                 },
                 '& .MuiOutlinedInput-input': {
-                  color: 'foreground.contrastPrimary',
+                  color: '#000000',
                 },
                 '& .MuiFormHelperText-root': {
-                  color: 'foreground.contrastSecondary',
+                  color: '#666666',
                 },
               }}
             />
           </Grid>
         </Grid>
       </TabPanel>
-      
-      {/* Preview section */}
-      <Box sx={{ mt: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-        <Typography variant="subtitle2" gutterBottom sx={{ color: 'foreground.contrastSecondary' }}>
-          Preview
-        </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-          <MuiButton
-            variant={props.variant as 'contained' | 'outlined' | 'text' || 'contained'}
-            color={useCustomColor ? undefined : (props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' || 'primary')}
-            size={props.size as 'small' | 'medium' | 'large' || 'medium'}
-            fullWidth={Boolean(props.fullWidth)}
-            disabled={Boolean(props.disabled)}
-            onClick={handlePreviewClick}
-            startIcon={props.showStartIcon ? getIconComponent(selectedIcon) : undefined}
-            endIcon={props.showEndIcon ? getIconComponent(selectedIcon) : undefined}
-            sx={getPreviewStyles()}
-          >
-            {props.text || 'Button'}
-          </MuiButton>
-        </Box>
-      </Box>
     </Box>
   )
 }

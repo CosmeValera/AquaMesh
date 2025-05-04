@@ -354,8 +354,15 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
                 try {
                   // Try to get the URL - handle various potential types
                   let url = ''
-                  if (component.props.url) {
+                  // First check for processedUrl (which has http/https handling)
+                  if (component.props.processedUrl) {
+                    url = String(component.props.processedUrl)
+                  } else if (component.props.url) {
                     url = String(component.props.url)
+                    // If URL doesn't have protocol prefix, add https://
+                    if (url && !url.match(/^https?:\/\//)) {
+                      url = `https://${url}`
+                    }
                   }
                   
                   if (url) {

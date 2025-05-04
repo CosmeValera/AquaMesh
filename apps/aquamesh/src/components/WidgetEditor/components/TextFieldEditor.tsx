@@ -17,7 +17,6 @@ import {
   InputAdornment
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
-import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew'
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
 import CodeIcon from '@mui/icons-material/Code'
 
@@ -133,7 +132,6 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
           <Tab label="Basic" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Appearance" icon={<FormatColorTextIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Validation" icon={<CodeIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Accessibility" icon={<AccessibilityNewIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
       
@@ -345,20 +343,6 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
               />
             )}
           </Grid>
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="Custom CSS Class"
-              fullWidth
-              value={(props.className as string) || ''}
-              onChange={(e) => handleChange('className', e.target.value)}
-              placeholder="my-custom-field-class"
-            />
-          </Grid>
         </Grid>
       </TabPanel>
       
@@ -459,12 +443,11 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
               </Grid>
             </>
           )}
-        </Grid>
-      </TabPanel>
-      
-      {/* Accessibility Tab */}
-      <TabPanel value={tabValue} index={3}>
-        <Grid container spacing={2}>
+          
+          <Grid item xs={12}>
+            <Divider sx={{ my: 1 }} />
+          </Grid>
+          
           <Grid item xs={12}>
             <FormControlLabel
               control={
@@ -486,28 +469,6 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                 />
               }
               label="Auto Focus"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="ARIA Label"
-              fullWidth
-              value={(props.ariaLabel as string) || ''}
-              onChange={(e) => handleChange('ariaLabel', e.target.value)}
-              placeholder="Enter your name"
-              helperText="Screen reader description for this field"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="Data Test ID"
-              fullWidth
-              value={(props.dataTestId as string) || ''}
-              onChange={(e) => handleChange('dataTestId', e.target.value)}
-              placeholder="textfield-test-id"
-              helperText="For automated testing"
             />
           </Grid>
         </Grid>

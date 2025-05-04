@@ -15,7 +15,12 @@ import {
   Tab,
   Paper,
   IconButton,
-  Slider
+  Slider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
@@ -26,7 +31,20 @@ import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft'
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter'
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight'
 import FormatAlignJustifyIcon from '@mui/icons-material/FormatAlignJustify'
-import CodeIcon from '@mui/icons-material/Code'
+
+// Define some default colors for color picker
+const DEFAULT_COLORS = [
+  '#2196F3', // blue
+  '#F44336', // red
+  '#4CAF50', // green  
+  '#FF9800', // orange
+  '#9C27B0', // purple
+  '#795548', // brown
+  '#607D8B', // blue-grey
+  '#E91E63', // pink
+  '#000000', // black
+  '#666666', // dark grey
+]
 
 interface LabelEditorProps {
   props: Record<string, unknown>
@@ -55,6 +73,75 @@ const TabPanel: React.FC<{
   )
 }
 
+// Color picker modal component
+interface ColorPickerProps {
+  open: boolean
+  currentColor: string
+  onClose: () => void
+  onSave: (color: string) => void
+}
+
+const ColorPickerModal: React.FC<ColorPickerProps> = ({ open, currentColor, onClose, onSave }) => {
+  const [selectedColor, setSelectedColor] = useState(currentColor)
+
+  // Reset selected color when modal opens with a new color
+  useEffect(() => {
+    setSelectedColor(currentColor)
+  }, [currentColor, open])
+
+  const handleSave = () => {
+    onSave(selectedColor)
+    onClose()
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+      <DialogTitle>Choose Color</DialogTitle>
+      <DialogContent>
+        <Box sx={{ textAlign: 'center', p: 2 }}>
+          <input
+            type="color"
+            value={selectedColor}
+            onChange={(e) => setSelectedColor(e.target.value)}
+            style={{ 
+              width: '100px', 
+              height: '100px', 
+              padding: 0, 
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          />
+        </Box>
+        
+        {/* Predefined colors palette */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', mt: 2 }}>
+          {DEFAULT_COLORS.map((color, index) => (
+            <Box 
+              key={index}
+              sx={{ 
+                width: 30, 
+                height: 30, 
+                bgcolor: color, 
+                borderRadius: '4px',
+                cursor: 'pointer',
+                border: selectedColor === color ? '2px solid #000' : '1px solid rgba(0,0,0,0.2)',
+              }}
+              onClick={() => setSelectedColor(color)}
+            />
+          ))}
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSave} variant="contained" color="primary">
+          Apply Color
+        </Button>
+      </DialogActions>
+    </Dialog>
+  )
+}
+
 const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
   // Tab state
   const [tabValue, setTabValue] = useState(0)
@@ -72,6 +159,9 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
   // Color states
   const [useCustomColor, setUseCustomColor] = useState(Boolean(props.useCustomColor))
   const [customColor, setCustomColor] = useState((props.customColor as string) || '#1976d2')
+  
+  // Color picker state
+  const [colorPickerOpen, setColorPickerOpen] = useState(false)
   
   // Initialize state based on props
   useEffect(() => {
@@ -146,6 +236,17 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
     }
   }
   
+  // Open color picker
+  const openColorPicker = () => {
+    setColorPickerOpen(true)
+  }
+  
+  // Apply selected color
+  const applyColor = (color: string) => {
+    setCustomColor(color)
+    handleChange('customColor', color)
+  }
+  
   // Preview styles based on current settings
   const previewStyles = {
     fontWeight: fontWeight,
@@ -187,8 +288,6 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
         >
           <Tab label="Content" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Typography" icon={<FormatBoldIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Style" icon={<ColorLensIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Advanced" icon={<CodeIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
       
@@ -203,6 +302,79 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
               rows={3}
               value={(props.text as string) || ''}
               onChange={(e) => handleChange('text', e.target.value)}
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="subtitle2" gutterBottom>
+              Styling Options
+            </Typography>
+          </Grid>
+          
+          {/* Custom Color Toggle */}
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={useCustomColor}
+                  onChange={handleCustomColorToggle}
+                />
+              }
+              label="Use Custom Color"
+            />
+          </Grid>
+          
+          {/* Custom Color Picker - Only show if useCustomColor is true */}
+          {useCustomColor && (
+            <Grid item xs={12}>
+              <Box>
+                <Typography variant="body2" gutterBottom>
+                  Text Color
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box 
+                    sx={{ 
+                      width: '36px', 
+                      height: '36px', 
+                      bgcolor: customColor,
+                      borderRadius: '4px',
+                      border: '1px solid rgba(0,0,0,0.2)',
+                      cursor: 'pointer' 
+                    }}
+                    onClick={openColorPicker}
+                  />
+                  <TextField 
+                    size="small" 
+                    value={customColor}
+                    onChange={(e) => {
+                      setCustomColor(e.target.value)
+                      handleChange('customColor', e.target.value)
+                    }}
+                    placeholder="#1976d2"
+                    variant="outlined"
+                    InputProps={{
+                      endAdornment: (
+                        <IconButton size="small" onClick={openColorPicker}>
+                          <ColorLensIcon fontSize="small" />
+                        </IconButton>
+                      )
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Grid>
+          )}
+          
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(props.noWrap)}
+                  onChange={(e) => handleChange('noWrap', e.target.checked)}
+                />
+              }
+              label="No Text Wrapping"
             />
           </Grid>
         </Grid>
@@ -329,129 +501,13 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
         </Grid>
       </TabPanel>
       
-      {/* Style Tab */}
-      <TabPanel value={tabValue} index={2}>
-        <Grid container spacing={2}>
-          {/* Custom Color Toggle */}
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={useCustomColor}
-                  onChange={handleCustomColorToggle}
-                />
-              }
-              label="Use Custom Color"
-            />
-          </Grid>
-          
-          {/* Custom Color Picker */}
-          {useCustomColor && (
-            <Grid item xs={12}>
-              <Box>
-                <Typography variant="body2" gutterBottom>
-                  Text Color
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <input
-                    type="color"
-                    value={customColor}
-                    onChange={(e) => {
-                      setCustomColor(e.target.value)
-                      handleChange('customColor', e.target.value)
-                    }}
-                    style={{ 
-                      width: '36px', 
-                      height: '36px', 
-                      padding: 0, 
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <TextField 
-                    size="small" 
-                    value={customColor}
-                    onChange={(e) => {
-                      setCustomColor(e.target.value)
-                      handleChange('customColor', e.target.value)
-                    }}
-                    placeholder="#1976d2"
-                    variant="outlined"
-                  />
-                </Box>
-              </Box>
-            </Grid>
-          )}
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.gutterBottom)}
-                  onChange={(e) => handleChange('gutterBottom', e.target.checked)}
-                />
-              }
-              label="Add Bottom Margin"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.noWrap)}
-                  onChange={(e) => handleChange('noWrap', e.target.checked)}
-                />
-              }
-              label="No Text Wrapping"
-            />
-          </Grid>
-        </Grid>
-      </TabPanel>
-      
-      {/* Advanced Tab */}
-      <TabPanel value={tabValue} index={3}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              label="Custom CSS Class"
-              fullWidth
-              value={(props.className as string) || ''}
-              onChange={(e) => handleChange('className', e.target.value)}
-              placeholder="my-custom-label-class"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="Inline Styles (JSON)"
-              fullWidth
-              multiline
-              rows={4}
-              value={(props.styleJson as string) || ''}
-              onChange={(e) => handleChange('styleJson', e.target.value)}
-              placeholder='{"marginTop": "10px", "letterSpacing": "0.5px"}'
-              helperText="Enter valid JSON for additional CSS styles"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="Data Test ID"
-              fullWidth
-              value={(props.dataTestId as string) || ''}
-              onChange={(e) => handleChange('dataTestId', e.target.value)}
-              placeholder="label-test-id"
-              helperText="For automated testing"
-            />
-          </Grid>
-        </Grid>
-      </TabPanel>
+      {/* Color Picker Modal */}
+      <ColorPickerModal
+        open={colorPickerOpen}
+        currentColor={customColor}
+        onClose={() => setColorPickerOpen(false)}
+        onSave={applyColor}
+      />
     </Box>
   )
 }

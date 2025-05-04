@@ -26,7 +26,6 @@ import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
-import CodeIcon from '@mui/icons-material/Code'
 
 interface FieldSetEditorProps {
   props: Record<string, unknown>
@@ -79,7 +78,6 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
   
   // Icon states
   const [iconPosition, setIconPosition] = useState((props.iconPosition as string) || 'start')
-  const [customIcon, setCustomIcon] = useState(Boolean(props.customIcon))
   
   // Initialize state based on props
   useEffect(() => {
@@ -119,8 +117,6 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
     if (props.iconPosition) {
       setIconPosition(props.iconPosition as string)
     }
-    
-    setCustomIcon(Boolean(props.customIcon))
   }, [props])
   
   // Handle tab change
@@ -128,14 +124,14 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
     setTabValue(newValue)
   }
   
-  // Toggle preview collapsing
-  const togglePreviewCollapse = () => {
-    setPreviewCollapsed(!previewCollapsed)
-  }
-  
   // Generic change handler
   const handleChange = (name: string, value: unknown) => {
     onChange({ ...props, [name]: value })
+  }
+  
+  // Handle collapsed toggle for preview only
+  const handlePreviewCollapseToggle = () => {
+    setPreviewCollapsed(!previewCollapsed)
   }
   
   // Custom color toggle
@@ -195,20 +191,20 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
           }}
         >
           <Box
-            onClick={togglePreviewCollapse}
             sx={{
               display: 'flex',
               alignItems: 'center',
-              cursor: 'pointer',
               justifyContent: iconPosition === 'end' ? 'space-between' : 'flex-start'
             }}
           >
             {iconPosition === 'start' && (
-              previewCollapsed ? (
-                <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
-              ) : (
-                <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
-              )
+              <IconButton onClick={handlePreviewCollapseToggle} size="small">
+                {previewCollapsed ? (
+                  <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
+                ) : (
+                  <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
+                )}
+              </IconButton>
             )}
             
             <Typography variant="subtitle2" sx={legendStyles}>
@@ -216,11 +212,13 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
             </Typography>
             
             {iconPosition === 'end' && (
-              previewCollapsed ? (
-                <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
-              ) : (
-                <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
-              )
+              <IconButton onClick={handlePreviewCollapseToggle} size="small">
+                {previewCollapsed ? (
+                  <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
+                ) : (
+                  <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
+                )}
+              </IconButton>
             )}
           </Box>
           
@@ -245,7 +243,6 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
           <Tab label="Basic" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Appearance" icon={<ViewQuiltIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Style" icon={<ColorLensIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Advanced" icon={<CodeIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
       
@@ -426,7 +423,7 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
           
-          {/* Custom Color Pickers */}
+          {/* Custom Color Pickers - Only show if useCustomColor is true */}
           {useCustomColor && (
             <>
               <Grid item xs={12} sm={6}>
@@ -569,21 +566,6 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
               </Select>
             </FormControl>
           </Grid>
-        </Grid>
-      </TabPanel>
-      
-      {/* Advanced Tab */}
-      <TabPanel value={tabValue} index={3}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              label="Custom CSS Class"
-              fullWidth
-              value={(props.className as string) || ''}
-              onChange={(e) => handleChange('className', e.target.value)}
-              placeholder="my-custom-fieldset-class"
-            />
-          </Grid>
           
           <Grid item xs={12}>
             <FormControlLabel
@@ -606,32 +588,6 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
                 />
               }
               label="Remember Collapsed State (Local Storage)"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="Data Test ID"
-              fullWidth
-              value={(props.dataTestId as string) || ''}
-              onChange={(e) => handleChange('dataTestId', e.target.value)}
-              placeholder="fieldset-test-id"
-              helperText="For automated testing"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="ARIA Label"
-              fullWidth
-              value={(props.ariaLabel as string) || ''}
-              onChange={(e) => handleChange('ariaLabel', e.target.value)}
-              placeholder="Collapsible section for settings"
-              helperText="Accessibility label for screen readers"
             />
           </Grid>
         </Grid>

@@ -20,7 +20,6 @@ import {
 import SettingsIcon from '@mui/icons-material/Settings'
 import DesignServicesIcon from '@mui/icons-material/DesignServices'
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
-import CodeIcon from '@mui/icons-material/Code'
 
 interface FlexBoxEditorProps {
   props: Record<string, unknown>
@@ -215,7 +214,6 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
           <Tab label="Layout" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Alignment" icon={<DesignServicesIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Spacing" icon={<SpaceDashboardIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Advanced" icon={<CodeIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
       
@@ -442,47 +440,9 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
               </Paper>
             </Box>
           </Grid>
-        </Grid>
-      </TabPanel>
-      
-      {/* Advanced Tab */}
-      <TabPanel value={tabValue} index={3}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              label="Custom CSS Class"
-              fullWidth
-              value={(props.className as string) || ''}
-              onChange={(e) => handleChange('className', e.target.value)}
-              placeholder="my-custom-flexbox-class"
-            />
-          </Grid>
           
           <Grid item xs={12}>
-            <TextField
-              label="Background Color"
-              fullWidth
-              value={(props.backgroundColor as string) || ''}
-              onChange={(e) => handleChange('backgroundColor', e.target.value)}
-              placeholder="#f5f5f5"
-              helperText="CSS color value or 'transparent'"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Border</InputLabel>
-              <Select
-                value={(props.border as string) || 'none'}
-                label="Border"
-                onChange={(e) => handleChange('border', e.target.value)}
-              >
-                <MenuItem value="none">None</MenuItem>
-                <MenuItem value="solid">Solid</MenuItem>
-                <MenuItem value="dashed">Dashed</MenuItem>
-                <MenuItem value="dotted">Dotted</MenuItem>
-              </Select>
-            </FormControl>
+            <Divider sx={{ my: 1 }} />
           </Grid>
           
           <Grid item xs={12}>
@@ -506,17 +466,6 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                 />
               }
               label="Responsive Layout (adapt to screen size)"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="Data Test ID"
-              fullWidth
-              value={(props.dataTestId as string) || ''}
-              onChange={(e) => handleChange('dataTestId', e.target.value)}
-              placeholder="flexbox-test-id"
-              helperText="For automated testing"
             />
           </Grid>
         </Grid>

@@ -380,7 +380,7 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%', p: 2 }}>
       {/* Section 1: Segment Editor */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -395,7 +395,7 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
           </Button>
         </Box>
         
-        <TableContainer component={Paper} variant="outlined">
+        <TableContainer component={Paper} variant="outlined" sx={{ p: 1 }}>
           <Table size="small">
             <TableHead>
               <TableRow>
@@ -423,6 +423,7 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
                       }}
                       placeholder="Segment name"
                       variant="outlined"
+                      sx={{ my: 0.5 }}
                     />
                   </TableCell>
                   <TableCell align="center">
@@ -500,9 +501,9 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
       </Box>
       
       {/* Section 2: Chart Preview */}
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 2, mt: 4 }}>
         <Typography variant="subtitle1" sx={{ mb: 1 }}>Preview</Typography>
-        <Box sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1, p: 2, bgcolor: 'rgba(0,0,0,0.02)' }}>
+        <Box sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1, p: 3, bgcolor: 'rgba(0,0,0,0.02)' }}>
           <ChartPreview
             chartType="pie"
             title={title}

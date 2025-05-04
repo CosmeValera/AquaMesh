@@ -393,7 +393,19 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
                 fullWidth
                 placeholder="https://example.com"
                 value={String(props.url || '')}
-                onChange={(e) => handleChange('url', e.target.value)}
+                onChange={(e) => {
+                  let url = e.target.value;
+                  // Only add prefix if URL doesn't already have one and isn't empty
+                  if (url && !url.match(/^https?:\/\//)) {
+                    // Store just the raw URL value without modifying it in the field
+                    handleChange('url', url);
+                    // Also store the processed URL for proper opening
+                    handleChange('processedUrl', `https://${url}`);
+                  } else {
+                    handleChange('url', url);
+                    handleChange('processedUrl', url);
+                  }
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -401,6 +413,7 @@ const ButtonEditor: React.FC<ButtonEditorProps> = ({ props, onChange }) => {
                     </InputAdornment>
                   ),
                 }}
+                helperText="Enter URL with or without http:// - we'll handle it for you"
               />
             </Grid>
           )}

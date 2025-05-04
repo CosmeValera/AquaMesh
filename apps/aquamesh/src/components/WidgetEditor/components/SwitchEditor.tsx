@@ -13,16 +13,9 @@ import {
   Grid,
   Tabs,
   Tab,
-  Paper,
-  Tooltip,
-  Slider,
-  Chip,
-  Stack
+  Paper
 } from '@mui/material'
-import ToggleOnIcon from '@mui/icons-material/ToggleOn'
-import ToggleOffIcon from '@mui/icons-material/ToggleOff'
 import SettingsIcon from '@mui/icons-material/Settings'
-import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
 import NotificationsIcon from '@mui/icons-material/Notifications'
 
@@ -159,7 +152,6 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
           <Tab label="Basic" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Style" icon={<ColorLensIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Behavior" icon={<NotificationsIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Accessibility" icon={<AccessibilityNewIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
       
@@ -245,7 +237,7 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
           
-          {/* Custom Color Pickers */}
+          {/* Custom Color Pickers - Only show if useCustomColor is true */}
           {useCustomColor && (
             <>
               <Grid item xs={12} sm={6}>
@@ -321,20 +313,6 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
               </Grid>
             </>
           )}
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="Custom CSS Class"
-              fullWidth
-              value={(props.className as string) || ''}
-              onChange={(e) => handleChange('className', e.target.value)}
-              placeholder="my-custom-switch-class"
-            />
-          </Grid>
         </Grid>
       </TabPanel>
       
@@ -409,33 +387,6 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
                 />
               }
               label="Disabled"
-            />
-          </Grid>
-        </Grid>
-      </TabPanel>
-      
-      {/* Accessibility Tab */}
-      <TabPanel value={tabValue} index={3}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              label="ARIA Label"
-              fullWidth
-              value={(props.ariaLabel as string) || ''}
-              onChange={(e) => handleChange('ariaLabel', e.target.value)}
-              placeholder="Enable feature"
-              helperText="Screen reader description for this switch"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="Data Test ID"
-              fullWidth
-              value={(props.dataTestId as string) || ''}
-              onChange={(e) => handleChange('dataTestId', e.target.value)}
-              placeholder="switch-test-id"
-              helperText="For automated testing"
             />
           </Grid>
         </Grid>

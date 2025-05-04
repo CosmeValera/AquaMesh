@@ -20,7 +20,6 @@ import {
 import SettingsIcon from '@mui/icons-material/Settings'
 import GridViewIcon from '@mui/icons-material/GridView'
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
-import CodeIcon from '@mui/icons-material/Code'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
 
 interface GridBoxEditorProps {
@@ -101,7 +100,7 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
   const [rows, setRows] = useState<number>(typeof props.rows === 'number' ? props.rows : 2)
   const [spacing, setSpacing] = useState<number>(typeof props.spacing === 'number' ? props.spacing : 2)
   const [minHeight, setMinHeight] = useState<number>(typeof props.minHeight === 'number' ? props.minHeight : 0)
-  const [autoRows, setAutoRows] = useState(Boolean(props.autoRows))
+  const [autoRows, setAutoRows] = useState(props.autoRows !== false) // Default to true
   const [equalHeight, setEqualHeight] = useState(Boolean(props.equalHeight))
   const [useCustomColor, setUseCustomColor] = useState(Boolean(props.useCustomColor))
   const [backgroundColor, setBackgroundColor] = useState((props.backgroundColor as string) || '#f5f5f5')
@@ -125,7 +124,7 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
       setMinHeight(props.minHeight)
     }
     
-    setAutoRows(Boolean(props.autoRows))
+    setAutoRows(props.autoRows !== false) // Default to true
     setEqualHeight(Boolean(props.equalHeight))
     setUseCustomColor(Boolean(props.useCustomColor))
     
@@ -196,7 +195,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
           <Tab label="Grid Layout" icon={<GridViewIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Spacing" icon={<SpaceDashboardIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Appearance" icon={<ColorLensIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Advanced" icon={<CodeIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
       
@@ -383,7 +381,7 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
           
-          {/* Custom Color Pickers */}
+          {/* Custom Color Pickers - Only show if useCustomColor is true */}
           {useCustomColor && (
             <>
               <Grid item xs={12} sm={6}>
@@ -495,21 +493,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
               </Select>
             </FormControl>
           </Grid>
-        </Grid>
-      </TabPanel>
-      
-      {/* Advanced Tab */}
-      <TabPanel value={tabValue} index={3}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              label="Custom CSS Class"
-              fullWidth
-              value={(props.className as string) || ''}
-              onChange={(e) => handleChange('className', e.target.value)}
-              placeholder="my-custom-grid-class"
-            />
-          </Grid>
           
           <Grid item xs={12}>
             <FormControlLabel
@@ -532,34 +515,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
                 />
               }
               label="Center Content Horizontally"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="CSS Grid Template Areas"
-              fullWidth
-              multiline
-              rows={3}
-              value={(props.gridTemplateAreas as string) || ''}
-              onChange={(e) => handleChange('gridTemplateAreas', e.target.value)}
-              placeholder='"header header" "sidebar content" "footer footer"'
-              helperText="Advanced: Define named grid areas (use with caution)"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="Data Test ID"
-              fullWidth
-              value={(props.dataTestId as string) || ''}
-              onChange={(e) => handleChange('dataTestId', e.target.value)}
-              placeholder="grid-test-id"
-              helperText="For automated testing"
             />
           </Grid>
         </Grid>

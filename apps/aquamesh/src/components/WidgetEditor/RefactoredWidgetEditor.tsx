@@ -16,6 +16,8 @@ import EditIcon from '@mui/icons-material/Edit'
 import DescriptionIcon from '@mui/icons-material/Description'
 import SettingsIcon from '@mui/icons-material/Settings'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import MenuOpenIcon from '@mui/icons-material/MenuOpen'
+import MenuIcon from '@mui/icons-material/Menu'
 import { getComponentsByCategory } from './constants/componentTypes'
 import { ComponentData } from './types/types'
 import { useWidgetEditor } from './hooks/useWidgetEditor'
@@ -72,16 +74,24 @@ const WidgetEditor: React.FC = () => {
     setCurrentEditComponent,
   } = useWidgetEditor()
 
+  // State to control sidebar visibility
+  const [showSidebar, setShowSidebar] = React.useState(true)
+
+  // Toggle sidebar visibility
+  const toggleSidebar = () => {
+    setShowSidebar(!showSidebar)
+  }
+
   // Toast state for component interactions
   const [componentToast, setComponentToast] = React.useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error' | 'info' | 'warning';
+    open: boolean
+    message: string
+    severity: 'success' | 'error' | 'info' | 'warning'
   }>({
     open: false,
     message: '',
     severity: 'info',
-  });
+  })
 
   // Listen for custom toast events from components
   React.useEffect(() => {
@@ -160,9 +170,22 @@ const WidgetEditor: React.FC = () => {
           borderColor: 'divider',
         }}
       >
-        <Typography variant="h6" sx={{ flexGrow: 1, color: 'foreground.contrastPrimary' }}>
+        {editMode && (
+          <Tooltip title={showSidebar ? "Hide component sidebar" : "Show component sidebar"}>
+            <IconButton
+              size="small"
+              onClick={toggleSidebar}
+              sx={{ color: 'foreground.contrastPrimary', mr: 1.5 }}
+            >
+              {showSidebar ? <MenuOpenIcon /> : <MenuIcon />}
+            </IconButton>
+          </Tooltip>
+        )}
+        
+        <Typography variant="h6" sx={{ flexGrow: 1, color: 'foreground.contrastPrimary', pl: editMode ? '0rem' : '0.5rem' }}>
           Widget Editor
         </Typography>
+
         <Tooltip title="Settings">
           <IconButton
             size="small"
@@ -211,10 +234,11 @@ const WidgetEditor: React.FC = () => {
           display: 'flex',
           flexGrow: 1,
           overflow: 'hidden',
+          transition: 'all 0.3s ease',
         }}
       >
         {/* Component palette */}
-        {editMode && (
+        {editMode && showSidebar && (
           <Box
             sx={{
               width: 250,
@@ -259,6 +283,8 @@ const WidgetEditor: React.FC = () => {
             flexDirection: 'column',
             overflowY: 'auto',
             bgcolor: 'background.default',
+            transition: 'width 0.3s ease',
+            width: '100%',
           }}
         >
           {/* Widget name field */}
@@ -344,7 +370,9 @@ const WidgetEditor: React.FC = () => {
                 </Typography>
                 {editMode && !isDragging && (
                   <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.3)' }}>
-                    Use the components panel on the left to build your widget
+                    {showSidebar 
+                      ? 'Use the components panel on the left to build your widget'
+                      : 'Click the menu button in the toolbar to show component panel'}
                   </Typography>
                 )}
               </Box>

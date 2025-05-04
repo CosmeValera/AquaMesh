@@ -14,7 +14,7 @@ import {
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import WidgetStorage from './WidgetStorage'
-import ChartPreview from './components/ChartPreview'
+import ChartPreview from './components/preview/ChartPreview'
 import AddIcon from '@mui/icons-material/Add'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import DeleteIcon from '@mui/icons-material/Delete'

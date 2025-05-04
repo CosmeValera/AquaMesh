@@ -5,18 +5,26 @@ import {
   Paper,
   TextField
 } from '@mui/material'
-import { ComponentData, DropTarget } from '../types/types'
-import ComponentPreview from './ComponentPreview'
+import { ComponentData, DropTarget } from '../../types/types'
+import ComponentPreview from '../preview/ComponentPreview'
 
 interface EditorCanvasProps {
   editMode: boolean;
   widgetData: {
     name: string;
     components: ComponentData[];
+    id?: string;
+    createdAt?: number;
+    updatedAt?: number;
+    version?: string;
   };
   setWidgetData: React.Dispatch<React.SetStateAction<{
     name: string;
     components: ComponentData[];
+    id?: string;
+    createdAt?: number;
+    updatedAt?: number;
+    version?: string;
   }>>;
   dropAreaRef: React.RefObject<HTMLDivElement>;
   handleDrop: (e: React.DragEvent) => void;

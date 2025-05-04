@@ -22,7 +22,7 @@ import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
 // Use crypto.randomUUID instead of uuid library
-import ChartPreview from './ChartPreview'
+import ChartPreview from '../preview/ChartPreview'
 
 // Define some default colors for new segments
 const DEFAULT_COLORS = [

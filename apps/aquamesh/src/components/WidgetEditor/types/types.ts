@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 
 // Types for the Widget Editor
 
@@ -14,8 +14,12 @@ export interface ComponentData {
 
 // Widget data structure
 export interface WidgetData {
+  id: string;
   name: string;
   components: ComponentData[];
+  createdAt: number;
+  updatedAt: number;
+  version: string;
 }
 
 // Edit component dialog props
@@ -29,16 +33,14 @@ export interface EditComponentDialogProps {
 // Drop target information
 export interface DropTarget {
   id: string | null;
-  isHovering: boolean;
+  position?: 'before' | 'after' | 'inside';
 }
 
 // Component palette item props
 export interface ComponentPaletteItemProps {
-  type: string;
-  label: string;
-  tooltip: string;
-  icon: React.ElementType;
-  onDragStart: (e: React.DragEvent, type: string) => void;
+  component: ComponentType;
+  showTooltips: boolean;
+  handleDragStart: (e: React.DragEvent<HTMLDivElement>, type: string) => void;
 }
 
 // Component preview props
@@ -69,8 +71,62 @@ export type NotificationSeverity = 'success' | 'error' | 'info' | 'warning';
 export interface ComponentType {
   type: string;
   label: string;
-  defaultProps: Record<string, unknown>;
   category: string;
-  icon: React.ElementType;
   tooltip: string;
+  icon: React.ComponentType;
+  defaultProps: Record<string, unknown>;
+}
+
+// Notification
+export interface Notification {
+  open: boolean;
+  message: string;
+  severity: 'success' | 'error' | 'info' | 'warning';
+}
+
+// Component Editor Props
+export interface ComponentEditorProps<T = Record<string, unknown>> {
+  props: T;
+  onChange: (updatedProps: T) => void;
+}
+
+// Specific Component Props Types
+export interface ButtonProps {
+  text?: string;
+  variant?: 'contained' | 'outlined' | 'text';
+  size?: 'small' | 'medium' | 'large';
+  color?: 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info';
+  fullWidth?: boolean;
+  disabled?: boolean;
+  showToast?: boolean;
+  toastMessage?: string;
+  toastSeverity?: 'info' | 'success' | 'warning' | 'error';
+  fontWeight?: number | string;
+  fontStyle?: 'normal' | 'italic';
+  textDecoration?: 'none' | 'underline';
+  customColor?: string;
+  customHoverColor?: string;
+  showStartIcon?: boolean;
+  iconName?: string;
+  showEndIcon?: boolean;
+  [key: string]: unknown;
+}
+
+export interface LabelProps {
+  text?: string;
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2' | 'caption' | 'overline';
+  align?: 'left' | 'center' | 'right' | 'justify';
+  color?: string;
+  fontWeight?: number | string;
+  fontSize?: number | string;
+  [key: string]: unknown;
+}
+
+export interface SwitchProps {
+  label?: string;
+  defaultChecked?: boolean;
+  disabled?: boolean;
+  labelPlacement?: 'end' | 'start' | 'top' | 'bottom';
+  size?: 'small' | 'medium';
+  [key: string]: unknown;
 } 

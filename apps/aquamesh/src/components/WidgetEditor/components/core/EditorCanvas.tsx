@@ -5,8 +5,8 @@ import {
   Paper,
   TextField
 } from '@mui/material'
-import { ComponentData, DropTarget } from '../types/types'
-import ComponentPreview from './ComponentPreview'
+import { ComponentData, DropTarget } from '../../types/types'
+import ComponentPreview from '../preview/ComponentPreview'
 
 interface EditorCanvasProps {
   editMode: boolean;

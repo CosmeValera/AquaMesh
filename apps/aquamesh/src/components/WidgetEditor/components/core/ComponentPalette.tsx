@@ -4,15 +4,14 @@ import {
   Typography, 
   List,
   ListSubheader,
-  Paper,
-  Tooltip,
   Collapse,
   IconButton
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
-import { COMPONENT_TYPES } from '../constants/componentTypes'
-import { ComponentType } from '../types/types'
+import { COMPONENT_TYPES } from '../../constants/componentTypes'
+import { ComponentType } from '../../types/types'
+import ComponentPaletteItem from './ComponentPaletteItem'
 
 // Interface for component props
 interface ComponentPaletteProps {
@@ -125,58 +124,14 @@ const ComponentPalette = ({ showTooltips, showHelpText = true, handleDragStart }
               
               <Collapse in={expandedCategories[category]} timeout="auto">
                 <Box sx={{ px: 1 }}>
-                  {components.map((component) => {
-                    // Create the icon element dynamically from the component's icon property
-                    const IconComponent = component.icon
-                    
-                    return (
-                      <Box key={component.type} sx={{ mb: 1 }}>
-                        <Tooltip
-                          title={showTooltips ? component.tooltip || '' : ''}
-                          placement="right"
-                          arrow
-                        >
-                          <Paper
-                            elevation={1}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, component.type)}
-                            sx={{
-                              p: 1.5,
-                              display: 'flex',
-                              alignItems: 'center',
-                              cursor: 'grab',
-                              transition: 'all 0.2s',
-                              '&:hover': {
-                                bgcolor: 'background.paper',
-                                transform: 'translateY(-2px)',
-                                boxShadow: 2,
-                              },
-                              bgcolor: 'rgba(255, 255, 255, 0.05)',
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                mr: 1.5,
-                                color: 'primary.main',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}
-                            >
-                              {IconComponent && <IconComponent />}
-                            </Box>
-                            <Typography
-                              variant="body2"
-                              sx={{ fontWeight: 'medium', color: 'foreground.contrastPrimary' }}
-                            >
-                              {component.label}
-                            </Typography>
-                          </Paper>
-                        </Tooltip>
-                      </Box>
-                    )
-                  })}
+                  {components.map((component) => (
+                    <ComponentPaletteItem
+                      key={component.type}
+                      component={component}
+                      showTooltips={showTooltips}
+                      handleDragStart={handleDragStart}
+                    />
+                  ))}
                 </Box>
               </Collapse>
             </Box>
@@ -201,4 +156,4 @@ const ComponentPalette = ({ showTooltips, showHelpText = true, handleDragStart }
   )
 }
 
-export default React.memo(ComponentPalette) 
+export default ComponentPalette 

@@ -17,8 +17,8 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
-import { ComponentPreviewProps } from '../types/types'
-import { getComponentIcon } from '../constants/componentTypes'
+import { ComponentPreviewProps } from '../../types/types'
+import { getComponentIcon } from '../../constants/componentTypes'
 import ChartPreview from './ChartPreview'
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = ({
@@ -322,7 +322,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                   onMoveDown={onMoveDown}
                   onAddInside={onAddInside}
                   isFirst={index === 0}
-                  isLast={index === component.children!.length - 1}
+                  isLast={index === component.children.length - 1}
                   level={level + 1}
                   editMode={editMode}
                   isDragging={isDragging}

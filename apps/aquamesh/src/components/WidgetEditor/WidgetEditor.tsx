@@ -3,14 +3,14 @@ import {
   Box
 } from '@mui/material'
 import { useWidgetEditor } from './hooks/useWidgetEditor'
-import EditComponentDialog from './components/EditComponentDialog'
-import SavedWidgetsDialog from './components/SavedWidgetsDialog'
-import SettingsDialog from './components/SettingsDialog'
-import EditorToolbar from './components/EditorToolbar'
-import ComponentPalette from './components/ComponentPalette'
-import EditorCanvas from './components/EditorCanvas'
-import NotificationSystem from './components/NotificationSystem'
-import DeleteConfirmationDialog from './components/DeleteConfirmationDialog'
+import EditComponentDialog from './components/dialogs/EditComponentDialog'
+import SavedWidgetsDialog from './components/dialogs/SavedWidgetsDialog'
+import SettingsDialog from './components/dialogs/SettingsDialog'
+import EditorToolbar from './components/core/EditorToolbar'
+import ComponentPalette from './components/core/ComponentPalette'
+import EditorCanvas from './components/core/EditorCanvas'
+import NotificationSystem from './components/ui/NotificationSystem'
+import DeleteConfirmationDialog from './components/dialogs/DeleteConfirmationDialog'
 
 // Main Widget Editor component
 const WidgetEditor: React.FC = () => {
@@ -248,12 +248,8 @@ const WidgetEditor: React.FC = () => {
         onClose={() => setShowSettingsModal(false)}
         showTooltips={showTooltips}
         onShowTooltipsChange={setShowTooltips}
-        showDeleteConfirmation={showDeleteConfirmation}
-        onShowDeleteConfirmationChange={setShowDeleteConfirmation}
         showComponentPaletteHelp={showComponentPaletteHelp}
         onShowComponentPaletteHelpChange={setShowComponentPaletteHelp}
-        showDeleteWidgetConfirmation={showDeleteWidgetConfirmation}
-        onShowDeleteWidgetConfirmationChange={setShowDeleteWidgetConfirmation}
       />
 
       {/* Delete Confirmation Dialog */}

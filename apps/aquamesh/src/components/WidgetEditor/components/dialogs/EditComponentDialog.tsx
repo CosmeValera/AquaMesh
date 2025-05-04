@@ -8,16 +8,16 @@ import {
   Typography,
   Box,
 } from '@mui/material'
-import { EditComponentDialogProps } from '../types/types'
-import ChartPreview from './ChartPreview'
-import PieChartEditor from './PieChartEditor'
-import ButtonEditor from './ButtonEditor'
-import SwitchEditor from './SwitchEditor'
-import TextFieldEditor from './TextFieldEditor'
-import LabelEditor from './LabelEditor'
-import FlexBoxEditor from './FlexBoxEditor'
-import GridBoxEditor from './GridBoxEditor'
-import FieldSetEditor from './FieldSetEditor'
+import { EditComponentDialogProps } from '../../types/types'
+import ChartPreview from '../preview/ChartPreview'
+import PieChartEditor from '../editors/PieChartEditor'
+import ButtonEditor from '../editors/ButtonEditor'
+import SwitchEditor from '../editors/SwitchEditor'
+import TextFieldEditor from '../editors/TextFieldEditor'
+import LabelEditor from '../editors/LabelEditor'
+import FlexBoxEditor from '../editors/FlexBoxEditor'
+import GridBoxEditor from '../editors/GridBoxEditor'
+import FieldSetEditor from '../editors/FieldSetEditor'
 
 const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
   open,

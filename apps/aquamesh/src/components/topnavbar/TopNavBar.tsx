@@ -20,7 +20,6 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import WidgetsIcon from '@mui/icons-material/Widgets'
 import CreateIcon from '@mui/icons-material/Create'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
-import DeleteIcon from '@mui/icons-material/Delete'
 import FolderIcon from '@mui/icons-material/Folder'
 
 import useTopNavBarWidgets from '../../customHooks/useTopNavBarWidgets'
@@ -28,9 +27,7 @@ import { useLayout } from '../Layout/LayoutProvider'
 import { ReactComponent as Logo } from '../../../public/logo.svg'
 import { useViews } from '../Views/ViewsProvider'
 import TutorialModal from '../tutorial/TutorialModal'
-import WidgetStorage from '../WidgetEditor/WidgetStorage'
 import DashboardOptionsMenu from '../Views/DashboardOptionsMenu'
-import SavedWidgetsDialog from '../WidgetEditor/components/dialogs/SavedWidgetsDialog'
 
 // Define user data type
 interface UserData {
@@ -46,15 +43,6 @@ interface ComponentData {
   props: Record<string, unknown>
   children?: ComponentData[]
   parentId?: string
-}
-
-// Define widget interface based on WidgetStorage
-interface CustomWidget {
-  id: string
-  name: string
-  components: ComponentData[]
-  createdAt: string
-  updatedAt: string
 }
 
 interface TopNavBarProps {
@@ -73,10 +61,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   const [showTutorialOnStartup, setShowTutorialOnStartup] = useState(() => {
     return !localStorage.getItem('aquamesh-tutorial-shown')
   })
-  
-  // Custom Widgets Library state
-  const [widgetsLibraryOpen, setWidgetsLibraryOpen] = useState(false)
-  
+
   const { topNavBarWidgets } = useTopNavBarWidgets()
   const { addComponent } = useLayout()
   const { addView, openViews } = useViews()
@@ -123,17 +108,6 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
     navigate('/login')
   }
 
-  // Delete a custom widget
-  const handleDeleteWidget = (widgetId: string, event: React.MouseEvent) => {
-    event.stopPropagation()
-    try {
-      WidgetStorage.deleteWidget(widgetId)
-      // The deletion will trigger a refresh via the WIDGET_STORAGE_UPDATED event
-    } catch (error) {
-      console.error('Failed to delete widget', error)
-    }
-  }
-  
   // Open tutorial modal
   const handleOpenTutorial = () => {
     setTutorialOpen(true)
@@ -166,25 +140,6 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
     }
   }
   
-  // Open Custom Widgets Library dialog
-  const handleOpenWidgetsLibrary = () => {
-    setWidgetsLibraryOpen(true)
-  }
-  
-  // Handle loading a widget from the library
-  const handleLoadWidget = (widget: CustomWidget, editMode: boolean = false) => {
-    ensureViewAndAddComponent({
-      id: `custom-widget-${Date.now()}`,
-      name: widget.name,
-      component: 'CustomWidget',
-      customProps: {
-        widgetId: widget.id,
-        editMode: editMode
-      }
-    })
-    setWidgetsLibraryOpen(false)
-  }
-
   return (
     <>
       <AppBar 
@@ -313,7 +268,8 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                   <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
                   <MenuItem 
                     onClick={() => {
-                      handleOpenWidgetsLibrary()
+                      // TODO: Implement this
+                      // handleOpenWidgetsLibrary()
                       handleClose()
                     }}
                     sx={{ p: 1.5 }}
@@ -428,19 +384,6 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
         onClose={() => setTutorialOpen(false)}
         onShowOnStartupToggle={handleToggleTutorialStartup}
       />
-      
-      {/* Custom Widgets Library Dialog */}
-      {widgetsLibraryOpen && (
-        <SavedWidgetsDialog
-          open={widgetsLibraryOpen}
-          widgets={WidgetStorage.getAllWidgets()}
-          onClose={() => setWidgetsLibraryOpen(false)}
-          onLoad={handleLoadWidget}
-          onDelete={(id) => {
-            WidgetStorage.deleteWidget(id)
-          }}
-        />
-      )}
     </>
   )
 }

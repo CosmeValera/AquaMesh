@@ -24,6 +24,7 @@ import SaveIcon from '@mui/icons-material/Save'
 import EditIcon from '@mui/icons-material/Edit'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
 import SettingsIcon from '@mui/icons-material/Settings'
+import DashboardIcon from '@mui/icons-material/Dashboard'
 
 interface SettingsDialogProps {
   open: boolean
@@ -36,6 +37,8 @@ interface SettingsDialogProps {
   onShowComponentPaletteHelpChange: (value: boolean) => void
   showDeleteWidgetConfirmation: boolean
   onShowDeleteWidgetConfirmationChange: (value: boolean) => void
+  showDeleteDashboardConfirmation?: boolean
+  onShowDeleteDashboardConfirmationChange?: (value: boolean) => void
 }
 
 // Keyboard shortcut card component
@@ -108,7 +111,34 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   onShowComponentPaletteHelpChange,
   showDeleteWidgetConfirmation,
   onShowDeleteWidgetConfirmationChange,
+  showDeleteDashboardConfirmation = true,
+  onShowDeleteDashboardConfirmationChange,
 }) => {
+  // Get the value from localStorage on dialog open
+  const [dashboardConfirmation, setDashboardConfirmation] = React.useState<boolean>(() => {
+    // Use the prop value if provided, otherwise check localStorage
+    if (showDeleteDashboardConfirmation !== undefined) {
+      return showDeleteDashboardConfirmation
+    }
+    
+    try {
+      const stored = localStorage.getItem('dashboard-delete-confirm')
+      return stored !== 'false' // Default to true if not set or if not 'false'
+    } catch (error) {
+      console.error('Error reading dashboard-delete-confirm from localStorage', error)
+      return true // Default to true if there's an error
+    }
+  })
+
+  // Handle dashboard confirmation change
+  const handleDashboardConfirmationChange = (value: boolean) => {
+    setDashboardConfirmation(value)
+    localStorage.setItem('dashboard-delete-confirm', value.toString())
+    if (onShowDeleteDashboardConfirmationChange) {
+      onShowDeleteDashboardConfirmationChange(value)
+    }
+  }
+
   return (
     <Dialog
       open={open}
@@ -208,6 +238,26 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ ml: 6, mb: 1 }}>
                   Show a confirmation dialog when deleting widgets from the library. Disable for quicker management.
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+          
+          <Paper elevation={0} sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <DashboardIcon sx={{ mr: 1.5, color: 'error.main' }} />
+                  <Typography fontWeight="medium">Confirm Dashboard Deletion</Typography>
+                  <Box sx={{ flexGrow: 1 }} />
+                  <Switch
+                    checked={dashboardConfirmation}
+                    onChange={(e) => handleDashboardConfirmationChange(e.target.checked)}
+                    color="primary"
+                  />
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 6, mb: 1 }}>
+                  Show a confirmation dialog when deleting dashboards. Disable for quicker dashboard management.
                 </Typography>
               </Box>
             </Box>

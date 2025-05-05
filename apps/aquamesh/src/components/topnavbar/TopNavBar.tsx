@@ -21,6 +21,7 @@ import WidgetsIcon from '@mui/icons-material/Widgets'
 import CreateIcon from '@mui/icons-material/Create'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import DeleteIcon from '@mui/icons-material/Delete'
+import FolderIcon from '@mui/icons-material/Folder'
 
 import useTopNavBarWidgets from '../../customHooks/useTopNavBarWidgets'
 import { useLayout } from '../Layout/LayoutProvider'
@@ -29,12 +30,31 @@ import { useViews } from '../Views/ViewsProvider'
 import TutorialModal from '../tutorial/TutorialModal'
 import WidgetStorage from '../WidgetEditor/WidgetStorage'
 import DashboardOptionsMenu from '../Views/DashboardOptionsMenu'
+import SavedWidgetsDialog from '../WidgetEditor/components/dialogs/SavedWidgetsDialog'
 
 // Define user data type
 interface UserData {
   id: string
   name: string
   role: string
+}
+
+// Define component data interface
+interface ComponentData {
+  id: string
+  type: string
+  props: Record<string, unknown>
+  children?: ComponentData[]
+  parentId?: string
+}
+
+// Define widget interface based on WidgetStorage
+interface CustomWidget {
+  id: string
+  name: string
+  components: ComponentData[]
+  createdAt: string
+  updatedAt: string
 }
 
 interface TopNavBarProps {
@@ -53,6 +73,9 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   const [showTutorialOnStartup, setShowTutorialOnStartup] = useState(() => {
     return !localStorage.getItem('aquamesh-tutorial-shown')
   })
+  
+  // Custom Widgets Library state
+  const [widgetsLibraryOpen, setWidgetsLibraryOpen] = useState(false)
   
   const { topNavBarWidgets } = useTopNavBarWidgets()
   const { addComponent } = useLayout()
@@ -141,6 +164,25 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
       // If views already exist, add the component directly
       addComponent(componentConfig)
     }
+  }
+  
+  // Open Custom Widgets Library dialog
+  const handleOpenWidgetsLibrary = () => {
+    setWidgetsLibraryOpen(true)
+  }
+  
+  // Handle loading a widget from the library
+  const handleLoadWidget = (widget: CustomWidget, editMode: boolean = false) => {
+    ensureViewAndAddComponent({
+      id: `custom-widget-${Date.now()}`,
+      name: widget.name,
+      component: 'CustomWidget',
+      customProps: {
+        widgetId: widget.id,
+        editMode: editMode
+      }
+    })
+    setWidgetsLibraryOpen(false)
   }
 
   return (
@@ -258,24 +300,34 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                           }}
                         >
                           {item.name}
-                          {item.component === 'CustomWidget' && item.customProps?.widgetId && (
-                            <ListItemIcon sx={{ ml: 2, minWidth: 'auto' }}>
-                              <DeleteIcon 
-                                fontSize="small" 
-                                onClick={(e) => item.customProps && item.customProps.widgetId && handleDeleteWidget(item.customProps.widgetId, e)}
-                                sx={{ color: 'error.main' }}
-                              />
-                            </ListItemIcon>
-                          )}
                         </MenuItem>
                       ))}
                     </Box>
                   ))}
                 </>
               )}
+              
+              {/* Widget Management Section */}
+              {userData.id === 'admin' && userData.role === 'ADMIN_ROLE' && (
+                <>
+                  <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  <MenuItem 
+                    onClick={() => {
+                      handleOpenWidgetsLibrary()
+                      handleClose()
+                    }}
+                    sx={{ p: 1.5 }}
+                  >
+                    <ListItemIcon>
+                      <FolderIcon fontSize="small" />
+                    </ListItemIcon>
+                    Manage Widgets
+                  </MenuItem>
+                </>
+              )}
             </Menu>
 
-            {/* Create Custom Widget Button - New Top Level Button */}
+            {/* Create Custom Widget Button */}
             {userData.id === 'admin' && userData.role === 'ADMIN_ROLE' && (
               <Button
                 onClick={() => {
@@ -297,7 +349,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                 startIcon={<CreateIcon />}
                 data-tutorial-id="create-widget-button"
               >
-                {!isTablet ? 'Create Widget' : ''}
+                {!isTablet ? 'Widget Editor' : ''}
               </Button>
             )}
           </Box>
@@ -376,6 +428,19 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
         onClose={() => setTutorialOpen(false)}
         onShowOnStartupToggle={handleToggleTutorialStartup}
       />
+      
+      {/* Custom Widgets Library Dialog */}
+      {widgetsLibraryOpen && (
+        <SavedWidgetsDialog
+          open={widgetsLibraryOpen}
+          widgets={WidgetStorage.getAllWidgets()}
+          onClose={() => setWidgetsLibraryOpen(false)}
+          onLoad={handleLoadWidget}
+          onDelete={(id) => {
+            WidgetStorage.deleteWidget(id)
+          }}
+        />
+      )}
     </>
   )
 }

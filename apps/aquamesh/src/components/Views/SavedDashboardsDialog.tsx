@@ -22,7 +22,8 @@ import {
   Grid,
   Fade,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  DialogContentText
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import DashboardIcon from '@mui/icons-material/Dashboard'
@@ -73,8 +74,23 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
   // User state - check if user is admin
   const [isAdmin, setIsAdmin] = useState(false)
   
+  // Delete confirmation dialog state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [dashboardToDelete, setDashboardToDelete] = useState<string | null>(null)
+  
   // Access views context
   const { addView } = useViews()
+  
+  // Get the delete confirmation preference from localStorage
+  const shouldConfirmDelete = () => {
+    try {
+      const stored = localStorage.getItem('dashboard-delete-confirm')
+      return stored !== 'false' // Default to true if not set or if not 'false'
+    } catch (error) {
+      console.error('Error reading dashboard-delete-confirm from localStorage', error)
+      return true // Default to true if there's an error
+    }
+  }
   
   // Check if user is admin on component mount
   useEffect(() => {
@@ -134,8 +150,10 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
     // Define NodeType interface for better type safety
     interface NodeType {
       type?: string;
-      component?: string;
+      component?: string | unknown;
       children?: NodeType[];
+      weight?: number;
+      name?: string;
     }
     
     // Count tabs with components
@@ -155,7 +173,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
       return 0
     }
     
-    count = countTabs(layout)
+    count = countTabs(layout as unknown as NodeType)
     return count
   }
   
@@ -181,6 +199,19 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
   // Function to delete a dashboard
   const handleDeleteDashboard = (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    
+    // Check if we should confirm deletion
+    if (shouldConfirmDelete()) {
+      setDashboardToDelete(id)
+      setDeleteConfirmOpen(true)
+    } else {
+      // Delete without confirmation
+      deleteDashboard(id)
+    }
+  }
+  
+  // Function to actually delete the dashboard
+  const deleteDashboard = (id: string) => {
     try {
       const updatedDashboards = dashboards.filter(dashboard => dashboard.id !== id)
       setDashboards(updatedDashboards)
@@ -188,6 +219,21 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
     } catch (error) {
       console.error('Failed to delete dashboard', error)
     }
+  }
+  
+  // Confirm dashboard deletion
+  const confirmDeleteDashboard = () => {
+    if (dashboardToDelete) {
+      deleteDashboard(dashboardToDelete)
+      setDeleteConfirmOpen(false)
+      setDashboardToDelete(null)
+    }
+  }
+  
+  // Cancel dashboard deletion
+  const cancelDeleteDashboard = () => {
+    setDeleteConfirmOpen(false)
+    setDashboardToDelete(null)
   }
   
   // Function to toggle a dashboard's public status
@@ -274,373 +320,400 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
   }, [filteredDashboards, sortBy])
   
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="md" 
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
-          overflow: 'hidden',
-          bgcolor: '#00A389', // Teal background for the entire dialog
-        }
-      }}
-    >
-      <DialogTitle sx={{ 
-        bgcolor: '#00BC9A', 
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        py: 2,
-      }}>
-        <Box display="flex" alignItems="center">
-          <DashboardIcon sx={{ mr: 1.5, color: '#191919' }} />
-          <Typography variant="h6" component="div" fontWeight="bold" color="#191919">
-            Dashboard Library
-          </Typography>
-        </Box>
-        <IconButton
-          onClick={onClose}
-          aria-label="close"
-          sx={{ color: '#191919' }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      
-      <DialogContent sx={{ p: 3, bgcolor: '#00A389'}}>
-        {/* Search, Sort, and Filter Controls */}
-        <Grid container spacing={2} sx={{ mb: 3, mt: 1 }}>
-          <Grid item xs={12} md={5}>
-            <TextField
-              fullWidth
-              placeholder="Search dashboards..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              variant="outlined"
-              size="small"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
-                  </InputAdornment>
-                ),
-                endAdornment: searchTerm ? (
-                  <InputAdornment position="end">
-                    <IconButton 
-                      size="small" 
-                      onClick={() => setSearchTerm('')}
-                      sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                    >
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  </InputAdornment>
-                ) : null,
-                sx: {
-                  bgcolor: 'rgba(0, 0, 0, 0.1)',
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                  color: 'white',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)'
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)'
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'white'
-                  }
-                }
-              }}
-              sx={{
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255, 255, 255, 0.7)'
-                }
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth size="small" variant="outlined">
-              <InputLabel id="sort-by-label" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Sort By</InputLabel>
-              <Select
-                labelId="sort-by-label"
-                value={sortBy}
-                onChange={handleSortChange}
-                label="Sort By"
-                startAdornment={
-                  <InputAdornment position="start">
-                    <SortIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
-                  </InputAdornment>
-                }
-                sx={{
-                  bgcolor: 'rgba(0, 0, 0, 0.1)',
-                  color: 'white',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)'
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)'
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'white'
+    <>
+      <Dialog 
+        open={open} 
+        onClose={onClose} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+            overflow: 'hidden',
+            bgcolor: '#00A389', // Teal background for the entire dialog
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          bgcolor: '#00BC9A', 
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          py: 2,
+        }}>
+          <Box display="flex" alignItems="center">
+            <DashboardIcon sx={{ mr: 1.5, color: '#191919' }} />
+            <Typography variant="h6" component="div" fontWeight="bold" color="#191919">
+              Dashboard Library
+            </Typography>
+          </Box>
+          <IconButton
+            onClick={onClose}
+            aria-label="close"
+            sx={{ color: '#191919' }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        
+        <DialogContent sx={{ p: 3, bgcolor: '#00A389'}}>
+          {/* Search, Sort, and Filter Controls */}
+          <Grid container spacing={2} sx={{ mb: 3, mt: 1 }}>
+            <Grid item xs={12} md={5}>
+              <TextField
+                fullWidth
+                placeholder="Search dashboards..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                variant="outlined"
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchTerm ? (
+                    <InputAdornment position="end">
+                      <IconButton 
+                        size="small" 
+                        onClick={() => setSearchTerm('')}
+                        sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : null,
+                  sx: {
+                    bgcolor: 'rgba(0, 0, 0, 0.1)',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    color: 'white',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255, 255, 255, 0.3)'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255, 255, 255, 0.5)'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'white'
+                    }
                   }
                 }}
-              >
-                <MenuItem value="nameAsc">Name (A-Z)</MenuItem>
-                <MenuItem value="nameDesc">Name (Z-A)</MenuItem>
-                <MenuItem value="dateNewest">Date (Newest First)</MenuItem>
-                <MenuItem value="dateOldest">Date (Oldest First)</MenuItem>
-                <MenuItem value="mostComponents">Most Components</MenuItem>
-                <MenuItem value="fewestComponents">Fewest Components</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            {isAdmin && (
-              <FormControlLabel
-                control={
-                  <Switch 
-                    checked={showPublicOnly} 
-                    onChange={handlePublicFilterChange}
-                    sx={{
-                      '& .MuiSwitch-switchBase.Mui-checked': {
-                        color: '#00D1AB',
-                      },
-                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                        backgroundColor: '#00886F',
-                      },
-                    }}
-                  />
-                }
-                label="Public only"
-                sx={{ 
-                  color: 'white',
-                  '& .MuiFormControlLabel-label': {
-                    fontSize: '0.875rem'
+                sx={{
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(255, 255, 255, 0.7)'
                   }
                 }}
               />
-            )}
-          </Grid>
-        </Grid>
-        
-        {/* Results count and non-admin message */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
-            {sortedDashboards.length === 0 
-              ? "No dashboards found" 
-              : `Showing ${sortedDashboards.length} dashboard${sortedDashboards.length !== 1 ? 's' : ''}`
-            }
-            {searchTerm && ` matching "${searchTerm}"`}
-            {!isAdmin && " (only showing public dashboards)"}
-          </Typography>
-        </Box>
-
-        {/* Dashboards list */}
-        {sortedDashboards.length === 0 ? (
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              p: 4, 
-              textAlign: 'center',
-              bgcolor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: 2,
-              border: '1px dashed rgba(255, 255, 255, 0.3)',
-            }}
-          >
-            <DashboardIcon 
-              sx={{ 
-                fontSize: 48, 
-                mb: 2, 
-                color: 'rgba(255, 255, 255, 0.6)'
-              }} 
-            />
-            <Typography color="white" variant="h6" gutterBottom>
-              {searchTerm ? 'No Matching Dashboards' : 'No Dashboards Available'}
-            </Typography>
-            <Typography color="rgba(255, 255, 255, 0.7)" variant="body2">
-              {searchTerm 
-                ? 'Try a different search term or clear the search' 
-                : !isAdmin 
-                  ? 'No public dashboards are currently available' 
-                  : 'No dashboards have been saved yet'
-              }
-            </Typography>
-          </Paper>
-        ) : (
-          <List>
-            {sortedDashboards.map((dashboard, index) => (
-              <Fade key={dashboard.id} in={true} timeout={300} style={{ transitionDelay: `${index * 50}ms` }}>
-                <Paper
-                  elevation={0}
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth size="small" variant="outlined">
+                <InputLabel id="sort-by-label" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Sort By</InputLabel>
+                <Select
+                  labelId="sort-by-label"
+                  value={sortBy}
+                  onChange={handleSortChange}
+                  label="Sort By"
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <SortIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                    </InputAdornment>
+                  }
                   sx={{
-                    mb: 2,
-                    overflow: 'hidden',
-                    border: '1px solid',
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
-                    borderRadius: 2,
-                    transition: 'all 0.2s ease-in-out',
-                    bgcolor: '#00886F', // Darker teal for dashboard cards
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                    bgcolor: 'rgba(0, 0, 0, 0.1)',
+                    color: 'white',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255, 255, 255, 0.3)'
                     },
-                    cursor: 'pointer'
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255, 255, 255, 0.5)'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'white'
+                    }
                   }}
-                  onClick={() => handleOpenDashboard(dashboard)}
                 >
-                  <Box
+                  <MenuItem value="nameAsc">Name (A-Z)</MenuItem>
+                  <MenuItem value="nameDesc">Name (Z-A)</MenuItem>
+                  <MenuItem value="dateNewest">Date (Newest First)</MenuItem>
+                  <MenuItem value="dateOldest">Date (Oldest First)</MenuItem>
+                  <MenuItem value="mostComponents">Most Components</MenuItem>
+                  <MenuItem value="fewestComponents">Fewest Components</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              {isAdmin && (
+                <FormControlLabel
+                  control={
+                    <Switch 
+                      checked={showPublicOnly} 
+                      onChange={handlePublicFilterChange}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#00D1AB',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#00886F',
+                        },
+                      }}
+                    />
+                  }
+                  label="Public only"
+                  sx={{ 
+                    color: 'white',
+                    '& .MuiFormControlLabel-label': {
+                      fontSize: '0.875rem'
+                    }
+                  }}
+                />
+              )}
+            </Grid>
+          </Grid>
+          
+          {/* Results count and non-admin message */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
+              {sortedDashboards.length === 0 
+                ? "No dashboards found" 
+                : `Showing ${sortedDashboards.length} dashboard${sortedDashboards.length !== 1 ? 's' : ''}`
+              }
+              {searchTerm && ` matching "${searchTerm}"`}
+              {!isAdmin && " (only showing public dashboards)"}
+            </Typography>
+          </Box>
+
+          {/* Dashboards list */}
+          {sortedDashboards.length === 0 ? (
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 4, 
+                textAlign: 'center',
+                bgcolor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                border: '1px dashed rgba(255, 255, 255, 0.3)',
+              }}
+            >
+              <DashboardIcon 
+                sx={{ 
+                  fontSize: 48, 
+                  mb: 2, 
+                  color: 'rgba(255, 255, 255, 0.6)'
+                }} 
+              />
+              <Typography color="white" variant="h6" gutterBottom>
+                {searchTerm ? 'No Matching Dashboards' : 'No Dashboards Available'}
+              </Typography>
+              <Typography color="rgba(255, 255, 255, 0.7)" variant="body2">
+                {searchTerm 
+                  ? 'Try a different search term or clear the search' 
+                  : !isAdmin 
+                    ? 'No public dashboards are currently available' 
+                    : 'No dashboards have been saved yet'
+                }
+              </Typography>
+            </Paper>
+          ) : (
+            <List>
+              {sortedDashboards.map((dashboard, index) => (
+                <Fade key={dashboard.id} in={true} timeout={300} style={{ transitionDelay: `${index * 50}ms` }}>
+                  <Paper
+                    elevation={0}
                     sx={{
-                      p: 2,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-start',
+                      mb: 2,
+                      overflow: 'hidden',
+                      border: '1px solid',
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                      borderRadius: 2,
+                      transition: 'all 0.2s ease-in-out',
+                      bgcolor: '#00886F', // Darker teal for dashboard cards
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                      },
+                      cursor: 'pointer'
                     }}
+                    onClick={() => handleOpenDashboard(dashboard)}
                   >
-                    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                        <Box 
-                          sx={{ 
-                            bgcolor: 'rgba(255, 255, 255, 0.15)',
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '50%',
-                            width: 40,
-                            height: 40,
-                            mr: 2
-                          }}
-                        >
-                          <DashboardIcon />
-                        </Box>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight="bold" color="white">
-                            {dashboard.name}
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                            <Typography variant="caption" color="rgba(255, 255, 255, 0.7)">
-                              Last modified: {new Date(dashboard.updatedAt).toLocaleDateString()} at {new Date(dashboard.updatedAt).toLocaleTimeString()}
+                    <Box
+                      sx={{
+                        p: 2,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                          <Box 
+                            sx={{ 
+                              bgcolor: 'rgba(255, 255, 255, 0.15)',
+                              color: 'white',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '50%',
+                              width: 40,
+                              height: 40,
+                              mr: 2
+                            }}
+                          >
+                            <DashboardIcon />
+                          </Box>
+                          <Box>
+                            <Typography variant="subtitle1" fontWeight="bold" color="white">
+                              {dashboard.name}
                             </Typography>
-                            <Chip 
-                              size="small" 
-                              label={`${dashboard.componentsCount} components`} 
-                              sx={{ 
-                                ml: 2, 
-                                height: 20, 
-                                fontSize: '0.7rem',
-                                bgcolor: 'rgba(255, 255, 255, 0.15)',
-                                color: 'white'
-                              }}
-                            />
-                            {dashboard.isPublic && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                              <Typography variant="caption" color="rgba(255, 255, 255, 0.7)">
+                                Last modified: {new Date(dashboard.updatedAt).toLocaleDateString()} at {new Date(dashboard.updatedAt).toLocaleTimeString()}
+                              </Typography>
                               <Chip 
                                 size="small" 
-                                label="Public" 
-                                icon={<ShareIcon style={{ width: 12, height: 12, color: 'white' }} />}
+                                label={`${dashboard.componentsCount} components`} 
                                 sx={{ 
-                                  ml: 1, 
+                                  ml: 2, 
                                   height: 20, 
                                   fontSize: '0.7rem',
-                                  bgcolor: 'rgba(0, 209, 171, 0.3)',
+                                  bgcolor: 'rgba(255, 255, 255, 0.15)',
                                   color: 'white'
                                 }}
                               />
-                            )}
-                          </Box>
-                          {dashboard.tags && dashboard.tags.length > 0 && (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
-                              {dashboard.tags.map((tag, tagIndex) => (
-                                <Chip
-                                  key={tagIndex}
-                                  label={tag}
-                                  size="small"
-                                  sx={{
-                                    height: 18,
-                                    fontSize: '0.65rem',
-                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
-                                    color: 'rgba(255, 255, 255, 0.8)'
+                              {dashboard.isPublic && (
+                                <Chip 
+                                  size="small" 
+                                  label="Public" 
+                                  icon={<ShareIcon style={{ width: 12, height: 12, color: 'white' }} />}
+                                  sx={{ 
+                                    ml: 1, 
+                                    height: 20, 
+                                    fontSize: '0.7rem',
+                                    bgcolor: 'rgba(0, 209, 171, 0.3)',
+                                    color: 'white'
                                   }}
                                 />
-                              ))}
+                              )}
                             </Box>
+                            {dashboard.tags && dashboard.tags.length > 0 && (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                                {dashboard.tags.map((tag, tagIndex) => (
+                                  <Chip
+                                    key={tagIndex}
+                                    label={tag}
+                                    size="small"
+                                    sx={{
+                                      height: 18,
+                                      fontSize: '0.65rem',
+                                      bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                      color: 'rgba(255, 255, 255, 0.8)'
+                                    }}
+                                  />
+                                ))}
+                              </Box>
+                            )}
+                          </Box>
+                        </Box>
+                        <Box onClick={(e) => e.stopPropagation()}>
+                          {isAdmin && (
+                            <>
+                              <Tooltip title={dashboard.isPublic ? "Make Private" : "Make Public"}>
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => handleTogglePublic(dashboard.id, e)}
+                                  sx={{
+                                    mr: 1,
+                                    bgcolor: dashboard.isPublic ? 'rgba(0, 209, 171, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    '&:hover': {
+                                      bgcolor: dashboard.isPublic ? 'rgba(0, 209, 171, 0.3)' : 'rgba(255, 255, 255, 0.2)'
+                                    }
+                                  }}
+                                >
+                                  <ShareIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete Dashboard">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={(e) => handleDeleteDashboard(dashboard.id, e)}
+                                  sx={{
+                                    bgcolor: 'rgba(211, 47, 47, 0.1)',
+                                    '&:hover': {
+                                      bgcolor: 'rgba(211, 47, 47, 0.2)'
+                                    }
+                                  }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </>
                           )}
                         </Box>
                       </Box>
-                      <Box onClick={(e) => e.stopPropagation()}>
-                        {isAdmin && (
-                          <>
-                            <Tooltip title={dashboard.isPublic ? "Make Private" : "Make Public"}>
-                              <IconButton
-                                size="small"
-                                onClick={(e) => handleTogglePublic(dashboard.id, e)}
-                                sx={{
-                                  mr: 1,
-                                  bgcolor: dashboard.isPublic ? 'rgba(0, 209, 171, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                                  color: 'white',
-                                  '&:hover': {
-                                    bgcolor: dashboard.isPublic ? 'rgba(0, 209, 171, 0.3)' : 'rgba(255, 255, 255, 0.2)'
-                                  }
-                                }}
-                              >
-                                <ShareIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete Dashboard">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={(e) => handleDeleteDashboard(dashboard.id, e)}
-                                sx={{
-                                  bgcolor: 'rgba(211, 47, 47, 0.1)',
-                                  '&:hover': {
-                                    bgcolor: 'rgba(211, 47, 47, 0.2)'
-                                  }
-                                }}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </>
-                        )}
-                      </Box>
+                      {dashboard.description && (
+                        <Typography 
+                          variant="body2" 
+                          color="rgba(255, 255, 255, 0.7)"
+                          sx={{ mt: 1, pl: 7 }}
+                        >
+                          {dashboard.description}
+                        </Typography>
+                      )}
                     </Box>
-                    {dashboard.description && (
-                      <Typography 
-                        variant="body2" 
-                        color="rgba(255, 255, 255, 0.7)"
-                        sx={{ mt: 1, pl: 7 }}
-                      >
-                        {dashboard.description}
-                      </Typography>
-                    )}
-                  </Box>
-                </Paper>
-              </Fade>
-            ))}
-          </List>
-        )}
-      </DialogContent>
+                  </Paper>
+                </Fade>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+        
+        <DialogActions sx={{ px: 3, pb: 3, bgcolor: '#00A389' }}>
+          <Button 
+            onClick={onClose} 
+            variant="contained"
+            sx={{ 
+              bgcolor: '#00D1AB',
+              color: '#191919',
+              '&:hover': {
+                bgcolor: '#00E4BC',
+              }
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
       
-      <DialogActions sx={{ px: 3, pb: 3, bgcolor: '#00A389' }}>
-        <Button 
-          onClick={onClose} 
-          variant="contained"
-          sx={{ 
-            bgcolor: '#00D1AB',
-            color: '#191919',
-            '&:hover': {
-              bgcolor: '#00E4BC',
-            }
-          }}
-        >
-          Close
-        </Button>
-      </DialogActions>
-    </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={cancelDeleteDashboard}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Delete Dashboard?"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete this dashboard? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelDeleteDashboard} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={confirmDeleteDashboard} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }
 

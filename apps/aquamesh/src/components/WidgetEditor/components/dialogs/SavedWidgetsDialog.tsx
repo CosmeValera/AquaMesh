@@ -30,7 +30,7 @@ import PreviewIcon from '@mui/icons-material/Visibility'
 import SearchIcon from '@mui/icons-material/Search'
 import SortIcon from '@mui/icons-material/Sort'
 import CloseIcon from '@mui/icons-material/Close'
-import { CustomWidget } from '../WidgetStorage'
+import { CustomWidget } from '../../WidgetStorage'
 
 interface SavedWidgetsDialogProps {
   open: boolean

@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import React from 'react'
 
 // Types for the Widget Editor
 
@@ -14,12 +14,12 @@ export interface ComponentData {
 
 // Widget data structure
 export interface WidgetData {
-  id: string;
+  id?: string;
   name: string;
   components: ComponentData[];
-  createdAt: number;
-  updatedAt: number;
-  version: string;
+  createdAt?: number;
+  updatedAt?: number;
+  version?: string;
 }
 
 // Edit component dialog props
@@ -34,6 +34,7 @@ export interface EditComponentDialogProps {
 export interface DropTarget {
   id: string | null;
   position?: 'before' | 'after' | 'inside';
+  isHovering?: boolean;
 }
 
 // Component palette item props

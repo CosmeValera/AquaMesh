@@ -10,6 +10,14 @@ import {
 } from '../utils/componentUtils'
 import WidgetStorage, { CustomWidget } from '../WidgetStorage'
 
+// Maximum history states to keep
+const MAX_HISTORY_STATES = 50
+
+// Interface for tracking widget history
+interface WidgetHistoryItem extends WidgetData {
+  widgetId?: string // Optional ID to identify the source widget
+}
+
 /**
  * Custom hook for managing widget editor state and logic
  */
@@ -67,6 +75,14 @@ export const useWidgetEditor = () => {
     return savedValue ? JSON.parse(savedValue) : true
   })
 
+  // History states for undo/redo functionality
+  const [history, setHistory] = useState<WidgetHistoryItem[]>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
+  const [isUndoRedoAction, setIsUndoRedoAction] = useState(false)
+  
+  // Current active widget ID for history tracking between widgets
+  const [currentWidgetId, setCurrentWidgetId] = useState<string | undefined>(undefined)
+
   // Save settings to localStorage when they change
   useEffect(() => {
     localStorage.setItem('widget-editor-stay-open', JSON.stringify(stayOpen))
@@ -87,6 +103,165 @@ export const useWidgetEditor = () => {
   useEffect(() => {
     localStorage.setItem('widget-editor-show-palette-help', JSON.stringify(showComponentPaletteHelp))
   }, [showComponentPaletteHelp])
+
+  // Record widget data changes to history
+  useEffect(() => {
+    // Skip recording if this change was from an undo/redo action
+    if (isUndoRedoAction) {
+      setIsUndoRedoAction(false)
+      console.log('Skipping history recording - undo/redo action')
+      return
+    }
+
+    // Skip recording if the widget data hasn't meaningfully changed
+    // This helps prevent duplicate entries when loading widgets or undoing/redoing
+    if (history.length > 0 && historyIndex >= 0) {
+      const currentHistoryItem = history[historyIndex]
+      
+      // Compare current widget name and ID to prevent duplicates when switching widgets
+      if (currentHistoryItem?.name === widgetData.name && 
+          currentHistoryItem?.widgetId === currentWidgetId) {
+        
+        // For deeper comparison, check if components are equivalent
+        // We need to handle when the histories are equal and no need to record
+        const currentComponents = JSON.stringify(currentHistoryItem.components)
+        const newComponents = JSON.stringify(widgetData.components)
+        
+        if (currentComponents === newComponents) {
+          console.log('Skipping history recording - no meaningful change')
+          return
+        }
+      }
+    }
+
+    // Deep clone the widget data to ensure history separation
+    const stateToSave: WidgetHistoryItem = {
+      ...JSON.parse(JSON.stringify(widgetData)),
+      widgetId: currentWidgetId
+    }
+    
+    // If we're in the middle of the history and make a change,
+    // we should truncate the future history
+    if (historyIndex >= 0 && historyIndex < history.length - 1) {
+      const newHistory = history.slice(0, historyIndex + 1)
+      setHistory([...newHistory, stateToSave])
+      setHistoryIndex(historyIndex + 1)
+    } else {
+      // Normal case: add to history and increment index
+      setHistory(prev => {
+        // Limit history size by removing oldest states if needed
+        const newHistory = prev.length >= MAX_HISTORY_STATES 
+          ? [...prev.slice(prev.length - MAX_HISTORY_STATES + 1), stateToSave] 
+          : [...prev, stateToSave]
+        return newHistory
+      })
+      setHistoryIndex(prev => prev + 1)
+    }
+  }, [widgetData, currentWidgetId])
+
+  // Handle undo action
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      // Already moving back in history
+      setIsUndoRedoAction(true)
+      
+      const prevState = history[historyIndex - 1]
+      const newHistoryIndex = historyIndex - 1
+      
+      // Set current widget ID when undoing to a different widget
+      if (prevState.widgetId !== currentWidgetId) {
+        // We're undoing to a different widget
+        setCurrentWidgetId(prevState.widgetId)
+        
+        // Find the widget in saved widgets for better messaging
+        const targetWidget = savedWidgets.find(w => w.id === prevState.widgetId)
+        
+        if (targetWidget) {
+          setNotification({
+            open: true,
+            message: `Undid to previous widget: "${targetWidget.name}"`,
+            severity: 'info'
+          })
+        }
+      } else {
+        // Standard notification for same-widget undo
+        setNotification({
+          open: true,
+          message: 'Undo successful',
+          severity: 'info'
+        })
+      }
+      
+      // Create a clean version of the state without the widgetId property
+      const cleanState = { ...prevState }
+      delete cleanState.widgetId
+      
+      // Set history index before updating widget data to prevent race conditions
+      setHistoryIndex(newHistoryIndex)
+      
+      // Finally update the widget data
+      setWidgetData(cleanState)
+      
+    } else {
+      setNotification({
+        open: true,
+        message: 'Nothing to undo',
+        severity: 'info'
+      })
+    }
+  }
+
+  // Handle redo action
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      // Already moving forward in history
+      setIsUndoRedoAction(true)
+      
+      const nextState = history[historyIndex + 1]
+      const newHistoryIndex = historyIndex + 1
+      
+      // Set current widget ID when redoing to a different widget
+      if (nextState.widgetId !== currentWidgetId) {
+        // We're redoing to a different widget
+        setCurrentWidgetId(nextState.widgetId)
+        
+        // Find the widget in saved widgets for better messaging
+        const targetWidget = savedWidgets.find(w => w.id === nextState.widgetId)
+        
+        if (targetWidget) {
+          setNotification({
+            open: true,
+            message: `Redid to next widget: "${targetWidget.name}"`,
+            severity: 'info'
+          })
+        }
+      } else {
+        // Standard notification for same-widget redo
+        setNotification({
+          open: true,
+          message: 'Redo successful',
+          severity: 'info'
+        })
+      }
+      
+      // Create a clean version of the state without the widgetId property
+      const cleanState = { ...nextState }
+      delete cleanState.widgetId
+      
+      // Set history index before updating widget data to prevent race conditions
+      setHistoryIndex(newHistoryIndex)
+      
+      // Finally update the widget data
+      setWidgetData(cleanState)
+      
+    } else {
+      setNotification({
+        open: true,
+        message: 'Nothing to redo',
+        severity: 'info'
+      })
+    }
+  }
 
   // Load saved widgets on component mount and listen for widget storage update events
   useEffect(() => {
@@ -123,16 +298,28 @@ export const useWidgetEditor = () => {
         toggleEditMode()
       }
       
-      // Open widget list with Ctrl+O
+      // Toggle widget list with Ctrl+O
       if (e.ctrlKey && e.key === 'o') {
         e.preventDefault()
-        setShowWidgetList(true)
+        setShowWidgetList(prev => !prev)
       }
       
-      // Open settings with Ctrl+, (comma)
+      // Toggle settings with Ctrl+, (comma)
       if (e.ctrlKey && e.key === ',') {
         e.preventDefault()
-        setShowSettingsModal(true)
+        setShowSettingsModal(prev => !prev)
+      }
+
+      // Undo with Ctrl+Z
+      if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        handleUndo()
+      }
+
+      // Redo with Ctrl+Y or Ctrl+Shift+Z
+      if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
+        e.preventDefault()
+        handleRedo()
       }
     }
     
@@ -141,7 +328,7 @@ export const useWidgetEditor = () => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [widgetData]) // Depend on widgetData to ensure handleSaveWidget has the latest data
+  }, [widgetData, historyIndex, history]) // Dependencies for undo/redo
 
   // Handle drag start from component palette
   const handleDragStart = (e: React.DragEvent, type: string) => {
@@ -435,11 +622,15 @@ export const useWidgetEditor = () => {
       // Find if we already have a widget with this name to replace
       const existingWidget = savedWidgets.find(w => w.name === widgetData.name)
       
+      let savedWidgetId: string
+      
       if (existingWidget) {
         WidgetStorage.updateWidget(existingWidget.id, {
           name: widgetData.name,
           components: widgetData.components
         })
+        
+        savedWidgetId = existingWidget.id
         
         setNotification({
           open: true,
@@ -447,10 +638,12 @@ export const useWidgetEditor = () => {
           severity: 'success'
         })
       } else {
-        WidgetStorage.saveWidget({
+        const savedWidget = WidgetStorage.saveWidget({
           name: widgetData.name,
           components: widgetData.components
         })
+        
+        savedWidgetId = savedWidget.id
         
         setNotification({
           open: true,
@@ -458,6 +651,9 @@ export const useWidgetEditor = () => {
           severity: 'success'
         })
       }
+      
+      // Update current widget ID for history tracking
+      setCurrentWidgetId(savedWidgetId)
       
       setSavedWidgets(WidgetStorage.getAllWidgets())
     } catch (error) {
@@ -472,15 +668,60 @@ export const useWidgetEditor = () => {
 
   // Handle loading a widget
   const handleLoadWidget = (widget: CustomWidget, shouldEnterEditMode?: boolean) => {
+    
+    // Set flag BEFORE updating any state to prevent duplicate history entries
+    setIsUndoRedoAction(true)
+    
+    // Create the widget history item first
+    const widgetHistoryItem: WidgetHistoryItem = {
+      name: widget.name,
+      components: JSON.parse(JSON.stringify(widget.components)),
+      widgetId: widget.id
+    }
+
+    // Update the current widget ID for history tracking
+    setCurrentWidgetId(widget.id)
+    
+    // Set widget data
     setWidgetData({
       name: widget.name,
       components: widget.components
     })
     
+    // Handle history for loaded widget
+    if (history.length === 0) {
+      // First widget ever loaded - create new history
+      setHistory([widgetHistoryItem])
+      setHistoryIndex(0)
+    } else {
+      // Check if we're loading the same widget as current
+      const currentWidget = historyIndex >= 0 && historyIndex < history.length ? 
+        history[historyIndex] : null
+        
+      if (currentWidget && currentWidget.widgetId === widget.id) {
+        // We're reloading the same widget - replace current history entry
+        const updatedHistory = [...history]
+        updatedHistory[historyIndex] = widgetHistoryItem
+        setHistory(updatedHistory)
+        // Keep same history index
+      } else {
+        // Loading a different widget - add to history and truncate if needed
+        if (historyIndex < history.length - 1) {
+          // We're in the middle of history, truncate future entries
+          const newHistory = history.slice(0, historyIndex + 1)
+          setHistory([...newHistory, widgetHistoryItem])
+        } else {
+          // We're at the end of history, append
+          setHistory(prev => [...prev, widgetHistoryItem])
+        }
+        // Move to new history position
+        setHistoryIndex(prev => prev + 1)
+      }
+    }
+    
     setShowWidgetList(false)
     
-    // Set editor mode based on the passed parameter (true = edit mode, false = preview mode)
-    // If no parameter is provided, maintain current mode
+    // Set editor mode based on the passed parameter
     if (shouldEnterEditMode !== undefined) {
       setEditMode(shouldEnterEditMode)
     }
@@ -599,6 +840,12 @@ export const useWidgetEditor = () => {
     confirmDeleteComponent,
     cancelDeleteComponent,
     confirmDeleteSavedWidget,
+    
+    // History/Undo/Redo
+    handleUndo,
+    handleRedo,
+    canUndo: historyIndex > 0,
+    canRedo: historyIndex < history.length - 1,
     
     // Utility
     setEditDialogOpen,

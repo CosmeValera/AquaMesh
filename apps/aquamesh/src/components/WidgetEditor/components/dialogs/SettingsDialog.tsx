@@ -8,14 +8,22 @@ import {
   Typography,
   Box,
   Switch,
-  FormControlLabel,
   Divider,
   Paper,
+  Grid,
+  Chip,
 } from '@mui/material'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import WidgetsIcon from '@mui/icons-material/Widgets'
+import KeyboardIcon from '@mui/icons-material/Keyboard'
+import UndoIcon from '@mui/icons-material/Undo'
+import RedoIcon from '@mui/icons-material/Redo'
+import SaveIcon from '@mui/icons-material/Save'
+import EditIcon from '@mui/icons-material/Edit'
+import FolderOpenIcon from '@mui/icons-material/FolderOpen'
+import SettingsIcon from '@mui/icons-material/Settings'
 
 interface SettingsDialogProps {
   open: boolean
@@ -29,6 +37,65 @@ interface SettingsDialogProps {
   showDeleteWidgetConfirmation: boolean
   onShowDeleteWidgetConfirmationChange: (value: boolean) => void
 }
+
+// Keyboard shortcut card component
+interface ShortcutCardProps {
+  icon: React.ReactNode
+  title: string
+  shortcut: string
+  color?: string
+}
+
+const ShortcutCard: React.FC<ShortcutCardProps> = ({ icon, title, shortcut, color = 'primary.main' }) => (
+  <Paper
+    elevation={0}
+    sx={{
+      p: 1.5,
+      display: 'flex',
+      alignItems: 'center',
+      mb: 1.5,
+      borderRadius: 2,
+      border: '1px solid',
+      borderColor: 'divider',
+      transition: 'transform 0.2s, box-shadow 0.2s',
+      '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+      }
+    }}
+  >
+    <Box sx={{ 
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white',
+      bgcolor: color,
+      borderRadius: '50%',
+      width: 36,
+      height: 36,
+      mr: 2
+    }}>
+      {icon}
+    </Box>
+    <Box sx={{ flex: 1 }}>
+      <Typography variant="body2" fontWeight="medium">
+        {title}
+      </Typography>
+    </Box>
+    <Chip
+      label={shortcut}
+      size="small"
+      sx={{
+        fontFamily: 'monospace',
+        fontWeight: 'bold',
+        bgcolor: 'rgba(0,0,0,0.05)',
+        border: '1px solid rgba(0,0,0,0.1)',
+        borderRadius: 1,
+        px: 0.5
+      }}
+    />
+  </Paper>
+)
 
 const SettingsDialog: React.FC<SettingsDialogProps> = ({
   open,
@@ -144,6 +211,79 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 </Typography>
               </Box>
             </Box>
+          </Paper>
+          
+          <Divider sx={{ my: 3 }} />
+          
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            mb: 2.5
+          }}>
+            <KeyboardIcon sx={{ mr: 1.5, color: 'primary.main', fontSize: 28 }} />
+            <Typography variant="h6" fontWeight="medium">
+              Keyboard Shortcuts
+            </Typography>
+          </Box>
+          
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 3, 
+              mb: 2, 
+              bgcolor: 'background.default', 
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <ShortcutCard 
+                  icon={<UndoIcon />} 
+                  title="Undo" 
+                  shortcut="Ctrl + Z" 
+                  color="#3f51b5"
+                />
+                
+                <ShortcutCard 
+                  icon={<RedoIcon />} 
+                  title="Redo" 
+                  shortcut="Ctrl + Y" 
+                  color="#3f51b5"
+                />
+                
+                <ShortcutCard 
+                  icon={<SaveIcon />} 
+                  title="Save Widget" 
+                  shortcut="Ctrl + S" 
+                  color="#4caf50"
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <ShortcutCard 
+                  icon={<EditIcon />} 
+                  title="Toggle Edit Mode" 
+                  shortcut="Ctrl + E" 
+                  color="#ff9800"
+                />
+                
+                <ShortcutCard 
+                  icon={<FolderOpenIcon />} 
+                  title="Open/Close Library" 
+                  shortcut="Ctrl + O" 
+                  color="#9c27b0"
+                />
+                
+                <ShortcutCard 
+                  icon={<SettingsIcon />} 
+                  title="Open/Close Settings" 
+                  shortcut="Ctrl + ," 
+                  color="#2196f3"
+                />
+              </Grid>
+            </Grid>
           </Paper>
         </Box>
       </DialogContent>

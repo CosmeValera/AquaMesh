@@ -66,6 +66,12 @@ const WidgetEditor: React.FC = () => {
     componentToDelete,
     widgetToDelete,
     
+    // History/Undo/Redo functionality
+    handleUndo,
+    handleRedo,
+    canUndo,
+    canRedo,
+    
     // Utility
     setEditDialogOpen,
     setCurrentEditComponent,
@@ -170,6 +176,10 @@ const WidgetEditor: React.FC = () => {
         setShowWidgetList={setShowWidgetList}
         setShowSettingsModal={setShowSettingsModal}
         isUpdating={isUpdating}
+        handleUndo={handleUndo}
+        handleRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
 
       {/* Main content area */}

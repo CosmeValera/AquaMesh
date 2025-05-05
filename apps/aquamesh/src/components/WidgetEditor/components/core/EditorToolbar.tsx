@@ -13,6 +13,8 @@ import EditIcon from '@mui/icons-material/Edit'
 import SettingsIcon from '@mui/icons-material/Settings'
 import SaveIcon from '@mui/icons-material/Save'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
+import UndoIcon from '@mui/icons-material/Undo'
+import RedoIcon from '@mui/icons-material/Redo'
 
 interface EditorToolbarProps {
   editMode: boolean
@@ -23,6 +25,10 @@ interface EditorToolbarProps {
   setShowWidgetList: (show: boolean) => void
   setShowSettingsModal: (show: boolean) => void
   isUpdating: boolean
+  handleUndo?: () => void
+  handleRedo?: () => void
+  canUndo?: boolean
+  canRedo?: boolean
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({
@@ -33,7 +39,11 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   handleSaveWidget,
   setShowWidgetList,
   setShowSettingsModal,
-  isUpdating
+  isUpdating,
+  handleUndo,
+  handleRedo,
+  canUndo = false,
+  canRedo = false
 }) => {
   return (
     <AppBar 
@@ -70,6 +80,43 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </Typography>
         
         <Box>
+          {/* Undo/Redo buttons - only show in edit mode */}
+          {editMode && handleUndo && handleRedo && (
+            <>
+              <Tooltip title="Undo (Ctrl+Z)">
+                <span>
+                  <IconButton 
+                    color="inherit" 
+                    onClick={handleUndo}
+                    disabled={!canUndo}
+                    sx={{ 
+                      mr: 1,
+                      color: canUndo ? 'foreground.contrastSecondary' : 'action.disabled'
+                    }}
+                  >
+                    <UndoIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              
+              <Tooltip title="Redo (Ctrl+Y)">
+                <span>
+                  <IconButton 
+                    color="inherit" 
+                    onClick={handleRedo}
+                    disabled={!canRedo}
+                    sx={{ 
+                      mr: 1,
+                      color: canRedo ? 'foreground.contrastSecondary' : 'action.disabled'
+                    }}
+                  >
+                    <RedoIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </>
+          )}
+          
           <Tooltip title="Toggle edit mode">
             <IconButton 
               color="inherit" 

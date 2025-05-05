@@ -11,14 +11,21 @@ import ComponentPalette from './components/core/ComponentPalette'
 import EditorCanvas from './components/core/EditorCanvas'
 import NotificationSystem from './components/ui/NotificationSystem'
 import DeleteConfirmationDialog from './components/dialogs/DeleteConfirmationDialog'
+import { CustomWidget } from './WidgetStorage'
 
 // Main Widget Editor component
-const WidgetEditor: React.FC = () => {
+const WidgetEditor: React.FC<{
+  customProps?: {
+    loadWidget?: CustomWidget; // The widget to load
+    initialEditMode?: boolean; // Whether to start in edit mode
+  }
+}> = ({ customProps }) => {
   const {
     // State
     widgetData,
     setWidgetData,
     editMode,
+    setEditMode,
     notification,
     savedWidgets,
     showWidgetList,
@@ -118,6 +125,45 @@ const WidgetEditor: React.FC = () => {
     }
   }, [])
 
+  // Listen for loadWidgetInEditor events from widget management
+  React.useEffect(() => {
+    const handleExternalWidgetLoad = (event: Event) => {
+      const customEvent = event as CustomEvent
+      if (customEvent.detail && customEvent.detail.widget) {
+        handleLoadWidget(customEvent.detail.widget, customEvent.detail.editMode)
+      }
+    }
+
+    document.addEventListener('loadWidgetInEditor', handleExternalWidgetLoad)
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('loadWidgetInEditor', handleExternalWidgetLoad)
+    }
+  }, [handleLoadWidget])
+  
+  // Handle initial widget load from customProps
+  React.useEffect(() => {
+    if (customProps?.loadWidget) {
+      console.log('WidgetEditor: Loading initial widget from customProps', {
+        widgetName: customProps.loadWidget.name,
+        editMode: customProps.initialEditMode || false,
+        componentCount: customProps.loadWidget.components.length
+      })
+      
+      // Set the appropriate edit mode first
+      if (customProps.initialEditMode !== undefined) {
+        setEditMode(customProps.initialEditMode)
+      }
+      
+      // Then load the widget - use a setTimeout to ensure the edit mode is set first
+      setTimeout(() => {
+        // Load the widget with the proper mode
+        handleLoadWidget(customProps.loadWidget!, customProps.initialEditMode || false)
+      }, 0)
+    }
+  }, [customProps, handleLoadWidget, setEditMode])
+  
   // Handle closing component toasts
   const handleCloseComponentToast = () => {
     setComponentToast({
@@ -194,6 +240,8 @@ const WidgetEditor: React.FC = () => {
         width: '100%',
         bgcolor: 'background.paper',
       }}
+      className="widget-editor-container"
+      data-component="WidgetEditor"
     >
       {/* Toolbar */}
       <EditorToolbar 

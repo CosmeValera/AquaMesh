@@ -330,6 +330,51 @@ export const useWidgetEditor = () => {
       document.removeEventListener('widgetStorageUpdated', handleWidgetUpdate)
     }
   }, [])
+  
+  // Listen for loadWidgetInEditor events from widget management
+  useEffect(() => {
+    const handleExternalWidgetLoad = (event: Event) => {
+      const customEvent = event as CustomEvent
+      if (customEvent.detail && customEvent.detail.widget) {
+        const widget = customEvent.detail.widget as CustomWidget
+        const shouldEditMode = Boolean(customEvent.detail.editMode)
+        
+        console.log('WidgetEditor: External widget load request received', {
+          widgetName: widget.name,
+          editMode: shouldEditMode,
+          componentCount: widget.components.length
+        })
+        
+        // Set flag to prevent recording in history
+        setIsUndoRedoAction(true)
+        
+        // Update the current widget ID for history tracking
+        setCurrentWidgetId(widget.id)
+        
+        // Update edit mode
+        setEditMode(shouldEditMode)
+        
+        // Set widget data with deep clone to avoid reference issues
+        setWidgetData({
+          name: widget.name,
+          components: JSON.parse(JSON.stringify(widget.components))
+        })
+        
+        // Show notification
+        setNotification({
+          open: true,
+          message: `Widget "${widget.name}" loaded in ${shouldEditMode ? 'edit' : 'preview'} mode`,
+          severity: 'success'
+        })
+      }
+    }
+    
+    document.addEventListener('loadWidgetInEditor', handleExternalWidgetLoad)
+    
+    return () => {
+      document.removeEventListener('loadWidgetInEditor', handleExternalWidgetLoad)
+    }
+  }, [])
 
   // Add keyboard shortcuts
   useEffect(() => {

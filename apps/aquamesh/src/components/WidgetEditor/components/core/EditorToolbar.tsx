@@ -54,6 +54,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
       position="static" 
       color="default" 
       elevation={0}
+      className="widget-editor-toolbar"
       sx={{ 
         borderBottom: 1, 
         borderColor: 'divider',

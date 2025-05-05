@@ -71,6 +71,7 @@ const ComponentPalette = ({ showTooltips, showHelpText = true, handleDragStart }
         display: 'flex',
         flexDirection: 'column',
       }}
+      className="component-palette"
     >
       <Typography 
         variant="h6" 

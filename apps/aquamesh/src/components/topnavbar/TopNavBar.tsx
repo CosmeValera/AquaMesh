@@ -28,6 +28,8 @@ import { ReactComponent as Logo } from '../../../public/logo.svg'
 import { useViews } from '../Views/ViewsProvider'
 import TutorialModal from '../tutorial/TutorialModal'
 import DashboardOptionsMenu from '../Views/DashboardOptionsMenu'
+import WidgetManagementModal from '../WidgetEditor/components/dialogs/WidgetManagementModal'
+import useWidgetManager from '../WidgetEditor/hooks/useWidgetManager'
 
 // Define user data type
 interface UserData {
@@ -36,15 +38,7 @@ interface UserData {
   role: string
 }
 
-// Define component data interface
-interface ComponentData {
-  id: string
-  type: string
-  props: Record<string, unknown>
-  children?: ComponentData[]
-  parentId?: string
-}
-
+// Define component props interface 
 interface TopNavBarProps {
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -70,6 +64,17 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   // Use theme and media query for responsive design
   const theme = useTheme()
   const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+  
+  // Use the widget manager hook
+  const {
+    widgets,
+    isWidgetManagementOpen,
+    openWidgetManagement,
+    closeWidgetManagement,
+    previewWidget,
+    editWidget,
+    deleteWidget
+  } = useWidgetManager()
   
   // Load user data from localStorage on component mount
   useEffect(() => {
@@ -139,7 +144,13 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
       addComponent(componentConfig)
     }
   }
-  
+
+  // Handle opening widgets library
+  const handleOpenWidgetsLibrary = () => {
+    openWidgetManagement()
+    handleClose()
+  }
+
   return (
     <>
       <AppBar 
@@ -267,11 +278,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                 <>
                   <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
                   <MenuItem 
-                    onClick={() => {
-                      // TODO: Implement this
-                      // handleOpenWidgetsLibrary()
-                      handleClose()
-                    }}
+                    onClick={handleOpenWidgetsLibrary}
                     sx={{ p: 1.5 }}
                   >
                     <ListItemIcon>
@@ -383,6 +390,16 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
         open={tutorialOpen}
         onClose={() => setTutorialOpen(false)}
         onShowOnStartupToggle={handleToggleTutorialStartup}
+      />
+      
+      {/* Widget Management Modal */}
+      <WidgetManagementModal
+        open={isWidgetManagementOpen}
+        onClose={closeWidgetManagement}
+        widgets={widgets}
+        onPreview={previewWidget}
+        onEdit={editWidget}
+        onDelete={deleteWidget}
       />
     </>
   )

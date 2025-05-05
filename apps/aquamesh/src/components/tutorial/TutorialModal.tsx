@@ -96,6 +96,11 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
           // Reset scroll position when opening the modal
           scrollContainer.scrollTop = 0
         }
+        
+        // Ensure the dialog receives focus for keyboard navigation
+        if (dialogRef.current) {
+          dialogRef.current.focus()
+        }
       }, 50)
     }
   }, [open])
@@ -342,11 +347,6 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
   
   // Set up keyboard event listeners
   useEffect(() => {
-    // Focus the dialog when opened for keyboard navigation
-    if (open && dialogRef.current) {
-      dialogRef.current.focus()
-    }
-    
     // Listen for visibility change events to check if elements are in viewport
     const handleScroll = () => {
       // Check which option is most visible in the viewport and update currentSlide
@@ -488,6 +488,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
           style={{ outline: 'none' }}
+          autoFocus
         >
           <DialogContent 
             sx={{ 

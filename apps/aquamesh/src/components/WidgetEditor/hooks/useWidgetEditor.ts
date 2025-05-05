@@ -667,17 +667,24 @@ export const useWidgetEditor = () => {
     }
 
     try {
+      // Always set this flag to prevent save/update operations from being recorded in history
+      setIsUndoRedoAction(true)
+      
       // Find if we already have a widget with this name to replace
       const existingWidget = savedWidgets.find(w => w.name === widgetData.name)
       
+      // Get a copy of the current widget data before saving
+      // This prevents triggering history recording based on ID changes
+      const widgetToSave = {
+        name: widgetData.name,
+        components: [...widgetData.components]
+      }
+      
       let savedWidgetId: string
       
+      // Handle updating existing widget
       if (existingWidget) {
-        WidgetStorage.updateWidget(existingWidget.id, {
-          name: widgetData.name,
-          components: widgetData.components
-        })
-        
+        WidgetStorage.updateWidget(existingWidget.id, widgetToSave)
         savedWidgetId = existingWidget.id
         
         setNotification({
@@ -685,12 +692,10 @@ export const useWidgetEditor = () => {
           message: `Widget "${widgetData.name}" updated successfully`,
           severity: 'success'
         })
-      } else {
-        const savedWidget = WidgetStorage.saveWidget({
-          name: widgetData.name,
-          components: widgetData.components
-        })
-        
+      } 
+      // Handle saving new widget
+      else {
+        const savedWidget = WidgetStorage.saveWidget(widgetToSave)
         savedWidgetId = savedWidget.id
         
         setNotification({
@@ -700,8 +705,14 @@ export const useWidgetEditor = () => {
         })
       }
       
-      // Update current widget ID for history tracking
-      setCurrentWidgetId(savedWidgetId)
+      // Update current widget ID without triggering a re-render of widget data
+      // This prevents the ID update from triggering another history recording
+      setCurrentWidgetId(prev => {
+        if (prev !== savedWidgetId) {
+          return savedWidgetId
+        }
+        return prev
+      })
       
       setSavedWidgets(WidgetStorage.getAllWidgets())
     } catch (error) {

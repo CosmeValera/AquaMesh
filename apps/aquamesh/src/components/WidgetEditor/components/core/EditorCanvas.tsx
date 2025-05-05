@@ -144,7 +144,14 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
           }}
         />
       ) : (
-        <Typography variant="body1" sx={{ mb: 2, color: 'foreground.contrastPrimary' }}>
+        <Typography 
+          variant="body1" 
+          sx={{ 
+            mb: 2, 
+            color: 'foreground.contrastPrimary',
+            userSelect: 'none' // Prevent text selection in view mode
+          }}
+        >
           <strong>Widget Name:</strong> {widgetData.name}
         </Typography>
       )}

@@ -42,6 +42,7 @@ interface EditorCanvasProps {
   handleContainerDragLeave: (e: React.DragEvent) => void;
   handleContainerDrop: (e: React.DragEvent, containerId: string) => void;
   showSidebar: boolean;
+  handleWidgetNameChange?: (name: string) => void;
 }
 
 const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -63,7 +64,8 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   handleContainerDragOver,
   handleContainerDragLeave,
   handleContainerDrop,
-  showSidebar
+  showSidebar,
+  handleWidgetNameChange
 }) => {
   // Render the component hierarchy
   const renderComponents = (components: ComponentData[]) => {
@@ -109,8 +111,10 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         <TextField
           label="Widget Name"
           value={widgetData.name}
-          onChange={(e) =>
-            setWidgetData((prev) => ({ ...prev, name: e.target.value }))
+          onChange={(e) => 
+            handleWidgetNameChange 
+              ? handleWidgetNameChange(e.target.value) 
+              : setWidgetData((prev) => ({ ...prev, name: e.target.value }))
           }
           margin="normal"
           variant="outlined"

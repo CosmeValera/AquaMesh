@@ -75,6 +75,7 @@ const WidgetEditor: React.FC = () => {
     // Utility
     setEditDialogOpen,
     setCurrentEditComponent,
+    handleWidgetNameChange,
   } = useWidgetEditor()
 
   // State to control sidebar visibility
@@ -251,6 +252,7 @@ const WidgetEditor: React.FC = () => {
           handleContainerDragLeave={handleContainerDragLeave}
           handleContainerDrop={handleContainerDrop}
           showSidebar={showSidebar}
+          handleWidgetNameChange={handleWidgetNameChange}
         />
       </Box>
 

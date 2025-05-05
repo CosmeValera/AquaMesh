@@ -13,6 +13,9 @@ import WidgetStorage, { CustomWidget } from '../WidgetStorage'
 // Maximum history states to keep
 const MAX_HISTORY_STATES = 50
 
+// Debounce delay for name changes in milliseconds
+const NAME_CHANGE_DEBOUNCE_DELAY = 750
+
 // Interface for tracking widget history
 interface WidgetHistoryItem extends WidgetData {
   widgetId?: string // Optional ID to identify the source widget
@@ -80,6 +83,12 @@ export const useWidgetEditor = () => {
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [isUndoRedoAction, setIsUndoRedoAction] = useState(false)
   
+  // Ref for tracking the name change timeout
+  const nameChangeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  
+  // Flag to prevent recording history for widget name changes
+  const [isChangingName, setIsChangingName] = useState(false)
+  
   // Current active widget ID for history tracking between widgets
   const [currentWidgetId, setCurrentWidgetId] = useState<string | undefined>(undefined)
 
@@ -110,6 +119,12 @@ export const useWidgetEditor = () => {
     if (isUndoRedoAction) {
       setIsUndoRedoAction(false)
       console.log('Skipping history recording - undo/redo action')
+      return
+    }
+    
+    // Skip recording if we're in the middle of changing the widget name
+    if (isChangingName) {
+      console.log('Skipping history recording - name change in progress')
       return
     }
 
@@ -157,7 +172,40 @@ export const useWidgetEditor = () => {
       })
       setHistoryIndex(prev => prev + 1)
     }
-  }, [widgetData, currentWidgetId])
+  }, [widgetData, currentWidgetId, isChangingName])
+
+  // Handler for widget name changes with debouncing
+  const handleWidgetNameChange = (newName: string) => {
+    // Mark that we're changing the name - prevents history recording during typing
+    setIsChangingName(true)
+    
+    // Update widget data with new name immediately for UI responsiveness
+    setWidgetData(prev => ({
+      ...prev,
+      name: newName
+    }))
+    
+    // Clear any existing timeout
+    if (nameChangeTimeoutRef.current) {
+      clearTimeout(nameChangeTimeoutRef.current)
+    }
+    
+    // Set a new timeout to record history after typing stops
+    nameChangeTimeoutRef.current = setTimeout(() => {
+      setIsChangingName(false)
+      // This will trigger the useEffect above after the debounce period
+      // which will record the name change in history
+    }, NAME_CHANGE_DEBOUNCE_DELAY)
+  }
+  
+  // Clean up the timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (nameChangeTimeoutRef.current) {
+        clearTimeout(nameChangeTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Handle undo action
   const handleUndo = () => {
@@ -850,5 +898,6 @@ export const useWidgetEditor = () => {
     // Utility
     setEditDialogOpen,
     setCurrentEditComponent,
+    handleWidgetNameChange,
   }
 } 

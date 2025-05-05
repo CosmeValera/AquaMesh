@@ -322,116 +322,114 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                     }
                   }}
                 >
-                  <Tooltip title="Click to preview">
+                  <Box 
+                    onClick={() => onEdit(widget)}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    {/* Widget Header */}
                     <Box 
-                      onClick={() => onPreview(widget)}
-                      sx={{ cursor: 'pointer' }}
+                      sx={{ 
+                        bgcolor: '#00D1AB',
+                        color: '#191919',
+                        p: 2, 
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
                     >
-                      {/* Widget Header */}
-                      <Box 
-                        sx={{ 
-                          bgcolor: '#00D1AB',
-                          color: '#191919',
-                          p: 2, 
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between'
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <WidgetsIcon sx={{ mr: 1 }} />
-                          <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
-                            {widget.name}
-                          </Typography>
-                        </Box>
-                        <Chip 
-                          label={`${widget.components.length} ${widget.components.length === 1 ? 'component' : 'components'}`}
-                          size="small" 
-                          sx={{ 
-                            bgcolor: 'rgba(0, 0, 0, 0.2)',
-                            color: '#191919',
-                            fontWeight: 'bold'
-                          }} 
-                        />
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <WidgetsIcon sx={{ mr: 1 }} />
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                          {widget.name}
+                        </Typography>
                       </Box>
-                    
-                      {/* Widget Info */}
-                      <Box sx={{ p: 2, color: 'white' }}>
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 1 }}>
-                          Last updated: {formatDate(widget.updatedAt)}
-                        </Typography>
-                        
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 2 }}>
-                          Created: {formatDate(widget.createdAt)}
-                        </Typography>
-                        
-                        {/* Action Buttons */}
-                        <Box>
-                          <Tooltip title="Preview Widget">
-                            <Button
-                              size="small"
-                              startIcon={<PreviewIcon />}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                onPreview(widget)
-                              }}
-                              sx={{ 
-                                mr: 1,
-                                color: 'white',
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                '&:hover': {
-                                  borderColor: 'white',
-                                  bgcolor: 'rgba(255, 255, 255, 0.1)'
-                                }
-                              }}
-                              variant="outlined"
-                            >
-                              Preview
-                            </Button>
-                          </Tooltip>
-                          <Tooltip title="Edit Widget">
-                            <Button
-                              size="small"
-                              startIcon={<EditIcon />}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                onEdit(widget)
-                              }}
-                              sx={{ 
-                                mr: 1,
-                                bgcolor: '#00D1AB',
-                                color: '#191919',
-                                '&:hover': {
-                                  bgcolor: '#00E4BC'
-                                }
-                              }}
-                              variant="contained"
-                            >
-                              Edit
-                            </Button>
-                          </Tooltip>
-                          <Tooltip title="Delete Widget">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                onDelete(widget.id)
-                              }}
-                              sx={{
-                                bgcolor: 'rgba(211, 47, 47, 0.1)',
-                                '&:hover': {
-                                  bgcolor: 'rgba(211, 47, 47, 0.2)'
-                                }
-                              }}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
+                      <Chip 
+                        label={`${widget.components.length} ${widget.components.length === 1 ? 'component' : 'components'}`}
+                        size="small" 
+                        sx={{ 
+                          bgcolor: 'rgba(0, 0, 0, 0.2)',
+                          color: '#191919',
+                          fontWeight: 'bold'
+                        }} 
+                      />
+                    </Box>
+                  
+                    {/* Widget Info */}
+                    <Box sx={{ p: 2, color: 'white' }}>
+                      <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 1 }}>
+                        Last updated: {formatDate(widget.updatedAt)}
+                      </Typography>
+                      
+                      <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 2 }}>
+                        Created: {formatDate(widget.createdAt)}
+                      </Typography>
+                      
+                      {/* Action Buttons */}
+                      <Box>
+                        <Tooltip title="Preview Widget">
+                          <Button
+                            size="small"
+                            startIcon={<PreviewIcon />}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onPreview(widget)
+                            }}
+                            sx={{ 
+                              mr: 1,
+                              color: 'white',
+                              borderColor: 'rgba(255, 255, 255, 0.3)',
+                              '&:hover': {
+                                borderColor: 'white',
+                                bgcolor: 'rgba(255, 255, 255, 0.1)'
+                              }
+                            }}
+                            variant="outlined"
+                          >
+                            Preview
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="Edit Widget">
+                          <Button
+                            size="small"
+                            startIcon={<EditIcon />}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onEdit(widget)
+                            }}
+                            sx={{ 
+                              mr: 1,
+                              bgcolor: '#00D1AB',
+                              color: '#191919',
+                              '&:hover': {
+                                bgcolor: '#00E4BC'
+                              }
+                            }}
+                            variant="contained"
+                          >
+                            Edit
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="Delete Widget">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onDelete(widget.id)
+                            }}
+                            sx={{
+                              bgcolor: 'rgba(211, 47, 47, 0.1)',
+                              '&:hover': {
+                                bgcolor: 'rgba(211, 47, 47, 0.2)'
+                              }
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
                       </Box>
                     </Box>
-                  </Tooltip>
+                  </Box>
                 </Paper>
               </Fade>
             ))}

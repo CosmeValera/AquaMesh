@@ -56,6 +56,21 @@ export const useWidgetManager = () => {
     setIsWidgetManagementOpen(false)
   }
   
+  // Open a new widget editor without loading any widget
+  const openWidgetEditor = () => {
+    // Always close the widget management modal first if it's open
+    if (isWidgetManagementOpen) {
+      closeWidgetManagement()
+    }
+    
+    // Open new widget editor instance
+    addComponent({
+      id: `widget-editor-${Date.now()}`,
+      name: "Widget Editor",
+      component: "WidgetEditor"
+    })
+  }
+  
   // Preview a widget
   const previewWidget = (widget: CustomWidget) => {
     // Always close the widget management modal first
@@ -130,7 +145,9 @@ export const useWidgetManager = () => {
     closeWidgetManagement,
     previewWidget,
     editWidget,
-    deleteWidget
+    deleteWidget,
+    isWidgetEditorOpen,
+    openWidgetEditor
   }
 }
 

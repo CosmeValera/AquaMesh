@@ -19,8 +19,6 @@ import CloseIcon from '@mui/icons-material/Close'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import CreateIcon from '@mui/icons-material/Create'
 import InfoIcon from '@mui/icons-material/Info'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft'
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
 import DashboardWidgetExplanationModal from './DashboardWidgetExplanationModal'
@@ -204,10 +202,27 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
     if (currentSlide < options.length - 1) {
       setCurrentSlide(currentSlide + 1)
       
-      // Add smooth scrolling when using arrows
+      // Add smooth scrolling when using arrows with proper offset
       const nextOptionElement = document.getElementById(`tutorial-option-${currentSlide + 1}`)
       if (nextOptionElement) {
-        nextOptionElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        const scrollContainer = document.querySelector('.MuiDialogContent-root')
+        if (scrollContainer) {
+          // Get element position relative to the scroll container
+          const elementPosition = nextOptionElement.getBoundingClientRect().top -
+                                 scrollContainer.getBoundingClientRect().top
+          
+          // Calculate target position with padding to account for the sticky header (66px)
+          const targetPosition = elementPosition + scrollContainer.scrollTop - 66
+          
+          // Perform smooth scroll to that position
+          scrollContainer.scrollTo({
+            top: targetPosition,
+            behavior: 'smooth'
+          })
+        } else {
+          // Fallback to standard method if scroll container not found
+          nextOptionElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
       }
     }
   }
@@ -217,10 +232,27 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
     if (currentSlide > 0) {
       setCurrentSlide(currentSlide - 1)
       
-      // Add smooth scrolling when using arrows
+      // Add smooth scrolling when using arrows with proper offset
       const prevOptionElement = document.getElementById(`tutorial-option-${currentSlide - 1}`)
       if (prevOptionElement) {
-        prevOptionElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        const scrollContainer = document.querySelector('.MuiDialogContent-root')
+        if (scrollContainer) {
+          // Get element position relative to the scroll container
+          const elementPosition = prevOptionElement.getBoundingClientRect().top -
+                                 scrollContainer.getBoundingClientRect().top
+          
+          // Calculate target position with padding to account for the sticky header (66px)
+          const targetPosition = elementPosition + scrollContainer.scrollTop - 66
+          
+          // Perform smooth scroll to that position
+          scrollContainer.scrollTo({
+            top: targetPosition,
+            behavior: 'smooth'
+          })
+        } else {
+          // Fallback to standard method if scroll container not found
+          prevOptionElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
       }
     }
   }
@@ -230,7 +262,24 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
     setCurrentSlide(index)
     const optionElement = document.getElementById(`tutorial-option-${index}`)
     if (optionElement) {
-      optionElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      const scrollContainer = document.querySelector('.MuiDialogContent-root')
+      if (scrollContainer) {
+        // Get element position relative to the scroll container
+        const elementPosition = optionElement.getBoundingClientRect().top -
+                               scrollContainer.getBoundingClientRect().top
+        
+        // Calculate target position with padding to account for the sticky header (66px)
+        const targetPosition = elementPosition + scrollContainer.scrollTop - 66
+        
+        // Perform smooth scroll to that position
+        scrollContainer.scrollTo({
+          top: targetPosition,
+          behavior: 'smooth'
+        })
+      } else {
+        // Fallback to standard method if scroll container not found
+        optionElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
     }
   }
   
@@ -383,59 +432,6 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
               }
             }}
           >
-            {/* Navigation arrows - place inside DialogContent but outside the scrollable content */}
-            <Box sx={{ 
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
-              pointerEvents: 'none', // This allows scrolling through the arrows
-              zIndex: 10
-            }}>
-              {currentSlide > 0 && (
-                <IconButton
-                  onClick={goToPrevSlide}
-                  sx={{
-                    position: 'absolute',
-                    left: 16,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    bgcolor: 'rgba(0, 188, 162, 0.1)',
-                    color: '#00BC9A',
-                    '&:hover': {
-                      bgcolor: 'rgba(0, 188, 162, 0.2)',
-                    },
-                    zIndex: 10,
-                    pointerEvents: 'auto' // Re-enable pointer events only for the button
-                  }}
-                >
-                  <ArrowBackIcon />
-                </IconButton>
-              )}
-              
-              {currentSlide < options.length - 1 && (
-                <IconButton
-                  onClick={goToNextSlide}
-                  sx={{
-                    position: 'absolute',
-                    right: 16,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    bgcolor: 'rgba(0, 188, 162, 0.1)',
-                    color: '#00BC9A',
-                    '&:hover': {
-                      bgcolor: 'rgba(0, 188, 162, 0.2)',
-                    },
-                    zIndex: 10,
-                    pointerEvents: 'auto' // Re-enable pointer events only for the button
-                  }}
-                >
-                  <ArrowForwardIcon />
-                </IconButton>
-              )}
-            </Box>
-            
             <Box my={3}>            
               <Grid container spacing={4} sx={{ mt: 2 }}>
                 {options.map((option, index) => (
@@ -475,7 +471,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                           // Highlight the current slide
                           border: currentSlide === index ? '2px solid #00BC9A' : '2px solid transparent',
                           boxShadow: currentSlide === index ? '0 0 20px rgba(0, 188, 162, 0.4)' : undefined,
-                          scrollMarginTop: '80px' // Add scroll margin to prevent content being hidden behind the sticky header
+                          scrollMarginTop: '100px' // Add scroll margin to prevent content being hidden behind the sticky header
                         }}
                         id={`tutorial-option-${index}`}
                       >

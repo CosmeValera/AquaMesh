@@ -209,6 +209,7 @@ const WidgetEditor: React.FC = () => {
         canUndo={canUndo}
         canRedo={canRedo}
         hasChanges={hasChanges}
+        isEmpty={widgetData.components.length === 0}
       />
 
       {/* Main content area */}

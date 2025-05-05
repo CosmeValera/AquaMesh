@@ -30,6 +30,7 @@ interface EditorToolbarProps {
   canUndo?: boolean
   canRedo?: boolean
   hasChanges?: boolean
+  isEmpty?: boolean
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({
@@ -45,7 +46,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   handleRedo,
   canUndo = false,
   canRedo = false,
-  hasChanges = true
+  hasChanges = true,
+  isEmpty = false
 }) => {
   return (
     <AppBar 
@@ -164,7 +166,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             startIcon={<SaveIcon />}
             onClick={handleSaveWidget}
             size="small"
-            disabled={!hasChanges}
+            disabled={!hasChanges || isEmpty}
             sx={{ 
               borderRadius: 1,
               width: '155px',
@@ -175,7 +177,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               }
             }}
           >
-            {isUpdating && !hasChanges ? 'No changes' : isUpdating ? 'Update Widget' : 'Save Widget'}
+            {isEmpty ? 'Empty Widget' : isUpdating && !hasChanges ? 'No changes' : isUpdating ? 'Update Widget' : 'Save Widget'}
           </Button>
         </Box>
       </Toolbar>

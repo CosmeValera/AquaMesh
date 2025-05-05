@@ -115,6 +115,9 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
           margin="normal"
           variant="outlined"
           size="small"
+          onFocus={(e) => {
+            e.target.select()
+          }}
           sx={{ 
             mb: 2,
             '& .MuiOutlinedInput-root': {

@@ -84,6 +84,22 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
     ArrowDown: { held: false, repeats: 0 }
   })
   
+  // Reset current slide when modal opens
+  useEffect(() => {
+    if (open) {
+      setCurrentSlide(0)
+      
+      // Set a small delay to ensure DOM is ready
+      setTimeout(() => {
+        const scrollContainer = document.querySelector('.MuiDialogContent-root')
+        if (scrollContainer) {
+          // Reset scroll position when opening the modal
+          scrollContainer.scrollTop = 0
+        }
+      }, 50)
+    }
+  }, [open])
+  
   useEffect(() => {
     // Check user role from localStorage
     try {
@@ -334,46 +350,78 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
     // Listen for visibility change events to check if elements are in viewport
     const handleScroll = () => {
       // Check which option is most visible in the viewport and update currentSlide
-      const options = document.querySelectorAll('.tutorial-option')
-      if (options.length === 0) {
+      const optionElements = document.querySelectorAll('[id^="tutorial-option-"]')
+      if (optionElements.length === 0) {
         return
       }
       
       let mostVisibleOption = 0
       let maxVisibleArea = 0
       
-      options.forEach((option, index) => {
+      optionElements.forEach((option) => {
+        const index = parseInt(option.id.split('-').pop() || '0', 10)
         const rect = option.getBoundingClientRect()
+        
+        // Get the scroll container's position
+        const scrollContainer = document.querySelector('.MuiDialogContent-root')
+        if (!scrollContainer) {
+          return
+        }
+        
+        const containerRect = scrollContainer.getBoundingClientRect()
+        
         // Calculate how much of the element is visible in the viewport
-        const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)
-        if (visibleHeight > maxVisibleArea) {
-          maxVisibleArea = visibleHeight
+        const visibleTop = Math.max(rect.top, containerRect.top)
+        const visibleBottom = Math.min(rect.bottom, containerRect.bottom)
+        const visibleHeight = Math.max(0, visibleBottom - visibleTop)
+        
+        // Calculate visible percentage (how much of the element is visible)
+        const visiblePercent = visibleHeight / rect.height
+        
+        // Give priority to elements that are more visible and closer to the top
+        // This weighted calculation considers both visibility and position
+        const visibleScore = visiblePercent * (1 - (visibleTop - containerRect.top) / containerRect.height)
+        
+        if (visibleScore > maxVisibleArea) {
+          maxVisibleArea = visibleScore
           mostVisibleOption = index
         }
       })
       
-      // Only update if the most visible option is different from current
-      if (mostVisibleOption !== currentSlide) {
-        setCurrentSlide(mostVisibleOption)
-      }
+      // Update the current slide regardless of previous state
+      setCurrentSlide(mostVisibleOption)
     }
     
     // Add scroll event listener when modal is open
     if (open) {
       const scrollContainer = document.querySelector('.MuiDialogContent-root')
       if (scrollContainer) {
-        scrollContainer.addEventListener('scroll', handleScroll)
+        // Add a passive listener for better performance on smooth scrolling
+        scrollContainer.addEventListener('scroll', handleScroll, { passive: true })
+        
+        // Initial check to set the correct option based on scroll position
+        setTimeout(handleScroll, 100)
+      }
+      
+      // Set up a periodic check to ensure dots are updated even if scroll events are missed
+      const intervalCheck = setInterval(handleScroll, 200)
+      
+      return () => {
+        const scrollContainer = document.querySelector('.MuiDialogContent-root')
+        if (scrollContainer) {
+          scrollContainer.removeEventListener('scroll', handleScroll)
+        }
+        clearInterval(intervalCheck)
       }
     }
     
-    // Cleanup event listener
     return () => {
       const scrollContainer = document.querySelector('.MuiDialogContent-root')
       if (scrollContainer) {
         scrollContainer.removeEventListener('scroll', handleScroll)
       }
     }
-  }, [open, currentSlide])
+  }, [open])
 
   return (
     <>
@@ -446,8 +494,9 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
               backgroundImage: 'radial-gradient(circle at 90% 10%, rgba(0, 188, 162, 0.1) 0%, transparent 60%)',
               position: 'relative',
               overflowY: 'auto', // Ensure scrolling works
-              maxHeight: 'calc(100vh - 160px)', // Set max height to allow scrolling
+              maxHeight: 'calc(100vh - 220px)', // Set max height to allow scrolling
               paddingTop: 0,
+              paddingBottom: 0,
               "&::-webkit-scrollbar": {
                 width: "8px",
                 bgcolor: "rgba(0, 0, 0, 0.1)",
@@ -501,7 +550,6 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                           // Highlight the current slide
                           border: currentSlide === index ? '2px solid #00BC9A' : '2px solid transparent',
                           boxShadow: currentSlide === index ? '0 0 20px rgba(0, 188, 162, 0.4)' : undefined,
-                          scrollMarginTop: '100px' // Add scroll margin to prevent content being hidden behind the sticky header
                         }}
                         id={`tutorial-option-${index}`}
                       >

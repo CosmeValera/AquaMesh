@@ -17,20 +17,18 @@ import { useNavigate } from 'react-router-dom'
 
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import LogoutIcon from '@mui/icons-material/Logout'
-import DashboardIcon from '@mui/icons-material/Dashboard'
 import WidgetsIcon from '@mui/icons-material/Widgets'
 import CreateIcon from '@mui/icons-material/Create'
-import DeleteIcon from '@mui/icons-material/Delete'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import DeleteIcon from '@mui/icons-material/Delete'
 
 import useTopNavBarWidgets from '../../customHooks/useTopNavBarWidgets'
 import { useLayout } from '../Layout/LayoutProvider'
 import { ReactComponent as Logo } from '../../../public/logo.svg'
 import { useViews } from '../Views/ViewsProvider'
-import { DefaultDashboard } from '../Views/fixture'
-import { Layout } from '../../types/types'
 import TutorialModal from '../tutorial/TutorialModal'
 import WidgetStorage from '../WidgetEditor/WidgetStorage'
+import DashboardOptionsMenu from '../Views/DashboardOptionsMenu'
 
 // Define user data type
 interface UserData {
@@ -44,21 +42,11 @@ interface TopNavBarProps {
   setOpen: (open: boolean) => void;
 }
 
-// Define saved dashboard type
-interface SavedDashboard {
-  id: string;
-  name: string;
-  layout: Layout;
-  timestamp: number;
-}
-
 const TopNavBar: React.FC<TopNavBarProps> = () => {
   // State for different dropdown menus
-  const [viewsAnchorEl, setViewsAnchorEl] = useState<null | HTMLElement>(null)
   const [panelsAnchorEl, setPanelsAnchorEl] = useState<null | HTMLElement>(null)
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null)
   const [userData, setUserData] = useState<UserData>({ id: 'admin', name: 'Admin User', role: 'ADMIN_ROLE' })
-  const [customDashboards, setCustomDashboards] = useState<SavedDashboard[]>([])
   
   // Tutorial modal state
   const [tutorialOpen, setTutorialOpen] = useState(false)
@@ -75,7 +63,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   const theme = useTheme()
   const isTablet = useMediaQuery(theme.breakpoints.down('md'))
   
-  // Load user data and saved dashboards from localStorage on component mount
+  // Load user data from localStorage on component mount
   useEffect(() => {
     const storedUserData = localStorage.getItem('userData')
     if (storedUserData) {
@@ -86,9 +74,6 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
         console.error('Failed to parse user data from localStorage', error)
       }
     }
-
-    // Load saved dashboards
-    loadSavedDashboards()
     
     // Check if tutorial should be shown
     if (showTutorialOnStartup) {
@@ -96,46 +81,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
     }
   }, [showTutorialOnStartup])
 
-  const loadSavedDashboards = () => {
-    try {
-      const dashboards = localStorage.getItem('customDashboards')
-      if (dashboards) {
-        setCustomDashboards(JSON.parse(dashboards))
-      }
-    } catch (error) {
-      console.error('Failed to load saved dashboards', error)
-    }
-  }
-
-  // Delete a saved dashboard
-  const handleDeleteDashboard = (id: string, event: React.MouseEvent) => {
-    event.stopPropagation()
-    try {
-      const dashboards = customDashboards.filter(dashboard => dashboard.id !== id)
-      localStorage.setItem('customDashboards', JSON.stringify(dashboards))
-      setCustomDashboards(dashboards)
-    } catch (error) {
-      console.error('Failed to delete dashboard', error)
-    }
-  }
-  
-  // Delete a custom widget
-  const handleDeleteWidget = (widgetId: string, event: React.MouseEvent) => {
-    event.stopPropagation()
-    try {
-      WidgetStorage.deleteWidget(widgetId)
-      // The deletion will trigger a refresh via the WIDGET_STORAGE_UPDATED event
-    } catch (error) {
-      console.error('Failed to delete widget', error)
-    }
-  }
-  
   // Handle opening and closing dropdowns
-  const handleViewsMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
-    loadSavedDashboards() // Refresh the list when opening menu
-    setViewsAnchorEl(event.currentTarget)
-  }
-  
   const handlePanelsMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setPanelsAnchorEl(event.currentTarget)
   }
@@ -145,7 +91,6 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   }
   
   const handleClose = () => {
-    setViewsAnchorEl(null)
     setPanelsAnchorEl(null)
     setUserAnchorEl(null)
   }
@@ -154,21 +99,16 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
     handleClose()
     navigate('/login')
   }
-  
-  // Create a view with predefined layout
-  const createViewWithLayout = (viewName: string, layout: Layout) => {
-    const newView: DefaultDashboard = {
-      name: viewName,
-      layout
-    }
-    
-    addView(newView)
-    handleClose()
-  }
 
-  // Load a saved dashboard
-  const loadCustomDashboard = (dashboard: SavedDashboard) => {
-    createViewWithLayout(dashboard.name, dashboard.layout)
+  // Delete a custom widget
+  const handleDeleteWidget = (widgetId: string, event: React.MouseEvent) => {
+    event.stopPropagation()
+    try {
+      WidgetStorage.deleteWidget(widgetId)
+      // The deletion will trigger a refresh via the WIDGET_STORAGE_UPDATED event
+    } catch (error) {
+      console.error('Failed to delete widget', error)
+    }
   }
   
   // Open tutorial modal
@@ -233,106 +173,8 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
 
           {/* Main Navigation Items */}
           <Box sx={{ flexGrow: 1, display: 'flex' }}>
-            {/* Dashboard/Views Menu */}
-            <Button
-              onClick={handleViewsMenuOpen}
-              sx={{ 
-                color: 'foreground.contrastPrimary', 
-                display: 'flex', 
-                alignItems: 'center',
-                minWidth: isTablet ? '40px' : 'auto',
-                mx: isTablet ? 0.5 : 1,
-                px: isTablet ? 1 : 2,
-              }}
-              startIcon={<DashboardIcon />}
-              endIcon={<KeyboardArrowDownIcon />}
-              data-tutorial-id="dashboards-button"
-            >
-              {!isTablet ? 'Dashboards' : 'D.'}
-            </Button>
-            <Menu
-              anchorEl={viewsAnchorEl}
-              open={Boolean(viewsAnchorEl)}
-              onClose={handleClose}
-              PaperProps={{
-                sx: {
-                  bgcolor: 'background.menu',
-                  color: 'foreground.contrastPrimary',
-                  width: '250px',
-                  boxShadow: 3
-                }
-              }}
-            >
-              {/* Predefined Dashboards Section */}
-              <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
-                Predefined Dashboards
-              </Typography>
-              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-              <MenuItem 
-                onClick={() => createViewWithLayout('Control Flow Dashboard', { 
-                  type: 'row', 
-                  weight: 100, 
-                  children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] }]
-                })}
-                sx={{ p: 1.5 }}
-              >
-                Control Flow Dashboard
-              </MenuItem>
-              <MenuItem 
-                onClick={() => createViewWithLayout('System Lens Dashboard', { 
-                  type: 'row', 
-                  weight: 100, 
-                  children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }]
-                })}
-                sx={{ p: 1.5 }}
-              >
-                System Lens Dashboard
-              </MenuItem>
-              <MenuItem 
-                onClick={() => createViewWithLayout('Control Flow + System Lens', { 
-                  type: 'row', 
-                  weight: 100, 
-                  children: [
-                    { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] },
-                    { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }
-                  ]
-                })}
-                sx={{ p: 1.5 }}
-              >
-                Control Flow + System Lens
-              </MenuItem>
-
-              {/* Custom Dashboards Section */}
-              {customDashboards.length > 0 && (
-                <>
-                  <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
-                    Custom Dashboards
-                  </Typography>
-                  <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-                  {customDashboards.map((dashboard) => (
-                    <MenuItem 
-                      key={dashboard.id}
-                      onClick={() => loadCustomDashboard(dashboard)}
-                      sx={{ 
-                        p: 1.5,
-                        display: 'flex', 
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}
-                    >
-                      {dashboard.name}
-                      <ListItemIcon sx={{ ml: 2, minWidth: 'auto' }}>
-                        <DeleteIcon 
-                          fontSize="small" 
-                          onClick={(e) => handleDeleteDashboard(dashboard.id, e)}
-                          sx={{ color: 'error.main' }}
-                        />
-                      </ListItemIcon>
-                    </MenuItem>
-                  ))}
-                </>
-              )}
-            </Menu>
+            {/* Dashboard Options Menu (replaced with our new component) */}
+            <DashboardOptionsMenu isMobile={isTablet} />
 
             {/* Panels/Widgets Menu */}
             <Button

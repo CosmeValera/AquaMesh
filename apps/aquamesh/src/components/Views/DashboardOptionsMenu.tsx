@@ -1,0 +1,204 @@
+import React, { useState, useEffect } from 'react'
+import {
+  Button,
+  Menu,
+  MenuItem,
+  Divider,
+  ListItemIcon,
+  Typography,
+} from '@mui/material'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import DashboardIcon from '@mui/icons-material/Dashboard'
+import FolderIcon from '@mui/icons-material/Folder'
+import { useViews } from './ViewsProvider'
+import SavedDashboardsDialog from './SavedDashboardsDialog'
+import { Layout } from '../../types/types'
+
+interface DashboardOptionsMenuProps {
+  isMobile?: boolean;
+}
+
+// Define saved dashboard type
+interface SavedDashboard {
+  id: string;
+  name: string;
+  layout: Layout;
+  description?: string;
+  tags?: string[];
+  isPublic?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = false }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [customDashboards, setCustomDashboards] = useState<SavedDashboard[]>([])
+  const [dashboardLibraryOpen, setDashboardLibraryOpen] = useState(false)
+  
+  const { addView } = useViews()
+  
+  // Load saved dashboards from localStorage on component mount
+  useEffect(() => {
+    loadSavedDashboards()
+  }, [])
+  
+  const loadSavedDashboards = () => {
+    try {
+      const dashboards = localStorage.getItem('customDashboards')
+      if (dashboards) {
+        setCustomDashboards(JSON.parse(dashboards))
+      }
+    } catch (error) {
+      console.error('Failed to load saved dashboards', error)
+    }
+  }
+  
+  // Handle opening and closing dropdown
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    loadSavedDashboards() // Refresh the list when opening menu
+    setAnchorEl(event.currentTarget)
+  }
+  
+  const handleClose = () => {
+    setAnchorEl(null)
+  }
+  
+  // Create a view with predefined layout
+  const createViewWithLayout = (viewName: string, layout: Layout) => {
+    addView({
+      name: viewName,
+      layout
+    })
+    handleClose()
+  }
+  
+  // Load a saved dashboard
+  const loadCustomDashboard = (dashboard: SavedDashboard) => {
+    createViewWithLayout(dashboard.name, dashboard.layout)
+  }
+  
+  // Open dashboard library dialog
+  const handleOpenDashboardLibrary = () => {
+    handleClose()
+    setDashboardLibraryOpen(true)
+  }
+  
+  // Handle dashboard library dialog close
+  const handleDashboardLibraryClose = () => {
+    setDashboardLibraryOpen(false)
+    loadSavedDashboards() // Refresh dashboards list
+  }
+  
+  return (
+    <>
+      <Button
+        onClick={handleMenuOpen}
+        sx={{ 
+          color: 'foreground.contrastPrimary', 
+          display: 'flex', 
+          alignItems: 'center',
+          minWidth: isMobile ? '40px' : 'auto',
+          mx: isMobile ? 0.5 : 1,
+          px: isMobile ? 1 : 2,
+        }}
+        startIcon={<DashboardIcon />}
+        endIcon={<KeyboardArrowDownIcon />}
+        data-tutorial-id="dashboards-button"
+      >
+        {!isMobile ? 'Dashboards' : 'D.'}
+      </Button>
+      
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        PaperProps={{
+          sx: {
+            bgcolor: 'background.menu',
+            color: 'foreground.contrastPrimary',
+            width: '250px',
+            boxShadow: 3
+          }
+        }}
+      >
+        {/* Predefined Dashboards Section */}
+        <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
+          Predefined Dashboards
+        </Typography>
+        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+        <MenuItem 
+          onClick={() => createViewWithLayout('Control Flow Dashboard', { 
+            type: 'row', 
+            weight: 100, 
+            children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] }]
+          })}
+          sx={{ p: 1.5 }}
+        >
+          Control Flow Dashboard
+        </MenuItem>
+        <MenuItem 
+          onClick={() => createViewWithLayout('System Lens Dashboard', { 
+            type: 'row', 
+            weight: 100, 
+            children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }]
+          })}
+          sx={{ p: 1.5 }}
+        >
+          System Lens Dashboard
+        </MenuItem>
+        <MenuItem 
+          onClick={() => createViewWithLayout('Control Flow + System Lens', { 
+            type: 'row', 
+            weight: 100, 
+            children: [
+              { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] },
+              { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }
+            ]
+          })}
+          sx={{ p: 1.5 }}
+        >
+          Control Flow + System Lens
+        </MenuItem>
+        
+        {/* Custom Dashboards Section */}
+        {customDashboards.length > 0 && (
+          <>
+            <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
+              Recent Custom Dashboards
+            </Typography>
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+            {customDashboards.slice(0, 3).map((dashboard) => (
+              <MenuItem 
+                key={dashboard.id}
+                onClick={() => loadCustomDashboard(dashboard)}
+                sx={{ p: 1.5 }}
+              >
+                {dashboard.name}
+              </MenuItem>
+            ))}
+          </>
+        )}
+        
+        {/* Dashboard Management Section */}
+        <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+        <MenuItem 
+          onClick={handleOpenDashboardLibrary}
+          sx={{ p: 1.5 }}
+        >
+          <ListItemIcon>
+            <FolderIcon fontSize="small" />
+          </ListItemIcon>
+          Manage Dashboards
+        </MenuItem>
+      </Menu>
+      
+      {/* Dashboard Library Dialog */}
+      <SavedDashboardsDialog
+        open={dashboardLibraryOpen}
+        onClose={handleDashboardLibraryClose}
+      />
+    </>
+  )
+}
+
+export default DashboardOptionsMenu 

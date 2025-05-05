@@ -127,6 +127,34 @@ const WidgetEditor: React.FC = () => {
 
   // Check if we're updating an existing widget
   const isUpdating = savedWidgets.some(widget => widget.name === widgetData.name)
+  
+  // Check if there are changes to save/update
+  const hasChanges = React.useMemo(() => {
+    if (!isUpdating) {
+      return true // Always enable save for new widgets
+    }
+    
+    // Find the saved widget with the same name
+    const savedWidget = savedWidgets.find(widget => widget.name === widgetData.name)
+    if (!savedWidget) {
+      return true
+    }
+    
+    // Compare the current widget data with the saved one
+    const savedWidgetJson = JSON.stringify(savedWidget.components)
+    const currentWidgetJson = JSON.stringify(widgetData.components)
+    const result = savedWidgetJson !== currentWidgetJson
+    
+    // Debug log
+    console.log('Widget change detection:', { 
+      hasChanges: result, 
+      widgetName: widgetData.name,
+      savedComponentsLength: savedWidget.components.length,
+      currentComponentsLength: widgetData.components.length
+    })
+    
+    return result
+  }, [widgetData, savedWidgets, isUpdating])
 
   // Set up delete confirmation content based on what's being deleted
   const getDeleteConfirmationProps = () => {
@@ -147,10 +175,10 @@ const WidgetEditor: React.FC = () => {
       }
     }
     return {
-      // title: "Delete Item?",
-      // content: "Are you sure you want to delete this item?",
-      // onConfirm: cancelDeleteComponent,
-      // onCancel: cancelDeleteComponent
+      title: "Delete Item?",
+      content: "Are you sure you want to delete this item?",
+      onConfirm: () => cancelDeleteComponent(),
+      onCancel: () => cancelDeleteComponent()
     }
   }
 
@@ -180,6 +208,7 @@ const WidgetEditor: React.FC = () => {
         handleRedo={handleRedo}
         canUndo={canUndo}
         canRedo={canRedo}
+        hasChanges={hasChanges}
       />
 
       {/* Main content area */}
@@ -267,13 +296,15 @@ const WidgetEditor: React.FC = () => {
       />
 
       {/* Delete Confirmation Dialog */}
-      <DeleteConfirmationDialog
-        open={deleteConfirmOpen}
-        title={deleteConfirmProps.title}
-        content={deleteConfirmProps.content}
-        onConfirm={deleteConfirmProps.onConfirm}
-        onCancel={deleteConfirmProps.onCancel}
-      />
+      {deleteConfirmOpen && deleteConfirmProps && (
+        <DeleteConfirmationDialog
+          open={deleteConfirmOpen}
+          title={deleteConfirmProps.title}
+          content={deleteConfirmProps.content}
+          onConfirm={deleteConfirmProps.onConfirm}
+          onCancel={deleteConfirmProps.onCancel}
+        />
+      )}
     </Box>
   )
 }

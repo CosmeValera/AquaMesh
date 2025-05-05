@@ -117,9 +117,32 @@ const Views = () => {
   }, [openViews])
 
   const handleSaveDialogOpen = (index: number) => {
-    setCurrentTabIndex(index)
-    setDashboardName(openViews[index]?.name || '')
-    setSaveDialogOpen(true)
+    const currentView = openViews[index]
+    
+    // Check if it's an update of an existing dashboard
+    const existingDashboard = DashboardStorage.getByName(currentView.name)
+    
+    if (existingDashboard) {
+      // Direct update without showing the dialog
+      try {
+        if (currentView.layout) {
+          DashboardStorage.save(currentView.name, currentView.layout)
+          
+          // Mark this view as no longer having changes
+          setHasChanges(prev => ({
+            ...prev,
+            [index]: false
+          }))
+        }
+      } catch (error) {
+        console.error('Error updating dashboard:', error)
+      }
+    } else {
+      // Show save dialog for new dashboards
+      setCurrentTabIndex(index)
+      setDashboardName(currentView.name || '')
+      setSaveDialogOpen(true)
+    }
   }
 
   const handleSaveDialogClose = () => {
@@ -283,9 +306,19 @@ const Views = () => {
       </Tabs>
 
       {/* Save Dashboard Dialog */}
-      <Dialog open={saveDialogOpen} onClose={handleSaveDialogClose}>
-        <DialogTitle>Save Dashboard</DialogTitle>
-        <DialogContent>
+      <Dialog 
+        open={saveDialogOpen} 
+        onClose={handleSaveDialogClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider', pb: 2 }}>
+          <Typography variant="h6">Save Dashboard</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Enter a name for your dashboard configuration
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3, pb: 2 }}>
           <TextField
             autoFocus
             margin="dense"
@@ -296,15 +329,34 @@ const Views = () => {
             variant="outlined"
             value={dashboardName}
             onChange={(e) => setDashboardName(e.target.value)}
+            error={dashboardName.trim() === ''}
+            helperText={dashboardName.trim() === '' ? 'Dashboard name is required' : ''}
+            InputProps={{
+              endAdornment: dashboardName.trim() !== '' && (
+                <IconButton 
+                  size="small" 
+                  onClick={() => setDashboardName('')}
+                  edge="end"
+                >
+                  <CloseIcon width={16} height={16} />
+                </IconButton>
+              )
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleSaveDialogClose}>Cancel</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button 
+            onClick={handleSaveDialogClose}
+            variant="outlined"
+          >
+            Cancel
+          </Button>
           <Button 
             onClick={handleSaveDashboard} 
             variant="contained" 
             color="primary"
             disabled={dashboardName.trim() === ''}
+            startIcon={<SaveIcon />}
           >
             Save
           </Button>

@@ -29,6 +29,7 @@ interface EditorToolbarProps {
   handleRedo?: () => void
   canUndo?: boolean
   canRedo?: boolean
+  hasChanges?: boolean
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({
@@ -43,7 +44,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   handleUndo,
   handleRedo,
   canUndo = false,
-  canRedo = false
+  canRedo = false,
+  hasChanges = true
 }) => {
   return (
     <AppBar 
@@ -80,8 +82,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </Typography>
         
         <Box>
-          {/* Undo/Redo buttons - only show in edit mode */}
-          {editMode && handleUndo && handleRedo && (
+          {/* Undo/Redo buttons*/}
+          {handleUndo && handleRedo && (
             <>
               <Tooltip title="Undo (Ctrl+Z)">
                 <span>
@@ -162,12 +164,18 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             startIcon={<SaveIcon />}
             onClick={handleSaveWidget}
             size="small"
+            disabled={!hasChanges}
             sx={{ 
               borderRadius: 1,
-              textTransform: 'none'
+              width: '155px',
+              textTransform: 'none',
+              '&.Mui-disabled': {
+                backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                color: 'rgba(0, 0, 0, 0.26)'
+              }
             }}
           >
-            {isUpdating ? 'Update Widget' : 'Save Widget'}
+            {isUpdating && !hasChanges ? 'No changes' : isUpdating ? 'Update Widget' : 'Save Widget'}
           </Button>
         </Box>
       </Toolbar>

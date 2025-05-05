@@ -223,7 +223,8 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               alignItems: 'center', 
               fontWeight: isTablet ? 'normal' : 'bold',
               color: 'foreground.contrastPrimary',
-              mr: 4
+              mr: 4,
+              cursor: 'default'
             }}
           >
             <Logo height="32px" width="32px" style={{ marginRight: isTablet ? '-28px' : '12px' }} />

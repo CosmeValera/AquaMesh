@@ -19,8 +19,6 @@ import CloseIcon from '@mui/icons-material/Close'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import CreateIcon from '@mui/icons-material/Create'
 import InfoIcon from '@mui/icons-material/Info'
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft'
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
 import DashboardWidgetExplanationModal from './DashboardWidgetExplanationModal'
 import WidgetEditorExplanationModal from './WidgetEditorExplanationModal'
 
@@ -77,6 +75,14 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
   
   // Check if user is admin
   const [isAdmin, setIsAdmin] = useState(false)
+  
+  // Track key pressed state for faster repeated scrolling
+  // The state itself doesn't need to be referenced directly as it's used in the setKeyHoldState updater function
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [keyHoldState, setKeyHoldState] = useState({
+    ArrowUp: { held: false, repeats: 0 },
+    ArrowDown: { held: false, repeats: 0 }
+  })
   
   useEffect(() => {
     // Check user role from localStorage
@@ -194,6 +200,41 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault()
       goToPrevSlide()
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      
+      setKeyHoldState(prev => {
+        const isArrowDown = e.key === 'ArrowDown'
+        const key = e.key as 'ArrowUp' | 'ArrowDown'
+        
+        const scrollAmount = 50
+        
+        // Perform the scroll
+        const scrollContainer = document.querySelector('.MuiDialogContent-root')
+        if (scrollContainer) {
+          scrollContainer.scrollBy({
+            top: isArrowDown ? scrollAmount : -scrollAmount,
+            behavior: 'auto'
+          })
+        }
+        
+        // Return updated state
+        return {
+          ...prev,
+          [key]: { held: true }
+        }
+      })
+    }
+  }
+  
+  // Handle key up to reset hold state
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      // Reset key hold state when key is released
+      setKeyHoldState(prev => ({
+        ...prev,
+        [e.key]: { held: false, repeats: 0 }
+      }))
     }
   }
   
@@ -377,19 +418,6 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
               Welcome to AquaMesh
             </Typography>
             <Box display="flex" alignItems="center">
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  mr: 2, 
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
-                <KeyboardArrowLeftIcon fontSize="small" />
-                <KeyboardArrowRightIcon fontSize="small" />
-                Use arrow keys to navigate
-              </Typography>
               <IconButton
                 aria-label="close"
                 onClick={onClose}
@@ -410,6 +438,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
           ref={dialogRef} 
           tabIndex={-1} 
           onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
           style={{ outline: 'none' }}
         >
           <DialogContent 
@@ -418,6 +447,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
               position: 'relative',
               overflowY: 'auto', // Ensure scrolling works
               maxHeight: 'calc(100vh - 160px)', // Set max height to allow scrolling
+              paddingTop: 0,
               "&::-webkit-scrollbar": {
                 width: "8px",
                 bgcolor: "rgba(0, 0, 0, 0.1)",

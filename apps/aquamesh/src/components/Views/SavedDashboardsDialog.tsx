@@ -22,8 +22,7 @@ import {
   Grid,
   Fade,
   Switch,
-  FormControlLabel,
-  DialogContentText
+  FormControlLabel
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import DashboardIcon from '@mui/icons-material/Dashboard'
@@ -31,9 +30,11 @@ import SearchIcon from '@mui/icons-material/Search'
 import SortIcon from '@mui/icons-material/Sort'
 import CloseIcon from '@mui/icons-material/Close'
 import ShareIcon from '@mui/icons-material/Share'
+import EditIcon from '@mui/icons-material/Edit'
 import { Layout } from '../../types/types'
 import { useViews } from './ViewsProvider'
 import { DefaultDashboard } from './fixture'
+import DeleteConfirmationDialog from '../WidgetEditor/components/dialogs/DeleteConfirmationDialog'
 
 interface SavedDashboard {
   id: string;
@@ -50,6 +51,14 @@ interface SavedDashboard {
 interface SavedDashboardsDialogProps {
   open: boolean;
   onClose: () => void;
+}
+
+// Add a new interface for the edit dashboard dialog
+interface EditDashboardDialogProps {
+  open: boolean;
+  onClose: () => void;
+  dashboard: SavedDashboard | null;
+  onSave: (dashboard: SavedDashboard) => void;
 }
 
 // Sort types
@@ -80,6 +89,10 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
   
   // Access views context
   const { addView } = useViews()
+  
+  // Add state for edit dialog
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [dashboardToEdit, setDashboardToEdit] = useState<SavedDashboard | null>(null)
   
   // Get the delete confirmation preference from localStorage
   const shouldConfirmDelete = () => {
@@ -318,6 +331,28 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
       }
     })
   }, [filteredDashboards, sortBy])
+  
+  // Function to handle editing a dashboard
+  const handleEditDashboard = (dashboard: SavedDashboard, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setDashboardToEdit(dashboard)
+    setEditDialogOpen(true)
+  }
+
+  // Function to save edited dashboard
+  const handleSaveEditedDashboard = (editedDashboard: SavedDashboard) => {
+    try {
+      const updatedDashboards = dashboards.map(dashboard => 
+        dashboard.id === editedDashboard.id ? editedDashboard : dashboard
+      )
+      setDashboards(updatedDashboards)
+      localStorage.setItem('customDashboards', JSON.stringify(updatedDashboards))
+      setEditDialogOpen(false)
+      setDashboardToEdit(null)
+    } catch (error) {
+      console.error('Failed to update dashboard', error)
+    }
+  }
   
   return (
     <>
@@ -620,6 +655,22 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                         <Box onClick={(e) => e.stopPropagation()}>
                           {isAdmin && (
                             <>
+                              <Tooltip title="Edit Dashboard">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => handleEditDashboard(dashboard, e)}
+                                  sx={{
+                                    mr: 1,
+                                    bgcolor: 'rgba(0, 150, 136, 0.1)',
+                                    color: 'white',
+                                    '&:hover': {
+                                      bgcolor: 'rgba(0, 150, 136, 0.2)'
+                                    }
+                                  }}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
                               <Tooltip title={dashboard.isPublic ? "Make Private" : "Make Public"}>
                                 <IconButton
                                   size="small"
@@ -689,31 +740,300 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
         </DialogActions>
       </Dialog>
       
-      {/* Delete Confirmation Dialog */}
-      <Dialog
+      {/* Delete Confirmation Dialog - Replace with the imported DeleteConfirmationDialog */}
+      <DeleteConfirmationDialog
         open={deleteConfirmOpen}
-        onClose={cancelDeleteDashboard}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">
-          {"Delete Dashboard?"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete this dashboard? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={cancelDeleteDashboard} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={confirmDeleteDashboard} color="error" autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        title="Delete Dashboard"
+        content="Are you sure you want to delete this dashboard? This action cannot be undone."
+        onConfirm={confirmDeleteDashboard}
+        onCancel={cancelDeleteDashboard}
+      />
+      
+      {/* Edit Dashboard Dialog */}
+      <EditDashboardDialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        dashboard={dashboardToEdit}
+        onSave={handleSaveEditedDashboard}
+      />
     </>
+  )
+}
+
+// Create the EditDashboardDialog component
+const EditDashboardDialog: React.FC<EditDashboardDialogProps> = ({
+  open,
+  onClose,
+  dashboard,
+  onSave,
+}) => {
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [tags, setTags] = useState<string[]>([])
+  const [isPublic, setIsPublic] = useState(false)
+  const [tagInput, setTagInput] = useState('')
+  
+  // Initialize form values when dashboard changes
+  useEffect(() => {
+    if (dashboard) {
+      setName(dashboard.name)
+      setDescription(dashboard.description || '')
+      setTags(dashboard.tags || [])
+      setIsPublic(dashboard.isPublic || false)
+    }
+  }, [dashboard])
+  
+  // Handle form submission
+  const handleSubmit = () => {
+    if (dashboard && name.trim()) {
+      const updatedDashboard: SavedDashboard = {
+        ...dashboard,
+        name: name.trim(),
+        description: description.trim() || 'No description',
+        tags: tags.length > 0 ? tags : ['dashboard'],
+        isPublic,
+        updatedAt: new Date().toISOString()
+      }
+      onSave(updatedDashboard)
+    }
+  }
+  
+  // Handle adding a tag
+  const handleAddTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()])
+      setTagInput('')
+    }
+  }
+  
+  // Handle removing a tag
+  const handleRemoveTag = (tagToDelete: string) => {
+    setTags(tags.filter(tag => tag !== tagToDelete))
+  }
+  
+  // Handle tag input key down
+  const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleAddTag()
+    }
+  }
+  
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          overflow: 'hidden',
+          bgcolor: '#00A389'
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        bgcolor: '#00BC9A', 
+        color: '#191919',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        py: 2
+      }}>
+        <Box display="flex" alignItems="center">
+          <EditIcon sx={{ mr: 1.5, color: '#191919' }} />
+          <Typography variant="h6" component="div" fontWeight="bold">
+            Edit Dashboard
+          </Typography>
+        </Box>
+        <IconButton
+          onClick={onClose}
+          aria-label="close"
+          sx={{ color: '#191919' }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      
+      <DialogContent sx={{ p: 3, bgcolor: '#00A389' }}>
+        <Box component="form" sx={{ mt: 1 }}>
+          <TextField
+            fullWidth
+            label="Dashboard Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            margin="normal"
+            required
+            InputLabelProps={{ shrink: true, sx: { color: 'rgba(255, 255, 255, 0.7)' } }}
+            InputProps={{
+              sx: {
+                bgcolor: 'rgba(0, 0, 0, 0.1)',
+                color: 'white',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.3)'
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)'
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'white'
+                }
+              }
+            }}
+          />
+          
+          <TextField
+            fullWidth
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            margin="normal"
+            multiline
+            rows={3}
+            InputLabelProps={{ shrink: true, sx: { color: 'rgba(255, 255, 255, 0.7)' } }}
+            InputProps={{
+              sx: {
+                bgcolor: 'rgba(0, 0, 0, 0.1)',
+                color: 'white',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.3)'
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)'
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'white'
+                }
+              }
+            }}
+          />
+          
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle2" color="white" gutterBottom>
+              Tags
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <TextField
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                placeholder="Add a tag"
+                size="small"
+                onKeyDown={handleTagInputKeyDown}
+                InputProps={{
+                  sx: {
+                    bgcolor: 'rgba(0, 0, 0, 0.1)',
+                    color: 'white',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255, 255, 255, 0.3)'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255, 255, 255, 0.5)'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'white'
+                    }
+                  }
+                }}
+                sx={{ flexGrow: 1, mr: 1 }}
+              />
+              <Button 
+                onClick={handleAddTag}
+                variant="contained"
+                disabled={!tagInput.trim()}
+                sx={{ 
+                  bgcolor: '#00D1AB',
+                  color: '#191919',
+                  '&:hover': {
+                    bgcolor: '#00E4BC',
+                  }
+                }}
+              >
+                Add
+              </Button>
+            </Box>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+              {tags.map((tag, index) => (
+                <Chip
+                  key={index}
+                  label={tag}
+                  onDelete={() => handleRemoveTag(tag)}
+                  sx={{
+                    bgcolor: 'rgba(255, 255, 255, 0.15)',
+                    color: 'white',
+                    '& .MuiChip-deleteIcon': {
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      '&:hover': {
+                        color: 'white'
+                      }
+                    }
+                  }}
+                />
+              ))}
+              {tags.length === 0 && (
+                <Typography variant="body2" color="rgba(255, 255, 255, 0.5)">
+                  No tags added yet
+                </Typography>
+              )}
+            </Box>
+          </Box>
+          
+          <FormControlLabel
+            control={
+              <Switch 
+                checked={isPublic} 
+                onChange={(e) => setIsPublic(e.target.checked)}
+                sx={{
+                  '& .MuiSwitch-switchBase.Mui-checked': {
+                    color: '#00D1AB',
+                  },
+                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#00886F',
+                  },
+                }}
+              />
+            }
+            label="Make dashboard public"
+            sx={{ 
+              color: 'white',
+              mt: 2
+            }}
+          />
+        </Box>
+      </DialogContent>
+      
+      <DialogActions sx={{ p: 3, bgcolor: '#00A389' }}>
+        <Button 
+          onClick={onClose} 
+          variant="outlined"
+          sx={{ 
+            color: 'white',
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            mr: 1,
+            '&:hover': {
+              borderColor: 'white',
+              bgcolor: 'rgba(255, 255, 255, 0.05)'
+            }
+          }}
+        >
+          Cancel
+        </Button>
+        <Button 
+          onClick={handleSubmit} 
+          variant="contained"
+          disabled={!name.trim()}
+          sx={{ 
+            bgcolor: '#00D1AB',
+            color: '#191919',
+            '&:hover': {
+              bgcolor: '#00E4BC',
+            }
+          }}
+        >
+          Save Changes
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }
 

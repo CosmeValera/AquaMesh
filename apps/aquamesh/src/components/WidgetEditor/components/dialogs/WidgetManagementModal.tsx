@@ -30,9 +30,9 @@ import PreviewIcon from '@mui/icons-material/Visibility'
 import SearchIcon from '@mui/icons-material/Search'
 import SortIcon from '@mui/icons-material/Sort'
 import CloseIcon from '@mui/icons-material/Close'
-import CreateIcon from '@mui/icons-material/Create'
 import { CustomWidget } from '../../WidgetStorage'
 import useWidgetManager from '../../hooks/useWidgetManager'
+import DeleteConfirmationDialog from './DeleteConfirmationDialog'
 
 // Sorting options
 type SortOption = 'dateNewest' | 'dateOldest' | 'nameAsc' | 'nameDesc';
@@ -64,6 +64,10 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [loadingText, setLoadingText] = useState('')
   
+  // Delete confirmation state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [widgetToDelete, setWidgetToDelete] = useState<string | null>(null)
+  
   // Get functions from widget manager hook
   const { isWidgetEditorOpen } = useWidgetManager()
   
@@ -74,6 +78,46 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
       setIsLoading(false)
     }
   }, [open])
+  
+  // Function to check if delete confirmation is enabled
+  const shouldConfirmDelete = (): boolean => {
+    try {
+      const storedValue = localStorage.getItem('widget-editor-delete-confirmation')
+      return storedValue !== 'false' // Default to true if not set
+    } catch (error) {
+      console.error('Error reading widget-editor-delete-confirmation from localStorage', error)
+      return true // Default to true if there's an error
+    }
+  }
+  
+  // Handle delete button click
+  const handleDeleteClick = (e: React.MouseEvent, widgetId: string) => {
+    e.stopPropagation()
+    
+    if (shouldConfirmDelete()) {
+      // Show confirmation dialog if enabled
+      setWidgetToDelete(widgetId)
+      setDeleteConfirmOpen(true)
+    } else {
+      // Delete directly if confirmation is disabled
+      onDelete(widgetId)
+    }
+  }
+  
+  // Confirm deletion
+  const confirmDelete = () => {
+    if (widgetToDelete) {
+      onDelete(widgetToDelete)
+      setDeleteConfirmOpen(false)
+      setWidgetToDelete(null)
+    }
+  }
+  
+  // Cancel deletion
+  const cancelDelete = () => {
+    setDeleteConfirmOpen(false)
+    setWidgetToDelete(null)
+  }
   
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -490,10 +534,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                             <IconButton
                               size="small"
                               color="error"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                onDelete(widget.id)
-                              }}
+                              onClick={(e) => handleDeleteClick(e, widget.id)}
                               sx={{
                                 bgcolor: 'rgba(211, 47, 47, 0.1)',
                                 '&:hover': {
@@ -532,6 +573,15 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteConfirmOpen}
+        title="Delete Widget"
+        content="Are you sure you want to delete this widget? This action cannot be undone."
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
     </>
   )
 }

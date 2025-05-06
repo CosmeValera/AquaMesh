@@ -10,13 +10,13 @@ declare const __webpack_share_scopes__: { default: Record<string, unknown> }
 
 import useDynamicScript from '../customHooks/useDynamicScript'
 import StatusPage from '../common/StatusPage'
-import { StateView } from '../state/store'
+import { StateDashboard } from '../state/store'
 import { DynamicMicrofrontendProps } from './DynamicMicrofrontend'
 
 interface ModuleLoaderProps extends DynamicMicrofrontendProps {
   url: string;
-  changePanelData: (data: Partial<StateView>) => void;
-  getCurrentView: () => StateView | undefined;
+  changeWidgetData: (data: Partial<StateDashboard>) => void;
+  getCurrentView: () => StateDashboard | undefined;
 }
 
 interface ComponentCache {

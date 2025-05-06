@@ -19,7 +19,7 @@ interface StoreState {
   openDashboards: StateDashboard[];
   setDashboards: (element: StateDashboard[]) => void;
   setSelectedDashboard: (index: number) => void;
-  changePanelData: (data: Partial<StateDashboard>) => void;
+  changeWidgetData: (data: Partial<StateDashboard>) => void;
   getCurrentDashboard: () => StateDashboard | undefined;
 }
 
@@ -30,7 +30,7 @@ export const useStore = create<StoreState>()(
       openDashboards: [],
       setDashboards: (element) => set({ openDashboards: element }),
       setSelectedDashboard: (index) => set({ selectedDashboard: index }),
-      changePanelData: (data) => {
+      changeWidgetData: (data) => {
         const state = get()
         const updatedOpenDashboards = [...state.openDashboards]
 

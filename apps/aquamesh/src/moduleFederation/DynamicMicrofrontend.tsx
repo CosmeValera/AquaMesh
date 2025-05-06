@@ -39,8 +39,8 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
 
   const { topNavBarWidgets } = useTopNavBarWidgets()
 
-  const changePanelData = useStore((state) => state.changePanelData)
-  const getCurrentView = useStore((state) => state.getCurrentView)
+  const changeWidgetData = useStore((state) => state.changeWidgetData)
+  const getCurrentDashboard = useStore((state) => state.getCurrentDashboard)
 
   // const { keycloak } = useAuth()
 
@@ -56,9 +56,9 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
     )
 
     if (topNavBarWidget) {
-      const panelItem: Item | undefined = topNavBarWidget.items.find(item => item.name === props.name)
-      if (panelItem) {
-        setRemote(panelItem)
+      const widgetItem: Item | undefined = topNavBarWidget.items.find(item => item.name === props.name)
+      if (widgetItem) {
+        setRemote(widgetItem)
       }
     }
   }, [topNavBarWidgets, props.component, props.name])
@@ -113,8 +113,8 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
           url={remote.url} 
           {...props} 
           {...remote.customProps} 
-          changePanelData={changePanelData} 
-          getCurrentView={getCurrentView} 
+          changeWidgetData={changeWidgetData} 
+          getCurrentView={getCurrentDashboard} 
           component={remote.component}
         />
       )}

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { Layout, Model, TabNode } from 'flexlayout-react'
 
-import { ReactComponent as EmptyPanelIcon } from '../../icons/gui.svg'
+import { ReactComponent as EmptyWidgetIcon } from '../../icons/gui.svg'
 import { ReactComponent as CloseIcon } from '../../icons/close.svg'
 import { ReactComponent as OpenInNewIcon } from '../../icons/launch.svg'
 import { ReactComponent as MaximizeIcon } from '../../icons/maximize.svg'
@@ -34,7 +34,7 @@ const CONFIG = {
   borders: [],
 }
 
-const EmptyPanel = () => (
+const EmptyWidget = () => (
   <div
     style={{
       height: '100%',
@@ -43,7 +43,7 @@ const EmptyPanel = () => (
       justifyContent: 'center',
     }}
   >
-    <EmptyPanelIcon width={60} height={60} opacity={0.16} />
+    <EmptyWidgetIcon width={60} height={60} opacity={0.16} />
   </div>
 )
 
@@ -56,7 +56,7 @@ const DashboardLayoutView: React.FC<DashboardLayoutViewProps>= ({ layout, update
     const component = node.getComponent()
 
     if (!component) {
-      return <EmptyPanel />
+      return <EmptyWidget />
     }
 
     return (
@@ -121,7 +121,7 @@ const DashboardLayoutView: React.FC<DashboardLayoutViewProps>= ({ layout, update
         // ),
       }}
       onTabSetPlaceHolder={() => (
-        <EmptyPanelIcon width={60} height={60} opacity={0.16} />
+        <EmptyWidgetIcon width={60} height={60} opacity={0.16} />
       )}
       onModelChange={updateLayout}
     />

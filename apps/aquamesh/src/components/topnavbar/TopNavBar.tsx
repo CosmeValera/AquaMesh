@@ -46,7 +46,7 @@ interface TopNavBarProps {
 
 const TopNavBar: React.FC<TopNavBarProps> = () => {
   // State for different dropdown menus
-  const [panelsAnchorEl, setPanelsAnchorEl] = useState<null | HTMLElement>(null)
+  const [widgetsAnchorEl, setWidgetsAnchorEl] = useState<null | HTMLElement>(null)
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null)
   const [userData, setUserData] = useState<UserData>({ id: 'admin', name: 'Admin User', role: 'ADMIN_ROLE' })
   
@@ -95,8 +95,8 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   }, [showTutorialOnStartup])
 
   // Handle opening and closing dropdowns
-  const handlePanelsMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setPanelsAnchorEl(event.currentTarget)
+  const handleWidgetsMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setWidgetsAnchorEl(event.currentTarget)
   }
   
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -104,7 +104,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   }
   
   const handleClose = () => {
-    setPanelsAnchorEl(null)
+    setWidgetsAnchorEl(null)
     setUserAnchorEl(null)
   }
 
@@ -182,9 +182,9 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
             {/* Dashboard Options Menu (replaced with our new component) */}
             <DashboardOptionsMenu isMobile={isTablet} />
 
-            {/* Panels/Widgets Menu */}
+            {/* Widgets Menu */}
             <Button
-              onClick={handlePanelsMenuOpen}
+              onClick={handleWidgetsMenuOpen}
               sx={{ 
                 color: 'foreground.contrastPrimary', 
                 display: 'flex', 
@@ -200,8 +200,8 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               {!isTablet ? 'Widgets' : 'W.'}
             </Button>
             <Menu
-              anchorEl={panelsAnchorEl}
-              open={Boolean(panelsAnchorEl)}
+              anchorEl={widgetsAnchorEl}
+              open={Boolean(widgetsAnchorEl)}
               onClose={handleClose}
               PaperProps={{
                 sx: {

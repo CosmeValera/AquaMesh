@@ -32,7 +32,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import ShareIcon from '@mui/icons-material/Share'
 import EditIcon from '@mui/icons-material/Edit'
 import { Layout } from '../../types/types'
-import { useViews } from './ViewsProvider'
+import { useViews } from './DashboardProvider'
 import { DefaultDashboard } from './fixture'
 import DeleteConfirmationDialog from '../WidgetEditor/components/dialogs/DeleteConfirmationDialog'
 

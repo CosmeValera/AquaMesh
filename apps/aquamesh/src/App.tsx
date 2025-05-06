@@ -5,8 +5,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 import TopNavBar from './components/topnavbar/TopNavBar'
 import Main from './components/Main'
-import Views from './components/Views/View'
-import ViewsProvider from './components/Views/ViewsProvider'
+import Views from './components/Dasboard/Dashboard'
+import ViewsProvider from './components/Dasboard/DashboardProvider'
 import LayoutProvider from './components/Layout/LayoutProvider'
 import Login from './components/auth/Login'
 

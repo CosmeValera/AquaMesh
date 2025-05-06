@@ -10,7 +10,7 @@ import {
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import FolderIcon from '@mui/icons-material/Folder'
-import { useViews } from './ViewsProvider'
+import { useViews } from './DashboardProvider'
 import SavedDashboardsDialog from './SavedDashboardsDialog'
 import { Layout } from '../../types/types'
 

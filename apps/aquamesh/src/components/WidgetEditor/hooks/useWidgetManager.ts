@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLayout } from '../../Layout/LayoutProvider'
-import { useViews } from '../../Views/ViewsProvider'
+import { useViews } from '../../Dasboard/DashboardProvider'
 import WidgetStorage, { CustomWidget } from '../WidgetStorage'
 
 // Custom hook for widget management

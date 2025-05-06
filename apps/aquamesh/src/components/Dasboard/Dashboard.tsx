@@ -8,7 +8,7 @@ import SaveIcon from '@mui/icons-material/Save'
 
 import LayoutView from '../Layout/Layout'
 import { ViewLayout } from '../../state/store'
-import { useViews } from './ViewsProvider'
+import { useViews } from './DashboardProvider'
 import './tabs.scss'
 
 // Define custom dashboard type for localStorage

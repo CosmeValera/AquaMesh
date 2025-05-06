@@ -185,10 +185,39 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
   // Mock button click for preview
   const handlePreviewClick = () => {
     if (props.clickAction === 'toast') {
-      // Display a toast when clicked in the preview
-      alert(`Mock Toast: ${props.toastMessage || 'Button clicked'} (Severity: ${props.toastSeverity || 'info'})`)
+      // Display a mock toast notification instead of alert
+      console.log(`Toast notification: ${props.toastMessage || 'Button clicked'} (Severity: ${props.toastSeverity || 'info'})`)
+      
+      // Add a visual indicator in the preview
+      const previewArea = document.querySelector('.MuiPaper-root.ComponentPreview')
+      if (previewArea) {
+        const mockToast = document.createElement('div')
+        mockToast.textContent = `${props.toastMessage || 'Button clicked'}`
+        mockToast.style.position = 'absolute'
+        mockToast.style.bottom = '8px'
+        mockToast.style.left = '50%'
+        mockToast.style.transform = 'translateX(-50%)'
+        mockToast.style.padding = '4px 12px'
+        mockToast.style.borderRadius = '4px'
+        mockToast.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'
+        mockToast.style.color = 'white'
+        mockToast.style.fontSize = '12px'
+        mockToast.style.opacity = '0'
+        mockToast.style.transition = 'opacity 0.3s'
+        
+        previewArea.appendChild(mockToast)
+        
+        setTimeout(() => {
+          mockToast.style.opacity = '1'
+        }, 50)
+        
+        setTimeout(() => {
+          mockToast.style.opacity = '0'
+          setTimeout(() => mockToast.remove(), 300)
+        }, 2000)
+      }
     } else if (props.clickAction === 'openUrl' && props.url) {
-      alert(`Would open URL: ${props.url}`)
+      console.log(`Would open URL: ${props.url}`)
     }
   }
   

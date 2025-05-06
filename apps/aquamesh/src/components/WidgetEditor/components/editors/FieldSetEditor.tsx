@@ -17,7 +17,11 @@ import {
   Slider,
   Collapse,
   IconButton,
-  Button
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
@@ -100,6 +104,15 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
   
   // Icon states
   const [iconPosition, setIconPosition] = useState((props.iconPosition as string) || 'start')
+  
+  // Dialog state for edit button
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [tempDialogSettings, setTempDialogSettings] = useState({
+    legend: '',
+    legendColor: '',
+    borderColor: '',
+    iconPosition: ''
+  })
   
   // Initialize state based on props
   useEffect(() => {
@@ -207,9 +220,44 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
   
   // Function to handle edit button click
   const handleEditButtonClick = () => {
-    // Open first tab and focus on the legend text input
-    setTabValue(0);
-  };
+    // Open the edit dialog instead of switching tabs
+    setTempDialogSettings({
+      legend: (props.legend as string) || 'Field Set',
+      legendColor: legendColor,
+      borderColor: borderColor,
+      iconPosition: iconPosition
+    })
+    setEditDialogOpen(true)
+  }
+
+  // Handle dialog close
+  const handleDialogClose = () => {
+    setEditDialogOpen(false)
+  }
+
+  // Handle dialog save
+  const handleDialogSave = () => {
+    // Apply the changes
+    handleChange('legend', tempDialogSettings.legend)
+    handleChange('legendColor', tempDialogSettings.legendColor)
+    handleChange('borderColor', tempDialogSettings.borderColor)
+    handleChange('iconPosition', tempDialogSettings.iconPosition)
+
+    // Make sure custom color is enabled if colors changed
+    if (tempDialogSettings.legendColor !== legendColor || 
+        tempDialogSettings.borderColor !== borderColor) {
+      handleChange('useCustomColor', true)
+      setUseCustomColor(true)
+    }
+
+    // Update local state
+    setLegendColor(tempDialogSettings.legendColor)
+    setBorderColor(tempDialogSettings.borderColor)
+    setIconPosition(tempDialogSettings.iconPosition)
+    
+    // Close dialog
+    setEditDialogOpen(false)
+  }
   
   return (
     <Box sx={{ width: '100%' }}>
@@ -281,6 +329,108 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
           </Collapse>
         </Box>
       </Paper>
+      
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit FieldSet</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            <Grid item xs={12}>
+              <TextField
+                label="Legend Text"
+                fullWidth
+                value={tempDialogSettings.legend}
+                onChange={(e) => setTempDialogSettings({...tempDialogSettings, legend: e.target.value})}
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Icon Position</InputLabel>
+                <Select
+                  value={tempDialogSettings.iconPosition}
+                  label="Icon Position"
+                  onChange={(e) => setTempDialogSettings({...tempDialogSettings, iconPosition: e.target.value})}
+                >
+                  <MenuItem value="start">Before Legend</MenuItem>
+                  <MenuItem value="end">After Legend</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom>
+                Colors
+              </Typography>
+              <Divider />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <Box>
+                <Typography variant="body2" gutterBottom>
+                  Legend Color
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <input
+                    type="color"
+                    value={tempDialogSettings.legendColor}
+                    onChange={(e) => setTempDialogSettings({...tempDialogSettings, legendColor: e.target.value})}
+                    style={{ 
+                      width: '36px', 
+                      height: '36px', 
+                      padding: 0, 
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <TextField 
+                    size="small" 
+                    value={tempDialogSettings.legendColor}
+                    onChange={(e) => setTempDialogSettings({...tempDialogSettings, legendColor: e.target.value})}
+                    placeholder="#1976d2"
+                    variant="outlined"
+                  />
+                </Box>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <Box>
+                <Typography variant="body2" gutterBottom>
+                  Border Color
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <input
+                    type="color"
+                    value={tempDialogSettings.borderColor}
+                    onChange={(e) => setTempDialogSettings({...tempDialogSettings, borderColor: e.target.value})}
+                    style={{ 
+                      width: '36px', 
+                      height: '36px', 
+                      padding: 0, 
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <TextField 
+                    size="small" 
+                    value={tempDialogSettings.borderColor}
+                    onChange={(e) => setTempDialogSettings({...tempDialogSettings, borderColor: e.target.value})}
+                    placeholder="#cccccc"
+                    variant="outlined"
+                  />
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button onClick={handleDialogSave} variant="contained" color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
       
       {/* Tabs Navigation */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>

@@ -105,13 +105,10 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
     
     if (checked) {
       handleChange('useCustomColor', true)
-      handleChange('customColor', customColor)
       handleChange('customTrackColor', customTrackColor)
     } else {
       handleChange('useCustomColor', undefined)
-      handleChange('customColor', undefined)
       handleChange('customTrackColor', undefined)
-      setCustomColor('#1976d2')
       setCustomTrackColor('#90caf9')
     }
   }

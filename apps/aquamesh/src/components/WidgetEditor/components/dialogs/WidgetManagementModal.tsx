@@ -65,7 +65,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   const [loadingText, setLoadingText] = useState('')
   
   // Get functions from widget manager hook
-  const { isWidgetEditorOpen, ensureViewAndAddComponent } = useWidgetManager()
+  const { isWidgetEditorOpen } = useWidgetManager()
   
   // Clear search when dialog opens/closes
   useEffect(() => {
@@ -86,7 +86,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   }
   
   // Handle preview button click
-  const handlePreviewClick = async (e: React.MouseEvent, widget: CustomWidget) => {
+  const handlePreviewClick = (e: React.MouseEvent, widget: CustomWidget) => {
     e.stopPropagation()
     
     if (isWidgetEditorOpen()) {
@@ -99,14 +99,14 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
       
       // Use the onPreview which is the improved previewWidget function
       // from useWidgetManager that handles opening Widget Editor first
-      await onPreview(widget)
+      onPreview(widget)
       
       setIsLoading(false)
     }
   }
   
   // Handle edit button click
-  const handleEditClick = async (e: React.MouseEvent, widget: CustomWidget) => {
+  const handleEditClick = (e: React.MouseEvent, widget: CustomWidget) => {
     e.stopPropagation()
     
     if (isWidgetEditorOpen()) {
@@ -119,29 +119,10 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
       
       // Use the onEdit which is the improved editWidget function
       // from useWidgetManager that handles opening Widget Editor first
-      await onEdit(widget)
+      onEdit(widget)
       
       setIsLoading(false)
     }
-  }
-  
-  // Handle opening widget editor
-  const handleOpenWidgetEditor = () => {
-    // Show loading indicator
-    setIsLoading(true)
-    setLoadingText('Opening Widget Editor...')
-    
-    // Close the current modal
-    onClose()
-    
-    // Use the ensureViewAndAddComponent function to properly handle view creation
-    ensureViewAndAddComponent({
-      id: `widget-editor-${Date.now()}`,
-      name: "Widget Editor",
-      component: "WidgetEditor"
-    })
-    
-    // Loading will be hidden automatically when modal closes
   }
   
   // Filter widgets based on search term
@@ -534,24 +515,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
           )}
         </DialogContent>
         
-        <DialogActions sx={{ px: 3, pb: 3, bgcolor: '#00A389', display: 'flex', justifyContent: 'space-between' }}>
-          {/* Open Widget Editor Button */}
-          <Button 
-            onClick={handleOpenWidgetEditor}
-            variant="contained"
-            startIcon={<CreateIcon />}
-            sx={{ 
-              bgcolor: '#005542',
-              color: 'white',
-              '&:hover': {
-                bgcolor: '#006653',
-              }
-            }}
-            disabled={isLoading}
-          >
-            Open Widget Editor
-          </Button>
-          
+        <DialogActions sx={{ px: 3, pb: 3, bgcolor: '#00A389', display: 'flex', justifyContent: 'flex-end' }}>
           <Button 
             onClick={onClose} 
             variant="contained"

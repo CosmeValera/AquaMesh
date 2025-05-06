@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLayout } from '../../Layout/LayoutProvider'
+import { useViews } from '../../Views/ViewsProvider'
 import WidgetStorage, { CustomWidget } from '../WidgetStorage'
 
 // Custom hook for widget management
@@ -10,6 +11,9 @@ export const useWidgetManager = () => {
   
   // Layout context to add widget editor component
   const { addComponent } = useLayout()
+  
+  // Views context to manage dashboards
+  const { addView, openViews } = useViews()
   
   // Load widgets on mount or when modal is opened
   useEffect(() => {
@@ -45,6 +49,11 @@ export const useWidgetManager = () => {
     return editorToolbar.length > 0 || componentPalette.length > 0
   }
   
+  // Check if there are any open views/dashboards
+  const hasOpenViews = (): boolean => {
+    return openViews.length > 0
+  }
+  
   // Opens widget management modal
   const openWidgetManagement = () => {
     loadWidgets()
@@ -56,23 +65,51 @@ export const useWidgetManager = () => {
     setIsWidgetManagementOpen(false)
   }
   
+  // Helper function to ensure there's a view before adding a component
+  const ensureViewAndAddComponent = (componentConfig: {
+    id: string;
+    name: string;
+    component: string;
+    customProps?: Record<string, unknown>;
+  }) => {
+    // Check if there are any open views (dashboards)
+    if (!hasOpenViews()) {
+      // If no views exist, create a default dashboard first
+      addView()
+      // Short delay to ensure the view is created before adding the component
+      setTimeout(() => {
+        addComponent(componentConfig)
+      }, 100)
+    } else {
+      // If views already exist, add the component directly
+      addComponent(componentConfig)
+    }
+  }
+  
   // Open a new widget editor without loading any widget
-  const openWidgetEditor = () => {
+  const openWidgetEditor = async () => {
     // Always close the widget management modal first if it's open
     if (isWidgetManagementOpen) {
       closeWidgetManagement()
     }
     
-    // Open new widget editor instance
-    addComponent({
+    // Use the ensureViewAndAddComponent function to properly handle view creation
+    ensureViewAndAddComponent({
       id: `widget-editor-${Date.now()}`,
       name: "Widget Editor",
       component: "WidgetEditor"
     })
+    
+    // Return a promise that resolves after the widget editor is opened
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve()
+      }, 300)
+    })
   }
   
   // Preview a widget
-  const previewWidget = (widget: CustomWidget) => {
+  const previewWidget = async (widget: CustomWidget) => {
     // Always close the widget management modal first
     closeWidgetManagement()
     
@@ -86,22 +123,30 @@ export const useWidgetManager = () => {
         }
       }))
     } else {
-      console.log('Opening new Widget Editor and loading widget in preview mode')
-      // Open new widget editor instance with the widget in view mode
-      addComponent({
+      console.log('No Widget Editor open. Opening new Widget Editor and loading widget in preview mode')
+      
+      // Use the ensureViewAndAddComponent approach to open a new Widget Editor
+      ensureViewAndAddComponent({
         id: `widget-editor-${Date.now()}`,
         name: `Widget Editor - ${widget.name}`,
-        component: "WidgetEditor",
-        customProps: {
-          loadWidget: widget,
-          initialEditMode: false
-        }
+        component: "WidgetEditor"
       })
+      
+      // Wait for a moment to ensure Widget Editor is initialized
+      setTimeout(() => {
+        // Then load the widget in preview mode
+        document.dispatchEvent(new CustomEvent('loadWidgetInEditor', {
+          detail: {
+            widget: JSON.parse(JSON.stringify(widget)), // Deep clone to avoid reference issues
+            editMode: false
+          }
+        }))
+      }, 500)
     }
   }
   
   // Edit a widget
-  const editWidget = (widget: CustomWidget) => {
+  const editWidget = async (widget: CustomWidget) => {
     // Always close the widget management modal first
     closeWidgetManagement()
     
@@ -115,17 +160,25 @@ export const useWidgetManager = () => {
         }
       }))
     } else {
-      console.log('Opening new Widget Editor and loading widget in edit mode')
-      // Open new widget editor instance with the widget in edit mode
-      addComponent({
+      console.log('No Widget Editor open. Opening new Widget Editor and loading widget in edit mode')
+      
+      // Use the ensureViewAndAddComponent approach to open a new Widget Editor
+      ensureViewAndAddComponent({
         id: `widget-editor-${Date.now()}`,
         name: `Widget Editor - ${widget.name}`,
-        component: "WidgetEditor",
-        customProps: {
-          loadWidget: widget,
-          initialEditMode: true
-        }
+        component: "WidgetEditor"
       })
+      
+      // Wait for a moment to ensure Widget Editor is initialized
+      setTimeout(() => {
+        // Then load the widget in edit mode
+        document.dispatchEvent(new CustomEvent('loadWidgetInEditor', {
+          detail: {
+            widget: JSON.parse(JSON.stringify(widget)), // Deep clone to avoid reference issues
+            editMode: true
+          }
+        }))
+      }, 500)
     }
   }
   
@@ -147,7 +200,9 @@ export const useWidgetManager = () => {
     editWidget,
     deleteWidget,
     isWidgetEditorOpen,
-    openWidgetEditor
+    openWidgetEditor,
+    hasOpenViews,
+    ensureViewAndAddComponent
   }
 }
 

@@ -21,8 +21,7 @@ import {
   InputLabel,
   Grid,
   Fade,
-  Snackbar,
-  Alert
+  CircularProgress
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import WidgetsIcon from '@mui/icons-material/Widgets'
@@ -61,17 +60,18 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   // Sort state
   const [sortBy, setSortBy] = useState<SortOption>('dateNewest')
   
-  // Alert message state
-  const [alertOpen, setAlertOpen] = useState(false)
-  const [alertMessage, setAlertMessage] = useState('')
+  // Loading state for operations
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingText, setLoadingText] = useState('')
   
   // Get functions from widget manager hook
-  const { isWidgetEditorOpen, openWidgetEditor } = useWidgetManager()
+  const { isWidgetEditorOpen, ensureViewAndAddComponent } = useWidgetManager()
   
   // Clear search when dialog opens/closes
   useEffect(() => {
     if (!open) {
       setSearchTerm('')
+      setIsLoading(false)
     }
   }, [open])
   
@@ -86,41 +86,62 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   }
   
   // Handle preview button click
-  const handlePreviewClick = (e: React.MouseEvent, widget: CustomWidget) => {
+  const handlePreviewClick = async (e: React.MouseEvent, widget: CustomWidget) => {
     e.stopPropagation()
     
     if (isWidgetEditorOpen()) {
+      // Widget Editor is already open, just preview the widget
       onPreview(widget)
     } else {
-      setAlertMessage("Please open a Widget Editor first to preview widgets")
-      setAlertOpen(true)
+      // Widget Editor is not open, open it first then preview
+      setIsLoading(true)
+      setLoadingText('Opening Widget Editor...')
+      
+      // Use the onPreview which is the improved previewWidget function
+      // from useWidgetManager that handles opening Widget Editor first
+      await onPreview(widget)
+      
+      setIsLoading(false)
     }
   }
   
   // Handle edit button click
-  const handleEditClick = (e: React.MouseEvent, widget: CustomWidget) => {
+  const handleEditClick = async (e: React.MouseEvent, widget: CustomWidget) => {
     e.stopPropagation()
     
     if (isWidgetEditorOpen()) {
+      // Widget Editor is already open, just edit the widget
       onEdit(widget)
     } else {
-      setAlertMessage("Please open a Widget Editor first to edit widgets")
-      setAlertOpen(true)
+      // Widget Editor is not open, open it first then edit
+      setIsLoading(true)
+      setLoadingText('Opening Widget Editor...')
+      
+      // Use the onEdit which is the improved editWidget function
+      // from useWidgetManager that handles opening Widget Editor first
+      await onEdit(widget)
+      
+      setIsLoading(false)
     }
   }
   
   // Handle opening widget editor
   const handleOpenWidgetEditor = () => {
+    // Show loading indicator
+    setIsLoading(true)
+    setLoadingText('Opening Widget Editor...')
+    
     // Close the current modal
     onClose()
     
-    // Use the openWidgetEditor function from the hook
-    openWidgetEditor()
-  }
-  
-  // Close alert
-  const handleAlertClose = () => {
-    setAlertOpen(false)
+    // Use the ensureViewAndAddComponent function to properly handle view creation
+    ensureViewAndAddComponent({
+      id: `widget-editor-${Date.now()}`,
+      name: "Widget Editor",
+      component: "WidgetEditor"
+    })
+    
+    // Loading will be hidden automatically when modal closes
   }
   
   // Filter widgets based on search term
@@ -205,6 +226,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
             onClick={onClose}
             edge="end"
             sx={{ color: 'white' }}
+            disabled={isLoading}
           >
             <CloseIcon />
           </IconButton>
@@ -221,6 +243,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                 onChange={handleSearchChange}
                 variant="outlined"
                 size="small"
+                disabled={isLoading}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -233,6 +256,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                         size="small" 
                         onClick={() => setSearchTerm('')}
                         sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                        disabled={isLoading}
                       >
                         <CloseIcon fontSize="small" />
                       </IconButton>
@@ -261,7 +285,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth size="small" variant="outlined">
+              <FormControl fullWidth size="small" variant="outlined" disabled={isLoading}>
                 <InputLabel id="sort-by-label" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Sort By</InputLabel>
                 <Select
                   labelId="sort-by-label"
@@ -305,11 +329,32 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
               }
               {searchTerm && ` matching "${searchTerm}"`}
             </Typography>
-            
-            <Typography variant="body2" color={isWidgetEditorOpen() ? "rgba(50, 255, 100, 0.9)" : "rgba(255, 200, 50, 0.9)"}>
-              Widget Editor: {isWidgetEditorOpen() ? "Open" : "Not Open"}
-            </Typography>
           </Box>
+          
+          {/* Loading overlay */}
+          {isLoading && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                bgcolor: 'rgba(0, 0, 0, 0.7)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+                borderRadius: 2,
+              }}
+            >
+              <CircularProgress size={60} sx={{ color: '#00D1AB', mb: 2 }} />
+              <Typography variant="h6" color="white">
+                {loadingText}
+              </Typography>
+            </Box>
+          )}
           
           {/* Widget cards */}
           {sortedWidgets.length === 0 ? (
@@ -436,6 +481,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                                 }
                               }}
                               variant="outlined"
+                              disabled={isLoading}
                             >
                               Preview
                             </Button>
@@ -454,6 +500,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                                 }
                               }}
                               variant="contained"
+                              disabled={isLoading}
                             >
                               Edit
                             </Button>
@@ -472,6 +519,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                                   bgcolor: 'rgba(211, 47, 47, 0.2)'
                                 }
                               }}
+                              disabled={isLoading}
                             >
                               <DeleteIcon />
                             </IconButton>
@@ -499,6 +547,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                 bgcolor: '#006653',
               }
             }}
+            disabled={isLoading}
           >
             Open Widget Editor
           </Button>
@@ -513,28 +562,12 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                 bgcolor: '#00E4BC',
               }
             }}
+            disabled={isLoading}
           >
             Close
           </Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Alert for when Widget Editor is not open */}
-      <Snackbar
-        open={alertOpen}
-        autoHideDuration={5000}
-        onClose={handleAlertClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={handleAlertClose} 
-          severity="info" 
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {alertMessage}
-        </Alert>
-      </Snackbar>
     </>
   )
 }

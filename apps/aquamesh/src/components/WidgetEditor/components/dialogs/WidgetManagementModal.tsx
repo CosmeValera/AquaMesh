@@ -35,7 +35,7 @@ import useWidgetManager from '../../hooks/useWidgetManager'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
 
 // Sorting options
-type SortOption = 'dateNewest' | 'dateOldest' | 'nameAsc' | 'nameDesc';
+type SortOption = 'dateNewest' | 'dateOldest' | 'nameAsc' | 'nameDesc' | 'mostComponents' | 'fewestComponents';
 
 interface WidgetManagementModalProps {
   open: boolean
@@ -193,6 +193,10 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       case 'dateOldest':
         return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
+      case 'mostComponents':
+        return b.components.length - a.components.length
+      case 'fewestComponents':
+        return a.components.length - b.components.length
       default:
         return 0
       }
@@ -340,6 +344,8 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                   <MenuItem value="nameDesc">Name (Z-A)</MenuItem>
                   <MenuItem value="dateNewest">Date (Newest First)</MenuItem>
                   <MenuItem value="dateOldest">Date (Oldest First)</MenuItem>
+                  <MenuItem value="mostComponents">Most Components</MenuItem>
+                  <MenuItem value="fewestComponents">Fewest Components</MenuItem>
                 </Select>
               </FormControl>
             </Grid>

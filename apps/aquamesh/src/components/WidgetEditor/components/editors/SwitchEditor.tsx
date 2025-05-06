@@ -121,18 +121,11 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
     const isChecked = e.target.checked;
     setChecked(isChecked);
     
-    if (showToast) {
-      // Display an indicator of what would happen
-      const message = isChecked 
-        ? (props.onMessage as string || 'Switch turned ON')
-        : (props.offMessage as string || 'Switch turned OFF');
-      alert(`Toast: ${message} (Severity: ${props.toastSeverity || 'info'})`);
-    }
+    // Alert functionality removed as requested
   };
   
   // Generate preview style based on current settings
   const previewStyles = {
-    color: useCustomColor ? customColor : undefined,
     '& .MuiSwitch-track': {
       backgroundColor: useCustomColor ? customTrackColor : undefined
     }
@@ -170,10 +163,6 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
               <Box sx={{ width: 16, height: 16, bgcolor: customTrackColor, borderRadius: 1 }} />
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 Track: {customTrackColor}
-              </Typography>
-              <Box sx={{ width: 16, height: 16, bgcolor: customColor, borderRadius: '50%', ml: 1 }} />
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Thumb: {customColor}
               </Typography>
             </Box>
           )}
@@ -260,11 +249,6 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
           </Grid>
           
           <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          {/* Custom Color Toggle */}
-          <Grid item xs={12}>
             <FormControlLabel
               control={
                 <Switch
@@ -272,86 +256,49 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
                   onChange={handleCustomColorToggle}
                 />
               }
-              label="Use Custom Colors"
+              label="Use Custom Track Color"
             />
           </Grid>
           
-          {/* Custom Color Pickers - Only show if useCustomColor is true */}
           {useCustomColor && (
-            <>
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <Typography variant="body2" gutterBottom>
-                    Thumb Color
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <input
-                      type="color"
-                      value={customColor}
-                      onChange={(e) => {
-                        setCustomColor(e.target.value)
-                        handleChange('customColor', e.target.value)
-                      }}
-                      style={{ 
-                        width: '36px', 
-                        height: '36px', 
-                        padding: 0, 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
+            <Grid item xs={12}>
+              <TextField 
+                label="Track Color"
+                fullWidth
+                value={customTrackColor}
+                onChange={(e) => {
+                  setCustomTrackColor(e.target.value)
+                  handleChange('customTrackColor', e.target.value)
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <Box 
+                      sx={{ 
+                        width: 18, 
+                        height: 18, 
+                        bgcolor: customTrackColor, 
+                        borderRadius: 1,
+                        mr: 1,
+                        border: '1px solid rgba(0,0,0,0.1)'
+                      }} 
                     />
-                    <TextField 
-                      size="small" 
-                      value={customColor}
-                      onChange={(e) => {
-                        setCustomColor(e.target.value)
-                        handleChange('customColor', e.target.value)
-                      }}
-                      placeholder="#1976d2"
-                      variant="outlined"
-                    />
-                  </Box>
-                </Box>
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <Typography variant="body2" gutterBottom>
-                    Track Color
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <input
-                      type="color"
-                      value={customTrackColor}
-                      onChange={(e) => {
-                        setCustomTrackColor(e.target.value)
-                        handleChange('customTrackColor', e.target.value)
-                      }}
-                      style={{ 
-                        width: '36px', 
-                        height: '36px', 
-                        padding: 0, 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <TextField 
-                      size="small" 
-                      value={customTrackColor}
-                      onChange={(e) => {
-                        setCustomTrackColor(e.target.value)
-                        handleChange('customTrackColor', e.target.value)
-                      }}
-                      placeholder="#90caf9"
-                      variant="outlined"
-                    />
-                  </Box>
-                </Box>
-              </Grid>
-            </>
+                  ),
+                }}
+              />
+            </Grid>
           )}
+          
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(props.disabled)}
+                  onChange={(e) => handleChange('disabled', e.target.checked)}
+                />
+              }
+              label="Disabled"
+            />
+          </Grid>
         </Grid>
       </TabPanelShared>
       

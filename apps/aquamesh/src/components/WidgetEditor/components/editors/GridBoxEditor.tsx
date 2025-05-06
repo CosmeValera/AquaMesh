@@ -13,10 +13,10 @@ import {
   Grid,
   Tabs,
   Tab,
-  Slider
+  Slider,
+  Tooltip
 } from '@mui/material'
 import GridViewIcon from '@mui/icons-material/GridView'
-import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
 
 import {
@@ -30,14 +30,14 @@ interface GridBoxEditorProps {
 }
 
 // Grid visualization component
-const GridVisualizer: React.FC<{ columns: number, rows: number, spacing: number, useCustomColor?: boolean, backgroundColor?: string, borderColor?: string }> = ({ 
+const GridVisualizer: React.FC<{ columns: number, spacing: number, useCustomColor?: boolean, backgroundColor?: string, borderColor?: string }> = ({ 
   columns, 
-  rows, 
   spacing, 
   useCustomColor = false, 
   backgroundColor = '#f5f5f5',
   borderColor = '#e0e0e0'
 }) => {
+  const rows = 2; // Fixed number of rows
   const cells = []
   
   for (let row = 0; row < rows; row++) {
@@ -73,7 +73,7 @@ const GridVisualizer: React.FC<{ columns: number, rows: number, spacing: number,
         gridTemplateRows: `repeat(${rows}, 1fr)`,
         gap: spacing,
         width: '100%',
-        maxWidth: '240px'
+        maxWidth: '200px' // Smaller preview
       }}
     >
       {cells}
@@ -87,10 +87,8 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
   
   // GridBox states
   const [columns, setColumns] = useState<number>(typeof props.columns === 'number' ? props.columns : 3)
-  const [rows, setRows] = useState<number>(typeof props.rows === 'number' ? props.rows : 2)
   const [spacing, setSpacing] = useState<number>(typeof props.spacing === 'number' ? props.spacing : 2)
-  const [minHeight, setMinHeight] = useState<number>(typeof props.minHeight === 'number' ? props.minHeight : 0)
-  const [autoRows, setAutoRows] = useState(props.autoRows !== false) // Default to true
+  const [cellPadding, setCellPadding] = useState<number>(typeof props.cellPadding === 'number' ? props.cellPadding : 1)
   const [equalHeight, setEqualHeight] = useState(Boolean(props.equalHeight))
   const [useCustomColor, setUseCustomColor] = useState(Boolean(props.useCustomColor))
   const [backgroundColor, setBackgroundColor] = useState((props.backgroundColor as string) || '#f5f5f5')
@@ -102,19 +100,14 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
       setColumns(props.columns)
     }
     
-    if (typeof props.rows === 'number') {
-      setRows(props.rows)
-    }
-    
     if (typeof props.spacing === 'number') {
       setSpacing(props.spacing)
     }
     
-    if (typeof props.minHeight === 'number') {
-      setMinHeight(props.minHeight)
+    if (typeof props.cellPadding === 'number') {
+      setCellPadding(props.cellPadding)
     }
     
-    setAutoRows(props.autoRows !== false) // Default to true
     setEqualHeight(Boolean(props.equalHeight))
     setUseCustomColor(Boolean(props.useCustomColor))
     
@@ -176,7 +169,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
           <GridVisualizer 
             columns={columns} 
-            rows={rows} 
             spacing={spacing}
             useCustomColor={useCustomColor}
             backgroundColor={backgroundColor}
@@ -185,13 +177,13 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
           
           <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%' }}>
             <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
-              <span>{columns} Columns × {autoRows ? 'Auto' : rows} Rows</span>
+              <span>{columns} Columns</span>
               <span>•</span>
               <span>Gap: {spacing}</span>
-              {minHeight > 0 && (
+              {cellPadding > 0 && (
                 <>
                   <span>•</span>
-                  <span>Min Height: {minHeight}px</span>
+                  <span>Cell Padding: {cellPadding}</span>
                 </>
               )}
               {equalHeight && (
@@ -204,12 +196,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
                 <>
                   <span>•</span>
                   <span>Custom Colors</span>
-                </>
-              )}
-              {props.responsive && (
-                <>
-                  <span>•</span>
-                  <span>Responsive</span>
                 </>
               )}
             </Typography>
@@ -226,7 +212,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
           scrollButtons="auto"
         >
           <Tab label="Grid Layout" icon={<GridViewIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Spacing" icon={<SpaceDashboardIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Appearance" icon={<ColorLensIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
@@ -249,157 +234,67 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Rows"
-              type="number"
-              fullWidth
-              value={rows}
-              onChange={(e) => {
-                const value = Number(e.target.value)
-                setRows(value)
-                handleChange('rows', value)
-              }}
-              inputProps={{ min: 1, max: 12, step: 1 }}
-              disabled={autoRows}
-            />
-          </Grid>
-          
           <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={autoRows}
-                  onChange={(e) => {
-                    setAutoRows(e.target.checked)
-                    handleChange('autoRows', e.target.checked)
-                  }}
-                />
-              }
-              label="Auto-calculate Rows (based on children)"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={equalHeight}
-                  onChange={(e) => {
-                    setEqualHeight(e.target.checked)
-                    handleChange('equalHeight', e.target.checked)
-                  }}
-                />
-              }
-              label="Equal Height Cells"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              label="Min Height (px)"
-              type="number"
-              fullWidth
-              value={minHeight}
-              onChange={(e) => {
-                const value = Number(e.target.value)
-                setMinHeight(value)
-                handleChange('minHeight', value)
-              }}
-              inputProps={{ min: 0, step: 10 }}
-              helperText="0 = Auto height"
-            />
-          </Grid>
-        </Grid>
-      </TabPanelShared>
-      
-      {/* Spacing Tab */}
-      <TabPanelShared value={tabValue} index={1}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Typography gutterBottom>
-              Grid Gap: {spacing}
+            <Typography variant="subtitle2" gutterBottom>
+              Grid Gap (Spacing between cells)
             </Typography>
             <Slider
               value={spacing}
               min={0}
-              max={5}
+              max={8}
               step={1}
               marks
+              valueLabelDisplay="auto"
               onChange={(_e, value) => {
-                const newValue = Array.isArray(value) ? value[0] : value
-                setSpacing(newValue)
-                handleChange('spacing', newValue)
+                setSpacing(value as number)
+                handleChange('spacing', value)
               }}
             />
           </Grid>
           
           <Grid item xs={12}>
-            <Box sx={{ mt: 2, mb: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Spacing Visualization
-              </Typography>
-              <Box
-                sx={{
-                  p: 2,
-                  backgroundColor: '#f5f5f5',
-                  border: '1px dashed #aaa',
-                  borderRadius: 1
-                }}
-              >
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: spacing,
-                    '& > div': { 
-                      height: 40, 
-                      display: 'flex', 
-                      justifyContent: 'center', 
-                      alignItems: 'center',
-                      fontWeight: 'bold',
-                      color: 'white',
-                      borderRadius: 1
-                    }
+            <Tooltip title="When enabled, all cells will have the same height, regardless of their content">
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={equalHeight}
+                    onChange={(e) => {
+                      setEqualHeight(e.target.checked)
+                      handleChange('equalHeight', e.target.checked)
+                    }}
+                  />
+                }
+                label="Equal Height Cells"
+              />
+            </Tooltip>
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" gutterBottom>
+              Cell Padding
+            </Typography>
+            <Tooltip title="Padding adds space inside each cell, around the content">
+              <Box>
+                <Slider
+                  value={cellPadding}
+                  min={0}
+                  max={4}
+                  step={1}
+                  marks
+                  valueLabelDisplay="auto"
+                  onChange={(_e, value) => {
+                    setCellPadding(value as number)
+                    handleChange('cellPadding', value)
                   }}
-                >
-                  <Box sx={{ bgcolor: '#ef5350' }}>A</Box>
-                  <Box sx={{ bgcolor: '#42a5f5' }}>B</Box>
-                  <Box sx={{ bgcolor: '#66bb6a' }}>C</Box>
-                  <Box sx={{ bgcolor: '#ff9800' }}>D</Box>
-                </Box>
+                />
               </Box>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Cell Padding</InputLabel>
-              <Select
-                value={(props.cellPadding as string) || 'normal'}
-                label="Cell Padding"
-                onChange={(e) => handleChange('cellPadding', e.target.value)}
-              >
-                <MenuItem value="none">None</MenuItem>
-                <MenuItem value="small">Small</MenuItem>
-                <MenuItem value="normal">Normal</MenuItem>
-                <MenuItem value="large">Large</MenuItem>
-              </Select>
-            </FormControl>
+            </Tooltip>
           </Grid>
         </Grid>
       </TabPanelShared>
       
       {/* Appearance Tab */}
-      <TabPanelShared value={tabValue} index={2}>
+      <TabPanelShared value={tabValue} index={1}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControlLabel
@@ -413,115 +308,78 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
           
+          {/* Custom Color Pickers */}
           {useCustomColor && (
             <>
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <Typography variant="body2" gutterBottom>
-                    Background Color
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <input
-                      type="color"
-                      value={backgroundColor}
-                      onChange={handleBackgroundColorChange}
-                      style={{ 
-                        width: '36px', 
-                        height: '36px', 
-                        padding: 0, 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <TextField 
-                      size="small" 
-                      value={backgroundColor}
-                      onChange={handleBackgroundColorChange}
-                      placeholder="#f5f5f5"
-                      variant="outlined"
-                    />
-                  </Box>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Background Color
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <input
+                    type="color"
+                    value={backgroundColor}
+                    onChange={handleBackgroundColorChange}
+                    style={{ 
+                      width: '36px', 
+                      height: '36px', 
+                      padding: 0, 
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <TextField 
+                    fullWidth
+                    value={backgroundColor}
+                    onChange={handleBackgroundColorChange}
+                    placeholder="#f5f5f5"
+                  />
                 </Box>
               </Grid>
               
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <Typography variant="body2" gutterBottom>
-                    Border Color
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <input
-                      type="color"
-                      value={borderColor}
-                      onChange={handleBorderColorChange}
-                      style={{ 
-                        width: '36px', 
-                        height: '36px', 
-                        padding: 0, 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <TextField 
-                      size="small" 
-                      value={borderColor}
-                      onChange={handleBorderColorChange}
-                      placeholder="#e0e0e0"
-                      variant="outlined"
-                    />
-                  </Box>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Border Color
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <input
+                    type="color"
+                    value={borderColor}
+                    onChange={handleBorderColorChange}
+                    style={{ 
+                      width: '36px', 
+                      height: '36px', 
+                      padding: 0, 
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <TextField 
+                    fullWidth
+                    value={borderColor}
+                    onChange={handleBorderColorChange}
+                    placeholder="#e0e0e0"
+                  />
                 </Box>
               </Grid>
             </>
           )}
           
           <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Cell Border Style</InputLabel>
-              <Select
-                value={(props.borderStyle as string) || 'none'}
-                label="Cell Border Style"
-                onChange={(e) => handleChange('borderStyle', e.target.value)}
-              >
-                <MenuItem value="none">None</MenuItem>
-                <MenuItem value="solid">Solid</MenuItem>
-                <MenuItem value="dashed">Dashed</MenuItem>
-                <MenuItem value="dotted">Dotted</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Cell Border Radius</InputLabel>
-              <Select
-                value={(props.borderRadius as string) || 'small'}
-                label="Cell Border Radius"
-                onChange={(e) => handleChange('borderRadius', e.target.value)}
-              >
-                <MenuItem value="none">None</MenuItem>
-                <MenuItem value="small">Small</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="large">Large</MenuItem>
-              </Select>
-            </FormControl>
+            <Divider sx={{ my: 2 }} />
           </Grid>
           
           <Grid item xs={12}>
             <FormControlLabel
               control={
                 <Switch
-                  checked={Boolean(props.responsive)}
-                  onChange={(e) => handleChange('responsive', e.target.checked)}
+                  checked={Boolean(props.showGridLines)}
+                  onChange={(e) => handleChange('showGridLines', e.target.checked)}
                 />
               }
-              label="Responsive Grid (adjust columns on small screens)"
+              label="Show Grid Lines"
             />
           </Grid>
           
@@ -529,11 +387,11 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
             <FormControlLabel
               control={
                 <Switch
-                  checked={Boolean(props.alignCenter)}
-                  onChange={(e) => handleChange('alignCenter', e.target.checked)}
+                  checked={Boolean(props.fitContainer)}
+                  onChange={(e) => handleChange('fitContainer', e.target.checked)}
                 />
               }
-              label="Center Content Horizontally"
+              label="Fit Container Width"
             />
           </Grid>
         </Grid>
@@ -542,4 +400,4 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
   )
 }
 
-export default GridBoxEditor 
+export default GridBoxEditor

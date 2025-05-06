@@ -16,7 +16,8 @@ import {
   Paper,
   Slider,
   Collapse,
-  IconButton
+  IconButton,
+  Button
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
@@ -204,6 +205,12 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
     fontWeight: 'bold'
   }
   
+  // Function to handle edit button click
+  const handleEditButtonClick = () => {
+    // Open first tab and focus on the legend text input
+    setTabValue(0);
+  };
+  
   return (
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
@@ -256,11 +263,20 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
             )}
           </Box>
           
-          <Collapse in={!previewCollapsed} timeout="auto">
-            <Box sx={{ mt: 1, mb: 1, p: 1, minHeight: '60px', border: '1px dashed #ccc', borderRadius: 1 }}>
-              <Typography variant="body2" color="text.secondary" align="center">
-                Content Area
-              </Typography>
+          <Collapse in={!previewCollapsed}>
+            <Box sx={{ p: 1, mt: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 60 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+                  Content Area
+                </Typography>
+                <Button 
+                  size="small" 
+                  variant="outlined" 
+                  onClick={handleEditButtonClick}
+                >
+                  Edit
+                </Button>
+              </Box>
             </Box>
           </Collapse>
         </Box>

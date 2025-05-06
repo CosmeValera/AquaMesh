@@ -232,6 +232,9 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
               }
               label="No Text Wrapping"
             />
+            <Typography variant="caption" sx={{ display: 'block', mt: 0.5, ml: 3, color: 'text.secondary' }}>
+              When enabled, text will not wrap to a new line and will be truncated with an ellipsis if it exceeds available space.
+            </Typography>
           </Grid>
         </Grid>
       </TabPanelShared>

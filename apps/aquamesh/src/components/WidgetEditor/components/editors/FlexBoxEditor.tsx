@@ -15,11 +15,16 @@ import {
   Tab,
   Slider,
   Stack,
-  Chip
+  Chip,
+  Button
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import DesignServicesIcon from '@mui/icons-material/DesignServices'
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
 import {
   ComponentPreview,
@@ -33,21 +38,6 @@ interface FlexBoxEditorProps {
 
 // Color squares for visualization
 const DirectionIndicator: React.FC<{ direction: string }> = ({ direction }) => {
-  const getArrows = () => {
-    switch (direction) {
-      case 'row':
-        return <>→→→</>
-      case 'column':
-        return <>↓<br/>↓<br/>↓</>
-      case 'row-reverse':
-        return <>←←←</>
-      case 'column-reverse':
-        return <>↑<br/>↑<br/>↑</>
-      default:
-        return <>→→→</>
-    }
-  }
-  
   return (
     <Box 
       sx={{ 
@@ -59,10 +49,13 @@ const DirectionIndicator: React.FC<{ direction: string }> = ({ direction }) => {
         borderRadius: 1,
         width: '60px',
         height: '60px',
-        fontSize: '24px'
+        bgcolor: 'rgba(0,0,0,0.04)'
       }}
     >
-      {getArrows()}
+      {direction === 'row' && <ArrowForwardIcon color="primary" />}
+      {direction === 'column' && <ArrowDownwardIcon color="primary" />}
+      {direction === 'row-reverse' && <ArrowBackIcon color="primary" />}
+      {direction === 'column-reverse' && <ArrowUpwardIcon color="primary" />}
     </Box>
   )
 }
@@ -78,8 +71,6 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
   const [flexWrap, setFlexWrap] = useState((props.wrap as string) || 'wrap')
   const [spacing, setSpacing] = useState<number>(typeof props.spacing === 'number' ? props.spacing : 1)
   const [padding, setPadding] = useState<number>(typeof props.padding === 'number' ? props.padding : 1)
-  const [maxItems, setMaxItems] = useState<number>(typeof props.maxItems === 'number' ? props.maxItems : 0)
-  const [minHeight, setMinHeight] = useState<number>(typeof props.minHeight === 'number' ? props.minHeight : 0)
   
   // Initialize state based on props
   useEffect(() => {
@@ -105,14 +96,6 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
     
     if (typeof props.padding === 'number') {
       setPadding(props.padding as number)
-    }
-    
-    if (typeof props.maxItems === 'number') {
-      setMaxItems(props.maxItems as number)
-    }
-    
-    if (typeof props.minHeight === 'number') {
-      setMinHeight(props.minHeight as number)
     }
   }, [props])
   
@@ -204,7 +187,7 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
               width: '100%',
               border: '1px dashed #ccc',
               borderRadius: 1,
-              minHeight: minHeight ? `${minHeight}px` : '120px',
+              minHeight: '120px',
               backgroundColor: 'rgba(0,0,0,0.02)'
             }}
           >
@@ -222,34 +205,10 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
               <span>Gap: {spacing}</span>
               <span>•</span>
               <span>Padding: {padding}</span>
-              {minHeight > 0 && (
-                <>
-                  <span>•</span>
-                  <span>Min Height: {minHeight}px</span>
-                </>
-              )}
-              {maxItems > 0 && (
-                <>
-                  <span>•</span>
-                  <span>Max Items: {maxItems}</span>
-                </>
-              )}
-              {Boolean(props.grow) && (
-                <>
-                  <span>•</span>
-                  <span>Children Can Grow</span>
-                </>
-              )}
               {Boolean(props.scrollable) && (
                 <>
                   <span>•</span>
                   <span>Scrollable</span>
-                </>
-              )}
-              {Boolean(props.responsive) && (
-                <>
-                  <span>•</span>
-                  <span>Responsive</span>
                 </>
               )}
             </Typography>
@@ -265,103 +224,82 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
           variant="scrollable"
           scrollButtons="auto"
         >
-          <Tab label="Layout" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Alignment" icon={<DesignServicesIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Spacing" icon={<SpaceDashboardIcon fontSize="small" />} iconPosition="start" />
+          <Tab label="Layout" icon={<SpaceDashboardIcon fontSize="small" />} iconPosition="start" />
+          <Tab label="Appearance" icon={<DesignServicesIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
       
       {/* Layout Tab */}
       <TabPanelShared value={tabValue} index={0}>
         <Grid container spacing={2}>
+          {/* Flex Direction */}
           <Grid item xs={12}>
             <Typography variant="subtitle2" gutterBottom>
               Flex Direction
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <DirectionIndicator direction={direction} />
-              <FormControl fullWidth>
-                <InputLabel>Direction</InputLabel>
-                <Select
-                  value={direction}
-                  label="Direction"
-                  onChange={(e) => {
-                    setDirection(e.target.value)
-                    handleChange('direction', e.target.value)
+            <Grid container spacing={1}>
+              <Grid item xs={3}>
+                <Button 
+                  fullWidth
+                  variant={direction === 'row' ? 'contained' : 'outlined'}
+                  onClick={() => {
+                    setDirection('row')
+                    handleChange('direction', 'row')
                   }}
+                  sx={{ height: '60px', display: 'flex', flexDirection: 'column', gap: 0.5 }}
                 >
-                  <MenuItem value="row">Row (Horizontal →)</MenuItem>
-                  <MenuItem value="column">Column (Vertical ↓)</MenuItem>
-                  <MenuItem value="row-reverse">Row Reverse (← Horizontal)</MenuItem>
-                  <MenuItem value="column-reverse">Column Reverse (↑ Vertical)</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
+                  <ArrowForwardIcon />
+                  <Typography variant="caption">Row</Typography>
+                </Button>
+              </Grid>
+              <Grid item xs={3}>
+                <Button 
+                  fullWidth
+                  variant={direction === 'column' ? 'contained' : 'outlined'}
+                  onClick={() => {
+                    setDirection('column')
+                    handleChange('direction', 'column')
+                  }}
+                  sx={{ height: '60px', display: 'flex', flexDirection: 'column', gap: 0.5 }}
+                >
+                  <ArrowDownwardIcon />
+                  <Typography variant="caption">Column</Typography>
+                </Button>
+              </Grid>
+              <Grid item xs={3}>
+                <Button 
+                  fullWidth
+                  variant={direction === 'row-reverse' ? 'contained' : 'outlined'}
+                  onClick={() => {
+                    setDirection('row-reverse')
+                    handleChange('direction', 'row-reverse')
+                  }}
+                  sx={{ height: '60px', display: 'flex', flexDirection: 'column', gap: 0.5 }}
+                >
+                  <ArrowBackIcon />
+                  <Typography variant="caption">Row Rev</Typography>
+                </Button>
+              </Grid>
+              <Grid item xs={3}>
+                <Button 
+                  fullWidth
+                  variant={direction === 'column-reverse' ? 'contained' : 'outlined'}
+                  onClick={() => {
+                    setDirection('column-reverse')
+                    handleChange('direction', 'column-reverse')
+                  }}
+                  sx={{ height: '60px', display: 'flex', flexDirection: 'column', gap: 0.5 }}
+                >
+                  <ArrowUpwardIcon />
+                  <Typography variant="caption">Col Rev</Typography>
+                </Button>
+              </Grid>
+            </Grid>
           </Grid>
           
+          {/* Justification */}
           <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Flex Wrap</InputLabel>
-              <Select
-                value={flexWrap}
-                label="Flex Wrap"
-                onChange={(e) => {
-                  setFlexWrap(e.target.value)
-                  handleChange('wrap', e.target.value)
-                }}
-              >
-                <MenuItem value="nowrap">No Wrap (Force single line)</MenuItem>
-                <MenuItem value="wrap">Wrap (Allow multiple lines)</MenuItem>
-                <MenuItem value="wrap-reverse">Wrap Reverse</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Min Height (px)"
-              type="number"
-              fullWidth
-              value={minHeight}
-              onChange={(e) => {
-                const value = Number(e.target.value)
-                setMinHeight(value)
-                handleChange('minHeight', value)
-              }}
-              inputProps={{ min: 0, step: 10 }}
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Max Items (0 = unlimited)"
-              type="number"
-              fullWidth
-              value={maxItems}
-              onChange={(e) => {
-                const value = Number(e.target.value)
-                setMaxItems(value)
-                handleChange('maxItems', value)
-              }}
-              inputProps={{ min: 0 }}
-              helperText="Limit number of children"
-            />
-          </Grid>
-        </Grid>
-      </TabPanelShared>
-      
-      {/* Alignment Tab */}
-      <TabPanelShared value={tabValue} index={1}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2" gutterBottom>
-              Justify Content ({direction.includes('column') ? 'Vertical' : 'Horizontal'} Alignment)
-            </Typography>
-            <FormControl fullWidth>
+            <FormControl fullWidth sx={{ mt: 2 }}>
               <InputLabel>Justify Content</InputLabel>
               <Select
                 value={justifyContent}
@@ -381,10 +319,8 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
             </FormControl>
           </Grid>
           
+          {/* Alignment */}
           <Grid item xs={12}>
-            <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-              Align Items (Cross-axis Alignment)
-            </Typography>
             <FormControl fullWidth>
               <InputLabel>Align Items</InputLabel>
               <Select
@@ -404,101 +340,51 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
             </FormControl>
           </Grid>
           
+          {/* Wrapping */}
           <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.grow)}
-                  onChange={(e) => handleChange('grow', e.target.checked)}
-                />
-              }
-              label="Allow Children to Grow"
-              sx={{ mt: 2 }}
-            />
+            <FormControl fullWidth>
+              <InputLabel>Flex Wrap</InputLabel>
+              <Select
+                value={flexWrap}
+                label="Flex Wrap"
+                onChange={(e) => {
+                  setFlexWrap(e.target.value)
+                  handleChange('wrap', e.target.value)
+                }}
+              >
+                <MenuItem value="nowrap">No Wrap</MenuItem>
+                <MenuItem value="wrap">Wrap</MenuItem>
+                <MenuItem value="wrap-reverse">Wrap Reverse</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
-        </Grid>
-      </TabPanelShared>
-      
-      {/* Spacing Tab */}
-      <TabPanelShared value={tabValue} index={2}>
-        <Grid container spacing={2}>
+          
+          {/* Spacing */}
           <Grid item xs={12}>
-            <Typography gutterBottom>
-              Spacing Between Items: {spacing}
+            <Typography variant="subtitle2" gutterBottom>
+              Item Spacing (Gap)
             </Typography>
             <Slider
               value={spacing}
               min={0}
-              max={10}
+              max={8}
               step={1}
               marks
+              valueLabelDisplay="auto"
               onChange={(_e, value) => {
-                const newValue = Array.isArray(value) ? value[0] : value
-                setSpacing(newValue)
-                handleChange('spacing', newValue)
+                setSpacing(value as number)
+                handleChange('spacing', value)
+              }}
+              sx={{
+                '& .MuiSlider-markLabel': {
+                  color: 'text.primary',
+                  fontWeight: 'medium'
+                }
               }}
             />
           </Grid>
           
-          <Grid item xs={12}>
-            <Typography gutterBottom sx={{ mt: 2 }}>
-              Padding Inside Container: {padding}
-            </Typography>
-            <Slider
-              value={padding}
-              min={0}
-              max={5}
-              step={1}
-              marks
-              onChange={(_e, value) => {
-                const newValue = Array.isArray(value) ? value[0] : value
-                setPadding(newValue)
-                handleChange('padding', newValue)
-              }}
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Box sx={{ mt: 2, mb: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Spacing Visualization
-              </Typography>
-              <Box
-                sx={{
-                  p: padding,
-                  backgroundColor: '#f5f5f5',
-                  border: '1px dashed #aaa',
-                  borderRadius: 1
-                }}
-              >
-                <Stack 
-                  direction="row" 
-                  spacing={spacing}
-                  sx={{ 
-                    '& > div': { 
-                      width: 30, 
-                      height: 30, 
-                      display: 'flex', 
-                      justifyContent: 'center', 
-                      alignItems: 'center',
-                      fontWeight: 'bold',
-                      color: 'white',
-                      borderRadius: 1
-                    }
-                  }}
-                >
-                  <Box sx={{ bgcolor: '#ef5350' }}>1</Box>
-                  <Box sx={{ bgcolor: '#42a5f5' }}>2</Box>
-                  <Box sx={{ bgcolor: '#66bb6a' }}>3</Box>
-                </Stack>
-              </Box>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
+          {/* Scrollable Option */}
           <Grid item xs={12}>
             <FormControlLabel
               control={
@@ -507,25 +393,112 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                   onChange={(e) => handleChange('scrollable', e.target.checked)}
                 />
               }
-              label="Enable Scrolling (when content overflows)"
+              label="Make Container Scrollable"
+            />
+          </Grid>
+        </Grid>
+      </TabPanelShared>
+      
+      {/* Appearance Tab */}
+      <TabPanelShared value={tabValue} index={1}>
+        <Grid container spacing={2}>
+          {/* Padding */}
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" gutterBottom>
+              Container Padding
+            </Typography>
+            <Slider
+              value={padding}
+              min={0}
+              max={8}
+              step={1}
+              marks
+              valueLabelDisplay="auto"
+              onChange={(_e, value) => {
+                setPadding(value as number)
+                handleChange('padding', value)
+              }}
+              sx={{
+                '& .MuiSlider-markLabel': {
+                  color: 'text.primary',
+                  fontWeight: 'medium'
+                }
+              }}
             />
           </Grid>
           
+          {/* Background Color */}
           <Grid item xs={12}>
             <FormControlLabel
               control={
                 <Switch
-                  checked={Boolean(props.responsive)}
-                  onChange={(e) => handleChange('responsive', e.target.checked)}
+                  checked={Boolean(props.useCustomColor)}
+                  onChange={(e) => handleChange('useCustomColor', e.target.checked)}
                 />
               }
-              label="Responsive Layout (adapt to screen size)"
+              label="Use Custom Background Color"
             />
           </Grid>
+          
+          {props.useCustomColor && (
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <input
+                  type="color"
+                  value={(props.backgroundColor as string) || '#f5f5f5'}
+                  onChange={(e) => handleChange('backgroundColor', e.target.value)}
+                  style={{ 
+                    width: '36px', 
+                    height: '36px', 
+                    padding: 0, 
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <TextField 
+                  fullWidth
+                  label="Background Color"
+                  value={(props.backgroundColor as string) || '#f5f5f5'}
+                  onChange={(e) => handleChange('backgroundColor', e.target.value)}
+                />
+              </Box>
+            </Grid>
+          )}
+          
+          {/* Border Option */}
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(props.showBorder)}
+                  onChange={(e) => handleChange('showBorder', e.target.checked)}
+                />
+              }
+              label="Show Border"
+            />
+          </Grid>
+          
+          {props.showBorder && (
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Border Style</InputLabel>
+                <Select
+                  value={(props.borderStyle as string) || 'solid'}
+                  label="Border Style"
+                  onChange={(e) => handleChange('borderStyle', e.target.value)}
+                >
+                  <MenuItem value="solid">Solid</MenuItem>
+                  <MenuItem value="dashed">Dashed</MenuItem>
+                  <MenuItem value="dotted">Dotted</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
         </Grid>
       </TabPanelShared>
     </Box>
   )
 }
 
-export default FlexBoxEditor 
+export default FlexBoxEditor

@@ -87,13 +87,13 @@ export const createDualPanelLayout = (component1: string, component2: string, na
 
 interface DashboardOptionsProps {
   topNavBarWidgets: PanelGroup[]
-  createViewWithLayout: (viewName: string, layout: Layout) => void
+  createDashboardWithLayout: (dashboardName: string, layout: Layout) => void
   handleClose: () => void
 }
 
 const DashboardOptions: React.FC<DashboardOptionsProps> = ({ 
   topNavBarWidgets, 
-  createViewWithLayout,
+  createDashboardWithLayout,
   handleClose
 }) => {
   const controlFlowComponent = topNavBarWidgets[0]?.items[0]?.component
@@ -106,8 +106,8 @@ const DashboardOptions: React.FC<DashboardOptionsProps> = ({
     <>
       <MenuItem 
         onClick={() => {
-          createViewWithLayout(
-            "Control Flow View", 
+          createDashboardWithLayout(
+            "Control Flow Dashboard", 
             createSinglePanelLayout(
               controlFlowComponent,
               controlFlowName
@@ -116,13 +116,13 @@ const DashboardOptions: React.FC<DashboardOptionsProps> = ({
           handleClose()
         }}
       >
-        Control Flow View
+        Control Flow Dashboard
       </MenuItem>
       
       <MenuItem 
         onClick={() => {
-          createViewWithLayout(
-            "System Lens View", 
+          createDashboardWithLayout(
+            "System Lens Dashboard", 
             createSinglePanelLayout(
               systemLensComponent,
               systemLensName
@@ -131,18 +131,18 @@ const DashboardOptions: React.FC<DashboardOptionsProps> = ({
           handleClose()
         }}
       >
-        System Lens View
+        System Lens Dashboard
       </MenuItem>
       
       <Divider />
       
       <Typography sx={{ px: 2, py: 1, fontSize: '0.8rem', color: 'text.secondary' }}>
-        Combined View
+        Combined Dashboard
       </Typography>
       
       <MenuItem 
         onClick={() => {
-          createViewWithLayout(
+          createDashboardWithLayout(
             "Combined Dashboard", 
             createDualPanelLayout(
               controlFlowComponent,

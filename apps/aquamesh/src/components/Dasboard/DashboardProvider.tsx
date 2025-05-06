@@ -5,93 +5,93 @@ import { nanoid } from 'nanoid'
 
 import { DEFAULT_DASHBOARD, DefaultDashboard } from './fixture'
 
-import { useStore, StateView } from '../../state/store'
+import { useStore, StateDashboard } from '../../state/store'
 
 import { Model } from 'flexlayout-react'
 
-interface ViewsProviderProps {
+interface DashboardProviderProps {
   children: React.ReactNode;
 }
 
-interface ViewsContextType {
-  openViews: StateView[];
-  selectedView: number;
-  setSelectedView: (index: number) => void;
-  removeView: (id: string) => void;
-  addView: (view?: DefaultDashboard) => void;
+interface DashboardContextType {
+  openDashboards: StateDashboard[];
+  selectedDashboard: number;
+  setSelectedDashboard: (index: number) => void;
+  removeDashboard: (id: string) => void;
+  addDashboard: (dashboard?: DefaultDashboard) => void;
   updateLayout: (model: Model) => void;
-  renameView: (id: string, newName: string) => void;
+  renameDashboard: (id: string, newName: string) => void;
 }
 
-const ViewsContext = React.createContext<ViewsContextType | null>(null)
+const DashboardContext = React.createContext<DashboardContextType | null>(null)
 
-const ViewsProvider: React.FC<ViewsProviderProps> = (props) => {
-  const selectedView = useStore((state) => state.selectedView)
-  const setSelectedView = useStore((state) => state.setSelectedView)
-  const openViews = useStore((state) => state.openViews)
-  const setViews = useStore((state) => state.setViews)
+const DashboardProvider: React.FC<DashboardProviderProps> = (props) => {
+  const selectedDashboard = useStore((state) => state.selectedDashboard)
+  const setSelectedDashboard = useStore((state) => state.setSelectedDashboard)
+  const openDashboards = useStore((state) => state.openDashboards)
+  const setDashboards = useStore((state) => state.setDashboards)
 
-  const removeView = (id: string) => {
-    const views = openViews.filter((view) => view.id !== id)
+  const removeDashboard = (id: string) => {
+    const dashboards = openDashboards.filter((dashboard) => dashboard.id !== id)
 
-    setViews(views)
+    setDashboards(dashboards)
 
-    if (selectedView >= views.length) {
-      setSelectedView(selectedView - 1)
+    if (selectedDashboard >= dashboards.length) {
+      setSelectedDashboard(selectedDashboard - 1)
     }
   }
 
-  const addView = (view = DEFAULT_DASHBOARD) => {
-    const newView = openViews.concat(Object.assign({ id: nanoid() }, view))
-    const newSelectedView = openViews.length
+  const addDashboard = (dashboard = DEFAULT_DASHBOARD) => {
+    const newDashboard = openDashboards.concat(Object.assign({ id: nanoid() }, dashboard))
+    const newSelectedDashboard = openDashboards.length
 
-    setViews(newView)
-    setSelectedView(newSelectedView)
+    setDashboards(newDashboard)
+    setSelectedDashboard(newSelectedDashboard)
   }
 
   const updateLayout = (model: Model) => {
     const newLayout = model.toJson().layout
-    const newOpenViews = [...openViews]
-    newOpenViews[selectedView] = {
-      ...openViews[selectedView],
+    const newOpenDashboards = [...openDashboards]
+    newOpenDashboards[selectedDashboard] = {
+      ...openDashboards[selectedDashboard],
       layout: newLayout,
     }
-    setViews(newOpenViews)
+    setDashboards(newOpenDashboards)
   }
   
-  const renameView = (id: string, newName: string) => {
-    const newOpenViews = openViews.map(view => {
-      if (view.id === id) {
-        return { ...view, name: newName };
+  const renameDashboard = (id: string, newName: string) => {
+    const newOpenDashboards = openDashboards.map(dashboard => {
+      if (dashboard.id === id) {
+        return { ...dashboard, name: newName }
       }
-      return view;
-    });
+      return dashboard
+    })
     
-    setViews(newOpenViews);
+    setDashboards(newOpenDashboards)
   }
   
   return (
-    <ViewsContext.Provider
+    <DashboardContext.Provider
       {...props}
       value={{
-        openViews,
-        selectedView,
-        setSelectedView,
-        removeView,
-        addView,
+        openDashboards,
+        selectedDashboard,
+        setSelectedDashboard,
+        removeDashboard,
+        addDashboard,
         updateLayout,
-        renameView,
+        renameDashboard,
       }}
     />
   )
 }
 
-export const useViews = () => {
-  const context = useContext(ViewsContext)
+export const useDashboards = () => {
+  const context = useContext(DashboardContext)
   if(!context) {
-    throw new Error("useLayout must be used within a ViewsProvider")
+    throw new Error("useDashboards must be used within a DashboardProvider")
   }
   return context
 }
 
-export default ViewsProvider
+export default DashboardProvider

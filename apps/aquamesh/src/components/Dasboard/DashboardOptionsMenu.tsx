@@ -10,7 +10,7 @@ import {
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import FolderIcon from '@mui/icons-material/Folder'
-import { useViews } from './DashboardProvider'
+import { useDashboards } from './DashboardProvider'
 import SavedDashboardsDialog from './SavedDashboardsDialog'
 import { Layout } from '../../types/types'
 
@@ -35,7 +35,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
   const [customDashboards, setCustomDashboards] = useState<SavedDashboard[]>([])
   const [dashboardLibraryOpen, setDashboardLibraryOpen] = useState(false)
   
-  const { addView } = useViews()
+  const { addDashboard } = useDashboards()
   
   // Load saved dashboards from localStorage on component mount
   useEffect(() => {
@@ -63,10 +63,10 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
     setAnchorEl(null)
   }
   
-  // Create a view with predefined layout
-  const createViewWithLayout = (viewName: string, layout: Layout) => {
-    addView({
-      name: viewName,
+  // Create a dashboard with predefined layout
+  const createDashboardWithLayout = (dashboardName: string, layout: Layout) => {
+    addDashboard({
+      name: dashboardName,
       layout
     })
     handleClose()
@@ -74,7 +74,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
   
   // Load a saved dashboard
   const loadCustomDashboard = (dashboard: SavedDashboard) => {
-    createViewWithLayout(dashboard.name, dashboard.layout)
+    createDashboardWithLayout(dashboard.name, dashboard.layout)
   }
   
   // Open dashboard library dialog
@@ -127,7 +127,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
         </Typography>
         <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
         <MenuItem 
-          onClick={() => createViewWithLayout('Control Flow Dashboard', { 
+          onClick={() => createDashboardWithLayout('Control Flow Dashboard', { 
             type: 'row', 
             weight: 100, 
             children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] }]
@@ -137,7 +137,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
           Control Flow Dashboard
         </MenuItem>
         <MenuItem 
-          onClick={() => createViewWithLayout('System Lens Dashboard', { 
+          onClick={() => createDashboardWithLayout('System Lens Dashboard', { 
             type: 'row', 
             weight: 100, 
             children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }]
@@ -147,7 +147,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
           System Lens Dashboard
         </MenuItem>
         <MenuItem 
-          onClick={() => createViewWithLayout('Control Flow + System Lens', { 
+          onClick={() => createDashboardWithLayout('Control Flow + System Lens', { 
             type: 'row', 
             weight: 100, 
             children: [
@@ -164,10 +164,10 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
         {customDashboards.length > 0 && (
           <>
             <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
-              Recent Custom Dashboards
+              Custom Dashboards
             </Typography>
             <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-            {customDashboards.slice(0, 3).map((dashboard) => (
+            {customDashboards.map((dashboard) => (
               <MenuItem 
                 key={dashboard.id}
                 onClick={() => loadCustomDashboard(dashboard)}

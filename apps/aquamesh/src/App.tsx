@@ -5,8 +5,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 import TopNavBar from './components/topnavbar/TopNavBar'
 import Main from './components/Main'
-import Views from './components/Dasboard/Dashboard'
-import ViewsProvider from './components/Dasboard/DashboardProvider'
+import Dashboards from './components/Dasboard/Dashboard'
+import DashboardProvider from './components/Dasboard/DashboardProvider'
 import LayoutProvider from './components/Layout/LayoutProvider'
 import Login from './components/auth/Login'
 
@@ -33,7 +33,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>
 }
 
-const Dashboard = () => {
+const MainPage = () => {
   const [menuOpen, setMenuOpen] = useState(false)
   
   return (
@@ -43,7 +43,7 @@ const Dashboard = () => {
         mt={8}
         sx={{ position: 'relative' }}
       >
-        <Views />
+        <Dashboards />
       </Main>
     </>
   )
@@ -55,20 +55,20 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <PrimeReactProvider value={{ ripple: true }}>
           <CssBaseline />
-          <ViewsProvider>
+          <DashboardProvider>
             <LayoutProvider>
               <CssBaseline />
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/" element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <MainPage />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </LayoutProvider>
-          </ViewsProvider>
+          </DashboardProvider>
         </PrimeReactProvider>
       </ThemeProvider>
     </BrowserRouter>

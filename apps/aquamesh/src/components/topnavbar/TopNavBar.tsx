@@ -25,7 +25,7 @@ import FolderIcon from '@mui/icons-material/Folder'
 import useTopNavBarWidgets from '../../customHooks/useTopNavBarWidgets'
 import { useLayout } from '../Layout/LayoutProvider'
 import { ReactComponent as Logo } from '../../../public/logo.svg'
-import { useViews } from '../Dasboard/DashboardProvider'
+import { useDashboards } from '../Dasboard/DashboardProvider'
 import TutorialModal from '../tutorial/TutorialModal'
 import DashboardOptionsMenu from '../Dasboard/DashboardOptionsMenu'
 import WidgetManagementModal from '../WidgetEditor/components/dialogs/WidgetManagementModal'
@@ -58,7 +58,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
 
   const { topNavBarWidgets } = useTopNavBarWidgets()
   const { addComponent } = useLayout()
-  const { addView, openViews } = useViews()
+  const { addDashboard, openDashboards } = useDashboards()
   const navigate = useNavigate()
   
   // Use theme and media query for responsive design
@@ -123,24 +123,22 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
     setShowTutorialOnStartup(!showTutorialOnStartup)
   }
 
-  // Helper function to ensure there's a view before adding a component
-  const ensureViewAndAddComponent = (componentConfig: {
+  // Helper function to ensure there's a dashboard before adding a component
+  const ensureDashboardAndAddComponent = (componentConfig: {
     id: string;
     name: string;
     component: string;
-    url?: string;
-    customProps?: Record<string, unknown>;
   }) => {
-    // Check if there are any open views (dashboards)
-    if (openViews.length === 0) {
-      // If no views exist, create a default dashboard first
-      addView()
-      // Short delay to ensure the view is created before adding the component
+    // Check if there are any open dashboards
+    if (openDashboards.length === 0) {
+      // If no dashboards exist, create a default dashboard first
+      addDashboard()
+      // Short delay to ensure the dashboard is created before adding the component
       setTimeout(() => {
         addComponent(componentConfig)
       }, 100)
     } else {
-      // If views already exist, add the component directly
+      // If dashboards already exist, add the component directly
       addComponent(componentConfig)
     }
   }
@@ -225,7 +223,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                     <MenuItem 
                       key={item.name} 
                       onClick={() => {
-                        ensureViewAndAddComponent({
+                        ensureDashboardAndAddComponent({
                           id: `panel-${Date.now()}`,
                           ...item,
                         })
@@ -252,7 +250,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                         <MenuItem 
                           key={item.name} 
                           onClick={() => {
-                            ensureViewAndAddComponent({
+                            ensureDashboardAndAddComponent({
                               id: `panel-${Date.now()}`,
                               ...item,
                             })
@@ -294,7 +292,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
             {userData.id === 'admin' && userData.role === 'ADMIN_ROLE' && (
               <Button
                 onClick={() => {
-                  ensureViewAndAddComponent({
+                  ensureDashboardAndAddComponent({
                     id: `widget-editor-${Date.now()}`,
                     name: "Widget Editor",
                     component: "WidgetEditor",

@@ -11,13 +11,13 @@ import { ReactComponent as MinimizeIcon } from '../../icons/minimize.svg'
 import DynamicMicrofrontend from '../../moduleFederation/DynamicMicrofrontend'
 
 import { useLayout } from './LayoutProvider'
-import { ViewLayout } from '../../state/store'
+import { DashboardLayout } from '../../state/store'
 
 import 'flexlayout-react/style/light.css'
 import './layout.scss'
 
-interface LayoutViewProps {
-  layout?: ViewLayout;
+interface DashboardLayoutViewProps {
+  layout?: DashboardLayout;
   updateLayout: (model: Model) => void; 
 }
 
@@ -47,7 +47,7 @@ const EmptyPanel = () => (
   </div>
 )
 
-const LayoutView: React.FC<LayoutViewProps>= ({ layout, updateLayout }) => {
+const DashboardLayoutView: React.FC<DashboardLayoutViewProps>= ({ layout, updateLayout }) => {
   const { ref } = useLayout()
 
   const factory = (node: TabNode) => {
@@ -128,4 +128,4 @@ const LayoutView: React.FC<LayoutViewProps>= ({ layout, updateLayout }) => {
   )
 }
 
-export default LayoutView
+export default DashboardLayoutView

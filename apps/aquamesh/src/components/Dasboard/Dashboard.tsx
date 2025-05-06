@@ -6,16 +6,16 @@ import { ReactComponent as AddIcon } from '../../icons/add.svg'
 import { ReactComponent as CloseIcon } from '../../icons/close.svg'
 import SaveIcon from '@mui/icons-material/Save'
 
-import LayoutView from '../Layout/Layout'
-import { ViewLayout } from '../../state/store'
-import { useViews } from './DashboardProvider'
+import DashboardLayoutView from '../Layout/Layout'
+import { DashboardLayout } from '../../state/store'
+import { useDashboards } from './DashboardProvider'
 import './tabs.scss'
 
 // Define custom dashboard type for localStorage
 interface SavedDashboard {
   id: string;
   name: string;
-  layout: ViewLayout;
+  layout: DashboardLayout;
   description?: string;
   tags?: string[];
   isPublic?: boolean;
@@ -76,7 +76,7 @@ const DashboardStorage = {
   },
   
   // Check if the current layout is different from the saved one
-  hasChanges: (name: string, currentLayout?: ViewLayout): boolean => {
+  hasChanges: (name: string, currentLayout?: DashboardLayout): boolean => {
     const savedDashboard = DashboardStorage.getByName(name)
     if (!savedDashboard) { return true } // If no saved dashboard exists, then there are changes
     if (!currentLayout) { return false } // If no current layout, no changes
@@ -86,16 +86,16 @@ const DashboardStorage = {
   }
 }
 
-const Views = () => {
+const Dashboards = () => {
   const {
-    openViews,
-    selectedView,
-    setSelectedView,
-    removeView,
-    addView,
+    openDashboards,
+    selectedDashboard,
+    setSelectedDashboard,
+    removeDashboard,
+    addDashboard,
     updateLayout,
-    renameView
-  } = useViews()
+    renameDashboard
+  } = useDashboards()
   
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [dashboardName, setDashboardName] = useState('')
@@ -121,36 +121,36 @@ const Views = () => {
     }
   }, [])
 
-  // Check if current views have changes compared to saved dashboards
+  // Check if current dashboards have changes compared to saved dashboards
   useEffect(() => {
     const changes: Record<string, boolean> = {}
     
-    openViews.forEach((view, index) => {
-      changes[index] = DashboardStorage.hasChanges(view.name, view.layout)
+    openDashboards.forEach((dashboard, index) => {
+      changes[index] = DashboardStorage.hasChanges(dashboard.name, dashboard.layout)
     })
     
     setHasChanges(changes)
-  }, [openViews])
+  }, [openDashboards])
 
   const handleSaveDialogOpen = (index: number) => {
-    const currentView = openViews[index]
+    const currentDashboard = openDashboards[index]
     
     // Check if it's an update of an existing dashboard
-    const existingDashboard = DashboardStorage.getByName(currentView.name)
+    const existingDashboard = DashboardStorage.getByName(currentDashboard.name)
     
     if (existingDashboard) {
       // Direct update without showing the dialog for existing dashboards
       try {
-        if (currentView.layout) {
+        if (currentDashboard.layout) {
           const updatedDashboard: SavedDashboard = {
             ...existingDashboard,
-            layout: currentView.layout,
+            layout: currentDashboard.layout,
             updatedAt: new Date().toISOString()
           }
           
           DashboardStorage.save(updatedDashboard)
           
-          // Mark this view as no longer having changes
+          // Mark this dashboard as no longer having changes
           setHasChanges(prev => ({
             ...prev,
             [index]: false
@@ -162,7 +162,7 @@ const Views = () => {
     } else {
       // Show enhanced save dialog for new dashboards
       setCurrentTabIndex(index)
-      setDashboardName(currentView.name || '')
+      setDashboardName(currentDashboard.name || '')
       setDashboardDescription('')
       setDashboardTags(['dashboard'])
       setIsPublic(false)
@@ -201,13 +201,13 @@ const Views = () => {
 
   const handleSaveDashboard = () => {
     if (currentTabIndex !== null && dashboardName.trim() !== '') {
-      const currentView = openViews[currentTabIndex]
+      const currentDashboard = openDashboards[currentTabIndex]
       try {
-        if (currentView.layout) {
+        if (currentDashboard.layout) {
           const newDashboard: SavedDashboard = {
             id: `dashboard-${Date.now()}`,
             name: dashboardName.trim(),
-            layout: currentView.layout,
+            layout: currentDashboard.layout,
             description: dashboardDescription.trim() || undefined,
             tags: dashboardTags.length > 0 ? dashboardTags : ['dashboard'],
             isPublic: isAdmin ? isPublic : false,
@@ -217,10 +217,10 @@ const Views = () => {
           
           DashboardStorage.save(newDashboard)
           
-          // Update the view name in the TabList
-          renameView(currentView.id, dashboardName)
+          // Update the dashboard name in the TabList
+          renameDashboard(currentDashboard.id, dashboardName)
           
-          // Mark this view as no longer having changes
+          // Mark this dashboard as no longer having changes
           setHasChanges(prev => ({
             ...prev,
             [currentTabIndex]: false
@@ -237,13 +237,13 @@ const Views = () => {
   return (
     <Box>
       <Tabs
-        selectedIndex={selectedView}
-        onSelect={(index) => setSelectedView(index)}
+        selectedIndex={selectedDashboard}
+        onSelect={(index) => setSelectedDashboard(index)}
         style={{ position: 'relative' }}
       >
         <TabList>
-          {openViews.map((view, index) => (
-            <Tab key={view.id}>
+          {openDashboards.map((dashboard, index) => (
+            <Tab key={dashboard.id}>
               <Typography
                 variant="subtitle2"
                 sx={{
@@ -254,7 +254,7 @@ const Views = () => {
                   marginLeft: '0.5rem'
                 }}
               >
-                {view.name}
+                {dashboard.name}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 {hasChanges[index] && (
@@ -296,7 +296,7 @@ const Views = () => {
                     onClick={(ev) => {
                       // NOTE prevent the tab being closed from being selected too!
                       ev.stopPropagation()
-                      removeView(view.id)
+                      removeDashboard(dashboard.id)
                     }}
                   />
                 </Box>
@@ -333,11 +333,11 @@ const Views = () => {
               },
             }}
             startIcon={<AddIcon width={16} height={16} />}
-            onClick={() => addView()}
+            onClick={() => addDashboard()}
           />
         </TabList>
-        {openViews.map((view) => (
-          <TabPanel key={view.id}>
+        {openDashboards.map((dashboard) => (
+          <TabPanel key={dashboard.id}>
             <Box
               sx={{
                 display: 'flex',
@@ -347,14 +347,14 @@ const Views = () => {
               }}
             >
               <Box sx={{ position: 'relative', flex: '1' }}>
-                <LayoutView
-                  layout={view.layout}
+                <DashboardLayoutView
+                  layout={dashboard.layout}
                   updateLayout={(model) => {
                     updateLayout(model)
-                    // Mark this view as having changes after layout update
+                    // Mark this dashboard as having changes after layout update
                     setHasChanges(prev => ({
                       ...prev,
-                      [selectedView]: true
+                      [selectedDashboard]: true
                     }))
                   }}
                 />
@@ -607,4 +607,4 @@ const Views = () => {
   )
 }
 
-export default Views
+export default Dashboards

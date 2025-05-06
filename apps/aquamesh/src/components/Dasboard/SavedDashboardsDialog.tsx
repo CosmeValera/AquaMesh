@@ -32,7 +32,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import ShareIcon from '@mui/icons-material/Share'
 import EditIcon from '@mui/icons-material/Edit'
 import { Layout } from '../../types/types'
-import { useViews } from './DashboardProvider'
+import { useDashboards } from './DashboardProvider'
 import { DefaultDashboard } from './fixture'
 import DeleteConfirmationDialog from '../WidgetEditor/components/dialogs/DeleteConfirmationDialog'
 
@@ -87,8 +87,8 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [dashboardToDelete, setDashboardToDelete] = useState<string | null>(null)
   
-  // Access views context
-  const { addView } = useViews()
+  // Access dashboards context
+  const { addDashboard } = useDashboards()
   
   // Add state for edit dialog
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -202,13 +202,18 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
     }
   }, [open])
   
-  // Function to open a dashboard
+  // Handle opening a dashboard
   const handleOpenDashboard = (dashboard: SavedDashboard) => {
-    const newDashboard: DefaultDashboard = {
+    // Convert saved dashboard to the format needed by DashboardProvider
+    const dashboardToOpen: DefaultDashboard = {
       name: dashboard.name,
       layout: dashboard.layout
     }
-    addView(newDashboard)
+    
+    // Add the dashboard
+    addDashboard(dashboardToOpen)
+    
+    // Close the dialog
     onClose()
   }
   

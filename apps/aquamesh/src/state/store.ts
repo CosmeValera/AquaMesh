@@ -1,49 +1,49 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from 'zustand/middleware'
 
-export interface StateView {
+export interface StateDashboard {
   id: string;
   name: string;
-  layout?: ViewLayout;
+  layout?: DashboardLayout;
   aquamesh?: string;
 }
 
-export interface ViewLayout {
+export interface DashboardLayout {
   type?: string;
   id?: string;
-  children?: ViewLayout[];
+  children?: DashboardLayout[];
 }
 
 interface StoreState {
-  selectedView: number;
-  openViews: StateView[];
-  setViews: (element: StateView[]) => void;
-  setSelectedView: (index: number) => void;
-  changePanelData: (data: Partial<StateView>) => void;
-  getCurrentView: () => StateView | undefined;
+  selectedDashboard: number;
+  openDashboards: StateDashboard[];
+  setDashboards: (element: StateDashboard[]) => void;
+  setSelectedDashboard: (index: number) => void;
+  changePanelData: (data: Partial<StateDashboard>) => void;
+  getCurrentDashboard: () => StateDashboard | undefined;
 }
 
 export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
-      selectedView: 0,
-      openViews: [],
-      setViews: (element) => set({ openViews: element }),
-      setSelectedView: (index) => set({ selectedView: index }),
+      selectedDashboard: 0,
+      openDashboards: [],
+      setDashboards: (element) => set({ openDashboards: element }),
+      setSelectedDashboard: (index) => set({ selectedDashboard: index }),
       changePanelData: (data) => {
         const state = get()
-        const updatedOpenViews = [...state.openViews]
+        const updatedOpenDashboards = [...state.openDashboards]
 
-        updatedOpenViews[state.selectedView] = {
-          ...updatedOpenViews[state.selectedView],
+        updatedOpenDashboards[state.selectedDashboard] = {
+          ...updatedOpenDashboards[state.selectedDashboard],
           ...data,
         }
 
-        set({ openViews: updatedOpenViews })
+        set({ openDashboards: updatedOpenDashboards })
       },
-      getCurrentView: () => {
+      getCurrentDashboard: () => {
         const state = get()
-        return state.openViews[state.selectedView]
+        return state.openDashboards[state.selectedDashboard]
       },
     }),
     {

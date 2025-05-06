@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLayout } from '../../Layout/LayoutProvider'
-import { useViews } from '../../Dasboard/DashboardProvider'
+import { useDashboards } from '../../Dasboard/DashboardProvider'
 import WidgetStorage, { CustomWidget } from '../WidgetStorage'
 
 // Custom hook for widget management
@@ -12,8 +12,8 @@ export const useWidgetManager = () => {
   // Layout context to add widget editor component
   const { addComponent } = useLayout()
   
-  // Views context to manage dashboards
-  const { addView, openViews } = useViews()
+  // Dashboards context to manage dashboards
+  const { addDashboard, openDashboards } = useDashboards()
   
   // Load widgets on mount or when modal is opened
   useEffect(() => {
@@ -49,9 +49,9 @@ export const useWidgetManager = () => {
     return editorToolbar.length > 0 || componentPalette.length > 0
   }
   
-  // Check if there are any open views/dashboards
-  const hasOpenViews = (): boolean => {
-    return openViews.length > 0
+  // Check if there are any open dashboards
+  const hasOpenDashboards = (): boolean => {
+    return openDashboards.length > 0
   }
   
   // Opens widget management modal
@@ -65,23 +65,23 @@ export const useWidgetManager = () => {
     setIsWidgetManagementOpen(false)
   }
   
-  // Helper function to ensure there's a view before adding a component
-  const ensureViewAndAddComponent = (componentConfig: {
+  // Helper function to ensure there's a dashboard before adding a component
+  const ensureDashboardAndAddComponent = (componentConfig: {
     id: string;
     name: string;
     component: string;
     customProps?: Record<string, unknown>;
   }) => {
-    // Check if there are any open views (dashboards)
-    if (!hasOpenViews()) {
-      // If no views exist, create a default dashboard first
-      addView()
-      // Short delay to ensure the view is created before adding the component
+    // Check if there are any open dashboards
+    if (!hasOpenDashboards()) {
+      // Create a new dashboard if none exists
+      addDashboard()
+      // Short delay to ensure the dashboard is created before adding the component
       setTimeout(() => {
         addComponent(componentConfig)
       }, 100)
     } else {
-      // If views already exist, add the component directly
+      // If dashboards already exist, add the component directly
       addComponent(componentConfig)
     }
   }
@@ -93,8 +93,8 @@ export const useWidgetManager = () => {
       closeWidgetManagement()
     }
     
-    // Use the ensureViewAndAddComponent function to properly handle view creation
-    ensureViewAndAddComponent({
+    // Use the ensureDashboardAndAddComponent function to properly handle dashboard creation
+    ensureDashboardAndAddComponent({
       id: `widget-editor-${Date.now()}`,
       name: "Widget Editor",
       component: "WidgetEditor"
@@ -123,8 +123,8 @@ export const useWidgetManager = () => {
       }))
     } else {
       
-      // Use the ensureViewAndAddComponent approach to open a new Widget Editor
-      ensureViewAndAddComponent({
+      // Use the ensureDashboardAndAddComponent approach to open a new Widget Editor
+      ensureDashboardAndAddComponent({
         id: `widget-editor-${Date.now()}`,
         name: `Widget Editor - ${widget.name}`,
         component: "WidgetEditor"
@@ -158,8 +158,8 @@ export const useWidgetManager = () => {
       }))
     } else {
       
-      // Use the ensureViewAndAddComponent approach to open a new Widget Editor
-      ensureViewAndAddComponent({
+      // Use the ensureDashboardAndAddComponent approach to open a new Widget Editor
+      ensureDashboardAndAddComponent({
         id: `widget-editor-${Date.now()}`,
         name: `Widget Editor - ${widget.name}`,
         component: "WidgetEditor"
@@ -197,8 +197,8 @@ export const useWidgetManager = () => {
     deleteWidget,
     isWidgetEditorOpen,
     openWidgetEditor,
-    hasOpenViews,
-    ensureViewAndAddComponent
+    hasOpenDashboards,
+    ensureDashboardAndAddComponent
   }
 }
 

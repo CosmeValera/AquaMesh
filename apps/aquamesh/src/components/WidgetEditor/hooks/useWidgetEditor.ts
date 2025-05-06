@@ -66,7 +66,7 @@ export const useWidgetEditor = () => {
     return savedValue ? JSON.parse(savedValue) : true
   })
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<boolean>(() => {
-    const savedValue = localStorage.getItem('widget-editor-delete-confirmation')
+    const savedValue = localStorage.getItem('widget-editor-delete-component-confirmation')
     return savedValue ? JSON.parse(savedValue) : true
   })
   const [showDeleteWidgetConfirmation, setShowDeleteWidgetConfirmation] = useState<boolean>(() => {
@@ -108,7 +108,7 @@ export const useWidgetEditor = () => {
   }, [showTooltips])
   
   useEffect(() => {
-    localStorage.setItem('widget-editor-delete-confirmation', JSON.stringify(showDeleteConfirmation))
+    localStorage.setItem('widget-editor-delete-component-confirmation', JSON.stringify(showDeleteConfirmation))
   }, [showDeleteConfirmation])
   
   useEffect(() => {

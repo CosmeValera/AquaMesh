@@ -82,10 +82,10 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   // Function to check if delete confirmation is enabled
   const shouldConfirmDelete = (): boolean => {
     try {
-      const storedValue = localStorage.getItem('widget-editor-delete-confirmation')
+      const storedValue = localStorage.getItem('widget-editor-delete-component-confirmation')
       return storedValue !== 'false' // Default to true if not set
     } catch (error) {
-      console.error('Error reading widget-editor-delete-confirmation from localStorage', error)
+      console.error('Error reading widget-editor-delete-component-confirmation from localStorage', error)
       return true // Default to true if there's an error
     }
   }

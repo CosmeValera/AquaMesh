@@ -78,6 +78,12 @@ export const useWidgetEditor = () => {
     return savedValue ? JSON.parse(savedValue) : true
   })
 
+  // Dashboard deletion confirmation setting
+  const [showDeleteDashboardConfirmation, setShowDeleteDashboardConfirmation] = useState<boolean>(() => {
+    const savedValue = localStorage.getItem('widget-editor-delete-dashboard-confirmation')
+    return savedValue ? JSON.parse(savedValue) : true
+  })
+
   // History states for undo/redo functionality
   const [history, setHistory] = useState<WidgetHistoryItem[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
@@ -112,6 +118,10 @@ export const useWidgetEditor = () => {
   useEffect(() => {
     localStorage.setItem('widget-editor-show-palette-help', JSON.stringify(showComponentPaletteHelp))
   }, [showComponentPaletteHelp])
+
+  useEffect(() => {
+    localStorage.setItem('widget-editor-delete-dashboard-confirmation', JSON.stringify(showDeleteDashboardConfirmation))
+  }, [showDeleteDashboardConfirmation])
 
   // Record widget data changes to history
   useEffect(() => {
@@ -917,6 +927,8 @@ export const useWidgetEditor = () => {
     setShowDeleteWidgetConfirmation,
     showComponentPaletteHelp,
     setShowComponentPaletteHelp,
+    showDeleteDashboardConfirmation,
+    setShowDeleteDashboardConfirmation,
     deleteConfirmOpen,
     componentToDelete,
     widgetToDelete,

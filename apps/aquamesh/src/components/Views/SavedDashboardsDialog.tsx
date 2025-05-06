@@ -97,10 +97,13 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
   // Get the delete confirmation preference from localStorage
   const shouldConfirmDelete = () => {
     try {
-      const stored = localStorage.getItem('dashboard-delete-confirm')
-      return stored !== 'false' // Default to true if not set or if not 'false'
+      const stored = localStorage.getItem('widget-editor-delete-dashboard-confirmation')
+      if (stored !== null) {
+        return JSON.parse(stored)
+      }
+      return true // Default to true if not set
     } catch (error) {
-      console.error('Error reading dashboard-delete-confirm from localStorage', error)
+      console.error('Error reading widget-editor-delete-dashboard-confirmation from localStorage', error)
       return true // Default to true if there's an error
     }
   }

@@ -46,6 +46,8 @@ const WidgetEditor: React.FC<{
     deleteConfirmOpen,
     showDeleteWidgetConfirmation,
     setShowDeleteWidgetConfirmation,
+    showDeleteDashboardConfirmation,
+    setShowDeleteDashboardConfirmation,
     
     // Event handlers
     handleDragStart,
@@ -344,6 +346,8 @@ const WidgetEditor: React.FC<{
         onShowDeleteConfirmationChange={setShowDeleteConfirmation}
         showDeleteWidgetConfirmation={showDeleteWidgetConfirmation}
         onShowDeleteWidgetConfirmationChange={setShowDeleteWidgetConfirmation}
+        showDeleteDashboardConfirmation={showDeleteDashboardConfirmation}
+        onShowDeleteDashboardConfirmationChange={setShowDeleteDashboardConfirmation}
       />
 
       {/* Delete Confirmation Dialog */}

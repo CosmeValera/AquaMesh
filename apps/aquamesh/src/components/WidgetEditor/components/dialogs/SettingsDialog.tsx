@@ -111,34 +111,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   onShowComponentPaletteHelpChange,
   showDeleteWidgetConfirmation,
   onShowDeleteWidgetConfirmationChange,
-  showDeleteDashboardConfirmation = true,
+  showDeleteDashboardConfirmation,
   onShowDeleteDashboardConfirmationChange,
 }) => {
-  // Get the value from localStorage on dialog open
-  const [dashboardConfirmation, setDashboardConfirmation] = React.useState<boolean>(() => {
-    // Use the prop value if provided, otherwise check localStorage
-    if (showDeleteDashboardConfirmation !== undefined) {
-      return showDeleteDashboardConfirmation
-    }
-    
-    try {
-      const stored = localStorage.getItem('dashboard-delete-confirm')
-      return stored !== 'false' // Default to true if not set or if not 'false'
-    } catch (error) {
-      console.error('Error reading dashboard-delete-confirm from localStorage', error)
-      return true // Default to true if there's an error
-    }
-  })
-
-  // Handle dashboard confirmation change
-  const handleDashboardConfirmationChange = (value: boolean) => {
-    setDashboardConfirmation(value)
-    localStorage.setItem('dashboard-delete-confirm', value.toString())
-    if (onShowDeleteDashboardConfirmationChange) {
-      onShowDeleteDashboardConfirmationChange(value)
-    }
-  }
-
   return (
     <Dialog
       open={open}
@@ -251,8 +226,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   <Typography fontWeight="medium">Confirm Dashboard Deletion</Typography>
                   <Box sx={{ flexGrow: 1 }} />
                   <Switch
-                    checked={dashboardConfirmation}
-                    onChange={(e) => handleDashboardConfirmationChange(e.target.checked)}
+                    checked={showDeleteDashboardConfirmation}
+                    onChange={(e) => onShowDeleteDashboardConfirmationChange(e.target.checked)}
                     color="primary"
                   />
                 </Box>

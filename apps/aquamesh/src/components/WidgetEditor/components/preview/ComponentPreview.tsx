@@ -20,6 +20,16 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import { ComponentPreviewProps } from '../../types/types'
 import { getComponentIcon } from '../../constants/componentTypes'
 import ChartPreview from './ChartPreview'
+import AddIcon from '@mui/icons-material/Add'
+import NotificationsIcon from '@mui/icons-material/Notifications'
+import CodeIcon from '@mui/icons-material/Code'
+import SettingsIcon from '@mui/icons-material/Settings'
+import PreviewIcon from '@mui/icons-material/Preview'
+import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import SaveIcon from '@mui/icons-material/Save'
+import SendIcon from '@mui/icons-material/Send'
+import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   component,
@@ -187,49 +197,113 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
         )
       case 'Button':
         return (
-          <Button
-            variant={(component.props.variant as 'contained' | 'outlined' | 'text') || 'contained'}
-            color={(component.props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info') || 'primary'}
-            size={(component.props.size as 'small' | 'medium' | 'large') || 'medium'}
-            fullWidth={Boolean(component.props.fullWidth)}
-            onClick={() => {
-              // Handle toast functionality in preview/edit mode
-              if (component.props.clickAction === 'toast' && component.props.showToast !== false) {
-                const customEvent = new CustomEvent('showWidgetToast', {
-                  detail: {
-                    message: component.props.toastMessage as string || 'Button clicked!',
-                    severity: component.props.toastSeverity as string || 'info'
-                  },
-                  bubbles: true
-                });
-                document.dispatchEvent(customEvent);
-              } else if (component.props.clickAction === 'openUrl' && component.props.url) {
-                let url = component.props.url as string;
-                if (url && !url.match(/^https?:\/\//)) {
-                  url = `https://${url}`;
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Button
+              variant={(component.props.variant as 'contained' | 'outlined' | 'text') || 'contained'}
+              color={(component.props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info') || 'primary'}
+              size={(component.props.size as 'small' | 'medium' | 'large') || 'medium'}
+              fullWidth={Boolean(component.props.fullWidth)}
+              onClick={() => {
+                // Handle toast functionality in preview/edit mode
+                if (component.props.clickAction === 'toast') {
+                  const customEvent = new CustomEvent('showWidgetToast', {
+                    detail: {
+                      message: component.props.toastMessage as string || 'Button clicked!',
+                      severity: component.props.toastSeverity as string || 'info'
+                    },
+                    bubbles: true
+                  });
+                  document.dispatchEvent(customEvent);
+                } else if (component.props.clickAction === 'openUrl' && component.props.url) {
+                  let url = component.props.url as string;
+                  if (url && !url.match(/^https?:\/\//)) {
+                    url = `https://${url}`;
+                  }
+                  window.open(url, '_blank', 'noopener,noreferrer');
                 }
-                window.open(url, '_blank', 'noopener,noreferrer');
-              }
-            }}
-            sx={{
-              fontWeight: component.props.fontWeight as number,
-              fontStyle: component.props.fontStyle as string,
-              textDecoration: component.props.textDecoration as string,
-              ...(component.props.customColor ? {
-                backgroundColor: component.props.variant === 'contained' ? component.props.customColor : 'transparent',
-                borderColor: component.props.customColor,
-                color: component.props.variant === 'contained' ? '#fff' : component.props.customColor,
-                '&:hover': {
-                  backgroundColor: component.props.variant === 'contained' 
-                    ? component.props.customHoverColor || component.props.customColor 
-                    : 'rgba(25, 118, 210, 0.04)',
-                  borderColor: component.props.customHoverColor || component.props.customColor
+              }}
+              sx={{
+                fontWeight: component.props.fontWeight as number,
+                fontStyle: component.props.fontStyle as string,
+                textDecoration: component.props.textDecoration as string,
+                textAlign: component.props.textAlign as 'left' | 'center' | 'right' | 'justify',
+                ...(component.props.customColor ? {
+                  backgroundColor: component.props.variant === 'contained' ? component.props.customColor : 'transparent',
+                  borderColor: component.props.customColor,
+                  color: component.props.variant === 'contained' ? '#fff' : component.props.customColor,
+                  '&:hover': {
+                    backgroundColor: component.props.variant === 'contained' 
+                      ? component.props.customHoverColor || component.props.customColor 
+                      : 'rgba(25, 118, 210, 0.04)',
+                    borderColor: component.props.customHoverColor || component.props.customColor
+                  }
+                } : {}),
+                ...(component.props.clickAction === 'openUrl' ? { 
+                  '&::after': { 
+                    content: '""',
+                    display: 'inline-block',
+                    width: '0.5em',
+                    height: '0.5em',
+                    marginLeft: '0.2em',
+                    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'%3E%3Cpath d=\'M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z\'/%3E%3C/svg%3E")',
+                    backgroundSize: 'contain',
+                    verticalAlign: 'middle',
+                  } 
+                } : {})
+              }}
+              startIcon={component.props.showStartIcon ? (() => {
+                const iconName = component.props.iconName as string;
+                switch (iconName) {
+                  case 'add': return <AddIcon />;
+                  case 'delete': return <DeleteIcon />;
+                  case 'notification': return <NotificationsIcon />;
+                  case 'code': return <CodeIcon />;
+                  case 'settings': return <SettingsIcon />;
+                  case 'preview': return <PreviewIcon />;
+                  case 'openNew': return <OpenInNewIcon />;
+                  case 'save': return <SaveIcon />;
+                  case 'send': return <SendIcon />;
+                  case 'upload': return <CloudUploadIcon />;
+                  case 'check': return <CheckCircleIcon />;
+                  default: return <AddIcon />;
                 }
-              } : {})
-            }}
-          >
-            {component.props.text as string}
-          </Button>
+              })() : undefined}
+              endIcon={component.props.showEndIcon ? (() => {
+                const iconName = component.props.iconName as string;
+                switch (iconName) {
+                  case 'add': return <AddIcon />;
+                  case 'delete': return <DeleteIcon />;
+                  case 'notification': return <NotificationsIcon />;
+                  case 'code': return <CodeIcon />;
+                  case 'settings': return <SettingsIcon />;
+                  case 'preview': return <PreviewIcon />;
+                  case 'openNew': return <OpenInNewIcon />;
+                  case 'save': return <SaveIcon />;
+                  case 'send': return <SendIcon />;
+                  case 'upload': return <CloudUploadIcon />;
+                  case 'check': return <CheckCircleIcon />;
+                  default: return <AddIcon />;
+                }
+              })() : undefined}
+            >
+              {component.props.text as string}
+            </Button>
+            {editMode && (
+              <>
+                {component.props.clickAction === 'toast' && (
+                  <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
+                    Click Action: Show toast &quot;{component.props.toastMessage as string || 'Button clicked'}&quot; 
+                    ({component.props.toastSeverity as string || 'info'})
+                  </Typography>
+                )}
+                {component.props.clickAction === 'openUrl' && component.props.url && (
+                  <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
+                    Click Action: Open URL {component.props.url as string}
+                  </Typography>
+                )}
+              </>
+            )}
+          </Box>
         )
       case 'TextField':
         return (

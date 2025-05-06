@@ -9,12 +9,10 @@ import {
   MenuItem,
   FormControlLabel,
   Switch,
-  Divider,
   Grid,
   IconButton,
   Button as MuiButton,
   Tooltip,
-  InputAdornment,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -31,7 +29,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { ButtonProps, ComponentEditorProps } from '../../types/types'
 
 import {
-  TabPanel,
+  TabPanelShared,
   ComponentPreview,
   EditorTabs,
   TextStylingControls,
@@ -186,9 +184,11 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
   
   // Mock button click for preview
   const handlePreviewClick = () => {
-    if (props.showToast) {
+    if (props.clickAction === 'toast') {
       // Display a toast when clicked in the preview
-      alert(`Mock Toast: ${props.toastMessage || 'Button clicked'}`)
+      alert(`Mock Toast: ${props.toastMessage || 'Button clicked'} (Severity: ${props.toastSeverity || 'info'})`)
+    } else if (props.clickAction === 'openUrl' && props.url) {
+      alert(`Would open URL: ${props.url}`)
     }
   }
   
@@ -213,7 +213,21 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
           onClick={handlePreviewClick}
           startIcon={props.showStartIcon ? getIconComponent(selectedIcon) : undefined}
           endIcon={props.showEndIcon ? getIconComponent(selectedIcon) : undefined}
-          sx={getPreviewStyles()}
+          sx={{
+            ...getPreviewStyles(),
+            ...(props.clickAction === 'openUrl' ? { 
+              '&::after': { 
+                content: '""',
+                display: 'inline-block',
+                width: '0.5em',
+                height: '0.5em',
+                marginLeft: '0.2em',
+                backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'%3E%3Cpath d=\'M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z\'/%3E%3C/svg%3E")',
+                backgroundSize: 'contain',
+                verticalAlign: 'middle',
+              } 
+            } : {})
+          }}
         >
           {props.text || 'Button'}
         </MuiButton>
@@ -227,7 +241,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
       />
       
       {/* Basic Settings Tab */}
-      <TabPanel value={tabValue} index={0} id="button">
+      <TabPanelShared value={tabValue} index={0} id="button">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
@@ -389,10 +403,10 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Styling Tab */}
-      <TabPanel value={tabValue} index={1} id="button">
+      <TabPanelShared value={tabValue} index={1} id="button">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             {/* Text Styling Controls */}
@@ -419,10 +433,10 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Icons Tab */}
-      <TabPanel value={tabValue} index={2} id="button">
+      <TabPanelShared value={tabValue} index={2} id="button">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -477,35 +491,107 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
             </Grid>
           )}
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Advanced Tab */}
-      <TabPanel value={tabValue} index={3} id="button">
+      <TabPanelShared value={tabValue} index={3} id="button">
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.showToast)}
-                  onChange={(e) => handleChange('showToast', e.target.checked)}
-                />
-              }
-              label="Show Toast on Click"
-              sx={{ color: '#191919' }}
-            />
+            <FormControl fullWidth margin="dense" size="small" variant="outlined">
+              <InputLabel id="click-action-label">Click Action</InputLabel>
+              <Select
+                labelId="click-action-label"
+                value={props.clickAction || 'none'}
+                onChange={(e) => handleChange('clickAction', e.target.value)}
+                label="Click Action"
+                sx={{
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.light',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main',
+                  },
+                  '& .MuiSelect-select': {
+                    color: '#000000',
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#191919',
+                  },
+                }}
+              >
+                <MenuItem value="toast">Show Toast</MenuItem>
+                <MenuItem value="openUrl">Open URL</MenuItem>
+                <MenuItem value="none">None</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
           
-          {props.showToast && (
+          {props.clickAction === 'toast' && (
+            <>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Toast Message"
+                  value={props.toastMessage || ''}
+                  onChange={(e) => handleChange('toastMessage', e.target.value)}
+                  variant="outlined"
+                  margin="dense"
+                  size="small"
+                  placeholder="Button clicked successfully!"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: 'rgba(0, 0, 0, 0.23)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'primary.light',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: '#191919',
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      color: '#000000',
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth margin="dense" size="small" variant="outlined">
+                  <InputLabel id="toast-severity-label">Toast Severity</InputLabel>
+                  <Select
+                    labelId="toast-severity-label"
+                    value={props.toastSeverity || 'info'}
+                    onChange={(e) => handleChange('toastSeverity', e.target.value)}
+                    label="Toast Severity"
+                  >
+                    <MenuItem value="info">Info</MenuItem>
+                    <MenuItem value="success">Success</MenuItem>
+                    <MenuItem value="warning">Warning</MenuItem>
+                    <MenuItem value="error">Error</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </>
+          )}
+          
+          {props.clickAction === 'openUrl' && (
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Toast Message"
-                value={props.toastMessage || ''}
-                onChange={(e) => handleChange('toastMessage', e.target.value)}
+                label="URL"
+                value={props.url || ''}
+                onChange={(e) => handleChange('url', e.target.value)}
                 variant="outlined"
                 margin="dense"
                 size="small"
-                placeholder="Button clicked successfully!"
+                placeholder="https://example.com"
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     '& fieldset': {
@@ -528,45 +614,8 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
               />
             </Grid>
           )}
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-            <TextField
-              fullWidth
-              label="Test ID"
-              value={props.dataTestId || ''}
-              onChange={(e) => handleChange('dataTestId', e.target.value)}
-              variant="outlined"
-              margin="dense"
-              size="small"
-              placeholder="button-1"
-              helperText="For automated testing"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: 'rgba(0, 0, 0, 0.23)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'primary.light',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: 'primary.main',
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: '#191919',
-                },
-                '& .MuiOutlinedInput-input': {
-                  color: '#000000',
-                },
-                '& .MuiFormHelperText-root': {
-                  color: '#666666',
-                },
-              }}
-            />
-          </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
     </Box>
   )
 }

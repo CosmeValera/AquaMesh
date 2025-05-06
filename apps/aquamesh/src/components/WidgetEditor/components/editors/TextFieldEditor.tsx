@@ -14,37 +14,22 @@ import {
   Tabs,
   Tab,
   Paper,
-  InputAdornment
+  InputAdornment,
+  IconButton
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
 import CodeIcon from '@mui/icons-material/Code'
+import ClearIcon from '@mui/icons-material/Clear'
+
+import {
+  TabPanelShared,
+  ComponentPreview
+} from '../shared/SharedEditorComponents'
 
 interface TextFieldEditorProps {
   props: Record<string, unknown>
   onChange: (updatedProps: Record<string, unknown>) => void
-}
-
-// Tab panel component for organizing the editor
-const TabPanel: React.FC<{ 
-  children: React.ReactNode
-  value: number
-  index: number 
-}> = ({ children, value, index }) => {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`textfield-tabpanel-${index}`}
-      aria-labelledby={`textfield-tab-${index}`}
-    >
-      {value === index && (
-        <Box sx={{ p: 2 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  )
 }
 
 const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) => {
@@ -90,36 +75,85 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
   
   return (
     <Box sx={{ width: '100%' }}>
-      {/* Preview Section */}
-      <Paper variant="outlined" sx={{ mb: 2, p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <TextField
-          label={(props.label as string) || 'Label'}
-          placeholder={(props.placeholder as string) || 'Placeholder text'}
-          defaultValue={(props.defaultValue as string) || ''}
-          variant={variant as 'outlined' | 'filled' | 'standard'}
-          size={size as 'small' | 'medium'}
-          type={type as string}
-          fullWidth
-          helperText={showHelperText ? (props.helperText as string) || 'Helper text' : undefined}
-          required={Boolean(props.required)}
-          disabled={Boolean(props.disabled)}
-          error={Boolean(props.error)}
-          multiline={Boolean(props.multiline)}
-          rows={props.multiline ? ((props.rows as number) || 3) : undefined}
-          InputProps={{
-            startAdornment: hasStartAdornment ? (
-              <InputAdornment position="start">
-                {(props.startAdornmentText as string) || '$'}
-              </InputAdornment>
-            ) : undefined,
-            endAdornment: hasEndAdornment ? (
-              <InputAdornment position="end">
-                {(props.endAdornmentText as string) || '.00'}
-              </InputAdornment>
-            ) : undefined
-          }}
-        />
-      </Paper>
+      {/* Preview section */}
+      <ComponentPreview>
+        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '300px' }}>
+          <TextField
+            label={props.label as string || 'Label'}
+            placeholder={props.placeholder as string || 'Placeholder'}
+            defaultValue={props.defaultValue as string || ''}
+            variant={(props.variant as 'outlined' | 'filled' | 'standard') || 'outlined'}
+            size={(props.size as 'small' | 'medium') || 'medium'}
+            required={Boolean(props.required)}
+            error={Boolean(props.showError)}
+            helperText={props.showError ? (props.errorText as string || 'Error text') : (props.helperText as string || '')}
+            fullWidth
+            disabled={Boolean(props.disabled)}
+            type={props.type as string || 'text'}
+            InputProps={{
+              startAdornment: props.startAdornment ? (
+                <InputAdornment position="start">{props.startAdornment as React.ReactNode}</InputAdornment>
+              ) : undefined,
+              endAdornment: (
+                <>
+                  {props.endAdornment && <InputAdornment position="end">{props.endAdornment as React.ReactNode}</InputAdornment>}
+                  {props.clearable && (
+                    <InputAdornment position="end">
+                      <IconButton size="small" sx={{ p: 0.5 }}>
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  )}
+                </>
+              ),
+            }}
+            sx={{
+              '& .MuiInputLabel-root': {
+                color: props.labelColor as string || 'rgba(0, 0, 0, 0.6)',
+              },
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: props.borderColor as string || 'rgba(0, 0, 0, 0.23)',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'primary.main',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'primary.main',
+                },
+              },
+            }}
+          />
+
+          {/* Show validation information when present */}
+          {(props.required || props.minLength || props.maxLength || props.pattern) && (
+            <Box sx={{ mt: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1, fontSize: '0.75rem' }}>
+              <Typography variant="caption" color="text.secondary" component="div">
+                Validation Rules:
+              </Typography>
+              <Box component="ul" sx={{ pl: 2, m: 0 }}>
+                {props.required && <Box component="li">Required</Box>}
+                {props.minLength && <Box component="li">Min Length: {props.minLength as number}</Box>}
+                {props.maxLength && <Box component="li">Max Length: {props.maxLength as number}</Box>}
+                {props.pattern && <Box component="li">Pattern: {props.pattern as string}</Box>}
+              </Box>
+            </Box>
+          )}
+
+          {/* Show action information when present */}
+          {props.valueChangeAction && props.valueChangeAction !== 'none' && (
+            <Box sx={{ mt: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1, fontSize: '0.75rem' }}>
+              <Typography variant="caption" color="text.secondary">
+                On Value Change: 
+                {props.valueChangeAction === 'toast' && (
+                  <> Show Toast &quot;{props.toastMessage as string || 'Value changed'}&quot; ({props.toastSeverity as string || 'info'})</>
+                )}
+                {props.valueChangeAction === 'log' && ' Log to Console'}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </ComponentPreview>
       
       {/* Tabs Navigation */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -132,11 +166,12 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
           <Tab label="Basic" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Appearance" icon={<FormatColorTextIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Validation" icon={<CodeIcon fontSize="small" />} iconPosition="start" />
+          <Tab label="Advanced" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
       
       {/* Basic Tab */}
-      <TabPanel value={tabValue} index={0}>
+      <TabPanelShared value={tabValue} index={0}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
@@ -218,10 +253,10 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             )}
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Appearance Tab */}
-      <TabPanel value={tabValue} index={1}>
+      <TabPanelShared value={tabValue} index={1}>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
@@ -344,10 +379,10 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             )}
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Validation Tab */}
-      <TabPanel value={tabValue} index={2}>
+      <TabPanelShared value={tabValue} index={2}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControlLabel
@@ -472,7 +507,74 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
+      
+      {/* Advanced Tab */}
+      <TabPanelShared value={tabValue} index={3} id="textfield">
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <FormControl fullWidth margin="dense" size="small" variant="outlined">
+              <InputLabel id="value-change-action-label">Value Change Action</InputLabel>
+              <Select
+                labelId="value-change-action-label"
+                value={props.valueChangeAction || 'none'}
+                onChange={(e) => handleChange('valueChangeAction', e.target.value)}
+                label="Value Change Action"
+              >
+                <MenuItem value="none">None</MenuItem>
+                <MenuItem value="toast">Show Toast</MenuItem>
+                <MenuItem value="log">Log to Console</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          {props.valueChangeAction === 'toast' && (
+            <>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Toast Message"
+                  value={props.toastMessage || ''}
+                  onChange={(e) => handleChange('toastMessage', e.target.value)}
+                  variant="outlined"
+                  margin="dense"
+                  size="small"
+                  placeholder="Value changed to: {value}"
+                  helperText="Use {value} to insert the current field value"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth margin="dense" size="small" variant="outlined">
+                  <InputLabel id="toast-severity-label">Toast Severity</InputLabel>
+                  <Select
+                    labelId="toast-severity-label"
+                    value={props.toastSeverity || 'info'}
+                    onChange={(e) => handleChange('toastSeverity', e.target.value)}
+                    label="Toast Severity"
+                  >
+                    <MenuItem value="info">Info</MenuItem>
+                    <MenuItem value="success">Success</MenuItem>
+                    <MenuItem value="warning">Warning</MenuItem>
+                    <MenuItem value="error">Error</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </>
+          )}
+          
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(props.clearable)}
+                  onChange={(e) => handleChange('clearable', e.target.checked)}
+                />
+              }
+              label="Show Clear Button"
+            />
+          </Grid>
+        </Grid>
+      </TabPanelShared>
     </Box>
   )
 }

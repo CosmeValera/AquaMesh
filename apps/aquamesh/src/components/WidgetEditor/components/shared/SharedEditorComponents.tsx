@@ -84,7 +84,7 @@ export interface PreviewProps {
 /**
  * Reusable TabPanel component
  */
-export const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, id = 'widget' }) => {
+export const TabPanelShared: React.FC<TabPanelProps> = ({ children, value, index, id = 'widget' }) => {
   return (
     <div
       role="tabpanel"

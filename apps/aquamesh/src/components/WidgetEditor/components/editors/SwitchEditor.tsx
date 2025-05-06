@@ -12,12 +12,16 @@ import {
   Divider,
   Grid,
   Tabs,
-  Tab,
-  Paper
+  Tab
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
 import NotificationsIcon from '@mui/icons-material/Notifications'
+
+import {
+  TabPanelShared,
+  ComponentPreview
+} from '../shared/SharedEditorComponents'
 
 // Define props interface
 interface SwitchProps {
@@ -39,28 +43,6 @@ interface SwitchProps {
 interface SwitchEditorProps {
   props: SwitchProps; // Use defined interface
   onChange: (updatedProps: SwitchProps) => void; // Use defined interface
-}
-
-// Tab panel component for organizing the editor
-const TabPanel: React.FC<{ 
-  children: React.ReactNode
-  value: number
-  index: number 
-}> = ({ children, value, index }) => {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`switch-tabpanel-${index}`}
-      aria-labelledby={`switch-tab-${index}`}
-    >
-      {value === index && (
-        <Box sx={{ p: 2 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  )
 }
 
 const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
@@ -134,6 +116,20 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
     }
   }
   
+  // Handle switch toggle in preview
+  const handleSwitchToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    setChecked(isChecked);
+    
+    if (showToast) {
+      // Display an indicator of what would happen
+      const message = isChecked 
+        ? (props.onMessage as string || 'Switch turned ON')
+        : (props.offMessage as string || 'Switch turned OFF');
+      alert(`Toast: ${message} (Severity: ${props.toastSeverity || 'info'})`);
+    }
+  };
+  
   // Generate preview style based on current settings
   const previewStyles = {
     color: useCustomColor ? customColor : undefined,
@@ -145,20 +141,44 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
   return (
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
-      <Paper variant="outlined" sx={{ mb: 2, p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <FormControlLabel
-          control={
-            <Switch 
-              checked={checked}
-              onChange={(e) => setChecked(e.target.checked)}
-              size={size as 'small' | 'medium'}
-              sx={previewStyles}
-            />
-          }
-          label={(props.label as string) || 'Switch'}
-          labelPlacement={labelPlacement as 'end' | 'start' | 'top' | 'bottom'}
-        />
-      </Paper>
+      <ComponentPreview>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <FormControlLabel
+            control={
+              <Switch 
+                checked={checked}
+                onChange={handleSwitchToggle}
+                size={size as 'small' | 'medium'}
+                disabled={Boolean(props.disabled)}
+                sx={previewStyles}
+              />
+            }
+            label={(props.label as string) || 'Switch'}
+            labelPlacement={labelPlacement as 'end' | 'start' | 'top' | 'bottom'}
+          />
+          
+          {showToast && (
+            <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
+              When toggled ON: &quot;{props.onMessage as string || 'Switch turned ON'}&quot; ({props.toastSeverity as string || 'info'})
+              <br />
+              When toggled OFF: &quot;{props.offMessage as string || 'Switch turned OFF'}&quot; ({props.toastSeverity as string || 'info'})
+            </Typography>
+          )}
+          
+          {useCustomColor && (
+            <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ width: 16, height: 16, bgcolor: customTrackColor, borderRadius: 1 }} />
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                Track: {customTrackColor}
+              </Typography>
+              <Box sx={{ width: 16, height: 16, bgcolor: customColor, borderRadius: '50%', ml: 1 }} />
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                Thumb: {customColor}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </ComponentPreview>
       
       {/* Tabs Navigation */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -175,7 +195,7 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
       </Box>
       
       {/* Basic Tab */}
-      <TabPanel value={tabValue} index={0}>
+      <TabPanelShared value={tabValue} index={0}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
@@ -217,10 +237,10 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
             </FormControl>
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Style Tab */}
-      <TabPanel value={tabValue} index={1}>
+      <TabPanelShared value={tabValue} index={1}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControl fullWidth>
@@ -258,47 +278,85 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
           
           {/* Custom Color Pickers - Only show if useCustomColor is true */}
           {useCustomColor && (
-            <Grid item xs={12}>
-              <Box>
-                <Typography variant="body2" gutterBottom>
-                  Track Color
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <input
-                    type="color"
-                    value={customTrackColor}
-                    onChange={(e) => {
-                      setCustomTrackColor(e.target.value)
-                      handleChange('customTrackColor', e.target.value)
-                    }}
-                    style={{ 
-                      width: '36px', 
-                      height: '36px', 
-                      padding: 0, 
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <TextField 
-                    size="small" 
-                    value={customTrackColor}
-                    onChange={(e) => {
-                      setCustomTrackColor(e.target.value)
-                      handleChange('customTrackColor', e.target.value)
-                    }}
-                    placeholder="#90caf9"
-                    variant="outlined"
-                  />
+            <>
+              <Grid item xs={12} sm={6}>
+                <Box>
+                  <Typography variant="body2" gutterBottom>
+                    Thumb Color
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <input
+                      type="color"
+                      value={customColor}
+                      onChange={(e) => {
+                        setCustomColor(e.target.value)
+                        handleChange('customColor', e.target.value)
+                      }}
+                      style={{ 
+                        width: '36px', 
+                        height: '36px', 
+                        padding: 0, 
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <TextField 
+                      size="small" 
+                      value={customColor}
+                      onChange={(e) => {
+                        setCustomColor(e.target.value)
+                        handleChange('customColor', e.target.value)
+                      }}
+                      placeholder="#1976d2"
+                      variant="outlined"
+                    />
+                  </Box>
                 </Box>
-              </Box>
-            </Grid>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Box>
+                  <Typography variant="body2" gutterBottom>
+                    Track Color
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <input
+                      type="color"
+                      value={customTrackColor}
+                      onChange={(e) => {
+                        setCustomTrackColor(e.target.value)
+                        handleChange('customTrackColor', e.target.value)
+                      }}
+                      style={{ 
+                        width: '36px', 
+                        height: '36px', 
+                        padding: 0, 
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <TextField 
+                      size="small" 
+                      value={customTrackColor}
+                      onChange={(e) => {
+                        setCustomTrackColor(e.target.value)
+                        handleChange('customTrackColor', e.target.value)
+                      }}
+                      placeholder="#90caf9"
+                      variant="outlined"
+                    />
+                  </Box>
+                </Box>
+              </Grid>
+            </>
           )}
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Behavior Tab */}
-      <TabPanel value={tabValue} index={2}>
+      <TabPanelShared value={tabValue} index={2}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControlLabel
@@ -371,7 +429,7 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
     </Box>
   )
 }

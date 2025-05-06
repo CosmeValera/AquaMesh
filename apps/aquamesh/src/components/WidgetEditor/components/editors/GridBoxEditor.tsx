@@ -13,44 +13,31 @@ import {
   Grid,
   Tabs,
   Tab,
-  Paper,
-  Slider,
-  Stack
+  Slider
 } from '@mui/material'
-import SettingsIcon from '@mui/icons-material/Settings'
 import GridViewIcon from '@mui/icons-material/GridView'
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
+
+import {
+  ComponentPreview,
+  TabPanelShared
+} from '../shared/SharedEditorComponents'
 
 interface GridBoxEditorProps {
   props: Record<string, unknown>
   onChange: (updatedProps: Record<string, unknown>) => void
 }
 
-// Tab panel component for organizing the editor
-const TabPanel: React.FC<{ 
-  children: React.ReactNode
-  value: number
-  index: number 
-}> = ({ children, value, index }) => {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`gridbox-tabpanel-${index}`}
-      aria-labelledby={`gridbox-tab-${index}`}
-    >
-      {value === index && (
-        <Box sx={{ p: 2 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  )
-}
-
 // Grid visualization component
-const GridVisualizer: React.FC<{ columns: number, rows: number }> = ({ columns, rows }) => {
+const GridVisualizer: React.FC<{ columns: number, rows: number, spacing: number, useCustomColor?: boolean, backgroundColor?: string, borderColor?: string }> = ({ 
+  columns, 
+  rows, 
+  spacing, 
+  useCustomColor = false, 
+  backgroundColor = '#f5f5f5',
+  borderColor = '#e0e0e0'
+}) => {
   const cells = []
   
   for (let row = 0; row < rows; row++) {
@@ -59,12 +46,15 @@ const GridVisualizer: React.FC<{ columns: number, rows: number }> = ({ columns, 
         <Box
           key={`${row}-${col}`}
           sx={{
-            border: '1px solid #ccc',
+            border: '1px solid',
+            borderColor: useCustomColor ? borderColor : '#ccc',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             borderRadius: 1,
-            backgroundColor: (row + col) % 2 === 0 ? 'rgba(66, 165, 245, 0.2)' : 'white',
+            backgroundColor: useCustomColor ? 
+              backgroundColor : 
+              (row + col) % 2 === 0 ? 'rgba(66, 165, 245, 0.2)' : 'white',
             aspectRatio: '1/1',
             fontSize: '0.75rem'
           }}
@@ -81,7 +71,7 @@ const GridVisualizer: React.FC<{ columns: number, rows: number }> = ({ columns, 
         display: 'grid',
         gridTemplateColumns: `repeat(${columns}, 1fr)`,
         gridTemplateRows: `repeat(${rows}, 1fr)`,
-        gap: 1,
+        gap: spacing,
         width: '100%',
         maxWidth: '240px'
       }}
@@ -165,24 +155,67 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
     }
   }
   
+  // Handle background color change
+  const handleBackgroundColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newColor = e.target.value
+    setBackgroundColor(newColor)
+    handleChange('backgroundColor', newColor)
+  }
+  
+  // Handle border color change
+  const handleBorderColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newColor = e.target.value
+    setBorderColor(newColor)
+    handleChange('borderColor', newColor)
+  }
+  
   return (
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
-      <Paper 
-        variant="outlined" 
-        sx={{ 
-          mb: 2, 
-          p: 2, 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          minHeight: '120px'
-        }}
-      >
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-          <GridVisualizer columns={columns} rows={rows} />
+      <ComponentPreview>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+          <GridVisualizer 
+            columns={columns} 
+            rows={rows} 
+            spacing={spacing}
+            useCustomColor={useCustomColor}
+            backgroundColor={backgroundColor}
+            borderColor={borderColor}
+          />
+          
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
+              <span>{columns} Columns × {autoRows ? 'Auto' : rows} Rows</span>
+              <span>•</span>
+              <span>Gap: {spacing}</span>
+              {minHeight > 0 && (
+                <>
+                  <span>•</span>
+                  <span>Min Height: {minHeight}px</span>
+                </>
+              )}
+              {equalHeight && (
+                <>
+                  <span>•</span>
+                  <span>Equal Height Cells</span>
+                </>
+              )}
+              {useCustomColor && (
+                <>
+                  <span>•</span>
+                  <span>Custom Colors</span>
+                </>
+              )}
+              {props.responsive && (
+                <>
+                  <span>•</span>
+                  <span>Responsive</span>
+                </>
+              )}
+            </Typography>
+          </Box>
         </Box>
-      </Paper>
+      </ComponentPreview>
       
       {/* Tabs Navigation */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -199,7 +232,7 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
       </Box>
       
       {/* Grid Layout Tab */}
-      <TabPanel value={tabValue} index={0}>
+      <TabPanelShared value={tabValue} index={0}>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
             <TextField
@@ -282,10 +315,10 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Spacing Tab */}
-      <TabPanel value={tabValue} index={1}>
+      <TabPanelShared value={tabValue} index={1}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Typography gutterBottom>
@@ -310,12 +343,12 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
               <Typography variant="subtitle2" gutterBottom>
                 Spacing Visualization
               </Typography>
-              <Paper
-                variant="outlined"
+              <Box
                 sx={{
                   p: 2,
                   backgroundColor: '#f5f5f5',
-                  border: '1px dashed #aaa'
+                  border: '1px dashed #aaa',
+                  borderRadius: 1
                 }}
               >
                 <Box
@@ -339,7 +372,7 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
                   <Box sx={{ bgcolor: '#66bb6a' }}>C</Box>
                   <Box sx={{ bgcolor: '#ff9800' }}>D</Box>
                 </Box>
-              </Paper>
+              </Box>
             </Box>
           </Grid>
           
@@ -363,11 +396,91 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
             </FormControl>
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Appearance Tab */}
-      <TabPanel value={tabValue} index={2}>
+      <TabPanelShared value={tabValue} index={2}>
         <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={useCustomColor}
+                  onChange={handleCustomColorToggle}
+                />
+              }
+              label="Use Custom Colors"
+            />
+          </Grid>
+          
+          {useCustomColor && (
+            <>
+              <Grid item xs={12} sm={6}>
+                <Box>
+                  <Typography variant="body2" gutterBottom>
+                    Background Color
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <input
+                      type="color"
+                      value={backgroundColor}
+                      onChange={handleBackgroundColorChange}
+                      style={{ 
+                        width: '36px', 
+                        height: '36px', 
+                        padding: 0, 
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <TextField 
+                      size="small" 
+                      value={backgroundColor}
+                      onChange={handleBackgroundColorChange}
+                      placeholder="#f5f5f5"
+                      variant="outlined"
+                    />
+                  </Box>
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Box>
+                  <Typography variant="body2" gutterBottom>
+                    Border Color
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <input
+                      type="color"
+                      value={borderColor}
+                      onChange={handleBorderColorChange}
+                      style={{ 
+                        width: '36px', 
+                        height: '36px', 
+                        padding: 0, 
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <TextField 
+                      size="small" 
+                      value={borderColor}
+                      onChange={handleBorderColorChange}
+                      placeholder="#e0e0e0"
+                      variant="outlined"
+                    />
+                  </Box>
+                </Box>
+              </Grid>
+            </>
+          )}
+          
+          <Grid item xs={12}>
+            <Divider sx={{ my: 1 }} />
+          </Grid>
+          
           <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel>Cell Border Style</InputLabel>
@@ -424,7 +537,7 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
     </Box>
   )
 }

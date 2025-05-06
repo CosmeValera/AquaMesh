@@ -381,8 +381,22 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
 
   return (
     <Box sx={{ width: '100%', p: 2 }}>
-      {/* Section 1: Segment Editor */}
-      <Box sx={{ mb: 4 }}>
+      
+      {/* Section 1: Chart Preview */}
+      <Box sx={{ mb: 2, mt: 0 }}>
+        <Typography variant="subtitle1" sx={{ mb: 1 }}>Preview</Typography>
+        <Box sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1, p: 3, bgcolor: 'rgba(0,0,0,0.02)' }}>
+          <ChartPreview
+            chartType="pie"
+            title={title}
+            description={description}
+            data={previewData}
+          />
+        </Box>
+      </Box>
+      
+      {/* Section 2: Segment Editor */}
+      <Box sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="subtitle1">Pie Chart Segments</Typography>
           <Button 
@@ -499,20 +513,6 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
           </Box>
         )}
       </Box>
-      
-      {/* Section 2: Chart Preview */}
-      <Box sx={{ mb: 2, mt: 4 }}>
-        <Typography variant="subtitle1" sx={{ mb: 1 }}>Preview</Typography>
-        <Box sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1, p: 3, bgcolor: 'rgba(0,0,0,0.02)' }}>
-          <ChartPreview
-            chartType="pie"
-            title={title}
-            description={description}
-            data={previewData}
-          />
-        </Box>
-      </Box>
-      
       {/* Color Picker Modal */}
       <ColorPickerModal
         open={colorPickerOpen}

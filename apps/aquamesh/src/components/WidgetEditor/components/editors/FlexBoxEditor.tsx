@@ -13,39 +13,22 @@ import {
   Grid,
   Tabs,
   Tab,
-  Paper,
   Slider,
-  Stack
+  Stack,
+  Chip
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import DesignServicesIcon from '@mui/icons-material/DesignServices'
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
 
+import {
+  ComponentPreview,
+  TabPanelShared
+} from '../shared/SharedEditorComponents'
+
 interface FlexBoxEditorProps {
   props: Record<string, unknown>
   onChange: (updatedProps: Record<string, unknown>) => void
-}
-
-// Tab panel component for organizing the editor
-const TabPanel: React.FC<{ 
-  children: React.ReactNode
-  value: number
-  index: number 
-}> = ({ children, value, index }) => {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`flexbox-tabpanel-${index}`}
-      aria-labelledby={`flexbox-tab-${index}`}
-    >
-      {value === index && (
-        <Box sx={{ p: 2 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  )
 }
 
 // Color squares for visualization
@@ -170,38 +153,109 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
     return boxes
   }
   
+  // Get alignment description
+  const getAlignmentDescription = () => {
+    let justifyText = '';
+    let alignText = '';
+    
+    // Map justifyContent values to readable descriptions
+    switch (justifyContent) {
+      case 'flex-start': justifyText = 'Start'; break;
+      case 'flex-end': justifyText = 'End'; break;
+      case 'center': justifyText = 'Center'; break;
+      case 'space-between': justifyText = 'Space Between'; break;
+      case 'space-around': justifyText = 'Space Around'; break;
+      case 'space-evenly': justifyText = 'Space Evenly'; break;
+      default: justifyText = justifyContent;
+    }
+    
+    // Map alignItems values to readable descriptions
+    switch (alignItems) {
+      case 'flex-start': alignText = 'Start'; break;
+      case 'flex-end': alignText = 'End'; break;
+      case 'center': alignText = 'Center'; break;
+      case 'stretch': alignText = 'Stretch'; break;
+      case 'baseline': alignText = 'Baseline'; break;
+      default: alignText = alignItems;
+    }
+    
+    return {
+      justifyText,
+      alignText
+    };
+  }
+  
+  const { justifyText, alignText } = getAlignmentDescription();
+  
   return (
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
-      <Paper 
-        variant="outlined" 
-        sx={{ 
-          mb: 2, 
-          p: 2, 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          minHeight: '120px'
-        }}
-      >
-        <Box 
-          sx={{ 
-            display: 'flex',
-            flexDirection: direction as 'row' | 'column' | 'row-reverse' | 'column-reverse',
-            justifyContent: justifyContent as string,
-            alignItems: alignItems as string,
-            flexWrap: flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse',
-            gap: spacing,
-            padding: padding,
-            width: '100%',
-            border: '1px dashed #ccc',
-            borderRadius: 1,
-            minHeight: minHeight ? `${minHeight}px` : 'auto'
-          }}
-        >
-          {generatePreviewBoxes()}
+      <ComponentPreview>
+        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+          <Box 
+            sx={{ 
+              display: 'flex',
+              flexDirection: direction as 'row' | 'column' | 'row-reverse' | 'column-reverse',
+              justifyContent: justifyContent as string,
+              alignItems: alignItems as string,
+              flexWrap: flexWrap as 'nowrap' | 'wrap' | 'wrap-reverse',
+              gap: spacing,
+              padding: padding,
+              width: '100%',
+              border: '1px dashed #ccc',
+              borderRadius: 1,
+              minHeight: minHeight ? `${minHeight}px` : '120px',
+              backgroundColor: 'rgba(0,0,0,0.02)'
+            }}
+          >
+            {generatePreviewBoxes()}
+          </Box>
+          
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%' }}>
+            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center" sx={{ mb: 1 }}>
+              <Chip size="small" label={`Direction: ${direction}`} color="primary" variant="outlined" />
+              <Chip size="small" label={`Justify: ${justifyText}`} color="secondary" variant="outlined" />
+              <Chip size="small" label={`Align: ${alignText}`} color="info" variant="outlined" />
+              <Chip size="small" label={`Wrap: ${flexWrap}`} color="default" variant="outlined" />
+            </Stack>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
+              <span>Gap: {spacing}</span>
+              <span>•</span>
+              <span>Padding: {padding}</span>
+              {minHeight > 0 && (
+                <>
+                  <span>•</span>
+                  <span>Min Height: {minHeight}px</span>
+                </>
+              )}
+              {maxItems > 0 && (
+                <>
+                  <span>•</span>
+                  <span>Max Items: {maxItems}</span>
+                </>
+              )}
+              {Boolean(props.grow) && (
+                <>
+                  <span>•</span>
+                  <span>Children Can Grow</span>
+                </>
+              )}
+              {Boolean(props.scrollable) && (
+                <>
+                  <span>•</span>
+                  <span>Scrollable</span>
+                </>
+              )}
+              {Boolean(props.responsive) && (
+                <>
+                  <span>•</span>
+                  <span>Responsive</span>
+                </>
+              )}
+            </Typography>
+          </Box>
         </Box>
-      </Paper>
+      </ComponentPreview>
       
       {/* Tabs Navigation */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -218,7 +272,7 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
       </Box>
       
       {/* Layout Tab */}
-      <TabPanel value={tabValue} index={0}>
+      <TabPanelShared value={tabValue} index={0}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Typography variant="subtitle2" gutterBottom>
@@ -298,10 +352,10 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Alignment Tab */}
-      <TabPanel value={tabValue} index={1}>
+      <TabPanelShared value={tabValue} index={1}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Typography variant="subtitle2" gutterBottom>
@@ -363,10 +417,10 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Spacing Tab */}
-      <TabPanel value={tabValue} index={2}>
+      <TabPanelShared value={tabValue} index={2}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Typography gutterBottom>
@@ -409,12 +463,12 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
               <Typography variant="subtitle2" gutterBottom>
                 Spacing Visualization
               </Typography>
-              <Paper
-                variant="outlined"
+              <Box
                 sx={{
                   p: padding,
                   backgroundColor: '#f5f5f5',
-                  border: '1px dashed #aaa'
+                  border: '1px dashed #aaa',
+                  borderRadius: 1
                 }}
               >
                 <Stack 
@@ -437,7 +491,7 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                   <Box sx={{ bgcolor: '#42a5f5' }}>2</Box>
                   <Box sx={{ bgcolor: '#66bb6a' }}>3</Box>
                 </Stack>
-              </Paper>
+              </Box>
             </Box>
           </Grid>
           
@@ -469,7 +523,7 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
     </Box>
   )
 }

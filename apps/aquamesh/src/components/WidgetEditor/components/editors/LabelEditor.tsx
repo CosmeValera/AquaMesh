@@ -18,121 +18,27 @@ import {
   EditorTabs,
   TextStylingControls,
   TextAlignmentControls,
-  CustomColorControl
+  CustomColorControl,
+  TabPanelShared
 } from '../shared/SharedEditorComponents'
 
-// Define some default colors for color picker
-const DEFAULT_COLORS = [
-  '#2196F3', // blue
-  '#F44336', // red
-  '#4CAF50', // green  
-  '#FF9800', // orange
-  '#9C27B0', // purple
-  '#795548', // brown
-  '#607D8B', // blue-grey
-  '#E91E63', // pink
-  '#000000', // black
-  '#666666', // dark grey
-]
-
+// Define props interface with explicit types
 interface LabelProps {
+  text?: string;
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2';
+  fontWeight?: number;
+  fontStyle?: 'normal' | 'italic';
+  textDecoration?: string;
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
+  useCustomColor?: boolean;
+  customColor?: string;
+  noWrap?: boolean;
   [key: string]: unknown; 
 }
 
 interface LabelEditorProps {
   props: LabelProps;
   onChange: (updatedProps: LabelProps) => void;
-}
-
-// Tab panel component for organizing the editor
-const TabPanel: React.FC<{ 
-  children: React.ReactNode
-  value: number
-  index: number 
-}> = ({ children, value, index }) => {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`label-tabpanel-${index}`}
-      aria-labelledby={`label-tab-${index}`}
-    >
-      {value === index && (
-        <Box sx={{ p: 2 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  )
-}
-
-// Color picker modal component
-interface ColorPickerProps {
-  open: boolean
-  currentColor: string
-  onClose: () => void
-  onSave: (color: string) => void
-}
-
-const ColorPickerModal: React.FC<ColorPickerProps> = ({ open, currentColor, onClose, onSave }) => {
-  const [selectedColor, setSelectedColor] = useState(currentColor)
-
-  // Reset selected color when modal opens with a new color
-  useEffect(() => {
-    setSelectedColor(currentColor)
-  }, [currentColor, open])
-
-  const handleSave = () => {
-    onSave(selectedColor)
-    onClose()
-  }
-
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Choose Color</DialogTitle>
-      <DialogContent>
-        <Box sx={{ textAlign: 'center', p: 2 }}>
-          <input
-            type="color"
-            value={selectedColor}
-            onChange={(e) => setSelectedColor(e.target.value)}
-            style={{ 
-              width: '100px', 
-              height: '100px', 
-              padding: 0, 
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          />
-        </Box>
-        
-        {/* Predefined colors palette */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', mt: 2 }}>
-          {DEFAULT_COLORS.map((color, index) => (
-            <Box 
-              key={index}
-              sx={{ 
-                width: 30, 
-                height: 30, 
-                bgcolor: color, 
-                borderRadius: '4px',
-                cursor: 'pointer',
-                border: selectedColor === color ? '2px solid #000' : '1px solid rgba(0,0,0,0.2)',
-              }}
-              onClick={() => setSelectedColor(color)}
-            />
-          ))}
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} variant="contained" color="primary">
-          Apply Color
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
 }
 
 const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
@@ -152,9 +58,6 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
   // Color states
   const [useCustomColor, setUseCustomColor] = useState(Boolean(props.useCustomColor))
   const [customColor, setCustomColor] = useState((props.customColor as string) || '#1976d2')
-  
-  // Color picker state
-  const [colorPickerOpen, setColorPickerOpen] = useState(false)
   
   // Initialize state based on props
   useEffect(() => {
@@ -255,12 +158,29 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
       <ComponentPreview>
-        <Typography
-          variant={variant as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2'}
-          sx={previewStyles}
-        >
-          {(props.text as string) || 'Label Text'}
-        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+          <Typography
+            variant={variant as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2'}
+            sx={previewStyles}
+          >
+            {(props.text as string) || 'Label Text'}
+          </Typography>
+          
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%', display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center' }}>
+              {variant} {useCustomColor && (
+                <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', ml: 1 }}>
+                  • Color: <Box component="span" sx={{ width: 10, height: 10, bgcolor: customColor, borderRadius: '50%', display: 'inline-block', mx: 0.5 }} /> {customColor}
+                </Box>
+              )}
+              {isBold && ' • Bold'}
+              {isItalic && ' • Italic'}
+              {hasUnderline && ' • Underlined'}
+              {props.noWrap && ' • No Wrap'}
+              {' • Align: ' + textAlign}
+            </Typography>
+          </Box>
+        </Box>
       </ComponentPreview>
       
       {/* Tabs Navigation */}
@@ -271,7 +191,7 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
       />
       
       {/* Content Tab */}
-      <TabPanel value={tabValue} index={0} id="label">
+      <TabPanelShared value={tabValue} index={0} id="label">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
@@ -314,10 +234,10 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
       {/* Typography Tab */}
-      <TabPanel value={tabValue} index={1} id="label">
+      <TabPanelShared value={tabValue} index={1} id="label">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControl fullWidth>
@@ -363,7 +283,7 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
     </Box>
   )
 }

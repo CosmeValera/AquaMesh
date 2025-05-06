@@ -413,6 +413,7 @@ const Views = () => {
             variant="outlined"
             value={dashboardName}
             onChange={(e) => setDashboardName(e.target.value)}
+            onFocus={(e) => { e.target.select() }}
             error={dashboardName.trim() === ''}
             helperText={dashboardName.trim() === '' ? 'Dashboard name is required' : ''}
             required
@@ -455,6 +456,7 @@ const Views = () => {
             variant="outlined"
             value={dashboardDescription}
             onChange={(e) => setDashboardDescription(e.target.value)}
+            onFocus={(e) => { e.target.select() }}
             InputLabelProps={{ shrink: true, sx: { color: 'rgba(255, 255, 255, 0.7)' } }}
             InputProps={{
               sx: {

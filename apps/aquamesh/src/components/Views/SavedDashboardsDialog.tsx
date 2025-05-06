@@ -866,6 +866,7 @@ const EditDashboardDialog: React.FC<EditDashboardDialogProps> = ({
             label="Dashboard Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onFocus={(e) => { e.target.select() }}
             margin="normal"
             required
             InputLabelProps={{ shrink: true, sx: { color: 'rgba(255, 255, 255, 0.7)' } }}
@@ -891,6 +892,7 @@ const EditDashboardDialog: React.FC<EditDashboardDialogProps> = ({
             label="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            onFocus={(e) => { e.target.select() }}
             margin="normal"
             multiline
             rows={3}

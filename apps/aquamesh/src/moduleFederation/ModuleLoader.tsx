@@ -2,6 +2,11 @@
 /* eslint-disable react/display-name */
 /* eslint-disable no-undef */
 import React, { useState, useEffect } from 'react'
+// Declare webpack module federation globals
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __webpack_init_sharing__: (scope: string) => Promise<void>
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare const __webpack_share_scopes__: { default: Record<string, unknown> }
 
 import useDynamicScript from '../customHooks/useDynamicScript'
 import StatusPage from '../common/StatusPage'
@@ -22,13 +27,11 @@ interface ComponentCache {
 type LazyComponentType = React.LazyExoticComponent<React.ComponentType<unknown>>;
 
 const ModuleLoader: React.FC<ModuleLoaderProps> = (props) => {
-  console.log(props)
   const [Component, setComponent] = useState<React.FC<ModuleLoaderProps>>()
   const { ready, failed } = useDynamicScript({ url: props.url })
   const componentCache: ComponentCache = {}
 
-  async function loadComponent(scope: string , module: string) {
-    // Check if the container exists
+  async function loadComponent(scope: string, module: string) {
     if (!(window as ComponentCache)[scope]) {
       throw new Error(`Container ${scope} does not exist`)
     }
@@ -36,7 +39,6 @@ const ModuleLoader: React.FC<ModuleLoaderProps> = (props) => {
     // Initialize the share scope
     await __webpack_init_sharing__("default")
     const container = (window as ComponentCache)[scope]
-    console.log(container)
 
     // Initialize the container
     await container.init(__webpack_share_scopes__.default)
@@ -78,7 +80,6 @@ const ModuleLoader: React.FC<ModuleLoaderProps> = (props) => {
           setComponent(() => () => <p>Error loading component: {props.component}</p>)
         }
       }
-      console.log('cache', componentCache)
     }
 
     fetchComponent()

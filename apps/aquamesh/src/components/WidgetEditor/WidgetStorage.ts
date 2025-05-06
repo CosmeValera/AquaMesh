@@ -105,7 +105,7 @@ class WidgetStorage {
     try {
       const serialized = JSON.stringify(widgets)
       localStorage.setItem(STORAGE_KEY, serialized)
-      console.log('Saved widgets to localStorage:', widgets)
+      // console.log('Saved widgets to localStorage:', widgets)
     } catch (error) {
       console.error('Failed to save widgets to localStorage:', error)
     }

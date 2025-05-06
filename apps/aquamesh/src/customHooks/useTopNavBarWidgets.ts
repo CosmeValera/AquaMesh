@@ -32,7 +32,6 @@ const useTopNavBarWidgets = () => {
       .then(data => {
         // Get custom widgets from storage
         const customWidgets = WidgetStorage.getAllWidgets()
-        console.log('useTopNavBarWidgets: Loaded custom widgets:', JSON.stringify(customWidgets, null, 2))
         
         // Create a new panel for custom widgets if there are any
         if (customWidgets.length > 0) {
@@ -56,7 +55,6 @@ const useTopNavBarWidgets = () => {
             })
           }
           
-          console.log('useTopNavBarWidgets: Created custom widgets panel:', JSON.stringify(customWidgetsPanel, null, 2))
           
           // Add the custom widgets panel to the list
           setTopNavBarWidgets([...data, customWidgetsPanel])
@@ -73,7 +71,6 @@ const useTopNavBarWidgets = () => {
     
     // Set up event listener for widget storage updates
     const handleWidgetUpdate = () => {
-      console.log('useTopNavBarWidgets: Widget storage updated, reloading widgets')
       loadWidgets()
     }
     

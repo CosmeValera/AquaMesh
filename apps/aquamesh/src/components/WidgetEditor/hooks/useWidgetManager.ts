@@ -114,7 +114,6 @@ export const useWidgetManager = () => {
     closeWidgetManagement()
     
     if (isWidgetEditorOpen()) {
-      console.log('Widget Editor already open, loading widget in preview mode')
       // Notify existing widget editor to load widget in view mode
       document.dispatchEvent(new CustomEvent('loadWidgetInEditor', {
         detail: {
@@ -123,7 +122,6 @@ export const useWidgetManager = () => {
         }
       }))
     } else {
-      console.log('No Widget Editor open. Opening new Widget Editor and loading widget in preview mode')
       
       // Use the ensureViewAndAddComponent approach to open a new Widget Editor
       ensureViewAndAddComponent({
@@ -151,7 +149,6 @@ export const useWidgetManager = () => {
     closeWidgetManagement()
     
     if (isWidgetEditorOpen()) {
-      console.log('Widget Editor already open, loading widget in edit mode')
       // Notify existing widget editor to load widget in edit mode
       document.dispatchEvent(new CustomEvent('loadWidgetInEditor', {
         detail: {
@@ -160,7 +157,6 @@ export const useWidgetManager = () => {
         }
       }))
     } else {
-      console.log('No Widget Editor open. Opening new Widget Editor and loading widget in edit mode')
       
       // Use the ensureViewAndAddComponent approach to open a new Widget Editor
       ensureViewAndAddComponent({

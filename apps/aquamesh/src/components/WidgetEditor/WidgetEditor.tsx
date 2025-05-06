@@ -147,11 +147,11 @@ const WidgetEditor: React.FC<{
   // Handle initial widget load from customProps
   React.useEffect(() => {
     if (customProps?.loadWidget) {
-      console.log('WidgetEditor: Loading initial widget from customProps', {
-        widgetName: customProps.loadWidget.name,
-        editMode: customProps.initialEditMode || false,
-        componentCount: customProps.loadWidget.components.length
-      })
+      // console.log('WidgetEditor: Loading initial widget from customProps', {
+      //   widgetName: customProps.loadWidget.name,
+      //   editMode: customProps.initialEditMode || false,
+      //   componentCount: customProps.loadWidget.components.length
+      // })
       
       // Set the appropriate edit mode first
       if (customProps.initialEditMode !== undefined) {
@@ -195,12 +195,12 @@ const WidgetEditor: React.FC<{
     const result = savedWidgetJson !== currentWidgetJson
     
     // Debug log
-    console.log('Widget change detection:', { 
-      hasChanges: result, 
-      widgetName: widgetData.name,
-      savedComponentsLength: savedWidget.components.length,
-      currentComponentsLength: widgetData.components.length
-    })
+    // console.log('Widget change detection:', { 
+    //   hasChanges: result, 
+    //   widgetName: widgetData.name,
+    //   savedComponentsLength: savedWidget.components.length,
+    //   currentComponentsLength: widgetData.components.length
+    // })
     
     return result
   }, [widgetData, savedWidgets, isUpdating])

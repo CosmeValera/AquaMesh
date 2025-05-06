@@ -19,7 +19,6 @@ const useDynamicScript = ({ url }: { url: string }) => {
     setFailed(false)
 
     element.onload = () => {
-      console.log(`Dynamic Script Loaded: ${url}`)
       setReady(true)
     }
 
@@ -32,7 +31,6 @@ const useDynamicScript = ({ url }: { url: string }) => {
     document.head.appendChild(element)
 
     return () => {
-      console.log(`Dynamic Script Removed: ${url}`)
       document.head.removeChild(element)
     }
   }, [url])

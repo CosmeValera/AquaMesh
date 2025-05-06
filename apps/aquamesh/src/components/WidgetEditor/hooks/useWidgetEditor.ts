@@ -128,13 +128,13 @@ export const useWidgetEditor = () => {
     // Skip recording if this change was from an undo/redo action
     if (isUndoRedoAction) {
       setIsUndoRedoAction(false)
-      console.log('Skipping history recording - undo/redo action')
+      // Skipping history recording - undo/redo action
       return
     }
     
     // Skip recording if we're in the middle of changing the widget name
     if (isChangingName) {
-      console.log('Skipping history recording - name change in progress')
+      // Skipping history recording - name change in progress
       return
     }
 
@@ -153,7 +153,7 @@ export const useWidgetEditor = () => {
         const newComponents = JSON.stringify(widgetData.components)
         
         if (currentComponents === newComponents) {
-          console.log('Skipping history recording - no meaningful change')
+          // Skipping history recording - no meaningful change
           return
         }
       }
@@ -328,7 +328,6 @@ export const useWidgetEditor = () => {
     
     // Listen for widget storage updates (when widgets are deleted through TopNavBar)
     const handleWidgetUpdate = () => {
-      console.log('WidgetEditor: Widget storage updated, reloading widgets')
       setSavedWidgets(WidgetStorage.getAllWidgets())
     }
     
@@ -349,11 +348,6 @@ export const useWidgetEditor = () => {
         const widget = customEvent.detail.widget as CustomWidget
         const shouldEditMode = Boolean(customEvent.detail.editMode)
         
-        console.log('WidgetEditor: External widget load request received', {
-          widgetName: widget.name,
-          editMode: shouldEditMode,
-          componentCount: widget.components.length
-        })
         
         // Set flag to prevent recording in history
         setIsUndoRedoAction(true)

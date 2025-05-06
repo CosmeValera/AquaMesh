@@ -66,21 +66,17 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
   // Load widget data from storage when needed
   useEffect(() => {
     if (props.component === 'CustomWidget') {
-      console.log('DynamicMicrofrontend: CustomWidget loaded with props:', JSON.stringify(props, null, 2))
       
       // Verify the widget exists in storage
       if (props.customProps && 'widgetId' in props.customProps) {
         const widgetId = props.customProps.widgetId as string
         const widget = WidgetStorage.getWidgetById(widgetId)
-        console.log('DynamicMicrofrontend: Widget from storage:', JSON.stringify(widget, null, 2))
         
         if (widget && Array.isArray(widget.components) && widget.components.length > 0) {
-          console.log('DynamicMicrofrontend: Setting widget components from storage')
           setWidgetData({
             components: widget.components
           })
         } else if (props.customProps && 'components' in props.customProps) {
-          console.log('DynamicMicrofrontend: Using components from customProps')
           setWidgetData({
             components: props.customProps.components as ComponentData[]
           })
@@ -101,7 +97,6 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
       ...(widgetData.components && { components: widgetData.components })
     }
     
-    console.log('DynamicMicrofrontend: Rendering CustomWidget with props:', JSON.stringify(customWidgetProps, null, 2))
     
     return <CustomWidget 
       widgetId={customWidgetProps.widgetId} 

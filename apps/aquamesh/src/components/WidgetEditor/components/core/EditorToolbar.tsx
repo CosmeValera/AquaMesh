@@ -12,7 +12,8 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Divider
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import EditIcon from '@mui/icons-material/Edit'
@@ -21,7 +22,6 @@ import SaveIcon from '@mui/icons-material/Save'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
 import UndoIcon from '@mui/icons-material/Undo'
 import RedoIcon from '@mui/icons-material/Redo'
-import PreviewIcon from '@mui/icons-material/Preview'
 import TemplateIcon from '@mui/icons-material/Dashboard'
 import ImportExportIcon from '@mui/icons-material/ImportExport'
 import HistoryIcon from '@mui/icons-material/History'
@@ -143,7 +143,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             Widget Editor
           </Typography>
           
-          <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {/* Undo/Redo buttons*/}
             {handleUndo && handleRedo && (
               <>
@@ -178,6 +178,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     </IconButton>
                   </span>
                 </Tooltip>
+                
+                <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />
               </>
             )}
             
@@ -217,6 +219,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 </span>
               </Tooltip>
             )}
+            
+            <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />
             
             <Tooltip title="Open saved widget">
               <IconButton 
@@ -258,6 +262,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               </IconButton>
             </Tooltip>
             
+            <Divider orientation="vertical" flexItem sx={{ mr: 2, height: '24px', alignSelf: 'center' }} />
+            
             {/* Advanced Features Menu */}
             <Menu
               anchorEl={advancedMenuAnchor}
@@ -280,33 +286,20 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     right: 14,
                     width: 10,
                     height: 10,
-                    bgcolor: 'background.paper',
                     transform: 'translateY(-50%) rotate(45deg)',
                     zIndex: 0,
                   },
                   '& .MuiListItemText-primary, & .MuiListItemText-secondary': {
-                    color: theme.palette.text.primary
+                    color: theme.palette.common.white
                   },
                   '& .MuiListItemIcon-root': {
-                    color: theme.palette.primary.main
+                    color: theme.palette.common.white
                   }
                 }
               }}
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              <Box sx={{ 
-                px: 2, 
-                py: 1.5, 
-                bgcolor: 'primary.main',
-                color: 'white',
-                borderTopLeftRadius: 8,
-                borderTopRightRadius: 8
-              }}>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  Advanced Features
-                </Typography>
-              </Box>
               
               <MenuItem 
                 onClick={() => {
@@ -318,18 +311,18 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                   borderBottom: '1px solid',
                   borderColor: 'divider',
                   '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.08)
+                    bgcolor: alpha(theme.palette.primary.main, 0.2)
                   }
                 }}
               >
-                <ListItemIcon sx={{ color: theme.palette.primary.main }}>
+                <ListItemIcon sx={{ color: theme.palette.common.white }}>
                   <TemplateIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText 
                   primary="Templates" 
                   secondary="Save, load, and manage templates"
-                  primaryTypographyProps={{ fontWeight: 'bold' }}
-                  secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                  primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
+                  secondaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 'light', color: theme.palette.common.white }}
                 />
               </MenuItem>
               
@@ -343,18 +336,18 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                   borderBottom: '1px solid',
                   borderColor: 'divider',
                   '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.08)
+                    bgcolor: alpha(theme.palette.primary.main, 0.2)
                   }
                 }}
               >
-                <ListItemIcon sx={{ color: theme.palette.primary.main }}>
+                <ListItemIcon sx={{ color: theme.palette.common.white }}>
                   <ImportExportIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText 
                   primary="Export/Import Widgets" 
                   secondary="Transfer widgets between environments"
-                  primaryTypographyProps={{ fontWeight: 'bold' }}
-                  secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                  primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
+                  secondaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 'light', color: theme.palette.common.white }}
                 />
               </MenuItem>
               
@@ -366,18 +359,18 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 sx={{ 
                   py: 1.5,
                   '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.08)
+                    bgcolor: alpha(theme.palette.primary.main, 0.2)
                   }
                 }}
               >
-                <ListItemIcon sx={{ color: theme.palette.primary.main }}>
+                <ListItemIcon sx={{ color: theme.palette.common.white }}>
                   <HistoryIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText 
                   primary="Version History" 
                   secondary="View and restore previous versions"
-                  primaryTypographyProps={{ fontWeight: 'bold' }}
-                  secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                  primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
+                  secondaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 'light', color: theme.palette.common.white }}
                 />
               </MenuItem>
             </Menu>

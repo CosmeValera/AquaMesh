@@ -57,14 +57,6 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   // Get the component icon for display
   const ComponentIcon = getComponentIcon(component.type)
 
-  // Toggle collapse state for fieldset
-  const handleToggleCollapse = (e: React.MouseEvent, fieldsetId: string) => {
-    e.stopPropagation()
-    // Find the component and toggle its collapsed state
-    // We use the existing edit functionality
-    onEdit(fieldsetId)
-  }
-
   // Render a preview of the component based on its type
   const renderComponent = () => {
     switch (component.type) {
@@ -126,9 +118,10 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             onDrop={(e) => handleContainerDrop(e, component.id)}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <IconButton 
-                onClick={(e) => handleToggleCollapse(e, component.id)} 
-                size="small" 
+              <IconButton
+                // Open the FieldSet editor when clicking the collapse icon
+                onClick={(e) => { e.stopPropagation(); onEdit(component.id); }}
+                size="small"
                 sx={{ color: 'primary.main' }}
               >
                 {isCollapsed ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}

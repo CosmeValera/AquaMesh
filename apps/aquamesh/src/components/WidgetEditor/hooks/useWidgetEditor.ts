@@ -626,30 +626,13 @@ export const useWidgetEditor = () => {
     setDeleteConfirmOpen(false)
   }
 
-  // Handle editing a component or toggling FieldSet collapsed state
+  // Handle editing a component: open the edit dialog for all component types
   const handleEditComponent = (id: string) => {
     const component = findComponentById(id, widgetData.components)
-    
+
     if (component) {
-      // For FieldSets, clicking edit also toggles the collapsed state
-      if (component.type === 'FieldSet') {
-        const updatedComponent = {
-          ...component,
-          props: {
-            ...component.props,
-            collapsed: !(component.props.collapsed as boolean)
-          }
-        }
-        
-        setWidgetData(prev => ({
-          ...prev,
-          components: updateComponentById(id, updatedComponent, prev.components)
-        }))
-      } else {
-        // For other components, open the edit dialog
-        setCurrentEditComponent(component)
-        setEditDialogOpen(true)
-      }
+      setCurrentEditComponent(component)
+      setEditDialogOpen(true)
     }
   }
 

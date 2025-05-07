@@ -895,6 +895,13 @@ export const useWidgetEditor = () => {
     setEditMode(prev => !prev)
   }
 
+  // Utility function to load saved widgets
+  const loadSavedWidgets = () => {
+    // Get widgets from local storage
+    const savedWidgets = WidgetStorage.getAllWidgets()
+    setSavedWidgets(savedWidgets)
+  }
+
   return {
     // State
     widgetData,
@@ -963,5 +970,6 @@ export const useWidgetEditor = () => {
     setEditDialogOpen,
     setCurrentEditComponent,
     handleWidgetNameChange,
+    loadSavedWidgets
   }
 } 

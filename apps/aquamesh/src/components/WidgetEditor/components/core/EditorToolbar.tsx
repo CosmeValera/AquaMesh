@@ -6,7 +6,9 @@ import {
   Typography,
   Button,
   Tooltip,
-  Box
+  Box,
+  useTheme,
+  alpha
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import EditIcon from '@mui/icons-material/Edit'
@@ -15,6 +17,11 @@ import SaveIcon from '@mui/icons-material/Save'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
 import UndoIcon from '@mui/icons-material/Undo'
 import RedoIcon from '@mui/icons-material/Redo'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import TemplateIcon from '@mui/icons-material/Dashboard'
+import ImportExportIcon from '@mui/icons-material/ImportExport'
+import HistoryIcon from '@mui/icons-material/History'
+import SearchIcon from '@mui/icons-material/Search'
 
 interface EditorToolbarProps {
   editMode: boolean
@@ -31,6 +38,13 @@ interface EditorToolbarProps {
   canRedo?: boolean
   hasChanges?: boolean
   isEmpty?: boolean
+  showTemplateDialog: boolean
+  setShowTemplateDialog: (show: boolean) => void
+  showExportImportDialog: boolean
+  setShowExportImportDialog: (show: boolean) => void
+  handleOpenVersioningDialog: () => void
+  handleOpenSearchDialog?: () => void
+  widgetHasComponents?: boolean
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({
@@ -47,8 +61,17 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   canUndo = false,
   canRedo = false,
   hasChanges = true,
-  isEmpty = false
+  isEmpty = false,
+  showTemplateDialog,
+  setShowTemplateDialog,
+  showExportImportDialog,
+  setShowExportImportDialog,
+  handleOpenVersioningDialog,
+  handleOpenSearchDialog,
+  widgetHasComponents = false
 }) => {
+  const theme = useTheme()
+
   return (
     <AppBar 
       position="static" 
@@ -58,7 +81,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
       sx={{ 
         borderBottom: 1, 
         borderColor: 'divider',
-        bgcolor: 'background.paper' 
+        bgcolor: theme.palette.mode === 'dark' 
+          ? alpha(theme.palette.background.paper, 0.9) 
+          : 'background.paper' 
       }}
     >
       <Toolbar variant="dense">
@@ -128,12 +153,33 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               onClick={toggleEditMode}
               sx={{ 
                 mr: 1,
-                color: editMode ? 'primary.main' : 'foreground.contrastSecondary' 
+                color: editMode ? 'primary.main' : 'foreground.contrastSecondary',
+                bgcolor: editMode ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                '&:hover': {
+                  bgcolor: editMode 
+                    ? alpha(theme.palette.primary.main, 0.2)
+                    : alpha(theme.palette.action.hover, 0.1)
+                }
               }}
             >
-              <EditIcon />
+              {editMode ? <VisibilityIcon /> : <EditIcon />}
             </IconButton>
           </Tooltip>
+          
+          {handleOpenSearchDialog && (
+            <Tooltip title="Search components">
+              <span>
+                <IconButton
+                  color="inherit"
+                  onClick={handleOpenSearchDialog}
+                  sx={{ ml: 1 }}
+                  disabled={!editMode || !widgetHasComponents}
+                >
+                  <SearchIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
           
           <Tooltip title="Open saved widget">
             <IconButton 
@@ -158,6 +204,36 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               }}
             >
               <SettingsIcon />
+            </IconButton>
+          </Tooltip>
+          
+          <Tooltip title="Choose template">
+            <IconButton
+              color="inherit"
+              onClick={() => setShowTemplateDialog(true)}
+              sx={{ mr: 1 }}
+            >
+              <TemplateIcon />
+            </IconButton>
+          </Tooltip>
+          
+          <Tooltip title="Export or import widgets">
+            <IconButton
+              color="inherit"
+              onClick={() => setShowExportImportDialog(true)}
+              sx={{ mr: 1 }}
+            >
+              <ImportExportIcon />
+            </IconButton>
+          </Tooltip>
+          
+          <Tooltip title="Version history">
+            <IconButton
+              color="inherit"
+              onClick={handleOpenVersioningDialog}
+              sx={{ mr: 1 }}
+            >
+              <HistoryIcon />
             </IconButton>
           </Tooltip>
           

@@ -15,9 +15,11 @@ import ComponentPaletteItem from './ComponentPaletteItem'
 
 // Interface for component props
 interface ComponentPaletteProps {
-  showTooltips: boolean
+  showTooltips?: boolean
   showHelpText?: boolean
   handleDragStart: (e: React.DragEvent<HTMLDivElement>, type: string) => void
+  showComponentPaletteHelp: boolean
+  setShowComponentPaletteHelp: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 // Group component types by category
@@ -38,7 +40,7 @@ const groupByCategory = (componentTypes: ComponentType[]) => {
 const PALETTE_GROUPS = ['UI Components', 'Layout Containers', 'Chart Components']
 
 // Component palette component
-const ComponentPalette = ({ showTooltips, showHelpText = true, handleDragStart }: ComponentPaletteProps) => {
+const ComponentPalette = ({ showTooltips = false, showHelpText = true, handleDragStart, showComponentPaletteHelp, setShowComponentPaletteHelp }: ComponentPaletteProps) => {
   // Group component types by category - memoized to prevent recalculation on each render
   const groupedComponents = useMemo(() => groupByCategory(COMPONENT_TYPES), [])
   

@@ -1,10 +1,14 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Box
 } from '@mui/material'
 import { useWidgetEditor } from './hooks/useWidgetEditor'
 import EditComponentDialog from './components/dialogs/EditComponentDialog'
 import SavedWidgetsDialog from './components/dialogs/SavedWidgetsDialog'
+import TemplateSelectionDialog from './components/dialogs/TemplateSelectionDialog'
+import ExportImportDialog from './components/dialogs/ExportImportDialog'
+import WidgetVersioningDialog from './components/dialogs/WidgetVersioningDialog'
+import ComponentSearchDialog from './components/dialogs/ComponentSearchDialog'
 import SettingsDialog from './components/dialogs/SettingsDialog'
 import EditorToolbar from './components/core/EditorToolbar'
 import ComponentPalette from './components/core/ComponentPalette'
@@ -12,6 +16,7 @@ import EditorCanvas from './components/core/EditorCanvas'
 import NotificationSystem from './components/ui/NotificationSystem'
 import DeleteConfirmationDialog from './components/dialogs/DeleteConfirmationDialog'
 import { CustomWidget } from './WidgetStorage'
+import WidgetStorage, { WidgetVersion } from './WidgetStorage'
 
 // Main Widget Editor component
 const WidgetEditor: React.FC<{
@@ -86,10 +91,26 @@ const WidgetEditor: React.FC<{
     setEditDialogOpen,
     setCurrentEditComponent,
     handleWidgetNameChange,
+    loadSavedWidgets
   } = useWidgetEditor()
 
   // State to control sidebar visibility
   const [showSidebar, setShowSidebar] = React.useState(true)
+  
+  // State to control template selection dialog visibility
+  const [showTemplateDialog, setShowTemplateDialog] = React.useState(false)
+
+  // State to control export/import dialog visibility
+  const [showExportImportDialog, setShowExportImportDialog] = React.useState(false)
+  
+  // State to control versioning dialog visibility
+  const [showVersioningDialog, setShowVersioningDialog] = React.useState(false)
+  
+  // State to control component search dialog visibility
+  const [showSearchDialog, setShowSearchDialog] = React.useState(false)
+  
+  // State to track current widget for versioning
+  const [currentVersioningWidget, setCurrentVersioningWidget] = React.useState<CustomWidget | null>(null)
 
   // Toggle sidebar visibility
   const toggleSidebar = () => {
@@ -206,6 +227,98 @@ const WidgetEditor: React.FC<{
     return result
   }, [widgetData, savedWidgets, isUpdating])
 
+  // Load a template as a new widget
+  const handleTemplateSelected = (templateWidget: CustomWidget) => {
+    handleLoadWidget(templateWidget, true)
+  }
+
+  // Handler for when import is complete
+  const handleImportComplete = () => {
+    loadSavedWidgets()
+    setComponentToast({
+      open: true,
+      message: 'Widgets imported successfully',
+      severity: 'success',
+    })
+  }
+  
+  // Open versioning dialog for a widget
+  const handleOpenVersioningDialog = () => {
+    // Find the current widget in saved widgets
+    const currentWidget = savedWidgets.find(w => w.name === widgetData.name)
+    if (currentWidget) {
+      setCurrentVersioningWidget(currentWidget)
+      setShowVersioningDialog(true)
+    } else {
+      // Show a message that versioning is only available for saved widgets
+      setComponentToast({
+        open: true,
+        message: 'Please save your widget first to access version history',
+        severity: 'info',
+      })
+    }
+  }
+  
+  // Open component search dialog
+  const handleOpenSearchDialog = () => {
+    if (widgetData.components.length === 0) {
+      // Show a message if there are no components to search
+      setComponentToast({
+        open: true,
+        message: 'No components to search. Add components to your widget first.',
+        severity: 'info',
+      })
+      return
+    }
+    
+    setShowSearchDialog(true)
+  }
+  
+  // Handle component selection from search
+  const handleSelectComponentFromSearch = (componentId: string) => {
+    // Find the component in the widget tree
+    handleEditComponent(componentId)
+    
+    // Show a success message
+    setComponentToast({
+      open: true,
+      message: 'Component found and selected for editing',
+      severity: 'success',
+    })
+  }
+  
+  // Handle restoring a previous version
+  const handleRestoreVersion = (widgetId: string, version: WidgetVersion) => {
+    // Find widget by ID
+    const widget = savedWidgets.find(w => w.id === widgetId)
+    if (!widget) {
+      return
+    }
+
+    // Create a new widget object with the restored components
+    const restoredWidget = {
+      ...widget,
+      components: version.components,
+      version: version.version
+    }
+    
+    // Update version in storage
+    WidgetStorage.updateWidget(widgetId, {
+      components: version.components,
+      version: version.version
+    })
+    
+    // Load the restored widget
+    handleLoadWidget(restoredWidget, true)
+    
+    // Show success message
+    setComponentToast({
+      open: true,
+      message: `Restored to version ${version.version}`,
+      severity: 'success',
+    })
+  }
+
   // Set up delete confirmation content based on what's being deleted
   const getDeleteConfirmationProps = () => {
     if (componentToDelete) {
@@ -249,40 +362,43 @@ const WidgetEditor: React.FC<{
       {/* Toolbar */}
       <EditorToolbar 
         editMode={editMode}
-        showSidebar={showSidebar}
-        toggleSidebar={toggleSidebar}
         toggleEditMode={toggleEditMode}
-        handleSaveWidget={handleSaveWidget}
         setShowWidgetList={setShowWidgetList}
-        setShowSettingsModal={setShowSettingsModal}
-        isUpdating={isUpdating}
+        showSidebar={showSidebar} 
+        toggleSidebar={toggleSidebar}
+        handleSaveWidget={handleSaveWidget}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
         canUndo={canUndo}
         canRedo={canRedo}
+        isUpdating={isUpdating}
         hasChanges={hasChanges}
-        isEmpty={widgetData.components.length === 0}
+        setShowSettingsModal={setShowSettingsModal}
+        setShowTemplateDialog={setShowTemplateDialog}
+        setShowExportImportDialog={setShowExportImportDialog}
+        handleOpenVersioningDialog={handleOpenVersioningDialog}
+        handleOpenSearchDialog={handleOpenSearchDialog}
+        widgetHasComponents={widgetData.components.length > 0}
       />
-
-      {/* Main content area */}
+      
+      {/* Main editor area */}
       <Box
         sx={{
           display: 'flex',
-          flexGrow: 1,
+          flex: 1,
           overflow: 'hidden',
-          transition: 'all 0.3s ease',
         }}
       >
-        {/* Component palette */}
-        {editMode && showSidebar && (
+        {/* Component palette sidebar */}
+        {showSidebar && editMode && (
           <ComponentPalette 
-            showTooltips={showTooltips}
-            showHelpText={showComponentPaletteHelp}
             handleDragStart={handleDragStart}
+            showComponentPaletteHelp={showComponentPaletteHelp}
+            setShowComponentPaletteHelp={setShowComponentPaletteHelp}
           />
         )}
-
-        {/* Widget editing area */}
+        
+        {/* Canvas area */}
         <EditorCanvas 
           editMode={editMode}
           widgetData={widgetData}
@@ -307,61 +423,97 @@ const WidgetEditor: React.FC<{
           handleWidgetNameChange={handleWidgetNameChange}
         />
       </Box>
-
-      {/* Component Edit Dialog */}
-      <EditComponentDialog
+      
+      {/* Dialogs */}
+      <EditComponentDialog 
         open={editDialogOpen}
         component={currentEditComponent}
-        onClose={() => {
-          setEditDialogOpen(false)
-          setCurrentEditComponent(null)
-        }}
         onSave={handleSaveComponent}
+        onClose={() => setEditDialogOpen(false)}
       />
-
-      {/* Notifications */}
-      <NotificationSystem 
+      
+      <SavedWidgetsDialog
+        open={showWidgetList}
+        onClose={() => setShowWidgetList(false)}
+        widgets={savedWidgets}
+        onLoad={(widget) => {
+          handleLoadWidget(widget, editMode)
+          setShowWidgetList(false)
+        }}
+        onDelete={handleDeleteSavedWidget}
+      />
+      
+      <TemplateSelectionDialog
+        open={showTemplateDialog}
+        onClose={() => setShowTemplateDialog(false)}
+        onTemplateSelected={handleTemplateSelected}
+        currentWidget={
+          isUpdating 
+            ? savedWidgets.find(w => w.name === widgetData.name) 
+            : (widgetData.components.length > 0 
+              ? {
+                id: widgetData.id || `widget-${Date.now()}`,
+                name: widgetData.name,
+                components: widgetData.components,
+                createdAt: widgetData.createdAt ? new Date(widgetData.createdAt).toISOString() : new Date().toISOString(),
+                updatedAt: widgetData.updatedAt ? new Date(widgetData.updatedAt).toISOString() : new Date().toISOString(),
+                version: widgetData.version || '1.0'
+              } as CustomWidget
+              : null)
+        }
+      />
+      
+      <ExportImportDialog
+        open={showExportImportDialog}
+        onClose={() => setShowExportImportDialog(false)}
+        widgets={savedWidgets}
+        onImportComplete={handleImportComplete}
+      />
+      
+      <WidgetVersioningDialog
+        open={showVersioningDialog}
+        onClose={() => setShowVersioningDialog(false)}
+        widget={currentVersioningWidget}
+        onRestoreVersion={handleRestoreVersion}
+      />
+      
+      <ComponentSearchDialog
+        open={showSearchDialog}
+        onClose={() => setShowSearchDialog(false)}
+        components={widgetData.components}
+        onSelectComponent={handleSelectComponentFromSearch}
+      />
+      
+      <SettingsDialog
+        open={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        showTooltips={showTooltips}
+        setShowTooltips={setShowTooltips}
+        showDeleteConfirmation={showDeleteConfirmation}
+        setShowDeleteConfirmation={setShowDeleteConfirmation}
+        showDeleteWidgetConfirmation={showDeleteWidgetConfirmation}
+        setShowDeleteWidgetConfirmation={setShowDeleteWidgetConfirmation}
+        showDeleteDashboardConfirmation={showDeleteDashboardConfirmation}
+        setShowDeleteDashboardConfirmation={setShowDeleteDashboardConfirmation}
+        showComponentPaletteHelp={showComponentPaletteHelp}
+        setShowComponentPaletteHelp={setShowComponentPaletteHelp}
+      />
+      
+      <DeleteConfirmationDialog
+        open={deleteConfirmOpen}
+        title={deleteConfirmProps.title}
+        content={deleteConfirmProps.content}
+        onConfirm={deleteConfirmProps.onConfirm}
+        onCancel={deleteConfirmProps.onCancel}
+      />
+      
+      {/* Notification toasts */}
+      <NotificationSystem
         notification={notification}
         componentToast={componentToast}
         handleCloseNotification={handleCloseNotification}
         handleCloseComponentToast={handleCloseComponentToast}
       />
-
-      {/* Saved Widgets Dialog */}
-      <SavedWidgetsDialog 
-        open={showWidgetList}
-        widgets={savedWidgets}
-        onClose={() => setShowWidgetList(false)}
-        onLoad={handleLoadWidget}
-        onDelete={handleDeleteSavedWidget}
-      />
-
-      {/* Settings Dialog */}
-      <SettingsDialog
-        open={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
-        showTooltips={showTooltips}
-        onShowTooltipsChange={setShowTooltips}
-        showComponentPaletteHelp={showComponentPaletteHelp}
-        onShowComponentPaletteHelpChange={setShowComponentPaletteHelp}
-        showDeleteConfirmation={showDeleteConfirmation}
-        onShowDeleteConfirmationChange={setShowDeleteConfirmation}
-        showDeleteWidgetConfirmation={showDeleteWidgetConfirmation}
-        onShowDeleteWidgetConfirmationChange={setShowDeleteWidgetConfirmation}
-        showDeleteDashboardConfirmation={showDeleteDashboardConfirmation}
-        onShowDeleteDashboardConfirmationChange={setShowDeleteDashboardConfirmation}
-      />
-
-      {/* Delete Confirmation Dialog */}
-      {deleteConfirmOpen && deleteConfirmProps && (
-        <DeleteConfirmationDialog
-          open={deleteConfirmOpen}
-          title={deleteConfirmProps.title}
-          content={deleteConfirmProps.content}
-          onConfirm={deleteConfirmProps.onConfirm}
-          onCancel={deleteConfirmProps.onCancel}
-        />
-      )}
     </Box>
   )
 }

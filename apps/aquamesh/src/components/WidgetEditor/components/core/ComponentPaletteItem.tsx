@@ -9,13 +9,13 @@ import { ComponentType } from '../../types/types'
 
 interface ComponentPaletteItemProps {
   component: ComponentType
-  showTooltips: boolean
+  showTooltips?: boolean
   handleDragStart: (e: React.DragEvent<HTMLDivElement>, type: string) => void
 }
 
 const ComponentPaletteItem: React.FC<ComponentPaletteItemProps> = ({
   component,
-  showTooltips,
+  showTooltips = false,
   handleDragStart
 }) => {
   // Create the icon element dynamically from the component's icon property

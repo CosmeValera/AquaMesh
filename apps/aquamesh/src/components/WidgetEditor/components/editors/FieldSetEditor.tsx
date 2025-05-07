@@ -249,98 +249,6 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
           label="Animated Collapse/Expand"
         />
       </Grid>
-      
-      <Grid item xs={12} sm={6}>
-        <FormControl fullWidth>
-          <InputLabel>Border Style</InputLabel>
-          <Select
-            value={borderStyle}
-            onChange={(e) => {
-              setBorderStyle(e.target.value)
-              handleChange('borderStyle', e.target.value)
-            }}
-            label="Border Style"
-          >
-            <MenuItem value="solid">Solid</MenuItem>
-            <MenuItem value="dashed">Dashed</MenuItem>
-            <MenuItem value="dotted">Dotted</MenuItem>
-            <MenuItem value="none">None</MenuItem>
-          </Select>
-        </FormControl>
-      </Grid>
-      
-      <Grid item xs={12} sm={6}>
-        <Typography gutterBottom>Border Radius: {borderRadius}px</Typography>
-        <Slider
-          value={borderRadius}
-          onChange={(_e, newValue) => {
-            setBorderRadius(newValue as number)
-            handleChange('borderRadius', newValue)
-          }}
-          min={0}
-          max={16}
-          step={1}
-          marks={[
-            { value: 0, label: '0' },
-            { value: 8, label: '8' },
-            { value: 16, label: '16' }
-          ]}
-        />
-      </Grid>
-      
-      <Grid item xs={12}>
-        <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-          Colors
-        </Typography>
-      </Grid>
-      
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Border Color"
-          value={props.borderColor || '#cccccc'}
-          onChange={(e) => handleChange('borderColor', e.target.value)}
-          type="color"
-          InputProps={{
-            startAdornment: (
-              <Box
-                sx={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: '50%',
-                  backgroundColor: props.borderColor || '#cccccc',
-                  mr: 1,
-                  border: '1px solid rgba(0,0,0,0.2)'
-                }}
-              />
-            )
-          }}
-        />
-      </Grid>
-      
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Legend Color"
-          value={props.legendColor || '#1976d2'}
-          onChange={(e) => handleChange('legendColor', e.target.value)}
-          type="color"
-          InputProps={{
-            startAdornment: (
-              <Box
-                sx={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: '50%',
-                  backgroundColor: props.legendColor || '#1976d2',
-                  mr: 1,
-                  border: '1px solid rgba(0,0,0,0.2)'
-                }}
-              />
-            )
-          }}
-        />
-      </Grid>
     </Grid>
   )
   
@@ -368,36 +276,23 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
       
       <Grid item xs={12} sm={6}>
         <Typography gutterBottom>Border Radius: {borderRadius}px</Typography>
-        <Slider
-          value={borderRadius}
-          onChange={(_e, newValue) => {
-            setBorderRadius(newValue as number)
-            handleChange('borderRadius', newValue)
-          }}
-          min={0}
-          max={16}
-          step={1}
-          marks={[
-            { value: 0, label: '0' },
-            { value: 8, label: '8' },
-            { value: 16, label: '16' }
-          ]}
-        />
-      </Grid>
-      
-      <Grid item xs={12}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={animated}
-              onChange={(e) => {
-                setAnimated(e.target.checked)
-                handleChange('animated', e.target.checked)
-              }}
-            />
-          }
-          label="Animated Collapse/Expand"
-        />
+        <Box sx={{ px: 1 }}>
+          <Slider
+            value={borderRadius}
+            onChange={(_e, newValue) => {
+              setBorderRadius(newValue as number)
+              handleChange('borderRadius', newValue)
+            }}
+            min={0}
+            max={16}
+            step={1}
+            marks={[
+              { value: 0, label: '0' },
+              { value: 8, label: '8' },
+              { value: 16, label: '16' }
+            ]}
+          />
+        </Box>
       </Grid>
       
       <Grid item xs={12}>
@@ -458,7 +353,7 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
   )
   
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%', overflowX: 'hidden' }}>
       {/* Preview Section */}
       <Paper 
         variant="outlined" 

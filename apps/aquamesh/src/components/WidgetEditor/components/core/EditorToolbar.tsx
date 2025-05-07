@@ -21,7 +21,7 @@ import SaveIcon from '@mui/icons-material/Save'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
 import UndoIcon from '@mui/icons-material/Undo'
 import RedoIcon from '@mui/icons-material/Redo'
-import VisibilityIcon from '@mui/icons-material/Visibility'
+import PreviewIcon from '@mui/icons-material/Preview'
 import TemplateIcon from '@mui/icons-material/Dashboard'
 import ImportExportIcon from '@mui/icons-material/ImportExport'
 import HistoryIcon from '@mui/icons-material/History'
@@ -187,16 +187,16 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 onClick={toggleEditMode}
                 sx={{ 
                   mr: 1,
-                  color: editMode ? 'primary.main' : 'foreground.contrastSecondary',
-                  bgcolor: editMode ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                  color: !editMode ? 'primary.main' : 'foreground.contrastSecondary',
+                  bgcolor: !editMode ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
                   '&:hover': {
-                    bgcolor: editMode 
+                    bgcolor: !editMode 
                       ? alpha(theme.palette.primary.main, 0.2)
                       : alpha(theme.palette.action.hover, 0.1)
                   }
                 }}
               >
-                {editMode ? <VisibilityIcon /> : <EditIcon />}
+                <EditIcon />
               </IconButton>
             </Tooltip>
             
@@ -206,7 +206,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                   <IconButton
                     color="inherit"
                     onClick={handleOpenSearchDialog}
-                    sx={{ mr: 1 }}
+                    sx={{ 
+                      mr: 1,
+                      color: 'foreground.contrastSecondary' 
+                    }}
                     disabled={!editMode || !widgetHasComponents}
                   >
                     <SearchIcon />
@@ -281,6 +284,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     transform: 'translateY(-50%) rotate(45deg)',
                     zIndex: 0,
                   },
+                  '& .MuiListItemText-primary, & .MuiListItemText-secondary': {
+                    color: theme.palette.text.primary
+                  },
+                  '& .MuiListItemIcon-root': {
+                    color: theme.palette.primary.main
+                  }
                 }
               }}
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}

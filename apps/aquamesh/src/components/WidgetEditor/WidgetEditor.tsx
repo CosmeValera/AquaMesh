@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import {
   Box
 } from '@mui/material'
@@ -226,6 +226,46 @@ const WidgetEditor: React.FC<{
     
     return result
   }, [widgetData, savedWidgets, isUpdating])
+  
+  // Check if the current widget is the latest version
+  const isLatestVersion = React.useMemo(() => {
+    if (!isUpdating) {
+      return true // New widgets are always the latest
+    }
+
+    // Find current widget in saved widgets
+    const currentWidget = savedWidgets.find(w => w.name === widgetData.name)
+    if (!currentWidget) {
+      return true
+    }
+    
+    // Get latest version from versions list
+    const versions = WidgetStorage.getWidgetVersions(currentWidget.id)
+    if (versions.length === 0) {
+      return true
+    }
+    
+    // Get the latest version (versions are sorted newest first)
+    const latestVersion = versions[0]
+    
+    // Check if current widget version matches latest version
+    return currentWidget.version === latestVersion.version
+  }, [widgetData, savedWidgets, isUpdating])
+  
+  // Get the current widget version
+  const currentWidgetVersion = React.useMemo(() => {
+    if (!isUpdating) {
+      return '1.0' // Default for new widgets
+    }
+    
+    // Find current widget in saved widgets
+    const currentWidget = savedWidgets.find(w => w.name === widgetData.name)
+    if (!currentWidget) {
+      return '1.0'
+    }
+    
+    return currentWidget.version || '1.0'
+  }, [widgetData.name, savedWidgets, isUpdating])
 
   // Load a template as a new widget
   const handleTemplateSelected = (templateWidget: CustomWidget) => {
@@ -373,12 +413,17 @@ const WidgetEditor: React.FC<{
         canRedo={canRedo}
         isUpdating={isUpdating}
         hasChanges={hasChanges}
+        isLatestVersion={isLatestVersion}
+        currentWidgetVersion={currentWidgetVersion}
         setShowSettingsModal={setShowSettingsModal}
+        showTemplateDialog={showTemplateDialog}
         setShowTemplateDialog={setShowTemplateDialog}
+        showExportImportDialog={showExportImportDialog}
         setShowExportImportDialog={setShowExportImportDialog}
         handleOpenVersioningDialog={handleOpenVersioningDialog}
         handleOpenSearchDialog={handleOpenSearchDialog}
         widgetHasComponents={widgetData.components.length > 0}
+        isEmpty={widgetData.components.length === 0}
       />
       
       {/* Main editor area */}
@@ -492,15 +537,15 @@ const WidgetEditor: React.FC<{
         open={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
         showTooltips={showTooltips}
-        setShowTooltips={setShowTooltips}
+        onShowTooltipsChange={setShowTooltips}
         showDeleteConfirmation={showDeleteConfirmation}
-        setShowDeleteConfirmation={setShowDeleteConfirmation}
+        onShowDeleteConfirmationChange={setShowDeleteConfirmation}
         showDeleteWidgetConfirmation={showDeleteWidgetConfirmation}
-        setShowDeleteWidgetConfirmation={setShowDeleteWidgetConfirmation}
+        onShowDeleteWidgetConfirmationChange={setShowDeleteWidgetConfirmation}
         showDeleteDashboardConfirmation={showDeleteDashboardConfirmation}
-        setShowDeleteDashboardConfirmation={setShowDeleteDashboardConfirmation}
+        onShowDeleteDashboardConfirmationChange={setShowDeleteDashboardConfirmation}
         showComponentPaletteHelp={showComponentPaletteHelp}
-        setShowComponentPaletteHelp={setShowComponentPaletteHelp}
+        onShowComponentPaletteHelpChange={setShowComponentPaletteHelp}
       />
       
       <DeleteConfirmationDialog

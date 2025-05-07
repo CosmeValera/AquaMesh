@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   AppBar,
   Toolbar,
@@ -8,7 +8,11 @@ import {
   Tooltip,
   Box,
   useTheme,
-  alpha
+  alpha,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import EditIcon from '@mui/icons-material/Edit'
@@ -22,6 +26,7 @@ import TemplateIcon from '@mui/icons-material/Dashboard'
 import ImportExportIcon from '@mui/icons-material/ImportExport'
 import HistoryIcon from '@mui/icons-material/History'
 import SearchIcon from '@mui/icons-material/Search'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 
 interface EditorToolbarProps {
   editMode: boolean
@@ -62,15 +67,22 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   canRedo = false,
   hasChanges = true,
   isEmpty = false,
-  showTemplateDialog,
   setShowTemplateDialog,
-  showExportImportDialog,
   setShowExportImportDialog,
   handleOpenVersioningDialog,
   handleOpenSearchDialog,
   widgetHasComponents = false
 }) => {
   const theme = useTheme()
+  const [advancedMenuAnchor, setAdvancedMenuAnchor] = useState<null | HTMLElement>(null)
+  
+  const handleAdvancedMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAdvancedMenuAnchor(event.currentTarget)
+  }
+  
+  const handleAdvancedMenuClose = () => {
+    setAdvancedMenuAnchor(null)
+  }
 
   return (
     <AppBar 
@@ -172,7 +184,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 <IconButton
                   color="inherit"
                   onClick={handleOpenSearchDialog}
-                  sx={{ ml: 1 }}
+                  sx={{ mr: 1 }}
                   disabled={!editMode || !widgetHasComponents}
                 >
                   <SearchIcon />
@@ -207,35 +219,137 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             </IconButton>
           </Tooltip>
           
-          <Tooltip title="Choose template">
+          {/* Advanced Features Menu Button */}
+          <Tooltip title="Advanced features">
             <IconButton
               color="inherit"
-              onClick={() => setShowTemplateDialog(true)}
-              sx={{ mr: 1 }}
+              onClick={handleAdvancedMenuOpen}
+              sx={{ 
+                mr: 1,
+                color: 'foreground.contrastSecondary' 
+              }}
             >
-              <TemplateIcon />
+              <MoreVertIcon />
             </IconButton>
           </Tooltip>
           
-          <Tooltip title="Export or import widgets">
-            <IconButton
-              color="inherit"
-              onClick={() => setShowExportImportDialog(true)}
-              sx={{ mr: 1 }}
+          {/* Advanced Features Menu */}
+          <Menu
+            anchorEl={advancedMenuAnchor}
+            open={Boolean(advancedMenuAnchor)}
+            onClose={handleAdvancedMenuClose}
+            PaperProps={{
+              elevation: 6,
+              sx: {
+                minWidth: 220,
+                maxWidth: 320,
+                overflow: 'visible',
+                mt: 1,
+                borderRadius: 2,
+                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)',
+                '&:before': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  top: 0,
+                  right: 14,
+                  width: 10,
+                  height: 10,
+                  bgcolor: 'background.paper',
+                  transform: 'translateY(-50%) rotate(45deg)',
+                  zIndex: 0,
+                },
+              }
+            }}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          >
+            <Box sx={{ 
+              px: 2, 
+              py: 1.5, 
+              bgcolor: 'primary.main',
+              color: 'white',
+              borderTopLeftRadius: 8,
+              borderTopRightRadius: 8
+            }}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                Advanced Features
+              </Typography>
+            </Box>
+            
+            <MenuItem 
+              onClick={() => {
+                setShowTemplateDialog(true)
+                handleAdvancedMenuClose()
+              }}
+              sx={{ 
+                py: 1.5, 
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.08)
+                }
+              }}
             >
-              <ImportExportIcon />
-            </IconButton>
-          </Tooltip>
-          
-          <Tooltip title="Version history">
-            <IconButton
-              color="inherit"
-              onClick={handleOpenVersioningDialog}
-              sx={{ mr: 1 }}
+              <ListItemIcon sx={{ color: theme.palette.primary.main }}>
+                <TemplateIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Templates" 
+                secondary="Save, load, and manage templates"
+                primaryTypographyProps={{ fontWeight: 'bold' }}
+                secondaryTypographyProps={{ fontSize: '0.75rem' }}
+              />
+            </MenuItem>
+            
+            <MenuItem 
+              onClick={() => {
+                setShowExportImportDialog(true)
+                handleAdvancedMenuClose()
+              }}
+              sx={{ 
+                py: 1.5, 
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.08)
+                }
+              }}
             >
-              <HistoryIcon />
-            </IconButton>
-          </Tooltip>
+              <ListItemIcon sx={{ color: theme.palette.primary.main }}>
+                <ImportExportIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Export/Import Widgets" 
+                secondary="Transfer widgets between environments"
+                primaryTypographyProps={{ fontWeight: 'bold' }}
+                secondaryTypographyProps={{ fontSize: '0.75rem' }}
+              />
+            </MenuItem>
+            
+            <MenuItem 
+              onClick={() => {
+                handleOpenVersioningDialog()
+                handleAdvancedMenuClose()
+              }}
+              sx={{ 
+                py: 1.5,
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.08)
+                }
+              }}
+            >
+              <ListItemIcon sx={{ color: theme.palette.primary.main }}>
+                <HistoryIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Version History" 
+                secondary="View and restore previous versions"
+                primaryTypographyProps={{ fontWeight: 'bold' }}
+                secondaryTypographyProps={{ fontSize: '0.75rem' }}
+              />
+            </MenuItem>
+          </Menu>
           
           <Button
             variant="contained"

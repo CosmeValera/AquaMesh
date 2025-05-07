@@ -436,8 +436,12 @@ const WidgetEditor: React.FC<{
         open={showWidgetList}
         onClose={() => setShowWidgetList(false)}
         widgets={savedWidgets}
-        onLoad={(widget) => {
-          handleLoadWidget(widget, editMode)
+        onLoad={(widget, useEditMode) => {
+          // If useEditMode is explicitly provided (from preview/edit buttons), use that
+          // Otherwise default to false (preview mode) as handled in WidgetManagementModal
+          // This fixes the issue where widgets were always opening in edit mode
+          const targetMode = useEditMode !== undefined ? useEditMode : false
+          handleLoadWidget(widget, targetMode)
           setShowWidgetList(false)
         }}
         onDelete={handleDeleteSavedWidget}

@@ -31,7 +31,6 @@ import SearchIcon from '@mui/icons-material/Search'
 import SortIcon from '@mui/icons-material/Sort'
 import CloseIcon from '@mui/icons-material/Close'
 import { CustomWidget } from '../../WidgetStorage'
-import useWidgetManager from '../../hooks/useWidgetManager'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
 
 // Sorting options
@@ -44,6 +43,7 @@ interface WidgetManagementModalProps {
   onPreview: (widget: CustomWidget) => void
   onEdit: (widget: CustomWidget) => void
   onDelete: (id: string) => void
+  onDefaultLoad?: (widget: CustomWidget) => void
 }
 
 const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
@@ -53,6 +53,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   onPreview,
   onEdit,
   onDelete,
+  onDefaultLoad
 }) => {
   // Search state
   const [searchTerm, setSearchTerm] = useState('')
@@ -62,14 +63,10 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   
   // Loading state for operations
   const [isLoading, setIsLoading] = useState(false)
-  const [loadingText, setLoadingText] = useState('')
   
   // Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [widgetToDelete, setWidgetToDelete] = useState<string | null>(null)
-  
-  // Get functions from widget manager hook
-  const { isWidgetEditorOpen } = useWidgetManager()
   
   // Clear search when dialog opens/closes
   useEffect(() => {
@@ -127,46 +124,6 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   // Handle sort change
   const handleSortChange = (e: SelectChangeEvent) => {
     setSortBy(e.target.value as SortOption)
-  }
-  
-  // Handle preview button click
-  const handlePreviewClick = (e: React.MouseEvent, widget: CustomWidget) => {
-    e.stopPropagation()
-    
-    if (isWidgetEditorOpen()) {
-      // Widget Editor is already open, just preview the widget
-      onPreview(widget)
-    } else {
-      // Widget Editor is not open, open it first then preview
-      setIsLoading(true)
-      setLoadingText('Opening Widget Editor...')
-      
-      // Use the onPreview which is the improved previewWidget function
-      // from useWidgetManager that handles opening Widget Editor first
-      onPreview(widget)
-      
-      setIsLoading(false)
-    }
-  }
-  
-  // Handle edit button click
-  const handleEditClick = (e: React.MouseEvent, widget: CustomWidget) => {
-    e.stopPropagation()
-    
-    if (isWidgetEditorOpen()) {
-      // Widget Editor is already open, just edit the widget
-      onEdit(widget)
-    } else {
-      // Widget Editor is not open, open it first then edit
-      setIsLoading(true)
-      setLoadingText('Opening Widget Editor...')
-      
-      // Use the onEdit which is the improved editWidget function
-      // from useWidgetManager that handles opening Widget Editor first
-      onEdit(widget)
-      
-      setIsLoading(false)
-    }
   }
   
   // Filter widgets based on search term
@@ -382,7 +339,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
             >
               <CircularProgress size={60} sx={{ color: '#00D1AB', mb: 2 }} />
               <Typography variant="h6" color="white">
-                {loadingText}
+                Loading...
               </Typography>
             </Box>
           )}
@@ -447,61 +404,64 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                       overflow: 'hidden',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       transition: 'transform 0.2s, box-shadow 0.2s',
+                      cursor: 'pointer',
                       '&:hover': {
                         transform: 'translateY(-5px)',
                         boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)',
                       }
                     }}
+                    onClick={() => onPreview(widget)}
                   >
+                    {/* Widget Header */}
                     <Box 
-                      onClick={(e) => handleEditClick(e, widget)}
-                      sx={{ cursor: 'pointer' }}
+                      sx={{ 
+                        bgcolor: '#00D1AB',
+                        color: '#191919',
+                        p: 2, 
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
                     >
-                      {/* Widget Header */}
-                      <Box 
-                        sx={{ 
-                          bgcolor: '#00D1AB',
-                          color: '#191919',
-                          p: 2, 
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between'
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <WidgetsIcon sx={{ mr: 1 }} />
-                          <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
-                            {widget.name}
-                          </Typography>
-                        </Box>
-                        <Chip 
-                          label={`${widget.components.length} ${widget.components.length === 1 ? 'component' : 'components'}`}
-                          size="small" 
-                          sx={{ 
-                            bgcolor: 'rgba(0, 0, 0, 0.2)',
-                            color: '#191919',
-                            fontWeight: 'bold'
-                          }} 
-                        />
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <WidgetsIcon sx={{ mr: 1 }} />
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                          {widget.name}
+                        </Typography>
                       </Box>
-                    
-                      {/* Widget Info */}
-                      <Box sx={{ p: 2, color: 'white' }}>
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 1 }}>
-                          Last updated: {formatDate(widget.updatedAt)}
-                        </Typography>
-                        
-                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 2 }}>
-                          Created: {formatDate(widget.createdAt)}
-                        </Typography>
-                        
-                        {/* Action Buttons */}
-                        <Box>
-                          <Tooltip title="Preview Widget">
+                      <Chip 
+                        label={`${widget.components.length} ${widget.components.length === 1 ? 'component' : 'components'}`}
+                        size="small" 
+                        sx={{ 
+                          bgcolor: 'rgba(0, 0, 0, 0.2)',
+                          color: '#191919',
+                          fontWeight: 'bold'
+                        }} 
+                      />
+                    </Box>
+                  
+                    {/* Widget Info */}
+                    <Box sx={{ p: 2, color: 'white' }}>
+                      <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 1 }}>
+                        Last updated: {formatDate(widget.updatedAt)}
+                      </Typography>
+                      
+                      <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 2 }}>
+                        Created: {formatDate(widget.createdAt)}
+                      </Typography>
+                      
+                      {/* Action Buttons */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                        <Box sx={{ display: 'flex', mr: 1 }}>
+                          <Tooltip title="Preview">
                             <Button
+                              variant="outlined"
                               size="small"
                               startIcon={<PreviewIcon />}
-                              onClick={(e) => handlePreviewClick(e, widget)}
+                              onClick={(e) => {
+                                e.stopPropagation() // Prevent row click handler
+                                onPreview(widget)
+                              }}
                               sx={{ 
                                 mr: 1,
                                 color: 'white',
@@ -511,17 +471,20 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                                   bgcolor: 'rgba(255, 255, 255, 0.1)'
                                 }
                               }}
-                              variant="outlined"
-                              disabled={isLoading}
                             >
                               Preview
                             </Button>
                           </Tooltip>
-                          <Tooltip title="Edit Widget">
+                          
+                          <Tooltip title="Edit">
                             <Button
+                              variant="contained"
                               size="small"
                               startIcon={<EditIcon />}
-                              onClick={(e) => handleEditClick(e, widget)}
+                              onClick={(e) => {
+                                e.stopPropagation() // Prevent row click handler
+                                onEdit(widget)
+                              }}
                               sx={{ 
                                 mr: 1,
                                 bgcolor: '#00D1AB',
@@ -530,29 +493,27 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                                   bgcolor: '#00E4BC'
                                 }
                               }}
-                              variant="contained"
-                              disabled={isLoading}
                             >
                               Edit
                             </Button>
                           </Tooltip>
-                          <Tooltip title="Delete Widget">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={(e) => handleDeleteClick(e, widget.id)}
-                              sx={{
-                                bgcolor: 'rgba(211, 47, 47, 0.1)',
-                                '&:hover': {
-                                  bgcolor: 'rgba(211, 47, 47, 0.2)'
-                                }
-                              }}
-                              disabled={isLoading}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
                         </Box>
+                        <Tooltip title="Delete Widget">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={(e) => handleDeleteClick(e, widget.id)}
+                            sx={{
+                              bgcolor: 'rgba(211, 47, 47, 0.1)',
+                              '&:hover': {
+                                bgcolor: 'rgba(211, 47, 47, 0.2)'
+                              }
+                            }}
+                            disabled={isLoading}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
                       </Box>
                     </Box>
                   </Paper>

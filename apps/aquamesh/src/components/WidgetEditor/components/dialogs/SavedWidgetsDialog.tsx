@@ -16,7 +16,7 @@ const SavedWidgetsDialog: React.FC<SavedWidgetsDialogProps> = ({
   widgets,
   onClose,
   onLoad,
-  onDelete,
+  onDelete
 }) => {
   // Handler for preview (load in view mode)
   const handlePreview = (widget: CustomWidget) => {

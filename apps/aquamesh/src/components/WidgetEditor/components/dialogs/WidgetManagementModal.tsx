@@ -410,7 +410,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                         boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)',
                       }
                     }}
-                    onClick={() => onPreview(widget)}
+                    onClick={() => onEdit(widget)}
                   >
                     {/* Widget Header */}
                     <Box 

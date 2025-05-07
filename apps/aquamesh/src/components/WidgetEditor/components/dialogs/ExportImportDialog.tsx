@@ -17,12 +17,20 @@ import {
   ListItemIcon,
   Checkbox,
   IconButton,
-  useTheme
+  useTheme,
+  Divider,
+  Paper,
+  Tooltip
 } from '@mui/material'
 import DownloadIcon from '@mui/icons-material/Download'
 import UploadIcon from '@mui/icons-material/Upload'
 import SaveIcon from '@mui/icons-material/Save'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload'
+import ErrorIcon from '@mui/icons-material/Error'
+import { alpha } from '@mui/material/styles'
 import WidgetStorage, { CustomWidget } from '../../WidgetStorage'
 
 interface ExportImportDialogProps {
@@ -104,7 +112,9 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
 
   // Download export data as a file
   const downloadExport = () => {
-    if (!exportData) return
+    if (!exportData) {
+      return
+    }
     
     const blob = new Blob([exportData], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -141,7 +151,9 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
   // Handle file selection for import
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (!file) return
+    if (!file) {
+      return
+    }
     
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -234,179 +246,391 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
       maxWidth="md"
       fullWidth
       PaperProps={{
+        elevation: 8,
         sx: {
-          backgroundColor: theme.palette.background.paper,
-          color: theme.palette.text.primary
+          borderRadius: 2,
+          overflow: 'hidden'
         }
       }}
     >
-      <DialogTitle>
-        <Typography variant="h6">Export & Import Widgets</Typography>
+      <DialogTitle sx={{ 
+        bgcolor: theme.palette.primary.main, 
+        color: theme.palette.primary.contrastText,
+        p: 3,
+        display: 'flex',
+        alignItems: 'center',
+      }}>
+        {tabValue === 0 ? (
+          <CloudDownloadIcon sx={{ mr: 1.5 }} />
+        ) : (
+          <CloudUploadIcon sx={{ mr: 1.5 }} />
+        )}
+        <Typography variant="h5" fontWeight="bold">
+          {tabValue === 0 ? 'Export Widgets' : 'Import Widgets'}
+        </Typography>
       </DialogTitle>
       
       <Tabs
         value={tabValue}
         onChange={handleTabChange}
-        centered
-        sx={{ borderBottom: 1, borderColor: 'divider' }}
+        variant="fullWidth"
+        sx={{ 
+          bgcolor: alpha(theme.palette.primary.main, 0.1),
+          borderBottom: 1,
+          borderColor: 'divider',
+          '& .MuiTab-root': {
+            py: 1.5,
+            fontSize: '0.9rem',
+            fontWeight: 'medium',
+            textTransform: 'none'
+          },
+          '& .Mui-selected': {
+            fontWeight: 'bold'
+          }
+        }}
       >
-        <Tab label="Export" id="export-import-tab-0" />
-        <Tab label="Import" id="export-import-tab-1" />
+        <Tab 
+          label="Export" 
+          icon={<DownloadIcon />} 
+          iconPosition="start"
+        />
+        <Tab 
+          label="Import" 
+          icon={<UploadIcon />} 
+          iconPosition="start"
+        />
       </Tabs>
       
-      <DialogContent>
+      <DialogContent sx={{ p: 0 }}>
         <TabPanel value={tabValue} index={0}>
-          {/* Export Tab */}
-          <Typography variant="subtitle1" gutterBottom>
-            Select widgets to export
-          </Typography>
-          
-          <Box sx={{ mb: 2 }}>
-            <Button 
+          <Box sx={{ p: 3 }}>
+            <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
+              Select widgets to export
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Export your widgets to share them or transfer between environments
+            </Typography>
+            
+            <Paper 
               variant="outlined" 
-              size="small" 
-              onClick={selectAllWidgets}
-              sx={{ mr: 1 }}
+              sx={{ 
+                mb: 3, 
+                borderRadius: 2,
+                overflow: 'hidden',
+                maxHeight: '300px', 
+                overflowY: 'auto',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)',
+              }}
             >
-              Select All
-            </Button>
-            <Button 
-              variant="outlined" 
-              size="small" 
-              onClick={deselectAllWidgets}
-            >
-              Deselect All
-            </Button>
-          </Box>
-          
-          <List sx={{ bgcolor: 'background.paper', mb: 2 }}>
-            {widgets.length > 0 ? (
-              widgets.map((widget) => (
-                <ListItem key={widget.id} dense button onClick={() => toggleWidgetSelection(widget.id)}>
-                  <ListItemIcon>
-                    <Checkbox
-                      edge="start"
-                      checked={selectedWidgets.includes(widget.id)}
-                      tabIndex={-1}
-                      disableRipple
-                    />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={widget.name} 
-                    secondary={`${widget.components.length} components • Last updated: ${new Date(widget.updatedAt).toLocaleDateString()}`} 
-                  />
-                </ListItem>
-              ))
-            ) : (
-              <ListItem>
-                <ListItemText primary="No widgets available" />
-              </ListItem>
-            )}
-          </List>
-          
-          <Box sx={{ mb: 2 }}>
-            <Button
-              variant="contained"
-              onClick={generateExport}
-              disabled={selectedWidgets.length === 0}
-              startIcon={<SaveIcon />}
-            >
-              Generate Export
-            </Button>
-          </Box>
-          
-          {exportData && (
-            <>
-              <TextField
-                label="Export Data"
-                multiline
-                rows={10}
-                value={exportData}
-                fullWidth
-                variant="outlined"
-                InputProps={{
-                  readOnly: true,
-                }}
-                sx={{ mb: 2 }}
-              />
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                px: 2,
+                py: 1.5,
+                borderBottom: '1px solid',
+                borderColor: 'divider'
+              }}>
+                <Typography variant="subtitle2">
+                  {widgets.length} widget{widgets.length !== 1 ? 's' : ''} available
+                </Typography>
+                <Box>
+                  <Button 
+                    size="small" 
+                    onClick={selectAllWidgets}
+                    sx={{ mr: 1, textTransform: 'none' }}
+                  >
+                    Select all
+                  </Button>
+                  <Button 
+                    size="small" 
+                    onClick={deselectAllWidgets}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Clear
+                  </Button>
+                </Box>
+              </Box>
               
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              {widgets.length === 0 ? (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No widgets available to export
+                  </Typography>
+                </Box>
+              ) : (
+                <List disablePadding>
+                  {widgets.map((widget) => (
+                    <ListItem 
+                      key={widget.id} 
+                      divider
+                      dense
+                      sx={{ 
+                        transition: 'background-color 0.2s',
+                        '&:hover': {
+                          bgcolor: alpha(theme.palette.primary.main, 0.05)
+                        }
+                      }}
+                    >
+                      <ListItemIcon sx={{ minWidth: 36 }}>
+                        <Checkbox
+                          checked={selectedWidgets.includes(widget.id)}
+                          onChange={() => toggleWidgetSelection(widget.id)}
+                          edge="start"
+                          color="primary"
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={widget.name}
+                        secondary={
+                          <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
+                            <Typography variant="caption" component="span" sx={{ 
+                              bgcolor: alpha(theme.palette.primary.main, 0.1),
+                              px: 1,
+                              py: 0.25,
+                              borderRadius: 1
+                            }}>
+                              {widget.components.length} components
+                            </Typography>
+                            {widget.category && (
+                              <Typography variant="caption" component="span" sx={{ 
+                                bgcolor: alpha(theme.palette.secondary.main, 0.1),
+                                px: 1,
+                                py: 0.25,
+                                borderRadius: 1
+                              }}>
+                                {widget.category}
+                              </Typography>
+                            )}
+                            <Typography variant="caption" component="span">
+                              Last updated: {new Date(widget.updatedAt).toLocaleDateString()}
+                            </Typography>
+                          </Box>
+                        }
+                        primaryTypographyProps={{ 
+                          fontWeight: selectedWidgets.includes(widget.id) ? 'bold' : 'normal' 
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </Paper>
+            
+            {exportData ? (
+              <Box sx={{ mb: 3 }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  mb: 1 
+                }}>
+                  <Typography variant="subtitle1" fontWeight="medium">
+                    Export Data
+                  </Typography>
+                  <Box>
+                    <Tooltip title="Copy to clipboard">
+                      <IconButton 
+                        onClick={copyExportToClipboard}
+                        color="primary"
+                        sx={{ mr: 0.5 }}
+                      >
+                        <ContentCopyIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Download as file">
+                      <IconButton 
+                        onClick={downloadExport}
+                        color="primary"
+                      >
+                        <DownloadIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+                <TextField
+                  multiline
+                  fullWidth
+                  rows={12}
+                  variant="outlined"
+                  value={exportData}
+                  InputProps={{
+                    readOnly: true,
+                    sx: { 
+                      fontFamily: 'monospace',
+                      fontSize: '0.8rem',
+                      borderRadius: 2,
+                      bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.05) : alpha(theme.palette.primary.main, 0.02)
+                    }
+                  }}
+                />
+              </Box>
+            ) : (
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                justifyContent: 'center', 
+                pt: 2
+              }}>
                 <Button
                   variant="contained"
-                  onClick={downloadExport}
-                  startIcon={<DownloadIcon />}
+                  color="primary"
+                  disabled={selectedWidgets.length === 0}
+                  onClick={generateExport}
+                  startIcon={<SaveIcon />}
+                  sx={{ 
+                    borderRadius: 2,
+                    px: 3,
+                    py: 1,
+                    boxShadow: 2,
+                    textTransform: 'none'
+                  }}
                 >
-                  Download JSON
+                  Generate Export
                 </Button>
-                <IconButton
-                  onClick={copyExportToClipboard}
-                  title="Copy to clipboard"
-                >
-                  <ContentCopyIcon />
-                </IconButton>
+                {selectedWidgets.length === 0 && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    Select at least one widget to export
+                  </Typography>
+                )}
               </Box>
-            </>
-          )}
+            )}
+            
+            {importResult && (
+              <Alert 
+                severity={importResult.success ? "success" : "error"}
+                sx={{ mb: 3, borderRadius: 2 }}
+              >
+                {importResult.message}
+              </Alert>
+            )}
+          </Box>
         </TabPanel>
         
         <TabPanel value={tabValue} index={1}>
-          {/* Import Tab */}
-          <Typography variant="subtitle1" gutterBottom>
-            Import widgets from file or paste JSON
-          </Typography>
-          
-          <Box sx={{ mb: 2 }}>
-            <Button
-              variant="contained"
-              onClick={handleUploadClick}
-              startIcon={<UploadIcon />}
-              sx={{ mb: 2 }}
-            >
-              Upload JSON File
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
+          <Box sx={{ p: 3 }}>
+            <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
+              Import widgets from file or text
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Import widgets previously exported from another environment
+            </Typography>
+            
+            <Box sx={{ 
+              border: '2px dashed',
+              borderColor: alpha(theme.palette.primary.main, 0.3),
+              borderRadius: 2,
+              p: 3,
+              mb: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: alpha(theme.palette.primary.main, 0.02),
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              '&:hover': {
+                borderColor: theme.palette.primary.main,
+                bgcolor: alpha(theme.palette.primary.main, 0.05)
+              }
+            }} onClick={handleUploadClick}>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+                accept=".json"
+              />
+              <CloudUploadIcon 
+                sx={{ 
+                  fontSize: 48, 
+                  color: theme.palette.primary.main,
+                  mb: 2,
+                  opacity: 0.7
+                }} 
+              />
+              <Typography variant="h6" gutterBottom>
+                Click to upload
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Accepts .json files
+              </Typography>
+            </Box>
+            
+            <Divider sx={{ mb: 3 }}>
+              <Typography variant="caption" color="text.secondary">
+                OR PASTE JSON BELOW
+              </Typography>
+            </Divider>
+            
+            <TextField
+              multiline
+              fullWidth
+              rows={10}
+              variant="outlined"
+              placeholder="Paste exported widget data here as JSON..."
+              value={importData}
+              onChange={(e) => setImportData(e.target.value)}
+              InputProps={{
+                sx: { 
+                  fontFamily: 'monospace',
+                  fontSize: '0.8rem',
+                  borderRadius: 2
+                }
+              }}
+              sx={{ mb: 3 }}
             />
+            
+            {importResult && (
+              <Alert 
+                icon={importResult.success ? <CheckCircleIcon /> : <ErrorIcon />}
+                severity={importResult.success ? "success" : "error"}
+                variant="filled"
+                sx={{ 
+                  mb: 3, 
+                  borderRadius: 2,
+                  boxShadow: 2,
+                  '& .MuiAlert-message': {
+                    fontWeight: 'medium'
+                  }
+                }}
+              >
+                {importResult.message}
+              </Alert>
+            )}
+            
+            <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                disabled={!importData.trim()}
+                onClick={processImport}
+                startIcon={<UploadIcon />}
+                sx={{ 
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1,
+                  boxShadow: 2,
+                  textTransform: 'none',
+                  fontWeight: 'medium'
+                }}
+              >
+                Import Widgets
+              </Button>
+            </Box>
           </Box>
-          
-          <TextField
-            label="Paste JSON Data"
-            multiline
-            rows={10}
-            value={importData}
-            onChange={(e) => setImportData(e.target.value)}
-            fullWidth
-            variant="outlined"
-            sx={{ mb: 2 }}
-            placeholder='{"exportDate":"2023-05-15T12:00:00.000Z", "widgets":[...]}'
-          />
-          
-          {importResult && (
-            <Alert 
-              severity={importResult.success ? 'success' : 'error'}
-              sx={{ mb: 2 }}
-            >
-              {importResult.message}
-            </Alert>
-          )}
-          
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={processImport}
-            disabled={!importData}
-          >
-            Import Widgets
-          </Button>
         </TabPanel>
       </DialogContent>
       
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+      <DialogActions sx={{ px: 3, py: 2, bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.02)', borderTop: '1px solid', borderColor: 'divider' }}>
+        <Button 
+          onClick={onClose}
+          variant="outlined"
+          sx={{ borderRadius: 1.5 }}
+        >
+          Close
+        </Button>
       </DialogActions>
     </Dialog>
   )

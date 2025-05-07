@@ -25,6 +25,7 @@ import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
+import { CustomColorControl } from '../shared/SharedEditorComponents'
 
 // Define props interface
 interface FieldSetProps {
@@ -38,6 +39,8 @@ interface FieldSetProps {
   borderColor?: string;
   legendColor?: string;
   animated?: boolean;
+  useCustomBorderColor?: boolean;
+  useCustomLegendColor?: boolean;
   [key: string]: unknown;
 }
 
@@ -85,7 +88,8 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
   )
   
   // Color states
-  const useCustomColor = true
+  const [useCustomBorderColor, setUseCustomBorderColor] = useState(props.useCustomBorderColor === true)
+  const [useCustomLegendColor, setUseCustomLegendColor] = useState(props.useCustomLegendColor === true)
   const [animated, setAnimated] = useState(props.animated !== false)
   
   // Icon states
@@ -125,6 +129,18 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
     } else {
       handleChange('animated', true)
     }
+
+    if (props.useCustomBorderColor !== undefined) {
+      setUseCustomBorderColor(props.useCustomBorderColor as boolean)
+    } else {
+      handleChange('useCustomBorderColor', false)
+    }
+
+    if (props.useCustomLegendColor !== undefined) {
+      setUseCustomLegendColor(props.useCustomLegendColor as boolean)
+    } else {
+      handleChange('useCustomLegendColor', false)
+    }
   }, [props])
   
   // Handle tab change
@@ -144,18 +160,20 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
   
   // Generate preview styles based on current settings
   const previewStyles = {
-    border: `1px ${borderStyle} ${props.borderColor || '#cccccc'}`,
+    border: `1px ${borderStyle} ${useCustomBorderColor ? (props.borderColor || '#cccccc') : '#cccccc'}`,
     borderRadius: `${borderRadius}px`,
     padding: padding,
     backgroundColor: 'transparent',
   }
   
   const legendStyles = {
-    color: useCustomColor ? props.legendColor || '#1976d2' : 'inherit',
+    color: useCustomLegendColor ? props.legendColor || '#1976d2' : '#1976d2',
     textAlign: legendAlign as 'left' | 'center' | 'right',
     paddingLeft: '8px',
     paddingRight: '8px',
-    fontWeight: 'bold'
+    fontWeight: 'bold' as const,
+    width: legendAlign === 'center' ? '100%' : 'auto',
+    display: 'block'
   }
   
   // Basic settings form
@@ -303,50 +321,28 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
       </Grid>
       
       <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Border Color"
-          value={props.borderColor || '#cccccc'}
-          onChange={(e) => handleChange('borderColor', e.target.value)}
-          type="color"
-          InputProps={{
-            startAdornment: (
-              <Box
-                sx={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: '50%',
-                  backgroundColor: props.borderColor || '#cccccc',
-                  mr: 1,
-                  border: '1px solid rgba(0,0,0,0.2)'
-                }}
-              />
-            )
+        <CustomColorControl
+          useCustomColor={useCustomBorderColor}
+          customColor={props.borderColor as string || '#cccccc'}
+          onColorChange={(color) => handleChange('borderColor', color)}
+          onToggleCustomColor={(useCustom) => {
+            setUseCustomBorderColor(useCustom)
+            handleChange('useCustomBorderColor', useCustom)
           }}
+          label="Custom Border Color"
         />
       </Grid>
       
       <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Legend Color"
-          value={props.legendColor || '#1976d2'}
-          onChange={(e) => handleChange('legendColor', e.target.value)}
-          type="color"
-          InputProps={{
-            startAdornment: (
-              <Box
-                sx={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: '50%',
-                  backgroundColor: props.legendColor || '#1976d2',
-                  mr: 1,
-                  border: '1px solid rgba(0,0,0,0.2)'
-                }}
-              />
-            )
+        <CustomColorControl
+          useCustomColor={useCustomLegendColor}
+          customColor={props.legendColor as string || '#1976d2'}
+          onColorChange={(color) => handleChange('legendColor', color)}
+          onToggleCustomColor={(useCustom) => {
+            setUseCustomLegendColor(useCustom)
+            handleChange('useCustomLegendColor', useCustom)
           }}
+          label="Custom Legend Color"
         />
       </Grid>
     </Grid>
@@ -375,47 +371,83 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
             width: '100%',
             minHeight: '120px',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            overflow: 'hidden'
           }}
         >
           <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: iconPosition === 'end' ? 'space-between' : 'flex-start',
-              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              justifyContent: legendAlign === 'center' 
+                ? 'center' 
+                : legendAlign === 'right' 
+                  ? 'flex-end' 
+                  : 'flex-start',
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
               borderTopLeftRadius: `${borderRadius}px`,
               borderTopRightRadius: `${borderRadius}px`,
               pl: 1,
-              pr: 1
+              pr: 1,
+              position: 'relative',
+              borderBottom: `1px ${borderStyle} ${useCustomBorderColor ? (props.borderColor || '#cccccc') : '#cccccc'}`,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              }
             }}
+            onClick={handlePreviewCollapseToggle}
           >
             {iconPosition === 'start' && (
-              <IconButton onClick={handlePreviewCollapseToggle} size="small">
+              <IconButton 
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent double triggering
+                  handlePreviewCollapseToggle();
+                }} 
+                size="small" 
+                sx={{ mr: 1 }}
+              >
                 {previewCollapsed ? (
-                  <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomColor ? props.legendColor || '#1976d2' : 'inherit' }} />
+                  <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomLegendColor ? props.legendColor || '#1976d2' : '#1976d2' }} />
                 ) : (
-                  <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomColor ? props.legendColor || '#1976d2' : 'inherit' }} />
+                  <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomLegendColor ? props.legendColor || '#1976d2' : '#1976d2' }} />
                 )}
               </IconButton>
             )}
             
-            <Typography variant="subtitle2" sx={legendStyles}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{
+                ...legendStyles,
+                textAlign: legendAlign
+              }}
+            >
               {(props.legend as string) || 'Field Set'}
             </Typography>
             
             {iconPosition === 'end' && (
-              <IconButton onClick={handlePreviewCollapseToggle} size="small">
+              <IconButton 
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent double triggering
+                  handlePreviewCollapseToggle();
+                }} 
+                size="small" 
+                sx={{ ml: 1 }}
+              >
                 {previewCollapsed ? (
-                  <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomColor ? props.legendColor || '#1976d2' : 'inherit' }} />
+                  <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomLegendColor ? props.legendColor || '#1976d2' : '#1976d2' }} />
                 ) : (
-                  <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomColor ? props.legendColor || '#1976d2' : 'inherit' }} />
+                  <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomLegendColor ? props.legendColor || '#1976d2' : '#1976d2' }} />
                 )}
               </IconButton>
             )}
           </Box>
           
-          <Collapse in={!previewCollapsed}>
+          {/* Actual collapse content */}
+          <Collapse 
+            in={!previewCollapsed} 
+            timeout={animated ? 'auto' : 0}
+          >
             <Box sx={{ 
               p: 1, 
               mt: 1, 
@@ -423,8 +455,9 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
               justifyContent: 'center',
               alignItems: 'center',
               minHeight: '80px',
-              backgroundColor: 'rgba(255,255,255,0.5)',
-              borderRadius: '4px'
+              backgroundColor: 'rgba(255,255,255,0.15)',
+              borderRadius: '4px',
+              margin: '8px'
             }}>
               <Typography variant="body2" color="text.secondary">
                 Content Area

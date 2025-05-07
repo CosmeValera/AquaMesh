@@ -360,8 +360,10 @@ export const useWidgetEditor = () => {
         
         // Set widget data with deep clone to avoid reference issues
         setWidgetData({
+          id: widget.id,
           name: widget.name,
-          components: JSON.parse(JSON.stringify(widget.components))
+          components: JSON.parse(JSON.stringify(widget.components)),
+          version: widget.version
         })
         
         // Show notification
@@ -723,8 +725,7 @@ export const useWidgetEditor = () => {
       // Find if we already have a widget with this name to replace
       const existingWidget = savedWidgets.find(w => w.name === widgetData.name)
       
-      // Get a copy of the current widget data before saving
-      // This prevents triggering history recording based on ID changes
+      // Prepare basic widget data for saving
       const widgetToSave = {
         name: widgetData.name,
         components: [...widgetData.components]
@@ -734,7 +735,28 @@ export const useWidgetEditor = () => {
       
       // Handle updating existing widget
       if (existingWidget) {
-        WidgetStorage.updateWidget(existingWidget.id, widgetToSave)
+        // Determine if this is a branch-from-older version based on loaded preview version
+        const restoreVersion = widgetData.version
+        const isRestoreOperation = restoreVersion !== undefined && restoreVersion !== existingWidget.version
+        // Perform update and capture updated widget info
+        let updatedWidget = null as (CustomWidget | null)
+        if (isRestoreOperation) {
+          updatedWidget = WidgetStorage.updateWidget(existingWidget.id, {
+            ...widgetToSave,
+            version: restoreVersion
+          })
+        } else {
+          updatedWidget = WidgetStorage.updateWidget(existingWidget.id, widgetToSave)
+        }
+        // Update local widgetData to reflect the new version/id
+        if (updatedWidget) {
+          setWidgetData(prev => ({
+            ...prev,
+            id: updatedWidget.id,
+            version: updatedWidget.version
+          }))
+        }
+        
         savedWidgetId = existingWidget.id
         
         setNotification({
@@ -747,6 +769,12 @@ export const useWidgetEditor = () => {
       else {
         const savedWidget = WidgetStorage.saveWidget(widgetToSave)
         savedWidgetId = savedWidget.id
+        // Set new widgetData id and version
+        setWidgetData(prev => ({
+          ...prev,
+          id: savedWidget.id,
+          version: savedWidget.version
+        }))
         
         setNotification({
           open: true,
@@ -765,6 +793,7 @@ export const useWidgetEditor = () => {
       })
       
       setSavedWidgets(WidgetStorage.getAllWidgets())
+      console.log("All saved widgets after save/update:", WidgetStorage.getAllWidgets())
     } catch (error) {
       console.error('Failed to save widget:', error)
       setNotification({
@@ -791,10 +820,12 @@ export const useWidgetEditor = () => {
     // Update the current widget ID for history tracking
     setCurrentWidgetId(widget.id)
     
-    // Set widget data
+    // Set widget data with version info
     setWidgetData({
+      id: widget.id,
       name: widget.name,
-      components: widget.components
+      components: [...widget.components],
+      version: widget.version
     })
     
     // Handle history for loaded widget

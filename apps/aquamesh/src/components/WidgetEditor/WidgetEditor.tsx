@@ -89,7 +89,6 @@ const WidgetEditor: React.FC<{
     
     // Utility
     setEditDialogOpen,
-    setCurrentEditComponent,
     handleWidgetNameChange,
     loadSavedWidgets
   } = useWidgetEditor()
@@ -210,47 +209,50 @@ const WidgetEditor: React.FC<{
     if (!savedWidget) {
       return true
     }
-    
-    // Compare the current widget data with the saved one
-    const savedWidgetJson = JSON.stringify(savedWidget.components)
-    const currentWidgetJson = JSON.stringify(widgetData.components)
-    const result = savedWidgetJson !== currentWidgetJson
-    
-    // Debug log
-    // console.log('Widget change detection:', { 
-    //   hasChanges: result, 
-    //   widgetName: widgetData.name,
-    //   savedComponentsLength: savedWidget.components.length,
-    //   currentComponentsLength: widgetData.components.length
-    // })
-    
-    return result
+
+    const currentJson = JSON.stringify(widgetData.components)
+    const savedJson = JSON.stringify(savedWidget.components)
+
+    // If we're previewing an older version without edits, treat as no changes
+    if (widgetData.version && widgetData.version !== savedWidget.version) {
+      const versions = WidgetStorage.getWidgetVersions(savedWidget.id)
+      const matching = versions.find(v => v.version === widgetData.version)
+      if (matching && JSON.stringify(matching.components) === currentJson) {
+        return false
+      }
+    }
+
+    // Otherwise, compare current components to saved
+    return savedJson !== currentJson
   }, [widgetData, savedWidgets, isUpdating])
   
-  // Check if the current widget is the latest version
+  // Check if the current widget (including any loaded preview) is the latest version
   const isLatestVersion = React.useMemo(() => {
     if (!isUpdating) {
       return true // New widgets are always the latest
     }
-
-    // Find current widget in saved widgets
+    // Find the saved widget for history lookup
     const currentWidget = savedWidgets.find(w => w.name === widgetData.name)
     if (!currentWidget) {
       return true
     }
-    
-    // Get latest version from versions list
+    // Get stored history versions (sorted newest first)
     const versions = WidgetStorage.getWidgetVersions(currentWidget.id)
     if (versions.length === 0) {
       return true
     }
-    
-    // Get the latest version (versions are sorted newest first)
-    const latestVersion = versions[0]
-    
-    // Check if current widget version matches latest version
-    return currentWidget.version === latestVersion.version
-  }, [widgetData, savedWidgets, isUpdating])
+    // Helper to parse 'major.minor'
+    const parseVersion = (v: string = '0.0'): [number, number] => {
+      const [major = 0, minor = 0] = v.split('.').map(p => parseInt(p, 10))
+      return [major, minor]
+    }
+    // Use loaded widgetData.version for UI (preview or saved), fallback to stored version
+    const loadedVersion = widgetData.version ?? currentWidget.version ?? '0.0'
+    const [majorCurr, minorCurr] = parseVersion(loadedVersion)
+    const [majorHist, minorHist] = parseVersion(versions[0].version)
+    // If loaded version is at or ahead of stored latest, consider latest
+    return majorCurr > majorHist || (majorCurr === majorHist && minorCurr >= minorHist)
+  }, [widgetData.version, savedWidgets, isUpdating])
   
   // Get the current widget version
   const currentWidgetVersion = React.useMemo(() => {
@@ -282,19 +284,22 @@ const WidgetEditor: React.FC<{
     })
   }
   
-  // Open versioning dialog for a widget
+  // Open versioning dialog for a widget, marking the loaded preview version if any
   const handleOpenVersioningDialog = () => {
-    // Find the current widget in saved widgets
     const currentWidget = savedWidgets.find(w => w.name === widgetData.name)
     if (currentWidget) {
-      setCurrentVersioningWidget(currentWidget)
+      // Override the version for dialog to reflect any previewed version
+      const dialogWidget: CustomWidget = {
+        ...currentWidget,
+        version: widgetData.version ?? currentWidget.version
+      }
+      setCurrentVersioningWidget(dialogWidget)
       setShowVersioningDialog(true)
     } else {
-      // Show a message that versioning is only available for saved widgets
       setComponentToast({
         open: true,
         message: 'Please save your widget first to access version history',
-        severity: 'info',
+        severity: 'info'
       })
     }
   }
@@ -335,27 +340,25 @@ const WidgetEditor: React.FC<{
       return
     }
 
+    console.log("COSME")
+    console.log("Widget", widget)
+    console.log("Version", version)
+    console.log("Saved Widgets", savedWidgets)
+
     // Create a new widget object with the restored components
-    const restoredWidget = {
+    const restoredWidget: CustomWidget = {
       ...widget,
       components: version.components,
       version: version.version
     }
     
-    // Update version in storage
-    WidgetStorage.updateWidget(widgetId, {
-      components: version.components,
-      version: version.version
-    })
-    
-    // Load the restored widget
+    // Preview the restored version without modifying storage
     handleLoadWidget(restoredWidget, true)
-    
-    // Show success message
+    // Inform the user this version is loaded for editing
     setComponentToast({
       open: true,
-      message: `Restored to version ${version.version}`,
-      severity: 'success',
+      message: `Loaded version ${version.version} for editing`,
+      severity: 'info'
     })
   }
 
@@ -414,7 +417,7 @@ const WidgetEditor: React.FC<{
         isUpdating={isUpdating}
         hasChanges={hasChanges}
         isLatestVersion={isLatestVersion}
-        currentWidgetVersion={currentWidgetVersion}
+        currentWidgetVersion={widgetData.version ?? currentWidgetVersion}
         setShowSettingsModal={setShowSettingsModal}
         showTemplateDialog={showTemplateDialog}
         setShowTemplateDialog={setShowTemplateDialog}

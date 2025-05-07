@@ -126,6 +126,34 @@ class WidgetStorage {
       } else if (updates.version) {
         // Use the provided version during a restore operation
         nextVersion = updates.version
+        
+        // Get all versions of this widget
+        const widgetVersions = this.getWidgetVersions(id)
+        
+        // Check if we're updating from an older version
+        const currentVersionObj = widgetVersions.find(v => v.version === widgets[index].version)
+        const targetVersionObj = widgetVersions.find(v => v.version === updates.version)
+        
+        if (currentVersionObj && targetVersionObj) {
+          const currentDate = new Date(currentVersionObj.createdAt).getTime()
+          const targetDate = new Date(targetVersionObj.createdAt).getTime()
+          
+          // If target version is older than current version and we have future versions, delete them
+          if (targetDate < currentDate) {
+            // Delete any future versions beyond the one we're restoring
+            this.deleteFutureVersions(id, updates.version)
+            
+            // Calculate next version to be a new branch from the restored version
+            const versionParts = updates.version.split('.')
+            if (versionParts.length >= 2) {
+              const major = parseInt(versionParts[0], 10)
+              const minor = parseInt(versionParts[1], 10) + 1
+              nextVersion = `${major}.${minor}`
+            } else {
+              nextVersion = '1.1' // Default increment if parsing fails
+            }
+          }
+        }
       }
     }
     
@@ -144,6 +172,9 @@ class WidgetStorage {
     
     // Dispatch event to notify other components
     document.dispatchEvent(new CustomEvent(WIDGET_STORAGE_UPDATED))
+    
+    // Record the newly updated version so the latest version is saved in history
+    this.createWidgetVersion(updatedWidget)
     
     return updatedWidget
   }
@@ -190,6 +221,43 @@ class WidgetStorage {
     return versions
       .filter(v => v.widgetId === widgetId)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  }
+  
+  /**
+   * Delete future versions of a widget beyond a specific version
+   */
+  deleteFutureVersions(widgetId: string, currentVersion: string): void {
+    const versions = this.getAllWidgetVersions()
+    
+    // Helper function to compare version numbers
+    const compareVersions = (v1: string, v2: string): number => {
+      const v1Parts = v1.split('.').map(p => parseInt(p, 10))
+      const v2Parts = v2.split('.').map(p => parseInt(p, 10))
+      
+      // Compare major version
+      if (v1Parts[0] !== v2Parts[0]) {
+        return v1Parts[0] - v2Parts[0]
+      }
+      
+      // Compare minor version
+      return v1Parts[1] - v2Parts[1]
+    }
+    
+    // Filter out versions of this widget that are greater than the current version
+    const updatedVersions = versions.filter(version => {
+      // Keep versions from other widgets
+      if (version.widgetId !== widgetId) {
+        return true
+      }
+      
+      // Keep current version and older versions
+      return compareVersions(version.version, currentVersion) <= 0
+    })
+    
+    // If we've filtered out some versions, save the updates
+    if (updatedVersions.length < versions.length) {
+      this.saveVersionsToLocalStorage(updatedVersions)
+    }
   }
   
   /**

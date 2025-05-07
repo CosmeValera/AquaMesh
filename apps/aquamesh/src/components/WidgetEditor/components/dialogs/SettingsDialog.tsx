@@ -119,10 +119,28 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   showAdvancedInToolbar = false,
   onShowAdvancedInToolbarChange,
 }) => {
-  // Handle undefined callback safely
+  // Create safe handlers for all possibly undefined callbacks
+  const handleTooltipsChange = (checked: boolean) => {
+    if (onShowTooltipsChange) {
+      onShowTooltipsChange(checked)
+    }
+  }
+
+  const handleComponentPaletteHelpChange = (checked: boolean) => {
+    if (onShowComponentPaletteHelpChange) {
+      onShowComponentPaletteHelpChange(checked)
+    }
+  }
+
   const handleAdvancedInToolbarChange = (checked: boolean) => {
     if (onShowAdvancedInToolbarChange) {
       onShowAdvancedInToolbarChange(checked)
+    }
+  }
+
+  const handleDeleteDashboardConfirmationChange = (checked: boolean) => {
+    if (onShowDeleteDashboardConfirmationChange) {
+      onShowDeleteDashboardConfirmationChange(checked)
     }
   }
 
@@ -155,7 +173,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   <Box sx={{ flexGrow: 1 }} />
                   <Switch
                     checked={showTooltips}
-                    onChange={(e) => onShowTooltipsChange(e.target.checked)}
+                    onChange={(e) => handleTooltipsChange(e.target.checked)}
                     color="primary"
                   />
                 </Box>
@@ -175,7 +193,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   <Box sx={{ flexGrow: 1 }} />
                   <Switch
                     checked={showComponentPaletteHelp}
-                    onChange={(e) => onShowComponentPaletteHelpChange(e.target.checked)}
+                    onChange={(e) => handleComponentPaletteHelpChange(e.target.checked)}
                     color="primary"
                   />
                 </Box>
@@ -259,7 +277,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   <Box sx={{ flexGrow: 1 }} />
                   <Switch
                     checked={showDeleteDashboardConfirmation}
-                    onChange={(e) => onShowDeleteDashboardConfirmationChange(e.target.checked)}
+                    onChange={(e) => handleDeleteDashboardConfirmationChange(e.target.checked)}
                     color="primary"
                   />
                 </Box>

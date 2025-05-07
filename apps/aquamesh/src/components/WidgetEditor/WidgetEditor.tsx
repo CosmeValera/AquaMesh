@@ -448,6 +448,7 @@ const WidgetEditor: React.FC<{
             handleDragStart={handleDragStart}
             showComponentPaletteHelp={showComponentPaletteHelp}
             setShowComponentPaletteHelp={setShowComponentPaletteHelp}
+            showTooltips={showTooltips}
           />
         )}
         

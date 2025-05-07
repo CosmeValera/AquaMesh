@@ -40,7 +40,13 @@ const groupByCategory = (componentTypes: ComponentType[]) => {
 const PALETTE_GROUPS = ['UI Components', 'Layout Containers', 'Chart Components']
 
 // Component palette component
-const ComponentPalette = ({ showTooltips = false, showHelpText = true, handleDragStart, showComponentPaletteHelp, setShowComponentPaletteHelp }: ComponentPaletteProps) => {
+const ComponentPalette = ({ 
+  showTooltips = false, 
+  showHelpText = true, 
+  handleDragStart, 
+  showComponentPaletteHelp, 
+  setShowComponentPaletteHelp 
+}: ComponentPaletteProps) => {
   // Group component types by category - memoized to prevent recalculation on each render
   const groupedComponents = useMemo(() => groupByCategory(COMPONENT_TYPES), [])
   
@@ -143,7 +149,7 @@ const ComponentPalette = ({ showTooltips = false, showHelpText = true, handleDra
       </List>
       
       {/* Help text at bottom */}
-      {showHelpText && (
+      {showComponentPaletteHelp && showHelpText && (
         <Box sx={{ p: '4px 16px', borderTop: 1, borderColor: 'divider', bgcolor: 'background.default' }}>
           <Typography variant="caption" color="foreground.contrastSecondary" sx={{ display: 'block', mb: 1, fontSize: '11px' }}>
             Drag components to the editor canvas

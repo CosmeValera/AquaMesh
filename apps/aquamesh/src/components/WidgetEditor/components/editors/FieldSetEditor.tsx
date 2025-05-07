@@ -9,7 +9,6 @@ import {
   MenuItem,
   FormControlLabel,
   Switch,
-  Divider,
   Grid,
   Tabs,
   Tab,
@@ -17,14 +16,9 @@ import {
   Slider,
   Collapse,
   IconButton,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
+  Divider
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
-import ColorLensIcon from '@mui/icons-material/ColorLens'
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft'
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter'
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight'
@@ -54,8 +48,8 @@ interface FieldSetProps {
 }
 
 interface FieldSetEditorProps {
-  props: FieldSetProps; // Use defined interface
-  onChange: (updatedProps: FieldSetProps) => void; // Use defined interface
+  props: FieldSetProps;
+  onChange: (updatedProps: FieldSetProps) => void;
 }
 
 // Tab panel component for organizing the editor
@@ -97,22 +91,11 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
   )
   
   // Color states
-  const [useCustomColor, setUseCustomColor] = useState(Boolean(props.useCustomColor))
-  const [borderColor, setBorderColor] = useState((props.borderColor as string) || '#cccccc')
-  const [legendColor, setLegendColor] = useState((props.legendColor as string) || '#1976d2')
-  const [backgroundColor, setBackgroundColor] = useState((props.backgroundColor as string) || '#ffffff')
+  const useCustomColor = true
+  const [animated, setAnimated] = useState(props.animated !== false)
   
   // Icon states
   const [iconPosition, setIconPosition] = useState((props.iconPosition as string) || 'start')
-  
-  // Dialog state for edit button
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [tempDialogSettings, setTempDialogSettings] = useState({
-    legend: '',
-    legendColor: '',
-    borderColor: '',
-    iconPosition: ''
-  })
   
   // Initialize state based on props
   useEffect(() => {
@@ -143,26 +126,10 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
       setPadding(2)
     }
     
-    if (props.borderColor) {
-      setBorderColor(props.borderColor as string)
+    if (props.animated !== undefined) {
+      setAnimated(props.animated)
     } else {
-      setBorderColor('#cccccc')
-    }
-    
-    if (props.legendColor) {
-      setLegendColor(props.legendColor as string)
-    } else {
-      setLegendColor('#1976d2')
-    }
-    
-    if (props.backgroundColor) {
-      setBackgroundColor(props.backgroundColor as string)
-    } else {
-      setBackgroundColor('#ffffff')
-    }
-    
-    if (props.iconPosition) {
-      setIconPosition(props.iconPosition as string)
+      handleChange('animated', true)
     }
   }, [props])
   
@@ -181,82 +148,20 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
     setPreviewCollapsed(!previewCollapsed)
   }
   
-  // Custom color toggle
-  const handleCustomColorToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked
-    setUseCustomColor(checked)
-    
-    if (checked) {
-      handleChange('useCustomColor', true)
-      handleChange('borderColor', borderColor)
-      handleChange('legendColor', legendColor)
-      handleChange('backgroundColor', backgroundColor)
-    } else {
-      handleChange('useCustomColor', undefined)
-      handleChange('borderColor', undefined)
-      handleChange('legendColor', undefined)
-      handleChange('backgroundColor', undefined)
-      setBorderColor('#cccccc')
-      setLegendColor('#1976d2')
-      setBackgroundColor('#ffffff')
-    }
-  }
-  
   // Generate preview styles based on current settings
   const previewStyles = {
-    border: `1px ${borderStyle} ${useCustomColor ? borderColor : '#cccccc'}`,
+    border: `1px ${borderStyle} ${props.borderColor || '#cccccc'}`,
     borderRadius: `${borderRadius}px`,
     padding: padding,
-    backgroundColor: useCustomColor ? backgroundColor : 'white',
+    backgroundColor: 'transparent',
   }
   
   const legendStyles = {
-    color: useCustomColor ? legendColor : 'inherit',
+    color: useCustomColor ? props.legendColor || '#1976d2' : 'inherit',
     textAlign: legendAlign as 'left' | 'center' | 'right',
     paddingLeft: '8px',
     paddingRight: '8px',
     fontWeight: 'bold'
-  }
-  
-  // Function to handle edit button click
-  const handleEditButtonClick = () => {
-    // Open the edit dialog instead of switching tabs
-    setTempDialogSettings({
-      legend: (props.legend as string) || 'Field Set',
-      legendColor: legendColor,
-      borderColor: borderColor,
-      iconPosition: iconPosition
-    })
-    setEditDialogOpen(true)
-  }
-
-  // Handle dialog close
-  const handleDialogClose = () => {
-    setEditDialogOpen(false)
-  }
-
-  // Handle dialog save
-  const handleDialogSave = () => {
-    // Apply the changes
-    handleChange('legend', tempDialogSettings.legend)
-    handleChange('legendColor', tempDialogSettings.legendColor)
-    handleChange('borderColor', tempDialogSettings.borderColor)
-    handleChange('iconPosition', tempDialogSettings.iconPosition)
-
-    // Make sure custom color is enabled if colors changed
-    if (tempDialogSettings.legendColor !== legendColor || 
-        tempDialogSettings.borderColor !== borderColor) {
-      handleChange('useCustomColor', true)
-      setUseCustomColor(true)
-    }
-
-    // Update local state
-    setLegendColor(tempDialogSettings.legendColor)
-    setBorderColor(tempDialogSettings.borderColor)
-    setIconPosition(tempDialogSettings.iconPosition)
-    
-    // Close dialog
-    setEditDialogOpen(false)
   }
   
   return (
@@ -270,28 +175,39 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center',
-          minHeight: '120px'
+          minHeight: '200px',
+          background: 'rgba(0, 0, 0, 0.04)',
+          border: '1px solid rgba(0, 0, 0, 0.1)',
+          borderRadius: 2
         }}
       >
         <Box 
           sx={{ 
             ...previewStyles,
-            width: '100%'
+            width: '100%',
+            minHeight: '120px',
+            display: 'flex',
+            flexDirection: 'column'
           }}
         >
           <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: iconPosition === 'end' ? 'space-between' : 'flex-start'
+              justifyContent: iconPosition === 'end' ? 'space-between' : 'flex-start',
+              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              borderTopLeftRadius: `${borderRadius}px`,
+              borderTopRightRadius: `${borderRadius}px`,
+              pl: 1,
+              pr: 1
             }}
           >
             {iconPosition === 'start' && (
               <IconButton onClick={handlePreviewCollapseToggle} size="small">
                 {previewCollapsed ? (
-                  <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
+                  <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomColor ? props.legendColor || '#1976d2' : 'inherit' }} />
                 ) : (
-                  <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
+                  <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomColor ? props.legendColor || '#1976d2' : 'inherit' }} />
                 )}
               </IconButton>
             )}
@@ -303,134 +219,32 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
             {iconPosition === 'end' && (
               <IconButton onClick={handlePreviewCollapseToggle} size="small">
                 {previewCollapsed ? (
-                  <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
+                  <KeyboardArrowDownIcon fontSize="small" sx={{ color: useCustomColor ? props.legendColor || '#1976d2' : 'inherit' }} />
                 ) : (
-                  <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomColor ? legendColor : 'inherit' }} />
+                  <KeyboardArrowUpIcon fontSize="small" sx={{ color: useCustomColor ? props.legendColor || '#1976d2' : 'inherit' }} />
                 )}
               </IconButton>
             )}
           </Box>
           
           <Collapse in={!previewCollapsed}>
-            <Box sx={{ p: 1, mt: 1 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 60 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-                  Content Area
-                </Typography>
-                <Button 
-                  size="small" 
-                  variant="outlined" 
-                  onClick={handleEditButtonClick}
-                >
-                  Edit
-                </Button>
-              </Box>
+            <Box sx={{ 
+              p: 1, 
+              mt: 1, 
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: '80px',
+              backgroundColor: 'rgba(255,255,255,0.5)',
+              borderRadius: '4px'
+            }}>
+              <Typography variant="body2" color="text.secondary">
+                Content Area
+              </Typography>
             </Box>
           </Collapse>
         </Box>
       </Paper>
-      
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onClose={handleDialogClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit FieldSet</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0.5 }}>
-            <Grid item xs={12}>
-              <TextField
-                label="Legend Text"
-                fullWidth
-                value={tempDialogSettings.legend}
-                onChange={(e) => setTempDialogSettings({...tempDialogSettings, legend: e.target.value})}
-              />
-            </Grid>
-            
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Icon Position</InputLabel>
-                <Select
-                  value={tempDialogSettings.iconPosition}
-                  label="Icon Position"
-                  onChange={(e) => setTempDialogSettings({...tempDialogSettings, iconPosition: e.target.value})}
-                >
-                  <MenuItem value="start">Before Legend</MenuItem>
-                  <MenuItem value="end">After Legend</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" gutterBottom>
-                Colors
-              </Typography>
-              <Divider />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <Box>
-                <Typography variant="body2" gutterBottom>
-                  Legend Color
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <input
-                    type="color"
-                    value={tempDialogSettings.legendColor}
-                    onChange={(e) => setTempDialogSettings({...tempDialogSettings, legendColor: e.target.value})}
-                    style={{ 
-                      width: '36px', 
-                      height: '36px', 
-                      padding: 0, 
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <TextField 
-                    size="small" 
-                    value={tempDialogSettings.legendColor}
-                    onChange={(e) => setTempDialogSettings({...tempDialogSettings, legendColor: e.target.value})}
-                    placeholder="#1976d2"
-                    variant="outlined"
-                  />
-                </Box>
-              </Box>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <Box>
-                <Typography variant="body2" gutterBottom>
-                  Border Color
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <input
-                    type="color"
-                    value={tempDialogSettings.borderColor}
-                    onChange={(e) => setTempDialogSettings({...tempDialogSettings, borderColor: e.target.value})}
-                    style={{ 
-                      width: '36px', 
-                      height: '36px', 
-                      padding: 0, 
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <TextField 
-                    size="small" 
-                    value={tempDialogSettings.borderColor}
-                    onChange={(e) => setTempDialogSettings({...tempDialogSettings, borderColor: e.target.value})}
-                    placeholder="#cccccc"
-                    variant="outlined"
-                  />
-                </Box>
-              </Box>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose}>Cancel</Button>
-          <Button onClick={handleDialogSave} variant="contained" color="primary">Save</Button>
-        </DialogActions>
-      </Dialog>
       
       {/* Tabs Navigation */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -442,7 +256,6 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
         >
           <Tab label="Basic" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Appearance" icon={<ViewQuiltIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Style" icon={<ColorLensIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
       
@@ -576,203 +389,14 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
           </Grid>
           
           <Grid item xs={12}>
-            <Typography gutterBottom>
-              Padding: {padding}
-            </Typography>
-            <Slider
-              value={padding}
-              min={0}
-              max={4}
-              step={1}
-              marks
-              onChange={(_e, value) => {
-                const newValue = Array.isArray(value) ? value[0] : value
-                setPadding(newValue)
-                handleChange('padding', newValue)
-              }}
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
             <FormControlLabel
               control={
                 <Switch
-                  checked={Boolean(props.elevation)}
-                  onChange={(e) => handleChange('elevation', e.target.checked)}
-                />
-              }
-              label="Add Shadow"
-            />
-          </Grid>
-        </Grid>
-      </TabPanel>
-      
-      {/* Style Tab */}
-      <TabPanel value={tabValue} index={2}>
-        <Grid container spacing={2}>
-          {/* Custom Color Toggle */}
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={useCustomColor}
-                  onChange={handleCustomColorToggle}
-                />
-              }
-              label="Use Custom Colors"
-            />
-          </Grid>
-          
-          {/* Custom Color Pickers - Only show if useCustomColor is true */}
-          {useCustomColor && (
-            <>
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <Typography variant="body2" gutterBottom>
-                    Border Color
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <input
-                      type="color"
-                      value={borderColor}
-                      onChange={(e) => {
-                        setBorderColor(e.target.value)
-                        handleChange('borderColor', e.target.value)
-                      }}
-                      style={{ 
-                        width: '36px', 
-                        height: '36px', 
-                        padding: 0, 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <TextField 
-                      size="small" 
-                      value={borderColor}
-                      onChange={(e) => {
-                        setBorderColor(e.target.value)
-                        handleChange('borderColor', e.target.value)
-                      }}
-                      placeholder="#cccccc"
-                      variant="outlined"
-                    />
-                  </Box>
-                </Box>
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <Typography variant="body2" gutterBottom>
-                    Legend Color
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <input
-                      type="color"
-                      value={legendColor}
-                      onChange={(e) => {
-                        setLegendColor(e.target.value)
-                        handleChange('legendColor', e.target.value)
-                      }}
-                      style={{ 
-                        width: '36px', 
-                        height: '36px', 
-                        padding: 0, 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <TextField 
-                      size="small" 
-                      value={legendColor}
-                      onChange={(e) => {
-                        setLegendColor(e.target.value)
-                        handleChange('legendColor', e.target.value)
-                      }}
-                      placeholder="#1976d2"
-                      variant="outlined"
-                    />
-                  </Box>
-                </Box>
-              </Grid>
-              
-              <Grid item xs={12}>
-                <Box>
-                  <Typography variant="body2" gutterBottom>
-                    Background Color
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <input
-                      type="color"
-                      value={backgroundColor}
-                      onChange={(e) => {
-                        setBackgroundColor(e.target.value)
-                        handleChange('backgroundColor', e.target.value)
-                      }}
-                      style={{ 
-                        width: '36px', 
-                        height: '36px', 
-                        padding: 0, 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <TextField 
-                      size="small" 
-                      value={backgroundColor}
-                      onChange={(e) => {
-                        setBackgroundColor(e.target.value)
-                        handleChange('backgroundColor', e.target.value)
-                      }}
-                      placeholder="#ffffff"
-                      variant="outlined"
-                    />
-                  </Box>
-                </Box>
-              </Grid>
-            </>
-          )}
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.legendBold)}
-                  onChange={(e) => handleChange('legendBold', e.target.checked)}
-                />
-              }
-              label="Bold Legend"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Legend Size</InputLabel>
-              <Select
-                value={(props.legendSize as string) || 'medium'}
-                label="Legend Size"
-                onChange={(e) => handleChange('legendSize', e.target.value)}
-              >
-                <MenuItem value="small">Small</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="large">Large</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.animated)}
-                  onChange={(e) => handleChange('animated', e.target.checked)}
+                  checked={animated}
+                  onChange={(e) => {
+                    setAnimated(e.target.checked);
+                    handleChange('animated', e.target.checked);
+                  }}
                 />
               }
               label="Animated Collapse/Expand"
@@ -780,15 +404,70 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
           </Grid>
           
           <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.saveState)}
-                  onChange={(e) => handleChange('saveState', e.target.checked)}
+            <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
+              Colors
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <Box>
+              <Typography variant="body2" gutterBottom>
+                Legend Color
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <input
+                  type="color"
+                  value={props.legendColor || '#1976d2'}
+                  onChange={(e) => handleChange('legendColor', e.target.value)}
+                  style={{ 
+                    width: '36px', 
+                    height: '36px', 
+                    padding: 0, 
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
                 />
-              }
-              label="Remember Collapsed State (Local Storage)"
-            />
+                <TextField 
+                  size="small" 
+                  value={props.legendColor || '#1976d2'}
+                  onChange={(e) => handleChange('legendColor', e.target.value)}
+                  placeholder="#1976d2"
+                  variant="outlined"
+                />
+              </Box>
+            </Box>
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <Box>
+              <Typography variant="body2" gutterBottom>
+                Border Color
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <input
+                  type="color"
+                  value={props.borderColor || '#cccccc'}
+                  onChange={(e) => handleChange('borderColor', e.target.value)}
+                  style={{ 
+                    width: '36px', 
+                    height: '36px', 
+                    padding: 0, 
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <TextField 
+                  size="small" 
+                  value={props.borderColor || '#cccccc'}
+                  onChange={(e) => handleChange('borderColor', e.target.value)}
+                  placeholder="#cccccc"
+                  variant="outlined"
+                />
+              </Box>
+            </Box>
           </Grid>
         </Grid>
       </TabPanel>

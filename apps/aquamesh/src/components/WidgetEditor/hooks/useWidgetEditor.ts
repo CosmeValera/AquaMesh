@@ -84,6 +84,12 @@ export const useWidgetEditor = () => {
     return savedValue ? JSON.parse(savedValue) : true
   })
 
+  // Advanced features toolbar setting
+  const [showAdvancedInToolbar, setShowAdvancedInToolbar] = useState<boolean>(() => {
+    const savedValue = localStorage.getItem('widget-editor-show-advanced-in-toolbar')
+    return savedValue ? JSON.parse(savedValue) : false
+  })
+
   // History states for undo/redo functionality
   const [history, setHistory] = useState<WidgetHistoryItem[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
@@ -122,6 +128,10 @@ export const useWidgetEditor = () => {
   useEffect(() => {
     localStorage.setItem('widget-editor-delete-dashboard-confirmation', JSON.stringify(showDeleteDashboardConfirmation))
   }, [showDeleteDashboardConfirmation])
+
+  useEffect(() => {
+    localStorage.setItem('widget-editor-show-advanced-in-toolbar', JSON.stringify(showAdvancedInToolbar))
+  }, [showAdvancedInToolbar])
 
   // Record widget data changes to history
   useEffect(() => {
@@ -962,6 +972,8 @@ export const useWidgetEditor = () => {
     setShowComponentPaletteHelp,
     showDeleteDashboardConfirmation,
     setShowDeleteDashboardConfirmation,
+    showAdvancedInToolbar,
+    setShowAdvancedInToolbar,
     deleteConfirmOpen,
     componentToDelete,
     widgetToDelete,

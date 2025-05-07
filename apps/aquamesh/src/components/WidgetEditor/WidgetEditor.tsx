@@ -53,6 +53,8 @@ const WidgetEditor: React.FC<{
     setShowDeleteWidgetConfirmation,
     showDeleteDashboardConfirmation,
     setShowDeleteDashboardConfirmation,
+    showAdvancedInToolbar,
+    setShowAdvancedInToolbar,
     
     // Event handlers
     handleDragStart,
@@ -397,28 +399,29 @@ const WidgetEditor: React.FC<{
         flexDirection: 'column',
         height: '100%',
         width: '100%',
-        bgcolor: 'background.paper',
+        position: 'relative',
+        minHeight: 0,
+        overflow: 'hidden',
       }}
       className="widget-editor-container"
       data-component="WidgetEditor"
     >
-      {/* Toolbar */}
-      <EditorToolbar 
+      {/* Editor Toolbar */}
+      <EditorToolbar
         editMode={editMode}
-        toggleEditMode={toggleEditMode}
-        setShowWidgetList={setShowWidgetList}
-        showSidebar={showSidebar} 
+        showSidebar={showSidebar}
         toggleSidebar={toggleSidebar}
+        toggleEditMode={toggleEditMode}
         handleSaveWidget={handleSaveWidget}
+        setShowWidgetList={setShowWidgetList}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
         canUndo={canUndo}
         canRedo={canRedo}
+        setShowSettingsModal={setShowSettingsModal}
         isUpdating={isUpdating}
         hasChanges={hasChanges}
-        isLatestVersion={isLatestVersion}
-        currentWidgetVersion={widgetData.version ?? currentWidgetVersion}
-        setShowSettingsModal={setShowSettingsModal}
+        isEmpty={widgetData.components.length === 0}
         showTemplateDialog={showTemplateDialog}
         setShowTemplateDialog={setShowTemplateDialog}
         showExportImportDialog={showExportImportDialog}
@@ -426,7 +429,9 @@ const WidgetEditor: React.FC<{
         handleOpenVersioningDialog={handleOpenVersioningDialog}
         handleOpenSearchDialog={handleOpenSearchDialog}
         widgetHasComponents={widgetData.components.length > 0}
-        isEmpty={widgetData.components.length === 0}
+        isLatestVersion={isLatestVersion}
+        currentWidgetVersion={currentWidgetVersion}
+        showAdvancedInToolbar={showAdvancedInToolbar}
       />
       
       {/* Main editor area */}
@@ -543,12 +548,14 @@ const WidgetEditor: React.FC<{
         onShowTooltipsChange={setShowTooltips}
         showDeleteConfirmation={showDeleteConfirmation}
         onShowDeleteConfirmationChange={setShowDeleteConfirmation}
+        showComponentPaletteHelp={showComponentPaletteHelp}
+        onShowComponentPaletteHelpChange={setShowComponentPaletteHelp}
         showDeleteWidgetConfirmation={showDeleteWidgetConfirmation}
         onShowDeleteWidgetConfirmationChange={setShowDeleteWidgetConfirmation}
         showDeleteDashboardConfirmation={showDeleteDashboardConfirmation}
         onShowDeleteDashboardConfirmationChange={setShowDeleteDashboardConfirmation}
-        showComponentPaletteHelp={showComponentPaletteHelp}
-        onShowComponentPaletteHelpChange={setShowComponentPaletteHelp}
+        showAdvancedInToolbar={showAdvancedInToolbar}
+        onShowAdvancedInToolbarChange={setShowAdvancedInToolbar}
       />
       
       <DeleteConfirmationDialog

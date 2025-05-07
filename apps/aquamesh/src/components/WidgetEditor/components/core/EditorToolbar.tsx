@@ -53,6 +53,7 @@ interface EditorToolbarProps {
   widgetHasComponents?: boolean
   isLatestVersion?: boolean
   currentWidgetVersion?: string
+  showAdvancedInToolbar?: boolean
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({
@@ -76,7 +77,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   handleOpenSearchDialog,
   widgetHasComponents = false,
   isLatestVersion = true,
-  currentWidgetVersion = '1.0'
+  currentWidgetVersion = '1.0',
+  showAdvancedInToolbar = false
 }) => {
   const theme = useTheme()
   const [advancedMenuAnchor, setAdvancedMenuAnchor] = useState<null | HTMLElement>(null)
@@ -248,19 +250,66 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               </IconButton>
             </Tooltip>
             
-            {/* Advanced Features Menu Button */}
-            <Tooltip title="Advanced features">
-              <IconButton
-                color="inherit"
-                onClick={handleAdvancedMenuOpen}
-                sx={{ 
-                  mr: 1,
-                  color: 'foreground.contrastSecondary' 
-                }}
-              >
-                <MoreVertIcon />
-              </IconButton>
-            </Tooltip>
+            
+            {/* Advanced Features in Toolbar (when enabled) */}
+            {showAdvancedInToolbar && (
+              <>
+                <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />  
+                <Tooltip title="Templates">
+                  <IconButton
+                    color="inherit"
+                    onClick={() => setShowTemplateDialog(true)}
+                    sx={{ 
+                      mr: 1,
+                      color: 'foreground.contrastSecondary'
+                    }}
+                  >
+                    <TemplateIcon />
+                  </IconButton>
+                </Tooltip>
+                
+                <Tooltip title="Export/Import Widgets">
+                  <IconButton
+                    color="inherit"
+                    onClick={() => setShowExportImportDialog(true)}
+                    sx={{ 
+                      mr: 1,
+                      color: 'foreground.contrastSecondary'
+                    }}
+                  >
+                    <ImportExportIcon />
+                  </IconButton>
+                </Tooltip>
+                
+                <Tooltip title="Version History">
+                  <IconButton
+                    color="inherit"
+                    onClick={handleOpenVersioningDialog}
+                    sx={{ 
+                      mr: 1,
+                      color: 'foreground.contrastSecondary'
+                    }}
+                  >
+                    <HistoryIcon />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
+            {/* Advanced Features Menu Button (only shown when not displayed in toolbar) */}
+            {!showAdvancedInToolbar && (
+              <Tooltip title="Advanced features">
+                <IconButton
+                  color="inherit"
+                  onClick={handleAdvancedMenuOpen}
+                  sx={{ 
+                    mr: 1,
+                    color: 'foreground.contrastSecondary' 
+                  }}
+                >
+                  <MoreVertIcon />
+                </IconButton>
+              </Tooltip>
+            )}
             
             <Divider orientation="vertical" flexItem sx={{ mr: 2, height: '24px', alignSelf: 'center' }} />
             

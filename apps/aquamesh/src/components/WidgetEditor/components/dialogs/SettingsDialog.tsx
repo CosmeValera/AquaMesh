@@ -25,6 +25,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
 import SettingsIcon from '@mui/icons-material/Settings'
 import DashboardIcon from '@mui/icons-material/Dashboard'
+import SearchIcon from '@mui/icons-material/Search'
 
 interface SettingsDialogProps {
   open: boolean
@@ -39,6 +40,8 @@ interface SettingsDialogProps {
   onShowDeleteWidgetConfirmationChange: (value: boolean) => void
   showDeleteDashboardConfirmation?: boolean
   onShowDeleteDashboardConfirmationChange?: (value: boolean) => void
+  showAdvancedInToolbar?: boolean
+  onShowAdvancedInToolbarChange?: (value: boolean) => void
 }
 
 // Keyboard shortcut card component
@@ -113,7 +116,16 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   onShowDeleteWidgetConfirmationChange,
   showDeleteDashboardConfirmation,
   onShowDeleteDashboardConfirmationChange,
+  showAdvancedInToolbar = false,
+  onShowAdvancedInToolbarChange,
 }) => {
+  // Handle undefined callback safely
+  const handleAdvancedInToolbarChange = (checked: boolean) => {
+    if (onShowAdvancedInToolbarChange) {
+      onShowAdvancedInToolbarChange(checked)
+    }
+  }
+
   return (
     <Dialog
       open={open}
@@ -147,7 +159,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     color="primary"
                   />
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 6, mb: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 5, mb: 1 }}>
                   Display helpful tooltips when hovering over components in the palette.
                 </Typography>
               </Box>
@@ -167,8 +179,28 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     color="primary"
                   />
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 6, mb: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 5, mb: 1 }}>
                   Show the help text at the bottom of the component palette.
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+          
+          <Paper elevation={0} sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <SearchIcon fontSize="small" sx={{ mr: 1.5, color: 'primary.main' }} />
+                  <Typography fontWeight="medium">Show Advanced Features in Toolbar</Typography>
+                  <Box sx={{ flexGrow: 1 }} />
+                  <Switch
+                    checked={showAdvancedInToolbar}
+                    onChange={(e) => handleAdvancedInToolbarChange(e.target.checked)}
+                    color="primary"
+                  />
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 5, mb: 1 }}>
+                  Display Templates, Export/Import, and Version History buttons directly in the toolbar for easy access.
                 </Typography>
               </Box>
             </Box>
@@ -191,7 +223,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     color="primary"
                   />
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 6, mb: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 5, mb: 1 }}>
                   Show a confirmation dialog when deleting components. Disable for quicker editing.
                 </Typography>
               </Box>
@@ -211,7 +243,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     color="primary"
                   />
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 6, mb: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 5, mb: 1 }}>
                   Show a confirmation dialog when deleting widgets from the library. Disable for quicker management.
                 </Typography>
               </Box>
@@ -231,7 +263,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     color="primary"
                   />
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 6, mb: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 5, mb: 1 }}>
                   Show a confirmation dialog when deleting dashboards. Disable for quicker dashboard management.
                 </Typography>
               </Box>

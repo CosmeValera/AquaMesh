@@ -4,14 +4,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  DialogContentText,
   Button,
   Typography,
   Alert,
   useTheme
 } from '@mui/material'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
-import { alpha } from '@mui/material/styles'
 
 interface VersionWarningDialogProps {
   open: boolean
@@ -41,44 +39,45 @@ const VersionWarningDialog: React.FC<VersionWarningDialogProps> = ({
         }
       }}
     >
-      <DialogTitle sx={{ 
-        bgcolor: alpha(theme.palette.warning.main, 0.1),
+      <DialogTitle sx={{
+        bgcolor: theme.palette.primary.main,
+        color: theme.palette.primary.contrastText,
         display: 'flex',
         alignItems: 'center',
-        gap: 1
+        gap: 1,
+        p: 3
       }}>
-        <WarningAmberIcon color="warning" />
-        <Typography fontWeight="bold">Version Restoration Warning</Typography>
+        <WarningAmberIcon sx={{ color: 'inherit', mr: 1 }} />
+        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+          Version Restoration Warning
+        </Typography>
       </DialogTitle>
-      <DialogContent sx={{ mt: 2 }}>
+      <DialogContent sx={{ p: 3 }}>
         <Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
           This action will discard all versions after the currently restored version.
         </Alert>
-        <DialogContentText>
-          You are about to update this widget while using an older version ({version}). 
-          All versions created after this one will be discarded permanently.
-        </DialogContentText>
-        <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+        <Typography variant="body1" sx={{ mb: 1.5 }}>
+          You are about to update this widget while using an older version <strong>({version})</strong>. All versions created after this one will be discarded permanently.
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
           If you want to keep these future versions, you should export them before proceeding with the update.
         </Typography>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button 
-          onClick={onCancel} 
-          variant="outlined"
-          sx={{ borderRadius: 1.5 }}
-        >
+      <DialogActions sx={{
+        px: 3,
+        py: 2,
+        bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.02)',
+        borderTop: '1px solid',
+        borderColor: 'divider'
+      }}>
+        <Button onClick={onCancel} variant="outlined" sx={{ borderRadius: 1.5 }}>
           Cancel
         </Button>
-        <Button 
-          onClick={onConfirm} 
-          variant="contained" 
+        <Button
+          onClick={onConfirm}
+          variant="contained"
           color="warning"
-          sx={{ 
-            ml: 1, 
-            borderRadius: 1.5,
-            fontWeight: 'medium'
-          }}
+          sx={{ ml: 1, borderRadius: 1.5, fontWeight: 'medium' }}
         >
           Update and Discard Future Versions
         </Button>

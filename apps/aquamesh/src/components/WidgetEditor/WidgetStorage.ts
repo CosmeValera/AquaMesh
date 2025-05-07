@@ -302,7 +302,12 @@ class WidgetStorage {
     }
     
     this.saveToLocalStorage(newWidgets)
-    
+
+    // Also delete this widget's version history
+    const allVersions = this.getAllWidgetVersions()
+    const filteredVersions = allVersions.filter(v => v.widgetId !== id)
+    this.saveVersionsToLocalStorage(filteredVersions)
+
     // Dispatch event to notify other components
     document.dispatchEvent(new CustomEvent(WIDGET_STORAGE_UPDATED))
     

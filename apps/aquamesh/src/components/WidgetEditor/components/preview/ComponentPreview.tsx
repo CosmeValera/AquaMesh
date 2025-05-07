@@ -34,6 +34,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   component,
   onEdit,
+  onToggleCollapse,
   onDelete,
   onMoveUp,
   onMoveDown,
@@ -101,7 +102,6 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
         )
       case 'FieldSet': {
         const isCollapsed = component.props.collapsed as boolean
-        
         return (
           <Box
             sx={{
@@ -118,15 +118,21 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             onDrop={(e) => handleContainerDrop(e, component.id)}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              {/* Collapse/Expand Arrow */}
               <IconButton
-                // Open the FieldSet editor when clicking the collapse icon
-                onClick={(e) => { e.stopPropagation(); onEdit(component.id); }}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  if (onToggleCollapse) {
+                    onToggleCollapse(component.id); 
+                  }
+                }}
                 size="small"
                 sx={{ color: 'primary.main' }}
               >
                 {isCollapsed ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
               </IconButton>
-              <Typography variant="h6" sx={{ ml: 1 }}>
+              {/* Legend Text */}
+              <Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
                 {component.props.legend as string}
               </Typography>
             </Box>
@@ -137,6 +143,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                     key={child.id}
                     component={child}
                     onEdit={onEdit}
+                    onToggleCollapse={onToggleCollapse}
                     onDelete={onDelete}
                     onMoveUp={onMoveUp}
                     onMoveDown={onMoveDown}
@@ -337,6 +344,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                   key={child.id}
                   component={child}
                   onEdit={onEdit}
+                  onToggleCollapse={onToggleCollapse}
                   onDelete={onDelete}
                   onMoveUp={onMoveUp}
                   onMoveDown={onMoveDown}
@@ -389,6 +397,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                   key={child.id}
                   component={child}
                   onEdit={onEdit}
+                  onToggleCollapse={onToggleCollapse}
                   onDelete={onDelete}
                   onMoveUp={onMoveUp}
                   onMoveDown={onMoveDown}

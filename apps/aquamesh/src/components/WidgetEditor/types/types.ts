@@ -48,6 +48,8 @@ export interface ComponentPaletteItemProps {
 export interface ComponentPreviewProps {
   component: ComponentData;
   onEdit: (id: string) => void;
+  /** Function to toggle collapse for FieldSet components */
+  onToggleCollapse?: (id: string) => void;
   onDelete: (id: string) => void;
   onMoveUp: (id: string) => void;
   onMoveDown: (id: string) => void;

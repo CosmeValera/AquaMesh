@@ -626,6 +626,24 @@ export const useWidgetEditor = () => {
     setDeleteConfirmOpen(false)
   }
 
+  // Handle toggling collapsed state for FieldSet components (used by collapse arrow)
+  const handleToggleFieldsetCollapse = (id: string) => {
+    const component = findComponentById(id, widgetData.components)
+    if (component && component.type === 'FieldSet') {
+      const updatedComponent = {
+        ...component,
+        props: {
+          ...component.props,
+          collapsed: !(component.props.collapsed as boolean)
+        }
+      }
+      setWidgetData(prev => ({
+        ...prev,
+        components: updateComponentById(id, updatedComponent, prev.components)
+      }))
+    }
+  }
+
   // Handle editing a component: open the edit dialog for all component types
   const handleEditComponent = (id: string) => {
     const component = findComponentById(id, widgetData.components)
@@ -922,6 +940,7 @@ export const useWidgetEditor = () => {
     handleDragOver,
     handleDeleteComponent,
     handleEditComponent,
+    handleToggleFieldsetCollapse,
     handleSaveComponent,
     handleMoveComponent,
     handleSaveWidget,

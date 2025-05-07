@@ -69,6 +69,7 @@ const WidgetEditor: React.FC<{
     handleCloseNotification,
     toggleEditMode,
     handleToggleVisibility,
+    handleToggleFieldsetCollapse,
     confirmDeleteComponent,
     cancelDeleteComponent,
     confirmDeleteSavedWidget,
@@ -301,6 +302,7 @@ const WidgetEditor: React.FC<{
           handleContainerDragOver={handleContainerDragOver}
           handleContainerDragLeave={handleContainerDragLeave}
           handleContainerDrop={handleContainerDrop}
+          handleToggleFieldsetCollapse={handleToggleFieldsetCollapse}
           showSidebar={showSidebar}
           handleWidgetNameChange={handleWidgetNameChange}
         />

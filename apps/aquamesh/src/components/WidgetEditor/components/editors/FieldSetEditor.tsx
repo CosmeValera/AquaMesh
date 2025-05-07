@@ -35,15 +35,9 @@ interface FieldSetProps {
   borderStyle?: 'solid' | 'dashed' | 'dotted' | 'none';
   borderRadius?: number;
   padding?: number;
-  elevation?: boolean; // for shadow
-  useCustomColor?: boolean;
   borderColor?: string;
   legendColor?: string;
-  backgroundColor?: string;
-  legendBold?: boolean;
-  legendSize?: 'small' | 'medium' | 'large';
   animated?: boolean;
-  saveState?: boolean; // for local storage
   [key: string]: unknown;
 }
 
@@ -164,6 +158,305 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
     fontWeight: 'bold'
   }
   
+  // Basic settings form
+  const basicSettingsForm = (
+    <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <TextField 
+          fullWidth
+          label="Legend"
+          value={props.legend || ''}
+          onChange={(e) => handleChange('legend', e.target.value)}
+        />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Legend Alignment</InputLabel>
+          <Select
+            value={legendAlign}
+            onChange={(e) => {
+              setLegendAlign(e.target.value)
+              handleChange('legendAlign', e.target.value)
+            }}
+            label="Legend Alignment"
+          >
+            <MenuItem value="left">
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <FormatAlignLeftIcon sx={{ mr: 1 }} fontSize="small" />
+                Left
+              </Box>
+            </MenuItem>
+            <MenuItem value="center">
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <FormatAlignCenterIcon sx={{ mr: 1 }} fontSize="small" />
+                Center
+              </Box>
+            </MenuItem>
+            <MenuItem value="right">
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <FormatAlignRightIcon sx={{ mr: 1 }} fontSize="small" />
+                Right
+              </Box>
+            </MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Icon Position</InputLabel>
+          <Select
+            value={iconPosition}
+            onChange={(e) => {
+              setIconPosition(e.target.value)
+              handleChange('iconPosition', e.target.value)
+            }}
+            label="Icon Position"
+          >
+            <MenuItem value="start">Start</MenuItem>
+            <MenuItem value="end">End</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={collapsed}
+              onChange={(e) => {
+                setCollapsed(e.target.checked)
+                handleChange('collapsed', e.target.checked)
+              }}
+            />
+          }
+          label="Initially Collapsed"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={animated}
+              onChange={(e) => {
+                setAnimated(e.target.checked)
+                handleChange('animated', e.target.checked)
+              }}
+            />
+          }
+          label="Animated Collapse/Expand"
+        />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Border Style</InputLabel>
+          <Select
+            value={borderStyle}
+            onChange={(e) => {
+              setBorderStyle(e.target.value)
+              handleChange('borderStyle', e.target.value)
+            }}
+            label="Border Style"
+          >
+            <MenuItem value="solid">Solid</MenuItem>
+            <MenuItem value="dashed">Dashed</MenuItem>
+            <MenuItem value="dotted">Dotted</MenuItem>
+            <MenuItem value="none">None</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <Typography gutterBottom>Border Radius: {borderRadius}px</Typography>
+        <Slider
+          value={borderRadius}
+          onChange={(_e, newValue) => {
+            setBorderRadius(newValue as number)
+            handleChange('borderRadius', newValue)
+          }}
+          min={0}
+          max={16}
+          step={1}
+          marks={[
+            { value: 0, label: '0' },
+            { value: 8, label: '8' },
+            { value: 16, label: '16' }
+          ]}
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
+          Colors
+        </Typography>
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Border Color"
+          value={props.borderColor || '#cccccc'}
+          onChange={(e) => handleChange('borderColor', e.target.value)}
+          type="color"
+          InputProps={{
+            startAdornment: (
+              <Box
+                sx={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: '50%',
+                  backgroundColor: props.borderColor || '#cccccc',
+                  mr: 1,
+                  border: '1px solid rgba(0,0,0,0.2)'
+                }}
+              />
+            )
+          }}
+        />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Legend Color"
+          value={props.legendColor || '#1976d2'}
+          onChange={(e) => handleChange('legendColor', e.target.value)}
+          type="color"
+          InputProps={{
+            startAdornment: (
+              <Box
+                sx={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: '50%',
+                  backgroundColor: props.legendColor || '#1976d2',
+                  mr: 1,
+                  border: '1px solid rgba(0,0,0,0.2)'
+                }}
+              />
+            )
+          }}
+        />
+      </Grid>
+    </Grid>
+  )
+  
+  // Appearance settings form
+  const appearanceSettingsForm = (
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={6}>
+        <FormControl fullWidth>
+          <InputLabel>Border Style</InputLabel>
+          <Select
+            value={borderStyle}
+            onChange={(e) => {
+              setBorderStyle(e.target.value)
+              handleChange('borderStyle', e.target.value)
+            }}
+            label="Border Style"
+          >
+            <MenuItem value="solid">Solid</MenuItem>
+            <MenuItem value="dashed">Dashed</MenuItem>
+            <MenuItem value="dotted">Dotted</MenuItem>
+            <MenuItem value="none">None</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <Typography gutterBottom>Border Radius: {borderRadius}px</Typography>
+        <Slider
+          value={borderRadius}
+          onChange={(_e, newValue) => {
+            setBorderRadius(newValue as number)
+            handleChange('borderRadius', newValue)
+          }}
+          min={0}
+          max={16}
+          step={1}
+          marks={[
+            { value: 0, label: '0' },
+            { value: 8, label: '8' },
+            { value: 16, label: '16' }
+          ]}
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={animated}
+              onChange={(e) => {
+                setAnimated(e.target.checked)
+                handleChange('animated', e.target.checked)
+              }}
+            />
+          }
+          label="Animated Collapse/Expand"
+        />
+      </Grid>
+      
+      <Grid item xs={12}>
+        <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
+          Colors
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Border Color"
+          value={props.borderColor || '#cccccc'}
+          onChange={(e) => handleChange('borderColor', e.target.value)}
+          type="color"
+          InputProps={{
+            startAdornment: (
+              <Box
+                sx={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: '50%',
+                  backgroundColor: props.borderColor || '#cccccc',
+                  mr: 1,
+                  border: '1px solid rgba(0,0,0,0.2)'
+                }}
+              />
+            )
+          }}
+        />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <TextField
+          fullWidth
+          label="Legend Color"
+          value={props.legendColor || '#1976d2'}
+          onChange={(e) => handleChange('legendColor', e.target.value)}
+          type="color"
+          InputProps={{
+            startAdornment: (
+              <Box
+                sx={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: '50%',
+                  backgroundColor: props.legendColor || '#1976d2',
+                  mr: 1,
+                  border: '1px solid rgba(0,0,0,0.2)'
+                }}
+              />
+            )
+          }}
+        />
+      </Grid>
+    </Grid>
+  )
+  
   return (
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
@@ -261,215 +554,12 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
       
       {/* Basic Tab */}
       <TabPanel value={tabValue} index={0}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              label="Legend Text"
-              fullWidth
-              value={(props.legend as string) || ''}
-              onChange={(e) => handleChange('legend', e.target.value)}
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={collapsed}
-                  onChange={(e) => {
-                    setCollapsed(e.target.checked)
-                    setPreviewCollapsed(e.target.checked)
-                    handleChange('collapsed', e.target.checked)
-                  }}
-                />
-              }
-              label="Default Collapsed"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Typography gutterBottom>
-              Legend Alignment
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <IconButton 
-                color={legendAlign === 'left' ? 'primary' : 'default'} 
-                onClick={() => {
-                  setLegendAlign('left')
-                  handleChange('legendAlign', 'left')
-                }}
-              >
-                <FormatAlignLeftIcon />
-              </IconButton>
-              
-              <IconButton 
-                color={legendAlign === 'center' ? 'primary' : 'default'} 
-                onClick={() => {
-                  setLegendAlign('center')
-                  handleChange('legendAlign', 'center')
-                }}
-              >
-                <FormatAlignCenterIcon />
-              </IconButton>
-              
-              <IconButton 
-                color={legendAlign === 'right' ? 'primary' : 'default'} 
-                onClick={() => {
-                  setLegendAlign('right')
-                  handleChange('legendAlign', 'right')
-                }}
-              >
-                <FormatAlignRightIcon />
-              </IconButton>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Collapse Icon Position</InputLabel>
-              <Select
-                value={iconPosition}
-                label="Collapse Icon Position"
-                onChange={(e) => {
-                  setIconPosition(e.target.value)
-                  handleChange('iconPosition', e.target.value)
-                }}
-              >
-                <MenuItem value="start">Start (Before Legend)</MenuItem>
-                <MenuItem value="end">End (After Legend)</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
+        {basicSettingsForm}
       </TabPanel>
       
       {/* Appearance Tab */}
       <TabPanel value={tabValue} index={1}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Border Style</InputLabel>
-              <Select
-                value={borderStyle}
-                label="Border Style"
-                onChange={(e) => {
-                  setBorderStyle(e.target.value)
-                  handleChange('borderStyle', e.target.value)
-                }}
-              >
-                <MenuItem value="solid">Solid</MenuItem>
-                <MenuItem value="dashed">Dashed</MenuItem>
-                <MenuItem value="dotted">Dotted</MenuItem>
-                <MenuItem value="none">None</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Typography gutterBottom>
-              Border Radius: {borderRadius}px
-            </Typography>
-            <Slider
-              value={borderRadius}
-              min={0}
-              max={16}
-              step={1}
-              marks={[
-                { value: 0, label: '0' },
-                { value: 4, label: '4' },
-                { value: 8, label: '8' },
-                { value: 16, label: '16' }
-              ]}
-              onChange={(_e, value) => {
-                const newValue = Array.isArray(value) ? value[0] : value
-                setBorderRadius(newValue)
-                handleChange('borderRadius', newValue)
-              }}
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={animated}
-                  onChange={(e) => {
-                    setAnimated(e.target.checked);
-                    handleChange('animated', e.target.checked);
-                  }}
-                />
-              }
-              label="Animated Collapse/Expand"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-              Colors
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <Box>
-              <Typography variant="body2" gutterBottom>
-                Legend Color
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <input
-                  type="color"
-                  value={props.legendColor || '#1976d2'}
-                  onChange={(e) => handleChange('legendColor', e.target.value)}
-                  style={{ 
-                    width: '36px', 
-                    height: '36px', 
-                    padding: 0, 
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <TextField 
-                  size="small" 
-                  value={props.legendColor || '#1976d2'}
-                  onChange={(e) => handleChange('legendColor', e.target.value)}
-                  placeholder="#1976d2"
-                  variant="outlined"
-                />
-              </Box>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <Box>
-              <Typography variant="body2" gutterBottom>
-                Border Color
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <input
-                  type="color"
-                  value={props.borderColor || '#cccccc'}
-                  onChange={(e) => handleChange('borderColor', e.target.value)}
-                  style={{ 
-                    width: '36px', 
-                    height: '36px', 
-                    padding: 0, 
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <TextField 
-                  size="small" 
-                  value={props.borderColor || '#cccccc'}
-                  onChange={(e) => handleChange('borderColor', e.target.value)}
-                  placeholder="#cccccc"
-                  variant="outlined"
-                />
-              </Box>
-            </Box>
-          </Grid>
-        </Grid>
+        {appearanceSettingsForm}
       </TabPanel>
     </Box>
   )

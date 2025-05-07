@@ -41,6 +41,8 @@ interface EditorCanvasProps {
   handleContainerDragOver: (e: React.DragEvent) => void;
   handleContainerDragLeave: (e: React.DragEvent) => void;
   handleContainerDrop: (e: React.DragEvent, containerId: string) => void;
+  /** Toggle collapse for FieldSet components */
+  handleToggleFieldsetCollapse: (id: string) => void;
   showSidebar: boolean;
   handleWidgetNameChange?: (name: string) => void;
 }
@@ -64,6 +66,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   handleContainerDragOver,
   handleContainerDragLeave,
   handleContainerDrop,
+  handleToggleFieldsetCollapse,
   showSidebar,
   handleWidgetNameChange
 }) => {
@@ -78,6 +81,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         onMoveUp={(id) => handleMoveComponent(id, 'up')}
         onMoveDown={(id) => handleMoveComponent(id, 'down')}
         onAddInside={handleAddInsideFieldset}
+        onToggleCollapse={handleToggleFieldsetCollapse}
         onToggleVisibility={handleToggleVisibility}
         isFirst={index === 0}
         isLast={index === components.length - 1}

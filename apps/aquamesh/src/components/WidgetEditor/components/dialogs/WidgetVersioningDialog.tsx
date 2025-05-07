@@ -97,17 +97,16 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
   
   const handleRestoreVersion = () => {
     if (widget && selectedVersion) {
-      if (!selectedVersion.isCurrent && !isLatestVersion(selectedVersion)) {
-        setConfirmDialogOpen(true)
-      } else {
-        completeRestore()
-      }
+      // Directly restore the version without confirmation dialog
+      completeRestore()
     }
   }
   
   const isLatestVersion = (version: WidgetVersion): boolean => {
-    if (!versions.length) return false;
-    return version.id === versions[0].id;
+    if (!versions.length) {
+      return false
+    }
+    return version.id === versions[0].id
   }
   
   const completeRestore = () => {
@@ -302,21 +301,23 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
                                   {formatDate(version.createdAt)}
                                 </Typography>
                               </Box>
-                              <Typography 
-                                variant="body2" 
-                                color="text.secondary"
-                                sx={{
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: 'vertical',
-                                  overflow: 'hidden',
-                                  mb: 1,
-                                  fontSize: '0.8rem',
-                                  fontStyle: 'italic'
-                                }}
-                              >
-                                {version.notes || 'No notes'}
-                              </Typography>
+                              {version.notes && version.notes !== 'No notes' && (
+                                <Typography 
+                                  variant="body2" 
+                                  color="text.secondary"
+                                  sx={{
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    mb: 1,
+                                    fontSize: '0.8rem',
+                                    fontStyle: 'italic'
+                                  }}
+                                >
+                                  {version.notes}
+                                </Typography>
+                              )}
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Chip
                                   size="small"
@@ -536,6 +537,7 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
         </DialogActions>
       </Dialog>
       
+      {/* Keep the version restoration warning dialog, but we'll only show it when updating from the editor toolbar */}
       <Dialog
         open={confirmDialogOpen}
         onClose={() => setConfirmDialogOpen(false)}

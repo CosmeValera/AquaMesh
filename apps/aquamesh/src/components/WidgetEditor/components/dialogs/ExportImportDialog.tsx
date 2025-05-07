@@ -301,11 +301,13 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
           label="Export" 
           icon={<DownloadIcon />} 
           iconPosition="start"
+          sx={{ minHeight: 56 }}
         />
         <Tab 
           label="Import" 
           icon={<UploadIcon />} 
           iconPosition="start"
+          sx={{ minHeight: 56 }}
         />
       </Tabs>
       
@@ -342,7 +344,7 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                 bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.04)'
               }}>
                 <Typography variant="subtitle2" sx={{
-                  color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.dark,
+                  color: '#191919',
                   fontWeight: 'medium'
                 }}>
                   {widgets.length} widget{widgets.length !== 1 ? 's' : ''} available
@@ -354,7 +356,7 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                     sx={{ 
                       mr: 1, 
                       textTransform: 'none',
-                      color: theme.palette.primary.main,
+                      color: theme.palette.primary.light,
                       fontWeight: 'medium'
                     }}
                   >
@@ -365,7 +367,8 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                     onClick={deselectAllWidgets}
                     sx={{ 
                       textTransform: 'none',
-                      color: theme.palette.mode === 'dark' ? theme.palette.grey[400] : theme.palette.grey[700]
+                      color: theme.palette.primary.light,
+                      fontWeight: 'medium'
                     }}
                   >
                     Clear

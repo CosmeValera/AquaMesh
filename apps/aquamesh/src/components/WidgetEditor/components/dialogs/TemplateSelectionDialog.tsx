@@ -38,6 +38,7 @@ import SaveIcon from '@mui/icons-material/Save'
 import RestoreIcon from '@mui/icons-material/Restore'
 import { CustomWidget } from '../../WidgetStorage'
 import { alpha } from '@mui/material/styles'
+import CloseIcon from '@mui/icons-material/Close'
 
 // Sort function type
 type SortFunction = (a: CustomWidget, b: CustomWidget) => number
@@ -325,6 +326,19 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
 
   const handleRestoreBuiltInTemplates = () => {
     setDeletedBuiltInTemplates([])
+  }
+
+  // Helper to check if built-in template should be displayed based on current filter
+  const shouldShowBuiltInTemplate = (templateId: string): boolean => {
+    if (isBuiltInTemplateDeleted(templateId)) {
+      return false
+    }
+    
+    if (showFavoritesOnly) {
+      return isFavorite(templateId)
+    }
+    
+    return true
   }
 
   return (
@@ -615,7 +629,7 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
             <Grid container spacing={2}>
               {/* First show built-in templates if not hidden */}
               {showBuiltInTemplates && WIDGET_TEMPLATES.map(template => (
-                !isBuiltInTemplateDeleted(template.id) && (
+                shouldShowBuiltInTemplate(template.id) && (
                   <Grid item xs={12} sm={6} md={4} lg={3} key={template.id}>
                     <Card
                       elevation={2}
@@ -966,36 +980,77 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
         </>
       )}
       
-      {/* Confirmation dialog for deleting templates */}
+      {/* Confirmation dialog for deleting templates - Styled like DeleteConfirmationDialog */}
       <Dialog
         open={!!showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(null)}
         maxWidth="xs"
+        fullWidth
         PaperProps={{
-          elevation: 24,
           sx: {
-            borderRadius: 2
+            borderRadius: '12px',
+            overflow: 'hidden',
+            bgcolor: 'background.paper'
           }
         }}
       >
-        <DialogTitle sx={{ pb: 1 }}>
-          <Typography variant="h6">Confirm Deletion</Typography>
+        <DialogTitle 
+          sx={{ 
+            bgcolor: 'error.main',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            px: 3,
+            py: 1.5,
+            position: 'relative'
+          }}
+        >
+          <DeleteIcon sx={{ mr: 1.5, fontSize: 24, color: 'white' }} />
+          <Typography variant="h6" sx={{ fontWeight: 500 }}>
+            Confirm Deletion
+          </Typography>
+          <IconButton
+            size="small"
+            aria-label="close"
+            sx={{ 
+              position: 'absolute', 
+              right: 16, 
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'white'
+            }}
+            onClick={() => setShowDeleteConfirm(null)}
+          >
+            <CloseIcon fontSize="medium" />
+          </IconButton>
         </DialogTitle>
-        <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            This action cannot be undone.
-          </Alert>
-          <Typography variant="body1">
+        
+        <DialogContent sx={{ px: 3, pb: 0, bgcolor: '#006d5c' }}>
+          <Typography variant="body1" color="white" sx={{ mb: 2, pt: 1.5, fontWeight: 400 }}>
             Are you sure you want to delete this template?
           </Typography>
+          <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mt: 1 }}>
+            This action cannot be undone.
+          </Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
+        
+        <DialogActions sx={{ px: 3, py: 3, bgcolor: '#006d5c', justifyContent: 'center', gap: 2 }}>
           <Button 
-            onClick={() => setShowDeleteConfirm(null)}
+            onClick={() => setShowDeleteConfirm(null)} 
             variant="outlined"
-            sx={{ borderRadius: 1.5 }}
+            sx={{ 
+              px: 3, 
+              py: 1,
+              minWidth: 120,
+              color: 'white',
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+              '&:hover': {
+                borderColor: 'white',
+                bgcolor: 'rgba(255, 255, 255, 0.05)'
+              }
+            }}
           >
-            Cancel
+            CANCEL
           </Button>
           <Button 
             onClick={() => {
@@ -1009,12 +1064,18 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                   deleteTemplate(showDeleteConfirm)
                 }
               }
-            }}
+            }} 
             variant="contained"
             color="error"
-            sx={{ ml: 1, borderRadius: 1.5 }}
+            startIcon={<DeleteIcon />}
+            sx={{ 
+              px: 3, 
+              py: 1,
+              minWidth: 120,
+              fontWeight: 500
+            }}
           >
-            Delete
+            DELETE
           </Button>
         </DialogActions>
       </Dialog>

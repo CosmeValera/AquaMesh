@@ -1,15 +1,18 @@
 import React from 'react'
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
   Typography,
-  Alert,
-  useTheme
+  Stack,
+  Box,
+  Divider,
+  useTheme,
+  alpha
 } from '@mui/material'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 
 interface VersionWarningDialogProps {
   open: boolean
@@ -25,59 +28,132 @@ const VersionWarningDialog: React.FC<VersionWarningDialogProps> = ({
   version
 }) => {
   const theme = useTheme()
+  const isLightMode = theme.palette.mode === 'light'
+  
+  // Orange palette
+  const orangeBase = '#f57c00'
+  const orangeLight = '#fff3e0'
+  const orangeDark = '#e65100'
 
   return (
     <Dialog
       open={open}
       onClose={onCancel}
       maxWidth="sm"
+      fullWidth
       PaperProps={{
+        elevation: 6,
         sx: { 
-          borderRadius: 2,
-          border: `1px solid ${theme.palette.warning.main}`,
-          boxShadow: 5
+          borderRadius: 1.5,
+          overflow: 'hidden'
         }
       }}
     >
-      <DialogTitle sx={{
-        bgcolor: theme.palette.primary.main,
-        color: theme.palette.primary.contrastText,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        p: 3
+      <Box sx={{
+        bgcolor: orangeBase,
+        p: 2,
+        position: 'relative'
       }}>
-        <WarningAmberIcon sx={{ color: 'inherit', mr: 1 }} />
-        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-          Version Restoration Warning
-        </Typography>
-      </DialogTitle>
-      <DialogContent sx={{ p: 3 }}>
-        <Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
-          This action will discard all versions after the currently restored version.
-        </Alert>
-        <Typography variant="body1" sx={{ mb: 1.5 }}>
-          You are about to update this widget while using an older version <strong>({version})</strong>. All versions created after this one will be discarded permanently.
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          If you want to keep these future versions, you should export them before proceeding with the update.
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <WarningAmberIcon sx={{ 
+            fontSize: 28,
+            color: '#ffffff'
+          }} />
+          <Typography variant="h6" sx={{ 
+            fontWeight: 600,
+            color: '#ffffff'
+          }}>
+            Version Restoration Warning
+          </Typography>
+        </Stack>
+      </Box>
+      
+      <DialogContent sx={{ px: 3, pt: 2.5, pb: 1 }}>
+        <Stack spacing={2}>
+          <Typography variant="body1" sx={{ color: theme.palette.text.primary }}>
+            This action will discard all versions after the currently restored version.
+          </Typography>
+          <Typography variant="body1" sx={{ color: theme.palette.text.primary }}>
+            You are about to update this widget while using an older version 
+            <Box component="span" sx={{ 
+              fontWeight: 'bold',
+              mx: 0.5,
+              px: 0.8,
+              py: 0.3,
+              bgcolor: orangeDark,
+              color: '#ffffff',
+              borderRadius: 0.8,
+              border: `1px solid ${orangeBase}`
+            }}>
+              {version}
+            </Box>
+            All versions created after this one will be discarded permanently.
+          </Typography>
+          
+          <Box sx={{ 
+            p: 2,
+            borderRadius: 1,
+            bgcolor: isLightMode ? alpha(orangeBase, 0.08) : alpha(orangeBase, 0.15),
+            border: `1px solid ${isLightMode ? alpha(orangeBase, 0.2) : alpha(orangeBase, 0.4)}`
+          }}>
+            <Typography variant="body2" sx={{ 
+              display: 'flex',
+              alignItems: 'flex-start',
+              color: theme.palette.text.primary
+            }}>
+              <InfoOutlinedIcon 
+                sx={{ 
+                  fontSize: 18, 
+                  mr: 1,
+                  mt: 0.25,
+                  color: orangeBase
+                }}
+              />
+              If you want to keep these future versions, you should export them before proceeding with the update.
+            </Typography>
+          </Box>
+        </Stack>
       </DialogContent>
+      
+      <Divider sx={{ mt: 2 }} />
+      
       <DialogActions sx={{
         px: 3,
         py: 2,
-        bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.02)',
-        borderTop: '1px solid',
-        borderColor: 'divider'
+        bgcolor: '#107349',
       }}>
-        <Button onClick={onCancel} variant="outlined" sx={{ borderRadius: 1.5 }}>
+        <Button 
+          onClick={onCancel} 
+          variant="outlined"
+          sx={{ 
+            borderRadius: 1,
+            px: 2.5,
+            py: 0.8,
+            color: orangeDark,
+            borderColor: orangeDark,
+            '&:hover': {
+              borderColor: orangeDark,
+              bgcolor: alpha(orangeDark, 0.05)
+            }
+          }}
+        >
           Cancel
         </Button>
         <Button
           onClick={onConfirm}
           variant="contained"
-          color="warning"
-          sx={{ ml: 1, borderRadius: 1.5, fontWeight: 'medium' }}
+          sx={{ 
+            ml: 1.5, 
+            borderRadius: 1,
+            px: 2.5,
+            py: 0.8,
+            fontWeight: 500,
+            bgcolor: orangeBase,
+            color: '#ffffff',
+            '&:hover': {
+              bgcolor: orangeDark
+            }
+          }}
         >
           Update and Discard Future Versions
         </Button>

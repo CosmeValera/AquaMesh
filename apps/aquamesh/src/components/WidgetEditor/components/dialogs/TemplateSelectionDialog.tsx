@@ -23,7 +23,8 @@ import {
   useTheme,
   ListItemText,
   ListItemIcon,
-  Alert
+  Alert,
+  Divider
 } from '@mui/material'
 import { WIDGET_TEMPLATES, cloneTemplate } from '../../constants/templateWidgets'
 import AddIcon from '@mui/icons-material/Add'
@@ -34,6 +35,7 @@ import SortIcon from '@mui/icons-material/Sort'
 import FilterListIcon from '@mui/icons-material/FilterList'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import SaveIcon from '@mui/icons-material/Save'
+import RestoreIcon from '@mui/icons-material/Restore'
 import { CustomWidget } from '../../WidgetStorage'
 import { alpha } from '@mui/material/styles'
 
@@ -80,6 +82,10 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
   // Load user-saved templates
   const [userTemplates, setUserTemplates] = useState<CustomWidget[]>([])
   
+  // Add new state variables
+  const [showBuiltInTemplates, setShowBuiltInTemplates] = useState(true)
+  const [deletedBuiltInTemplates, setDeletedBuiltInTemplates] = useState<string[]>([])
+  
   // Load templates when dialog opens
   useEffect(() => {
     if (open) {
@@ -109,10 +115,8 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
     const templateWidget: CustomWidget = {
       id: `template-${Date.now()}`,
       name: templateName,
-      // If keepStructureOnly is true, reset dynamic values but keep structure
-      components: keepStructureOnly 
-        ? cleanComponentValues(currentWidget.components as ComponentData[]) 
-        : [...currentWidget.components],
+      // Remove keepStructureOnly option and always clean values for templates
+      components: cleanComponentValues(currentWidget.components as any[]),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       category: currentWidget.category,
@@ -306,6 +310,23 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
     handleCloseFilterMenu()
   }
 
+  const toggleBuiltInTemplatesVisibility = () => {
+    setShowBuiltInTemplates(!showBuiltInTemplates)
+  }
+
+  const isBuiltInTemplateDeleted = (templateId: string): boolean => {
+    return deletedBuiltInTemplates.includes(templateId)
+  }
+
+  const handleDeleteBuiltInTemplate = (templateId: string) => {
+    setDeletedBuiltInTemplates([...deletedBuiltInTemplates, templateId])
+    setShowDeleteConfirm(null)
+  }
+
+  const handleRestoreBuiltInTemplates = () => {
+    setDeletedBuiltInTemplates([])
+  }
+
   return (
     <Dialog 
       open={open} 
@@ -369,24 +390,6 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                   borderRadius: 1.5
                 }
               }}
-            />
-            
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={keepStructureOnly}
-                  onChange={(e) => setKeepStructureOnly(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body1">Keep structure only</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Reset dynamic values but keep the structure of components
-                  </Typography>
-                </Box>
-              }
             />
           </DialogContent>
           <DialogActions sx={{ px: 3, py: 2, bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.02)' }}>
@@ -537,6 +540,22 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                   </ListItemIcon>
                   <ListItemText primary="Show All" />
                 </MenuItem>
+                <Divider sx={{ my: 1 }} />
+                <MenuItem 
+                  onClick={toggleBuiltInTemplatesVisibility}
+                  sx={{ py: 1 }}
+                >
+                  <ListItemIcon>
+                    <Checkbox 
+                      checked={showBuiltInTemplates} 
+                      size="small" 
+                      edge="start"
+                      tabIndex={-1}
+                      disableRipple
+                    />
+                  </ListItemIcon>
+                  <ListItemText primary="Show Built-in Templates" />
+                </MenuItem>
               </Menu>
             </Box>
           </DialogTitle>
@@ -545,18 +564,19 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
             {currentWidget && (
               <Box sx={{ mb: 3 }}>
                 <Button
-                  variant="outlined"
+                  variant="contained"
                   color="primary"
                   startIcon={<AddIcon />}
                   onClick={() => setSaveAsTemplateMode(true)}
                   fullWidth
                   sx={{ 
                     p: 1.5, 
-                    borderStyle: 'dashed',
                     borderRadius: 2,
-                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,30,60,0.3)' : 'rgba(0,127,255,0.04)',
+                    bgcolor: theme.palette.primary.main,
+                    color: '#ffffff',
+                    fontWeight: 'medium',
                     '&:hover': {
-                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,30,60,0.5)' : 'rgba(0,127,255,0.08)',
+                      bgcolor: theme.palette.primary.dark,
                     }
                   }}
                 >
@@ -565,20 +585,21 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
               </Box>
             )}
             
-            {/* Empty template option */}
+            {/* Empty template option with improved contrast */}
             <Box sx={{ mb: 3 }}>
               <Button
-                variant="outlined"
+                variant="contained"
                 color="secondary"
                 onClick={handleUseEmptyTemplate}
                 fullWidth
                 sx={{ 
                   p: 1.5, 
-                  borderStyle: 'dashed',
                   borderRadius: 2,
-                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(50,0,80,0.2)' : 'rgba(100,0,150,0.04)',
+                  bgcolor: theme.palette.secondary.main,
+                  color: '#ffffff',
+                  fontWeight: 'medium',
                   '&:hover': {
-                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(50,0,80,0.3)' : 'rgba(100,0,150,0.08)',
+                    bgcolor: theme.palette.secondary.dark,
                   }
                 }}
               >
@@ -592,102 +613,161 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
             
             {/* Templates grid/list */}
             <Grid container spacing={2}>
-              {/* First show built-in templates */}
-              {WIDGET_TEMPLATES.map(template => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={template.id}>
-                  <Card 
-                    elevation={2}
-                    sx={{ 
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      borderRadius: 2,
-                      transition: 'transform 0.2s, box-shadow 0.2s',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: 6
-                      },
-                      bgcolor: alpha(theme.palette.background.paper, 0.7)
-                    }}
-                  >
-                    <Box sx={{ 
-                      height: 10, 
-                      bgcolor: theme.palette.secondary.main,
-                      borderRadius: '8px 8px 0 0'
-                    }} />
-                    
-                    <CardContent sx={{ 
-                      flexGrow: 1,
-                      pb: 1,
-                      position: 'relative',
-                      '&:last-child': { pb: 1 }
-                    }}>
-                      <Chip 
-                        label="Built-in" 
-                        size="small" 
-                        color="secondary"
-                        sx={{ 
-                          position: 'absolute',
-                          top: 8,
-                          right: 8,
-                          fontSize: '0.7rem'
-                        }}
-                      />
+              {/* First show built-in templates if not hidden */}
+              {showBuiltInTemplates && WIDGET_TEMPLATES.map(template => (
+                !isBuiltInTemplateDeleted(template.id) && (
+                  <Grid item xs={12} sm={6} md={4} lg={3} key={template.id}>
+                    <Card
+                      elevation={2}
+                      sx={{
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        borderRadius: 2,
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          boxShadow: 6
+                        },
+                        bgcolor: alpha(theme.palette.background.paper, 0.7)
+                      }}
+                    >
+                      <Box sx={{ 
+                        height: 10, 
+                        bgcolor: theme.palette.secondary.main,
+                        borderRadius: '8px 8px 0 0'
+                      }} />
                       
-                      <Typography variant="h6" gutterBottom sx={{ 
-                        fontWeight: 'medium', 
-                        fontSize: '1rem', 
-                        mb: 0.5,
-                        mt: 1
+                      <CardContent sx={{ 
+                        flexGrow: 1,
+                        pb: 1,
+                        position: 'relative',
+                        '&:last-child': { pb: 1 }
                       }}>
-                        {template.name}
-                      </Typography>
-                      
-                      <Typography 
-                        variant="body2" 
-                        color="text.secondary"
-                        sx={{
-                          display: '-webkit-box',
-                          overflow: 'hidden',
-                          WebkitBoxOrient: 'vertical',
-                          WebkitLineClamp: 2,
-                          mb: 2,
-                          height: 40
-                        }}
-                      >
-                        {template.description || 'No description'}
-                      </Typography>
-                      
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1 }}>
-                        {template.tags?.map(tag => (
-                          <Chip
-                            key={tag}
-                            label={tag}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Chip 
+                            label="Built-in" 
                             size="small"
-                            variant="outlined"
-                            sx={{ fontSize: '0.7rem', height: 22 }}
+                            color="secondary"
+                            sx={{ 
+                              position: 'absolute',
+                              top: 8,
+                              left: 8,
+                              fontSize: '0.7rem'
+                            }}
                           />
-                        ))}
-                      </Box>
-                    </CardContent>
-                    
-                    <CardActions sx={{ px: 2, pt: 0, pb: 2 }}>
-                      <Button 
-                        size="small" 
-                        fullWidth
-                        variant="contained"
-                        onClick={() => handleSelectTemplate(template.id)}
-                        sx={{ 
-                          borderRadius: 1.5,
-                          textTransform: 'none',
-                          boxShadow: 2
-                        }}
-                      >
-                        Use Template
-                      </Button>
-                    </CardActions>
-                  </Card>
-                </Grid>
+                          
+                          {/* Add favorite toggle for built-in templates */}
+                          <Tooltip title="Favorite">
+                            <IconButton 
+                              size="small" 
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleFavorite(template.id)
+                              }}
+                              sx={{ 
+                                position: 'absolute',
+                                top: 8,
+                                right: 8
+                              }}
+                            >
+                              {isFavorite(template.id) ? (
+                                <StarIcon fontSize="small" sx={{ color: theme.palette.warning.main }} />
+                              ) : (
+                                <StarBorderIcon fontSize="small" />
+                              )}
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                        
+                        <Typography variant="h6" gutterBottom sx={{ 
+                          fontWeight: 'medium', 
+                          fontSize: '1rem', 
+                          mb: 0.5,
+                          mt: 1,
+                          pt: 2 // Add space to accommodate favorite icon
+                        }}>
+                          {template.name}
+                        </Typography>
+                        
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary"
+                          sx={{
+                            display: '-webkit-box',
+                            overflow: 'hidden',
+                            WebkitBoxOrient: 'vertical',
+                            WebkitLineClamp: 2,
+                            mb: 2,
+                            height: 40
+                          }}
+                        >
+                          {/* Add meaningful descriptions for built-in templates */}
+                          {template.id === 'basic-form' ? 
+                            'A simple form template with input fields, labels and a submit button' : 
+                            template.id === 'dashboard-stats' ? 
+                            'Dashboard with statistics cards, charts and data visualizations' : 
+                            template.id === 'status-report' ? 
+                            'Status report layout with tables and status indicators' : 
+                            template.description || 'No description'}
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1 }}>
+                          {template.tags?.map(tag => (
+                            <Chip
+                              key={tag}
+                              label={tag}
+                              size="small"
+                              variant="filled"
+                              color={
+                                tag === 'template' ? 'primary' : 
+                                tag === 'form' ? 'secondary' : 
+                                tag === 'dashboard' ? 'success' : 
+                                tag === 'chart' ? 'info' : 
+                                'default'
+                              }
+                              sx={{ 
+                                fontSize: '0.7rem', 
+                                height: 22, 
+                                fontWeight: 'medium',
+                                '& .MuiChip-label': {
+                                  px: 1
+                                }
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      </CardContent>
+                      
+                      <CardActions sx={{ px: 2, pt: 0, pb: 2, justifyContent: 'space-between' }}>
+                        <Button 
+                          size="small" 
+                          fullWidth 
+                          variant="contained"
+                          onClick={() => handleSelectTemplate(template.id)}
+                          sx={{ 
+                            borderRadius: 1.5,
+                            textTransform: 'none',
+                            boxShadow: 2,
+                            flexGrow: 1
+                          }}
+                        >
+                          Use Template
+                        </Button>
+                        
+                        {/* Add delete button for built-in templates */}
+                        <IconButton 
+                          size="small" 
+                          color="error"
+                          onClick={() => setShowDeleteConfirm(template.id)}
+                          sx={{ ml: 1 }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                )
               ))}
               
               {/* User-saved templates */}
@@ -772,15 +852,35 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                             key={tag}
                             label={tag}
                             size="small"
-                            variant="outlined"
-                            sx={{ fontSize: '0.7rem', height: 22 }}
+                            variant="filled"
+                            color={
+                              tag === 'template' ? 'primary' : 
+                              tag === 'form' ? 'secondary' : 
+                              tag === 'dashboard' ? 'success' : 
+                              tag === 'chart' ? 'info' : 
+                              'default'
+                            }
+                            sx={{ 
+                              fontSize: '0.7rem', 
+                              height: 22, 
+                              fontWeight: 'medium',
+                              '& .MuiChip-label': {
+                                px: 1
+                              }
+                            }}
                           />
                         ))}
                         <Chip
                           label={`${template.components?.length || 0} components`}
                           size="small"
                           variant="outlined"
-                          sx={{ fontSize: '0.7rem', height: 22 }}
+                          sx={{ 
+                            fontSize: '0.7rem', 
+                            height: 22,
+                            borderColor: alpha(theme.palette.primary.main, 0.3),
+                            color: theme.palette.primary.main,
+                            bgcolor: alpha(theme.palette.primary.main, 0.05)
+                          }}
                         />
                       </Box>
                     </CardContent>
@@ -822,7 +922,7 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                     textAlign: 'center',
                     borderRadius: 2,
                     bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
-                    border: '1px dashed',
+                    border: '1px solid',
                     borderColor: 'divider'
                   }}>
                     <Typography variant="body1" color="text.secondary" gutterBottom>
@@ -831,6 +931,23 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                     <Typography variant="body2" color="text.secondary">
                       Save your current widget as a template to reuse it later
                     </Typography>
+                  </Box>
+                </Grid>
+              )}
+
+              {/* Show restore button if all built-in templates are deleted */}
+              {deletedBuiltInTemplates.length === WIDGET_TEMPLATES.length && (
+                <Grid item xs={12}>
+                  <Box sx={{ textAlign: 'center', mt: 2 }}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={handleRestoreBuiltInTemplates}
+                      startIcon={<RestoreIcon />}
+                      sx={{ borderRadius: 1.5 }}
+                    >
+                      Restore Built-in Templates
+                    </Button>
                   </Box>
                 </Grid>
               )}
@@ -883,7 +1000,14 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
           <Button 
             onClick={() => {
               if (showDeleteConfirm) {
-                deleteTemplate(showDeleteConfirm)
+                // Check if it's a built-in template or user template
+                const isBuiltIn = WIDGET_TEMPLATES.some(t => t.id === showDeleteConfirm)
+                
+                if (isBuiltIn) {
+                  handleDeleteBuiltInTemplate(showDeleteConfirm)
+                } else {
+                  deleteTemplate(showDeleteConfirm)
+                }
               }
             }}
             variant="contained"

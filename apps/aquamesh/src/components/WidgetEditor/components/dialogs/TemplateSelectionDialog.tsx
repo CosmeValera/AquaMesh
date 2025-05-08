@@ -583,50 +583,52 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
           </DialogTitle>
 
           <DialogContent dividers sx={{ p: 3 }}>
-            {currentWidget && (
-              <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {currentWidget && (
+                <Box sx={{ mb: 3, width: '50%' }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<AddIcon />}
+                    onClick={() => setSaveAsTemplateMode(true)}
+                    fullWidth
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: theme.palette.primary.main,
+                      color: '#ffffff',
+                      fontWeight: 'medium',
+                      '&:hover': {
+                        bgcolor: theme.palette.primary.dark,
+                      },
+                    }}
+                  >
+                    Save current widget a template
+                  </Button>
+                </Box>
+              )}
+
+              {/* Empty template option with improved contrast */}
+              <Box sx={{ mb: 3, width: currentWidget ? '50%' : '100%' }}>
                 <Button
                   variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={() => setSaveAsTemplateMode(true)}
+                  color="secondary"
+                  onClick={handleUseEmptyTemplate}
                   fullWidth
                   sx={{
                     p: 1.5,
                     borderRadius: 2,
-                    bgcolor: theme.palette.primary.main,
+                    bgcolor: theme.palette.secondary.main,
                     color: '#ffffff',
                     fontWeight: 'medium',
                     '&:hover': {
-                      bgcolor: theme.palette.primary.dark,
+                      bgcolor: theme.palette.secondary.dark,
                     },
                   }}
                 >
-                  Save current widget as template
+                  Start with an empty template
                 </Button>
               </Box>
-            )}
-
-            {/* Empty template option with improved contrast */}
-            <Box sx={{ mb: 3 }}>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={handleUseEmptyTemplate}
-                fullWidth
-                sx={{
-                  p: 1.5,
-                  borderRadius: 2,
-                  bgcolor: theme.palette.secondary.main,
-                  color: '#ffffff',
-                  fontWeight: 'medium',
-                  '&:hover': {
-                    bgcolor: theme.palette.secondary.dark,
-                  },
-                }}
-              >
-                Start with empty template
-              </Button>
             </Box>
 
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'medium' }}>
@@ -654,20 +656,6 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                       bgcolor: alpha(theme.palette.background.paper, 0.7),
                     }}
                   >
-                    {/* Add 'Built-in' chip for built-in templates */}
-                    {WIDGET_TEMPLATES.some((t) => t.id === template.id) && (
-                      <Chip
-                        label="Built-in"
-                        size="small"
-                        color="secondary"
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          left: 8,
-                          fontSize: '0.7rem',
-                        }}
-                      />
-                    )}
                     <Box
                       sx={{
                         height: 10,
@@ -680,6 +668,21 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                       }}
                     />
 
+                    {/* Add 'Built-in' chip for built-in templates */}
+                    {WIDGET_TEMPLATES.some((t) => t.id === template.id) && (
+                      <Chip
+                        label="Built-in"
+                        size="small"
+                        color="secondary"
+                        sx={{
+                          position: 'relative',
+                          top: 8,
+                          left: 8,
+                          fontSize: '0.7rem',
+                          width: '4rem',
+                        }}
+                      />
+                    )}
                     <CardContent
                       sx={{
                         flexGrow: 1,

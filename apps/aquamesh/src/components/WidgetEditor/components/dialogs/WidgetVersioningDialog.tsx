@@ -263,22 +263,39 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
                         <TimelineItem key={version.id} sx={{ minHeight: 'auto' /* Compact items */ }}>
                           <TimelineSeparator>
                             <TimelineDot 
-                              variant={version.isCurrent ? "filled" : "outlined"} // Differentiate current
+                              variant={version.isCurrent ? "filled" : "outlined"}
                               sx={{ 
                                 borderColor: getVersionColor(index, !!version.isCurrent),
-                                bgcolor: version.isCurrent ? getVersionColor(index, !!version.isCurrent) : 'transparent',
-                                boxShadow: version.isCurrent ? `0 0 10px ${alpha(getVersionColor(index, !!version.isCurrent), 0.7)}` : 'none',
+                                bgcolor: version.isCurrent 
+                                  ? getVersionColor(index, !!version.isCurrent) 
+                                  : 'transparent', // Use transparent background for non-current versions
+                                boxShadow: version.isCurrent 
+                                  ? `0 0 10px ${alpha(getVersionColor(index, !!version.isCurrent), 0.7)}` 
+                                  : `0 0 6px ${alpha(getVersionColor(index, !!version.isCurrent), 0.9)}`, // Add shadow to non-current versions too
                                 cursor: 'pointer',
                                 p: 0.75,
-                                borderWidth: 2,
-                                my: '8px' // Vertical margin for dot
+                                borderWidth: 2.5, // Make border slightly thicker for better visibility
+                                my: '8px', // Vertical margin for dot
+                                // Add a subtle background for better contrast
+                                '&:hover': {
+                                  bgcolor: version.isCurrent 
+                                    ? getVersionColor(index, !!version.isCurrent) 
+                                    : alpha(getVersionColor(index, !!version.isCurrent), 0.1),
+                                  boxShadow: `0 0 12px ${alpha(getVersionColor(index, !!version.isCurrent), 0.8)}`,
+                                }
                               }}
                               onClick={() => handleSelectVersion(version)}
                             >
                               {version.isCurrent ? (
                                 <CheckCircleIcon fontSize="small" sx={{color: theme.palette.common.white}} />
                               ) : (
-                                <AccessTimeIcon fontSize="small" sx={{color: getVersionColor(index, !!version.isCurrent)}}/>
+                                <AccessTimeIcon fontSize="small" sx={{
+                                  color: getVersionColor(index, !!version.isCurrent),
+                                  // Make the icon slightly more visible
+                                  filter: 'brightness(1.2)',
+                                  stroke: getVersionColor(index, !!version.isCurrent),
+                                  strokeWidth: 0.5
+                                }}/>
                               )}
                             </TimelineDot>
                             {index < versions.length - 1 && (

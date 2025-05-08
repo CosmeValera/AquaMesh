@@ -262,9 +262,9 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
         alignItems: 'center',
       }}>
         {tabValue === 0 ? (
-          <CloudDownloadIcon sx={{ mr: 1.5 }} />
+          <CloudDownloadIcon sx={{ mr: 1.5, fontSize: 28 }} />
         ) : (
-          <CloudUploadIcon sx={{ mr: 1.5 }} />
+          <CloudUploadIcon sx={{ mr: 1.5, fontSize: 28 }} />
         )}
         <Typography variant="h5" fontWeight="bold">
           {tabValue === 0 ? 'Export Widgets' : 'Import Widgets'}
@@ -276,16 +276,16 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
         onChange={handleTabChange}
         variant="fullWidth"
         sx={{ 
-          bgcolor: alpha(theme.palette.primary.main, 0.15),
+          bgcolor: alpha(theme.palette.primary.main, 0.1),
           borderBottom: 1,
           borderColor: 'divider',
           '& .MuiTab-root': {
             py: 1.5,
             height: 56,
-            fontSize: '0.9rem',
+            fontSize: '0.95rem',
             fontWeight: 'medium',
             textTransform: 'none',
-            color: theme.palette.mode === 'dark' ? '#ffffff' : theme.palette.primary.dark
+            color: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.7) : alpha(theme.palette.primary.dark, 0.8)
           },
           '& .Mui-selected': {
             fontWeight: 'bold',
@@ -329,8 +329,8 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                 overflow: 'hidden',
                 maxHeight: '300px', 
                 overflowY: 'auto',
-                bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)',
-                borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'
+                bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.6) : alpha(theme.palette.background.paper, 0.8),
+                borderColor: theme.palette.mode === 'dark' ? alpha(theme.palette.divider, 0.3) : theme.palette.divider
               }}
             >
               <Box sx={{ 
@@ -340,12 +340,12 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                 px: 2,
                 py: 1.5,
                 borderBottom: '1px solid',
-                borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)',
-                bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.04)'
+                borderColor: theme.palette.divider,
+                bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.black, 0.3) : alpha(theme.palette.primary.main, 0.05)
               }}>
                 <Typography variant="subtitle2" sx={{
-                  color: '#191919',
-                  fontWeight: 'medium'
+                  fontWeight: 'medium',
+                  color: theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.text.primary
                 }}>
                   {widgets.length} widget{widgets.length !== 1 ? 's' : ''} available
                 </Typography>
@@ -356,7 +356,7 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                     sx={{ 
                       mr: 1, 
                       textTransform: 'none',
-                      color: theme.palette.primary.light,
+                      color: theme.palette.primary.main,
                       fontWeight: 'medium'
                     }}
                   >
@@ -367,7 +367,7 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                     onClick={deselectAllWidgets}
                     sx={{ 
                       textTransform: 'none',
-                      color: theme.palette.primary.light,
+                      color: theme.palette.primary.main,
                       fontWeight: 'medium'
                     }}
                   >
@@ -563,12 +563,12 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              bgcolor: alpha(theme.palette.primary.main, 0.02),
+              bgcolor: alpha(theme.palette.primary.main, 0.04),
               cursor: 'pointer',
               transition: 'all 0.2s',
               '&:hover': {
                 borderColor: theme.palette.primary.main,
-                bgcolor: alpha(theme.palette.primary.main, 0.05)
+                bgcolor: alpha(theme.palette.primary.main, 0.08)
               }
             }} onClick={handleUploadClick}>
               <input
@@ -583,10 +583,10 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                   fontSize: 48, 
                   color: theme.palette.primary.main,
                   mb: 2,
-                  opacity: 0.7
+                  opacity: 0.8
                 }} 
               />
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom fontWeight="medium" color={theme.palette.primary.main}>
                 Click to upload
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -612,7 +612,14 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                 sx: { 
                   fontFamily: 'monospace',
                   fontSize: '0.8rem',
-                  borderRadius: 2
+                  borderRadius: 2,
+                  borderColor: theme.palette.divider,
+                  '&:hover': {
+                    borderColor: alpha(theme.palette.primary.main, 0.5)
+                  },
+                  '&.Mui-focused': {
+                    borderColor: theme.palette.primary.main
+                  }
                 }
               }}
               sx={{ mb: 3 }}
@@ -629,7 +636,8 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                   boxShadow: 2,
                   '& .MuiAlert-message': {
                     fontWeight: 'medium'
-                  }
+                  },
+                  color: '#ffffff'
                 }}
               >
                 {importResult.message}
@@ -659,11 +667,22 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
         </TabPanel>
       </DialogContent>
       
-      <DialogActions sx={{ px: 3, py: 2, bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.02)', borderTop: '1px solid', borderColor: 'divider' }}>
+      <DialogActions sx={{ 
+        px: 3, 
+        py: 2, 
+        bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.black, 0.15) : alpha(theme.palette.common.black, 0.03), 
+        borderTop: '1px solid', 
+        borderColor: theme.palette.divider 
+      }}>
         <Button 
           onClick={onClose}
           variant="outlined"
-          sx={{ borderRadius: 1.5 }}
+          sx={{ 
+            borderRadius: 1.5,
+            textTransform: 'none',
+            fontWeight: 'medium',
+            borderColor: alpha(theme.palette.primary.main, 0.5)
+          }}
         >
           Close
         </Button>
@@ -680,7 +699,8 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
             bgcolor: theme.palette.primary.main,
             color: theme.palette.primary.contrastText,
             fontWeight: 'medium',
-            borderRadius: 2
+            borderRadius: 2,
+            boxShadow: 3
           }
         }}
       />

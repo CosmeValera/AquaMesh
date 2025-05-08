@@ -452,9 +452,8 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
             <Box>
               <ButtonGroup size="small" variant="contained" sx={{ 
                 boxShadow: 'none',
-                bgcolor: 'rgba(255,255,255,0.1)',
+                bgcolor: 'rgba(255,255,255,0.15)',
                 borderRadius: 1.5,
-                mr: 1
               }}>
                 <Tooltip title="Sort templates">
                   <Button 
@@ -463,25 +462,48 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                     sx={{ 
                       borderRadius: '8px 0 0 8px',
                       textTransform: 'none',
-                      fontWeight: 'normal',
-                      fontSize: '0.85rem'
+                      fontWeight: 'medium',
+                      fontSize: '0.85rem',
+                      backgroundColor: 'transparent',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.1)'
+                      }
                     }}
                   >
                     {sortOption === 'newest' && 'Newest'}
                     {sortOption === 'oldest' && 'Oldest'}
-                    {sortOption === 'compCount' && 'Component Count'}
+                    {sortOption === 'compCount' && 'Components'}
                     {sortOption === 'name' && 'Name'}
                   </Button>
                 </Tooltip>
-                <Tooltip title="Filter templates">
+                
+                <Tooltip title={showFavoritesOnly ? "Showing favorites only" : "Filter by favorites"}>
                   <IconButton 
-                    onClick={handleOpenFilterMenu}
+                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
                     sx={{ 
-                      color: showFavoritesOnly ? 'warning.light' : 'inherit',
-                      borderRadius: '0 8px 8px 0'
+                      color: showFavoritesOnly ? theme.palette.warning.light : theme.palette.common.white,
+                      borderRadius: '0',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.1)'
+                      }
                     }}
                   >
-                    <FilterListIcon />
+                    {showFavoritesOnly ? <StarIcon /> : <StarBorderIcon />}
+                  </IconButton>
+                </Tooltip>
+                
+                <Tooltip title={showBuiltInTemplates ? "Hide built-in templates" : "Show built-in templates"}>
+                  <IconButton 
+                    onClick={toggleBuiltInTemplatesVisibility}
+                    sx={{ 
+                      color: showBuiltInTemplates ? theme.palette.common.white : 'rgba(255,255,255,0.5)',
+                      borderRadius: '0 8px 8px 0',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.1)'
+                      }
+                    }}
+                  >
+                    <DashboardIcon />
                   </IconButton>
                 </Tooltip>
               </ButtonGroup>
@@ -491,7 +513,7 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                 open={Boolean(sortMenuAnchor)}
                 onClose={handleCloseSortMenu}
                 PaperProps={{
-                  elevation: 3,
+                  elevation: 4,
                   sx: { borderRadius: 2, mt: 1, minWidth: 180 }
                 }}
               >
@@ -522,53 +544,6 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                   sx={{ py: 1 }}
                 >
                   <ListItemText primary="Name (A-Z)" />
-                </MenuItem>
-              </Menu>
-              
-              <Menu
-                anchorEl={filterMenuAnchor}
-                open={Boolean(filterMenuAnchor)}
-                onClose={handleCloseFilterMenu}
-                PaperProps={{
-                  elevation: 3,
-                  sx: { borderRadius: 2, mt: 1, minWidth: 180 }
-                }}
-              >
-                <MenuItem 
-                  onClick={() => handleFilterOptionChange(true)}
-                  selected={showFavoritesOnly}
-                  sx={{ py: 1 }}
-                >
-                  <ListItemIcon>
-                    <StarIcon fontSize="small" sx={{ color: 'warning.main' }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Favorites Only" />
-                </MenuItem>
-                <MenuItem 
-                  onClick={() => handleFilterOptionChange(false)}
-                  selected={!showFavoritesOnly}
-                  sx={{ py: 1 }}
-                >
-                  <ListItemIcon>
-                    <Box sx={{ ml: 0.25 }}>•</Box>
-                  </ListItemIcon>
-                  <ListItemText primary="Show All" />
-                </MenuItem>
-                <Divider sx={{ my: 1 }} />
-                <MenuItem 
-                  onClick={toggleBuiltInTemplatesVisibility}
-                  sx={{ py: 1 }}
-                >
-                  <ListItemIcon>
-                    <Checkbox 
-                      checked={showBuiltInTemplates} 
-                      size="small" 
-                      edge="start"
-                      tabIndex={-1}
-                      disableRipple
-                    />
-                  </ListItemIcon>
-                  <ListItemText primary="Show Built-in Templates" />
                 </MenuItem>
               </Menu>
             </Box>
@@ -949,8 +924,8 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                 </Grid>
               )}
 
-              {/* Show restore button if all built-in templates are deleted */}
-              {deletedBuiltInTemplates.length === WIDGET_TEMPLATES.length && (
+              {/* Show restore button if all built-in templates are deleted AND built-in templates are shown */}
+              {deletedBuiltInTemplates.length === WIDGET_TEMPLATES.length && showBuiltInTemplates && (
                 <Grid item xs={12}>
                   <Box sx={{ textAlign: 'center', mt: 2 }}>
                     <Button
@@ -958,7 +933,17 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                       color="primary"
                       onClick={handleRestoreBuiltInTemplates}
                       startIcon={<RestoreIcon />}
-                      sx={{ borderRadius: 1.5 }}
+                      sx={{ 
+                        borderRadius: 1.5,
+                        textTransform: 'none',
+                        fontWeight: 'medium',
+                        borderColor: alpha(theme.palette.primary.main, 0.8),
+                        color: theme.palette.primary.main,
+                        '&:hover': {
+                          borderColor: theme.palette.primary.main,
+                          backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                        }
+                      }}
                     >
                       Restore Built-in Templates
                     </Button>

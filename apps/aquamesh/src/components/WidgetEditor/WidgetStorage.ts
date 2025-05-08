@@ -88,7 +88,7 @@ class WidgetStorage {
   /**
    * Update an existing widget
    */
-  updateWidget(id: string, updates: Partial<Omit<CustomWidget, 'id' | 'createdAt'>>): CustomWidget | null {
+  updateWidget(id: string, updates: Partial<Omit<CustomWidget, 'id' | 'createdAt'>>, isMajorUpdate: boolean = false): CustomWidget | null {
     const widgets = this.getAllWidgets()
     const index = widgets.findIndex(w => w.id === id)
     
@@ -118,10 +118,18 @@ class WidgetStorage {
         const versionParts = nextVersion.split('.')
         if (versionParts.length >= 2) {
           const major = parseInt(versionParts[0], 10)
-          const minor = parseInt(versionParts[1], 10) + 1
-          nextVersion = `${major}.${minor}`
+          const minor = parseInt(versionParts[1], 10)
+          
+          // Handle major or minor version increment
+          if (isMajorUpdate) {
+            // Increment major version, reset minor to 0
+            nextVersion = `${major + 1}.0`
+          } else {
+            // Standard minor version increment
+            nextVersion = `${major}.${minor + 1}`
+          }
         } else {
-          nextVersion = '1.1' // Default increment if parsing fails
+          nextVersion = isMajorUpdate ? '2.0' : '1.1' // Default increment if parsing fails
         }
       } else if (updates.version) {
         // Use the provided version during a restore operation
@@ -147,10 +155,16 @@ class WidgetStorage {
             const versionParts = updates.version.split('.')
             if (versionParts.length >= 2) {
               const major = parseInt(versionParts[0], 10)
-              const minor = parseInt(versionParts[1], 10) + 1
-              nextVersion = `${major}.${minor}`
+              if (isMajorUpdate) {
+                // Increment major version, reset minor to 0
+                nextVersion = `${major + 1}.0`
+              } else {
+                // Standard minor version increment
+                const minor = parseInt(versionParts[1], 10) + 1
+                nextVersion = `${major}.${minor}`
+              }
             } else {
-              nextVersion = '1.1' // Default increment if parsing fails
+              nextVersion = isMajorUpdate ? '2.0' : '1.1' // Default increment if parsing fails
             }
           }
         }

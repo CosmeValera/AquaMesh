@@ -34,7 +34,7 @@ interface EditorToolbarProps {
   showSidebar: boolean
   toggleSidebar: () => void
   toggleEditMode: () => void
-  handleSaveWidget: () => void
+  handleSaveWidget: (isMajorUpdate?: boolean) => void
   setShowWidgetList: (show: boolean) => void
   setShowSettingsModal: (show: boolean) => void
   isUpdating: boolean
@@ -98,13 +98,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
       setShowVersionWarning(true)
     } else {
       // Otherwise proceed normally
-      handleSaveWidget()
+      handleSaveWidget(false)
     }
   }
 
   const handleVersionWarningConfirm = () => {
     setShowVersionWarning(false)
-    handleSaveWidget()
+    handleSaveWidget(false) // Regular save after warning
   }
 
   return (
@@ -427,10 +427,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             <Button
               variant="contained"
               color="primary"
-              startIcon={<SaveIcon />}
               onClick={handleSaveButtonClick}
               size="small"
-              disabled={!hasChanges || isEmpty}
+              disabled={!editMode || (!hasChanges && isUpdating) || isEmpty}
+              startIcon={<SaveIcon />}
               sx={{ 
                 borderRadius: 1,
                 width: '155px',
@@ -452,7 +452,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         open={showVersionWarning}
         onConfirm={handleVersionWarningConfirm}
         onCancel={() => setShowVersionWarning(false)}
-        version={currentWidgetVersion}
+        version={currentWidgetVersion || '1.0'}
       />
     </>
   )

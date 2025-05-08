@@ -333,12 +333,6 @@ const WidgetEditor: React.FC<{
     if (!widget) {
       return
     }
-
-    console.log("COSME")
-    console.log("Widget", widget)
-    console.log("Version", version)
-    console.log("Saved Widgets", savedWidgets)
-
     // Create a new widget object with the restored components
     const restoredWidget: CustomWidget = {
       ...widget,
@@ -354,6 +348,35 @@ const WidgetEditor: React.FC<{
       message: `Loaded version ${version.version} for editing`,
       severity: 'info'
     })
+  }
+
+  // Define handleMajorVersionUpdate function
+  const handleMajorVersionUpdate = (widgetId: string) => {
+    // Find widget by ID
+    const widget = savedWidgets.find(w => w.id === widgetId)
+    if (!widget) {
+      return
+    }
+    
+    // Update the widget with a major version increment
+    handleSaveWidget(true)
+    
+    // Show success message
+    setComponentToast({
+      open: true,
+      message: `Updated to major version ${getNextMajorVersion(widget.version || "1.0")}`,
+      severity: 'success'
+    })
+  }
+
+  // Helper function to calculate next major version
+  const getNextMajorVersion = (currentVersion: string): string => {
+    const versionParts = currentVersion.split('.')
+    if (versionParts.length >= 2) {
+      const major = parseInt(versionParts[0], 10) + 1
+      return `${major}.0`
+    }
+    return '2.0'
   }
 
   // Set up delete confirmation content based on what's being deleted
@@ -525,6 +548,8 @@ const WidgetEditor: React.FC<{
         onClose={() => setShowVersioningDialog(false)}
         widget={currentVersioningWidget}
         onRestoreVersion={handleRestoreVersion}
+        onMajorVersionUpdate={handleMajorVersionUpdate}
+        isLatestVersion={isLatestVersion}
       />
       
       <ComponentSearchDialog

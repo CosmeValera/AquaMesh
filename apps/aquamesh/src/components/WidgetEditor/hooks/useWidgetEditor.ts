@@ -711,7 +711,7 @@ export const useWidgetEditor = () => {
   }
 
   // Handle saving the widget
-  const handleSaveWidget = () => {
+  const handleSaveWidget = (isMajorUpdate: boolean = false) => {
     if (!widgetData.name.trim()) {
       setNotification({
         open: true,
@@ -756,9 +756,9 @@ export const useWidgetEditor = () => {
           updatedWidget = WidgetStorage.updateWidget(existingWidget.id, {
             ...widgetToSave,
             version: restoreVersion
-          })
+          }, isMajorUpdate)
         } else {
-          updatedWidget = WidgetStorage.updateWidget(existingWidget.id, widgetToSave)
+          updatedWidget = WidgetStorage.updateWidget(existingWidget.id, widgetToSave, isMajorUpdate)
         }
         // Update local widgetData to reflect the new version/id
         if (updatedWidget) {
@@ -773,7 +773,7 @@ export const useWidgetEditor = () => {
         
         setNotification({
           open: true,
-          message: `Widget "${widgetData.name}" updated successfully`,
+          message: `Widget "${widgetData.name}" updated successfully${isMajorUpdate ? ' with major version bump' : ''}`,
           severity: 'success'
         })
       } 

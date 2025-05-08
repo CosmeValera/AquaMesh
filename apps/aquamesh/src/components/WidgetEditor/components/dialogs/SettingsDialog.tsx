@@ -295,6 +295,40 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             </Box>
           </Paper>
 
+          <Paper
+            elevation={0}
+            sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2 }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box
+                sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <SaveIcon sx={{ mr: 1.5, color: 'primary.main' }} />
+                  <Typography fontWeight="medium">
+                    Require name entry on save
+                  </Typography>
+                  <Box sx={{ flexGrow: 1 }} />
+                  <Switch
+                    checked={showRequireNameEntryOnSave}
+                    onChange={(e) =>
+                      handleRequireNameEntryChange(e.target.checked)
+                    }
+                    color="primary"
+                  />
+                </Box>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ ml: 5, mb: 1 }}
+                >
+                  Prompt for a unique widget name when saving a new widget.
+                  Disable to auto-generate a name.
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+
           <Divider sx={{ my: 3 }} />
 
           <Typography variant="h6" gutterBottom fontWeight="medium">
@@ -310,15 +344,15 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <DeleteOutlineIcon sx={{ mr: 1.5, color: 'error.main' }} />
+                  <DashboardIcon sx={{ mr: 1.5, color: 'error.main' }} />
                   <Typography fontWeight="medium">
-                    Confirm Component Deletion
+                    Confirm Dashboard Deletion
                   </Typography>
                   <Box sx={{ flexGrow: 1 }} />
                   <Switch
-                    checked={showDeleteConfirmation}
+                    checked={showDeleteDashboardConfirmation}
                     onChange={(e) =>
-                      onShowDeleteConfirmationChange(e.target.checked)
+                      handleDeleteDashboardConfirmationChange(e.target.checked)
                     }
                     color="primary"
                   />
@@ -328,8 +362,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   color="text.secondary"
                   sx={{ ml: 5, mb: 1 }}
                 >
-                  Show a confirmation dialog when deleting components. Disable
-                  for quicker editing.
+                  Show a confirmation dialog when deleting dashboards.
                 </Typography>
               </Box>
             </Box>
@@ -362,8 +395,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   color="text.secondary"
                   sx={{ ml: 5, mb: 1 }}
                 >
-                  Show a confirmation dialog when deleting templates. Disable to
-                  delete immediately.
+                  Show a confirmation dialog when deleting templates.
                 </Typography>
               </Box>
             </Box>
@@ -397,7 +429,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   sx={{ ml: 5, mb: 1 }}
                 >
                   Show a confirmation dialog when deleting widgets from the
-                  library. Disable for quicker management.
+                  library.
                 </Typography>
               </Box>
             </Box>
@@ -412,15 +444,15 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <DashboardIcon sx={{ mr: 1.5, color: 'error.main' }} />
+                  <DeleteOutlineIcon sx={{ mr: 1.5, color: 'error.main' }} />
                   <Typography fontWeight="medium">
-                    Confirm Dashboard Deletion
+                    Confirm Component Deletion
                   </Typography>
                   <Box sx={{ flexGrow: 1 }} />
                   <Switch
-                    checked={showDeleteDashboardConfirmation}
+                    checked={showDeleteConfirmation}
                     onChange={(e) =>
-                      handleDeleteDashboardConfirmationChange(e.target.checked)
+                      onShowDeleteConfirmationChange(e.target.checked)
                     }
                     color="primary"
                   />
@@ -430,42 +462,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   color="text.secondary"
                   sx={{ ml: 5, mb: 1 }}
                 >
-                  Show a confirmation dialog when deleting dashboards. Disable
-                  for quicker dashboard management.
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-
-          <Paper
-            elevation={0}
-            sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2 }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box
-                sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <SaveIcon sx={{ mr: 1.5, color: 'primary.main' }} />
-                  <Typography fontWeight="medium">
-                    Require name entry on save
-                  </Typography>
-                  <Box sx={{ flexGrow: 1 }} />
-                  <Switch
-                    checked={showRequireNameEntryOnSave}
-                    onChange={(e) =>
-                      handleRequireNameEntryChange(e.target.checked)
-                    }
-                    color="primary"
-                  />
-                </Box>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ ml: 5, mb: 1 }}
-                >
-                  Prompt for a unique widget name when saving a new widget.
-                  Disable to auto-generate a name.
+                  Show a confirmation dialog when deleting components.
                 </Typography>
               </Box>
             </Box>

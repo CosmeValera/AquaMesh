@@ -1,6 +1,6 @@
 # Widget Editor
 
-This folder contains the Widget Editor feature which allows users to build custom widgets through a drag-and-drop interface.
+This folder contains the Widget Editor feature, a powerful tool designed to empower users to easily build, customize, and manage their own widgets through an intuitive drag-and-drop interface.
 
 ## Architecture Overview
 
@@ -46,6 +46,18 @@ WidgetEditor/
 └── WidgetStorage.ts        # Local storage handling for widgets
 ```
 
+## Focus on Creating Widgets
+
+The WidgetEditor is built from the ground up to make widget creation a seamless and creative experience:
+
+*   **Intuitive Drag & Drop:** Start with a blank canvas or a template and simply drag components from the palette to design your widget's layout and functionality.
+*   **Rich Component Set:** Utilize a diverse library of components including interactive elements (Buttons, Switches, TextFields), layout containers (FlexBox, GridBox, FieldSets), and data visualization tools (Charts).
+*   **Deep Customization:** Each component comes with a dedicated editor, allowing you to fine-tune its appearance, behavior, and data bindings through an extensive set of properties.
+*   **Live Preview:** See your changes reflected instantly in the live preview canvas, enabling rapid iteration and design adjustments.
+*   **Complex Layouts:** Easily create sophisticated structures by nesting components within layout containers, providing full control over widget organization.
+*   **Save, Load & Reuse:** Save your widget designs to your personal library, load them for further editing, or reuse them across different dashboards.
+*   **Versioning & Templates:** Manage different versions of your widgets and leverage pre-built templates to kickstart your creations.
+
 ## Usage
 
 The Widget Editor can be imported and used as follows:
@@ -64,11 +76,13 @@ function App() {
 
 ## Features
 
-- Drag-and-drop interface for building widgets
-- Component properties editing
-- Save and load widget definitions
-- Preview mode for testing
-- Local storage persistence
+- **Intuitive drag-and-drop interface** for visually constructing widgets.
+- **Comprehensive component properties editing** for fine-grained control.
+- **Save and load widget definitions** to a personal library for easy reuse.
+- **Real-time preview mode** for instant feedback during the creation process.
+- **Flexible layout options** using container components like FlexBox, GridBox, and FieldSet.
+- **Local storage persistence** for all created widgets and editor settings.
+- **Widget versioning and template management.**
 
 ## Component Types
 

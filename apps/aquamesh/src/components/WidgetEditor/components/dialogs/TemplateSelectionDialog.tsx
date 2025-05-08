@@ -20,6 +20,7 @@ import {
   Chip,
   useTheme,
   ListItemText,
+  Divider,
 } from '@mui/material'
 import {
   WIDGET_TEMPLATES,
@@ -650,62 +651,6 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
           </DialogTitle>
 
           <DialogContent dividers sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              {currentWidget && (
-                <Box sx={{ mb: 3, width: '50%' }}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon />}
-                    onClick={() => setSaveAsTemplateMode(true)}
-                    fullWidth
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 2,
-                      background: `linear-gradient(45deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.light, 0.9)} 100%)`,
-                      color: '#ffffff',
-                      fontWeight: 'bold',
-                      boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
-                      textTransform: 'none',
-                      fontSize: '0.95rem',
-                      '&:hover': {
-                        background: `linear-gradient(45deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
-                        boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)',
-                      },
-                    }}
-                  >
-                    SAVE CURRENT WIDGET A TEMPLATE
-                  </Button>
-                </Box>
-              )}
-
-              {/* Empty template option with improved contrast */}
-              <Box sx={{ mb: 3, width: currentWidget ? '50%' : '100%' }}>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={handleUseEmptyTemplate}
-                  fullWidth
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    background: `linear-gradient(45deg, ${theme.palette.secondary.dark} 0%, ${theme.palette.secondary.main} 100%)`,
-                    color: '#ffffff',
-                    fontWeight: 'bold',
-                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
-                    textTransform: 'none',
-                    fontSize: '0.95rem',
-                    '&:hover': {
-                      background: `linear-gradient(45deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.light} 100%)`,
-                      boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)',
-                    },
-                  }}
-                >
-                  START WITH AN EMPTY TEMPLATE
-                </Button>
-              </Box>
-            </Box>
-
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'medium' }}>
               {userTemplates.length > 0
                 ? 'Available Templates'
@@ -879,15 +824,9 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                         <Chip
                           label={`${template.components?.length || 0} components`}
                           size="small"
-                          variant="outlined"
-                          sx={{
-                            fontSize: '0.7rem',
-                            height: 22,
-                            borderColor: alpha(theme.palette.primary.main, 0.4),
-                            color: theme.palette.primary.main,
-                            bgcolor: alpha(theme.palette.primary.main, 0.08),
-                            fontWeight: 'medium',
-                          }}
+                          variant="filled"
+                          color="primary"
+                          sx={{ fontSize: '0.7rem', height: 22, fontWeight: 'medium', px: 1 }}
                         />
                       </Box>
                     </CardContent>
@@ -1025,6 +964,31 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                   </Grid>
                 )}
             </Grid>
+
+            <Divider sx={{ my: 3, bgcolor: '#00C49A', color: '#00C49A' }} />
+
+            {/* Action buttons moved to bottom */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 4, justifyContent: 'space-between' }}>
+              {currentWidget && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={() => setSaveAsTemplateMode(true)}
+                  sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold', px: 3, py: 1 }}
+                >
+                  Save as Template
+                </Button>
+              )}
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleUseEmptyTemplate}
+                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold', px: 3, py: 1, opacity: 0.6 }}
+              >
+                Start with Empty Template
+              </Button>
+            </Box>
           </DialogContent>
 
           <DialogActions

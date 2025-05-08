@@ -260,16 +260,17 @@ export const useWidgetEditor = () => {
         })
       }
       
-      // Create a clean version of the state without the widgetId property
-      const cleanState = { ...prevState }
-      delete cleanState.widgetId
-      
+      // Copy previous state and remove widgetId and version to preserve the current version
+      const stateWithoutVersion = { ...prevState }
+      delete stateWithoutVersion.widgetId
+      delete stateWithoutVersion.version
       // Set history index before updating widget data to prevent race conditions
       setHistoryIndex(newHistoryIndex)
-      
-      // Finally update the widget data
-      setWidgetData(cleanState)
-      
+      // Update widget data by merging previous state fields, preserving version
+      setWidgetData(prev => ({
+        ...prev,
+        ...stateWithoutVersion
+      }))
     } else {
       setNotification({
         open: true,
@@ -312,16 +313,17 @@ export const useWidgetEditor = () => {
         })
       }
       
-      // Create a clean version of the state without the widgetId property
-      const cleanState = { ...nextState }
-      delete cleanState.widgetId
-      
+      // Copy next state and remove widgetId and version to preserve the current version
+      const stateWithoutVersion = { ...nextState }
+      delete stateWithoutVersion.widgetId
+      delete stateWithoutVersion.version
       // Set history index before updating widget data to prevent race conditions
       setHistoryIndex(newHistoryIndex)
-      
-      // Finally update the widget data
-      setWidgetData(cleanState)
-      
+      // Update widget data by merging next state fields, preserving version
+      setWidgetData(prev => ({
+        ...prev,
+        ...stateWithoutVersion
+      }))
     } else {
       setNotification({
         open: true,

@@ -258,18 +258,9 @@ const WidgetEditor: React.FC<{
   
   // Get the current widget version
   const currentWidgetVersion = React.useMemo(() => {
-    if (!isUpdating) {
-      return '1.0' // Default for new widgets
-    }
-    
-    // Find current widget in saved widgets
-    const currentWidget = savedWidgets.find(w => w.name === widgetData.name)
-    if (!currentWidget) {
-      return '1.0'
-    }
-    
-    return currentWidget.version || '1.0'
-  }, [widgetData.name, savedWidgets, isUpdating])
+    // Use the version from widgetData to reflect the current or previewed version
+    return widgetData.version ?? '1.0'
+  }, [widgetData.version])
 
   // Load a template as a new widget
   const handleTemplateSelected = (templateWidget: CustomWidget) => {
@@ -290,10 +281,11 @@ const WidgetEditor: React.FC<{
   const handleOpenVersioningDialog = () => {
     const currentWidget = savedWidgets.find(w => w.name === widgetData.name)
     if (currentWidget) {
-      // Override the version for dialog to reflect any previewed version
+      // Prepare widget for dialog to reflect any previewed version and current components
       const dialogWidget: CustomWidget = {
         ...currentWidget,
-        version: widgetData.version ?? currentWidget.version
+        version: widgetData.version ?? currentWidget.version,
+        components: widgetData.components
       }
       setCurrentVersioningWidget(dialogWidget)
       setShowVersioningDialog(true)

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import React from 'react'
+import { v4 as uuidv4 } from 'uuid'
 import {
   ComponentData,
   WidgetData,
@@ -30,6 +31,9 @@ interface WidgetHistoryItem extends WidgetData {
  * Custom hook for managing widget editor state and logic
  */
 export const useWidgetEditor = () => {
+  // Generate a unique identifier for this widget editor instance
+  const [editorId] = useState<string>(() => uuidv4())
+
   // Widget data and editor state
   const [widgetData, setWidgetData] = useState<WidgetData>({
     name: 'New Widget',
@@ -150,6 +154,9 @@ export const useWidgetEditor = () => {
   const [currentWidgetId, setCurrentWidgetId] = useState<string | undefined>(
     undefined,
   )
+
+  // Additional flag to prevent duplicate dialog events
+  const [isSaveDialogRequested, setIsSaveDialogRequested] = useState(false)
 
   // Save settings to localStorage when they change
   useEffect(() => {
@@ -480,6 +487,29 @@ export const useWidgetEditor = () => {
       )
     }
   }, [])
+
+  // Listen for reset of save dialog requested flag
+  useEffect(() => {
+    const handleResetSaveDialogRequested = (event: Event) => {
+      const customEvent = event as CustomEvent
+      // Only reset the flag if the event is for this editor instance
+      if (!customEvent.detail || customEvent.detail.editorId === editorId) {
+        setIsSaveDialogRequested(false)
+      }
+    }
+
+    document.addEventListener(
+      'resetSaveDialogRequested',
+      handleResetSaveDialogRequested,
+    )
+
+    return () => {
+      document.removeEventListener(
+        'resetSaveDialogRequested',
+        handleResetSaveDialogRequested,
+      )
+    }
+  }, [editorId]) // Add editorId as dependency
 
   // Add keyboard shortcuts
   useEffect(() => {
@@ -839,27 +869,23 @@ export const useWidgetEditor = () => {
     const existingNames = savedWidgets.map((w) => w.name)
     if (!nameToSave || nameToSave === 'New Widget') {
       if (requireNameEntryOnSave) {
-        const entered = window.prompt(
-          'Please enter a unique widget name:',
-          nameToSave,
-        )
-        if (!entered || !entered.trim()) {
-          setNotification({
-            open: true,
-            message: 'Widget name is required',
-            severity: 'error',
-          })
+        // Prevent multiple dialogs by checking flag
+        if (!isSaveDialogRequested) {
+          setIsSaveDialogRequested(true)
+          // Signal to parent component to show the custom save dialog
+          document.dispatchEvent(
+            new CustomEvent('showSaveWidgetDialog', {
+              detail: {
+                defaultName: nameToSave,
+                editorId: editorId,
+              },
+            }),
+          )
+          return // Exit and wait for dialog response
+        } else {
+          // Dialog already requested, wait for response
           return
         }
-        if (existingNames.includes(entered.trim())) {
-          setNotification({
-            open: true,
-            message: 'Name already exists',
-            severity: 'error',
-          })
-          return
-        }
-        nameToSave = entered.trim()
       } else {
         // Auto-generate random name
         do {
@@ -1172,6 +1198,7 @@ export const useWidgetEditor = () => {
     deleteConfirmOpen,
     componentToDelete,
     widgetToDelete,
+    editorId,
 
     // Event handlers
     handleDragStart,

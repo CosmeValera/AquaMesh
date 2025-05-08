@@ -15,6 +15,7 @@ import NotificationSystem from './components/ui/NotificationSystem'
 import DeleteConfirmationDialog from './components/dialogs/DeleteConfirmationDialog'
 import { CustomWidget } from './WidgetStorage'
 import WidgetStorage, { WidgetVersion } from './WidgetStorage'
+import SaveWidgetDialog from './components/dialogs/SaveWidgetDialog'
 
 // Main Widget Editor component
 const WidgetEditor: React.FC<{
@@ -95,6 +96,7 @@ const WidgetEditor: React.FC<{
     setEditDialogOpen,
     handleWidgetNameChange,
     loadSavedWidgets,
+    editorId,
   } = useWidgetEditor()
 
   // State to control sidebar visibility
@@ -112,6 +114,10 @@ const WidgetEditor: React.FC<{
 
   // State to control component search dialog visibility
   const [showSearchDialog, setShowSearchDialog] = React.useState(false)
+
+  // State to control save widget dialog
+  const [showSaveDialog, setShowSaveDialog] = React.useState(false)
+  const [saveDialogDefaultName, setSaveDialogDefaultName] = React.useState('')
 
   // State to track current widget for versioning
   const [currentVersioningWidget, setCurrentVersioningWidget] =
@@ -198,6 +204,46 @@ const WidgetEditor: React.FC<{
       }, 0)
     }
   }, [customProps, handleLoadWidget, setEditMode])
+
+  // Listen for save widget dialog requests
+  React.useEffect(() => {
+    const handleShowSaveDialog = (event: Event) => {
+      const customEvent = event as CustomEvent
+      if (
+        customEvent.detail &&
+        // Check if the event is for this editor instance
+        customEvent.detail.editorId === editorId
+      ) {
+        setSaveDialogDefaultName(customEvent.detail.defaultName || '')
+        setShowSaveDialog(true)
+      }
+    }
+
+    document.addEventListener('showSaveWidgetDialog', handleShowSaveDialog)
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('showSaveWidgetDialog', handleShowSaveDialog)
+    }
+  }, [editorId])
+
+  // Handle saving with a custom name from the dialog
+  const handleSaveWidgetWithName = (name: string) => {
+    // Update widget data with the new name
+    setWidgetData((prev) => ({ ...prev, name }))
+
+    // Set a short timeout to allow state update to process
+    setTimeout(() => {
+      // Then call the actual save function
+      handleSaveWidget()
+      // Reset the dialog request flag
+      document.dispatchEvent(
+        new CustomEvent('resetSaveDialogRequested', {
+          detail: { editorId },
+        }),
+      )
+    }, 0)
+  }
 
   // Handle closing component toasts
   const handleCloseComponentToast = () => {
@@ -614,6 +660,22 @@ const WidgetEditor: React.FC<{
         content={deleteConfirmProps.content}
         onConfirm={deleteConfirmProps.onConfirm}
         onCancel={deleteConfirmProps.onCancel}
+      />
+
+      <SaveWidgetDialog
+        open={showSaveDialog}
+        onClose={() => {
+          setShowSaveDialog(false)
+          // Reset the save dialog request flag in the hook
+          document.dispatchEvent(
+            new CustomEvent('resetSaveDialogRequested', {
+              detail: { editorId },
+            }),
+          )
+        }}
+        onSave={handleSaveWidgetWithName}
+        defaultName={saveDialogDefaultName}
+        existingWidgets={savedWidgets}
       />
 
       {/* Notification toasts */}

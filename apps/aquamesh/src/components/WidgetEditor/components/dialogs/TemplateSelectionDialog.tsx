@@ -380,6 +380,7 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
               sx={{ mb: 3 }}
+              autoFocus
               placeholder="Enter a descriptive name for your template"
               InputProps={{
                 sx: {

@@ -5,6 +5,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
   {
     id: 'template-basic-form',
     name: 'Basic Form Template',
+    description: 'A basic form template with a fieldset, text field, and button.',
     components: [
       {
         id: 'template-fieldset-1',
@@ -70,6 +71,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
   {
     id: 'template-dashboard',
     name: 'Dashboard Stats Template',
+    description: 'A dashboard template with a title, grid, and fieldsets.',
     components: [
       {
         id: 'template-flex-1',
@@ -197,6 +199,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
   {
     id: 'template-report',
     name: 'Status Report Template',
+    description: 'A status report template with a title, grid, and fieldsets.',
     components: [
       {
         id: 'template-title',
@@ -339,7 +342,9 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
 // Function to clone a template and generate new IDs
 export const cloneTemplate = (templateId: string): CustomWidget | null => {
   const template = WIDGET_TEMPLATES.find(t => t.id === templateId);
-  if (!template) return null;
+  if (!template) {
+    return null;
+  }
   
   // Generate a new ID for the widget
   const newWidget: CustomWidget = {

@@ -5,7 +5,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
   {
     id: 'template-basic-form',
     name: 'Basic Form Template',
-    description: 'A basic form template with a fieldset, text field, and button.',
+    description: 'A clean, user-friendly form with styled fieldset, input fields, and submit button perfect for collecting information.',
     components: [
       {
         id: 'template-fieldset-1',
@@ -15,9 +15,12 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
           collapsed: false,
           borderStyle: 'solid',
           useCustomColor: true,
-          borderColor: '#4a90e2',
-          legendColor: '#4a90e2',
-          legendBold: true
+          borderColor: '#2c7be5',
+          backgroundColor: 'rgba(44, 123, 229, 0.04)',
+          legendColor: '#2c7be5',
+          legendBold: true,
+          padding: 2,
+          borderRadius: 8
         },
         children: [
           {
@@ -28,7 +31,10 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
               placeholder: 'Enter your full name',
               defaultValue: '',
               required: true,
-              fullWidth: true
+              fullWidth: true,
+              variant: 'outlined',
+              margin: 'normal',
+              helperText: 'Your first and last name'
             }
           },
           {
@@ -39,7 +45,10 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
               placeholder: 'Enter your email',
               defaultValue: '',
               required: true,
-              fullWidth: true
+              fullWidth: true,
+              variant: 'outlined',
+              margin: 'normal',
+              helperText: 'We\'ll never share your email'
             }
           },
           {
@@ -48,7 +57,9 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
             props: {
               label: 'Subscribe to newsletter',
               defaultChecked: true,
-              labelPlacement: 'end'
+              labelPlacement: 'end',
+              margin: 'normal',
+              color: 'primary'
             }
           }
         ]
@@ -59,19 +70,30 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
         props: {
           text: 'Submit',
           variant: 'contained',
+          color: 'primary',
+          size: 'large',
+          fullWidth: false,
           showToast: true,
           toastMessage: 'Form submitted successfully!',
-          toastSeverity: 'success'
+          toastSeverity: 'success',
+          sx: {
+            marginTop: 3,
+            borderRadius: 2,
+            fontWeight: 'bold',
+            boxShadow: 3,
+            padding: '10px 24px'
+          }
         }
       }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    tags: ['form', 'input', 'user data']
   },
   {
     id: 'template-dashboard',
     name: 'Dashboard Stats Template',
-    description: 'A dashboard template with a title, grid, and fieldsets.',
+    description: 'A modern dashboard layout featuring key performance metrics in visually distinct panels with a color-coded chart for data visualization.',
     components: [
       {
         id: 'template-flex-1',
@@ -81,7 +103,10 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
           justifyContent: 'space-between',
           alignItems: 'center',
           spacing: 2,
-          wrap: 'wrap'
+          wrap: 'wrap',
+          sx: {
+            marginBottom: 3
+          }
         },
         children: [
           {
@@ -91,11 +116,14 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
               legend: 'Total Users',
               borderStyle: 'solid',
               useCustomColor: true,
-              borderColor: '#4caf50',
-              backgroundColor: 'rgba(76, 175, 80, 0.1)',
-              legendColor: '#4caf50',
+              borderColor: '#3bc179',
+              backgroundColor: 'rgba(59, 193, 121, 0.08)',
+              legendColor: '#3bc179',
               legendBold: true,
-              padding: 1
+              padding: 1.5,
+              borderRadius: 8,
+              borderWidth: 1.5,
+              boxShadow: '0 4px 12px rgba(59, 193, 121, 0.15)'
             },
             children: [
               {
@@ -106,7 +134,12 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
                   variant: 'h3',
                   align: 'center',
                   useCustomColor: true,
-                  customColor: '#4caf50'
+                  customColor: '#3bc179',
+                  fontWeight: 'bold',
+                  sx: {
+                    textShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                    letterSpacing: '-0.5px'
+                  }
                 }
               }
             ]
@@ -118,11 +151,14 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
               legend: 'Active Sessions',
               borderStyle: 'solid',
               useCustomColor: true,
-              borderColor: '#f57c00',
-              backgroundColor: 'rgba(245, 124, 0, 0.1)',
-              legendColor: '#f57c00',
+              borderColor: '#e67c13',
+              backgroundColor: 'rgba(230, 124, 19, 0.08)',
+              legendColor: '#e67c13',
               legendBold: true,
-              padding: 1
+              padding: 1.5,
+              borderRadius: 8,
+              borderWidth: 1.5,
+              boxShadow: '0 4px 12px rgba(230, 124, 19, 0.15)'
             },
             children: [
               {
@@ -133,7 +169,12 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
                   variant: 'h3',
                   align: 'center',
                   useCustomColor: true,
-                  customColor: '#f57c00'
+                  customColor: '#e67c13',
+                  fontWeight: 'bold',
+                  sx: {
+                    textShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                    letterSpacing: '-0.5px'
+                  }
                 }
               }
             ]
@@ -145,11 +186,14 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
               legend: 'System Status',
               borderStyle: 'solid',
               useCustomColor: true,
-              borderColor: '#2196f3',
-              backgroundColor: 'rgba(33, 150, 243, 0.1)',
-              legendColor: '#2196f3',
+              borderColor: '#0c87f2',
+              backgroundColor: 'rgba(12, 135, 242, 0.08)',
+              legendColor: '#0c87f2',
               legendBold: true,
-              padding: 1
+              padding: 1.5,
+              borderRadius: 8,
+              borderWidth: 1.5,
+              boxShadow: '0 4px 12px rgba(12, 135, 242, 0.15)'
             },
             children: [
               {
@@ -160,7 +204,12 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
                   variant: 'h3',
                   align: 'center',
                   useCustomColor: true,
-                  customColor: '#2196f3'
+                  customColor: '#0c87f2',
+                  fontWeight: 'bold',
+                  sx: {
+                    textShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                    letterSpacing: '-0.5px'
+                  }
                 }
               }
             ]
@@ -173,20 +222,34 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
         props: {
           title: 'Monthly Usage',
           chartType: 'pie',
-          height: 300,
+          height: 320,
           description: 'System resources usage by month',
+          sx: {
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            padding: 2,
+            borderRadius: 3,
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
+          },
           data: `{
             "labels": ["CPU", "Memory", "Storage", "Network", "GPU"],
             "datasets": [
               {
                 "data": [35, 25, 15, 15, 10],
                 "backgroundColor": [
-                  "rgba(75, 192, 192, 0.8)",
-                  "rgba(54, 162, 235, 0.8)",
-                  "rgba(255, 99, 132, 0.8)",
-                  "rgba(255, 206, 86, 0.8)",
-                  "rgba(153, 102, 255, 0.8)"
-                ]
+                  "rgba(75, 192, 192, 0.85)",
+                  "rgba(54, 162, 235, 0.85)",
+                  "rgba(255, 99, 132, 0.85)",
+                  "rgba(255, 206, 86, 0.85)",
+                  "rgba(153, 102, 255, 0.85)"
+                ],
+                "borderColor": [
+                  "rgba(75, 192, 192, 1)",
+                  "rgba(54, 162, 235, 1)",
+                  "rgba(255, 99, 132, 1)",
+                  "rgba(255, 206, 86, 1)",
+                  "rgba(153, 102, 255, 1)"
+                ],
+                "borderWidth": 2
               }
             ]
           }`
@@ -194,12 +257,13 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
       }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    tags: ['dashboard', 'stats', 'chart', 'metrics']
   },
   {
     id: 'template-report',
     name: 'Status Report Template',
-    description: 'A status report template with a title, grid, and fieldsets.',
+    description: 'A comprehensive status report interface with system health indicators, key metrics display, and action buttons for data management.',
     components: [
       {
         id: 'template-title',
@@ -210,7 +274,14 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
           align: 'center',
           useCustomColor: true,
           customColor: '#3f51b5',
-          gutterBottom: true
+          gutterBottom: true,
+          fontWeight: 'bold',
+          sx: {
+            marginBottom: 3,
+            paddingBottom: 2,
+            borderBottom: '1px solid rgba(63, 81, 181, 0.2)',
+            textShadow: '0 1px 2px rgba(0,0,0,0.05)'
+          }
         }
       },
       {
@@ -218,7 +289,10 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
         type: 'GridBox',
         props: {
           columns: 2,
-          spacing: 2
+          spacing: 3,
+          sx: {
+            marginBottom: 3
+          }
         },
         children: [
           {
@@ -227,7 +301,12 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
             props: {
               legend: 'System Health',
               borderStyle: 'solid',
-              collapsed: false
+              collapsed: false,
+              borderColor: '#5c6bc0',
+              backgroundColor: 'rgba(92, 107, 192, 0.05)',
+              padding: 2,
+              borderRadius: 8,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
             },
             children: [
               {
@@ -236,7 +315,9 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
                 props: {
                   label: 'System Online',
                   defaultChecked: true,
-                  disabled: true
+                  disabled: true,
+                  color: 'success',
+                  sx: { marginY: 1 }
                 }
               },
               {
@@ -245,7 +326,9 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
                 props: {
                   label: 'Backups Active',
                   defaultChecked: true,
-                  disabled: true
+                  disabled: true,
+                  color: 'success',
+                  sx: { marginY: 1 }
                 }
               },
               {
@@ -255,10 +338,12 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
                   label: 'Alerts Enabled',
                   defaultChecked: true,
                   disabled: false,
+                  color: 'primary',
                   showToast: true,
                   onMessage: 'Alerts enabled',
                   offMessage: 'Alerts disabled',
-                  toastSeverity: 'info'
+                  toastSeverity: 'info',
+                  sx: { marginY: 1 }
                 }
               }
             ]
@@ -269,7 +354,12 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
             props: {
               legend: 'Key Metrics',
               borderStyle: 'solid',
-              collapsed: false
+              collapsed: false,
+              borderColor: '#26a69a',
+              backgroundColor: 'rgba(38, 166, 154, 0.05)',
+              padding: 2,
+              borderRadius: 8,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
             },
             children: [
               {
@@ -279,7 +369,14 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
                   label: 'System Uptime',
                   defaultValue: '14 days, 6 hours',
                   disabled: true,
-                  fullWidth: true
+                  fullWidth: true,
+                  variant: 'outlined',
+                  margin: 'normal',
+                  InputProps: {
+                    sx: {
+                      backgroundColor: 'rgba(0,0,0,0.03)'
+                    }
+                  }
                 }
               },
               {
@@ -289,7 +386,14 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
                   label: 'Last Backup',
                   defaultValue: '2023-05-15 04:30 UTC',
                   disabled: true,
-                  fullWidth: true
+                  fullWidth: true,
+                  variant: 'outlined',
+                  margin: 'normal',
+                  InputProps: {
+                    sx: {
+                      backgroundColor: 'rgba(0,0,0,0.03)'
+                    }
+                  }
                 }
               }
             ]
@@ -303,8 +407,13 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
           direction: 'row',
           justifyContent: 'flex-end',
           alignItems: 'center',
-          spacing: 1,
-          wrap: 'wrap'
+          spacing: 2,
+          wrap: 'wrap',
+          sx: {
+            marginTop: 2,
+            paddingTop: 2,
+            borderTop: '1px solid rgba(0,0,0,0.08)'
+          }
         },
         children: [
           {
@@ -314,9 +423,15 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
               text: 'Refresh Data',
               variant: 'outlined',
               icon: 'refresh',
+              color: 'info',
               showToast: true,
               toastMessage: 'Data refreshed',
-              toastSeverity: 'info'
+              toastSeverity: 'info',
+              sx: {
+                borderRadius: 2,
+                fontWeight: 'medium',
+                textTransform: 'none'
+              }
             }
           },
           {
@@ -326,16 +441,24 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
               text: 'Export Report',
               variant: 'contained',
               icon: 'save',
+              color: 'primary',
               showToast: true,
               toastMessage: 'Report exported successfully',
-              toastSeverity: 'success'
+              toastSeverity: 'success',
+              sx: {
+                borderRadius: 2,
+                fontWeight: 'bold',
+                textTransform: 'none',
+                boxShadow: 2
+              }
             }
           }
         ]
       }
     ],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    tags: ['report', 'status', 'system', 'monitoring']
   }
 ];
 

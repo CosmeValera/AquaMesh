@@ -29,8 +29,9 @@ import DashboardIcon from '@mui/icons-material/Dashboard'
 import SearchIcon from '@mui/icons-material/Search'
 import SortIcon from '@mui/icons-material/Sort'
 import CloseIcon from '@mui/icons-material/Close'
-import ShareIcon from '@mui/icons-material/Share'
 import EditIcon from '@mui/icons-material/Edit'
+import PublicIcon from '@mui/icons-material/Public'
+import LockIcon from '@mui/icons-material/Lock'
 import { Layout } from '../../types/types'
 import { useDashboards } from './DashboardProvider'
 import { DefaultDashboard } from './fixture'
@@ -630,7 +631,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                                 <Chip 
                                   size="small" 
                                   label="Public" 
-                                  icon={<ShareIcon style={{ width: 12, height: 12, color: 'white' }} />}
+                                  icon={<PublicIcon style={{ width: 12, height: 12, color: 'white' }} />}
                                   sx={{ 
                                     ml: 1, 
                                     height: 20, 
@@ -692,7 +693,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                                     }
                                   }}
                                 >
-                                  <ShareIcon fontSize="small" />
+                                  {dashboard.isPublic ? <LockIcon fontSize="small" /> : <PublicIcon fontSize="small" />}
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="Delete Dashboard">

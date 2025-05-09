@@ -9,7 +9,6 @@ import {
   MenuItem,
   FormControlLabel,
   Switch,
-  Divider,
   Grid,
   Tabs,
   Tab
@@ -175,7 +174,6 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
           scrollButtons="auto"
         >
           <Tab label="Basic" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Style" icon={<ColorLensIcon fontSize="small" />} iconPosition="start" />
           <Tab label="Behavior" icon={<NotificationsIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
@@ -192,7 +190,7 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
           
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <FormControlLabel
               control={
                 <Switch
@@ -203,8 +201,19 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
               label="Default Checked"
             />
           </Grid>
-          
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(props.disabled)}
+                  onChange={(e) => handleChange('disabled', e.target.checked)}
+                />
+              }
+              label="Disabled"
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel>Label Placement</InputLabel>
               <Select
@@ -222,13 +231,8 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
               </Select>
             </FormControl>
           </Grid>
-        </Grid>
-      </TabPanelShared>
-      
-      {/* Style Tab */}
-      <TabPanelShared value={tabValue} index={1}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
+
+          <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel>Size</InputLabel>
               <Select
@@ -284,23 +288,11 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
               />
             </Grid>
           )}
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.disabled)}
-                  onChange={(e) => handleChange('disabled', e.target.checked)}
-                />
-              }
-              label="Disabled"
-            />
-          </Grid>
         </Grid>
       </TabPanelShared>
       
       {/* Behavior Tab */}
-      <TabPanelShared value={tabValue} index={2}>
+      <TabPanelShared value={tabValue} index={1}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControlLabel
@@ -356,22 +348,6 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
               </Grid>
             </>
           )}
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.disabled)}
-                  onChange={(e) => handleChange('disabled', e.target.checked)}
-                />
-              }
-              label="Disabled"
-            />
-          </Grid>
         </Grid>
       </TabPanelShared>
     </Box>

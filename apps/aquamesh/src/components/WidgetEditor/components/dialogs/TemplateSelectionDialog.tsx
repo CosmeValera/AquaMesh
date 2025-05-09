@@ -651,6 +651,31 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
           </DialogTitle>
 
           <DialogContent dividers sx={{ p: 3 }}>
+            {/* Action buttons moved to bottom */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, justifyContent: 'space-between' }}>
+              {currentWidget ? (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={() => setSaveAsTemplateMode(true)}
+                  sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold', px: 3, py: 1 }}
+                >
+                  Save as Template
+                </Button>
+              )
+                : (<Box></Box>) // If no widget is selected, don't show the button
+              }
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleUseEmptyTemplate}
+                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold', px: 3, py: 1, opacity: 0.6 }}
+              >
+                Start with Empty Template
+              </Button>
+            </Box>
+
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'medium' }}>
               {userTemplates.length > 0
                 ? 'Available Templates'
@@ -936,61 +961,35 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
               {/* Show restore button if all built-in templates are deleted AND built-in templates are shown */}
               {deletedBuiltInTemplates.length === WIDGET_TEMPLATES.length &&
                 showBuiltInTemplates && (
-                  <Grid item xs={12}>
-                    <Box sx={{ textAlign: 'center', mt: 2 }}>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        onClick={handleRestoreBuiltInTemplates}
-                        startIcon={<RestoreIcon />}
-                        sx={{
-                          borderRadius: 1.5,
-                          textTransform: 'none',
-                          fontWeight: 'medium',
-                          borderColor: alpha(theme.palette.primary.main, 0.8),
-                          color: theme.palette.primary.main,
-                          '&:hover': {
-                            borderColor: theme.palette.primary.main,
-                            backgroundColor: alpha(
-                              theme.palette.primary.main,
-                              0.05,
-                            ),
-                          },
-                        }}
-                      >
-                        Restore Built-in Templates
-                      </Button>
-                    </Box>
-                  </Grid>
-                )}
-            </Grid>
-
-            <Divider sx={{ my: 3, bgcolor: '#00C49A', color: '#00C49A' }} />
-
-            {/* Action buttons moved to bottom */}
-            <Box sx={{ display: 'flex', gap: 2, mt: 4, justifyContent: 'space-between' }}>
-              {currentWidget && (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={() => setSaveAsTemplateMode(true)}
-                  sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold', px: 3, py: 1 }}
-                >
-                  Save as Template
-                </Button>
+                <Grid item xs={12}>
+                  <Box sx={{ textAlign: 'center', mt: 2 }}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={handleRestoreBuiltInTemplates}
+                      startIcon={<RestoreIcon />}
+                      sx={{
+                        borderRadius: 1.5,
+                        textTransform: 'none',
+                        fontWeight: 'medium',
+                        borderColor: alpha(theme.palette.primary.main, 0.8),
+                        color: theme.palette.primary.main,
+                        '&:hover': {
+                          borderColor: theme.palette.primary.main,
+                          backgroundColor: alpha(
+                            theme.palette.primary.main,
+                            0.05,
+                          ),
+                        },
+                      }}
+                    >
+                      Restore Built-in Templates
+                    </Button>
+                  </Box>
+                </Grid>
               )}
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleUseEmptyTemplate}
-                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold', px: 3, py: 1, opacity: 0.6 }}
-              >
-                Start with Empty Template
-              </Button>
-            </Box>
+            </Grid>
           </DialogContent>
-
           <DialogActions
             sx={{
               px: 3,

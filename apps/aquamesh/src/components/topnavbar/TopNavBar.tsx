@@ -21,6 +21,7 @@ import WidgetsIcon from '@mui/icons-material/Widgets'
 import CreateIcon from '@mui/icons-material/Create'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import FolderIcon from '@mui/icons-material/Folder'
+import ImportContactsIcon from '@mui/icons-material/ImportContacts';
 
 import useTopNavBarWidgets from '../../customHooks/useTopNavBarWidgets'
 import { useLayout } from '../Layout/LayoutProvider'
@@ -30,6 +31,7 @@ import TutorialModal from '../tutorial/TutorialModal'
 import DashboardOptionsMenu from '../Dasboard/DashboardOptionsMenu'
 import WidgetManagementModal from '../WidgetEditor/components/dialogs/WidgetManagementModal'
 import useWidgetManager from '../WidgetEditor/hooks/useWidgetManager'
+import FAQDialog from '../tutorial/FAQDialog'
 
 // Define user data type
 interface UserData {
@@ -55,6 +57,9 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   const [showTutorialOnStartup, setShowTutorialOnStartup] = useState(() => {
     return !localStorage.getItem('aquamesh-tutorial-shown')
   })
+
+  // Add a state for the FAQ dialog
+  const [faqDialogOpen, setFaqDialogOpen] = useState(false)
 
   const { topNavBarWidgets } = useTopNavBarWidgets()
   const { addComponent } = useLayout()
@@ -121,6 +126,11 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   // Toggle tutorial display on startup
   const handleToggleTutorialStartup = () => {
     setShowTutorialOnStartup(!showTutorialOnStartup)
+  }
+
+  // Add a function to handle opening the FAQ dialog
+  const handleOpenFaq = () => {
+    setFaqDialogOpen(true)
   }
 
   // Helper function to ensure there's a dashboard before adding a component
@@ -328,6 +338,20 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               data-tutorial-id="help-button"
               title="Open tutorial"
             >
+              <ImportContactsIcon />
+            </Button>
+            
+            {/* FAQ Button */}
+            <Button
+              onClick={handleOpenFaq}
+              sx={{ 
+                color: 'foreground.contrastPrimary', 
+                minWidth: 'auto',
+                mx: 1
+              }}
+              data-tutorial-id="faq-button"
+              title="Frequently Asked Questions"
+            >
               <HelpOutlineIcon />
             </Button>
             
@@ -388,6 +412,12 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
         open={tutorialOpen}
         onClose={() => setTutorialOpen(false)}
         onShowOnStartupToggle={handleToggleTutorialStartup}
+      />
+      
+      {/* FAQ Dialog */}
+      <FAQDialog
+        open={faqDialogOpen}
+        onClose={() => setFaqDialogOpen(false)}
       />
       
       {/* Widget Management Modal */}

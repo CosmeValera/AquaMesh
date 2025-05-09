@@ -97,13 +97,48 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
           />
 
           {/* Show validation information when present */}
-          {(props.required) && (
+          {(props.required || props.error || showHelperText) && (
             <Box sx={{ mt: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1, fontSize: '0.75rem' }}>
               <Typography variant="caption" color="text.secondary" component="div">
-                Required Field
+                {props.required && <Box component="span" sx={{ mr: 1, fontWeight: 'medium' }}>Required</Box>}
+                {props.error && <Box component="span" sx={{ mr: 1, color: 'error.main' }}>Error: {props.errorText}</Box>}
+                {showHelperText && !props.error && <Box component="span">{props.helperText}</Box>}
               </Typography>
             </Box>
           )}
+          
+          {/* Show field metadata */}
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1 }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                {variant}
+              </Box>
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                {size}
+              </Box>
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                {type}
+              </Box>
+            </Typography>
+            {Boolean(props.multiline) && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                  multiline
+                </Box>
+              </Typography>
+            )}
+            {Boolean(props.disabled) && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                  disabled
+                </Box>
+              </Typography>
+            )}
+          </Box>
         </Box>
       </ComponentPreview>
       
@@ -238,6 +273,35 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
               />
             )}
           </Grid>
+
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showHelperText}
+                  onChange={(e) => {
+                    setShowHelperText(e.target.checked)
+                    if (e.target.checked && !props.helperText) {
+                      handleChange('helperText', 'Helper text')
+                    } else if (!e.target.checked) {
+                      handleChange('helperText', '')
+                    }
+                  }}
+                />
+              }
+              label="Show Helper Text"
+            />
+            
+            {showHelperText && (
+              <TextField
+                label="Helper Text"
+                fullWidth
+                value={(props.helperText as string) || ''}
+                onChange={(e) => handleChange('helperText', e.target.value)}
+                sx={{ mt: 1 }}
+              />
+            )}
+          </Grid>
         </Grid>
       </TabPanelShared>
       
@@ -283,18 +347,6 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             <FormControlLabel
               control={
                 <Switch
-                  checked={Boolean(props.fullWidth)}
-                  onChange={(e) => handleChange('fullWidth', e.target.checked)}
-                />
-              }
-              label="Full Width"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
                   checked={Boolean(props.disabled)}
                   onChange={(e) => handleChange('disabled', e.target.checked)}
                 />
@@ -305,36 +357,7 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
           
           <Grid item xs={12}>
             <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" gutterBottom>Additional Options</Typography>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={showHelperText}
-                  onChange={(e) => {
-                    setShowHelperText(e.target.checked)
-                    if (e.target.checked && !props.helperText) {
-                      handleChange('helperText', 'Helper text')
-                    } else if (!e.target.checked) {
-                      handleChange('helperText', undefined)
-                    }
-                  }}
-                />
-              }
-              label="Show Helper Text"
-            />
-            
-            {showHelperText && (
-              <TextField
-                label="Helper Text"
-                fullWidth
-                value={(props.helperText as string) || 'Helper text'}
-                onChange={(e) => handleChange('helperText', e.target.value)}
-                sx={{ mt: 1 }}
-              />
-            )}
+            <Typography variant="subtitle2" gutterBottom>Input Adornments</Typography>
           </Grid>
           
           <Grid item xs={12} sm={6}>
@@ -344,12 +367,9 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                   checked={hasStartAdornment}
                   onChange={(e) => {
                     setHasStartAdornment(e.target.checked)
-                    if (e.target.checked) {
-                      handleChange('startAdornment', true)
+                    handleChange('startAdornment', e.target.checked)
+                    if (e.target.checked && !props.startAdornmentText) {
                       handleChange('startAdornmentText', '$')
-                    } else {
-                      handleChange('startAdornment', undefined)
-                      handleChange('startAdornmentText', undefined)
                     }
                   }}
                 />
@@ -375,12 +395,9 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                   checked={hasEndAdornment}
                   onChange={(e) => {
                     setHasEndAdornment(e.target.checked)
-                    if (e.target.checked) {
-                      handleChange('endAdornment', true)
-                      handleChange('endAdornmentText', '.00')
-                    } else {
-                      handleChange('endAdornment', undefined)
-                      handleChange('endAdornmentText', undefined)
+                    handleChange('endAdornment', e.target.checked)
+                    if (e.target.checked && !props.endAdornmentText) {
+                      handleChange('endAdornmentText', 'kg')
                     }
                   }}
                 />
@@ -392,7 +409,7 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
               <TextField
                 label="End Adornment Text"
                 fullWidth
-                value={(props.endAdornmentText as string) || '.00'}
+                value={(props.endAdornmentText as string) || 'kg'}
                 onChange={(e) => handleChange('endAdornmentText', e.target.value)}
                 sx={{ mt: 1 }}
               />

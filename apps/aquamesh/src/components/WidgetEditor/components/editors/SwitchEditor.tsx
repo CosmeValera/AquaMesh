@@ -11,7 +11,8 @@ import {
   Switch,
   Grid,
   Tabs,
-  Tab
+  Tab,
+  Chip
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
@@ -116,8 +117,6 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
   const handleSwitchToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
     setChecked(isChecked);
-    
-    // Alert functionality removed as requested
   };
   
   // Generate preview style based on current settings
@@ -146,22 +145,56 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
             labelPlacement={labelPlacement as 'end' | 'start' | 'top' | 'bottom'}
           />
           
+          {/* Toast message preview */}
           {showToast && (
-            <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
-              When toggled ON: &quot;{props.onMessage as string || 'Switch turned ON'}&quot; ({props.toastSeverity as string || 'info'})
-              <br />
-              When toggled OFF: &quot;{props.offMessage as string || 'Switch turned OFF'}&quot; ({props.toastSeverity as string || 'info'})
-            </Typography>
-          )}
-          
-          {useCustomColor && (
-            <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: customTrackColor, borderRadius: 1 }} />
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Track: {customTrackColor}
+            <Box sx={{ mt: 2, p: 1.5, width: '100%', bgcolor: 'background.paper', borderRadius: 1, border: '1px dashed rgba(0,0,0,0.1)' }}>
+              <Typography variant="caption" sx={{ fontWeight: 'medium', display: 'block', mb: 0.5 }}>
+                Toast Messages:
               </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Chip size="small" label="ON" color="success" sx={{ minWidth: '40px' }} />
+                  <Typography variant="caption">
+                    "{props.onMessage as string || 'Switch turned ON'}"
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Chip size="small" label="OFF" color="default" sx={{ minWidth: '40px' }} />
+                  <Typography variant="caption">
+                    "{props.offMessage as string || 'Switch turned OFF'}"
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
           )}
+          
+          {/* Properties summary */}
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1 }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                {size}
+              </Box>
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                placement: {labelPlacement}
+              </Box>
+            </Typography>
+            {Boolean(props.defaultChecked) && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                  default: ON
+                </Box>
+              </Typography>
+            )}
+            {Boolean(props.disabled) && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                  disabled
+                </Box>
+              </Typography>
+            )}
+          </Box>
         </Box>
       </ComponentPreview>
       
@@ -305,7 +338,7 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
                   }}
                 />
               }
-              label="Show Toast on Toggle"
+              label="Show Toast Message on Change"
             />
           </Grid>
           
@@ -317,7 +350,7 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
                   fullWidth
                   value={(props.onMessage as string) || 'Switch turned ON'}
                   onChange={(e) => handleChange('onMessage', e.target.value)}
-                  placeholder="Switch turned ON"
+                  placeholder="Message when turned ON"
                 />
               </Grid>
               
@@ -327,7 +360,7 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
                   fullWidth
                   value={(props.offMessage as string) || 'Switch turned OFF'}
                   onChange={(e) => handleChange('offMessage', e.target.value)}
-                  placeholder="Switch turned OFF"
+                  placeholder="Message when turned OFF"
                 />
               </Grid>
               

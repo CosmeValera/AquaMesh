@@ -232,33 +232,107 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
     <Box sx={{ width: '100%' }}>
       {/* Preview section */}
       <ComponentPreview>
-        <MuiButton
-          variant={props.variant as 'contained' | 'outlined' | 'text' || 'contained'}
-          color={useCustomColor ? undefined : (props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' || 'primary')}
-          size={props.size as 'small' | 'medium' | 'large' || 'medium'}
-          fullWidth={Boolean(props.fullWidth)}
-          disabled={Boolean(props.disabled)}
-          onClick={handlePreviewClick}
-          startIcon={props.showStartIcon ? getIconComponent(selectedIcon) : undefined}
-          endIcon={props.showEndIcon ? getIconComponent(selectedIcon) : undefined}
-          sx={{
-            ...getPreviewStyles(),
-            ...(props.clickAction === 'openUrl' ? { 
-              '&::after': { 
-                content: '""',
-                display: 'inline-block',
-                width: '1em',
-                height: '1em',
-                marginLeft: '0.2em',
-                backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'%3E%3Cpath d=\'M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z\'/%3E%3C/svg%3E")',
-                backgroundSize: 'contain',
-                verticalAlign: 'middle',
-              } 
-            } : {})
-          }}
-        >
-          {props.text || 'Button'}
-        </MuiButton>
+        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center' }}>
+          <MuiButton
+            variant={props.variant as 'contained' | 'outlined' | 'text' || 'contained'}
+            color={useCustomColor ? undefined : (props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' || 'primary')}
+            size={props.size as 'small' | 'medium' | 'large' || 'medium'}
+            fullWidth={Boolean(props.fullWidth)}
+            disabled={Boolean(props.disabled)}
+            onClick={handlePreviewClick}
+            startIcon={props.showStartIcon ? getIconComponent(selectedIcon) : undefined}
+            endIcon={props.showEndIcon ? getIconComponent(selectedIcon) : undefined}
+            sx={{
+              ...getPreviewStyles(),
+              ...(props.clickAction === 'openUrl' ? { 
+                '&::after': { 
+                  content: '""',
+                  display: 'inline-block',
+                  width: '1em',
+                  height: '1em',
+                  backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\'%3E%3C/path%3E%3Cpolyline points=\'15 3 21 3 21 9\'%3E%3C/polyline%3E%3Cline x1=\'10\' y1=\'14\' x2=\'21\' y2=\'3\'%3E%3C/line%3E%3C/svg%3E")',
+                  backgroundSize: 'contain',
+                  marginLeft: '5px',
+                  opacity: 0.6
+                }
+              } : {})
+            }}
+          >
+            {props.text || 'Button Text'}
+          </MuiButton>
+
+          {/* Action preview information */}
+          {props.clickAction && (
+            <Box sx={{ mt: 2, p: 1.5, width: '100%', bgcolor: 'background.paper', borderRadius: 1, border: '1px dashed rgba(0,0,0,0.1)' }}>
+              <Typography variant="caption" sx={{ fontWeight: 'medium', display: 'block', mb: 0.5 }}>
+                Click Action:
+              </Typography>
+              {props.clickAction === 'toast' && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Typography variant="caption">
+                    Show toast: "{props.toastMessage || 'Button clicked'}"
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Type: {props.toastSeverity || 'info'}
+                  </Typography>
+                </Box>
+              )}
+              {props.clickAction === 'openUrl' && props.url && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography variant="caption">
+                    Open URL: {props.url}
+                  </Typography>
+                  <OpenInNewIcon sx={{ fontSize: '0.75rem', color: 'text.secondary' }} />
+                </Box>
+              )}
+              {props.clickAction === 'custom' && (
+                <Typography variant="caption">
+                  Custom action (will trigger event)
+                </Typography>
+              )}
+            </Box>
+          )}
+
+          {/* Properties summary */}
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1 }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                {props.variant || 'contained'}
+              </Box>
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                {props.size || 'medium'}
+              </Box>
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                {useCustomColor ? 'custom color' : props.color || 'primary'}
+              </Box>
+            </Typography>
+            {Boolean(props.showStartIcon || props.showEndIcon) && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                  icon: {selectedIcon}
+                </Box>
+              </Typography>
+            )}
+            {Boolean(props.fullWidth) && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                  full width
+                </Box>
+              </Typography>
+            )}
+            {Boolean(props.disabled) && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                  disabled
+                </Box>
+              </Typography>
+            )}
+          </Box>
+        </Box>
       </ComponentPreview>
       
       {/* Tabs */}

@@ -225,8 +225,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
   const editorTabs = [
     { label: 'Basic Settings', id: 'button-basic' },
     { label: 'Styling', id: 'button-styling' },
-    { label: 'Icons', id: 'button-icons' },
-    { label: 'Advanced', id: 'button-advanced' }
+    { label: 'Behaviour', id: 'button-behaviour' }
   ]
   
   return (
@@ -248,8 +247,8 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
               '&::after': { 
                 content: '""',
                 display: 'inline-block',
-                width: '0.5em',
-                height: '0.5em',
+                width: '1em',
+                height: '1em',
                 marginLeft: '0.2em',
                 backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'%3E%3Cpath d=\'M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z\'/%3E%3C/svg%3E")',
                 backgroundSize: 'contain',
@@ -338,43 +337,6 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
           
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth margin="dense" size="small" variant="outlined">
-              <InputLabel id="button-color-label">Color</InputLabel>
-              <Select
-                labelId="button-color-label"
-                value={props.color || 'primary'}
-                onChange={(e) => handleChange('color', e.target.value)}
-                label="Color"
-                disabled={useCustomColor}
-                sx={{
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.23)',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.light',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
-                  '& .MuiSelect-select': {
-                    color: '#000000',
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: '#191919',
-                  },
-                }}
-              >
-                <MenuItem value="primary">Primary</MenuItem>
-                <MenuItem value="secondary">Secondary</MenuItem>
-                <MenuItem value="success">Success</MenuItem>
-                <MenuItem value="error">Error</MenuItem>
-                <MenuItem value="warning">Warning</MenuItem>
-                <MenuItem value="info">Info</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth margin="dense" size="small" variant="outlined">
               <InputLabel id="button-size-label">Size</InputLabel>
               <Select
                 labelId="button-size-label"
@@ -432,23 +394,16 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
             />
           </Grid>
         </Grid>
+        
       </TabPanelShared>
+
       
       {/* Styling Tab */}
       <TabPanelShared value={tabValue} index={1} id="button">
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            {/* Text Styling Controls */}
-            <TextStylingControls
-              fontWeight={fontWeight}
-              isBold={isBold}
-              isItalic={isItalic}
-              hasUnderline={hasUnderline}
-              onChange={handleTextStyleChange}
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
+
+      <Grid container spacing={2}>
+        
+      <Grid item xs={12} sm={6}>
             {/* Color Controls */}
             <DualColorPicker
               useCustomColor={useCustomColor}
@@ -461,13 +416,60 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
               secondaryLabel="Hover Color"
             />
           </Grid>
-        </Grid>
-      </TabPanelShared>
-      
-      {/* Icons Tab */}
-      <TabPanelShared value={tabValue} index={2} id="button">
-        <Grid container spacing={2}>
+          
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth margin="dense" size="small" variant="outlined">
+              <InputLabel id="button-color-label">Color</InputLabel>
+              <Select
+                labelId="button-color-label"
+                value={props.color || 'primary'}
+                onChange={(e) => handleChange('color', e.target.value)}
+                label="Color"
+                disabled={useCustomColor}
+                sx={{
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.light',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main',
+                  },
+                  '& .MuiSelect-select': {
+                    color: '#000000',
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#191919',
+                  },
+                }}
+              >
+                <MenuItem value="primary">Primary</MenuItem>
+                <MenuItem value="secondary">Secondary</MenuItem>
+                <MenuItem value="success">Success</MenuItem>
+                <MenuItem value="error">Error</MenuItem>
+                <MenuItem value="warning">Warning</MenuItem>
+                <MenuItem value="info">Info</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          
           <Grid item xs={12}>
+            {/* Text Styling Controls */}
+            <TextStylingControls
+              fontWeight={fontWeight}
+              isBold={isBold}
+              isItalic={isItalic}
+              hasUnderline={hasUnderline}
+              onChange={handleTextStyleChange}
+            />
+          </Grid>
+          
+          
+        </Grid>
+
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <FormControlLabel
                 control={
@@ -479,7 +481,11 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
                 label="Show Start Icon"
                 sx={{ color: '#191919' }}
               />
+              </Box>
+            </Grid>
               
+          <Grid item xs={12} sm={6}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -522,8 +528,9 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
         </Grid>
       </TabPanelShared>
       
-      {/* Advanced Tab */}
-      <TabPanelShared value={tabValue} index={3} id="button">
+      
+      {/* Behaviour Tab */}
+      <TabPanelShared value={tabValue} index={2} id="button">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControl fullWidth margin="dense" size="small" variant="outlined">

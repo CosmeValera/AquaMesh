@@ -1,7 +1,9 @@
-# 🌊 AquaMesh - Advanced Underwater Monitoring System
-🌊 AquaMesh is an advanced underwater monitoring platform built to monitor and manage submarine operations and underwater systems. Built on a React-based Turborepo monorepo architecture, it dynamically loads microfrontends to provide real-time updates from various underwater systems. This highly flexible platform allows new components to be added easily through a dynamic federation setup.
+# 🌊 AquaMesh - No-Code Dashboard & Widget Creation Platform
+
+AquaMesh is a powerful no-code dashboard creation platform that enables users to build, customize, and manage interactive dashboards through an intuitive drag-and-drop interface. Built on a React-based Turborepo monorepo architecture, it dynamically loads components and allows for highly flexible customization of dashboards and widgets without requiring programming knowledge.
 
 ## 🚀 Getting Started
+
 To get started with AquaMesh, follow these simple steps:
 
 1. Clone the repository.
@@ -15,81 +17,101 @@ npm start
 ```
 That's it! Everything else is already configured for you. The AquaMesh app and all its components will be up and running.
 
-## ⚙️ Project Structure
-**AquaMesh** is a React-based monorepo to manage its three key applications:
+## ⚙️ System Overview
 
-- **AquaMesh (Kernel)**: the core app acts as the kernel, dynamically loading microfrontends via module federation. 
+- **AquaMesh**: The main application that provides dashboard management, widget creation tools, and a flexible layout system.
+- **Widget Editor**: A powerful tool for creating custom widgets through an intuitive drag-and-drop interface.
+- **Dashboard System**: Allows users to create, save, and manage customizable dashboards.
 
-- **System Lens (MFe)**: exposes information about the processes and status inside the underwater systems.
+## 📊 Dashboards
 
-- **Control Flow (MFe)**: focuses on operational flow and control of underwater systems.
+Dashboards are container layouts that organize multiple widgets into a cohesive view. Think of them as the canvas where you arrange your widgets.
 
+![Dashboard Interface](tools/readme_images/Mix.png)
 
-## 📷 Images
-### Empty
-Initial state of the AquaMesh platform before any microfrontends are loaded.
+In the **Dashboard Library** You can save, categorize, and change visibility of dashboards.
 
-![Empty AquaMesh app](tools/readme_images/empty.png)
+![Dashboards Library](tools/readme_images/topbar-dashboards-library.png)
+
+## 🧩 Widgets
+
+Widgets are individual components that display specific data, visualizations, or controls. Each widget serves a distinct purpose and can be added to dashboards.
+
+![Widget Library](tools/readme_images/topbar-widgets.png)
+
+## 🔧 No-Code Widget Creation
+
+AquaMesh's most powerful feature is its **Widget Editor**, which enables users to create custom widgets without coding:
+
+### Widget Editor Features
+
+- **Intuitive Drag & Drop**: Easily drag components from the palette onto your canvas to design widgets.
+- **Rich Component Library**: Choose from UI components (buttons, switches, text fields), layout containers, and data visualization tools.
+- **Deep Customization**: Fine-tune each component's appearance and behavior through dedicated property editors.
+- **Live Preview**: See your changes reflected instantly for rapid iteration and design adjustments.
+- **Complex Layouts**: Create sophisticated structures by nesting components within layout containers.
+- **Save & Reuse**: Build a personal library of widgets that can be reused across different dashboards.
+
+![Widget Editor](tools/readme_images/widget_editor.png)
+
+### Supported Component Types
+
+The Widget Editor offers various component types:
+
+- **UI Components**: Buttons, Labels, Text Fields, Switches and Charts
+- **Layout Containers**: FieldSets, FlexBox, GridBox for organizing content
+
+## 📦 Key Features
 
 ### Top Navigation
-Provides navigation and access to different modules like System Lens and Control Flow. Users can add or remove widgets from here via changing `apps/aquamesh/public/config/widgets.json`.
+
+The top navigation bar provides quick access to all platform capabilities:
+
+- **📊 Dashboards**: Browse and select from both predefined and custom dashboards
+- **🧩 Widgets**: Access ready-made components and your custom-built widgets
+- **🔧 Widget Editor**: The heart of our no-code experience - build custom widgets without programming
+- **📚 Libraries**: Save and organize your dashboard and widget creations
+- **❓ Support**: Get help through tutorials and FAQ sections
+- **👤 User Management**: Select and manage user profiles
+
+All our pre-built widgets load as microfrontends using Module Federation. Want to customize what's available? Just update the `apps/aquamesh/public/config/widgets.json` file. 
 
 **Topbar**
 
 ![topbar](tools/readme_images/topbar.png)
 
-**Widgets**
+**Widgets Menu**
 
 ![widgets in topbar](tools/readme_images/topbar-widgets.png)
 
-**Dashboards**
+**Dashboards Menu**
 
 ![dashboards in topbar](tools/readme_images/topbar-dashboards.png)
 
-### Control Flow (MFe)
-It is designed for managing the operational flow and controlling underwater systems. It displays various controls and settings related to underwater operations.
+<!-- An image for each one -->
 
-![Control Flow](tools/readme_images/CF.png)
+### Drag and Resize Capabilities
 
-### System Lens (MFe)
-It provides a detailed view of internal underwater processes and statuses, allowing for real-time monitoring and analysis.
-
-![System Lens](tools/readme_images/SL.png)
-
-### System Lens and Control Flow
-Different modules can be active simultaneously in this customizable workspace.
-
-![System Lens and Control Flow](tools/readme_images/CFandSL.png)
-
-### Drag and Resize capabilities
-This image illustrates the platform's drag-and-resize feature, enabling users to move, resize, and organize different widgets to customize their workspace layout according to their needs.
+Customize your dashboard by dragging, repositioning, and resizing widgets to suit your needs.
 
 ![Drag and Resize](tools/readme_images/Mix.png)
 
 ## 🏗️ Architecture Overview
-The following sections explore AquaMesh's design and functionality for those wanting to dive deeper into the platform's architecture and modularity.
 
-### 📦 Modular Design with Dynamic Microfrontends
-AquaMesh's dynamic module federation simplifies system updates and expansion:
+### 📦 Modular Design with Dynamic Component Loading
 
-- **Dynamic Microfrontend Loading**: New microfrontends can be added by editing the configuration file, allowing seamless integration of external apps without code changes.
+AquaMesh's architecture emphasizes flexibility and extensibility:
 
-- **Drag and Drop**: widgets like Control Flow or System Lens can be freely moved, resized, and positioned for a customizable workspace.
-
-- **Resizing**: Users can adjust widget sizes to focus on specific data, enhancing control over underwater operations.
+- **Drag and Drop Interface**: Widgets can be freely moved, resized, and positioned.
+- **Dynamic Component Loading**: New predefined widgets can be added easily through configuration.
+- **Customizable Dashboard**: Users have complete control over their layout.
 
 ### 🛠 Turborepo Setup
-The AquaMesh platform uses **Turborepo** for managing the three applications in the monorepo:
 
-- **Simplifies package management**: Only one npm install is needed from the root.
-- **Speeds up development**: Built-in tools for running and building multiple projects simultaneously.
-- **Consistency**: Shared dependencies and workspace scripts ensure all microfrontends work seamlessly together.
+The platform uses **Turborepo** for managing the applications in the monorepo:
 
-### 🌱 Future-Proof and Scalable
-The flexibility of dynamically adding microfrontends ensures AquaMesh is future-proof. This approach allows for:
+- **Simplified package management**: Only one npm install needed from the root.
+- **Efficient development**: Built-in tools for running and building multiple projects simultaneously.
+- **Consistency**: Shared dependencies and dashboard scripts ensure all components work seamlessly together.
 
-- **Scalability**: New microfrontends can be added without modifying the core codebase.
-- **Ease of Maintenance**: Updates to individual microfrontends do not affect the overall platform stability.
-- **Rapid Deployment**: Teams can focus on developing new features while AquaMesh automatically integrates them.
-
-🔍 Dive in and explore the system! 🌊
+🔍 Start creating amazing dashboards today! 🌊

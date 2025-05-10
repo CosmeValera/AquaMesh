@@ -1,6 +1,8 @@
 # 🌊 AquaMesh - No-Code Dashboard & Widget Creation Platform
 
-AquaMesh is a powerful no-code dashboard creation platform that enables users to build, customize, and manage interactive dashboards through an intuitive drag-and-drop interface. Built on a React-based Turborepo monorepo architecture, it dynamically loads components and allows for highly flexible customization of dashboards and widgets without requiring programming knowledge.
+AquaMesh is a powerful no-code dashboard creation platform that enables users to build, customize, and manage interactive dashboards through an intuitive drag-and-drop interface.
+
+Built on a React-based Turborepo monorepo architecture, it dynamically loads components and allows for highly flexible customization of dashboards and widgets.
 
 ## 🚀 Getting Started
 
@@ -72,7 +74,7 @@ The top navigation bar provides quick access to all platform capabilities:
 - **🔧 Widget Editor**: The heart of our no-code experience - build custom widgets without programming
 - **📚 Libraries**: Save and organize your dashboard and widget creations
 - **❓ Support**: Get help through tutorials and FAQ sections
-- **👤 User Management**: Select and manage user profiles
+- **👤 User Management**: Select and manage user profiles (only admin can create new widgets)
 
 All our pre-built widgets load as microfrontends using Module Federation. Want to customize what's available? Just update the `apps/aquamesh/public/config/widgets.json` file. 
 

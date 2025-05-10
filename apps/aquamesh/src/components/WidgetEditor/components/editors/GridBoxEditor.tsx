@@ -89,9 +89,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
   const [spacing, setSpacing] = useState<number>(typeof props.spacing === 'number' ? props.spacing : 2)
   const [cellPadding, setCellPadding] = useState<number>(typeof props.cellPadding === 'number' ? props.cellPadding : 1)
   const [equalHeight, setEqualHeight] = useState(Boolean(props.equalHeight))
-  const [useCustomColor, setUseCustomColor] = useState(Boolean(props.useCustomColor))
-  const [backgroundColor, setBackgroundColor] = useState((props.backgroundColor as string) || '#f5f5f5')
-  const [borderColor, setBorderColor] = useState((props.borderColor as string) || '#e0e0e0')
   
   // Initialize state based on props
   useEffect(() => {
@@ -108,15 +105,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
     }
     
     setEqualHeight(Boolean(props.equalHeight))
-    setUseCustomColor(Boolean(props.useCustomColor))
-    
-    if (props.backgroundColor) {
-      setBackgroundColor(props.backgroundColor as string)
-    }
-    
-    if (props.borderColor) {
-      setBorderColor(props.borderColor as string)
-    }
   }, [props])
   
   // Handle tab change
@@ -129,38 +117,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
     onChange({ ...props, [name]: value })
   }
   
-  // Custom color toggle
-  const handleCustomColorToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked
-    setUseCustomColor(checked)
-    
-    if (checked) {
-      handleChange('useCustomColor', true)
-      handleChange('backgroundColor', backgroundColor)
-      handleChange('borderColor', borderColor)
-    } else {
-      const newProps = { ...props }
-      delete newProps.useCustomColor
-      delete newProps.backgroundColor
-      delete newProps.borderColor
-      onChange(newProps)
-    }
-  }
-  
-  // Handle background color change
-  const handleBackgroundColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newColor = e.target.value
-    setBackgroundColor(newColor)
-    handleChange('backgroundColor', newColor)
-  }
-  
-  // Handle border color change
-  const handleBorderColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newColor = e.target.value
-    setBorderColor(newColor)
-    handleChange('borderColor', newColor)
-  }
-  
   return (
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
@@ -169,9 +125,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
           <GridVisualizer 
             columns={columns} 
             spacing={spacing}
-            useCustomColor={useCustomColor}
-            backgroundColor={backgroundColor}
-            borderColor={borderColor}
           />
           
           <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%' }}>
@@ -191,186 +144,88 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
                   <span>Equal Height Cells</span>
                 </>
               )}
-              {useCustomColor && (
-                <>
-                  <span>•</span>
-                  <span>Custom Colors</span>
-                </>
-              )}
             </Typography>
           </Box>
         </Box>
       </ComponentPreview>
       
-      {/* Tabs Navigation */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange} 
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          <Tab label="Grid Layout" icon={<GridViewIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Appearance" icon={<ColorLensIcon fontSize="small" />} iconPosition="start" />
-        </Tabs>
-      </Box>
-      
-      {/* Grid Layout Tab */}
-      <TabPanelShared value={tabValue} index={0}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Columns"
-              type="number"
-              fullWidth
-              value={columns}
-              onChange={(e) => {
-                const value = Number(e.target.value)
-                setColumns(value)
-                handleChange('columns', value)
-              }}
-              inputProps={{ min: 1, max: 12, step: 1 }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={equalHeight}
-                  onChange={(e) => {
-                    setEqualHeight(e.target.checked)
-                    handleChange('equalHeight', e.target.checked)
-                  }}
-                />
-              }
-              label="Equal Height Cells"
-            />
-            <Typography variant="caption" sx={{ display: 'block', mt: 0.5, ml: 3, color: 'text.secondary' }}>
-              When enabled, all cells will have the same height, regardless of their content
-            </Typography>
-          </Grid>
-          
-          <Grid item xs={12} sx={{ marginX: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Grid Gap (Spacing between cells)
-            </Typography>
+      <Grid container spacing={2} sx={{ padding: 2 }}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Columns"
+            type="number"
+            fullWidth
+            value={columns}
+            onChange={(e) => {
+              const value = Number(e.target.value)
+              setColumns(value)
+              handleChange('columns', value)
+            }}
+            inputProps={{ min: 1, max: 12, step: 1 }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={equalHeight}
+                onChange={(e) => {
+                  setEqualHeight(e.target.checked)
+                  handleChange('equalHeight', e.target.checked)
+                }}
+              />
+            }
+            label="Equal Height Cells"
+          />
+          <Typography variant="caption" sx={{ display: 'block', mt: 0.5, ml: 3, color: 'text.secondary' }}>
+            When enabled, all cells will have the same height, regardless of their content
+          </Typography>
+        </Grid>
+        
+        <Grid item xs={12} sx={{ marginX: 2 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Grid Gap (Spacing between cells)
+          </Typography>
+          <Slider
+            value={spacing}
+            min={0}
+            max={8}
+            step={1}
+            marks
+            valueLabelDisplay="auto"
+            onChange={(_e, value) => {
+              setSpacing(value as number)
+              handleChange('spacing', value)
+            }}
+            sx={{ marginRight: 2 }}
+          />
+        </Grid>
+        
+        
+        <Grid item xs={12} sx={{ marginX: 2 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Cell Padding
+          </Typography>
+          <Box>
             <Slider
-              value={spacing}
+              value={cellPadding}
               min={0}
-              max={8}
+              max={4}
               step={1}
               marks
               valueLabelDisplay="auto"
               onChange={(_e, value) => {
-                setSpacing(value as number)
-                handleChange('spacing', value)
+                setCellPadding(value as number)
+                handleChange('cellPadding', value)
               }}
               sx={{ marginRight: 2 }}
             />
-          </Grid>
-          
-          
-          <Grid item xs={12} sx={{ marginX: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Cell Padding
-            </Typography>
-            <Box>
-              <Slider
-                value={cellPadding}
-                min={0}
-                max={4}
-                step={1}
-                marks
-                valueLabelDisplay="auto"
-                onChange={(_e, value) => {
-                  setCellPadding(value as number)
-                  handleChange('cellPadding', value)
-                }}
-                sx={{ marginRight: 2 }}
-              />
-            </Box>
-            <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.secondary' }}>
-              Padding adds space inside each cell, around the content
-            </Typography>
-          </Grid>
+          </Box>
+          <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.secondary' }}>
+            Padding adds space inside each cell, around the content
+          </Typography>
         </Grid>
-      </TabPanelShared>
-      
-      {/* Appearance Tab */}
-      <TabPanelShared value={tabValue} index={1}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={useCustomColor}
-                  onChange={handleCustomColorToggle}
-                />
-              }
-              label="Use Custom Colors"
-            />
-          </Grid>
-          
-          {/* Custom Color Pickers */}
-          {useCustomColor && (
-            <>
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Background Color
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <input
-                    type="color"
-                    value={backgroundColor}
-                    onChange={handleBackgroundColorChange}
-                    style={{ 
-                      width: '36px', 
-                      height: '36px', 
-                      padding: 0, 
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <TextField 
-                    fullWidth
-                    value={backgroundColor}
-                    onChange={handleBackgroundColorChange}
-                    placeholder="#f5f5f5"
-                  />
-                </Box>
-              </Grid>
-              
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Border Color
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <input
-                    type="color"
-                    value={borderColor}
-                    onChange={handleBorderColorChange}
-                    style={{ 
-                      width: '36px', 
-                      height: '36px', 
-                      padding: 0, 
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <TextField 
-                    fullWidth
-                    value={borderColor}
-                    onChange={handleBorderColorChange}
-                    placeholder="#e0e0e0"
-                  />
-                </Box>
-              </Grid>
-            </>
-          )}
-        </Grid>
-      </TabPanelShared>
+      </Grid>
     </Box>
   )
 }

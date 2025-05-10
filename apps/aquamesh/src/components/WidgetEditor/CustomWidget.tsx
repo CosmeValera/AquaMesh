@@ -154,6 +154,18 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
     }))
   }
 
+  // Recursively apply collapsed state to all FieldSet components
+  const applyCollapsed = (comp: ComponentData): ComponentData => {
+    return {
+      ...comp,
+      props: {
+        ...comp.props,
+        collapsed: collapsedFieldsets[comp.id] ?? Boolean(comp.props.collapsed)
+      },
+      children: comp.children ? comp.children.map(applyCollapsed) : undefined
+    }
+  }
+
   // Function to render any component type
   const renderComponent = (component: ComponentData) => {
     switch (component.type) {
@@ -702,13 +714,7 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
       {widgetComponents.map((component, index) => (
         <ComponentPreview
           key={component.id}
-          component={{
-            ...component,
-            props: {
-              ...component.props,
-              collapsed: collapsedFieldsets[component.id] ?? Boolean(component.props.collapsed)
-            }
-          }}
+          component={applyCollapsed(component)}
           onEdit={() => {}}
           onToggleCollapse={toggleFieldsetCollapse}
           onDelete={() => {}}

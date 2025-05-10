@@ -95,11 +95,11 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
           />
 
           {/* Show validation information when present */}
-          {(props.required || props.error) && (
+          {(Boolean(props.required) || Boolean(props.error)) && (
             <Box sx={{ mt: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1, fontSize: '0.75rem' }}>
               <Typography variant="caption" color="text.secondary" component="div">
-                {props.required && <Box component="span" sx={{ mr: 1, fontWeight: 'medium' }}>Required</Box>}
-                {props.error && <Box component="span" sx={{ mr: 1, color: 'error.main' }}>Error: {props.errorText}</Box>}
+                {Boolean(props.required) && <Box component="span" sx={{ mr: 1, fontWeight: 'medium' }}>Required</Box>}
+                {Boolean(props.error) && <Box component="span" sx={{ mr: 1, color: 'error.main' }}>Error: {props.errorText as string}</Box>}
               </Typography>
             </Box>
           )}

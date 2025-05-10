@@ -9,7 +9,8 @@ import {
   FormControlLabel,
   Button,
   Collapse,
-  Tooltip
+  Tooltip,
+  InputAdornment
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
@@ -388,6 +389,23 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             fullWidth
             size={(component.props.size as 'small' | 'medium') || 'small'}
             variant={(component.props.variant as 'outlined' | 'filled' | 'standard') || 'outlined'}
+            required={Boolean(component.props.required)}
+            disabled={Boolean(component.props.disabled)}
+            error={Boolean(component.props.error)}
+            helperText={
+              component.props.error
+                ? (component.props.errorText as string)
+                : (component.props.helperText as string)
+            }
+            type={component.props.type as string}
+            InputProps={{
+              startAdornment: component.props.startAdornment && component.props.startAdornmentText ? (
+                <InputAdornment position="start">{component.props.startAdornmentText as string}</InputAdornment>
+              ) : undefined,
+              endAdornment: component.props.endAdornment && component.props.endAdornmentText ? (
+                <InputAdornment position="end">{component.props.endAdornmentText as string}</InputAdornment>
+              ) : undefined
+            }}
           />
         )
       case 'FlexBox': {

@@ -385,7 +385,11 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
             required={Boolean(component.props.required)}
             disabled={Boolean(component.props.disabled)}
             error={Boolean(component.props.error)}
-            helperText={component.props.helperText as string}
+            helperText={
+              component.props.error
+                ? (component.props.errorText as string)
+                : (component.props.helperText as string)
+            }
             multiline={Boolean(component.props.multiline)}
             rows={component.props.multiline ? ((component.props.rows as number) || 3) : undefined}
             fullWidth

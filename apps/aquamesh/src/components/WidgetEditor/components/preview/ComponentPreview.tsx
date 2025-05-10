@@ -584,28 +584,24 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             <EditIcon fontSize="small" />
           </IconButton>
           
-          {component.type !== 'FieldSet' && (
-            <>
-              {!isFirst && (
-                <IconButton 
-                  size="small" 
-                  onClick={() => onMoveUp(component.id)}
-                  sx={{ color: 'warning.light' }}
-                >
-                  <KeyboardArrowUpIcon fontSize="small" />
-                </IconButton>
-              )}
-              
-              {!isLast && (
-                <IconButton 
-                  size="small" 
-                  onClick={() => onMoveDown(component.id)}
-                  sx={{ color: 'warning.light' }}
-                >
-                  <KeyboardArrowDownIcon fontSize="small" />
-                </IconButton>
-              )}
-            </>
+          {!isFirst && (
+            <IconButton 
+              size="small" 
+              onClick={() => onMoveUp(component.id)}
+              sx={{ color: 'warning.light' }}
+            >
+              <KeyboardArrowUpIcon fontSize="small" />
+            </IconButton>
+          )}
+          
+          {!isLast && (
+            <IconButton 
+              size="small" 
+              onClick={() => onMoveDown(component.id)}
+              sx={{ color: 'warning.light' }}
+            >
+              <KeyboardArrowDownIcon fontSize="small" />
+            </IconButton>
           )}
           
           <IconButton 

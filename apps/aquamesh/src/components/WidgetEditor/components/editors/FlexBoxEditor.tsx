@@ -10,23 +10,23 @@ import {
   FormControlLabel,
   Switch,
   Grid,
-  Tabs,
-  Tab,
   Slider,
   Stack,
   Chip,
   Button
 } from '@mui/material'
-import DesignServicesIcon from '@mui/icons-material/DesignServices'
+import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import SettingsIcon from '@mui/icons-material/Settings'
 
 import {
   ComponentPreview,
-  TabPanelShared
+  TabPanelShared,
+  EditorTabs
 } from '../shared/SharedEditorComponents'
 
 interface FlexBoxEditorProps {
@@ -215,17 +215,13 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
       </ComponentPreview>
       
       {/* Tabs Navigation */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange} 
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          <Tab label="Layout" icon={<SpaceDashboardIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Appearance" icon={<DesignServicesIcon fontSize="small" />} iconPosition="start" />
-        </Tabs>
-      </Box>
+      <EditorTabs
+        value={tabValue}
+        onChange={handleTabChange}
+        tabs={[
+          { label: 'Basic Settings', id: 'flexbox-basic', icon: <SettingsIcon fontSize="small" /> },
+{ label: 'Styling', id: 'label-styling', icon: <FormatColorTextIcon fontSize="small" /> }        ]}
+      />
       
       {/* Layout Tab */}
       <TabPanelShared value={tabValue} index={0}>
@@ -425,45 +421,6 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
               }}
             />
           </Grid>
-          
-          {/* Background Color */}
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.useCustomColor)}
-                  onChange={(e) => handleChange('useCustomColor', e.target.checked)}
-                />
-              }
-              label="Use Custom Background Color"
-            />
-          </Grid>
-          
-          {props.useCustomColor && (
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <input
-                  type="color"
-                  value={(props.backgroundColor as string) || '#f5f5f5'}
-                  onChange={(e) => handleChange('backgroundColor', e.target.value)}
-                  style={{ 
-                    width: '36px', 
-                    height: '36px', 
-                    padding: 0, 
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <TextField 
-                  fullWidth
-                  label="Background Color"
-                  value={(props.backgroundColor as string) || '#f5f5f5'}
-                  onChange={(e) => handleChange('backgroundColor', e.target.value)}
-                />
-              </Box>
-            </Grid>
-          )}
         </Grid>
       </TabPanelShared>
     </Box>

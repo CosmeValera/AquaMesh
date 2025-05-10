@@ -18,6 +18,7 @@ import {
 } from '@mui/material'
 import GridViewIcon from '@mui/icons-material/GridView'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 
 import {
   ComponentPreview,
@@ -175,11 +176,15 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
                 }}
               />
             }
-            label="Equal Height Cells"
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                Equal Height Cells
+                <Tooltip title="When enabled, all cells will have the same height, regardless of their content">
+                  <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
+                </Tooltip>
+              </Box>
+            }
           />
-          <Typography variant="caption" sx={{ display: 'block', mt: 0.5, ml: 3, color: 'text.secondary' }}>
-            When enabled, all cells will have the same height, regardless of their content
-          </Typography>
         </Grid>
         
         <Grid item xs={12} sx={{ marginX: 2 }}>

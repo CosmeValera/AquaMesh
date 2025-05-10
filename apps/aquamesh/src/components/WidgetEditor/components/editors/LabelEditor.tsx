@@ -12,6 +12,10 @@ import {
   Divider,
   Grid
 } from '@mui/material'
+import Tooltip from '@mui/material/Tooltip'
+import SettingsIcon from '@mui/icons-material/Settings'
+import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 
 import {
   ComponentPreview,
@@ -150,8 +154,8 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
   }
   
   const editorTabs = [
-    { label: 'Content', id: 'label-content' },
-    { label: 'Typography', id: 'label-typography' }
+    { label: 'Basic Settings', id: 'label-basic', icon: <SettingsIcon fontSize="small" /> },
+    { label: 'Styling', id: 'label-styling', icon: <FormatColorTextIcon fontSize="small" /> }
   ]
   
   return (
@@ -184,8 +188,8 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
       </ComponentPreview>
       
       {/* Tabs Navigation */}
-      <EditorTabs 
-        value={tabValue} 
+      <EditorTabs
+        value={tabValue}
         onChange={handleTabChange}
         tabs={editorTabs}
       />
@@ -210,7 +214,7 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
           </Grid>
           
           {/* Custom Color Toggle and Picker */}
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <CustomColorControl
               useCustomColor={useCustomColor}
               customColor={customColor}
@@ -220,7 +224,7 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
           
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <FormControlLabel
               control={
                 <Switch
@@ -228,11 +232,15 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
                   onChange={(e) => handleChange('noWrap', e.target.checked)}
                 />
               }
-              label="No Text Wrapping"
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  No Text Wrapping
+                  <Tooltip title="When enabled, text will not wrap to a new line and will be truncated with an ellipsis if it exceeds available space.">
+                    <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
+                  </Tooltip>
+                </Box>
+              }
             />
-            <Typography variant="caption" sx={{ display: 'block', mt: 0.5, ml: 3, color: 'text.secondary' }}>
-              When enabled, text will not wrap to a new line and will be truncated with an ellipsis if it exceeds available space.
-            </Typography>
           </Grid>
         </Grid>
       </TabPanelShared>

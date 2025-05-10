@@ -10,9 +10,7 @@ import {
   FormControlLabel,
   Switch,
   Divider,
-  Grid,
-  Tabs,
-  Tab
+  Grid
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
@@ -20,7 +18,8 @@ import InputAdornment from '@mui/material/InputAdornment'
 
 import {
   TabPanelShared,
-  ComponentPreview
+  ComponentPreview,
+  EditorTabs
 } from '../shared/SharedEditorComponents'
 
 interface TextFieldEditorProps {
@@ -133,20 +132,17 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
       </ComponentPreview>
       
       {/* Tabs Navigation */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange} 
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          <Tab label="Basic" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Advanced" icon={<FormatColorTextIcon fontSize="small" />} iconPosition="start" />
-        </Tabs>
-      </Box>
+      <EditorTabs
+        value={tabValue}
+        onChange={handleTabChange}
+        tabs={[
+          { label: 'Basic Settings', id: 'textfield-basic', icon: <SettingsIcon fontSize="small" /> },
+          { label: 'Styling', id: 'textfield-styling', icon: <FormatColorTextIcon fontSize="small" /> }
+        ]}
+      />
       
-      {/* Basic Tab */}
-      <TabPanelShared value={tabValue} index={0}>
+      {/* Basic Settings Tab */}
+      <TabPanelShared value={tabValue} index={0} id="textfield-basic">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
@@ -198,8 +194,8 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
         </Grid>
       </TabPanelShared>
       
-      {/* Appearance Tab */}
-      <TabPanelShared value={tabValue} index={1}>
+      {/* Styling Tab */}
+      <TabPanelShared value={tabValue} index={1} id="textfield-styling">
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>

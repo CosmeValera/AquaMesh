@@ -10,17 +10,19 @@ import {
   FormControlLabel,
   Switch,
   Grid,
-  Tabs,
-  Tab,
-  Chip
+  Chip,
+  Tooltip
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
 import NotificationsIcon from '@mui/icons-material/Notifications'
+import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 
 import {
   TabPanelShared,
-  ComponentPreview
+  ComponentPreview,
+  EditorTabs
 } from '../shared/SharedEditorComponents'
 
 // Define props interface
@@ -126,6 +128,13 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
     }
   }
   
+  // Define tabs
+  const editorTabs = [
+    { label: 'Basic Settings', id: 'switch-basic', icon: <SettingsIcon fontSize="small" /> },
+    { label: 'Styling', id: 'switch-styling', icon: <FormatColorTextIcon fontSize="small" /> },
+    { label: 'Behaviour', id: 'switch-behaviour', icon: <NotificationsIcon fontSize="small" /> }
+  ]
+  
   return (
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
@@ -199,20 +208,14 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
       </ComponentPreview>
       
       {/* Tabs Navigation */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange} 
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          <Tab label="Basic" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Behavior" icon={<NotificationsIcon fontSize="small" />} iconPosition="start" />
-        </Tabs>
-      </Box>
+      <EditorTabs
+        value={tabValue}
+        onChange={handleTabChange}
+        tabs={editorTabs}
+      />
       
-      {/* Basic Tab */}
-      <TabPanelShared value={tabValue} index={0}>
+      {/* Basic Settings Tab */}
+      <TabPanelShared value={tabValue} index={0} id="switch-basic">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
@@ -281,22 +284,26 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
               </Select>
             </FormControl>
           </Grid>
-          
+        </Grid>
+      </TabPanelShared>
+      
+      {/* Styling Tab */}
+      <TabPanelShared value={tabValue} index={1} id="switch-styling">
+        <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControlLabel
-              control={
-                <Switch
-                  checked={useCustomColor}
-                  onChange={handleCustomColorToggle}
-                />
-              }
-              label="Use Custom Track Color"
+              control={<Switch checked={useCustomColor} onChange={handleCustomColorToggle} />}
+              label={<Box sx={{ display: 'flex', alignItems: 'center' }}>
+                Use Custom Track Color
+                <Tooltip title="Toggle custom track color for the switch">
+                  <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
+                </Tooltip>
+              </Box>}
             />
           </Grid>
-          
           {useCustomColor && (
             <Grid item xs={12}>
-              <TextField 
+              <TextField
                 label="Track Color"
                 fullWidth
                 value={customTrackColor}
@@ -306,16 +313,7 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
                 }}
                 InputProps={{
                   startAdornment: (
-                    <Box 
-                      sx={{ 
-                        width: 18, 
-                        height: 18, 
-                        bgcolor: customTrackColor, 
-                        borderRadius: 1,
-                        mr: 1,
-                        border: '1px solid rgba(0,0,0,0.1)'
-                      }} 
-                    />
+                    <Box sx={{ width: 18, height: 18, bgcolor: customTrackColor, borderRadius: 1, mr: 1, border: '1px solid rgba(0,0,0,0.1)' }} />
                   ),
                 }}
               />
@@ -324,8 +322,8 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
         </Grid>
       </TabPanelShared>
       
-      {/* Behavior Tab */}
-      <TabPanelShared value={tabValue} index={1}>
+      {/* Behaviour Tab */}
+      <TabPanelShared value={tabValue} index={2} id="switch-behaviour">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControlLabel

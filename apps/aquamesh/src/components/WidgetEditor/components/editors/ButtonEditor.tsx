@@ -17,6 +17,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import NotificationsIcon from '@mui/icons-material/Notifications'
+import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
 import CodeIcon from '@mui/icons-material/Code'
 import SettingsIcon from '@mui/icons-material/Settings'
 import PreviewIcon from '@mui/icons-material/Preview'
@@ -234,11 +235,11 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
     }
   }
   
-  // Define tabs
+  // Define tabs with icons
   const editorTabs = [
-    { label: 'Basic Settings', id: 'button-basic' },
-    { label: 'Styling', id: 'button-styling' },
-    { label: 'Behaviour', id: 'button-behaviour' }
+    { label: 'Basic Settings', id: 'button-basic', icon: <SettingsIcon fontSize="small" /> },
+    { label: 'Styling', id: 'button-styling', icon: <FormatColorTextIcon fontSize="small" /> },
+    { label: 'Behaviour', id: 'button-behaviour', icon: <NotificationsIcon fontSize="small" /> }
   ]
   
   return (
@@ -310,17 +311,17 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
           <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1 }}>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
-                {props.variant || 'contained'}
+                {(props.variant as string) || 'contained'}
               </Box>
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
-                {props.size || 'medium'}
+                {(props.size as string) || 'medium'}
               </Box>
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
-                {useCustomColor ? 'custom color' : props.color || 'primary'}
+                {useCustomColor ? 'custom color' : ((props.color as string) || 'primary')}
               </Box>
             </Typography>
             {Boolean(props.showStartIcon || props.showEndIcon) && (

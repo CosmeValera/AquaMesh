@@ -135,7 +135,7 @@ export const ComponentPreview: React.FC<PreviewProps> = ({ children }) => {
 export const EditorTabs: React.FC<{
   value: number;
   onChange: (event: React.SyntheticEvent, newValue: number) => void;
-  tabs: { label: string; id: string }[];
+  tabs: { label: string; id: string; icon?: React.ReactNode }[];
 }> = ({ value, onChange, tabs }) => {
   return (
     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -154,7 +154,13 @@ export const EditorTabs: React.FC<{
         }}
       >
         {tabs.map((tab, index) => (
-          <Tab key={tab.id} label={tab.label} id={`${tab.id}-tab-${index}`} />
+          <Tab
+            key={tab.id}
+            label={tab.label}
+            id={`${tab.id}-tab-${index}`}
+            icon={tab.icon}
+            iconPosition="start"
+          />
         ))}
       </Tabs>
     </Box>

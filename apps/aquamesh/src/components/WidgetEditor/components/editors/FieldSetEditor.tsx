@@ -10,15 +10,16 @@ import {
   FormControlLabel,
   Switch,
   Grid,
-  Tabs,
-  Tab,
   Slider,
   Collapse,
+  Tooltip
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
-import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
+import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import { EditorTabs, TabPanelShared } from '../shared/SharedEditorComponents'
 
 // Define props interface
 interface FieldSetProps {
@@ -170,6 +171,11 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
     </Box>
   )
   
+  const editorTabs = [
+    { label: 'Basic Settings', id: 'fieldset-basic', icon: <SettingsIcon fontSize="small" /> },
+    { label: 'Styling', id: 'label-styling', icon: <FormatColorTextIcon fontSize="small" /> }
+  ]
+  
   return (
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
@@ -260,28 +266,28 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
       </Box>
       
       {/* Tabs Navigation */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange} 
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          <Tab label="Basic Settings" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Appearance" icon={<ViewQuiltIcon fontSize="small" />} iconPosition="start" />
-        </Tabs>
-      </Box>
+      <EditorTabs
+        value={tabValue}
+        onChange={handleTabChange}
+        tabs={editorTabs}
+      />
       
-      {/* Basic settings tab */}
-      <TabPanel value={tabValue} index={0}>
+      {/* Basic Settings Tab */}
+      <TabPanelShared value={tabValue} index={0} id="fieldset-basic">
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <TextField 
+            <TextField
               fullWidth
-              label="Legend"
               value={props.legend || ''}
               onChange={(e) => handleChange('legend', e.target.value)}
-              helperText="Text label that appears at the top of the fieldset"
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  Legend
+                  <Tooltip title="Text label that appears at the top of the fieldset">
+                    <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
+                  </Tooltip>
+                </Box>
+              }
             />
           </Grid>
           
@@ -332,10 +338,10 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
       
-      {/* Appearance tab */}
-      <TabPanel value={tabValue} index={1}>
+      {/* Appearance Tab */}
+      <TabPanelShared value={tabValue} index={1} id="fieldset-appearance">
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
@@ -397,7 +403,7 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanelShared>
     </Box>
   )
 }

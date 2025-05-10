@@ -79,7 +79,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
   const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>(
     typeof props.alignment === 'string' && ['left','center','right'].includes(props.alignment as string)
       ? (props.alignment as 'left' | 'center' | 'right')
-      : 'center'
+      : 'left'
   )
   
   // Initialize custom colors if they exist in props
@@ -88,7 +88,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
     if (typeof props.alignment === 'string' && ['left','center','right'].includes(props.alignment as string)) {
       setAlignment(props.alignment as 'left' | 'center' | 'right')
     } else {
-      setAlignment('center')
+      setAlignment('left')
     }
     const useCustColor = Boolean(props.customColor)
     if (useCustColor) {
@@ -311,6 +311,11 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
           <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1 }}>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
+                {alignment}
+              </Box>
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
                 {(props.variant as string) || 'contained'}
               </Box>
             </Typography>
@@ -363,6 +368,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
             <TextField
               fullWidth
               label="Button Text"
+              onFocus={(e) => { e.target.select() }}
               value={props.text || ''}
               onChange={(e) => handleChange('text', e.target.value)}
               variant="outlined"

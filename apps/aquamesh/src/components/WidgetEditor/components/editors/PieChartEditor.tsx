@@ -427,6 +427,7 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
                       id={`segment-${segment.id}-label`}
                       fullWidth
                       size="small"
+                      onFocus={(e) => { e.target.select() }}
                       value={segment.label}
                       onChange={(e) => updateBufferedSegment(segment.id, 'label', e.target.value)}
                       onBlur={() => applyBufferedChanges(segment.id)}
@@ -498,20 +499,6 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
             </TableBody>
           </Table>
         </TableContainer>
-        
-        {/* Show "Apply Changes" button if there are dirty segments */}
-        {bufferedSegments.some(segment => segment.isDirty) && (
-          <Box sx={{ mt: 1, textAlign: 'right' }}>
-            <Button
-              size="small"
-              variant="contained"
-              color="primary"
-              onClick={saveChanges}
-            >
-              Apply Changes
-            </Button>
-          </Box>
-        )}
       </Box>
       {/* Color Picker Modal */}
       <ColorPickerModal

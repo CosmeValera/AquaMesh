@@ -136,13 +136,17 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
             label="Columns"
             type="number"
             fullWidth
+            onFocus={(e) => { e.target.select() }}
             value={columns}
             onChange={(e) => {
               const value = Number(e.target.value)
-              setColumns(value)
-              handleChange('columns', value)
+              // Enforce min and max constraints
+              const validValue = Math.min(Math.max(value, 0), 12)
+              setColumns(validValue)
+              handleChange('columns', validValue)
             }}
-            inputProps={{ min: 1, max: 12, step: 1 }}
+            inputProps={{ min: 0, max: 12, step: 1 }}
+            helperText="Enter a value between 1 and 12"
           />
         </Grid>
         <Grid item xs={12} sm={6}>

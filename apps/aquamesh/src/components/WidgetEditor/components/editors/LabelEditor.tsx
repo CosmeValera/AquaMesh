@@ -162,7 +162,7 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
       <ComponentPreview>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: props.textAlign, width: '100%' }}>
           <Typography
             variant={variant as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2'}
             sx={previewStyles}
@@ -199,8 +199,9 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
-              label="Text Content"
+              label="Label Text"
               fullWidth
+              onFocus={(e) => { e.target.select() }}
               value={(props.text as string) || ''}
               onChange={(e) => handleChange('text', e.target.value)}
             />

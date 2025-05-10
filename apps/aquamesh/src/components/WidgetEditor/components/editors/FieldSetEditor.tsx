@@ -257,6 +257,7 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
             <TextField
               fullWidth
               value={props.legend || ''}
+              onFocus={(e) => { e.target.select() }}
               onChange={(e) => handleChange('legend', e.target.value)}
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>

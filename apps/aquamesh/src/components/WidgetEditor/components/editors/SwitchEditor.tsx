@@ -212,6 +212,7 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
             <TextField
               label="Label Text"
               fullWidth
+              onFocus={(e) => { e.target.select() }}
               value={(props.label as string) || ''}
               onChange={(e) => handleChange('label', e.target.value)}
             />

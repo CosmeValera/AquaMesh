@@ -148,6 +148,7 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             <TextField
               label="Field Label"
               fullWidth
+              onFocus={(e) => { e.target.select() }}
               value={(props.label as string) || ''}
               onChange={(e) => handleChange('label', e.target.value)}
             />
@@ -157,6 +158,7 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             <TextField
               label="Placeholder Text"
               fullWidth
+              onFocus={(e) => { e.target.select() }}
               value={(props.placeholder as string) || ''}
               onChange={(e) => handleChange('placeholder', e.target.value)}
             />
@@ -166,6 +168,7 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             <TextField
               label="Default Value"
               fullWidth
+              onFocus={(e) => { e.target.select() }}
               value={(props.defaultValue as string) || ''}
               onChange={(e) => handleChange('defaultValue', e.target.value)}
             />

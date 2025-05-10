@@ -270,7 +270,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
         const urlProp = component.props.url as string;
         // Determine alignment based on props.alignment
         const alignment = component.props.alignment as 'left' | 'center' | 'right' | undefined;
-        const alignItems = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        const alignItems = alignment === 'right' ? 'flex-end' : alignment === 'center' ? 'center' : 'flex-start';
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems }}>
             <Button

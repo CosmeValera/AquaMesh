@@ -197,8 +197,6 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
             <TextField
               label="Text Content"
               fullWidth
-              multiline
-              rows={3}
               value={(props.text as string) || ''}
               onChange={(e) => handleChange('text', e.target.value)}
             />

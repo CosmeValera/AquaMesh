@@ -36,7 +36,6 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
   const [variant, setVariant] = useState((props.variant as string) || 'outlined')
   const [size, setSize] = useState((props.size as string) || 'medium')
   const [type, setType] = useState((props.type as string) || 'text')
-  const [showHelperText, setShowHelperText] = useState(Boolean(props.helperText))
   const [hasStartAdornment, setHasStartAdornment] = useState(Boolean(props.startAdornment))
   const [hasEndAdornment, setHasEndAdornment] = useState(Boolean(props.endAdornment))
   
@@ -54,7 +53,6 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
       setType(props.type as string)
     }
     
-    setShowHelperText(Boolean(props.helperText))
     setHasStartAdornment(Boolean(props.startAdornment))
     setHasEndAdornment(Boolean(props.endAdornment))
   }, [props])
@@ -97,12 +95,11 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
           />
 
           {/* Show validation information when present */}
-          {(props.required || props.error || showHelperText) && (
+          {(props.required || props.error) && (
             <Box sx={{ mt: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1, fontSize: '0.75rem' }}>
               <Typography variant="caption" color="text.secondary" component="div">
                 {props.required && <Box component="span" sx={{ mr: 1, fontWeight: 'medium' }}>Required</Box>}
                 {props.error && <Box component="span" sx={{ mr: 1, color: 'error.main' }}>Error: {props.errorText}</Box>}
-                {showHelperText && !props.error && <Box component="span">{props.helperText}</Box>}
               </Typography>
             </Box>
           )}
@@ -124,13 +121,6 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                 {type}
               </Box>
             </Typography>
-            {Boolean(props.multiline) && (
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
-                  multiline
-                </Box>
-              </Typography>
-            )}
             {Boolean(props.disabled) && (
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
@@ -151,7 +141,7 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
           scrollButtons="auto"
         >
           <Tab label="Basic" icon={<SettingsIcon fontSize="small" />} iconPosition="start" />
-          <Tab label="Appearance" icon={<FormatColorTextIcon fontSize="small" />} iconPosition="start" />
+          <Tab label="Advanced" icon={<FormatColorTextIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </Box>
       
@@ -167,7 +157,7 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             />
           </Grid>
           
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <TextField
               label="Placeholder Text"
               fullWidth
@@ -176,7 +166,7 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             />
           </Grid>
           
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <TextField
               label="Default Value"
               fullWidth
@@ -204,103 +194,6 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                 <MenuItem value="date">Date</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.multiline)}
-                  onChange={(e) => {
-                    handleChange('multiline', e.target.checked)
-                    if (e.target.checked && !props.rows) {
-                      handleChange('rows', 3)
-                    }
-                  }}
-                />
-              }
-              label="Multiline"
-            />
-            
-            {Boolean(props.multiline) && (
-              <TextField
-                label="Rows"
-                type="number"
-                value={(props.rows as number) || 3}
-                onChange={(e) => handleChange('rows', Number(e.target.value))}
-                inputProps={{ min: 2, max: 10 }}
-                size="small"
-                sx={{ mt: 1 }}
-              />
-            )}
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" gutterBottom>Validation</Typography>
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.required)}
-                  onChange={(e) => handleChange('required', e.target.checked)}
-                />
-              }
-              label="Required Field"
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.error)}
-                  onChange={(e) => handleChange('error', e.target.checked)}
-                />
-              }
-              label="Error State"
-            />
-            
-            {Boolean(props.error) && (
-              <TextField
-                label="Error Text"
-                fullWidth
-                value={(props.errorText as string) || ''}
-                onChange={(e) => handleChange('errorText', e.target.value)}
-                sx={{ mt: 1 }}
-              />
-            )}
-          </Grid>
-
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={showHelperText}
-                  onChange={(e) => {
-                    setShowHelperText(e.target.checked)
-                    if (e.target.checked && !props.helperText) {
-                      handleChange('helperText', 'Helper text')
-                    } else if (!e.target.checked) {
-                      handleChange('helperText', '')
-                    }
-                  }}
-                />
-              }
-              label="Show Helper Text"
-            />
-            
-            {showHelperText && (
-              <TextField
-                label="Helper Text"
-                fullWidth
-                value={(props.helperText as string) || ''}
-                onChange={(e) => handleChange('helperText', e.target.value)}
-                sx={{ mt: 1 }}
-              />
-            )}
           </Grid>
         </Grid>
       </TabPanelShared>
@@ -344,6 +237,23 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
           </Grid>
           
           <Grid item xs={12}>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="subtitle2" gutterBottom>Validation</Typography>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(props.required)}
+                  onChange={(e) => handleChange('required', e.target.checked)}
+                />
+              }
+              label="Required Field"
+            />
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
             <FormControlLabel
               control={
                 <Switch
@@ -354,7 +264,36 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
               label="Disabled"
             />
           </Grid>
-          
+
+          <Grid item xs={12}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={Boolean(props.error)}
+                      onChange={(e) => handleChange('error', e.target.checked)}
+                    />
+                  }
+                  label="Error State"
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                {Boolean(props.error) && (
+                  <TextField
+                    label="Error Text"
+                    fullWidth
+                    value={(props.errorText as string) || ''}
+                    onChange={(e) => handleChange('errorText', e.target.value)}
+                    margin="none"
+                    size="small"
+                  />
+                )}
+              </Grid>
+            </Grid>
+          </Grid>
+
           <Grid item xs={12}>
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle2" gutterBottom>Input Adornments</Typography>

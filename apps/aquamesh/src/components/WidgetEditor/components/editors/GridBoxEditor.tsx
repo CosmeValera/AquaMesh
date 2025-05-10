@@ -56,7 +56,8 @@ const GridVisualizer: React.FC<{ columns: number, spacing: number, useCustomColo
               backgroundColor : 
               (row + col) % 2 === 0 ? 'rgba(66, 165, 245, 0.2)' : 'white',
             aspectRatio: '1/1',
-            fontSize: '0.75rem'
+            fontSize: '0.75rem',
+            height: '100px'
           }}
         >
           {row + 1},{col + 1}
@@ -72,8 +73,6 @@ const GridVisualizer: React.FC<{ columns: number, spacing: number, useCustomColo
         gridTemplateColumns: `repeat(${columns}, 1fr)`,
         gridTemplateRows: `repeat(${rows}, 1fr)`,
         gap: spacing,
-        width: '100%',
-        maxWidth: '200px' // Smaller preview
       }}
     >
       {cells}
@@ -233,8 +232,25 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
               inputProps={{ min: 1, max: 12, step: 1 }}
             />
           </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={equalHeight}
+                  onChange={(e) => {
+                    setEqualHeight(e.target.checked)
+                    handleChange('equalHeight', e.target.checked)
+                  }}
+                />
+              }
+              label="Equal Height Cells"
+            />
+            <Typography variant="caption" sx={{ display: 'block', mt: 0.5, ml: 3, color: 'text.secondary' }}>
+              When enabled, all cells will have the same height, regardless of their content
+            </Typography>
+          </Grid>
           
-          <Grid item xs={12}>
+          <Grid item xs={12} sx={{ marginX: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
               Grid Gap (Spacing between cells)
             </Typography>
@@ -249,46 +265,33 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
                 setSpacing(value as number)
                 handleChange('spacing', value)
               }}
+              sx={{ marginRight: 2 }}
             />
           </Grid>
           
-          <Grid item xs={12}>
-            <Tooltip title="When enabled, all cells will have the same height, regardless of their content">
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={equalHeight}
-                    onChange={(e) => {
-                      setEqualHeight(e.target.checked)
-                      handleChange('equalHeight', e.target.checked)
-                    }}
-                  />
-                }
-                label="Equal Height Cells"
-              />
-            </Tooltip>
-          </Grid>
           
-          <Grid item xs={12}>
+          <Grid item xs={12} sx={{ marginX: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
               Cell Padding
             </Typography>
-            <Tooltip title="Padding adds space inside each cell, around the content">
-              <Box>
-                <Slider
-                  value={cellPadding}
-                  min={0}
-                  max={4}
-                  step={1}
-                  marks
-                  valueLabelDisplay="auto"
-                  onChange={(_e, value) => {
-                    setCellPadding(value as number)
-                    handleChange('cellPadding', value)
-                  }}
-                />
-              </Box>
-            </Tooltip>
+            <Box>
+              <Slider
+                value={cellPadding}
+                min={0}
+                max={4}
+                step={1}
+                marks
+                valueLabelDisplay="auto"
+                onChange={(_e, value) => {
+                  setCellPadding(value as number)
+                  handleChange('cellPadding', value)
+                }}
+                sx={{ marginRight: 2 }}
+              />
+            </Box>
+            <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.secondary' }}>
+              Padding adds space inside each cell, around the content
+            </Typography>
           </Grid>
         </Grid>
       </TabPanelShared>
@@ -366,34 +369,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
               </Grid>
             </>
           )}
-          
-          <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.showGridLines)}
-                  onChange={(e) => handleChange('showGridLines', e.target.checked)}
-                />
-              }
-              label="Show Grid Lines"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.fitContainer)}
-                  onChange={(e) => handleChange('fitContainer', e.target.checked)}
-                />
-              }
-              label="Fit Container Width"
-            />
-          </Grid>
         </Grid>
       </TabPanelShared>
     </Box>

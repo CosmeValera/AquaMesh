@@ -9,7 +9,6 @@ import {
   MenuItem,
   FormControlLabel,
   Switch,
-  Divider,
   Grid,
   Tabs,
   Tab,
@@ -18,7 +17,6 @@ import {
   Chip,
   Button
 } from '@mui/material'
-import SettingsIcon from '@mui/icons-material/Settings'
 import DesignServicesIcon from '@mui/icons-material/DesignServices'
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
@@ -298,7 +296,7 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
           </Grid>
           
           {/* Justification */}
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <FormControl fullWidth sx={{ mt: 2 }}>
               <InputLabel>Justify Content</InputLabel>
               <Select
@@ -320,8 +318,8 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
           </Grid>
           
           {/* Alignment */}
-          <Grid item xs={12}>
-            <FormControl fullWidth>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth sx={{ mt: 2 }}>
               <InputLabel>Align Items</InputLabel>
               <Select
                 value={alignItems}
@@ -341,7 +339,7 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
           </Grid>
           
           {/* Wrapping */}
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel>Flex Wrap</InputLabel>
               <Select
@@ -359,33 +357,8 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
             </FormControl>
           </Grid>
           
-          {/* Spacing */}
-          <Grid item xs={12}>
-            <Typography variant="subtitle2" gutterBottom>
-              Item Spacing (Gap)
-            </Typography>
-            <Slider
-              value={spacing}
-              min={0}
-              max={8}
-              step={1}
-              marks
-              valueLabelDisplay="auto"
-              onChange={(_e, value) => {
-                setSpacing(value as number)
-                handleChange('spacing', value)
-              }}
-              sx={{
-                '& .MuiSlider-markLabel': {
-                  color: 'text.primary',
-                  fontWeight: 'medium'
-                }
-              }}
-            />
-          </Grid>
-          
           {/* Scrollable Option */}
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <FormControlLabel
               control={
                 <Switch
@@ -397,13 +370,39 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
         </Grid>
+          
       </TabPanelShared>
       
       {/* Appearance Tab */}
       <TabPanelShared value={tabValue} index={1}>
+        
+        {/* Spacing */}
+        <Grid item xs={12} sx={{ marginX: 2 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Item Spacing (Gap)
+          </Typography>
+          <Slider
+            value={spacing}
+            min={0}
+            max={8}
+            step={1}
+            marks
+            valueLabelDisplay="auto"
+            onChange={(_e, value) => {
+              setSpacing(value as number)
+              handleChange('spacing', value)
+            }}
+            sx={{
+              '& .MuiSlider-markLabel': {
+                color: 'text.primary',
+                fontWeight: 'medium'
+              }
+            }}
+          />
+        </Grid>
         <Grid container spacing={2}>
           {/* Padding */}
-          <Grid item xs={12}>
+          <Grid item xs={12} sx={{ marginX: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
               Container Padding
             </Typography>
@@ -428,7 +427,7 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
           </Grid>
           
           {/* Background Color */}
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <FormControlLabel
               control={
                 <Switch
@@ -441,7 +440,7 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
           </Grid>
           
           {props.useCustomColor && (
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <input
                   type="color"
@@ -463,36 +462,6 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                   onChange={(e) => handleChange('backgroundColor', e.target.value)}
                 />
               </Box>
-            </Grid>
-          )}
-          
-          {/* Border Option */}
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.showBorder)}
-                  onChange={(e) => handleChange('showBorder', e.target.checked)}
-                />
-              }
-              label="Show Border"
-            />
-          </Grid>
-          
-          {props.showBorder && (
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Border Style</InputLabel>
-                <Select
-                  value={(props.borderStyle as string) || 'solid'}
-                  label="Border Style"
-                  onChange={(e) => handleChange('borderStyle', e.target.value)}
-                >
-                  <MenuItem value="solid">Solid</MenuItem>
-                  <MenuItem value="dashed">Dashed</MenuItem>
-                  <MenuItem value="dotted">Dotted</MenuItem>
-                </Select>
-              </FormControl>
             </Grid>
           )}
         </Grid>

@@ -167,7 +167,14 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                 sx={{ 
                   color: legendColor,
                   fontWeight: 'bold',
-                  mx: 0.5
+                  mx: 0.5,
+                  cursor: 'pointer'
+                }}
+                onClick={(e) => { 
+                  e.stopPropagation();
+                  if (onToggleCollapse) {
+                    onToggleCollapse(component.id);
+                  }
                 }}
               >
                 {component.props.legend as string || 'Field Set'}
@@ -255,27 +262,34 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             {component.props.text as string}
           </Typography>
         )
-      case 'Button':
+      case 'Button': {
+        const clickAction = component.props.clickAction as string | undefined;
+        const toastMessage = (component.props.toastMessage as string) || 'Button clicked!';
+        const toastSeverity = (component.props.toastSeverity as string) || 'info';
+        const urlProp = component.props.url as string;
+        // Determine alignment based on props.alignment
+        const alignment = component.props.alignment as 'left' | 'center' | 'right' | undefined;
+        const alignItems = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems }}>
             <Button
               variant={(component.props.variant as 'contained' | 'outlined' | 'text') || 'contained'}
               color={(component.props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info') || 'primary'}
               size={(component.props.size as 'small' | 'medium' | 'large') || 'medium'}
               fullWidth={Boolean(component.props.fullWidth)}
+              disabled={Boolean(component.props.disabled)}
               onClick={() => {
-                // Handle toast functionality in preview/edit mode
-                if (component.props.clickAction === 'toast') {
+                if (clickAction === 'toast') {
                   const customEvent = new CustomEvent('showWidgetToast', {
                     detail: {
-                      message: component.props.toastMessage as string || 'Button clicked!',
-                      severity: component.props.toastSeverity as string || 'info'
+                      message: toastMessage,
+                      severity: toastSeverity
                     },
                     bubbles: true
                   });
                   document.dispatchEvent(customEvent);
-                } else if (component.props.clickAction === 'openUrl' && component.props.url) {
-                  let url = component.props.url as string;
+                } else if (clickAction === 'openUrl' && urlProp) {
+                  let url = urlProp;
                   if (url && !url.match(/^https?:\/\//)) {
                     url = `https://${url}`;
                   }
@@ -348,23 +362,23 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             >
               {component.props.text as string}
             </Button>
-            {editMode && component.props.clickAction && (
-              <React.Fragment>
-                {component.props.clickAction === 'toast' && (
+            {editMode && clickAction && (
+              <>
+                {clickAction === 'toast' && (
                   <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
-                    Click Action: Show toast &quot;{(component.props.toastMessage as string) || 'Button clicked'}&quot; 
-                    ({(component.props.toastSeverity as string) || 'info'})
+                    Click Action: Show toast "{toastMessage}" ({toastSeverity})
                   </Typography>
                 )}
-                {component.props.clickAction === 'openUrl' && component.props.url && (
+                {clickAction === 'openUrl' && urlProp && (
                   <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
-                    Click Action: Open URL {component.props.url as string}
+                    Click Action: Open URL {urlProp}
                   </Typography>
                 )}
-              </React.Fragment>
+              </>
             )}
           </Box>
         )
+      }
       case 'TextField':
         return (
           <TextField

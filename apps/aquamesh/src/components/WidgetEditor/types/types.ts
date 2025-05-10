@@ -110,6 +110,7 @@ export interface ButtonProps {
   textDecoration?: 'none' | 'underline';
   customColor?: string;
   customHoverColor?: string;
+  alignment?: 'left' | 'center' | 'right';
   showStartIcon?: boolean;
   iconName?: string;
   showEndIcon?: boolean;

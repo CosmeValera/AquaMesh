@@ -74,8 +74,21 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
     typeof props.iconName === 'string' ? props.iconName : 'add'
   )
   
+  // Alignment state for preview
+  const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>(
+    typeof props.alignment === 'string' && ['left','center','right'].includes(props.alignment as string)
+      ? (props.alignment as 'left' | 'center' | 'right')
+      : 'center'
+  )
+  
   // Initialize custom colors if they exist in props
   useEffect(() => {
+    // Sync alignment from props
+    if (typeof props.alignment === 'string' && ['left','center','right'].includes(props.alignment as string)) {
+      setAlignment(props.alignment as 'left' | 'center' | 'right')
+    } else {
+      setAlignment('center')
+    }
     const useCustColor = Boolean(props.customColor)
     if (useCustColor) {
       setCustomColor(props.customColor || '#1976d2')
@@ -232,7 +245,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
     <Box sx={{ width: '100%' }}>
       {/* Preview section */}
       <ComponentPreview>
-        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: (alignment === 'left' ? 'flex-start' : (alignment === 'right' ? 'flex-end' : 'center')) }}>
           <MuiButton
             variant={props.variant as 'contained' | 'outlined' | 'text' || 'contained'}
             color={useCustomColor ? undefined : (props.color as 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' || 'primary')}
@@ -466,6 +479,33 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
               label="Disabled"
               sx={{ color: '#191919' }}
             />
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth margin="dense" size="small" variant="outlined">
+              <InputLabel id="button-alignment-label">Alignment</InputLabel>
+              <Select
+                labelId="button-alignment-label"
+                value={alignment}
+                onChange={(e) => {
+                  const value = e.target.value as 'left' | 'center' | 'right';
+                  setAlignment(value);
+                  handleChange('alignment', value);
+                }}
+                label="Alignment"
+                sx={{
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0, 0, 0, 0.23)' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.light' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
+                  '& .MuiSelect-select': { color: '#000000' },
+                  '& .MuiInputLabel-root': { color: '#191919' }
+                }}
+              >
+                <MenuItem value="left">Left</MenuItem>
+                <MenuItem value="center">Center</MenuItem>
+                <MenuItem value="right">Right</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
         </Grid>
         

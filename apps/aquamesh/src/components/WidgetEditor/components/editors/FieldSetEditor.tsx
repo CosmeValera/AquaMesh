@@ -206,14 +206,13 @@ const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
                     sx={{ cursor: 'pointer', color: useCustomLegendColor ? props.legendColor : 'primary.main' }}
                   />
                 )}
-                
-                <Typography 
-                  variant="subtitle2" 
-                  sx={legendStyles}
+                <Typography
+                  variant="subtitle2"
+                  sx={{ ...legendStyles, cursor: 'pointer' }}
+                  onClick={handlePreviewCollapseToggle}
                 >
                   {props.legend || 'Legend'}
                 </Typography>
-                
                 {iconPosition === 'end' && !previewCollapsed && (
                   <KeyboardArrowUpIcon 
                     fontSize="small" 

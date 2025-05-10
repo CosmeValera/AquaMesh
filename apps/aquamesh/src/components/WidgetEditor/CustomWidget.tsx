@@ -33,6 +33,7 @@ import SaveIcon from '@mui/icons-material/Save'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
+import ComponentPreview from './components/preview/ComponentPreview'
 
 interface ComponentData {
   id: string
@@ -191,95 +192,65 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
       )
     case 'FieldSet': {
       const isCollapsed = collapsedFieldsets[component.id] ?? Boolean(component.props.collapsed)
-      
-      // Generate fieldset styles
-      const fieldsetStyles: Record<string, any> = {
-        border: component.props.borderStyle 
-          ? `1px ${component.props.borderStyle as string} ${component.props.useCustomColor ? component.props.borderColor : '#ccc'}` 
-          : '1px solid #ccc',
-        p: component.props.padding !== undefined ? component.props.padding : 2,
-        borderRadius: component.props.borderRadius !== undefined ? component.props.borderRadius : 1,
-        mb: 1
-      }
-      
-      if (component.props.useCustomColor && component.props.backgroundColor) {
-        fieldsetStyles.backgroundColor = component.props.backgroundColor
-      }
-      
-      if (component.props.elevation) {
-        fieldsetStyles.boxShadow = 1
-      }
-      
-      // Generate legend styles
-      const legendStyles: Record<string, any> = {
-        ml: 0.5
-      }
-      
-      if (component.props.useCustomColor && component.props.legendColor) {
-        legendStyles.color = component.props.legendColor
-      }
-      
-      if (component.props.legendBold) {
-        legendStyles.fontWeight = 'bold'
-      }
-      
-      if (component.props.legendAlign) {
-        legendStyles.textAlign = component.props.legendAlign
-      }
-      
-      if (component.props.legendSize) {
-        switch(component.props.legendSize) {
-          case 'small':
-            legendStyles.fontSize = '0.875rem'
-            break
-          case 'large':
-            legendStyles.fontSize = '1.25rem'
-            break
-        }
-      }
-      
+      const borderStyle = (component.props.borderStyle as string) || 'solid'
+      const borderRadius = typeof component.props.borderRadius === 'number' ? component.props.borderRadius : 4
+      const padding = typeof component.props.padding === 'number' ? component.props.padding : 2
+      const useCustomBorderColor = Boolean(component.props.useCustomBorderColor)
+      const useCustomLegendColor = Boolean(component.props.useCustomLegendColor)
+      const borderColor = useCustomBorderColor ? (component.props.borderColor as string || '#cccccc') : '#cccccc'
+      const legendColor = useCustomLegendColor ? (component.props.legendColor as string || '#00C49A') : '#00C49A'
+      const iconPosition = (component.props.iconPosition as 'start' | 'end') || 'start'
+      const animated = component.props.animated !== false
+
       return (
-        <Box 
-          key={component.id} 
-          sx={fieldsetStyles}
-          data-testid={component.props.dataTestId as string}
-          aria-label={component.props.ariaLabel as string}
+        <Box
+          key={component.id}
+          sx={{
+            position: 'relative',
+            border: `1px ${borderStyle} ${borderColor}`,
+            borderRadius: borderRadius,
+            p: padding,
+            mt: 1.5
+          }}
         >
-          <Box
-            onClick={() => toggleFieldsetCollapse(component.id)}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-              mb: 1,
-              justifyContent: component.props.iconPosition === 'end' ? 'space-between' : 'flex-start'
-            }}
-          >
-            {component.props.iconPosition !== 'end' && (
-              isCollapsed ? (
-                <KeyboardArrowDownIcon fontSize="small" color={component.props.useCustomColor && component.props.legendColor ? "inherit" : "action"} />
-              ) : (
-                <KeyboardArrowUpIcon fontSize="small" color={component.props.useCustomColor && component.props.legendColor ? "inherit" : "action"} />
-              )
+          {/* Legend */}
+          <Box sx={{
+            position: 'absolute',
+            top: -10,
+            left: 10,
+            bgcolor: 'background.paper',
+            px: 1,
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            {iconPosition === 'start' && (
+              <Box
+                onClick={() => toggleFieldsetCollapse(component.id)}
+                sx={{ cursor: 'pointer', color: legendColor }}
+              >
+                {isCollapsed ? <KeyboardArrowDownIcon fontSize="small" /> : <KeyboardArrowUpIcon fontSize="small" />}
+              </Box>
             )}
-            
-            <Typography variant="subtitle2" sx={legendStyles}>
-              {component.props.legend as string}
+            <Typography
+              variant="subtitle2"
+              sx={{ color: legendColor, fontWeight: 'bold', mx: 0.5, cursor: 'pointer' }}
+              onClick={() => toggleFieldsetCollapse(component.id)}
+            >
+              {component.props.legend as string || 'Field Set'}
             </Typography>
-            
-            {component.props.iconPosition === 'end' && (
-              isCollapsed ? (
-                <KeyboardArrowDownIcon fontSize="small" color={component.props.useCustomColor && component.props.legendColor ? "inherit" : "action"} />
-              ) : (
-                <KeyboardArrowUpIcon fontSize="small" color={component.props.useCustomColor && component.props.legendColor ? "inherit" : "action"} />
-              )
+            {iconPosition === 'end' && (
+              <Box
+                onClick={() => toggleFieldsetCollapse(component.id)}
+                sx={{ cursor: 'pointer', color: legendColor }}
+              >
+                {isCollapsed ? <KeyboardArrowDownIcon fontSize="small" /> : <KeyboardArrowUpIcon fontSize="small" />}
+              </Box>
             )}
           </Box>
-          
-          <Collapse in={!isCollapsed} timeout={component.props.animated ? 'auto' : 0}>
+          <Collapse in={!isCollapsed} timeout={animated ? 300 : 0}>
             {component.children && component.children.length > 0 ? (
               <Box sx={{ mt: 1 }}>
-                {component.children.map(renderComponent)}
+                {component.children.map(child => renderComponent(child))}
               </Box>
             ) : (
               <Typography variant="body2" color="text.secondary">No content</Typography>
@@ -316,8 +287,12 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
       const iconName = component.props.iconName as string || 'add'
       const IconComponent = AVAILABLE_ICONS[iconName] || AddIcon
       
+      // Determine alignment based on props.alignment
+      const alignment = component.props.alignment as 'left' | 'center' | 'right' | undefined;
+      const justifyContent = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+      
       return (
-        <Box key={component.id} sx={{ mb: 1 }}>
+        <Box key={component.id} sx={{ mb: 1, display: 'flex', justifyContent }}>
           <Button 
             variant={component.props.variant as 'contained' | 'outlined' | 'text' || 'contained'} 
             size={component.props.size as 'small' | 'medium' | 'large' || 'medium'}
@@ -724,7 +699,36 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
       {showWidgetName && widgetName && (
         <Typography variant="subtitle1" sx={{ mb: 2 }}>Widget Name: {widgetName}</Typography>
       )}
-      {renderComponents()}
+      {widgetComponents.map((component, index) => (
+        <ComponentPreview
+          key={component.id}
+          component={{
+            ...component,
+            props: {
+              ...component.props,
+              collapsed: collapsedFieldsets[component.id] ?? Boolean(component.props.collapsed)
+            }
+          }}
+          onEdit={() => {}}
+          onToggleCollapse={toggleFieldsetCollapse}
+          onDelete={() => {}}
+          onMoveUp={() => {}}
+          onMoveDown={() => {}}
+          onAddInside={() => {}}
+          onToggleVisibility={() => {}}
+          isFirst={index === 0}
+          isLast={index === widgetComponents.length - 1}
+          level={0}
+          editMode={false}
+          isDragging={false}
+          dropTarget={{ id: '', isHovering: false }}
+          handleContainerDragEnter={() => {}}
+          handleContainerDragOver={() => {}}
+          handleContainerDragLeave={() => {}}
+          handleContainerDrop={() => {}}
+          showWidgetName={showWidgetName}
+        />
+      ))}
       
       {/* Toast notification */}
       {toastState.open && (

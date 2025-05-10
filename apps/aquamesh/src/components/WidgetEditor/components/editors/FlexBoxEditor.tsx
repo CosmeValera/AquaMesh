@@ -325,22 +325,8 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                 <MenuItem value="wrap-reverse">Wrap Reverse</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
-          
-          {/* Scrollable Option */}
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(props.scrollable)}
-                  onChange={(e) => handleChange('scrollable', e.target.checked)}
-                />
-              }
-              label="Make Container Scrollable"
-            />
-          </Grid>
+          </Grid> 
         </Grid>
-          
       </TabPanelShared>
       
       {/* Appearance Tab */}

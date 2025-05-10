@@ -42,28 +42,6 @@ interface FieldSetEditorProps {
   onChange: (updatedProps: FieldSetProps) => void;
 }
 
-// Tab panel component for organizing the editor
-const TabPanel: React.FC<{ 
-  children: React.ReactNode
-  value: number
-  index: number 
-}> = ({ children, value, index }) => {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`fieldset-tabpanel-${index}`}
-      aria-labelledby={`fieldset-tab-${index}`}
-    >
-      {value === index && (
-        <Box sx={{ p: 2 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  )
-}
-
 const FieldSetEditor: React.FC<FieldSetEditorProps> = ({ props, onChange }) => {
   // Tab state
   const [tabValue, setTabValue] = useState(0)

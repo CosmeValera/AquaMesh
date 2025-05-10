@@ -14,7 +14,6 @@ import {
   Tooltip
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
-import ColorLensIcon from '@mui/icons-material/ColorLens'
 import NotificationsIcon from '@mui/icons-material/Notifications'
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
@@ -32,7 +31,6 @@ interface SwitchProps {
   labelPlacement?: 'end' | 'start' | 'top' | 'bottom';
   size?: 'small' | 'medium';
   useCustomColor?: boolean;
-  customColor?: string; // thumb color
   customTrackColor?: string; // track color
   showToast?: boolean;
   onMessage?: string;
@@ -56,7 +54,6 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
   
   // Color states
   const [useCustomColor, setUseCustomColor] = useState(Boolean(props.useCustomColor))
-  const [customColor, setCustomColor] = useState((props.customColor as string) || '#1976d2')
   const [customTrackColor, setCustomTrackColor] = useState((props.customTrackColor as string) || '#90caf9')
   
   // Size & Style
@@ -67,12 +64,6 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
   // Initialize state based on props
   useEffect(() => {
     setChecked(Boolean(props.defaultChecked))
-    if (props.customColor) {
-      setCustomColor(props.customColor as string)
-    } else {
-      setCustomColor('#1976d2')
-    }
-    
     if (props.customTrackColor) {
       setCustomTrackColor(props.customTrackColor as string)
     } else {

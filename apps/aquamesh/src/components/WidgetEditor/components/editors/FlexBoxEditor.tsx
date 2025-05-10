@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import {
   Box,
   Typography,
-  TextField,
   FormControl,
   InputLabel,
   Select,
@@ -16,7 +15,6 @@ import {
   Button
 } from '@mui/material'
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
-import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
@@ -32,30 +30,6 @@ import {
 interface FlexBoxEditorProps {
   props: Record<string, unknown>
   onChange: (updatedProps: Record<string, unknown>) => void
-}
-
-// Color squares for visualization
-const DirectionIndicator: React.FC<{ direction: string }> = ({ direction }) => {
-  return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        border: '1px solid #ccc',
-        p: 1,
-        borderRadius: 1,
-        width: '60px',
-        height: '60px',
-        bgcolor: 'rgba(0,0,0,0.04)'
-      }}
-    >
-      {direction === 'row' && <ArrowForwardIcon color="primary" />}
-      {direction === 'column' && <ArrowDownwardIcon color="primary" />}
-      {direction === 'row-reverse' && <ArrowBackIcon color="primary" />}
-      {direction === 'column-reverse' && <ArrowUpwardIcon color="primary" />}
-    </Box>
-  )
 }
 
 const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {

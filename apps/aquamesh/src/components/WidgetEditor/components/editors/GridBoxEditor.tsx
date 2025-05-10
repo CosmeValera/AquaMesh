@@ -3,27 +3,15 @@ import {
   Box,
   Typography,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   FormControlLabel,
   Switch,
-  Divider,
   Grid,
-  Tabs,
-  Tab,
   Slider,
   Tooltip
 } from '@mui/material'
-import GridViewIcon from '@mui/icons-material/GridView'
-import ColorLensIcon from '@mui/icons-material/ColorLens'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 
-import {
-  ComponentPreview,
-  TabPanelShared
-} from '../shared/SharedEditorComponents'
+import { ComponentPreview } from '../shared/SharedEditorComponents'
 
 interface GridBoxEditorProps {
   props: Record<string, unknown>
@@ -82,9 +70,6 @@ const GridVisualizer: React.FC<{ columns: number, spacing: number, useCustomColo
 }
 
 const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
-  // Tab state
-  const [tabValue, setTabValue] = useState(0)
-  
   // GridBox states
   const [columns, setColumns] = useState<number>(typeof props.columns === 'number' ? props.columns : 3)
   const [spacing, setSpacing] = useState<number>(typeof props.spacing === 'number' ? props.spacing : 2)
@@ -107,11 +92,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
     
     setEqualHeight(Boolean(props.equalHeight))
   }, [props])
-  
-  // Handle tab change
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue)
-  }
   
   // Generic change handler
   const handleChange = (name: string, value: unknown) => {

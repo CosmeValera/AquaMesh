@@ -520,7 +520,7 @@ export const useWidgetEditor = () => {
         handleSaveWidget()
       }
 
-      // Toggle edit mode with Ctrl+E
+      // Toggle edit/preview mode with Ctrl+E
       if (e.ctrlKey && e.key === 'e') {
         e.preventDefault()
         toggleEditMode()
@@ -1146,7 +1146,7 @@ export const useWidgetEditor = () => {
     setNotification({ ...notification, open: false })
   }
 
-  // Toggle edit mode
+  // Toggle edit/preview mode
   const toggleEditMode = () => {
     setEditMode((prev) => !prev)
   }

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactNode } from 'react'
 import {
   Box,
   Paper,
@@ -31,6 +31,9 @@ import SendIcon from '@mui/icons-material/Send'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 
+// Fix for type issues with MUI icons
+type IconType = React.ElementType;
+
 const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   component,
   onEdit,
@@ -56,7 +59,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   const isHidden = Boolean(component.hidden)
 
   // Get the component icon for display
-  const ComponentIcon = getComponentIcon(component.type)
+  const ComponentIcon = getComponentIcon(component.type) as IconType
 
   // Render a preview of the component based on its type
   const renderComponent = () => {
@@ -101,15 +104,27 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
           />
         )
       case 'FieldSet': {
-        const isCollapsed = component.props.collapsed as boolean
+        const isCollapsed = component.props.collapsed as boolean;
+        const borderStyle = component.props.borderStyle as string || 'solid';
+        const borderRadius = (component.props.borderRadius as number) || 4;
+        const padding = (component.props.padding as number) || 2;
+        const useCustomBorderColor = Boolean(component.props.useCustomBorderColor);
+        const useCustomLegendColor = Boolean(component.props.useCustomLegendColor);
+        const borderColor = useCustomBorderColor ? (component.props.borderColor as string || '#cccccc') : '#cccccc';
+        const legendColor = useCustomLegendColor ? (component.props.legendColor as string || '#00C49A') : '#00C49A';
+        const iconPosition = component.props.iconPosition as string || 'start';
+        const animated = component.props.animated !== false;
+        
         return (
           <Box
             sx={{
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: 1,
-              p: 2,
+              position: 'relative',
+              border: `1px ${borderStyle} ${borderColor}`,
+              borderRadius: borderRadius,
+              p: padding,
+              mt: 1.5, // Space for legend
               bgcolor: isCurrentTarget ? 'rgba(0, 188, 162, 0.15)' : 'transparent',
-              borderStyle: isCurrentTarget ? 'dashed' : 'solid',
+              borderStyle: isCurrentTarget ? 'dashed' : borderStyle,
               transition: 'background-color 0.2s, border-color 0.2s',
             }}
             onDragEnter={(e) => handleContainerDragEnter(e, component.id)}
@@ -117,26 +132,70 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             onDragLeave={handleContainerDragLeave}
             onDrop={(e) => handleContainerDrop(e, component.id)}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              {/* Collapse/Expand Arrow */}
-              <IconButton
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  if (onToggleCollapse) {
-                    onToggleCollapse(component.id); 
-                  }
+            {/* Legend */}
+            <Box sx={{ 
+              position: 'absolute', 
+              top: -10, 
+              left: 10,
+              bgcolor: 'background.paper',
+              px: 1,
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              {iconPosition === 'start' && (
+                <Box 
+                  component="span" 
+                  sx={{ 
+                    cursor: 'pointer', 
+                    color: legendColor,
+                    display: 'inline-flex',
+                    alignItems: 'center'
+                  }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (onToggleCollapse) {
+                      onToggleCollapse(component.id); 
+                    }
+                  }}
+                >
+                  {isCollapsed ? <KeyboardArrowDownIcon fontSize="small" /> : <KeyboardArrowUpIcon fontSize="small" />}
+                </Box>
+              )}
+              
+              <Typography 
+                variant="subtitle2" 
+                sx={{ 
+                  color: legendColor,
+                  fontWeight: 'bold',
+                  mx: 0.5
                 }}
-                size="small"
-                sx={{ color: 'primary.main' }}
               >
-                {isCollapsed ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
-              </IconButton>
-              {/* Legend Text */}
-              <Typography variant="h6" sx={{ ml: 1, flexGrow: 1 }}>
-                {component.props.legend as string}
+                {component.props.legend as string || 'Field Set'}
               </Typography>
+              
+              {iconPosition === 'end' && (
+                <Box 
+                  component="span" 
+                  sx={{ 
+                    cursor: 'pointer', 
+                    color: legendColor,
+                    display: 'inline-flex',
+                    alignItems: 'center'
+                  }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (onToggleCollapse) {
+                      onToggleCollapse(component.id); 
+                    }
+                  }}
+                >
+                  {isCollapsed ? <KeyboardArrowDownIcon fontSize="small" /> : <KeyboardArrowUpIcon fontSize="small" />}
+                </Box>
+              )}
             </Box>
-            <Collapse in={!isCollapsed}>
+            
+            {/* Content area */}
+            <Collapse in={!isCollapsed} timeout={animated ? 300 : 0}>
               {component.children && component.children.length > 0 ? (
                 component.children.map((child, index) => (
                   <ComponentPreview
@@ -166,14 +225,15 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                 <Box
                   sx={{
                     p: 2,
-                    border: '1px dashed rgba(255, 255, 255, 0.2)',
+                    border: editMode ? '1px dashed rgba(255, 255, 255, 0.2)' : 'none',
                     borderRadius: 1,
-                    bgcolor: isCurrentTarget ? 'rgba(0, 188, 162, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    bgcolor: isCurrentTarget ? 'rgba(0, 188, 162, 0.1)' : 'transparent',
                     color: 'text.secondary',
                     textAlign: 'center',
+                    minHeight: editMode ? '60px' : 'auto'
                   }}
                 >
-                  {isDragging ? 'Drop component here' : (editMode ? 'Drag and drop components here' : 'No content')}
+                  {isDragging ? 'Drop component here' : (editMode ? 'Drag and drop components here' : 'Content will appear here')}
                 </Box>
               )}
             </Collapse>
@@ -288,12 +348,12 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             >
               {component.props.text as string}
             </Button>
-            {editMode && (
-              <>
+            {editMode && component.props.clickAction && (
+              <React.Fragment>
                 {component.props.clickAction === 'toast' && (
                   <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
-                    Click Action: Show toast &quot;{component.props.toastMessage as string || 'Button clicked'}&quot; 
-                    ({component.props.toastSeverity as string || 'info'})
+                    Click Action: Show toast &quot;{(component.props.toastMessage as string) || 'Button clicked'}&quot; 
+                    ({(component.props.toastSeverity as string) || 'info'})
                   </Typography>
                 )}
                 {component.props.clickAction === 'openUrl' && component.props.url && (
@@ -301,7 +361,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                     Click Action: Open URL {component.props.url as string}
                   </Typography>
                 )}
-              </>
+              </React.Fragment>
             )}
           </Box>
         )
@@ -312,24 +372,34 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             placeholder={component.props.placeholder as string}
             defaultValue={component.props.defaultValue as string}
             fullWidth
-            size="small"
+            size={(component.props.size as 'small' | 'medium') || 'small'}
+            variant={(component.props.variant as 'outlined' | 'filled' | 'standard') || 'outlined'}
           />
         )
-      case 'FlexBox':
+      case 'FlexBox': {
+        const direction = (component.props.direction as 'row' | 'column' | 'row-reverse' | 'column-reverse') || 'row';
+        const justifyContent = (component.props.justifyContent as string) || 'flex-start';
+        const alignItems = (component.props.alignItems as string) || 'center';
+        const flexWrap = (component.props.wrap as 'wrap' | 'nowrap' | 'wrap-reverse') || 'wrap';
+        const spacing = (component.props.spacing as number) || 2;
+        const padding = (component.props.padding as number) || 1;
+        const useCustomColor = Boolean(component.props.useCustomColor);
+        const backgroundColor = useCustomColor ? (component.props.backgroundColor as string || 'transparent') : 'transparent';
+        
         return (
           <Box
             sx={{
               display: 'flex',
-              flexDirection: (component.props.direction as 'row' | 'column' | 'row-reverse' | 'column-reverse') || 'row',
-              justifyContent: (component.props.justifyContent as string) || 'flex-start',
-              alignItems: (component.props.alignItems as string) || 'center',
-              flexWrap: (component.props.wrap as 'wrap' | 'nowrap' | 'wrap-reverse') || 'wrap',
-              gap: (component.props.spacing as number) || 2,
-              p: 2,
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              flexDirection: direction,
+              justifyContent: justifyContent,
+              alignItems: alignItems,
+              flexWrap: flexWrap,
+              gap: spacing,
+              p: padding,
+              border: isCurrentTarget || editMode ? '1px solid rgba(255, 255, 255, 0.2)' : 'none',
               borderRadius: 1,
               minHeight: '50px',
-              bgcolor: isCurrentTarget ? 'rgba(0, 188, 162, 0.15)' : 'transparent',
+              bgcolor: isCurrentTarget ? 'rgba(0, 188, 162, 0.15)' : backgroundColor,
               borderStyle: isCurrentTarget ? 'dashed' : 'solid',
               transition: 'background-color 0.2s, border-color 0.2s',
             }}
@@ -364,25 +434,40 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                 />
               ))
             ) : (
-              <Box sx={{ width: '100%', textAlign: 'center', color: 'text.secondary' }}>
-                {isDragging ? 'Drop component here' : (editMode ? 'Drag and drop components here' : 'Empty Flex Container')}
+              <Box sx={{ 
+                width: '100%', 
+                textAlign: 'center', 
+                color: 'text.secondary',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '40px'
+              }}>
+                {isDragging ? 'Drop component here' : 'Empty Flex Container'}
               </Box>
             )}
           </Box>
         )
-      case 'GridBox':
+      }
+      case 'GridBox': {
+        const columns = (component.props.columns as number) || 1;
+        const cellPadding = (component.props.cellPadding as number) || 1;
+        const spacing = (component.props.spacing as number) || 2;
+        const useCustomColor = Boolean(component.props.useCustomColor);
+        const backgroundColor = useCustomColor ? (component.props.backgroundColor as string) : 'transparent';
+        const borderColor = useCustomColor ? (component.props.borderColor as string) : '#e0e0e0';
+        
         return (
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: `repeat(${component.props.columns as number || 1}, 1fr)`,
-              gridTemplateRows: `repeat(${component.props.rows as number || 1}, auto)`,
-              gap: (component.props.spacing as number) || 2,
-              p: 2,
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              gridTemplateColumns: `repeat(${columns}, 1fr)`,
+              gap: spacing,
+              p: cellPadding,
+              border: isCurrentTarget || editMode ? '1px solid rgba(255, 255, 255, 0.2)' : 'none',
               borderRadius: 1,
               minHeight: '50px',
-              bgcolor: isCurrentTarget ? 'rgba(0, 188, 162, 0.15)' : 'transparent',
+              bgcolor: isCurrentTarget ? 'rgba(0, 188, 162, 0.15)' : backgroundColor,
               borderStyle: isCurrentTarget ? 'dashed' : 'solid',
               transition: 'background-color 0.2s, border-color 0.2s',
             }}
@@ -393,28 +478,36 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
           >
             {component.children && component.children.length > 0 ? (
               component.children.map((child, index) => (
-                <ComponentPreview
+                <Box
                   key={child.id}
-                  component={child}
-                  onEdit={onEdit}
-                  onToggleCollapse={onToggleCollapse}
-                  onDelete={onDelete}
-                  onMoveUp={onMoveUp}
-                  onMoveDown={onMoveDown}
-                  onAddInside={onAddInside}
-                  isFirst={index === 0}
-                  isLast={index === component.children.length - 1}
-                  level={level + 1}
-                  editMode={editMode}
-                  isDragging={isDragging}
-                  dropTarget={dropTarget}
-                  handleContainerDragEnter={handleContainerDragEnter}
-                  handleContainerDragOver={handleContainerDragOver}
-                  handleContainerDragLeave={handleContainerDragLeave}
-                  handleContainerDrop={handleContainerDrop}
-                  onToggleVisibility={onToggleVisibility}
-                  showWidgetName={showWidgetName}
-                />
+                  sx={{
+                    border: useCustomColor ? `1px solid ${borderColor}` : 'none',
+                    borderRadius: 1,
+                    p: cellPadding
+                  }}
+                >
+                  <ComponentPreview
+                    component={child}
+                    onEdit={onEdit}
+                    onToggleCollapse={onToggleCollapse}
+                    onDelete={onDelete}
+                    onMoveUp={onMoveUp}
+                    onMoveDown={onMoveDown}
+                    onAddInside={onAddInside}
+                    isFirst={index === 0}
+                    isLast={index === (component.children?.length || 0) - 1}
+                    level={level + 1}
+                    editMode={editMode}
+                    isDragging={isDragging}
+                    dropTarget={dropTarget}
+                    handleContainerDragEnter={handleContainerDragEnter}
+                    handleContainerDragOver={handleContainerDragOver}
+                    handleContainerDragLeave={handleContainerDragLeave}
+                    handleContainerDrop={handleContainerDrop}
+                    onToggleVisibility={onToggleVisibility}
+                    showWidgetName={showWidgetName}
+                  />
+                </Box>
               ))
             ) : (
               <Box sx={{ 
@@ -424,13 +517,16 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                 justifyContent: 'center',
                 alignItems: 'center',
                 textAlign: 'center', 
-                color: 'text.secondary' 
+                color: 'text.secondary',
+                gridColumn: `span ${columns}`,
+                minHeight: '40px'
               }}>
-                {isDragging ? 'Drop component here' : (editMode ? 'Drag and drop components here' : 'Empty Grid Container')}
+                {isDragging ? 'Drop component here' : 'Empty Grid Container'}
               </Box>
             )}
           </Box>
         )
+      }
       case 'Chart': {
         const chartType = component.props.chartType as string || 'pie'
         const title = component.props.title as string || ''
@@ -528,23 +624,35 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
     return null;
   }
 
+  // For non-container components, we can skip the Paper wrapper in non-edit mode
+  const isContainer = ['FieldSet', 'FlexBox', 'GridBox'].includes(component.type);
+  if (!editMode && !isContainer) {
+    return renderComponent();
+  }
+
+  // Special case for FieldSet in non-edit mode - render directly without Paper wrapper
+  if (!editMode && component.type === 'FieldSet') {
+    return renderComponent();
+  }
+
   return (
     <Paper
-      elevation={1}
+      elevation={editMode ? 1 : 0}
       sx={{
         position: 'relative',
         mb: 1,
-        p: 2,
+        p: editMode ? 2 : 0,
         bgcolor: isCurrentTarget 
           ? 'rgba(0, 188, 162, 0.15)' 
-          : (isHidden ? 'rgba(0, 0, 0, 0.3)' : 'background.paper'),
+          : (isHidden && editMode ? 'rgba(0, 0, 0, 0.3)' : (editMode ? 'background.paper' : 'transparent')),
         borderStyle: isCurrentTarget ? 'dashed' : 'solid',
-        borderWidth: 1,
+        borderWidth: editMode ? 1 : 0,
         borderColor: isCurrentTarget 
           ? 'primary.main' 
           : (isHidden ? 'rgba(255, 0, 0, 0.4)' : 'divider'),
         opacity: isHidden && editMode ? 0.5 : 1,
         transition: 'background-color 0.3s, border-color 0.3s, opacity 0.3s',
+        boxShadow: editMode ? 1 : 'none'
       }}
       onDragEnter={editMode ? (e) => handleContainerDragEnter(e, component.id) : undefined}
       onDragOver={editMode ? handleContainerDragOver : undefined}
@@ -617,7 +725,9 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
       {/* Component Type Label */}
       {editMode && (
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          {ComponentIcon && <ComponentIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />}
+          {ComponentIcon && (
+            <Box component={ComponentIcon} sx={{ mr: 1, opacity: 0.7, fontSize: '1rem' }} />
+          )}
           <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
             {component.type} {isHidden && "(Hidden)"}
           </Typography>
@@ -625,7 +735,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
       )}
 
       {/* Actual component preview */}
-      <Box sx={{ ml: level * 2 }}>
+      <Box sx={{ ml: editMode ? level * 2 : 0 }}>
         {renderComponent()}
       </Box>
     </Paper>

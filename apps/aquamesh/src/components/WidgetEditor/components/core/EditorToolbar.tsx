@@ -185,7 +185,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               </>
             )}
             
-            <Tooltip title="Toggle edit mode">
+            <Tooltip title="Toggle edit/preview mode">
               <IconButton 
                 color="inherit" 
                 onClick={toggleEditMode}

@@ -523,7 +523,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               <Grid item xs={12} md={6}>
                 <ShortcutCard
                   icon={<EditIcon />}
-                  title="Toggle Edit Mode"
+                  title="Toggle edit/preview mode"
                   shortcut="Ctrl + E"
                   color="#ff9800"
                 />

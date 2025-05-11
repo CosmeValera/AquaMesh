@@ -21,7 +21,7 @@ import WidgetsIcon from '@mui/icons-material/Widgets'
 import CreateIcon from '@mui/icons-material/Create'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import FolderIcon from '@mui/icons-material/Folder'
-import ImportContactsIcon from '@mui/icons-material/ImportContacts';
+import ImportContactsIcon from '@mui/icons-material/ImportContacts'
 
 import useTopNavBarWidgets from '../../customHooks/useTopNavBarWidgets'
 import { useLayout } from '../Layout/LayoutProvider'
@@ -32,6 +32,7 @@ import DashboardOptionsMenu from '../Dasboard/DashboardOptionsMenu'
 import WidgetManagementModal from '../WidgetEditor/components/dialogs/WidgetManagementModal'
 import useWidgetManager from '../WidgetEditor/hooks/useWidgetManager'
 import FAQDialog from '../tutorial/FAQDialog'
+import { Actions } from 'flexlayout-react'
 
 // Define user data type
 interface UserData {
@@ -42,8 +43,8 @@ interface UserData {
 
 // Define component props interface 
 interface TopNavBarProps {
-  open: boolean;
-  setOpen: (open: boolean) => void;
+  open: boolean
+  setOpen: (open: boolean) => void
 }
 
 const TopNavBar: React.FC<TopNavBarProps> = () => {
@@ -62,7 +63,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   const [faqDialogOpen, setFaqDialogOpen] = useState(false)
 
   const { topNavBarWidgets } = useTopNavBarWidgets()
-  const { addComponent } = useLayout()
+  const { ref: layoutRef, addComponent } = useLayout()
   const { addDashboard, openDashboards } = useDashboards()
   const navigate = useNavigate()
   
@@ -135,9 +136,9 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
 
   // Helper function to ensure there's a dashboard before adding a component
   const ensureDashboardAndAddComponent = (componentConfig: {
-    id: string;
-    name: string;
-    component: string;
+    id: string,
+    name: string,
+    component: string
   }) => {
     // Check if there are any open dashboards
     if (openDashboards.length === 0) {
@@ -148,7 +149,17 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
         addComponent(componentConfig)
       }, 100)
     } else {
-      // If dashboards already exist, add the component directly
+      // If dashboards already exist, ensure an active tabset exists, and then add the component
+      if (layoutRef.current) {
+        const model = layoutRef.current.props.model
+        if (!model.getActiveTabset()) {
+          const firstTabset = model.getFirstTabSet()
+          if (firstTabset) {
+            // @ts-expect-error: doAction exists at runtime on Layout instance
+            layoutRef.current.doAction(Actions.setActiveTabset(firstTabset.getId()))
+          }
+        }
+      }
       addComponent(componentConfig)
     }
   }

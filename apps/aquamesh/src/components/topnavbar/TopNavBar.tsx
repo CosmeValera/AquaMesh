@@ -22,6 +22,7 @@ import CreateIcon from '@mui/icons-material/Create'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import FolderIcon from '@mui/icons-material/Folder'
 import ImportContactsIcon from '@mui/icons-material/ImportContacts'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 
 import useTopNavBarWidgets from '../../customHooks/useTopNavBarWidgets'
 import { useLayout } from '../Layout/LayoutProvider'
@@ -62,6 +63,9 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   // Add a state for the FAQ dialog
   const [faqDialogOpen, setFaqDialogOpen] = useState(false)
 
+  // State for phone More menu grouping Tutorial and FAQ
+  const [moreAnchorEl, setMoreAnchorEl] = useState<null | HTMLElement>(null)
+
   const { topNavBarWidgets } = useTopNavBarWidgets()
   const { ref: layoutRef, addComponent } = useLayout()
   const { addDashboard, openDashboards } = useDashboards()
@@ -69,7 +73,9 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
   
   // Use theme and media query for responsive design
   const theme = useTheme()
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'lg'))
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'))
   
   // Use the widget manager hook
   const {
@@ -134,6 +140,14 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
     setFaqDialogOpen(true)
   }
 
+  // Handlers for More menu
+  const handleMoreMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setMoreAnchorEl(event.currentTarget)
+  }
+  const handleMoreMenuClose = () => {
+    setMoreAnchorEl(null)
+  }
+
   // Helper function to ensure there's a dashboard before adding a component
   const ensureDashboardAndAddComponent = (componentConfig: {
     id: string,
@@ -188,20 +202,20 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
             sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              fontWeight: isTablet ? 'normal' : 'bold',
+              fontWeight: isDesktop ? 'bold' : 'normal',
+              mr: isDesktop ? 4 : 1,
               color: 'foreground.contrastPrimary',
-              mr: 4,
               cursor: 'default'
             }}
           >
-            <Logo height="32px" width="32px" style={{ marginRight: isTablet ? '-28px' : '12px' }} />
-            {!isTablet && 'AquaMesh'}
+            <Logo height="32px" width="32px" style={{ marginRight: isDesktop ? '12px' : '0' }} />
+            {isDesktop && 'AquaMesh'}
           </Typography>
 
           {/* Main Navigation Items */}
           <Box sx={{ flexGrow: 1, display: 'flex' }}>
             {/* Dashboard Options Menu (replaced with our new component) */}
-            <DashboardOptionsMenu isMobile={isTablet} />
+            <DashboardOptionsMenu />
 
             {/* Widgets Menu */}
             <Button
@@ -210,15 +224,15 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                 color: 'foreground.contrastPrimary', 
                 display: 'flex', 
                 alignItems: 'center',
-                minWidth: isTablet ? '40px' : 'auto',
-                mx: isTablet ? 0.5 : 1,
-                px: isTablet ? 1 : 2,
+                minWidth: isPhone ? '32px' : isTablet ? '40px' : 'auto',
+                mx: isPhone ? 0.5 : isTablet ? 0.75 : 1,
+                px: isPhone ? 1 : isTablet ? 1.5 : 2,
               }}
               startIcon={<WidgetsIcon />}
-              endIcon={<KeyboardArrowDownIcon />}
+              endIcon={isDesktop ? <KeyboardArrowDownIcon /> : null}
               data-tutorial-id="widgets-button"
             >
-              {!isTablet ? 'Widgets' : 'W.'}
+              {isPhone ? '' : isTablet ? 'W.' : 'Widgets'}
             </Button>
             <Menu
               anchorEl={widgetsAnchorEl}
@@ -324,49 +338,100 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                   color: 'foreground.contrastPrimary', 
                   display: 'flex', 
                   alignItems: 'center',
-                  minWidth: isTablet ? '40px' : 'auto',
-                  mx: isTablet ? 0.5 : 1,
-                  px: isTablet ? 1 : 2,
+                  minWidth: isPhone ? '32px' : isTablet ? '40px' : 'auto',
+                  mx: isPhone ? 0.5 : isTablet ? 0.75 : 1,
+                  px: isPhone ? 1 : isTablet ? 1.5 : 2,
                 }}
                 startIcon={<CreateIcon />}
                 data-tutorial-id="create-widget-button"
               >
-                {!isTablet ? 'Widget Editor' : ''}
+                {isPhone ? '' : 'Widget Editor'}
               </Button>
             )}
           </Box>
 
           {/* Right Side Elements */}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {/* Help Button */}
-            <Button
-              onClick={handleOpenTutorial}
-              sx={{ 
-                color: 'foreground.contrastPrimary', 
-                minWidth: 'auto',
-                mx: 1
-              }}
-              data-tutorial-id="help-button"
-              title="Open tutorial"
-            >
-              <ImportContactsIcon />
-            </Button>
+            {isPhone ? (
+              <>
+                {/* More menu grouping Tutorial & FAQ on phone */}
+                <Button
+                  onClick={handleMoreMenuOpen}
+                  sx={{
+                    color: 'foreground.contrastPrimary',
+                    minWidth: 'auto',
+                    mx: 0.5
+                  }}
+                  data-tutorial-id="more-button"
+                  title="More options"
+                >
+                  <MoreVertIcon />
+                </Button>
+                <Menu
+                  anchorEl={moreAnchorEl}
+                  open={Boolean(moreAnchorEl)}
+                  onClose={handleMoreMenuClose}
+                  PaperProps={{
+                    sx: {
+                      bgcolor: 'background.menu',
+                      color: 'foreground.contrastPrimary',
+                      boxShadow: 3
+                    }
+                  }}
+                >
+                  <MenuItem
+                    onClick={() => (handleOpenTutorial(), handleMoreMenuClose())}
+                    sx={{ p: 1.5 }}
+                  >
+                    <ListItemIcon>
+                      <ImportContactsIcon fontSize="small" sx={{ color: 'foreground.contrastPrimary' }} />
+                    </ListItemIcon>
+                    Tutorial
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => (handleOpenFaq(), handleMoreMenuClose())}
+                    sx={{ p: 1.5 }}
+                  >
+                    <ListItemIcon>
+                      <HelpOutlineIcon fontSize="small" sx={{ color: 'foreground.contrastPrimary' }} />
+                    </ListItemIcon>
+                    FAQ
+                  </MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <>
+                {/* Help Button */}
+                <Button
+                  onClick={handleOpenTutorial}
+                  sx={{
+                    color: 'foreground.contrastPrimary',
+                    minWidth: 'auto',
+                    mx: isPhone ? 0.5 : 1
+                  }}
+                  data-tutorial-id="help-button"
+                  title="Open tutorial"
+                >
+                  <ImportContactsIcon />
+                </Button>
+
+                {/* FAQ Button */}
+                <Button
+                  onClick={handleOpenFaq}
+                  sx={{
+                    color: 'foreground.contrastPrimary',
+                    minWidth: 'auto',
+                    mx: isPhone ? 0.5 : 1
+                  }}
+                  data-tutorial-id="faq-button"
+                  title="Frequently Asked Questions"
+                >
+                  <HelpOutlineIcon />
+                </Button>
+              </>
+            )}
             
-            {/* FAQ Button */}
-            <Button
-              onClick={handleOpenFaq}
-              sx={{ 
-                color: 'foreground.contrastPrimary', 
-                minWidth: 'auto',
-                mx: 1
-              }}
-              data-tutorial-id="faq-button"
-              title="Frequently Asked Questions"
-            >
-              <HelpOutlineIcon />
-            </Button>
-            
-            <Divider orientation="vertical" flexItem sx={{ mx: isTablet ? 1 : 2, bgcolor: 'background.light' }} />
+            <Divider orientation="vertical" flexItem sx={{ mx: isPhone ? 0.5 : isTablet ? 1 : 2, bgcolor: 'background.light' }} />
 
             {/* User Menu */}
             <Button
@@ -374,24 +439,24 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               sx={{ 
                 color: 'foreground.contrastPrimary', 
                 textTransform: 'none',
-                minWidth: isTablet ? '45px' : 'auto',
-                px: isTablet ? 0.5 : 2,
+                minWidth: isPhone ? '45px' : 'auto',
+                px: isPhone ? 0.5 : isTablet ? 1 : 2,
                 display: 'flex'
               }}
-              endIcon={isTablet ? null : <KeyboardArrowDownIcon />}
+              endIcon={isDesktop ? <KeyboardArrowDownIcon /> : null}
             >
               <Avatar 
                 sx={{ 
                   width: 32, 
                   height: 32, 
                   bgcolor: 'primary.main',
-                  mr: isTablet ? 0 : 1,
+                  mr: isDesktop ? 1 : 0,
                   fontSize: '0.9rem'
                 }}
               >
                 {userData.id.substring(0, 2).toUpperCase()}
               </Avatar>
-              {!isTablet && (
+              {isDesktop && (
                 <Box sx={{ textAlign: 'left' }}>
                   <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
                     {userData.name}

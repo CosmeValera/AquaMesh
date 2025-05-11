@@ -6,6 +6,8 @@ import {
   Divider,
   ListItemIcon,
   Typography,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import DashboardIcon from '@mui/icons-material/Dashboard'
@@ -13,10 +15,6 @@ import FolderIcon from '@mui/icons-material/Folder'
 import { useDashboards } from './DashboardProvider'
 import SavedDashboardsDialog from './SavedDashboardsDialog'
 import { Layout } from '../../types/types'
-
-interface DashboardOptionsMenuProps {
-  isMobile?: boolean;
-}
 
 // Define saved dashboard type
 interface SavedDashboard {
@@ -30,12 +28,16 @@ interface SavedDashboard {
   updatedAt: string;
 }
 
-const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = false }) => {
+const DashboardOptionsMenu: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [customDashboards, setCustomDashboards] = useState<SavedDashboard[]>([])
   const [dashboardLibraryOpen, setDashboardLibraryOpen] = useState(false)
   
   const { addDashboard } = useDashboards()
+  
+  const theme = useTheme()
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'lg'))
   
   // Load saved dashboards from localStorage on component mount
   useEffect(() => {
@@ -97,15 +99,15 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
           color: 'foreground.contrastPrimary', 
           display: 'flex', 
           alignItems: 'center',
-          minWidth: isMobile ? '40px' : 'auto',
-          mx: isMobile ? 0.5 : 1,
-          px: isMobile ? 1 : 2,
+          minWidth: isPhone ? '32px' : isTablet ? '40px' : 'auto',
+          mx: isPhone ? 0.5 : isTablet ? 0.75 : 1,
+          px: isPhone ? 1 : isTablet ? 1.5 : 2,
         }}
         startIcon={<DashboardIcon />}
-        endIcon={<KeyboardArrowDownIcon />}
+        endIcon={isPhone ? null : <KeyboardArrowDownIcon />}
         data-tutorial-id="dashboards-button"
       >
-        {!isMobile ? 'Dashboards' : 'D.'}
+        {isPhone ? '' : isTablet ? 'D.' : 'Dashboards'}
       </Button>
       
       <Menu

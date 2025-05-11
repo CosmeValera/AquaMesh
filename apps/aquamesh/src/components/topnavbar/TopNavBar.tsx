@@ -222,6 +222,22 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                 }
               }}
             >
+              {/* Widget Management Section */}
+              {userData.id === 'admin' && userData.role === 'ADMIN_ROLE' && (
+                <>
+                  <MenuItem 
+                    onClick={handleOpenWidgetsLibrary}
+                    sx={{ p: 1.5 }}
+                  >
+                    <ListItemIcon>
+                      <FolderIcon fontSize="small" sx={{ color: 'foreground.contrastPrimary' }}/>
+                    </ListItemIcon>
+                    Manage Widgets
+                  </MenuItem>
+                  <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                </>
+              )}
+
               {/* Predefined Widgets Section */}
               <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
                 Predefined Widgets
@@ -278,22 +294,6 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                       ))}
                     </Box>
                   ))}
-                </>
-              )}
-              
-              {/* Widget Management Section */}
-              {userData.id === 'admin' && userData.role === 'ADMIN_ROLE' && (
-                <>
-                  <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-                  <MenuItem 
-                    onClick={handleOpenWidgetsLibrary}
-                    sx={{ p: 1.5 }}
-                  >
-                    <ListItemIcon>
-                      <FolderIcon fontSize="small" />
-                    </ListItemIcon>
-                    Manage Widgets
-                  </MenuItem>
                 </>
               )}
             </Menu>

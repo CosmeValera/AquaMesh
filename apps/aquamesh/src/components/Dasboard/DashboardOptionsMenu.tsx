@@ -121,6 +121,19 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
           }
         }}
       >
+        {/* Dashboard Management Section */}
+        <MenuItem 
+          onClick={handleOpenDashboardLibrary}
+          sx={{ p: 1.5 }}
+        >
+          <ListItemIcon>
+            <FolderIcon fontSize="small" sx={{ color: 'foreground.contrastPrimary' }}/>
+          </ListItemIcon>
+          Manage Dashboards
+        </MenuItem>
+
+        <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
         {/* Predefined Dashboards Section */}
         <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
           Predefined Dashboards
@@ -178,18 +191,6 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
             ))}
           </>
         )}
-        
-        {/* Dashboard Management Section */}
-        <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-        <MenuItem 
-          onClick={handleOpenDashboardLibrary}
-          sx={{ p: 1.5 }}
-        >
-          <ListItemIcon>
-            <FolderIcon fontSize="small" />
-          </ListItemIcon>
-          Manage Dashboards
-        </MenuItem>
       </Menu>
       
       {/* Dashboard Library Dialog */}

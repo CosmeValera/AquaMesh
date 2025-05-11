@@ -31,8 +31,8 @@ interface TutorialModalProps {
 // Base64 placeholder images until real ones are created
 const placeholderImages = {
   dashboardWidgetExplanation: '/images/understanding_dashboards.png',
-  predefinedDashboards: `/images/predefined_dashboards.png`,
-  predefinedWidgets: `/images/predefined_widgets.png`,
+  predefinedDashboards: `/images/dashboards_topnavbar.png`,
+  predefinedWidgets: `/images/widgets_topnavbar.png`,
   customWidgetCreation: `/images/widget_editor.png`
 }
 
@@ -601,14 +601,14 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                             }}
                           >
                             {option.hasMultipleImages && option.images ? (
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, gap: 2 }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'center', px: 2, gap: 2 }}>
                                 {option.images.map((image, imgIndex) => (
                                   <img 
                                     key={imgIndex}
                                     src={image.src} 
                                     alt={image.alt}
                                     style={{ 
-                                      maxWidth: '48%', 
+                                      maxWidth: '30%', 
                                       maxHeight: '100%',
                                       objectFit: 'contain',
                                       border: '1px solid rgb(238, 238, 238)',
@@ -626,7 +626,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                                 src={option.image} 
                                 alt={`${option.title} illustration`}
                                 style={{ 
-                                  maxWidth: '100%', 
+                                  maxWidth: '65%', 
                                   maxHeight: '100%',
                                   objectFit: 'contain',
                                   border: '1px solid rgb(238, 238, 238)',

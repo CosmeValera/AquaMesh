@@ -143,7 +143,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
           onClick={() => createDashboardWithLayout('Control Flow Dashboard', { 
             type: 'row', 
             weight: 100, 
-            children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] }]
+            children: [{ type: 'tabset', weight: 100, active: true, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] }]
           })}
           sx={{ p: 1.5 }}
         >
@@ -153,7 +153,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
           onClick={() => createDashboardWithLayout('System Lens Dashboard', { 
             type: 'row', 
             weight: 100, 
-            children: [{ type: 'tabset', weight: 100, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }]
+            children: [{ type: 'tabset', weight: 100, active: true, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }]
           })}
           sx={{ p: 1.5 }}
         >
@@ -164,7 +164,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({ isMobile = 
             type: 'row', 
             weight: 100, 
             children: [
-              { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] },
+              { type: 'tabset', weight: 50, active: true, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] },
               { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }
             ]
           })}

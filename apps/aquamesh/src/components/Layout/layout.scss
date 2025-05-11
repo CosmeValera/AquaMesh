@@ -5,7 +5,7 @@
 
 .flexlayout__layout {
   overflow: visible;
-  background-color: var(--background-paper);
+  background-color: var(--background-bar-medium);
 }
 
 /* popup menu */
@@ -64,10 +64,10 @@
 }
 
 .flexlayout__splitter {
-  background-color: transparent;
+  background-color: #28453e29;
 
   &:hover {
-    background-color: var(--action-hover);
+    background-color: #30927e;
   }
 
   &.flexlayout__splitter_drag {
@@ -114,7 +114,7 @@
 
     &.flexlayout__tab_button--selected {
       color: white;
-      background-color: var(--background-light);
+      background-color: #ffffff24;
       border-bottom: 1px solid var(--primary-main);
     }
 
@@ -149,6 +149,15 @@
       color: white;
     }
   }
+}
+
+/* Hide the entire toolbar when tab container is empty */
+.flexlayout__tabset:has(.flexlayout__tabset_tabbar_inner_tab_container:empty) .flexlayout__tab_toolbar {
+  display: none !important;
+}
+
+.flexlayout__tab_floating {
+  background-color: #006B55;
 }
 
 .flexlayout__tab_button:hover {

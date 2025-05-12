@@ -260,7 +260,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
           <Paper
             elevation={0}
-            sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2, display: { xs: 'none', sm: 'block' } }}
+            sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2, display: { xs: 'none', lg: 'block' } }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Box

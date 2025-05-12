@@ -20,9 +20,9 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import WidgetsIcon from '@mui/icons-material/Widgets'
 import CreateIcon from '@mui/icons-material/Create'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import HelpIcon from '@mui/icons-material/Help'
 import FolderIcon from '@mui/icons-material/Folder'
 import ImportContactsIcon from '@mui/icons-material/ImportContacts'
-import MoreVertIcon from '@mui/icons-material/MoreVert'
 
 import useTopNavBarWidgets from '../../customHooks/useTopNavBarWidgets'
 import { useLayout } from '../Layout/LayoutProvider'
@@ -362,10 +362,10 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                     minWidth: 'auto',
                     mx: 0.5
                   }}
-                  data-tutorial-id="more-button"
-                  title="More options"
+                  data-tutorial-id="help-button"
+                  title="Tutorial & FAQ"
                 >
-                  <MoreVertIcon />
+                  <HelpIcon />
                 </Button>
                 <Menu
                   anchorEl={moreAnchorEl}

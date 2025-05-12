@@ -354,7 +354,68 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              
+              {isPhone && !!handleUndo && !!handleRedo && (
+                <>
+                  <MenuItem
+                    onClick={() => { handleUndo() ; handleAdvancedMenuClose() }}
+                    disabled={!canUndo}
+                    sx={{
+                      py: 1.5,
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                    }}
+                  >
+                    <ListItemIcon sx={{ color: theme.palette.common.white }}>
+                      <UndoIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Undo"
+                      primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
+                    />
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => { handleRedo() ; handleAdvancedMenuClose() }}
+                    disabled={!canRedo}
+                    sx={{
+                      py: 1.5,
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                    }}
+                  >
+                    <ListItemIcon sx={{ color: theme.palette.common.white }}>
+                      <RedoIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Redo"
+                      primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
+                    />
+                  </MenuItem>
+                </>
+              )}
+              {isPhone && !!handleOpenSearchDialog && (
+                <MenuItem
+                  onClick={() => { handleOpenSearchDialog() ; handleAdvancedMenuClose() }}
+                  disabled={!editMode || !widgetHasComponents}
+                  sx={{
+                    py: 1.5,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                  }}
+                >
+                  <ListItemIcon sx={{ color: theme.palette.common.white }}>
+                    <SearchIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Search Components"
+                    secondary="Search available components"
+                    primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
+                    secondaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 'light', color: theme.palette.common.white }}
+                  />
+                </MenuItem>
+              )}
               <MenuItem 
                 onClick={() => {
                   setShowTemplateDialog(true)

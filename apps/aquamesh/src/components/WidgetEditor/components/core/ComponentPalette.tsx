@@ -107,6 +107,7 @@ const ComponentPalette = ({
           overflowY: 'auto',
           flexGrow: 1,
           pt: 0,
+          overflowX: 'hidden',
         }}
       >
         {PALETTE_GROUPS.map((category) => {

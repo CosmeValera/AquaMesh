@@ -260,7 +260,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
           <Paper
             elevation={0}
-            sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2 }}
+            sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2, display: { xs: 'none', sm: 'block' } }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Box
@@ -468,11 +468,11 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             </Box>
           </Paper>
 
-          <Divider sx={{ my: 3 }} />
+          <Divider sx={{ my: 3, display: { xs: 'none', sm: 'flex' } }} />
 
           <Box
             sx={{
-              display: 'flex',
+              display: { xs: 'none', sm: 'block' },
               alignItems: 'center',
               mb: 2.5,
             }}
@@ -494,6 +494,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               borderRadius: 2,
               border: '1px solid',
               borderColor: 'divider',
+              display: { xs: 'none', sm: 'block' },
             }}
           >
             <Grid container spacing={2}>

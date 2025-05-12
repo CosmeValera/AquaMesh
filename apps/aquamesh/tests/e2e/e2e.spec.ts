@@ -1,17 +1,21 @@
 import { test, expect } from '@playwright/test'
 
-test.beforeEach('test & login', async ({ page }) => {
+test.beforeEach('login to application as admin', async ({ page }) => {
   await page.goto('http://localhost:3000/')
-
-  const username = 'aquamesh_admin'
-  const password = 'aquamesh'
-
-  await page.fill('input[name="username"]', username)
-  await page.fill('input[name="password"]', password)
-  await page.click('input[name="login"]')
-
+  
+  // Wait for login page to load
+  await page.getByText('Please select a user to continue').waitFor()
+  
+  // Click the MUI dropdown (not a regular select element)
+  await page.getByRole('combobox').click()
+  
+  // Select Admin option from dropdown
+  await page.getByText('Admin (ADMIN_ROLE)').click()
+  
+  // Click the login button
+  await page.getByRole('button', { name: 'Login' }).click()
+  
   await page.waitForURL('http://localhost:3000/')
-
   await page.waitForSelector('.loader', { state: 'hidden' })
 })
 
@@ -30,7 +34,7 @@ test.describe('TopNavBar', () => {
   })
     
   test('Widgets', async({ page }) => {
-    await page.getByLabel('Widgets').click()
+    await page.getByLabel('WIDGETS').click()
 
     await page.getByText('System lens', { exact: true }).click()
     await page.getByText('Control Flow', { exact: true }).click()

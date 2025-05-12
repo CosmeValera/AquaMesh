@@ -19,13 +19,27 @@ npm start
 ```
 That's it! Everything else is already configured for you. The AquaMesh app and all its components will be up and running.
 
-## ⚙️ System Overview
+## ✨ TL:DR
 
 - **AquaMesh**: The main application that provides dashboard management, widget creation tools, and a flexible layout system.
-- **Widget Editor**: A powerful tool for creating custom widgets through an intuitive drag-and-drop interface.
-- **Dashboard System**: Allows users to create, save, and manage customizable dashboards.
+- **Widget Editor**: The heart of our no-code experience. Build custom widgets without programming!
 
-## 📊 Dashboards
+## 📦 Key Features
+
+### Top Navigation
+
+The top navigation bar provides quick access to all platform capabilities:
+
+- **📊 Dashboards**: Browse and select from both predefined and custom dashboards
+- **🧩 Widgets**: Access ready-made components and your custom-built widgets
+- **🔧 Widget Editor**: A tool for creating custom widgets through an intuitive drag-and-drop interface.
+- **📚 Libraries**: Save and organize your dashboard and widget creations
+- **❓ Support**: Get help through tutorials and FAQ sections
+- **👤 User Management**: Select and manage user profiles (only admin can create new widgets)
+
+All our pre-built widgets load as microfrontends using Module Federation. Want to customize what's available? Just update the `apps/aquamesh/public/config/widgets.json` file. 
+
+### 📊 Dashboards
 
 Dashboards are container layouts that organize multiple widgets into a cohesive view. Think of them as the canvas where you arrange your widgets.
 
@@ -35,17 +49,17 @@ In the **Dashboard Library** You can save, categorize, and change visibility of 
 
 ![Dashboards Library](tools/readme_images/topbar-dashboards-library.png)
 
-## 🧩 Widgets
+### 🧩 Widgets
 
 Widgets are individual components that display specific data, visualizations, or controls. Each widget serves a distinct purpose and can be added to dashboards.
 
 ![Widget Library](tools/readme_images/topbar-widgets.png)
 
-## 🔧 No-Code Widget Creation
+### 🔧 No-Code Widget Creation
 
 AquaMesh's most powerful feature is its **Widget Editor**, which enables users to create custom widgets without coding:
 
-### Widget Editor Features
+**Widget Editor Features:**
 
 - **Intuitive Drag & Drop**: Easily drag components from the palette onto your canvas to design widgets.
 - **Rich Component Library**: Choose from UI components (buttons, switches, text fields), layout containers, and data visualization tools.
@@ -56,43 +70,14 @@ AquaMesh's most powerful feature is its **Widget Editor**, which enables users t
 
 ![Widget Editor](tools/readme_images/widget_editor.png)
 
-### Supported Component Types
+**Supported Component Types:**
 
 The Widget Editor offers various component types:
 
 - **UI Components**: Buttons, Labels, Text Fields, Switches and Charts
 - **Layout Containers**: FieldSets, FlexBox, GridBox for organizing content
 
-## 📦 Key Features
-
-### Top Navigation
-
-The top navigation bar provides quick access to all platform capabilities:
-
-- **📊 Dashboards**: Browse and select from both predefined and custom dashboards
-- **🧩 Widgets**: Access ready-made components and your custom-built widgets
-- **🔧 Widget Editor**: The heart of our no-code experience - build custom widgets without programming
-- **📚 Libraries**: Save and organize your dashboard and widget creations
-- **❓ Support**: Get help through tutorials and FAQ sections
-- **👤 User Management**: Select and manage user profiles (only admin can create new widgets)
-
-All our pre-built widgets load as microfrontends using Module Federation. Want to customize what's available? Just update the `apps/aquamesh/public/config/widgets.json` file. 
-
-**Topbar**
-
-![topbar](tools/readme_images/topbar.png)
-
-**Widgets Menu**
-
-![widgets in topbar](tools/readme_images/topbar-widgets.png)
-
-**Dashboards Menu**
-
-![dashboards in topbar](tools/readme_images/topbar-dashboards.png)
-
-<!-- An image for each one -->
-
-### Drag and Resize Capabilities
+**Drag and Resize Capabilities:**
 
 Customize your dashboard by dragging, repositioning, and resizing widgets to suit your needs.
 

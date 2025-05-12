@@ -8,6 +8,7 @@ import {
   Tooltip,
   Box,
   useTheme,
+  useMediaQuery,
   alpha,
   Menu,
   MenuItem,
@@ -81,6 +82,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   showAdvancedInToolbar = false
 }) => {
   const theme = useTheme()
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'))
   const [advancedMenuAnchor, setAdvancedMenuAnchor] = useState<null | HTMLElement>(null)
   const [showVersionWarning, setShowVersionWarning] = useState(false)
   
@@ -123,31 +126,33 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         }}
       >
         <Toolbar variant="dense">
-          {editMode && (
+          {(editMode || isPhone) && (
             <IconButton
               edge="start"
               color="inherit"
               aria-label="menu"
               onClick={toggleSidebar}
-              sx={{ mr: 2, color: showSidebar ? 'primary.main' : 'foreground.contrastSecondary' }}
+              sx={{ mr: 2, color: showSidebar ? 'primary.main' : 'foreground.contrastSecondary', flexGrow: isPhone ? 1 : 0, justifyContent: 'flex-start' }}
             >
               <MenuIcon />
             </IconButton>
           )}
           
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              flexGrow: 1,
-              color: 'foreground.contrastPrimary'
-            }}
-          >
-            Widget Editor
-          </Typography>
+          {!isPhone && (
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                flexGrow: 1,
+                color: 'foreground.contrastPrimary'
+              }}
+            >
+              Widget Editor
+            </Typography>
+          )}
           
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {/* Undo/Redo buttons*/}
-            {handleUndo && handleRedo && (
+            {/* Undo/Redo buttons */}
+            {!isPhone && !!handleUndo && !!handleRedo && (
               <>
                 <Tooltip title="Undo (Ctrl+Z)">
                   <span>
@@ -181,7 +186,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                   </span>
                 </Tooltip>
                 
-                <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />
+                {!isPhone && <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />}
               </>
             )}
             
@@ -204,7 +209,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               </IconButton>
             </Tooltip>
             
-            {handleOpenSearchDialog && (
+            {!isPhone && !!handleOpenSearchDialog && (
               <Tooltip title="Search components">
                 <span>
                   <IconButton
@@ -222,7 +227,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               </Tooltip>
             )}
             
-            <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />
+            {!isPhone && <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />}
             
             <Tooltip title="Open saved widget">
               <IconButton 
@@ -237,6 +242,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               </IconButton>
             </Tooltip>
             
+            
             <Tooltip title="Editor settings">
               <IconButton 
                 color="inherit" 
@@ -250,9 +256,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               </IconButton>
             </Tooltip>
             
-            
-            {/* Advanced Features in Toolbar (when enabled) */}
-            {showAdvancedInToolbar && (
+            {/* Advanced Features in Toolbar (when enabled, only on desktop) */}
+            {isDesktop && showAdvancedInToolbar && (
               <>
                 <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />  
                 <Tooltip title="Templates">
@@ -295,8 +300,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 </Tooltip>
               </>
             )}
-            {/* Advanced Features Menu Button (only shown when not displayed in toolbar) */}
-            {!showAdvancedInToolbar && (
+            {/* Advanced Features Menu Button (shown when not on desktop or advanced features not inline) */}
+            {(!isDesktop || !showAdvancedInToolbar) && (
               <Tooltip title="Advanced features">
                 <IconButton
                   color="inherit"
@@ -424,25 +429,45 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               </MenuItem>
             </Menu>
             
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSaveButtonClick}
-              size="small"
-              disabled={!editMode || (!hasChanges && isUpdating) || isEmpty}
-              startIcon={<SaveIcon />}
-              sx={{ 
-                borderRadius: 1,
-                width: '155px',
-                textTransform: 'none',
-                '&.Mui-disabled': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.12)',
-                  color: 'rgba(0, 0, 0, 0.26)'
-                }
-              }}
-            >
-              {isEmpty ? 'Empty Widget' : isUpdating && !hasChanges ? 'No changes' : isUpdating ? 'Update Widget' : 'Save Widget'}
-            </Button>
+            {/* Save Button or Icon */}
+            {isPhone ? (
+              <Tooltip title={isEmpty ? 'Empty Widget' : isUpdating && !hasChanges ? 'No changes' : isUpdating ? 'Update Widget' : 'Save Widget'}>
+                <span>
+                  <IconButton
+                    color="inherit"
+                    onClick={handleSaveButtonClick}
+                    disabled={!editMode || (!hasChanges && isUpdating) || isEmpty}
+                    sx={{
+                      color: (!editMode || (!hasChanges && isUpdating) || isEmpty) 
+                        ? 'action.disabled' 
+                        : 'primary.main'
+                    }}
+                  >
+                    <SaveIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            ) : (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSaveButtonClick}
+                size="small"
+                disabled={!editMode || (!hasChanges && isUpdating) || isEmpty}
+                startIcon={<SaveIcon />}
+                sx={{ 
+                  borderRadius: 1,
+                  width: '155px',
+                  textTransform: 'none',
+                  '&.Mui-disabled': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                    color: 'rgba(0, 0, 0, 0.26)'
+                  }
+                }}
+              >
+                {isEmpty ? 'Empty Widget' : isUpdating && !hasChanges ? 'No changes' : isUpdating ? 'Update Widget' : 'Save Widget'}
+              </Button>
+            )}
           </Box>
         </Toolbar>
       </AppBar>

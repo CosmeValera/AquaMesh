@@ -204,7 +204,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 : 'No components added yet'}
             </Typography>
             {editMode && !isDragging && (
-              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.3)' }}>
+              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.3)', textAlign: 'center' }}>
                 {showSidebar 
                   ? 'Use the components panel on the left to build your widget'
                   : 'Click the menu button in the toolbar to show component panel'}

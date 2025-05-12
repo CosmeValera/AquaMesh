@@ -5,7 +5,9 @@ import {
   List,
   ListSubheader,
   Collapse,
-  IconButton
+  IconButton,
+  useTheme,
+  useMediaQuery
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
@@ -19,7 +21,6 @@ interface ComponentPaletteProps {
   showHelpText?: boolean
   handleDragStart: (e: React.DragEvent<HTMLDivElement>, type: string) => void
   showComponentPaletteHelp: boolean
-  setShowComponentPaletteHelp: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 // Group component types by category
@@ -44,9 +45,14 @@ const ComponentPalette = ({
   showTooltips = false, 
   showHelpText = true, 
   handleDragStart, 
-  showComponentPaletteHelp, 
-  setShowComponentPaletteHelp 
+  showComponentPaletteHelp 
 }: ComponentPaletteProps) => {
+  // Responsive width based on screen size
+  const theme = useTheme()
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'lg'))
+  const drawerWidth = isPhone ? 150 : isTablet ? 220 : 250
+  
   // Group component types by category - memoized to prevent recalculation on each render
   const groupedComponents = useMemo(() => groupByCategory(COMPONENT_TYPES), [])
   
@@ -70,7 +76,7 @@ const ComponentPalette = ({
   return (
     <Box
       sx={{
-        width: 250,
+        width: drawerWidth,
         bgcolor: 'background.paper',
         borderRight: 1,
         borderColor: 'divider',
@@ -117,6 +123,7 @@ const ComponentPalette = ({
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  textAlign: 'center',
                   bgcolor: 'background.default',
                   color: 'foreground.contrastSecondary',
                   fontWeight: 'bold',

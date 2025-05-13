@@ -179,8 +179,8 @@ const FAQDialog: React.FC<FAQDialogProps> = ({ open, onClose }) => {
         justifyContent: 'space-between'
       }}>
         <Box display="flex" alignItems="center">
-          <QuestionAnswerIcon sx={{ mr: 1, color: '#191919' }} />
-          <Typography variant="h6" component="div" fontWeight="bold" color="#191919">
+          <QuestionAnswerIcon sx={{ mr: 1, color: '#eee' }} />
+          <Typography variant="h6" component="div" fontWeight="bold" color="#eee">
             Frequently Asked Questions
           </Typography>
         </Box>

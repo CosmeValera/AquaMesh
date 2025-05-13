@@ -459,7 +459,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
               component="div" 
               fontWeight="bold" 
               sx={{
-                color: '#191919',
+                color: '#eee',
                 textShadow: '0px 1px 2px rgba(255, 255, 255, 0.3)'
               }}
             >

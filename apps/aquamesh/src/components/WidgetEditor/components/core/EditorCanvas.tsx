@@ -123,6 +123,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
           margin="normal"
           variant="outlined"
           size="small"
+          data-testid="widget-name-input"
           onFocus={(e) => {
             e.target.select()
           }}

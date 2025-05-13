@@ -9,14 +9,14 @@ export async function dismissActiveDialog(page: Page): Promise<boolean> {
   if (await dialog.isVisible()) {
 
     // Wait for dialog to load
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(600)
     
     // Try to click outside the dialog to dismiss it
     // Click on a corner of the page, away from the dialog
     await page.mouse.click(10, 10)
 
     // Wait for dialog to disappear
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(400)
     return true
   }
   return false

@@ -307,6 +307,7 @@ const Dashboards = () => {
             size="small"
             variant="text"
             disableRipple
+            data-testid="add-dashboard-button"
             sx={{
               position: 'relative',
               top: '3px',

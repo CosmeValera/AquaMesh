@@ -70,6 +70,11 @@ test.describe('Widget Editor Advanced Features', () => {
     // Click the Use Template button
     await expect(useTemplateButton).toBeVisible({ timeout: 5000 })
     await useTemplateButton.click()
+    // Wait for template to be applied
+    await page.waitForTimeout(500)
+
+    // Avoid tooltips and stuff by clicking the screen
+    await page.mouse.click(10, 10)
     
     // Wait for template to be applied
     await page.waitForTimeout(1500)
@@ -159,10 +164,6 @@ test.describe('Widget Editor Advanced Features', () => {
     // Click on the Save button
     await page.getByRole('button', { name: 'Save Widget' }).click()
     
-    // Wait before taking screenshot
-    await page.waitForTimeout(500)
-
-    
     // Wait for Version History dialog to appear
     await page.waitForTimeout(1000)
     
@@ -181,8 +182,44 @@ test.describe('Widget Editor Advanced Features', () => {
     // Wait for dialog to load
     await page.waitForTimeout(1200)
 
+    // Take screenshot with masked areas to ignore the changing timestamp
+    // Find the elements to mask
+    const dateElement = page.locator('text=Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec').first()
+    const timeAgoElement = page.locator('text=less than a minute ago').first()
+    
+    // Take screenshot with the masked elements
+    const screenshot = await page.screenshot({
+      mask: [dateElement, timeAgoElement],
+      maskColor: '#00FF00' // Use green color for the mask to make it visible
+    })
+    
+    await expect(screenshot).toMatchSnapshot('widget-editor-version-history-dialog.png')
+  })
+
+  test('should open the Editor Settings dialog', async ({ page }) => {
+    // Open widget editor
+    await openWidgetEditor(page)
+    
+    // Wait for editor to fully load
+    await page.waitForTimeout(500)
+    
+    // Click on the Editor Settings button (identified by its aria-label)
+    const settingsButton = page.getByRole('button', { name: 'Editor settings' })
+    await expect(settingsButton).toBeVisible({ timeout: 5000 })
+    await settingsButton.click()
+    
+    // Wait for Settings dialog to appear
+    await page.waitForTimeout(1000)
+    
+    // Verify that the dialog is open
+    const settingsDialog = page.getByRole('dialog').filter({ has: page.getByText('Editor Settings') })
+    await expect(settingsDialog).toBeVisible({ timeout: 5000 })
+    
+    // Wait for dialog to fully load before taking screenshot
+    await page.waitForTimeout(500)
+    
     // Take screenshot
     const screenshot = await page.screenshot()
-    await expect(screenshot).toMatchSnapshot('widget-editor-version-history-dialog.png')
+    await expect(screenshot).toMatchSnapshot('widget-editor-settings-dialog.png')
   })
 }) 

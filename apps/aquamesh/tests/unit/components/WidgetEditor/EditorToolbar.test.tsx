@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import EditorToolbar from '../../../../src/components/WidgetEditor/components/core/EditorToolbar'
 import { ThemeProvider, createTheme } from '@mui/material'
 
@@ -8,9 +8,13 @@ import { ThemeProvider, createTheme } from '@mui/material'
 vi.mock('../../../../src/components/WidgetEditor/components/dialogs/VersionWarningDialog', () => ({
   __esModule: true,
   default: ({ open, onConfirm, onCancel }) => (
-    <div data-testid="version-warning-dialog" data-open={open}>
-      <button onClick={onConfirm} data-testid="confirm-button">Confirm</button>
-      <button onClick={onCancel} data-testid="cancel-button">Cancel</button>
+    <div data-testid="version-warning-dialog" data-open={open ? 'true' : 'false'}>
+      {open && (
+        <>
+          <button onClick={onConfirm} data-testid="confirm-button">Confirm</button>
+          <button onClick={onCancel} data-testid="cancel-button">Cancel</button>
+        </>
+      )}
     </div>
   )
 }))
@@ -64,17 +68,21 @@ describe('EditorToolbar Component', () => {
     
     // Verify basic elements are rendered
     expect(screen.getByText('Widget Editor')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /toggle edit\/preview mode/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /open saved widget/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /editor settings/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /advanced features/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /save widget/i })).toBeInTheDocument()
+    expect(screen.getByLabelText('Toggle edit/preview mode')).toBeInTheDocument()
+    expect(screen.getByLabelText('Open saved widget')).toBeInTheDocument()
+    expect(screen.getByLabelText('Editor settings')).toBeInTheDocument()
+    expect(screen.getByLabelText('Advanced features')).toBeInTheDocument()
+    expect(screen.getByText('Save Widget')).toBeInTheDocument()
     
-    // Check that undo/redo buttons are present and disabled
-    const undoButton = screen.getByRole('button', { name: /undo/i })
-    const redoButton = screen.getByRole('button', { name: /redo/i })
-    expect(undoButton).toBeInTheDocument()
-    expect(redoButton).toBeInTheDocument()
+    // Check that undo/redo spans are present
+    const undoSpan = screen.getByLabelText('Undo (Ctrl+Z)')
+    const redoSpan = screen.getByLabelText('Redo (Ctrl+Y)')
+    expect(undoSpan).toBeInTheDocument()
+    expect(redoSpan).toBeInTheDocument()
+    
+    // Verify the buttons inside these spans are disabled
+    const undoButton = within(undoSpan).getByRole('button')
+    const redoButton = within(redoSpan).getByRole('button')
     expect(undoButton).toBeDisabled()
     expect(redoButton).toBeDisabled()
   })
@@ -86,8 +94,12 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    const undoButton = screen.getByRole('button', { name: /undo/i })
-    const redoButton = screen.getByRole('button', { name: /redo/i })
+    // Get the spans first then the buttons within them
+    const undoSpan = screen.getByLabelText('Undo (Ctrl+Z)')
+    const redoSpan = screen.getByLabelText('Redo (Ctrl+Y)')
+    
+    const undoButton = within(undoSpan).getByRole('button')
+    const redoButton = within(redoSpan).getByRole('button')
     
     expect(undoButton).not.toBeDisabled()
     expect(redoButton).not.toBeDisabled()
@@ -100,7 +112,7 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    const sidebarButton = screen.getByRole('button', { name: /menu/i })
+    const sidebarButton = screen.getByLabelText('menu')
     fireEvent.click(sidebarButton)
     
     expect(mockProps.toggleSidebar).toHaveBeenCalledTimes(1)
@@ -113,7 +125,7 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    const editModeButton = screen.getByRole('button', { name: /toggle edit\/preview mode/i })
+    const editModeButton = screen.getByLabelText('Toggle edit/preview mode')
     fireEvent.click(editModeButton)
     
     expect(mockProps.toggleEditMode).toHaveBeenCalledTimes(1)
@@ -126,48 +138,56 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    const saveButton = screen.getByRole('button', { name: /save widget/i })
+    const saveButton = screen.getByText('Save Widget')
     fireEvent.click(saveButton)
     
     expect(mockProps.handleSaveWidget).toHaveBeenCalledWith(false)
   })
 
-  it('shows version warning when saving on non-latest version', async () => {
-    render(
+  it('shows version warning when saving non-latest version and confirms', async () => {
+    // First test handles the confirmation path
+    const { getByText, getByTestId } = render(
       <ThemeProvider theme={darkTheme}>
         <EditorToolbar {...mockProps} isLatestVersion={false} isUpdating={true} />
       </ThemeProvider>
     )
     
-    const saveButton = screen.getByRole('button', { name: /update widget/i })
+    // Find and click the Update Widget button
+    const saveButton = getByText('Update Widget')
     fireEvent.click(saveButton)
     
-    // Check if warning dialog is shown
+    // Wait for dialog to appear and check it's there
     await waitFor(() => {
-      const warningDialog = screen.getByTestId('version-warning-dialog')
-      expect(warningDialog).toBeInTheDocument()
-      expect(warningDialog.getAttribute('data-open')).toBe('true')
+      expect(getByTestId('version-warning-dialog')).toHaveAttribute('data-open', 'true')
     })
     
     // Test confirm button
-    fireEvent.click(screen.getByTestId('confirm-button'))
+    fireEvent.click(getByTestId('confirm-button'))
     expect(mockProps.handleSaveWidget).toHaveBeenCalledWith(false)
-    
-    // Reset mocks
-    vi.clearAllMocks()
-    
-    // Test cancel button (need to re-render because state is reset)
-    render(
+  })
+  
+  it('shows version warning when saving non-latest version and cancels', async () => {
+    // Second test handles the cancellation path
+    const { getByText, getByTestId } = render(
       <ThemeProvider theme={darkTheme}>
         <EditorToolbar {...mockProps} isLatestVersion={false} isUpdating={true} />
       </ThemeProvider>
     )
     
-    fireEvent.click(screen.getByRole('button', { name: /update widget/i }))
+    // Clear any previous calls
+    mockProps.handleSaveWidget.mockClear()
+    
+    // Find and click the Update Widget button
+    const saveButton = getByText('Update Widget')
+    fireEvent.click(saveButton)
+    
+    // Wait for dialog to appear and check it's there
     await waitFor(() => {
-      fireEvent.click(screen.getByTestId('cancel-button'))
+      expect(getByTestId('version-warning-dialog')).toHaveAttribute('data-open', 'true')
     })
     
+    // Test cancel button
+    fireEvent.click(getByTestId('cancel-button'))
     expect(mockProps.handleSaveWidget).not.toHaveBeenCalled()
   })
 
@@ -178,7 +198,7 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    const folderButton = screen.getByRole('button', { name: /open saved widget/i })
+    const folderButton = screen.getByLabelText('Open saved widget')
     fireEvent.click(folderButton)
     
     expect(mockProps.setShowWidgetList).toHaveBeenCalledWith(true)
@@ -191,7 +211,7 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    const settingsButton = screen.getByRole('button', { name: /editor settings/i })
+    const settingsButton = screen.getByLabelText('Editor settings')
     fireEvent.click(settingsButton)
     
     expect(mockProps.setShowSettingsModal).toHaveBeenCalledWith(true)
@@ -204,8 +224,12 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    const undoButton = screen.getByRole('button', { name: /undo/i })
-    const redoButton = screen.getByRole('button', { name: /redo/i })
+    // Get the spans first then the buttons within them
+    const undoSpan = screen.getByLabelText('Undo (Ctrl+Z)')
+    const redoSpan = screen.getByLabelText('Redo (Ctrl+Y)')
+    
+    const undoButton = within(undoSpan).getByRole('button')
+    const redoButton = within(redoSpan).getByRole('button')
     
     fireEvent.click(undoButton)
     expect(mockProps.handleUndo).toHaveBeenCalledTimes(1)
@@ -221,7 +245,7 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    const moreButton = screen.getByRole('button', { name: /advanced features/i })
+    const moreButton = screen.getByLabelText('Advanced features')
     fireEvent.click(moreButton)
     
     // Wait for menu to appear
@@ -240,7 +264,7 @@ describe('EditorToolbar Component', () => {
     )
     
     // Open advanced menu
-    fireEvent.click(screen.getByRole('button', { name: /advanced features/i }))
+    fireEvent.click(screen.getByLabelText('Advanced features'))
     
     // Click on Templates option
     await waitFor(() => {
@@ -258,7 +282,7 @@ describe('EditorToolbar Component', () => {
     )
     
     // Open advanced menu
-    fireEvent.click(screen.getByRole('button', { name: /advanced features/i }))
+    fireEvent.click(screen.getByLabelText('Advanced features'))
     
     // Click on Export/Import option
     await waitFor(() => {
@@ -276,7 +300,7 @@ describe('EditorToolbar Component', () => {
     )
     
     // Open advanced menu
-    fireEvent.click(screen.getByRole('button', { name: /advanced features/i }))
+    fireEvent.click(screen.getByLabelText('Advanced features'))
     
     // Click on Version History option
     await waitFor(() => {
@@ -294,7 +318,8 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    expect(screen.getByRole('button', { name: /save widget/i })).toBeDisabled()
+    const saveButton = screen.getByText('Save Widget').closest('button')
+    expect(saveButton).toBeDisabled()
     
     // Case 2: No changes when updating
     render(
@@ -303,7 +328,8 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    expect(screen.getByRole('button', { name: /no changes/i })).toBeDisabled()
+    const noChangesButton = screen.getByText('No changes').closest('button')
+    expect(noChangesButton).toBeDisabled()
     
     // Case 3: Empty widget
     render(
@@ -312,10 +338,24 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    expect(screen.getByRole('button', { name: /empty widget/i })).toBeDisabled()
+    const emptyWidgetButton = screen.getByText('Empty Widget').closest('button')
+    expect(emptyWidgetButton).toBeDisabled()
   })
   
+  // This test needs to mock the mediaQuery specifically to test desktop view
   it('shows advanced features directly in toolbar when showAdvancedInToolbar is true', () => {
+    // Force desktop view by mocking the useMediaQuery hook from MUI
+    vi.spyOn(window, 'matchMedia').mockImplementation(query => ({
+      matches: true, // This will simulate a desktop view
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }))
+    
     render(
       <ThemeProvider theme={darkTheme}>
         <EditorToolbar 
@@ -325,14 +365,9 @@ describe('EditorToolbar Component', () => {
       </ThemeProvider>
     )
     
-    // Use queries to check if buttons are in the document without throwing errors
-    const templateButton = screen.queryByRole('button', { name: /templates/i })
-    const exportImportButton = screen.queryByRole('button', { name: /export\/import widgets/i })
-    const versionHistoryButton = screen.queryByRole('button', { name: /version history/i })
-    
-    // In desktop view with showAdvancedInToolbar=true, these buttons should be visible
-    expect(templateButton).not.toBeNull()
-    expect(exportImportButton).not.toBeNull()
-    expect(versionHistoryButton).not.toBeNull()
+    // Test for SVG icons inside buttons instead of button text
+    expect(screen.getAllByTestId('DashboardIcon').length).toBeGreaterThan(0)
+    expect(screen.getAllByTestId('ImportExportIcon').length).toBeGreaterThan(0)
+    expect(screen.getAllByTestId('HistoryIcon').length).toBeGreaterThan(0)
   })
 }) 

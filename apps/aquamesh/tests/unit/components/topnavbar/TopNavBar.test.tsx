@@ -187,8 +187,8 @@ describe('TopNavBar Component', () => {
       </BrowserRouter>
     )
     
-    // The button might be an icon button without text, so find by test ID
-    const tutorialButton = screen.getByTestId('help-button')
+    // Find the tutorial button by its data-tutorial-id attribute
+    const tutorialButton = screen.getByTitle('Open tutorial')
     fireEvent.click(tutorialButton)
     
     // Check if the tutorial modal is visible
@@ -206,8 +206,8 @@ describe('TopNavBar Component', () => {
       </BrowserRouter>
     )
     
-    // The button might be an icon button without text, so find by test ID
-    const faqButton = screen.getByTestId('faq-button')
+    // Find the FAQ button by its data-tutorial-id attribute
+    const faqButton = screen.getByTitle('Frequently Asked Questions')
     fireEvent.click(faqButton)
     
     // Check if the FAQ dialog is visible

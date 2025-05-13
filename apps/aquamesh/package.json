@@ -7,8 +7,8 @@
     "build": "webpack --mode production --config webpack.config.prod.js",
     "serve": "serve -l 3000 -s dist",
     "bs": "npm run build && npm run serve",
-    "test": "vitest --run --config ./vitest.config.js ./tests/unit/ && npx playwright test",
-    "test:unit": "vitest --config ./vitest.config.js ./tests/unit/",
+    "test": "vitest --run --config ./vitest.config.ts ./tests/unit/ && npx playwright test",
+    "test:unit": "vitest --config ./vitest.config.ts ./tests/unit/",
     "test:e2e": "npx playwright test",
     "test:snapshot": "npx playwright test --update-snapshots"
   },

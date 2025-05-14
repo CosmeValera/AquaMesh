@@ -87,15 +87,15 @@ const ShortcutCard: React.FC<ShortcutCardProps> = ({
         color: 'white',
         bgcolor: color,
         borderRadius: '50%',
-        width: 36,
-        height: 36,
+        minWidth: 36,
+        minHeight: 36,
         mr: 2,
       }}
     >
       {icon}
     </Box>
     <Box sx={{ flex: 1 }}>
-      <Typography variant="body2" fontWeight="medium">
+      <Typography variant="body2" fontWeight="medium" color="#eeee">
         {title}
       </Typography>
     </Box>
@@ -109,6 +109,7 @@ const ShortcutCard: React.FC<ShortcutCardProps> = ({
         border: '1px solid rgba(0,0,0,0.1)',
         borderRadius: 1,
         px: 0.5,
+        color: '#eee',
       }}
     />
   </Paper>
@@ -194,7 +195,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       </DialogTitle>
       <DialogContent>
         <Box sx={{ py: 2 }}>
-          <Typography variant="h6" gutterBottom fontWeight="medium">
+          <Typography variant="h6" gutterBottom fontWeight="medium" color="#eee">
             Interface Options
           </Typography>
 
@@ -208,7 +209,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <InfoOutlinedIcon sx={{ mr: 1.5, color: 'primary.main' }} />
-                  <Typography fontWeight="medium">
+                  <Typography fontWeight="medium" color="#eee">
                     Show Component Tooltips
                   </Typography>
                   <Box sx={{ flexGrow: 1 }} />
@@ -221,7 +222,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ ml: 5, mb: 1 }}
+                  sx={{ ml: 5, mb: 1, color: '#b3b3b3' }}
                 >
                   Display helpful tooltips when hovering over components in the
                   palette.
@@ -240,7 +241,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <HelpOutlineIcon sx={{ mr: 1.5, color: 'primary.main' }} />
-                  <Typography fontWeight="medium">
+                  <Typography fontWeight="medium" color="#eee">
                     Show Component Palette Help
                   </Typography>
                   <Box sx={{ flexGrow: 1 }} />
@@ -255,7 +256,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ ml: 5, mb: 1 }}
+                  sx={{ ml: 5, mb: 1, color: '#b3b3b3' }}
                 >
                   Show the help text at the bottom of the component palette.
                 </Typography>
@@ -276,7 +277,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     fontSize="small"
                     sx={{ mr: 1.5, color: 'primary.main' }}
                   />
-                  <Typography fontWeight="medium">
+                  <Typography fontWeight="medium" color="#eee">
                     Show Advanced Features in Toolbar
                   </Typography>
                   <Box sx={{ flexGrow: 1 }} />
@@ -291,7 +292,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ ml: 5, mb: 1 }}
+                  sx={{ ml: 5, mb: 1, color: '#b3b3b3' }}
                 >
                   Display Templates, Export/Import, and Version History buttons
                   directly in the toolbar for easy access.
@@ -310,7 +311,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <SaveIcon sx={{ mr: 1.5, color: 'primary.main' }} />
-                  <Typography fontWeight="medium">
+                  <Typography fontWeight="medium" color="#eee">
                     Require name entry on save
                   </Typography>
                   <Box sx={{ flexGrow: 1 }} />
@@ -325,7 +326,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ ml: 5, mb: 1 }}
+                  sx={{ ml: 5, mb: 1, color: '#b3b3b3' }}
                 >
                   Prompt for a unique widget name when saving a new widget.
                   Disable to auto-generate a name.
@@ -336,7 +337,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
           <Divider sx={{ my: 3 }} />
 
-          <Typography variant="h6" gutterBottom fontWeight="medium">
+          <Typography variant="h6" gutterBottom fontWeight="medium" color="#eee">
             Confirmation Options
           </Typography>
 
@@ -350,7 +351,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <DashboardIcon sx={{ mr: 1.5, color: 'error.main' }} />
-                  <Typography fontWeight="medium">
+                  <Typography fontWeight="medium" color="#eee">
                     Confirm Dashboard Deletion
                   </Typography>
                   <Box sx={{ flexGrow: 1 }} />
@@ -365,7 +366,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ ml: 5, mb: 1 }}
+                  sx={{ ml: 5, mb: 1, color: '#b3b3b3' }}
                 >
                   Show a confirmation dialog when deleting dashboards.
                 </Typography>
@@ -383,7 +384,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <DeleteOutlineIcon sx={{ mr: 1.5, color: 'error.main' }} />
-                  <Typography fontWeight="medium">
+                  <Typography fontWeight="medium" color="#eee">
                     Confirm Template Deletion
                   </Typography>
                   <Box sx={{ flexGrow: 1 }} />
@@ -398,7 +399,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ ml: 5, mb: 1 }}
+                  sx={{ ml: 5, mb: 1, color: '#b3b3b3' }}
                 >
                   Show a confirmation dialog when deleting templates.
                 </Typography>
@@ -416,7 +417,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <WidgetsIcon sx={{ mr: 1.5, color: 'error.main' }} />
-                  <Typography fontWeight="medium">
+                  <Typography fontWeight="medium" color="#eee">
                     Confirm Widget Deletion
                   </Typography>
                   <Box sx={{ flexGrow: 1 }} />
@@ -431,7 +432,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ ml: 5, mb: 1 }}
+                  sx={{ ml: 5, mb: 1, color: '#b3b3b3' }}
                 >
                   Show a confirmation dialog when deleting widgets from the
                   library.
@@ -450,7 +451,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <DeleteOutlineIcon sx={{ mr: 1.5, color: 'error.main' }} />
-                  <Typography fontWeight="medium">
+                  <Typography fontWeight="medium" color="#eee">
                     Confirm Component Deletion
                   </Typography>
                   <Box sx={{ flexGrow: 1 }} />
@@ -465,7 +466,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ ml: 5, mb: 1 }}
+                  sx={{ ml: 5, mb: 1, color: '#b3b3b3' }}
                 >
                   Show a confirmation dialog when deleting components.
                 </Typography>
@@ -485,7 +486,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             <KeyboardIcon
               sx={{ mr: 1.5, color: 'primary.main', fontSize: 28 }}
             />
-            <Typography variant="h6" fontWeight="medium">
+            <Typography variant="h6" fontWeight="medium" color="#eee">
               Keyboard Shortcuts
             </Typography>
           </Box>

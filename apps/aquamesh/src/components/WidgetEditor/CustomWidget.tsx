@@ -139,6 +139,11 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
       message,
       severity,
     })
+    // Dispatch global toast event for editor previews
+    document.dispatchEvent(new CustomEvent('showWidgetToast', {
+      detail: { message, severity },
+      bubbles: true,
+    }))
     
     // Auto hide after 3 seconds
     setTimeout(() => {
@@ -303,7 +308,12 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
       
       // Determine alignment based on props.alignment
       const alignment = component.props.alignment as 'left' | 'center' | 'right' | undefined;
-      const justifyContent = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+      // Default to left alignment if none specified
+      const justifyContent = alignment === 'right'
+        ? 'flex-end'
+        : alignment === 'center'
+          ? 'center'
+          : 'flex-start';
       
       return (
         <Box key={component.id} sx={{ mb: 1, display: 'flex', justifyContent }}>
@@ -336,9 +346,9 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
             startIcon={component.props.showStartIcon ? <IconComponent /> : undefined}
             endIcon={component.props.showEndIcon ? <OpenInNewIcon /> : undefined}
             onClick={() => {
-              const clickAction = component.props.clickAction as string || 'toast'
-              
-              if (clickAction === 'toast' && component.props.showToast !== false) {
+              const clickAction = (component.props.clickAction as string) || 'toast'
+              // Always show toast for 'toast' action
+              if (clickAction === 'toast') {
                 const message = component.props.toastMessage as string || 'Button clicked!'
                 const severity = component.props.toastSeverity as 'success' | 'error' | 'info' | 'warning' || 'info'
                 showToast(message, severity)
@@ -717,39 +727,17 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
       {showWidgetName && widgetName && (
         <Typography variant="subtitle1" sx={{ mb: 2 }}>Widget Name: {widgetName}</Typography>
       )}
-      {widgetComponents.map((component, index) => (
-        <ComponentPreview
-          key={component.id}
-          component={applyCollapsed(component)}
-          onEdit={() => {}}
-          onToggleCollapse={toggleFieldsetCollapse}
-          onDelete={() => {}}
-          onMoveUp={() => {}}
-          onMoveDown={() => {}}
-          onAddInside={() => {}}
-          onToggleVisibility={() => {}}
-          isFirst={index === 0}
-          isLast={index === widgetComponents.length - 1}
-          level={0}
-          editMode={false}
-          isDragging={false}
-          dropTarget={{ id: '', isHovering: false }}
-          handleContainerDragEnter={() => {}}
-          handleContainerDragOver={() => {}}
-          handleContainerDragLeave={() => {}}
-          handleContainerDrop={() => {}}
-          showWidgetName={showWidgetName}
-        />
-      ))}
+      {/* Render components directly to support inline toasts */}
+      {renderComponents()}
       
       {/* Toast notification */}
       {toastState.open && (
-        <Alert 
-          severity={toastState.severity} 
-          sx={{ 
-            position: 'absolute', 
-            bottom: 16, 
-            right: 16, 
+        <Alert
+          severity={toastState.severity}
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            left: 16,
             zIndex: 9999,
             boxShadow: 3,
             maxWidth: 400

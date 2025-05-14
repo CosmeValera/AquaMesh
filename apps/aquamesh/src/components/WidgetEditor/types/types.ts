@@ -105,6 +105,8 @@ export interface ButtonProps {
   showToast?: boolean;
   toastMessage?: string;
   toastSeverity?: 'info' | 'success' | 'warning' | 'error';
+  clickAction?: 'toast' | 'openUrl' | 'none';
+  url?: string;
   fontWeight?: number | string;
   fontStyle?: 'normal' | 'italic';
   textDecoration?: 'none' | 'underline';

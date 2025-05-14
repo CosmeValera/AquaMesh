@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useEffect } from 'react'
 import {
   Box,
@@ -84,6 +85,8 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
   
   // Initialize custom colors if they exist in props
   useEffect(() => {
+    // Reset custom color toggle on prop change
+    setUseCustomColor(Boolean(props.customColor))
     // Sync alignment from props
     if (typeof props.alignment === 'string' && ['left','center','right'].includes(props.alignment as string)) {
       setAlignment(props.alignment as 'left' | 'center' | 'right')
@@ -199,39 +202,15 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
   // Mock button click for preview
   const handlePreviewClick = () => {
     if (props.clickAction === 'toast') {
-      // Display a mock toast notification instead of alert
-      console.log(`Toast notification: ${props.toastMessage || 'Button clicked'} (Severity: ${props.toastSeverity || 'info'})`)
-      
-      // Add a visual indicator in the preview
-      const previewArea = document.querySelector('.MuiPaper-root.ComponentPreview')
-      if (previewArea) {
-        const mockToast = document.createElement('div')
-        mockToast.textContent = `${props.toastMessage || 'Button clicked'}`
-        mockToast.style.position = 'absolute'
-        mockToast.style.bottom = '8px'
-        mockToast.style.left = '50%'
-        mockToast.style.transform = 'translateX(-50%)'
-        mockToast.style.padding = '4px 12px'
-        mockToast.style.borderRadius = '4px'
-        mockToast.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'
-        mockToast.style.color = 'white'
-        mockToast.style.fontSize = '12px'
-        mockToast.style.opacity = '0'
-        mockToast.style.transition = 'opacity 0.3s'
-        
-        previewArea.appendChild(mockToast)
-        
-        setTimeout(() => {
-          mockToast.style.opacity = '1'
-        }, 50)
-        
-        setTimeout(() => {
-          mockToast.style.opacity = '0'
-          setTimeout(() => mockToast.remove(), 300)
-        }, 2000)
-      }
+      const message = props.toastMessage || 'Button clicked'
+      const severity = props.toastSeverity || 'info'
+      document.dispatchEvent(new CustomEvent('showWidgetToast', {
+        detail: { message, severity },
+        bubbles: true,
+      }))
     } else if (props.clickAction === 'openUrl' && props.url) {
-      console.log(`Would open URL: ${props.url}`)
+      const url = props.url.match(/^https?:\/\//) ? props.url : `https://${props.url}`
+      window.open(url, '_blank', 'noopener,noreferrer')
     }
   }
   

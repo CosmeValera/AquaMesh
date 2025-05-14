@@ -257,7 +257,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
               fontStyle: component.props.fontStyle as 'italic' | 'normal',
               textDecoration: component.props.textDecoration as string,
               textAlign: component.props.textAlign as 'left' | 'center' | 'right' | 'justify',
-              color: component.props.useCustomColor ? component.props.customColor as string : 'inherit',
+              color: component.props.useCustomColor ? component.props.customColor as string : '#000',
             }}
           >
             {component.props.text as string}

@@ -332,14 +332,13 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
               fontStyle: component.props.fontStyle as string,
               textDecoration: component.props.textDecoration as string,
               ...(component.props.customColor ? {
-                backgroundColor: component.props.variant === 'contained' ? component.props.customColor : 'transparent',
-                borderColor: component.props.customColor,
-                color: component.props.variant === 'contained' ? '#fff' : component.props.customColor,
+                backgroundColor: component.props.variant === 'contained' ? component.props.customColor as string : 'transparent',
+                borderColor: component.props.customColor as string,
+                color: component.props.customTextColor ? component.props.customTextColor as string : (component.props.variant === 'contained' ? '#fff' : component.props.customColor as string),
                 '&:hover': {
                   backgroundColor: component.props.variant === 'contained' 
                     ? component.props.customHoverColor || component.props.customColor 
                     : 'rgba(25, 118, 210, 0.04)',
-                  borderColor: component.props.customHoverColor || component.props.customColor
                 }
               } : {})
             }}

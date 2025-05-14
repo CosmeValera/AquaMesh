@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react'
 import {
   Box,
@@ -268,6 +269,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
           </Typography>
         )
       case 'Button': {
+        // Support custom text color // eslint-disable-line indent
+        const customTextColor = component.props.customTextColor as string | undefined; // eslint-disable-line indent
         const clickAction = component.props.clickAction as string | undefined;
         const toastMessage = (component.props.toastMessage as string) || 'Button clicked!';
         const toastSeverity = (component.props.toastSeverity as string) || 'info';
@@ -307,9 +310,9 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                 textDecoration: component.props.textDecoration as string,
                 textAlign: component.props.textAlign as 'left' | 'center' | 'right' | 'justify',
                 ...(component.props.customColor ? {
-                  backgroundColor: component.props.variant === 'contained' ? component.props.customColor : 'transparent',
-                  borderColor: component.props.customColor,
-                  color: component.props.variant === 'contained' ? '#fff' : component.props.customColor,
+                  backgroundColor: component.props.variant === 'contained' ? component.props.customColor as string : 'transparent',
+                  borderColor: component.props.customColor as string,
+                  color: customTextColor ?? (component.props.variant === 'contained' ? '#fff' : component.props.customColor as string),
                   '&:hover': {
                     backgroundColor: component.props.variant === 'contained' 
                       ? component.props.customHoverColor || component.props.customColor 

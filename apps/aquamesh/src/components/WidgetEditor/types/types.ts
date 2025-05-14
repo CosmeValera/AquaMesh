@@ -112,6 +112,7 @@ export interface ButtonProps {
   textDecoration?: 'none' | 'underline';
   customColor?: string;
   customHoverColor?: string;
+  customTextColor?: string;
   alignment?: 'left' | 'center' | 'right';
   showStartIcon?: boolean;
   iconName?: string;

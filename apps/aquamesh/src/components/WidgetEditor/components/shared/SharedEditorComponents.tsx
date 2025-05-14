@@ -484,27 +484,34 @@ export const CustomColorControl: React.FC<CustomColorProps> = ({
 /**
  * Dual color picker for components that need two colors (like a button and its hover state)
  */
-export const DualColorPicker: React.FC<{
+export const DualColorPicker: React.FC<{  
   useCustomColor: boolean;
   primaryColor: string;
   secondaryColor: string;
+  tertiaryColor?: string;
   onToggleCustomColor: (useCustom: boolean) => void;
   onPrimaryColorChange: (color: string) => void;
   onSecondaryColorChange: (color: string) => void;
+  onTertiaryColorChange?: (color: string) => void;
   primaryLabel?: string;
   secondaryLabel?: string;
+  tertiaryLabel?: string;
 }> = ({
   useCustomColor,
   primaryColor,
   secondaryColor,
+  tertiaryColor,
   onToggleCustomColor,
   onPrimaryColorChange,
   onSecondaryColorChange,
+  onTertiaryColorChange,
   primaryLabel = "Button Color",
-  secondaryLabel = "Hover Color"
+  secondaryLabel = "Hover Color",
+  tertiaryLabel = "Text Color"
 }) => {
   const [primaryColorPickerOpen, setPrimaryColorPickerOpen] = useState(false)
   const [secondaryColorPickerOpen, setSecondaryColorPickerOpen] = useState(false)
+  const [tertiaryColorPickerOpen, setTertiaryColorPickerOpen] = useState(false)
   
   const handleCustomColorToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     onToggleCustomColor(e.target.checked)
@@ -631,6 +638,62 @@ export const DualColorPicker: React.FC<{
               },
             }}
           />
+          
+          {/* Tertiary Color */}
+          {onTertiaryColorChange && (
+            <TextField
+              fullWidth
+              label={tertiaryLabel}
+              value={tertiaryColor || ''}
+              onChange={(e) => onTertiaryColorChange(e.target.value)}
+              variant="outlined"
+              margin="dense"
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Box
+                      sx={{
+                        width: 16,
+                        height: 16,
+                        bgcolor: tertiaryColor,
+                        borderRadius: '2px',
+                        border: '1px solid rgba(0,0,0,0.23)',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setTertiaryColorPickerOpen(true)}
+                    />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setTertiaryColorPickerOpen(true)}>
+                      <ColorLensIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'primary.light',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'primary.main',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#191919',
+                },
+                '& .MuiOutlinedInput-input': {
+                  color: '#000000',
+                },
+              }}
+            />
+          )}
         </Box>
       )}
       
@@ -650,6 +713,16 @@ export const DualColorPicker: React.FC<{
         onSave={onSecondaryColorChange}
         title={`Choose ${secondaryLabel}`}
       />
+      
+      {onTertiaryColorChange && (
+        <ColorPickerModal
+          open={tertiaryColorPickerOpen}
+          currentColor={tertiaryColor || ''}
+          onClose={() => setTertiaryColorPickerOpen(false)}
+          onSave={onTertiaryColorChange}
+          title={`Choose ${tertiaryLabel}`}
+        />
+      )}
     </Box>
   )
 } 

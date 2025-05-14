@@ -62,6 +62,8 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
   const [useCustomColor, setUseCustomColor] = useState(Boolean(props.customColor))
   const [customColor, setCustomColor] = useState(props.customColor || '#1976d2')
   const [customHoverColor, setCustomHoverColor] = useState(props.customHoverColor || '#1565c0')
+  // State for custom text color picker
+  const [customTextColor, setCustomTextColor] = useState(props.customTextColor || '#000000')
   
   // Typography states
   const [fontWeight, setFontWeight] = useState<number>(
@@ -97,10 +99,12 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
     if (useCustColor) {
       setCustomColor(props.customColor || '#1976d2')
       setCustomHoverColor(props.customHoverColor || '#1565c0')
+      setCustomTextColor(props.customTextColor || '#000000')
     } else {
       // Reset to defaults if custom color prop is removed
       setCustomColor('#1976d2')
       setCustomHoverColor('#1565c0')
+      setCustomTextColor('#000000')
     }
     
     // Set typography states based on props
@@ -156,17 +160,25 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
     handleChange('customHoverColor', color)
   }
   
+  // Update custom text color
+  const handleTextColorChange = (color: string) => {
+    setCustomTextColor(color)
+    handleChange('customTextColor', color)
+  }
+  
   const handleCustomColorToggle = (useCustom: boolean) => {
     setUseCustomColor(useCustom)
     
     if (useCustom) {
       handleChange('customColor', customColor)
       handleChange('customHoverColor', customHoverColor)
+      handleChange('customTextColor', customTextColor)
     } else {
       // Remove custom color props
       const newProps = { ...props }
       delete newProps.customColor
       delete newProps.customHoverColor
+      delete newProps.customTextColor
       onChange(newProps)
     }
   }
@@ -186,7 +198,7 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
       fontStyle: isItalic ? 'italic' : 'normal',
       textDecoration: hasUnderline ? 'underline' : 'none',
       backgroundColor: useCustomColor ? customColor : undefined,
-      color: useCustomColor ? '#000000' : undefined, // Ensure text is black when using custom colors
+      color: useCustomColor ? customTextColor : undefined,
       '&:hover': {
         backgroundColor: useCustomColor ? customHoverColor : undefined,
       }
@@ -509,11 +521,14 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
               useCustomColor={useCustomColor}
               primaryColor={customColor}
               secondaryColor={customHoverColor}
+              tertiaryColor={customTextColor}
               onToggleCustomColor={handleCustomColorToggle}
               onPrimaryColorChange={handlePrimaryColorChange}
               onSecondaryColorChange={handleHoverColorChange}
+              onTertiaryColorChange={handleTextColorChange}
               primaryLabel="Button Color"
               secondaryLabel="Hover Color"
+              tertiaryLabel="Text Color"
             />
           </Grid>
           

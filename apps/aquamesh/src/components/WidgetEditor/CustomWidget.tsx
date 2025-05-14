@@ -286,7 +286,9 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
               textDecoration: component.props.textDecoration as string,
               textAlign: component.props.textAlign as 'left' | 'center' | 'right' | 'justify',
               color: component.props.useCustomColor ? component.props.customColor as string : 'inherit',
-              // Apply any additional styles from JSON if provided
+              whiteSpace: component.props.noWrap ? 'nowrap' : 'normal',
+              overflow: component.props.noWrap ? 'hidden' : 'visible',
+              textOverflow: component.props.noWrap ? 'ellipsis' : 'clip',
               ...(component.props.styleJson ? JSON.parse(component.props.styleJson as string) : {})
             }}
           >

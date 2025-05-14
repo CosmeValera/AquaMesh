@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import React from 'react'
 import {
   Box,
   Paper,
@@ -250,14 +250,18 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
       }
       case 'Label':
         return (
-          <Typography 
+          <Typography
             variant={(component.props.variant as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2') || 'body1'}
+            noWrap={Boolean(component.props.noWrap)}
             sx={{
               fontWeight: component.props.fontWeight as number,
               fontStyle: component.props.fontStyle as 'italic' | 'normal',
               textDecoration: component.props.textDecoration as string,
               textAlign: component.props.textAlign as 'left' | 'center' | 'right' | 'justify',
               color: component.props.useCustomColor ? component.props.customColor as string : '#000',
+              whiteSpace: component.props.noWrap ? 'nowrap' : 'normal',
+              overflow: component.props.noWrap ? 'hidden' : 'visible',
+              textOverflow: component.props.noWrap ? 'ellipsis' : 'clip',
             }}
           >
             {component.props.text as string}

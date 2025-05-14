@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect } from 'react'
 import {
   Box,
@@ -65,6 +66,8 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
   
   // Initialize state based on props
   useEffect(() => {
+    // Reset custom color toggle on prop change
+    setUseCustomColor(Boolean(props.useCustomColor))
     if (props.variant) {
       setVariant(props.variant as string)
     }
@@ -150,7 +153,9 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
     fontStyle: isItalic ? 'italic' : 'normal',
     textDecoration: hasUnderline ? 'underline' : 'none',
     textAlign: textAlign,
-    color: useCustomColor ? customColor : 'inherit'
+    color: useCustomColor ? customColor : 'inherit',
+    // Apply noWrap CSS if enabled
+    ...(props.noWrap ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : {})
   }
   
   const editorTabs = [
@@ -165,6 +170,7 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: props.textAlign, width: '100%' }}>
           <Typography
             variant={variant as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2'}
+            noWrap={Boolean(props.noWrap)}
             sx={previewStyles}
           >
             {(props.text as string) || 'Label Text'}

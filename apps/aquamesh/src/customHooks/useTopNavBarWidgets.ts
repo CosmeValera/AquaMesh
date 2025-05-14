@@ -37,7 +37,7 @@ const useTopNavBarWidgets = () => {
         if (customWidgets.length > 0) {
           const customWidgetsPanel: Panel = {
             name: "Custom Widgets",
-            items: customWidgets.map((widget: CustomWidget) => {
+            items: [...customWidgets].reverse().map((widget: CustomWidget) => {
               // Ensure we have components data
               if (!widget.components || !Array.isArray(widget.components)) {
                 console.warn(`Widget ${widget.id} (${widget.name}) has invalid components data`)

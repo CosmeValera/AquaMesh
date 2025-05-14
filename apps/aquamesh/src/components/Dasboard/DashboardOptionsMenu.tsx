@@ -182,7 +182,7 @@ const DashboardOptionsMenu: React.FC = () => {
               Custom Dashboards
             </Typography>
             <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-            {customDashboards.map((dashboard) => (
+            {[...customDashboards].reverse().map((dashboard) => (
               <MenuItem 
                 key={dashboard.id}
                 onClick={() => loadCustomDashboard(dashboard)}

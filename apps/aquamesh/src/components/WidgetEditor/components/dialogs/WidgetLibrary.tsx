@@ -67,6 +67,8 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   // Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [widgetToDelete, setWidgetToDelete] = useState<string | null>(null)
+  // Delete all confirmation state
+  const [deleteAllConfirmOpen, setDeleteAllConfirmOpen] = useState(false)
   
   // Clear search when dialog opens/closes
   useEffect(() => {
@@ -79,10 +81,10 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   // Function to check if delete confirmation is enabled
   const shouldConfirmDelete = (): boolean => {
     try {
-      const storedValue = localStorage.getItem('widget-editor-delete-component-confirmation')
+      const storedValue = localStorage.getItem('widget-editor-delete-widget-confirmation')
       return storedValue !== 'false' // Default to true if not set
     } catch (error) {
-      console.error('Error reading widget-editor-delete-component-confirmation from localStorage', error)
+      console.error('Error reading widget-editor-delete-widget-confirmation from localStorage', error)
       return true // Default to true if there's an error
     }
   }
@@ -114,6 +116,22 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   const cancelDelete = () => {
     setDeleteConfirmOpen(false)
     setWidgetToDelete(null)
+  }
+  
+  // Handle delete all button click
+  const handleDeleteAllClick = () => {
+    setDeleteAllConfirmOpen(true)
+  }
+
+  // Confirm deletion of all widgets
+  const confirmDeleteAll = () => {
+    sortedWidgets.forEach(widget => onDelete(widget.id))
+    setDeleteAllConfirmOpen(false)
+  }
+
+  // Cancel deletion of all widgets
+  const cancelDeleteAll = () => {
+    setDeleteAllConfirmOpen(false)
   }
   
   // Handle search input change
@@ -335,6 +353,18 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
               }
               {searchTerm && ` matching "${searchTerm}"`}
             </Typography>
+            {sortedWidgets.length > 0 && (
+              <Tooltip title="Delete All Widgets">
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={handleDeleteAllClick}
+                  disabled={isLoading}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
           
           {/* Loading overlay */}
@@ -566,6 +596,17 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
         content="Are you sure you want to delete this widget?"
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
+      />
+      {/* Delete All Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteAllConfirmOpen}
+        title="Delete All Widgets"
+        content={sortedWidgets.length === 1 
+          ? "Are you sure you want to delete this widget?" 
+          : `Are you sure you want to delete all ${sortedWidgets.length} widgets? \n Always export your widgets before deleting them.`
+        }
+        onConfirm={confirmDeleteAll}
+        onCancel={cancelDeleteAll}
       />
     </>
   )

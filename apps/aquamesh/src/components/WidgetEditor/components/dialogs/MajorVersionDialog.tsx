@@ -112,10 +112,10 @@ const MajorVersionDialog: React.FC<MajorVersionDialogProps> = ({
             alignItems: 'flex-start',
             gap: 1
           }}>
-             <InfoOutlinedIcon sx={{ fontSize: 20, mt: 0.25, color: theme.palette.info.main }} />
-             <Typography variant="body2" color="text.secondary">
-                Major versions usually involve significant changes. Restoring previous minor versions within this new major version might not be possible.
-             </Typography>
+            <InfoOutlinedIcon sx={{ fontSize: 20, mt: 0.25, color: theme.palette.info.main }} />
+            <Typography variant="body2" color="text.secondary">
+              Major versions usually involve significant changes. These releases often break backward compatibility.
+            </Typography>
           </Paper>
         </Box>
       </DialogContent>

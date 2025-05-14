@@ -30,6 +30,7 @@ import { format, formatDistanceToNow } from 'date-fns'
 import { alpha, lighten, darken } from '@mui/material/styles'
 import MajorVersionDialog from './MajorVersionDialog'
 import VersionWarningDialog from './VersionWarningDialog'
+import { buttonStyles } from '../../../shared/DialogStyles'
 
 interface WidgetVersioningDialogProps {
   open: boolean
@@ -366,6 +367,25 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
                                 variant="outlined"
                                 sx={{ height: 20, fontSize: '0.7rem', borderColor: alpha(theme.palette.divider, 0.6), color: 'text.secondary' }}
                               />
+                              {!version.isCurrent && selectedVersion?.id === version.id && (
+                                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-start' }}>
+                                  <Button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleRestoreVersion()
+                                    }}
+                                    startIcon={<RestoreIcon />}
+                                    variant="contained"
+                                    sx={{
+                                      ...buttonStyles.small,
+                                      mt: 1,
+                                      borderRadius: 2
+                                    }}
+                                  >
+                                    Restore This Version
+                                  </Button>
+                                </Box>
+                              )}
                             </Paper>
                           </TimelineContent>
                         </TimelineItem>

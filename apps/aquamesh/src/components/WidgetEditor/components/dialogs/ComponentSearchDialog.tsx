@@ -136,7 +136,7 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
   // Get component icon component
   const getIconComponent = (type: string) => {
     const IconComponent = getComponentIcon(type)
-    return IconComponent ? <IconComponent /> : null
+    return IconComponent ? <IconComponent sx={{ color: '#eee' }} /> : null
   }
   
   return (
@@ -152,14 +152,31 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
         }
       }}
     >
-      <DialogTitle>
+      <DialogTitle id="tutorial-dialog-title" sx={{ 
+        bgcolor: 'primary.main', 
+        color: 'white', 
+        pb: 1,
+        backgroundImage: 'linear-gradient(90deg, #00BC9A 0%, #00A389 100%)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 1200
+      }}>
         <Box display="flex" alignItems="center">
           <SearchIcon sx={{ mr: 1.5, color: '#eee' }} />
-          <Typography variant="h6" component="div" fontWeight="bold" color="#eee">
+          <Typography 
+            variant="h5" 
+            component="div" 
+            fontWeight="bold" 
+            sx={{
+              color: '#eee',
+              textShadow: '0px 1px 2px rgba(255, 255, 255, 0.3)'
+            }}
+          >
             Search Components
           </Typography>
         </Box>
       </DialogTitle>
+        
       
       <DialogContent dividers>
         <TextField
@@ -173,15 +190,26 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
+                <SearchIcon sx={{ color: '#eee' }} />
               </InputAdornment>
             )
+          }}
+          sx={{ 
+            color: '#eee',
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: '#eee'
+              },
+              '& .MuiOutlinedInput-input': {
+                color: '#eee'
+              }
+            }
           }}
         />
         
         <Box sx={{ my: 2 }}>
           {searchTerm && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="#eee">
               Found {searchResults.length} component{searchResults.length !== 1 ? 's' : ''} matching "{searchTerm}"
             </Typography>
           )}
@@ -213,15 +241,16 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
                 </ListItemIcon>
                 <ListItemText
                   primary={component.type}
+                  primaryTypographyProps={{ color: 'white' }}
                   secondary={
                     <Box component="span">
-                      <Typography variant="body2" component="span" color="text.secondary">
+                      <Typography variant="body2" component="span" color="#eee">
                         {getComponentDescription(component)}
                       </Typography>
                       <Typography 
                         variant="caption" 
                         component="div" 
-                        color="text.secondary" 
+                        color="#eee" 
                         sx={{ mt: 0.5, opacity: 0.7 }}
                       >
                         Path: {path}
@@ -236,8 +265,20 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
         )}
       </DialogContent>
       
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+      <DialogActions sx={{ px: 3, py: 2, bgcolor: '#00A389', display: 'flex', justifyContent: 'flex-end' }}>
+        <Button 
+          onClick={onClose} 
+          variant="contained"
+          sx={{ 
+            bgcolor: '#00D1AB',
+            color: '#191919',
+            '&:hover': {
+              bgcolor: '#00E4BC',
+            }
+          }}
+        >
+          Close
+        </Button>
       </DialogActions>
     </Dialog>
   )

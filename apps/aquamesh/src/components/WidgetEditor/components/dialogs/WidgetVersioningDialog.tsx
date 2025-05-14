@@ -370,20 +370,21 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
                               {!version.isCurrent && selectedVersion?.id === version.id && (
                                 <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-start' }}>
                                   <Button
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      handleRestoreVersion()
-                                    }}
-                                    startIcon={<RestoreIcon />}
-                                    variant="contained"
-                                    sx={{
-                                      ...buttonStyles.small,
-                                      mt: 1,
-                                      borderRadius: 2
-                                    }}
-                                  >
-                                    Restore This Version
-                                  </Button>
+                          variant="contained"
+                          startIcon={<RestoreIcon />}
+                          onClick={handleRestoreVersion}
+                          sx={{
+                            borderRadius: 2, textTransform: 'none', fontWeight: 'bold', px: 3, py: 1.2,
+                            background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${darken(theme.palette.primary.main, 0.2)} 90%)`,
+                            boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.25)}`,
+                            '&:hover': {
+                              background: `linear-gradient(45deg, ${darken(theme.palette.primary.main, 0.1)} 30%, ${darken(theme.palette.primary.main, 0.3)} 90%)`,
+                              boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.35)}`
+                            }
+                          }}
+                        >
+                          Restore This Version
+                        </Button>
                                 </Box>
                               )}
                             </Paper>

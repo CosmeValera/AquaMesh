@@ -632,11 +632,17 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
         </TabPanel>
       </DialogContent>
       
-      <DialogActions sx={dialogStyles.actions}>
+      <DialogActions sx={{ px: 3, py: 2, bgcolor: '#00A389', display: 'flex', justifyContent: 'flex-end' }}>
         <Button 
-          onClick={onClose}
-          variant="outlined"
-          sx={buttonStyles.secondary}
+          onClick={onClose} 
+          variant="contained"
+          sx={{ 
+            bgcolor: '#00D1AB',
+            color: '#191919',
+            '&:hover': {
+              bgcolor: '#00E4BC',
+            }
+          }}
         >
           Close
         </Button>

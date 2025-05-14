@@ -552,12 +552,18 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
           </Paper>
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button
-          onClick={onClose}
+
+      <DialogActions sx={{ px: 3, py: 2, bgcolor: '#00A389', display: 'flex', justifyContent: 'flex-end' }}>
+        <Button 
+          onClick={onClose} 
           variant="contained"
-          color="primary"
-          sx={{ px: 3 }}
+          sx={{ 
+            bgcolor: '#00D1AB',
+            color: '#191919',
+            '&:hover': {
+              bgcolor: '#00E4BC',
+            }
+          }}
         >
           Close
         </Button>

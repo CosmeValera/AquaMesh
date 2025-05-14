@@ -477,7 +477,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
           <Box
             sx={{
-              display: { xs: 'none', sm: 'block' },
+              display: { xs: 'none', sm: 'flex' },
               alignItems: 'center',
               mb: 2.5,
             }}

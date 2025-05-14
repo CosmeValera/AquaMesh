@@ -644,6 +644,7 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
               }}
               sx={{
                 '& .MuiPaper-root': {
+                  backgroundImage: 'linear-gradient(135deg, #00BC9A 0%, #008C8C 100%)',
                   borderRadius: 2,
                   mt: 1,
                   '& .MuiList-root': {
@@ -715,50 +716,6 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
           <DialogContent sx={{...dialogStyles.content, px: 3, my: 3}}>
             {/* Dialog content */}
             <Grid container spacing={3}>
-              {/* Empty Template Card */}
-              <Grid item xs={12} sm={6} md={4}>
-                <Card
-                  onClick={handleUseEmptyTemplate}
-                  sx={{
-                    ...cardStyles.base,
-                    cursor: 'pointer',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    position: 'relative',
-                    transition: 'all 0.3s ease',
-                    borderStyle: 'dashed',
-                    borderWidth: 2,
-                    '&:hover': {
-                      ...cardStyles.base['&:hover'],
-                      borderColor: 'white',
-                    }
-                  }}
-                >
-                  <CardContent sx={{ ...cardStyles.content, flexGrow: 1 }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        height: '100%',
-                        textAlign: 'center',
-                        pt: 2,
-                        pb: 3,
-                      }}
-                    >
-                      <AddIcon sx={{ fontSize: 45, color: 'white', mb: 2 }} />
-                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'white' }}>
-                        Start Empty
-                      </Typography>
-                      <Typography variant="body2" color="white" sx={{ opacity: 0.7 }}>
-                        Create a new widget from scratch
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
 
               {/* Save as Template Card - Only show if there's a current widget */}
               {currentWidget && (
@@ -771,9 +728,8 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                       height: '100%',
                       display: 'flex',
                       flexDirection: 'column',
-                      position: 'relative', 
+                      position: 'relative',
                       transition: 'all 0.3s ease',
-                      bgcolor: 'rgba(0, 188, 154, 0.15)',
                       borderStyle: 'dashed',
                       borderWidth: 2,
                       '&:hover': {
@@ -808,6 +764,52 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                   </Card>
                 </Grid>
               )}
+
+              {/* Empty Template Card */}
+              <Grid item xs={12} sm={6} md={4}>
+                <Card
+                  onClick={handleUseEmptyTemplate}
+                  sx={{
+                    ...cardStyles.base,
+                    cursor: 'pointer',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    position: 'relative',
+                    transition: 'all 0.3s ease',
+                    borderStyle: 'dashed',
+                    borderWidth: 2,
+                    '&:hover': {
+                      ...cardStyles.base['&:hover'],
+                      borderColor: '#00BC9A',
+                      bgcolor: 'rgba(0, 188, 154, 0.25)',
+                    }
+                  }}
+                >
+                  <CardContent sx={{ ...cardStyles.content, flexGrow: 1 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '100%',
+                        textAlign: 'center',
+                        pt: 2,
+                        pb: 3,
+                      }}
+                    >
+                      <AddIcon sx={{ fontSize: 45, color: 'white', mb: 2 }} />
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'white' }}>
+                        Start Empty
+                      </Typography>
+                      <Typography variant="body2" color="white" sx={{ opacity: 0.7 }}>
+                        Create a new widget from scratch
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
 
               {/* Template Cards */}
               {getSortedAndFilteredTemplates().map((template) => (
@@ -971,6 +973,7 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                           sx={{ 
                             ...chipStyles.base,
                             fontSize: '0.7rem', 
+                            background: 'linear-gradient(to right,rgb(31, 177, 174),rgb(33, 218, 116))',
                             height: 22, 
                             fontWeight: 'medium', 
                             '& .MuiChip-label': { px: 1 }

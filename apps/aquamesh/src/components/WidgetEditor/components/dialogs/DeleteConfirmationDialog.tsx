@@ -10,6 +10,7 @@ import {
 } from '@mui/material'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import CloseIcon from '@mui/icons-material/Close'
+import { dialogStyles, buttonStyles } from '../../../shared/DialogStyles'
 
 interface DeleteConfirmationDialogProps {
   open: boolean
@@ -34,45 +35,34 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '12px',
-          overflow: 'hidden',
-          bgcolor: 'background.paper'
+          ...dialogStyles.paper,
+          bgcolor: '#006B58' // Special background for danger dialog
         }
       }}
     >
       <DialogTitle 
         sx={{ 
-          bgcolor: 'error.main',
-          color: 'white',
+          ...dialogStyles.errorTitle,
           display: 'flex',
           alignItems: 'center',
-          px: 3,
-          py: 1.5,
-          position: 'relative'
         }}
       >
         <DeleteOutlineIcon sx={{ mr: 1.5, fontSize: 24, color: 'white' }} />
-        <Typography variant="h6" sx={{ fontWeight: 500 }}>
+        <Typography variant="h6" sx={{ fontWeight: 500, color: 'white' }}>
           {title}
         </Typography>
         <IconButton
           size="small"
           aria-label="close"
-          sx={{ 
-            position: 'absolute', 
-            right: 16, 
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: 'white'
-          }}
+          sx={dialogStyles.closeButton}
           onClick={onCancel}
         >
           <CloseIcon fontSize="medium" />
         </IconButton>
       </DialogTitle>
       
-      <DialogContent sx={{ px: 3, pb: 0, bgcolor: '#006d5c' }}>
-        <Typography variant="body1" color="white" sx={{ mb: 2, pt: 1.5, fontWeight: 400 }}>
+      <DialogContent sx={{ ...dialogStyles.content, bgcolor: '#006B58', color: 'white' }}>
+        <Typography variant="body1" sx={{ mb: 2, pt: 1.5, fontWeight: 400 }}>
           {content}
         </Typography>
         <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mt: 1 }}>
@@ -80,21 +70,11 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
         </Typography>
       </DialogContent>
       
-      <DialogActions sx={{ px: 3, py: 3, bgcolor: '#006d5c', justifyContent: 'center', gap: 2 }}>
+      <DialogActions sx={{ ...dialogStyles.centeredActions, bgcolor: '#006B58' }}>
         <Button 
           onClick={onCancel} 
           variant="outlined"
-          sx={{ 
-            px: 3, 
-            py: 1,
-            minWidth: 120,
-            color: 'white',
-            borderColor: 'rgba(255, 255, 255, 0.3)',
-            '&:hover': {
-              borderColor: 'white',
-              bgcolor: 'rgba(255, 255, 255, 0.05)'
-            }
-          }}
+          sx={buttonStyles.secondary}
         >
           CANCEL
         </Button>
@@ -103,12 +83,7 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
           variant="contained"
           color="error"
           startIcon={<DeleteOutlineIcon />}
-          sx={{ 
-            px: 3, 
-            py: 1,
-            minWidth: 120,
-            fontWeight: 500
-          }}
+          sx={buttonStyles.danger}
         >
           DELETE
         </Button>

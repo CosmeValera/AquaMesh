@@ -17,10 +17,8 @@ import {
   ListItemIcon,
   Checkbox,
   IconButton,
-  useTheme,
   Divider,
   Paper,
-  Tooltip,
   Snackbar
 } from '@mui/material'
 import DownloadIcon from '@mui/icons-material/Download'
@@ -31,8 +29,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload'
 import ErrorIcon from '@mui/icons-material/Error'
-import { alpha } from '@mui/material/styles'
+import CloseIcon from '@mui/icons-material/Close'
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import WidgetStorage, { CustomWidget } from '../../WidgetStorage'
+import { dialogStyles, buttonStyles } from '../../../shared/DialogStyles'
 
 interface ExportImportDialogProps {
   open: boolean
@@ -70,7 +70,6 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
   widgets,
   onImportComplete
 }) => {
-  const theme = useTheme()
   const [tabValue, setTabValue] = useState(0)
   const [selectedWidgets, setSelectedWidgets] = useState<string[]>([])
   const [exportData, setExportData] = useState('')
@@ -241,470 +240,285 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
   }
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={onClose}
       maxWidth="md"
       fullWidth
       PaperProps={{
-        elevation: 8,
-        sx: {
-          borderRadius: 2,
-          overflow: 'hidden'
-        }
+        sx: dialogStyles.paper
       }}
     >
-      <DialogTitle sx={{ 
-        background: `linear-gradient(45deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
-        color: theme.palette.primary.contrastText,
-        p: 3,
-        display: 'flex',
-        alignItems: 'center',
-        boxShadow: '0 1px 8px rgba(0,0,0,0.15)',
-        position: 'relative',
-        zIndex: 1,
-      }}>
-        {tabValue === 0 ? (
-          <CloudDownloadIcon sx={{ mr: 1.5, fontSize: 28, filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.2))' }} />
-        ) : (
-          <CloudUploadIcon sx={{ mr: 1.5, fontSize: 28, filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.2))' }} />
-        )}
-        <Typography variant="h5" fontWeight="bold" sx={{ textShadow: '0px 1px 2px rgba(0,0,0,0.1)' }}>
-          {tabValue === 0 ? 'Export Widgets' : 'Import Widgets'}
+      <DialogTitle sx={dialogStyles.title}>
+        <SwapHorizIcon sx={{ mr: 1.5, color: 'white' }} />
+        <Typography variant="h6" sx={{ fontWeight: 500, color: 'white' }}>
+          Export & Import Widgets
         </Typography>
+        <IconButton
+          size="small"
+          aria-label="close"
+          sx={dialogStyles.closeButton}
+          onClick={onClose}
+        >
+          <CloseIcon fontSize="medium" />
+        </IconButton>
       </DialogTitle>
-      
-      <Tabs
-        value={tabValue}
-        onChange={handleTabChange}
-        variant="fullWidth"
-        sx={{ 
-          bgcolor: alpha(theme.palette.primary.main, 0.12),
-          borderBottom: 1,
-          borderColor: theme.palette.divider,
-          position: 'relative',
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: '1px',
-            backgroundColor: theme.palette.divider,
-          },
-          '& .MuiTab-root': {
-            py: 1.5,
-            height: 56,
-            fontSize: '0.95rem',
-            fontWeight: 'medium',
-            textTransform: 'none',
-            transition: 'all 0.2s ease',
-            color: theme.palette.text.secondary,
-          },
-          '& .Mui-selected': {
-            fontWeight: 'bold',
-            color: theme.palette.primary.main
-          },
-          '& .MuiTabs-indicator': {
-            height: 3,
-            borderRadius: '3px 3px 0 0',
-            background: theme.palette.mode === 'dark'
-              ? `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
-              : theme.palette.primary.main,
-          }
-        }}
-      >
-        <Tab 
-          label="Export" 
-          icon={<DownloadIcon sx={{ 
-            filter: tabValue === 0 
-              ? 'drop-shadow(0px 1px 2px rgba(0,0,0,0.2))' 
-              : 'none',
-            transition: 'all 0.2s ease',
-          }} />} 
-          iconPosition="start"
-          sx={{ 
-            minHeight: 56,
-            gap: 1,
-            '&.Mui-selected': {
-              color: theme.palette.mode === 'dark' 
-                ? theme.palette.primary.light 
-                : theme.palette.primary.main,
+
+      <DialogContent sx={{
+        ...dialogStyles.content,
+        p: 0, // Remove padding for tabs to extend to edges
+      }}>
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          variant="fullWidth"
+          sx={{
+            borderBottom: 1,
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            bgcolor: 'rgba(0, 0, 0, 0.1)',
+            minHeight: '48px',
+            '& .MuiTab-root': {
+              color: 'rgba(255, 255, 255, 0.7)',
+              minHeight: '48px',
+              fontWeight: 500,
+              fontSize: '0.95rem',
+              '&.Mui-selected': {
+                color: 'white',
+              },
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: 'white',
             },
           }}
-        />
-        <Tab 
-          label="Import" 
-          icon={<UploadIcon sx={{ 
-            filter: tabValue === 1 ? 'drop-shadow(0px 1px 2px rgba(0,0,0,0.2))' : 'none',
-            transition: 'all 0.2s ease',
-          }} />} 
-          iconPosition="start"
-          sx={{ 
-            minHeight: 56, 
-            gap: 1,
-            '&.Mui-selected': { color: theme.palette.primary.main },
-          }}
-        />
-      </Tabs>
-      
-      <DialogContent sx={{ p: 0 }}>
+        >
+          <Tab 
+            label="Export Widgets" 
+            icon={<CloudDownloadIcon />} 
+            iconPosition="start" 
+          />
+          <Tab 
+            label="Import Widgets" 
+            icon={<CloudUploadIcon />}
+            iconPosition="start"
+          />
+        </Tabs>
+
         <TabPanel value={tabValue} index={0}>
           <Box sx={{ p: 3 }}>
-            <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
-              Select widgets to export
+            <Typography variant="body1" paragraph color="white">
+              Export your widgets to share with others or back up your work.
+              Select the widgets you want to export from the list below.
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Export your widgets to share them or transfer between environments
-            </Typography>
-            
+
+            <Box sx={{ 
+              mb: 3, 
+              mt: 2, 
+              display: 'flex', 
+              gap: 1.5,
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <Typography variant="subtitle1" fontWeight="500" color="white">
+                {widgets.length > 0 
+                  ? `Available Widgets (${widgets.length})` 
+                  : 'No widgets available to export'}
+              </Typography>
+
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button 
+                  size="small" 
+                  onClick={selectAllWidgets} 
+                  disabled={widgets.length === 0}
+                  sx={{
+                    color: 'white',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    '&:hover': {
+                      borderColor: 'white',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    },
+                  }}
+                  variant="outlined"
+                >
+                  Select All
+                </Button>
+                <Button 
+                  size="small" 
+                  onClick={deselectAllWidgets} 
+                  disabled={selectedWidgets.length === 0}
+                  sx={{
+                    color: 'white',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    '&:hover': {
+                      borderColor: 'white',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    },
+                  }}
+                  variant="outlined"
+                >
+                  Clear
+                </Button>
+              </Box>
+            </Box>
+
             <Paper 
-              variant="outlined" 
+              elevation={0} 
               sx={{ 
-                mb: 3, 
+                maxHeight: 240, 
+                overflow: 'auto',
+                mb: 3,
+                bgcolor: 'rgba(0, 0, 0, 0.15)',
                 borderRadius: 2,
-                overflow: 'hidden',
-                maxHeight: '300px', 
-                overflowY: 'auto',
-                bgcolor: theme.palette.mode === 'dark' 
-                  ? alpha(theme.palette.background.paper, 0.7) 
-                  : theme.palette.background.paper,
-                borderColor: theme.palette.mode === 'dark' 
-                  ? alpha(theme.palette.divider, 0.3) 
-                  : theme.palette.divider,
-                boxShadow: theme.palette.mode === 'dark'
-                  ? '0 4px 12px rgba(0,0,0,0.15)'
-                  : '0 2px 8px rgba(0,0,0,0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
               }}
             >
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                px: 2,
-                py: 1.5,
-                borderBottom: '1px solid',
-                borderColor: theme.palette.divider,
-                background: theme.palette.mode === 'dark' 
-                  ? `linear-gradient(to right, ${alpha(theme.palette.primary.dark, 0.1)}, ${alpha(theme.palette.background.paper, 0.2)})` 
-                  : `linear-gradient(to right, ${alpha(theme.palette.primary.light, 0.1)}, ${alpha(theme.palette.background.paper, 0.05)})`
-              }}>
-                <Typography variant="subtitle2" sx={{
-                  fontWeight: 'bold',
-                  color: theme.palette.mode === 'dark' 
-                    ? theme.palette.common.white 
-                    : theme.palette.text.primary,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                }}>
-                  <Box component="span" sx={{ 
-                    display: 'inline-flex', 
-                    bgcolor: alpha(theme.palette.primary.main, 0.15),
-                    color: theme.palette.primary.main,
-                    width: 24,
-                    height: 24,
-                    borderRadius: '50%',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 'bold',
-                    fontSize: '0.8rem',
-                    mr: 0.5
-                  }}>
-                    {widgets.length}
-                  </Box>
-                  widget{widgets.length !== 1 ? 's' : ''} available
-                </Typography>
-                <Box>
-                  <Button 
-                    size="small" 
-                    onClick={selectAllWidgets}
-                    sx={{ 
-                      mr: 1, 
-                      textTransform: 'none',
-                      color: theme.palette.primary.main,
-                      fontWeight: 'bold',
-                      borderRadius: 1,
-                      px: 1.5,
-                      py: 0.3,
-                      '&:hover': {
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                      }
-                    }}
-                  >
-                    Select all
-                  </Button>
-                  <Button 
-                    size="small" 
-                    onClick={deselectAllWidgets}
-                    sx={{ 
-                      textTransform: 'none',
-                      color: theme.palette.text.secondary,
-                      fontWeight: 'bold',
-                      borderRadius: 1,
-                      px: 1.5,
-                      py: 0.3,
-                      '&:hover': {
-                        bgcolor: alpha(theme.palette.grey[500], 0.1),
-                        color: theme.palette.text.primary,
-                      }
-                    }}
-                  >
-                    Clear
-                  </Button>
-                </Box>
-              </Box>
-              
-              {widgets.length === 0 ? (
-                <Box sx={{ 
-                  p: 4, 
-                  textAlign: 'center',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: theme.palette.text.secondary,
-                  minHeight: 120,
-                }}>
-                  <Box sx={{ opacity: 0.5, mb: 1.5 }}>
-                    <SaveIcon sx={{ fontSize: 40 }} />
-                  </Box>
-                  <Typography variant="body1" fontWeight="medium" gutterBottom color="text.secondary">
-                    No widgets available to export
-                  </Typography>
-                  <Typography variant="body2" color={alpha(theme.palette.text.secondary, 0.7)}>
-                    Create widgets first before exporting
-                  </Typography>
-                </Box>
-              ) : (
-                <List disablePadding>
-                  {widgets.map((widget) => (
+              <List dense>
+                {widgets.length === 0 ? (
+                  <ListItem>
+                    <ListItemText 
+                      primary="No widgets found" 
+                      primaryTypographyProps={{ 
+                        color: 'rgba(255, 255, 255, 0.5)',
+                        fontStyle: 'italic',
+                      }} 
+                    />
+                  </ListItem>
+                ) : (
+                  widgets.map((widget) => (
                     <ListItem 
-                      key={widget.id} 
-                      divider
-                      dense
-                      sx={{ 
-                        transition: 'all 0.2s ease',
+                      key={widget.id}
+                      button
+                      onClick={() => toggleWidgetSelection(widget.id)}
+                      sx={{
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                         '&:hover': {
-                          bgcolor: alpha(theme.palette.primary.main, 0.08)
+                          bgcolor: 'rgba(255, 255, 255, 0.05)',
                         },
-                        ...(selectedWidgets.includes(widget.id) && {
-                          bgcolor: alpha(theme.palette.primary.main, 0.05),
-                        }),
                       }}
                     >
-                      <ListItemIcon sx={{ minWidth: 36 }}>
-                        <Checkbox
-                          checked={selectedWidgets.includes(widget.id)}
-                          onChange={() => toggleWidgetSelection(widget.id)}
+                      <ListItemIcon sx={{ minWidth: 40 }}>
+                        <Checkbox 
                           edge="start"
-                          color="primary"
-                          sx={{
+                          checked={selectedWidgets.includes(widget.id)}
+                          tabIndex={-1}
+                          disableRipple
+                          inputProps={{ 'aria-labelledby': `widget-${widget.id}` }}
+                          sx={{ 
+                            color: 'rgba(255, 255, 255, 0.5)',
                             '&.Mui-checked': {
-                              color: theme.palette.mode === 'dark' 
-                                ? theme.palette.primary.light 
-                                : theme.palette.primary.main,
-                              filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))',
+                              color: 'white',
                             },
                           }}
                         />
                       </ListItemIcon>
-                      <ListItemText
-                        primary={widget.name}
-                        secondary={
-                          <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
-                            <Typography variant="caption" component="span" sx={{ 
-                              bgcolor: alpha(theme.palette.primary.main, 0.1),
-                              color: theme.palette.primary.main,
-                              px: 1,
-                              py: 0.25,
-                              borderRadius: 1,
-                              fontWeight: 'medium',
-                            }}>
-                              {widget.components.length} components
-                            </Typography>
-                            {widget.category && (
-                              <Typography variant="caption" component="span" sx={{ 
-                                bgcolor: alpha(theme.palette.secondary.main, 0.1),
-                                color: theme.palette.secondary.main,
-                                px: 1,
-                                py: 0.25,
-                                borderRadius: 1,
-                                fontWeight: 'medium',
-                              }}>
-                                {widget.category}
-                              </Typography>
-                            )}
-                            <Typography 
-                              variant="caption" 
-                              component="span"
-                              sx={{
-                                color: alpha(theme.palette.text.secondary, 0.9)
-                              }}
-                            >
-                              Last updated: {new Date(widget.updatedAt).toLocaleDateString()}
-                            </Typography>
-                          </Box>
-                        }
+                      <ListItemText 
+                        id={`widget-${widget.id}`}
+                        primary={widget.name} 
+                        secondary={widget.description || 'No description available'}
                         primaryTypographyProps={{ 
-                          fontWeight: selectedWidgets.includes(widget.id) ? 'bold' : 'medium',
-                          color: selectedWidgets.includes(widget.id) 
-                            ? theme.palette.primary.main 
-                            : theme.palette.text.primary
+                          color: 'white',
+                          fontWeight: 500,
+                        }}
+                        secondaryTypographyProps={{ 
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          fontSize: '0.8rem',
                         }}
                       />
                     </ListItem>
-                  ))}
-                </List>
-              )}
+                  ))
+                )}
+              </List>
             </Paper>
-            
-            {exportData ? (
-              <Box sx={{ mb: 3 }}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between', 
-                  mb: 1 
+
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={selectedWidgets.length === 0}
+              onClick={generateExport}
+              startIcon={<SaveIcon />}
+              sx={buttonStyles.primary}
+            >
+              Generate Export
+            </Button>
+
+            {exportData && (
+              <Box sx={{ mt: 3 }}>
+                <Divider sx={{ 
+                  mb: 3, 
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
+                  '&::before, &::after': {
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                  }
                 }}>
-                  <Typography variant="subtitle1" fontWeight="medium" sx={{
-                    color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.dark
-                  }}>
-                    Export Data
+                  <Typography 
+                    variant="caption" 
+                    component="span"
+                    sx={{ 
+                      color: 'rgba(255, 255, 255, 0.7)', 
+                      fontWeight: 'medium',
+                      px: 1,
+                    }}
+                  >
+                    EXPORT DATA
                   </Typography>
-                  <Box>
-                    <Tooltip title="Copy to clipboard">
-                      <IconButton 
-                        onClick={copyExportToClipboard}
-                        color="primary"
-                        sx={{ mr: 0.5 }}
-                      >
-                        <ContentCopyIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Download as file">
-                      <IconButton 
-                        onClick={downloadExport}
-                        color="primary"
-                      >
-                        <DownloadIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </Box>
+                </Divider>
+
                 <TextField
                   multiline
                   fullWidth
-                  rows={12}
+                  rows={8}
                   variant="outlined"
                   value={exportData}
                   InputProps={{
                     readOnly: true,
                     sx: { 
                       fontFamily: 'monospace',
-                      fontSize: '0.8rem',
+                      fontSize: '0.85rem',
+                      color: 'white',
                       borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)',
-                      bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.1) : alpha(theme.palette.primary.main, 0.05)
+                      bgcolor: 'rgba(0, 0, 0, 0.2)',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                      },
                     }
                   }}
+                  sx={{ mb: 2 }}
                 />
+
+                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    onClick={downloadExport}
+                    startIcon={<DownloadIcon />}
+                    sx={buttonStyles.primary}
+                  >
+                    Download as File
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={copyExportToClipboard}
+                    startIcon={<ContentCopyIcon />}
+                    sx={buttonStyles.secondary}
+                  >
+                    Copy to Clipboard
+                  </Button>
+                </Box>
               </Box>
-            ) : (
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center',
-                justifyContent: 'center', 
-                pt: 2
-              }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  disabled={selectedWidgets.length === 0}
-                  onClick={generateExport}
-                  startIcon={<SaveIcon sx={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.2))' }} />}
-                  sx={{ 
-                    borderRadius: 2,
-                    px: 3,
-                    py: 1.2,
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                    textTransform: 'none',
-                    fontWeight: 'bold',
-                    fontSize: '0.95rem',
-                    background: theme.palette.mode === 'dark'
-                      ? `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`
-                      : `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${alpha(theme.palette.primary.light, 0.9)} 90%)`,
-                    letterSpacing: 0.5,
-                    '&:hover': {
-                      boxShadow: '0 6px 12px rgba(0,0,0,0.2)',
-                      background: theme.palette.mode === 'dark'
-                        ? `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`
-                        : `linear-gradient(45deg, ${alpha(theme.palette.primary.light, 0.9)} 30%, ${theme.palette.primary.main} 90%)`,
-                    },
-                    '&.Mui-disabled': {
-                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
-                      color: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.26)',
-                      boxShadow: 'none',
-                    }
-                  }}
-                >
-                  Generate Export
-                </Button>
-                {selectedWidgets.length === 0 && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, fontStyle: 'italic' }}>
-                    Select at least one widget to export
-                  </Typography>
-                )}
-              </Box>
-            )}
-            
-            {importResult && (
-              <Alert 
-                icon={importResult.success ? <CheckCircleIcon /> : <ErrorIcon />}
-                severity={importResult.success ? "success" : "error"}
-                variant="filled"
-                sx={{ 
-                  mb: 3, 
-                  borderRadius: 2,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  '& .MuiAlert-message': {
-                    fontWeight: 'bold',
-                    fontSize: '0.95rem',
-                  },
-                  color: '#ffffff',
-                  animation: 'fadeIn 0.3s ease-in-out',
-                  '@keyframes fadeIn': {
-                    '0%': {
-                      opacity: 0,
-                      transform: 'translateY(10px)',
-                    },
-                    '100%': {
-                      opacity: 1,
-                      transform: 'translateY(0)',
-                    },
-                  },
-                }}
-              >
-                {importResult.message}
-              </Alert>
             )}
           </Box>
         </TabPanel>
-        
+
         <TabPanel value={tabValue} index={1}>
           <Box sx={{ p: 3 }}>
-            <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
-              Import widgets from file or text
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Import widgets previously exported from another environment
+            <Typography variant="body1" paragraph color="white">
+              Import widgets from a file or by pasting exported widget data.
             </Typography>
             
             <Box sx={{ 
               border: '2px dashed',
-              borderColor: alpha(theme.palette.primary.main, 0.4),
+              borderColor: 'rgba(255, 255, 255, 0.3)',
               borderRadius: 2,
               p: 4,
               mb: 3,
@@ -712,15 +526,15 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              bgcolor: alpha(theme.palette.primary.main, 0.04),
+              bgcolor: 'rgba(255, 255, 255, 0.05)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               height: 180,
               '&:hover': {
-                borderColor: theme.palette.primary.main,
-                bgcolor: alpha(theme.palette.primary.main, 0.08),
+                borderColor: 'white',
+                bgcolor: 'rgba(255, 255, 255, 0.08)',
                 transform: 'translateY(-2px)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               }
             }} onClick={handleUploadClick}>
               <input
@@ -733,18 +547,15 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
               <CloudUploadIcon 
                 sx={{ 
                   fontSize: 52, 
-                  color: theme.palette.primary.main,
+                  color: 'white',
                   mb: 2,
                   opacity: 0.9,
-                  filter: 'drop-shadow(0px 2px 3px rgba(0,0,0,0.1))',
                 }} 
               />
-              <Typography variant="h6" gutterBottom fontWeight="bold" color={theme.palette.primary.main}
-                sx={{ textShadow: '0px 1px 1px rgba(0,0,0,0.05)' }}
-              >
-                Click to upload
+              <Typography variant="h6" gutterBottom fontWeight="bold" color="white">
+                Click to Upload File
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.9 }}>
+              <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
                 Accepts .json files
               </Typography>
             </Box>
@@ -752,31 +563,21 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
             <Box sx={{ my: 3, display: 'flex', alignItems: 'center', width: '100%' }}>
               <Divider sx={{ 
                 flexGrow: 1,
-                borderColor: `${alpha(theme.palette.divider, 0.8)}`
+                borderColor: 'rgba(255, 255, 255, 0.1)',
               }} />
-              <Box
-                sx={{
-                  px: 2,
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  px: 2, 
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontWeight: 'medium',
                 }}
               >
-                <Typography 
-                  variant="caption" 
-                  color="text.secondary" 
-                  sx={{ 
-                    py: 0.5, 
-                    borderRadius: 1,
-                    bgcolor: alpha(theme.palette.background.paper, 0.8),
-                    fontWeight: 'medium',
-                    letterSpacing: 0.5,
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  OR PASTE JSON BELOW
-                </Typography>
-              </Box>
+                OR PASTE JSON BELOW
+              </Typography>
               <Divider sx={{ 
                 flexGrow: 1,
-                borderColor: `${alpha(theme.palette.divider, 0.8)}`
+                borderColor: 'rgba(255, 255, 255, 0.1)',
               }} />
             </Box>
 
@@ -793,18 +594,16 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                   fontFamily: 'monospace',
                   fontSize: '0.85rem',
                   borderRadius: 2,
-                  borderColor: theme.palette.mode === 'dark' 
-                    ? alpha(theme.palette.primary.main, 0.3) 
-                    : theme.palette.divider,
-                  bgcolor: theme.palette.mode === 'dark' 
-                    ? alpha(theme.palette.common.black, 0.2) 
-                    : alpha(theme.palette.background.paper, 0.8),
-                  '&:hover': {
-                    borderColor: alpha(theme.palette.primary.main, 0.5)
+                  color: 'white',
+                  bgcolor: 'rgba(0, 0, 0, 0.2)',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
                   },
-                  '&.Mui-focused': {
-                    borderColor: theme.palette.primary.main,
-                    boxShadow: `0 0 0 1px ${alpha(theme.palette.primary.main, 0.2)}`,
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'white',
                   }
                 }
               }}
@@ -819,23 +618,7 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
                 sx={{ 
                   mb: 3, 
                   borderRadius: 2,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  '& .MuiAlert-message': {
-                    fontWeight: 'bold',
-                    fontSize: '0.95rem',
-                  },
-                  color: '#ffffff',
-                  animation: 'fadeIn 0.3s ease-in-out',
-                  '@keyframes fadeIn': {
-                    '0%': {
-                      opacity: 0,
-                      transform: 'translateY(10px)',
-                    },
-                    '100%': {
-                      opacity: 1,
-                      transform: 'translateY(0)',
-                    },
-                  },
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
                 }}
               >
                 {importResult.message}
@@ -845,34 +628,10 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
             <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1 }}>
               <Button
                 variant="contained"
-                color="primary"
                 disabled={!importData.trim()}
                 onClick={processImport}
-                startIcon={<UploadIcon sx={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.2))' }} />}
-                sx={{ 
-                  borderRadius: 2,
-                  px: 4,
-                  py: 1.2,
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                  textTransform: 'none',
-                  fontWeight: 'bold',
-                  fontSize: '0.95rem',
-                  background: theme.palette.mode === 'dark'
-                    ? `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.primary.main} 90%)`
-                    : `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${alpha(theme.palette.primary.light, 0.9)} 90%)`,
-                  letterSpacing: 0.5,
-                  '&:hover': {
-                    boxShadow: '0 6px 12px rgba(0,0,0,0.2)',
-                    background: theme.palette.mode === 'dark'
-                      ? `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`
-                      : `linear-gradient(45deg, ${alpha(theme.palette.primary.light, 0.9)} 30%, ${theme.palette.primary.main} 90%)`,
-                  },
-                  '&.Mui-disabled': {
-                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
-                    color: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.26)',
-                    boxShadow: 'none',
-                  }
-                }}
+                startIcon={<UploadIcon />}
+                sx={buttonStyles.primary}
               >
                 Import Widgets
               </Button>
@@ -881,50 +640,30 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
         </TabPanel>
       </DialogContent>
       
-      <DialogActions sx={{ 
-        px: 3,
-        py: 2,
-        bgcolor: alpha(theme.palette.divider, 0.08),
-        borderTop: '1px solid', 
-        borderColor: theme.palette.divider 
-      }}>
+      <DialogActions sx={dialogStyles.actions}>
         <Button 
           onClick={onClose}
           variant="outlined"
-          sx={{ 
-            borderRadius: 1.5,
-            textTransform: 'none',
-            fontWeight: 'medium',
-            px: 3,
-            py: 0.8,
-            borderColor: alpha(theme.palette.primary.main, 0.5),
-            color: theme.palette.primary.main,
-            '&:hover': {
-              borderColor: theme.palette.primary.main,
-              bgcolor: alpha(theme.palette.primary.main, 0.12),
-            }
-          }}
+          sx={buttonStyles.secondary}
         >
           Close
         </Button>
       </DialogActions>
-      
+
+      {/* Toast notification */}
       <Snackbar
         open={toastOpen}
         autoHideDuration={3000}
         onClose={() => setToastOpen(false)}
         message={toastMessage}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        sx={{
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ 
           '& .MuiSnackbarContent-root': {
-            bgcolor: theme.palette.primary.main,
-            color: theme.palette.primary.contrastText,
-            fontWeight: 'bold',
+            bgcolor: '#00BC9A',
+            color: 'black',
+            fontWeight: 'medium',
             borderRadius: 2,
-            boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
-            px: 2.5,
-            py: 1.5,
-            fontSize: '0.95rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           }
         }}
       />

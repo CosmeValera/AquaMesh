@@ -563,7 +563,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
       <DeleteConfirmationDialog
         open={deleteConfirmOpen}
         title="Delete Widget"
-        content="Are you sure you want to delete this widget? This action cannot be undone."
+        content="Are you sure you want to delete this widget?"
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
       />

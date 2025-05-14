@@ -1100,6 +1100,22 @@ export const useWidgetEditor = () => {
 
   // Handle deleting a saved widget
   const handleDeleteSavedWidget = (id: string) => {
+    // If the saved widgets list is open (WidgetManagementModal handles its own confirmation), delete immediately
+    if (showWidgetList) {
+      const widget = WidgetStorage.getWidgetById(id)
+      if (widget) {
+        WidgetStorage.deleteWidget(id)
+        setSavedWidgets(WidgetStorage.getAllWidgets())
+
+        setNotification({
+          open: true,
+          message: `Widget "${widget.name}" deleted`,
+          severity: 'error',
+        })
+      }
+      return
+    }
+
     // If delete confirmation is turned off, delete immediately
     if (!showDeleteWidgetConfirmation) {
       const widget = WidgetStorage.getWidgetById(id)

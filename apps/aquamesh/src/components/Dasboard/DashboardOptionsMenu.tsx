@@ -13,7 +13,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import FolderIcon from '@mui/icons-material/Folder'
 import { useDashboards } from './DashboardProvider'
-import SavedDashboardsDialog from './SavedDashboardsDialog'
+import SavedDashboardsDialog from './DashboardLibrary'
 import { Layout } from '../../types/types'
 
 // Define saved dashboard type

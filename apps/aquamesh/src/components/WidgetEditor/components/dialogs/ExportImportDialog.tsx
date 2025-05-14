@@ -254,14 +254,6 @@ const ExportImportDialog: React.FC<ExportImportDialogProps> = ({
         <Typography variant="h6" sx={{ fontWeight: 500, color: 'white' }}>
           Export & Import Widgets
         </Typography>
-        <IconButton
-          size="small"
-          aria-label="close"
-          sx={dialogStyles.closeButton}
-          onClick={onClose}
-        >
-          <CloseIcon fontSize="medium" />
-        </IconButton>
       </DialogTitle>
 
       <DialogContent sx={{

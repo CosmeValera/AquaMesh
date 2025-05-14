@@ -21,6 +21,7 @@ import CreateIcon from '@mui/icons-material/Create'
 import InfoIcon from '@mui/icons-material/Info'
 import DashboardWidgetExplanationModal from './DashboardWidgetExplanationModal'
 import WidgetEditorExplanationModal from './WidgetEditorExplanationModal'
+import ImportContactsIcon from '@mui/icons-material/ImportContacts'
 
 interface TutorialModalProps {
   open: boolean
@@ -454,17 +455,21 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
           zIndex: 1200
         }}>
           <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Typography 
-              variant="h5" 
-              component="div" 
-              fontWeight="bold" 
-              sx={{
-                color: '#eee',
-                textShadow: '0px 1px 2px rgba(255, 255, 255, 0.3)'
-              }}
-            >
-              Welcome to AquaMesh
-            </Typography>
+            
+            <Box display="flex" alignItems="center">
+              <ImportContactsIcon sx={{ color: '#eee', mr: 1 }} />
+              <Typography 
+                variant="h5" 
+                component="div" 
+                fontWeight="bold" 
+                sx={{
+                  color: '#eee',
+                  textShadow: '0px 1px 2px rgba(255, 255, 255, 0.3)'
+                }}
+              >
+                Welcome to AquaMesh
+              </Typography>
+            </Box>
             <Box display="flex" alignItems="center">
               <IconButton
                 aria-label="close"

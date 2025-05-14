@@ -153,7 +153,12 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
       }}
     >
       <DialogTitle>
-        <Typography variant="h6">Search Components</Typography>
+        <Box display="flex" alignItems="center">
+          <SearchIcon sx={{ mr: 1.5, color: '#eee' }} />
+          <Typography variant="h6" component="div" fontWeight="bold" color="#eee">
+            Search Components
+          </Typography>
+        </Box>
       </DialogTitle>
       
       <DialogContent dividers>

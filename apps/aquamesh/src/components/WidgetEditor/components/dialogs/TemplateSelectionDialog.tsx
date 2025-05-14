@@ -356,14 +356,6 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
             <Typography variant="h6" sx={{ fontWeight: 500, color: 'white' }}>
               Save as Template
             </Typography>
-            <IconButton
-              size="small"
-              aria-label="close"
-              sx={dialogStyles.closeButton}
-              onClick={onClose}
-            >
-              <CloseIcon fontSize="medium" />
-            </IconButton>
           </DialogTitle>
           <DialogContent sx={dialogStyles.content}>
             <Box sx={{ my: 1, py: 1 }}>
@@ -531,16 +523,8 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
             <Typography variant="h6" sx={{ fontWeight: 500, color: 'white' }}>
               Templates
             </Typography>
-            <IconButton
-              size="small"
-              aria-label="close"
-              sx={dialogStyles.closeButton}
-              onClick={onClose}
-            >
-              <CloseIcon fontSize="medium" />
-            </IconButton>
 
-            <Box sx={{ position: 'absolute', right: 55 }}>
+            <Box sx={{ position: 'absolute', right: 10 }}>
               <ButtonGroup
                 size="small"
                 variant="contained"

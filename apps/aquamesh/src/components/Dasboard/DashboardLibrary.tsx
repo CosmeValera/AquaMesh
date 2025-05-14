@@ -379,27 +379,45 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
           }
         }}
       >
-        <DialogTitle sx={{ 
-          bgcolor: '#00BC9A', 
-          color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          py: 2,
+        <DialogTitle id="tutorial-dialog-title" sx={{ 
+          bgcolor: 'primary.main', 
+          color: 'white', 
+          pb: 1,
+          backgroundImage: 'linear-gradient(90deg, #00BC9A 0%, #00A389 100%)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1200
         }}>
-          <Box display="flex" alignItems="center">
-            <DashboardIcon sx={{ mr: 1.5, color: '#191919' }} />
-            <Typography variant="h6" component="div" fontWeight="bold" color="#191919">
-              Dashboard Library
-            </Typography>
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Box display="flex" alignItems="center">
+              <DashboardIcon sx={{ mr: 1.5, color: '#eee' }} />
+              <Typography 
+                variant="h5" 
+                component="div" 
+                fontWeight="bold" 
+                sx={{
+                  color: '#eee',
+                  textShadow: '0px 1px 2px rgba(255, 255, 255, 0.3)'
+                }}
+              >
+                Dashboard Library
+              </Typography>
+            </Box>
+            <Box display="flex" alignItems="center">
+              <IconButton
+                aria-label="close"
+                onClick={onClose}
+                sx={{ 
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
           </Box>
-          <IconButton
-            onClick={onClose}
-            aria-label="close"
-            sx={{ color: '#191919' }}
-          >
-            <CloseIcon />
-          </IconButton>
         </DialogTitle>
         
         <DialogContent sx={{ p: 3, bgcolor: '#00A389'}}>

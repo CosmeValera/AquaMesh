@@ -195,27 +195,45 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
         }}
       >
         <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          color: 'white',
-          px: 3,
-          pt: 3
+          bgcolor: 'primary.main', 
+          color: 'white', 
+          pb: 1,
+          backgroundImage: 'linear-gradient(90deg, #00BC9A 0%, #00A389 100%)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1200
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <WidgetsIcon sx={{ mr: 1 }} />
-            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-              Widget Library
-            </Typography>
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <WidgetsIcon sx={{ mr: 1 }} />
+              <Typography 
+                variant="h5" 
+                component="div" 
+                fontWeight="bold" 
+                sx={{
+                  color: '#eee',
+                  textShadow: '0px 1px 2px rgba(255, 255, 255, 0.3)'
+                }}
+              >
+                Widget Library
+              </Typography>
+            </Box>
+            
+            <Box display="flex" alignItems="center">
+              <IconButton
+                aria-label="close"
+                onClick={onClose}
+                sx={{ 
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
           </Box>
-          <IconButton
-            onClick={onClose}
-            edge="end"
-            sx={{ color: 'white' }}
-            disabled={isLoading}
-          >
-            <CloseIcon />
-          </IconButton>
         </DialogTitle>
         
         <DialogContent sx={{ px: 3, py: 2, bgcolor: '#00A389' }}>

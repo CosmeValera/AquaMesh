@@ -183,9 +183,14 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       }}
     >
       <DialogTitle
-        sx={{ bgcolor: 'primary.main', color: 'primary.contrastText' }}
+        sx={{ bgcolor: 'primary.main', color: '#eee' }}
       >
-        Widget Editor Settings
+        <Box display="flex" alignItems="center">
+          <SettingsIcon sx={{ mr: 1.5, color: '#eee' }} />
+          <Typography variant="h6" component="div" fontWeight="bold" color="#eee">
+            Widget Editor Settings
+          </Typography>
+        </Box>
       </DialogTitle>
       <DialogContent>
         <Box sx={{ py: 2 }}>

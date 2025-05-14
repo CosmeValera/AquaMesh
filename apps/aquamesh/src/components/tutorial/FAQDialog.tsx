@@ -187,7 +187,7 @@ const FAQDialog: React.FC<FAQDialogProps> = ({ open, onClose }) => {
         <IconButton
           onClick={onClose}
           aria-label="close"
-          sx={{ color: '#191919' }}
+          sx={{ color: '#eee' }}
         >
           <CloseIcon />
         </IconButton>

@@ -1,6 +1,6 @@
 import React from 'react'
 import { CustomWidget } from '../../WidgetStorage'
-import WidgetManagementModal from './WidgetManagementModal'
+import WidgetManagementModal from './WidgetLibrary'
 
 interface SavedWidgetsDialogProps {
   open: boolean

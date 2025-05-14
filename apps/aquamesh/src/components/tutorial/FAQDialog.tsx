@@ -16,6 +16,8 @@ import {
 import CloseIcon from '@mui/icons-material/Close'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer'
+import ImportContactsIcon from '@mui/icons-material/ImportContacts'
+import SaveIcon from '@mui/icons-material/Save'
 
 interface FAQDialogProps {
   open: boolean
@@ -41,7 +43,11 @@ const FAQDialog: React.FC<FAQDialogProps> = ({ open, onClose }) => {
     {
       category: 'General',
       question: 'How do I get started?',
-      answer: 'Start by exploring the tutorial (click the book icon in the top bar 📖). You can then either use predefined dashboards and widgets, or create your own custom widgets using the Widget Editor.'
+      answer: (
+        <>
+          Start by exploring the <span style={{ color: '#00D1AB', fontWeight: 'bold' }}>Tutorial</span> (click the book icon in the top bar <ImportContactsIcon sx={{ color: '#eee', fontWeight: 'bold', position: 'relative', bottom: '-6px', marginRight: '2px' }} />). You can then either use predefined dashboards and widgets, or create your own custom widgets using the <span style={{ color: '#00D1AB', fontWeight: 'bold' }}>Widget Editor</span>.
+        </>
+      )
     },
     
     // Dashboard FAQs
@@ -58,12 +64,20 @@ const FAQDialog: React.FC<FAQDialogProps> = ({ open, onClose }) => {
     {
       category: 'Dashboards',
       question: 'How do I add widgets to my dashboard?',
-      answer: 'Click on the Widgets menu in the top bar and select from the available widgets. The widget will be added to your current dashboard. You can drag and drop widgets to rearrange them.'
+      answer: (
+        <>
+          Click on the <span style={{ color: '#00D1AB', fontWeight: 'bold' }}>Widgets menu</span> in the top bar and select from the available widgets. The widget will be added to your current dashboard. You can drag and drop widgets to rearrange them.
+        </>
+      )
     },
     {
       category: 'Dashboards',
       question: 'Can I save my dashboards?',
-      answer: 'Yes! You can save your dashboards by clicking on the floppy disk icon 💾 in the open tab. Also, in the Dashboard Library you can make them public or private, add tags, and provide descriptions.'
+      // Change the floppy disk icon to a save icon
+      // answer: 'Yes! You can save your dashboards by clicking on the floppy disk icon 💾 in the open tab. Also, in the Dashboard Library you can make them public or private, add tags, and provide descriptions.'
+      answer: <>
+        Yes! You can save your dashboards by clicking on the floppy disk icon <SaveIcon sx={{ color: '#eee', fontWeight: 'bold', position: 'relative', bottom: '-6px', marginRight: '2px' }} /> in the open tab. Also, in the Dashboard Library you can make them public or private, add tags, and provide descriptions.
+      </>
     },
     {
       category: 'Dashboards',
@@ -80,17 +94,27 @@ const FAQDialog: React.FC<FAQDialogProps> = ({ open, onClose }) => {
     {
       category: 'Widget Editor',
       question: 'What is the Widget Editor?',
-      answer: 'The Widget Editor is a tool that allows you to create custom widgets by combining various UI components. You can drag and drop components, configure their properties, and save your widgets for later use.'
+      answer: (
+        <>
+          The <span style={{ color: '#00D1AB', fontWeight: 'bold' }}>Widget Editor</span> is a tool that allows you to create custom widgets by combining various UI components. You can drag and drop components, configure their properties, and save your widgets for later use.
+        </>
+      )
     },
     {
       category: 'Widget Editor',
       question: 'Who can use the Widget Editor?',
-      answer: 'Only administrators can use the Widget Editor. To access admin features, change your user role to admin by clicking the user settings button in the top bar.'
+      answer: (
+        <>
+          Only administrators can use the <span style={{ color: '#00D1AB', fontWeight: 'bold' }}>Widget Editor</span>. To access admin features, change your user role to admin by clicking the user settings button in the top bar.
+        </>
+      )
     },
     {
       category: 'Widget Editor',
       question: 'How do I create a new widget?',
-      answer: 'Click on the Widget Editor button in the top bar. This will open the editor where you can drag components from the left panel onto the canvas. Once you\'ve designed your widget, click Save to add it to your Widget Library.'
+      answer: <>
+        Click on the <span style={{ color: '#00D1AB', fontWeight: 'bold' }}>Widget Editor</span> button in the top bar. This will open the editor where you can drag components from the left panel onto the canvas. Once you&apos;ve designed your widget, click Save to add it to your Widget Library.
+      </>
     },
     {
       category: 'Widget Editor',
@@ -100,7 +124,9 @@ const FAQDialog: React.FC<FAQDialogProps> = ({ open, onClose }) => {
     {
       category: 'Widget Editor',
       question: 'What components are available in the Widget Editor?',
-      answer: 'The Widget Editor provides various UI components like buttons, text fields, switches, charts, and layout components like fieldsets and grids. You can combine these to create complex widgets.'
+      answer: <>
+        The <span style={{ color: '#00D1AB', fontWeight: 'bold' }}>Widget Editor</span> provides various UI components like buttons, text fields, switches, charts, and layout components like fieldsets and grids. You can combine these to create complex widgets.
+      </>
     },
 
     // Extra features FAQs

@@ -210,8 +210,8 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
           boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <HistoryIcon sx={{ mr: 1.5, fontSize: 26 }} />
-            <Typography variant="h6" fontWeight="bold">Version History</Typography>
+            <HistoryIcon sx={{ mr: 1.5, fontSize: 26, color: 'white' }} />
+            <Typography variant="h6" fontWeight="bold" color="white">Version History</Typography>
           </Box>
         </DialogTitle>
         

@@ -13,15 +13,15 @@ export const dialogStyles = {
     boxShadow: '0 8px 16px rgba(0,0,0,0.25)'
   },
   
-  // Dialog title with gradient background
-  title: { 
-    bgcolor: '#00BC9A',
-    backgroundImage: 'linear-gradient(135deg, #00BC9A 0%, #008C8C 100%)',
+  // Dialog title with gradient background (matching TutorialModal)
+  title: {
+    bgcolor: 'primary.main',
+    backgroundImage: 'linear-gradient(90deg, #00BC9A 0%, #00A389 100%)',
     color: 'white',
     display: 'flex',
     alignItems: 'center',
     px: 3,
-    py: 1.75,
+    py: 2,
     position: 'relative'
   },
   
@@ -35,13 +35,13 @@ export const dialogStyles = {
   },
   
   // Actions area (footer)
-  actions: { 
-    px: 3, 
-    py: 1.5, 
-    bgcolor: '#00A389',
-    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+  actions: {
+    px: 3,
+    pb: 3,
+    bgcolor: 'background.paper',
+    borderTop: '1px solid rgba(0, 188, 162, 0.2)',
     justifyContent: 'flex-end',
-    gap: 2 
+    gap: 2
   },
   
   // Centered actions (for confirmation dialogs)
@@ -358,15 +358,7 @@ export const TAG_COLOR_MAP: Record<string, 'default'|'primary'|'secondary'|'erro
 }
 
 // Helper function to apply consistent dialog styling
-export const applyDialogStyles = (type: 'standard' | 'error' | 'info' | 'secondary' = 'standard'): {
-  PaperProps: { sx: SxProps<Theme> }
-} => {
-  const titleStyle = 
-    type === 'error' ? dialogStyles.errorTitle :
-    type === 'info' ? dialogStyles.infoTitle :
-    type === 'secondary' ? dialogStyles.secondaryTitle :
-    dialogStyles.title;
-    
+export const applyDialogStyles = (): { PaperProps: { sx: SxProps<Theme> } } => {
   return {
     PaperProps: {
       sx: {

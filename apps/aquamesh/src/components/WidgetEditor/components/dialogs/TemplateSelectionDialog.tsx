@@ -38,7 +38,7 @@ import { alpha } from '@mui/material/styles'
 import CloseIcon from '@mui/icons-material/Close'
 import Autocomplete from '@mui/material/Autocomplete'
 // Import shared styles
-import { dialogStyles, buttonStyles, cardStyles, chipStyles, TAG_COLOR_MAP } from '../../../shared/DialogStyles'
+import { dialogStyles, applyDialogStyles, buttonStyles, cardStyles, chipStyles, TAG_COLOR_MAP } from '../../../shared/DialogStyles'
 
 // Sort function type
 type SortFunction = (a: CustomWidget, b: CustomWidget) => number
@@ -347,9 +347,7 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{
-        sx: dialogStyles.paper
-      }}
+      {...applyDialogStyles()}
     >
       {saveAsTemplateMode ? (
         <>
@@ -450,8 +448,8 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                   const color = TAG_COLOR_MAP[option.toLowerCase()] || 'default'
                   return (
                     <Chip
-                      key={option}
                       {...getTagProps({ index })}
+                      key={option}
                       label={option}
                       size="small"
                       color={color}

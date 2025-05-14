@@ -25,7 +25,7 @@ interface FAQDialogProps {
 // FAQ data structure
 interface FAQ {
   question: string
-  answer: string
+  answer: React.ReactNode
   category: string
 }
 
@@ -145,12 +145,26 @@ const FAQDialog: React.FC<FAQDialogProps> = ({ open, onClose }) => {
     {
       category: 'About',
       question: 'Who is the person behind this project?',
-      answer: 'I am a software developer with a passion for creating useful and innovative tools. You can find more about me and my projects on my website: https://cosmevalera.github.io/'
+      answer: (
+        <>
+          I am a software developer with a passion for creating useful and innovative tools. You can find more about me and my projects on my website:{' '}
+          <a href="https://cosmevalera.github.io/" style={{ color: '#00D1AB' }} target="_blank" rel="noopener noreferrer">
+            https://cosmevalera.github.io/
+          </a>
+        </>
+      )
     },
     {
       category: 'About',
       question: 'How can I sponsor this project?',
-      answer: 'Feel free to contribute by sending a Bitcoin Lightning payment to my address 😊: https://getalby.com/p/cosmevalerareales'
+      answer: (
+        <>
+          Feel free to contribute by sending a Bitcoin Lightning payment to my address 😊:{' '}
+          <a href="https://getalby.com/p/cosmevalerareales" style={{ color: '#00D1AB' }} target="_blank" rel="noopener noreferrer">
+            https://getalby.com/p/cosmevalerareales
+          </a>
+        </>
+      )
     },
   ]
 

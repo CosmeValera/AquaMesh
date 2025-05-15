@@ -99,7 +99,8 @@ module.exports = (_, argv) => ({
     }),
     new CopyWebpackPlugin({
       patterns: [
-        { from: 'public/config/widgets.json', to: './config/', noErrorOnMissing: true }
+        { from: 'public/config/widgets.json', to: './config/', noErrorOnMissing: true },
+        { from: 'public/images', to: './', noErrorOnMissing: true }
       ],
     }),
     new CleanWebpackPlugin(),

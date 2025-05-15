@@ -28,8 +28,8 @@ const DashboardWidgetExplanationModal: React.FC<DashboardWidgetExplanationModalP
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
   // Example Dashboard and Widget images
-  const dashboardImage = `/images/understanding_dashboards.png`
-  const widgetImage = `/images/understanding_widgets.png`
+  const dashboardImage = `images/understanding_dashboards.png`
+  const widgetImage = `images/understanding_widgets.png`
 
   return (
     <Dialog 

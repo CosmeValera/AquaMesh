@@ -236,7 +236,7 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
           my: 3 
         }}>
           <img 
-            src="/images/widget_editor.png" 
+            src="images/widget_editor.png" 
             alt="Widget Editor Interface" 
             style={{ 
               maxWidth: '90%', 

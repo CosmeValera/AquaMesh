@@ -31,10 +31,10 @@ interface TutorialModalProps {
 
 // Base64 placeholder images until real ones are created
 const placeholderImages = {
-  dashboardWidgetExplanation: '/images/understanding_dashboards.png',
-  predefinedDashboards: `/images/dashboards_topnavbar.png`,
-  predefinedWidgets: `/images/widgets_topnavbar.png`,
-  customWidgetCreation: `/images/widget_editor.png`
+  dashboardWidgetExplanation: 'images/understanding_dashboards.png',
+  predefinedDashboards: `images/dashboards_topnavbar.png`,
+  predefinedWidgets: `images/widgets_topnavbar.png`,
+  customWidgetCreation: `images/widget_editor.png`
 }
 
 // Define interfaces for the tutorial options

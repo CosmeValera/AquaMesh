@@ -1,43 +1,30 @@
-# 🌊 AquaMesh - No-Code Dashboard & Widget Creation Platform
+# 🌊 AquaMesh | No-Code Dashboard Platform with React & Module Federation
 
-AquaMesh is a powerful no-code dashboard creation platform that enables users to build, customize, and manage interactive dashboards through an intuitive drag-and-drop interface.
+🌊 AquaMesh is a powerful no-code dashboard creation platform that enables users to build, customize, and manage interactive dashboards through an intuitive drag-and-drop interface.
 
 Built on a React-based Turborepo monorepo architecture, it dynamically loads components and allows for highly flexible customization of dashboards and widgets.
 
-## 🚀 Getting Started
+## ✨ Key Features
+- **🔧 No-Code Widget Editor:** Build custom widgets without programming knowledge
+- **📊 Dynamic Dashboard System:** Drag, resize, and position widgets in flexible layouts
+- **🔗 Module Federation Architecture:** Load widgets as independent micro-frontends
+- **⚡ React-based Turborepo Structure:** Optimized monorepo for efficient development
+- **🎨 Rich Component Library:** Pre-built UI elements, containers, and visualization tools
 
-To get started with AquaMesh, follow these simple steps:
+## 🚀 Quickstart
 
-1. Clone the repository.
-2. Run the following command in the root directory:
 ```sh
+# Clone the repository
+git clone https://github.com/CosmeValera/AquaMesh.git
+
+# Install dependencies (just one command for the entire monorepo!)
 npm install
-```
-3. Once dependencies are installed, launch the project with:
-```sh
+
+# Launch AquaMesh
 npm start
 ```
-That's it! Everything else is already configured for you. The AquaMesh app and all its components will be up and running.
 
-## ✨ TL:DR
-
-- **AquaMesh**: The main application that provides dashboard management, widget creation tools, and a flexible layout system.
-- **Widget Editor**: The heart of our no-code experience. Build custom widgets without programming!
-
-## 📦 Key Features
-
-### Top Navigation
-
-The top navigation bar provides quick access to all platform capabilities:
-
-- **📊 Dashboards**: Browse and select from both predefined and custom dashboards
-- **🧩 Widgets**: Access ready-made components and your custom-built widgets
-- **🔧 Widget Editor**: A tool for creating custom widgets through an intuitive drag-and-drop interface.
-- **📚 Libraries**: Save and organize your dashboard and widget creations
-- **❓ Support**: Get help through tutorials and FAQ sections
-- **👤 User Management**: Select and manage user profiles (only admin can create new widgets)
-
-All our pre-built widgets load as microfrontends using Module Federation. Want to customize what's available? Just update the `apps/aquamesh/public/config/widgets.json` file. 
+That's it! The AquaMesh application and all its components will be up and running.
 
 ### 📊 Dashboards
 
@@ -82,6 +69,19 @@ The Widget Editor offers various component types:
 Customize your dashboard by dragging, repositioning, and resizing widgets to suit your needs.
 
 ![Drag and Resize](tools/readme_images/Mix.png)
+
+### Top Navigation
+
+The top navigation bar provides quick access to all platform capabilities:
+
+- **📊 Dashboards**: Browse and select from both predefined and custom dashboards
+- **🧩 Widgets**: Access ready-made components and your custom-built widgets
+- **🔧 Widget Editor**: The heart of our no-code experience. Build custom widgets without programming!
+- **📚 Libraries**: Save and organize your dashboard and widget creations
+- **❓ Support**: Get help through tutorials and FAQ sections
+- **👤 User Management**: Select and manage user profiles (only admin can create new widgets)
+
+All our pre-built widgets load as microfrontends using Module Federation. Want to customize what's available? Just update the `apps/aquamesh/public/config/widgets.json` file. 
 
 ## 🏗️ Architecture Overview
 

@@ -12,11 +12,15 @@ Built on a React-based Turborepo monorepo architecture, it dynamically loads com
 - **🎨 Rich Component Library:** Pre-built UI elements, containers, and visualization tools
 
 ## 🎬 Demo
-[Live Demo](https://claude.ai/chat/ff62d5d1-2358-45a2-8e24-a7f918cf079a) - See AquaMesh in action!
+
+To try AquaMesh Demo: [**Click Here**](https://codesandbox.io/p/github/CosmeValera/AquaMesh/aquamesh-portfolio)*
 
 ![Live Demo](tools/readme_images/live_demo.png)
 
-Watch how easily you can create dashboards with drag-and-drop widgets, customize their appearance, and arrange them in a flexible layout - all without writing a single line of code.
+> [!NOTE]
+> *Please allow up to 5 minutes for the sandbox to initialize. Once ready at `localhost:3000`, refresh the preview panel to start.
+
+Create custom dashboards with drag-and-drop widgets, no coding required!
 
 ## 🚀 Quickstart
 
@@ -144,7 +148,7 @@ As the sole developer of AquaMesh, I designed and implemented the entire archite
 - Implement advanced React patterns and hooks for state management
 - Develop a deep understanding of Module Federation for micro-frontend architecture
 - Create an intuitive drag-and-drop interface with complex layout capabilities
-- Build a complete product with consideration for user experience and developer extensibility
+- **Build a complete product with consideration for user experience and developer extensibility**
 
 The most rewarding aspect was solving the technical challenges for designing an intuitive way for users to customize widgets while keeping everything working smoothly.
 

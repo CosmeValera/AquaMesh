@@ -49,6 +49,8 @@ interface PieChartEditorProps {
   onChange: (jsonData: string) => void
   title?: string
   description?: string
+  onTitleChange: (title: string) => void
+  onDescriptionChange: (description: string) => void
 }
 
 interface PieSegment {
@@ -138,6 +140,8 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
   onChange,
   title = '',
   description = '',
+  onTitleChange,
+  onDescriptionChange,
 }) => {
   // State for pie chart segments
   const [segments, setSegments] = useState<PieSegment[]>([])
@@ -381,6 +385,27 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
 
   return (
     <Box sx={{ width: '100%', p: 2 }}>
+      
+      {/* Chart Details */}
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Chart Title"
+          value={title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          fullWidth
+          size="small"
+          variant="outlined"
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Chart Description"
+          value={description}
+          onChange={(e) => onDescriptionChange(e.target.value)}
+          fullWidth
+          size="small"
+          variant="outlined"
+        />
+      </Box>
       
       {/* Section 1: Chart Preview */}
       <Box sx={{ mb: 2, mt: 0 }}>

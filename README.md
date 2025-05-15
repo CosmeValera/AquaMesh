@@ -11,6 +11,13 @@ Built on a React-based Turborepo monorepo architecture, it dynamically loads com
 - **⚡ React-based Turborepo Structure:** Optimized monorepo for efficient development
 - **🎨 Rich Component Library:** Pre-built UI elements, containers, and visualization tools
 
+## 🎬 Demo
+[Live Demo](https://claude.ai/chat/ff62d5d1-2358-45a2-8e24-a7f918cf079a) - See AquaMesh in action!
+
+![Live Demo](tools/readme_images/live_demo.png)
+
+Watch how easily you can create dashboards with drag-and-drop widgets, customize their appearance, and arrange them in a flexible layout - all without writing a single line of code.
+
 ## 🚀 Quickstart
 
 ```sh
@@ -84,7 +91,7 @@ AquaMesh's most powerful feature is its **Widget Editor**, which enables users t
 
 ![Search](tools/readme_images/search.png)
 
-- **Settings**: Settings for: Interface options, Confirmation options and Keyboard Shortcuts.
+- **Settings**: Settings for-> Interface options, Confirmation options and Keyboard Shortcuts.
 
 ![Settings](tools/readme_images/settings.png)
 
@@ -129,5 +136,16 @@ The platform uses **Turborepo** for managing the applications in the monorepo:
 - **Simplified package management**: Only one npm install needed from the root.
 - **Efficient development**: Built-in tools for running and building multiple projects simultaneously.
 - **Consistency**: Shared dependencies and dashboard scripts ensure all components work seamlessly together.
+
+### 👨‍💻 Personal Contribution
+As the sole developer of AquaMesh, I designed and implemented the entire architecture from concept to completion. This project allowed me to:
+
+- Master monorepo structures and Turborepo for efficient code organization
+- Implement advanced React patterns and hooks for state management
+- Develop a deep understanding of Module Federation for micro-frontend architecture
+- Create an intuitive drag-and-drop interface with complex layout capabilities
+- Build a complete product with consideration for user experience and developer extensibility
+
+The most rewarding aspect was solving the technical challenges for designing an intuitive way for users to customize widgets while keeping everything working smoothly.
 
 🔍 Start creating amazing dashboards today! 🌊

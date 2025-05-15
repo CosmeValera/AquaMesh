@@ -145,6 +145,17 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
   const handleSwitchToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
     setChecked(isChecked);
+    // Dispatch toast event for preview
+    if (showToast) {
+      const message = isChecked
+        ? (props.onMessage as string) || 'Switch turned ON'
+        : (props.offMessage as string) || 'Switch turned OFF';
+      const severity = (props.toastSeverity as string) as 'success' | 'error' | 'info' | 'warning';
+      document.dispatchEvent(new CustomEvent('showWidgetToast', {
+        detail: { message, severity },
+        bubbles: true,
+      }));
+    }
   };
   
   // Generate preview style based on current settings
@@ -167,9 +178,8 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
       <ComponentPreview>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <FormControlLabel
-            sx={{ ...(useCustomLabelColor ? { '& .MuiFormControlLabel-label': { color: customLabelColor } } : {}) }}
             control={
-              <Switch 
+              <Switch
                 checked={checked}
                 onChange={handleSwitchToggle}
                 size={size as 'small' | 'medium'}
@@ -177,7 +187,11 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
                 sx={previewStyles}
               />
             }
-            label={(props.label as string) || 'Switch'}
+            label={
+              <Typography component="span" sx={{ color: useCustomLabelColor ? customLabelColor : '#000000' }}>
+                {(props.label as string) || 'Switch'}
+              </Typography>
+            }
             labelPlacement={labelPlacement as 'end' | 'start' | 'top' | 'bottom'}
           />
           

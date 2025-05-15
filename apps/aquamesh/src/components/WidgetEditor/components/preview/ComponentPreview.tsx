@@ -69,10 +69,12 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
       case 'SwitchEnable': {
         const labelValue = component.props.label as string;
         const customLabel = component.props.customLabelColor as string | undefined;
-        // Prepare label with custom color if provided
-        const labelNode = customLabel
-          ? <Typography component="span" sx={{ color: customLabel }}>{labelValue}</Typography>
-          : labelValue;
+        // Always render label with custom label color or default black
+        const labelNode = (
+          <Typography component="span" sx={{ color: customLabel ?? '#000000' }}>
+            {labelValue}
+          </Typography>
+        );
         return (
           <FormControlLabel
             control={

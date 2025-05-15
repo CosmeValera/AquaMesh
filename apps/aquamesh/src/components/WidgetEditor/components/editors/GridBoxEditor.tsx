@@ -63,7 +63,7 @@ const GridVisualizer: React.FC<{ columns: number }> = ({
 
 const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
   // GridBox states
-  const [columns, setColumns] = useState<number>(typeof props.columns === 'number' ? props.columns : 3)
+  const [columns, setColumns] = useState<number>(typeof props.columns === 'number' ? props.columns : 2)
   const [cellPadding, setCellPadding] = useState<number>(typeof props.cellPadding === 'number' ? props.cellPadding : 1)
   
   // Initialize state based on props
@@ -137,7 +137,7 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
               <InfoOutlinedIcon fontSize="small" sx={{ ml: 1 }} />
             </Tooltip>
           </Box>
-          <Box>
+          <Box sx={{ marginRight: 2 }}>
             <Slider
               value={cellPadding}
               min={0}
@@ -149,7 +149,6 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
                 setCellPadding(value as number)
                 handleChange('cellPadding', value)
               }}
-              sx={{ marginRight: 2 }}
             />
           </Box>
         </Grid>

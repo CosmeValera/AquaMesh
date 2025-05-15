@@ -100,7 +100,7 @@ export const COMPONENT_TYPES: ComponentType[] = [
     type: 'GridBox',
     label: 'Grid Container',
     defaultProps: { 
-      columns: 1, 
+      columns: 2, 
       rows: 1,
       spacing: 2
     },

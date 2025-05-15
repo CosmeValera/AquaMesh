@@ -74,10 +74,9 @@ module.exports = (_, argv) => ({
       name: "aquamesh",
       filename: "remoteEntry.js",
       remotes: {
-        aquamesh_system_lens: "aquamesh_system_lens@https://system-lens.vercel.app/remoteEntry.js",
-        aquamesh_control_flow: "aquamesh_control_flow@https://control-flow.vercel.app/remoteEntry.js",
+        aquamesh_system_lens: "aquamesh_system_lens@https://aquamesh-system-lens.vercel.app/remoteEntry.js",
+        aquamesh_control_flow: "aquamesh_control_flow@https://aquamesh-system-lens.vercel.app/remoteEntry.js",
       },
-      
       exposes: {},
       shared: {
         ...deps,

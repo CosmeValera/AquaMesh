@@ -74,13 +74,10 @@ module.exports = (_, argv) => ({
       name: "aquamesh",
       filename: "remoteEntry.js",
       remotes: {
-        aquamesh_system_lens: argv.mode === 'production' 
-          ? process.env.SYSTEM_LENS_URL || "aquamesh_system_lens@https://system-lens.your-vercel-domain.com/remoteEntry.js"
-          : "aquamesh_system_lens@http://localhost:3001/remoteEntry.js",
-        aquamesh_control_flow: argv.mode === 'production'
-          ? process.env.CONTROL_FLOW_URL || "aquamesh_control_flow@https://control-flow.your-vercel-domain.com/remoteEntry.js"
-          : "aquamesh_control_flow@http://localhost:3002/remoteEntry.js"
+        aquamesh_system_lens: "aquamesh_system_lens@https://system-lens.vercel.app/remoteEntry.js",
+        aquamesh_control_flow: "aquamesh_control_flow@https://control-flow.vercel.app/remoteEntry.js",
       },
+      
       exposes: {},
       shared: {
         ...deps,

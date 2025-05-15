@@ -174,12 +174,17 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
   // Function to render any component type
   const renderComponent = (component: ComponentData) => {
     switch (component.type) {
-    case 'SwitchEnable':
+    case 'SwitchEnable': {
+      const labelValue = component.props.label as string;
+      const customLabel = component.props.customLabelColor as string | undefined;
+      const labelNode = customLabel
+        ? <Typography component="span" sx={{ color: customLabel }}>{labelValue}</Typography>
+        : labelValue;
       return (
         <Box key={component.id} sx={{ mb: 1 }}>
           <FormControlLabel
             control={
-              <Switch 
+              <Switch
                 defaultChecked={component.props.defaultChecked as boolean}
                 disabled={Boolean(component.props.disabled)}
                 size={component.props.size as 'small' | 'medium'}
@@ -192,12 +197,12 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
                 } : undefined}
               />
             }
-            label={component.props.label as string}
+            label={labelNode}
             labelPlacement={component.props.labelPlacement as 'end' | 'start' | 'top' | 'bottom' || 'end'}
             onChange={(e) => {
               if (component.props.showToast) {
                 const isChecked = (e.target as HTMLInputElement).checked
-                const message = isChecked 
+                const message = isChecked  
                   ? (component.props.onMessage as string || 'Switch turned ON')
                   : (component.props.offMessage as string || 'Switch turned OFF')
                 const severity = component.props.toastSeverity as 'success' | 'error' | 'info' | 'warning' || 'info'
@@ -207,6 +212,7 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({ widgetId, components: propC
           />
         </Box>
       )
+    }
     case 'FieldSet': {
       const isCollapsed = collapsedFieldsets[component.id] ?? Boolean(component.props.collapsed)
       const borderStyle = (component.props.borderStyle as string) || 'solid'

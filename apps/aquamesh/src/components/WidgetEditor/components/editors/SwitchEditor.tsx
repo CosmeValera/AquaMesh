@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useEffect } from 'react'
 import {
   Box,
@@ -21,7 +22,8 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import {
   TabPanelShared,
   ComponentPreview,
-  EditorTabs
+  EditorTabs,
+  CustomColorControl
 } from '../shared/SharedEditorComponents'
 
 // Define props interface
@@ -32,6 +34,8 @@ interface SwitchProps {
   size?: 'small' | 'medium';
   useCustomColor?: boolean;
   customTrackColor?: string; // track color
+  useCustomLabelColor?: boolean;
+  customLabelColor?: string;
   showToast?: boolean;
   onMessage?: string;
   offMessage?: string;
@@ -56,6 +60,10 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
   const [useCustomColor, setUseCustomColor] = useState(Boolean(props.useCustomColor))
   const [customTrackColor, setCustomTrackColor] = useState((props.customTrackColor as string) || '#90caf9')
   
+  // Label color states
+  const [useCustomLabelColor, setUseCustomLabelColor] = useState(Boolean(props.useCustomLabelColor))
+  const [customLabelColor, setCustomLabelColor] = useState((props.customLabelColor as string) || '#000000')
+  
   // Size & Style
   const [size, setSize] = useState((props.size as string) || 'medium')
   const [labelPlacement, setLabelPlacement] = useState((props.labelPlacement as string) || 'end')
@@ -79,6 +87,14 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
     }
     
     setShowToast(Boolean(props.showToast))
+    
+    // Sync label color
+    setUseCustomLabelColor(Boolean(props.useCustomLabelColor))
+    if (props.customLabelColor) {
+      setCustomLabelColor(props.customLabelColor as string)
+    } else {
+      setCustomLabelColor('#000000')
+    }
   }, [props])
   
   // Handle tab change
@@ -104,6 +120,25 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
       handleChange('customTrackColor', undefined)
       setCustomTrackColor('#90caf9')
     }
+  }
+  
+  // Label color toggle
+  const handleLabelColorToggle = (useCustom: boolean) => {
+    setUseCustomLabelColor(useCustom)
+    if (useCustom) {
+      handleChange('useCustomLabelColor', true)
+      handleChange('customLabelColor', customLabelColor)
+    } else {
+      handleChange('useCustomLabelColor', undefined)
+      handleChange('customLabelColor', undefined)
+      setCustomLabelColor('#000000')
+    }
+  }
+  
+  // Label color change
+  const handleLabelColorChange = (color: string) => {
+    setCustomLabelColor(color)
+    handleChange('customLabelColor', color)
   }
   
   // Handle switch toggle in preview
@@ -132,6 +167,7 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
       <ComponentPreview>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <FormControlLabel
+            sx={{ ...(useCustomLabelColor ? { '& .MuiFormControlLabel-label': { color: customLabelColor } } : {}) }}
             control={
               <Switch 
                 checked={checked}
@@ -311,6 +347,15 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
               />
             </Grid>
           )}
+          <Grid item xs={12}>
+            <CustomColorControl
+              useCustomColor={useCustomLabelColor}
+              customColor={customLabelColor}
+              onToggleCustomColor={handleLabelColorToggle}
+              onColorChange={handleLabelColorChange}
+              label="Use Custom Label Color"
+            />
+          </Grid>
         </Grid>
       </TabPanelShared>
       

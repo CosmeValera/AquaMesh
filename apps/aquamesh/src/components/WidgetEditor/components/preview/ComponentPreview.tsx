@@ -66,11 +66,17 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   // Render a preview of the component based on its type
   const renderComponent = () => {
     switch (component.type) {
-      case 'SwitchEnable':
+      case 'SwitchEnable': {
+        const labelValue = component.props.label as string;
+        const customLabel = component.props.customLabelColor as string | undefined;
+        // Prepare label with custom color if provided
+        const labelNode = customLabel
+          ? <Typography component="span" sx={{ color: customLabel }}>{labelValue}</Typography>
+          : labelValue;
         return (
           <FormControlLabel
             control={
-              <Switch 
+              <Switch
                 defaultChecked={component.props.defaultChecked as boolean}
                 disabled={Boolean(component.props.disabled)}
                 size={component.props.size as 'small' | 'medium'}
@@ -82,18 +88,13 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                 } : undefined}
                 onChange={(e) => {
                   if (component.props.showToast) {
-                    const isChecked = e.target.checked;
-                    const message = isChecked 
+                    const isChecked = (e.target as HTMLInputElement).checked;
+                    const message = isChecked
                       ? (component.props.onMessage as string || 'Switch turned ON')
                       : (component.props.offMessage as string || 'Switch turned OFF');
                     const severity = component.props.toastSeverity as string || 'info';
-                    
-                    // Dispatch custom event for toast
                     const customEvent = new CustomEvent('showWidgetToast', {
-                      detail: {
-                        message,
-                        severity
-                      },
+                      detail: { message, severity },
                       bubbles: true
                     });
                     document.dispatchEvent(customEvent);
@@ -101,10 +102,11 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                 }}
               />
             }
-            label={component.props.label as string}
+            label={labelNode}
             labelPlacement={component.props.labelPlacement as 'end' | 'start' | 'top' | 'bottom' || 'end'}
           />
-        )
+        );
+      }
       case 'FieldSet': {
         const isCollapsed = component.props.collapsed as boolean;
         const borderStyle = component.props.borderStyle as string || 'solid';

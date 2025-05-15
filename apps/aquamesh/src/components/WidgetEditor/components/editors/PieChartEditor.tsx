@@ -384,9 +384,9 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
   }
 
   return (
-    <Box sx={{ width: '100%', p: 2, display: 'flex', gap: 2 }}>
+    <Box sx={{ width: '100%', p: 2, display: 'flex', gap: 2, '@media (max-width: 720px)': { flexDirection: 'column' } }}>
       {/* Left Pane: Chart Details and Preview */}
-      <Box sx={{ flex: '0 0 35%', maxWidth: '35%' }}>
+      <Box sx={{ flex: '0 0 35%', maxWidth: '35%', '@media (max-width: 720px)': { flex: '0 0 100%', maxWidth: '100%' } }}>
         {/* Chart Details */}
         <Box sx={{ mb: 1 }}>
           <TextField

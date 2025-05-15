@@ -100,7 +100,13 @@ module.exports = (_, argv) => ({
     new CopyWebpackPlugin({
       patterns: [
         { from: 'public/config/widgets.json', to: './config/', noErrorOnMissing: true },
-        { from: 'public/images', to: './', noErrorOnMissing: true }
+        { from: 'public/images', to: './images', noErrorOnMissing: true }
+      ],
+    }),
+    // Add a second copy to ensure images are available at both locations
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: 'public/images', to: '/', noErrorOnMissing: true }
       ],
     }),
     new CleanWebpackPlugin(),

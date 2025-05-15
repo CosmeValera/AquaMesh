@@ -4,7 +4,7 @@
   "scripts": {
     "start": "webpack serve --mode development",
     "start:live": "webpack serve --mode development --live-reload --hot",
-    "build": "webpack --mode production",
+    "build": "webpack --mode production --config webpack.config.prod.js",
     "build:dev": "webpack --mode development",
     "build:start": "cd dist && PORT=3002 npx serve",
     "test": "vitest --config ./vitest.config.js ./tests/"

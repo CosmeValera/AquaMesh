@@ -7,7 +7,7 @@
     "test": "vitest --run tests/handler.test.ts && npx playwright test",
     "test:unit": "vitest tests/handler.test.ts",
     "test:e2e": "npx playwright test",
-    "build": "webpack --mode production",
+    "build": "webpack --mode production --config webpack.config.prod.js",
     "build:dev": "webpack --mode development",
     "build:start": "cd dist && PORT=3003 npx serve"
   },

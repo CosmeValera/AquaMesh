@@ -8,7 +8,7 @@
     }
   ],
   "env": {
-    "SYSTEM_LENS_URL": "aquamesh_system_lens@https://system-lens.your-vercel-domain.com/remoteEntry.js",
-    "CONTROL_FLOW_URL": "aquamesh_control_flow@https://control-flow.your-vercel-domain.com/remoteEntry.js"
+    "SYSTEM_LENS_URL": "aquamesh_system_lens@https://aquamesh-system-lens.vercel.app/remoteEntry.js",
+    "CONTROL_FLOW_URL": "aquamesh_control_flow@https://aquamesh-control-flow.vercel.app/remoteEntry.js"
   }
 } 

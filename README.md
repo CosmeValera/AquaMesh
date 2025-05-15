@@ -26,51 +26,69 @@ npm start
 
 That's it! The AquaMesh application and all its components will be up and running.
 
+## 🔍 Tutorial
+When you first use the app, a **Tutorial** will automatically appear, explaining **Dashboards**, **Widgets**, and the **Widget Editor** features. You can revisit this tutorial anytime from the help menu. For specific questions, there's also a **FAQ** section available.
+
+![Tutorial Modal](tools/readme_images/tutorial.png)
+
+![FAQ Modal](tools/readme_images/faq.png)
+
 ### 📊 Dashboards
 
-Dashboards are container layouts that organize multiple widgets into a cohesive view. Think of them as the canvas where you arrange your widgets.
+Dashboards are container layouts that organize multiple widgets into a cohesive view. Think of them as the canvas where you arrange your widgets (visual components).
 
-![Dashboard Interface](tools/readme_images/Mix.png)
+![Dashboard Interface](tools/readme_images/dashboard.png)
 
-In the **Dashboard Library** You can save, categorize, and change visibility of dashboards.
+In the **Dashboard Library**, you can save, categorize, and change visibility of your dashboards.
 
-![Dashboards Library](tools/readme_images/topbar-dashboards-library.png)
+![Dashboards Library](tools/readme_images/dashboards-library.png)
 
 ### 🧩 Widgets
 
-Widgets are individual components that display specific data, visualizations, or controls. Each widget serves a distinct purpose and can be added to dashboards.
+Widgets are individual components that display specific data, visualizations, or controls. Each widget serves a distinct purpose and can be added to any dashboard.
 
-![Widget Library](tools/readme_images/topbar-widgets.png)
+![Widget Interface](tools/readme_images/widget.png)
 
-### 🔧 No-Code Widget Creation
+In the **Widget Library**, you can sort, load and delete your widgets.
+
+![Widget Library](tools/readme_images/dashboards-library.png)
+
+
+### 🔧 Widget Editor
 
 AquaMesh's most powerful feature is its **Widget Editor**, which enables users to create custom widgets without coding:
 
 **Widget Editor Features:**
 
 - **Intuitive Drag & Drop**: Easily drag components from the palette onto your canvas to design widgets.
-- **Rich Component Library**: Choose from UI components (buttons, switches, text fields), layout containers, and data visualization tools.
-- **Deep Customization**: Fine-tune each component's appearance and behavior through dedicated property editors.
-- **Live Preview**: See your changes reflected instantly for rapid iteration and design adjustments.
-- **Complex Layouts**: Create sophisticated structures by nesting components within layout containers.
-- **Save & Reuse**: Build a personal library of widgets that can be reused across different dashboards.
+- **Component Library**: Choose from UI components (buttons, switches, text fields), layout containers, and data visualization tools.
+- **Customization**: Adjust appearance and behavior through property editors.
+- **Live Preview**: See your changes instantly.
 
 ![Widget Editor](tools/readme_images/widget_editor.png)
 
-**Supported Component Types:**
+**Widget Editor Advanced Features:**
+- **Templates**: Templates are predefined widget configurations that you can use to quickly create new widgets.
 
-The Widget Editor offers various component types:
+![Templates](tools/readme_images/templates.png)
 
-- **UI Components**: Buttons, Labels, Text Fields, Switches and Charts
-- **Layout Containers**: FieldSets, FlexBox, GridBox for organizing content
+- **Import & Export**: You can export your widgets as JSON to import them later. This is useful for backup or sharing with others.
 
-**Drag and Resize Capabilities:**
+![Import & Export](tools/readme_images/import_export.png)
 
-Customize your dashboard by dragging, repositioning, and resizing widgets to suit your needs.
+- **Versions**: A version control system is already built-in. You can see all your saved versions of the current widget, and you can restore any previous version.
 
-![Drag and Resize](tools/readme_images/Mix.png)
+![Version History](tools/readme_images/version_history.png)
 
-### Top Navigation
+- **Search**: Quickly search for any component in your canvas.
+
+![Search](tools/readme_images/search.png)
+
+- **Settings**: Settings for: Interface options, Confirmation options and Keyboard Shortcuts.
+
+![Settings](tools/readme_images/settings.png)
+
+### 🧭 Top Navigation
 
 The top navigation bar provides quick access to all platform capabilities:
 
@@ -78,12 +96,23 @@ The top navigation bar provides quick access to all platform capabilities:
 - **🧩 Widgets**: Access ready-made components and your custom-built widgets
 - **🔧 Widget Editor**: The heart of our no-code experience. Build custom widgets without programming!
 - **📚 Libraries**: Save and organize your dashboard and widget creations
-- **❓ Support**: Get help through tutorials and FAQ sections
+- **❓ Support**: Get help through the tutorial and FAQ sections
 - **👤 User Management**: Select and manage user profiles (only admin can create new widgets)
 
 All our pre-built widgets load as microfrontends using Module Federation. Want to customize what's available? Just update the `apps/aquamesh/public/config/widgets.json` file. 
 
 ## 🏗️ Architecture Overview
+
+### 💻 Technology Stack
+AquaMesh uses modern frontend technologies to deliver a powerful and intuitive experience:
+
+- **React:** The core framework for the interface
+- **flexlayout-react:** Powers the dashboard's flexible layout system, allowing widgets to be resized and repositioned
+- **react-tabs:** Manages multiple dashboard views, each with their own set of widgets
+- **🧪 Testing Suite:**
+  - **Playwright:** End-to-end testing that validates the full application workflow
+  - **Vitest:** Fast and efficient unit testing for individual components
+  - **bashunit:** Modern bash testing library for testing bash scripts 
 
 ### 📦 Modular Design with Dynamic Component Loading
 

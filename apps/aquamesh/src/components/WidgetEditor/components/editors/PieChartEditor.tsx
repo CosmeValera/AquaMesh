@@ -384,58 +384,46 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
   }
 
   return (
-    <Box sx={{ width: '100%', p: 2 }}>
-      
-      {/* Chart Details */}
-      <Box sx={{ mb: 2 }}>
-        <TextField
-          label="Chart Title"
-          value={title}
-          onChange={(e) => onTitleChange(e.target.value)}
-          fullWidth
-          size="small"
-          variant="outlined"
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="Chart Description"
-          value={description}
-          onChange={(e) => onDescriptionChange(e.target.value)}
-          fullWidth
-          size="small"
-          variant="outlined"
-        />
-      </Box>
-      
-      {/* Section 1: Chart Preview */}
-      <Box sx={{ mb: 2, mt: 0 }}>
-        <Typography variant="subtitle1" sx={{ mb: 1 }}>Preview</Typography>
-        <Box sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1, p: 3, bgcolor: 'rgba(0,0,0,0.02)' }}>
-          <ChartPreview
-            chartType="pie"
-            title={title}
-            description={description}
-            data={previewData}
+    <Box sx={{ width: '100%', p: 2, display: 'flex', gap: 2 }}>
+      {/* Left Pane: Chart Details and Preview */}
+      <Box sx={{ flex: '0 0 35%', maxWidth: '35%' }}>
+        {/* Chart Details */}
+        <Box sx={{ mb: 1 }}>
+          <TextField
+            label="Chart Title"
+            value={title}
+            onChange={(e) => onTitleChange(e.target.value)}
+            fullWidth
+            size="small"
+            variant="standard"
+            sx={{ mb: 1 }}
+          />
+          <TextField
+            label="Chart Description"
+            value={description}
+            onChange={(e) => onDescriptionChange(e.target.value)}
+            fullWidth
+            size="small"
+            variant="standard"
           />
         </Box>
+        {/* Preview */}
+        <Typography variant="subtitle2" sx={{ mb: 1 }}>Preview</Typography>
+        <Box sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1, p: 1, bgcolor: 'rgba(0,0,0,0.02)' }}>
+          <ChartPreview chartType="pie" title={title} description={description} data={previewData} />
+        </Box>
       </Box>
-      
-      {/* Section 2: Segment Editor */}
-      <Box sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="subtitle1">Pie Chart Segments</Typography>
-          <Button 
-            variant="outlined" 
-            startIcon={<AddIcon />} 
-            size="small"
-            onClick={addSegment}
-          >
+      {/* Right Pane: Segment Editor */}
+      <Box sx={{ flex: '1 1 65%' }}>
+        {/* Pie Chart Segments */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="subtitle2">Pie Chart Segments</Typography>
+          <Button variant="outlined" startIcon={<AddIcon />} size="small" onClick={addSegment}>
             Add Segment
           </Button>
         </Box>
-        
-        <TableContainer component={Paper} variant="outlined" sx={{ p: 1 }}>
-          <Table size="small">
+        <TableContainer component={Paper} variant="outlined" sx={{ p: 0.5 }}>
+          <Table size="small" padding="dense">
             <TableHead>
               <TableRow>
                 <TableCell>Label</TableCell>
@@ -524,14 +512,9 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
             </TableBody>
           </Table>
         </TableContainer>
+        {/* Color Picker Modal */}
+        <ColorPickerModal open={colorPickerOpen} currentColor={currentColor} onClose={() => setColorPickerOpen(false)} onSave={applyColor} />
       </Box>
-      {/* Color Picker Modal */}
-      <ColorPickerModal
-        open={colorPickerOpen}
-        currentColor={currentColor}
-        onClose={() => setColorPickerOpen(false)}
-        onSave={applyColor}
-      />
     </Box>
   )
 }

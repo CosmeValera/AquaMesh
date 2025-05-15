@@ -13,7 +13,7 @@ module.exports = (_, argv) => ({
     minimize: true,
   },
   output: {
-    publicPath: '/',
+    publicPath: 'https://aquamesh-control-flow.vercel.app/',
     clean: true,
     pathinfo: false,
     path: path.join(__dirname, '/dist')

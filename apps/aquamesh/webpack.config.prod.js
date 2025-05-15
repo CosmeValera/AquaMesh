@@ -32,14 +32,6 @@ module.exports = (_, argv) => ({
   module: {
     rules: [
       {
-        test: /\.(js|jsx|ts|tsx)$/,
-        exclude: /node_modules/,
-        loader: 'swc-loader',
-        options: {
-          cacheDirectory: true,
-        },
-      },
-      {
         test: /\.(css|s[ac]ss)$/i,
         use: [
           "style-loader",
@@ -82,7 +74,12 @@ module.exports = (_, argv) => ({
       name: "aquamesh",
       filename: "remoteEntry.js",
       remotes: {
-        remote_app: "remote_app@http://localhost:3001/remoteEntry.js",
+        aquamesh_system_lens: argv.mode === 'production' 
+          ? process.env.SYSTEM_LENS_URL || "aquamesh_system_lens@https://system-lens.your-vercel-domain.com/remoteEntry.js"
+          : "aquamesh_system_lens@http://localhost:3001/remoteEntry.js",
+        aquamesh_control_flow: argv.mode === 'production'
+          ? process.env.CONTROL_FLOW_URL || "aquamesh_control_flow@https://control-flow.your-vercel-domain.com/remoteEntry.js"
+          : "aquamesh_control_flow@http://localhost:3002/remoteEntry.js"
       },
       exposes: {},
       shared: {
@@ -107,7 +104,8 @@ module.exports = (_, argv) => ({
     }),
     new CleanWebpackPlugin(),
     new Dotenv({
-      path: `./.env.${argv.mode}`,
+      path: `./.env.${argv.mode || 'production'}`,
+      systemvars: true, // Load all system variables as well (useful for CI/CD)
     }),
   ],
 });

@@ -1,0 +1,15 @@
+{
+  "buildCommand": "cd apps/aquamesh && npm install && npm run build",
+  "outputDirectory": "apps/aquamesh/dist",
+  "framework": "other",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "env": {
+    "SYSTEM_LENS_URL": "aquamesh_system_lens@https://system-lens.your-vercel-domain.com/remoteEntry.js",
+    "CONTROL_FLOW_URL": "aquamesh_control_flow@https://control-flow.your-vercel-domain.com/remoteEntry.js"
+  }
+} 

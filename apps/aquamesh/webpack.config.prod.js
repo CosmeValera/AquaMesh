@@ -75,7 +75,7 @@ module.exports = (_, argv) => ({
       filename: "remoteEntry.js",
       remotes: {
         aquamesh_system_lens: "aquamesh_system_lens@https://aquamesh-system-lens.vercel.app/remoteEntry.js",
-        aquamesh_control_flow: "aquamesh_control_flow@https://aquamesh-system-lens.vercel.app/remoteEntry.js",
+        aquamesh_control_flow: "aquamesh_control_flow@https://aquamesh-control-flow.vercel.app/remoteEntry.js",
       },
       exposes: {},
       shared: {
@@ -95,7 +95,7 @@ module.exports = (_, argv) => ({
     }),
     new CopyWebpackPlugin({
       patterns: [
-        { from: 'public/config/widgets.json', to: './config/', noErrorOnMissing: true },
+        { from: 'public/config/widgets-prod.json', to: './config/', noErrorOnMissing: true },
         { from: 'public/images', to: './images', noErrorOnMissing: true }
       ],
     }),

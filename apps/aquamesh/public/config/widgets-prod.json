@@ -1,0 +1,24 @@
+[
+  {
+    "name": "Control Flow",
+    "items": [
+      {
+        "name": "Control Flow",
+        "component": "aquamesh_control_flow/ControlFlowMain",
+        "url": "https://aquamesh-control-flow.vercel.app/remoteEntry.js",
+        "customProps": { "aquamesh": "316"}
+      }
+    ]
+  },
+  {
+    "name": "System Lens",
+    "items": [
+      {
+        "name": "System Lens",
+        "component": "aquamesh_system_lens/SystemLensMain",
+        "url": "https://aquamesh-system-lens.vercel.app/remoteEntry.js",
+        "customProps": { "aquameshs": ["316"]}
+      }
+    ]
+  }
+]

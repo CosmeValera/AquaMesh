@@ -6,18 +6,18 @@ Built on a React-based Turborepo monorepo architecture, it dynamically loads com
 
 ## ✨ Key Features
 - **🔧 No-Code Widget Editor:** Build custom widgets without programming knowledge
-- **📊 Dynamic Dashboard System:** Drag, resize, and position widgets in flexible layouts
-- **🔗 Module Federation Architecture:** Load widgets as independent micro-frontends
-- **⚡ React-based Turborepo Structure:** Optimized monorepo for efficient development
 - **🎨 Rich Component Library:** Pre-built UI elements, containers, and visualization tools
+- **📊 Dynamic Dashboard System:** Drag, resize, and position widgets in flexible layouts
+- **⚡ React-based Turborepo Structure:** Optimized monorepo for efficient development
+- **🔗 Module Federation Architecture:** Load widgets as independent micro-frontends
 
 ## 🎬 Demo
 
-To try AquaMesh Demo: <a href="https://codesandbox.io/p/github/CosmeValera/AquaMesh/aquamesh-portfolio" target="_blank">**Click Here**</a>*
+To try AquaMesh: <a href="https://codesandbox.io/p/github/CosmeValera/AquaMesh/aquamesh-portfolio" target="_blank">**Click Here**</a>*
 
 ![Live Demo](tools/readme_images/live_demo.png)
 
-Create custom dashboards with drag-and-drop widgets, no coding required!
+Create custom dashboards adding widgets with drag-and-drop, no coding required!
 
 > [!NOTE]
 > *Please allow up to 5 minutes for the sandbox to initialize. Once ready at `localhost:3000`, refresh the preview panel to start.
@@ -40,7 +40,11 @@ That's it! The AquaMesh application and all its components will be up and runnin
 ## 🔍 Tutorial
 When you first use the app, a **Tutorial** will automatically appear, explaining **Dashboards**, **Widgets**, and the **Widget Editor** features. You can revisit this tutorial anytime from the help menu. For specific questions, there's also a **FAQ** section available.
 
+**Tutorial:**
+
 ![Tutorial Modal](tools/readme_images/tutorial.png)
+
+**FAQ:**
 
 ![FAQ Modal](tools/readme_images/faq.png)
 
@@ -62,12 +66,13 @@ Widgets are individual components that display specific data, visualizations, or
 
 In the **Widget Library**, you can sort, load and delete your widgets.
 
-![Widget Library](tools/readme_images/dashboards-library.png)
-
+![Widget Library](tools/readme_images/widgets-library.png)
 
 ### 🔧 Widget Editor
 
 AquaMesh's most powerful feature is its **Widget Editor**, which enables users to create custom widgets without coding:
+
+![Widget Editor](tools/readme_images/widget_editor.png)
 
 **Widget Editor Features:**
 
@@ -76,20 +81,14 @@ AquaMesh's most powerful feature is its **Widget Editor**, which enables users t
 - **Customization**: Adjust appearance and behavior through property editors.
 - **Live Preview**: See your changes instantly.
 
-![Widget Editor](tools/readme_images/widget_editor.png)
+**Widget Editor Common Features:**
 
-**Widget Editor Advanced Features:**
-- **Templates**: Templates are predefined widget configurations that you can use to quickly create new widgets.
+- **Toggle Edit/Preview modes**: Add, adjust and move your components in the Edit mode. Use the Preview mode to see how it would look like.
 
-![Templates](tools/readme_images/templates.png)
-
-- **Import & Export**: You can export your widgets as JSON to import them later. This is useful for backup or sharing with others.
-
-![Import & Export](tools/readme_images/import_export.png)
-
-- **Versions**: A version control system is already built-in. You can see all your saved versions of the current widget, and you can restore any previous version.
-
-![Version History](tools/readme_images/version_history.png)
+**Edit mode:**
+![Search](tools/readme_images/edit_mode.png)
+**Preview Mode:**
+![Search](tools/readme_images/preview_mode.png)
 
 - **Search**: Quickly search for any component in your canvas.
 
@@ -98,6 +97,21 @@ AquaMesh's most powerful feature is its **Widget Editor**, which enables users t
 - **Settings**: Settings for-> Interface options, Confirmation options and Keyboard Shortcuts.
 
 ![Settings](tools/readme_images/settings.png)
+
+**Widget Editor Advanced Features:**
+- **Templates**: Templates are predefined widget configurations that you can use to quickly create new widgets.
+
+![Templates](tools/readme_images/templates.png)
+
+- **Versions**: A version control system is already built-in. You can see all your saved versions of the current widget, and you can restore any previous version.
+
+![Version History](tools/readme_images/version_history1.png)
+![Version History](tools/readme_images/version_history2.png)
+
+- **Import & Export**: You can export your widgets as JSON to import them later. This is useful for backup or sharing with others.
+
+![Import & Export](tools/readme_images/import_export1.png)
+![Import & Export](tools/readme_images/import_export2.png)
 
 ### 🧭 Top Navigation
 

@@ -24,7 +24,6 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
 }) => {
   const chartTitle = String(title || '')
   const chartDescription = String(description || '')
-  const FIXED_HEIGHT = 400
   
   // Generate colors for the pie segments and legend - consistent colors for both
   const colors = React.useMemo(() => {
@@ -125,8 +124,8 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
           width: '100%'
         }}>
           <Box sx={{
-            width: '280px',
-            height: '280px',
+            width: '140px',
+            height: '140px',
             borderRadius: '50%',
             position: 'relative',
             aspectRatio: '1/1',
@@ -161,8 +160,8 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
         width: '100%'
       }}>
         <Box sx={{
-          width: '280px',
-          height: '280px',
+          width: '140px',
+          height: '140px',
           borderRadius: '50%',
           position: 'relative',
           aspectRatio: '1/1',
@@ -187,7 +186,7 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
           display: 'flex',
           flexWrap: 'wrap',
           justifyContent: 'center',
-          maxWidth: '280px',
+          maxWidth: '100%',
           width: '100%',
           marginTop: 2,
           gap: 1
@@ -204,11 +203,11 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
               }}
             >
               <Box sx={{
-                width: 12,
-                height: 12,
+                minWidth: 12,
+                minHeight: 12,
                 borderRadius: '3px',
                 backgroundColor: segment.color,
-                marginRight: 1
+                marginRight: 1,
               }} />
               <Typography 
                 variant="caption" 
@@ -233,7 +232,6 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
           p: 2,
           border: '1px solid rgba(0, 0, 0, 0.1)',
           borderRadius: 1,
-          height: `${FIXED_HEIGHT}px`,
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',

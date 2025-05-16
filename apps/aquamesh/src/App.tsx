@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { CssBaseline } from '@mui/material'
+import { Box, CssBaseline } from '@mui/material'
 import { ThemeProvider } from '@mui/material/styles'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
@@ -37,7 +37,7 @@ const MainPage = () => {
   const [menuOpen, setMenuOpen] = useState(false)
   
   return (
-    <>
+    <Box sx={{ overflowX: 'hidden'}}>
       <TopNavBar open={menuOpen} setOpen={setMenuOpen} />
       <Main
         mt={8}
@@ -45,7 +45,7 @@ const MainPage = () => {
       >
         <Dashboards />
       </Main>
-    </>
+    </Box>
   )
 }
 

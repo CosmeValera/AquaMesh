@@ -8,6 +8,7 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
+  Box
 } from '@mui/material'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import DashboardIcon from '@mui/icons-material/Dashboard'
@@ -26,6 +27,39 @@ interface SavedDashboard {
   isPublic?: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+// Phone button with label component
+interface PhoneButtonProps {
+  icon: React.ReactNode
+  label: string
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void
+  sx?: React.CSSProperties | Record<string, unknown>
+  'data-tutorial-id'?: string
+}
+
+const PhoneButtonWithLabel: React.FC<PhoneButtonProps> = ({ icon, label, onClick, sx, ...props }) => {
+  return (
+    <Button
+      onClick={onClick}
+      sx={{
+        color: 'foreground.contrastPrimary',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        minWidth: '48px',
+        mx: 0.5,
+        px: 1,
+        ...sx
+      }}
+      {...props}
+    >
+      {icon}
+      <Typography variant="caption" sx={{ fontSize: '0.6rem', mt: 0.3, lineHeight: 1 }}>
+        {label}
+      </Typography>
+    </Button>
+  )
 }
 
 const DashboardOptionsMenu: React.FC = () => {
@@ -93,22 +127,31 @@ const DashboardOptionsMenu: React.FC = () => {
   
   return (
     <>
-      <Button
-        onClick={handleMenuOpen}
-        sx={{ 
-          color: 'foreground.contrastPrimary', 
-          display: 'flex', 
-          alignItems: 'center',
-          minWidth: isPhone ? '32px' : isTablet ? '40px' : 'auto',
-          mx: isPhone ? 0.5 : isTablet ? 0.75 : 1,
-          px: isPhone ? 1 : isTablet ? 1.5 : 2,
-        }}
-        startIcon={<DashboardIcon />}
-        endIcon={isPhone ? null : <KeyboardArrowDownIcon />}
-        data-tutorial-id="dashboards-button"
-      >
-        {isPhone ? '' : isTablet ? 'D.' : 'Dashboards'}
-      </Button>
+      {isPhone ? (
+        <PhoneButtonWithLabel
+          icon={<DashboardIcon />}
+          label="Dash"
+          onClick={handleMenuOpen}
+          data-tutorial-id="dashboards-button"
+        />
+      ) : (
+        <Button
+          onClick={handleMenuOpen}
+          sx={{ 
+            color: 'foreground.contrastPrimary', 
+            display: 'flex', 
+            alignItems: 'center',
+            minWidth: isTablet ? '40px' : 'auto',
+            mx: isTablet ? 0.75 : 1,
+            px: isTablet ? 1.5 : 2,
+          }}
+          startIcon={<DashboardIcon />}
+          endIcon={isPhone ? null : <KeyboardArrowDownIcon />}
+          data-tutorial-id="dashboards-button"
+        >
+          {isTablet ? 'D.' : 'Dashboards'}
+        </Button>
+      )}
       
       <Menu
         anchorEl={anchorEl}

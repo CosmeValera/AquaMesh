@@ -1,10 +1,10 @@
 import React from 'react'
-import { Box, Typography, Paper } from '@mui/material'
+import { Box, Typography, Paper, useMediaQuery } from '@mui/material'
+import theme from '../../../../theme'
 
 interface ChartPreviewProps {
   chartType: string
   title?: string
-  height?: number // Make height optional as we'll use a fixed value
   description?: string
   data: {
     labels: string[]
@@ -22,6 +22,7 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
   description,
   data
 }) => {
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const chartTitle = String(title || '')
   const chartDescription = String(description || '')
   
@@ -124,8 +125,9 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
           width: '100%'
         }}>
           <Box sx={{
-            width: '140px',
-            height: '140px',
+            // If it's phone it should be 70px
+            width: isPhone ? '70px' : '120px',
+            height: isPhone ? '70px' : '120px',
             borderRadius: '50%',
             position: 'relative',
             aspectRatio: '1/1',
@@ -160,8 +162,8 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
         width: '100%'
       }}>
         <Box sx={{
-          width: '140px',
-          height: '140px',
+          width: isPhone ? '70px' : '120px',
+          height: isPhone ? '70px' : '120px',
           borderRadius: '50%',
           position: 'relative',
           aspectRatio: '1/1',
@@ -182,14 +184,15 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
         }} />
         
         {/* Legend */}
+        {/* If it's phone everything should be smaller */}
         <Box sx={{ 
           display: 'flex',
           flexWrap: 'wrap',
           justifyContent: 'center',
           maxWidth: '100%',
           width: '100%',
-          marginTop: 2,
-          gap: 1
+          marginTop: isPhone ? 1 : 2,
+          gap: isPhone ? 0.5 : 1
         }}>
           {segments.map((segment, index) => (
             <Box 
@@ -197,22 +200,22 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                padding: '4px 8px',
+                padding: isPhone ? '2px 4px' : '4px 8px',
                 borderRadius: '4px',
                 backgroundColor: 'rgba(0,0,0,0.04)',
               }}
             >
               <Box sx={{
-                minWidth: 12,
-                minHeight: 12,
+                minWidth: isPhone ? 10 : 12,
+                minHeight: isPhone ? 10 : 12,
                 borderRadius: '3px',
                 backgroundColor: segment.color,
-                marginRight: 1,
+                marginRight: isPhone ? 0.5 : 1,
               }} />
               <Typography 
                 variant="caption" 
                 sx={{ 
-                  fontSize: '0.75rem',
+                  fontSize: isPhone ? '0.5rem' : '0.65rem',
                   fontWeight: 500
                 }}
               >

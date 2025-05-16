@@ -17,6 +17,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -71,9 +73,10 @@ interface ColorPickerProps {
   currentColor: string
   onClose: () => void
   onSave: (color: string) => void
+  isMobile?: boolean
 }
 
-const ColorPickerModal: React.FC<ColorPickerProps> = ({ open, currentColor, onClose, onSave }) => {
+const ColorPickerModal: React.FC<ColorPickerProps> = ({ open, currentColor, onClose, onSave, isMobile }) => {
   const [selectedColor, setSelectedColor] = useState(currentColor)
 
   // Reset selected color when modal opens with a new color
@@ -88,16 +91,16 @@ const ColorPickerModal: React.FC<ColorPickerProps> = ({ open, currentColor, onCl
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Choose Color</DialogTitle>
-      <DialogContent>
-        <Box sx={{ textAlign: 'center', p: 2 }}>
+      <DialogTitle sx={{ fontSize: isMobile ? '1rem' : undefined, py: isMobile ? 1 : 2 }}>Choose Color</DialogTitle>
+      <DialogContent sx={{ py: isMobile ? 1 : 2 }}>
+        <Box sx={{ textAlign: 'center', p: isMobile ? 1 : 2 }}>
           <input
             type="color"
             value={selectedColor}
             onChange={(e) => setSelectedColor(e.target.value)}
             style={{ 
-              width: '100px', 
-              height: '100px', 
+              width: isMobile ? '80px' : '100px', 
+              height: isMobile ? '80px' : '100px', 
               padding: 0, 
               border: 'none',
               borderRadius: '4px',
@@ -107,13 +110,13 @@ const ColorPickerModal: React.FC<ColorPickerProps> = ({ open, currentColor, onCl
         </Box>
         
         {/* Predefined colors palette */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', mt: 2 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? 0.5 : 1, justifyContent: 'center', mt: isMobile ? 1 : 2 }}>
           {DEFAULT_COLORS.map((color, index) => (
             <Tooltip title={`Color ${index + 1}`} key={index}>
               <Box 
                 sx={{ 
-                  width: 30, 
-                  height: 30, 
+                  width: isMobile ? 24 : 30, 
+                  height: isMobile ? 24 : 30, 
                   bgcolor: color, 
                   borderRadius: '4px',
                   cursor: 'pointer',
@@ -125,9 +128,9 @@ const ColorPickerModal: React.FC<ColorPickerProps> = ({ open, currentColor, onCl
           ))}
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} variant="contained" color="primary">
+      <DialogActions sx={{ p: isMobile ? 1 : 2 }}>
+        <Button onClick={onClose} size={isMobile ? "small" : "medium"}>Cancel</Button>
+        <Button onClick={handleSave} variant="contained" color="primary" size={isMobile ? "small" : "medium"}>
           Apply Color
         </Button>
       </DialogActions>
@@ -143,6 +146,10 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
   onTitleChange,
   onDescriptionChange,
 }) => {
+  // Theme and responsive design
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  
   // State for pie chart segments
   const [segments, setSegments] = useState<PieSegment[]>([])
   // Buffered segments to prevent losing focus
@@ -230,12 +237,6 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
     onChange(JSON.stringify(chartData))
     setNeedsUpdate(false)
   }, [segments, onChange, needsUpdate])
-  
-  // Save changes from buffer to actual segments
-  const saveChanges = () => {
-    setSegments([...bufferedSegments])
-    setNeedsUpdate(true)
-  }
   
   // Restore focus after render
   useEffect(() => {
@@ -384,11 +385,20 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
   }
 
   return (
-    <Box sx={{ width: '100%', p: 2, display: 'flex', gap: 2, '@media (max-width: 720px)': { flexDirection: 'column' } }}>
+    <Box sx={{ 
+      width: '100%', 
+      p: isMobile ? 1 : 2, 
+      display: 'flex', 
+      gap: isMobile ? 1 : 2, 
+      flexDirection: isMobile ? 'column' : 'row'
+    }}>
       {/* Left Pane: Chart Details and Preview */}
-      <Box sx={{ flex: '0 0 35%', maxWidth: '35%', '@media (max-width: 720px)': { flex: '0 0 100%', maxWidth: '100%' } }}>
+      <Box sx={{ 
+        flex: isMobile ? '1 1 auto' : '0 0 35%', 
+        maxWidth: isMobile ? '100%' : '35%'
+      }}>
         {/* Chart Details */}
-        <Box sx={{ mb: 1 }}>
+        <Box sx={{ mb: isMobile ? 0.5 : 1 }}>
           <TextField
             label="Chart Title"
             value={title}
@@ -396,7 +406,10 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
             fullWidth
             size="small"
             variant="standard"
-            sx={{ mb: 1 }}
+            sx={{ mb: isMobile ? 0.5 : 1 }}
+            InputLabelProps={{
+              style: { fontSize: isMobile ? '0.875rem' : undefined }
+            }}
           />
           <TextField
             label="Chart Description"
@@ -405,37 +418,68 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
             fullWidth
             size="small"
             variant="standard"
+            InputLabelProps={{
+              style: { fontSize: isMobile ? '0.875rem' : undefined }
+            }}
           />
         </Box>
         {/* Preview */}
-        <Typography variant="subtitle2" sx={{ mb: 1 }}>Preview</Typography>
-        <Box sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1, p: 1, bgcolor: 'rgba(0,0,0,0.02)' }}>
+        <Typography variant="subtitle2" sx={{ 
+          mb: isMobile ? 0.5 : 1,
+          fontSize: isMobile ? '0.75rem' : undefined
+        }}>
+          Preview
+        </Typography>
+        <Box sx={{ 
+          border: '1px solid rgba(0,0,0,0.1)', 
+          borderRadius: 1, 
+          p: isMobile ? 0.5 : 1, 
+          bgcolor: 'rgba(0,0,0,0.02)' 
+        }}>
           <ChartPreview chartType="pie" title={title} description={description} data={previewData} />
         </Box>
       </Box>
       {/* Right Pane: Segment Editor */}
       <Box sx={{ flex: '1 1 65%' }}>
         {/* Pie Chart Segments */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Typography variant="subtitle2">Pie Chart Segments</Typography>
-          <Button variant="outlined" startIcon={<AddIcon />} size="small" onClick={addSegment}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: isMobile ? 0.5 : 1 
+        }}>
+          <Typography variant="subtitle2" sx={{ 
+            fontSize: isMobile ? '0.75rem' : undefined 
+          }}>
+            Pie Chart Segments
+          </Typography>
+          <Button 
+            variant="outlined" 
+            startIcon={<AddIcon fontSize={isMobile ? "small" : "medium"} />} 
+            size="small" 
+            onClick={addSegment}
+            sx={{ 
+              fontSize: isMobile ? '0.75rem' : undefined,
+              py: isMobile ? 0.5 : undefined
+            }}
+          >
             Add Segment
           </Button>
         </Box>
-        <TableContainer component={Paper} variant="outlined" sx={{ p: 0.5 }}>
-          <Table size="small" padding="dense">
+        <TableContainer component={Paper} variant="outlined" sx={{ p: isMobile ? 0.25 : 0.5 }}>
+          <Table size="small" padding={isMobile ? "none" : "normal"}>
             <TableHead>
               <TableRow>
-                <TableCell>Label</TableCell>
-                <TableCell align="center">Value</TableCell>
-                <TableCell align="center">Color</TableCell>
-                <TableCell align="center">Actions</TableCell>
+                <TableCell sx={{ fontSize: isMobile ? '0.75rem' : undefined, py: isMobile ? 0.5 : undefined }}>Label</TableCell>
+                <TableCell align="center" sx={{ fontSize: isMobile ? '0.75rem' : undefined, py: isMobile ? 0.5 : undefined }}>Value</TableCell>
+                <TableCell align="center" sx={{ fontSize: isMobile ? '0.75rem' : undefined, py: isMobile ? 0.5 : undefined }}>Color</TableCell>
+                <TableCell align="center" sx={{ fontSize: isMobile ? '0.75rem' : undefined, py: isMobile ? 0.5 : undefined }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {bufferedSegments.map((segment) => (
                 <TableRow key={segment.id}>
-                  <TableCell>
+                  <TableCell sx={{ py: isMobile ? 0.5 : undefined }}>
                     <TextField
                       id={`segment-${segment.id}-label`}
                       fullWidth
@@ -451,15 +495,29 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
                       }}
                       placeholder="Segment name"
                       variant="outlined"
-                      sx={{ my: 0.5 }}
+                      sx={{ 
+                        my: isMobile ? 0.25 : 0.5,
+                        '& .MuiInputBase-input': {
+                          fontSize: isMobile ? '0.75rem' : undefined
+                        }
+                      }}
+                      InputLabelProps={{
+                        style: { fontSize: isMobile ? '0.75rem' : undefined }
+                      }}
                     />
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="center" sx={{ py: isMobile ? 0.5 : undefined }}>
                     <TextField
                       id={`segment-${segment.id}-value`}
                       size="small"
                       type="number"
-                      inputProps={{ min: 0, style: { textAlign: 'center' } }}
+                      inputProps={{ 
+                        min: 0, 
+                        style: { 
+                          textAlign: 'center',
+                          fontSize: isMobile ? '0.75rem' : undefined
+                        }
+                      }}
                       value={segment.value}
                       onChange={(e) => {
                         const value = parseFloat(e.target.value) || 0
@@ -471,19 +529,19 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
                           applyBufferedChanges(segment.id)
                         }
                       }}
-                      sx={{ width: '80px' }}
+                      sx={{ width: isMobile ? '60px' : '80px' }}
                     />
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="center" sx={{ py: isMobile ? 0.5 : undefined }}>
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                       <Box
                         sx={{ 
-                          width: '24px', 
-                          height: '24px', 
+                          width: isMobile ? '20px' : '24px', 
+                          height: isMobile ? '20px' : '24px', 
                           bgcolor: segment.color,
                           borderRadius: '4px',
                           border: '1px solid rgba(0,0,0,0.2)',
-                          mr: 1,
+                          mr: isMobile ? 0.5 : 1,
                           display: 'inline-block'
                         }}
                       />
@@ -491,11 +549,11 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
                         size="small" 
                         onClick={() => openColorPicker(segment.id, segment.color)}
                       >
-                        <ColorLensIcon fontSize="small" />
+                        <ColorLensIcon fontSize={isMobile ? "small" : "medium"} />
                       </IconButton>
                     </Box>
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="center" sx={{ py: isMobile ? 0.5 : undefined }}>
                     <Tooltip title="Delete segment">
                       <IconButton 
                         size="small" 
@@ -503,7 +561,7 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
                         disabled={segments.length <= 1}
                         onClick={() => deleteSegment(segment.id)}
                       >
-                        <DeleteIcon fontSize="small" />
+                        <DeleteIcon fontSize={isMobile ? "small" : "medium"} />
                       </IconButton>
                     </Tooltip>
                   </TableCell>
@@ -513,7 +571,13 @@ const PieChartEditor: React.FC<PieChartEditorProps> = ({
           </Table>
         </TableContainer>
         {/* Color Picker Modal */}
-        <ColorPickerModal open={colorPickerOpen} currentColor={currentColor} onClose={() => setColorPickerOpen(false)} onSave={applyColor} />
+        <ColorPickerModal 
+          open={colorPickerOpen} 
+          currentColor={currentColor} 
+          onClose={() => setColorPickerOpen(false)} 
+          onSave={applyColor}
+          isMobile={isMobile} 
+        />
       </Box>
     </Box>
   )

@@ -61,7 +61,7 @@ const ComponentPalette = ({
   const theme = useTheme()
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'lg'))
-  const drawerWidth = isPhone ? 150 : isTablet ? 220 : 250
+  const drawerWidth = isPhone ? 130 : isTablet ? 220 : 250
   
   // Group component types by category - memoized to prevent recalculation on each render
   const groupedComponents = useMemo(() => groupByCategory(COMPONENT_TYPES), [])
@@ -143,14 +143,15 @@ const ComponentPalette = ({
       className="component-palette"
     >
       <Typography 
-        variant="h6" 
+        variant={isPhone ? "subtitle2" : "h6"}
         sx={{ 
-          px: 2, 
-          py: 1, 
+          px: isPhone ? 1 : 2, 
+          py: isPhone ? 0.75 : 1, 
           color: 'foreground.contrastPrimary', 
           fontWeight: 'bold', 
           borderBottom: 1, 
-          borderColor: 'divider' 
+          borderColor: 'divider',
+          fontSize: isPhone ? '0.875rem' : undefined
         }}
       >
         Components
@@ -159,7 +160,7 @@ const ComponentPalette = ({
       {/* Active container indicator for mobile */}
       {isPhone && activeContainerId && activeContainerInfo && (
         <Box sx={{ 
-          p: 1, 
+          p: isPhone ? 0.75 : 1, 
           bgcolor: 'rgba(0, 188, 162, 0.1)', 
           borderBottom: 1, 
           borderColor: 'divider',
@@ -167,18 +168,25 @@ const ComponentPalette = ({
           flexDirection: 'column',
           alignItems: 'center'
         }}>
-          <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, fontSize: isPhone ? '0.65rem' : undefined }}>
             Adding to:
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <TargetIcon fontSize="small" sx={{ color: '#00C49A' }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <TargetIcon fontSize="small" sx={{ color: '#00C49A', fontSize: isPhone ? '0.875rem' : undefined }} />
             <Chip
               label={activeContainerInfo.name}
               size="small"
               color="primary"
               variant="outlined"
               onDelete={handleClearActiveContainer}
-              deleteIcon={<CloseIcon fontSize="small" />}
+              deleteIcon={<CloseIcon fontSize="small" sx={{ fontSize: isPhone ? '0.75rem' : undefined }} />}
+              sx={{ 
+                height: isPhone ? 20 : 24,
+                '& .MuiChip-label': {
+                  px: isPhone ? 0.5 : 1,
+                  fontSize: isPhone ? '0.65rem' : undefined
+                }
+              }}
             />
           </Box>
         </Box>
@@ -191,6 +199,9 @@ const ComponentPalette = ({
           flexGrow: 1,
           pt: 0,
           overflowX: 'hidden',
+          '& .MuiListSubheader-root': {
+            py: isPhone ? 0.5 : 1
+          }
         }}
       >
         {PALETTE_GROUPS.map((category) => {
@@ -201,7 +212,7 @@ const ComponentPalette = ({
           }
           
           return (
-            <Box key={category} sx={{ mb: 2 }}>
+            <Box key={category} sx={{ mb: isPhone ? 1 : 2 }}>
               <ListSubheader
                 sx={{
                   display: 'flex',
@@ -212,18 +223,29 @@ const ComponentPalette = ({
                   color: 'foreground.contrastSecondary',
                   fontWeight: 'bold',
                   cursor: 'pointer',
-                  py: 1
+                  py: isPhone ? 0.5 : 1,
+                  fontSize: isPhone ? '0.7rem' : undefined,
+                  lineHeight: isPhone ? 1.3 : undefined
                 }}
                 onClick={() => toggleCategory(category)}
               >
                 {category}
-                <IconButton size="small" sx={{ color: 'foreground.contrastSecondary' }}>
-                  {expandedCategories[category] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                <IconButton 
+                  size="small" 
+                  sx={{ 
+                    color: 'foreground.contrastSecondary',
+                    padding: isPhone ? 0.25 : '4px'
+                  }}
+                >
+                  {expandedCategories[category] ? 
+                    <ExpandLessIcon sx={{ fontSize: isPhone ? '0.9rem' : '1.25rem' }} /> : 
+                    <ExpandMoreIcon sx={{ fontSize: isPhone ? '0.9rem' : '1.25rem' }} />
+                  }
                 </IconButton>
               </ListSubheader>
               
               <Collapse in={expandedCategories[category]} timeout="auto">
-                <Box sx={{ px: 1, pt: 1 }}>
+                <Box sx={{ px: isPhone ? 0.5 : 1, pt: isPhone ? 0.5 : 1 }}>
                   {components.map((component) => (
                     <ComponentPaletteItem
                       key={component.type}
@@ -243,11 +265,28 @@ const ComponentPalette = ({
       
       {/* Help text at bottom */}
       {showComponentPaletteHelp && showHelpText && (
-        <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', fontSize: '0.75rem' }}>
-          <Typography variant="caption" color="foreground.contrastSecondary" sx={{ display: 'block', mb: 1, fontSize: '11px' }}>
+        <Box sx={{ 
+          p: isPhone ? 1 : 2, 
+          borderTop: 1, 
+          borderColor: 'divider', 
+          fontSize: isPhone ? '0.65rem' : '0.75rem'
+        }}>
+          <Typography 
+            variant="caption" 
+            color="foreground.contrastSecondary" 
+            sx={{ 
+              display: 'block', 
+              mb: 0.5, 
+              fontSize: isPhone ? '0.65rem' : '11px' 
+            }}
+          >
             {isPhone ? 'Tap and hold to drag components' : 'Drag components to the editor canvas'}
           </Typography>
-          <Typography variant="caption" color="foreground.contrastSecondary" sx={{ fontSize: '9px' }}>
+          <Typography 
+            variant="caption" 
+            color="foreground.contrastSecondary" 
+            sx={{ fontSize: isPhone ? '0.6rem' : '9px' }}
+          >
             {showTooltips 
               ? 'Hover over components for descriptions' 
               : 'Enable tooltips in settings for descriptions'}

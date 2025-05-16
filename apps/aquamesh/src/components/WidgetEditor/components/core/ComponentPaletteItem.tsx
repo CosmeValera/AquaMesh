@@ -3,7 +3,9 @@ import {
   Box, 
   Typography, 
   Paper,
-  IconButton
+  IconButton,
+  useTheme,
+  useMediaQuery
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { ComponentType } from '../../types/types'
@@ -26,6 +28,8 @@ const ComponentPaletteItem: React.FC<ComponentPaletteItemProps> = ({
 }) => {
   // Create the icon element dynamically from the component's icon property
   const IconComponent = component.icon
+  const theme = useTheme()
+  const isPhoneSize = useMediaQuery(theme.breakpoints.down('sm'))
   
   // Touch handling state
   const [isTouching, setIsTouching] = useState(false)
@@ -107,7 +111,7 @@ const ComponentPaletteItem: React.FC<ComponentPaletteItemProps> = ({
   }
   
   return (
-    <Box key={component.type} sx={{ mb: 1 }}>
+    <Box key={component.type} sx={{ mb: isPhoneSize ? 0.5 : 1 }}>
       <TooltipStyled
         title={showTooltips ? component.tooltip || '' : ''}
         placement="right"
@@ -123,7 +127,7 @@ const ComponentPaletteItem: React.FC<ComponentPaletteItemProps> = ({
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchEnd}
           sx={{
-            p: 1.5,
+            p: isPhoneSize ? 0.75 : 1.5,
             display: 'flex',
             alignItems: 'center',
             cursor: 'grab',
@@ -142,22 +146,23 @@ const ComponentPaletteItem: React.FC<ComponentPaletteItemProps> = ({
         >
           <Box
             sx={{
-              mr: 1.5,
+              mr: isPhoneSize ? 0.75 : 1.5,
               color: 'primary.main',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            {IconComponent && <IconComponent />}
+            {IconComponent && <IconComponent sx={{ fontSize: isPhoneSize ? '0.9rem' : '1.2rem' }} />}
           </Box>
           <Typography
-            variant="body2"
+            variant={isPhoneSize ? "caption" : "body2"}
             sx={{ 
               fontWeight: 'medium', 
               color: 'foreground.contrastPrimary',
               flexGrow: 1,
-              pr: isPhone ? 2 : 0 // Add padding if there's an add button
+              pr: isPhone ? 2 : 0, // Add padding if there's an add button
+              fontSize: isPhoneSize ? '0.7rem' : undefined,
             }}
           >
             {component.label}
@@ -170,20 +175,20 @@ const ComponentPaletteItem: React.FC<ComponentPaletteItemProps> = ({
               onClick={handleAddClick}
               sx={{
                 position: 'absolute',
-                right: 4,
+                right: 2,
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: 'primary.main',
                 bgcolor: 'background.paper',
-                width: 24,
-                height: 24,
+                width: isPhoneSize ? 18 : 24,
+                height: isPhoneSize ? 18 : 24,
                 '&:hover': {
                   bgcolor: 'primary.light',
                   color: 'white',
                 },
               }}
             >
-              <AddIcon fontSize="small" />
+              <AddIcon fontSize={isPhoneSize ? "inherit" : "small"} />
             </IconButton>
           )}
         </Paper>

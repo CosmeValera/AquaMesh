@@ -122,23 +122,45 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
           borderColor: 'divider',
           bgcolor: theme.palette.mode === 'dark' 
             ? alpha(theme.palette.background.paper, 0.9) 
-            : 'background.paper' 
+            : 'background.paper',
+          minHeight: isPhone ? 48 : 64
         }}
       >
-        <Toolbar variant="dense">
+        <Toolbar 
+          variant={isPhone ? "dense" : "regular"}
+          sx={{ 
+            minHeight: isPhone ? 48 : 64,
+            padding: isPhone ? '0px 4px' : '0px 16px' 
+          }}
+        >
           {(editMode || isPhone) && (
             <IconButton
               edge="start"
               color="inherit"
               aria-label="menu"
               onClick={toggleSidebar}
-              sx={{ mr: 2, color: showSidebar ? 'primary.main' : 'foreground.contrastSecondary', flexGrow: isPhone ? 1 : 0, justifyContent: 'flex-start' }}
+              sx={{ 
+                mr: 2, 
+                color: showSidebar ? 'primary.main' : 'foreground.contrastSecondary', 
+                // flexGrow: !isDesktop ? 1 : 0, 
+                justifyContent: 'flex-start',
+              }}
             >
-              <MenuIcon />
+              <MenuIcon sx={{ fontSize: isPhone ? '1.25rem' : '1.5rem', ml: '1rem' }} />
             </IconButton>
           )}
           
-          {!isPhone && (
+          {!isDesktop &&(
+            <Box
+              sx={{ 
+                flexGrow: 1,
+                color: 'foreground.contrastPrimary'
+              }}
+            >
+              
+            </Box>
+          )}
+          {isDesktop &&(
             <Typography 
               variant="h6" 
               sx={{ 
@@ -148,7 +170,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             >
               Widget Editor
             </Typography>
-          )}
+          )}          
           
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {/* Undo/Redo buttons */}
@@ -195,9 +217,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 color="inherit" 
                 onClick={toggleEditMode}
                 sx={{ 
-                  mr: 1,
+                  mr: isPhone ? 0.5 : 1,
                   color: !editMode ? 'primary.main' : 'foreground.contrastSecondary',
                   bgcolor: !editMode ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                  padding: isPhone ? '4px' : '8px',
                   '&:hover': {
                     bgcolor: !editMode 
                       ? alpha(theme.palette.primary.main, 0.2)
@@ -205,7 +228,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                   }
                 }}
               >
-                <EditIcon />
+                <EditIcon sx={{ fontSize: isPhone ? '1.25rem' : '1.5rem' }} />
               </IconButton>
             </TooltipStyled>
             
@@ -234,11 +257,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 color="inherit" 
                 onClick={() => setShowWidgetList(true)}
                 sx={{ 
-                  mr: 1,
-                  color: 'foreground.contrastSecondary' 
+                  mr: isPhone ? 0.5 : 1,
+                  color: 'foreground.contrastSecondary',
+                  padding: isPhone ? '4px' : '8px'
                 }}
               >
-                <FolderOpenIcon />
+                <FolderOpenIcon sx={{ fontSize: isPhone ? '1.25rem' : '1.5rem' }} />
               </IconButton>
             </TooltipStyled>
             
@@ -248,11 +272,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 color="inherit" 
                 onClick={() => setShowSettingsModal(true)}
                 sx={{ 
-                  mr: 1,
-                  color: 'foreground.contrastSecondary' 
+                  mr: isPhone ? 0.5 : 1,
+                  color: 'foreground.contrastSecondary',
+                  padding: isPhone ? '4px' : '8px'
                 }}
               >
-                <SettingsIcon />
+                <SettingsIcon sx={{ fontSize: isPhone ? '1.25rem' : '1.5rem' }} />
               </IconButton>
             </TooltipStyled>
             
@@ -300,6 +325,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 </TooltipStyled>
               </>
             )}
+            
             {/* Advanced Features Menu Button (shown when not on desktop or advanced features not inline) */}
             {(!isDesktop || !showAdvancedInToolbar) && (
               <TooltipStyled title="Advanced features">
@@ -307,16 +333,17 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                   color="inherit"
                   onClick={handleAdvancedMenuOpen}
                   sx={{ 
-                    mr: 1,
-                    color: 'foreground.contrastSecondary' 
+                    mr: isPhone ? 0.5 : 1,
+                    color: 'foreground.contrastSecondary',
+                    padding: isPhone ? '4px' : '8px'
                   }}
                 >
-                  <MoreVertIcon />
+                  <MoreVertIcon sx={{ fontSize: isPhone ? '1.25rem' : '1.5rem' }} />
                 </IconButton>
               </TooltipStyled>
             )}
             
-            <Divider orientation="vertical" flexItem sx={{ mr: 2, height: '24px', alignSelf: 'center' }} />
+            <Divider orientation="vertical" flexItem sx={{ mr: isPhone ? 1 : 2, height: isPhone ? '20px' : '24px', alignSelf: 'center' }} />
             
             {/* Advanced Features Menu */}
             <Menu
@@ -326,8 +353,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               PaperProps={{
                 elevation: 6,
                 sx: {
-                  minWidth: 220,
-                  maxWidth: 320,
+                  minWidth: isPhone ? 180 : 220,
+                  maxWidth: isPhone ? 280 : 320,
                   overflow: 'visible',
                   mt: 1,
                   borderRadius: 2,
@@ -501,10 +528,11 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     sx={{
                       color: (!editMode || (!hasChanges && isUpdating) || isEmpty) 
                         ? 'action.disabled' 
-                        : 'primary.main'
+                        : 'primary.main',
+                      padding: isPhone ? '4px' : '8px'
                     }}
                   >
-                    <SaveIcon />
+                    <SaveIcon sx={{ fontSize: isPhone ? '1.25rem' : '1.5rem' }} />
                   </IconButton>
                 </span>
               </TooltipStyled>

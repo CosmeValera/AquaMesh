@@ -3,7 +3,9 @@ import {
   Box,
   Typography,
   Paper,
-  TextField
+  TextField,
+  useTheme,
+  useMediaQuery
 } from '@mui/material'
 import { ComponentData, DropTarget } from '../../types/types'
 import ComponentPreview from '../preview/ComponentPreview'
@@ -74,6 +76,9 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   activeContainerId,
   onSelectContainer
 }) => {
+  const theme = useTheme()
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
+  
   // Render the component hierarchy
   const renderComponents = (components: ComponentData[]) => {
     return components.map((component, index) => (
@@ -107,7 +112,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     <Box
       sx={{
         flex: 1,
-        p: 2,
+        p: isPhone ? 1 : 2,
         display: 'flex',
         flexDirection: 'column',
         overflowY: 'auto',
@@ -134,7 +139,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
             e.target.select()
           }}
           sx={{ 
-            mb: 2,
+            mb: isPhone ? 1 : 2,
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
                 borderColor: 'rgba(255, 255, 255, 0.2)',
@@ -148,9 +153,12 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
             },
             '& .MuiInputLabel-root': {
               color: 'foreground.contrastSecondary',
+              fontSize: isPhone ? '0.8rem' : undefined,
             },
             '& .MuiOutlinedInput-input': {
               color: 'foreground.contrastPrimary',
+              padding: isPhone ? '8px 10px' : undefined,
+              fontSize: isPhone ? '0.875rem' : undefined,
             },
           }}
         />
@@ -158,7 +166,8 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         <Typography 
           variant="body1" 
           sx={{ 
-            mb: 2, 
+            mb: isPhone ? 1 : 2,
+            fontSize: isPhone ? '0.875rem' : undefined,
             color: 'foreground.contrastPrimary',
             userSelect: 'none' // Prevent text selection in view mode
           }}
@@ -172,7 +181,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         ref={dropAreaRef}
         sx={{
           flex: 1,
-          p: 2,
+          p: isPhone ? 1 : 2,
           backgroundColor: editMode
             ? dropTarget.id === null && isDragging 
               ? 'rgba(0, 188, 162, 0.1)' 
@@ -180,7 +189,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
             : 'rgba(0, 188, 162, 0.02)',
           border: editMode ? '2px dashed rgba(0, 188, 162, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: 1,
-          minHeight: 200,
+          minHeight: isPhone ? 150 : 200,
           overflowY: 'auto',
           color: 'foreground.contrastPrimary',
           boxShadow: 'none',
@@ -199,11 +208,18 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
               justifyContent: 'center',
               alignItems: 'center',
               color: 'rgba(255, 255, 255, 0.4)',
-              pt: 4,
-              pb: 4,
+              pt: isPhone ? 2 : 4,
+              pb: isPhone ? 2 : 4,
             }}
           >
-            <Typography variant="body1" sx={{ mb: 1, textAlign: 'center' }}>
+            <Typography 
+              variant={isPhone ? "body2" : "body1"} 
+              sx={{ 
+                mb: 1, 
+                textAlign: 'center',
+                fontSize: isPhone ? '0.85rem' : undefined 
+              }}
+            >
               {editMode
                 ? isDragging 
                   ? 'Drop component here'
@@ -211,7 +227,14 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 : 'No components added yet'}
             </Typography>
             {editMode && !isDragging && (
-              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.3)', textAlign: 'center' }}>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: 'rgba(255, 255, 255, 0.3)', 
+                  textAlign: 'center',
+                  fontSize: isPhone ? '0.7rem' : undefined 
+                }}
+              >
                 {showSidebar 
                   ? 'Use the components panel on the left to build your widget'
                   : 'Click the menu button in the toolbar to show component panel'}

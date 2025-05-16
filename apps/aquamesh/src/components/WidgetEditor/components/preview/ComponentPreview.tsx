@@ -35,6 +35,7 @@ import SendIcon from '@mui/icons-material/Send'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import TargetIcon from '@mui/icons-material/GpsFixed'
+import TooltipStyled from '../../../TooltipStyled'
 import theme from '../../../../theme'
 
 // Fix for type issues with MUI icons
@@ -690,8 +691,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
     <Paper 
       elevation={editMode ? 1 : 0}
       sx={{ 
-        p: editMode ? 2 : 0, 
-        mb: editMode ? 2 : 1,
+        p: editMode ? (isPhone ? 1 : 2) : 0, 
+        mb: editMode ? (isPhone ? 1 : 2) : (isPhone ? 0.5 : 1),
         position: 'relative',
         borderRadius: 1,
         bgcolor: isActiveContainer 
@@ -723,33 +724,39 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
         <Box 
           sx={{ 
             position: 'absolute', 
-            top: 4, 
-            right: 4, 
+            top: isPhone ? 2 : 4, 
+            right: isPhone ? 2 : 4, 
             display: 'flex', 
             zIndex: 10,
             bgcolor: 'background.paper',
             borderRadius: 1,
-            boxShadow: 1
+            boxShadow: 1,
+            '& .MuiIconButton-root': {
+              padding: isPhone ? '2px' : '4px',
+              fontSize: isPhone ? '0.75rem' : '1rem'
+            }
           }}
         >
           {/* Visibility toggle button */}
-          <Tooltip title={isHidden ? "Show component" : "Hide component"}>
+          <TooltipStyled title={isHidden ? "Show component" : "Hide component"}>
             <IconButton 
               size="small" 
               onClick={() => onToggleVisibility && onToggleVisibility(component.id)}
               sx={{ color: isHidden ? 'error.light' : 'success.light' }}
             >
-              {isHidden ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+              {isHidden ? 
+                <VisibilityOffIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} /> : 
+                <VisibilityIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
+              }
             </IconButton>
-          </Tooltip>
+          </TooltipStyled>
           
           {/* If this is a container component, add a button to select it as the active target for mobile */}
           {isPhone && isContainer && onSelectContainer && (
-            <Tooltip title={isActiveContainer ? "Active target container" : "Make this the active target container"}>
+            <TooltipStyled title={isActiveContainer ? "Active target container" : "Make this the active target container"}>
               <IconButton
                 size="small"
                 onClick={() => {
-                  // If there is an active container, and the active container is the current component, set it to null
                   if (activeContainerId && activeContainerId === component.id) {
                     onSelectContainer('')
                   } else {
@@ -761,9 +768,9 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                   bgcolor: isActiveContainer ? 'rgba(0, 188, 162, 0.1)' : 'transparent'
                 }}
               >
-                <TargetIcon fontSize="small" />
+                <TargetIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
               </IconButton>
-            </Tooltip>
+            </TooltipStyled>
           )}
           
           <IconButton 
@@ -771,7 +778,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             onClick={() => onEdit(component.id)}
             sx={{ color: 'info.light' }}
           >
-            <EditIcon fontSize="small" />
+            <EditIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
           </IconButton>
           
           {!isFirst && (
@@ -780,7 +787,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
               onClick={() => onMoveUp(component.id)}
               sx={{ color: 'warning.light' }}
             >
-              <KeyboardArrowUpIcon fontSize="small" />
+              <KeyboardArrowUpIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
             </IconButton>
           )}
           
@@ -790,7 +797,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
               onClick={() => onMoveDown(component.id)}
               sx={{ color: 'warning.light' }}
             >
-              <KeyboardArrowDownIcon fontSize="small" />
+              <KeyboardArrowDownIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
             </IconButton>
           )}
           
@@ -799,25 +806,39 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             onClick={() => onDelete(component.id)}
             sx={{ color: 'error.main' }}
           >
-            <DeleteIcon fontSize="small" />
+            <DeleteIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
           </IconButton>
         </Box>
       )}
 
       {/* Component Type Label */}
       {editMode && (
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: isPhone ? 0.5 : 1 }}>
           {ComponentIcon && (
-            <Box component={ComponentIcon} sx={{ mr: 1, opacity: 0.7, fontSize: '1rem' }} />
+            <Box 
+              component={ComponentIcon} 
+              sx={{ 
+                mr: isPhone ? 0.5 : 1, 
+                opacity: 0.7, 
+                fontSize: isPhone ? '0.75rem' : '1rem' 
+              }} 
+            />
           )}
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: 'text.secondary', 
+              fontFamily: 'monospace',
+              fontSize: isPhone ? '0.65rem' : undefined
+            }}
+          >
             {component.type} {isHidden && "(Hidden)"} {isActiveContainer && "(Active Target)"}
           </Typography>
         </Box>
       )}
 
       {/* Actual component preview */}
-      <Box sx={{ ml: editMode ? level * 2 : 0 }}>
+      <Box sx={{ ml: editMode ? level * (isPhone ? 1 : 2) : 0 }}>
         {renderComponent()}
       </Box>
     </Paper>

@@ -13,7 +13,9 @@ import {
   Fade,
   Zoom,
   Tab,
-  Tabs
+  Tabs,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import EditIcon from '@mui/icons-material/Edit'
@@ -84,6 +86,8 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
   onCloseTutorial 
 }) => {
   const [tabValue, setTabValue] = useState(0)
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue)
@@ -650,11 +654,17 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
         onChange={handleTabChange}
         aria-label="widget editor explanation tabs"
         centered
+        variant={isMobile ? "scrollable" : "standard"}
+        scrollButtons={isMobile ? "auto" : false}
+        allowScrollButtonsMobile
         sx={{
           bgcolor: 'rgba(0, 0, 0, 0.1)',
           '& .MuiTab-root': {
             color: 'rgba(255, 255, 255, 0.7)',
             fontWeight: 'bold',
+            fontSize: isMobile ? '0.75rem' : '0.875rem',
+            minWidth: isMobile ? 'auto' : 90,
+            px: isMobile ? 2 : 3,
             '&.Mui-selected': {
               color: 'white'
             }
@@ -709,4 +719,4 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
   )
 }
 
-export default WidgetEditorExplanationModal 
+export default WidgetEditorExplanationModal

@@ -436,12 +436,13 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
           sx: {
             bgcolor: 'background.paper',
             boxShadow: 24,
-            borderRadius: '16px',
+            borderRadius: 2,
             overflow: 'hidden',
-            backgroundImage: 'linear-gradient(135deg, rgba(0, 196, 154, 0.05) 0%, rgba(0, 188, 162, 0.1) 100%)'
+            backgroundImage: 'linear-gradient(135deg, rgba(0, 196, 154, 0.05) 0%, rgba(0, 188, 162, 0.1) 100%)',
+            height: isMobile ? '100%' : 'auto',
+            margin: isMobile ? 0 : undefined
           }
         }}
-        fullScreen={isMobile}
         TransitionComponent={Fade}
         transitionDuration={400}
       >
@@ -464,7 +465,8 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                 fontWeight="bold" 
                 sx={{
                   color: '#eee',
-                  textShadow: '0px 1px 2px rgba(255, 255, 255, 0.3)'
+                  textShadow: '0px 1px 2px rgba(255, 255, 255, 0.3)',
+                  fontSize: isMobile ? '1.2rem' : undefined
                 }}
               >
                 Welcome to AquaMesh
@@ -503,22 +505,11 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
               maxHeight: 'calc(100vh - 220px)', // Set max height to allow scrolling
               paddingTop: 0,
               paddingBottom: 0,
-              "&::-webkit-scrollbar": {
-                width: "8px",
-                bgcolor: "rgba(0, 0, 0, 0.1)",
-                borderRadius: "4px"
-              },
-              "&::-webkit-scrollbar-thumb": {
-                bgcolor: "rgba(0, 188, 162, 0.3)",
-                borderRadius: "4px",
-                "&:hover": {
-                  bgcolor: "rgba(0, 188, 162, 0.5)"
-                }
-              }
+              px: isMobile ? 2 : 3, // Reduce padding on mobile
             }}
           >
-            <Box my={3}>            
-              <Grid container spacing={4} sx={{ mt: 2 }}>
+            <Box my={isMobile ? 2 : 3}>            
+              <Grid container spacing={isMobile ? 2 : 4} sx={{ mt: isMobile ? 1 : 2 }}>
                 {options.map((option, index) => (
                   <Zoom 
                     in={open} 
@@ -529,7 +520,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                       <Paper
                         elevation={3}
                         sx={{
-                          p: 3,
+                          p: isMobile ? 2 : 3,
                           width: '100%',
                           display: 'flex',
                           flexDirection: 'column',
@@ -537,10 +528,10 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                           textAlign: 'center',
                           transition: 'transform 0.3s, box-shadow 0.3s, border 0.3s',
                           '&:hover': {
-                            transform: 'translateY(-8px)',
-                            boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+                            transform: isMobile ? 'none' : 'translateY(-8px)',
+                            boxShadow: isMobile ? undefined : '0 12px 24px rgba(0, 0, 0, 0.2)',
                           },
-                          mb: 3,
+                          mb: isMobile ? 2 : 3,
                           position: 'relative',
                           overflow: 'hidden',
                           backgroundImage: 'linear-gradient(135deg, rgba(0, 166, 137, 0.1) 0%, rgba(25, 25, 25, 0.2) 100%)',
@@ -560,24 +551,24 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                         id={`tutorial-option-${index}`}
                       >
                         <Box sx={{ width: '100%' }}>
-                          <Box mb={2} display="flex" justifyContent="center">
+                          <Box mb={isMobile ? 1 : 2} display="flex" justifyContent="center">
                             <div style={{ 
                               background: 'rgba(0, 188, 162, 0.1)',
                               borderRadius: '50%',
-                              width: '60px',
-                              height: '60px',
+                              width: isMobile ? '50px' : '60px',
+                              height: isMobile ? '50px' : '60px',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
                             }}>
                               {React.cloneElement(option.icon, {
-                                style: { fontSize: '32px', color: '#00BC9A' }
+                                style: { fontSize: isMobile ? '28px' : '32px', color: '#00BC9A' }
                               })}
                             </div>
                           </Box>
                           <Typography 
-                            variant="h6" 
+                            variant={isMobile ? "subtitle1" : "h6"} 
                             fontWeight="bold" 
                             gutterBottom 
                             color="#f9f9f9"
@@ -590,15 +581,23 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                           >
                             {option.title}
                           </Typography>
-                          <Typography variant="body2" paragraph color="#f9f9f9" sx={{ minHeight: '48px' }}>
+                          <Typography 
+                            variant={isMobile ? "body2" : "body1"} 
+                            paragraph 
+                            color="#f9f9f9" 
+                            sx={{ 
+                              minHeight: isMobile ? '36px' : '48px',
+                              fontSize: isMobile ? '0.875rem' : undefined
+                            }}
+                          >
                             {option.description}
                           </Typography>
                           
                           {/* Image with arrows */}
                           <Box 
                             sx={{ 
-                              mt: 2, 
-                              mb: 3, 
+                              mt: isMobile ? 1 : 2, 
+                              mb: isMobile ? 2 : 3, 
                               maxWidth: '100%', 
                               display: 'flex',
                               alignItems: 'center',
@@ -606,14 +605,21 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                             }}
                           >
                             {option.hasMultipleImages && option.images ? (
-                              <Box sx={{ display: 'flex', justifyContent: 'center', px: 2, gap: 2 }}>
+                              <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                px: isMobile ? 1 : 2, 
+                                gap: isMobile ? 1 : 2,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                              }}>
                                 {option.images.map((image, imgIndex) => (
                                   <img 
                                     key={imgIndex}
                                     src={image.src} 
                                     alt={image.alt}
                                     style={{ 
-                                      maxWidth: '30%', 
+                                      maxWidth: isMobile ? '50%' : '30%', 
                                       maxHeight: '100%',
                                       objectFit: 'contain',
                                       border: '1px solid rgb(238, 238, 238)',
@@ -621,6 +627,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                                       backgroundColor: 'background.paper',
                                       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                                       transition: 'transform 0.2s ease',
+                                      marginBottom: isMobile ? '10px' : 0
                                     }}
                                     className="hover-scale-image"
                                   />
@@ -631,7 +638,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                                 src={option.image} 
                                 alt={`${option.title} illustration`}
                                 style={{ 
-                                  maxWidth: '65%', 
+                                  maxWidth: isMobile ? '90%' : '65%', 
                                   maxHeight: '100%',
                                   objectFit: 'contain',
                                   border: '1px solid rgb(238, 238, 238)',
@@ -651,23 +658,32 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                           
                           {/* Render either multiple buttons or a single button */}
                           {option.hasMultipleButtons && option.buttons ? (
-                            <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 2, mt: 2 }}>
+                            <Box sx={{ 
+                              display: 'flex', 
+                              justifyContent: 'center', 
+                              flexWrap: 'wrap', 
+                              gap: isMobile ? 1 : 2, 
+                              mt: isMobile ? 1 : 2,
+                              flexDirection: isMobile ? 'column' : 'row'
+                            }}>
                               {option.buttons.map((button, btnIndex) => (
                                 <Button 
                                   key={btnIndex}
                                   variant={btnIndex === 0 ? "outlined" : "contained"} 
                                   onClick={button.action}
+                                  size={isMobile ? "small" : "medium"}
                                   sx={{
                                     color: btnIndex === 0 ? "#00BC9A" : "#191919",
                                     borderColor: btnIndex === 0 ? "#00BC9A" : "transparent",
                                     boxShadow: btnIndex === 0 ? 'none' : '0 2px 8px rgba(0, 188, 162, 0.4)',
                                     fontWeight: 'bold',
                                     '&:hover': {
-                                      transform: 'translateY(-2px)',
+                                      transform: isMobile ? 'none' : 'translateY(-2px)',
                                       boxShadow: btnIndex === 0 ? '0 2px 5px rgba(0, 188, 162, 0.3)' : '0 4px 12px rgba(0, 188, 162, 0.5)',
                                       backgroundColor: btnIndex === 0 ? 'transparent' : '#00D1AB'
                                     },
-                                    transition: 'all 0.2s ease'
+                                    transition: 'all 0.2s ease',
+                                    fontSize: isMobile ? '0.8rem' : undefined
                                   }}
                                 >
                                   {button.text}
@@ -677,19 +693,21 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                           ) : (
                             <Button 
                               variant="contained" 
-                              color="primary" 
+                              color="primary"
+                              size={isMobile ? "small" : "medium"}
                               onClick={option.action}
                               sx={{ 
-                                mt: 2, 
+                                mt: isMobile ? 1 : 2, 
                                 color: '#191919',
                                 fontWeight: 'bold',
                                 boxShadow: '0 2px 8px rgba(0, 188, 162, 0.4)',
                                 '&:hover': {
-                                  transform: 'translateY(-2px)',
+                                  transform: isMobile ? 'none' : 'translateY(-2px)',
                                   boxShadow: '0 4px 12px rgba(0, 188, 162, 0.5)',
                                   backgroundColor: '#00D1AB'
                                 },
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                fontSize: isMobile ? '0.8rem' : undefined
                               }}
                             >
                               {option.buttonText}
@@ -708,13 +726,13 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                   <Paper
                     elevation={3}
                     sx={{
-                      p: 3,
+                      p: isMobile ? 2 : 3,
                       width: '100%',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       textAlign: 'center',
-                      mt: 2,
+                      mt: isMobile ? 1 : 2,
                       background: 'linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(25, 25, 25, 0.2) 100%)',
                       '&::before': {
                         content: '""',
@@ -730,9 +748,9 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                     }}
                   >
                     <Box sx={{ width: '100%' }}>
-                      <InfoIcon fontSize="large" sx={{ color: '#FFC107' }} />
+                      <InfoIcon fontSize={isMobile ? "medium" : "large"} sx={{ color: '#FFC107' }} />
                       <Typography 
-                        variant="h6" 
+                        variant={isMobile ? "subtitle1" : "h6"} 
                         fontWeight="bold" 
                         gutterBottom 
                         color="#f9f9f9"
@@ -745,7 +763,12 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                       >
                         Administrator Access Required
                       </Typography>
-                      <Typography variant="body2" paragraph color="#f9f9f9">
+                      <Typography 
+                        variant={isMobile ? "body2" : "body1"} 
+                        paragraph 
+                        color="#f9f9f9"
+                        sx={{ fontSize: isMobile ? '0.875rem' : undefined }}
+                      >
                         Some advanced features like the Widget Editor are only available to users with Administrator privileges. 
                         To access these features, please log in with an Admin account.
                       </Typography>
@@ -756,16 +779,18 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
             </Box>
           </DialogContent>
           <DialogActions sx={{ 
-            px: 3, 
-            pb: 3, 
+            px: isMobile ? 2 : 3, 
+            pb: isMobile ? 2 : 3, 
+            pt: isMobile ? 1 : 2,
             justifyContent: 'space-between',
             position: 'sticky',
             bottom: 0,
             bgcolor: 'background.paper',
             borderTop: '1px solid rgba(0, 188, 162, 0.2)',
-            zIndex: 1100 
+            zIndex: 1100,
+            flexDirection: isMobile ? 'column' : 'row'
           }}>
-            <Box display="flex" alignItems="center">
+            <Box display="flex" alignItems="center" mb={isMobile ? 1 : 0}>
               {/* Pagination dots */}
               <Box sx={{ display: 'flex', gap: 1 }}>
                 {options.map((_, index) => (
@@ -775,8 +800,8 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                       scrollToSlide(index)
                     }}
                     sx={{
-                      width: 12,
-                      height: 12,
+                      width: isMobile ? 10 : 12,
+                      height: isMobile ? 10 : 12,
                       borderRadius: '50%',
                       backgroundColor: currentSlide === index ? '#00BC9A' : 'rgba(0, 188, 162, 0.3)',
                       cursor: 'pointer',
@@ -789,7 +814,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                 ))}
               </Box>
             </Box>
-            <Box>
+            <Box display="flex" width={isMobile ? '100%' : 'auto'} justifyContent={isMobile ? 'space-between' : 'flex-end'}>
               {tutorialShown ? (
                 <Button 
                   onClick={() => {
@@ -800,7 +825,12 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                     onClose()
                   }} 
                   variant="text"
-                  sx={{color: '#191919', ":hover": {background: '#00C49A99'}}}
+                  size={isMobile ? "small" : "medium"}
+                  sx={{
+                    color: '#191919', 
+                    ":hover": {background: '#00C49A99'},
+                    fontSize: isMobile ? '0.8rem' : undefined
+                  }}
                 >
                   Show on startup
                 </Button>
@@ -814,7 +844,12 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                     onClose()
                   }} 
                   variant="text"
-                  sx={{color: '#191919', ":hover": {background: '#00C49A99'}}}
+                  size={isMobile ? "small" : "medium"}
+                  sx={{
+                    color: '#191919', 
+                    ":hover": {background: '#00C49A99'},
+                    fontSize: isMobile ? '0.8rem' : undefined
+                  }}
                 >
                   Don&apos;t show again
                 </Button>
@@ -823,7 +858,11 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                 onClick={onClose} 
                 color="primary" 
                 variant="contained"
-                sx={{ ml: 1 }}
+                size={isMobile ? "small" : "medium"}
+                sx={{ 
+                  ml: 1,
+                  fontSize: isMobile ? '0.8rem' : undefined
+                }}
               >
                 Got it!
               </Button>
@@ -852,7 +891,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
             transition: transform 0.3s ease;
           }
           .hover-scale-image:hover {
-            transform: scale(1.02);
+            transform: scale(${isMobile ? '1.01' : '1.02'});
           }
         `
       }} />

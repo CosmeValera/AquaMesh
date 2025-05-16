@@ -46,7 +46,6 @@ const DashboardWidgetExplanationModal: React.FC<DashboardWidgetExplanationModalP
           backgroundImage: 'linear-gradient(135deg, #00A389 0%, #00886F 100%)'
         }
       }}
-      fullScreen={isMobile}
       TransitionComponent={Fade}
       transitionDuration={500}
     >
@@ -57,13 +56,13 @@ const DashboardWidgetExplanationModal: React.FC<DashboardWidgetExplanationModalP
         backgroundImage: 'linear-gradient(90deg, #00BC9A 0%, #00A389 100%)'
       }}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6" component="div" fontWeight="bold" color="#191919">
+          <Typography variant="h6" component="div" fontWeight="bold" color="#eee">
             Understanding Dashboards & Widgets
           </Typography>
           <IconButton
             aria-label="close"
             onClick={onClose}
-            sx={{ color: '#191919' }}
+            sx={{ color: '#eee' }}
           >
             <CloseIcon />
           </IconButton>

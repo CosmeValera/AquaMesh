@@ -635,12 +635,12 @@ const WidgetEditorExplanationModal: React.FC<WidgetEditorExplanationModalProps> 
         }}
       >
         <Box display="flex" alignItems="center">
-          <EditIcon sx={{ mr: 1.5, color: '#191919' }} />
-          <Typography variant="h6" fontWeight="bold" color="#191919">
+          <EditIcon sx={{ mr: 1.5, color: '#eee' }} />
+          <Typography variant="h6" fontWeight="bold" color="#eee">
             Understanding the Widget Editor
           </Typography>
         </Box>
-        <IconButton onClick={onClose} sx={{ color: '#191919' }}>
+        <IconButton onClick={onClose} sx={{ color: '#eee' }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>

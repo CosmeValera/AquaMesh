@@ -11,7 +11,9 @@ import {
   Button,
   Collapse,
   Tooltip,
-  InputAdornment
+  InputAdornment,
+  Badge,
+  useMediaQuery
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
@@ -32,6 +34,8 @@ import SaveIcon from '@mui/icons-material/Save'
 import SendIcon from '@mui/icons-material/Send'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import TargetIcon from '@mui/icons-material/GpsFixed'
+import theme from '../../../../theme'
 
 // Fix for type issues with MUI icons
 type IconType = React.ElementType;
@@ -55,10 +59,15 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   handleContainerDragLeave,
   handleContainerDrop,
   onToggleVisibility,
-  showWidgetName
+  showWidgetName,
+  activeContainerId,
+  onSelectContainer
 }) => {
   const isCurrentTarget = dropTarget.id === component.id && dropTarget.isHovering
   const isHidden = Boolean(component.hidden)
+  const isActiveContainer = activeContainerId === component.id
+  const isContainer = ['FieldSet', 'FlexBox', 'GridBox'].includes(component.type)
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
 
   // Get the component icon for display
   const ComponentIcon = getComponentIcon(component.type) as IconType
@@ -668,7 +677,6 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   }
 
   // For non-container components, we can skip the Paper wrapper in non-edit mode
-  const isContainer = ['FieldSet', 'FlexBox', 'GridBox'].includes(component.type);
   if (!editMode && !isContainer) {
     return renderComponent();
   }
@@ -679,23 +687,31 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
   }
 
   return (
-    <Paper
+    <Paper 
       elevation={editMode ? 1 : 0}
-      sx={{
+      sx={{ 
+        p: editMode ? 2 : 0, 
+        mb: editMode ? 2 : 1,
         position: 'relative',
-        mb: 1,
-        p: editMode ? 2 : 0,
-        bgcolor: isCurrentTarget 
-          ? 'rgba(0, 188, 162, 0.15)' 
-          : (isHidden && editMode ? 'rgba(0, 0, 0, 0.3)' : (editMode ? 'background.paper' : 'transparent')),
-        borderStyle: isCurrentTarget ? 'dashed' : 'solid',
-        borderWidth: editMode ? 1 : 0,
-        borderColor: isCurrentTarget 
-          ? 'primary.main' 
-          : (isHidden ? 'rgba(255, 0, 0, 0.4)' : 'divider'),
+        borderRadius: 1,
+        bgcolor: isActiveContainer 
+          ? 'rgba(0, 188, 162, 0.1)' 
+          : isCurrentTarget 
+            ? 'rgba(25, 118, 210, 0.05)' 
+            : (isHidden && editMode ? 'rgba(0, 0, 0, 0.3)' : (editMode ? 'background.paper' : 'transparent')),
+        border: isActiveContainer
+          ? '2px solid #00C49A'
+          : (isCurrentTarget 
+              ? '1px dashed #1976d2' 
+              : editMode 
+                ? (isHidden ? '1px solid rgba(255, 0, 0, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)')
+                : 'none'),
         opacity: isHidden && editMode ? 0.5 : 1,
-        transition: 'background-color 0.3s, border-color 0.3s, opacity 0.3s',
-        boxShadow: editMode ? 1 : 'none'
+        transition: 'all 0.2s ease',
+        boxShadow: isActiveContainer ? '0 0 0 1px #00C49A' : (editMode ? 1 : 'none'),
+        '&:hover': editMode && isContainer && onSelectContainer ? {
+          boxShadow: isActiveContainer ? '0 0 0 1px #00C49A' : '0 0 0 1px rgba(25, 118, 210, 0.3)',
+        } : undefined,
       }}
       onDragEnter={editMode ? (e) => handleContainerDragEnter(e, component.id) : undefined}
       onDragOver={editMode ? handleContainerDragOver : undefined}
@@ -726,6 +742,29 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
               {isHidden ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
+          
+          {/* If this is a container component, add a button to select it as the active target for mobile */}
+          {isPhone && isContainer && onSelectContainer && (
+            <Tooltip title={isActiveContainer ? "Active target container" : "Make this the active target container"}>
+              <IconButton
+                size="small"
+                onClick={() => {
+                  // If there is an active container, and the active container is the current component, set it to null
+                  if (activeContainerId && activeContainerId === component.id) {
+                    onSelectContainer('')
+                  } else {
+                    onSelectContainer(component.id)
+                  }
+                }}
+                sx={{ 
+                  color: isActiveContainer ? 'success.main' : 'info.main',
+                  bgcolor: isActiveContainer ? 'rgba(0, 188, 162, 0.1)' : 'transparent'
+                }}
+              >
+                <TargetIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
           
           <IconButton 
             size="small" 
@@ -772,7 +811,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             <Box component={ComponentIcon} sx={{ mr: 1, opacity: 0.7, fontSize: '1rem' }} />
           )}
           <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
-            {component.type} {isHidden && "(Hidden)"}
+            {component.type} {isHidden && "(Hidden)"} {isActiveContainer && "(Active Target)"}
           </Typography>
         </Box>
       )}

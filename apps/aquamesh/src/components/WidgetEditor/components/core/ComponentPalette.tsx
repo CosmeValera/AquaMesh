@@ -7,10 +7,14 @@ import {
   Collapse,
   IconButton,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Chip,
+  Divider
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
+import TargetIcon from '@mui/icons-material/GpsFixed'
+import CloseIcon from '@mui/icons-material/Close'
 import { COMPONENT_TYPES } from '../../constants/componentTypes'
 import { ComponentType } from '../../types/types'
 import ComponentPaletteItem from './ComponentPaletteItem'
@@ -22,6 +26,9 @@ interface ComponentPaletteProps {
   handleDragStart: (e: React.DragEvent<HTMLDivElement>, type: string) => void
   showComponentPaletteHelp: boolean
   handleDirectAdd?: (componentType: string) => void
+  activeContainerId?: string | null
+  setActiveContainerId?: (id: string | null) => void
+  widgetData?: any // To lookup container name
 }
 
 // Helper function to group components by category
@@ -45,7 +52,10 @@ const ComponentPalette = ({
   showHelpText = true, 
   handleDragStart, 
   showComponentPaletteHelp,
-  handleDirectAdd
+  handleDirectAdd,
+  activeContainerId,
+  setActiveContainerId,
+  widgetData
 }: ComponentPaletteProps) => {
   // Responsive width based on screen size
   const theme = useTheme()
@@ -82,6 +92,42 @@ const ComponentPalette = ({
     document.dispatchEvent(customEvent)
   })
   
+  // Find active container name if we have an ID and widget data
+  const activeContainerInfo = React.useMemo(() => {
+    if (!activeContainerId || !widgetData || !widgetData.components) return null
+    
+    // Recursive function to find a component by ID
+    const findComponentById = (id: string, components: any[]): any => {
+      for (const component of components) {
+        if (component.id === id) {
+          return component
+        }
+        if (component.children && component.children.length > 0) {
+          const found = findComponentById(id, component.children)
+          if (found) return found
+        }
+      }
+      return null
+    }
+    
+    const container = findComponentById(activeContainerId, widgetData.components)
+    if (container) {
+      return {
+        name: container.type,
+        props: container.props,
+      }
+    }
+    
+    return null
+  }, [activeContainerId, widgetData])
+  
+  // Handle clearing the active container
+  const handleClearActiveContainer = () => {
+    if (setActiveContainerId) {
+      setActiveContainerId(null)
+    }
+  }
+  
   return (
     <Box
       sx={{
@@ -109,6 +155,34 @@ const ComponentPalette = ({
       >
         Components
       </Typography>
+      
+      {/* Active container indicator for mobile */}
+      {isPhone && activeContainerId && activeContainerInfo && (
+        <Box sx={{ 
+          p: 1, 
+          bgcolor: 'rgba(0, 188, 162, 0.1)', 
+          borderBottom: 1, 
+          borderColor: 'divider',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5 }}>
+            Adding to:
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <TargetIcon fontSize="small" sx={{ color: '#00C49A' }} />
+            <Chip
+              label={activeContainerInfo.name}
+              size="small"
+              color="primary"
+              variant="outlined"
+              onDelete={handleClearActiveContainer}
+              deleteIcon={<CloseIcon fontSize="small" />}
+            />
+          </Box>
+        </Box>
+      )}
       
       <List
         sx={{

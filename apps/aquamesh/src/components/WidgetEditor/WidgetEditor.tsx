@@ -98,6 +98,8 @@ const WidgetEditor: React.FC<{
     loadSavedWidgets,
     editorId,
     handleDirectAdd,
+    activeContainerId,
+    setActiveContainerId,
   } = useWidgetEditor()
 
   // State to control sidebar visibility
@@ -530,6 +532,9 @@ const WidgetEditor: React.FC<{
             showComponentPaletteHelp={showComponentPaletteHelp}
             showTooltips={showTooltips}
             handleDirectAdd={handleDirectAdd}
+            activeContainerId={activeContainerId}
+            setActiveContainerId={setActiveContainerId}
+            widgetData={widgetData}
           />
         )}
 
@@ -556,6 +561,8 @@ const WidgetEditor: React.FC<{
           handleToggleFieldsetCollapse={handleToggleFieldsetCollapse}
           showSidebar={showSidebar}
           handleWidgetNameChange={handleWidgetNameChange}
+          activeContainerId={activeContainerId}
+          onSelectContainer={setActiveContainerId}
         />
       </Box>
 

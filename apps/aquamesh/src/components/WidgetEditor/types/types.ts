@@ -66,6 +66,8 @@ export interface ComponentPreviewProps {
   handleContainerDragLeave: (e: React.DragEvent) => void;
   handleContainerDrop: (e: React.DragEvent, containerId: string) => void;
   showWidgetName?: boolean;
+  activeContainerId?: string | null;
+  onSelectContainer?: (containerId: string) => void;
 }
 
 // Notification severity options

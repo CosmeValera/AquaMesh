@@ -34,6 +34,9 @@ export const useWidgetEditor = () => {
   // Generate a unique identifier for this widget editor instance
   const [editorId] = useState<string>(() => uuidv4())
 
+  // Active container for adding components (null means add to root)
+  const [activeContainerId, setActiveContainerId] = useState<string | null>(null)
+
   // Widget data and editor state
   const [widgetData, setWidgetData] = useState<WidgetData>({
     name: 'New Widget',
@@ -464,7 +467,36 @@ export const useWidgetEditor = () => {
             props: { ...componentConfig.defaultProps },
           }
           
-          // Add to widget components
+          // If we have an active container, add the component to that container
+          if (activeContainerId) {
+            // Find the container component
+            const container = findComponentById(activeContainerId, widgetData.components)
+            
+            if (container && ['FieldSet', 'FlexBox', 'GridBox'].includes(container.type)) {
+              // Add to the container's children
+              const updatedContainer = {
+                ...container,
+                children: [...(container.children || []), newComponent],
+              }
+              
+              // Update the widget data
+              setWidgetData((prev) => ({
+                ...prev,
+                components: updateComponentById(activeContainerId, updatedContainer, prev.components),
+              }))
+              
+              // Show success notification
+              setNotification({
+                open: true,
+                message: `Added ${componentConfig.label} to ${container.type}`,
+                severity: 'success',
+              })
+              
+              return
+            }
+          }
+          
+          // If no active container or container not found, add to root level
           setWidgetData((prev) => ({
             ...prev,
             components: [...prev.components, newComponent],
@@ -487,7 +519,7 @@ export const useWidgetEditor = () => {
     return () => {
       document.removeEventListener('addComponentDirectly', handleDirectAdd)
     }
-  }, [])
+  }, [activeContainerId])
 
   // Listen for loadWidgetInEditor events from widget management
   useEffect(() => {
@@ -1222,7 +1254,36 @@ export const useWidgetEditor = () => {
         props: { ...componentConfig.defaultProps },
       }
       
-      // Add to widget components
+      // If we have an active container, add the component to that container
+      if (activeContainerId) {
+        // Find the container component
+        const container = findComponentById(activeContainerId, widgetData.components)
+        
+        if (container && ['FieldSet', 'FlexBox', 'GridBox'].includes(container.type)) {
+          // Add to the container's children
+          const updatedContainer = {
+            ...container,
+            children: [...(container.children || []), newComponent],
+          }
+          
+          // Update the widget data
+          setWidgetData((prev) => ({
+            ...prev,
+            components: updateComponentById(activeContainerId, updatedContainer, prev.components),
+          }))
+          
+          // Show success notification
+          setNotification({
+            open: true,
+            message: `Added ${componentConfig.label} to ${container.type}`,
+            severity: 'success',
+          })
+          
+          return
+        }
+      }
+      
+      // If no active container or container not found, add to root level
       setWidgetData((prev) => ({
         ...prev,
         components: [...prev.components, newComponent],
@@ -1290,6 +1351,8 @@ export const useWidgetEditor = () => {
     componentToDelete,
     widgetToDelete,
     editorId,
+    activeContainerId,
+    setActiveContainerId,
 
     // Event handlers
     handleDragStart,

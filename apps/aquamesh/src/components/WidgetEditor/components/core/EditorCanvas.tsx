@@ -45,6 +45,8 @@ interface EditorCanvasProps {
   handleToggleFieldsetCollapse: (id: string) => void;
   showSidebar: boolean;
   handleWidgetNameChange?: (name: string) => void;
+  activeContainerId?: string | null;
+  onSelectContainer?: (containerId: string) => void;
 }
 
 const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -68,7 +70,9 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   handleContainerDrop,
   handleToggleFieldsetCollapse,
   showSidebar,
-  handleWidgetNameChange
+  handleWidgetNameChange,
+  activeContainerId,
+  onSelectContainer
 }) => {
   // Render the component hierarchy
   const renderComponents = (components: ComponentData[]) => {
@@ -93,6 +97,8 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         handleContainerDragLeave={handleContainerDragLeave}
         handleContainerDrop={handleContainerDrop}
         showWidgetName={editMode}
+        activeContainerId={activeContainerId}
+        onSelectContainer={onSelectContainer}
       />
     ))
   }

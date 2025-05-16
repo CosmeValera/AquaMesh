@@ -222,7 +222,7 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
             No components found matching your search.
           </Alert>
         ) : (
-          <List sx={{ maxHeight: '50vh', overflow: 'auto' }}>
+          <List sx={{ maxHeight: '50dvh', overflow: 'auto' }}>
             {searchResults.map(({ component, path }) => (
               <ListItem
                 key={component.id}

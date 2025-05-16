@@ -502,7 +502,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
               backgroundImage: 'radial-gradient(circle at 90% 10%, rgba(0, 188, 162, 0.1) 0%, transparent 60%)',
               position: 'relative',
               overflowY: 'auto', // Ensure scrolling works
-              maxHeight: 'calc(100vh - 220px)', // Set max height to allow scrolling
+              maxHeight: 'calc(100dvh - 220px)', // Set max height to allow scrolling
               paddingTop: 0,
               paddingBottom: 0,
               px: isMobile ? 2 : 3, // Reduce padding on mobile

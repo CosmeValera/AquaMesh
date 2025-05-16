@@ -76,7 +76,7 @@
     // NOTE use the whole viewport and substract (1) header's height, (2) main
     // content's top padding, (3) tab bar height, and (4) main content's bottom
     // padding
-    height: calc(100vh - 36px - 16px - 36px - 24px);
+    height: calc(100dvh - 36px - 16px - 36px - 24px);
 
     display: none;
 

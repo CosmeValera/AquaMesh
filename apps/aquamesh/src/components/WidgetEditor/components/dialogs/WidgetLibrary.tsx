@@ -208,7 +208,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
             bgcolor: 'background.paper',
             backgroundImage: 'linear-gradient(to bottom, #00A389, #00886F)',
             borderRadius: 2,
-            maxHeight: '80vh',
+            maxHeight: '80dvh',
           }
         }}
       >
@@ -420,7 +420,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
               gap: 2,
-              maxHeight: 'calc(80vh - 250px)',
+              maxHeight: 'calc(80dvh - 250px)',
               overflowY: 'auto',
               pb: 2,
               px: 0,

@@ -121,7 +121,7 @@ const SystemResourceChart: React.FC<SystemResourceChartProps> = ({ systemData })
         <h3 className="text-xl font-medium m-0">System Resource Usage</h3>
       </div>
       <div className="card-body">
-        <div className="chart-container" style={{ position: 'relative', height: '400px', width: '100%', maxHeight: '60vh' }}>
+        <div className="chart-container" style={{ position: 'relative', height: '400px', width: '100%', maxHeight: '60dvh' }}>
           <canvas ref={chartRef}></canvas>
         </div>
         

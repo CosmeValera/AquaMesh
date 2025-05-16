@@ -246,7 +246,7 @@ const EditComponentDialog: React.FC<EditComponentDialogProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          maxHeight: '90vh'
+          maxHeight: '90dvh'
         }
       }}
     >

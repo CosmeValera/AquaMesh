@@ -32,7 +32,7 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ icon, message, subMessage, 
 
 const LoadingMessage: React.FC<LoadingMessageProps> = ({ componentLine, urlLine, height }) => (
   <div className={`centered loader ${height}`}>
-    <Logo height={componentLine ? '5hw' : '20vh'} width={componentLine ? '5vw' : '20vw'} />
+    <Logo height={componentLine ? '5hw' : '20dvh'} width={componentLine ? '5vw' : '20vw'} />
     {componentLine && <p>Loading {componentLine} from {urlLine}</p>}
   </div>
 )

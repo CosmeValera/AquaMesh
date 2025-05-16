@@ -16,37 +16,32 @@ import { useNavigate } from 'react-router-dom'
 import { ReactComponent as Logo } from '../../../public/logo.svg'
 import InfoIcon from '@mui/icons-material/Info'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-// Define user type for localStorage
-interface UserData {
-  id: string
-  name: string
-  role: string
-}
 
-const userOptions: Record<string, UserData> = {
+const userOptions: Record<string, { id: string, name: string, role: string }> = {
   admin: { id: 'admin', name: 'Admin', role: 'ADMIN_ROLE' },
   operator: { id: 'operator', name: 'Operator', role: 'OPERATOR_ROLE' },
   viewer: { id: 'viewer', name: 'Viewer', role: 'VIEWER_ROLE' }
 }
 
 const Login: React.FC = () => {
-  const [selectedUser, setSelectedUser] = useState('viewer')
+  // It's localstorage so its format stringified JSON
+  const [selectedUser, setSelectedUser] = useState(JSON.parse(localStorage.getItem('userData') || '{"id": "admin"}').id || 'admin')
   const navigate = useNavigate()
 
   // Load the last selected user from localStorage if available
   useEffect(() => {
-    const savedUser = localStorage.getItem('selectedUser')
-    if (savedUser && userOptions[savedUser]) {
-      setSelectedUser(savedUser)
+    const savedUserString = localStorage.getItem('userData')
+
+    // It's a stringified JSON so we need to parse it
+    const savedUser = JSON.parse(savedUserString || '{"id": "admin"}')
+    if (savedUser && savedUser.id && userOptions[savedUser.id]) {
+      setSelectedUser(savedUser.id)
     }
   }, [])
 
   const handleUserChange = (event: SelectChangeEvent) => {
     const userId = event.target.value
     setSelectedUser(userId)
-    
-    // Save user ID to localStorage
-    localStorage.setItem('selectedUser', userId)
   }
 
   const handleLogin = () => {

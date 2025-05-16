@@ -49,7 +49,7 @@ interface TopNavBarProps {
 }
 
 // Custom button with icon and label for phone view
-interface PhoneButtonProps {
+interface ButtonWithLabelProps {
   icon: React.ReactNode
   label: string
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void
@@ -57,7 +57,7 @@ interface PhoneButtonProps {
   'data-tutorial-id'?: string
 }
 
-const PhoneButtonWithLabel: React.FC<PhoneButtonProps> = ({ icon, label, onClick, sx, ...props }) => {
+const ButtonWithLabel: React.FC<ButtonWithLabelProps> = ({ icon, label, onClick, sx, ...props }) => {
   return (
     <Button
       onClick={onClick}
@@ -248,17 +248,17 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
           {/* Main Navigation Items */}
           <Box sx={{ flexGrow: 1, display: 'flex' }}>
             {/* Dashboard Options Menu */}
-            {isPhone ? (
+            {isPhone || isTablet ? (
               <DashboardOptionsMenu />
             ) : (
               <DashboardOptionsMenu />
             )}
 
             {/* Widgets Menu */}
-            {isPhone ? (
-              <PhoneButtonWithLabel
+            {isPhone || isTablet ? (
+              <ButtonWithLabel
                 icon={<WidgetsIcon />}
-                label="Widgets"
+                label={isPhone ? "Widgets" : "Widgets"}
                 onClick={handleWidgetsMenuOpen}
                 data-tutorial-id="widgets-button"
               />
@@ -269,15 +269,15 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                   color: 'foreground.contrastPrimary', 
                   display: 'flex', 
                   alignItems: 'center',
-                  minWidth: isTablet ? '40px' : 'auto',
-                  mx: isTablet ? 0.75 : 1,
-                  px: isTablet ? 1.5 : 2,
+                  minWidth: 'auto',
+                  mx: 1,
+                  px: 2,
                 }}
                 startIcon={<WidgetsIcon />}
-                endIcon={isDesktop ? <KeyboardArrowDownIcon /> : null}
+                endIcon={<KeyboardArrowDownIcon />}
                 data-tutorial-id="widgets-button"
               >
-                {isTablet ? 'W.' : 'Widgets'}
+                Widgets
               </Button>
             )}
             <Menu
@@ -371,10 +371,10 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
 
             {/* Create Custom Widget Button */}
             {userData.id === 'admin' && userData.role === 'ADMIN_ROLE' && (
-              isPhone ? (
-                <PhoneButtonWithLabel
+              isPhone || isTablet ? (
+                <ButtonWithLabel
                   icon={<CreateIcon />}
-                  label="Editor"
+                  label={isPhone ? "Editor" : "Widget Editor"}
                   onClick={() => {
                     ensureDashboardAndAddComponent({
                       id: `widget-editor-${Date.now()}`,
@@ -399,14 +399,14 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                     color: 'foreground.contrastPrimary', 
                     display: 'flex', 
                     alignItems: 'center',
-                    minWidth: isTablet ? '40px' : 'auto',
-                    mx: isTablet ? 0.75 : 1,
-                    px: isTablet ? 1.5 : 2,
+                    minWidth: 'auto',
+                    mx: 1,
+                    px: 2,
                   }}
                   startIcon={<CreateIcon />}
                   data-tutorial-id="create-widget-button"
                 >
-                  {isTablet ? 'W.E.' : 'Widget Editor'}
+                  Widget Editor
                 </Button>
               )
             )}
@@ -417,7 +417,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
             {isPhone ? (
               <>
                 {/* More menu grouping Tutorial & FAQ on phone */}
-                <PhoneButtonWithLabel
+                <ButtonWithLabel
                   icon={<HelpIcon />}
                   label="Help"
                   onClick={handleMoreMenuOpen}
@@ -457,41 +457,29 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               </>
             ) : (
               <>
-                {/* Help Button */}
-                <Button
+                {/* Tutorial Button */}
+                <ButtonWithLabel
+                  icon={<ImportContactsIcon />}
+                  label="Tutorial"
                   onClick={handleOpenTutorial}
-                  sx={{
-                    color: 'foreground.contrastPrimary',
-                    minWidth: 'auto',
-                    mx: 1
-                  }}
                   data-tutorial-id="help-button"
-                  title="Open tutorial"
-                >
-                  <ImportContactsIcon />
-                </Button>
+                />
 
                 {/* FAQ Button */}
-                <Button
+                <ButtonWithLabel
+                  icon={<HelpOutlineIcon />}
+                  label="FAQ"
                   onClick={handleOpenFaq}
-                  sx={{
-                    color: 'foreground.contrastPrimary',
-                    minWidth: 'auto',
-                    mx: 1
-                  }}
                   data-tutorial-id="faq-button"
-                  title="Frequently Asked Questions"
-                >
-                  <HelpOutlineIcon />
-                </Button>
+                />
               </>
             )}
             
             <Divider orientation="vertical" flexItem sx={{ mx: isPhone ? 0.5 : isTablet ? 1 : 2, bgcolor: 'background.light' }} />
 
             {/* User Menu */}
-            {isPhone ? (
-              <PhoneButtonWithLabel
+            {isPhone || isTablet ? (
+              <ButtonWithLabel
                 icon={
                   <Avatar 
                     sx={{ 
@@ -514,33 +502,31 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                 sx={{ 
                   color: 'foreground.contrastPrimary', 
                   textTransform: 'none',
-                  minWidth: isTablet ? '45px' : 'auto',
-                  px: isTablet ? 1 : 2,
+                  minWidth: 'auto',
+                  px: 2,
                   display: 'flex'
                 }}
-                endIcon={isDesktop ? <KeyboardArrowDownIcon /> : null}
+                endIcon={<KeyboardArrowDownIcon />}
               >
                 <Avatar 
                   sx={{ 
                     width: 32, 
                     height: 32, 
                     bgcolor: 'primary.main',
-                    mr: isDesktop ? 1 : 0,
+                    mr: 1,
                     fontSize: '0.9rem'
                   }}
                 >
                   {userData.id.substring(0, 2).toUpperCase()}
                 </Avatar>
-                {isDesktop && (
-                  <Box sx={{ textAlign: 'left' }}>
-                    <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
-                      {userData.name}
-                    </Typography>
-                    <Typography variant="caption" sx={{ opacity: 0.7, lineHeight: 1 }}>
-                      {userData.role}
-                    </Typography>
-                  </Box>
-                )}
+                <Box sx={{ textAlign: 'left' }}>
+                  <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
+                    {userData.name}
+                  </Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.7, lineHeight: 1 }}>
+                    {userData.role}
+                  </Typography>
+                </Box>
               </Button>
             )}
             <Menu

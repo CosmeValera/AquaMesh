@@ -8,7 +8,6 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
-  Box
 } from '@mui/material'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import DashboardIcon from '@mui/icons-material/Dashboard'
@@ -29,8 +28,8 @@ interface SavedDashboard {
   updatedAt: string;
 }
 
-// Phone button with label component
-interface PhoneButtonProps {
+// Button with label component
+interface ButtonWithLabelProps {
   icon: React.ReactNode
   label: string
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void
@@ -38,7 +37,7 @@ interface PhoneButtonProps {
   'data-tutorial-id'?: string
 }
 
-const PhoneButtonWithLabel: React.FC<PhoneButtonProps> = ({ icon, label, onClick, sx, ...props }) => {
+const ButtonWithLabel: React.FC<ButtonWithLabelProps> = ({ icon, label, onClick, sx, ...props }) => {
   return (
     <Button
       onClick={onClick}
@@ -127,10 +126,10 @@ const DashboardOptionsMenu: React.FC = () => {
   
   return (
     <>
-      {isPhone ? (
-        <PhoneButtonWithLabel
+      {isPhone || isTablet ? (
+        <ButtonWithLabel
           icon={<DashboardIcon />}
-          label="Dash"
+          label={isPhone ? "Dash" : "Dashboards"}
           onClick={handleMenuOpen}
           data-tutorial-id="dashboards-button"
         />
@@ -141,15 +140,15 @@ const DashboardOptionsMenu: React.FC = () => {
             color: 'foreground.contrastPrimary', 
             display: 'flex', 
             alignItems: 'center',
-            minWidth: isTablet ? '40px' : 'auto',
-            mx: isTablet ? 0.75 : 1,
-            px: isTablet ? 1.5 : 2,
+            minWidth: 'auto',
+            mx: 1,
+            px: 2,
           }}
           startIcon={<DashboardIcon />}
-          endIcon={isPhone ? null : <KeyboardArrowDownIcon />}
+          endIcon={<KeyboardArrowDownIcon />}
           data-tutorial-id="dashboards-button"
         >
-          {isTablet ? 'D.' : 'Dashboards'}
+          Dashboards
         </Button>
       )}
       

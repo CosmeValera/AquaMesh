@@ -13,7 +13,9 @@ Built on a React-based Turborepo monorepo architecture, it dynamically loads com
 
 ## 🎬 Demo
 
-To try AquaMesh: <a href="https://aqua-mesh.vercel.app/" target="_blank">**Click Here**</a>*
+<a href="https://aqua-mesh.vercel.app/" target="_blank">Try AquaMesh</a> on Vercel! Ready to use with zero setup.
+
+<!-- To try AquaMesh: <a href="https://aqua-mesh.vercel.app/" target="_blank">**Click Here**</a>* -->
 
 ![Live Demo](tools/readme_images/live_demo.png)
 
@@ -152,14 +154,14 @@ The platform uses **Turborepo** for managing the applications in the monorepo:
 - **Efficient development**: Built-in tools for running and building multiple projects simultaneously.
 - **Consistency**: Shared dependencies and dashboard scripts ensure all components work seamlessly together.
 
-### 👨‍💻 Personal Contribution
+### 👨‍💻 Developer Journey
 As the sole developer of AquaMesh, I designed and implemented the entire architecture from concept to completion. This project allowed me to:
 
+- **Build a complete product with consideration for user experience and developer extensibility**
 - Master monorepo structures and Turborepo for efficient code organization
 - Implement advanced React patterns and hooks for state management
 - Develop a deep understanding of Module Federation for micro-frontend architecture
 - Create an intuitive drag-and-drop interface with complex layout capabilities
-- **Build a complete product with consideration for user experience and developer extensibility**
 
 The most rewarding aspect was solving the technical challenges for designing an intuitive way for users to customize widgets while keeping everything working smoothly.
 

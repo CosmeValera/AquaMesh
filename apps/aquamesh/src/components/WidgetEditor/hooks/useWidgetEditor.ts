@@ -444,6 +444,51 @@ export const useWidgetEditor = () => {
     }
   }, [])
 
+  // Listen for direct component add events from ComponentPalette
+  useEffect(() => {
+    const handleDirectAdd = (event: Event) => {
+      const customEvent = event as CustomEvent
+      if (customEvent.detail && customEvent.detail.componentType) {
+        const componentType = customEvent.detail.componentType
+        
+        // Find the component configuration
+        const componentConfig = COMPONENT_TYPES.find(
+          (c) => c.type === componentType
+        )
+        
+        if (componentConfig) {
+          // Create a new component
+          const newComponent: ComponentData = {
+            id: `${componentType}-${Date.now()}`,
+            type: componentType,
+            props: { ...componentConfig.defaultProps },
+          }
+          
+          // Add to widget components
+          setWidgetData((prev) => ({
+            ...prev,
+            components: [...prev.components, newComponent],
+          }))
+          
+          // Show success notification
+          setNotification({
+            open: true,
+            message: `Added ${componentConfig.label} component`,
+            severity: 'success',
+          })
+        }
+      }
+    }
+    
+    // Add event listener
+    document.addEventListener('addComponentDirectly', handleDirectAdd)
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('addComponentDirectly', handleDirectAdd)
+    }
+  }, [])
+
   // Listen for loadWidgetInEditor events from widget management
   useEffect(() => {
     const handleExternalWidgetLoad = (event: Event) => {
@@ -1162,6 +1207,36 @@ export const useWidgetEditor = () => {
     setNotification({ ...notification, open: false })
   }
 
+  // Handle direct component addition (for mobile devices)
+  const handleDirectAdd = (componentType: string) => {
+    // Find the component configuration
+    const componentConfig = COMPONENT_TYPES.find(
+      (c) => c.type === componentType
+    )
+    
+    if (componentConfig) {
+      // Create a new component
+      const newComponent: ComponentData = {
+        id: `${componentType}-${Date.now()}`,
+        type: componentType,
+        props: { ...componentConfig.defaultProps },
+      }
+      
+      // Add to widget components
+      setWidgetData((prev) => ({
+        ...prev,
+        components: [...prev.components, newComponent],
+      }))
+      
+      // Show success notification
+      setNotification({
+        open: true,
+        message: `Added ${componentConfig.label} component`,
+        severity: 'success',
+      })
+    }
+  }
+
   // Toggle edit/preview mode
   const toggleEditMode = () => {
     setEditMode((prev) => !prev)
@@ -1235,6 +1310,7 @@ export const useWidgetEditor = () => {
     handleLoadWidget,
     handleDeleteSavedWidget,
     handleCloseNotification,
+    handleDirectAdd,
     toggleEditMode,
     handleToggleVisibility,
     confirmDeleteComponent,

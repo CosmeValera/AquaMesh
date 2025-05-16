@@ -97,6 +97,7 @@ const WidgetEditor: React.FC<{
     handleWidgetNameChange,
     loadSavedWidgets,
     editorId,
+    handleDirectAdd,
   } = useWidgetEditor()
 
   // State to control sidebar visibility
@@ -528,6 +529,7 @@ const WidgetEditor: React.FC<{
             handleDragStart={handleDragStart}
             showComponentPaletteHelp={showComponentPaletteHelp}
             showTooltips={showTooltips}
+            handleDirectAdd={handleDirectAdd}
           />
         )}
 

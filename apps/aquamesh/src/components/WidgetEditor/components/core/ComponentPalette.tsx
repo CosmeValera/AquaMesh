@@ -21,20 +21,19 @@ interface ComponentPaletteProps {
   showHelpText?: boolean
   handleDragStart: (e: React.DragEvent<HTMLDivElement>, type: string) => void
   showComponentPaletteHelp: boolean
+  handleDirectAdd?: (componentType: string) => void
 }
 
-// Group component types by category
-const groupByCategory = (componentTypes: ComponentType[]) => {
-  return componentTypes.reduce<Record<string, ComponentType[]>>((acc, component) => {
-    const category = component.category || 'Other'
-    
+// Helper function to group components by category
+const groupByCategory = (components: ComponentType[]) => {
+  return components.reduce((acc, component) => {
+    const category = component.category || 'UI Components'
     if (!acc[category]) {
       acc[category] = []
     }
-    
     acc[category].push(component)
     return acc
-  }, {})
+  }, {} as Record<string, ComponentType[]>)
 }
 
 // Define the component palette groups and expand state
@@ -45,7 +44,8 @@ const ComponentPalette = ({
   showTooltips = false, 
   showHelpText = true, 
   handleDragStart, 
-  showComponentPaletteHelp 
+  showComponentPaletteHelp,
+  handleDirectAdd
 }: ComponentPaletteProps) => {
   // Responsive width based on screen size
   const theme = useTheme()
@@ -72,6 +72,15 @@ const ComponentPalette = ({
       [category]: !prev[category]
     }))
   }
+  
+  // Create a direct add handler if one wasn't provided
+  const onDirectAdd = handleDirectAdd || ((componentType: string) => {
+    // If no handler was provided, dispatch a custom event to add the component
+    const customEvent = new CustomEvent('addComponentDirectly', {
+      detail: { componentType }
+    })
+    document.dispatchEvent(customEvent)
+  })
   
   return (
     <Box
@@ -147,6 +156,8 @@ const ComponentPalette = ({
                       component={component}
                       showTooltips={showTooltips}
                       handleDragStart={handleDragStart}
+                      isPhone={isPhone}
+                      onDirectAdd={onDirectAdd}
                     />
                   ))}
                 </Box>
@@ -158,9 +169,9 @@ const ComponentPalette = ({
       
       {/* Help text at bottom */}
       {showComponentPaletteHelp && showHelpText && (
-        <Box sx={{ p: '4px 16px', borderTop: 1, borderColor: 'divider', bgcolor: 'background.default' }}>
+        <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', fontSize: '0.75rem' }}>
           <Typography variant="caption" color="foreground.contrastSecondary" sx={{ display: 'block', mb: 1, fontSize: '11px' }}>
-            Drag components to the editor canvas
+            {isPhone ? 'Tap and hold to drag components' : 'Drag components to the editor canvas'}
           </Typography>
           <Typography variant="caption" color="foreground.contrastSecondary" sx={{ fontSize: '9px' }}>
             {showTooltips 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, Tooltip, FormControlLabel, Switch, Chip } from '@mui/material'
+import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, FormControlLabel, Switch, Chip } from '@mui/material'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
+import TooltipStyled from '../TooltipStyled'
 
 import { ReactComponent as AddIcon } from '../../icons/add.svg'
 import { ReactComponent as CloseIcon } from '../../icons/close.svg'
@@ -258,7 +259,7 @@ const Dashboards = () => {
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 {hasChanges[index] && (
-                  <Tooltip title="Save Dashboard">
+                  <TooltipStyled title="Save Dashboard">
                     <IconButton
                       size="small"
                       onClick={(ev) => {
@@ -274,7 +275,7 @@ const Dashboards = () => {
                     >
                       <SaveIcon sx={{ fontSize: 16 }}/>
                     </IconButton>
-                  </Tooltip>
+                  </TooltipStyled>
                 )}
                 <Box
                   className="close"

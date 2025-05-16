@@ -1,5 +1,5 @@
 import React from 'react'
-import { Tooltip, TooltipProps } from '@mui/material'
+import { Tooltip, TooltipProps, useMediaQuery, useTheme } from '@mui/material'
 import { merge } from 'lodash'
 
 interface TooltipStyledProps extends Omit<TooltipProps, 'componentsProps' | 'slotProps'> {
@@ -15,6 +15,9 @@ interface TooltipStyledProps extends Omit<TooltipProps, 'componentsProps' | 'slo
 
 // TODO: This belongs in style...
 const styledComponentsProps = (props: TooltipStyledProps) => {
+  const theme = useTheme()
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
+  
   const tooltip: Record<string, unknown> = {}
   const arrow: Record<string, unknown> = {}
 
@@ -32,10 +35,11 @@ const styledComponentsProps = (props: TooltipStyledProps) => {
       sx: {
         ...tooltip,
         borderRadius: 0,
-        fontSize: '10px',
-        lineHeight: '14px',
-        padding: '4px 8px',
+        fontSize: isPhone ? '8px' : '10px',
+        lineHeight: isPhone ? '12px' : '14px',
+        padding: isPhone ? '2px 4px' : '4px 8px',
         pointerEvents: 'auto',
+        maxWidth: isPhone ? '150px' : '300px',
         boxShadow: `
           0 5px 22px 4px #0000001F,
           0 12px 17px 2px #00000024,
@@ -53,6 +57,8 @@ const styledComponentsProps = (props: TooltipStyledProps) => {
 }
 
 const styledSlotProps = (props: TooltipStyledProps) => {
+  const theme = useTheme()
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const offsetOptions: Record<string, unknown> = {}
 
   switch (props.placement) {
@@ -60,7 +66,7 @@ const styledSlotProps = (props: TooltipStyledProps) => {
     offsetOptions.offset = [0, -4]
     break
   case 'right':
-    offsetOptions.offset = [0, 2]
+    offsetOptions.offset = isPhone ? [0, 0] : [0, 2]
     break
   default:
     offsetOptions.offset = [0, 0]

@@ -13,10 +13,10 @@ import {
   Divider,
   Grid
 } from '@mui/material'
-import Tooltip from '@mui/material/Tooltip'
 import SettingsIcon from '@mui/icons-material/Settings'
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import TooltipStyled from '../../../TooltipStyled'
 
 import {
   ComponentPreview,
@@ -242,9 +242,9 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   No Text Wrapping
-                  <Tooltip title="When enabled, text will not wrap to a new line and will be truncated with an ellipsis if it exceeds available space.">
+                  <TooltipStyled title="When enabled, text will not wrap to a new line and will be truncated with an ellipsis if it exceeds available space.">
                     <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
-                  </Tooltip>
+                  </TooltipStyled>
                 </Box>
               }
             />

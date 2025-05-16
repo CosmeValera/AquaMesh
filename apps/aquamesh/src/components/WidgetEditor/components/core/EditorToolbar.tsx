@@ -5,7 +5,6 @@ import {
   IconButton,
   Typography,
   Button,
-  Tooltip,
   Box,
   useTheme,
   useMediaQuery,
@@ -29,6 +28,7 @@ import HistoryIcon from '@mui/icons-material/History'
 import SearchIcon from '@mui/icons-material/Search'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import VersionWarningDialog from '../dialogs/VersionWarningDialog'
+import TooltipStyled from '../../../../components/TooltipStyled'
 
 interface EditorToolbarProps {
   editMode: boolean
@@ -154,7 +154,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             {/* Undo/Redo buttons */}
             {!isPhone && !!handleUndo && !!handleRedo && (
               <>
-                <Tooltip title="Undo (Ctrl+Z)">
+                <TooltipStyled title="Undo (Ctrl+Z)">
                   <span>
                     <IconButton 
                       color="inherit" 
@@ -168,9 +168,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                       <UndoIcon />
                     </IconButton>
                   </span>
-                </Tooltip>
+                </TooltipStyled>
                 
-                <Tooltip title="Redo (Ctrl+Y)">
+                <TooltipStyled title="Redo (Ctrl+Y)">
                   <span>
                     <IconButton 
                       color="inherit" 
@@ -184,13 +184,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                       <RedoIcon />
                     </IconButton>
                   </span>
-                </Tooltip>
+                </TooltipStyled>
                 
                 {!isPhone && <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />}
               </>
             )}
             
-            <Tooltip title="Toggle edit/preview mode">
+            <TooltipStyled title="Toggle edit/preview mode">
               <IconButton 
                 color="inherit" 
                 onClick={toggleEditMode}
@@ -207,10 +207,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               >
                 <EditIcon />
               </IconButton>
-            </Tooltip>
+            </TooltipStyled>
             
             {!isPhone && !!handleOpenSearchDialog && (
-              <Tooltip title="Search components">
+              <TooltipStyled title="Search components">
                 <span>
                   <IconButton
                     color="inherit"
@@ -224,12 +224,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     <SearchIcon />
                   </IconButton>
                 </span>
-              </Tooltip>
+              </TooltipStyled>
             )}
             
             {!isPhone && <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />}
             
-            <Tooltip title="Open saved widget">
+            <TooltipStyled title="Open saved widget">
               <IconButton 
                 color="inherit" 
                 onClick={() => setShowWidgetList(true)}
@@ -240,10 +240,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               >
                 <FolderOpenIcon />
               </IconButton>
-            </Tooltip>
+            </TooltipStyled>
             
             
-            <Tooltip title="Editor settings">
+            <TooltipStyled title="Editor settings">
               <IconButton 
                 color="inherit" 
                 onClick={() => setShowSettingsModal(true)}
@@ -254,13 +254,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               >
                 <SettingsIcon />
               </IconButton>
-            </Tooltip>
+            </TooltipStyled>
             
             {/* Advanced Features in Toolbar (when enabled, only on desktop) */}
             {isDesktop && showAdvancedInToolbar && (
               <>
                 <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />  
-                <Tooltip title="Templates">
+                <TooltipStyled title="Templates">
                   <IconButton
                     color="inherit"
                     onClick={() => setShowTemplateDialog(true)}
@@ -271,9 +271,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                   >
                     <TemplateIcon />
                   </IconButton>
-                </Tooltip>
+                </TooltipStyled>
                 
-                <Tooltip title="Export/Import Widgets">
+                <TooltipStyled title="Export/Import Widgets">
                   <IconButton
                     color="inherit"
                     onClick={() => setShowExportImportDialog(true)}
@@ -284,9 +284,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                   >
                     <ImportExportIcon />
                   </IconButton>
-                </Tooltip>
+                </TooltipStyled>
                 
-                <Tooltip title="Version History">
+                <TooltipStyled title="Version History">
                   <IconButton
                     color="inherit"
                     onClick={handleOpenVersioningDialog}
@@ -297,12 +297,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                   >
                     <HistoryIcon />
                   </IconButton>
-                </Tooltip>
+                </TooltipStyled>
               </>
             )}
             {/* Advanced Features Menu Button (shown when not on desktop or advanced features not inline) */}
             {(!isDesktop || !showAdvancedInToolbar) && (
-              <Tooltip title="Advanced features">
+              <TooltipStyled title="Advanced features">
                 <IconButton
                   color="inherit"
                   onClick={handleAdvancedMenuOpen}
@@ -313,7 +313,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 >
                   <MoreVertIcon />
                 </IconButton>
-              </Tooltip>
+              </TooltipStyled>
             )}
             
             <Divider orientation="vertical" flexItem sx={{ mr: 2, height: '24px', alignSelf: 'center' }} />
@@ -492,7 +492,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             
             {/* Save Button or Icon */}
             {isPhone ? (
-              <Tooltip title={isEmpty ? 'Empty Widget' : isUpdating && !hasChanges ? 'No changes' : isUpdating ? 'Update Widget' : 'Save Widget'}>
+              <TooltipStyled title={isEmpty ? 'Empty Widget' : isUpdating && !hasChanges ? 'No changes' : isUpdating ? 'Update Widget' : 'Save Widget'}>
                 <span>
                   <IconButton
                     color="inherit"
@@ -507,7 +507,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     <SaveIcon />
                   </IconButton>
                 </span>
-              </Tooltip>
+              </TooltipStyled>
             ) : (
               <Button
                 variant="contained"

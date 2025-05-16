@@ -3,11 +3,11 @@ import {
   Box, 
   Typography, 
   Paper,
-  Tooltip,
   IconButton
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { ComponentType } from '../../types/types'
+import TooltipStyled from '../../../TooltipStyled'
 
 interface ComponentPaletteItemProps {
   component: ComponentType
@@ -108,7 +108,7 @@ const ComponentPaletteItem: React.FC<ComponentPaletteItemProps> = ({
   
   return (
     <Box key={component.type} sx={{ mb: 1 }}>
-      <Tooltip
+      <TooltipStyled
         title={showTooltips ? component.tooltip || '' : ''}
         placement="right"
         arrow
@@ -187,7 +187,7 @@ const ComponentPaletteItem: React.FC<ComponentPaletteItemProps> = ({
             </IconButton>
           )}
         </Paper>
-      </Tooltip>
+      </TooltipStyled>
     </Box>
   )
 }

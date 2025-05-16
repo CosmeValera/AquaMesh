@@ -13,14 +13,11 @@ Built on a React-based Turborepo monorepo architecture, it dynamically loads com
 
 ## 🎬 Demo
 
-To try AquaMesh: <a href="https://codesandbox.io/p/github/CosmeValera/AquaMesh/aquamesh-portfolio" target="_blank">**Click Here**</a>*
+To try AquaMesh: <a href="https://aqua-mesh.vercel.app/" target="_blank">**Click Here**</a>*
 
 ![Live Demo](tools/readme_images/live_demo.png)
 
 Create custom dashboards adding widgets with drag-and-drop, no coding required!
-
-> [!NOTE]
-> *Please allow up to 5 minutes for the sandbox to initialize. Once ready at `localhost:3000`, refresh the preview panel to start.
 
 ## 🚀 Quickstart
 

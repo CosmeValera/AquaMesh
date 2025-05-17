@@ -10,7 +10,9 @@ import {
   FormControlLabel,
   Switch,
   Divider,
-  Grid
+  Grid,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
@@ -28,6 +30,10 @@ interface TextFieldEditorProps {
 }
 
 const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) => {
+  // Theme and responsive design
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+
   // Tab state
   const [tabValue, setTabValue] = useState(0)
   
@@ -70,7 +76,13 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
     <Box sx={{ width: '100%' }}>
       {/* Preview section */}
       <ComponentPreview>
-        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '300px' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          width: '100%', 
+          maxWidth: '300px',
+          p: isMobile ? 1 : 2
+        }}>
           <TextField
             label={props.label as string || 'Label'}
             placeholder={props.placeholder as string || 'Placeholder'}
@@ -85,18 +97,48 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             type={props.type as string || 'text'}
             InputProps={{
               startAdornment: props.startAdornment ? (
-                <InputAdornment position="start">{props.startAdornmentText as string}</InputAdornment>
+                <InputAdornment position="start">
+                  <Typography sx={{ fontSize: isMobile ? '0.75rem' : undefined }}>
+                    {props.startAdornmentText as string}
+                  </Typography>
+                </InputAdornment>
               ) : undefined,
               endAdornment: props.endAdornment ? (
-                <InputAdornment position="end">{props.endAdornmentText as string}</InputAdornment>
+                <InputAdornment position="end">
+                  <Typography sx={{ fontSize: isMobile ? '0.75rem' : undefined }}>
+                    {props.endAdornmentText as string}
+                  </Typography>
+                </InputAdornment>
               ) : undefined
+            }}
+            sx={{
+              '& .MuiInputLabel-root': {
+                fontSize: isMobile ? '0.875rem' : undefined
+              },
+              '& .MuiOutlinedInput-input': {
+                fontSize: isMobile ? '0.875rem' : undefined
+              },
+              '& .MuiFormHelperText-root': {
+                fontSize: isMobile ? '0.7rem' : '0.75rem'
+              }
             }}
           />
 
           {/* Show validation information when present */}
           {(Boolean(props.required) || Boolean(props.error)) && (
-            <Box sx={{ mt: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1, fontSize: '0.75rem' }}>
-              <Typography variant="caption" color="text.secondary" component="div">
+            <Box sx={{ 
+              mt: isMobile ? 0.5 : 1, 
+              p: isMobile ? 0.5 : 1, 
+              bgcolor: 'background.paper', 
+              borderRadius: 1, 
+              fontSize: isMobile ? '0.65rem' : '0.75rem' 
+            }}>
+              <Typography 
+                variant="caption" 
+                color="text.secondary" 
+                component="div"
+                sx={{ fontSize: isMobile ? '0.65rem' : undefined }}
+              >
                 {Boolean(props.required) && <Box component="span" sx={{ mr: 1, fontWeight: 'medium' }}>Required</Box>}
                 {Boolean(props.error) && <Box component="span" sx={{ mr: 1, color: 'error.main' }}>Error: {props.errorText as string}</Box>}
               </Typography>
@@ -104,24 +146,56 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
           )}
           
           {/* Show field metadata */}
-          <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1 }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          <Box sx={{ 
+            mt: isMobile ? 1 : 2, 
+            pt: isMobile ? 1 : 2, 
+            borderTop: '1px dashed rgba(0,0,0,0.1)', 
+            display: 'flex', 
+            justifyContent: 'center', 
+            flexWrap: 'wrap', 
+            gap: isMobile ? 0.5 : 1 
+          }}>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: 'text.secondary',
+                fontSize: isMobile ? '0.65rem' : undefined 
+              }}
+            >
               <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
                 {variant}
               </Box>
             </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: 'text.secondary',
+                fontSize: isMobile ? '0.65rem' : undefined 
+              }}
+            >
               <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
                 {size}
               </Box>
             </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: 'text.secondary',
+                fontSize: isMobile ? '0.65rem' : undefined 
+              }}
+            >
               <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
                 {type}
               </Box>
             </Typography>
             {Boolean(props.disabled) && (
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: 'text.secondary',
+                  fontSize: isMobile ? '0.65rem' : undefined 
+                }}
+              >
                 <Box component="span" sx={{ px: 0.5, py: 0.2, bgcolor: 'rgba(25, 118, 210, 0.1)', borderRadius: 0.5 }}>
                   disabled
                 </Box>
@@ -136,21 +210,30 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
         value={tabValue}
         onChange={handleTabChange}
         tabs={[
-          { label: 'Basic Settings', id: 'textfield-basic', icon: <SettingsIcon fontSize="small" /> },
-          { label: 'Styling', id: 'textfield-styling', icon: <FormatColorTextIcon fontSize="small" /> }
+          { label: 'Basic Settings', id: 'textfield-basic', icon: <SettingsIcon fontSize={isMobile ? "small" : "medium"} /> },
+          { label: 'Styling', id: 'textfield-styling', icon: <FormatColorTextIcon fontSize={isMobile ? "small" : "medium"} /> }
         ]}
       />
       
       {/* Basic Settings Tab */}
       <TabPanelShared value={tabValue} index={0} id="textfield-basic">
-        <Grid container spacing={2}>
+        <Grid container spacing={isMobile ? 1 : 2}>
           <Grid item xs={12}>
             <TextField
               label="Field Label"
               fullWidth
+              size={isMobile ? "small" : "medium"}
               onFocus={(e) => { e.target.select() }}
               value={(props.label as string) || ''}
               onChange={(e) => handleChange('label', e.target.value)}
+              sx={{
+                '& .MuiInputLabel-root': {
+                  fontSize: isMobile ? '0.875rem' : undefined
+                },
+                '& .MuiOutlinedInput-input': {
+                  fontSize: isMobile ? '0.875rem' : undefined
+                }
+              }}
             />
           </Grid>
           
@@ -158,9 +241,18 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             <TextField
               label="Placeholder Text"
               fullWidth
+              size={isMobile ? "small" : "medium"}
               onFocus={(e) => { e.target.select() }}
               value={(props.placeholder as string) || ''}
               onChange={(e) => handleChange('placeholder', e.target.value)}
+              sx={{
+                '& .MuiInputLabel-root': {
+                  fontSize: isMobile ? '0.875rem' : undefined
+                },
+                '& .MuiOutlinedInput-input': {
+                  fontSize: isMobile ? '0.875rem' : undefined
+                }
+              }}
             />
           </Grid>
           
@@ -168,15 +260,24 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
             <TextField
               label="Default Value"
               fullWidth
+              size={isMobile ? "small" : "medium"}
               onFocus={(e) => { e.target.select() }}
               value={(props.defaultValue as string) || ''}
               onChange={(e) => handleChange('defaultValue', e.target.value)}
+              sx={{
+                '& .MuiInputLabel-root': {
+                  fontSize: isMobile ? '0.875rem' : undefined
+                },
+                '& .MuiOutlinedInput-input': {
+                  fontSize: isMobile ? '0.875rem' : undefined
+                }
+              }}
             />
           </Grid>
           
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <InputLabel>Input Type</InputLabel>
+            <FormControl fullWidth size={isMobile ? "small" : "medium"}>
+              <InputLabel sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Input Type</InputLabel>
               <Select
                 value={type}
                 label="Input Type"
@@ -184,13 +285,16 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                   setType(e.target.value)
                   handleChange('type', e.target.value)
                 }}
+                sx={{
+                  '& .MuiSelect-select': { fontSize: isMobile ? '0.875rem' : undefined }
+                }}
               >
-                <MenuItem value="text">Text</MenuItem>
-                <MenuItem value="password">Password</MenuItem>
-                <MenuItem value="number">Number</MenuItem>
-                <MenuItem value="email">Email</MenuItem>
-                <MenuItem value="tel">Telephone</MenuItem>
-                <MenuItem value="date">Date</MenuItem>
+                <MenuItem value="text" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Text</MenuItem>
+                <MenuItem value="password" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Password</MenuItem>
+                <MenuItem value="number" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Number</MenuItem>
+                <MenuItem value="email" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Email</MenuItem>
+                <MenuItem value="tel" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Telephone</MenuItem>
+                <MenuItem value="date" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Date</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -199,10 +303,10 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
       
       {/* Styling Tab */}
       <TabPanelShared value={tabValue} index={1} id="textfield-styling">
-        <Grid container spacing={2}>
+        <Grid container spacing={isMobile ? 1 : 2}>
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <InputLabel>Variant</InputLabel>
+            <FormControl fullWidth size={isMobile ? "small" : "medium"}>
+              <InputLabel sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Variant</InputLabel>
               <Select
                 value={variant}
                 label="Variant"
@@ -210,17 +314,20 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                   setVariant(e.target.value)
                   handleChange('variant', e.target.value)
                 }}
+                sx={{
+                  '& .MuiSelect-select': { fontSize: isMobile ? '0.875rem' : undefined }
+                }}
               >
-                <MenuItem value="outlined">Outlined</MenuItem>
-                <MenuItem value="filled">Filled</MenuItem>
-                <MenuItem value="standard">Standard</MenuItem>
+                <MenuItem value="outlined" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Outlined</MenuItem>
+                <MenuItem value="filled" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Filled</MenuItem>
+                <MenuItem value="standard" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Standard</MenuItem>
               </Select>
             </FormControl>
           </Grid>
           
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <InputLabel>Size</InputLabel>
+            <FormControl fullWidth size={isMobile ? "small" : "medium"}>
+              <InputLabel sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Size</InputLabel>
               <Select
                 value={size}
                 label="Size"
@@ -228,16 +335,25 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                   setSize(e.target.value)
                   handleChange('size', e.target.value)
                 }}
+                sx={{
+                  '& .MuiSelect-select': { fontSize: isMobile ? '0.875rem' : undefined }
+                }}
               >
-                <MenuItem value="small">Small</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
+                <MenuItem value="small" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Small</MenuItem>
+                <MenuItem value="medium" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Medium</MenuItem>
               </Select>
             </FormControl>
           </Grid>
           
           <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" gutterBottom>Validation</Typography>
+            <Divider sx={{ my: isMobile ? 1 : 2 }} />
+            <Typography 
+              variant={isMobile ? "body2" : "subtitle2"} 
+              gutterBottom
+              sx={{ fontSize: isMobile ? '0.875rem' : undefined }}
+            >
+              Validation
+            </Typography>
           </Grid>
 
           <Grid item xs={12} sm={6}>
@@ -246,9 +362,14 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                 <Switch
                   checked={Boolean(props.required)}
                   onChange={(e) => handleChange('required', e.target.checked)}
+                  size={isMobile ? "small" : "medium"}
                 />
               }
-              label="Required Field"
+              label={
+                <Typography sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>
+                  Required Field
+                </Typography>
+              }
             />
           </Grid>
           
@@ -258,23 +379,33 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                 <Switch
                   checked={Boolean(props.disabled)}
                   onChange={(e) => handleChange('disabled', e.target.checked)}
+                  size={isMobile ? "small" : "medium"}
                 />
               }
-              label="Disabled"
+              label={
+                <Typography sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>
+                  Disabled
+                </Typography>
+              }
             />
           </Grid>
 
           <Grid item xs={12}>
-            <Grid container spacing={2} alignItems="center">
+            <Grid container spacing={isMobile ? 1 : 2} alignItems="center">
               <Grid item xs={12} sm={6}>
                 <FormControlLabel
                   control={
                     <Switch
                       checked={Boolean(props.error)}
                       onChange={(e) => handleChange('error', e.target.checked)}
+                      size={isMobile ? "small" : "medium"}
                     />
                   }
-                  label="Error State"
+                  label={
+                    <Typography sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>
+                      Error State
+                    </Typography>
+                  }
                 />
               </Grid>
               
@@ -286,7 +417,15 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                     value={(props.errorText as string) || ''}
                     onChange={(e) => handleChange('errorText', e.target.value)}
                     margin="none"
-                    size="small"
+                    size={isMobile ? "small" : "medium"}
+                    sx={{
+                      '& .MuiInputLabel-root': {
+                        fontSize: isMobile ? '0.875rem' : undefined
+                      },
+                      '& .MuiOutlinedInput-input': {
+                        fontSize: isMobile ? '0.875rem' : undefined
+                      }
+                    }}
                   />
                 )}
               </Grid>
@@ -294,8 +433,14 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
           </Grid>
 
           <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" gutterBottom>Input Adornments</Typography>
+            <Divider sx={{ my: isMobile ? 1 : 2 }} />
+            <Typography 
+              variant={isMobile ? "body2" : "subtitle2"} 
+              gutterBottom
+              sx={{ fontSize: isMobile ? '0.875rem' : undefined }}
+            >
+              Input Adornments
+            </Typography>
           </Grid>
           
           <Grid item xs={12} sm={6}>
@@ -310,9 +455,14 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                       handleChange('startAdornmentText', '$')
                     }
                   }}
+                  size={isMobile ? "small" : "medium"}
                 />
               }
-              label="Start Adornment"
+              label={
+                <Typography sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>
+                  Start Adornment
+                </Typography>
+              }
             />
             
             {hasStartAdornment && (
@@ -321,7 +471,16 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                 fullWidth
                 value={(props.startAdornmentText as string) || '$'}
                 onChange={(e) => handleChange('startAdornmentText', e.target.value)}
-                sx={{ mt: 1 }}
+                sx={{ 
+                  mt: isMobile ? 0.5 : 1,
+                  '& .MuiInputLabel-root': {
+                    fontSize: isMobile ? '0.875rem' : undefined
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    fontSize: isMobile ? '0.875rem' : undefined
+                  }
+                }}
+                size={isMobile ? "small" : "medium"}
               />
             )}
           </Grid>
@@ -338,9 +497,14 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                       handleChange('endAdornmentText', 'kg')
                     }
                   }}
+                  size={isMobile ? "small" : "medium"}
                 />
               }
-              label="End Adornment"
+              label={
+                <Typography sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>
+                  End Adornment
+                </Typography>
+              }
             />
             
             {hasEndAdornment && (
@@ -349,7 +513,16 @@ const TextFieldEditor: React.FC<TextFieldEditorProps> = ({ props, onChange }) =>
                 fullWidth
                 value={(props.endAdornmentText as string) || 'kg'}
                 onChange={(e) => handleChange('endAdornmentText', e.target.value)}
-                sx={{ mt: 1 }}
+                sx={{ 
+                  mt: isMobile ? 0.5 : 1,
+                  '& .MuiInputLabel-root': {
+                    fontSize: isMobile ? '0.875rem' : undefined
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    fontSize: isMobile ? '0.875rem' : undefined
+                  }
+                }}
+                size={isMobile ? "small" : "medium"}
               />
             )}
           </Grid>

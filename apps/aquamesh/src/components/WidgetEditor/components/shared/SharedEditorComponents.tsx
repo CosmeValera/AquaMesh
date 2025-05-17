@@ -16,7 +16,9 @@ import {
   Paper,
   Slider,
   Tabs,
-  Tab
+  Tab,
+  useTheme,
+  useMediaQuery
 } from '@mui/material'
 import FormatBoldIcon from '@mui/icons-material/FormatBold'
 import FormatItalicIcon from '@mui/icons-material/FormatItalic'
@@ -137,6 +139,10 @@ export const EditorTabs: React.FC<{
   onChange: (event: React.SyntheticEvent, newValue: number) => void;
   tabs: { label: string; id: string; icon?: React.ReactNode }[];
 }> = ({ value, onChange, tabs }) => {
+  // Add useTheme and useMediaQuery for responsive design
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  
   return (
     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
       <Tabs 
@@ -147,6 +153,9 @@ export const EditorTabs: React.FC<{
         sx={{
           '& .MuiTab-root': {
             color: '#191919',
+            fontSize: isMobile ? '0.5rem' : undefined,
+            minHeight: isMobile ? '40px' : undefined,
+            padding: isMobile ? '6px 12px' : undefined,
             '&.Mui-selected': {
               color: 'primary.main',
             }

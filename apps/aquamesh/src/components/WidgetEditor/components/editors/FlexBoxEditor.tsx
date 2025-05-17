@@ -12,7 +12,9 @@ import {
   Slider,
   Stack,
   Chip,
-  Button
+  Button,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
@@ -33,6 +35,10 @@ interface FlexBoxEditorProps {
 }
 
 const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
+  // Theme and responsive design
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  
   // Tab state
   const [tabValue, setTabValue] = useState(0)
   
@@ -96,9 +102,10 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
             justifyContent: 'center',
             alignItems: 'center',
             borderRadius: 1,
-            p: 1,
+            p: isMobile ? 0.5 : 1,
             color: 'white',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            fontSize: isMobile ? '0.75rem' : 'inherit'
           }}
         >
           {i + 1}
@@ -146,7 +153,12 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
       <ComponentPreview>
-        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          width: '100%',
+          p: isMobile ? 1 : 2 
+        }}>
           <Box 
             sx={{ 
               display: 'flex',
@@ -159,21 +171,66 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
               width: '100%',
               border: '1px dashed #ccc',
               borderRadius: 1,
-              minHeight: '120px',
+              minHeight: isMobile ? '100px' : '120px',
               backgroundColor: 'rgba(0,0,0,0.02)'
             }}
           >
             {generatePreviewBoxes()}
           </Box>
           
-          <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%' }}>
-            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center" sx={{ mb: 1 }}>
-              <Chip size="small" label={`Direction: ${direction}`} color="primary" variant="outlined" />
-              <Chip size="small" label={`Justify: ${justifyText}`} color="secondary" variant="outlined" />
-              <Chip size="small" label={`Align: ${alignText}`} color="info" variant="outlined" />
-              <Chip size="small" label={`Wrap: ${flexWrap}`} color="default" variant="outlined" />
+          <Box sx={{ 
+            mt: isMobile ? 1 : 2, 
+            pt: isMobile ? 1 : 2, 
+            borderTop: '1px dashed rgba(0,0,0,0.1)', 
+            width: '100%' 
+          }}>
+            <Stack 
+              direction="row" 
+              spacing={0.5} 
+              flexWrap="wrap" 
+              justifyContent="center" 
+              sx={{ mb: isMobile ? 0.5 : 1, gap: isMobile ? 0.5 : 1 }}
+            >
+              <Chip 
+                size="small" 
+                label={`Direction: ${direction}`} 
+                color="primary" 
+                variant="outlined" 
+                sx={{ fontSize: isMobile ? '0.65rem' : undefined }}
+              />
+              <Chip 
+                size="small" 
+                label={`Justify: ${justifyText}`} 
+                color="secondary" 
+                variant="outlined" 
+                sx={{ fontSize: isMobile ? '0.65rem' : undefined }}
+              />
+              <Chip 
+                size="small" 
+                label={`Align: ${alignText}`} 
+                color="info" 
+                variant="outlined" 
+                sx={{ fontSize: isMobile ? '0.65rem' : undefined }}
+              />
+              <Chip 
+                size="small" 
+                label={`Wrap: ${flexWrap}`} 
+                color="default" 
+                variant="outlined" 
+                sx={{ fontSize: isMobile ? '0.65rem' : undefined }}
+              />
             </Stack>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: 'text.secondary', 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                justifyContent: 'center', 
+                gap: 1,
+                fontSize: isMobile ? '0.65rem' : undefined 
+              }}
+            >
               <span>Gap: {spacing}</span>
               <span>•</span>
               <span>Padding: {padding}</span>
@@ -193,19 +250,24 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
         value={tabValue}
         onChange={handleTabChange}
         tabs={[
-          { label: 'Basic Settings', id: 'flexbox-basic', icon: <SettingsIcon fontSize="small" /> },
-{ label: 'Styling', id: 'label-styling', icon: <FormatColorTextIcon fontSize="small" /> }        ]}
+          { label: 'Basic Settings', id: 'flexbox-basic', icon: <SettingsIcon fontSize={isMobile ? "small" : "medium"} /> },
+          { label: 'Styling', id: 'label-styling', icon: <FormatColorTextIcon fontSize={isMobile ? "small" : "medium"} /> }
+        ]}
       />
       
       {/* Layout Tab */}
       <TabPanelShared value={tabValue} index={0}>
-        <Grid container spacing={2}>
+        <Grid container spacing={isMobile ? 1 : 2}>
           {/* Flex Direction */}
           <Grid item xs={12}>
-            <Typography variant="subtitle2" gutterBottom>
+            <Typography 
+              variant={isMobile ? "body2" : "subtitle2"} 
+              gutterBottom
+              sx={{ fontSize: isMobile ? '0.875rem' : undefined }}
+            >
               Flex Direction
             </Typography>
-            <Grid container spacing={1}>
+            <Grid container spacing={isMobile ? 0.5 : 1}>
               <Grid item xs={3}>
                 <Button 
                   fullWidth
@@ -214,10 +276,18 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                     setDirection('row')
                     handleChange('direction', 'row')
                   }}
-                  sx={{ height: '60px', display: 'flex', flexDirection: 'column', gap: 0.5 }}
+                  sx={{ 
+                    height: isMobile ? '50px' : '60px', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: 0.5 
+                  }}
+                  size={isMobile ? "small" : "medium"}
                 >
-                  <ArrowForwardIcon />
-                  <Typography variant="caption">Row</Typography>
+                  <ArrowForwardIcon fontSize={isMobile ? "small" : "medium"} />
+                  <Typography variant="caption" sx={{ fontSize: isMobile ? '0.65rem' : undefined }}>
+                    Row
+                  </Typography>
                 </Button>
               </Grid>
               <Grid item xs={3}>
@@ -228,10 +298,18 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                     setDirection('column')
                     handleChange('direction', 'column')
                   }}
-                  sx={{ height: '60px', display: 'flex', flexDirection: 'column', gap: 0.5 }}
+                  sx={{ 
+                    height: isMobile ? '50px' : '60px', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: 0.5 
+                  }}
+                  size={isMobile ? "small" : "medium"}
                 >
-                  <ArrowDownwardIcon />
-                  <Typography variant="caption">Column</Typography>
+                  <ArrowDownwardIcon fontSize={isMobile ? "small" : "medium"} />
+                  <Typography variant="caption" sx={{ fontSize: isMobile ? '0.65rem' : undefined }}>
+                    Column
+                  </Typography>
                 </Button>
               </Grid>
               <Grid item xs={3}>
@@ -242,10 +320,18 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                     setDirection('row-reverse')
                     handleChange('direction', 'row-reverse')
                   }}
-                  sx={{ height: '60px', display: 'flex', flexDirection: 'column', gap: 0.5 }}
+                  sx={{ 
+                    height: isMobile ? '50px' : '60px', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: 0.5 
+                  }}
+                  size={isMobile ? "small" : "medium"}
                 >
-                  <ArrowBackIcon />
-                  <Typography variant="caption">Row Rev</Typography>
+                  <ArrowBackIcon fontSize={isMobile ? "small" : "medium"} />
+                  <Typography variant="caption" sx={{ fontSize: isMobile ? '0.65rem' : undefined }}>
+                    Row Rev
+                  </Typography>
                 </Button>
               </Grid>
               <Grid item xs={3}>
@@ -256,10 +342,18 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                     setDirection('column-reverse')
                     handleChange('direction', 'column-reverse')
                   }}
-                  sx={{ height: '60px', display: 'flex', flexDirection: 'column', gap: 0.5 }}
+                  sx={{ 
+                    height: isMobile ? '50px' : '60px', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: 0.5 
+                  }}
+                  size={isMobile ? "small" : "medium"}
                 >
-                  <ArrowUpwardIcon />
-                  <Typography variant="caption">Col Rev</Typography>
+                  <ArrowUpwardIcon fontSize={isMobile ? "small" : "medium"} />
+                  <Typography variant="caption" sx={{ fontSize: isMobile ? '0.65rem' : undefined }}>
+                    Col Rev
+                  </Typography>
                 </Button>
               </Grid>
             </Grid>
@@ -267,8 +361,8 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
           
           {/* Justification */}
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Justify Content</InputLabel>
+            <FormControl fullWidth sx={{ mt: isMobile ? 1 : 2 }} size={isMobile ? "small" : "medium"}>
+              <InputLabel sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Justify Content</InputLabel>
               <Select
                 value={justifyContent}
                 label="Justify Content"
@@ -276,21 +370,24 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                   setJustifyContent(e.target.value)
                   handleChange('justifyContent', e.target.value)
                 }}
+                sx={{
+                  '& .MuiSelect-select': { fontSize: isMobile ? '0.875rem' : undefined }
+                }}
               >
-                <MenuItem value="flex-start">Start</MenuItem>
-                <MenuItem value="center">Center</MenuItem>
-                <MenuItem value="flex-end">End</MenuItem>
-                <MenuItem value="space-between">Space Between</MenuItem>
-                <MenuItem value="space-around">Space Around</MenuItem>
-                <MenuItem value="space-evenly">Space Evenly</MenuItem>
+                <MenuItem value="flex-start" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Start</MenuItem>
+                <MenuItem value="center" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Center</MenuItem>
+                <MenuItem value="flex-end" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>End</MenuItem>
+                <MenuItem value="space-between" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Space Between</MenuItem>
+                <MenuItem value="space-around" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Space Around</MenuItem>
+                <MenuItem value="space-evenly" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Space Evenly</MenuItem>
               </Select>
             </FormControl>
           </Grid>
           
           {/* Alignment */}
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Align Items</InputLabel>
+            <FormControl fullWidth sx={{ mt: isMobile ? 1 : 2 }} size={isMobile ? "small" : "medium"}>
+              <InputLabel sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Align Items</InputLabel>
               <Select
                 value={alignItems}
                 label="Align Items"
@@ -298,20 +395,23 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                   setAlignItems(e.target.value)
                   handleChange('alignItems', e.target.value)
                 }}
+                sx={{
+                  '& .MuiSelect-select': { fontSize: isMobile ? '0.875rem' : undefined }
+                }}
               >
-                <MenuItem value="flex-start">Start</MenuItem>
-                <MenuItem value="center">Center</MenuItem>
-                <MenuItem value="flex-end">End</MenuItem>
-                <MenuItem value="stretch">Stretch</MenuItem>
-                <MenuItem value="baseline">Baseline</MenuItem>
+                <MenuItem value="flex-start" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Start</MenuItem>
+                <MenuItem value="center" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Center</MenuItem>
+                <MenuItem value="flex-end" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>End</MenuItem>
+                <MenuItem value="stretch" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Stretch</MenuItem>
+                <MenuItem value="baseline" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Baseline</MenuItem>
               </Select>
             </FormControl>
           </Grid>
           
           {/* Wrapping */}
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <InputLabel>Flex Wrap</InputLabel>
+            <FormControl fullWidth size={isMobile ? "small" : "medium"}>
+              <InputLabel sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Flex Wrap</InputLabel>
               <Select
                 value={flexWrap}
                 label="Flex Wrap"
@@ -319,10 +419,13 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
                   setFlexWrap(e.target.value)
                   handleChange('wrap', e.target.value)
                 }}
+                sx={{
+                  '& .MuiSelect-select': { fontSize: isMobile ? '0.875rem' : undefined }
+                }}
               >
-                <MenuItem value="nowrap">No Wrap</MenuItem>
-                <MenuItem value="wrap">Wrap</MenuItem>
-                <MenuItem value="wrap-reverse">Wrap Reverse</MenuItem>
+                <MenuItem value="nowrap" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>No Wrap</MenuItem>
+                <MenuItem value="wrap" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Wrap</MenuItem>
+                <MenuItem value="wrap-reverse" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Wrap Reverse</MenuItem>
               </Select>
             </FormControl>
           </Grid> 
@@ -333,8 +436,12 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
       <TabPanelShared value={tabValue} index={1}>
         
         {/* Spacing */}
-        <Grid item xs={12} sx={{ marginX: 2 }}>
-          <Typography variant="subtitle2" gutterBottom>
+        <Grid item xs={12} sx={{ marginX: isMobile ? 1 : 2 }}>
+          <Typography 
+            variant={isMobile ? "body2" : "subtitle2"} 
+            gutterBottom
+            sx={{ fontSize: isMobile ? '0.875rem' : undefined }}
+          >
             Item Spacing (Gap)
           </Typography>
           <Slider
@@ -343,6 +450,7 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
             max={8}
             step={1}
             marks
+            size={isMobile ? "small" : "medium"}
             valueLabelDisplay="auto"
             onChange={(_e, value) => {
               setSpacing(value as number)
@@ -351,15 +459,20 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
             sx={{
               '& .MuiSlider-markLabel': {
                 color: 'text.primary',
-                fontWeight: 'medium'
+                fontWeight: 'medium',
+                fontSize: isMobile ? '0.75rem' : undefined
               }
             }}
           />
         </Grid>
-        <Grid container spacing={2}>
+        <Grid container spacing={isMobile ? 1 : 2}>
           {/* Padding */}
-          <Grid item xs={12} sx={{ marginX: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
+          <Grid item xs={12} sx={{ marginX: isMobile ? 1 : 2 }}>
+            <Typography 
+              variant={isMobile ? "body2" : "subtitle2"} 
+              gutterBottom
+              sx={{ fontSize: isMobile ? '0.875rem' : undefined }}
+            >
               Container Padding
             </Typography>
             <Slider
@@ -368,6 +481,7 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
               max={8}
               step={1}
               marks
+              size={isMobile ? "small" : "medium"}
               valueLabelDisplay="auto"
               onChange={(_e, value) => {
                 setPadding(value as number)
@@ -376,7 +490,8 @@ const FlexBoxEditor: React.FC<FlexBoxEditorProps> = ({ props, onChange }) => {
               sx={{
                 '& .MuiSlider-markLabel': {
                   color: 'text.primary',
-                  fontWeight: 'medium'
+                  fontWeight: 'medium',
+                  fontSize: isMobile ? '0.75rem' : undefined
                 }
               }}
             />

@@ -11,7 +11,9 @@ import {
   FormControlLabel,
   Switch,
   Divider,
-  Grid
+  Grid,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText'
@@ -47,6 +49,10 @@ interface LabelEditorProps {
 }
 
 const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
+  // Get theme and media query for responsive design
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  
   // Tab state
   const [tabValue, setTabValue] = useState(0)
   
@@ -142,8 +148,11 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
       handleChange('useCustomColor', true)
       handleChange('customColor', customColor)
     } else {
-      handleChange('useCustomColor', undefined)
-      handleChange('customColor', undefined)
+      // Fix: properly remove custom color properties
+      const newProps = { ...props }
+      delete newProps.useCustomColor
+      delete newProps.customColor
+      onChange(newProps)
     }
   }
   
@@ -159,28 +168,58 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
   }
   
   const editorTabs = [
-    { label: 'Basic Settings', id: 'label-basic', icon: <SettingsIcon fontSize="small" /> },
-    { label: 'Styling', id: 'label-styling', icon: <FormatColorTextIcon fontSize="small" /> }
+    { label: 'Basic Settings', id: 'label-basic', icon: <SettingsIcon fontSize={isMobile ? "small" : "medium"} /> },
+    { label: 'Styling', id: 'label-styling', icon: <FormatColorTextIcon fontSize={isMobile ? "small" : "medium"} /> }
   ]
   
   return (
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
       <ComponentPreview>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: props.textAlign, width: '100%' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: props.textAlign, 
+          width: '100%',
+          p: isMobile ? 1 : 2 
+        }}>
           <Typography
             variant={variant as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2'}
             noWrap={Boolean(props.noWrap)}
-            sx={previewStyles}
+            sx={{
+              ...previewStyles,
+              fontSize: isMobile ? 
+                variant.startsWith('h') ? 
+                  `calc(${String(theme.typography[variant as keyof typeof theme.typography]?.fontSize || '1rem')} * 0.8)` : 
+                  theme.typography[variant as keyof typeof theme.typography]?.fontSize || '1rem' : 
+                theme.typography[variant as keyof typeof theme.typography]?.fontSize || '1rem'
+            }}
           >
             {(props.text as string) || 'Label Text'}
           </Typography>
           
-          <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%', display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ 
+            mt: isMobile ? 1 : 2, 
+            pt: isMobile ? 1 : 2, 
+            borderTop: '1px dashed rgba(0,0,0,0.1)', 
+            width: '100%', 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: isMobile ? 0.5 : 1, 
+            justifyContent: 'center' 
+          }}>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: 'text.secondary', 
+                display: 'flex', 
+                alignItems: 'center',
+                fontSize: isMobile ? '0.65rem' : '0.75rem'
+              }}
+            >
               {variant} {useCustomColor && (
-                <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', ml: 1 }}>
-                  • Color: <Box component="span" sx={{ width: 10, height: 10, bgcolor: customColor, borderRadius: '50%', display: 'inline-block', mx: 0.5 }} /> {customColor}
+                <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', ml: isMobile ? 0.5 : 1 }}>
+                  • Color: <Box component="span" sx={{ width: 8, height: 8, bgcolor: customColor, borderRadius: '50%', display: 'inline-block', mx: 0.5 }} /> {customColor}
                 </Box>
               )}
               {isBold && ' • Bold'}
@@ -202,7 +241,7 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
       
       {/* Content Tab */}
       <TabPanelShared value={tabValue} index={0} id="label">
-        <Grid container spacing={2}>
+        <Grid container spacing={isMobile ? 1 : 2}>
           <Grid item xs={12}>
             <TextField
               label="Label Text"
@@ -210,18 +249,25 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
               onFocus={(e) => { e.target.select() }}
               value={(props.text as string) || ''}
               onChange={(e) => handleChange('text', e.target.value)}
+              size={isMobile ? "small" : "medium"}
+              InputLabelProps={{
+                style: { fontSize: isMobile ? '0.875rem' : undefined }
+              }}
             />
           </Grid>
           
           <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" gutterBottom>
+            <Divider sx={{ my: isMobile ? 1 : 2 }} />
+            <Typography variant="subtitle2" gutterBottom sx={{ 
+              fontSize: isMobile ? '0.75rem' : undefined,
+              mt: isMobile ? 0.5 : 1
+            }}>
               Styling Options
             </Typography>
           </Grid>
           
           {/* Custom Color Toggle and Picker */}
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={isMobile ? 12 : 6}>
             <CustomColorControl
               useCustomColor={useCustomColor}
               customColor={customColor}
@@ -231,22 +277,31 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={isMobile ? 12 : 6}>
             <FormControlLabel
               control={
                 <Switch
                   checked={Boolean(props.noWrap)}
                   onChange={(e) => handleChange('noWrap', e.target.checked)}
+                  size={isMobile ? "small" : "medium"}
                 />
               }
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  No Text Wrapping
+                  <Typography sx={{ fontSize: isMobile ? '0.75rem' : undefined }}>
+                    No Text Wrapping
+                  </Typography>
                   <TooltipStyled title="When enabled, text will not wrap to a new line and will be truncated with an ellipsis if it exceeds available space.">
-                    <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
+                    <InfoOutlinedIcon fontSize={isMobile ? "small" : "medium"} sx={{ ml: 0.5 }} />
                   </TooltipStyled>
                 </Box>
               }
+              sx={{ 
+                m: 0,
+                '& .MuiFormControlLabel-label': {
+                  fontSize: isMobile ? '0.75rem' : undefined
+                }
+              }}
             />
           </Grid>
         </Grid>
@@ -254,10 +309,10 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
       
       {/* Typography Tab */}
       <TabPanelShared value={tabValue} index={1} id="label">
-        <Grid container spacing={2}>
+        <Grid container spacing={isMobile ? 1 : 2}>
           <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Text Variant</InputLabel>
+            <FormControl fullWidth size={isMobile ? "small" : "medium"}>
+              <InputLabel sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Text Variant</InputLabel>
               <Select
                 value={variant}
                 label="Text Variant"
@@ -265,17 +320,22 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
                   setVariant(e.target.value)
                   handleChange('variant', e.target.value)
                 }}
+                sx={{
+                  '.MuiSelect-select': {
+                    fontSize: isMobile ? '0.875rem' : undefined
+                  }
+                }}
               >
-                <MenuItem value="h1">Heading 1</MenuItem>
-                <MenuItem value="h2">Heading 2</MenuItem>
-                <MenuItem value="h3">Heading 3</MenuItem>
-                <MenuItem value="h4">Heading 4</MenuItem>
-                <MenuItem value="h5">Heading 5</MenuItem>
-                <MenuItem value="h6">Heading 6</MenuItem>
-                <MenuItem value="subtitle1">Subtitle 1</MenuItem>
-                <MenuItem value="subtitle2">Subtitle 2</MenuItem>
-                <MenuItem value="body1">Body 1</MenuItem>
-                <MenuItem value="body2">Body 2</MenuItem>
+                <MenuItem value="h1" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Heading 1</MenuItem>
+                <MenuItem value="h2" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Heading 2</MenuItem>
+                <MenuItem value="h3" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Heading 3</MenuItem>
+                <MenuItem value="h4" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Heading 4</MenuItem>
+                <MenuItem value="h5" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Heading 5</MenuItem>
+                <MenuItem value="h6" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Heading 6</MenuItem>
+                <MenuItem value="subtitle1" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Subtitle 1</MenuItem>
+                <MenuItem value="subtitle2" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Subtitle 2</MenuItem>
+                <MenuItem value="body1" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Body 1</MenuItem>
+                <MenuItem value="body2" sx={{ fontSize: isMobile ? '0.875rem' : undefined }}>Body 2</MenuItem>
               </Select>
             </FormControl>
           </Grid>

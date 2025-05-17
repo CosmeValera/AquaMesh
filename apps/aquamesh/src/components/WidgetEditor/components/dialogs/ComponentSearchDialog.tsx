@@ -15,7 +15,8 @@ import {
   Box,
   Divider,
   Alert,
-  useTheme
+  useTheme,
+  useMediaQuery
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import { ComponentData } from '../../types/types'
@@ -100,6 +101,7 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
   onSelectComponent
 }) => {
   const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [searchTerm, setSearchTerm] = useState('')
   const [searchResults, setSearchResults] = useState<{ component: ComponentData; path: string }[]>([])
   
@@ -136,7 +138,7 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
   // Get component icon component
   const getIconComponent = (type: string) => {
     const IconComponent = getComponentIcon(type)
-    return IconComponent ? <IconComponent sx={{ color: '#eee' }} /> : null
+    return IconComponent ? <IconComponent sx={{ color: '#eee', fontSize: isMobile ? '1.2rem' : '1.5rem' }} /> : null
   }
   
   return (
@@ -148,28 +150,32 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
       PaperProps={{
         sx: {
           backgroundColor: theme.palette.background.paper,
-          color: theme.palette.text.primary
+          color: theme.palette.text.primary,
+          maxHeight: isMobile ? '100%' : '80vh'
         }
       }}
     >
       <DialogTitle id="tutorial-dialog-title" sx={{ 
         bgcolor: 'primary.main', 
         color: 'white', 
-        pb: 1,
+        pb: isMobile ? 0.5 : 1,
+        pt: isMobile ? 1.5 : 2,
+        px: isMobile ? 1.5 : 2.5,
         backgroundImage: 'linear-gradient(90deg, #00BC9A 0%, #00A389 100%)',
         position: 'sticky',
         top: 0,
         zIndex: 1200
       }}>
         <Box display="flex" alignItems="center">
-          <SearchIcon sx={{ mr: 1.5, color: '#eee' }} />
+          <SearchIcon sx={{ mr: 1.5, color: '#eee', fontSize: isMobile ? '1.5rem' : '1.8rem' }} />
           <Typography 
-            variant="h5" 
+            variant={isMobile ? "h6" : "h5"}
             component="div" 
             fontWeight="bold" 
             sx={{
               color: '#eee',
-              textShadow: '0px 1px 2px rgba(255, 255, 255, 0.3)'
+              textShadow: '0px 1px 2px rgba(255, 255, 255, 0.3)',
+              fontSize: isMobile ? '1.1rem' : undefined
             }}
           >
             Search Components
@@ -178,7 +184,7 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
       </DialogTitle>
         
       
-      <DialogContent dividers>
+      <DialogContent dividers sx={{ p: isMobile ? 1 : 2 }}>
         <TextField
           autoFocus
           fullWidth
@@ -187,15 +193,20 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
           onChange={handleSearchChange}
           margin="normal"
           variant="outlined"
+          size={isMobile ? "small" : "medium"}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: '#eee' }} />
+                <SearchIcon sx={{ color: '#eee', fontSize: isMobile ? '1.2rem' : '1.5rem' }} />
               </InputAdornment>
-            )
+            ),
+            style: {
+              fontSize: isMobile ? '0.875rem' : undefined
+            }
           }}
           sx={{ 
             color: '#eee',
+            mt: isMobile ? 0.5 : 2,
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
                 borderColor: '#eee'
@@ -207,22 +218,38 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
           }}
         />
         
-        <Box sx={{ my: 2 }}>
+        <Box sx={{ my: isMobile ? 1 : 2 }}>
           {searchTerm && (
-            <Typography variant="body2" color="#eee">
+            <Typography 
+              variant="body2" 
+              color="#eee" 
+              sx={{ fontSize: isMobile ? '0.75rem' : undefined }}
+            >
               Found {searchResults.length} component{searchResults.length !== 1 ? 's' : ''} matching "{searchTerm}"
             </Typography>
           )}
         </Box>
         
-        <Divider sx={{ my: 1 }} />
+        <Divider sx={{ my: isMobile ? 0.5 : 1 }} />
         
         {searchTerm && searchResults.length === 0 ? (
-          <Alert severity="info" sx={{ my: 2 }}>
+          <Alert 
+            severity="info" 
+            sx={{ 
+              my: isMobile ? 1 : 2,
+              '& .MuiAlert-message': {
+                fontSize: isMobile ? '0.75rem' : undefined
+              }
+            }}
+          >
             No components found matching your search.
           </Alert>
         ) : (
-          <List sx={{ maxHeight: '50dvh', overflow: 'auto' }}>
+          <List sx={{ 
+            maxHeight: isMobile ? '40dvh' : '50dvh', 
+            overflow: 'auto',
+            py: 0 
+          }}>
             {searchResults.map(({ component, path }) => (
               <ListItem
                 key={component.id}
@@ -230,28 +257,42 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
                 onClick={() => handleSelectComponent(component.id)}
                 sx={{
                   borderRadius: 1,
-                  mb: 1,
+                  mb: isMobile ? 0.5 : 1,
+                  py: isMobile ? 0.5 : 1,
                   '&:hover': {
                     backgroundColor: theme.palette.action.hover
                   }
                 }}
               >
-                <ListItemIcon>
+                <ListItemIcon sx={{ minWidth: isMobile ? 36 : 48 }}>
                   {getIconComponent(component.type)}
                 </ListItemIcon>
                 <ListItemText
                   primary={component.type}
-                  primaryTypographyProps={{ color: 'white' }}
+                  primaryTypographyProps={{ 
+                    color: 'white',
+                    fontSize: isMobile ? '0.875rem' : undefined
+                  }}
                   secondary={
                     <Box component="span">
-                      <Typography variant="body2" component="span" color="#eee">
+                      <Typography 
+                        variant="body2" 
+                        component="span" 
+                        color="#eee"
+                        sx={{ fontSize: isMobile ? '0.75rem' : undefined }}
+                      >
                         {getComponentDescription(component)}
                       </Typography>
                       <Typography 
                         variant="caption" 
                         component="div" 
                         color="#eee" 
-                        sx={{ mt: 0.5, opacity: 0.7 }}
+                        sx={{ 
+                          mt: 0.5, 
+                          opacity: 0.7,
+                          fontSize: isMobile ? '0.65rem' : undefined,
+                          display: isMobile ? 'none' : 'block' // Hide path on mobile
+                        }}
                       >
                         Path: {path}
                       </Typography>
@@ -265,13 +306,21 @@ const ComponentSearchDialog: React.FC<ComponentSearchDialogProps> = ({
         )}
       </DialogContent>
       
-      <DialogActions sx={{ px: 3, py: 2, bgcolor: '#00A389', display: 'flex', justifyContent: 'flex-end' }}>
+      <DialogActions sx={{ 
+        px: isMobile ? 2 : 3, 
+        py: isMobile ? 1.5 : 2, 
+        bgcolor: '#00A389', 
+        display: 'flex', 
+        justifyContent: 'flex-end' 
+      }}>
         <Button 
           onClick={onClose} 
           variant="contained"
+          size={isMobile ? "small" : "medium"}
           sx={{ 
             bgcolor: '#00D1AB',
             color: '#191919',
+            fontSize: isMobile ? '0.75rem' : undefined,
             '&:hover': {
               bgcolor: '#00E4BC',
             }

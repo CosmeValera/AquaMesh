@@ -5,7 +5,9 @@ import {
   TextField,
   Grid,
   Slider,
-  Tooltip
+  Tooltip,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 
@@ -20,6 +22,8 @@ interface GridBoxEditorProps {
 const GridVisualizer: React.FC<{ columns: number }> = ({ 
   columns
 }) => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const rows = 2; // Fixed number of rows
   const cells = []
   
@@ -37,8 +41,8 @@ const GridVisualizer: React.FC<{ columns: number }> = ({
             alignItems: 'center',
             borderRadius: 1,
             aspectRatio: '1/1',
-            fontSize: '0.75rem',
-            height: '80px'
+            fontSize: isMobile ? '0.65rem' : '0.75rem',
+            height: isMobile ? '50px' : '80px'
           }}
         >
           {row + 1},{col + 1}
@@ -53,7 +57,7 @@ const GridVisualizer: React.FC<{ columns: number }> = ({
         display: 'grid',
         gridTemplateColumns: `repeat(${columns}, 1fr)`,
         gridTemplateRows: `repeat(${rows}, 1fr)`,
-        gap: 2,
+        gap: isMobile ? 1 : 2,
       }}
     >
       {cells}
@@ -62,6 +66,10 @@ const GridVisualizer: React.FC<{ columns: number }> = ({
 }
 
 const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
+  // Theme and responsive design
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+
   // GridBox states
   const [columns, setColumns] = useState<number>(typeof props.columns === 'number' ? props.columns : 2)
   const [cellPadding, setCellPadding] = useState<number>(typeof props.cellPadding === 'number' ? props.cellPadding : 1)
@@ -86,13 +94,34 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
     <Box sx={{ width: '100%' }}>
       {/* Preview Section */}
       <ComponentPreview>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          width: '100%',
+          p: isMobile ? 1 : 2
+        }}>
           <GridVisualizer 
             columns={columns}
           />
           
-          <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed rgba(0,0,0,0.1)', width: '100%' }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
+          <Box sx={{ 
+            mt: isMobile ? 1 : 2, 
+            pt: isMobile ? 1 : 2, 
+            borderTop: '1px dashed rgba(0,0,0,0.1)', 
+            width: '100%' 
+          }}>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: 'text.secondary', 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                justifyContent: 'center', 
+                gap: 1,
+                fontSize: isMobile ? '0.65rem' : undefined
+              }}
+            >
               <span>{columns} Columns</span>
               {cellPadding > 0 && (
                 <>
@@ -105,13 +134,14 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
         </Box>
       </ComponentPreview>
       
-      <Grid container spacing={2} sx={{ padding: 2 }}>
+      <Grid container spacing={isMobile ? 1 : 2} sx={{ padding: isMobile ? 1 : 2 }}>
         <Grid item xs={12} sm={6}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <TextField
               label="Columns"
               type="number"
               fullWidth
+              size={isMobile ? "small" : "medium"}
               onFocus={(e) => { e.target.select() }}
               value={columns}
               onChange={(e) => {
@@ -122,19 +152,37 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
                 handleChange('columns', validValue)
               }}
               inputProps={{ min: 0, max: 12, step: 1 }}
+              sx={{
+                '& .MuiInputLabel-root': {
+                  fontSize: isMobile ? '0.875rem' : undefined
+                },
+                '& .MuiOutlinedInput-input': {
+                  fontSize: isMobile ? '0.875rem' : undefined
+                }
+              }}
             />
             <Tooltip title="Enter a value between 1 and 12">
-              <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5, mb: 3.5 }} />
+              <InfoOutlinedIcon 
+                fontSize={isMobile ? "small" : "medium"} 
+                sx={{ ml: 0.5, mb: isMobile ? 2 : 3.5 }} 
+              />
             </Tooltip>
           </Box>
         </Grid>
         <Grid item xs={12} sm={6}>
           <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-            <Typography variant="subtitle2" gutterBottom>
+            <Typography 
+              variant={isMobile ? "body2" : "subtitle2"} 
+              gutterBottom
+              sx={{ fontSize: isMobile ? '0.875rem' : undefined }}
+            >
               Cell Padding
             </Typography>
             <Tooltip title="Padding adds space inside each cell, around the content">
-              <InfoOutlinedIcon fontSize="small" sx={{ ml: 1 }} />
+              <InfoOutlinedIcon 
+                fontSize={isMobile ? "small" : "medium"} 
+                sx={{ ml: 1 }} 
+              />
             </Tooltip>
           </Box>
           <Box sx={{ marginRight: 2 }}>
@@ -144,6 +192,7 @@ const GridBoxEditor: React.FC<GridBoxEditorProps> = ({ props, onChange }) => {
               max={4}
               step={1}
               marks
+              size={isMobile ? "small" : "medium"}
               valueLabelDisplay="auto"
               onChange={(_e, value) => {
                 setCellPadding(value as number)

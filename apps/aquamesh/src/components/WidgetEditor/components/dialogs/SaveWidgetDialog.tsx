@@ -7,9 +7,9 @@ import {
   Button,
   TextField,
   Typography,
-  Box,
   Alert,
   useTheme,
+  useMediaQuery
 } from '@mui/material'
 import SaveIcon from '@mui/icons-material/Save'
 import { CustomWidget } from '../../WidgetStorage'
@@ -30,6 +30,7 @@ const SaveWidgetDialog: React.FC<SaveWidgetDialogProps> = ({
   existingWidgets,
 }) => {
   const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -84,7 +85,7 @@ const SaveWidgetDialog: React.FC<SaveWidgetDialogProps> = ({
       PaperProps={{
         elevation: 8,
         sx: {
-          borderRadius: 2,
+          borderRadius: isMobile ? 1 : 2,
           overflow: 'hidden',
         },
       }}
@@ -93,23 +94,26 @@ const SaveWidgetDialog: React.FC<SaveWidgetDialogProps> = ({
         sx={{
           bgcolor: theme.palette.primary.main,
           color: theme.palette.primary.contrastText,
-          p: 3,
+          p: isMobile ? 2 : 3,
           display: 'flex',
           alignItems: 'center',
         }}
       >
-        <SaveIcon sx={{ mr: 1.5, fontSize: 24 }} />
-        <Typography variant="h5" fontWeight="bold">
+        <SaveIcon sx={{ mr: isMobile ? 1 : 1.5, fontSize: isMobile ? 20 : 24 }} />
+        <Typography variant={isMobile ? "h6" : "h5"} fontWeight="bold">
           Save Widget
         </Typography>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 3, mt: 1 }}>
+      <DialogContent sx={{ p: isMobile ? 2 : 3, mt: isMobile ? 0.5 : 1 }}>
         <Typography
           variant="body1"
           color="text.secondary"
           gutterBottom
-          sx={{ mb: 2 }}
+          sx={{ 
+            mb: isMobile ? 1.5 : 2,
+            fontSize: isMobile ? '0.875rem' : undefined
+          }}
         >
           Please provide a unique name for your widget
         </Typography>
@@ -128,10 +132,20 @@ const SaveWidgetDialog: React.FC<SaveWidgetDialogProps> = ({
               handleSave()
             }
           }}
+          size={isMobile ? "small" : "medium"}
+          InputLabelProps={{
+            style: { fontSize: isMobile ? '0.875rem' : undefined }
+          }}
+          InputProps={{
+            style: { fontSize: isMobile ? '0.875rem' : undefined }
+          }}
+          FormHelperTextProps={{
+            style: { fontSize: isMobile ? '0.75rem' : undefined }
+          }}
           sx={{
-            mb: 2,
+            mb: isMobile ? 1.5 : 2,
             '& .MuiOutlinedInput-root': {
-              borderRadius: 1.5,
+              borderRadius: isMobile ? 1 : 1.5,
             },
           }}
         />
@@ -140,16 +154,21 @@ const SaveWidgetDialog: React.FC<SaveWidgetDialogProps> = ({
           <Alert
             severity="info"
             sx={{
-              borderRadius: 1.5,
+              borderRadius: isMobile ? 1 : 1.5,
               bgcolor: 'rgba(0, 166, 126, 0.08)', // Light green background
               color: 'rgba(0, 66, 50, 0.9)', // Darker green text
               border: '1px solid rgba(0, 166, 126, 0.2)',
               '& .MuiAlert-icon': {
                 color: 'rgba(0, 166, 126, 0.9)', // Green icon
+                fontSize: isMobile ? '1rem' : undefined
               },
+              '& .MuiAlert-message': {
+                fontSize: isMobile ? '0.75rem' : undefined
+              },
+              py: isMobile ? 0.5 : 1
             }}
           >
-            Using the default name "New Widget" is not recommended. Please
+            Using the default name &quot;New Widget&quot; is not recommended. Please
             provide a descriptive name.
           </Alert>
         )}
@@ -157,8 +176,8 @@ const SaveWidgetDialog: React.FC<SaveWidgetDialogProps> = ({
 
       <DialogActions
         sx={{
-          px: 3,
-          py: 2,
+          px: isMobile ? 2 : 3,
+          py: isMobile ? 1.5 : 2,
           bgcolor:
             theme.palette.mode === 'dark'
               ? 'rgba(0,0,0,0.1)'
@@ -167,18 +186,28 @@ const SaveWidgetDialog: React.FC<SaveWidgetDialogProps> = ({
           borderColor: 'divider',
         }}
       >
-        <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 1.5 }}>
+        <Button 
+          onClick={onClose} 
+          variant="outlined" 
+          size={isMobile ? "small" : "medium"}
+          sx={{ 
+            borderRadius: isMobile ? 1 : 1.5,
+            fontSize: isMobile ? '0.75rem' : undefined
+          }}
+        >
           Cancel
         </Button>
         <Button
           onClick={handleSave}
           variant="contained"
-          startIcon={<SaveIcon />}
+          startIcon={<SaveIcon fontSize={isMobile ? "small" : "medium"} />}
+          size={isMobile ? "small" : "medium"}
           sx={{
             ml: 1,
-            px: 3,
-            borderRadius: 1.5,
+            px: isMobile ? 2 : 3,
+            borderRadius: isMobile ? 1 : 1.5,
             boxShadow: 2,
+            fontSize: isMobile ? '0.75rem' : undefined
           }}
         >
           Save Widget

@@ -32,7 +32,6 @@ const VersionWarningDialog: React.FC<VersionWarningDialogProps> = ({
   
   // Orange palette
   const orangeBase = '#f57c00'
-  const orangeLight = '#fff3e0'
   const orangeDark = '#e65100'
 
   return (
@@ -41,6 +40,11 @@ const VersionWarningDialog: React.FC<VersionWarningDialogProps> = ({
       onClose={onCancel}
       maxWidth="sm"
       fullWidth
+      sx={{
+        '& .MuiTypography-h6': { fontSize: { xs: '1rem', sm: '1.25rem' } },
+        '& .MuiTypography-body1': { fontSize: { xs: '0.75rem', sm: '1rem' } },
+        '& .MuiTypography-body2': { fontSize: { xs: '0.75rem', sm: '0.875rem' } },
+      }}
       PaperProps={{
         elevation: 6,
         sx: { 

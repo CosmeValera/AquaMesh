@@ -176,6 +176,11 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
+      sx={{
+        '& .MuiTypography-h6': { fontSize: { xs: '1rem', sm: '1.25rem' } },
+        '& .MuiTypography-body1': { fontSize: { xs: '0.75rem', sm: '1rem' } },
+        '& .MuiTypography-body2': { fontSize: { xs: '0.75rem', sm: '0.875rem' } },
+      }}
       PaperProps={{
         sx: {
           borderRadius: '12px',

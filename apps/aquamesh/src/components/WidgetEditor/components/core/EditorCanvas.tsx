@@ -223,7 +223,9 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
               {editMode
                 ? isDragging 
                   ? 'Drop component here'
-                  : 'Drag and drop components here'
+                  : isPhone
+                    ? 'Click the + button to add a component'
+                    : 'Drag and drop components here'
                 : 'No components added yet'}
             </Typography>
             {editMode && !isDragging && (

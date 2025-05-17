@@ -22,8 +22,12 @@ import {
   Grid,
   Fade,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Menu,
+  useTheme,
+  useMediaQuery
 } from '@mui/material'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 import DeleteIcon from '@mui/icons-material/Delete'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import SearchIcon from '@mui/icons-material/Search'
@@ -69,6 +73,8 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
   open,
   onClose,
 }) => {
+  // Increased card spacing and padding for mobile via responsive styles
+  
   // Search state
   const [searchTerm, setSearchTerm] = useState('')
   
@@ -94,6 +100,14 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
   // Add state for edit dialog
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [dashboardToEdit, setDashboardToEdit] = useState<SavedDashboard | null>(null)
+  
+  // Theme and responsive breakpoints for xs checks
+  const theme = useTheme()
+  const isXs = useMediaQuery(theme.breakpoints.down('sm'))
+  
+  // State for action menu
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null)
+  const [menuDashboard, setMenuDashboard] = useState<SavedDashboard | null>(null)
   
   // Get the delete confirmation preference from localStorage
   const shouldConfirmDelete = () => {
@@ -363,6 +377,16 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
     }
   }
   
+  const handleMenuOpen = (dashboard: SavedDashboard, e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation()
+    setMenuDashboard(dashboard)
+    setMenuAnchorEl(e.currentTarget)
+  }
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null)
+    setMenuDashboard(null)
+  }
+  
   return (
     <>
       <Dialog 
@@ -420,7 +444,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
           </Box>
         </DialogTitle>
         
-        <DialogContent sx={{ p: 3, bgcolor: '#00A389'}}>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#00A389'}}>
           {/* Search, Sort, and Filter Controls */}
           <Grid container spacing={2} sx={{ mb: 3, mt: 1 }}>
             <Grid item xs={12} md={5}>
@@ -585,13 +609,14 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                   <Paper
                     elevation={0}
                     sx={{
-                      mb: 2,
+                      mb: { xs: 1, sm: 2 },
+                      width: '100%',
                       overflow: 'hidden',
                       border: '1px solid',
                       borderColor: 'rgba(255, 255, 255, 0.2)',
                       borderRadius: 2,
                       transition: 'all 0.2s ease-in-out',
-                      bgcolor: '#00886F', // Darker teal for dashboard cards
+                      bgcolor: '#00886F',
                       '&:hover': {
                         transform: 'translateY(-2px)',
                         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
@@ -603,65 +628,58 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                   >
                     <Box
                       sx={{
-                        p: 2,
+                        p: { xs: 1, sm: 2 },
                         display: 'flex',
                         flexDirection: 'column',
-                        alignItems: 'flex-start',
+                        alignItems: { xs: 'center', sm: 'flex-start' },
                       }}
                     >
-                      <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                          <Box 
-                            sx={{ 
+                      <Box sx={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: { xs: 'center', sm: 'space-between' },
+                        alignItems: { xs: 'center', sm: 'flex-start' },
+                        position: { xs: 'relative', sm: 'static' }
+                      }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            flexGrow: { xs: 0, sm: 1 },
+                            flexDirection: { xs: 'column', sm: 'row' }
+                          }}>
+                          <Box
+                            sx={{
                               bgcolor: 'rgba(255, 255, 255, 0.15)',
                               color: 'white',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               borderRadius: '50%',
-                              width: 40,
-                              height: 40,
+                              width: { xs: 32, sm: 40 },
+                              height: { xs: 32, sm: 40 },
                               mr: 2
                             }}
                           >
-                            <DashboardIcon />
+                            <DashboardIcon fontSize={isXs ? 'small' : 'medium'} />
                           </Box>
                           <Box>
-                            <Typography variant="subtitle1" fontWeight="bold" color="white">
+                            <Typography variant="subtitle1" fontWeight="bold" color="white" sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
                               {dashboard.name}
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                              <Typography variant="caption" color="rgba(255, 255, 255, 0.7)">
+                            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, mt: 0.5 }}>
+                              <Typography variant="caption" color="rgba(255, 255, 255, 0.7)" sx={{ display: { xs: 'none', sm: 'block' }, fontSize: '0.8rem' }}>
                                 Last modified: {new Date(dashboard.updatedAt).toLocaleDateString()} at {new Date(dashboard.updatedAt).toLocaleTimeString()}
                               </Typography>
-                              <Chip 
-                                size="small" 
-                                label={`${dashboard.componentsCount} components`} 
-                                sx={{ 
-                                  ml: 2, 
-                                  height: 20, 
-                                  fontSize: '0.7rem',
-                                  bgcolor: 'rgba(255, 255, 255, 0.15)',
-                                  color: 'white'
-                                }}
-                              />
-                              {dashboard.isPublic && (
-                                <Chip 
-                                  size="small" 
-                                  label="Public" 
-                                  icon={<PublicIcon style={{ width: 12, height: 12, color: 'white' }} />}
-                                  sx={{ 
-                                    ml: 1, 
-                                    height: 20, 
-                                    fontSize: '0.7rem',
-                                    bgcolor: 'rgba(0, 209, 171, 0.3)',
-                                    color: 'white'
-                                  }}
-                                />
-                              )}
+                              <Box sx={{ display: 'flex', alignItems: 'center', mt: { xs: 0.5, sm: 0 }, ml: { xs: 0, sm: 2 } }}>
+                                <Chip size="small" label={`${dashboard.componentsCount} components`} sx={{ height: 20, fontSize: '0.7rem', bgcolor: 'rgba(255, 255, 255, 0.15)', color: 'white' }} />
+                                {dashboard.isPublic && (
+                                  <Chip size="small" label="Public" icon={<PublicIcon style={{ width: 12, height: 12, color: 'white' }} />} sx={{ ml: 1, height: 20, fontSize: '0.7rem', bgcolor: 'rgba(0, 209, 171, 0.3)', color: 'white' }} />
+                                )}
+                              </Box>
                             </Box>
                             {dashboard.tags && dashboard.tags.length > 0 && (
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                              <Box sx={{ display: { xs: 'none', sm: 'flex' }, flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
                                 {dashboard.tags.map((tag, tagIndex) => (
                                   <Chip
                                     key={tagIndex}
@@ -679,56 +697,45 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                             )}
                           </Box>
                         </Box>
-                        <Box onClick={(e) => e.stopPropagation()}>
+                        <Box
+                          onClick={(e) => e.stopPropagation()}
+                          sx={{
+                            position: { xs: 'absolute', sm: 'static' },
+                            top: { xs: '8px', sm: 'auto' },
+                            right: { xs: '8px', sm: 'auto' }
+                          }}
+                        >
                           {isAdmin && (
                             <>
-                              <Tooltip title="Edit Dashboard">
-                                <IconButton
-                                  size="small"
-                                  onClick={(e) => handleEditDashboard(dashboard, e)}
-                                  sx={{
-                                    mr: 1,
-                                    bgcolor: 'rgba(0, 150, 136, 0.1)',
-                                    color: 'white',
-                                    '&:hover': {
-                                      bgcolor: 'rgba(0, 150, 136, 0.2)'
-                                    }
-                                  }}
-                                >
-                                  <EditIcon fontSize="small" />
+                              {/* xs: overflow menu, sm+: inline icons */}
+                              <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                <IconButton size="small" sx={{ color: 'white' }} onClick={(e) => handleMenuOpen(dashboard, e)}>
+                                  <MoreVertIcon fontSize="small" />
                                 </IconButton>
-                              </Tooltip>
-                              <Tooltip title={dashboard.isPublic ? "Make Private" : "Make Public"}>
-                                <IconButton
-                                  size="small"
-                                  onClick={(e) => handleTogglePublic(dashboard.id, e)}
-                                  sx={{
-                                    mr: 1,
-                                    bgcolor: dashboard.isPublic ? 'rgba(0, 209, 171, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                                    color: 'white',
-                                    '&:hover': {
-                                      bgcolor: dashboard.isPublic ? 'rgba(0, 209, 171, 0.3)' : 'rgba(255, 255, 255, 0.2)'
-                                    }
-                                  }}
-                                >
-                                  {dashboard.isPublic ? <LockIcon fontSize="small" /> : <PublicIcon fontSize="small" />}
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Delete Dashboard">
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={(e) => handleDeleteDashboard(dashboard.id, e)}
-                                  sx={{
-                                    bgcolor: 'rgba(211, 47, 47, 0.1)',
-                                    '&:hover': {
-                                      bgcolor: 'rgba(211, 47, 47, 0.2)'
-                                    }
-                                  }}
-                                >
-                                  <DeleteIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
+                              </Box>
+                              <Box sx={{ display: { xs: 'none', sm: 'flex' } }}>
+                                <Tooltip title="Edit Dashboard">
+                                  <IconButton size="small" onClick={(e) => handleEditDashboard(dashboard, e)} sx={{ mr: 1, bgcolor: 'rgba(0,150,136,0.1)', color: 'white', '&:hover': { bgcolor: 'rgba(0,150,136,0.2)' } }}>
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={dashboard.isPublic ? 'Make Private' : 'Make Public'}>
+                                  <IconButton size="small" onClick={(e) => handleTogglePublic(dashboard.id, e)} sx={{ mr: 1, bgcolor: dashboard.isPublic ? 'rgba(0,209,171,0.2)' : 'rgba(255,255,255,0.1)', color: 'white', '&:hover': { bgcolor: dashboard.isPublic ? 'rgba(0,209,171,0.3)' : 'rgba(255,255,255,0.2)' } }}>
+                                    {dashboard.isPublic ? <LockIcon fontSize="small" /> : <PublicIcon fontSize="small" />}
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Delete Dashboard">
+                                  <IconButton size="small" color="error" onClick={(e) => handleDeleteDashboard(dashboard.id, e)} sx={{ bgcolor: 'rgba(211,47,47,0.1)', '&:hover': { bgcolor: 'rgba(211,47,47,0.2)' } }}>
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                              {/* Mobile action menu */}
+                              <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl) && menuDashboard?.id === dashboard.id} onClose={handleMenuClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
+                                <MenuItem onClick={(e: React.MouseEvent<HTMLElement>) => { handleEditDashboard(dashboard, e); handleMenuClose() }}>Edit</MenuItem>
+                                <MenuItem onClick={(e: React.MouseEvent<HTMLElement>) => { handleTogglePublic(dashboard.id, e); handleMenuClose() }}>{dashboard.isPublic ? 'Make Private' : 'Make Public'}</MenuItem>
+                                <MenuItem onClick={(e: React.MouseEvent<HTMLElement>) => { handleDeleteDashboard(dashboard.id, e); handleMenuClose() }}>Delete</MenuItem>
+                              </Menu>
                             </>
                           )}
                         </Box>
@@ -737,7 +744,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                         <Typography 
                           variant="body2" 
                           color="rgba(255, 255, 255, 0.7)"
-                          sx={{ mt: 1, pl: 7 }}
+                          sx={{ mt: { xs: 0.5, sm: 1 }, pl: { xs: 0, sm: 7 }, textAlign: { xs: 'center', sm: 'left' }, fontSize: { xs: '0.7rem', sm: '0.875rem' } }}
                         >
                           {dashboard.description}
                         </Typography>

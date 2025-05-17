@@ -40,6 +40,7 @@ import Autocomplete from '@mui/material/Autocomplete'
 // Import shared styles
 import { dialogStyles, applyDialogStyles, buttonStyles, cardStyles, chipStyles, TAG_COLOR_MAP } from '../../../shared/DialogStyles'
 import useMediaQuery from '@mui/material/useMediaQuery'
+import theme from '../../../../theme'
 
 // Sort function type
 type SortFunction = (a: CustomWidget, b: CustomWidget) => number
@@ -69,7 +70,6 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
   currentWidget,
   showDeleteTemplateConfirmation = true,
 }) => {
-  const theme = useTheme()
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const [saveAsTemplateMode, setSaveAsTemplateMode] = useState(false)
   const [templateName, setTemplateName] = useState('')
@@ -347,7 +347,6 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      fullScreen={isPhone}
       maxWidth={isPhone ? 'xs' : 'md'}
       fullWidth
       {...applyDialogStyles()}
@@ -1163,9 +1162,7 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
                 '&:hover': {
                   bgcolor: '#00E4BC',
                 }
-              }}
-              fullWidth={isPhone}
-            >
+              }}            >
               Close
             </Button>
           </DialogActions>

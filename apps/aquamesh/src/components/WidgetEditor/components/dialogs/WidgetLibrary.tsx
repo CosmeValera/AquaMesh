@@ -21,7 +21,8 @@ import {
   InputLabel,
   Grid,
   Fade,
-  CircularProgress
+  CircularProgress,
+  useTheme,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import WidgetsIcon from '@mui/icons-material/Widgets'
@@ -32,6 +33,7 @@ import SortIcon from '@mui/icons-material/Sort'
 import CloseIcon from '@mui/icons-material/Close'
 import { CustomWidget } from '../../WidgetStorage'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
+import useMediaQuery from '@mui/material/useMediaQuery'
 
 // Sorting options
 type SortOption = 'dateNewest' | 'dateOldest' | 'nameAsc' | 'nameDesc' | 'mostComponents' | 'fewestComponents';
@@ -67,6 +69,10 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   const [widgetToDelete, setWidgetToDelete] = useState<string | null>(null)
   // Delete all confirmation state
   const [deleteAllConfirmOpen, setDeleteAllConfirmOpen] = useState(false)
+  
+  // Phone breakpoint detection for responsive sizing
+  const theme = useTheme()
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   
   // Clear search when dialog opens/closes
   useEffect(() => {
@@ -472,7 +478,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <WidgetsIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: { xs: '0.7rem', sm: '1rem' } }}>
                           {widget.name}
                         </Typography>
                       </Box>
@@ -482,7 +488,10 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                         sx={{ 
                           bgcolor: 'rgba(0, 0, 0, 0.2)',
                           color: '#191919',
-                          fontWeight: 'bold'
+                          fontWeight: 'bold',
+                          '& .MuiChip-label': {
+                            fontSize: { xs: '0.6rem', sm: '0.875rem' }
+                          }
                         }} 
                       />
                     </Box>
@@ -510,9 +519,11 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                                 onPreview(widget)
                               }}
                               sx={{ 
-                                mr: 1,
+                                mr: isPhone ? 0.5 : 1,
                                 color: 'white',
                                 borderColor: 'rgba(255, 255, 255, 0.3)',
+                                fontSize: isPhone ? '0.6rem' : '0.875rem',
+                                padding: isPhone ? '2px 6px' : undefined,
                                 '&:hover': {
                                   borderColor: 'white',
                                   bgcolor: 'rgba(255, 255, 255, 0.1)'
@@ -533,9 +544,11 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                                 onEdit(widget)
                               }}
                               sx={{ 
-                                mr: 1,
+                                mr: isPhone ? 0.5 : 1,
                                 bgcolor: '#00D1AB',
                                 color: '#191919',
+                                fontSize: isPhone ? '0.7rem' : '0.875rem',
+                                padding: isPhone ? '2px 6px' : undefined,
                                 '&:hover': {
                                   bgcolor: '#00E4BC'
                                 }

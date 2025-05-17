@@ -229,21 +229,23 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
       >
         <Toolbar sx={{ height: isPhone ? '72px' : '64px' }}>
           {/* Logo and Brand */}
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              fontWeight: isDesktop ? 'bold' : 'normal',
-              mr: isDesktop ? 4 : 1,
-              color: 'foreground.contrastPrimary',
-              cursor: 'default'
-            }}
-          >
-            <Logo height="32px" width="32px" style={{ marginRight: isDesktop ? '12px' : '0' }} />
-            {isDesktop && 'AquaMesh'}
-          </Typography>
+          {!isPhone && (
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                fontWeight: isDesktop ? 'bold' : 'normal',
+                mr: isDesktop ? 4 : 1,
+                color: 'foreground.contrastPrimary',
+                cursor: 'default'
+              }}
+            >
+              <Logo height="32px" width="32px" style={{ marginRight: isDesktop ? '12px' : '0' }} />
+              {isDesktop && 'AquaMesh'}
+            </Typography>
+          )}
 
           {/* Main Navigation Items */}
           <Box sx={{ flexGrow: 1, display: 'flex' }}>

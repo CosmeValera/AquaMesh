@@ -1,6 +1,7 @@
 import React from 'react'
 import { Tooltip, TooltipProps, useMediaQuery, useTheme } from '@mui/material'
 import { merge } from 'lodash'
+import theme from '../theme'
 
 interface TooltipStyledProps extends Omit<TooltipProps, 'componentsProps' | 'slotProps'> {
   componentsProps?: {
@@ -15,7 +16,6 @@ interface TooltipStyledProps extends Omit<TooltipProps, 'componentsProps' | 'slo
 
 // TODO: This belongs in style...
 const styledComponentsProps = (props: TooltipStyledProps) => {
-  const theme = useTheme()
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   
   const tooltip: Record<string, unknown> = {}

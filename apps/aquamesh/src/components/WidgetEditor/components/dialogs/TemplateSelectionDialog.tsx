@@ -39,6 +39,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import Autocomplete from '@mui/material/Autocomplete'
 // Import shared styles
 import { dialogStyles, applyDialogStyles, buttonStyles, cardStyles, chipStyles, TAG_COLOR_MAP } from '../../../shared/DialogStyles'
+import useMediaQuery from '@mui/material/useMediaQuery'
 
 // Sort function type
 type SortFunction = (a: CustomWidget, b: CustomWidget) => number
@@ -69,6 +70,7 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
   showDeleteTemplateConfirmation = true,
 }) => {
   const theme = useTheme()
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const [saveAsTemplateMode, setSaveAsTemplateMode] = useState(false)
   const [templateName, setTemplateName] = useState('')
   const [templateDescription, setTemplateDescription] = useState('')
@@ -345,7 +347,8 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      fullScreen={isPhone}
+      maxWidth={isPhone ? 'xs' : 'md'}
       fullWidth
       {...applyDialogStyles()}
     >
@@ -353,7 +356,7 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
         <>
           <DialogTitle sx={dialogStyles.title}>
             <SaveIcon sx={{ mr: 1.5, color: 'white' }} />
-            <Typography variant="h6" sx={{ fontWeight: 500, color: 'white' }}>
+            <Typography variant={isPhone ? 'subtitle1' : 'h6'} sx={{ fontWeight: 500, color: 'white' }}>
               Save as Template
             </Typography>
           </DialogTitle>
@@ -518,186 +521,247 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
         </>
       ) : (
         <>
-          <DialogTitle sx={dialogStyles.title}>
+          <DialogTitle sx={{
+            ...dialogStyles.title,
+            px: isPhone ? 2 : dialogStyles.title.px,
+            py: isPhone ? 1 : dialogStyles.title.py
+          }}>
             <DashboardIcon sx={{ mr: 1.5, color: 'white' }} />
-            <Typography variant="h6" sx={{ fontWeight: 500, color: 'white' }}>
+            <Typography
+              variant={isPhone ? 'subtitle2' : 'h6'}
+              sx={{
+                flexGrow: 1,
+                fontWeight: 500,
+                color: 'white',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                fontSize: isPhone ? '1rem' : undefined,
+              }}
+            >
               Templates
             </Typography>
 
-            <Box sx={{ position: 'absolute', right: 10 }}>
-              <ButtonGroup
-                size="small"
-                variant="contained"
-                sx={{
-                  boxShadow: 'none',
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  borderRadius: 1.5,
-                  border: '1px solid',
-                  borderColor: 'rgba(255,255,255,0.3)',
-                  overflow: 'hidden',
-                }}
-              >
-                <Tooltip title="Sort templates">
-                  <Button
+            <Box sx={{
+              position: 'absolute',
+              right: isPhone ? 4 : 10,
+              top: isPhone ? 8 : '50%',
+              transform: isPhone ? 'none' : 'translateY(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: isPhone ? 0.5 : 1,
+            }}>
+              {isPhone ? (
+                <>
+                  <IconButton
                     onClick={handleOpenSortMenu}
-                    startIcon={<SortIcon />}
-                    sx={{
-                      borderRadius: '8px 0 0 8px',
-                      textTransform: 'none',
-                      fontWeight: 'bold',
-                      fontSize: '0.85rem',
-                      backgroundColor: 'transparent',
-                      px: 2,
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.15)',
-                      },
-                    }}
+                    size="small"
+                    sx={{ color: 'white', p: 0.5 }}
                   >
-                    {sortOption === 'newest' && 'Date (New-Old)'}
-                    {sortOption === 'oldest' && 'Date (Old-New)'}
-                    {sortOption === 'name_asc' && 'Name (A-Z)'}
-                    {sortOption === 'name_desc' && 'Name (Z-A)'}
-                    {sortOption === 'components_asc' && 'Components (Low-High)'}
-                    {sortOption === 'components_desc' && 'Components (High-Low)'}
-                  </Button>
-                </Tooltip>
-
-                <Tooltip
-                  title={
-                    showFavoritesOnly
-                      ? 'Show all templates'
-                      : 'Show favorites only'
-                  }
-                >
+                    <SortIcon fontSize="small" />
+                  </IconButton>
                   <IconButton
                     onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                    size="small"
                     sx={{
-                      color: showFavoritesOnly
-                        ? '#FFD700'
-                        : 'white',
-                      borderRadius: '0',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.15)',
-                      },
+                      color: showFavoritesOnly ? '#FFD700' : 'white',
+                      p: 0.5,
                     }}
                   >
-                    {showFavoritesOnly ? <StarIcon /> : <StarBorderIcon />}
+                    {showFavoritesOnly ? (
+                      <StarIcon fontSize="small" />
+                    ) : (
+                      <StarBorderIcon fontSize="small" />
+                    )}
                   </IconButton>
-                </Tooltip>
-
-                <Tooltip
-                  title={
-                    showBuiltInTemplates
-                      ? 'Hide built-in templates'
-                      : 'Show built-in templates'
-                  }
-                >
                   <IconButton
                     onClick={toggleBuiltInTemplatesVisibility}
+                    size="small"
                     sx={{
-                      color: showBuiltInTemplates
-                        ? 'white'
-                        : 'rgba(255, 255, 255, 0.5)',
-                      borderRadius: '0 8px 8px 0',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.15)',
-                      },
+                      color: showBuiltInTemplates ? 'white' : 'rgba(255,255,255,0.5)',
+                      p: 0.5,
                     }}
                   >
-                    <DashboardIcon />
+                    <DashboardIcon fontSize="small" />
                   </IconButton>
-                </Tooltip>
-              </ButtonGroup>
-            </Box>
+                </>
+              ) : (
+                <ButtonGroup
+                  size="small"
+                  variant="contained"
+                  sx={{
+                    boxShadow: 'none',
+                    bgcolor: 'rgba(255,255,255,0.2)',
+                    borderRadius: 1.5,
+                    border: '1px solid',
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Tooltip title="Sort templates">
+                    <Button
+                      onClick={handleOpenSortMenu}
+                      startIcon={<SortIcon />}
+                      sx={{
+                        borderRadius: '8px 0 0 8px',
+                        textTransform: 'none',
+                        fontWeight: 'bold',
+                        fontSize: '0.85rem',
+                        backgroundColor: 'transparent',
+                        px: 2,
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255,255,255,0.15)',
+                        },
+                      }}
+                    >
+                      {!isPhone && (
+                        sortOption === 'newest' ? 'Date (New-Old)' :
+                        sortOption === 'oldest' ? 'Date (Old-New)' :
+                        sortOption === 'name_asc' ? 'Name (A-Z)' :
+                        sortOption === 'name_desc' ? 'Name (Z-A)' :
+                        sortOption === 'components_asc' ? 'Components (Low-High)' :
+                        sortOption === 'components_desc' ? 'Components (High-Low)' : ''
+                      )}
+                    </Button>
+                  </Tooltip>
 
-            {/* Sort menu */}
-            <Menu
-              anchorEl={sortMenuAnchor}
-              open={Boolean(sortMenuAnchor)}
-              onClose={handleCloseSortMenu}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              sx={{
-                '& .MuiPaper-root': {
-                  backgroundImage: 'linear-gradient(135deg, #00BC9A 0%, #008C8C 100%)',
-                  borderRadius: 2,
-                  mt: 1,
-                  '& .MuiList-root': {
-                    py: 0.5,
-                  },
-                  '& .MuiMenuItem-root': {
-                    py: 1,
-                  },
-                },
-              }}
-            >
-              <MenuItem
-                onClick={() => handleSortOptionChange('newest')}
-                sx={{
-                  fontWeight: sortOption === 'newest' ? 'bold' : 'normal',
-                  bgcolor: sortOption === 'newest' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
-                }}
-              >
-                <ListItemText>Date (Newest first)</ListItemText>
-              </MenuItem>
-              <MenuItem
-                onClick={() => handleSortOptionChange('oldest')}
-                sx={{
-                  fontWeight: sortOption === 'oldest' ? 'bold' : 'normal',
-                  bgcolor: sortOption === 'oldest' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
-                }}
-              >
-                <ListItemText>Date (Oldest first)</ListItemText>
-              </MenuItem>
-              <MenuItem
-                onClick={() => handleSortOptionChange('name_asc')}
-                sx={{
-                  fontWeight: sortOption === 'name_asc' ? 'bold' : 'normal',
-                  bgcolor: sortOption === 'name_asc' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
-                }}
-              >
-                <ListItemText>Name (A-Z)</ListItemText>
-              </MenuItem>
-              <MenuItem
-                onClick={() => handleSortOptionChange('name_desc')}
-                sx={{
-                  fontWeight: sortOption === 'name_desc' ? 'bold' : 'normal',
-                  bgcolor: sortOption === 'name_desc' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
-                }}
-              >
-                <ListItemText>Name (Z-A)</ListItemText>
-              </MenuItem>
-              <MenuItem
-                onClick={() => handleSortOptionChange('components_desc')}
-                sx={{
-                  fontWeight: sortOption === 'components_desc' ? 'bold' : 'normal',
-                  bgcolor: sortOption === 'components_desc' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
-                }}
-              >
-                <ListItemText>Components (High-Low)</ListItemText>
-              </MenuItem>
-              <MenuItem
-                onClick={() => handleSortOptionChange('components_asc')}
-                sx={{
-                  fontWeight: sortOption === 'components_asc' ? 'bold' : 'normal',
-                  bgcolor: sortOption === 'components_asc' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
-                }}
-              >
-                <ListItemText>Components (Low-High)</ListItemText>
-              </MenuItem>
-            </Menu>
+                  <Tooltip
+                    title={
+                      showFavoritesOnly
+                        ? 'Show all templates'
+                        : 'Show favorites only'
+                    }
+                  >
+                    <IconButton
+                      onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                      sx={{
+                        color: showFavoritesOnly
+                          ? '#FFD700'
+                          : 'white',
+                        borderRadius: '0',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255,255,255,0.15)',
+                        },
+                      }}
+                    >
+                      {showFavoritesOnly ? <StarIcon /> : <StarBorderIcon />}
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip
+                    title={
+                      showBuiltInTemplates
+                        ? 'Hide built-in templates'
+                        : 'Show built-in templates'
+                    }
+                  >
+                    <IconButton
+                      onClick={toggleBuiltInTemplatesVisibility}
+                      sx={{
+                        color: showBuiltInTemplates
+                          ? 'white'
+                          : 'rgba(255, 255, 255, 0.5)',
+                        borderRadius: '0 8px 8px 0',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255,255,255,0.15)',
+                        },
+                      }}
+                    >
+                      <DashboardIcon />
+                    </IconButton>
+                  </Tooltip>
+                </ButtonGroup>
+              )}
+            </Box>
           </DialogTitle>
 
-          <DialogContent sx={{...dialogStyles.content, px: 3, my: 3}}>
+          {/* Sort menu */}
+          <Menu
+            anchorEl={sortMenuAnchor}
+            open={Boolean(sortMenuAnchor)}
+            onClose={handleCloseSortMenu}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            sx={{
+              '& .MuiPaper-root': {
+                backgroundImage: 'linear-gradient(135deg, #00BC9A 0%, #008C8C 100%)',
+                borderRadius: 2,
+                mt: 1,
+                '& .MuiList-root': {
+                  py: 0.5,
+                },
+                '& .MuiMenuItem-root': {
+                  py: 1,
+                },
+              },
+            }}
+          >
+            <MenuItem
+              onClick={() => handleSortOptionChange('newest')}
+              sx={{
+                fontWeight: sortOption === 'newest' ? 'bold' : 'normal',
+                bgcolor: sortOption === 'newest' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
+              }}
+            >
+              <ListItemText>Date (Newest first)</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleSortOptionChange('oldest')}
+              sx={{
+                fontWeight: sortOption === 'oldest' ? 'bold' : 'normal',
+                bgcolor: sortOption === 'oldest' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
+              }}
+            >
+              <ListItemText>Date (Oldest first)</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleSortOptionChange('name_asc')}
+              sx={{
+                fontWeight: sortOption === 'name_asc' ? 'bold' : 'normal',
+                bgcolor: sortOption === 'name_asc' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
+              }}
+            >
+              <ListItemText>Name (A-Z)</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleSortOptionChange('name_desc')}
+              sx={{
+                fontWeight: sortOption === 'name_desc' ? 'bold' : 'normal',
+                bgcolor: sortOption === 'name_desc' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
+              }}
+            >
+              <ListItemText>Name (Z-A)</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleSortOptionChange('components_desc')}
+              sx={{
+                fontWeight: sortOption === 'components_desc' ? 'bold' : 'normal',
+                bgcolor: sortOption === 'components_desc' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
+              }}
+            >
+              <ListItemText>Components (High-Low)</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleSortOptionChange('components_asc')}
+              sx={{
+                fontWeight: sortOption === 'components_asc' ? 'bold' : 'normal',
+                bgcolor: sortOption === 'components_asc' ? 'rgba(0, 0, 0, 0.08)' : 'inherit',
+              }}
+            >
+              <ListItemText>Components (Low-High)</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          <DialogContent sx={{...dialogStyles.content, p: isPhone ? 1 : 3}}>
             {/* Dialog content */}
-            <Grid container spacing={3}>
+            <Grid container spacing={isPhone ? 1 : 3} sx={{ flexDirection: isPhone ? 'column' : 'row' }}>
 
               {/* Save as Template Card - Only show if there's a current widget */}
               {currentWidget && (
@@ -1081,17 +1145,26 @@ const TemplateSelectionDialog: React.FC<TemplateSelectionDialogProps> = ({
               )}
             </Grid>
           </DialogContent>
-          <DialogActions sx={{ px: 3, py: 2, bgcolor: '#00A389', display: 'flex', justifyContent: 'flex-end' }}>
+          <DialogActions sx={{
+            px: isPhone ? 1 : 3,
+            py: isPhone ? 1 : 2,
+            bgcolor: '#00A389',
+            display: 'flex',
+            justifyContent: 'flex-end'
+          }}>
             <Button 
               onClick={onClose} 
               variant="contained"
-              sx={{ 
+              sx={{
                 bgcolor: '#00D1AB',
                 color: '#191919',
+                px: isPhone ? 2 : undefined,
+                py: isPhone ? 1 : undefined,
                 '&:hover': {
                   bgcolor: '#00E4BC',
                 }
               }}
+              fullWidth={isPhone}
             >
               Close
             </Button>

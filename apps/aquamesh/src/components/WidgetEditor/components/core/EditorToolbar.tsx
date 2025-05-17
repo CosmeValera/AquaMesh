@@ -174,7 +174,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
           
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {/* Undo/Redo buttons */}
-            {!isPhone && !!handleUndo && !!handleRedo && (
+            {!!handleUndo && !!handleRedo && (
               <>
                 <TooltipStyled title="Undo (Ctrl+Z)">
                   <span>
@@ -184,10 +184,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                       disabled={!canUndo}
                       sx={{ 
                         mr: 1,
+                        fontSize: isPhone ? '1.25rem' : '1.5rem',
+                        maxWidth: isPhone ? '20px' : '48px',
+                        maxHeight: isPhone ? '20px' : '40px',
                         color: canUndo ? 'foreground.contrastSecondary' : 'action.disabled'
                       }}
                     >
-                      <UndoIcon />
+                      <UndoIcon sx={{ fontSize: isPhone ? '1.25rem' : '1.5rem' }} />
                     </IconButton>
                   </span>
                 </TooltipStyled>
@@ -200,15 +203,18 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                       disabled={!canRedo}
                       sx={{ 
                         mr: 1,
+                        fontSize: isPhone ? '1.25rem' : '1.5rem',
+                        maxWidth: isPhone ? '20px' : '48px',
+                        maxHeight: isPhone ? '20px' : '40px',
                         color: canRedo ? 'foreground.contrastSecondary' : 'action.disabled'
                       }}
                     >
-                      <RedoIcon />
+                      <RedoIcon sx={{ fontSize: isPhone ? '1.25rem' : '1.5rem' }} />
                     </IconButton>
                   </span>
                 </TooltipStyled>
                 
-                {!isPhone && <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />}
+                <Divider orientation="vertical" flexItem sx={{ mx: isPhone ? 0.5 : 1, height: '24px', alignSelf: 'center' }} />
               </>
             )}
             
@@ -239,18 +245,18 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     color="inherit"
                     onClick={handleOpenSearchDialog}
                     sx={{ 
-                      mr: 1,
+                      mr: isPhone ? 0.25 : 1,
                       color: 'foreground.contrastSecondary' 
                     }}
                     disabled={!editMode || !widgetHasComponents}
                   >
-                    <SearchIcon />
+                    <SearchIcon sx={{ fontSize: isPhone ? '1.25rem' : '1.5rem' }} />
                   </IconButton>
                 </span>
               </TooltipStyled>
             )}
             
-            {!isPhone && <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '24px', alignSelf: 'center' }} />}
+            {!isPhone && !!handleOpenSearchDialog && <Divider orientation="vertical" flexItem sx={{ mx: isPhone ? 0.5 : 1, height: '24px', alignSelf: 'center' }} />}
             
             <TooltipStyled title="Open saved widget">
               <IconButton 

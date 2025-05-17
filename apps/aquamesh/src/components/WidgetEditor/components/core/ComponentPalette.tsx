@@ -268,7 +268,7 @@ const ComponentPalette = ({
           p: isPhone ? 1 : 2, 
           borderTop: 1, 
           borderColor: 'divider', 
-          fontSize: isPhone ? '0.65rem' : '0.75rem'
+          fontSize: isPhone ? '0.5rem' : '0.65rem'
         }}>
           <Typography 
             variant="caption" 
@@ -276,19 +276,24 @@ const ComponentPalette = ({
             sx={{ 
               display: 'block', 
               mb: 0.5, 
-              fontSize: isPhone ? '0.65rem' : '11px' 
+              fontSize: isPhone ? '0.5rem' : '0.65rem' 
             }}
           >
-            {isPhone ? 'Tap and hold to drag components' : 'Drag components to the editor canvas'}
+            {isPhone ? 'Click the + button to add a component' : 'Drag components to the editor canvas'}
           </Typography>
           <Typography 
             variant="caption" 
             color="foreground.contrastSecondary" 
-            sx={{ fontSize: isPhone ? '0.6rem' : '9px' }}
+            sx={{ 
+              display: 'block', 
+              fontSize: isPhone ? '0.5rem' : '0.65rem' }}
           >
-            {showTooltips 
-              ? 'Hover over components for descriptions' 
-              : 'Enable tooltips in settings for descriptions'}
+            {!showTooltips 
+              ? 'Enable tooltips in settings for descriptions'
+              : isPhone 
+                ? 'Long press over components for descriptions' 
+                : 'Hover over components for descriptions'
+            }
           </Typography>
         </Box>
       )}

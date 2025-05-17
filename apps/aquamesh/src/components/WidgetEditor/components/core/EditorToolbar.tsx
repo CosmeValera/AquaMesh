@@ -359,8 +359,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               PaperProps={{
                 elevation: 6,
                 sx: {
-                  minWidth: isPhone ? 180 : 220,
-                  maxWidth: isPhone ? 280 : 320,
+                  width: isPhone ? 260 : 300,
                   overflow: 'visible',
                   mt: 1,
                   borderRadius: 2,
@@ -387,46 +386,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              {isPhone && !!handleUndo && !!handleRedo && (
-                <>
-                  <MenuItem
-                    onClick={() => { handleUndo() ; handleAdvancedMenuClose() }}
-                    disabled={!canUndo}
-                    sx={{
-                      py: 1.5,
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
-                    }}
-                  >
-                    <ListItemIcon sx={{ color: theme.palette.common.white }}>
-                      <UndoIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Undo"
-                      primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
-                    />
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => { handleRedo() ; handleAdvancedMenuClose() }}
-                    disabled={!canRedo}
-                    sx={{
-                      py: 1.5,
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
-                    }}
-                  >
-                    <ListItemIcon sx={{ color: theme.palette.common.white }}>
-                      <RedoIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Redo"
-                      primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
-                    />
-                  </MenuItem>
-                </>
-              )}
+              {/* Removed undo/redo items for phone */}
               {isPhone && !!handleOpenSearchDialog && (
                 <MenuItem
                   onClick={() => { handleOpenSearchDialog() ; handleAdvancedMenuClose() }}
@@ -444,8 +404,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                   <ListItemText
                     primary="Search Components"
                     secondary="Search available components"
-                    primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
-                    secondaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 'light', color: theme.palette.common.white }}
+                    primaryTypographyProps={{ fontSize: isPhone ? '0.6rem' : '0.8rem', fontWeight: 'bold', color: theme.palette.common.white }}
+                    secondaryTypographyProps={{ fontSize: isPhone ? '0.5rem' : '0.65rem', fontWeight: 'light', color: theme.palette.common.white }}
                   />
                 </MenuItem>
               )}
@@ -469,8 +429,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 <ListItemText 
                   primary="Templates" 
                   secondary="Save, load, and manage templates"
-                  primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
-                  secondaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 'light', color: theme.palette.common.white }}
+                  primaryTypographyProps={{ fontSize: isPhone ? '0.6rem' : '0.8rem', fontWeight: 'bold', color: theme.palette.common.white }}
+                  secondaryTypographyProps={{ fontSize: isPhone ? '0.5rem' : '0.65rem', fontWeight: 'light', color: theme.palette.common.white }}
                 />
               </MenuItem>
               
@@ -494,8 +454,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 <ListItemText 
                   primary="Export/Import Widgets" 
                   secondary="Transfer widgets between environments"
-                  primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
-                  secondaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 'light', color: theme.palette.common.white }}
+                  primaryTypographyProps={{ fontSize: isPhone ? '0.6rem' : '0.8rem', fontWeight: 'bold', color: theme.palette.common.white }}
+                  secondaryTypographyProps={{ fontSize: isPhone ? '0.5rem' : '0.65rem', fontWeight: 'light', color: theme.palette.common.white }}
                 />
               </MenuItem>
               
@@ -517,8 +477,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 <ListItemText 
                   primary="Version History" 
                   secondary="View and restore previous versions"
-                  primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.common.white }}
-                  secondaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 'light', color: theme.palette.common.white }}
+                  primaryTypographyProps={{ fontSize: isPhone ? '0.6rem' : '0.8rem', fontWeight: 'bold', color: theme.palette.common.white }}
+                  secondaryTypographyProps={{ fontSize: isPhone ? '0.5rem' : '0.65rem', fontWeight: 'light', color: theme.palette.common.white }}
                 />
               </MenuItem>
             </Menu>

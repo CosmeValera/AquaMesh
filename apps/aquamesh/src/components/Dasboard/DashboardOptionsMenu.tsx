@@ -178,44 +178,48 @@ const DashboardOptionsMenu: React.FC = () => {
 
         <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
-        {/* Predefined Dashboards Section */}
-        <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
-          Predefined Dashboards
-        </Typography>
-        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-        <MenuItem 
-          onClick={() => createDashboardWithLayout('Control Flow Dashboard', { 
-            type: 'row', 
-            weight: 100, 
-            children: [{ type: 'tabset', weight: 100, active: true, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] }]
-          })}
-          sx={{ p: 1.5 }}
-        >
-          Control Flow Dashboard
-        </MenuItem>
-        <MenuItem 
-          onClick={() => createDashboardWithLayout('System Lens Dashboard', { 
-            type: 'row', 
-            weight: 100, 
-            children: [{ type: 'tabset', weight: 100, active: true, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }]
-          })}
-          sx={{ p: 1.5 }}
-        >
-          System Lens Dashboard
-        </MenuItem>
-        <MenuItem 
-          onClick={() => createDashboardWithLayout('Control Flow + System Lens', { 
-            type: 'row', 
-            weight: 100, 
-            children: [
-              { type: 'tabset', weight: 50, active: true, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] },
-              { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }
-            ]
-          })}
-          sx={{ p: 1.5 }}
-        >
-          Control Flow + System Lens
-        </MenuItem>
+        {!isPhone && (
+          <>
+            {/* Predefined Dashboards Section */}
+            <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
+              Predefined Dashboards
+            </Typography>
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+            <MenuItem 
+              onClick={() => createDashboardWithLayout('Control Flow Dashboard', { 
+                type: 'row', 
+                weight: 100, 
+                children: [{ type: 'tabset', weight: 100, active: true, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] }]
+              })}
+              sx={{ p: 1.5 }}
+            >
+              Control Flow Dashboard
+            </MenuItem>
+            <MenuItem 
+              onClick={() => createDashboardWithLayout('System Lens Dashboard', { 
+                type: 'row', 
+                weight: 100, 
+                children: [{ type: 'tabset', weight: 100, active: true, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }]
+              })}
+              sx={{ p: 1.5 }}
+            >
+              System Lens Dashboard
+            </MenuItem>
+            <MenuItem 
+              onClick={() => createDashboardWithLayout('Control Flow + System Lens', { 
+                type: 'row', 
+                weight: 100, 
+                children: [
+                  { type: 'tabset', weight: 50, active: true, children: [{ type: 'tab', name: 'Control Flow', component: 'ControlFlow' }] },
+                  { type: 'tabset', weight: 50, children: [{ type: 'tab', name: 'System Lens', component: 'SystemLens' }] }
+                ]
+              })}
+              sx={{ p: 1.5 }}
+            >
+              Control Flow + System Lens
+            </MenuItem>
+          </>
+        )}
         
         {/* Custom Dashboards Section */}
         {customDashboards.length > 0 && (
@@ -234,6 +238,11 @@ const DashboardOptionsMenu: React.FC = () => {
               </MenuItem>
             ))}
           </>
+        )}
+        {isPhone && customDashboards.length === 0 && (
+          <MenuItem disabled sx={{ p: 1.5, opacity: 1, justifyContent: 'center', whiteSpace: 'normal', textAlign: 'center' }}>
+            No Dashboards
+          </MenuItem>
         )}
       </Menu>
       

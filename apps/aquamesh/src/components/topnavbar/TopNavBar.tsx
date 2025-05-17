@@ -313,61 +313,86 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
               )}
 
               {/* Predefined Widgets Section */}
-              <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
-                Predefined Widgets
-              </Typography>
-              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-              {topNavBarWidgets.filter((widget: { name: string }) => !widget.name.includes('Custom')).map((topNavBarWidget: { name: string; items: Array<{ name: string; component: string }> }) => (
-                <Box key={topNavBarWidget.name}>
-                  {topNavBarWidget.items.map((item: { name: string; component: string }) => (
-                    <MenuItem 
-                      key={item.name} 
-                      onClick={() => {
-                        ensureDashboardAndAddComponent({
-                          id: `panel-${Date.now()}`,
-                          ...item,
-                        })
-                        handleClose()
-                      }}
-                      sx={{ p: 1.5 }}
-                    >
-                      {item.name}
-                    </MenuItem>
-                  ))}
-                </Box>
-              ))}
-              
-              {/* Custom Widgets Section */}
-              {topNavBarWidgets.filter((widget: { name: string }) => widget.name.includes('Custom')).length > 0 && (
-                <>
-                  <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
-                    Custom Widgets
-                  </Typography>
-                  <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-                  {topNavBarWidgets.filter((widget: { name: string }) => widget.name.includes('Custom')).map((topNavBarWidget: { name: string; items: Array<{ name: string; component: string; customProps?: { widgetId?: string } }> }) => (
-                    <Box key={topNavBarWidget.name}>
-                      {topNavBarWidget.items.map((item: { name: string; component: string; customProps?: { widgetId?: string } }) => (
-                        <MenuItem 
-                          key={item.name} 
+              {isPhone ? (
+                topNavBarWidgets.filter(widget => widget.name.includes('Custom')).length > 0 ? (
+                  topNavBarWidgets.filter(widget => widget.name.includes('Custom')).map(panel => (
+                    <Box key={panel.name}>
+                      {panel.items.map(item => (
+                        <MenuItem
+                          key={item.name}
                           onClick={() => {
-                            ensureDashboardAndAddComponent({
-                              id: `panel-${Date.now()}`,
-                              ...item,
-                            })
+                            ensureDashboardAndAddComponent({ id: `panel-${Date.now()}`, ...item })
                             handleClose()
                           }}
-                          sx={{ 
-                            p: 1.5,
-                            display: 'flex', 
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
+                          sx={{ p: 1.5 }}
+                        >
+                          {item.name}
+                        </MenuItem>
+                      ))}
+                    </Box>
+                  ))
+                ) : (
+                  <MenuItem disabled sx={{ p: 1.5, opacity: 1, justifyContent: 'center', whiteSpace: 'normal', textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ fontSize: '0.7rem', whiteSpace: 'normal', wordBreak: 'break-word', display: 'block' }}>
+                      {userData.role === 'ADMIN_ROLE'
+                        ? 'No widgets found. Create your own widget with the widget editor.'
+                        : 'Log in as admin and create your own widget with the widget editor.'}
+                    </Typography>
+                  </MenuItem>
+                )
+              ) : (
+                <>
+                  <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
+                    Predefined Widgets
+                  </Typography>
+                  <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  {topNavBarWidgets.filter(widget => !widget.name.includes('Custom')).map(topNavBarWidget => (
+                    <Box key={topNavBarWidget.name}>
+                      {topNavBarWidget.items.map(item => (
+                        <MenuItem
+                          key={item.name}
+                          onClick={() => {
+                            ensureDashboardAndAddComponent({ id: `panel-${Date.now()}`, ...item })
+                            handleClose()
                           }}
+                          sx={{ p: 1.5 }}
                         >
                           {item.name}
                         </MenuItem>
                       ))}
                     </Box>
                   ))}
+
+                  {/* Custom Widgets Section */}
+                  {topNavBarWidgets.filter(widget => widget.name.includes('Custom')).length > 0 && (
+                    <>
+                      <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
+                        Custom Widgets
+                      </Typography>
+                      <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                      {topNavBarWidgets.filter(widget => widget.name.includes('Custom')).map(topNavBarWidget => (
+                        <Box key={topNavBarWidget.name}>
+                          {topNavBarWidget.items.map(item => (
+                            <MenuItem
+                              key={item.name}
+                              onClick={() => {
+                                ensureDashboardAndAddComponent({ id: `panel-${Date.now()}`, ...item })
+                                handleClose()
+                              }}
+                              sx={{
+                                p: 1.5,
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                              }}
+                            >
+                              {item.name}
+                            </MenuItem>
+                          ))}
+                        </Box>
+                      ))}
+                    </>
+                  )}
                 </>
               )}
             </Menu>

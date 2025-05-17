@@ -179,7 +179,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
   // Add Option 2 only for admin users
   if (isAdmin) {
     options.push({
-      title: 'OPTION 2: Create Custom Widgets & Dashboards',
+      title: isMobile ? 'Create Custom Widgets & Dashboards' : 'OPTION 2: Create Custom Widgets & Dashboards',
       description: 'Design your own widgets with the Widget Editor and save custom dashboards that fit your specific needs. Drag and drop components, then save or browse your widgets.',
       icon: <CreateIcon fontSize="large" color="primary" />,
       buttonText: 'Open Widget Editor',
@@ -207,6 +207,18 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
         }
       ]
     })
+  }
+
+  // Determine which slides to display based on device and user role
+  let displayOptions = options
+  if (isMobile) {
+    if (isAdmin) {
+      // On mobile for admin: show only the first and last slides
+      displayOptions = [options[0], options[options.length - 1]]
+    } else {
+      // On mobile for non-admin: show only the first slide
+      displayOptions = [options[0]]
+    }
   }
 
   // Keyboard navigation handler
@@ -262,7 +274,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
   
   // Function to navigate to next slide
   const goToNextSlide = () => {
-    if (currentSlide < options.length - 1) {
+    if (currentSlide < displayOptions.length - 1) {
       setCurrentSlide(currentSlide + 1)
       
       // Add smooth scrolling when using arrows with proper offset
@@ -510,7 +522,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
           >
             <Box my={isMobile ? 2 : 3}>            
               <Grid container spacing={isMobile ? 2 : 4} sx={{ mt: isMobile ? 1 : 2 }}>
-                {options.map((option, index) => (
+                {displayOptions.map((option, index) => (
                   <Zoom 
                     in={open} 
                     style={{ transitionDelay: `${index * 100}ms` }}
@@ -722,7 +734,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
               
               {/* Admin access note for non-admin users */}
               {!isAdmin && (
-                <Zoom in={open} style={{ transitionDelay: `${options.length * 100}ms` }}>
+                <Zoom in={open} style={{ transitionDelay: `${displayOptions.length * 100}ms` }}>
                   <Paper
                     elevation={3}
                     sx={{
@@ -793,7 +805,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
             <Box display="flex" alignItems="center" mb={isMobile ? 1 : 0}>
               {/* Pagination dots */}
               <Box sx={{ display: 'flex', gap: 1 }}>
-                {options.map((_, index) => (
+                {displayOptions.map((_, index) => (
                   <Box 
                     key={index}
                     onClick={() => {

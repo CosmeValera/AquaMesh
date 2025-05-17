@@ -36,11 +36,11 @@ export async function loginAs(page: Page, role: 'admin' | 'operator' | 'viewer')
   
   // Select the appropriate user role from dropdown
   if (role === 'admin') {
-    await page.getByText('Admin (ADMIN_ROLE)').click()
+    await page.getByRole('option', { name: 'Admin (ADMIN_ROLE)' }).click()
   } else if (role === 'operator') {
-    await page.getByText('Operator (OPERATOR_ROLE)').click()
+    await page.getByRole('option', { name: 'Operator (OPERATOR_ROLE)' }).click()
   } else if (role === 'viewer') {
-    await page.getByText('Viewer (VIEWER_ROLE)').click()
+    await page.getByRole('option', { name: 'Viewer (VIEWER_ROLE)' }).click()
   }
   
   // Click the login button

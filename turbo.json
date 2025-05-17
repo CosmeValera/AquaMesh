@@ -11,10 +11,6 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["apps/webpack-app/dist/**"]
-    },
-    "test": {
-      "dependsOn": ["^test"],
-      "outputs": []
     }
   }
 }

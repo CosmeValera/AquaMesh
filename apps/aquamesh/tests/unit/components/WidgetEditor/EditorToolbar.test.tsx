@@ -1,8 +1,24 @@
+/// <reference types="@testing-library/jest-dom" />
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import EditorToolbar from '../../../../src/components/WidgetEditor/components/core/EditorToolbar'
 import { ThemeProvider, createTheme } from '@mui/material'
+
+// Mock matchMedia for desktop view: queries containing 'min-width' will match
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: query.includes('min-width'),
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+})
 
 // Mock VersionWarningDialog component
 vi.mock('../../../../src/components/WidgetEditor/components/dialogs/VersionWarningDialog', () => ({

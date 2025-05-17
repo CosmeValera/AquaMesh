@@ -55,6 +55,7 @@ interface ButtonWithLabelProps {
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void
   sx?: React.CSSProperties | Record<string, unknown>
   'data-tutorial-id'?: string
+  title?: string
 }
 
 const ButtonWithLabel: React.FC<ButtonWithLabelProps> = ({ icon, label, onClick, sx, ...props }) => {
@@ -465,6 +466,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                   label="Tutorial"
                   onClick={handleOpenTutorial}
                   data-tutorial-id="help-button"
+                  title="Open tutorial"
                 />
 
                 {/* FAQ Button */}
@@ -473,6 +475,7 @@ const TopNavBar: React.FC<TopNavBarProps> = () => {
                   label="FAQ"
                   onClick={handleOpenFaq}
                   data-tutorial-id="faq-button"
+                  title="Frequently Asked Questions"
                 />
               </>
             )}

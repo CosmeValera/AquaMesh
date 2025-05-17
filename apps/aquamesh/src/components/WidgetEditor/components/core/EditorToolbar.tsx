@@ -142,7 +142,6 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               sx={{ 
                 mr: 2, 
                 color: showSidebar ? 'primary.main' : 'foreground.contrastSecondary', 
-                // flexGrow: !isDesktop ? 1 : 0, 
                 justifyContent: 'flex-start',
               }}
             >
@@ -161,8 +160,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             </Box>
           )}
           {isDesktop &&(
-            <Typography 
-              variant="h6" 
+            <Typography
+              variant="h6"
               sx={{ 
                 flexGrow: 1,
                 color: 'foreground.contrastPrimary'

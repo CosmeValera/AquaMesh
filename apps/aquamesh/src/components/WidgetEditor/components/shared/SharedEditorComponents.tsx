@@ -28,6 +28,7 @@ import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter'
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight'
 import FormatAlignJustifyIcon from '@mui/icons-material/FormatAlignJustify'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
+import theme from '../../../../theme'
 
 // Define some default colors for color picker
 const DEFAULT_COLORS = [
@@ -398,6 +399,8 @@ export const CustomColorControl: React.FC<CustomColorProps> = ({
   onToggleCustomColor,
   label = "Use Custom Color"
 }) => {
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+
   const [colorPickerOpen, setColorPickerOpen] = useState(false)
   
   const handleCustomColorToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -421,11 +424,25 @@ export const CustomColorControl: React.FC<CustomColorProps> = ({
           <Switch
             checked={Boolean(useCustomColor)}
             onChange={handleCustomColorToggle}
+            size={isMobile ? "small" : "medium"}
           />
         }
-        label={label}
+        label={
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography sx={{ fontSize: isMobile ? '0.75rem' : undefined }}>
+              {label}
+            </Typography>
+          </Box>
+        }
+        sx={{ 
+          m: 0,
+          '& .MuiFormControlLabel-label': {
+            fontSize: isMobile ? '0.75rem' : undefined
+          }
+        }}
       />
       
+      {/* Make it phone responsive */}
       {useCustomColor && (
         <Box sx={{ mt: 1 }}>
           <Typography variant="body2" gutterBottom>

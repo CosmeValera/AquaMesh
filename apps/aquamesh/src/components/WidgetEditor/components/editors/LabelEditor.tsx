@@ -28,6 +28,7 @@ import {
   CustomColorControl,
   TabPanelShared
 } from '../shared/SharedEditorComponents'
+import theme from '../../../../theme'
 
 // Define props interface with explicit types
 interface LabelProps {
@@ -50,7 +51,6 @@ interface LabelEditorProps {
 
 const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
   // Get theme and media query for responsive design
-  const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   
   // Tab state

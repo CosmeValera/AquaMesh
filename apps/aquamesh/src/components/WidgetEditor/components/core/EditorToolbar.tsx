@@ -146,7 +146,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 justifyContent: 'flex-start',
               }}
             >
-              <MenuIcon sx={{ fontSize: isPhone ? '1.25rem' : '1.5rem', ml: '1rem' }} />
+              <MenuIcon sx={{ fontSize: isPhone ? '1.25rem' : '1.5rem', ml: isPhone ? '1rem' : '0rem' }} />
             </IconButton>
           )}
           

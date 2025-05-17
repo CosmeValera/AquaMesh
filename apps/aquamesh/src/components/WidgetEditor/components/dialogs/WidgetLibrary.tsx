@@ -208,11 +208,10 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
         fullWidth
         PaperProps={{
           sx: {
-            minHeight: 'fit-content',
             bgcolor: 'background.paper',
             backgroundImage: 'linear-gradient(to bottom, #00A389, #00886F)',
             borderRadius: 2,
-            maxHeight: '80dvh',
+            overflow: 'hidden',
           }
         }}
       >
@@ -424,26 +423,8 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
               display: 'grid',
               gridTemplateColumns: { xs: '1fr', sm: 'repeat(auto-fill, minmax(240px, 1fr))', md: 'repeat(auto-fill, minmax(320px, 1fr))' },
               gap: 2,
-              maxHeight: 'calc(80dvh - 250px)',
-              overflowY: 'auto',
               pb: 2,
               px: 0,
-              
-              // Scrollbar styling
-              '&::-webkit-scrollbar': {
-                width: '10px',
-              },
-              '&::-webkit-scrollbar-track': {
-                backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                borderRadius: '10px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                borderRadius: '10px',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                }
-              }
             }}>
               {sortedWidgets.map((widget, index) => (
                 <Fade key={widget.id} in={true} timeout={300} style={{ transitionDelay: `${index * 50}ms` }}>

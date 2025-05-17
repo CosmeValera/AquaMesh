@@ -43,7 +43,6 @@ interface WidgetManagementModalProps {
   onPreview: (widget: CustomWidget) => void
   onEdit: (widget: CustomWidget) => void
   onDelete: (id: string) => void
-  onDefaultLoad?: (widget: CustomWidget) => void
 }
 
 const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
@@ -52,8 +51,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   widgets,
   onPreview,
   onEdit,
-  onDelete,
-  onDefaultLoad
+  onDelete
 }) => {
   // Search state
   const [searchTerm, setSearchTerm] = useState('')
@@ -418,7 +416,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
           ) : (
             <List sx={{ 
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(auto-fill, minmax(240px, 1fr))', md: 'repeat(auto-fill, minmax(320px, 1fr))' },
               gap: 2,
               maxHeight: 'calc(80dvh - 250px)',
               overflowY: 'auto',
@@ -446,6 +444,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                   <Paper
                     elevation={3}
                     sx={{
+                      width: '100%',
                       bgcolor: 'rgba(0, 0, 0, 0.2)',
                       backdropFilter: 'blur(10px)',
                       borderRadius: 2,
@@ -465,7 +464,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                       sx={{ 
                         bgcolor: '#00D1AB',
                         color: '#191919',
-                        p: 2, 
+                        p: { xs: 1, sm: 2 },
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between'
@@ -473,7 +472,7 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <WidgetsIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                           {widget.name}
                         </Typography>
                       </Box>
@@ -489,12 +488,12 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
                     </Box>
                   
                     {/* Widget Info */}
-                    <Box sx={{ p: 2, color: 'white' }}>
-                      <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 1 }}>
+                    <Box sx={{ p: { xs: 1, sm: 2 }, color: 'white' }}>
+                      <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: { xs: 0.5, sm: 1 }, fontSize: { xs: '0.65rem', sm: '0.875rem' } }}>
                         Last updated: {formatDate(widget.updatedAt)}
                       </Typography>
                       
-                      <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: { xs: 0.5, sm: 1 }, fontSize: { xs: '0.65rem', sm: '0.875rem' } }}>
                         Created: {formatDate(widget.createdAt)}
                       </Typography>
                       

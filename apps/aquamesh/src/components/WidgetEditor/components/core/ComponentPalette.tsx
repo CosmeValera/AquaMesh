@@ -158,7 +158,7 @@ const ComponentPalette = ({
       </Typography>
       
       {/* Active container indicator for mobile */}
-      {isPhone && activeContainerId && activeContainerInfo && (
+      {activeContainerId && activeContainerInfo && (
         <Box sx={{ 
           p: isPhone ? 0.75 : 1, 
           bgcolor: 'rgba(0, 188, 162, 0.1)', 
@@ -252,7 +252,6 @@ const ComponentPalette = ({
                       component={component}
                       showTooltips={showTooltips}
                       handleDragStart={handleDragStart}
-                      isPhone={isPhone}
                       onDirectAdd={onDirectAdd}
                     />
                   ))}

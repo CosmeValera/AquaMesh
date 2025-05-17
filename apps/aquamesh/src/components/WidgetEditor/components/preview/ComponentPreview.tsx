@@ -752,7 +752,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
           </TooltipStyled>
           
           {/* If this is a container component, add a button to select it as the active target for mobile */}
-          {isPhone && isContainer && onSelectContainer && (
+          {isContainer && onSelectContainer && (
             <TooltipStyled title={isActiveContainer ? "Active target container" : "Make this the active target container"}>
               <IconButton
                 size="small"

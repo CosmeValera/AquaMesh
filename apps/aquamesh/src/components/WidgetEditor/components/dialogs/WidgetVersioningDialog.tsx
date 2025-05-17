@@ -207,12 +207,12 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
         <DialogTitle sx={{ 
           background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
           color: theme.palette.primary.contrastText,
-          p: isPhone ? '8px 16px' : '12px 24px',
+          p: isPhone ? '8px 12px' : '12px 24px',
           boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <HistoryIcon sx={{ mr: 1.5, fontSize: 26, color: 'white' }} />
-            <Typography variant={isPhone ? 'subtitle1' : 'h6'} fontWeight="bold" color="white">Version History</Typography>
+            <HistoryIcon sx={{ mr: 1, fontSize: isPhone ? 20 : 26, color: 'white' }} />
+            <Typography variant={isPhone ? 'subtitle2' : 'h6'} fontWeight="bold" color="white">Version History</Typography>
           </Box>
         </DialogTitle>
         
@@ -241,7 +241,7 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
                   borderColor: theme.palette.divider,
                   background: `linear-gradient(to bottom, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.primary.main, 0.03)})`,
                 }}>
-                  <Typography variant="h6" fontWeight="bold" sx={{ mb: 0.5, color: "#00C49A" }}>
+                  <Typography variant={isPhone ? 'subtitle2' : 'h6'} fontWeight="bold" sx={{ mb: 0.5, color: "#00C49A" }}>
                     {widget.name}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -249,7 +249,7 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
                   </Typography>
                 </Box>
                 
-                <Box sx={{ flexGrow: 1, overflow: 'auto', p: '12px 8px 12px 20px' /* Adjusted padding */ }}>
+                <Box sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden', p: isPhone ? '8px 0px 8px 8px' : '12px 8px 12px 20px' }}>
                   {versions.length === 0 ? (
                     <Box sx={{ p: 3, textAlign: 'center' }}>
                       <Typography variant="body2" color="text.secondary">
@@ -338,7 +338,7 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
                               onClick={() => handleSelectVersion(version)}
                             >
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
-                                <Typography variant="subtitle1" fontWeight="bold" color={selectedVersion?.id === version.id ? theme.palette.primary.main : "text.primary"}>
+                                <Typography variant={isPhone ? 'body2' : 'subtitle1'} fontWeight="bold" color={selectedVersion?.id === version.id ? theme.palette.primary.main : "text.primary"} sx={{ fontSize: isPhone ? '0.85rem' : undefined }}>
                                   Version {version.version}
                                 </Typography>
                                 {version.isCurrent && (
@@ -402,9 +402,9 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
               <Box sx={{ flexGrow: 1, p: isPhone ? '16px' : '24px', display: 'flex', flexDirection: 'column', bgcolor: theme.palette.background.default }}>
                 {selectedVersion ? (
                   <>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                       <Box>
-                        <Typography variant="h5" fontWeight="bold" color="#00C49A">
+                        <Typography variant={isPhone ? 'h6' : 'h5'} fontWeight="bold" color="#00C49A" sx={{ fontSize: isPhone ? '1rem' : undefined }}>
                           Version {selectedVersion.version}
                           {selectedVersion.isCurrent && (
                             <Chip size="small" label="Current Version" color="primary" variant="filled" sx={{ ml: 1.5, fontWeight: 'bold', fontSize: '0.75rem' }}/>
@@ -433,7 +433,7 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
                         </Button>
                       )}
                     </Box>
-                    <Typography variant="h6" fontWeight="medium" sx={{mb: 1.5, color: theme.palette.text.primary}}>
+                    <Typography variant={isPhone ? 'subtitle2' : 'h6'} fontWeight="medium" sx={{mb: 1.5, color: theme.palette.text.primary, fontSize: isPhone ? '1rem' : undefined}}>
                       Component Summary
                     </Typography>
                     <Paper variant="outlined" sx={{ 
@@ -535,7 +535,7 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
                     opacity: 0.7
                   }}>
                     <HistoryIcon sx={{ fontSize: 70, color: alpha(theme.palette.text.secondary, 0.5), mb: 2.5 }} />
-                    <Typography variant="h5" color="text.secondary" gutterBottom sx={{fontWeight: 500}}>
+                    <Typography variant="h5" color="text.secondary" gutterBottom sx={{fontWeight: 500, textAlign: 'center'}}>
                       Select a version to view details
                     </Typography>
                     <Typography variant="body1" color={alpha(theme.palette.text.secondary, 0.8)} align="center" sx={{ maxWidth: 420 }}>

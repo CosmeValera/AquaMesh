@@ -30,7 +30,7 @@ import { format, formatDistanceToNow } from 'date-fns'
 import { alpha, lighten, darken } from '@mui/material/styles'
 import MajorVersionDialog from './MajorVersionDialog'
 import VersionWarningDialog from './VersionWarningDialog'
-import { buttonStyles } from '../../../shared/DialogStyles'
+import useMediaQuery from '@mui/material/useMediaQuery'
 
 interface WidgetVersioningDialogProps {
   open: boolean
@@ -62,6 +62,7 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
   isLatestVersion = true
 }) => {
   const theme = useTheme()
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const [versions, setVersions] = useState<WidgetVersion[]>([])
   const [selectedVersion, setSelectedVersion] = useState<WidgetVersion | null>(null)
   const [showMajorVersionDialog, setShowMajorVersionDialog] = useState(false)
@@ -192,30 +193,30 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
       <Dialog
         open={open}
         onClose={onClose}
-        maxWidth="md"
+        maxWidth={isPhone ? 'xs' : 'md'}
         fullWidth
         PaperProps={{
-          elevation: 12, // Increased elevation for more depth
+          elevation: 12,
           sx: {
-            borderRadius: 3, // Slightly more pronounced border radius
+            borderRadius: 3,
             overflow: 'hidden',
-            border: `1px solid ${alpha(theme.palette.divider, 0.2)}` // Subtle border
+            border: `1px solid ${alpha(theme.palette.divider, 0.2)}`
           }
         }}
       >
         <DialogTitle sx={{ 
           background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
           color: theme.palette.primary.contrastText,
-          p: '12px 24px', // Adjusted padding
+          p: isPhone ? '8px 16px' : '12px 24px',
           boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <HistoryIcon sx={{ mr: 1.5, fontSize: 26, color: 'white' }} />
-            <Typography variant="h6" fontWeight="bold" color="white">Version History</Typography>
+            <Typography variant={isPhone ? 'subtitle1' : 'h6'} fontWeight="bold" color="white">Version History</Typography>
           </Box>
         </DialogTitle>
         
-        <DialogContent sx={{ p: 0, bgcolor: alpha(theme.palette.background.default, 0.5) /* Light background for content */ }}>
+        <DialogContent sx={{ p: isPhone ? 1 : 0, bgcolor: alpha(theme.palette.background.default, 0.5) }}>
           {!widget ? (
             <Box sx={{ p: 3 }}>
               <Alert severity="info" sx={{ borderRadius: 2 }}>
@@ -223,11 +224,12 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
               </Alert>
             </Box>
           ) : (
-            <Box sx={{ display: 'flex', height: '550px' /* Increased height */ }}>
+            <Box sx={{ display: 'flex', flexDirection: isPhone ? 'column' : 'row', height: isPhone ? 'auto' : '550px' }}>
               {/* Left panel - version list */}
               <Box sx={{ 
-                width: '340px', 
-                borderRight: '1px solid',
+                width: isPhone ? '100%' : '340px', 
+                borderRight: isPhone ? 'none' : '1px solid',
+                borderBottom: isPhone ? '1px solid' : 'none',
                 borderColor: theme.palette.divider,
                 display: 'flex',
                 flexDirection: 'column',
@@ -397,7 +399,7 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
               </Box>
               
               {/* Right panel - version details */}
-              <Box sx={{ flexGrow: 1, p: '24px', display: 'flex', flexDirection: 'column', bgcolor: theme.palette.background.default }}>
+              <Box sx={{ flexGrow: 1, p: isPhone ? '16px' : '24px', display: 'flex', flexDirection: 'column', bgcolor: theme.palette.background.default }}>
                 {selectedVersion ? (
                   <>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
@@ -546,11 +548,11 @@ const WidgetVersioningDialog: React.FC<WidgetVersioningDialogProps> = ({
           )}
         </DialogContent>
         
-        <DialogActions sx={{ px: 3, py: 2, bgcolor: alpha(theme.palette.background.paper,0.9), borderTop: '1px solid', borderColor: theme.palette.divider }}>
-          <Button 
+        <DialogActions sx={{ px: isPhone ? 1 : 3, py: isPhone ? 1 : 2, bgcolor: alpha(theme.palette.background.paper,0.9), borderTop: '1px solid', borderColor: theme.palette.divider }}>
+          <Button
             onClick={onClose}
-            variant="outlined" 
-            sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 'medium', px: 3, py: 0.8, borderColor: alpha(theme.palette.primary.main,0.7), color: theme.palette.primary.main, '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.08), borderColor: theme.palette.primary.main }}}
+            variant="outlined"
+            sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 'medium', px: isPhone ? 2 : 3, py: isPhone ? 1 : 0.8, borderColor: alpha(theme.palette.primary.main, 0.7), color: theme.palette.primary.main, '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.08), borderColor: theme.palette.primary.main } }}
           >
             Close
           </Button>

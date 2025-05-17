@@ -65,6 +65,8 @@ const DashboardOptionsMenu: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [customDashboards, setCustomDashboards] = useState<SavedDashboard[]>([])
   const [dashboardLibraryOpen, setDashboardLibraryOpen] = useState(false)
+  // Track admin status to filter dashboards
+  const [isAdmin, setIsAdmin] = useState(false)
   
   const { addDashboard } = useDashboards()
   
@@ -77,6 +79,20 @@ const DashboardOptionsMenu: React.FC = () => {
     loadSavedDashboards()
   }, [])
   
+  // Determine if current user is admin
+  useEffect(() => {
+    try {
+      const userData = localStorage.getItem('userData')
+      if (userData) {
+        const parsedData = JSON.parse(userData)
+        setIsAdmin(parsedData.id === 'admin' && parsedData.role === 'ADMIN_ROLE')
+      }
+    } catch (error) {
+      console.error('Failed to parse user data', error)
+      setIsAdmin(false)
+    }
+  }, [])
+  
   const loadSavedDashboards = () => {
     try {
       const dashboards = localStorage.getItem('customDashboards')
@@ -87,6 +103,9 @@ const DashboardOptionsMenu: React.FC = () => {
       console.error('Failed to load saved dashboards', error)
     }
   }
+  
+  // Filter dashboards based on admin status
+  const visibleCustomDashboards = isAdmin ? customDashboards : customDashboards.filter(d => d.isPublic)
   
   // Handle opening and closing dropdown
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -222,13 +241,13 @@ const DashboardOptionsMenu: React.FC = () => {
         )}
         
         {/* Custom Dashboards Section */}
-        {customDashboards.length > 0 && (
+        {visibleCustomDashboards.length > 0 && (
           <>
             <Typography sx={{ px: 2, py: 1, fontWeight: 'bold', mt: 1, color: '#000000DE' }}>
               Custom Dashboards
             </Typography>
             <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-            {[...customDashboards].reverse().map((dashboard) => (
+            {[...visibleCustomDashboards].reverse().map((dashboard) => (
               <MenuItem 
                 key={dashboard.id}
                 onClick={() => loadCustomDashboard(dashboard)}
@@ -239,7 +258,7 @@ const DashboardOptionsMenu: React.FC = () => {
             ))}
           </>
         )}
-        {isPhone && customDashboards.length === 0 && (
+        {isPhone && visibleCustomDashboards.length === 0 && (
           <MenuItem disabled sx={{ p: 1.5, opacity: 1, justifyContent: 'center', whiteSpace: 'normal', textAlign: 'center' }}>
             No Dashboards
           </MenuItem>

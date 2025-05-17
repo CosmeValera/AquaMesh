@@ -211,7 +211,7 @@ const Dashboards = () => {
             layout: currentDashboard.layout,
             description: dashboardDescription.trim() || undefined,
             tags: dashboardTags.length > 0 ? dashboardTags : ['dashboard'],
-            isPublic: isAdmin ? isPublic : false,
+            isPublic: isAdmin ? isPublic : true,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           }
@@ -591,7 +591,7 @@ const Dashboards = () => {
             onClick={handleSaveDashboard} 
             variant="contained" 
             color="primary"
-            disabled={dashboardName.trim() === ''}
+            disabled={dashboardName.trim() === '' || dashboardName.trim() === 'Dashboard'}
             startIcon={<SaveIcon />}
             sx={{ 
               bgcolor: '#00D1AB',

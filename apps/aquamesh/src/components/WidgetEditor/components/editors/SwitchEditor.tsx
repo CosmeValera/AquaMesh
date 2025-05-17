@@ -117,13 +117,13 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
   const handleCustomColorToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked
     setUseCustomColor(checked)
-    
-    if (checked) {
-      handleChange('useCustomColor', true)
-      handleChange('customTrackColor', customTrackColor)
-    } else {
-      handleChange('useCustomColor', undefined)
-      handleChange('customTrackColor', undefined)
+    // Update both useCustomColor and customTrackColor in one onChange call
+    onChange({
+      ...props,
+      useCustomColor: checked,
+      customTrackColor: checked ? customTrackColor : undefined,
+    })
+    if (!checked) {
       setCustomTrackColor('#90caf9')
     }
   }
@@ -131,12 +131,13 @@ const SwitchEditor: React.FC<SwitchEditorProps> = ({ props, onChange }) => {
   // Label color toggle
   const handleLabelColorToggle = (useCustom: boolean) => {
     setUseCustomLabelColor(useCustom)
-    if (useCustom) {
-      handleChange('useCustomLabelColor', true)
-      handleChange('customLabelColor', customLabelColor)
-    } else {
-      handleChange('useCustomLabelColor', undefined)
-      handleChange('customLabelColor', undefined)
+    // Update both useCustomLabelColor and customLabelColor in one onChange call
+    onChange({
+      ...props,
+      useCustomLabelColor: useCustom,
+      customLabelColor: useCustom ? customLabelColor : undefined,
+    })
+    if (!useCustom) {
       setCustomLabelColor('#000000')
     }
   }

@@ -143,17 +143,12 @@ const LabelEditor: React.FC<LabelEditorProps> = ({ props, onChange }) => {
   
   const handleCustomColorToggle = (useCustom: boolean) => {
     setUseCustomColor(useCustom)
-    
-    if (useCustom) {
-      handleChange('useCustomColor', true)
-      handleChange('customColor', customColor)
-    } else {
-      // Fix: properly remove custom color properties
-      const newProps = { ...props }
-      delete newProps.useCustomColor
-      delete newProps.customColor
-      onChange(newProps)
-    }
+    // Update both useCustomColor and customColor in one onChange call
+    onChange({
+      ...props,
+      useCustomColor: useCustom,
+      customColor: useCustom ? customColor : undefined,
+    })
   }
   
   // Preview styles based on current settings

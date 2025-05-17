@@ -174,19 +174,13 @@ const ButtonEditor: React.FC<ComponentEditorProps<ButtonProps>> = ({ props, onCh
   
   const handleCustomColorToggle = (useCustom: boolean) => {
     setUseCustomColor(useCustom)
-    
-    if (useCustom) {
-      handleChange('customColor', customColor)
-      handleChange('customHoverColor', customHoverColor)
-      handleChange('customTextColor', customTextColor)
-    } else {
-      // Remove custom color props
-      const newProps = { ...props }
-      delete newProps.customColor
-      delete newProps.customHoverColor
-      delete newProps.customTextColor
-      onChange(newProps)
-    }
+    // Update all custom color properties in one onChange call
+    onChange({
+      ...props,
+      customColor: useCustom ? customColor : undefined,
+      customHoverColor: useCustom ? customHoverColor : undefined,
+      customTextColor: useCustom ? customTextColor : undefined,
+    })
   }
   
   // Update props on change

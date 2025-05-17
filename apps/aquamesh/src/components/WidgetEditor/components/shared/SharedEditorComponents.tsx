@@ -401,7 +401,9 @@ export const CustomColorControl: React.FC<CustomColorProps> = ({
   const [colorPickerOpen, setColorPickerOpen] = useState(false)
   
   const handleCustomColorToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onToggleCustomColor(e.target.checked)
+    // Force the checked value to be a boolean to ensure it's properly handled
+    const isChecked = Boolean(e.target.checked)
+    onToggleCustomColor(isChecked)
   }
   
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -417,7 +419,7 @@ export const CustomColorControl: React.FC<CustomColorProps> = ({
       <FormControlLabel
         control={
           <Switch
-            checked={useCustomColor}
+            checked={Boolean(useCustomColor)}
             onChange={handleCustomColorToggle}
           />
         }
@@ -523,7 +525,9 @@ export const DualColorPicker: React.FC<{
   const [tertiaryColorPickerOpen, setTertiaryColorPickerOpen] = useState(false)
   
   const handleCustomColorToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onToggleCustomColor(e.target.checked)
+    // Force the checked value to be a boolean to ensure it's properly handled
+    const isChecked = Boolean(e.target.checked)
+    onToggleCustomColor(isChecked)
   }
 
   return (
@@ -531,7 +535,7 @@ export const DualColorPicker: React.FC<{
       <FormControlLabel
         control={
           <Switch
-            checked={useCustomColor}
+            checked={Boolean(useCustomColor)}
             onChange={handleCustomColorToggle}
           />
         }

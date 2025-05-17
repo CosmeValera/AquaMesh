@@ -733,7 +733,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             boxShadow: 1,
             '& .MuiIconButton-root': {
               padding: isPhone ? '2px' : '4px',
-              fontSize: isPhone ? '0.75rem' : '1rem'
+              fontSize: isPhone ? '0.75rem' : '1.3rem'
             }
           }}
         >
@@ -745,8 +745,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
               sx={{ color: isHidden ? 'error.light' : 'success.light' }}
             >
               {isHidden ? 
-                <VisibilityOffIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} /> : 
-                <VisibilityIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
+                <VisibilityOffIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1.3rem' }} /> : 
+                <VisibilityIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1.3rem' }} />
               }
             </IconButton>
           </TooltipStyled>
@@ -768,7 +768,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
                   bgcolor: isActiveContainer ? 'rgba(0, 188, 162, 0.1)' : 'transparent'
                 }}
               >
-                <TargetIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
+                <TargetIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1.3rem' }} />
               </IconButton>
             </TooltipStyled>
           )}
@@ -778,7 +778,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             onClick={() => onEdit(component.id)}
             sx={{ color: 'info.light' }}
           >
-            <EditIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
+            <EditIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1.3rem' }} />
           </IconButton>
           
           {!isFirst && (
@@ -787,7 +787,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
               onClick={() => onMoveUp(component.id)}
               sx={{ color: 'warning.light' }}
             >
-              <KeyboardArrowUpIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
+              <KeyboardArrowUpIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1.3rem' }} />
             </IconButton>
           )}
           
@@ -797,7 +797,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
               onClick={() => onMoveDown(component.id)}
               sx={{ color: 'warning.light' }}
             >
-              <KeyboardArrowDownIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
+              <KeyboardArrowDownIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1.3rem' }} />
             </IconButton>
           )}
           
@@ -806,7 +806,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
             onClick={() => onDelete(component.id)}
             sx={{ color: 'error.main' }}
           >
-            <DeleteIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1rem' }} />
+            <DeleteIcon fontSize="small" sx={{ fontSize: isPhone ? '0.875rem' : '1.3rem' }} />
           </IconButton>
         </Box>
       )}
@@ -820,7 +820,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({
               sx={{ 
                 mr: isPhone ? 0.5 : 1, 
                 opacity: 0.7, 
-                fontSize: isPhone ? '0.75rem' : '1rem' 
+                fontSize: isPhone ? '0.75rem' : '1.3rem' 
               }} 
             />
           )}

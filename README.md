@@ -13,9 +13,7 @@
 
 <a href="https://aqua-mesh.vercel.app/" target="_blank">Try AquaMesh</a> on Vercel! Ready to use with zero setup.
 
-<!-- To try AquaMesh: <a href="https://aqua-mesh.vercel.app/" target="_blank">**Click Here**</a>* -->
-
-![Live Demo](readme_docs/readme_images/live_demo.png)
+![Live Demo](readme_docs/live_demo.gif)
 
 ## 🚀 Quickstart
 

@@ -92,7 +92,7 @@ AquaMesh's most powerful feature is its **Widget Editor**, which enables users t
 Aquamesh is responsive and can be used with your phone, tablet or computer. However, computer is the most recommended especially to build complex layouts.
 
 #### 📱 Phone
-![Phone empty](./readme_images/phone/phone_empty.jpg)
-![Phone Templates](./readme_images/phone/phone_templates.jpg)
-![Phone Widget History](./readme_images/phone/phone_widget_history.jpg)
-![Phone Import & Export](./readme_images/phone/phone_import_export.jpg)
+<img src="./readme_images/phone/phone_empty.jpg" width="200" />
+<img src="./readme_images/phone/phone_templates.jpg" width="200" />
+<img src="./readme_images/phone/phone_widget_history.jpg" width="200" />
+<img src="./readme_images/phone/phone_import_export.jpg" width="200" />

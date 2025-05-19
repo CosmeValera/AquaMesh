@@ -70,7 +70,6 @@
     "flexlayout-react": "^0.7.8",
     "happy-dom": "^15.3.1",
     "jsdom": "^25.0.0",
-    "keycloak-js": "^25.0.1",
     "nanoid": "^4.0.2",
     "prettier": "3.0.0",
     "primeflex": "^3.3.1",

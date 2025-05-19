@@ -42,8 +42,6 @@ const DynamicMicrofrontend: React.FC<DynamicMicrofrontendProps> = (props) => {
   const changeWidgetData = useStore((state) => state.changeWidgetData)
   const getCurrentDashboard = useStore((state) => state.getCurrentDashboard)
 
-  // const { keycloak } = useAuth()
-
   useEffect(() => {
     // Check if it's a local component first
     if (props.component === 'WidgetEditor' || props.component === 'CustomWidget') {

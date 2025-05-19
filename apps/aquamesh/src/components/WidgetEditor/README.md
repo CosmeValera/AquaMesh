@@ -15,32 +15,45 @@ WidgetEditor/
 │   │   ├── ComponentPalette.tsx    # Component palette for drag and drop
 │   │   └── ComponentPaletteItem.tsx # Individual component in palette
 │   ├── dialogs/            # Modal dialogs
+│   │   ├── ComponentSearchDialog.tsx # Dialog for component search
+│   │   ├── DeleteConfirmationDialog.tsx # Dialog for confirming deletions
 │   │   ├── EditComponentDialog.tsx  # Dialog for editing component properties
+│   │   ├── ExportImportDialog.tsx   # Dialog for export/import functionality
+│   │   ├── MajorVersionDialog.tsx   # Dialog for major version changes
 │   │   ├── SavedWidgetsDialog.tsx   # Dialog for saved widgets management
+│   │   ├── SaveWidgetDialog.tsx     # Dialog for saving widgets
 │   │   ├── SettingsDialog.tsx       # Dialog for editor settings
-│   │   └── DeleteConfirmationDialog.tsx # Dialog for confirming deletions
+│   │   ├── TemplateSelectionDialog.tsx # Dialog for template selection
+│   │   ├── VersionWarningDialog.tsx # Dialog for version warnings
+│   │   ├── WidgetLibrary.tsx        # Dialog for widget library management
+│   │   ├── WidgetMetadataDialog.tsx # Dialog for widget metadata
+│   │   └── WidgetVersioningDialog.tsx # Dialog for widget versioning
 │   ├── editors/            # Property editors for specific components
 │   │   ├── ButtonEditor.tsx         # Button properties editor
-│   │   ├── SwitchEditor.tsx         # Switch properties editor
-│   │   ├── LabelEditor.tsx          # Label properties editor
-│   │   ├── TextFieldEditor.tsx      # TextField properties editor
 │   │   ├── FieldSetEditor.tsx       # FieldSet properties editor
 │   │   ├── FlexBoxEditor.tsx        # FlexBox properties editor
 │   │   ├── GridBoxEditor.tsx        # GridBox properties editor
-│   │   └── PieChartEditor.tsx       # PieChart properties editor
+│   │   ├── LabelEditor.tsx          # Label properties editor
+│   │   ├── PieChartEditor.tsx       # PieChart properties editor
+│   │   ├── SwitchEditor.tsx         # Switch properties editor
+│   │   └── TextFieldEditor.tsx      # TextField properties editor
 │   ├── preview/            # Component preview renderers
 │   │   ├── ComponentPreview.tsx     # Preview for most components
 │   │   └── ChartPreview.tsx         # Specialized preview for charts
+│   ├── shared/             # Shared components across the editor
+│   │   └── SharedEditorComponents.tsx # Common editor components
 │   └── ui/                 # Generic UI components
 │       └── NotificationSystem.tsx   # Notification/toast system
 ├── constants/              # Constants used throughout the editor
-│   └── componentTypes.ts           # Available component types and metadata
+│   ├── componentTypes.ts            # Available component types and metadata
+│   └── templateWidgets.ts           # Template widget definitions
 ├── hooks/                  # Custom React hooks
-│   └── useWidgetEditor.ts          # Main editor state and logic
+│   ├── useWidgetEditor.ts           # Main editor state and logic
+│   └── useWidgetManager.ts          # Widget management functionality
 ├── types/                  # TypeScript type definitions
-│   └── types.ts                    # Common type definitions
+│   └── types.ts                     # Common type definitions
 ├── utils/                  # Utility functions
-│   └── componentUtils.ts           # Component manipulation utilities
+│   └── componentUtils.ts            # Component manipulation utilities
 ├── CustomWidget.tsx        # Component for rendering saved widgets 
 ├── WidgetEditor.tsx        # Main Widget Editor component
 └── WidgetStorage.ts        # Local storage handling for widgets
@@ -73,16 +86,6 @@ function App() {
   );
 }
 ```
-
-## Features
-
-- **Intuitive drag-and-drop interface** for visually constructing widgets.
-- **Comprehensive component properties editing** for fine-grained control.
-- **Save and load widget definitions** to a personal library for easy reuse.
-- **Real-time preview mode** for instant feedback during the creation process.
-- **Flexible layout options** using container components like FlexBox, GridBox, and FieldSet.
-- **Local storage persistence** for all created widgets and editor settings.
-- **Widget versioning and template management.**
 
 ## Component Types
 

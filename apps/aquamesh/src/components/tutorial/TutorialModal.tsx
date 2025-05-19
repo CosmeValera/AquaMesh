@@ -801,33 +801,37 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
             bgcolor: 'background.paper',
             borderTop: '1px solid rgba(0, 188, 162, 0.2)',
             zIndex: 1100,
-            flexDirection: 'row'
+            flexDirection: isMobile ? 'column' : 'row'
           }}>
             <Box display="flex" alignItems="center" mb={isMobile ? 1 : 0}>
               {/* Pagination dots */}
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                {displayOptions.map((_, index) => (
-                  <Box 
-                    key={index}
-                    onClick={() => {
-                      scrollToSlide(index)
-                    }}
-                    sx={{
-                      width: isMobile ? 10 : 12,
-                      height: isMobile ? 10 : 12,
-                      borderRadius: '50%',
-                      backgroundColor: currentSlide === index ? '#00BC9A' : 'rgba(0, 188, 162, 0.3)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        backgroundColor: currentSlide === index ? '#00BC9A' : 'rgba(0, 188, 162, 0.5)',
-                      }
-                    }}
-                  />
-                ))}
-              </Box>
+              { displayOptions.length > 1 && (
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  {displayOptions.map((_, index) => (
+                    <Box 
+                      key={index}
+                      onClick={() => {
+                        scrollToSlide(index)
+                      }}
+                      sx={{
+                        width: isMobile ? 10 : 12,
+                        height: isMobile ? 10 : 12,
+                        borderRadius: '50%',
+                        backgroundColor: currentSlide === index ? '#00BC9A' : 'rgba(0, 188, 162, 0.3)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          backgroundColor: currentSlide === index ? '#00BC9A' : 'rgba(0, 188, 162, 0.5)',
+                        }
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
             </Box>
-            <Box display="flex" width={isMobile ? '100%' : 'auto'} justifyContent={'flex-end'}>
+            
+            {/* Show on startup toggle and close button */}
+            <Box display="flex" width={isMobile ? '100%' : 'auto'} justifyContent={isMobile ? 'space-between' : 'flex-end'}>
               {tutorialShown ? (
                 <Button 
                   onClick={() => {

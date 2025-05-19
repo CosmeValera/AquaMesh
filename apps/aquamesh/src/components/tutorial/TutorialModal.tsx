@@ -521,6 +521,64 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
             }}
           >
             <Box my={isMobile ? 2 : 3}>            
+              {/* Admin access note for non-admin users */}
+              {!isAdmin && (
+                <Zoom in={open} style={{ transitionDelay: `${displayOptions.length * 100}ms` }}>
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      p: isMobile ? 2 : 3,
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      textAlign: 'center',
+                      mt: isMobile ? 1 : 2,
+                      background: 'linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(25, 25, 25, 0.2) 100%)',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '4px',
+                        background: 'linear-gradient(90deg, #FFC107 0%, #FF9800 100%)',
+                      },
+                      position: 'relative',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <Box sx={{ width: '100%' }}>
+                      <InfoIcon fontSize={isMobile ? "medium" : "large"} sx={{ color: '#FFC107' }} />
+                      <Typography 
+                        variant={isMobile ? "subtitle1" : "h6"} 
+                        fontWeight="bold" 
+                        gutterBottom 
+                        color="#f9f9f9"
+                        sx={{ 
+                          background: 'linear-gradient(90deg, #FFC107, #FF9800)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          textShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)'
+                        }}
+                      >
+                        Administrator Access Required
+                      </Typography>
+                      <Typography 
+                        variant={isMobile ? "body2" : "body1"} 
+                        paragraph 
+                        color="#f9f9f9"
+                        sx={{ fontSize: isMobile ? '0.875rem' : undefined }}
+                      >
+                        Some advanced features like the Widget Editor are only available to users with Administrator privileges. 
+                        To access these features, please log in with an Admin account.
+                      </Typography>
+                    </Box>
+                  </Paper>
+                </Zoom>
+              )}
+
+              {/* Tutorial information */}
               <Grid container spacing={isMobile ? 2 : 4} sx={{ mt: isMobile ? 1 : 2 }}>
                 {displayOptions.map((option, index) => (
                   <Zoom 
@@ -731,63 +789,6 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                   </Zoom>
                 ))}
               </Grid>
-              
-              {/* Admin access note for non-admin users */}
-              {!isAdmin && (
-                <Zoom in={open} style={{ transitionDelay: `${displayOptions.length * 100}ms` }}>
-                  <Paper
-                    elevation={3}
-                    sx={{
-                      p: isMobile ? 2 : 3,
-                      width: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      textAlign: 'center',
-                      mt: isMobile ? 1 : 2,
-                      background: 'linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(25, 25, 25, 0.2) 100%)',
-                      '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '4px',
-                        background: 'linear-gradient(90deg, #FFC107 0%, #FF9800 100%)',
-                      },
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Box sx={{ width: '100%' }}>
-                      <InfoIcon fontSize={isMobile ? "medium" : "large"} sx={{ color: '#FFC107' }} />
-                      <Typography 
-                        variant={isMobile ? "subtitle1" : "h6"} 
-                        fontWeight="bold" 
-                        gutterBottom 
-                        color="#f9f9f9"
-                        sx={{ 
-                          background: 'linear-gradient(90deg, #FFC107, #FF9800)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          textShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)'
-                        }}
-                      >
-                        Administrator Access Required
-                      </Typography>
-                      <Typography 
-                        variant={isMobile ? "body2" : "body1"} 
-                        paragraph 
-                        color="#f9f9f9"
-                        sx={{ fontSize: isMobile ? '0.875rem' : undefined }}
-                      >
-                        Some advanced features like the Widget Editor are only available to users with Administrator privileges. 
-                        To access these features, please log in with an Admin account.
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Zoom>
-              )}
             </Box>
           </DialogContent>
           <DialogActions sx={{ 

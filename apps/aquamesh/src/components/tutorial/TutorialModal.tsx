@@ -451,7 +451,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
             borderRadius: 2,
             overflow: 'hidden',
             backgroundImage: 'linear-gradient(135deg, rgba(0, 196, 154, 0.05) 0%, rgba(0, 188, 162, 0.1) 100%)',
-            height: isMobile ? '100%' : 'auto',
+            height: 'auto',
             margin: isMobile ? 0 : undefined
           }
         }}
@@ -801,7 +801,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
             bgcolor: 'background.paper',
             borderTop: '1px solid rgba(0, 188, 162, 0.2)',
             zIndex: 1100,
-            flexDirection: isMobile ? 'column' : 'row'
+            flexDirection: 'row'
           }}>
             <Box display="flex" alignItems="center" mb={isMobile ? 1 : 0}>
               {/* Pagination dots */}
@@ -827,7 +827,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose, onShowOnSt
                 ))}
               </Box>
             </Box>
-            <Box display="flex" width={isMobile ? '100%' : 'auto'} justifyContent={isMobile ? 'space-between' : 'flex-end'}>
+            <Box display="flex" width={isMobile ? '100%' : 'auto'} justifyContent={'flex-end'}>
               {tutorialShown ? (
                 <Button 
                   onClick={() => {

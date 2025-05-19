@@ -76,7 +76,19 @@
     // NOTE use the whole viewport and substract (1) header's height, (2) main
     // content's top padding, (3) tab bar height, and (4) main content's bottom
     // padding
+
+    // Desktop default.
     height: calc(100dvh - 36px - 16px - 36px - 24px);
+
+    // Tablet: -2px extra height.
+    @media (min-width: 576px) and (max-width: 992px) {
+      height: calc(100dvh - 36px - 16px - 36px - 24px - 2px);
+    }
+
+    // Phone: -8px extra height.
+    @media (max-width: 576.99px) {
+      height: calc(100dvh - 36px - 16px - 36px - 24px - 8px);
+    }
 
     display: none;
 

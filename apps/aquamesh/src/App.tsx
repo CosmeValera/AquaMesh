@@ -37,7 +37,7 @@ const MainPage = () => {
   const [menuOpen, setMenuOpen] = useState(false)
   
   return (
-    <Box sx={{ overflowX: 'hidden'}}>
+    <Box sx={{ overflowX: 'hidden', height: '100dvh' }}>
       <TopNavBar open={menuOpen} setOpen={setMenuOpen} />
       <Main
         mt={8}

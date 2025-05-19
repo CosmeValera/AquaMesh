@@ -18,8 +18,8 @@ The top navigation bar provides quick access to all platform capabilities:
 - **🧩 Widgets**: Access ready-made components and your custom-built widgets
 - **🔧 Widget Editor**: The heart of our no-code experience. Build custom widgets without programming!
 - **📚 Libraries**: Save and organize your dashboard and widget creations
-- **❓ Support**: Get help through the tutorial and FAQ sections
-- **👤 User Management**: Select and manage user profiles (only admin can create new widgets)
+- **❓ Help**: Get support through the tutorial and FAQ sections
+- **👤 User**: Select and manage user profiles (only admin can create new widgets)
 
 All our pre-built widgets load as microfrontends using Module Federation. Want to customize what's available? Just update the `apps/aquamesh/public/config/widgets.json` file.
 
@@ -87,3 +87,12 @@ AquaMesh's most powerful feature is its **Widget Editor**, which enables users t
 
 ![Import & Export](./readme_images/import_export1.png)
 ![Import & Export](./readme_images/import_export2.png)
+
+### 📱💻🖥️ Responsive
+Aquamesh is responsive and can be used with your phone, tablet or computer. However, computer is the most recommended especially to build complex layouts.
+
+#### 📱 Phone
+![Phone empty](./readme_images/phone/phone_empty.jpg)
+![Phone Templates](./readme_images/phone/phone_templates.jpg)
+![Phone Widget History](./readme_images/phone/phone_widget_history.jpg)
+![Phone Import & Export](./readme_images/phone/phone_import_export.jpg)

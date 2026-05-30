@@ -447,10 +447,10 @@ describe('Dashboards', () => {
     ).toBeInTheDocument()
     expect(
       screen.getByTestId('empty-dashboard-customizer-preview'),
-    ).toHaveAttribute(
-      'data-desktop-grid-template',
-      'minmax(0, 3fr) minmax(300px, 2fr)',
-    )
+    ).toHaveAttribute('data-desktop-grid-template', 'minmax(0, 1fr)')
+    expect(
+      screen.queryByRole('heading', { name: /what do you want to learn/i }),
+    ).not.toBeInTheDocument()
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -482,10 +482,7 @@ describe('Dashboards', () => {
 
     expect(
       screen.getByTestId('empty-dashboard-customizer-preview'),
-    ).toHaveAttribute(
-      'data-desktop-grid-template',
-      'minmax(300px, 2fr) minmax(0, 3fr)',
-    )
+    ).toHaveAttribute('data-desktop-grid-template', 'minmax(0, 1fr)')
     expect(localStorage.setItem).toHaveBeenCalledWith(
       'studymesh-empty-dashboard-settings-v1',
       expect.stringContaining('"blockOrder":["studyMaterial","creation"]'),
@@ -614,6 +611,74 @@ describe('Dashboards', () => {
     expect(localStorage.setItem).toHaveBeenCalledWith(
       'studymesh-empty-dashboard-settings-v1',
       expect.stringContaining('"studyMaterialColumns":2'),
+    )
+  })
+
+  it('limits custom study material columns to the selected custom entries', () => {
+    const savedDashboards = Array.from({ length: 5 }, (_, index) =>
+      createSavedDashboard(
+        `topic-${index + 1}`,
+        `Topic ${index + 1}`,
+        `Topic ${index + 1}`,
+      ),
+    )
+
+    localStorage.getItem.mockImplementation((key: string) => {
+      if (key === 'userData') {
+        return JSON.stringify({
+          id: 'admin',
+          name: 'Admin User',
+          role: 'ADMIN_ROLE',
+        })
+      }
+
+      if (key === 'customDashboards') {
+        return JSON.stringify(savedDashboards)
+      }
+
+      if (key === 'studymesh-empty-dashboard-settings-v1') {
+        return JSON.stringify({
+          blockOrder: ['creation', 'studyMaterial'],
+          showCreationBlock: true,
+          studyMaterialMode: 'custom',
+          studyMaterialLimit: 20,
+          studyMaterialColumns: 5,
+          customEntryIds: [
+            'dashboard:topic-1',
+            'dashboard:topic-2',
+            'dashboard:topic-3',
+            'dashboard:topic-4',
+            'dashboard:topic-5',
+          ],
+        })
+      }
+
+      return null
+    })
+    mockDashboardProvider({
+      openDashboards: [],
+      selectedDashboard: -1,
+    })
+
+    render(<Dashboards />)
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /customize this page/i }),
+    )
+
+    const columnsSlider = screen.getByRole('slider', {
+      name: /study material columns/i,
+    })
+    expect(columnsSlider).toHaveAttribute('max', '5')
+    expect(columnsSlider).toHaveValue('5')
+
+    fireEvent.click(screen.getByLabelText(/remove topic 5/i))
+
+    expect(columnsSlider).toHaveAttribute('max', '4')
+    expect(columnsSlider).toHaveValue('4')
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'studymesh-empty-dashboard-settings-v1',
+      expect.stringContaining('"studyMaterialColumns":4'),
     )
   })
 

@@ -4,7 +4,6 @@ import {
   Button,
   Chip,
   Dialog,
-  Divider,
   FormControlLabel,
   IconButton,
   MenuItem,
@@ -214,6 +213,17 @@ const DashboardEmptyState = ({
   const availableCustomEntries = folderEntries.filter(
     (entry) => !selectedCustomIds.has(entry.id),
   )
+  const getStudyMaterialColumnMax = (nextSettings: EmptyDashboardSettings) => {
+    const entryCount =
+      nextSettings.studyMaterialMode === 'custom'
+        ? nextSettings.customEntryIds.filter((entryId) =>
+            entryById.has(entryId),
+          ).length
+        : folderEntries.length
+
+    return Math.max(1, Math.min(6, entryCount))
+  }
+  const studyMaterialColumnMax = getStudyMaterialColumnMax(settings)
   const visibleStudyMaterialEntries =
     settings.studyMaterialMode === 'custom'
       ? settings.customEntryIds
@@ -241,8 +251,16 @@ const DashboardEmptyState = ({
         ...current,
         ...nextPartial,
       })
-      saveEmptyDashboardSettings(normalized)
-      return normalized
+      const columnMax = getStudyMaterialColumnMax(normalized)
+      const nextNormalized = {
+        ...normalized,
+        studyMaterialColumns: Math.min(
+          normalized.studyMaterialColumns,
+          columnMax,
+        ),
+      }
+      saveEmptyDashboardSettings(nextNormalized)
+      return nextNormalized
     })
   }
 
@@ -430,13 +448,6 @@ const DashboardEmptyState = ({
       </Paper>
 
       <Box>
-        <Typography
-          variant="caption"
-          fontWeight={800}
-          sx={{ mb: 0.75, color: 'text.secondary', fontSize: '0.6875rem' }}
-        >
-          Fast creation from material
-        </Typography>
         <Box
           sx={{
             display: 'grid',
@@ -543,7 +554,7 @@ const DashboardEmptyState = ({
               alignSelf: { xs: 'stretch', sm: 'center' },
             }}
           >
-            Customize this page!
+            
           </Button>
         ) : null}
       </Stack>
@@ -685,6 +696,8 @@ const DashboardEmptyState = ({
         minWidth: 0,
         boxSizing: 'border-box',
         width: '100%',
+        position: { lg: 'sticky' },
+        top: { lg: 0 },
       }}
     >
       <Stack
@@ -713,7 +726,7 @@ const DashboardEmptyState = ({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: '1fr',
+          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
           gap: 1.5,
         }}
       >
@@ -725,9 +738,20 @@ const DashboardEmptyState = ({
             borderColor: 'divider',
             borderRadius: 2,
             bgcolor: 'background.default',
+            gridColumn: { xs: 'auto', md: '1 / -1' },
           }}
         >
-          <Stack spacing={1.5}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'minmax(0, 1fr) minmax(0, 1fr) auto',
+              },
+              gap: 1.25,
+              alignItems: 'center',
+            }}
+          >
             <TextField
               select
               size="small"
@@ -740,6 +764,23 @@ const DashboardEmptyState = ({
             >
               <MenuItem value="creation">Creation</MenuItem>
               <MenuItem value="studyMaterial">Open study material</MenuItem>
+            </TextField>
+
+            <TextField
+              select
+              size="small"
+              label="Study material"
+              value={settings.studyMaterialMode}
+              onChange={(event) =>
+                updateSettings({
+                  studyMaterialMode: event.target
+                    .value as EmptyDashboardStudyMaterialMode,
+                })
+              }
+              fullWidth
+            >
+              <MenuItem value="recent">Recent</MenuItem>
+              <MenuItem value="custom">Custom</MenuItem>
             </TextField>
 
             <FormControlLabel
@@ -762,24 +803,7 @@ const DashboardEmptyState = ({
               }
               label="Show Creation"
             />
-
-            <TextField
-              select
-              size="small"
-              label="Study material"
-              value={settings.studyMaterialMode}
-              onChange={(event) =>
-                updateSettings({
-                  studyMaterialMode: event.target
-                    .value as EmptyDashboardStudyMaterialMode,
-                })
-              }
-              fullWidth
-            >
-              <MenuItem value="recent">Recent</MenuItem>
-              <MenuItem value="custom">Custom</MenuItem>
-            </TextField>
-          </Stack>
+          </Box>
         </Paper>
 
         <Paper
@@ -790,10 +814,19 @@ const DashboardEmptyState = ({
             borderColor: 'divider',
             borderRadius: 2,
             bgcolor: 'background.default',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
           }}
         >
-          <Stack spacing={1.25}>
-            <Box>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+              gap: 1.5,
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
               <Stack
                 direction="row"
                 alignItems="center"
@@ -828,7 +861,7 @@ const DashboardEmptyState = ({
               />
             </Box>
 
-            <Box>
+            <Box sx={{ minWidth: 0 }}>
               <Stack
                 direction="row"
                 alignItems="center"
@@ -848,12 +881,18 @@ const DashboardEmptyState = ({
                 aria-label="Study material columns"
                 value={settings.studyMaterialColumns}
                 min={1}
-                max={6}
+                max={studyMaterialColumnMax}
                 step={1}
                 marks={[
                   { value: 1, label: '1' },
-                  { value: 3, label: '3' },
-                  { value: 6, label: '6' },
+                  ...(studyMaterialColumnMax > 1
+                    ? [
+                        {
+                          value: studyMaterialColumnMax,
+                          label: String(studyMaterialColumnMax),
+                        },
+                      ]
+                    : []),
                 ]}
                 onChange={(_, value) =>
                   updateSettings({
@@ -864,10 +903,23 @@ const DashboardEmptyState = ({
                 }
               />
             </Box>
+          </Box>
+        </Paper>
 
+        <Paper
+          elevation={0}
+          sx={{
+            p: 1.5,
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 2,
+            bgcolor: 'background.default',
+            gridColumn: { xs: 'auto', md: '1 / -1' },
+          }}
+        >
+          <Stack spacing={1.25}>
             {settings.studyMaterialMode === 'custom' ? (
               <>
-                <Divider />
                 <TextField
                   select
                   size="small"
@@ -971,7 +1023,26 @@ const DashboardEmptyState = ({
                   )}
                 </Box>
               </>
-            ) : null}
+            ) : (
+              <Box
+                sx={{
+                  minHeight: 96,
+                  display: 'grid',
+                  placeItems: 'center',
+                  textAlign: 'center',
+                  color: 'text.secondary',
+                  px: 2,
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  bgcolor: 'background.paper',
+                }}
+              >
+                <Typography variant="body2" fontWeight={800}>
+                  Recent study material uses saved dashboard order.
+                </Typography>
+              </Box>
+            )}
           </Stack>
         </Paper>
       </Box>
@@ -987,25 +1058,13 @@ const DashboardEmptyState = ({
         : renderStudyMaterialBlock(),
     )
     .filter(Boolean)
-  const previewBlocks = settings.blockOrder
-    .map((block) =>
-      block === 'creation'
-        ? settings.showCreationBlock
-          ? renderCreationBlock()
-          : null
-        : renderStudyMaterialBlock(false),
-    )
-    .filter(Boolean)
+  const previewBlock = renderStudyMaterialBlock(false)
   const mainDesktopGridTemplate = isSingleBlock
     ? 'minmax(0, 760px)'
     : settings.blockOrder[0] === 'studyMaterial'
     ? 'minmax(300px, 2fr) minmax(0, 3fr)'
     : 'minmax(0, 3fr) minmax(300px, 2fr)'
-  const previewDesktopGridTemplate = isSingleBlock
-    ? 'minmax(0, 760px)'
-    : settings.blockOrder[0] === 'studyMaterial'
-    ? 'minmax(300px, 2fr) minmax(0, 3fr)'
-    : 'minmax(0, 3fr) minmax(300px, 2fr)'
+  const previewDesktopGridTemplate = 'minmax(0, 1fr)'
 
   return (
     <Box
@@ -1118,7 +1177,7 @@ const DashboardEmptyState = ({
                 display: 'grid',
                 gridTemplateColumns: {
                   xs: '1fr',
-                  lg: 'minmax(280px, 360px) minmax(0, 1fr)',
+                  lg: 'minmax(520px, 640px) minmax(0, 1fr)',
                 },
                 gap: { xs: 1.5, md: 2.5 },
                 alignItems: 'start',
@@ -1139,7 +1198,7 @@ const DashboardEmptyState = ({
                   alignItems: 'stretch',
                 }}
               >
-                {previewBlocks}
+                {previewBlock}
               </Box>
             </Box>
           </Box>

@@ -259,6 +259,7 @@ const DashboardEmptyState = ({
   const [activeCustomSectionId, setActiveCustomSectionId] = useState(
     DEFAULT_CUSTOM_SECTION_ID,
   )
+  const [newCustomSectionName, setNewCustomSectionName] = useState('')
   const dashboardsByFolder = dashboardOptions.reduce<
     Record<string, SavedDashboard[]>
   >((folders, dashboard) => {
@@ -491,6 +492,12 @@ const DashboardEmptyState = ({
   }
 
   const addCustomSection = () => {
+    const sectionName = newCustomSectionName.trim()
+
+    if (!sectionName) {
+      return
+    }
+
     let index = settings.customSections.length + 1
     let sectionId = `custom-section-${index}`
 
@@ -507,10 +514,11 @@ const DashboardEmptyState = ({
       return {
         customSections: [
           ...current.customSections,
-          { id: sectionId, name: `Section ${index}`, entryIds: [] },
+          { id: sectionId, name: sectionName, entryIds: [] },
         ],
       }
     })
+    setNewCustomSectionName('')
   }
 
   const moveCustomSection = (sectionId: string, direction: -1 | 1) => {
@@ -571,8 +579,8 @@ const DashboardEmptyState = ({
   }
 
   const actionIconButtonSx = {
-    width: 36,
-    height: 36,
+    width: 30,
+    height: 30,
     borderRadius: '50%',
     color: 'text.primary',
     border: 1,
@@ -631,16 +639,16 @@ const DashboardEmptyState = ({
           elevation={0}
           sx={{
             width: '100%',
-            minHeight: { xs: 58, md: 68 },
+            minHeight: { xs: 82, md: 96 },
             display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) auto',
-            alignItems: 'center',
-            gap: 0.75,
+            gridTemplateRows: 'minmax(0, 1fr) auto',
+            alignItems: 'stretch',
+            gap: 0.85,
             border: 1,
             borderColor: 'divider',
             borderRadius: 1.5,
             px: 1.25,
-            py: 0.75,
+            py: 1,
             minWidth: 0,
             maxWidth: '100%',
             color: 'text.primary',
@@ -676,7 +684,17 @@ const DashboardEmptyState = ({
               {entry.title}
             </Typography>
           </Box>
-          <Stack direction="row" spacing={0.25}>
+          <Stack
+            direction="row"
+            spacing={0.5}
+            justifyContent="flex-end"
+            alignItems="center"
+            sx={{
+              pt: 0.75,
+              borderTop: 1,
+              borderColor: 'divider',
+            }}
+          >
             <IconButton
               aria-label={`Move ${entry.title} up`}
               size="small"
@@ -1373,8 +1391,8 @@ const DashboardEmptyState = ({
                   display: 'grid',
                   gridTemplateColumns: {
                     xs: '1fr',
-                    sm: 'minmax(0, 1fr) auto',
-                    md: 'minmax(0, 1fr) auto minmax(148px, auto)',
+                    sm: 'minmax(0, 1fr) minmax(0, 1fr)',
+                    md: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, auto)',
                   },
                   gap: 1,
                   alignItems: 'center',
@@ -1392,23 +1410,25 @@ const DashboardEmptyState = ({
                 >
                   {settings.customSections.map((section) => (
                     <MenuItem key={section.id} value={section.id}>
-                      {section.name} ({section.entryIds.length})
+                      {section.name}
                     </MenuItem>
                   ))}
                 </TextField>
-                <Button
+                <TextField
                   size="small"
-                  variant="outlined"
-                  onClick={addCustomSection}
-                  sx={{
-                    minHeight: 40,
-                    flexShrink: 0,
-                    textTransform: 'none',
-                    fontWeight: 800,
+                  label="New section name"
+                  value={newCustomSectionName}
+                  onChange={(event) =>
+                    setNewCustomSectionName(event.target.value)
+                  }
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault()
+                      addCustomSection()
+                    }
                   }}
-                >
-                  Add section
-                </Button>
+                  fullWidth
+                />
                 <Stack
                   direction="row"
                   spacing={0.5}
@@ -1424,6 +1444,21 @@ const DashboardEmptyState = ({
                     minHeight: 40,
                   }}
                 >
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={addCustomSection}
+                    disabled={!newCustomSectionName.trim()}
+                    sx={{
+                      minHeight: 30,
+                      flexShrink: 0,
+                      textTransform: 'none',
+                      fontWeight: 800,
+                      mr: 0.5,
+                    }}
+                  >
+                    Add
+                  </Button>
                   <Typography
                     variant="caption"
                     color="text.secondary"

@@ -530,9 +530,7 @@ describe('Dashboards', () => {
     fireEvent.click(
       screen.getByRole('button', { name: /customize this page/i }),
     )
-    expect(
-      screen.queryByRole('button', { name: /^add$/i }),
-    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^add$/i })).toBeDisabled()
     fireEvent.click(screen.getByLabelText(/move chemistry intro up/i))
     fireEvent.click(screen.getByLabelText(/remove biology intro/i))
 
@@ -692,6 +690,19 @@ describe('Dashboards', () => {
       expect.stringContaining(
         '"customEntryIds":["dashboard:biology","dashboard:chemistry","dashboard:algebra"]',
       ),
+    )
+
+    fireEvent.change(
+      screen.getByRole('textbox', { name: /new section name/i }),
+      {
+        target: { value: 'Review' },
+      },
+    )
+    fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
+
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'studymesh-empty-dashboard-settings-v1',
+      expect.stringContaining('"name":"Review"'),
     )
   })
 

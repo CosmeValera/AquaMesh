@@ -570,6 +570,39 @@ const DashboardEmptyState = ({
     })
   }
 
+  const actionIconButtonSx = {
+    width: 36,
+    height: 36,
+    borderRadius: '50%',
+    color: 'text.primary',
+    border: 1,
+    borderColor: 'divider',
+    bgcolor: 'background.paper',
+    boxShadow: (theme) =>
+      theme.palette.mode === 'dark'
+        ? '0 1px 0 rgba(255,255,255,0.04)'
+        : '0 1px 2px rgba(15,23,42,0.08)',
+    '&:hover': {
+      color: 'primary.main',
+      borderColor: 'primary.main',
+      bgcolor: 'action.hover',
+    },
+    '&.Mui-disabled': {
+      color: 'text.disabled',
+      borderColor: 'divider',
+      bgcolor: 'action.disabledBackground',
+      boxShadow: 'none',
+    },
+  }
+  const destructiveActionIconButtonSx = {
+    ...actionIconButtonSx,
+    '&:hover': {
+      color: 'error.main',
+      borderColor: 'error.main',
+      bgcolor: 'action.hover',
+    },
+  }
+
   const renderStudyMaterialEntry = (
     entry: StudyMaterialEntry,
     showCustomEntryControls: boolean,
@@ -583,24 +616,6 @@ const DashboardEmptyState = ({
     const showFolderLabel =
       !sectionName ||
       entry.folderName.trim().toLowerCase() !== sectionName.trim().toLowerCase()
-    const editIconButtonSx = {
-      width: 30,
-      height: 30,
-      color: 'text.primary',
-      border: 1,
-      borderColor: 'divider',
-      bgcolor: 'background.default',
-      '&:hover': {
-        color: 'primary.main',
-        borderColor: 'primary.main',
-        bgcolor: 'action.hover',
-      },
-      '&.Mui-disabled': {
-        color: 'text.disabled',
-        borderColor: 'divider',
-        bgcolor: 'action.disabledBackground',
-      },
-    }
 
     if (showCustomEntryControls && settings.studyMaterialMode === 'custom') {
       const customEntrySection = settings.customSections.find((section) =>
@@ -667,7 +682,7 @@ const DashboardEmptyState = ({
               size="small"
               onClick={() => moveCustomEntry(entry.id, -1)}
               disabled={customEntryIndex <= 0}
-              sx={editIconButtonSx}
+              sx={actionIconButtonSx}
             >
               <KeyboardArrowUpIcon fontSize="small" />
             </IconButton>
@@ -679,7 +694,7 @@ const DashboardEmptyState = ({
                 customEntryIndex < 0 ||
                 customEntryIndex === customEntryCount - 1
               }
-              sx={editIconButtonSx}
+              sx={actionIconButtonSx}
             >
               <KeyboardArrowDownIcon fontSize="small" />
             </IconButton>
@@ -687,7 +702,7 @@ const DashboardEmptyState = ({
               aria-label={`Remove ${entry.title}`}
               size="small"
               onClick={() => removeCustomEntry(entry.id)}
-              sx={editIconButtonSx}
+              sx={destructiveActionIconButtonSx}
             >
               <CloseIcon fontSize="small" />
             </IconButton>
@@ -1149,7 +1164,7 @@ const DashboardEmptyState = ({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+          gridTemplateColumns: '1fr',
           gap: 1.5,
         }}
       >
@@ -1240,16 +1255,22 @@ const DashboardEmptyState = ({
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
+            gridColumn: '1 / -1',
           }}
         >
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-              gap: 1.5,
+              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              gap: { xs: 1.25, md: 2 },
             }}
           >
-            <Box sx={{ minWidth: 0 }}>
+            <Box
+              sx={{
+                minWidth: 0,
+                px: { md: 0.5 },
+              }}
+            >
               <Stack
                 direction="row"
                 alignItems="center"
@@ -1284,7 +1305,12 @@ const DashboardEmptyState = ({
               />
             </Box>
 
-            <Box sx={{ minWidth: 0 }}>
+            <Box
+              sx={{
+                minWidth: 0,
+                px: { md: 0.5 },
+              }}
+            >
               <Stack
                 direction="row"
                 alignItems="center"
@@ -1342,15 +1368,22 @@ const DashboardEmptyState = ({
             }}
           >
             <Stack spacing={1.25}>
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1}
-                alignItems={{ xs: 'stretch', sm: 'center' }}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'minmax(0, 1fr) auto',
+                    md: 'minmax(0, 1fr) auto minmax(148px, auto)',
+                  },
+                  gap: 1,
+                  alignItems: 'center',
+                }}
               >
                 <TextField
                   select
                   size="small"
-                  label="Section"
+                  label="Active section"
                   value={activeCustomSectionIdSafe}
                   onChange={(event) =>
                     setActiveCustomSectionId(event.target.value)
@@ -1359,7 +1392,7 @@ const DashboardEmptyState = ({
                 >
                   {settings.customSections.map((section) => (
                     <MenuItem key={section.id} value={section.id}>
-                      {section.name}
+                      {section.name} ({section.entryIds.length})
                     </MenuItem>
                   ))}
                 </TextField>
@@ -1376,40 +1409,34 @@ const DashboardEmptyState = ({
                 >
                   Add section
                 </Button>
-              </Stack>
-
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '1fr',
-                    sm: 'minmax(0, 1fr) auto',
-                  },
-                  gap: 1,
-                  alignItems: 'center',
-                }}
-              >
-                <TextField
-                  select
-                  size="small"
-                  label="Add Study Path or dashboard"
-                  value=""
-                  onChange={(event) => addCustomEntry(event.target.value)}
-                  fullWidth
-                  disabled={availableCustomEntries.length === 0}
-                >
-                  {availableCustomEntries.map((entry) => (
-                    <MenuItem key={entry.id} value={entry.id}>
-                      {entry.title} -{' '}
-                      {entry.isStudyPath ? 'Study Path' : 'Dashboard'}
-                    </MenuItem>
-                  ))}
-                </TextField>
                 <Stack
                   direction="row"
-                  spacing={0.25}
-                  justifyContent={{ xs: 'flex-start', sm: 'flex-end' }}
+                  spacing={0.5}
+                  alignItems="center"
+                  justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
+                  sx={{
+                    px: 0.75,
+                    py: 0.5,
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    bgcolor: 'background.paper',
+                    minHeight: 40,
+                  }}
                 >
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight={900}
+                    sx={{
+                      mr: 0.25,
+                      textTransform: 'uppercase',
+                      fontSize: '0.625rem',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Section order
+                  </Typography>
                   <IconButton
                     aria-label="Move section up"
                     size="small"
@@ -1417,17 +1444,7 @@ const DashboardEmptyState = ({
                       moveCustomSection(activeCustomSectionIdSafe, -1)
                     }
                     disabled={activeCustomSectionIndex <= 0}
-                    sx={{
-                      color: 'text.primary',
-                      border: 1,
-                      borderColor: 'divider',
-                      bgcolor: 'background.paper',
-                      '&:hover': {
-                        color: 'primary.main',
-                        borderColor: 'primary.main',
-                        bgcolor: 'action.hover',
-                      },
-                    }}
+                    sx={actionIconButtonSx}
                   >
                     <KeyboardArrowUpIcon fontSize="small" />
                   </IconButton>
@@ -1441,17 +1458,7 @@ const DashboardEmptyState = ({
                       activeCustomSectionIndex >=
                       settings.customSections.length - 1
                     }
-                    sx={{
-                      color: 'text.primary',
-                      border: 1,
-                      borderColor: 'divider',
-                      bgcolor: 'background.paper',
-                      '&:hover': {
-                        color: 'primary.main',
-                        borderColor: 'primary.main',
-                        bgcolor: 'action.hover',
-                      },
-                    }}
+                    sx={actionIconButtonSx}
                   >
                     <KeyboardArrowDownIcon fontSize="small" />
                   </IconButton>
@@ -1462,22 +1469,29 @@ const DashboardEmptyState = ({
                       removeCustomSection(activeCustomSectionIdSafe)
                     }
                     disabled={settings.customSections.length <= 1}
-                    sx={{
-                      color: 'text.primary',
-                      border: 1,
-                      borderColor: 'divider',
-                      bgcolor: 'background.paper',
-                      '&:hover': {
-                        color: 'error.main',
-                        borderColor: 'error.main',
-                        bgcolor: 'action.hover',
-                      },
-                    }}
+                    sx={destructiveActionIconButtonSx}
                   >
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 </Stack>
               </Box>
+
+              <TextField
+                select
+                size="small"
+                label={`Add to ${activeCustomSection?.name || 'section'}`}
+                value=""
+                onChange={(event) => addCustomEntry(event.target.value)}
+                fullWidth
+                disabled={availableCustomEntries.length === 0}
+              >
+                {availableCustomEntries.map((entry) => (
+                  <MenuItem key={entry.id} value={entry.id}>
+                    {entry.title} -{' '}
+                    {entry.isStudyPath ? 'Study Path' : 'Dashboard'}
+                  </MenuItem>
+                ))}
+              </TextField>
 
               {customSectionsWithEntries.length > 0 ? (
                 <Stack direction="row" gap={0.75} flexWrap="wrap">

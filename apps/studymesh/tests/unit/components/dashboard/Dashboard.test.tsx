@@ -590,7 +590,7 @@ describe('Dashboards', () => {
     )
     fireEvent.mouseDown(
       screen.getByRole('combobox', {
-        name: /add study path or dashboard/i,
+        name: /add to custom/i,
       }),
     )
     fireEvent.click(screen.getByRole('option', { name: /chemistry intro/i }))
@@ -670,11 +670,13 @@ describe('Dashboards', () => {
     fireEvent.click(
       screen.getByRole('button', { name: /customize this page/i }),
     )
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: /section/i }))
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', { name: /active section/i }),
+    )
     fireEvent.click(screen.getByRole('option', { name: /science/i }))
     fireEvent.mouseDown(
       screen.getByRole('combobox', {
-        name: /add study path or dashboard/i,
+        name: /add to science/i,
       }),
     )
     fireEvent.click(screen.getByRole('option', { name: /chemistry intro/i }))

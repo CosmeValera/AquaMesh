@@ -15,6 +15,7 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import CloseIcon from '@mui/icons-material/Close'
+import DeleteIcon from '@mui/icons-material/Delete'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import AddIcon from '@mui/icons-material/Add'
@@ -95,6 +96,15 @@ import {
   studioPanelWidth,
   StudioFlow,
 } from './workspaceStudioModel'
+import {
+  addPersistentSource,
+  clearPersistentSources,
+  createPersistentSourceText,
+  PersistentSource,
+  readPersistentSourcesSettings,
+  removePersistentSource,
+} from '../../studyPack/persistentSources'
+import { CreationPanelTabs } from './CreationPanelTabs'
 import {
   WorkspaceDesktopLayout,
   WorkspaceMobileLayout,
@@ -507,6 +517,9 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const [mobileSection, setMobileSection] = useState<
     'creation' | 'dashboard' | 'ai-chat'
   >('dashboard')
+  const [creationActiveSection, setCreationActiveSection] = useState<
+    'dashboard' | 'sources' | 'study-path'
+  >('dashboard')
   const [activeFlow, setActiveFlow] = useState<StudioFlow>('hub')
   const [selectedIntent, setSelectedIntent] = useState<CreateIntent | null>(
     null,
@@ -540,6 +553,10 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const [quickSourceMode, setQuickSourceMode] =
     useState<QuickSourceMode>('dashboard')
   const [quickSourceStatus, setQuickSourceStatus] = useState('')
+  const [persistentSources, setPersistentSources] = useState<PersistentSource[]>(() =>
+    readPersistentSourcesSettings().sources,
+  )
+  const [persistentSourceTextDraft, setPersistentSourceTextDraft] = useState('')
   const [queueClockMs, setQueueClockMs] = useState(() => Date.now())
   const [studyPathRetrySignals, setStudyPathRetrySignals] = useState<
     Record<string, number>
@@ -1441,6 +1458,25 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     setQuickSourceFiles((current) =>
       current.filter((_, fileIndex) => fileIndex !== index),
     )
+  }
+
+  const addPersistentSourceTextFn = () => {
+    const text = persistentSourceTextDraft.trim()
+    if (!text) return
+    const source = createPersistentSourceText(text, text.slice(0, 50))
+    addPersistentSource(source)
+    setPersistentSources((current) => [...current, source])
+    setPersistentSourceTextDraft('')
+  }
+
+  const removePersistentSourceByIdFn = (id: string) => {
+    removePersistentSource(id)
+    setPersistentSources((current) => current.filter((s) => s.id !== id))
+  }
+
+  const clearAllPersistentSourcesFn = () => {
+    clearPersistentSources()
+    setPersistentSources([])
   }
 
   const clearQuickSources = () => {
@@ -3173,7 +3209,27 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
           flexDirection: 'column',
         }}
       >
-        {materialDetailContent || creationHubContent}
+        {materialDetailContent || (
+          <CreationPanelTabs
+            creationActiveSection={creationActiveSection}
+            setCreationActiveSection={setCreationActiveSection}
+            studyPathContent={creationHubContent}
+            quickOptionsOpen={quickOptionsOpen}
+            onOpenQuickOptions={() => setQuickOptionsOpen(true)}
+            onCloseQuickOptions={() => {
+              setQuickOptionsOpen(false)
+              setQuickSourceMode('dashboard')
+              setQuickSourceStatus('')
+            }}
+            persistentSources={persistentSources}
+            persistentSourceTextDraft={persistentSourceTextDraft}
+            onPersistentSourceTextChange={setPersistentSourceTextDraft}
+            onAddPersistentSourceText={addPersistentSourceTextFn}
+            onRemovePersistentSource={removePersistentSourceByIdFn}
+            onClearAllPersistentSources={clearAllPersistentSourcesFn}
+            onQuickCreateFromDashboard={() => setQuickOptionsOpen(true)}
+          />
+        )}
       </Box>
 
       <Box

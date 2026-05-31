@@ -207,9 +207,6 @@ const DashboardEmptyState = ({
   })
   const entryById = new Map(folderEntries.map((entry) => [entry.id, entry]))
   const selectedCustomIds = new Set(settings.customEntryIds)
-  const customEntries = settings.customEntryIds
-    .map((entryId) => entryById.get(entryId))
-    .filter((entry): entry is StudyMaterialEntry => Boolean(entry))
   const availableCustomEntries = folderEntries.filter(
     (entry) => !selectedCustomIds.has(entry.id),
   )
@@ -493,7 +490,10 @@ const DashboardEmptyState = ({
     </Paper>
   )
 
-  const renderStudyMaterialBlock = (showCustomizeButton = true) => (
+  const renderStudyMaterialBlock = (
+    showCustomizeButton = true,
+    showCustomEntryControls = false,
+  ) => (
     <Paper
       key="studyMaterial"
       elevation={0}
@@ -591,6 +591,95 @@ const DashboardEmptyState = ({
                   ?.folderColor ||
                   DashboardStorage.getFolderColor(entry.colorSourceFolder),
               )
+
+              if (
+                showCustomEntryControls &&
+                settings.studyMaterialMode === 'custom'
+              ) {
+                const customEntryIndex = settings.customEntryIds.indexOf(
+                  entry.id,
+                )
+
+                return (
+                  <Paper
+                    key={entry.id}
+                    elevation={0}
+                    sx={{
+                      width: '100%',
+                      minHeight: { xs: 58, md: 68 },
+                      display: 'grid',
+                      gridTemplateColumns: 'minmax(0, 1fr) auto',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      border: 1,
+                      borderColor: 'divider',
+                      borderRadius: 1.5,
+                      px: 1.25,
+                      py: 0.75,
+                      minWidth: 0,
+                      maxWidth: '100%',
+                      color: 'text.primary',
+                      bgcolor: 'background.paper',
+                    }}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: 'block',
+                          color: folderColor,
+                          fontWeight: 900,
+                          textTransform: 'uppercase',
+                          lineHeight: 1.2,
+                          fontSize: '0.625rem',
+                        }}
+                      >
+                        {entry.folderName}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={800}
+                        sx={{
+                          fontSize: '0.8125rem',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {entry.title}
+                      </Typography>
+                    </Box>
+                    <Stack direction="row" spacing={0.25}>
+                      <IconButton
+                        aria-label={`Move ${entry.title} up`}
+                        size="small"
+                        onClick={() => moveCustomEntry(entry.id, -1)}
+                        disabled={customEntryIndex === 0}
+                      >
+                        <KeyboardArrowUpIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        aria-label={`Move ${entry.title} down`}
+                        size="small"
+                        onClick={() => moveCustomEntry(entry.id, 1)}
+                        disabled={
+                          customEntryIndex ===
+                          settings.customEntryIds.length - 1
+                        }
+                      >
+                        <KeyboardArrowDownIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        aria-label={`Remove ${entry.title}`}
+                        size="small"
+                        onClick={() => removeCustomEntry(entry.id)}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                  </Paper>
+                )
+              }
 
               return (
                 <Button
@@ -913,145 +1002,36 @@ const DashboardEmptyState = ({
           </Box>
         </Paper>
 
-        <Paper
-          elevation={0}
-          sx={{
-            p: 1.5,
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 2,
-            bgcolor: 'background.default',
-            gridColumn: { xs: 'auto', md: '1 / -1' },
-          }}
-        >
-          <Stack spacing={1.25}>
-            {settings.studyMaterialMode === 'custom' ? (
-              <>
-                <TextField
-                  select
-                  size="small"
-                  label="Add Study Path or dashboard"
-                  value=""
-                  onChange={(event) => addCustomEntry(event.target.value)}
-                  fullWidth
-                  disabled={availableCustomEntries.length === 0}
-                >
-                  {availableCustomEntries.map((entry) => (
-                    <MenuItem key={entry.id} value={entry.id}>
-                      {entry.title} -{' '}
-                      {entry.isStudyPath ? 'Study Path' : 'Dashboard'}
-                    </MenuItem>
-                  ))}
-                </TextField>
-
-                <Box
-                  sx={{
-                    minHeight: 96,
-                    maxHeight: 220,
-                    overflowY: 'auto',
-                    p: 0.75,
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 2,
-                    bgcolor: 'background.paper',
-                  }}
-                >
-                  {customEntries.length > 0 ? (
-                    <Stack spacing={0.75}>
-                      {customEntries.map((entry, index) => (
-                        <Paper
-                          key={entry.id}
-                          elevation={0}
-                          sx={{
-                            p: 1,
-                            border: 1,
-                            borderColor: 'divider',
-                            borderRadius: 1.5,
-                            display: 'grid',
-                            gridTemplateColumns: 'minmax(0, 1fr) auto auto',
-                            alignItems: 'center',
-                            gap: 0.75,
-                          }}
-                        >
-                          <Box sx={{ minWidth: 0 }}>
-                            <Typography variant="body2" fontWeight={900} noWrap>
-                              {entry.title}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {entry.isStudyPath ? 'Study Path' : 'Dashboard'}
-                            </Typography>
-                          </Box>
-                          <Stack direction="row" spacing={0.25}>
-                            <IconButton
-                              aria-label={`Move ${entry.title} up`}
-                              size="small"
-                              onClick={() => moveCustomEntry(entry.id, -1)}
-                              disabled={index === 0}
-                            >
-                              <KeyboardArrowUpIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              aria-label={`Move ${entry.title} down`}
-                              size="small"
-                              onClick={() => moveCustomEntry(entry.id, 1)}
-                              disabled={index === customEntries.length - 1}
-                            >
-                              <KeyboardArrowDownIcon fontSize="small" />
-                            </IconButton>
-                          </Stack>
-                          <IconButton
-                            aria-label={`Remove ${entry.title}`}
-                            size="small"
-                            onClick={() => removeCustomEntry(entry.id)}
-                          >
-                            <CloseIcon fontSize="small" />
-                          </IconButton>
-                        </Paper>
-                      ))}
-                    </Stack>
-                  ) : (
-                    <Box
-                      sx={{
-                        minHeight: 80,
-                        display: 'grid',
-                        placeItems: 'center',
-                        textAlign: 'center',
-                        color: 'text.secondary',
-                        px: 2,
-                      }}
-                    >
-                      <Typography variant="body2" fontWeight={800}>
-                        Add Study Paths or standalone dashboards.
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              </>
-            ) : (
-              <Box
-                sx={{
-                  minHeight: 96,
-                  display: 'grid',
-                  placeItems: 'center',
-                  textAlign: 'center',
-                  color: 'text.secondary',
-                  px: 2,
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                  bgcolor: 'background.paper',
-                }}
-              >
-                <Typography variant="body2" fontWeight={800}>
-                  Recent study material uses saved dashboard order.
-                </Typography>
-              </Box>
-            )}
-          </Stack>
-        </Paper>
+        {settings.studyMaterialMode === 'custom' ? (
+          <Paper
+            elevation={0}
+            sx={{
+              p: 1.5,
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 2,
+              bgcolor: 'background.default',
+              gridColumn: { xs: 'auto', md: '1 / -1' },
+            }}
+          >
+            <TextField
+              select
+              size="small"
+              label="Add Study Path or dashboard"
+              value=""
+              onChange={(event) => addCustomEntry(event.target.value)}
+              fullWidth
+              disabled={availableCustomEntries.length === 0}
+            >
+              {availableCustomEntries.map((entry) => (
+                <MenuItem key={entry.id} value={entry.id}>
+                  {entry.title} -{' '}
+                  {entry.isStudyPath ? 'Study Path' : 'Dashboard'}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Paper>
+        ) : null}
       </Box>
     </Paper>
   )
@@ -1065,7 +1045,7 @@ const DashboardEmptyState = ({
         : renderStudyMaterialBlock(),
     )
     .filter(Boolean)
-  const previewBlock = renderStudyMaterialBlock(false)
+  const previewBlock = renderStudyMaterialBlock(false, true)
   const mainDesktopGridTemplate = isSingleBlock
     ? 'minmax(0, 760px)'
     : settings.blockOrder[0] === 'studyMaterial'

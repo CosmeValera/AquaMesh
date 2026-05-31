@@ -241,7 +241,6 @@ describe('Dashboards', () => {
     expect(
       screen.getByRole('heading', { name: /open study material/i }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/fast creation from material/i)).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: /create study path/i }),
     ).toBeInTheDocument()

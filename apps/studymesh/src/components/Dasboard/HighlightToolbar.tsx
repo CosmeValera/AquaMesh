@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import {
+  Fab,
   IconButton,
   Paper,
   Tooltip,
   Typography,
 } from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
 import {
   HighlightColor,
   HIGHLIGHT_COLORS,
@@ -73,6 +75,34 @@ export const HighlightToolbar: React.FC<HighlightToolbarProps> = ({
         </IconButton>
       </Tooltip>
     </Paper>
+  )
+}
+
+interface HighlightFabProps {
+  onClick: () => void
+  visible: boolean
+}
+
+export const HighlightFab: React.FC<HighlightFabProps> = ({ onClick, visible }) => {
+  if (!visible) return null
+
+  return (
+    <Fab
+      color="primary"
+      onClick={onClick}
+      sx={{
+        position: 'fixed',
+        bottom: 80,
+        right: 16,
+        zIndex: 9998,
+        transition: 'opacity 200ms ease, transform 200ms ease',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'scale(1)' : 'scale(0.8)',
+        pointerEvents: visible ? 'auto' : 'none',
+      }}
+    >
+      <AddIcon />
+    </Fab>
   )
 }
 

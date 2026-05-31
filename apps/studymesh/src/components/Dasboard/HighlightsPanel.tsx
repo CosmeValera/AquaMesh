@@ -26,7 +26,7 @@ import {
   HIGHLIGHT_COLORS,
   HighlightLink,
 } from './dashboardHighlights'
-import { HighlightToolbar, useHighlightSelection } from './HighlightToolbar'
+import { HighlightFab, HighlightToolbar, useHighlightSelection } from './HighlightToolbar'
 import { SavedDashboard, DashboardStorage } from './dashboardStorage'
 
 interface HighlightsPanelProps {
@@ -411,10 +411,16 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
 
       {/* Mobile toolbar when text selected */}
       {isMobile && selectedText && (
-        <HighlightToolbar
-          onHighlight={handleQuickHighlight}
-          onClose={clearSelection}
-        />
+        <>
+          <HighlightFab
+            onClick={() => setCreateOpen(true)}
+            visible={!!selectedText}
+          />
+          <HighlightToolbar
+            onHighlight={handleQuickHighlight}
+            onClose={clearSelection}
+          />
+        </>
       )}
 
       <CreateHighlightDialog

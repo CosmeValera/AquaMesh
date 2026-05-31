@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { useMediaQuery } from '@mui/material'
 import {
   Alert,
   Box,
@@ -36,6 +37,7 @@ interface CreateHighlightDialogProps {
   selectedText: string
   onClose: () => void
   onSave: (color: HighlightColor, note?: string) => void
+  isMobile?: boolean
 }
 
 const CreateHighlightDialog: React.FC<CreateHighlightDialogProps> = ({
@@ -43,6 +45,7 @@ const CreateHighlightDialog: React.FC<CreateHighlightDialogProps> = ({
   selectedText,
   onClose,
   onSave,
+  isMobile,
 }) => {
   const [color, setColor] = useState<HighlightColor>(DEFAULT_HIGHLIGHT_COLOR)
   const [note, setNote] = useState('')
@@ -55,7 +58,7 @@ const CreateHighlightDialog: React.FC<CreateHighlightDialogProps> = ({
   }, [open])
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       <DialogTitle>Create Highlight</DialogTitle>
       <DialogContent>
         <Stack spacing={2}>
@@ -124,6 +127,7 @@ interface EditHighlightDialogProps {
   onClose: () => void
   onSave: (updates: { note?: string; link?: HighlightLink; color?: HighlightColor }) => void
   onDelete: () => void
+  isMobile?: boolean
 }
 
 const EditHighlightDialog: React.FC<EditHighlightDialogProps> = ({
@@ -133,6 +137,7 @@ const EditHighlightDialog: React.FC<EditHighlightDialogProps> = ({
   onClose,
   onSave,
   onDelete,
+  isMobile,
 }) => {
   const [note, setNote] = useState('')
   const [link, setLink] = useState<HighlightLink | undefined>(undefined)
@@ -147,7 +152,7 @@ const EditHighlightDialog: React.FC<EditHighlightDialogProps> = ({
   if (!highlight) return null
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         Edit Highlight
         <IconButton onClick={onDelete} color="error" size="small">
@@ -248,6 +253,8 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   const [selectedText, setSelectedText] = useState('')
   const [editHighlight, setEditHighlight] = useState<DashboardHighlight | null>(null)
   const [dashboards, setDashboards] = useState<SavedDashboard[]>([])
+  const [showSelectionTip, setShowSelectionTip] = useState(false)
+  const isMobile = useMediaQuery('(max-width:600px)')
 
   const loadHighlights = useCallback(() => {
     setHighlights(DashboardHighlightsStorage.getByDashboard(dashboardId))
@@ -291,9 +298,22 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
     }
   }, [])
 
+  // Desktop mouse selection
   useEffect(() => {
     document.addEventListener('mouseup', handleSelectionChange)
     return () => document.removeEventListener('mouseup', handleSelectionChange)
+  }, [handleSelectionChange])
+
+  // Mobile touch selection
+  useEffect(() => {
+    const handleTouchEnd = () => {
+      // Delay to let mobile browser selection menu dismiss
+      setTimeout(() => {
+        handleSelectionChange()
+      }, 300)
+    }
+    document.addEventListener('touchend', handleTouchEnd)
+    return () => document.removeEventListener('touchend', handleTouchEnd)
   }, [handleSelectionChange])
 
   const handleUpdateHighlight = useCallback((updates: { note?: string; link?: HighlightLink; color?: HighlightColor }) => {
@@ -324,14 +344,19 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
             if (selectedText) {
               setCreateOpen(true)
             } else {
-              // No text selected - show tip
-              alert('Select some text on the dashboard first, then click Add Highlight')
+              setShowSelectionTip(true)
             }
           }}
         >
           Add Highlight
         </Button>
       </Box>
+
+      {showSelectionTip && (
+        <Alert severity="warning" onClose={() => setShowSelectionTip(false)} sx={{ py: 0.5 }}>
+          👆 Select some text on the dashboard first, then tap Add Highlight
+        </Alert>
+      )}
 
       {selectedText && (
         <Alert severity="info" sx={{ py: 0.5 }}>
@@ -406,6 +431,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           window.getSelection()?.removeAllRanges()
         }}
         onSave={handleCreateHighlight}
+        isMobile={isMobile}
       />
 
       <EditHighlightDialog
@@ -415,6 +441,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
         onClose={() => setEditHighlight(null)}
         onSave={handleUpdateHighlight}
         onDelete={handleDeleteHighlight}
+        isMobile={isMobile}
       />
     </Stack>
   )

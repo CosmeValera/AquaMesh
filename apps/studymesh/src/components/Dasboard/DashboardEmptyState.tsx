@@ -542,20 +542,27 @@ const DashboardEmptyState = ({
           </Box>
         </Stack>
         {showCustomizeButton ? (
-          <Button
-            variant="outlined"
+          <IconButton
+            aria-label="Customize this page"
             size="small"
-            startIcon={<TuneIcon />}
             onClick={() => setCustomizerOpen(true)}
             sx={{
-              textTransform: 'none',
-              fontWeight: 900,
-              borderRadius: 2,
-              alignSelf: { xs: 'stretch', sm: 'center' },
+              width: 34,
+              height: 34,
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1.5,
+              alignSelf: { xs: 'flex-start', sm: 'center' },
+              color: 'primary.main',
+              bgcolor: 'background.paper',
+              '&:hover': {
+                bgcolor: 'action.hover',
+                borderColor: 'primary.main',
+              },
             }}
           >
-            
-          </Button>
+            <TuneIcon sx={{ fontSize: 18 }} />
+          </IconButton>
         ) : null}
       </Stack>
 

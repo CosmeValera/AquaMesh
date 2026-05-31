@@ -26,6 +26,7 @@ import {
   HIGHLIGHT_COLORS,
   HighlightLink,
 } from './dashboardHighlights'
+import { HighlightToolbar, useHighlightSelection } from './HighlightToolbar'
 import { SavedDashboard, DashboardStorage } from './dashboardStorage'
 
 interface HighlightsPanelProps {
@@ -82,7 +83,7 @@ const CreateHighlightDialog: React.FC<CreateHighlightDialogProps> = ({
               Highlight Color
             </Typography>
             <Stack direction="row" spacing={1}>
-              {(Object.keys(HIGHLIGHT_COLORS) as HighlightColor[]).map(c => (
+              {(Object.keys(HIGHLIGHT_COLORS) as HighlightColor[]).map((c) => (
                 <Tooltip key={c} title={HIGHLIGHT_COLORS[c].label}>
                   <IconButton
                     onClick={() => setColor(c)}
@@ -215,7 +216,7 @@ const EditHighlightDialog: React.FC<EditHighlightDialogProps> = ({
                   Link this highlight to a Dashboard or Study Path
                 </Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap">
-                  {dashboards.slice(0, 3).map(d => (
+                  {dashboards.slice(0, 3).map((d) => (
                     <Button
                       key={d.id}
                       size="small"
@@ -250,11 +251,14 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
 }) => {
   const [highlights, setHighlights] = useState<DashboardHighlight[]>([])
   const [createOpen, setCreateOpen] = useState(false)
-  const [selectedText, setSelectedText] = useState('')
   const [editHighlight, setEditHighlight] = useState<DashboardHighlight | null>(null)
   const [dashboards, setDashboards] = useState<SavedDashboard[]>([])
   const [showSelectionTip, setShowSelectionTip] = useState(false)
   const isMobile = useMediaQuery('(max-width:600px)')
+
+  const { selectedText, clearSelection } = useHighlightSelection(() => {
+    setShowSelectionTip(false)
+  })
 
   const loadHighlights = useCallback(() => {
     setHighlights(DashboardHighlightsStorage.getByDashboard(dashboardId))
@@ -288,33 +292,22 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
     })
     loadHighlights()
     setCreateOpen(false)
-    setSelectedText('')
-  }, [dashboardId, selectedText, loadHighlights])
+    clearSelection()
+  }, [dashboardId, selectedText, loadHighlights, clearSelection])
 
-  const handleSelectionChange = useCallback(() => {
-    const selection = window.getSelection()
-    if (selection && !selection.isCollapsed && selection.toString().trim()) {
-      setSelectedText(selection.toString().trim())
-    }
-  }, [])
+  const handleQuickHighlight = useCallback((color: HighlightColor) => {
+    if (!selectedText.trim()) return
 
-  // Desktop mouse selection
-  useEffect(() => {
-    document.addEventListener('mouseup', handleSelectionChange)
-    return () => document.removeEventListener('mouseup', handleSelectionChange)
-  }, [handleSelectionChange])
-
-  // Mobile touch selection
-  useEffect(() => {
-    const handleTouchEnd = () => {
-      // Delay to let mobile browser selection menu dismiss
-      setTimeout(() => {
-        handleSelectionChange()
-      }, 300)
-    }
-    document.addEventListener('touchend', handleTouchEnd)
-    return () => document.removeEventListener('touchend', handleTouchEnd)
-  }, [handleSelectionChange])
+    DashboardHighlightsStorage.add({
+      dashboardId,
+      widgetId: 'manual',
+      blockType: 'text',
+      selectedText: selectedText.trim(),
+      color,
+    })
+    loadHighlights()
+    clearSelection()
+  }, [dashboardId, selectedText, loadHighlights, clearSelection])
 
   const handleUpdateHighlight = useCallback((updates: { note?: string; link?: HighlightLink; color?: HighlightColor }) => {
     if (!editHighlight) return
@@ -358,12 +351,6 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
         </Alert>
       )}
 
-      {selectedText && (
-        <Alert severity="info" sx={{ py: 0.5 }}>
-          Text selected: "{selectedText.slice(0, 50)}{selectedText.length > 50 ? '...' : ''}"
-        </Alert>
-      )}
-
       {highlights.length === 0 ? (
         <Paper
           elevation={0}
@@ -381,7 +368,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
         </Paper>
       ) : (
         <Stack spacing={1}>
-          {highlights.map(h => (
+          {highlights.map((h) => (
             <Paper
               key={h.id}
               elevation={0}
@@ -422,13 +409,20 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
         </Stack>
       )}
 
+      {/* Mobile toolbar when text selected */}
+      {isMobile && selectedText && (
+        <HighlightToolbar
+          onHighlight={handleQuickHighlight}
+          onClose={clearSelection}
+        />
+      )}
+
       <CreateHighlightDialog
         open={createOpen}
         selectedText={selectedText}
         onClose={() => {
           setCreateOpen(false)
-          setSelectedText('')
-          window.getSelection()?.removeAllRanges()
+          clearSelection()
         }}
         onSave={handleCreateHighlight}
         isMobile={isMobile}

@@ -89,7 +89,7 @@ import {
   getUniqueDashboardName,
   type SavedDashboard,
 } from './dashboardStorage'
-import './tabs.scss'
+import { HighlightControls } from './HighlightControls'
 const DEFAULT_STUDY_PATH_OPENED_KEY = 'studymesh-default-study-path-opened-v1'
 const USER_ROLE_CHANGED_EVENT = 'studymesh-user-role-changed'
 const OPEN_SAVED_DASHBOARDS_EVENT = 'studymesh-open-saved-dashboards'
@@ -1732,6 +1732,11 @@ const Dashboards = () => {
           })}
         </Tabs>
       </Box>
+
+      {/* Highlight Controls - ALWAYS visible on mobile */}
+      {isMobileDashboardView && currentDashboard && (
+        <HighlightControls dashboardId={currentDashboard.id} />
+      )}
 
       {isMobileDashboardView ? (
         <Drawer

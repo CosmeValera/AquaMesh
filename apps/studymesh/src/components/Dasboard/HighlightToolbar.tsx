@@ -84,47 +84,73 @@ interface HighlightFabProps {
 }
 
 export const HighlightFab: React.FC<HighlightFabProps> = ({ onClick, visible }) => {
-  if (!visible) return null
-
   return (
-    <Fab
-      color="primary"
-      onClick={onClick}
-      sx={{
-        position: 'fixed',
-        bottom: 80,
-        right: 16,
-        zIndex: 9998,
-        transition: 'opacity 200ms ease, transform 200ms ease',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'scale(1)' : 'scale(0.8)',
-        pointerEvents: visible ? 'auto' : 'none',
-      }}
-    >
-      <AddIcon />
-    </Fab>
+    <Tooltip title="Add Highlight">
+      <Fab
+        color="primary"
+        onClick={onClick}
+        sx={{
+          position: 'fixed',
+          bottom: 80,
+          right: 16,
+          zIndex: 9998,
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'scale(1)' : 'scale(0.8)',
+          pointerEvents: visible ? 'auto' : 'none',
+          transition: 'opacity 150ms ease, transform 150ms ease',
+        }}
+      >
+        <AddIcon />
+      </Fab>
+    </Tooltip>
   )
+}
+
+export const useHighlightSelection = (): string => {
+  const [selectedText, setSelectedText] = useState('')
+
+  const updateSelection = useCallback(() => {
+    const selection = window.getSelection()
+    if (selection && !selection.isCollapsed && selection.toString().trim()) {
+      setSelectedText(selection.toString().trim())
+    } else {
+      // Don't clear immediately - give time for re-selection
+      setTimeout(() => {
+        const sel = window.getSelection()
+        if (!sel || sel.isCollapsed) {
+          setSelectedText('')
+        }
+      }, 100)
+    }
+  }, [])
+
+  useEffect(() => {
+    // selectionchange fires on any selection change
+    document.addEventListener('selectionchange', updateSelection)
+    return () => document.removeEventListener('selectionchange', updateSelection)
+  }, [updateSelection])
+
+  return selectedText
 }
 
 interface UseHighlightSelectionResult {
   selectedText: string
-  handleTextSelect: () => void
   clearSelection: () => void
 }
 
-export const useHighlightSelection = (
-  onSelectionChange: (text: string) => void,
+export const useHighlightSelectionCallback = (
+  _onSelectionChange?: (text: string) => void,
 ): UseHighlightSelectionResult => {
   const [selectedText, setSelectedText] = useState('')
 
-  const handleTextSelect = useCallback(() => {
+  const updateSelection = useCallback(() => {
     const selection = window.getSelection()
     if (selection && !selection.isCollapsed && selection.toString().trim()) {
       const text = selection.toString().trim()
       setSelectedText(text)
-      onSelectionChange(text)
+      _onSelectionChange?.(text)
     }
-  }, [onSelectionChange])
+  }, [_onSelectionChange])
 
   const clearSelection = useCallback(() => {
     setSelectedText('')
@@ -133,18 +159,24 @@ export const useHighlightSelection = (
 
   // Desktop mouse selection
   useEffect(() => {
-    document.addEventListener('mouseup', handleTextSelect)
-    return () => document.removeEventListener('mouseup', handleTextSelect)
-  }, [handleTextSelect])
+    document.addEventListener('mouseup', updateSelection)
+    return () => document.removeEventListener('mouseup', updateSelection)
+  }, [updateSelection])
 
-  // Mobile touch selection
+  // Mobile touch selection (with delay for browser menu)
   useEffect(() => {
     const handleTouchEnd = () => {
-      setTimeout(handleTextSelect, 300)
+      setTimeout(updateSelection, 500)
     }
     document.addEventListener('touchend', handleTouchEnd)
     return () => document.removeEventListener('touchend', handleTouchEnd)
-  }, [handleTextSelect])
+  }, [updateSelection])
 
-  return { selectedText, handleTextSelect, clearSelection }
+  // Fallback: also listen to selectionchange which fires more reliably
+  useEffect(() => {
+    document.addEventListener('selectionchange', updateSelection)
+    return () => document.removeEventListener('selectionchange', updateSelection)
+  }, [updateSelection])
+
+  return { selectedText, clearSelection }
 }

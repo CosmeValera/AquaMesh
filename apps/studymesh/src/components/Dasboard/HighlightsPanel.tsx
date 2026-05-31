@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useMediaQuery } from '@mui/material'
 import {
-  Alert,
   Box,
   Button,
   Dialog,
@@ -26,7 +25,7 @@ import {
   HIGHLIGHT_COLORS,
   HighlightLink,
 } from './dashboardHighlights'
-import { HighlightFab, HighlightToolbar, useHighlightSelection } from './HighlightToolbar'
+import { HighlightFab, HighlightToolbar, useHighlightSelectionCallback } from './HighlightToolbar'
 import { SavedDashboard, DashboardStorage } from './dashboardStorage'
 
 interface HighlightsPanelProps {
@@ -253,12 +252,9 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   const [createOpen, setCreateOpen] = useState(false)
   const [editHighlight, setEditHighlight] = useState<DashboardHighlight | null>(null)
   const [dashboards, setDashboards] = useState<SavedDashboard[]>([])
-  const [showSelectionTip, setShowSelectionTip] = useState(false)
   const isMobile = useMediaQuery('(max-width:600px)')
 
-  const { selectedText, clearSelection } = useHighlightSelection(() => {
-    setShowSelectionTip(false)
-  })
+  const { selectedText, clearSelection } = useHighlightSelectionCallback()
 
   const loadHighlights = useCallback(() => {
     setHighlights(DashboardHighlightsStorage.getByDashboard(dashboardId))
@@ -334,22 +330,17 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => {
-            if (selectedText) {
+            if (isMobile) {
+              // On mobile, FAB handles text selection - just show all highlights
+              // or scroll to highlights list
+            } else if (selectedText) {
               setCreateOpen(true)
-            } else {
-              setShowSelectionTip(true)
             }
           }}
         >
-          Add Highlight
+          {highlights.length > 0 ? `${highlights.length} Highlight${highlights.length !== 1 ? 's' : ''}` : 'Highlights'}
         </Button>
       </Box>
-
-      {showSelectionTip && (
-        <Alert severity="warning" onClose={() => setShowSelectionTip(false)} sx={{ py: 0.5 }}>
-          👆 Select some text on the dashboard first, then tap Add Highlight
-        </Alert>
-      )}
 
       {highlights.length === 0 ? (
         <Paper

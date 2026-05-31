@@ -83,7 +83,7 @@ interface HighlightFabProps {
   visible: boolean
 }
 
-export const HighlightFab: React.FC<HighlightFabProps> = ({ onClick, visible }) => {
+export const HighlightFab: React.FC<HighlightFabProps> = ({ onClick }) => {
   return (
     <Tooltip title="Add Highlight">
       <Fab
@@ -94,10 +94,6 @@ export const HighlightFab: React.FC<HighlightFabProps> = ({ onClick, visible }) 
           bottom: 80,
           right: 16,
           zIndex: 9998,
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'scale(1)' : 'scale(0.8)',
-          pointerEvents: visible ? 'auto' : 'none',
-          transition: 'opacity 150ms ease, transform 150ms ease',
         }}
       >
         <AddIcon />

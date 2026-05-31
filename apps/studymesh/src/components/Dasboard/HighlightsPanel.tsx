@@ -400,12 +400,11 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
         </Stack>
       )}
 
-      {/* Mobile toolbar when text selected */}
-      {isMobile && selectedText && (
+      {/* Mobile always-on controls */}
+      {isMobile && (
         <>
           <HighlightFab
             onClick={() => setCreateOpen(true)}
-            visible={!!selectedText}
           />
           <HighlightToolbar
             onHighlight={handleQuickHighlight}

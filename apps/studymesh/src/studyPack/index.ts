@@ -37,6 +37,27 @@ export {
   normalizeLearningConcepts,
 } from './concepts'
 export type { LearningConcept } from './concepts'
+export {
+  completeStudyPathDashboard,
+  getNextSectionToReview,
+  getStudyPathDashboardProgress,
+  getStudyPathMasteryProgress,
+  isSectionLocked,
+  recordSectionQuizScore,
+  recordSectionTeachBack,
+  registerStudyPathAttempt,
+  setSectionMasteryStatus,
+} from './progress'
+export type {
+  StudyPathAttempt,
+  StudyPathAttemptType,
+  StudyPathDashboardMeta,
+  StudyPathDashboardProgress,
+  StudyPathMasteryProgress,
+  StudyPathProgress,
+  StudyPathSectionMasteryStatus,
+  StudyPathSectionProgress,
+} from './progress'
 export type {
   GeneratedStudyPack,
   StudyCodeObject,

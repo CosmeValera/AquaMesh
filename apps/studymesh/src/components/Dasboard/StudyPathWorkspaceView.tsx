@@ -1,4 +1,5 @@
 import React, {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -9,11 +10,13 @@ import {
   Box,
   Button,
   Chip,
+  Collapse,
   Divider,
   IconButton,
   LinearProgress,
   Paper,
   Stack,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material'
@@ -23,13 +26,24 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import CloseIcon from '@mui/icons-material/Close'
+import SchoolIcon from '@mui/icons-material/School'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import QuizIcon from '@mui/icons-material/Quiz'
 import DashboardLayoutView from '../Layout/Layout'
 import {
   DashboardLayout,
   StudyPathContainerState,
   StudyPathDashboardItem,
 } from '../../state/store'
-import { getStudyPathDashboardProgress } from '../../studyPack/progress'
+import {
+  getStudyPathDashboardProgress,
+  getStudyPathMasteryProgress,
+  setSectionMasteryStatus,
+  recordSectionQuizScore,
+  recordSectionTeachBack,
+  isSectionLocked,
+  StudyPathSectionMasteryStatus,
+} from '../../studyPack/progress'
 
 const STUDY_PATH_NAV_OPEN_STORAGE_KEY = 'studymesh-study-path-navigator-open-v2'
 const LEGACY_STUDY_PATH_NAV_OPEN_STORAGE_KEY =
@@ -143,11 +157,121 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [navigatorOpen, setNavigatorOpen] = useState(false)
   const [navigatorDock, setNavigatorDock] = useState<NavigatorDock>('right')
+  const [masteryOpen, setMasteryOpen] = useState(false)
+  const [teachBackOpen, setTeachBackOpen] = useState(false)
+  const [teachBackText, setTeachBackText] = useState('')
+  const [teachBackLoading, setTeachBackLoading] = useState(false)
+  const [teachBackResult, setTeachBackResult] = useState<string | null>(null)
+
   const selectedIndex = Math.min(
     Math.max(studyPath.selectedIndex || 0, 0),
     Math.max(studyPath.dashboards.length - 1, 0),
   )
   const currentLesson = studyPath.dashboards[selectedIndex]
+
+  // Mastery section (depends on currentLesson declared above)
+  const sectionIds = useMemo(
+    () => studyPath.dashboards.map((d) => d.dashboardKey),
+    [studyPath],
+  )
+
+  const masteryProgress = useMemo(
+    () => getStudyPathMasteryProgress(studyPath.pathId),
+    [studyPath.pathId, masteryOpen, teachBackOpen],
+  )
+
+  const currentSectionProgress = useMemo(
+    () =>
+      currentLesson
+        ? masteryProgress?.sections[currentLesson.dashboardKey] || {
+            sectionId: currentLesson.dashboardKey,
+            status: 'notStarted' as StudyPathSectionMasteryStatus,
+            quizAttempts: 0,
+            teachBackAttempts: 0,
+          }
+        : null,
+    [currentLesson, masteryProgress],
+  )
+
+  const sectionLocked = useMemo(
+    () =>
+      currentLesson
+        ? isSectionLocked(
+            studyPath.pathId,
+            currentLesson.dashboardKey,
+            sectionIds,
+          )
+        : false,
+    [currentLesson, studyPath.pathId, sectionIds],
+  )
+
+  const handleSetStatus = useCallback(
+    (status: StudyPathSectionMasteryStatus) => {
+      if (!currentLesson) return
+      setSectionMasteryStatus(studyPath.pathId, currentLesson.dashboardKey, status)
+      setMasteryOpen(false)
+    },
+    [currentLesson, studyPath.pathId],
+  )
+
+  const handleRecordScore = useCallback(
+    (score: number) => {
+      if (!currentLesson) return
+      recordSectionQuizScore(studyPath.pathId, currentLesson.dashboardKey, score)
+      setMasteryOpen(false)
+    },
+    [currentLesson, studyPath.pathId],
+  )
+
+  const handleTeachBackSubmit = useCallback(async () => {
+    if (!currentLesson || !teachBackText.trim()) return
+    setTeachBackLoading(true)
+    setTeachBackResult(null)
+
+    try {
+      const words = teachBackText.trim().split(/\s+/).length
+      const feedback =
+        words < 20
+          ? 'Try to explain the concept in more detail. Aim for at least 2-3 sentences covering the key points.'
+          : words < 50
+          ? 'Good effort! Try to include more specific examples or details about how or why something works.'
+          : 'Great explanation! You covered the main points well.'
+
+      recordSectionTeachBack(
+        studyPath.pathId,
+        currentLesson.dashboardKey,
+        feedback,
+      )
+      setTeachBackResult(feedback)
+    } finally {
+      setTeachBackLoading(false)
+    }
+  }, [currentLesson, studyPath.pathId, teachBackText])
+
+  const masteryStatusColor = (
+    status: StudyPathSectionMasteryStatus,
+  ): 'default' | 'primary' | 'success' | 'warning' | 'error' => {
+    switch (status) {
+      case 'mastered':
+        return 'success'
+      case 'needsReview':
+        return 'warning'
+      case 'inProgress':
+        return 'primary'
+      case 'locked':
+        return 'error'
+      default:
+        return 'default'
+    }
+  }
+
+  const masteryStatusLabel: Record<StudyPathSectionMasteryStatus, string> = {
+    notStarted: 'Not started',
+    inProgress: 'In progress',
+    needsReview: 'Needs review',
+    mastered: 'Mastered',
+    locked: 'Locked',
+  }
   const progressByKey = useMemo(
     () =>
       Object.fromEntries(
@@ -605,6 +729,284 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                 </Typography>
               </Paper>
 
+              {/* Mastery check section */}
+              <Paper
+                variant="outlined"
+                sx={{
+                  px: { xs: 1, sm: 1.25 },
+                  py: { xs: 0.65, sm: 1 },
+                  borderRadius: 2,
+                  bgcolor: 'action.hover',
+                }}
+              >
+                <Stack spacing={0.75}>
+                  <Stack
+                    direction="row"
+                    spacing={0.75}
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontSize: { xs: '0.68rem', sm: '0.75rem' } }}
+                    >
+                      Mastery check
+                    </Typography>
+                    <Chip
+                      size="small"
+                      label={
+                        currentSectionProgress
+                          ? masteryStatusLabel[currentSectionProgress.status]
+                          : 'Not started'
+                      }
+                      color={masteryStatusColor(
+                        sectionLocked
+                          ? 'locked'
+                          : currentSectionProgress?.status || 'notStarted',
+                      )}
+                      sx={{
+                        height: { xs: 18, sm: 22 },
+                        fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                      }}
+                    />
+                  </Stack>
+
+                  {currentSectionProgress && (
+                    <Stack spacing={0.4}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: '0.6rem', sm: '0.68rem' } }}
+                      >
+                        Quiz attempts: {currentSectionProgress.quizAttempts}{
+                          currentSectionProgress.bestScore !== undefined
+                            ? ` · Best: ${currentSectionProgress.bestScore}%`
+                            : ''
+                        }
+                        {currentSectionProgress.lastReviewedAt &&
+                          ` · Reviewed ${new Date(
+                            currentSectionProgress.lastReviewedAt,
+                          ).toLocaleDateString()}`}
+                      </Typography>
+                      {currentSectionProgress.lastTeachBackFeedback && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{
+                            fontSize: { xs: '0.6rem', sm: '0.68rem' },
+                            fontStyle: 'italic',
+                          }}
+                        >
+                          "{currentSectionProgress.lastTeachBackFeedback}"
+                        </Typography>
+                      )}
+                    </Stack>
+                  )}
+
+                  <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                    <Button
+                      size="small"
+                      variant={
+                        currentSectionProgress?.status === 'inProgress'
+                          ? 'contained'
+                          : 'outlined'
+                      }
+                      color="primary"
+                      disabled={sectionLocked}
+                      onClick={() => handleSetStatus('inProgress')}
+                      startIcon={<SchoolIcon sx={{ fontSize: 13 }} />}
+                      sx={{
+                        textTransform: 'none',
+                        py: { xs: 0.2, sm: 0.35 },
+                        px: { xs: 0.75, sm: 1 },
+                        fontSize: { xs: '0.68rem', sm: '0.75rem' },
+                        minWidth: 0,
+                      }}
+                    >
+                      Studying
+                    </Button>
+                    <Button
+                      size="small"
+                      variant={
+                        currentSectionProgress?.status === 'mastered'
+                          ? 'contained'
+                          : 'outlined'
+                      }
+                      color="success"
+                      disabled={sectionLocked}
+                      onClick={() => handleSetStatus('mastered')}
+                      startIcon={<CheckCircleIcon sx={{ fontSize: 13 }} />}
+                      sx={{
+                        textTransform: 'none',
+                        py: { xs: 0.2, sm: 0.35 },
+                        px: { xs: 0.75, sm: 1 },
+                        fontSize: { xs: '0.68rem', sm: '0.75rem' },
+                        minWidth: 0,
+                      }}
+                    >
+                      Mastered
+                    </Button>
+                    <Button
+                      size="small"
+                      variant={
+                        currentSectionProgress?.status === 'needsReview'
+                          ? 'contained'
+                          : 'outlined'
+                      }
+                      color="warning"
+                      disabled={sectionLocked}
+                      onClick={() => handleSetStatus('needsReview')}
+                      startIcon={<RefreshIcon sx={{ fontSize: 13 }} />}
+                      sx={{
+                        textTransform: 'none',
+                        py: { xs: 0.2, sm: 0.35 },
+                        px: { xs: 0.75, sm: 1 },
+                        fontSize: { xs: '0.68rem', sm: '0.75rem' },
+                        minWidth: 0,
+                      }}
+                    >
+                      Review
+                    </Button>
+                  </Stack>
+
+                  <Collapse in={masteryOpen}>
+                    <Stack spacing={0.5}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: '0.62rem', sm: '0.7rem' } }}
+                      >
+                        Record quiz score (0–100)
+                      </Typography>
+                      <Stack direction="row" spacing={0.5}>
+                        {[100, 80, 60, 40].map((score) => (
+                          <Button
+                            key={score}
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleRecordScore(score)}
+                            sx={{
+                              minWidth: 0,
+                              py: { xs: 0.1, sm: 0.25 },
+                              px: { xs: 0.5, sm: 0.75 },
+                              fontSize: { xs: '0.68rem', sm: '0.75rem' },
+                              flex: 1,
+                            }}
+                          >
+                            {score}%
+                          </Button>
+                        ))}
+                      </Stack>
+                    </Stack>
+                  </Collapse>
+
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={() => setMasteryOpen((v) => !v)}
+                    startIcon={<QuizIcon sx={{ fontSize: 13 }} />}
+                    sx={{
+                      textTransform: 'none',
+                      py: { xs: 0.2, sm: 0.25 },
+                      px: { xs: 0.5, sm: 0.75 },
+                      fontSize: { xs: '0.68rem', sm: '0.75rem' },
+                      color: 'text.secondary',
+                    }}
+                  >
+                    {masteryOpen ? 'Hide quiz score' : 'Record quiz score'}
+                  </Button>
+                </Stack>
+              </Paper>
+
+              {/* Teach-back section */}
+              <Paper
+                variant="outlined"
+                sx={{
+                  px: { xs: 1, sm: 1.25 },
+                  py: { xs: 0.65, sm: 1 },
+                  borderRadius: 2,
+                  bgcolor: 'action.hover',
+                }}
+              >
+                <Stack spacing={0.5}>
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={() => setTeachBackOpen((v) => !v)}
+                    startIcon={<SchoolIcon sx={{ fontSize: 13 }} />}
+                    sx={{
+                      textTransform: 'none',
+                      py: { xs: 0.2, sm: 0.25 },
+                      px: 0,
+                      fontSize: { xs: '0.72rem', sm: '0.8125rem' },
+                      fontWeight: 800,
+                      color: 'text.primary',
+                      justifyContent: 'flex-start',
+                    }}
+                  >
+                    Explain in your own words
+                  </Button>
+
+                  <Collapse in={teachBackOpen}>
+                    <Stack spacing={0.5}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: '0.62rem', sm: '0.7rem' } }}
+                      >
+                        Briefly explain the main concept of this lesson
+                        without looking at the material.
+                      </Typography>
+                      <TextField
+                        size="small"
+                        multiline
+                        minRows={2}
+                        maxRows={5}
+                        value={teachBackText}
+                        onChange={(e) => setTeachBackText(e.target.value)}
+                        placeholder="e.g. This lesson was about..."
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            fontSize: { xs: '0.72rem', sm: '0.8125rem' },
+                          },
+                        }}
+                      />
+                      <Button
+                        size="small"
+                        variant="contained"
+                        disabled={!teachBackText.trim() || teachBackLoading}
+                        onClick={handleTeachBackSubmit}
+                        sx={{
+                          textTransform: 'none',
+                          fontSize: { xs: '0.72rem', sm: '0.8125rem' },
+                        }}
+                      >
+                        {teachBackLoading ? 'Analyzing...' : 'Submit explanation'}
+                      </Button>
+                      {teachBackResult && (
+                        <Paper
+                          variant="outlined"
+                          sx={{
+                            p: { xs: 0.75, sm: 1 },
+                            bgcolor: 'background.paper',
+                            borderRadius: 1.5,
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ fontSize: { xs: '0.68rem', sm: '0.75rem' } }}
+                          >
+                            <strong>Feedback:</strong> {teachBackResult}
+                          </Typography>
+                        </Paper>
+                      )}
+                    </Stack>
+                  </Collapse>
+                </Stack>
+              </Paper>
+
               <Stack direction="row" spacing={0.75}>
                 <Button
                   size="small"
@@ -708,6 +1110,15 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                 {studyPath.dashboards.map((lesson, index) => {
                   const progress = progressByKey[lesson.dashboardKey]
                   const active = index === selectedIndex
+                  const lessonMastery = masteryProgress?.sections[lesson.dashboardKey]
+                  const locked = isSectionLocked(
+                    studyPath.pathId,
+                    lesson.dashboardKey,
+                    sectionIds,
+                  )
+                  const masteryStatus: StudyPathSectionMasteryStatus = locked
+                    ? 'locked'
+                    : lessonMastery?.status || 'notStarted'
 
                   return (
                     <Button
@@ -753,23 +1164,49 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                               : 'transparent',
                           }}
                         >
-                          {progress?.completedAt ? (
+                          {masteryStatus === 'mastered' || progress?.completedAt ? (
                             <CheckCircleIcon sx={{ fontSize: 16 }} />
                           ) : (
                             index + 1
                           )}
                         </Box>
                         <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography
-                            variant="body2"
-                            fontWeight={800}
-                            noWrap
-                            sx={{
-                              fontSize: { xs: '0.76rem', sm: '0.875rem' },
-                            }}
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            alignItems="center"
                           >
-                            {lesson.name}
-                          </Typography>
+                            <Typography
+                              variant="body2"
+                              fontWeight={800}
+                              noWrap
+                              sx={{
+                                fontSize: { xs: '0.76rem', sm: '0.875rem' },
+                              }}
+                            >
+                              {lesson.name}
+                            </Typography>
+                            <Chip
+                              size="small"
+                              label={
+                                masteryStatus === 'mastered'
+                                  ? '✓'
+                                  : masteryStatus === 'inProgress'
+                                  ? '→'
+                                  : masteryStatus === 'needsReview'
+                                  ? '?'
+                                  : masteryStatus === 'locked'
+                                  ? '🔒'
+                                  : '○'
+                              }
+                              color={masteryStatusColor(masteryStatus)}
+                              sx={{
+                                height: { xs: 14, sm: 16 },
+                                fontSize: { xs: '0.58rem', sm: '0.65rem' },
+                                ml: 0.25,
+                              }}
+                            />
+                          </Stack>
                           <Typography
                             variant="caption"
                             sx={{
@@ -778,10 +1215,13 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                             }}
                             noWrap
                           >
-                            Step {lesson.dashboardIndex}/{lesson.dashboardCount}
-                            {progress?.score
-                              ? ` · Score ${progress.score}%`
-                              : ''}
+                            Step {lesson.dashboardIndex}/{lesson.dashboardCount}{
+                              lessonMastery?.bestScore !== undefined
+                                ? ` · Best ${lessonMastery.bestScore}%`
+                                : progress?.score
+                                ? ` · Score ${progress.score}%`
+                                : ''
+                            }
                           </Typography>
                         </Box>
                       </Stack>

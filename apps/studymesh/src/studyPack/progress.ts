@@ -4,9 +4,41 @@ import { DashboardLayout } from '../state/store'
 export const OPEN_STUDY_PATH_REVIEW_DASHBOARD_EVENT =
   'studymesh-open-study-path-review-dashboard'
 
+// Section mastery layer (adaptive closed-loop learning)
+export type StudyPathSectionMasteryStatus =
+  | 'notStarted'
+  | 'inProgress'
+  | 'needsReview'
+  | 'mastered'
+  | 'locked'
+
+export interface StudyPathSectionProgress {
+  sectionId: string
+  status: StudyPathSectionMasteryStatus
+  quizAttempts: number
+  bestScore?: number
+  lastScore?: number
+  teachBackAttempts: number
+  lastTeachBackFeedback?: string
+  lastReviewedAt?: string
+  masteredAt?: string
+}
+
+export interface StudyPathMasteryProgress {
+  studyPathId: string
+  sections: Record<string, StudyPathSectionProgress>
+  activeSectionId?: string
+  updatedAt: string
+}
+
 const STORAGE_KEY = 'studymesh-study-path-progress-v1'
 const LEGACY_STORAGE_KEY = 'aquamesh-study-path-progress-v1'
+const MASTERY_STORAGE_KEY = 'studymesh-study-path-mastery-v1'
 const DASHBOARDS_STORAGE_KEY = 'customDashboards'
+
+interface MasteryStore {
+  paths: Record<string, StudyPathMasteryProgress>
+}
 const STUDY_PACK_COLOR = '#007C66'
 
 export type StudyPathAttemptType = 'quiz' | 'flashcard'
@@ -47,6 +79,7 @@ export interface StudyPathProgress {
   dashboards: Record<string, StudyPathDashboardProgress>
   reviewDashboardId?: string
   reviewGeneratedAt?: string
+  // Legacy: mastery stored separately in mastery store
 }
 
 interface ProgressStore {
@@ -407,4 +440,179 @@ export const completeStudyPathDashboard = (
 
   writeStore(store)
   return { dashboard, reviewDashboard }
+}
+
+// ── Section mastery layer ────────────────────────────────────────────────────
+
+const readMasteryStore = (): MasteryStore => {
+  try {
+    const stored = window.localStorage.getItem(MASTERY_STORAGE_KEY)
+    return stored ? (JSON.parse(stored) as MasteryStore) : { paths: {} }
+  } catch {
+    return { paths: {} }
+  }
+}
+
+const writeMasteryStore = (store: MasteryStore): void => {
+  window.localStorage.setItem(MASTERY_STORAGE_KEY, JSON.stringify(store))
+}
+
+export const getStudyPathMasteryProgress = (
+  studyPathId: string,
+): StudyPathMasteryProgress | null => {
+  const store = readMasteryStore()
+  return store.paths[studyPathId] || null
+}
+
+export const getOrCreateSectionProgress = (
+  store: MasteryStore,
+  studyPathId: string,
+  sectionId: string,
+): StudyPathSectionProgress => {
+  if (!store.paths[studyPathId]) {
+    store.paths[studyPathId] = {
+      studyPathId,
+      sections: {},
+      updatedAt: new Date().toISOString(),
+    }
+  }
+
+  const path = store.paths[studyPathId]
+  if (!path.sections[sectionId]) {
+    path.sections[sectionId] = {
+      sectionId,
+      status: 'notStarted',
+      quizAttempts: 0,
+      teachBackAttempts: 0,
+    }
+  }
+
+  return path.sections[sectionId]
+}
+
+export const setSectionMasteryStatus = (
+  studyPathId: string,
+  sectionId: string,
+  status: StudyPathSectionMasteryStatus,
+): StudyPathMasteryProgress => {
+  const store = readMasteryStore()
+  const section = getOrCreateSectionProgress(store, studyPathId, sectionId)
+  const now = new Date().toISOString()
+
+  section.status = status
+
+  if (status === 'mastered') {
+    section.masteredAt = now
+  }
+
+  if (status === 'needsReview' || status === 'inProgress') {
+    section.lastReviewedAt = now
+  }
+
+  store.paths[studyPathId].updatedAt = now
+  writeMasteryStore(store)
+  return store.paths[studyPathId]
+}
+
+export const recordSectionQuizScore = (
+  studyPathId: string,
+  sectionId: string,
+  score: number,
+): StudyPathMasteryProgress => {
+  const store = readMasteryStore()
+  const section = getOrCreateSectionProgress(store, studyPathId, sectionId)
+  const now = new Date().toISOString()
+
+  section.quizAttempts += 1
+  section.lastScore = score
+  section.bestScore = Math.max(score, section.bestScore ?? 0)
+  section.lastReviewedAt = now
+
+  // Auto-suggest needs review if score drops below 70
+  if (score < 70 && section.status === 'mastered') {
+    section.status = 'needsReview'
+  }
+
+  store.paths[studyPathId].updatedAt = now
+  writeMasteryStore(store)
+  return store.paths[studyPathId]
+}
+
+export const recordSectionTeachBack = (
+  studyPathId: string,
+  sectionId: string,
+  feedback: string,
+): StudyPathMasteryProgress => {
+  const store = readMasteryStore()
+  const section = getOrCreateSectionProgress(store, studyPathId, sectionId)
+  const now = new Date().toISOString()
+
+  section.teachBackAttempts += 1
+  section.lastTeachBackFeedback = feedback
+  section.lastReviewedAt = now
+
+  store.paths[studyPathId].updatedAt = now
+  writeMasteryStore(store)
+  return store.paths[studyPathId]
+}
+
+export const getNextSectionToReview = (
+  studyPathId: string,
+  sectionIds: string[],
+): string | null => {
+  const mastery = getStudyPathMasteryProgress(studyPathId)
+  if (!mastery) {
+    return sectionIds[0] || null
+  }
+
+  // Priority order: needsReview > inProgress > notStarted > mastered
+  const priority: Record<StudyPathSectionMasteryStatus, number> = {
+    needsReview: 0,
+    inProgress: 1,
+    notStarted: 2,
+    mastered: 3,
+    locked: 4,
+  }
+
+  const sorted = sectionIds
+    .map((id) => ({
+      id,
+      progress: mastery.sections[id] || {
+        sectionId: id,
+        status: 'notStarted' as StudyPathSectionMasteryStatus,
+        quizAttempts: 0,
+        teachBackAttempts: 0,
+      },
+    }))
+    .sort(
+      (a, b) =>
+        priority[a.progress.status] - priority[b.progress.status] ||
+        (a.progress.lastReviewedAt ?? '').localeCompare(
+          b.progress.lastReviewedAt ?? '',
+        ),
+    )
+
+  return sorted[0]?.id || null
+}
+
+export const isSectionLocked = (
+  studyPathId: string,
+  sectionId: string,
+  sectionIds: string[],
+): boolean => {
+  const mastery = getStudyPathMasteryProgress(studyPathId)
+  if (!mastery) {
+    return false
+  }
+
+  const index = sectionIds.indexOf(sectionId)
+  if (index <= 0) {
+    return false
+  }
+
+  // Previous section must be mastered to unlock
+  const prevSectionId = sectionIds[index - 1]
+  const prevProgress = mastery.sections[prevSectionId]
+
+  return prevProgress?.status !== 'mastered'
 }

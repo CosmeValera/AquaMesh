@@ -25,7 +25,6 @@ import {
   HIGHLIGHT_COLORS,
   HighlightLink,
 } from './dashboardHighlights'
-import { HighlightFab, HighlightToolbar, useHighlightSelectionCallback } from './HighlightToolbar'
 import { SavedDashboard, DashboardStorage } from './dashboardStorage'
 
 interface HighlightsPanelProps {
@@ -254,8 +253,6 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
   const [dashboards, setDashboards] = useState<SavedDashboard[]>([])
   const isMobile = useMediaQuery('(max-width:600px)')
 
-  const { selectedText, clearSelection } = useHighlightSelectionCallback()
-
   const loadHighlights = useCallback(() => {
     setHighlights(DashboardHighlightsStorage.getByDashboard(dashboardId))
   }, [dashboardId])
@@ -274,36 +271,6 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
       window.removeEventListener('studymesh-highlights-changed', handleChange as EventListener)
     }
   }, [dashboardId, loadHighlights])
-
-  const handleCreateHighlight = useCallback((color: HighlightColor, note?: string) => {
-    if (!selectedText.trim()) return
-
-    DashboardHighlightsStorage.add({
-      dashboardId,
-      widgetId: 'manual',
-      blockType: 'text',
-      selectedText: selectedText.trim(),
-      color,
-      note,
-    })
-    loadHighlights()
-    setCreateOpen(false)
-    clearSelection()
-  }, [dashboardId, selectedText, loadHighlights, clearSelection])
-
-  const handleQuickHighlight = useCallback((color: HighlightColor) => {
-    if (!selectedText.trim()) return
-
-    DashboardHighlightsStorage.add({
-      dashboardId,
-      widgetId: 'manual',
-      blockType: 'text',
-      selectedText: selectedText.trim(),
-      color,
-    })
-    loadHighlights()
-    clearSelection()
-  }, [dashboardId, selectedText, loadHighlights, clearSelection])
 
   const handleUpdateHighlight = useCallback((updates: { note?: string; link?: HighlightLink; color?: HighlightColor }) => {
     if (!editHighlight) return
@@ -330,12 +297,7 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => {
-            if (isMobile) {
-              // On mobile, FAB handles text selection - just show all highlights
-              // or scroll to highlights list
-            } else if (selectedText) {
-              setCreateOpen(true)
-            }
+            // Button just scrolls to highlights or future expand
           }}
         >
           {highlights.length > 0 ? `${highlights.length} Highlight${highlights.length !== 1 ? 's' : ''}` : 'Highlights'}
@@ -399,30 +361,6 @@ export const HighlightsPanel: React.FC<HighlightsPanelProps> = ({
           ))}
         </Stack>
       )}
-
-      {/* Mobile always-on controls */}
-      {isMobile && (
-        <>
-          <HighlightFab
-            onClick={() => setCreateOpen(true)}
-          />
-          <HighlightToolbar
-            onHighlight={handleQuickHighlight}
-            onClose={clearSelection}
-          />
-        </>
-      )}
-
-      <CreateHighlightDialog
-        open={createOpen}
-        selectedText={selectedText}
-        onClose={() => {
-          setCreateOpen(false)
-          clearSelection()
-        }}
-        onSave={handleCreateHighlight}
-        isMobile={isMobile}
-      />
 
       <EditHighlightDialog
         open={!!editHighlight}

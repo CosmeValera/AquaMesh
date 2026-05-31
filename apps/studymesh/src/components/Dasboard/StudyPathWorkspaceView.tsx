@@ -12,10 +12,15 @@ import {
   Chip,
   Collapse,
   Divider,
+  FormControl,
+  FormControlLabel,
   IconButton,
   LinearProgress,
   Paper,
+  Radio,
+  RadioGroup,
   Stack,
+  Switch,
   TextField,
   Tooltip,
   Typography,
@@ -41,8 +46,17 @@ import {
   setSectionMasteryStatus,
   recordSectionQuizScore,
   recordSectionTeachBack,
-  isSectionLocked,
+  isSectionLockedWithGuidedMode,
+  getStudyPathGuidedMode,
+  setStudyPathGuidedMode,
+  getReviewSections,
+  getNextRecommendedStep,
+  getQuickCheckQuestions,
+  getStatusFromScore,
   StudyPathSectionMasteryStatus,
+  NextStepSuggestion,
+  ReviewQueueItem,
+  QuickCheckQuestion,
 } from '../../studyPack/progress'
 
 const STUDY_PATH_NAV_OPEN_STORAGE_KEY = 'studymesh-study-path-navigator-open-v2'
@@ -162,6 +176,8 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   const [teachBackText, setTeachBackText] = useState('')
   const [teachBackLoading, setTeachBackLoading] = useState(false)
   const [teachBackResult, setTeachBackResult] = useState<string | null>(null)
+  const [quickCheckAnswers, setQuickCheckAnswers] = useState<Record<number, number>>({})
+  const [quickCheckSubmitted, setQuickCheckSubmitted] = useState(false)
 
   const selectedIndex = Math.min(
     Math.max(studyPath.selectedIndex || 0, 0),
@@ -193,16 +209,36 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
     [currentLesson, masteryProgress],
   )
 
+  const guidedModeEnabled = useMemo(
+    () => getStudyPathGuidedMode(studyPath.pathId),
+    [studyPath.pathId],
+  )
+
   const sectionLocked = useMemo(
     () =>
       currentLesson
-        ? isSectionLocked(
+        ? isSectionLockedWithGuidedMode(
             studyPath.pathId,
             currentLesson.dashboardKey,
             sectionIds,
           )
         : false,
     [currentLesson, studyPath.pathId, sectionIds],
+  )
+
+  const quickCheckQuestions = useMemo<QuickCheckQuestion[]>(
+    () => (currentLesson ? getQuickCheckQuestions(currentLesson.layout, 3) : []),
+    [currentLesson],
+  )
+
+  const reviewSections = useMemo<ReviewQueueItem[]>(
+    () => getReviewSections(studyPath.pathId, studyPath.dashboards),
+    [studyPath.pathId, masteryOpen, teachBackOpen],
+  )
+
+  const nextStep = useMemo<NextStepSuggestion>(
+    () => getNextRecommendedStep(studyPath.pathId, studyPath.dashboards),
+    [studyPath.pathId, masteryOpen, teachBackOpen],
   )
 
   const handleSetStatus = useCallback(
@@ -247,6 +283,32 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
       setTeachBackLoading(false)
     }
   }, [currentLesson, studyPath.pathId, teachBackText])
+
+  const handleQuickCheckAnswer = useCallback((questionIndex: number, answerIndex: number) => {
+    setQuickCheckAnswers((prev) => ({ ...prev, [questionIndex]: answerIndex }))
+  }, [])
+
+  const handleQuickCheckSubmit = useCallback(() => {
+    if (!currentLesson || quickCheckQuestions.length === 0) return
+
+    // Calculate score
+    let correct = 0
+    quickCheckQuestions.forEach((q, i) => {
+      if (quickCheckAnswers[i] === q.correctIndex) {
+        correct += 1
+      }
+    })
+    const score = Math.round((correct / quickCheckQuestions.length) * 100)
+    recordSectionQuizScore(studyPath.pathId, currentLesson.dashboardKey, score)
+    setQuickCheckSubmitted(true)
+  }, [currentLesson, studyPath.pathId, quickCheckQuestions, quickCheckAnswers])
+
+  const handleGuidedModeToggle = useCallback(
+    (_event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+      setStudyPathGuidedMode(studyPath.pathId, checked)
+    },
+    [studyPath.pathId],
+  )
 
   const masteryStatusColor = (
     status: StudyPathSectionMasteryStatus,
@@ -871,33 +933,127 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                   </Stack>
 
                   <Collapse in={masteryOpen}>
-                    <Stack spacing={0.5}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontSize: { xs: '0.62rem', sm: '0.7rem' } }}
-                      >
-                        Record quiz score (0–100)
-                      </Typography>
-                      <Stack direction="row" spacing={0.5}>
-                        {[100, 80, 60, 40].map((score) => (
+                    <Stack spacing={0.75}>
+                      {quickCheckQuestions.length > 0 ? (
+                        <>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ fontSize: { xs: '0.62rem', sm: '0.7rem' } }}
+                          >
+                            Quick check — select the best answer
+                          </Typography>
+                          {quickCheckQuestions.map((q, qi) => (
+                            <FormControl key={qi} component="fieldset" fullWidth>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  fontSize: { xs: '0.65rem', sm: '0.72rem' },
+                                  fontWeight: 600,
+                                  mb: 0.25,
+                                }}
+                              >
+                                {qi + 1}. {q.question}
+                              </Typography>
+                              <RadioGroup
+                                row
+                                value={quickCheckAnswers[qi]?.toString() ?? ''}
+                                onChange={(_, v) =>
+                                  handleQuickCheckAnswer(qi, Number(v))
+                                }
+                              >
+                                {q.options.map((opt, oi) => (
+                                  <FormControlLabel
+                                    key={oi}
+                                    value={oi.toString()}
+                                    control={
+                                      <Radio
+                                        size="small"
+                                        sx={{ py: 0.25 }}
+                                      />
+                                    }
+                                    label={
+                                      <Typography
+                                        variant="caption"
+                                        sx={{
+                                          fontSize: { xs: '0.6rem', sm: '0.68rem' },
+                                        }}
+                                      >
+                                        {opt}
+                                      </Typography>
+                                    }
+                                    disabled={quickCheckSubmitted}
+                                  />
+                                ))}
+                              </RadioGroup>
+                            </FormControl>
+                          ))}
                           <Button
-                            key={score}
                             size="small"
-                            variant="outlined"
-                            onClick={() => handleRecordScore(score)}
+                            variant="contained"
+                            disabled={
+                              Object.keys(quickCheckAnswers).length <
+                                quickCheckQuestions.length || quickCheckSubmitted
+                            }
+                            onClick={handleQuickCheckSubmit}
                             sx={{
-                              minWidth: 0,
-                              py: { xs: 0.1, sm: 0.25 },
-                              px: { xs: 0.5, sm: 0.75 },
-                              fontSize: { xs: '0.68rem', sm: '0.75rem' },
-                              flex: 1,
+                              textTransform: 'none',
+                              fontSize: { xs: '0.72rem', sm: '0.8125rem' },
                             }}
                           >
-                            {score}%
+                            {quickCheckSubmitted ? 'Submitted!' : 'Submit answers'}
                           </Button>
-                        ))}
-                      </Stack>
+                          {quickCheckSubmitted && currentSectionProgress?.lastScore !== undefined && (
+                            <Typography
+                              variant="caption"
+                              color={
+                                currentSectionProgress.lastScore >= 85
+                                  ? 'success.main'
+                                  : currentSectionProgress.lastScore >= 60
+                                  ? 'warning.main'
+                                  : 'error.main'
+                              }
+                              sx={{ fontSize: { xs: '0.65rem', sm: '0.72rem' } }}
+                            >
+                              Score: {currentSectionProgress.lastScore}% —{' '}
+                              {currentSectionProgress.lastScore >= 85
+                                ? 'Mastered!'
+                                : currentSectionProgress.lastScore >= 60
+                                ? 'Needs review'
+                                : 'Keep practicing'}
+                            </Typography>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ fontSize: { xs: '0.62rem', sm: '0.7rem' } }}
+                          >
+                            Quick check (or manual score below)
+                          </Typography>
+                          <Stack direction="row" spacing={0.5}>
+                            {[100, 80, 60, 40].map((score) => (
+                              <Button
+                                key={score}
+                                size="small"
+                                variant="outlined"
+                                onClick={() => handleRecordScore(score)}
+                                sx={{
+                                  minWidth: 0,
+                                  py: { xs: 0.1, sm: 0.25 },
+                                  px: { xs: 0.5, sm: 0.75 },
+                                  fontSize: { xs: '0.68rem', sm: '0.75rem' },
+                                  flex: 1,
+                                }}
+                              >
+                                {score}%
+                              </Button>
+                            ))}
+                          </Stack>
+                        </>
+                      )}
                     </Stack>
                   </Collapse>
 
@@ -914,8 +1070,91 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                       color: 'text.secondary',
                     }}
                   >
-                    {masteryOpen ? 'Hide quiz score' : 'Record quiz score'}
+                    {masteryOpen ? 'Hide quick check' : 'Quick check'}
                   </Button>
+                </Stack>
+              </Paper>
+
+              {/* Guided mode + review queue */}
+              <Paper
+                variant="outlined"
+                sx={{
+                  px: { xs: 1, sm: 1.25 },
+                  py: { xs: 0.65, sm: 1 },
+                  borderRadius: 2,
+                  bgcolor: 'action.hover',
+                }}
+              >
+                <Stack spacing={0.75}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        size="small"
+                        checked={guidedModeEnabled}
+                        onChange={handleGuidedModeToggle}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Typography
+                        variant="caption"
+                        sx={{ fontSize: { xs: '0.68rem', sm: '0.75rem' } }}
+                      >
+                        Guided mode
+                      </Typography>
+                    }
+                    sx={{ m: 0 }}
+                  />
+
+                  {reviewSections.length > 0 && (
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        color="warning.main"
+                        sx={{ fontSize: { xs: '0.62rem', sm: '0.7rem' }, fontWeight: 700 }}
+                      >
+                        Review queue ({reviewSections.length})
+                      </Typography>
+                      <Stack spacing={0.25} mt={0.25}>
+                        {reviewSections.slice(0, 3).map((section) => (
+                          <Chip
+                            key={section.sectionId}
+                            size="small"
+                            label={section.sectionName}
+                            color="warning"
+                            variant="outlined"
+                            onClick={() => {
+                              const idx = studyPath.dashboards.findIndex(
+                                (d) => d.dashboardKey === section.sectionId,
+                              )
+                              if (idx >= 0) {
+                                onStudyPathChange({
+                                  ...studyPath,
+                                  selectedIndex: idx,
+                                })
+                              }
+                            }}
+                            sx={{
+                              height: { xs: 18, sm: 22 },
+                              fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+
+                  {nextStep && (
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: '0.6rem', sm: '0.68rem' } }}
+                      >
+                        <strong>Next:</strong> {nextStep.message}
+                      </Typography>
+                    </Box>
+                  )}
                 </Stack>
               </Paper>
 

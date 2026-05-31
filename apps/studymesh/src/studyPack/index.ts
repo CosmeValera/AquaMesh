@@ -39,16 +39,27 @@ export {
 export type { LearningConcept } from './concepts'
 export {
   completeStudyPathDashboard,
+  getNextRecommendedStep,
   getNextSectionToReview,
+  getQuickCheckQuestions,
+  getReviewSections,
+  getStatusFromScore,
   getStudyPathDashboardProgress,
+  getStudyPathGuidedMode,
   getStudyPathMasteryProgress,
   isSectionLocked,
+  isSectionLockedWithGuidedMode,
   recordSectionQuizScore,
   recordSectionTeachBack,
   registerStudyPathAttempt,
   setSectionMasteryStatus,
+  setStudyPathGuidedMode,
 } from './progress'
 export type {
+  NextStepSuggestion,
+  NextStepType,
+  QuickCheckQuestion,
+  ReviewQueueItem,
   StudyPathAttempt,
   StudyPathAttemptType,
   StudyPathDashboardMeta,

@@ -29,6 +29,7 @@ export interface StudyPathMasteryProgress {
   sections: Record<string, StudyPathSectionProgress>
   activeSectionId?: string
   updatedAt: string
+  guidedMode?: boolean // undefined = default true (guided on)
 }
 
 const STORAGE_KEY = 'studymesh-study-path-progress-v1'
@@ -528,7 +529,9 @@ export const recordSectionQuizScore = (
   section.bestScore = Math.max(score, section.bestScore ?? 0)
   section.lastReviewedAt = now
 
-  // Auto-suggest needs review if score drops below 70
+  // Auto-update status based on score
+  section.status = getStatusFromScore(score, section.status)
+
   if (score < 70 && section.status === 'mastered') {
     section.status = 'needsReview'
   }
@@ -615,4 +618,231 @@ export const isSectionLocked = (
   const prevProgress = mastery.sections[prevSectionId]
 
   return prevProgress?.status !== 'mastered'
+}
+
+// ── Guided mode ──────────────────────────────────────────────────────────────
+
+export const getStudyPathGuidedMode = (
+  studyPathId: string,
+): boolean => {
+  const mastery = getStudyPathMasteryProgress(studyPathId)
+  // Default to true (guided on) if not set
+  return mastery?.guidedMode ?? true
+}
+
+export const setStudyPathGuidedMode = (
+  studyPathId: string,
+  enabled: boolean,
+): StudyPathMasteryProgress => {
+  const store = readMasteryStore()
+  if (!store.paths[studyPathId]) {
+    store.paths[studyPathId] = {
+      studyPathId,
+      sections: {},
+      updatedAt: new Date().toISOString(),
+      guidedMode: enabled,
+    }
+  } else {
+    store.paths[studyPathId].guidedMode = enabled
+    store.paths[studyPathId].updatedAt = new Date().toISOString()
+  }
+  writeMasteryStore(store)
+  return store.paths[studyPathId]
+}
+
+// ── Review queue ─────────────────────────────────────────────────────────────
+
+export interface ReviewQueueItem {
+  sectionId: string
+  sectionName: string
+  status: StudyPathSectionMasteryStatus
+  lastReviewedAt?: string
+}
+
+export const getReviewSections = (
+  studyPathId: string,
+  dashboards: Array<{ dashboardKey: string; name: string }>,
+): ReviewQueueItem[] => {
+  const mastery = getStudyPathMasteryProgress(studyPathId)
+  if (!mastery) {
+    return []
+  }
+
+  return dashboards
+    .map((d) => ({
+      sectionId: d.dashboardKey,
+      sectionName: d.name,
+      progress: mastery.sections[d.dashboardKey] || {
+        sectionId: d.dashboardKey,
+        status: 'notStarted' as StudyPathSectionMasteryStatus,
+        quizAttempts: 0,
+        teachBackAttempts: 0,
+      },
+    }))
+    .filter((d) => d.progress.status === 'needsReview')
+    .sort((a, b) => {
+      const aTime = a.progress.lastReviewedAt ?? ''
+      const bTime = b.progress.lastReviewedAt ?? ''
+      return bTime.localeCompare(aTime)
+    })
+}
+
+// ── Next recommended step ────────────────────────────────────────────────────
+
+export type NextStepType =
+  | 'continue'
+  | 'review'
+  | 'teachBack'
+  | 'mastered'
+  | 'start'
+
+export interface NextStepSuggestion {
+  type: NextStepType
+  message: string
+  sectionId?: string
+  sectionName?: string
+}
+
+export const getNextRecommendedStep = (
+  studyPathId: string,
+  dashboards: Array<{ dashboardKey: string; name: string }>,
+): NextStepSuggestion => {
+  const mastery = getStudyPathMasteryProgress(studyPathId)
+  const guidedMode = getStudyPathGuidedMode(studyPathId)
+  const sectionIds = dashboards.map((d) => d.dashboardKey)
+
+  // Check for needs review sections first
+  const needsReview = dashboards.filter((d) => {
+    const p = mastery?.sections[d.dashboardKey]
+    return p?.status === 'needsReview'
+  })
+  if (needsReview.length > 0) {
+    return {
+      type: 'review',
+      message: `Review "${needsReview[0].name}" before moving on`,
+      sectionId: needsReview[0].dashboardKey,
+      sectionName: needsReview[0].name,
+    }
+  }
+
+  // Find first non-mastered section
+  for (let i = 0; i < dashboards.length; i++) {
+    const d = dashboards[i]
+    const p = mastery?.sections[d.dashboardKey]
+    const status = p?.status ?? 'notStarted'
+
+    if (status === 'notStarted') {
+      return {
+        type: 'start',
+        message: `Start with "${d.name}"`,
+        sectionId: d.dashboardKey,
+        sectionName: d.name,
+      }
+    }
+
+    if (status === 'inProgress') {
+      return {
+        type: 'continue',
+        message: `Continue with "${d.name}"`,
+        sectionId: d.dashboardKey,
+        sectionName: d.name,
+      }
+    }
+
+    if (status === 'mastered' && i === dashboards.length - 1) {
+      return {
+        type: 'mastered',
+        message: "You've mastered all sections — great work!",
+      }
+    }
+  }
+
+  // All mastered
+  return {
+    type: 'mastered',
+    message: "You've mastered all sections — great work!",
+  }
+}
+
+// ── Section locking that respects guided mode ────────────────────────────────
+
+export const isSectionLockedWithGuidedMode = (
+  studyPathId: string,
+  sectionId: string,
+  sectionIds: string[],
+): boolean => {
+  if (!getStudyPathGuidedMode(studyPathId)) {
+    return false
+  }
+  return isSectionLocked(studyPathId, sectionId, sectionIds)
+}
+
+// ── Quick check questions extraction ─────────────────────────────────────────
+
+export interface QuickCheckQuestion {
+  question: string
+  options: string[]
+  correctIndex: number
+  answer: string
+  explanation: string
+}
+
+const extractQuestionsFromLayout = (
+  layout: DashboardLayout | undefined,
+  collected: QuickCheckQuestion[],
+): void => {
+  if (!layout) return
+
+  // Check if this is a QuizBlock widget
+  if (layout.component === 'QuizBlock' || layout.type === 'QuizBlock') {
+    const props = layout.config?.customProps ?? layout
+    const question = String(props.question || '')
+    const optionsRaw = props.options
+    let options: string[] = []
+    if (Array.isArray(optionsRaw)) {
+      options = optionsRaw.map((o) => String(o))
+    } else if (typeof optionsRaw === 'string') {
+      try {
+        options = JSON.parse(optionsRaw)
+      } catch {
+        options = []
+      }
+    }
+    const correctIndex = Number(props.correctIndex ?? 0)
+    const answer = String(props.answer || options[correctIndex] || '')
+    const explanation = String(props.explanation || '')
+
+    if (question && options.length > 0) {
+      collected.push({ question, options, correctIndex, answer, explanation })
+    }
+  }
+
+  // Recurse into children
+  if (layout.children) {
+    for (const child of layout.children) {
+      extractQuestionsFromLayout(child, collected)
+    }
+  }
+}
+
+export const getQuickCheckQuestions = (
+  dashboardLayout: DashboardLayout | undefined,
+  maxQuestions = 3,
+): QuickCheckQuestion[] => {
+  const questions: QuickCheckQuestion[] = []
+  extractQuestionsFromLayout(dashboardLayout, questions)
+  return questions.slice(0, maxQuestions)
+}
+
+// ── Score to status derivation ───────────────────────────────────────────────
+
+export const getStatusFromScore = (
+  score: number,
+  currentStatus: StudyPathSectionMasteryStatus,
+): StudyPathSectionMasteryStatus => {
+  if (score >= 85) return 'mastered'
+  if (score >= 60) return 'needsReview'
+  if (score >= 30) return 'inProgress'
+  // Low score: keep current or set to inProgress
+  return currentStatus === 'notStarted' ? 'inProgress' : currentStatus
 }

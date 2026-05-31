@@ -932,6 +932,31 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                     </Button>
                   </Stack>
 
+                  {sectionLocked && (
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => {
+                        // Override lock: mark previous section as mastered to unlock
+                        const idx = sectionIds.indexOf(currentLesson.dashboardKey)
+                        if (idx > 0) {
+                          const prevId = sectionIds[idx - 1]
+                          setSectionMasteryStatus(studyPath.pathId, prevId, 'mastered')
+                        }
+                      }}
+                      sx={{
+                        textTransform: 'none',
+                        py: { xs: 0.1, sm: 0.2 },
+                        px: 0,
+                        fontSize: { xs: '0.65rem', sm: '0.72rem' },
+                        color: 'text.secondary',
+                        alignSelf: 'flex-start',
+                      }}
+                    >
+                      Unlock section
+                    </Button>
+                  )}
+
                   <Collapse in={masteryOpen}>
                     <Stack spacing={0.75}>
                       {quickCheckQuestions.length > 0 ? (
@@ -1151,7 +1176,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                         color="text.secondary"
                         sx={{ fontSize: { xs: '0.6rem', sm: '0.68rem' } }}
                       >
-                        <strong>Next:</strong> {nextStep.message}
+                        <strong>Next recommended step:</strong> {nextStep.message}
                       </Typography>
                     </Box>
                   )}
@@ -1184,7 +1209,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                       justifyContent: 'flex-start',
                     }}
                   >
-                    Explain in your own words
+                    Teach it back
                   </Button>
 
                   <Collapse in={teachBackOpen}>

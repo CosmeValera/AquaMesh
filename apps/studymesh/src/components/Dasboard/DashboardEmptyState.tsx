@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Button,
@@ -40,6 +40,13 @@ interface EmptyDashboardSettings {
   studyMaterialLimit: number
   studyMaterialColumns: number
   customEntryIds: string[]
+  customSections: EmptyDashboardCustomSection[]
+}
+
+interface EmptyDashboardCustomSection {
+  id: string
+  name: string
+  entryIds: string[]
 }
 
 interface StudyMaterialEntry {
@@ -67,6 +74,8 @@ interface DashboardEmptyStateProps {
 
 const EMPTY_DASHBOARD_SETTINGS_KEY = 'studymesh-empty-dashboard-settings-v1'
 const MAX_STUDY_MATERIAL_ITEMS = 20
+const DEFAULT_CUSTOM_SECTION_ID = 'custom-section-default'
+const DEFAULT_CUSTOM_SECTION_NAME = 'Custom'
 
 const defaultEmptyDashboardSettings: EmptyDashboardSettings = {
   blockOrder: ['creation', 'studyMaterial'],
@@ -75,10 +84,85 @@ const defaultEmptyDashboardSettings: EmptyDashboardSettings = {
   studyMaterialLimit: 3,
   studyMaterialColumns: 1,
   customEntryIds: [],
+  customSections: [
+    {
+      id: DEFAULT_CUSTOM_SECTION_ID,
+      name: DEFAULT_CUSTOM_SECTION_NAME,
+      entryIds: [],
+    },
+  ],
 }
 
 const isEmptyDashboardBlock = (value: unknown): value is EmptyDashboardBlock =>
   value === 'creation' || value === 'studyMaterial'
+
+const normalizeEntryIds = (value: unknown) =>
+  Array.isArray(value)
+    ? Array.from(
+        new Set(
+          value.filter(
+            (entryId): entryId is string => typeof entryId === 'string',
+          ),
+        ),
+      )
+    : []
+
+const flattenCustomSections = (sections: EmptyDashboardCustomSection[]) =>
+  sections.flatMap((section) => section.entryIds)
+
+const normalizeCustomSections = (
+  sectionsValue: unknown,
+  legacyEntryIds: string[],
+): EmptyDashboardCustomSection[] => {
+  if (Array.isArray(sectionsValue)) {
+    const usedEntryIds = new Set<string>()
+    const sections = sectionsValue
+      .map((section, index) => {
+        if (!section || typeof section !== 'object') {
+          return null
+        }
+
+        const rawSection = section as Partial<EmptyDashboardCustomSection>
+        const entryIds = normalizeEntryIds(rawSection.entryIds).filter(
+          (entryId) => {
+            if (usedEntryIds.has(entryId)) {
+              return false
+            }
+
+            usedEntryIds.add(entryId)
+            return true
+          },
+        )
+
+        return {
+          id:
+            typeof rawSection.id === 'string' && rawSection.id.trim()
+              ? rawSection.id
+              : `custom-section-${index + 1}`,
+          name:
+            typeof rawSection.name === 'string' && rawSection.name.trim()
+              ? rawSection.name.trim()
+              : `Section ${index + 1}`,
+          entryIds,
+        }
+      })
+      .filter((section): section is EmptyDashboardCustomSection =>
+        Boolean(section),
+      )
+
+    if (sections.length > 0) {
+      return sections
+    }
+  }
+
+  return [
+    {
+      id: DEFAULT_CUSTOM_SECTION_ID,
+      name: DEFAULT_CUSTOM_SECTION_NAME,
+      entryIds: legacyEntryIds,
+    },
+  ]
+}
 
 const normalizeEmptyDashboardSettings = (
   value: Partial<EmptyDashboardSettings> | null,
@@ -93,6 +177,13 @@ const normalizeEmptyDashboardSettings = (
       (block) => !uniqueBlockOrder.includes(block),
     ),
   ]
+
+  const legacyEntryIds = normalizeEntryIds(value?.customEntryIds)
+  const customSections = normalizeCustomSections(
+    value?.customSections,
+    legacyEntryIds,
+  )
+  const customEntryIds = flattenCustomSections(customSections)
 
   return {
     blockOrder: normalizedBlockOrder,
@@ -115,11 +206,8 @@ const normalizeEmptyDashboardSettings = (
       typeof value?.studyMaterialColumns === 'number'
         ? Math.max(1, Math.min(6, Math.round(value.studyMaterialColumns)))
         : defaultEmptyDashboardSettings.studyMaterialColumns,
-    customEntryIds: Array.isArray(value?.customEntryIds)
-      ? value.customEntryIds.filter(
-          (entryId): entryId is string => typeof entryId === 'string',
-        )
-      : [],
+    customEntryIds,
+    customSections,
   }
 }
 
@@ -168,6 +256,9 @@ const DashboardEmptyState = ({
 }: DashboardEmptyStateProps) => {
   const [settings, setSettings] = useState(readEmptyDashboardSettings)
   const [customizerOpen, setCustomizerOpen] = useState(false)
+  const [activeCustomSectionId, setActiveCustomSectionId] = useState(
+    DEFAULT_CUSTOM_SECTION_ID,
+  )
   const dashboardsByFolder = dashboardOptions.reduce<
     Record<string, SavedDashboard[]>
   >((folders, dashboard) => {
@@ -210,17 +301,72 @@ const DashboardEmptyState = ({
   const availableCustomEntries = folderEntries.filter(
     (entry) => !selectedCustomIds.has(entry.id),
   )
-  const getStudyMaterialColumnMax = (nextSettings: EmptyDashboardSettings) => {
-    const entryCount =
+  const activeCustomSection =
+    settings.customSections.find(
+      (section) => section.id === activeCustomSectionId,
+    ) || settings.customSections[0]
+  const activeCustomSectionIndex = Math.max(
+    0,
+    settings.customSections.findIndex(
+      (section) => section.id === activeCustomSection?.id,
+    ),
+  )
+  const activeCustomSectionIdSafe =
+    activeCustomSection?.id || DEFAULT_CUSTOM_SECTION_ID
+  const customSectionsWithEntries = settings.customSections.map((section) => ({
+    ...section,
+    entries: section.entryIds
+      .map((entryId) => entryById.get(entryId))
+      .filter((entry): entry is StudyMaterialEntry => Boolean(entry)),
+  }))
+  const getVisibleCustomSections = (
+    nextSettings: EmptyDashboardSettings,
+  ): Array<EmptyDashboardCustomSection & { entries: StudyMaterialEntry[] }> => {
+    let remaining = nextSettings.studyMaterialLimit
+
+    return nextSettings.customSections
+      .map((section) => {
+        const entries: StudyMaterialEntry[] = []
+
+        for (const entryId of section.entryIds) {
+          if (remaining <= 0) {
+            break
+          }
+
+          const entry = entryById.get(entryId)
+
+          if (entry) {
+            entries.push(entry)
+            remaining -= 1
+          }
+        }
+
+        return { ...section, entries }
+      })
+      .filter((section) => section.entries.length > 0)
+  }
+  const getStudyMaterialVisibleCount = (
+    nextSettings: EmptyDashboardSettings,
+  ) => {
+    const availableCount =
       nextSettings.studyMaterialMode === 'custom'
-        ? nextSettings.customEntryIds.filter((entryId) =>
-            entryById.has(entryId),
-          ).length
+        ? nextSettings.customEntryIds.length
         : folderEntries.length
 
-    return Math.max(1, Math.min(6, entryCount))
+    return Math.min(nextSettings.studyMaterialLimit, availableCount)
+  }
+  const getStudyMaterialColumnMax = (nextSettings: EmptyDashboardSettings) => {
+    const visibleCount = getStudyMaterialVisibleCount(nextSettings)
+    const maxByVisibleItems = Math.max(1, visibleCount)
+
+    return Math.max(1, Math.min(6, maxByVisibleItems))
   }
   const studyMaterialColumnMax = getStudyMaterialColumnMax(settings)
+  const effectiveStudyMaterialColumns = Math.min(
+    settings.studyMaterialColumns,
+    studyMaterialColumnMax,
+  )
+  const visibleCustomSections = getVisibleCustomSections(settings)
   const visibleStudyMaterialEntries =
     settings.studyMaterialMode === 'custom'
       ? settings.customEntryIds
@@ -261,8 +407,15 @@ const DashboardEmptyState = ({
     })
   }
 
+  useEffect(() => {
+    if (settings.studyMaterialColumns > studyMaterialColumnMax) {
+      updateSettings({ studyMaterialColumns: studyMaterialColumnMax })
+    }
+  }, [settings.studyMaterialColumns, studyMaterialColumnMax])
+
   const resetSettings = () => {
     updateSettings(defaultEmptyDashboardSettings)
+    setActiveCustomSectionId(DEFAULT_CUSTOM_SECTION_ID)
   }
 
   const addCustomEntry = (entryId: string) => {
@@ -275,37 +428,137 @@ const DashboardEmptyState = ({
         return {}
       }
 
-      return { customEntryIds: [...current.customEntryIds, entryId] }
+      const sectionId = current.customSections.some(
+        (section) => section.id === activeCustomSectionIdSafe,
+      )
+        ? activeCustomSectionIdSafe
+        : current.customSections[0]?.id || DEFAULT_CUSTOM_SECTION_ID
+      const customSections = current.customSections.map((section) =>
+        section.id === sectionId
+          ? { ...section, entryIds: [...section.entryIds, entryId] }
+          : section,
+      )
+
+      return {
+        customSections,
+        customEntryIds: flattenCustomSections(customSections),
+      }
     })
   }
 
   const removeCustomEntry = (entryId: string) => {
-    updateSettings((current) => ({
-      customEntryIds: current.customEntryIds.filter(
-        (customEntryId) => customEntryId !== entryId,
-      ),
-    }))
+    updateSettings((current) => {
+      const customSections = current.customSections.map((section) => ({
+        ...section,
+        entryIds: section.entryIds.filter(
+          (customEntryId) => customEntryId !== entryId,
+        ),
+      }))
+
+      return {
+        customSections,
+        customEntryIds: flattenCustomSections(customSections),
+      }
+    })
   }
 
   const moveCustomEntry = (entryId: string, direction: -1 | 1) => {
     updateSettings((current) => {
-      const currentIndex = current.customEntryIds.indexOf(entryId)
+      const customSections = current.customSections.map((section) => {
+        const currentIndex = section.entryIds.indexOf(entryId)
+        const nextIndex = currentIndex + direction
+
+        if (
+          currentIndex < 0 ||
+          nextIndex < 0 ||
+          nextIndex >= section.entryIds.length
+        ) {
+          return section
+        }
+
+        const entryIds = [...section.entryIds]
+        const [movedEntryId] = entryIds.splice(currentIndex, 1)
+        entryIds.splice(nextIndex, 0, movedEntryId)
+
+        return { ...section, entryIds }
+      })
+
+      return {
+        customSections,
+        customEntryIds: flattenCustomSections(customSections),
+      }
+    })
+  }
+
+  const addCustomSection = () => {
+    let index = settings.customSections.length + 1
+    let sectionId = `custom-section-${index}`
+
+    while (
+      settings.customSections.some((section) => section.id === sectionId)
+    ) {
+      index += 1
+      sectionId = `custom-section-${index}`
+    }
+
+    setActiveCustomSectionId(sectionId)
+
+    updateSettings((current) => {
+      return {
+        customSections: [
+          ...current.customSections,
+          { id: sectionId, name: `Section ${index}`, entryIds: [] },
+        ],
+      }
+    })
+  }
+
+  const moveCustomSection = (sectionId: string, direction: -1 | 1) => {
+    updateSettings((current) => {
+      const currentIndex = current.customSections.findIndex(
+        (section) => section.id === sectionId,
+      )
       const nextIndex = currentIndex + direction
 
       if (
         currentIndex < 0 ||
         nextIndex < 0 ||
-        nextIndex >= current.customEntryIds.length
+        nextIndex >= current.customSections.length
       ) {
         return {}
       }
 
-      const customEntryIds = [...current.customEntryIds]
-      const [movedEntryId] = customEntryIds.splice(currentIndex, 1)
-      customEntryIds.splice(nextIndex, 0, movedEntryId)
+      const customSections = [...current.customSections]
+      const [movedSection] = customSections.splice(currentIndex, 1)
+      customSections.splice(nextIndex, 0, movedSection)
 
-      return { customEntryIds }
+      return {
+        customSections,
+        customEntryIds: flattenCustomSections(customSections),
+      }
     })
+  }
+
+  const removeCustomSection = (sectionId: string) => {
+    const nextActiveSectionId =
+      settings.customSections.find((section) => section.id !== sectionId)?.id ||
+      DEFAULT_CUSTOM_SECTION_ID
+
+    updateSettings((current) => {
+      if (current.customSections.length <= 1) {
+        return {}
+      }
+
+      const customSections = current.customSections.filter(
+        (section) => section.id !== sectionId,
+      )
+
+      return {
+        customSections,
+        customEntryIds: flattenCustomSections(customSections),
+      }
+    })
+    setActiveCustomSectionId(nextActiveSectionId)
   }
 
   const setFirstBlock = (block: EmptyDashboardBlock) => {
@@ -315,6 +568,192 @@ const DashboardEmptyState = ({
           ? ['creation', 'studyMaterial']
           : ['studyMaterial', 'creation'],
     })
+  }
+
+  const renderStudyMaterialEntry = (
+    entry: StudyMaterialEntry,
+    showCustomEntryControls: boolean,
+    sectionName?: string,
+  ) => {
+    const folderColor = normalizeFolderColor(
+      entry.dashboards.find((dashboard) => dashboard.folderColor)
+        ?.folderColor ||
+        DashboardStorage.getFolderColor(entry.colorSourceFolder),
+    )
+    const showFolderLabel =
+      !sectionName ||
+      entry.folderName.trim().toLowerCase() !== sectionName.trim().toLowerCase()
+    const editIconButtonSx = {
+      width: 30,
+      height: 30,
+      color: 'text.primary',
+      border: 1,
+      borderColor: 'divider',
+      bgcolor: 'background.default',
+      '&:hover': {
+        color: 'primary.main',
+        borderColor: 'primary.main',
+        bgcolor: 'action.hover',
+      },
+      '&.Mui-disabled': {
+        color: 'text.disabled',
+        borderColor: 'divider',
+        bgcolor: 'action.disabledBackground',
+      },
+    }
+
+    if (showCustomEntryControls && settings.studyMaterialMode === 'custom') {
+      const customEntrySection = settings.customSections.find((section) =>
+        section.entryIds.includes(entry.id),
+      )
+      const customEntryIndex =
+        customEntrySection?.entryIds.indexOf(entry.id) ?? -1
+      const customEntryCount = customEntrySection?.entryIds.length ?? 0
+
+      return (
+        <Paper
+          key={entry.id}
+          elevation={0}
+          sx={{
+            width: '100%',
+            minHeight: { xs: 58, md: 68 },
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) auto',
+            alignItems: 'center',
+            gap: 0.75,
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 1.5,
+            px: 1.25,
+            py: 0.75,
+            minWidth: 0,
+            maxWidth: '100%',
+            color: 'text.primary',
+            bgcolor: 'background.paper',
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            {showFolderLabel ? (
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'block',
+                  color: folderColor,
+                  fontWeight: 900,
+                  textTransform: 'uppercase',
+                  lineHeight: 1.2,
+                  fontSize: '0.625rem',
+                }}
+              >
+                {entry.folderName}
+              </Typography>
+            ) : null}
+            <Typography
+              variant="body2"
+              fontWeight={800}
+              sx={{
+                fontSize: '0.8125rem',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {entry.title}
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={0.25}>
+            <IconButton
+              aria-label={`Move ${entry.title} up`}
+              size="small"
+              onClick={() => moveCustomEntry(entry.id, -1)}
+              disabled={customEntryIndex <= 0}
+              sx={editIconButtonSx}
+            >
+              <KeyboardArrowUpIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              aria-label={`Move ${entry.title} down`}
+              size="small"
+              onClick={() => moveCustomEntry(entry.id, 1)}
+              disabled={
+                customEntryIndex < 0 ||
+                customEntryIndex === customEntryCount - 1
+              }
+              sx={editIconButtonSx}
+            >
+              <KeyboardArrowDownIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              aria-label={`Remove ${entry.title}`}
+              size="small"
+              onClick={() => removeCustomEntry(entry.id)}
+              sx={editIconButtonSx}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Stack>
+        </Paper>
+      )
+    }
+
+    return (
+      <Button
+        key={entry.id}
+        variant="text"
+        onClick={() =>
+          entry.isStudyPath
+            ? onOpenStudyGuide(entry.dashboards)
+            : entry.firstDashboard && onOpenDashboard(entry.firstDashboard)
+        }
+        sx={{
+          width: '100%',
+          minHeight: { xs: 48, md: 58 },
+          justifyContent: 'flex-start',
+          textAlign: 'left',
+          textTransform: 'none',
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: 1.5,
+          px: 1.25,
+          minWidth: 0,
+          maxWidth: '100%',
+          color: 'text.primary',
+          bgcolor: 'background.paper',
+          '&:hover': {
+            borderColor: folderColor,
+            bgcolor: 'action.hover',
+          },
+        }}
+      >
+        <Box sx={{ minWidth: 0 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              color: folderColor,
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              lineHeight: 1.2,
+              fontSize: '0.625rem',
+            }}
+          >
+            {entry.folderName}
+          </Typography>
+          <Typography
+            variant="body2"
+            fontWeight={800}
+            sx={{
+              fontSize: '0.8125rem',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {entry.title}
+          </Typography>
+        </Box>
+      </Button>
+    )
   }
 
   const renderCreationBlock = () => (
@@ -567,180 +1006,68 @@ const DashboardEmptyState = ({
       </Stack>
 
       <Box sx={{ flex: 1, minHeight: 0 }}>
-        <Typography
-          variant="caption"
-          fontWeight={800}
-          sx={{ mb: 0.75, color: 'text.secondary', fontSize: '0.6875rem' }}
-        >
-          {settings.studyMaterialMode === 'custom' ? 'Custom' : 'Recent'}
-        </Typography>
-        {visibleStudyMaterialEntries.length > 0 ? (
+        {settings.studyMaterialMode === 'recent' ? (
+          <Typography
+            variant="caption"
+            fontWeight={800}
+            sx={{ mb: 0.75, color: 'text.secondary', fontSize: '0.6875rem' }}
+          >
+            Recent
+          </Typography>
+        ) : null}
+        {settings.studyMaterialMode === 'custom' &&
+        visibleCustomSections.length > 0 ? (
+          <Stack spacing={1.25}>
+            {visibleCustomSections.map((section) => (
+              <Box key={section.id}>
+                <Typography
+                  variant="caption"
+                  fontWeight={900}
+                  color="text.secondary"
+                  sx={{
+                    display: 'block',
+                    mb: 0.5,
+                    textTransform: 'uppercase',
+                    fontSize: '0.625rem',
+                  }}
+                >
+                  {section.name}
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                      xs: '1fr',
+                      md: `repeat(${effectiveStudyMaterialColumns}, minmax(0, 1fr))`,
+                    },
+                    gap: 1,
+                  }}
+                >
+                  {section.entries.map((entry) =>
+                    renderStudyMaterialEntry(
+                      entry,
+                      showCustomEntryControls,
+                      section.name,
+                    ),
+                  )}
+                </Box>
+              </Box>
+            ))}
+          </Stack>
+        ) : visibleStudyMaterialEntries.length > 0 ? (
           <Box
             sx={{
               display: 'grid',
               gridTemplateColumns: {
                 xs: '1fr',
-                md: `repeat(${settings.studyMaterialColumns}, minmax(0, 1fr))`,
+                md: `repeat(${effectiveStudyMaterialColumns}, minmax(0, 1fr))`,
               },
               gap: 1,
             }}
           >
-            {visibleStudyMaterialEntries.map((entry) => {
-              const folderColor = normalizeFolderColor(
-                entry.dashboards.find((dashboard) => dashboard.folderColor)
-                  ?.folderColor ||
-                  DashboardStorage.getFolderColor(entry.colorSourceFolder),
-              )
-
-              if (
-                showCustomEntryControls &&
-                settings.studyMaterialMode === 'custom'
-              ) {
-                const customEntryIndex = settings.customEntryIds.indexOf(
-                  entry.id,
-                )
-
-                return (
-                  <Paper
-                    key={entry.id}
-                    elevation={0}
-                    sx={{
-                      width: '100%',
-                      minHeight: { xs: 58, md: 68 },
-                      display: 'grid',
-                      gridTemplateColumns: 'minmax(0, 1fr) auto',
-                      alignItems: 'center',
-                      gap: 0.75,
-                      border: 1,
-                      borderColor: 'divider',
-                      borderRadius: 1.5,
-                      px: 1.25,
-                      py: 0.75,
-                      minWidth: 0,
-                      maxWidth: '100%',
-                      color: 'text.primary',
-                      bgcolor: 'background.paper',
-                    }}
-                  >
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          display: 'block',
-                          color: folderColor,
-                          fontWeight: 900,
-                          textTransform: 'uppercase',
-                          lineHeight: 1.2,
-                          fontSize: '0.625rem',
-                        }}
-                      >
-                        {entry.folderName}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={800}
-                        sx={{
-                          fontSize: '0.8125rem',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {entry.title}
-                      </Typography>
-                    </Box>
-                    <Stack direction="row" spacing={0.25}>
-                      <IconButton
-                        aria-label={`Move ${entry.title} up`}
-                        size="small"
-                        onClick={() => moveCustomEntry(entry.id, -1)}
-                        disabled={customEntryIndex === 0}
-                      >
-                        <KeyboardArrowUpIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        aria-label={`Move ${entry.title} down`}
-                        size="small"
-                        onClick={() => moveCustomEntry(entry.id, 1)}
-                        disabled={
-                          customEntryIndex ===
-                          settings.customEntryIds.length - 1
-                        }
-                      >
-                        <KeyboardArrowDownIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        aria-label={`Remove ${entry.title}`}
-                        size="small"
-                        onClick={() => removeCustomEntry(entry.id)}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  </Paper>
-                )
-              }
-
-              return (
-                <Button
-                  key={entry.id}
-                  variant="text"
-                  onClick={() =>
-                    entry.isStudyPath
-                      ? onOpenStudyGuide(entry.dashboards)
-                      : entry.firstDashboard &&
-                        onOpenDashboard(entry.firstDashboard)
-                  }
-                  sx={{
-                    width: '100%',
-                    minHeight: { xs: 48, md: 58 },
-                    justifyContent: 'flex-start',
-                    textAlign: 'left',
-                    textTransform: 'none',
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 1.5,
-                    px: 1.25,
-                    minWidth: 0,
-                    maxWidth: '100%',
-                    color: 'text.primary',
-                    bgcolor: 'background.paper',
-                    '&:hover': {
-                      borderColor: folderColor,
-                      bgcolor: 'action.hover',
-                    },
-                  }}
-                >
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        display: 'block',
-                        color: folderColor,
-                        fontWeight: 900,
-                        textTransform: 'uppercase',
-                        lineHeight: 1.2,
-                        fontSize: '0.625rem',
-                      }}
-                    >
-                      {entry.folderName}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      fontWeight={800}
-                      sx={{
-                        fontSize: '0.8125rem',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {entry.title}
-                    </Typography>
-                  </Box>
-                </Button>
-              )
-            })}
+            {visibleStudyMaterialEntries.map((entry) =>
+              renderStudyMaterialEntry(entry, showCustomEntryControls),
+            )}
           </Box>
         ) : (
           <Box
@@ -969,13 +1296,13 @@ const DashboardEmptyState = ({
                 </Typography>
                 <Chip
                   size="small"
-                  label={settings.studyMaterialColumns}
+                  label={effectiveStudyMaterialColumns}
                   sx={{ fontWeight: 900 }}
                 />
               </Stack>
               <Slider
                 aria-label="Study material columns"
-                value={settings.studyMaterialColumns}
+                value={effectiveStudyMaterialColumns}
                 min={1}
                 max={studyMaterialColumnMax}
                 step={1}
@@ -1014,22 +1341,157 @@ const DashboardEmptyState = ({
               gridColumn: { xs: 'auto', md: '1 / -1' },
             }}
           >
-            <TextField
-              select
-              size="small"
-              label="Add Study Path or dashboard"
-              value=""
-              onChange={(event) => addCustomEntry(event.target.value)}
-              fullWidth
-              disabled={availableCustomEntries.length === 0}
-            >
-              {availableCustomEntries.map((entry) => (
-                <MenuItem key={entry.id} value={entry.id}>
-                  {entry.title} -{' '}
-                  {entry.isStudyPath ? 'Study Path' : 'Dashboard'}
-                </MenuItem>
-              ))}
-            </TextField>
+            <Stack spacing={1.25}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1}
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+              >
+                <TextField
+                  select
+                  size="small"
+                  label="Section"
+                  value={activeCustomSectionIdSafe}
+                  onChange={(event) =>
+                    setActiveCustomSectionId(event.target.value)
+                  }
+                  fullWidth
+                >
+                  {settings.customSections.map((section) => (
+                    <MenuItem key={section.id} value={section.id}>
+                      {section.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={addCustomSection}
+                  sx={{
+                    minHeight: 40,
+                    flexShrink: 0,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                  }}
+                >
+                  Add section
+                </Button>
+              </Stack>
+
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'minmax(0, 1fr) auto',
+                  },
+                  gap: 1,
+                  alignItems: 'center',
+                }}
+              >
+                <TextField
+                  select
+                  size="small"
+                  label="Add Study Path or dashboard"
+                  value=""
+                  onChange={(event) => addCustomEntry(event.target.value)}
+                  fullWidth
+                  disabled={availableCustomEntries.length === 0}
+                >
+                  {availableCustomEntries.map((entry) => (
+                    <MenuItem key={entry.id} value={entry.id}>
+                      {entry.title} -{' '}
+                      {entry.isStudyPath ? 'Study Path' : 'Dashboard'}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <Stack
+                  direction="row"
+                  spacing={0.25}
+                  justifyContent={{ xs: 'flex-start', sm: 'flex-end' }}
+                >
+                  <IconButton
+                    aria-label="Move section up"
+                    size="small"
+                    onClick={() =>
+                      moveCustomSection(activeCustomSectionIdSafe, -1)
+                    }
+                    disabled={activeCustomSectionIndex <= 0}
+                    sx={{
+                      color: 'text.primary',
+                      border: 1,
+                      borderColor: 'divider',
+                      bgcolor: 'background.paper',
+                      '&:hover': {
+                        color: 'primary.main',
+                        borderColor: 'primary.main',
+                        bgcolor: 'action.hover',
+                      },
+                    }}
+                  >
+                    <KeyboardArrowUpIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    aria-label="Move section down"
+                    size="small"
+                    onClick={() =>
+                      moveCustomSection(activeCustomSectionIdSafe, 1)
+                    }
+                    disabled={
+                      activeCustomSectionIndex >=
+                      settings.customSections.length - 1
+                    }
+                    sx={{
+                      color: 'text.primary',
+                      border: 1,
+                      borderColor: 'divider',
+                      bgcolor: 'background.paper',
+                      '&:hover': {
+                        color: 'primary.main',
+                        borderColor: 'primary.main',
+                        bgcolor: 'action.hover',
+                      },
+                    }}
+                  >
+                    <KeyboardArrowDownIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    aria-label="Remove section"
+                    size="small"
+                    onClick={() =>
+                      removeCustomSection(activeCustomSectionIdSafe)
+                    }
+                    disabled={settings.customSections.length <= 1}
+                    sx={{
+                      color: 'text.primary',
+                      border: 1,
+                      borderColor: 'divider',
+                      bgcolor: 'background.paper',
+                      '&:hover': {
+                        color: 'error.main',
+                        borderColor: 'error.main',
+                        bgcolor: 'action.hover',
+                      },
+                    }}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              </Box>
+
+              {customSectionsWithEntries.length > 0 ? (
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                  {customSectionsWithEntries.map((section) => (
+                    <Chip
+                      key={section.id}
+                      size="small"
+                      label={`${section.name}: ${section.entries.length}`}
+                      sx={{ fontWeight: 800 }}
+                    />
+                  ))}
+                </Stack>
+              ) : null}
+            </Stack>
           </Paper>
         ) : null}
       </Box>
@@ -1049,8 +1511,8 @@ const DashboardEmptyState = ({
   const mainDesktopGridTemplate = isSingleBlock
     ? 'minmax(0, 760px)'
     : settings.blockOrder[0] === 'studyMaterial'
-    ? 'minmax(300px, 2fr) minmax(0, 3fr)'
-    : 'minmax(0, 3fr) minmax(300px, 2fr)'
+      ? 'minmax(300px, 2fr) minmax(0, 3fr)'
+      : 'minmax(0, 3fr) minmax(300px, 2fr)'
   const previewDesktopGridTemplate = 'minmax(0, 1fr)'
 
   return (

@@ -414,7 +414,7 @@ describe('Dashboards', () => {
     )
     expect(screen.queryByText('Algebra Intro')).not.toBeInTheDocument()
     expect(screen.queryByText('Chemistry Intro')).not.toBeInTheDocument()
-    expect(screen.getByText('Custom')).toBeInTheDocument()
+    expect(screen.getAllByText('Custom').length).toBeGreaterThan(0)
   })
 
   it('opens and closes the empty dashboard customizer as a full-page modal', async () => {
@@ -613,6 +613,86 @@ describe('Dashboards', () => {
     )
   })
 
+  it('groups custom study material into editable sections', async () => {
+    const savedDashboards = [
+      createSavedDashboard('algebra', 'Algebra Intro', 'Algebra'),
+      createSavedDashboard('biology', 'Biology Intro', 'Biology'),
+      createSavedDashboard('chemistry', 'Chemistry Intro', 'Chemistry'),
+    ]
+
+    localStorage.getItem.mockImplementation((key: string) => {
+      if (key === 'userData') {
+        return JSON.stringify({
+          id: 'admin',
+          name: 'Admin User',
+          role: 'ADMIN_ROLE',
+        })
+      }
+
+      if (key === 'customDashboards') {
+        return JSON.stringify(savedDashboards)
+      }
+
+      if (key === 'studymesh-empty-dashboard-settings-v1') {
+        return JSON.stringify({
+          blockOrder: ['creation', 'studyMaterial'],
+          showCreationBlock: true,
+          studyMaterialMode: 'custom',
+          studyMaterialLimit: 20,
+          studyMaterialColumns: 2,
+          customSections: [
+            {
+              id: 'science',
+              name: 'Science',
+              entryIds: ['dashboard:biology'],
+            },
+            {
+              id: 'math',
+              name: 'Math',
+              entryIds: ['dashboard:algebra'],
+            },
+          ],
+        })
+      }
+
+      return null
+    })
+    mockDashboardProvider({
+      openDashboards: [],
+      selectedDashboard: -1,
+    })
+
+    render(<Dashboards />)
+
+    await waitFor(() => expect(screen.getByText('Science')).toBeInTheDocument())
+    expect(screen.getByText('Math')).toBeInTheDocument()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /customize this page/i }),
+    )
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /section/i }))
+    fireEvent.click(screen.getByRole('option', { name: /science/i }))
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', {
+        name: /add study path or dashboard/i,
+      }),
+    )
+    fireEvent.click(screen.getByRole('option', { name: /chemistry intro/i }))
+
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'studymesh-empty-dashboard-settings-v1',
+      expect.stringContaining(
+        '"entryIds":["dashboard:biology","dashboard:chemistry"]',
+      ),
+    )
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'studymesh-empty-dashboard-settings-v1',
+      expect.stringContaining(
+        '"customEntryIds":["dashboard:biology","dashboard:chemistry","dashboard:algebra"]',
+      ),
+    )
+  })
+
   it('limits custom study material columns to the selected custom entries', () => {
     const savedDashboards = Array.from({ length: 5 }, (_, index) =>
       createSavedDashboard(
@@ -678,6 +758,69 @@ describe('Dashboards', () => {
     expect(localStorage.setItem).toHaveBeenCalledWith(
       'studymesh-empty-dashboard-settings-v1',
       expect.stringContaining('"studyMaterialColumns":4'),
+    )
+  })
+
+  it('caps custom study material columns to visible items', () => {
+    const savedDashboards = Array.from({ length: 5 }, (_, index) =>
+      createSavedDashboard(
+        `topic-${index + 1}`,
+        `Topic ${index + 1}`,
+        `Topic ${index + 1}`,
+      ),
+    )
+
+    localStorage.getItem.mockImplementation((key: string) => {
+      if (key === 'userData') {
+        return JSON.stringify({
+          id: 'admin',
+          name: 'Admin User',
+          role: 'ADMIN_ROLE',
+        })
+      }
+
+      if (key === 'customDashboards') {
+        return JSON.stringify(savedDashboards)
+      }
+
+      if (key === 'studymesh-empty-dashboard-settings-v1') {
+        return JSON.stringify({
+          blockOrder: ['creation', 'studyMaterial'],
+          showCreationBlock: true,
+          studyMaterialMode: 'custom',
+          studyMaterialLimit: 3,
+          studyMaterialColumns: 5,
+          customEntryIds: [
+            'dashboard:topic-1',
+            'dashboard:topic-2',
+            'dashboard:topic-3',
+            'dashboard:topic-4',
+            'dashboard:topic-5',
+          ],
+        })
+      }
+
+      return null
+    })
+    mockDashboardProvider({
+      openDashboards: [],
+      selectedDashboard: -1,
+    })
+
+    render(<Dashboards />)
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /customize this page/i }),
+    )
+
+    const columnsSlider = screen.getByRole('slider', {
+      name: /study material columns/i,
+    })
+    expect(columnsSlider).toHaveAttribute('max', '3')
+    expect(columnsSlider).toHaveValue('3')
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'studymesh-empty-dashboard-settings-v1',
+      expect.stringContaining('"studyMaterialColumns":3'),
     )
   })
 

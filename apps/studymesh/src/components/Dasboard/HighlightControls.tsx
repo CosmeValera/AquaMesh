@@ -1,15 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import {
-  Box,
-  Fab,
-  IconButton,
-  Paper,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material'
-import { useMediaQuery } from '@mui/material'
+import { Box, Fab, IconButton, Paper, Stack, TextField, Tooltip, Typography } from '@mui/material'
+import { useTheme } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { Dialog, DialogTitle, DialogContent, Button } from '@mui/material'
 import {
@@ -19,6 +10,7 @@ import {
   HighlightColor,
   HIGHLIGHT_COLORS,
 } from './dashboardHighlights'
+import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceMode'
 
 interface HighlightControlsProps {
   dashboardId: string
@@ -27,7 +19,7 @@ interface HighlightControlsProps {
 export const HighlightControls: React.FC<HighlightControlsProps> = ({
   dashboardId,
 }) => {
-  const isMobile = useMediaQuery('(max-width:600px)')
+  const { isPhoneOrTablet: isMobile } = useResponsiveWorkspaceMode()
   const [selectedText, setSelectedText] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [noteText, setNoteText] = useState('')

@@ -96,6 +96,19 @@ import {
   StudioFlow,
 } from './workspaceStudioModel'
 import {
+  addPersistentSource,
+  clearPersistentSources,
+  createPersistentSourceDashboard,
+  createPersistentSourceImage,
+  createPersistentSourcePdf,
+  createPersistentSourcePptx,
+  createPersistentSourceText,
+  getPersistentSourceLabel,
+  PersistentSource,
+  readPersistentSourcesSettings,
+  removePersistentSource,
+} from '../../studyPack/persistentSources'
+import {
   WorkspaceDesktopLayout,
   WorkspaceMobileLayout,
 } from './WorkspaceStudioLayouts'
@@ -540,6 +553,11 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const [quickSourceMode, setQuickSourceMode] =
     useState<QuickSourceMode>('dashboard')
   const [quickSourceStatus, setQuickSourceStatus] = useState('')
+  const [persistentSources, setPersistentSources] = useState<PersistentSource[]>(() =>
+    readPersistentSourcesSettings().sources,
+  )
+  const [persistentSourcesOpen, setPersistentSourcesOpen] = useState(false)
+  const [persistentSourceTextDraft, setPersistentSourceTextDraft] = useState('')
   const [queueClockMs, setQueueClockMs] = useState(() => Date.now())
   const [studyPathRetrySignals, setStudyPathRetrySignals] = useState<
     Record<string, number>
@@ -1451,6 +1469,60 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     setQuickSourceStatus('')
   }
 
+  const addPersistentSourceText = () => {
+    const text = persistentSourceTextDraft.trim()
+    if (!text) return
+
+    const source = createPersistentSourceText(text, text.slice(0, 50))
+    addPersistentSource(source)
+    setPersistentSources((current) => [...current, source])
+    setPersistentSourceTextDraft('')
+  }
+
+  const addPersistentSourceFiles = async (files: FileList | File[]) => {
+    const fileArray = Array.from(files)
+
+    for (const file of fileArray) {
+      let source: PersistentSource
+
+      if (file.type.startsWith('image/')) {
+        source = await createPersistentSourceImage(file, file.name)
+      } else if (file.type === 'application/pdf') {
+        source = await createPersistentSourcePdf(file, file.name)
+      } else if (
+        file.type ===
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+      ) {
+        source = await createPersistentSourcePptx(file, file.name)
+      } else {
+        const content = await file.text()
+        source = createPersistentSourceText(content, file.name)
+      }
+
+      addPersistentSource(source)
+      setPersistentSources((current) => [...current, source])
+    }
+  }
+
+  const removePersistentSourceById = (id: string) => {
+    removePersistentSource(id)
+    setPersistentSources((current) => current.filter((s) => s.id !== id))
+  }
+
+  const clearAllPersistentSources = () => {
+    clearPersistentSources()
+    setPersistentSources([])
+  }
+
+  const addPersistentSourceFromDashboard = (
+    dashboardId: string,
+    label: string,
+  ) => {
+    const source = createPersistentSourceDashboard(dashboardId, label)
+    addPersistentSource(source)
+    setPersistentSources((current) => [...current, source])
+  }
+
   const addQuickCopiedText = () => {
     const text = quickCopiedTextDraft.trim()
     if (!text) {
@@ -2164,7 +2236,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
               <Stack spacing={1.25}>
                 <Box>
                   <Typography variant="subtitle1" fontWeight={900}>
-                    Quick Create
+                    Current Dashboard
                   </Typography>
                   <Typography
                     variant="body2"
@@ -2173,13 +2245,12 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   >
                     {hasCurrentDashboardContext
                       ? 'Generate focused material from your current dashboard.'
-                      : 'Add material first, then generate focused study material.'}
+                      : 'Select a dashboard to use as source.'}
                   </Typography>
                 </Box>
                 {!hasCurrentDashboardContext ? (
                   <Alert severity="info" sx={{ py: 0.5 }}>
-                    The current dashboard is empty. Pick a card and StudyMesh
-                    will open Create from Material with that output selected.
+                    Open a dashboard to enable Quick Create with this source.
                   </Alert>
                 ) : null}
                 <Box
@@ -2319,50 +2390,249 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                     },
                   )}
                 </Box>
-                <Button
-                  size="small"
-                  onClick={() => openCreateFromMaterial()}
-                  aria-expanded={quickOptionsOpen}
-                  sx={{
-                    alignSelf: 'flex-start',
-                    textTransform: 'none',
-                    borderRadius: 999,
-                    px: 0.5,
-                    fontWeight: 800,
-                  }}
+              </Stack>
+            </Paper>
+
+            {/* Sources section */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 1.35, sm: 1.5 },
+                borderRadius: 2.5,
+                border: 1,
+                borderColor: persistentSources.length > 0
+                  ? alpha(theme.palette.primary.main, 0.45)
+                  : 'divider',
+                bgcolor: 'background.default',
+              }}
+            >
+              <Stack spacing={1.25}>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
                 >
-                  Create from material
-                </Button>
+                  <Box>
+                    <Typography variant="subtitle1" fontWeight={900}>
+                      Sources
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 0.3 }}
+                    >
+                      {persistentSources.length === 0
+                        ? 'Add sources to use them across all creations.'
+                        : `${persistentSources.length} source${
+                            persistentSources.length === 1 ? '' : 's'
+                          } ready for Quick Create.`}
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    variant={persistentSourcesOpen ? 'contained' : 'outlined'}
+                    onClick={() => setPersistentSourcesOpen(!persistentSourcesOpen)}
+                    sx={{
+                      borderRadius: 999,
+                      textTransform: 'none',
+                      fontWeight: 900,
+                      flex: '0 0 auto',
+                    }}
+                  >
+                    {persistentSourcesOpen ? 'Done' : 'Manage'}
+                  </Button>
+                </Stack>
+
+                {persistentSources.length > 0 && !persistentSourcesOpen ? (
+                  <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    {persistentSources.slice(0, 5).map((source) => (
+                      <Chip
+                        key={source.id}
+                        label={getPersistentSourceLabel(source)}
+                        size="small"
+                        onDelete={() => removePersistentSourceById(source.id)}
+                        sx={{ fontWeight: 700 }}
+                      />
+                    ))}
+                    {persistentSources.length > 5 && (
+                      <Chip
+                        label={`+${persistentSources.length - 5} more`}
+                        size="small"
+                        sx={{ fontWeight: 700 }}
+                      />
+                    )}
+                  </Stack>
+                ) : null}
+
+                <Collapse in={persistentSourcesOpen} unmountOnExit>
+                  <Stack spacing={1}>
+                    {/* Add text source */}
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: '1fr', sm: '1fr auto' },
+                        gap: 1,
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      <TextField
+                        size="small"
+                        placeholder="Add text, notes, or content..."
+                        value={persistentSourceTextDraft}
+                        onChange={(e) =>
+                          setPersistentSourceTextDraft(e.target.value)
+                        }
+                        multiline
+                        minRows={2}
+                        maxRows={4}
+                        fullWidth
+                      />
+                      <Stack spacing={0.5} flex="0 0 auto">
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={addPersistentSourceText}
+                          disabled={!persistentSourceTextDraft.trim()}
+                          sx={{
+                            borderRadius: 1.5,
+                            textTransform: 'none',
+                            fontWeight: 900,
+                          }}
+                        >
+                          Add text
+                        </Button>
+                        <Button
+                          size="small"
+                          component="label"
+                          variant="outlined"
+                          sx={{
+                            borderRadius: 1.5,
+                            textTransform: 'none',
+                            fontWeight: 900,
+                          }}
+                        >
+                          Upload
+                          <input
+                            hidden
+                            type="file"
+                            multiple
+                            accept={quickSourceAcceptValue}
+                            onChange={(e) => {
+                              if (e.target.files) {
+                                addPersistentSourceFiles(e.target.files)
+                              }
+                              e.target.value = ''
+                            }}
+                          />
+                        </Button>
+                      </Stack>
+                    </Box>
+
+                    {/* Source type chips */}
+                    <Stack direction="row" gap={0.75} flexWrap="wrap">
+                      {['Text', 'Images', 'PDF', 'PPTX'].map((label) => (
+                        <Chip
+                          key={label}
+                          label={label}
+                          size="small"
+                          sx={{
+                            bgcolor: alpha(
+                              theme.palette.warning.main,
+                              theme.palette.mode === 'dark' ? 0.14 : 0.12,
+                            ),
+                            fontWeight: 700,
+                          }}
+                        />
+                      ))}
+                    </Stack>
+
+                    {/* List of persistent sources */}
+                    {persistentSources.length > 0 ? (
+                      <Stack spacing={0.75}>
+                        {persistentSources.map((source) => (
+                          <Paper
+                            key={source.id}
+                            elevation={0}
+                            sx={{
+                              p: 1,
+                              borderRadius: 1.5,
+                              border: 1,
+                              borderColor: 'divider',
+                              bgcolor: 'background.paper',
+                            }}
+                          >
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              spacing={1}
+                            >
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={700}
+                                  noWrap
+                                >
+                                  {getPersistentSourceLabel(source)}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {source.type}
+                                </Typography>
+                              </Box>
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  removePersistentSourceById(source.id)
+                                }
+                                sx={{ color: 'error.main' }}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </Stack>
+                          </Paper>
+                        ))}
+                        <Button
+                          size="small"
+                          color="error"
+                          onClick={clearAllPersistentSources}
+                          sx={{
+                            alignSelf: 'flex-start',
+                            textTransform: 'none',
+                            borderRadius: 999,
+                            fontWeight: 800,
+                          }}
+                        >
+                          Clear all sources
+                        </Button>
+                      </Stack>
+                    ) : (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ textAlign: 'center', py: 1 }}
+                      >
+                        No sources added yet. Add text or upload files above.
+                      </Typography>
+                    )}
+                  </Stack>
+                </Collapse>
               </Stack>
             </Paper>
           </>
         ) : (
           <Stack spacing={1.5}>
-            <Button
-              size="small"
-              onClick={() => {
-                setQuickOptionsOpen(false)
-                setQuickSourceMode('dashboard')
-                setQuickSourceStatus('')
-              }}
-              sx={{
-                alignSelf: 'flex-start',
-                borderRadius: 999,
-                fontWeight: 900,
-              }}
-            >
-              ← Back to Creation
-            </Button>
             <Box>
               <Typography variant="h5" fontWeight={900}>
-                Create from Material
+                Current Dashboard
               </Typography>
               <Typography
                 variant="body2"
                 color="text.secondary"
                 sx={{ mt: 0.35 }}
               >
-                Pick the output, source, and options in one focused flow.
+                Generate focused material from your current dashboard.
               </Typography>
             </Box>
           </Stack>

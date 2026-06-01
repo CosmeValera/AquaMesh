@@ -2245,6 +2245,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   )
 
   const creationSectionTabs: Array<{
+    ariaLabel: string
     disabled: boolean
     icon: React.ReactNode
     id: CreationSection
@@ -2252,19 +2253,22 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   }> = [
     {
       id: 'dashboard',
-      label: 'Current dashboard',
+      label: 'Dashboard',
+      ariaLabel: 'Current dashboard',
       icon: <DashboardIcon fontSize="small" />,
       disabled: !hasCurrentDashboardContext,
     },
     {
       id: 'sources',
       label: 'Sources',
+      ariaLabel: 'Sources',
       icon: <UploadFileIcon fontSize="small" />,
       disabled: false,
     },
     {
       id: 'prompt',
       label: 'Prompt',
+      ariaLabel: 'Prompt',
       icon: <RouteIcon fontSize="small" />,
       disabled: false,
     },
@@ -2299,6 +2303,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
           {creationSectionTabs.map((section) => (
             <Button
               key={section.id}
+              aria-label={section.ariaLabel}
               size="small"
               variant={
                 activeCreationSection === section.id ? 'contained' : 'outlined'
@@ -2315,28 +2320,36 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
               sx={{
                 minWidth: 0,
                 borderRadius: 2,
-                py: 1,
-                px: 0.5,
-                flexDirection: 'column',
-                gap: 0.25,
+                py: 0.85,
+                px: { xs: 0.35, sm: 0.6 },
+                justifyContent: 'center',
                 textTransform: 'none',
                 fontWeight: 900,
-                fontSize: 11,
+                fontSize: { xs: 10.5, sm: 11.5 },
                 lineHeight: 1.15,
-                whiteSpace: 'normal',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
                 '& .MuiButton-startIcon': {
-                  mr: 0,
-                  mb: 0.15,
+                  mr: 0.35,
+                  ml: 0,
                 },
                 '& .MuiButton-startIcon > *:nth-of-type(1)': {
-                  fontSize: 20,
+                  fontSize: 17,
                 },
                 '&.Mui-disabled': {
                   opacity: 0.48,
                 },
               }}
             >
-              {section.label}
+              <Typography
+                component="span"
+                variant="caption"
+                fontWeight={900}
+                noWrap
+                sx={{ minWidth: 0, lineHeight: 1.15 }}
+              >
+                {section.label}
+              </Typography>
             </Button>
           ))}
         </Box>

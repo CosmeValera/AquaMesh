@@ -160,6 +160,30 @@ describe('CreateStudyPathModal Study Path generation', () => {
     })
   })
 
+  it('hides dashboard source controls when dashboard sources are disabled', () => {
+    render(
+      <CreateStudyPathModal
+        open
+        onClose={vi.fn()}
+        onCreatePath={vi.fn()}
+        allowDashboardSource={false}
+        hasCurrentDashboardContext
+        currentDashboardTitle="Biology Dashboard"
+        currentDashboardContext="Dashboard notes"
+      />,
+    )
+
+    expect(
+      screen.queryByRole('button', { name: /current dashboard/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /prompt only/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('textbox', { name: /what should StudyMesh teach/i }),
+    ).toBeRequired()
+  })
+
   it('previews and creates balanced paths from generated lesson objects', async () => {
     const onCreatePath = vi.fn()
     mockGeminiDashboards(5)

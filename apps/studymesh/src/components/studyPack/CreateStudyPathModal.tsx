@@ -85,6 +85,7 @@ interface CreateStudyPathModalProps {
   currentDashboardContext?: string
   currentDashboardTitle?: string
   hasCurrentDashboardContext?: boolean
+  allowDashboardSource?: boolean
 }
 
 const generationAmountOptions: Array<{
@@ -548,6 +549,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   currentDashboardContext = '',
   currentDashboardTitle = 'Current dashboard',
   hasCurrentDashboardContext = false,
+  allowDashboardSource = true,
 }) => {
   const [step, setStep] = useState<'prompt' | 'review'>('prompt')
   const [sourceMode, setSourceMode] = useState<'prompt' | 'dashboard'>('prompt')
@@ -578,15 +580,23 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   const autoRetrySignalRef = useRef(autoRetrySignal)
   const autoCancelSignalRef = useRef(autoCancelSignal)
   const debugTrace = combinedDebugTrace(draft)
+  const canUseDashboardSource =
+    allowDashboardSource && hasCurrentDashboardContext
+
+  React.useEffect(() => {
+    if (!allowDashboardSource && sourceMode === 'dashboard') {
+      setSourceMode('prompt')
+    }
+  }, [allowDashboardSource, sourceMode])
 
   React.useEffect(() => {
     onDraftMetaChange?.({
       title:
-        sourceMode === 'dashboard'
+        sourceMode === 'dashboard' && allowDashboardSource
           ? currentDashboardTitle
           : prompt.trim() || 'Study Path',
       inputSummary:
-        sourceMode === 'dashboard'
+        sourceMode === 'dashboard' && allowDashboardSource
           ? `Current dashboard: ${currentDashboardTitle}`
           : prompt.trim() || 'Learning prompt',
       detailLevel: generationAmount,
@@ -594,6 +604,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   }, [
     currentDashboardTitle,
     generationAmount,
+    allowDashboardSource,
     onDraftMetaChange,
     prompt,
     sourceMode,
@@ -727,10 +738,10 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
 
   const generatePath = async () => {
     const effectivePrompt = [
-      sourceMode === 'dashboard' && !prompt.trim()
+      sourceMode === 'dashboard' && allowDashboardSource && !prompt.trim()
         ? `Create a Study Path from current dashboard: ${currentDashboardTitle}`
         : prompt.trim(),
-      sourceMode === 'dashboard'
+      sourceMode === 'dashboard' && allowDashboardSource
         ? `Use current dashboard as source context: ${currentDashboardTitle}\n\n${currentDashboardContext}`
         : '',
       mustInclude.trim()
@@ -745,7 +756,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       return
     }
 
-    if (sourceMode === 'dashboard' && !hasCurrentDashboardContext) {
+    if (sourceMode === 'dashboard' && !canUseDashboardSource) {
       setError('Current dashboard has no usable study content.')
       return
     }
@@ -1073,67 +1084,71 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
                 }}
               >
                 <Stack spacing={2}>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight={900}>
-                      Start from
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 0.3 }}
-                    >
-                      Use a new learning goal, or let the current dashboard
-                      drive the path.
-                    </Typography>
-                    <Stack
-                      direction={{ xs: 'column', sm: 'row' }}
-                      gap={1}
-                      sx={{ mt: 1.25 }}
-                    >
-                      <Button
-                        variant={
-                          sourceMode === 'prompt' ? 'contained' : 'outlined'
-                        }
-                        onClick={() => {
-                          setSourceMode('prompt')
-                          setError('')
-                        }}
-                        sx={{ textTransform: 'none', flex: 1 }}
-                      >
-                        Prompt only
-                      </Button>
-                      <Button
-                        variant={
-                          sourceMode === 'dashboard' ? 'contained' : 'outlined'
-                        }
-                        disabled={!hasCurrentDashboardContext}
-                        onClick={() => {
-                          setSourceMode('dashboard')
-                          setError('')
-                        }}
-                        sx={{ textTransform: 'none', flex: 1 }}
-                      >
-                        Current dashboard
-                      </Button>
-                    </Stack>
-                    {sourceMode === 'dashboard' ? (
-                      <Alert severity="info" sx={{ mt: 1.25 }}>
-                        Using current dashboard: {currentDashboardTitle}. The
-                        prompt below is optional.
-                      </Alert>
-                    ) : !hasCurrentDashboardContext ? (
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mt: 0.9, display: 'block' }}
-                      >
-                        Current dashboard has no usable study content.
+                  {allowDashboardSource ? (
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={900}>
+                        Start from
                       </Typography>
-                    ) : null}
-                  </Box>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 0.3 }}
+                      >
+                        Use a new learning goal, or let the current dashboard
+                        drive the path.
+                      </Typography>
+                      <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        gap={1}
+                        sx={{ mt: 1.25 }}
+                      >
+                        <Button
+                          variant={
+                            sourceMode === 'prompt' ? 'contained' : 'outlined'
+                          }
+                          onClick={() => {
+                            setSourceMode('prompt')
+                            setError('')
+                          }}
+                          sx={{ textTransform: 'none', flex: 1 }}
+                        >
+                          Prompt only
+                        </Button>
+                        <Button
+                          variant={
+                            sourceMode === 'dashboard'
+                              ? 'contained'
+                              : 'outlined'
+                          }
+                          disabled={!canUseDashboardSource}
+                          onClick={() => {
+                            setSourceMode('dashboard')
+                            setError('')
+                          }}
+                          sx={{ textTransform: 'none', flex: 1 }}
+                        >
+                          Current dashboard
+                        </Button>
+                      </Stack>
+                      {sourceMode === 'dashboard' ? (
+                        <Alert severity="info" sx={{ mt: 1.25 }}>
+                          Using current dashboard: {currentDashboardTitle}. The
+                          prompt below is optional.
+                        </Alert>
+                      ) : !canUseDashboardSource ? (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ mt: 0.9, display: 'block' }}
+                        >
+                          Current dashboard has no usable study content.
+                        </Typography>
+                      ) : null}
+                    </Box>
+                  ) : null}
                   <TextField
                     label={
-                      sourceMode === 'dashboard'
+                      sourceMode === 'dashboard' && allowDashboardSource
                         ? 'Optional learning focus'
                         : 'Study Path prompt'
                     }
@@ -1143,13 +1158,13 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
                     value={prompt}
                     onChange={(event) => setPrompt(event.target.value)}
                     placeholder={
-                      sourceMode === 'dashboard'
+                      sourceMode === 'dashboard' && allowDashboardSource
                         ? 'Optional: focus on missed exercises, exam prep, or the next lesson...'
                         : 'Example: Help me learn React hooks as a beginner/someone with JS experience...'
                     }
                     multiline
                     minRows={presentation === 'embedded' ? 5 : 6}
-                    required={sourceMode === 'prompt'}
+                    required={sourceMode === 'prompt' || !allowDashboardSource}
                     fullWidth
                   />
                   <Stack spacing={presentation === 'embedded' ? 1.25 : 2}>

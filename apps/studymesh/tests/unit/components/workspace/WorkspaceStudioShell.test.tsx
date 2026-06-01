@@ -118,7 +118,12 @@ vi.mock('../../../../src/studyPack/imageOcr', () => ({
 
 vi.mock('../../../../src/components/studyPack/CreateStudyPathModal', () => ({
   __esModule: true,
-  default: () => <div data-testid="create-study-path-modal" />,
+  default: (props: { allowDashboardSource?: boolean }) => (
+    <div
+      data-testid="create-study-path-modal"
+      data-allow-dashboard-source={String(props.allowDashboardSource)}
+    />
+  ),
 }))
 
 vi.mock('../../../../src/components/workspace/WidgetEditorDialog', () => ({
@@ -145,7 +150,7 @@ const clickQuickCard = (label: string) => {
 }
 
 const openCreateFromMaterial = () => {
-  fireEvent.click(screen.getByRole('button', { name: /Create from material/i }))
+  fireEvent.click(screen.getByRole('button', { name: /^Sources$/i }))
 }
 
 const addCopiedMaterial = (text: string) => {
@@ -275,7 +280,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
     expect(createStudyPackDashboardsMock).not.toHaveBeenCalled()
   })
 
-  it('opens a separate Create from Material flow from the hub link', () => {
+  it('opens the Sources section from the creation tabs', () => {
     render(
       <WorkspaceStudioShell>
         <div>Dashboard canvas</div>
@@ -285,16 +290,9 @@ describe('WorkspaceStudioShell Quick Create', () => {
     openCreation()
     openCreateFromMaterial()
 
-    expect(
-      screen.getByRole('heading', { name: /Create from Material/i }),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/Step 1: Choose output/i)).toBeInTheDocument()
-    expect(screen.getByText(/Step 2: Choose source/i)).toBeInTheDocument()
-    expect(screen.getByText(/Step 3: Options/i)).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /^Current dashboard$/i }),
-    ).toHaveClass('MuiButton-contained')
-    expect(screen.queryByText(/^Add sources$/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /^Sources$/i })).toBeInTheDocument()
+    expect(screen.getByText(/^Add sources$/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Step 3: Options/i)).not.toBeInTheDocument()
     expect(generateStudyPackWithAi).not.toHaveBeenCalled()
   })
 
@@ -307,10 +305,12 @@ describe('WorkspaceStudioShell Quick Create', () => {
 
     openCreation({ intent: 'study-path' })
 
-    expect(screen.getByTestId('create-study-path-modal')).toBeInTheDocument()
+    const studyPathModal = screen.getByTestId('create-study-path-modal')
+    expect(studyPathModal).toBeInTheDocument()
+    expect(studyPathModal).toHaveAttribute('data-allow-dashboard-source', 'false')
   })
 
-  it('output cards in Create from Material select output without generating immediately', () => {
+  it('source quick cards select output without generating until sources exist', () => {
     render(
       <WorkspaceStudioShell>
         <div>Dashboard canvas</div>
@@ -319,13 +319,15 @@ describe('WorkspaceStudioShell Quick Create', () => {
 
     openCreation()
     openCreateFromMaterial()
-    fireEvent.click(screen.getByRole('button', { name: /^Flashcards$/i }))
+    fireEvent.click(
+      screen.getByRole('button', { name: /^Quick Create Flashcards$/i }),
+    )
 
     expect(screen.getByText(/Flashcards selected/i)).toBeInTheDocument()
     expect(generateStudyPackWithAi).not.toHaveBeenCalled()
   })
 
-  it('uses pasted source material from Create from Material when the bottom CTA runs', async () => {
+  it('uses pasted source material from Sources when the bottom CTA runs', async () => {
     render(
       <WorkspaceStudioShell>
         <div>Dashboard canvas</div>
@@ -349,7 +351,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
   })
 
-  it('keeps Quick Create wired to dashboard source after returning from Create from Material', async () => {
+  it('keeps Current dashboard quick create separate from session sources', async () => {
     render(
       <WorkspaceStudioShell>
         <div>Dashboard canvas</div>
@@ -358,7 +360,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
 
     openCreation({ openQuickOptions: true })
     addCopiedMaterial('Custom source notes about enzymes')
-    fireEvent.click(screen.getByRole('button', { name: /Back to Creation/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Current dashboard$/i }))
     clickQuickCard('Quiz')
 
     await waitFor(() => expect(generateStudyPackWithAi).toHaveBeenCalled())
@@ -372,7 +374,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
   })
 
-  it('routes empty-dashboard quick card clicks into Create from Material with the output preselected', () => {
+  it('disables Current dashboard and falls back to Sources when the dashboard is empty', async () => {
     dashboardContextText = ''
     dashboardContextChunks = []
 
@@ -383,22 +385,22 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
 
     openCreation()
-    clickQuickCard('Quiz')
 
     expect(
-      screen.getByRole('heading', { name: /Create from Material/i }),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/Quiz selected/i)).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /^Create Quiz$/i }),
+      screen.getByRole('button', { name: /^Current dashboard$/i }),
     ).toBeDisabled()
-    expect(screen.getByRole('button', { name: /^Sources$/i })).toHaveClass(
-      'MuiButton-contained',
+    await waitFor(() =>
+      expect(
+        screen.getByRole('heading', { name: /^Sources$/i }),
+      ).toBeInTheDocument(),
     )
+    expect(
+      screen.getByRole('button', { name: /^Upload files$/i }),
+    ).toBeInTheDocument()
     expect(generateStudyPackWithAi).not.toHaveBeenCalled()
   })
 
-  it('opens the Creation panel from a collapsed quick action and preselects material flow', () => {
+  it('opens the Creation panel from a collapsed quick action and preselects Sources', () => {
     dashboardContextText = ''
     dashboardContextChunks = []
 
@@ -414,9 +416,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: /Quick Create Quiz/i }))
 
-    expect(
-      screen.getByRole('heading', { name: /Create from Material/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /^Sources$/i })).toBeInTheDocument()
     expect(screen.getByText(/Quiz selected/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Sources$/i })).toHaveClass(
       'MuiButton-contained',
@@ -439,14 +439,14 @@ describe('WorkspaceStudioShell Quick Create', () => {
 
     await waitFor(() => expect(generateStudyPackWithAi).toHaveBeenCalled())
     expect(
-      screen.queryByRole('heading', { name: /Create from Material/i }),
+      screen.queryByRole('heading', { name: /^Sources$/i }),
     ).not.toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: /Open Create panel/i }),
     ).toBeInTheDocument()
   })
 
-  it('focuses the upload area when an empty-dashboard upload launcher opens Create from Material', async () => {
+  it('focuses the upload area when an empty-dashboard upload launcher opens Sources', async () => {
     render(
       <WorkspaceStudioShell>
         <div>Dashboard canvas</div>
@@ -459,9 +459,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
       quickSourceFocus: 'upload',
     })
 
-    expect(
-      screen.getByRole('heading', { name: /Create from Material/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /^Sources$/i })).toBeInTheDocument()
     await waitFor(() =>
       expect(
         screen.getByRole('button', { name: /^Upload files$/i }),
@@ -469,7 +467,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
   })
 
-  it('focuses the paste textarea when an empty-dashboard paste launcher opens Create from Material', async () => {
+  it('focuses the paste textarea when an empty-dashboard paste launcher opens Sources', async () => {
     render(
       <WorkspaceStudioShell>
         <div>Dashboard canvas</div>
@@ -482,15 +480,13 @@ describe('WorkspaceStudioShell Quick Create', () => {
       quickSourceFocus: 'paste',
     })
 
-    expect(
-      screen.getByRole('heading', { name: /Create from Material/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /^Sources$/i })).toBeInTheDocument()
     await waitFor(() =>
       expect(screen.getByLabelText(/Copied text/i)).toHaveFocus(),
     )
   })
 
-  it('uses the dashboard source by default when the final CTA runs', async () => {
+  it('imports current dashboard into Sources for quick creation', async () => {
     render(
       <WorkspaceStudioShell>
         <div>Dashboard canvas</div>
@@ -499,7 +495,12 @@ describe('WorkspaceStudioShell Quick Create', () => {
 
     openCreation()
     openCreateFromMaterial()
-    fireEvent.click(screen.getByRole('button', { name: /^Create Quiz$/i }))
+    fireEvent.click(
+      screen.getByRole('button', { name: /^Import current dashboard$/i }),
+    )
+    fireEvent.click(
+      screen.getByRole('button', { name: /^Quick Create Quiz$/i }),
+    )
 
     await waitFor(() => expect(generateStudyPackWithAi).toHaveBeenCalled())
     expect(generateStudyPackWithAi).toHaveBeenCalledWith(
@@ -512,7 +513,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
   })
 
-  it('shows source controls after Sources is selected inside Create from Material', () => {
+  it('shows source controls after Sources is selected', () => {
     render(
       <WorkspaceStudioShell>
         <div>Dashboard canvas</div>
@@ -520,12 +521,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
 
     openCreation()
-    openCreateFromMaterial()
-
     expect(screen.queryByText(/^Add sources$/i)).not.toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /^Current dashboard$/i }),
-    ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /^Sources$/i }))
     expect(screen.getByText(/^Add sources$/i)).toBeInTheDocument()
   })

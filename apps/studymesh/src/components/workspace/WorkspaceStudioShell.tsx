@@ -2325,7 +2325,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 justifyContent: 'center',
                 textTransform: 'none',
                 fontWeight: 900,
-                fontSize: { xs: 10.5, sm: 11.5 },
+                fontSize: { xs: 10.5, sm: 11.5, md: 6.5 },
                 lineHeight: 1.15,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',

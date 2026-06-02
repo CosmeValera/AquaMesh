@@ -190,9 +190,7 @@ const normalizeEmptyDashboardSettings = (
         ? MAX_STUDY_MATERIAL_ITEMS
         : defaultEmptyDashboardSettings.studyMaterialLimit,
     studyMaterialColumns:
-      studyMaterialMode === 'recent'
-        ? defaultEmptyDashboardSettings.studyMaterialColumns
-        : typeof value?.studyMaterialColumns === 'number'
+      typeof value?.studyMaterialColumns === 'number'
         ? Math.max(
             1,
             Math.min(
@@ -385,10 +383,10 @@ const DashboardEmptyState = ({
       const columnMax = getStudyMaterialColumnMax(normalized)
       const nextNormalized = {
         ...normalized,
-        studyMaterialColumns: Math.min(
-          normalized.studyMaterialColumns,
-          columnMax,
-        ),
+        studyMaterialColumns:
+          normalized.studyMaterialMode === 'custom'
+            ? Math.min(normalized.studyMaterialColumns, columnMax)
+            : normalized.studyMaterialColumns,
       }
       saveEmptyDashboardSettings(nextNormalized)
       return nextNormalized
@@ -396,10 +394,17 @@ const DashboardEmptyState = ({
   }
 
   useEffect(() => {
-    if (settings.studyMaterialColumns > studyMaterialColumnMax) {
+    if (
+      settings.studyMaterialMode === 'custom' &&
+      settings.studyMaterialColumns > studyMaterialColumnMax
+    ) {
       updateSettings({ studyMaterialColumns: studyMaterialColumnMax })
     }
-  }, [settings.studyMaterialColumns, studyMaterialColumnMax])
+  }, [
+    settings.studyMaterialMode,
+    settings.studyMaterialColumns,
+    studyMaterialColumnMax,
+  ])
 
   const resetSettings = () => {
     updateSettings(defaultEmptyDashboardSettings)

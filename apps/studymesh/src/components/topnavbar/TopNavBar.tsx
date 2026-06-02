@@ -912,7 +912,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                       borderColor: 'divider',
                       minWidth: 260,
                       mt: 1,
-                      overflow: 'hidden',
+                      maxHeight: 'calc(100dvh - 16px)',
+                      overflowX: 'hidden',
+                      overflowY: 'auto',
                     },
                   }}
                 >
@@ -1096,7 +1098,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
               borderColor: 'divider',
               minWidth: 260,
               mt: 1,
-              overflow: 'hidden',
+              maxHeight: 'calc(100dvh - 16px)',
+              overflowX: 'hidden',
+              overflowY: 'auto',
             },
           }}
         >

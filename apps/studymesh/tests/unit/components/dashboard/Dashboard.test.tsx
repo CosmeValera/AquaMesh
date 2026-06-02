@@ -577,6 +577,66 @@ describe('Dashboards', () => {
     )
   })
 
+  it('remembers custom study material columns after switching through recent', () => {
+    const savedDashboards = [
+      createSavedDashboard('biology', 'Biology Intro', 'Biology'),
+      createSavedDashboard('chemistry', 'Chemistry Intro', 'Chemistry'),
+    ]
+
+    localStorage.getItem.mockImplementation((key: string) => {
+      if (key === 'userData') {
+        return JSON.stringify({
+          id: 'admin',
+          name: 'Admin User',
+          role: 'ADMIN_ROLE',
+        })
+      }
+
+      if (key === 'customDashboards') {
+        return JSON.stringify(savedDashboards)
+      }
+
+      if (key === 'studymesh-empty-dashboard-settings-v1') {
+        return JSON.stringify({
+          blockOrder: ['creation', 'studyMaterial'],
+          showCreationBlock: true,
+          studyMaterialMode: 'custom',
+          studyMaterialLimit: 20,
+          studyMaterialColumns: 2,
+          customEntryIds: ['dashboard:biology', 'dashboard:chemistry'],
+        })
+      }
+
+      return null
+    })
+    mockDashboardProvider({
+      openDashboards: [],
+      selectedDashboard: -1,
+    })
+
+    render(<Dashboards />)
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /customize this page/i }),
+    )
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', { name: /^study material$/i }),
+    )
+    fireEvent.click(screen.getByRole('option', { name: /recent/i }))
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', { name: /^study material$/i }),
+    )
+    fireEvent.click(screen.getByRole('option', { name: /custom/i }))
+
+    expect(
+      screen.getByRole('slider', { name: /study material columns/i }),
+    ).toHaveValue('2')
+    expect(localStorage.setItem).toHaveBeenLastCalledWith(
+      'studymesh-empty-dashboard-settings-v1',
+      expect.stringContaining('"studyMaterialColumns":2'),
+    )
+  })
+
   it('groups custom study material into editable sections', async () => {
     const savedDashboards = [
       createSavedDashboard('algebra', 'Algebra Intro', 'Algebra'),

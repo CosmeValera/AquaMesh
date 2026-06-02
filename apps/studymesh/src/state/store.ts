@@ -60,7 +60,7 @@ export interface DashboardLayout {
 
 const createDefaultDashboard = (): StateDashboard => ({
   id: `default-dashboard-${Date.now()}`,
-  name: 'Dashboard',
+  name: 'Empty Dashboard',
   layout: {
     type: 'row',
     id: '#default-dashboard-layout',

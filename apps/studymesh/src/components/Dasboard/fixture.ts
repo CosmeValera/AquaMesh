@@ -6,7 +6,7 @@ export interface DefaultDashboard {
 }
 
 export const DEFAULT_DASHBOARD: DefaultDashboard = {
-  name: 'Dashboard',
+  name: 'Empty Dashboard',
   layout: {
     type: 'row',
     weight: 100,

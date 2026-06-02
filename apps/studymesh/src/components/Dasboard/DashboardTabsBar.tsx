@@ -30,27 +30,32 @@ const isEmptyDashboard = (dashboard: StateDashboard) =>
   dashboard.kind !== 'studyPathContainer' &&
   !hasDashboardContent(dashboard.layout)
 
-const DashboardTabLabel = ({ dashboard }: { dashboard: StateDashboard }) => (
-  <TooltipStyled
-    title={dashboard.name}
-    placement="bottom"
-    enterTouchDelay={1000}
-  >
-    <Typography
-      component="span"
-      variant="subtitle2"
-      sx={{
-        flex: '1 0 0',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        marginLeft: '0.5rem',
-      }}
-    >
-      {dashboard.name}
-    </Typography>
-  </TooltipStyled>
-)
+const getDashboardTabName = (dashboard: StateDashboard) =>
+  isEmptyDashboard(dashboard) && dashboard.name === 'Dashboard'
+    ? 'Empty Dashboard'
+    : dashboard.name
+
+const DashboardTabLabel = ({ dashboard }: { dashboard: StateDashboard }) => {
+  const tabName = getDashboardTabName(dashboard)
+
+  return (
+    <TooltipStyled title={tabName} placement="bottom" enterTouchDelay={1000}>
+      <Typography
+        component="span"
+        variant="subtitle2"
+        sx={{
+          flex: '1 0 0',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          marginLeft: '0.5rem',
+        }}
+      >
+        {tabName}
+      </Typography>
+    </TooltipStyled>
+  )
+}
 
 const DashboardTabActions = ({
   dashboard,

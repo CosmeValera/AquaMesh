@@ -24,6 +24,7 @@ interface DashboardContextType {
   setSelectedDashboard: (index: number) => void
   removeDashboard: (id: string) => void
   closeAllDashboards: () => void
+  closeOtherDashboards: (index: number) => void
   closeDashboardsToRight: (index: number) => void
   reorderDashboard: (fromIndex: number, toIndex: number) => void
   addDashboard: (dashboard?: DefaultDashboard) => string
@@ -136,6 +137,19 @@ const DashboardProvider: React.FC<DashboardProviderProps> = (props) => {
     setDashboards([emptyDashboard])
     setSelectedDashboard(0)
     setEditingDashboardIds([emptyDashboard.id])
+  }
+
+  const closeOtherDashboards = (index: number) => {
+    if (index < 0 || index >= openDashboards.length) {
+      return
+    }
+
+    const dashboard = openDashboards[index]
+    setDashboards([dashboard])
+    setSelectedDashboard(0)
+    setEditingDashboardIds((currentIds) =>
+      currentIds.filter((currentId) => currentId === dashboard.id),
+    )
   }
 
   const closeDashboardsToRight = (index: number) => {
@@ -349,6 +363,7 @@ const DashboardProvider: React.FC<DashboardProviderProps> = (props) => {
         setSelectedDashboard,
         removeDashboard,
         closeAllDashboards,
+        closeOtherDashboards,
         closeDashboardsToRight,
         reorderDashboard,
         addDashboard,

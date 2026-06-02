@@ -170,6 +170,7 @@ const mockDashboardProvider = (
     addStudyPathContainer: vi.fn(),
     updateStudyPathContainer: vi.fn(),
     closeAllDashboards: vi.fn(),
+    closeOtherDashboards: vi.fn(),
     closeDashboardsToRight: vi.fn(),
     reorderDashboard: vi.fn(),
     replaceDashboard: vi.fn(),

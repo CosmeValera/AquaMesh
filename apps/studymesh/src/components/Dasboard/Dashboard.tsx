@@ -105,6 +105,7 @@ const Dashboards = () => {
     setSelectedDashboard,
     removeDashboard,
     closeAllDashboards,
+    closeOtherDashboards,
     closeDashboardsToRight,
     reorderDashboard,
     addDashboard,
@@ -1444,6 +1445,13 @@ const Dashboards = () => {
     closeDashboardTabMenu()
   }
 
+  const closeOtherDashboardTabs = () => {
+    if (dashboardTabMenu) {
+      closeOtherDashboards(dashboardTabMenu.tabIndex)
+    }
+    closeDashboardTabMenu()
+  }
+
   const closeDashboardTabsToRight = () => {
     if (dashboardTabMenu) {
       closeDashboardsToRight(dashboardTabMenu.tabIndex)
@@ -1887,6 +1895,12 @@ const Dashboards = () => {
       >
         <MenuItem onClick={closeAllDashboardTabs}>
           Close all dashboards
+        </MenuItem>
+        <MenuItem
+          onClick={closeOtherDashboardTabs}
+          disabled={!dashboardTabMenu || openDashboards.length <= 1}
+        >
+          Close other dashboards
         </MenuItem>
         <MenuItem
           onClick={closeDashboardTabsToRight}

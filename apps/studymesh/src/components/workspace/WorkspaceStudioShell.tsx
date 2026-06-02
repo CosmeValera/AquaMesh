@@ -1599,7 +1599,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     dispatchWorkspaceCreationStatus({
       task: 'from-notes',
       state: 'running',
-      message: 'Creating study materialâ€¦',
+      message: 'Creating study material',
     })
 
     const generationController = new AbortController()

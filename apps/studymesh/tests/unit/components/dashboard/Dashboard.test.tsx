@@ -233,26 +233,23 @@ describe('Dashboards', () => {
     render(<Dashboards />)
 
     expect(
-      screen.getByRole('heading', { name: /what do you want to learn/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: /create study path/i }),
-    ).toBeInTheDocument()
-    expect(
       screen.getByRole('heading', { name: /open study material/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /create study path/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /upload material/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /paste notes/i }),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: /customize this page/i }),
     ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: /what do you want to learn/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /create study path/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /upload material/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /paste notes/i }),
+    ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /create quiz/i }),
     ).not.toBeInTheDocument()
@@ -274,62 +271,6 @@ describe('Dashboards', () => {
     expect(
       screen.queryByRole('button', { name: /add saved widget/i }),
     ).not.toBeInTheDocument()
-  })
-
-  it('opens the Study Path modal when the primary empty workspace action is used', () => {
-    const createHubListener = vi.fn()
-    window.addEventListener('studymesh-open-create-hub', createHubListener)
-    mockDashboardProvider({
-      openDashboards: [],
-      selectedDashboard: -1,
-    })
-
-    render(<Dashboards />)
-
-    fireEvent.click(screen.getByRole('button', { name: /create study path/i }))
-
-    expect(createHubListener).toHaveBeenCalledTimes(1)
-    expect(createHubListener.mock.calls[0][0].detail).toEqual({
-      intent: 'study-path',
-    })
-    expect(openCreateWidgetMock).not.toHaveBeenCalled()
-    expect(openOperationsExampleMock).not.toHaveBeenCalled()
-    expect(openWidgetMenuMock).not.toHaveBeenCalled()
-    expect(navigateMock).not.toHaveBeenCalled()
-    window.removeEventListener('studymesh-open-create-hub', createHubListener)
-  })
-
-  it('opens Creation source options from empty dashboard material actions', () => {
-    const createHubListener = vi.fn()
-    window.addEventListener('studymesh-open-create-hub', createHubListener)
-    mockDashboardProvider({
-      openDashboards: [],
-      selectedDashboard: -1,
-    })
-
-    render(<Dashboards />)
-
-    fireEvent.click(screen.getByRole('button', { name: /upload material/i }))
-    expect(
-      createHubListener.mock.calls[createHubListener.mock.calls.length - 1][0]
-        .detail,
-    ).toEqual({
-      intent: 'improvedNotes',
-      openQuickOptions: true,
-      quickSourceFocus: 'upload',
-    })
-
-    fireEvent.click(screen.getByRole('button', { name: /paste notes/i }))
-    expect(
-      createHubListener.mock.calls[createHubListener.mock.calls.length - 1][0]
-        .detail,
-    ).toEqual({
-      intent: 'improvedNotes',
-      openQuickOptions: true,
-      quickSourceFocus: 'paste',
-    })
-
-    window.removeEventListener('studymesh-open-create-hub', createHubListener)
   })
 
   it('shows three recent study material entries by default', async () => {
@@ -438,12 +379,30 @@ describe('Dashboards', () => {
     expect(cardGrid).toHaveAttribute('data-max-width', '760px')
     expect(cardGrid).toHaveAttribute(
       'data-desktop-grid-template',
-      'minmax(0, 3fr) minmax(300px, 2fr)',
+      'minmax(0, 760px)',
     )
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(
       screen.getByTestId('empty-dashboard-customizer-settings'),
     ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /create study path/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /upload material/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('combobox', { name: /^study material$/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('combobox', { name: /first block/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('slider', { name: /visible items/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('slider', { name: /study material columns/i }),
+    ).not.toBeInTheDocument()
     expect(
       screen.getByTestId('empty-dashboard-customizer-preview'),
     ).toHaveAttribute('data-desktop-grid-template', 'minmax(0, 1fr)')
@@ -463,7 +422,7 @@ describe('Dashboards', () => {
     )
   })
 
-  it('keeps creation and study material proportions tied to card type when first block changes', () => {
+  it('switches empty dashboard study material settings without first block controls', () => {
     mockDashboardProvider({
       openDashboards: [],
       selectedDashboard: -1,
@@ -474,18 +433,24 @@ describe('Dashboards', () => {
     fireEvent.click(
       screen.getByRole('button', { name: /customize this page/i }),
     )
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: /first block/i }))
-    fireEvent.click(
-      screen.getByRole('option', { name: /open study material/i }),
+    expect(
+      screen.queryByRole('combobox', { name: /first block/i }),
+    ).not.toBeInTheDocument()
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', { name: /^study material$/i }),
     )
+    fireEvent.click(screen.getByRole('option', { name: /custom/i }))
 
     expect(
       screen.getByTestId('empty-dashboard-customizer-preview'),
     ).toHaveAttribute('data-desktop-grid-template', 'minmax(0, 1fr)')
     expect(localStorage.setItem).toHaveBeenCalledWith(
       'studymesh-empty-dashboard-settings-v1',
-      expect.stringContaining('"blockOrder":["studyMaterial","creation"]'),
+      expect.stringContaining('"studyMaterialMode":"custom"'),
     )
+    expect(
+      screen.getByRole('slider', { name: /study material columns/i }),
+    ).toBeInTheDocument()
   })
 
   it('reorders and removes custom study material entries from the canvas', async () => {
@@ -706,7 +671,7 @@ describe('Dashboards', () => {
     )
   })
 
-  it('limits custom study material columns to the selected custom entries', () => {
+  it('limits custom study material columns to the hard column cap', () => {
     const savedDashboards = Array.from({ length: 5 }, (_, index) =>
       createSavedDashboard(
         `topic-${index + 1}`,
@@ -761,8 +726,8 @@ describe('Dashboards', () => {
     const columnsSlider = screen.getByRole('slider', {
       name: /study material columns/i,
     })
-    expect(columnsSlider).toHaveAttribute('max', '5')
-    expect(columnsSlider).toHaveValue('5')
+    expect(columnsSlider).toHaveAttribute('max', '4')
+    expect(columnsSlider).toHaveValue('4')
 
     fireEvent.click(screen.getByLabelText(/remove topic 5/i))
 
@@ -774,7 +739,7 @@ describe('Dashboards', () => {
     )
   })
 
-  it('caps custom study material columns to visible items', () => {
+  it('shows all custom entries and caps columns to selected custom entries', () => {
     const savedDashboards = Array.from({ length: 5 }, (_, index) =>
       createSavedDashboard(
         `topic-${index + 1}`,
@@ -829,12 +794,9 @@ describe('Dashboards', () => {
     const columnsSlider = screen.getByRole('slider', {
       name: /study material columns/i,
     })
-    expect(columnsSlider).toHaveAttribute('max', '3')
-    expect(columnsSlider).toHaveValue('3')
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      'studymesh-empty-dashboard-settings-v1',
-      expect.stringContaining('"studyMaterialColumns":3'),
-    )
+    expect(screen.getAllByText('Topic 5').length).toBeGreaterThan(0)
+    expect(columnsSlider).toHaveAttribute('max', '4')
+    expect(columnsSlider).toHaveValue('4')
   })
 
   it('refreshes recent study material when saved dashboards change', async () => {
@@ -875,7 +837,7 @@ describe('Dashboards', () => {
     )
   })
 
-  it('can hide creation and show six recent study material entries', async () => {
+  it('ignores legacy visible item settings and shows three recent entries', async () => {
     const savedDashboards = Array.from({ length: 6 }, (_, index) =>
       createSavedDashboard(
         `topic-${index + 1}`,
@@ -919,6 +881,9 @@ describe('Dashboards', () => {
     await waitFor(() =>
       expect(screen.getAllByText('Topic 6').length).toBeGreaterThan(0),
     )
+    expect(screen.getAllByText('Topic 5').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Topic 4').length).toBeGreaterThan(0)
+    expect(screen.queryByText('Topic 3')).not.toBeInTheDocument()
     expect(
       screen.queryByRole('heading', { name: /what do you want to learn/i }),
     ).not.toBeInTheDocument()
@@ -927,7 +892,7 @@ describe('Dashboards', () => {
     ).toBeInTheDocument()
   })
 
-  it('respects empty dashboard block order settings', () => {
+  it('ignores legacy empty dashboard block order settings', () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -960,17 +925,16 @@ describe('Dashboards', () => {
 
     render(<Dashboards />)
 
-    const studyMaterialHeading = screen.getByRole('heading', {
-      name: /open study material/i,
-    })
-    const creationHeading = screen.getByRole('heading', {
-      name: /what do you want to learn/i,
-    })
-
     expect(
-      studyMaterialHeading.compareDocumentPosition(creationHeading) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
+      screen.getByRole('heading', {
+        name: /open study material/i,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', {
+        name: /what do you want to learn/i,
+      }),
+    ).not.toBeInTheDocument()
   })
 
   it('falls back to default empty dashboard settings when storage is malformed', () => {
@@ -1001,8 +965,13 @@ describe('Dashboards', () => {
     render(<Dashboards />)
 
     expect(
-      screen.getByRole('heading', { name: /what do you want to learn/i }),
+      screen.getByRole('heading', {
+      name: /open study material/i,
+      }),
     ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: /what do you want to learn/i }),
+    ).not.toBeInTheDocument()
     expect(screen.getByText('Recent')).toBeInTheDocument()
   })
 
@@ -1050,7 +1019,7 @@ describe('Dashboards', () => {
     )
   })
 
-  it('keeps the balanced empty dashboard actions reachable on phones', () => {
+  it('keeps empty dashboard study material reachable on phones', () => {
     mockPhoneViewport()
     mockDashboardProvider({
       openDashboards: [],
@@ -1059,16 +1028,13 @@ describe('Dashboards', () => {
 
     render(<Dashboards />)
 
-    expect(
-      screen.getByRole('button', { name: /create study path/i }),
-    ).toBeInTheDocument()
     expect(screen.getByText(/open study material/i)).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /upload material/i }),
+      screen.getByRole('button', { name: /customize this page/i }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /paste notes/i }),
-    ).toBeInTheDocument()
+      screen.queryByRole('button', { name: /create study path/i }),
+    ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /advanced dashboard/i }),
     ).not.toBeInTheDocument()

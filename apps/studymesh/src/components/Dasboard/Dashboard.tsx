@@ -50,7 +50,6 @@ import {
 import useTopNavBarWidgets from '../../customHooks/useTopNavBarWidgets'
 import {
   ensureStarterDashboards,
-  OPEN_CREATE_HUB_EVENT,
   OPEN_DASHBOARD_EDITOR_EVENT,
   OPEN_WIDGET_EDITOR_EVENT,
   STARTER_STUDY_PATH_FOLDER_NAME,
@@ -460,42 +459,6 @@ const Dashboards = () => {
       },
     })
     dispatchWorkspaceOnboardingEvent({ type: 'dashboard-editor-opened' })
-  }
-
-  const openCreateStudyPath = () => {
-    window.dispatchEvent(
-      new CustomEvent(OPEN_CREATE_HUB_EVENT, {
-        detail: { intent: 'study-path' },
-      }),
-    )
-  }
-
-  const openCreationSources = (
-    quickSourceFocus: 'upload' | 'paste' = 'upload',
-  ) => {
-    window.dispatchEvent(
-      new CustomEvent(OPEN_CREATE_HUB_EVENT, {
-        detail: {
-          intent: 'improvedNotes',
-          openQuickOptions: true,
-          quickSourceFocus,
-        },
-      }),
-    )
-  }
-
-  const openQuickCreateFromEmptyDashboard = (
-    intent: 'quiz' | 'flashcards' | 'improvedNotes',
-  ) => {
-    window.dispatchEvent(
-      new CustomEvent(OPEN_CREATE_HUB_EVENT, {
-        detail: {
-          intent,
-          openQuickOptions: true,
-          quickSourceFocus: 'upload',
-        },
-      }),
-    )
   }
 
   const updateDashboardChatMessages = (
@@ -1680,10 +1643,15 @@ const Dashboards = () => {
                       position: 'relative',
                       flex: 1,
                       minHeight: 0,
-                      overflow: isMobileDashboardView ? 'auto' : 'visible',
+                      overflow:
+                        isMobileDashboardView || isEmptyDashboard
+                          ? 'auto'
+                          : 'visible',
                       WebkitOverflowScrolling: isMobileDashboardView
                         ? 'touch'
-                        : undefined,
+                        : isEmptyDashboard
+                          ? 'touch'
+                          : undefined,
                     }}
                   >
                     {isStudyPathContainer && dashboard.studyPath ? (
@@ -1699,12 +1667,6 @@ const Dashboards = () => {
                       />
                     ) : isEmptyDashboard ? (
                       <DashboardEmptyState
-                        isAdmin={isAdmin}
-                        hasDashboard
-                        onCreateStudyPath={openCreateStudyPath}
-                        onUploadMaterial={() => openCreationSources('upload')}
-                        onPasteNotes={() => openCreationSources('paste')}
-                        onQuickCreate={openQuickCreateFromEmptyDashboard}
                         onOpenSavedLibrary={openSavedLibraryFromEmptyState}
                         dashboardOptions={visibleDashboardOptions}
                         onOpenDashboard={openSavedDashboardInWorkspace}
@@ -1939,12 +1901,6 @@ const Dashboards = () => {
 
       {openDashboards.length === 0 && (
         <DashboardEmptyState
-          isAdmin={isAdmin}
-          hasDashboard={false}
-          onCreateStudyPath={openCreateStudyPath}
-          onUploadMaterial={() => openCreationSources('upload')}
-          onPasteNotes={() => openCreationSources('paste')}
-          onQuickCreate={openQuickCreateFromEmptyDashboard}
           onOpenSavedLibrary={openSavedLibraryFromEmptyState}
           dashboardOptions={visibleDashboardOptions}
           onOpenDashboard={openSavedDashboardFromEmptyState}

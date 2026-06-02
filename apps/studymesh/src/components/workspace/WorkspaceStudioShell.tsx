@@ -1321,6 +1321,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     (quickSourceText.trim() ? 1 : 0) +
     quickSourceFiles.length +
     (quickDashboardSource ? 1 : 0)
+  const canRunQuickCreate = quickHasCustomSources || hasCurrentDashboardContext
   const quickSourceLabel = quickHasCustomSources
     ? `${quickCustomSourceCount} custom source${
         quickCustomSourceCount === 1 ? '' : 's'
@@ -1356,7 +1357,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       sourceMode === 'dashboard' ? currentDashboardTitle : quickSourceLabel
     return `${label} #${getNextQuickCreationIndex(
       resourceType,
-    )} Â· ${truncateQuickCreationContext(contextTitle)}`
+    )} · ${truncateQuickCreationContext(contextTitle)}`
   }
   useEffect(() => {
     if (
@@ -1964,7 +1965,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 fontWeight: 900,
               }}
             >
-              â† Back to Create
+              ← Back to Create
             </Button>
             <Typography variant="h5" fontWeight={900}>
               {activeMaterial.title}
@@ -2069,8 +2070,15 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
               component="button"
               type="button"
               aria-label={`Quick Create ${displayLabel}`}
+              disabled={!canCreate}
               elevation={0}
-              onClick={() => runQuickCreate(resourceType)}
+              onClick={() => {
+                if (!canCreate) {
+                  return
+                }
+
+                runQuickCreate(resourceType)
+              }}
               sx={{
                 minHeight: { xs: 82, sm: 110 },
                 p: { xs: 1.15, sm: 1.35 },
@@ -2079,12 +2087,14 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 borderColor: alpha(accent, 0.26),
                 bgcolor: alpha(accent, 0.06),
                 color: 'text.primary',
-                cursor: 'pointer',
+                cursor: canCreate ? 'pointer' : 'not-allowed',
                 textAlign: 'center',
-                opacity: canCreate ? 1 : 0.92,
+                opacity: canCreate ? 1 : 0.48,
                 '&:hover': {
-                  borderColor: accent,
-                  bgcolor: alpha(accent, 0.1),
+                  borderColor: canCreate ? accent : alpha(accent, 0.26),
+                  bgcolor: canCreate
+                    ? alpha(accent, 0.1)
+                    : alpha(accent, 0.06),
                 },
               }}
             >
@@ -2342,12 +2352,12 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   ? 'From sources'
                   : hasCurrentDashboardContext
                   ? 'From current dashboard'
-                  : 'Add sources needed'
+                  : 'No dashboard or sources'
               }
               color={
-                quickHasCustomSources || hasCurrentDashboardContext
+                canRunQuickCreate
                   ? 'primary'
-                  : 'warning'
+                  : 'default'
               }
               variant={quickHasCustomSources ? 'filled' : 'outlined'}
               sx={{ fontWeight: 900 }}
@@ -2356,7 +2366,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
           {renderQuickCreateCards(
             quickHasCustomSources ? 'sources' : 'dashboard',
-            quickHasCustomSources || hasCurrentDashboardContext,
+            canRunQuickCreate,
           )}
 
           <Paper
@@ -2931,36 +2941,47 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
           title={quickCreateLabels[resourceType]}
           placement="right"
         >
-          <Box
-            className="studymesh-creation-quick-action"
-            component="button"
-            type="button"
-            aria-label={`Quick Create ${quickCreateLabels[resourceType]}`}
-            onClick={(event) => {
-              event.stopPropagation()
-              handleCollapsedQuickCreateClick(resourceType)
-            }}
-            sx={{
-              width: 30,
-              height: 30,
-              border: 1,
-              borderColor: alpha(quickCreateAccents[resourceType], 0.32),
-              borderRadius: 1.25,
-              bgcolor: alpha(quickCreateAccents[resourceType], 0.1),
-              color: quickCreateAccents[resourceType],
-              display: 'grid',
-              placeItems: 'center',
-              cursor: 'pointer',
-              '&:hover': {
-                borderColor: quickCreateAccents[resourceType],
-                bgcolor: alpha(quickCreateAccents[resourceType], 0.18),
-              },
-              '& svg': {
-                margin: '0 -2px',
-              },
-            }}
-          >
-            {quickCreateIcons[resourceType]}
+          <Box component="span" sx={{ display: 'grid' }}>
+            <Box
+              className="studymesh-creation-quick-action"
+              component="button"
+              type="button"
+              aria-label={`Quick Create ${quickCreateLabels[resourceType]}`}
+              disabled={!canRunQuickCreate}
+              onClick={(event) => {
+                event.stopPropagation()
+                if (!canRunQuickCreate) {
+                  return
+                }
+                handleCollapsedQuickCreateClick(resourceType)
+              }}
+              sx={{
+                width: 30,
+                height: 30,
+                border: 1,
+                borderColor: alpha(quickCreateAccents[resourceType], 0.32),
+                borderRadius: 1.25,
+                bgcolor: alpha(quickCreateAccents[resourceType], 0.1),
+                color: quickCreateAccents[resourceType],
+                display: 'grid',
+                placeItems: 'center',
+                cursor: canRunQuickCreate ? 'pointer' : 'not-allowed',
+                opacity: canRunQuickCreate ? 1 : 0.42,
+                '&:hover': {
+                  borderColor: canRunQuickCreate
+                    ? quickCreateAccents[resourceType]
+                    : alpha(quickCreateAccents[resourceType], 0.32),
+                  bgcolor: canRunQuickCreate
+                    ? alpha(quickCreateAccents[resourceType], 0.18)
+                    : alpha(quickCreateAccents[resourceType], 0.1),
+                },
+                '& svg': {
+                  margin: '0 -2px',
+                },
+              }}
+            >
+              {quickCreateIcons[resourceType]}
+            </Box>
           </Box>
         </Tooltip>
       ))}

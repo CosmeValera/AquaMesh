@@ -347,7 +347,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
   })
 
-  it('expands sources without generating when quick create has no usable dashboard or sources', () => {
+  it('disables quick create when there is no usable dashboard or sources', () => {
     dashboardContextText = ''
     dashboardContextChunks = []
 
@@ -358,12 +358,39 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
 
     openCreation()
-    fireEvent.click(
-      screen.getByRole('button', { name: /^Quick Create Flashcards$/i }),
+    const flashcardsButton = screen.getByRole('button', {
+      name: /^Quick Create Flashcards$/i,
+    })
+
+    expect(screen.getByText(/^No dashboard or sources$/i)).toBeInTheDocument()
+    expect(flashcardsButton).toBeDisabled()
+    fireEvent.click(flashcardsButton)
+
+    expect(
+      screen.queryByRole('button', { name: /^Upload files$/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/Add sources or open a dashboard/i),
+    ).not.toBeInTheDocument()
+    expect(generateStudyPackWithAi).not.toHaveBeenCalled()
+  })
+
+  it('shows disabled quick create when the dashboard is empty', async () => {
+    dashboardContextText = ''
+    dashboardContextChunks = []
+
+    render(
+      <WorkspaceStudioShell>
+        <div>Dashboard canvas</div>
+      </WorkspaceStudioShell>,
     )
 
-    expect(screen.getByRole('button', { name: /^Upload files$/i })).toBeInTheDocument()
-    expect(screen.getByText(/Add sources or open a dashboard/i)).toBeInTheDocument()
+    openCreation()
+
+    expect(screen.getByText(/^No dashboard or sources$/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /^Quick Create Quiz$/i }),
+    ).toBeDisabled()
     expect(generateStudyPackWithAi).not.toHaveBeenCalled()
   })
 
@@ -412,23 +439,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
   })
 
-  it('shows Add sources needed when the dashboard is empty', async () => {
-    dashboardContextText = ''
-    dashboardContextChunks = []
-
-    render(
-      <WorkspaceStudioShell>
-        <div>Dashboard canvas</div>
-      </WorkspaceStudioShell>,
-    )
-
-    openCreation()
-
-    expect(screen.getByText(/^Add sources needed$/i)).toBeInTheDocument()
-    expect(generateStudyPackWithAi).not.toHaveBeenCalled()
-  })
-
-  it('opens the Creation panel from a collapsed quick action and expands sources when empty', () => {
+  it('keeps collapsed quick actions disabled when empty', () => {
     dashboardContextText = ''
     dashboardContextChunks = []
 
@@ -442,10 +453,16 @@ describe('WorkspaceStudioShell Quick Create', () => {
     fireEvent.click(
       screen.getByRole('button', { name: /Collapse Create panel/i }),
     )
-    fireEvent.click(screen.getByRole('button', { name: /Quick Create Quiz/i }))
+    const collapsedQuizButton = screen.getByRole('button', {
+      name: /Quick Create Quiz/i,
+    })
 
-    expect(screen.getByRole('button', { name: /^Upload files$/i })).toBeInTheDocument()
-    expect(screen.getByText(/Add sources or open a dashboard/i)).toBeInTheDocument()
+    expect(collapsedQuizButton).toBeDisabled()
+    fireEvent.click(collapsedQuizButton)
+
+    expect(
+      screen.queryByRole('button', { name: /^Upload files$/i }),
+    ).not.toBeInTheDocument()
     expect(generateStudyPackWithAi).not.toHaveBeenCalled()
   })
 

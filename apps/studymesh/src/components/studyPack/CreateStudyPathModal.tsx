@@ -75,6 +75,7 @@ interface CreateStudyPathModalProps {
   openGeneratedInWorkspace?: boolean
   autoRetrySignal?: number
   autoCancelSignal?: number
+  autoGenerateRequest?: { id: number; prompt: string }
   onStatusChange?: (state: WorkspaceCreationTaskState, message?: string) => void
   onDraftMetaChange?: (metadata: {
     title: string
@@ -543,6 +544,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   openGeneratedInWorkspace,
   autoRetrySignal = 0,
   autoCancelSignal = 0,
+  autoGenerateRequest,
   onStatusChange,
   onDraftMetaChange,
   initialPrompt,
@@ -736,11 +738,16 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     onClose()
   }
 
-  const generatePath = async () => {
+  const generatePath = async (promptOverride?: string) => {
+    const settingsProvider = readStudyPackAiSettings().provider || 'basic'
+    const effectiveAiProvider = settingsProvider
+    setAiProvider(effectiveAiProvider)
+    const basePrompt =
+      typeof promptOverride === 'string' ? promptOverride.trim() : prompt.trim()
     const effectivePrompt = [
-      sourceMode === 'dashboard' && allowDashboardSource && !prompt.trim()
+      sourceMode === 'dashboard' && allowDashboardSource && !basePrompt
         ? `Create a Study Path from current dashboard: ${currentDashboardTitle}`
-        : prompt.trim(),
+        : basePrompt,
       sourceMode === 'dashboard' && allowDashboardSource
         ? `Use current dashboard as source context: ${currentDashboardTitle}\n\n${currentDashboardContext}`
         : '',
@@ -751,7 +758,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       .filter(Boolean)
       .join('\n\n')
 
-    if (sourceMode === 'prompt' && !prompt.trim()) {
+    if (sourceMode === 'prompt' && !basePrompt) {
       setError('Describe what you want StudyMesh to teach.')
       return
     }
@@ -761,20 +768,22 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       return
     }
 
-    const credentials = isStrongAiProvider(aiProvider)
-      ? resolveStudyPackAiCredentials(aiProvider)
+    const credentials = isStrongAiProvider(effectiveAiProvider)
+      ? resolveStudyPackAiCredentials(effectiveAiProvider)
       : resolveStudyPackAiCredentials()
-    if (aiProvider === 'hosted') {
+    if (effectiveAiProvider === 'hosted') {
       setError('Hosted AI is not configured yet.')
       return
     }
 
-    if (isStrongAiProvider(aiProvider) && !credentials.apiToken) {
-      setError(`${providerLabels[aiProvider]} mode needs a configured API key.`)
+    if (isStrongAiProvider(effectiveAiProvider) && !credentials.apiToken) {
+      setError(
+        `${providerLabels[effectiveAiProvider]} mode needs a configured API key.`,
+      )
       return
     }
 
-    if (aiProvider === 'local' && generationAmount === 'deep') {
+    if (effectiveAiProvider === 'local' && generationAmount === 'deep') {
       setError(LOCAL_DEEP_BLOCKED_MESSAGE)
       return
     }
@@ -785,10 +794,10 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     setIsGenerating(true)
     setLocalAiProgress(null)
     setGeminiProgress(
-      isStrongAiProvider(aiProvider)
+      isStrongAiProvider(effectiveAiProvider)
         ? makeGeminiTimedProgress(
             Date.now(),
-            aiProvider === 'cerebras'
+            effectiveAiProvider === 'cerebras'
               ? CEREBRAS_STUDY_PATH_ESTIMATE_MS
               : GEMINI_STUDY_PATH_ESTIMATES_MS[
                   normalizeStudyPathGenerationAmount(generationAmount)
@@ -803,12 +812,12 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     }
 
     try {
-      if (aiProvider === 'basic') {
+      if (effectiveAiProvider === 'basic') {
         await waitForBasicFallbackDelay(generationController.signal)
       }
 
       const nextDraft = await generateStudyPathWithAi({
-        provider: aiProvider,
+        provider: effectiveAiProvider,
         apiToken: credentials.apiToken,
         model: credentials.model,
         title: 'Study Path',
@@ -818,7 +827,9 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
         avoidTopics: avoidTopics.trim() || undefined,
         generationAmount,
         localAiDashboardConcurrency:
-          aiProvider === 'local' ? localAiDashboardConcurrency : undefined,
+          effectiveAiProvider === 'local'
+            ? localAiDashboardConcurrency
+            : undefined,
         signal: generationController.signal,
         onProgress: (event) => {
           if (generationController.signal.aborted) {
@@ -833,7 +844,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       }
 
       const sanitizedDashboards = nextDraft.dashboards.map((dashboard) => {
-        if (aiProvider === 'local') {
+        if (effectiveAiProvider === 'local') {
           return dashboard
         }
 
@@ -879,7 +890,9 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       }
 
       setLocalAiFailureDebug(
-        aiProvider === 'local' && isLocalAiGenerationError(err) && err.debug
+        effectiveAiProvider === 'local' &&
+          isLocalAiGenerationError(err) &&
+          err.debug
           ? err.debug
           : null,
       )
@@ -920,6 +933,18 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       void generatePath()
     }
   }, [autoCreateOnGenerate, autoRetrySignal])
+
+  React.useEffect(() => {
+    if (!autoGenerateRequest) {
+      return
+    }
+
+    const nextPrompt = autoGenerateRequest.prompt.trim()
+    setSourceMode('prompt')
+    setPrompt(nextPrompt)
+    setError('')
+    void generatePath(nextPrompt)
+  }, [autoGenerateRequest?.id])
 
   React.useEffect(() => {
     if (autoCancelSignalRef.current === autoCancelSignal) {
@@ -1737,7 +1762,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
         {step === 'prompt' ? (
           <Button
             variant="contained"
-            onClick={generatePath}
+            onClick={() => void generatePath()}
             disabled={
               isGenerating ||
               (sourceMode === 'prompt' && !prompt.trim()) ||

@@ -184,6 +184,63 @@ describe('CreateStudyPathModal Study Path generation', () => {
     ).toBeRequired()
   })
 
+  it('uses the current Cerebras provider when inline auto-generation starts', async () => {
+    vi.mocked(readStudyPackAiSettings).mockReturnValue({
+      provider: 'cerebras',
+      apiToken: 'cerebras-token',
+      model: 'gpt-oss-120b',
+    })
+    vi.mocked(resolveStudyPackAiCredentials).mockReturnValue({
+      provider: 'cerebras',
+      apiToken: 'cerebras-token',
+      model: 'gpt-oss-120b',
+      tokenSource: 'settings',
+    })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  title: 'Cerebras Auto Path',
+                  folderName: 'Cerebras Auto Path',
+                  dashboards: [makeDashboard(1, 1)],
+                }),
+              },
+            },
+          ],
+        }),
+      }),
+    )
+
+    render(
+      <CreateStudyPathModal
+        open
+        onClose={vi.fn()}
+        onCreatePath={vi.fn()}
+        autoCreateOnGenerate
+        autoGenerateRequest={{
+          id: 1,
+          prompt: 'Teach me Cerebras routing',
+        }}
+      />,
+    )
+
+    await waitFor(() =>
+      expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+        'https://api.cerebras.ai/v1/chat/completions',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer cerebras-token',
+          }),
+        }),
+      ),
+    )
+  })
+
   it('previews and creates balanced paths from generated lesson objects', async () => {
     const onCreatePath = vi.fn()
     mockGeminiDashboards(5)

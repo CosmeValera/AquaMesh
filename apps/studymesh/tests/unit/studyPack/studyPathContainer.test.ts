@@ -5,7 +5,7 @@ import { DashboardLayout } from '../../../src/state/store'
 
 const createStudyPathComponentProps = (index: number) => ({
   studyPathId: 'study-path-algebra',
-  studyPathTitle: 'Algebra Study Path',
+  studyPathTitle: 'Algebra Study Guide',
   studyPathDashboardKey: `study-path-algebra-${index}`,
   studyPathDashboardName: `Lesson ${index}`,
   studyPathDashboardIndex: index,
@@ -45,7 +45,7 @@ const createStudyPathLayout = (index: number): DashboardLayout => ({
 })
 
 describe('createStudyPathContainerState', () => {
-  it('groups ordered Study Path dashboards into a single container model', () => {
+  it('groups ordered Study Guide dashboards into a single container model', () => {
     const container = createStudyPathContainerState([
       {
         id: 'lesson-2',
@@ -72,7 +72,7 @@ describe('createStudyPathContainerState', () => {
 
     expect(container).toMatchObject({
       pathId: 'study-path-algebra',
-      title: 'Algebra Study Path',
+      title: 'Algebra Study Guide',
       folderName: 'Algebra',
       selectedIndex: 0,
     })

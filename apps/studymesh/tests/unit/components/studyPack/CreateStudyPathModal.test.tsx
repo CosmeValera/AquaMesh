@@ -141,10 +141,10 @@ const generatePath = async (amount?: 'Compact' | 'Deep') => {
       target: { value: 'Teach French subjunctive' },
     },
   )
-  fireEvent.click(screen.getByRole('button', { name: /generate study path/i }))
+  fireEvent.click(screen.getByRole('button', { name: /generate study guide/i }))
 }
 
-describe('CreateStudyPathModal Study Path generation', () => {
+describe('CreateStudyPathModal Study Guide generation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(readStudyPackAiSettings).mockReturnValue({
@@ -259,7 +259,7 @@ describe('CreateStudyPathModal Study Path generation', () => {
       },
     )
     fireEvent.click(
-      screen.getByRole('button', { name: /generate study path/i }),
+      screen.getByRole('button', { name: /generate study guide/i }),
     )
 
     await waitFor(() => {
@@ -317,7 +317,7 @@ describe('CreateStudyPathModal Study Path generation', () => {
     expect(lessonFiveWidgets).not.toContain('Lesson 5 concept recap/list')
   })
 
-  it('shows Gemini elapsed and estimated Study Path timing capped at 99%', async () => {
+  it('shows Gemini elapsed and estimated Study Guide timing capped at 99%', async () => {
     vi.useFakeTimers()
     const pendingFetch = new Promise(() => undefined)
     vi.stubGlobal('fetch', vi.fn(() => pendingFetch))
@@ -331,7 +331,7 @@ describe('CreateStudyPathModal Study Path generation', () => {
       },
     )
     fireEvent.click(
-      screen.getByRole('button', { name: /generate study path/i }),
+      screen.getByRole('button', { name: /generate study guide/i }),
     )
 
     expect(screen.getByText(/estimated total 1m/i)).toBeInTheDocument()
@@ -402,7 +402,7 @@ describe('CreateStudyPathModal Study Path generation', () => {
     expect(finalMapping).toHaveTextContent('study-path-7-flashcard')
   })
 
-  it('blocks Deep Study Path when Local AI is selected', async () => {
+  it('blocks Deep Study Guide when Local AI is selected', async () => {
     vi.mocked(readStudyPackAiSettings).mockReturnValue({
       provider: 'local',
       apiToken: '',
@@ -439,7 +439,7 @@ describe('CreateStudyPathModal Study Path generation', () => {
     )
   })
 
-  it('shows Local AI failure debug after failed Study Path generation', async () => {
+  it('shows Local AI failure debug after failed Study Guide generation', async () => {
     vi.mocked(readStudyPackAiSettings).mockReturnValue({
       provider: 'local',
       apiToken: '',
@@ -499,7 +499,7 @@ describe('CreateStudyPathModal Study Path generation', () => {
       },
     )
     fireEvent.click(
-      screen.getByRole('button', { name: /generate study path/i }),
+      screen.getByRole('button', { name: /generate study guide/i }),
     )
 
     expect(
@@ -517,7 +517,7 @@ describe('CreateStudyPathModal Study Path generation', () => {
     ).toHaveTextContent('Broken')
   })
 
-  it('creates Local AI Study Path dashboards with visible source notes widgets', async () => {
+  it('creates Local AI Study Guide dashboards with visible source notes widgets', async () => {
     vi.mocked(readStudyPackAiSettings).mockReturnValue({
       provider: 'local',
       apiToken: '',
@@ -673,7 +673,7 @@ describe('CreateStudyPathModal Study Path generation', () => {
       },
     )
     fireEvent.click(
-      screen.getByRole('button', { name: /generate study path/i }),
+      screen.getByRole('button', { name: /generate study guide/i }),
     )
 
     await waitFor(() => {

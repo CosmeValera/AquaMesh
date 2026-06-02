@@ -103,7 +103,7 @@ const LOCAL_STUDY_PATH_DASHBOARD_MAX_ATTEMPTS = 3
 const LOCAL_STUDY_PACK_MAX_ATTEMPTS = 3
 const LOCAL_AI_RETRY_COOLDOWN_MS = 8500
 const LOCAL_DEEP_BLOCKED_MESSAGE =
-  'Deep Study Path is not available with Local AI. Use Average, Compact, Super small, or switch to Own Gemini token.'
+  'Deep Study Guide is not available with Local AI. Use Average, Compact, Super small, or switch to Own Gemini token.'
 const LOCAL_STUDY_PATH_TIMEOUT_MESSAGE =
   'Local AI timed out. Try again, choose a smaller path, or use Own Gemini token.'
 const LOCAL_STUDY_PATH_INVALID_JSON_MESSAGE =
@@ -212,8 +212,8 @@ const localBadTextPattern =
 const genericFolderNames = new Set([
   'aquamesh',
   'lesson plan',
-  'local ai study path',
-  'study path',
+  'local ai study guide',
+  'study guide',
   'study pack',
   'untitled',
 ])
@@ -1480,7 +1480,7 @@ const localStudyPathPlannerPrompt = (
 
   return `Return JSON only. Start with { and end with }.
 
-Plan a Study Path with exactly ${count} lesson dashboards for "${title}".
+Plan a Study Guide with exactly ${count} lesson dashboards for "${title}".
 
 Shape:
 {"title":"...","folderName":"...","dashboards":[{"title":"01 - ...","goal":"...","sections":[{"title":"...","goal":"...","focus":"...; ...; ..."},{"title":"...","goal":"...","focus":"...; ...; ..."}],"avoid":"...; ..."}]}
@@ -1580,7 +1580,7 @@ Rules:
 - Return Markdown only.
 - No JSON.
 - No code fences.
-- Do not mention dashboard, study path, lesson, concepts, part 1, or part 2.
+- Do not mention dashboard, study guide, lesson, concepts, part 1, or part 2.
 - Do not write Goal:.
 - Do not add a generic intro.
 - Do not add a conclusion.
@@ -2265,7 +2265,7 @@ const specificFolderName = (
     return fallbackCandidate
   }
 
-  return 'Local AI Study Path'
+  return 'Local AI Study Guide'
 }
 
 const fallbackPlannerItem = (
@@ -2417,7 +2417,7 @@ const normalizeLocalStudyPathPlan = (
 
   return {
     plan: {
-      title: stringValue(record.title) || options.title || 'Study Path',
+      title: stringValue(record.title) || options.title || 'Study Guide',
       folderName: specificFolderName(
         stringValue(record.folderName),
         options.folderName || options.title,
@@ -2574,7 +2574,7 @@ const createLocalStudyPathPlan = async (
         studyPathStep: 'planner',
         signal: localOptions.signal,
         promptType: 'planner',
-        stepLabel: 'Study Path planner',
+        stepLabel: 'Study Guide planner',
       })
       debug.rawResponse = text
 
@@ -3007,7 +3007,7 @@ const createLocalStudyPathPipelineTracker = (
       studyPathPipeline: {
         percent,
         estimatedRemainingMs: remainingBudget,
-        label: 'Study Path pipeline',
+        label: 'Study Guide pipeline',
         steps: steps.map((step) => ({
           id: step.id,
           label: step.label,
@@ -3903,7 +3903,7 @@ const generateLocalStudyPathDashboard = async (
             dashboardCount: expectedCount,
             rawResponse: rawAiResponse,
             parsedJson: combinedRecord,
-            mappingError: 'No usable Study Path widgets were produced.',
+            mappingError: 'No usable Study Guide widgets were produced.',
             droppedOrRepairedItems:
               mappedDashboard?.debugTrace?.droppedOrRepairedItems || [],
           },
@@ -4093,7 +4093,7 @@ export const generateStudyPathWithLocalAi = async (
     }
 
     throw new Error(
-      'Google Local AI did not return usable Study Path dashboards.',
+      'Google Local AI did not return usable Study Guide dashboards.',
     )
   }
 
@@ -4195,7 +4195,7 @@ export const generateStudyPathWithBasicFallback = ({
       title: dashboardTitle,
       summary:
         role === 'exercises'
-          ? 'Practice generated from the Study Path source.'
+          ? 'Practice generated from the Study Guide source.'
           : 'Basic fallback lesson generated from the request.',
       rawNotes,
       dashboardRole: role,
@@ -4207,8 +4207,8 @@ export const generateStudyPathWithBasicFallback = ({
   })
 
   return {
-    title: title || 'Study Path',
-    folderName: folderName || title || 'Study Path',
+    title: title || 'Study Guide',
+    folderName: folderName || title || 'Study Guide',
     dashboards,
     warnings: ['Basic fallback used local parsing and practice generation.'],
   }

@@ -243,7 +243,7 @@ describe('Dashboards', () => {
       screen.queryByRole('heading', { name: /what do you want to learn/i }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /create study path/i }),
+      screen.queryByRole('button', { name: /create study guide/i }),
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /upload material/i }),
@@ -387,7 +387,7 @@ describe('Dashboards', () => {
       screen.getByTestId('empty-dashboard-customizer-settings'),
     ).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /create study path/i }),
+      screen.queryByRole('button', { name: /create study guide/i }),
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /upload material/i }),
@@ -976,7 +976,7 @@ describe('Dashboards', () => {
     expect(screen.getByText('Recent')).toBeInTheDocument()
   })
 
-  it('opens the default starter Study Path on first empty workspace load', async () => {
+  it('opens the default starter Study Guide on first empty workspace load', async () => {
     const addStudyPathContainer = vi.fn()
     const starterDashboards = [
       createStarterStudyPathDashboard(1),
@@ -1034,14 +1034,14 @@ describe('Dashboards', () => {
       screen.getByRole('button', { name: /customize this page/i }),
     ).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /create study path/i }),
+      screen.queryByRole('button', { name: /create study guide/i }),
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /advanced dashboard/i }),
     ).not.toBeInTheDocument()
   })
 
-  it('adds generated Study Path review dashboards to the open Course navigator', () => {
+  it('adds generated Study Guide review dashboards to the open Course navigator', () => {
     const addDashboard = vi.fn()
     const setSelectedDashboard = vi.fn()
     const updateStudyPathContainer = vi.fn()
@@ -1152,7 +1152,7 @@ describe('Dashboards', () => {
     })
   })
 
-  it('allows a single Study Path tab to close so the provider can restore the empty workspace', () => {
+  it('allows a single Study Guide tab to close so the provider can restore the empty workspace', () => {
     const removeDashboard = vi.fn()
 
     mockDashboardProvider({

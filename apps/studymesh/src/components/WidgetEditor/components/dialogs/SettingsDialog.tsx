@@ -535,8 +535,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     window.dispatchEvent(new CustomEvent('dashboardStorageUpdated'))
     setLibraryTransferStatus(
       added
-        ? 'StudyMesh Guide Study Path added.'
-        : 'StudyMesh Guide Study Path is already available.',
+        ? 'StudyMesh Guide Study Guide added.'
+        : 'StudyMesh Guide Study Guide is already available.',
     )
   }
 
@@ -612,7 +612,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     color="text.secondary"
                     sx={{ mb: 2 }}
                   >
-                    Create from notes and Create Study Path use the configured
+                    Create from notes and Create Study Guide use the configured
                     provider. API keys are optional advanced settings and stay
                     in this browser.
                   </Typography>
@@ -626,7 +626,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     fullWidth
                     size="small"
                     sx={{ mb: 1.5 }}
-                    helperText="This provider is used by Create from notes and Create Study Path."
+                    helperText="This provider is used by Create from notes and Create Study Guide."
                   >
                     <MenuItem value="basic">Basic fallback</MenuItem>
                     <MenuItem value="local">
@@ -821,7 +821,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       size="small"
                       onClick={handleAddStudyMeshGuide}
                     >
-                      Add StudyMesh Guide Study Path
+                      Add StudyMesh Guide Study Guide
                     </Button>
                     {libraryTransferStatus && (
                       <Typography variant="caption" color="text.secondary">

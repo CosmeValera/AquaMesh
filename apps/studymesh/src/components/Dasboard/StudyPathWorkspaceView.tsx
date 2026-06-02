@@ -188,7 +188,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
         setNavigatorDock(storedDock)
       }
     } catch (error) {
-      console.error('Failed to load Study Path navigator state', error)
+      console.error('Failed to load Study Guide navigator state', error)
     }
   }, [studyPath.pathId])
 
@@ -199,7 +199,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
         String(navigatorOpen),
       )
     } catch (error) {
-      console.error('Failed to save Study Path navigator state', error)
+      console.error('Failed to save Study Guide navigator state', error)
     }
   }, [navigatorOpen, studyPath.pathId])
 
@@ -210,7 +210,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
         navigatorDock,
       )
     } catch (error) {
-      console.error('Failed to save Study Path navigator dock', error)
+      console.error('Failed to save Study Guide navigator dock', error)
     }
   }, [navigatorDock, studyPath.pathId])
 
@@ -269,7 +269,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   if (!currentLesson) {
     return (
       <Paper sx={{ p: 3, m: 2 }}>
-        <Typography variant="h6">Study Path is empty</Typography>
+        <Typography variant="h6">Study Guide is empty</Typography>
         <Typography color="text.secondary">
           This container does not have lessons attached yet.
         </Typography>
@@ -323,7 +323,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
       </Box>
 
       <Box
-        aria-label="Study Path navigator overlay"
+        aria-label="Study Guide navigator overlay"
         data-testid="study-path-navigator-overlay"
         sx={{
           position: 'absolute',

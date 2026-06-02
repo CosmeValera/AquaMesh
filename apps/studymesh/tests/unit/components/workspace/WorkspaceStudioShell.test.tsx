@@ -302,7 +302,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
     expect(generateStudyPackWithAi).not.toHaveBeenCalled()
   })
 
-  it('keeps Study Path as an inline prompt when the create hub event requests it', () => {
+  it('keeps Study Guide as an inline prompt when the create hub event requests it', () => {
     render(
       <WorkspaceStudioShell>
         <div>Dashboard canvas</div>
@@ -311,14 +311,14 @@ describe('WorkspaceStudioShell Quick Create', () => {
 
     openCreation({ intent: 'study-path' })
 
-    expect(screen.getByRole('heading', { name: /^Study Path$/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /^Study Guide$/i })).toBeInTheDocument()
     expect(
       screen.getByRole('textbox', { name: /What do you want to learn/i }),
     ).toBeInTheDocument()
     expect(screen.queryByTestId('create-study-path-modal')).not.toBeVisible()
   })
 
-  it('starts Study Path generation from the inline prompt', async () => {
+  it('starts Study Guide generation from the inline prompt', async () => {
     render(
       <WorkspaceStudioShell>
         <div>Dashboard canvas</div>
@@ -331,7 +331,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
       { target: { value: 'Learn Spanish B2 grammar' } },
     )
     fireEvent.click(
-      screen.getByRole('button', { name: /^Create Study Path$/i }),
+      screen.getByRole('button', { name: /^Create Study Guide$/i }),
     )
 
     await waitFor(() =>

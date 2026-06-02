@@ -69,7 +69,7 @@ describe('dashboard chat context builder', () => {
 
   const studyPathWorkspace = {
     id: 'path-1',
-    name: 'Spanish Study Path Workspace',
+    name: 'Spanish Study Guide Workspace',
     kind: 'studyPathContainer' as const,
     layout: {
       type: 'row',
@@ -127,7 +127,7 @@ describe('dashboard chat context builder', () => {
     },
   }
 
-  it('extracts source chunks from dashboards inside a study path workspace', () => {
+  it('extracts source chunks from dashboards inside a study guide workspace', () => {
     const context = buildDashboardChatContext(studyPathWorkspace)
 
     expect(context.dashboardTitle).toBe('Spanish Basics')
@@ -136,7 +136,7 @@ describe('dashboard chat context builder', () => {
     expect(context.chunks[0].text).toContain('subjunctive')
   })
 
-  it('can limit local chat context to source notes in the selected study path dashboard', () => {
+  it('can limit local chat context to source notes in the selected study guide dashboard', () => {
     const context = buildDashboardChatContext(studyPathWorkspace, {
       sourceNotesOnly: true,
       studyPathScope: 'selected',

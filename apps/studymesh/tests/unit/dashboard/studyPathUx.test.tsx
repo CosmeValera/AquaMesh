@@ -167,7 +167,7 @@ const StateProbe = () => {
 const renderWithDashboardProvider = (ui: React.ReactNode) =>
   render(<DashboardProvider>{ui}</DashboardProvider>)
 
-describe('Interactive Study Path UX', () => {
+describe('Interactive Study Guide UX', () => {
   beforeEach(() => {
     createMemoryStorage()
     useStore.setState({
@@ -182,7 +182,7 @@ describe('Interactive Study Path UX', () => {
     })
   })
 
-  it('opens a multi-lesson Study Path as one top-level tab and internal navigation does not add tabs', () => {
+  it('opens a multi-lesson Study Guide as one top-level tab and internal navigation does not add tabs', () => {
     renderWithDashboardProvider(<StateProbe />)
 
     fireEvent.click(screen.getByRole('button', { name: 'open-study-path' }))
@@ -252,7 +252,7 @@ describe('Interactive Study Path UX', () => {
     expect(screen.getByTestId('study-path-navigator-pill')).toBeInTheDocument()
   })
 
-  it('keeps Study Paths dropdown actions focused and opens lessons as standalone tabs', async () => {
+  it('keeps Study Guides dropdown actions focused and opens lessons as standalone tabs', async () => {
     const storage = createMemoryStorage()
     seedStudyPathDashboards(storage)
 
@@ -271,7 +271,7 @@ describe('Interactive Study Path UX', () => {
       screen.getByLabelText('Manage German B1 Grammar in Library'),
     ).toBeInTheDocument()
     expect(
-      screen.queryByLabelText(/Study Path actions/i),
+      screen.queryByLabelText(/Study Guide actions/i),
     ).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/Lesson actions/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Open all dashboards/i)).not.toBeInTheDocument()

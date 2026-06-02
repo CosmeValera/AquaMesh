@@ -172,7 +172,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
         setExpandedStudyPathFolders(JSON.parse(storedExpandedFolders))
       }
     } catch (error) {
-      console.error('Failed to load Study Path menu state', error)
+      console.error('Failed to load Study Guide menu state', error)
     }
   }, [])
 
@@ -183,7 +183,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
         JSON.stringify(expandedStudyPathFolders),
       )
     } catch (error) {
-      console.error('Failed to save Study Path menu state', error)
+      console.error('Failed to save Study Guide menu state', error)
     }
   }, [expandedStudyPathFolders])
 
@@ -582,7 +582,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
                   whiteSpace: 'nowrap',
                 }}
               >
-                Study Paths
+                Study Guides
               </Box>
             </Typography>
             {studyPathGroups.map((group) => {
@@ -1060,7 +1060,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
               textAlign: 'center',
             }}
           >
-            No study paths or dashboards yet
+            No study guides or dashboards yet
           </MenuItem>
         )}
         {!isPhone && visibleCustomDashboards.length === 0 && (
@@ -1074,7 +1074,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
               textAlign: 'center',
             }}
           >
-            No study paths or dashboards yet
+            No study guides or dashboards yet
           </MenuItem>
         )}
       </Menu>

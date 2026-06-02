@@ -782,7 +782,7 @@ const buildFallbackObjectsForDashboardRole = ({
       concepts.length > 0
         ? concepts.map((concept) => `How would you apply ${concept}?`)
         : practiceSource
-          ? ['What is one key idea from the previous Study Path material?']
+          ? ['What is one key idea from the previous Study Guide material?']
           : []
 
     return prompts.map((question, index) => ({
@@ -796,9 +796,9 @@ const buildFallbackObjectsForDashboardRole = ({
       question,
       options: [],
       correctIndex: 0,
-      answer: 'Use the Study Path notes to answer in your own words.',
+      answer: 'Use the Study Guide notes to answer in your own words.',
       explanation:
-        'Generated as a minimal fallback from the Study Path source.',
+        'Generated as a minimal fallback from the Study Guide source.',
     }))
   }
 
@@ -1042,7 +1042,7 @@ export const generateStudyPackWithAi = async ({
     ? 'The raw input is a learning prompt, not notes. Teach the requested topic from scratch. Because the input is not source notes, you may use accurate general knowledge for this topic. First create concise source notes/explanations, then generate practice grounded in those generated explanations. Include explanation/theory objects before exercises.'
     : 'The raw input is source notes. Stay grounded in those notes.'
   const pathInstruction = studyPathMode
-    ? 'Organize the material as a Study Path progression. Use titles/tags that clearly fit: Introduction, Theory, Examples, Practice, Final Review.'
+    ? 'Organize the material as a Study Guide progression. Use titles/tags that clearly fit: Introduction, Theory, Examples, Practice, Final Review.'
     : 'Organize the material as a single Study Pack.'
 
   const promptText = `Create a study pack JSON object ${
@@ -1246,7 +1246,7 @@ export const generateStudyPathWithAi = async ({
     mustInclude,
     avoidTopics,
   )
-  const promptText = `Create a Study Path JSON object. A Study Path is NOT one dashboard. It is a folder containing multiple ordered dashboards/study packs.
+  const promptText = `Create a Study Guide JSON object. A Study Guide is NOT one dashboard. It is a folder containing multiple ordered dashboards/study packs.
 
 Return exactly this structure:
 {
@@ -1277,7 +1277,7 @@ Return exactly this structure:
 
 Rules:
 - Return strict valid JSON only: double-quoted property names and strings, comma-separated array/object entries, matching { } and [ ], no trailing commas, no comments, no Markdown fences, no prose before or after the JSON.
-- Choose a concise, topic-specific folderName for the Study Path, such as "French B1 Subjunctive" or "Calculus Derivatives". Do not use a generic folderName like "Study Path" unless the topic is truly unknown.
+- Choose a concise, topic-specific folderName for the Study Guide, such as "French B1 Subjunctive" or "Calculus Derivatives". Do not use a generic folderName like "Study Guide" unless the topic is truly unknown.
 - Create exactly ${dashboardCount} ordered lesson dashboards, grouped mentally into 1-3 modules. Give each dashboard a useful topic-specific title.
 - Treat this as a bounded learning sprint, not a complete course on everything. Include scope in lesson choices: what gets covered now, what waits for later.
 - Do not follow a fixed role template by position. You are responsible for choosing each dashboard's purpose, layoutArchetype, practiceType, rawNotes, and practice mix from the lesson content itself.
@@ -1323,7 +1323,7 @@ ${
   advancedGuidance ? `Advanced user guidance:\n${advancedGuidance}\n\n` : ''
 }Path title fallback: ${title}
 Folder name fallback if you cannot infer a better one: ${
-    folderName || 'Study Path'
+    folderName || 'Study Guide'
   }
 User request/topic:
 ${prompt}`
@@ -1332,7 +1332,7 @@ ${prompt}`
 The previous response failed JSON formatting. Retry with a simpler response:
 - Return plain JSON only.
 - Return syntactically valid JSON with all commas and braces in place.
-- Use only the Study Path fields: title, summary, rawNotes, layoutArchetype, dashboardPurpose, practiceType, layoutReason, sourceRefs, sourceSummary, conceptRecap, practice, flashcards.
+- Use only the Study Guide fields: title, summary, rawNotes, layoutArchetype, dashboardPurpose, practiceType, layoutReason, sourceRefs, sourceSummary, conceptRecap, practice, flashcards.
 - Do not use markdown code fences.
 - Do not include comments, trailing commas, undefined, NaN, or extra text.`
   const createRepairPrompt = (originalJson: string) => `${promptText}
@@ -1340,7 +1340,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
 The previous response was valid JSON, but one or more normal dashboards were incomplete.
 Repair the JSON instead of simplifying it:
 - Preserve the exact dashboard count, order, titles, summaries, and rawNotes.
-- Every dashboard is a normal Study Path dashboard.
+- Every dashboard is a normal Study Guide dashboard.
 - Fill missing conceptRecap/practice/flashcards from that dashboard's rawNotes when the selected layout and practiceType call for active recall.
 - For focusLesson or practiceType none, practice and flashcards may stay empty if rawNotes contains a complete learning explanation.
 - For learnPracticeTabs or splitReferenceExercise, include sourceSummary with 3-5 bullets, conceptRecap with 2-4 sections, practice.shortAnswer with 1-2 questions, practice.multipleChoice with 1-2 questions, and flashcards with 2-5 cards.
@@ -1490,7 +1490,7 @@ ${prompt}`
     if (mode === 'summary' && conceptGroups.length > 0) {
       return [
         `# ${dashboardTitle}`,
-        'Use this recap to connect the major ideas from the Study Path before moving into mixed practice.',
+        'Use this recap to connect the major ideas from the Study Guide before moving into mixed practice.',
         ...conceptGroups.map((group) => {
           const items = group.items
             .map(stripRepeatedSummaryPrefix)
@@ -1542,7 +1542,7 @@ ${prompt}`
           : {}
       if (!hasUsableStudyPathDashboardInput(input)) {
         warnings.push(
-          `Skipped Study Path dashboard ${
+          `Skipped Study Guide dashboard ${
             index + 1
           }: no usable generated content.`,
         )
@@ -1706,7 +1706,7 @@ ${prompt}`
     )
 
   if (dashboards.length === 0) {
-    throw new Error('Gemini did not return any usable Study Path dashboards.')
+    throw new Error('Gemini did not return any usable Study Guide dashboards.')
   }
 
   return {

@@ -54,7 +54,7 @@ vi.mock('../../../../src/components/studyPack/CreateStudyPackModal', () => ({
 vi.mock('../../../../src/components/studyPack/CreateStudyPathModal', () => ({
   __esModule: true,
   default: ({ open }: { open: boolean }) =>
-    open ? <div data-testid="study-path-modal">Study Path Modal</div> : null,
+    open ? <div data-testid="study-path-modal">Study Guide Modal</div> : null,
 }))
 
 vi.mock('../../../../src/components/shared/ThemeModeToggle', () => ({
@@ -225,7 +225,7 @@ describe('TopNavBar Component', () => {
       screen.queryByRole('button', { name: /create from notes/i }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /create study path/i }),
+      screen.queryByRole('button', { name: /create study guide/i }),
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /advanced/i }),
@@ -252,7 +252,7 @@ describe('TopNavBar Component', () => {
     ).toBeTruthy()
   })
 
-  it('keeps Study Path and Create From Notes event entry points available in Basic fallback mode', async () => {
+  it('keeps Study Guide and Create From Notes event entry points available in Basic fallback mode', async () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -282,7 +282,7 @@ describe('TopNavBar Component', () => {
     act(() => {
       window.dispatchEvent(new Event(OPEN_STUDY_PATH_EVENT))
     })
-    expect(await screen.findByText('Study Path Modal')).toBeInTheDocument()
+    expect(await screen.findByText('Study Guide Modal')).toBeInTheDocument()
 
     act(() => {
       window.dispatchEvent(new Event(OPEN_STUDY_PACK_EVENT))
@@ -290,7 +290,7 @@ describe('TopNavBar Component', () => {
     expect(await screen.findByTestId('study-pack-modal')).toBeInTheDocument()
   })
 
-  it('disables Study Path and Create From Notes in Hosted AI tokens mode', () => {
+  it('disables Study Guide and Create From Notes in Hosted AI tokens mode', () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -322,7 +322,7 @@ describe('TopNavBar Component', () => {
       window.dispatchEvent(new Event(OPEN_STUDY_PACK_EVENT))
     })
 
-    expect(screen.queryByText('Study Path Modal')).not.toBeInTheDocument()
+    expect(screen.queryByText('Study Guide Modal')).not.toBeInTheDocument()
     expect(screen.queryByTestId('study-pack-modal')).not.toBeInTheDocument()
   })
 

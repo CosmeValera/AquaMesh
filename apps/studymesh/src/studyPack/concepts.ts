@@ -78,7 +78,7 @@ const splitSentences = (value: string): string[] =>
     .filter(Boolean)
 
 const looksInstructional = (value: string): boolean =>
-  /\b(?:return|create|generate|write|use this dashboard|answer mixed exercises|review the previous|do not|must|should|json|objects|dashboard|study path)\b/i.test(
+  /\b(?:return|create|generate|write|use this dashboard|answer mixed exercises|review the previous|do not|must|should|json|objects|dashboard|study guide)\b/i.test(
     value,
   )
 

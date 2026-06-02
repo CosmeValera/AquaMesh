@@ -67,12 +67,12 @@ const getStudyPathMeta = (
 
   return {
     studyPathId,
-    studyPathTitle: String(props.studyPathTitle || 'Study Path'),
+    studyPathTitle: String(props.studyPathTitle || 'Study Guide'),
     dashboardKey,
     dashboardName: String(props.studyPathDashboardName || 'Dashboard'),
     dashboardIndex: Number(props.studyPathDashboardIndex || 1),
     dashboardCount: Number(props.studyPathDashboardCount || 7),
-    folderName: String(props.studyPathFolderName || 'Study Path'),
+    folderName: String(props.studyPathFolderName || 'Study Guide'),
   }
 }
 

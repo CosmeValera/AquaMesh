@@ -17,7 +17,7 @@ export const WORKSPACE_CREATION_STATUS_EVENT =
 
 export const workspaceCreationTaskLabels: Record<WorkspaceCreationTask, string> =
   {
-    'study-path': 'Create Study Path',
+    'study-path': 'Create Study Guide',
     'from-notes': 'Create From Notes',
   }
 

@@ -833,7 +833,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                   Library items
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Study Paths and custom dashboards.
+                  Study Guides and custom dashboards.
                 </Typography>
               </Box>
             </Box>
@@ -862,7 +862,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                placeholder="Search Study Paths..."
+                placeholder="Search Study Guides..."
                 value={searchTerm}
                 onChange={handleSearchChange}
                 variant="outlined"
@@ -1045,7 +1045,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
             <Box>
               <Typography variant="body2" color="text.secondary">
                 {sortedDashboards.length === 0
-                  ? 'No Study Paths found'
+                  ? 'No Study Guides found'
                   : `Showing ${sortedDashboards.length} item${
                       sortedDashboards.length !== 1 ? 's' : ''
                     }`}
@@ -1065,7 +1065,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                 title={
                   dashboards.length === 0
                     ? 'No library items to delete'
-                    : 'Delete every saved Study Path and dashboard'
+                    : 'Delete every saved Study Guide and dashboard'
                 }
               >
                 <span>
@@ -1121,10 +1121,10 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
               />
               <Typography color="text.primary" variant="h6" gutterBottom>
                 {searchTerm
-                  ? 'No Matching Study Paths'
+                  ? 'No Matching Study Guides'
                   : folderFilter
-                  ? 'No Study Paths In Subject'
-                  : 'No Study Paths Available'}
+                  ? 'No Study Guides In Subject'
+                  : 'No Study Guides Available'}
               </Typography>
               <Typography color="text.secondary" variant="body2">
                 {searchTerm
@@ -1132,8 +1132,8 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                   : folderFilter
                   ? 'Select a different subject or clear the filter'
                   : !isAdmin
-                  ? 'No public Study Paths are currently available'
-                  : 'Create a Study Path from notes to start your library'}
+                  ? 'No public Study Guides are currently available'
+                  : 'Create a Study Guide from notes to start your library'}
               </Typography>
             </Paper>
           ) : (
@@ -1456,7 +1456,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                                           e,
                                         )
                                       }
-                                      title="Request new practice exercises from this Study Path"
+                                      title="Request new practice exercises from this Study Guide"
                                       sx={{
                                         borderColor: 'primary.main',
                                         color: 'primary.dark',
@@ -1477,7 +1477,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                                           e,
                                         )
                                       }
-                                      title="Open this Study Path for another practice session"
+                                      title="Open this Study Guide for another practice session"
                                       sx={{
                                         color: 'primary.dark',
                                         textTransform: 'none',
@@ -1496,7 +1496,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                                           e,
                                         )
                                       }
-                                      title="Request a quiz from this Study Path lesson"
+                                      title="Request a quiz from this Study Guide lesson"
                                       sx={{
                                         color: 'primary.dark',
                                         textTransform: 'none',
@@ -1718,7 +1718,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
       <DeleteConfirmationDialog
         open={deleteConfirmOpen}
         title="Delete from Library"
-        content="Are you sure you want to delete this Study Path or workspace? Export first if you need a backup. This action cannot be undone."
+        content="Are you sure you want to delete this Study Guide or workspace? Export first if you need a backup. This action cannot be undone."
         onConfirm={confirmDeleteDashboard}
         onCancel={cancelDeleteDashboard}
       />
@@ -2022,7 +2022,7 @@ const EditDashboardDialog: React.FC<EditDashboardDialogProps> = ({
         <Box component="form" sx={{ mt: 1 }}>
           <TextField
             fullWidth
-            label="Study Path Name"
+            label="Study Guide Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             onFocus={(e) => {

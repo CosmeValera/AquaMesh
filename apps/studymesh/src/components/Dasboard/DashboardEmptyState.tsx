@@ -937,8 +937,8 @@ const DashboardEmptyState = ({
               <FolderOpenIcon sx={{ fontSize: 38, mb: 1, opacity: 0.65 }} />
               <Typography variant="body2" fontWeight={800}>
                 {settings.studyMaterialMode === 'custom'
-                  ? 'Choose custom Study Paths and dashboards to show here.'
-                  : 'Saved Study Paths and dashboards appear here.'}
+                  ? 'Choose custom Study Guides and dashboards to show here.'
+                  : 'Saved Study Guides and dashboards appear here.'}
               </Typography>
             </Box>
           </Box>
@@ -946,7 +946,7 @@ const DashboardEmptyState = ({
       </Box>
 
       <Stack direction="row" gap={0.75} flexWrap="wrap">
-        <Chip size="small" label="Study Paths" />
+        <Chip size="small" label="Study Guides" />
         <Chip size="small" label="Dashboards" />
       </Stack>
     </Paper>
@@ -1251,7 +1251,7 @@ const DashboardEmptyState = ({
                 {availableCustomEntries.map((entry) => (
                   <MenuItem key={entry.id} value={entry.id}>
                     {entry.title} -{' '}
-                    {entry.isStudyPath ? 'Study Path' : 'Dashboard'}
+                    {entry.isStudyPath ? 'Study Guide' : 'Dashboard'}
                   </MenuItem>
                 ))}
               </TextField>

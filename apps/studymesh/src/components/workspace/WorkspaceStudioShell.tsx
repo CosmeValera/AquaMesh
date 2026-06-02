@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Box,
   Button,
@@ -247,7 +247,7 @@ const resourceTypeTitle = (resourceType?: string | null) => {
 
 const generationMaterialLabel = (draft: GenerationDraft) => {
   if (draft.flow === 'study-path') {
-    return 'study path'
+    return 'study guide'
   }
 
   if (draft.selectedResourceType === 'quiz') {
@@ -451,7 +451,7 @@ const formatDraftTitle = (draft: GenerationDraft) => {
   const shortTitle = base.length > 46 ? `${base.slice(0, 45).trim()}...` : base
 
   if (draft.flow === 'study-path') {
-    return `Study Path: ${shortTitle || 'Untitled'}`
+    return `Study Guide: ${shortTitle || 'Untitled'}`
   }
 
   return `${resourceTypeTitle(draft.selectedResourceType)} from ${
@@ -2266,7 +2266,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
               </Box>
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="subtitle1" fontWeight={950}>
-                  Study Path
+                  Study Guide
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Structured lessons from a learning goal
@@ -2309,7 +2309,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 fontWeight: 950,
               }}
             >
-              Create Study Path
+              Create Study Guide
             </Button>
           </Stack>
         </Paper>
@@ -2558,7 +2558,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                     : ''
                   const label =
                     isGenerating && draft.flow === 'study-path'
-                      ? 'Creating study path...'
+                      ? 'Creating study guide...'
                       : isGenerating
                       ? `Generating ${materialLabel}...`
                       : formatDraftTitle(draft)
@@ -2848,7 +2848,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   !draft.isPlaceholder &&
                   draft.status !== 'ready' &&
                   draft.title &&
-                  draft.title !== 'Study Path'
+                  draft.title !== 'Study Guide'
                     ? draft.title
                     : undefined
                 }
@@ -2865,7 +2865,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                     studyPath?.title ||
                     payload.folderName ||
                     dashboards[0]?.name ||
-                    'Study Path'
+                    'Study Guide'
                   updateDraft(draft.id, {
                     title: nextTitle,
                     inputSummary: nextTitle || draft.inputSummary,

@@ -62,7 +62,7 @@ describe('StudyBlockView', () => {
     ).toHaveLength(1)
   })
 
-  it('records Study Path quiz attempts without filled red or green buttons', () => {
+  it('records Study Guide quiz attempts without filled red or green buttons', () => {
     render(
       <StudyBlockView
         type="QuizBlock"

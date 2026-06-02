@@ -342,7 +342,7 @@ const createReviewDashboard = (
     folder: path.folderName,
     folderColor: STUDY_PACK_COLOR,
     layout,
-    description: 'Generated after completing all Study Path dashboards.',
+    description: 'Generated after completing all Study Guide dashboards.',
     tags: ['study-pack', 'study-path', 'review-mistakes'],
     isPublic: false,
     createdAt: path.reviewGeneratedAt || now,

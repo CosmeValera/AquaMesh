@@ -21,7 +21,7 @@ import CloudQueueIcon from '@mui/icons-material/CloudQueue'
 
 const mainUseCases = [
   {
-    title: 'Create Study Path',
+    title: 'Create Study Guide',
     eyebrow: 'From a goal',
     body: 'Describe what you want to learn and StudyMesh creates an ordered path with lessons, recap, and practice dashboards.',
     icon: <RouteIcon />,
@@ -54,7 +54,7 @@ const mainUseCases = [
 ]
 
 const heroHighlights = [
-  'Study paths from any topic',
+  'Study guides from any topic',
   'Dashboards from notes, PDFs, images, or slides',
   'Practice generated next to the source material',
 ]
@@ -65,7 +65,7 @@ const studyPathPromptExamples = [
     dashboards: [
       ['01', 'B1 conversation warm-up', 'speaking phrases + pronunciation'],
       ['02', 'Past and future tenses', 'grammar patterns + examples'],
-      ['03', 'Oral exam practice', 'roleplays + answer prompts'],
+      ['03', 'Oral practice', 'roleplays + answer prompts'],
       ['04', 'Final speaking review', 'mixed questions + confidence check'],
     ],
   },
@@ -130,17 +130,17 @@ const quickAnswers = [
   {
     question: 'What is StudyMesh for?',
     answer:
-      'StudyMesh helps students turn learning goals, notes, images, and references into study paths, clean dashboards, exercises, and review material.',
+      'StudyMesh helps students turn learning goals, notes, images, and references into study guides, clean dashboards, exercises, and review material.',
   },
   {
     question: 'What should I do first?',
     answer:
-      'Create a Study Path from a learning goal, or use Create from Notes when you already have notes, files, or screenshots.',
+      'Create a Study Guide from a learning goal, or use Create from Notes when you already have notes, files, or screenshots.',
   },
   {
     question: 'How are dashboards organized?',
     answer:
-      'Generated study paths and notes dashboards can be opened in the workspace and reused by folder.',
+      'Generated study guides and notes dashboards can be opened in the workspace and reused by folder.',
   },
 ]
 
@@ -165,7 +165,7 @@ const aiPricing = [
     title: 'BYOK Gemini',
     price: '0€',
     label: 'Use your own key',
-    body: 'Bring your Gemini API key and StudyMesh uses it directly for deeper study paths and notes cleanup.',
+    body: 'Bring your Gemini API key and StudyMesh uses it directly for deeper study guides and notes cleanup.',
     icon: <KeyIcon />,
     features: ['Your quota', 'Your control', 'Great quality'],
   },
@@ -302,7 +302,7 @@ const StudyMeshLanding = () => {
                 fontWeight: 500, 
               }}
             >
-              Turn <span style={{ color: '#2196F3', fontWeight: 700 }}>prompts</span> and <span style={{ color: '#00C49A', fontWeight: 700 }}>messy notes</span> into <Box component="span" sx={{ fontWeight: 700 }}>study paths</Box>.
+              Turn <span style={{ color: '#2196F3', fontWeight: 700 }}>prompts</span> and <span style={{ color: '#00C49A', fontWeight: 700 }}>messy notes</span> into <Box component="span" sx={{ fontWeight: 700 }}>study guides</Box>.
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
               Create tutorials, study dashboards, exercises, and reusable
@@ -317,7 +317,7 @@ const StudyMeshLanding = () => {
                 onClick={() => openWorkspace('create-study-path')}
                 sx={{ borderRadius: 1, textTransform: 'none' }}
               >
-                Create Study Path
+                Create Study Guide
               </Button>
               <Button
                 variant="outlined"
@@ -561,7 +561,7 @@ const StudyMeshLanding = () => {
                         fontWeight={950}
                         color="#2196F3"
                       >
-                        Create Study Path
+                        Create Study Guide
                       </Typography>
                       <Typography variant="h5" fontWeight={900}>
                         Tell StudyMesh what you want to master
@@ -1157,7 +1157,7 @@ const StudyMeshLanding = () => {
                 '&:hover': { bgcolor: 'primary.light' },
               }}
             >
-              Create Study Path
+              Create Study Guide
             </Button>
             <Button
               variant="outlined"

@@ -53,12 +53,12 @@ const readMetaFromCustomProps = (
 
   return {
     studyPathId,
-    studyPathTitle: String(customProps.studyPathTitle || 'Study Path'),
+    studyPathTitle: String(customProps.studyPathTitle || 'Study Guide'),
     dashboardKey,
     dashboardName: String(customProps.studyPathDashboardName || 'Lesson'),
     dashboardIndex: Number(customProps.studyPathDashboardIndex || 1),
       dashboardCount: Number(customProps.studyPathDashboardCount || 1),
-      folderName: String(customProps.studyPathFolderName || 'Study Path'),
+      folderName: String(customProps.studyPathFolderName || 'Study Guide'),
       layoutArchetype:
         typeof customProps.studyPathLayoutArchetype === 'string'
           ? (customProps.studyPathLayoutArchetype as StudyPathLayoutArchetype)
@@ -185,7 +185,7 @@ export const createStudyPathContainerState = (
       dashboardKey: meta.dashboardKey,
       dashboardIndex: meta.dashboardIndex,
       dashboardCount: meta.dashboardCount,
-      folderName: meta.folderName || dashboard.folder || 'Study Path',
+      folderName: meta.folderName || dashboard.folder || 'Study Guide',
       layoutArchetype: meta.layoutArchetype,
       dashboardPurpose: meta.dashboardPurpose,
       practiceType: meta.practiceType,
@@ -199,7 +199,7 @@ export const createStudyPathContainerState = (
     folderName:
       studyPathDashboards[0].meta.folderName ||
       studyPathDashboards[0].dashboard.folder ||
-      'Study Path',
+      'Study Guide',
     dashboards: orderedDashboards,
     selectedIndex: 0,
     pinnedDashboardKeys: [],

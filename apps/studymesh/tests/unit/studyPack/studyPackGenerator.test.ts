@@ -13,7 +13,7 @@ import {
 } from '../../../src/studyPack'
 
 describe('study pack generator', () => {
-  it('normalizes Study Path layout archetype metadata with safe fallbacks', () => {
+  it('normalizes Study Guide layout archetype metadata with safe fallbacks', () => {
     expect(getDefaultStudyPathLayoutMetadata('normal')).toMatchObject({
       layoutArchetype: 'learnPracticeTabs',
       dashboardPurpose: 'lesson',
@@ -456,7 +456,7 @@ A: Back
     expect(JSON.stringify(widgets)).not.toContain('"Chart"')
   })
 
-  it('adds Study Path progress metadata without auto-rendering practice widgets', () => {
+  it('adds Study Guide progress metadata without auto-rendering practice widgets', () => {
     const pack = parseStudyPack(
       `Quiz:: Which rule handles x^n? | Power rule | Chain rule | Product rule
 Q: When is the power rule used?
@@ -489,7 +489,7 @@ A: When differentiating x raised to a constant power.`,
     expect(serialized).not.toContain('FlashcardCarouselBlock')
   })
 
-  it('keeps split reference Study Path dashboards in a richer source plus summary layout', () => {
+  it('keeps split reference Study Guide dashboards in a richer source plus summary layout', () => {
     const pack = parseStudyPack(
       `Quiz:: Which rule handles x^n? | Power rule | Chain rule | Product rule
 Q: When is the power rule used?
@@ -518,7 +518,7 @@ A: When differentiating x raised to a constant power.`,
     ])
   })
 
-  it('renders summary Study Path dashboards as recap-only', () => {
+  it('renders summary Study Guide dashboards as recap-only', () => {
     const pack = parseStudyPack(
       `- Connect formation and usage rules
 Quiz:: Which form is correct? | A | B | C
@@ -552,7 +552,7 @@ A: The mixed rules.`,
     expect(serialized).not.toContain('French Summary Summary')
   })
 
-  it('keeps legacy exercises Study Path dashboards lesson-clean', () => {
+  it('keeps legacy exercises Study Guide dashboards lesson-clean', () => {
     const pack = parseStudyPack(
       `- This recap should not render on exercises dashboards
 Quiz:: Choose the subjunctive form. | partions | partons | partirez
@@ -587,7 +587,7 @@ A: partions`,
     expect(serialized).not.toContain('This recap should not render')
   })
 
-  it('renders focus lesson Study Path dashboards as one learning surface', () => {
+  it('renders focus lesson Study Guide dashboards as one learning surface', () => {
     const pack = parseStudyPack(
       `# Concept
 Read one careful explanation.

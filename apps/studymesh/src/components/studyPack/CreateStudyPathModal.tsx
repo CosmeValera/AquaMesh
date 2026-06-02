@@ -127,7 +127,7 @@ const providerLabels: Record<StudyPackAiProvider, string> = {
 const LOCAL_AI_ESTIMATE_COPY =
   'Local AI runs on your device and can be slow. Super small usually takes 12-15 min, Compact 14-17 min, Average 15-20 min. For faster/deeper paths, use Own Gemini token.'
 const LOCAL_DEEP_BLOCKED_MESSAGE =
-  'Deep Study Path is not available with Local AI. Use Average, Compact, Super small, or switch to Own Gemini token.'
+  'Deep Study Guide is not available with Local AI. Use Average, Compact, Super small, or switch to Own Gemini token.'
 const GEMINI_STUDY_PATH_ESTIMATES_MS: Record<
   ReturnType<typeof normalizeStudyPathGenerationAmount>,
   number
@@ -596,7 +596,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       title:
         sourceMode === 'dashboard' && allowDashboardSource
           ? currentDashboardTitle
-          : prompt.trim() || 'Study Path',
+          : prompt.trim() || 'Study Guide',
       inputSummary:
         sourceMode === 'dashboard' && allowDashboardSource
           ? `Current dashboard: ${currentDashboardTitle}`
@@ -614,12 +614,12 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
 
   React.useEffect(() => {
     if (isGenerating) {
-      onStatusChange?.('running', 'Create Study Path is working')
+      onStatusChange?.('running', 'Create Study Guide is working')
       return
     }
 
     if (step === 'review' && draft) {
-      onStatusChange?.('complete', 'Create Study Path is ready to review')
+      onStatusChange?.('complete', 'Create Study Guide is ready to review')
       return
     }
 
@@ -746,7 +746,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       typeof promptOverride === 'string' ? promptOverride.trim() : prompt.trim()
     const effectivePrompt = [
       sourceMode === 'dashboard' && allowDashboardSource && !basePrompt
-        ? `Create a Study Path from current dashboard: ${currentDashboardTitle}`
+        ? `Create a Study Guide from current dashboard: ${currentDashboardTitle}`
         : basePrompt,
       sourceMode === 'dashboard' && allowDashboardSource
         ? `Use current dashboard as source context: ${currentDashboardTitle}\n\n${currentDashboardContext}`
@@ -820,7 +820,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
         provider: effectiveAiProvider,
         apiToken: credentials.apiToken,
         model: credentials.model,
-        title: 'Study Path',
+        title: 'Study Guide',
         folderName: '',
         prompt: effectivePrompt,
         mustInclude: mustInclude.trim() || undefined,
@@ -857,7 +857,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
         assertRoleObjectsAreClean(
           objects,
           dashboard.dashboardRole,
-          dashboard.title || 'Study Path dashboard',
+          dashboard.title || 'Study Guide dashboard',
         )
 
         return {
@@ -899,7 +899,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       setError(
         err instanceof Error
           ? err.message
-          : 'Could not generate this Study Path.',
+          : 'Could not generate this Study Guide.',
       )
     } finally {
       if (activeGenerationRef.current === generationController) {
@@ -964,7 +964,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       reviewFolderName.trim() ||
       pathDraft.folderName ||
       pathDraft.title ||
-      'Study Path'
+      'Study Guide'
     const studyPathId = makeStudyPathId(pathDraft.title || effectiveFolder)
     const dashboardCount = pathDraft.dashboards.length
     const firstMarkdown = (dashboard: AiStudyPathDraft['dashboards'][number]) =>
@@ -1060,7 +1060,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
             </Box>
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="h6" fontWeight={900} noWrap>
-                Create Study Path
+                Create Study Guide
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Build an ordered lesson path from a goal or dashboard.
@@ -1070,7 +1070,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
           {onCollapse && (
             <Tooltip title="Collapse panel">
               <IconButton
-                aria-label="Collapse Create Study Path panel"
+                aria-label="Collapse Create Study Guide panel"
                 onClick={onCollapse}
                 size="small"
                 sx={{
@@ -1175,7 +1175,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
                     label={
                       sourceMode === 'dashboard' && allowDashboardSource
                         ? 'Optional learning focus'
-                        : 'Study Path prompt'
+                        : 'Study Guide prompt'
                     }
                     inputProps={{
                       'aria-label': 'What should StudyMesh teach?',
@@ -1526,7 +1526,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
                 >
                   <Stack spacing={1}>
                     <Typography variant="subtitle2" fontWeight={900}>
-                      Study Path generation running
+                      Study Guide generation running
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                       <Button onClick={cancelGeneration}>Cancel</Button>
@@ -1615,7 +1615,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
                     }
                   />
                 }
-                label="Open as a Study Path tutorial after creating it"
+                label="Open as a Study Guide tutorial after creating it"
               />
               <Stack spacing={1.5}>
                 {draft?.dashboards.map((dashboard, index) => (
@@ -1769,7 +1769,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
               (sourceMode === 'dashboard' && !hasCurrentDashboardContext)
             }
           >
-            {isGenerating ? 'Generating...' : 'Generate Study Path'}
+            {isGenerating ? 'Generating...' : 'Generate Study Guide'}
           </Button>
         ) : (
           <Button variant="contained" onClick={createPath}>

@@ -598,7 +598,7 @@ describe('local AI helpers', () => {
     expect(JSON.stringify(quizzes)).not.toMatch(/"A"|"B"|"C"/)
   })
 
-  it('keeps local Study Path dashboards useful when fields drift', async () => {
+  it('keeps local Study Guide dashboards useful when fields drift', async () => {
     const destroy = vi.fn()
     const prompt = vi
       .fn()
@@ -728,11 +728,11 @@ describe('local AI helpers', () => {
     )
     expect(draft.dashboards[0].debugTrace?.validatedContract).not.toBeNull()
     expect(String(prompt.mock.calls[0][0])).toContain(
-      'Plan a Study Path with exactly 3 lesson dashboards',
+      'Plan a Study Guide with exactly 3 lesson dashboards',
     )
   })
 
-  it('joins Local Study Path source notes from two Markdown section calls', async () => {
+  it('joins Local Study Guide source notes from two Markdown section calls', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce(
@@ -917,7 +917,7 @@ describe('local AI helpers', () => {
       .fn()
       .mockResolvedValueOnce(
         `\`\`\`json
-{"title":"Study Path","folderName":"Learn German B1","dashboards":[{"title":"01 - German Grammar Basics","goal":"Understand fundamental grammar structures","topics":["Noun genders","Verb conjugation"],"avoid":["summary dashboard"]}]}
+{"title":"Study Guide","folderName":"Learn German B1","dashboards":[{"title":"01 - German Grammar Basics","goal":"Understand fundamental grammar structures","topics":["Noun genders","Verb conjugation"],"avoid":["summary dashboard"]}]}
 {"title":"02 - Conversational German","goal":"Develop basic conversation skills","topics":["Greetings","Daily routines"]}
 }
 \`\`\``,
@@ -935,7 +935,7 @@ describe('local AI helpers', () => {
     const draft = await generateStudyPathWithLocalAi({
       apiToken: '',
       model: '',
-      title: 'Study Path',
+      title: 'Study Guide',
       prompt: 'learn german b1',
       folderName: '',
       generationAmount: 'superSmall',
@@ -956,7 +956,7 @@ describe('local AI helpers', () => {
       .fn()
       .mockResolvedValueOnce(
         `\`\`\`json
-{"title":"Learn Italian B2 Study Path","folderName":"Italian B2","dashboards":[{"title":"01 - Grammar & Fluency","goal":"Improve grammar flow","sections":[{"title":"Verb Conjugation","goal":"Master verb tenses","focus":"Present; Past; Future"},{"title":"Sentence Structure","goal":"Build complex sentences","focus":"Adverbs; Prepositions; Connectors"},{"title":"Idioms & Expressions","goal":"Understand common phrases","focus":"Slang; Figurative language; Regionalisms"},{"title":"Writing Practice","goal":"Improve written communication","focus":"Emails; Letters; Essays"}],"avoid":"Basic grammar; Vocabulary; Pronunciation"},{"title":"02 - Culture & Communication","goal":"Understand Italian culture","sections":[{"title":"Italian Culture","goal":"Learn about customs","focus":"Food; Family; Traditions"},{"title":"Social Communication","goal":"Understand social interactions","focus":"Greetings; Politeness; Etiquette"},{"title":"Cultural Sensitivity","goal":"Be respectful","focus":"Religion; History; Arts"}],"avoid":"Basic vocabulary; Grammar Review; Pronunciation practice"}
+{"title":"Learn Italian B2 Study Guide","folderName":"Italian B2","dashboards":[{"title":"01 - Grammar & Fluency","goal":"Improve grammar flow","sections":[{"title":"Verb Conjugation","goal":"Master verb tenses","focus":"Present; Past; Future"},{"title":"Sentence Structure","goal":"Build complex sentences","focus":"Adverbs; Prepositions; Connectors"},{"title":"Idioms & Expressions","goal":"Understand common phrases","focus":"Slang; Figurative language; Regionalisms"},{"title":"Writing Practice","goal":"Improve written communication","focus":"Emails; Letters; Essays"}],"avoid":"Basic grammar; Vocabulary; Pronunciation"},{"title":"02 - Culture & Communication","goal":"Understand Italian culture","sections":[{"title":"Italian Culture","goal":"Learn about customs","focus":"Food; Family; Traditions"},{"title":"Social Communication","goal":"Understand social interactions","focus":"Greetings; Politeness; Etiquette"},{"title":"Cultural Sensitivity","goal":"Be respectful","focus":"Religion; History; Arts"}],"avoid":"Basic vocabulary; Grammar Review; Pronunciation practice"}
 \`\`\``,
       )
       .mockImplementation((promptText: string) =>
@@ -1267,7 +1267,7 @@ describe('local AI helpers', () => {
           label: 'Generated 5 of 5 dashboards',
           timeoutMs: 240 * 1000,
           studyPathPipeline: expect.objectContaining({
-            label: 'Study Path pipeline',
+            label: 'Study Guide pipeline',
             estimatedRemainingMs: expect.any(Number),
             steps: expect.arrayContaining([
               expect.objectContaining({
@@ -1301,7 +1301,7 @@ describe('local AI helpers', () => {
         folderName: '',
         generationAmount: 'deep',
       }),
-    ).rejects.toThrow(/Deep Study Path is not available with Local AI/i)
+    ).rejects.toThrow(/Deep Study Guide is not available with Local AI/i)
     expect(create).not.toHaveBeenCalled()
   })
 
@@ -1491,7 +1491,7 @@ describe('local AI helpers', () => {
     vi.useRealTimers()
   })
 
-  it('does not auto-use Basic fallback when Local Study Path dashboard prompting times out', async () => {
+  it('does not auto-use Basic fallback when Local Study Guide dashboard prompting times out', async () => {
     vi.useFakeTimers({ now: 0 })
     const destroy = vi.fn()
     const prompt = vi
@@ -1528,7 +1528,7 @@ describe('local AI helpers', () => {
     vi.useRealTimers()
   })
 
-  it('reports malformed Local Study Path Markdown with raw failure debug', async () => {
+  it('reports malformed Local Study Guide Markdown with raw failure debug', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce(localStudyPathPlanJson(2, 'Italian B1'))
@@ -1572,7 +1572,7 @@ describe('local AI helpers', () => {
     }
   })
 
-  it('retries malformed Local Study Path Markdown with smaller section prompts', async () => {
+  it('retries malformed Local Study Guide Markdown with smaller section prompts', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce(localStudyPathPlanJson(2, 'Italian B1'))
@@ -1656,7 +1656,7 @@ describe('local AI helpers', () => {
     })
   })
 
-  it('maps valid loose Local Study Path objects without treating record debug as a contract', async () => {
+  it('maps valid loose Local Study Guide objects without treating record debug as a contract', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce(localStudyPathPlanJson(2, 'Japanese A1'))
@@ -1729,7 +1729,7 @@ describe('local AI helpers', () => {
     )
   })
 
-  it('prefers compact Local Study Path dashboard JSON and maps recall widgets', async () => {
+  it('prefers compact Local Study Guide dashboard JSON and maps recall widgets', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce(localStudyPathPlanJson(2, 'Italian B1'))
@@ -1890,7 +1890,7 @@ describe('local AI helpers', () => {
     )
   })
 
-  it('drops weak Local Study Path quiz options and ignores listItems widgets', async () => {
+  it('drops weak Local Study Guide quiz options and ignores listItems widgets', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce(localStudyPathPlanJson(2, 'Italian B1'))
@@ -1985,7 +1985,7 @@ describe('local AI helpers', () => {
     )
   })
 
-  it('recovers malformed Local Study Path practice JSON without retrying the dashboard', async () => {
+  it('recovers malformed Local Study Guide practice JSON without retrying the dashboard', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce(localStudyPathPlanJson(2, 'Italian B1'))
@@ -2106,7 +2106,7 @@ describe('local AI helpers', () => {
     )
   })
 
-  it('skips later Local Study Path dashboards after three retryable failures', async () => {
+  it('skips later Local Study Guide dashboards after three retryable failures', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce(localStudyPathPlanJson(3, 'Italian B1'))
@@ -2249,7 +2249,7 @@ describe('local AI helpers', () => {
     ])
   })
 
-  it('reports mapped Local Study Path JSON without usable widgets', async () => {
+  it('reports mapped Local Study Guide JSON without usable widgets', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce(localStudyPathPlanJson(2, 'French B2'))
@@ -2301,7 +2301,7 @@ describe('local AI helpers', () => {
     }
   })
 
-  it('preserves unsupported Local AI setup errors for Study Path generation', async () => {
+  it('preserves unsupported Local AI setup errors for Study Guide generation', async () => {
     vi.stubGlobal('LanguageModel', undefined)
 
     try {
@@ -2319,7 +2319,7 @@ describe('local AI helpers', () => {
     }
   })
 
-  it('keeps unknown Local Study Path failures distinct with the original cause', async () => {
+  it('keeps unknown Local Study Guide failures distinct with the original cause', async () => {
     const failure = new Error('Model exploded')
     const prompt = vi
       .fn()
@@ -2354,7 +2354,7 @@ describe('local AI helpers', () => {
     }
   })
 
-  it('uses generic language-learning guidance for Local Study Path prompts', async () => {
+  it('uses generic language-learning guidance for Local Study Guide prompts', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce(localStudyPathPlanJson(2, 'Italian B2'))
@@ -2409,10 +2409,10 @@ describe('Gemini study pack client', () => {
   const makeStrictPathDashboard = (index: number, label: string) => ({
     title: `${String(index).padStart(2, '0')} - ${label}`,
     summary: `${label} preview`,
-    rawNotes: `${label} lesson notes explain the topic with examples and common mistakes for this Study Path section.`,
+    rawNotes: `${label} lesson notes explain the topic with examples and common mistakes for this Study Guide section.`,
     sourceSummary: {
       title: `${label} source summary`,
-      bullets: [`${label} connects the Study Path ideas.`],
+      bullets: [`${label} connects the Study Guide ideas.`],
     },
     conceptRecap: {
       title: `${label} concept recap`,
@@ -2496,8 +2496,8 @@ describe('Gemini study pack client', () => {
               parts: [
                 {
                   text: JSON.stringify({
-                    title: 'Sparse Study Path',
-                    folderName: 'Sparse Study Path',
+                    title: 'Sparse Study Guide',
+                    folderName: 'Sparse Study Guide',
                     dashboards: Array.from(
                       { length: dashboardCount },
                       (_value, index) => ({
@@ -2508,7 +2508,7 @@ describe('Gemini study pack client', () => {
                         summary: `Sparse dashboard ${index + 1}`,
                         rawNotes: `Sparse notes ${
                           index + 1
-                        } explain one usable idea with enough context for a Study Path dashboard.`,
+                        } explain one usable idea with enough context for a Study Guide dashboard.`,
                         sourceSummary: {
                           title: `Sparse summary ${index + 1}`,
                           bullets: [
@@ -2845,7 +2845,7 @@ describe('Gemini study pack client', () => {
     )
   })
 
-  it('retries Study Path generation when Gemini returns malformed JSON with strict dashboards', async () => {
+  it('retries Study Guide generation when Gemini returns malformed JSON with strict dashboards', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({
@@ -2976,7 +2976,7 @@ describe('Gemini study pack client', () => {
                           title: '03 - Exercises',
                           summary: 'Mixed practice',
                           rawNotes:
-                            'Use this dashboard to answer mixed exercises from the Study Path.',
+                            'Use this dashboard to answer mixed exercises from the Study Guide.',
                           sourceSummary: {
                             title: 'Mixed practice',
                             bullets: ['Practice passe compose choices.'],
@@ -3130,13 +3130,13 @@ describe('Gemini study pack client', () => {
     })
   })
 
-  it('keeps a Study Path dashboard with only rawNotes and sourceSummary', async () => {
+  it('keeps a Study Guide dashboard with only rawNotes and sourceSummary', async () => {
     mockSparseStudyPathResponse(3)
 
     const draft = await generateStudyPathWithAi({
       apiToken: 'test-token',
       model: 'gemini-test',
-      title: 'Sparse Study Path',
+      title: 'Sparse Study Guide',
       prompt: 'Teach sparse material',
       folderName: '',
       generationAmount: 'few',
@@ -3158,7 +3158,7 @@ describe('Gemini study pack client', () => {
     )
   })
 
-  it('repairs source-summary-only normal Study Path dashboards before fallback', async () => {
+  it('repairs source-summary-only normal Study Guide dashboards before fallback', async () => {
     const sparseDashboards = Array.from({ length: 5 }, (_value, index) => ({
       title: `${String(index + 1).padStart(2, '0')} - Sparse ${index + 1}`,
       summary: `Sparse dashboard ${index + 1}`,
@@ -3220,7 +3220,7 @@ describe('Gemini study pack client', () => {
     const draft = await generateStudyPathWithAi({
       apiToken: 'test-token',
       model: 'gemini-test',
-      title: 'Sparse Study Path',
+      title: 'Sparse Study Guide',
       prompt: 'Teach sparse material',
       folderName: '',
       generationAmount: 'medium',
@@ -3264,14 +3264,14 @@ describe('Gemini study pack client', () => {
     ['medium' as const, 5],
     ['many' as const, 7],
   ])(
-    'preserves %s Study Path dashboard count with sparse usable dashboards',
+    'preserves %s Study Guide dashboard count with sparse usable dashboards',
     async (generationAmount, expectedCount) => {
       mockSparseStudyPathResponse(expectedCount)
 
       const draft = await generateStudyPathWithAi({
         apiToken: 'test-token',
         model: 'gemini-test',
-        title: 'Sparse Study Path',
+        title: 'Sparse Study Guide',
         prompt: 'Teach sparse material',
         folderName: '',
         generationAmount,
@@ -3291,7 +3291,7 @@ describe('Gemini study pack client', () => {
     },
   )
 
-  it('drops only completely unusable Study Path dashboard entries', async () => {
+  it('drops only completely unusable Study Guide dashboard entries', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -3301,8 +3301,8 @@ describe('Gemini study pack client', () => {
               parts: [
                 {
                   text: JSON.stringify({
-                    title: 'Sparse Study Path',
-                    folderName: 'Sparse Study Path',
+                    title: 'Sparse Study Guide',
+                    folderName: 'Sparse Study Guide',
                     dashboards: [
                       {},
                       {
@@ -3330,7 +3330,7 @@ describe('Gemini study pack client', () => {
     const draft = await generateStudyPathWithAi({
       apiToken: 'test-token',
       model: 'gemini-test',
-      title: 'Sparse Study Path',
+      title: 'Sparse Study Guide',
       prompt: 'Teach sparse material',
       folderName: '',
       generationAmount: 'few',
@@ -3340,7 +3340,7 @@ describe('Gemini study pack client', () => {
     expect(draft.dashboards[0].title).toBe('02 - Usable')
   })
 
-  it('filters balanced Study Path final mappings by dashboard role', async () => {
+  it('filters balanced Study Guide final mappings by dashboard role', async () => {
     mockStudyPathResponse(5)
 
     const draft = await generateStudyPathWithAi({
@@ -3394,7 +3394,7 @@ describe('Gemini study pack client', () => {
     )
   })
 
-  it('keeps extended Study Path generated dashboards role-neutral', async () => {
+  it('keeps extended Study Guide generated dashboards role-neutral', async () => {
     mockStudyPathResponse(7)
 
     const draft = await generateStudyPathWithAi({
@@ -3423,7 +3423,7 @@ describe('Gemini study pack client', () => {
     ).toBe(true)
   })
 
-  it('keeps compact Study Path generated dashboards role-neutral', async () => {
+  it('keeps compact Study Guide generated dashboards role-neutral', async () => {
     mockStudyPathResponse(3)
 
     const draft = await generateStudyPathWithAi({

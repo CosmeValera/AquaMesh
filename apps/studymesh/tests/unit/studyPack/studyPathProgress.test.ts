@@ -15,7 +15,7 @@ const createMeta = (index: number): StudyPathDashboardMeta => ({
   folderName: 'French B1',
 })
 
-describe('study path progress', () => {
+describe('study guide progress', () => {
   beforeEach(() => {
     const storage = new Map<string, string>()
     vi.mocked(localStorage.getItem).mockImplementation(

@@ -86,7 +86,7 @@ const guideLessons: GuideLesson[] = [
     id: 'studymesh-guide-basics',
     title: '01 - StudyMesh Basics: What It Is & Core Concepts',
     sourceMarkdown:
-      '## What StudyMesh Is\nStudyMesh helps students turn prompts, messy notes, files, camera pictures, references, and learning material into structured learning dashboards, tutorials, exercises, and reusable study views.\n\n## Core Concepts\n### Dashboard\nA dashboard is a workspace page or study surface where learning material is presented and used.\n\n### Widget\nA widget is a larger reusable piece inside a dashboard, such as notes, quizzes, flashcards, summaries, lists, tables, or interactive tools.\n\n### Block\nA block is the smallest content or interaction unit inside a widget, such as a paragraph, flashcard, quiz question, checklist item, button, chart element, or input.\n\n### Workspace\nThe Workspace is the main place where Study Paths, Study Packs, and custom dashboards are opened, studied, edited, and reused.',
+      '## What StudyMesh Is\nStudyMesh helps students turn prompts, messy notes, files, camera pictures, references, and learning material into structured learning dashboards, tutorials, exercises, and reusable study views.\n\n## Core Concepts\n### Dashboard\nA dashboard is a workspace page or study surface where learning material is presented and used.\n\n### Widget\nA widget is a larger reusable piece inside a dashboard, such as notes, quizzes, flashcards, summaries, lists, tables, or interactive tools.\n\n### Block\nA block is the smallest content or interaction unit inside a widget, such as a paragraph, flashcard, quiz question, checklist item, button, chart element, or input.\n\n### Workspace\nThe Workspace is the main place where Study Guides, Study Packs, and custom dashboards are opened, studied, edited, and reused.',
     summaryTitle: 'StudyMesh Fundamentals',
     summaryItems: [
       'StudyMesh turns raw learning material into structured study dashboards.',
@@ -133,7 +133,7 @@ const guideLessons: GuideLesson[] = [
       },
       {
         front: 'What is the Workspace?',
-        back: 'The place where Study Paths, Study Packs, and dashboards are opened, studied, edited, and reused.',
+        back: 'The place where Study Guides, Study Packs, and dashboards are opened, studied, edited, and reused.',
       },
     ],
   },
@@ -141,28 +141,28 @@ const guideLessons: GuideLesson[] = [
     id: 'studymesh-guide-workflows',
     title: '02 - StudyMesh Main Workflows',
     sourceMarkdown:
-      '## Main Workflows\n### Create Study Path\nUse Create Study Path when you want StudyMesh to teach a new topic step by step. You provide a learning prompt and StudyMesh creates a multi-dashboard tutorial with ordered lessons, quizzes, and flashcards.\n\n### Create From Notes\nUse Create From Notes when you already have material: messy notes, text files, screenshots, or camera pictures. StudyMesh turns that input into a clearer study dashboard with summaries and practice.\n\n### Workspace Path\nOpen an existing Study Path, Study Pack, or custom dashboard in the main workspace for study, editing, and reuse.\n\n### Advanced Path\nManually create widgets or dashboards when you need direct control. This is useful for advanced users but should be less prominent for beginners.',
+      '## Main Workflows\n### Create Study Guide\nUse Create Study Guide when you want StudyMesh to teach a new topic step by step. You provide a learning prompt and StudyMesh creates a multi-dashboard tutorial with ordered lessons, quizzes, and flashcards.\n\n### Create From Notes\nUse Create From Notes when you already have material: messy notes, text files, screenshots, or camera pictures. StudyMesh turns that input into a clearer study dashboard with summaries and practice.\n\n### Workspace Path\nOpen an existing Study Guide, Study Pack, or custom dashboard in the main workspace for study, editing, and reuse.\n\n### Advanced Path\nManually create widgets or dashboards when you need direct control. This is useful for advanced users but should be less prominent for beginners.',
     summaryTitle: 'Workflow Overview',
     summaryItems: [
-      'Create Study Path generates a multi-dashboard tutorial from a prompt.',
+      'Create Study Guide generates a multi-dashboard tutorial from a prompt.',
       'Create From Notes organizes existing notes, files, screenshots, or images.',
-      'Workspace Path opens saved Study Paths, Study Packs, and dashboards.',
+      'Workspace Path opens saved Study Guides, Study Packs, and dashboards.',
       'Advanced Path allows manual widget and dashboard creation.',
     ],
     quizzes: [
       {
-        question: "When should a student use 'Create Study Path'?",
+        question: "When should a student use 'Create Study Guide'?",
         answer:
           'When they want StudyMesh to teach a new topic step by step from a prompt.',
         explanation:
-          'Create Study Path is for guided learning across multiple ordered dashboards.',
+          'Create Study Guide is for guided learning across multiple ordered dashboards.',
       },
       {
         question:
           'Which workflow is best for a photo of class notes that should become a study dashboard?',
         options: [
           'Create From Notes',
-          'Create Study Path',
+          'Create Study Guide',
           'Advanced Path',
           'Workspace Path',
         ],
@@ -174,7 +174,7 @@ const guideLessons: GuideLesson[] = [
     ],
     flashcards: [
       {
-        front: 'What does Create Study Path do?',
+        front: 'What does Create Study Guide do?',
         back: 'It creates a multi-dashboard tutorial from a learning prompt.',
       },
       {
@@ -183,7 +183,7 @@ const guideLessons: GuideLesson[] = [
       },
       {
         front: 'What is the Workspace path for?',
-        back: 'Opening existing Study Paths, Study Packs, and dashboards for study and editing.',
+        back: 'Opening existing Study Guides, Study Packs, and dashboards for study and editing.',
       },
       {
         front: 'What is the Advanced path for?',
@@ -195,7 +195,7 @@ const guideLessons: GuideLesson[] = [
     id: 'studymesh-guide-ai-modes',
     title: '03 - StudyMesh AI Generation Modes',
     sourceMarkdown:
-      '## StudyMesh AI Generation Modes\n### Basic fallback\nNo AI API. It parses notes locally from obvious structure and keywords. It is fast and free, but weaker, and it supports Create From Notes rather than Study Path.\n\n### Google Local AI\nRuns on the local Chrome built-in AI model. It is free and can work offline. It is usually better than Basic fallback for messy notes and images, but weaker and slower than Gemini API.\n\n### Own Gemini API token\nUses the user-provided Gemini API key. This is the preferred high-quality path for rich Study Paths and study dashboards.\n\n### Hosted AI tokens\nNot implemented yet. The future idea is to provide a small hosted allowance before users switch to local AI, their own API token, or paid hosted usage.',
+      '## StudyMesh AI Generation Modes\n### Basic fallback\nNo AI API. It parses notes locally from obvious structure and keywords. It is fast and free, but weaker, and it supports Create From Notes rather than Study Guide.\n\n### Google Local AI\nRuns on the local Chrome built-in AI model. It is free and can work offline. It is usually better than Basic fallback for messy notes and images, but weaker and slower than Gemini API.\n\n### Own Gemini API token\nUses the user-provided Gemini API key. This is the preferred high-quality path for rich Study Guides and study dashboards.\n\n### Hosted AI tokens\nNot implemented yet. The future idea is to provide a small hosted allowance before users switch to local AI, their own API token, or paid hosted usage.',
     summaryTitle: 'AI Mode Summary',
     summaryItems: [
       'Basic fallback is fast, free, weak, and limited to Create From Notes.',
@@ -208,13 +208,13 @@ const guideLessons: GuideLesson[] = [
         question:
           "What is the main tradeoff of the 'Basic fallback' generation mode?",
         answer:
-          'It is fast, free, and local, but produces weaker output and does not support Study Path generation.',
+          'It is fast, free, and local, but produces weaker output and does not support Study Guide generation.',
         explanation:
           'Basic fallback relies on programmatic parsing rather than a strong AI model.',
       },
       {
         question:
-          'Which mode should a user choose for the highest quality Study Path if they have an API key?',
+          'Which mode should a user choose for the highest quality Study Guide if they have an API key?',
         options: [
           'Basic fallback',
           'Google Local AI',
@@ -480,7 +480,7 @@ export const createStudyMeshGuideDashboards = (): SavedDashboardRecord[] => {
       folder: STUDYMESH_GUIDE_FOLDER_NAME,
       folderColor: STUDYMESH_GUIDE_FOLDER_COLOR,
       layout: createGuideLayout(lesson, index),
-      description: 'Built-in StudyMesh guide Study Path.',
+      description: 'Built-in StudyMesh guide Study Guide.',
       tags: ['study-pack', 'study-path', 'starter', 'guide'],
       isPublic: false,
       createdAt: now,
@@ -506,7 +506,7 @@ export const removeOldStarterDashboards = () => {
   const nextDashboards = dashboards.filter(
     (dashboard) =>
       !OLD_STARTER_DASHBOARD_NAMES.has(dashboard.name) &&
-      dashboard.folder !== 'StudyMesh Starter Study Path',
+      dashboard.folder !== 'StudyMesh Starter Study Guide',
   )
   const widgets = readArray<SavedWidgetRecord>(WIDGET_STORAGE_KEY)
   const legacyWidgets = readArray<SavedWidgetRecord>(LEGACY_WIDGET_STORAGE_KEY)

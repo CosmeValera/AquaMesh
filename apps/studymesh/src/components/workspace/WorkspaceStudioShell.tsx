@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Box,
   Button,
@@ -73,7 +73,6 @@ import {
 import {
   appendQuickSourceText,
   createGenerationDraft,
-  CreateIntent,
   CreationFlow,
   GenerationDraft,
   OpenCreateHubDetail,
@@ -134,16 +133,6 @@ interface FromNotesRetrySnapshot {
 
 type GenerationRetrySnapshot = FromNotesRetrySnapshot
 
-const statusMarkerLabels: Record<
-  WorkspaceCreationTaskState | 'editing',
-  string
-> = {
-  editing: 'Creation draft open',
-  idle: '',
-  running: 'Generating study material…',
-  complete: 'Study material saved to dashboards',
-  error: 'Generation failed. Click to review.',
-}
 
 const detailLevelCountLimits: Record<
   StudyMaterialResourceType,
@@ -486,9 +475,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     'creation' | 'dashboard' | 'ai-chat'
   >('dashboard')
   const [activeFlow, setActiveFlow] = useState<StudioFlow>('hub')
-  const [selectedIntent, setSelectedIntent] = useState<CreateIntent | null>(
-    null,
-  )
   const [generationDrafts, setGenerationDrafts] =
     useState<GenerationDraft[]>(initialDrafts)
   const [activeDraftByFlow, setActiveDraftByFlow] = useState<
@@ -657,25 +643,17 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   }, [hasGeneratingQueueJobs])
 
   useEffect(() => {
-    const activateCreation = (flow: Exclude<StudioFlow, 'hub'>) => {
-      createNewDraft(flow)
-      if (isMobile) {
-        setMobileSection('creation')
-      }
-    }
     const handleOpenCreateHub = (event: Event) => {
       const customEvent = event as CustomEvent<OpenCreateHubDetail>
       const detail = customEvent.detail || {}
       setActiveMaterialDraftId(null)
       if (detail.intent === 'study-path' && permissions.canCreateStudyPath) {
-        setSelectedIntent('study-path')
         setStudyPathPromptError('')
         setActiveFlow('hub')
         setIsStudioOpen(true)
         return
       }
 
-      setSelectedIntent(detail.intent || null)
       if (detail.openQuickOptions) {
         setQuickSourcesExpanded(true)
       }
@@ -713,12 +691,24 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     }
     const handleOpenStudyPack = () => {
       if (permissions.canCreateFromNotes) {
-        activateCreation('from-notes')
+        setActiveMaterialDraftId(null)
+        setActiveFlow('hub')
+        setQuickSourcesExpanded(true)
+        setIsStudioOpen(true)
+        if (isMobile) {
+          setMobileSection('creation')
+        }
       }
     }
     const handleOpenStudyPath = () => {
       if (permissions.canCreateStudyPath) {
-        activateCreation('study-path')
+        setActiveMaterialDraftId(null)
+        setStudyPathPromptError('')
+        setActiveFlow('hub')
+        setIsStudioOpen(true)
+        if (isMobile) {
+          setMobileSection('creation')
+        }
       }
     }
     const handleOpenDashboard = () => {
@@ -960,7 +950,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       ? `${queueFailedCount} generation${
           queueFailedCount === 1 ? '' : 's'
         } failed`
-      : statusMarkerLabels.idle || 'Creation queue'
+      : 'Creation queue'
 
   useEffect(() => {
     if (
@@ -1160,7 +1150,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
   const openGenerationQueue = () => {
     setActiveMaterialDraftId(null)
-    setSelectedIntent(null)
     setActiveFlow('hub')
     setIsStudioOpen(true)
     if (isMobile) {
@@ -1186,7 +1175,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     if (draft.generatedMaterial) {
       updateDraft(draft.id, { acknowledgedAt: openedAt, openedAt })
       setActiveMaterialDraftId(draft.id)
-      setSelectedIntent(null)
       setActiveFlow('hub')
       setIsStudioOpen(true)
       if (isMobile) {
@@ -1340,8 +1328,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     : hasCurrentDashboardContext
     ? currentDashboardTitle
     : 'Sources required'
-  const selectedQuickCreateIntent =
-    selectedIntent && selectedIntent !== 'study-path' ? selectedIntent : null
   const getNextQuickCreationIndex = (
     resourceType: StudyMaterialResourceType,
   ) => {
@@ -1370,7 +1356,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       sourceMode === 'dashboard' ? currentDashboardTitle : quickSourceLabel
     return `${label} #${getNextQuickCreationIndex(
       resourceType,
-    )} · ${truncateQuickCreationContext(contextTitle)}`
+    )} Â· ${truncateQuickCreationContext(contextTitle)}`
   }
   useEffect(() => {
     if (
@@ -1580,7 +1566,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     })
 
     setActiveFlow('hub')
-    setSelectedIntent(null)
     setQuickSourceStatus('')
     setGenerationDrafts((current) => {
       if (retryOptions.draftId) {
@@ -1613,7 +1598,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     dispatchWorkspaceCreationStatus({
       task: 'from-notes',
       state: 'running',
-      message: 'Creating study material…',
+      message: 'Creating study materialâ€¦',
     })
 
     const generationController = new AbortController()
@@ -1803,7 +1788,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     if (!hasUsableSource) {
       openCreateFromMaterial(resourceType, 'upload')
       setQuickSourceStatus(
-        `Add sources or open a dashboard.`,
+        `Add sources or open a dashboard`,
       )
       return
     }
@@ -1838,7 +1823,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     focus?: QuickSourceFocus,
   ) => {
     setActiveMaterialDraftId(null)
-    setSelectedIntent(resourceType || selectedQuickCreateIntent || 'quiz')
     setQuickSourcesExpanded(true)
     setQuickSourceStatus(
       resourceType
@@ -1859,7 +1843,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     if (!quickHasCustomSources && !hasCurrentDashboardContext) {
       openCreateFromMaterial(resourceType, 'upload')
       setQuickSourceStatus(
-        `Add sources or open a dashboard.`,
+        `Add sources or open a dashboard`,
       )
       return
     }
@@ -1887,7 +1871,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const returnToCreateHub = () => {
     setActiveMaterialDraftId(null)
     setActiveFlow('hub')
-    setSelectedIntent(null)
     if (isMobile) {
       setMobileSection('creation')
     }
@@ -1899,7 +1882,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   ) => {
     removeDraft(draftId, flow)
     setActiveFlow('hub')
-    setSelectedIntent(null)
     if (isMobile) {
       setMobileSection('creation')
     }
@@ -1982,7 +1964,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 fontWeight: 900,
               }}
             >
-              ← Back to Create
+              â† Back to Create
             </Button>
             <Typography variant="h5" fontWeight={900}>
               {activeMaterial.title}
@@ -2906,31 +2888,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
           ))}
       </Box>
 
-      <Box
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          display: activeFlow === 'from-notes' ? 'flex' : 'none',
-          flexDirection: 'column',
-        }}
-      >
-        {generationDrafts
-          .filter((draft) => draft.flow === 'from-notes')
-          .map((draft) => (
-            <Box
-              key={draft.id}
-              sx={{
-                flex: 1,
-                minHeight: 0,
-                display:
-                  draft.id === activeDraftByFlow['from-notes']
-                    ? 'flex'
-                    : 'none',
-                flexDirection: 'column',
-              }}
-            ></Box>
-          ))}
-      </Box>
     </Box>
   )
 
@@ -2947,7 +2904,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     }
 
     setActiveMaterialDraftId(null)
-    setSelectedIntent(null)
     setActiveFlow('hub')
     setIsStudioOpen(true)
     if (isMobile) {

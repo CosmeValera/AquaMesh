@@ -4,7 +4,6 @@ import type {
 } from '../../studyPack/ai'
 import type { ComponentData } from '../WidgetEditor/types/types'
 import type { DashboardLayout } from '../../state/store'
-import type { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
 
 export type StudioFlow = 'hub' | 'study-path' | 'from-notes'
 export type CreationFlow = Exclude<StudioFlow, 'hub'>
@@ -20,9 +19,6 @@ export type GenerationDraftStatus =
   | 'ready'
   | 'failed'
   | 'cancelled'
-export type GenerationMarkerState =
-  | 'editing'
-  | Exclude<WorkspaceCreationTaskState, 'idle'>
 
 export interface GenerationDraft {
   id: string
@@ -137,25 +133,10 @@ export const quickSourceAcceptValue = [
 export const appendQuickSourceText = (current: string, next: string) =>
   [current.trim(), next.trim()].filter(Boolean).join('\n\n---\n\n')
 
-export const statusMarkerLabels: Record<
-  WorkspaceCreationTaskState | 'editing',
+export const statusMarkerGlow: Record<
+  'editing' | 'running' | 'complete' | 'error',
   string
 > = {
-  editing: 'Creation draft open',
-  idle: '',
-  running: 'Generating study material...',
-  complete: 'Study material ready to review',
-  error: 'Generation failed. Click to review.',
-}
-
-export const statusMarkerColors: Record<GenerationMarkerState, string> = {
-  editing: 'primary.main',
-  running: 'warning.main',
-  complete: 'success.main',
-  error: 'error.main',
-}
-
-export const statusMarkerGlow: Record<GenerationMarkerState, string> = {
   editing: '0 0 0 6px rgba(59, 130, 246, 0.14)',
   running: '0 0 0 6px rgba(245, 158, 11, 0.14)',
   complete: '0 0 0 7px rgba(34, 197, 94, 0.18)',
@@ -204,55 +185,3 @@ export const createGenerationDraft = (
   ...options,
 })
 
-export const resourceTypeTitle = (resourceType?: string | null) => {
-  if (resourceType === 'flashcards') {
-    return 'Flashcards'
-  }
-
-  if (resourceType === 'quiz') {
-    return 'Quiz'
-  }
-
-  if (resourceType === 'improvedNotes') {
-    return 'Expand on this'
-  }
-
-  return 'Dashboard'
-}
-
-export const formatDraftTitle = (draft: GenerationDraft) => {
-  const base = draft.title.trim()
-  const shortTitle = base.length > 46 ? `${base.slice(0, 45).trim()}...` : base
-
-  if (draft.flow === 'study-path') {
-    return `Study Path: ${shortTitle || 'Untitled'}`
-  }
-
-  return `${resourceTypeTitle(draft.selectedResourceType)} from ${
-    draft.inputSummary || shortTitle || 'notes'
-  }`
-}
-
-export const getDraftMarkerState = (
-  draft: GenerationDraft,
-): GenerationMarkerState | null => {
-  if (draft.status === 'editing' && !draft.isPlaceholder) {
-    return 'editing'
-  }
-
-  const { status } = draft
-
-  if (status === 'generating') {
-    return 'running'
-  }
-
-  if (status === 'ready') {
-    return 'complete'
-  }
-
-  if (status === 'failed') {
-    return 'error'
-  }
-
-  return null
-}

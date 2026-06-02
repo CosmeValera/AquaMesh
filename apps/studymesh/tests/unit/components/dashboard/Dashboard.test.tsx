@@ -396,6 +396,24 @@ describe('Dashboards', () => {
       screen.getByRole('combobox', { name: /^study material$/i }),
     ).toBeInTheDocument()
     expect(
+      screen.getByRole('button', {
+        name: /use empty dashboard layout 1/i,
+      }),
+    ).toHaveClass('MuiButton-contained')
+    expect(
+      screen.getByRole('button', {
+        name: /use empty dashboard layout 2/i,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', {
+        name: /use empty dashboard layout 3/i,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /^reset$/i }),
+    ).not.toBeInTheDocument()
+    expect(
       screen.queryByRole('combobox', { name: /first block/i }),
     ).not.toBeInTheDocument()
     expect(
@@ -631,10 +649,99 @@ describe('Dashboards', () => {
     expect(
       screen.getByRole('slider', { name: /study material columns/i }),
     ).toHaveValue('2')
-    expect(localStorage.setItem).toHaveBeenLastCalledWith(
+    expect(localStorage.setItem).toHaveBeenCalledWith(
       'studymesh-empty-dashboard-settings-v1',
       expect.stringContaining('"studyMaterialColumns":2'),
     )
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'studymesh-empty-dashboard-layouts-v1',
+      expect.stringContaining('"studyMaterialColumns":2'),
+    )
+  })
+
+  it('switches and persists empty dashboard layout slots', () => {
+    const savedDashboards = [
+      createSavedDashboard('biology', 'Biology Intro', 'Biology'),
+      createSavedDashboard('chemistry', 'Chemistry Intro', 'Chemistry'),
+    ]
+
+    localStorage.getItem.mockImplementation((key: string) => {
+      if (key === 'userData') {
+        return JSON.stringify({
+          id: 'admin',
+          name: 'Admin User',
+          role: 'ADMIN_ROLE',
+        })
+      }
+
+      if (key === 'customDashboards') {
+        return JSON.stringify(savedDashboards)
+      }
+
+      if (key === 'studymesh-empty-dashboard-active-layout-v1') {
+        return '2'
+      }
+
+      if (key === 'studymesh-empty-dashboard-layouts-v1') {
+        return JSON.stringify({
+          1: {
+            blockOrder: ['creation', 'studyMaterial'],
+            showCreationBlock: true,
+            studyMaterialMode: 'custom',
+            studyMaterialLimit: 20,
+            studyMaterialColumns: 2,
+            customEntryIds: ['dashboard:biology', 'dashboard:chemistry'],
+          },
+          2: {
+            blockOrder: ['creation', 'studyMaterial'],
+            showCreationBlock: true,
+            studyMaterialMode: 'recent',
+            studyMaterialLimit: 3,
+            studyMaterialColumns: 1,
+            customEntryIds: [],
+          },
+          3: {
+            blockOrder: ['creation', 'studyMaterial'],
+            showCreationBlock: true,
+            studyMaterialMode: 'recent',
+            studyMaterialLimit: 3,
+            studyMaterialColumns: 1,
+            customEntryIds: [],
+          },
+        })
+      }
+
+      return null
+    })
+    mockDashboardProvider({
+      openDashboards: [],
+      selectedDashboard: -1,
+    })
+
+    render(<Dashboards />)
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /customize this page/i }),
+    )
+    expect(
+      screen.getByRole('button', {
+        name: /use empty dashboard layout 2/i,
+      }),
+    ).toHaveClass('MuiButton-contained')
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /use empty dashboard layout 1/i,
+      }),
+    )
+
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'studymesh-empty-dashboard-active-layout-v1',
+      '1',
+    )
+    expect(
+      screen.getByRole('slider', { name: /study material columns/i }),
+    ).toHaveValue('2')
   })
 
   it('groups custom study material into editable sections', async () => {

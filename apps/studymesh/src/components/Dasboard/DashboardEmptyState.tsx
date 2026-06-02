@@ -25,6 +25,7 @@ import { DashboardStorage, SavedDashboard } from './dashboardStorage'
 
 type EmptyDashboardBlock = 'creation' | 'studyMaterial'
 type EmptyDashboardStudyMaterialMode = 'recent' | 'custom'
+type EmptyDashboardLayoutId = 1 | 2 | 3
 
 interface EmptyDashboardSettings {
   blockOrder: EmptyDashboardBlock[]
@@ -60,6 +61,10 @@ interface DashboardEmptyStateProps {
 }
 
 const EMPTY_DASHBOARD_SETTINGS_KEY = 'studymesh-empty-dashboard-settings-v1'
+const EMPTY_DASHBOARD_LAYOUTS_KEY = 'studymesh-empty-dashboard-layouts-v1'
+const EMPTY_DASHBOARD_ACTIVE_LAYOUT_KEY =
+  'studymesh-empty-dashboard-active-layout-v1'
+const EMPTY_DASHBOARD_LAYOUT_IDS: EmptyDashboardLayoutId[] = [1, 2, 3]
 const MAX_STUDY_MATERIAL_ITEMS = 20
 const MAX_STUDY_MATERIAL_COLUMNS = 4
 const DEFAULT_CUSTOM_SECTION_ID = 'custom-section-default'
@@ -233,6 +238,78 @@ const saveEmptyDashboardSettings = (settings: EmptyDashboardSettings) => {
   }
 }
 
+const readActiveEmptyDashboardLayoutId = (): EmptyDashboardLayoutId => {
+  if (typeof window === 'undefined') {
+    return 1
+  }
+
+  const stored = Number(
+    window.localStorage.getItem(EMPTY_DASHBOARD_ACTIVE_LAYOUT_KEY),
+  )
+
+  return EMPTY_DASHBOARD_LAYOUT_IDS.includes(stored as EmptyDashboardLayoutId)
+    ? (stored as EmptyDashboardLayoutId)
+    : 1
+}
+
+const readEmptyDashboardLayouts = (): Record<
+  EmptyDashboardLayoutId,
+  EmptyDashboardSettings
+> => {
+  const legacySettings = readEmptyDashboardSettings()
+
+  if (typeof window === 'undefined') {
+    return {
+      1: legacySettings,
+      2: defaultEmptyDashboardSettings,
+      3: defaultEmptyDashboardSettings,
+    }
+  }
+
+  try {
+    const stored = window.localStorage.getItem(EMPTY_DASHBOARD_LAYOUTS_KEY)
+    const parsed = stored ? JSON.parse(stored) : null
+
+    if (!parsed || typeof parsed !== 'object') {
+      return {
+        1: legacySettings,
+        2: defaultEmptyDashboardSettings,
+        3: defaultEmptyDashboardSettings,
+      }
+    }
+
+    return {
+      1: normalizeEmptyDashboardSettings(parsed[1] || null),
+      2: normalizeEmptyDashboardSettings(parsed[2] || null),
+      3: normalizeEmptyDashboardSettings(parsed[3] || null),
+    }
+  } catch (error) {
+    console.error('Failed to load empty dashboard layouts', error)
+    return {
+      1: legacySettings,
+      2: defaultEmptyDashboardSettings,
+      3: defaultEmptyDashboardSettings,
+    }
+  }
+}
+
+const saveEmptyDashboardLayouts = (
+  layouts: Record<EmptyDashboardLayoutId, EmptyDashboardSettings>,
+) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(
+      EMPTY_DASHBOARD_LAYOUTS_KEY,
+      JSON.stringify(layouts),
+    )
+  } catch (error) {
+    console.error('Failed to save empty dashboard layouts', error)
+  }
+}
+
 const getStudyPathEntryId = (folderName: string) =>
   `studyPath:${folderName.trim().toLowerCase()}`
 
@@ -243,7 +320,11 @@ const DashboardEmptyState = ({
   onOpenDashboard,
   onOpenStudyGuide,
 }: DashboardEmptyStateProps) => {
-  const [settings, setSettings] = useState(readEmptyDashboardSettings)
+  const [activeLayoutId, setActiveLayoutId] = useState(
+    readActiveEmptyDashboardLayoutId,
+  )
+  const [layouts, setLayouts] = useState(readEmptyDashboardLayouts)
+  const [settings, setSettings] = useState(() => layouts[activeLayoutId])
   const [customizerOpen, setCustomizerOpen] = useState(false)
   const [activeCustomSectionId, setActiveCustomSectionId] = useState(
     DEFAULT_CUSTOM_SECTION_ID,
@@ -389,6 +470,14 @@ const DashboardEmptyState = ({
             : normalized.studyMaterialColumns,
       }
       saveEmptyDashboardSettings(nextNormalized)
+      setLayouts((currentLayouts) => {
+        const nextLayouts = {
+          ...currentLayouts,
+          [activeLayoutId]: nextNormalized,
+        }
+        saveEmptyDashboardLayouts(nextLayouts)
+        return nextLayouts
+      })
       return nextNormalized
     })
   }
@@ -406,9 +495,19 @@ const DashboardEmptyState = ({
     studyMaterialColumnMax,
   ])
 
-  const resetSettings = () => {
-    updateSettings(defaultEmptyDashboardSettings)
-    setActiveCustomSectionId(DEFAULT_CUSTOM_SECTION_ID)
+  const selectLayout = (layoutId: EmptyDashboardLayoutId) => {
+    const nextSettings = layouts[layoutId]
+
+    setActiveLayoutId(layoutId)
+    window.localStorage.setItem(
+      EMPTY_DASHBOARD_ACTIVE_LAYOUT_KEY,
+      String(layoutId),
+    )
+    saveEmptyDashboardSettings(nextSettings)
+    setSettings(nextSettings)
+    setActiveCustomSectionId(
+      nextSettings.customSections[0]?.id || DEFAULT_CUSTOM_SECTION_ID,
+    )
   }
 
   const addCustomEntry = (entryId: string) => {
@@ -991,13 +1090,32 @@ const DashboardEmptyState = ({
             Changes apply live.
           </Typography>
         </Box>
-        <Button
-          size="small"
-          onClick={resetSettings}
+        <Stack
+          direction="row"
+          spacing={0.75}
+          aria-label="Empty dashboard layouts"
           sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
         >
-          Reset
-        </Button>
+          {EMPTY_DASHBOARD_LAYOUT_IDS.map((layoutId) => (
+            <Button
+              key={layoutId}
+              aria-label={`Use empty dashboard layout ${layoutId}`}
+              variant={activeLayoutId === layoutId ? 'contained' : 'outlined'}
+              size="small"
+              onClick={() => selectLayout(layoutId)}
+              sx={{
+                minWidth: 34,
+                width: 34,
+                height: 34,
+                p: 0,
+                borderRadius: 1,
+                fontWeight: 900,
+              }}
+            >
+              {layoutId}
+            </Button>
+          ))}
+        </Stack>
       </Stack>
 
       <Box

@@ -469,7 +469,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
     return [...placeholders, ...readPersistedGenerationQueue()]
   }, [])
-  const [isStudioOpen, setIsStudioOpen] = useState(false)
+  const [isStudioOpen, setIsStudioOpen] = useState(() => !isMobile)
   const [studioWidth, setStudioWidth] = useState(studioPanelWidth)
   const [mobileSection, setMobileSection] = useState<
     'creation' | 'dashboard' | 'ai-chat'
@@ -2905,11 +2905,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     if (isMobile && isStudioOpen && activeFlow === 'hub') {
       setActiveMaterialDraftId(null)
       setMobileSection('creation')
-      return
-    }
-
-    if (!isMobile && isStudioOpen && activeFlow === 'hub') {
-      closeStudio()
       return
     }
 

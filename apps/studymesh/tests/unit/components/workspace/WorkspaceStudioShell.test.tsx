@@ -198,6 +198,47 @@ describe('WorkspaceStudioShell Quick Create', () => {
     })
   })
 
+  it('opens the Creation panel by default on desktop', () => {
+    render(
+      <WorkspaceStudioShell>
+        <div>Dashboard canvas</div>
+      </WorkspaceStudioShell>,
+    )
+
+    expect(
+      screen.getByRole('button', { name: /Collapse Create panel/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /Open Create panel/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('keeps the dashboard section selected by default on phones', () => {
+    vi.mocked(window.matchMedia).mockImplementation((query) => ({
+      matches: query.includes('max-width'),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
+
+    render(
+      <WorkspaceStudioShell>
+        <div>Dashboard canvas</div>
+      </WorkspaceStudioShell>,
+    )
+
+    expect(screen.getByRole('button', { name: /Dashboards/i })).toHaveClass(
+      'MuiButton-contained',
+    )
+    expect(
+      screen.queryByRole('button', { name: /Collapse Create panel/i }),
+    ).not.toBeInTheDocument()
+  })
+
   it('runs direct AI generation with dashboard context for quick creation', async () => {
     render(
       <WorkspaceStudioShell>

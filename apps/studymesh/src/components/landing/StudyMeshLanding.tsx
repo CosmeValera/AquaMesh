@@ -18,6 +18,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import KeyIcon from '@mui/icons-material/Key'
 import MemoryIcon from '@mui/icons-material/Memory'
 import CloudQueueIcon from '@mui/icons-material/CloudQueue'
+import QuizIcon from '@mui/icons-material/Quiz'
+import StyleIcon from '@mui/icons-material/Style'
 
 const mainUseCases = [
   {
@@ -37,25 +39,25 @@ const mainUseCases = [
       'Lesson dashboards with source notes, guided explanations, flashcards, and exercises.',
   },
   {
-    title: 'Create from Notes',
-    eyebrow: 'From your material',
-    body: 'Paste notes, upload documents, or bring study notes and turn them into a clean dashboard with summaries and exercises.',
+    title: 'Quick Create',
+    eyebrow: 'From your workspace',
+    body: 'Turn the current dashboard, pasted text, uploaded files, images, PDFs, or slides into focused quizzes, flashcards, or clearer notes.',
     icon: <MenuBookIcon />,
     action: 'create-from-notes',
-    cta: 'Use notes',
+    cta: 'Open Quick Create',
     accent: '#00A878',
-    steps: ['Add material', 'Clean it up', 'Practice from it'],
-    inputLabel: 'Attachments',
-    input: 'Two screenshots, class notes, and a PowerPoint deck.',
-    outputLabel: 'Generated dashboard',
+    steps: ['Pick a source', 'Choose a format', 'Study the result'],
+    inputLabel: 'Source options',
+    input: 'Current dashboard, copied notes, screenshots, PDF, or PowerPoint deck.',
+    outputLabel: 'Quick result',
     output:
-      'A clean dashboard explaining your notes, references, summaries, and practice.',
+      'Quiz, flashcards, expanded notes, and practice tied to the selected source.',
   },
 ]
 
 const heroHighlights = [
   'Study guides from any topic',
-  'Dashboards from notes, PDFs, images, or slides',
+  'Quick Create for quizzes, flashcards, and expanded notes',
   'Practice generated next to the source material',
 ]
 
@@ -135,12 +137,31 @@ const quickAnswers = [
   {
     question: 'What should I do first?',
     answer:
-      'Create a Study Guide from a learning goal, or use Create from Notes when you already have notes, files, or screenshots.',
+      'Create a Study Guide when you want a full tutorial. Use Quick Create when you want a quiz, flashcards, or expanded notes from current material.',
   },
   {
     question: 'How are dashboards organized?',
     answer:
-      'Generated study guides and notes dashboards can be opened in the workspace and reused by folder.',
+      'Study Guides, Quick Create results, Study Packs, and custom dashboards open in the workspace and can be reused by folder.',
+  },
+]
+
+const creationFeaturePills = [
+  {
+    label: 'Study Guide',
+    icon: <RouteIcon />,
+  },
+  {
+    label: 'Quiz',
+    icon: <QuizIcon />,
+  },
+  {
+    label: 'Flashcards',
+    icon: <StyleIcon />,
+  },
+  {
+    label: 'Expand',
+    icon: <MenuBookIcon />,
   },
 ]
 
@@ -305,29 +326,56 @@ const StudyMeshLanding = () => {
               Turn <span style={{ color: '#2196F3', fontWeight: 700 }}>prompts</span> and <span style={{ color: '#00C49A', fontWeight: 700 }}>messy notes</span> into <Box component="span" sx={{ fontWeight: 700 }}>study guides</Box>.
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
-              Create tutorials, study dashboards, exercises, and reusable
-              workspace views from learning material without designing the
-              dashboard first.
+              Create a full tutorial from a learning goal, or use Quick Create
+              to turn current material into quizzes, flashcards, expanded notes,
+              and practice without designing the dashboard first.
             </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              flexWrap="wrap"
+              useFlexGap
+            >
               <Button
                 variant="contained"
                 size="large"
-                startIcon={<RouteIcon />}
-                onClick={() => openWorkspace('create-study-path')}
+                onClick={() => openWorkspace()}
                 sx={{ borderRadius: 1, textTransform: 'none' }}
               >
-                Create Study Guide
+                Open Workspace
               </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                startIcon={<MenuBookIcon />}
-                onClick={() => openWorkspace('create-from-notes')}
-                sx={{ borderRadius: 1, textTransform: 'none' }}
+            </Stack>
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              flexWrap="wrap"
+              useFlexGap
+              sx={{ mt: 2 }}
+            >
+              <Typography
+                variant="caption"
+                fontWeight={900}
+                color="text.secondary"
               >
-                Create From Notes
-              </Button>
+                Create:
+              </Typography>
+              {creationFeaturePills.map((item) => (
+                <Chip
+                  key={item.label}
+                  size="small"
+                  icon={item.icon}
+                  label={item.label}
+                  sx={{
+                    borderRadius: 1,
+                    fontWeight: 850,
+                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                    border: '1px solid',
+                    borderColor: alpha(theme.palette.primary.main, 0.16),
+                  }}
+                />
+              ))}
             </Stack>
             <Stack spacing={1} sx={{ mt: 3 }}>
               {heroHighlights.map((highlight) => (
@@ -386,16 +434,16 @@ const StudyMeshLanding = () => {
               Two ways to start
             </Typography>
             <Typography variant="h4" component="h2" fontWeight={900}>
-              Start from a learning goal or from your notes
+              Start from a learning goal or a Quick Create action
             </Typography>
             <Typography
               variant="body1"
               color="text.secondary"
               sx={{ maxWidth: 760 }}
             >
-              First, choose the quick overview card that matches how you want to
-              start. Then use the detailed examples below to see exactly what
-              you put in and what StudyMesh gives back.
+              Use Study Guide when you need a full tutorial across multiple
+              dashboards. Use Quick Create when you already have context and
+              want a focused study artifact fast.
             </Typography>
           </Stack>
 
@@ -525,7 +573,7 @@ const StudyMeshLanding = () => {
 
           <Stack spacing={1} sx={{ mt: 4, mb: 2 }}>
             <Typography variant="h5" fontWeight={900}>
-              What each option looks like in practice
+              What creation looks like in practice
             </Typography>
           </Stack>
 
@@ -726,10 +774,10 @@ const StudyMeshLanding = () => {
                         fontWeight={950}
                         color="#00A878"
                       >
-                        Create from Notes
+                        Quick Create
                       </Typography>
                       <Typography variant="h5" fontWeight={900}>
-                        Drop in what your teacher gave you
+                        Choose what you want from current material
                       </Typography>
                       <Box
                         sx={{
@@ -824,7 +872,7 @@ const StudyMeshLanding = () => {
                   >
                     <Stack spacing={1.25}>
                       <Typography variant="subtitle1" fontWeight={950}>
-                        Get organized dashboards from messy material
+                        Get focused study results without setup
                       </Typography>
                       <Box
                         sx={{
@@ -857,8 +905,8 @@ const StudyMeshLanding = () => {
                               color="text.secondary"
                               fontWeight={800}
                             >
-                              Click an attachment on the left to see what
-                              dashboards would be generated.
+                              Click a source on the left to see the focused
+                              study outputs Quick Create can generate.
                             </Typography>
                           </Box>
                         ) : (
@@ -1137,18 +1185,20 @@ const StudyMeshLanding = () => {
               mb: 3,
             }}
           >
-            Start with a learning goal or your study notes, then open the
-            generated work in your workspace.
+            Start with a learning goal or current study material, then open the
+            generated Study Guide or Quick Create result in your workspace.
           </Typography>
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1.5}
             justifyContent="center"
+            flexWrap="wrap"
+            useFlexGap
           >
             <Button
               variant="contained"
               size="large"
-              onClick={() => openWorkspace('create-study-path')}
+              onClick={() => openWorkspace()}
               sx={{
                 borderRadius: 1,
                 textTransform: 'none',
@@ -1157,24 +1207,7 @@ const StudyMeshLanding = () => {
                 '&:hover': { bgcolor: 'primary.light' },
               }}
             >
-              Create Study Guide
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              onClick={() => openWorkspace('create-from-notes')}
-              sx={{
-                borderRadius: 1,
-                textTransform: 'none',
-                color: 'primary.contrastText',
-                borderColor: alpha(theme.palette.primary.contrastText, 0.64),
-                '&:hover': {
-                  borderColor: 'primary.contrastText',
-                  bgcolor: alpha(theme.palette.primary.contrastText, 0.08),
-                },
-              }}
-            >
-              Create From Notes
+              Enter Workspace
             </Button>
           </Stack>
         </Paper>

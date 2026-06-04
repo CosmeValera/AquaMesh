@@ -28,29 +28,18 @@ const ConceptMapFAB: React.FC = () => {
 
       {isOpen && (
         <Box
+          onClick={() => setIsOpen(false)}
           sx={{
             position: 'fixed',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
+            bgcolor: 'rgba(0,0,0,0.3)',
             zIndex: 9998,
-            pointerEvents: 'none',
           }}
         >
-          <Box
-            onClick={() => setIsOpen(false)}
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              bgcolor: 'rgba(0,0,0,0.3)',
-              pointerEvents: 'auto',
-            }}
-          />
-          <Box sx={{ pointerEvents: 'auto' }}>
+          <Box sx={{ width: '100%', height: '100%' }} onClick={(e) => e.stopPropagation()}>
             <ConceptMapPanel onClose={() => setIsOpen(false)} />
           </Box>
         </Box>

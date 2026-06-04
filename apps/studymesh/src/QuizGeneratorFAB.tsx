@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Box, Fab, Tooltip } from '@mui/material'
-import { QuizGeneratorFAB } from './components/ai-quiz-generator'
+import { QuizGeneratorPanel } from './components/quizGenerator'
 
 const QuizGeneratorFAB: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -8,10 +8,10 @@ const QuizGeneratorFAB: React.FC = () => {
   return (
     <>
       <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9997 }}>
-        <Tooltip title="QuizGeneratorFAB" placement="left">
+        <Tooltip title="📝 AI Quiz Generator" placement="left">
           <Fab
             color="primary"
-            aria-label="QuizGeneratorFAB"
+            aria-label="AI Quiz Generator"
             onClick={() => setIsOpen(true)}
             sx={{
               width: 56,
@@ -21,39 +21,29 @@ const QuizGeneratorFAB: React.FC = () => {
               '&:hover': { bgcolor: 'primary.dark' },
             }}
           >
-            ⚡
+            📝
           </Fab>
         </Tooltip>
       </Box>
 
       {isOpen && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 9998,
-            pointerEvents: 'none',
-          }}
-        >
+        <>
           <Box
             onClick={() => setIsOpen(false)}
             sx={{
-              position: 'absolute',
+              position: 'fixed',
               top: 0,
               left: 0,
               right: 0,
               bottom: 0,
               bgcolor: 'rgba(0,0,0,0.3)',
-              pointerEvents: 'auto',
+              zIndex: 9998,
             }}
           />
-          <Box sx={{ pointerEvents: 'auto' }}>
-            <QuizGeneratorFAB onClose={() => setIsOpen(false)} />
+          <Box sx={{ width: '100%', height: '100%' }} onClick={(e) => e.stopPropagation()}>
+            <QuizGeneratorPanel onClose={() => setIsOpen(false)} />
           </Box>
-        </Box>
+        </>
       )}
     </>
   )

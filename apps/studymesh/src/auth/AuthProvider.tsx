@@ -228,6 +228,11 @@ export const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth()
   const location = useLocation()
 
+  // 🔓 DEV BYPASS: Skip login in development/testing
+  if (localStorage.getItem('dev_bypass_auth') === 'true') {
+    return <>{children}</>
+  }
+
   if (loading) {
     return (
       <Box

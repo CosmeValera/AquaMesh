@@ -18,6 +18,7 @@ import WorkspaceStudioShell from './components/workspace/WorkspaceStudioShell'
 import DashboardProvider from './components/Dasboard/DashboardProvider'
 import LayoutProvider from './components/Layout/LayoutProvider'
 import StudyMeshLanding from './components/landing/StudyMeshLanding'
+import CollapsibleOutlineFAB from './CollapsibleOutlineFAB'
 import { useWorkspaceActions } from './customHooks/useWorkspaceActions'
 import LocalAiDebugPanel from './components/debug/LocalAiDebugPanel'
 import { cancelAllLocalAiSessions } from './studyPack/ai'
@@ -134,6 +135,7 @@ const WorkspacePage = () => {
           <Dashboards />
         </WorkspaceStudioShell>
         <WorkspaceOnboarding />
+        <CollapsibleOutlineFAB />
       </Main>
     </Box>
   )

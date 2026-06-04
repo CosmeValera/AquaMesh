@@ -8,14 +8,14 @@ import {
 } from '../components/Dasboard/dashboardStorage'
 import {
   WIDGET_STORAGE_UPDATED,
-  type CustomWidget,
   type WidgetStorageUpdatedDetail,
-  type WidgetVersion,
 } from '../components/WidgetEditor/WidgetStorage'
 import { useStore } from '../state/store'
 import {
   readLocalWorkspaceSnapshot,
+  readWorkspaceCacheOwner,
   writeLocalWorkspaceSnapshot,
+  writeWorkspaceCacheOwner,
 } from './cache'
 import { createCloudRepository } from './repository'
 import type { CloudWorkspaceBundle, UserProfile, WorkspaceState } from './types'
@@ -30,6 +30,43 @@ const hasLocalWorkspaceData = (bundle: ReturnType<typeof readLocalWorkspaceSnaps
   bundle.widgetVersions.length > 0 ||
   Boolean(bundle.workspaceState?.openDashboards.length) ||
   Boolean(bundle.studyProgress)
+
+const hasCloudWorkspaceData = (bundle: CloudWorkspaceBundle) =>
+  bundle.dashboards.length > 0 ||
+  bundle.widgets.length > 0 ||
+  bundle.widgetVersions.length > 0 ||
+  Boolean(bundle.workspaceState?.openDashboards.length) ||
+  Boolean(bundle.workspaceState?.studyProgress)
+
+export type CloudHydrationAction =
+  | 'apply-cloud'
+  | 'upload-local'
+  | 'initialize-empty'
+
+export const chooseCloudHydrationAction = ({
+  cloudBundle,
+  localSnapshot,
+  cacheOwnerId,
+  currentOwnerId,
+}: {
+  cloudBundle: CloudWorkspaceBundle
+  localSnapshot: ReturnType<typeof readLocalWorkspaceSnapshot>
+  cacheOwnerId: string | null
+  currentOwnerId: string
+}): CloudHydrationAction => {
+  if (hasCloudWorkspaceData(cloudBundle)) {
+    return 'apply-cloud'
+  }
+
+  if (
+    hasLocalWorkspaceData(localSnapshot) &&
+    (cacheOwnerId === null || cacheOwnerId === currentOwnerId)
+  ) {
+    return 'upload-local'
+  }
+
+  return 'initialize-empty'
+}
 
 const dispatchCloudSyncStatus = (
   status: CloudSyncStatus,
@@ -52,40 +89,6 @@ const getUserDisplayName = (user: { email?: string; user_metadata?: Record<strin
       ? fullName
       : user.email || 'Student'
 }
-
-const newerFirst = <T extends { id: string; updatedAt?: string }>(
-  first: T,
-  second: T,
-) =>
-  new Date(first.updatedAt || 0).getTime() >=
-  new Date(second.updatedAt || 0).getTime()
-    ? first
-    : second
-
-const mergeById = <T extends { id: string; updatedAt?: string }>(
-  localItems: T[],
-  cloudItems: T[],
-): T[] => {
-  const merged = new Map<string, T>()
-
-  cloudItems.forEach((item) => merged.set(item.id, item))
-  localItems.forEach((item) => {
-    const cloudItem = merged.get(item.id)
-    merged.set(item.id, cloudItem ? newerFirst(item, cloudItem) : item)
-  })
-
-  return [...merged.values()]
-}
-
-const mergeWidgets = (
-  localWidgets: CustomWidget[],
-  cloudWidgets: CustomWidget[],
-) => mergeById(localWidgets, cloudWidgets)
-
-const mergeWidgetVersions = (
-  localVersions: WidgetVersion[],
-  cloudVersions: WidgetVersion[],
-) => mergeById(localVersions, cloudVersions)
 
 const applyCloudBundleToLocalCache = (bundle: CloudWorkspaceBundle): void => {
   writeLocalWorkspaceSnapshot({
@@ -163,51 +166,48 @@ const CloudWorkspaceSync = () => {
           repository.loadWorkspaceBundle(ownerId),
           Promise.resolve(readLocalWorkspaceSnapshot()),
         ])
+        const cacheOwnerId = readWorkspaceCacheOwner()
 
         if (cancelled) {
           return
         }
 
-        const localHasDashboards =
-          localSnapshot.dashboards.length > 0 ||
-          Boolean(localSnapshot.workspaceState?.openDashboards.length)
-        const cloudHasDashboards =
-          cloudBundle.dashboards.length > 0 ||
-          Boolean(cloudBundle.workspaceState?.openDashboards.length)
-        const mergedWidgets = mergeWidgets(
-          localSnapshot.widgets,
-          cloudBundle.widgets,
-        )
-        const mergedWidgetVersions = mergeWidgetVersions(
-          localSnapshot.widgetVersions,
-          cloudBundle.widgetVersions,
-        )
+        const action = chooseCloudHydrationAction({
+          cloudBundle,
+          localSnapshot,
+          cacheOwnerId,
+          currentOwnerId: ownerId,
+        })
 
-        if (cloudHasDashboards && !localHasDashboards) {
+        if (action === 'apply-cloud') {
           isApplyingRemoteRef.current = true
           applyCloudBundleToLocalCache(cloudBundle)
+          writeWorkspaceCacheOwner(ownerId)
           if (cloudBundle.workspaceState?.openDashboards.length) {
             setDashboards(cloudBundle.workspaceState.openDashboards)
             setSelectedDashboard(cloudBundle.workspaceState.selectedDashboard)
+          } else {
+            setDashboards([])
+            setSelectedDashboard(0)
           }
           window.setTimeout(() => {
             isApplyingRemoteRef.current = false
           }, 0)
-        } else if (hasLocalWorkspaceData(localSnapshot)) {
+        } else if (action === 'upload-local') {
           await repository.saveWorkspaceBundle(
             ownerId,
-            buildWorkspaceBundleFromLocalCache(ownerId, profile, {
-              widgets: mergedWidgets,
-              widgetVersions: mergedWidgetVersions,
-            }),
+            buildWorkspaceBundleFromLocalCache(ownerId, profile),
           )
-        } else if (cloudBundle.widgets.length > 0) {
-          writeLocalWorkspaceSnapshot({
-            ...localSnapshot,
-            widgets: cloudBundle.widgets,
-            widgetVersions: cloudBundle.widgetVersions,
-          })
+          writeWorkspaceCacheOwner(ownerId)
         } else {
+          isApplyingRemoteRef.current = true
+          applyCloudBundleToLocalCache(cloudBundle)
+          writeWorkspaceCacheOwner(ownerId)
+          setDashboards([])
+          setSelectedDashboard(0)
+          window.setTimeout(() => {
+            isApplyingRemoteRef.current = false
+          }, 0)
           await repository.upsertProfile(profile)
         }
 
@@ -255,6 +255,7 @@ const CloudWorkspaceSync = () => {
           ownerId,
           buildWorkspaceBundleFromLocalCache(ownerId, profile),
         )
+        writeWorkspaceCacheOwner(ownerId)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
         console.error('StudyMesh cloud sync failed', error)

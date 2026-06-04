@@ -15,6 +15,7 @@ export const CLOUD_CACHE_KEYS = {
   widgets: 'studymesh_custom_widgets',
   widgetVersions: 'studymesh_widget_versions',
   studyPathProgress: 'studymesh-study-path-progress-v1',
+  owner: 'studymesh-cloud-cache-owner-v1',
 } as const
 
 export const CLOUD_LEGACY_CACHE_KEYS = {
@@ -46,6 +47,14 @@ export const writeJsonCache = <T>(key: string, value: T): void => {
   }
 
   window.localStorage.setItem(key, JSON.stringify(value))
+}
+
+export const removeJsonCache = (key: string): void => {
+  if (!hasBrowserStorage()) {
+    return
+  }
+
+  window.localStorage.removeItem(key)
 }
 
 export const readDashboardsCache = (): SavedDashboard[] =>
@@ -104,6 +113,10 @@ export const writeWorkspaceStateCache = (workspaceState: {
   })
 }
 
+export const clearWorkspaceStateCache = (): void => {
+  removeJsonCache(CLOUD_CACHE_KEYS.workspaceState)
+}
+
 export const readStudyPathProgressCache = (): StudyPathProgressCache | null => {
   const current = readJsonCache<StudyPathProgressCache | null>(
     CLOUD_CACHE_KEYS.studyPathProgress,
@@ -125,8 +138,24 @@ export const writeStudyPathProgressCache = (
 ): void => {
   if (progress) {
     writeJsonCache(CLOUD_CACHE_KEYS.studyPathProgress, progress)
+  } else {
+    removeJsonCache(CLOUD_CACHE_KEYS.studyPathProgress)
+    removeJsonCache(CLOUD_LEGACY_CACHE_KEYS.studyPathProgress)
   }
 }
+
+export const readWorkspaceCacheOwner = (): string | null =>
+  readJsonCache<string | null>(CLOUD_CACHE_KEYS.owner, null)
+
+export const writeWorkspaceCacheOwner = (ownerId: string): void => {
+  writeJsonCache(CLOUD_CACHE_KEYS.owner, ownerId)
+}
+
+export const isWorkspaceCacheOwnedBy = (ownerId: string): boolean =>
+  readWorkspaceCacheOwner() === ownerId
+
+export const isWorkspaceCacheUnowned = (): boolean =>
+  readWorkspaceCacheOwner() === null
 
 export const readLocalWorkspaceSnapshot = (): LocalWorkspaceSnapshot => ({
   dashboards: readDashboardsCache(),
@@ -145,8 +174,9 @@ export const writeLocalWorkspaceSnapshot = (
 
   if (snapshot.workspaceState) {
     writeWorkspaceStateCache(snapshot.workspaceState)
+  } else {
+    clearWorkspaceStateCache()
   }
 
   writeStudyPathProgressCache(snapshot.studyProgress)
 }
-

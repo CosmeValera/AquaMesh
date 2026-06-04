@@ -396,7 +396,7 @@ const ClipCard: React.FC<ClipCardProps> = ({
           Preview
         </MenuItem>
         <MenuItem onClick={() => { onToggleRead(clip.id); setShowMenu(false); }}>
-          <ListItemIcon><CheckCircle fontSize="small" /></ListItemIcon>
+          <ListItemIcon><SavedIcon fontSize="small" /></ListItemIcon>
           {clip.isRead ? 'Mark Unread' : 'Mark Read'}
         </MenuItem>
         <MenuItem onClick={() => { onEdit(clip); setShowMenu(false); }}>

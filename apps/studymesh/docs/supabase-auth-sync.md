@@ -20,14 +20,20 @@ This document supports the real-login/cloud-sync implementation. It covers the d
 
 Run `apps/StudyMesh/docs/supabase-auth-sync.sql` in the Supabase SQL editor.
 
+If you already had these tables before the cascade constraints existed, run
+`apps/StudyMesh/docs/supabase-repair-delete-cascade.sql` once. Deleting a user
+from Supabase Auth should then remove their StudyMesh rows automatically.
+
 The SQL creates:
 
 - `profiles`: auth profile row for display name, email, avatar path, and app role.
-- `user_dashboards`: per-user dashboard JSON with soft delete support.
+- `user_dashboards`: per-user dashboard JSON.
 - `user_widgets`: per-user custom widget JSON.
 - `user_widget_versions`: per-user widget snapshots.
 - `user_workspace_state`: selected/open dashboards, study progress, and workspace settings.
 - Owner indexes for sync reads.
+- `on delete cascade` constraints from `auth.users` to `profiles`, and from `profiles` to app-owned rows, so deleting an auth user removes that user's profile, dashboards, widgets, widget versions, and workspace state.
+- `on delete cascade` from `user_widgets` to `user_widget_versions`, so deleting a widget removes its version history.
 - `updated_at` trigger.
 - RLS policies that allow authenticated users to access only their own rows.
 
@@ -73,7 +79,9 @@ Recommended migration flow:
 - Route guards should require authenticated session before `/workspace`.
 - Client writes should be optimistic: update local cache first, then upsert Supabase.
 - Dashboards should sync referenced widgets before dashboard rows.
-- Deletes should set `deleted_at` first for recoverable sync behavior. Hard deletes can be an admin maintenance task later.
+- Deleting a dashboard should hard-delete only the dashboard row. It must not delete referenced widgets, because widgets can be reused by multiple dashboards.
+- Deleting a widget should hard-delete the widget row and its related `user_widget_versions` rows.
+- Deleting an auth user should cascade-delete all StudyMesh rows owned by that user.
 - Conflict default: last-write-wins by `updated_at`, except migration duplicates newer cloud conflicts as described above.
 - User logout should clear in-memory workspace state. Local cache may remain, but should not hydrate into another account without session/user match.
 

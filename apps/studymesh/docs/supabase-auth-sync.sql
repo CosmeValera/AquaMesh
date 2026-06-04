@@ -32,7 +32,7 @@ create table if not exists public.profiles (
 -- Dashboard JSON, owned by one user. `layout` stores app-native dashboard data.
 create table if not exists public.user_dashboards (
   id text not null,
-  owner_id uuid not null references auth.users(id) on delete cascade,
+  owner_id uuid not null references public.profiles(id) on delete cascade,
   title text not null,
   description text,
   dashboard_type text,
@@ -49,7 +49,7 @@ create table if not exists public.user_dashboards (
 -- Custom widget JSON, owned by one user. `components` stores app-native widget state.
 create table if not exists public.user_widgets (
   id text not null,
-  owner_id uuid not null references auth.users(id) on delete cascade,
+  owner_id uuid not null references public.profiles(id) on delete cascade,
   title text not null,
   widget_type text,
   components jsonb not null default '[]'::jsonb,
@@ -63,7 +63,7 @@ create table if not exists public.user_widgets (
 -- Historical widget snapshots for restore/version UI.
 create table if not exists public.user_widget_versions (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references auth.users(id) on delete cascade,
+  owner_id uuid not null references public.profiles(id) on delete cascade,
   widget_id text not null,
   version integer not null,
   title text,
@@ -79,7 +79,7 @@ create table if not exists public.user_widget_versions (
 
 -- Per-user workspace preferences/progress/open tabs.
 create table if not exists public.user_workspace_state (
-  owner_id uuid primary key references auth.users(id) on delete cascade,
+  owner_id uuid primary key references public.profiles(id) on delete cascade,
   selected_dashboard text,
   open_dashboards jsonb not null default '[]'::jsonb,
   study_progress jsonb not null default '{}'::jsonb,

@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 import {
   createCloudRepository,
@@ -254,6 +256,66 @@ describe('workspace cloud repository', () => {
     expect(builder.delete).toHaveBeenCalled()
     expect(builder.eq).toHaveBeenCalledWith('owner_id', 'user-1')
     expect(builder.eq).toHaveBeenCalledWith('id', 'dash-1')
+  })
+
+  it('deletes widgets and their version history from cloud storage', async () => {
+    const versionBuilder = createQueryBuilder()
+    const widgetBuilder = createQueryBuilder()
+    const supabase = {
+      from: vi
+        .fn()
+        .mockReturnValueOnce(versionBuilder)
+        .mockReturnValueOnce(widgetBuilder),
+    }
+    const repository = createCloudRepository(supabase as never)
+
+    await repository.deleteWidgetVersions('user-1', 'widget-1')
+    await repository.deleteWidget('user-1', 'widget-1')
+
+    expect(supabase.from).toHaveBeenNthCalledWith(1, 'user_widget_versions')
+    expect(versionBuilder.delete).toHaveBeenCalled()
+    expect(versionBuilder.eq).toHaveBeenCalledWith('owner_id', 'user-1')
+    expect(versionBuilder.eq).toHaveBeenCalledWith('widget_id', 'widget-1')
+    expect(supabase.from).toHaveBeenNthCalledWith(2, 'user_widgets')
+    expect(widgetBuilder.delete).toHaveBeenCalled()
+    expect(widgetBuilder.eq).toHaveBeenCalledWith('owner_id', 'user-1')
+    expect(widgetBuilder.eq).toHaveBeenCalledWith('id', 'widget-1')
+  })
+
+  it('keeps user and widget cascade deletion in the Supabase schema', () => {
+    const sqlPath = resolve(process.cwd(), 'docs/supabase-auth-sync.sql')
+    const sql = readFileSync(sqlPath, 'utf8').replace(/\s+/g, ' ')
+
+    expect(sql).toContain(
+      'profiles ( id uuid primary key references auth.users(id) on delete cascade',
+    )
+    expect(sql).toContain(
+      'owner_id uuid not null references public.profiles(id) on delete cascade',
+    )
+    expect(sql).toContain(
+      'owner_id uuid primary key references public.profiles(id) on delete cascade',
+    )
+    expect(sql).toContain(
+      'references public.user_widgets(owner_id, id) on delete cascade',
+    )
+  })
+
+  it('keeps a Supabase cascade repair script for existing projects', () => {
+    const sqlPath = resolve(
+      process.cwd(),
+      'docs/supabase-repair-delete-cascade.sql',
+    )
+    const sql = readFileSync(sqlPath, 'utf8').replace(/\s+/g, ' ')
+
+    expect(sql).toContain('delete from public.user_dashboards')
+    expect(sql).toContain('delete from public.user_widgets')
+    expect(sql).toContain('delete from public.user_widget_versions')
+    expect(sql).toContain('where owner_id not in (select id from public.profiles)')
+    expect(sql).toContain('references auth.users(id) on delete cascade')
+    expect(sql).toContain('references public.profiles(id) on delete cascade')
+    expect(sql).toContain(
+      'references public.user_widgets(owner_id, id) on delete cascade',
+    )
   })
 
   it('throws a readable error when Supabase returns a failure', async () => {

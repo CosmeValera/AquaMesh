@@ -677,7 +677,7 @@ const demoClips: WebClip[] = [
   {
     id: 'clip-2',
     url: 'https://github.com/features',
-    title: 'GitHub: Let's build from here',
+    title: "GitHub: Let's build from here",
     excerpt: 'GitHub is the complete development environment that takes you from code to cloud...',
     content: '<p>GitHub is the complete development environment that takes you from code to cloud...</p>',
     type: 'bookmark',

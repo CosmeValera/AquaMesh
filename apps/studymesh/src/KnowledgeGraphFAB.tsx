@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Box, Fab, Tooltip } from '@mui/material'
-import { KnowledgeGraphFAB } from './components/knowledge-graph'
+import { KnowledgeGraphPanel } from './components/knowledgeGraph'
 
 const KnowledgeGraphFAB: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -8,10 +8,10 @@ const KnowledgeGraphFAB: React.FC = () => {
   return (
     <>
       <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9997 }}>
-        <Tooltip title="KnowledgeGraphFAB" placement="left">
+        <Tooltip title="🕸️ Knowledge Graph" placement="left">
           <Fab
             color="primary"
-            aria-label="KnowledgeGraphFAB"
+            aria-label="Knowledge Graph"
             onClick={() => setIsOpen(true)}
             sx={{
               width: 56,
@@ -21,39 +21,27 @@ const KnowledgeGraphFAB: React.FC = () => {
               '&:hover': { bgcolor: 'primary.dark' },
             }}
           >
-            ⚡
+            🕸️
           </Fab>
         </Tooltip>
       </Box>
 
       {isOpen && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 9998,
-            pointerEvents: 'none',
-          }}
-        >
+        <>
           <Box
             onClick={() => setIsOpen(false)}
             sx={{
-              position: 'absolute',
+              position: 'fixed',
               top: 0,
               left: 0,
               right: 0,
               bottom: 0,
               bgcolor: 'rgba(0,0,0,0.3)',
-              pointerEvents: 'auto',
+              zIndex: 9998,
             }}
           />
-          <Box sx={{ pointerEvents: 'auto' }}>
-            <KnowledgeGraphFAB onClose={() => setIsOpen(false)} />
-          </Box>
-        </Box>
+          <KnowledgeGraphPanel onClose={() => setIsOpen(false)} />
+        </>
       )}
     </>
   )

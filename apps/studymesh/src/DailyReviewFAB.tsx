@@ -1,37 +1,27 @@
 import React, { useState } from 'react'
 import { Box, Fab, Tooltip } from '@mui/material'
-import { Today as TodayIcon } from '@mui/icons-material'
-import { DailyReviewPanel } from './components/dailyReview'
+import { DailyReviewFAB } from './components/daily-review'
 
 const DailyReviewFAB: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
     <>
-      <Box
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          zIndex: 9997,
-        }}
-      >
-        <Tooltip title="📅 Daily Review" placement="left">
+      <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9997 }}>
+        <Tooltip title="DailyReviewFAB" placement="left">
           <Fab
             color="primary"
-            aria-label="Daily Review"
+            aria-label="DailyReviewFAB"
             onClick={() => setIsOpen(true)}
             sx={{
               width: 56,
               height: 56,
               fontSize: '1.5rem',
               bgcolor: 'primary.main',
-              '&:hover': {
-                bgcolor: 'primary.dark',
-              },
+              '&:hover': { bgcolor: 'primary.dark' },
             }}
           >
-            📅
+            ⚡
           </Fab>
         </Tooltip>
       </Box>
@@ -48,7 +38,6 @@ const DailyReviewFAB: React.FC = () => {
             pointerEvents: 'none',
           }}
         >
-          {/* Backdrop */}
           <Box
             onClick={() => setIsOpen(false)}
             sx={{
@@ -61,18 +50,8 @@ const DailyReviewFAB: React.FC = () => {
               pointerEvents: 'auto',
             }}
           />
-
-          {/* Panel */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              pointerEvents: 'auto',
-            }}
-          >
-            <DailyReviewPanel onClose={() => setIsOpen(false)} />
+          <Box sx={{ pointerEvents: 'auto' }}>
+            <DailyReviewFAB onClose={() => setIsOpen(false)} />
           </Box>
         </Box>
       )}

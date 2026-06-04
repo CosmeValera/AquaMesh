@@ -263,6 +263,8 @@ const StudyMeshLanding = () => {
   }
 
   const openWorkspace = (action?: string) => {
+    // 🔓 DEV BYPASS: Enable bypass when clicking "Try StudyMesh"
+    localStorage.setItem('dev_bypass_auth', 'true')
     navigate(action ? `/workspace?action=${action}` : '/workspace')
   }
 

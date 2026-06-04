@@ -116,6 +116,22 @@ export type StudyPathGenerationAmount =
 export interface AiStudyPathDashboardDraft extends AiStudyPackDraft {
   summary: string
   dashboardRole: StudyPathDashboardRole
+  moduleTitle?: string
+  lessonType?:
+    | 'orientation'
+    | 'concept'
+    | 'workedExample'
+    | 'comparison'
+    | 'procedure'
+    | 'lab'
+    | 'checkpoint'
+    | 'review'
+    | 'remediation'
+  learnerQuestion?: string
+  learningOutcome?: string
+  suggestedPractice?: string[]
+  qualityScore?: number
+  qualityIssues?: string[]
 }
 
 export interface AiStudyPathDraft {
@@ -123,6 +139,40 @@ export interface AiStudyPathDraft {
   folderName: string
   dashboards: AiStudyPathDashboardDraft[]
   warnings: string[]
+  blueprint?: AiStudyPathBlueprint
+}
+
+interface AiStudyPathBlueprintLesson {
+  title: string
+  moduleTitle: string
+  lessonType: NonNullable<AiStudyPathDashboardDraft['lessonType']>
+  learnerQuestion: string
+  learningOutcome: string
+  dashboardPurpose: string
+  layoutArchetype: string
+  practiceType: string
+  mustTeach: string[]
+  workedExample: string
+  misconceptionChecks: string[]
+  retrievalPractice: string[]
+  suggestedPractice: string[]
+}
+
+interface AiStudyPathBlueprint {
+  title: string
+  folderName: string
+  learnerProfile: string
+  scope: string
+  prerequisites: string[]
+  learningObjectives: string[]
+  conceptGraph: string[]
+  modules: Array<{
+    title: string
+    goal: string
+    lessonIndexes: number[]
+  }>
+  lessons: AiStudyPathBlueprintLesson[]
+  finalReviewPlan: string[]
 }
 
 export interface GenerateStudyPathWithAiOptions {
@@ -164,10 +214,10 @@ const getStudyPathDashboardCount = (
   return normalized === 'superSmall'
     ? 2
     : normalized === 'compact'
-      ? 3
-      : normalized === 'deep'
-        ? 7
-        : 5
+    ? 3
+    : normalized === 'deep'
+    ? 7
+    : 5
 }
 
 const getStudyPathStepNames = (
@@ -501,6 +551,141 @@ const studyPathSchema = {
   required: ['title', 'folderName', 'dashboards'],
 }
 
+const studyPathBlueprintLessonSchema = {
+  type: 'OBJECT',
+  properties: {
+    title: { type: 'STRING' },
+    moduleTitle: { type: 'STRING' },
+    lessonType: {
+      type: 'STRING',
+      enum: [
+        'orientation',
+        'concept',
+        'workedExample',
+        'comparison',
+        'procedure',
+        'lab',
+        'checkpoint',
+        'review',
+        'remediation',
+      ],
+    },
+    learnerQuestion: { type: 'STRING' },
+    learningOutcome: { type: 'STRING' },
+    dashboardPurpose: {
+      type: 'STRING',
+      enum: [
+        'overview',
+        'lesson',
+        'practice',
+        'review',
+        'finalReview',
+        'projectLab',
+      ],
+    },
+    layoutArchetype: {
+      type: 'STRING',
+      enum: [
+        'focusLesson',
+        'learnPracticeTabs',
+        'splitReferenceExercise',
+        'multiWidgetLab',
+        'overviewReview',
+      ],
+    },
+    practiceType: {
+      type: 'STRING',
+      enum: ['none', 'quiz', 'flashcards', 'mixed'],
+    },
+    mustTeach: textArraySchema,
+    workedExample: { type: 'STRING' },
+    misconceptionChecks: textArraySchema,
+    retrievalPractice: textArraySchema,
+    suggestedPractice: textArraySchema,
+  },
+  required: [
+    'title',
+    'moduleTitle',
+    'lessonType',
+    'learnerQuestion',
+    'learningOutcome',
+    'dashboardPurpose',
+    'layoutArchetype',
+    'practiceType',
+    'mustTeach',
+    'workedExample',
+    'misconceptionChecks',
+    'retrievalPractice',
+    'suggestedPractice',
+  ],
+}
+
+const studyPathBlueprintSchema = {
+  type: 'OBJECT',
+  properties: {
+    title: { type: 'STRING' },
+    folderName: { type: 'STRING' },
+    learnerProfile: { type: 'STRING' },
+    scope: { type: 'STRING' },
+    prerequisites: textArraySchema,
+    learningObjectives: textArraySchema,
+    conceptGraph: textArraySchema,
+    modules: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          title: { type: 'STRING' },
+          goal: { type: 'STRING' },
+          lessonIndexes: { type: 'ARRAY', items: { type: 'NUMBER' } },
+        },
+        required: ['title', 'goal', 'lessonIndexes'],
+      },
+    },
+    lessons: {
+      type: 'ARRAY',
+      items: studyPathBlueprintLessonSchema,
+    },
+    finalReviewPlan: textArraySchema,
+  },
+  required: [
+    'title',
+    'folderName',
+    'learnerProfile',
+    'scope',
+    'prerequisites',
+    'learningObjectives',
+    'conceptGraph',
+    'modules',
+    'lessons',
+    'finalReviewPlan',
+  ],
+}
+
+const studyPathDashboardSchema = {
+  type: 'OBJECT',
+  properties: studyPathSchema.properties.dashboards.items.properties,
+  required: [
+    'title',
+    'summary',
+    'rawNotes',
+    'sourceSummary',
+    'conceptRecap',
+    'practice',
+    'flashcards',
+  ],
+}
+
+const studyPathQualitySchema = {
+  type: 'OBJECT',
+  properties: {
+    score: { type: 'NUMBER' },
+    issues: textArraySchema,
+    repairInstructions: textArraySchema,
+  },
+  required: ['score', 'issues', 'repairInstructions'],
+}
+
 const emptyPractice = () => ({
   shortAnswer: [],
   multipleChoice: [],
@@ -782,8 +967,8 @@ const buildFallbackObjectsForDashboardRole = ({
       concepts.length > 0
         ? concepts.map((concept) => `How would you apply ${concept}?`)
         : practiceSource
-          ? ['What is one key idea from the previous Study Guide material?']
-          : []
+        ? ['What is one key idea from the previous Study Guide material?']
+        : []
 
     return prompts.map((question, index) => ({
       ...createFallbackBase(
@@ -862,8 +1047,8 @@ const getStudyPathVisiblePracticeTarget = (
     return normalized === 'superSmall' || normalized === 'compact'
       ? 10
       : normalized === 'deep'
-        ? 18
-        : 14
+      ? 18
+      : 14
   }
 
   return 0
@@ -1005,30 +1190,30 @@ export const generateStudyPackWithAi = async ({
     resourceType === 'flashcards'
       ? `Create ${resourceTarget} when possible. Never create fewer than 40 flashcards at Medium or Long detail if the notes contain enough usable facts.`
       : resourceType === 'quiz'
-        ? `Create ${resourceTarget} when possible. Never create fewer than 40 multiple-choice questions at Medium or Long detail if the notes contain enough usable facts.`
-        : `Create ${practiceProfile.targetTotal} reviewable study items when possible, never fewer than ${practiceProfile.minTotal} if the notes contain usable facts. Keep the total within ${practiceProfile.minTotal}-${practiceProfile.maxTotal} items.`
+      ? `Create ${resourceTarget} when possible. Never create fewer than 40 multiple-choice questions at Medium or Long detail if the notes contain enough usable facts.`
+      : `Create ${practiceProfile.targetTotal} reviewable study items when possible, never fewer than ${practiceProfile.minTotal} if the notes contain usable facts. Keep the total within ${practiceProfile.minTotal}-${practiceProfile.maxTotal} items.`
   const mixInstruction =
     resourceType === 'flashcards'
       ? 'All reviewable items must be flashcards. Do not create quizzes, short-answer practice, summaries, definitions, or support review objects.'
       : resourceType === 'quiz'
-        ? 'All reviewable items must be multiple-choice quiz questions. Do not create short-answer questions, typed-answer questions, quizSingle items, flashcards, summaries, definitions, or support review objects.'
-        : practiceProfile.enforceQuizzes || practiceProfile.enforceFlashcards
-          ? `Use an active-practice mix: ${practiceProfile.targetQuizzes} quizzes, ${practiceProfile.targetFlashcards} flashcards, and about ${practiceProfile.targetSupport} summaries/definitions/review prompts. Quizzes should be 50-60% of the pack and flashcards 20-30%.`
-          : 'Use the selected non-practice targets and still create the requested number of useful reviewable items.'
+      ? 'All reviewable items must be multiple-choice quiz questions. Do not create short-answer questions, typed-answer questions, quizSingle items, flashcards, summaries, definitions, or support review objects.'
+      : practiceProfile.enforceQuizzes || practiceProfile.enforceFlashcards
+      ? `Use an active-practice mix: ${practiceProfile.targetQuizzes} quizzes, ${practiceProfile.targetFlashcards} flashcards, and about ${practiceProfile.targetSupport} summaries/definitions/review prompts. Quizzes should be 50-60% of the pack and flashcards 20-30%.`
+      : 'Use the selected non-practice targets and still create the requested number of useful reviewable items.'
   const resourceInstruction =
     resourceType === 'improvedNotes'
       ? 'Selected resource type: Expand on this. Create one polished expanded note set from the source. Stay close to the provided content and preserve the same learner level, vocabulary difficulty, and topic depth as the original source. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless they are clearly needed to explain the source. Organize the notes into teachable sections such as: source summary, key concepts, examples, common mistakes or misconceptions, and compact takeaways. Use clear explanations, but keep the complexity appropriate to the source. Do not create a quiz, multiple choice questions, short answer practice, or flashcards. Leave practice.shortAnswer, practice.multipleChoice, and flashcards empty.'
       : resourceType === 'flashcards'
-        ? 'Selected resource type: Flashcards. Create only atomic flashcards from the source. Each flashcard must test one term, rule, contrast, formula step, exception, process step, or use case. Match the source’s learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Use answer backs that teach briefly, not one-word fragments. Keep sourceSummary brief, leave conceptRecap sections empty, and leave practice.shortAnswer and practice.multipleChoice empty.'
-        : resourceType === 'quiz'
-          ? 'Selected resource type: Quiz. Create only multiple-choice quiz questions from the source. Fill practice.multipleChoice only. Leave practice.shortAnswer empty. Never create typed-answer, short-answer, quizSingle, or free-response questions. Match the source’s learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Prefer scenario, application, contrast, error-fixing, and why/how questions over simple recall. Keep sourceSummary brief, leave conceptRecap sections empty, and leave flashcards empty.'
-          : 'Wrong Selected resource type.'
+      ? 'Selected resource type: Flashcards. Create only atomic flashcards from the source. Each flashcard must test one term, rule, contrast, formula step, exception, process step, or use case. Match the source’s learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Use answer backs that teach briefly, not one-word fragments. Keep sourceSummary brief, leave conceptRecap sections empty, and leave practice.shortAnswer and practice.multipleChoice empty.'
+      : resourceType === 'quiz'
+      ? 'Selected resource type: Quiz. Create only multiple-choice quiz questions from the source. Fill practice.multipleChoice only. Leave practice.shortAnswer empty. Never create typed-answer, short-answer, quizSingle, or free-response questions. Match the source’s learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Prefer scenario, application, contrast, error-fixing, and why/how questions over simple recall. Keep sourceSummary brief, leave conceptRecap sections empty, and leave flashcards empty.'
+      : 'Wrong Selected resource type.'
   const detailInstruction =
     detailLevel === 'short'
       ? 'Detail level: Short. Keep notes concise and generate a small focused set.'
       : detailLevel === 'long'
-        ? 'Detail level: Long. Create deeper explanations or a larger practice set while staying grounded.'
-        : 'Detail level: Medium. Use balanced depth and amount.'
+      ? 'Detail level: Long. Create deeper explanations or a larger practice set while staying grounded.'
+      : 'Detail level: Medium. Use balanced depth and amount.'
   const hardDetailInstruction = resourceType
     ? `The selected detail level is a hard constraint. Target ${geminiDetailTargets[resourceType][detailLevel]}. Match the target length/count exactly or as close as possible. Do not ignore it.`
     : 'The selected detail level is a hard constraint. Match the requested amount as closely as possible. Do not ignore it.'
@@ -1036,8 +1221,8 @@ export const generateStudyPackWithAi = async ({
     quizQuestionStyle === 'conceptual'
       ? 'Quiz style preference: Conceptual. Prioritize why/how questions, comparisons, cause/effect, inference, and common misconceptions. Include only enough recall to anchor the reasoning.'
       : quizQuestionStyle === 'examLike'
-        ? 'Quiz style preference: Exam-like. Write assessment-style questions that require applying concepts under realistic test conditions. Mix multiple-choice and short-answer when appropriate, with clear plausible distractors.'
-        : 'Quiz style preference: Mixed. Use a balanced mix of recall and reasoning questions, including conceptual understanding, applied scenarios, comparisons, and common mistakes.'
+      ? 'Quiz style preference: Exam-like. Write assessment-style questions that require applying concepts under realistic test conditions. Mix multiple-choice and short-answer when appropriate, with clear plausible distractors.'
+      : 'Quiz style preference: Mixed. Use a balanced mix of recall and reasoning questions, including conceptual understanding, applied scenarios, comparisons, and common mistakes.'
   const sourceInstruction = promptMode
     ? 'The raw input is a learning prompt, not notes. Teach the requested topic from scratch. Because the input is not source notes, you may use accurate general knowledge for this topic. First create concise source notes/explanations, then generate practice grounded in those generated explanations. Include explanation/theory objects before exercises.'
     : 'The raw input is source notes. Stay grounded in those notes.'
@@ -1224,6 +1409,434 @@ const studyPathAdvancedPromptGuidance = (
     .join('\n\n')
 }
 
+const stringArrayFromUnknown = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value
+        .map((item) => (typeof item === 'string' ? item.trim() : ''))
+        .filter(Boolean)
+    : []
+
+const stringFromUnknown = (value: unknown): string =>
+  typeof value === 'string' ? value.trim() : ''
+
+const numberArrayFromUnknown = (value: unknown): number[] =>
+  Array.isArray(value)
+    ? value
+        .map((item) => (typeof item === 'number' ? item : Number(item)))
+        .filter((item) => Number.isFinite(item))
+    : []
+
+const normalizeBlueprintLesson = (
+  value: unknown,
+  index: number,
+): AiStudyPathBlueprintLesson => {
+  const record =
+    value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
+  const fallbackTitle = `Lesson ${index + 1}`
+
+  return {
+    title: stringFromUnknown(record.title) || fallbackTitle,
+    moduleTitle: stringFromUnknown(record.moduleTitle) || 'Core module',
+    lessonType:
+      (stringFromUnknown(
+        record.lessonType,
+      ) as AiStudyPathBlueprintLesson['lessonType']) || 'concept',
+    learnerQuestion:
+      stringFromUnknown(record.learnerQuestion) ||
+      `What should I understand after ${fallbackTitle}?`,
+    learningOutcome:
+      stringFromUnknown(record.learningOutcome) ||
+      `Explain and apply the main idea from ${fallbackTitle}.`,
+    dashboardPurpose: stringFromUnknown(record.dashboardPurpose) || 'lesson',
+    layoutArchetype:
+      stringFromUnknown(record.layoutArchetype) || 'learnPracticeTabs',
+    practiceType: stringFromUnknown(record.practiceType) || 'none',
+    mustTeach: stringArrayFromUnknown(record.mustTeach),
+    workedExample: stringFromUnknown(record.workedExample),
+    misconceptionChecks: stringArrayFromUnknown(record.misconceptionChecks),
+    retrievalPractice: stringArrayFromUnknown(record.retrievalPractice),
+    suggestedPractice: stringArrayFromUnknown(record.suggestedPractice),
+  }
+}
+
+const normalizeStudyPathBlueprint = (
+  parsed: unknown,
+  fallbackTitle: string,
+  fallbackFolderName: string,
+  dashboardCount: number,
+): AiStudyPathBlueprint => {
+  const record =
+    parsed && typeof parsed === 'object'
+      ? (parsed as Record<string, unknown>)
+      : {}
+  const rawModules = Array.isArray(record.modules) ? record.modules : []
+  const rawLessons = Array.isArray(record.lessons) ? record.lessons : []
+  const lessons = Array.from({ length: dashboardCount }).map((_item, index) =>
+    normalizeBlueprintLesson(rawLessons[index], index),
+  )
+
+  return {
+    title: stringFromUnknown(record.title) || fallbackTitle,
+    folderName: stringFromUnknown(record.folderName) || fallbackFolderName,
+    learnerProfile:
+      stringFromUnknown(record.learnerProfile) ||
+      'Student learning from a short prompt with unknown prior knowledge.',
+    scope:
+      stringFromUnknown(record.scope) ||
+      'Bounded learning sprint focused on useful fundamentals and practice.',
+    prerequisites: stringArrayFromUnknown(record.prerequisites),
+    learningObjectives: stringArrayFromUnknown(record.learningObjectives),
+    conceptGraph: stringArrayFromUnknown(record.conceptGraph),
+    modules: rawModules
+      .map((module) => {
+        const moduleRecord =
+          module && typeof module === 'object'
+            ? (module as Record<string, unknown>)
+            : {}
+        return {
+          title: stringFromUnknown(moduleRecord.title) || 'Core module',
+          goal: stringFromUnknown(moduleRecord.goal) || 'Build understanding.',
+          lessonIndexes: numberArrayFromUnknown(moduleRecord.lessonIndexes),
+        }
+      })
+      .filter((module) => module.title || module.goal),
+    lessons,
+    finalReviewPlan: stringArrayFromUnknown(record.finalReviewPlan),
+  }
+}
+
+const createStudyPathBlueprintPrompt = ({
+  title,
+  folderName,
+  prompt,
+  dashboardCount,
+  advancedGuidance,
+}: {
+  title: string
+  folderName: string
+  prompt: string
+  dashboardCount: number
+  advancedGuidance: string
+}): string => `Plan a high-quality StudyMesh Study Guide before writing dashboards.
+
+Return strict JSON only. Create exactly ${dashboardCount} lessons.
+
+Planning requirements:
+- Infer likely learner level, goal, prerequisites, and useful scope from the user request.
+- Treat this as a bounded learning sprint, not a full course.
+- Use learning science: retrieval practice, worked examples, misconception checks, spaced review, and mixed practice.
+- Use dashboard layouts by teaching need, not by fixed position.
+- Do not follow a fixed role template by position; pick each layoutArchetype from learning need.
+- Use student-friendly language and concrete objectives.
+- Avoid vague lesson titles such as "Introduction", "Practice", or "Review" unless they include topic-specific words.
+- Include 1-3 modules. lessonIndexes are zero-based indexes into lessons.
+- For each lesson, include mustTeach, workedExample, misconceptionChecks, retrievalPractice, and suggestedPractice.
+- For normal teaching lessons, practice and flashcards should usually be empty unless the lesson is a checkpoint, review, remediation, or applied practice step.
+- Do not write full dashboard notes yet.
+${
+  advancedGuidance
+    ? `- Respect advanced user guidance below.\n\nAdvanced user guidance:\n${advancedGuidance}\n`
+    : ''
+}
+Title fallback: ${title}
+Folder fallback: ${folderName}
+
+User request/topic:
+${prompt}`
+
+const createStudyPathDashboardPrompt = ({
+  title,
+  prompt,
+  dashboardCount,
+  lesson,
+  lessonIndex,
+  blueprint,
+  advancedGuidance,
+}: {
+  title: string
+  prompt: string
+  dashboardCount: number
+  lesson: AiStudyPathBlueprintLesson
+  lessonIndex: number
+  blueprint: AiStudyPathBlueprint
+  advancedGuidance: string
+}): string => `Create one StudyMesh Study Guide dashboard as strict JSON.
+
+Return exactly one dashboard object. No Markdown fences. No extra prose.
+
+Study Guide context:
+- Path title: ${blueprint.title || title}
+- Learner profile: ${blueprint.learnerProfile}
+- Scope: ${blueprint.scope}
+- Objectives: ${
+  blueprint.learningObjectives.join('; ') || 'Useful understanding and practice'
+}
+- Concept graph: ${
+  blueprint.conceptGraph.join(' -> ') || 'Infer sensible progression'
+}
+- Dashboard ${lessonIndex + 1} of ${dashboardCount}
+
+Lesson plan:
+${JSON.stringify(lesson, null, 2)}
+
+Required dashboard fields:
+{
+  "title": "01 - Topic-specific title",
+  "summary": "One sentence preview",
+  "layoutArchetype": "focusLesson | learnPracticeTabs | splitReferenceExercise | multiWidgetLab | overviewReview",
+  "dashboardPurpose": "overview | lesson | practice | review | finalReview | projectLab",
+  "practiceType": "none | quiz | flashcards | mixed",
+  "layoutReason": "Why this layout helps learning",
+  "moduleTitle": "...",
+  "lessonType": "...",
+  "learnerQuestion": "...",
+  "learningOutcome": "...",
+  "suggestedPractice": ["..."],
+  "rawNotes": "Complete readable Markdown lesson",
+  "sourceSummary": { "title": "...", "bullets": ["..."] },
+  "conceptRecap": { "title": "...", "sections": [{ "title": "...", "bullets": ["..."], "example": "..." }] },
+  "practice": { "shortAnswer": [{ "question": "...", "expectedAnswer": "...", "explanation": "..." }], "multipleChoice": [{ "question": "...", "options": ["...", "...", "..."], "correctOptionIndex": 0, "explanation": "..." }] },
+  "flashcards": [{ "front": "...", "back": "..." }]
+}
+
+Quality rules:
+- rawNotes must be 350-750 words of real teaching, formatted as Markdown with short sections.
+- Include: goal, explanation, worked example, common mistakes/misconceptions, and quick recall.
+- Avoid filler, generic questions, copied headings as questions, and obvious answer choices.
+- Practice questions must include recall, application, error diagnosis, or transfer.
+- If practiceType is "none", practice and flashcards may be empty, but rawNotes still needs quick recall prompts.
+- For checkpoint/review/remediation, include focused practice and flashcards.
+- Use simple dashboard layout. Reduce cognitive load: clear hierarchy, signal key ideas, keep examples near rules.
+- Do not output objects/kind/widget renderer fields.
+${
+  advancedGuidance
+    ? `- Respect advanced user guidance:\n${advancedGuidance}\n`
+    : ''
+}
+Original user request/topic:
+${prompt}`
+
+const createStudyPathQualityPrompt = (
+  dashboard: Record<string, unknown>,
+): string => `Evaluate this StudyMesh Study Guide dashboard for student learning quality.
+
+Return strict JSON only:
+{
+  "score": 1-5,
+  "issues": ["..."],
+  "repairInstructions": ["..."]
+}
+
+Rubric:
+- 5: specific, clear, well-scaffolded, useful examples, strong retrieval practice, good layout fit, low cognitive load.
+- 4: good, minor gaps.
+- 3: usable but generic, thin, weak practice, or layout mismatch.
+- 2: poor teaching, vague, too short, generic practice, likely confusing.
+- 1: unusable or malformed.
+
+Check for: progression, specificity, misconceptions, worked example, retrieval practice, student-friendly explanation, layout fit, schema completeness.
+
+Dashboard JSON:
+${JSON.stringify(dashboard)}`
+
+const createStudyPathDashboardRepairPrompt = ({
+  dashboard,
+  repairInstructions,
+}: {
+  dashboard: Record<string, unknown>
+  repairInstructions: string[]
+}): string => `Repair this StudyMesh Study Guide dashboard. Return the same one-dashboard JSON shape only.
+
+Repair instructions:
+${repairInstructions.map((item) => `- ${item}`).join('\n')}
+
+Preserve topic, title intent, module, and dashboard count position. Improve teaching quality, examples, misconceptions, retrieval practice, and layout fit.
+
+Dashboard JSON:
+${JSON.stringify(dashboard)}`
+
+const generateStudyPathJsonWithPipeline = async ({
+  apiToken,
+  model,
+  strongProvider,
+  title,
+  prompt,
+  folderName,
+  dashboardCount,
+  advancedGuidance,
+}: {
+  apiToken: string
+  model: string
+  strongProvider: StrongAiProviderId
+  title: string
+  prompt: string
+  folderName: string
+  dashboardCount: number
+  advancedGuidance: string
+}): Promise<{
+  text: string
+  parsed: unknown
+  blueprint?: AiStudyPathBlueprint
+  qualityByIndex: Map<number, { score: number; issues: string[] }>
+}> => {
+  const blueprintText = await callStrongModel(
+    apiToken,
+    model,
+    [
+      {
+        text: createStudyPathBlueprintPrompt({
+          title,
+          folderName,
+          prompt,
+          dashboardCount,
+          advancedGuidance,
+        }),
+      },
+    ],
+    studyPathBlueprintSchema,
+    strongProvider,
+  )
+  const parsedBlueprint = parseGeminiJson(blueprintText)
+  if (
+    parsedBlueprint &&
+    typeof parsedBlueprint === 'object' &&
+    Array.isArray((parsedBlueprint as Record<string, unknown>).dashboards)
+  ) {
+    return {
+      text: blueprintText,
+      parsed: parsedBlueprint,
+      blueprint: undefined,
+      qualityByIndex: new Map(),
+    }
+  }
+
+  const blueprint = normalizeStudyPathBlueprint(
+    parsedBlueprint,
+    title,
+    folderName,
+    dashboardCount,
+  )
+  const qualityByIndex = new Map<number, { score: number; issues: string[] }>()
+  const dashboards: Record<string, unknown>[] = []
+
+  for (let index = 0; index < dashboardCount; index += 1) {
+    const lesson = blueprint.lessons[index]
+    const dashboardText = await callStrongModel(
+      apiToken,
+      model,
+      [
+        {
+          text: createStudyPathDashboardPrompt({
+            title,
+            prompt,
+            dashboardCount,
+            lesson,
+            lessonIndex: index,
+            blueprint,
+            advancedGuidance,
+          }),
+        },
+      ],
+      studyPathDashboardSchema,
+      strongProvider,
+    )
+    const parsedDashboard = parseGeminiJson(dashboardText)
+    let dashboard =
+      parsedDashboard && typeof parsedDashboard === 'object'
+        ? (parsedDashboard as Record<string, unknown>)
+        : {}
+
+    try {
+      const qualityText = await callStrongModel(
+        apiToken,
+        model,
+        [{ text: createStudyPathQualityPrompt(dashboard) }],
+        studyPathQualitySchema,
+        strongProvider,
+      )
+      const qualityParsed = parseGeminiJson(qualityText)
+      const qualityRecord =
+        qualityParsed && typeof qualityParsed === 'object'
+          ? (qualityParsed as Record<string, unknown>)
+          : {}
+      const score =
+        typeof qualityRecord.score === 'number' ? qualityRecord.score : 3
+      const issues = stringArrayFromUnknown(qualityRecord.issues)
+      const repairInstructions = stringArrayFromUnknown(
+        qualityRecord.repairInstructions,
+      )
+      qualityByIndex.set(index, { score, issues })
+
+      if (score < 4 && repairInstructions.length > 0) {
+        const repairText = await callStrongModel(
+          apiToken,
+          model,
+          [
+            {
+              text: createStudyPathDashboardRepairPrompt({
+                dashboard,
+                repairInstructions,
+              }),
+            },
+          ],
+          studyPathDashboardSchema,
+          strongProvider,
+        )
+        const repaired = parseGeminiJson(repairText)
+        if (repaired && typeof repaired === 'object') {
+          dashboard = repaired as Record<string, unknown>
+        }
+      }
+    } catch {
+      qualityByIndex.set(index, {
+        score: 3,
+        issues: [
+          'Quality evaluator skipped because provider returned unusable output.',
+        ],
+      })
+    }
+
+    dashboards.push({
+      ...dashboard,
+      title:
+        stringFromUnknown(dashboard.title) ||
+        `${String(index + 1).padStart(2, '0')} - ${lesson.title}`,
+      moduleTitle:
+        stringFromUnknown(dashboard.moduleTitle) || lesson.moduleTitle,
+      lessonType: stringFromUnknown(dashboard.lessonType) || lesson.lessonType,
+      learnerQuestion:
+        stringFromUnknown(dashboard.learnerQuestion) || lesson.learnerQuestion,
+      learningOutcome:
+        stringFromUnknown(dashboard.learningOutcome) || lesson.learningOutcome,
+      suggestedPractice:
+        stringArrayFromUnknown(dashboard.suggestedPractice).length > 0
+          ? stringArrayFromUnknown(dashboard.suggestedPractice)
+          : lesson.suggestedPractice,
+      layoutArchetype:
+        stringFromUnknown(dashboard.layoutArchetype) || lesson.layoutArchetype,
+      dashboardPurpose:
+        stringFromUnknown(dashboard.dashboardPurpose) ||
+        lesson.dashboardPurpose,
+      practiceType:
+        stringFromUnknown(dashboard.practiceType) || lesson.practiceType,
+    })
+  }
+
+  const pathJson = {
+    title: blueprint.title || title,
+    folderName: blueprint.folderName || folderName,
+    dashboards,
+  }
+  const text = JSON.stringify(pathJson)
+
+  return {
+    text,
+    parsed: pathJson,
+    blueprint,
+    qualityByIndex,
+  }
+}
+
 export const generateStudyPathWithAi = async ({
   apiToken,
   model,
@@ -1350,33 +1963,38 @@ Original JSON:
 ${originalJson}`
 
   let text: string
+  let parsed: unknown
+  let blueprint: AiStudyPathBlueprint | undefined
+  let qualityByIndex = new Map<number, { score: number; issues: string[] }>()
   try {
-    text = await callStrongModel(
+    const pipelineResult = await generateStudyPathJsonWithPipeline({
       apiToken,
       model,
-      [{ text: promptText }],
-      studyPathSchema,
       strongProvider,
-    )
+      title,
+      prompt,
+      folderName: folderName || 'Study Guide',
+      dashboardCount,
+      advancedGuidance,
+    })
+    text = pipelineResult.text
+    parsed = pipelineResult.parsed
+    blueprint = pipelineResult.blueprint
+    qualityByIndex = pipelineResult.qualityByIndex
   } catch (error) {
     if (!isGeminiOutputFormatError(error)) {
-      throw error
-    }
-
-    text = await callStrongModel(
-      apiToken,
-      model,
-      [{ text: fallbackPrompt }],
-      undefined,
-      strongProvider,
-    )
-  }
-
-  let parsed: unknown
-  try {
-    parsed = parseGeminiJson(text)
-  } catch {
-    try {
+      try {
+        text = await callStrongModel(
+          apiToken,
+          model,
+          [{ text: promptText }],
+          studyPathSchema,
+          strongProvider,
+        )
+      } catch {
+        throw error
+      }
+    } else {
       text = await callStrongModel(
         apiToken,
         model,
@@ -1384,9 +2002,25 @@ ${originalJson}`
         undefined,
         strongProvider,
       )
+    }
+  }
+
+  if (!parsed) {
+    try {
       parsed = parseGeminiJson(text)
     } catch {
-      throw new Error(GEMINI_OUTPUT_FORMAT_MESSAGE)
+      try {
+        text = await callStrongModel(
+          apiToken,
+          model,
+          [{ text: fallbackPrompt }],
+          undefined,
+          strongProvider,
+        )
+        parsed = parseGeminiJson(text)
+      } catch {
+        throw new Error(GEMINI_OUTPUT_FORMAT_MESSAGE)
+      }
     }
   }
   let record =
@@ -1651,15 +2285,15 @@ ${prompt}`
         filledVisibleObjects && filledVisibleObjects.objects.length > 0
           ? filledVisibleObjects.objects
           : visibleRoleObjects.length > 0
-            ? visibleRoleObjects
-            : buildFallbackObjectsForDashboardRole({
-                packId,
-                dashboardTitle,
-                dashboardRole,
-                rawNotes: input.rawNotes,
-                sourceSummary: draft.sourceSummary,
-                accumulatedContentNotes,
-              })
+          ? visibleRoleObjects
+          : buildFallbackObjectsForDashboardRole({
+              packId,
+              dashboardTitle,
+              dashboardRole,
+              rawNotes: input.rawNotes,
+              sourceSummary: draft.sourceSummary,
+              accumulatedContentNotes,
+            })
       if (visibleRoleObjects.length === 0 && finalObjects.length > 0) {
         finalEvents.push(
           `Fallback used: created ${dashboardRole} object because role filtering left no visible study objects.`,
@@ -1681,6 +2315,14 @@ ${prompt}`
         typeof input.rawNotes === 'string' ? input.rawNotes : '',
         finalObjects,
       )
+      const quality = qualityByIndex.get(index)
+      if (quality && quality.score < 4) {
+        finalEvents.push(
+          `Quality evaluator score ${quality.score}/5: ${quality.issues.join(
+            '; ',
+          )}`,
+        )
+      }
 
       warnings.push(...draft.warnings)
 
@@ -1691,6 +2333,15 @@ ${prompt}`
         rawNotes: lessonNotes,
         dashboardRole,
         ...layoutMetadata,
+        moduleTitle: stringFromUnknown(input.moduleTitle),
+        lessonType: stringFromUnknown(
+          input.lessonType,
+        ) as AiStudyPathDashboardDraft['lessonType'],
+        learnerQuestion: stringFromUnknown(input.learnerQuestion),
+        learningOutcome: stringFromUnknown(input.learningOutcome),
+        suggestedPractice: stringArrayFromUnknown(input.suggestedPractice),
+        qualityScore: quality?.score,
+        qualityIssues: quality?.issues,
         objects: finalObjects,
         warnings: [],
         debugTrace,
@@ -1720,5 +2371,6 @@ ${prompt}`
         : folderName,
     dashboards,
     warnings,
+    blueprint,
   }
 }

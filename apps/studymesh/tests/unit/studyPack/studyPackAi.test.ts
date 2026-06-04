@@ -2609,6 +2609,121 @@ describe('Gemini study pack client', () => {
     ],
   })
 
+  it('plans Study Guides before generating and evaluating individual dashboards', async () => {
+    const blueprint = {
+      title: 'Python Loops',
+      folderName: 'Python Loops',
+      learnerProfile: 'Beginner programming student.',
+      scope: 'Learn loop fundamentals and common mistakes.',
+      prerequisites: ['Variables', 'basic expressions'],
+      learningObjectives: ['Use for loops', 'Use while loops', 'debug loops'],
+      conceptGraph: ['for loop -> while loop -> loop debugging'],
+      modules: [
+        {
+          title: 'Loop foundations',
+          goal: 'Build useful loop intuition.',
+          lessonIndexes: [0, 1, 2],
+        },
+      ],
+      lessons: [1, 2, 3].map((index) => ({
+        title: `Loop lesson ${index}`,
+        moduleTitle: 'Loop foundations',
+        lessonType: index === 3 ? 'checkpoint' : 'concept',
+        learnerQuestion: `How do loops work in case ${index}?`,
+        learningOutcome: `Apply loop pattern ${index}.`,
+        dashboardPurpose: index === 3 ? 'practice' : 'lesson',
+        layoutArchetype:
+          index === 3 ? 'splitReferenceExercise' : 'learnPracticeTabs',
+        practiceType: index === 3 ? 'mixed' : 'none',
+        mustTeach: [`Loop idea ${index}`],
+        workedExample: `Loop worked example ${index}.`,
+        misconceptionChecks: [`Loop mistake ${index}.`],
+        retrievalPractice: [`Recall loop rule ${index}.`],
+        suggestedPractice: [`Generate quiz for loop lesson ${index}`],
+      })),
+      finalReviewPlan: ['Mix for and while loop decisions.'],
+    }
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        candidates: [
+          { content: { parts: [{ text: JSON.stringify(blueprint) }] } },
+        ],
+      }),
+    })
+    ;[1, 2, 3].forEach((index) => {
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify(
+                        makeRichPathDashboard(index, `Loop lesson ${index}`),
+                      ),
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        score: 4,
+                        issues: [],
+                        repairInstructions: [],
+                      }),
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const draft = await generateStudyPathWithAi({
+      apiToken: 'test-token',
+      model: 'gemini-test',
+      title: 'Python Loops',
+      prompt: 'Teach me Python loops',
+      folderName: '',
+      generationAmount: 'few',
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(7)
+    expect(fetchMock.mock.calls[0][1].body).toContain(
+      'Plan a high-quality StudyMesh Study Guide',
+    )
+    expect(fetchMock.mock.calls[1][1].body).toContain(
+      'Create one StudyMesh Study Guide dashboard',
+    )
+    expect(fetchMock.mock.calls[2][1].body).toContain(
+      'Evaluate this StudyMesh Study Guide dashboard',
+    )
+    expect(draft.blueprint?.learningObjectives).toContain('Use for loops')
+    expect(draft.dashboards[0]).toMatchObject({
+      moduleTitle: 'Loop foundations',
+      learnerQuestion: 'How do loops work in case 1?',
+      learningOutcome: 'Apply loop pattern 1.',
+      suggestedPractice: ['Generate quiz for loop lesson 1'],
+      qualityScore: 4,
+      qualityIssues: [],
+    })
+  })
+
   it('requests structured JSON and normalizes generated study objects', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

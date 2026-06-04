@@ -48,7 +48,8 @@ const mainUseCases = [
     accent: '#00A878',
     steps: ['Pick a source', 'Choose a format', 'Study the result'],
     inputLabel: 'Source options',
-    input: 'Current dashboard, copied notes, screenshots, PDF, or PowerPoint deck.',
+    input:
+      'Current dashboard, copied notes, screenshots, PDF, or PowerPoint deck.',
     outputLabel: 'Quick result',
     output:
       'Quiz, flashcards, expanded notes, and practice tied to the selected source.',
@@ -276,7 +277,7 @@ const StudyMeshLanding = () => {
             onClick={() => openWorkspace()}
             sx={{ borderRadius: 1, textTransform: 'none' }}
           >
-            Enter workspace
+            Try StudyMesh
           </Button>
         </Container>
       </Box>
@@ -317,13 +318,23 @@ const StudyMeshLanding = () => {
             <Typography
               variant="h5"
               component="p"
-              sx={{ 
+              sx={{
                 display: 'inline-block',
                 mb: 2,
-                fontWeight: 500, 
+                fontWeight: 500,
               }}
             >
-              Turn <span style={{ color: '#2196F3', fontWeight: 700 }}>prompts</span> and <span style={{ color: '#00C49A', fontWeight: 700 }}>messy notes</span> into <Box component="span" sx={{ fontWeight: 700 }}>study guides</Box>.
+              Turn{' '}
+              <span style={{ color: '#2196F3', fontWeight: 700 }}>prompts</span>{' '}
+              and{' '}
+              <span style={{ color: '#00C49A', fontWeight: 700 }}>
+                messy notes
+              </span>{' '}
+              into{' '}
+              <Box component="span" sx={{ fontWeight: 700 }}>
+                study guides
+              </Box>
+              .
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
               Create a full tutorial from a learning goal, or use Quick Create
@@ -343,7 +354,7 @@ const StudyMeshLanding = () => {
                 onClick={() => openWorkspace()}
                 sx={{ borderRadius: 1, textTransform: 'none' }}
               >
-                Open Workspace
+                Try StudyMesh
               </Button>
             </Stack>
             <Stack
@@ -604,11 +615,7 @@ const StudyMeshLanding = () => {
                     }}
                   >
                     <Stack spacing={1.5} height="100%">
-                      <Typography
-                        variant="h5"
-                        fontWeight={950}
-                        color="#2196F3"
-                      >
+                      <Typography variant="h5" fontWeight={950} color="#2196F3">
                         Create Study Guide
                       </Typography>
                       <Typography variant="h5" fontWeight={900}>
@@ -769,11 +776,7 @@ const StudyMeshLanding = () => {
                     }}
                   >
                     <Stack spacing={1.5} height="100%">
-                      <Typography
-                        variant="h5"
-                        fontWeight={950}
-                        color="#00A878"
-                      >
+                      <Typography variant="h5" fontWeight={950} color="#00A878">
                         Quick Create
                       </Typography>
                       <Typography variant="h5" fontWeight={900}>
@@ -1207,7 +1210,7 @@ const StudyMeshLanding = () => {
                 '&:hover': { bgcolor: 'primary.light' },
               }}
             >
-              Enter Workspace
+              Try StudyMesh
             </Button>
           </Stack>
         </Paper>

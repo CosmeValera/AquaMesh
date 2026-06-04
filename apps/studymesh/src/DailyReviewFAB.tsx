@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Box, Fab, Tooltip } from '@mui/material'
-import { DailyReviewFAB } from './components/daily-review'
+import { DailyReviewPanel } from './components/dailyReview'
 
 const DailyReviewFAB: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -27,33 +27,23 @@ const DailyReviewFAB: React.FC = () => {
       </Box>
 
       {isOpen && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 9998,
-            pointerEvents: 'none',
-          }}
-        >
+        <>
           <Box
             onClick={() => setIsOpen(false)}
             sx={{
-              position: 'absolute',
+              position: 'fixed',
               top: 0,
               left: 0,
               right: 0,
               bottom: 0,
               bgcolor: 'rgba(0,0,0,0.3)',
-              pointerEvents: 'auto',
+              zIndex: 9998,
             }}
           />
-          <Box sx={{ pointerEvents: 'auto' }}>
-            <DailyReviewFAB onClose={() => setIsOpen(false)} />
+          <Box sx={{ width: '100%', height: '100%' }} onClick={(e) => e.stopPropagation()}>
+            <DailyReviewPanel onClose={() => setIsOpen(false)} />
           </Box>
-        </Box>
+        </>
       )}
     </>
   )

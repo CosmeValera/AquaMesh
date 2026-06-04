@@ -55,6 +55,7 @@ import {
   normalizeFolderColor,
   normalizeFolderName,
 } from './folderColors'
+import { SAVED_DASHBOARDS_CHANGED_EVENT } from './dashboardStorage'
 
 interface SavedDashboard {
   id: string
@@ -188,9 +189,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
       const userData = localStorage.getItem('userData')
       if (userData) {
         const parsedData = JSON.parse(userData)
-        setIsAdmin(
-          parsedData.id === 'admin' && parsedData.role === 'ADMIN_ROLE',
-        )
+        setIsAdmin(parsedData.role === 'ADMIN_ROLE')
       }
     } catch (error) {
       console.error('Failed to parse user data', error)
@@ -370,6 +369,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
         'customDashboards',
         JSON.stringify(updatedDashboards),
       )
+      window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
     } catch (error) {
       console.error('Failed to delete dashboard', error)
     }
@@ -424,6 +424,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
         'customDashboards',
         JSON.stringify(updatedDashboards),
       )
+      window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
     } catch (error) {
       console.error('Failed to delete selected dashboards', error)
     } finally {
@@ -506,6 +507,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
         'customDashboards',
         JSON.stringify(updatedDashboards),
       )
+      window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
     } catch (error) {
       console.error('Failed to update dashboard visibility', error)
     }
@@ -763,6 +765,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
         'customDashboards',
         JSON.stringify(updatedDashboards),
       )
+      window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
       setEditDialogOpen(false)
       setDashboardToEdit(null)
     } catch (error) {

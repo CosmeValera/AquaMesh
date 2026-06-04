@@ -562,7 +562,7 @@ const WorkspaceOnboarding = () => {
         return false
       }
       const parsed = JSON.parse(userData)
-      return parsed.id === 'admin' && parsed.role === 'ADMIN_ROLE'
+      return parsed.role === 'ADMIN_ROLE'
     } catch {
       return false
     }

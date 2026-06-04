@@ -26,7 +26,6 @@ import {
 const showLocalAiDebugPanel = (): boolean => {
   const envValue = String(
     process.env.VITE_SHOW_LOCAL_AI_DEBUG_PANEL ||
-      process.env.REACT_APP_SHOW_LOCAL_AI_DEBUG_PANEL ||
       '',
   ).toLowerCase()
 

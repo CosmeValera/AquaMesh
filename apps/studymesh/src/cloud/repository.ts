@@ -1,0 +1,618 @@
+import type { SavedDashboard } from '../components/Dasboard/dashboardStorage'
+import type {
+  CustomWidget,
+  WidgetVersion,
+} from '../components/WidgetEditor/WidgetStorage'
+import type {
+  CloudJson,
+  CloudWorkspaceBundle,
+  DashboardMergeResult,
+  StudyMeshSupabaseClient,
+  StudyPathProgressCache,
+  UserProfile,
+  WorkspaceState,
+} from './types'
+
+const nowIso = () => new Date().toISOString()
+
+const cloneJson = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
+
+const toCloudJson = (value: unknown): CloudJson => cloneJson(value) as CloudJson
+
+const assertSingle = async <T>(
+  query: PromiseLike<{ data: T | null; error: { message: string } | null }>,
+): Promise<T | null> => {
+  const { data, error } = await query
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data
+}
+
+const assertMany = async <T>(
+  query: PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> => {
+  const { data, error } = await query
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data || []
+}
+
+interface ProfileRow {
+  id: string
+  email?: string | null
+  display_name?: string | null
+  avatar_path?: string | null
+  role?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface DashboardRow {
+  id: string
+  owner_id: string
+  title: string
+  description?: string | null
+  dashboard_type?: string | null
+  visibility?: string | null
+  layout: CloudJson
+  referenced_widget_ids?: string[] | null
+  created_at: string
+  updated_at: string
+  deleted_at?: string | null
+}
+
+export interface WidgetRow {
+  id: string
+  owner_id: string
+  title: string
+  widget_type?: string | null
+  components: CloudJson
+  metadata?: CloudJson | null
+  created_at: string
+  updated_at: string
+  deleted_at?: string | null
+}
+
+export interface WidgetVersionRow {
+  id?: string
+  owner_id: string
+  widget_id: string
+  version: number
+  title?: string | null
+  components: CloudJson
+  metadata?: CloudJson | null
+  notes?: string | null
+  created_at: string
+}
+
+export interface WorkspaceStateRow {
+  owner_id: string
+  selected_dashboard: string | null
+  open_dashboards: CloudJson
+  study_progress?: CloudJson | null
+  settings?: CloudJson | null
+  updated_at: string
+}
+
+const profileFromRow = (row: ProfileRow): UserProfile => ({
+  id: row.id,
+  email: row.email || undefined,
+  displayName: row.display_name || undefined,
+  avatarPath: row.avatar_path || undefined,
+  role: row.role || undefined,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+})
+
+const profileToRow = (profile: UserProfile): ProfileRow => ({
+  id: profile.id,
+  email: profile.email,
+  display_name: profile.displayName,
+  avatar_path: profile.avatarPath,
+  role: profile.role,
+  updated_at: profile.updatedAt || nowIso(),
+})
+
+const metadataValue = (
+  metadata: CloudJson | null | undefined,
+  key: string,
+) =>
+  typeof metadata === 'object' && metadata && !Array.isArray(metadata)
+    ? metadata[key]
+    : undefined
+
+export const mapDashboardRowToSavedDashboard = (
+  row: DashboardRow,
+): SavedDashboard => ({
+  id: row.id,
+  name: row.title,
+  folder: undefined,
+  folderColor: undefined,
+  description: row.description || undefined,
+  tags: [],
+  isPublic: false,
+  layout: cloneJson(row.layout) as SavedDashboard['layout'],
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+})
+
+export const mapSavedDashboardToDashboardRow = (
+  ownerId: string,
+  dashboard: SavedDashboard,
+): DashboardRow => ({
+  id: dashboard.id,
+  owner_id: ownerId,
+  title: dashboard.name,
+  description: dashboard.description,
+  dashboard_type: 'dashboard',
+  visibility: 'private',
+  layout: toCloudJson(dashboard.layout),
+  referenced_widget_ids: extractReferencedWidgetIds(dashboard),
+  created_at: dashboard.createdAt,
+  updated_at: dashboard.updatedAt || nowIso(),
+  deleted_at: null,
+})
+
+const widgetFromRow = (row: WidgetRow): CustomWidget => ({
+  id: row.id,
+  name: row.title,
+  components: cloneJson(row.components) as unknown as CustomWidget['components'],
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+  category:
+    typeof metadataValue(row.metadata, 'category') === 'string'
+      ? (metadataValue(row.metadata, 'category') as string)
+      : row.widget_type || 'Other',
+  tags: Array.isArray(metadataValue(row.metadata, 'tags'))
+    ? (metadataValue(row.metadata, 'tags') as unknown[]).filter(
+        (tag): tag is string => typeof tag === 'string',
+      )
+    : [],
+  description:
+    typeof metadataValue(row.metadata, 'description') === 'string'
+      ? (metadataValue(row.metadata, 'description') as string)
+      : '',
+  version:
+    typeof metadataValue(row.metadata, 'version') === 'string'
+      ? (metadataValue(row.metadata, 'version') as string)
+      : '1.0',
+  author:
+    typeof metadataValue(row.metadata, 'author') === 'string'
+      ? (metadataValue(row.metadata, 'author') as string)
+      : '',
+})
+
+const widgetToRow = (ownerId: string, widget: CustomWidget): WidgetRow => ({
+  id: widget.id,
+  owner_id: ownerId,
+  title: widget.name,
+  widget_type: widget.category || 'Other',
+  components: toCloudJson(widget.components),
+  metadata: toCloudJson({
+    category: widget.category || 'Other',
+    tags: widget.tags || [],
+    description: widget.description || '',
+    version: widget.version || '1.0',
+    author: widget.author || '',
+  }),
+  created_at: widget.createdAt,
+  updated_at: widget.updatedAt || nowIso(),
+  deleted_at: null,
+})
+
+const widgetVersionToNumber = (version: string): number => {
+  const [major = '1', minor = '0'] = version.split('.')
+  return Number(major) * 1000 + Number(minor)
+}
+
+const widgetVersionFromNumber = (version: number): string =>
+  `${Math.floor(version / 1000)}.${version % 1000}`
+
+const widgetVersionFromRow = (row: WidgetVersionRow): WidgetVersion => ({
+  id: row.id || `${row.widget_id}-version-${row.version}`,
+  widgetId: row.widget_id,
+  version: widgetVersionFromNumber(row.version),
+  components: cloneJson(row.components) as unknown as WidgetVersion['components'],
+  createdAt: row.created_at,
+  notes: row.notes || undefined,
+  isCurrent: metadataValue(row.metadata, 'isCurrent') === true || undefined,
+})
+
+const widgetVersionToRow = (
+  ownerId: string,
+  version: WidgetVersion,
+): WidgetVersionRow => ({
+  owner_id: ownerId,
+  widget_id: version.widgetId,
+  version: widgetVersionToNumber(version.version),
+  title: version.version,
+  components: toCloudJson(version.components),
+  metadata: toCloudJson({
+    originalId: version.id,
+    originalVersion: version.version,
+    isCurrent: Boolean(version.isCurrent),
+  }),
+  notes: version.notes,
+  created_at: version.createdAt,
+})
+
+const workspaceStateFromRow = (row: WorkspaceStateRow): WorkspaceState => ({
+  ownerId: row.owner_id,
+  selectedDashboard: Number(row.selected_dashboard || 0),
+  openDashboards: cloneJson(
+    row.open_dashboards,
+  ) as unknown as WorkspaceState['openDashboards'],
+  studyProgress: row.study_progress
+    ? (cloneJson(row.study_progress) as StudyPathProgressCache)
+    : undefined,
+  settings: row.settings
+    ? (cloneJson(row.settings) as Record<string, CloudJson>)
+    : undefined,
+  updatedAt: row.updated_at,
+})
+
+const workspaceStateToRow = (
+  workspaceState: WorkspaceState,
+): WorkspaceStateRow => ({
+  owner_id: workspaceState.ownerId,
+  selected_dashboard: String(workspaceState.selectedDashboard),
+  open_dashboards: toCloudJson(workspaceState.openDashboards),
+  study_progress: workspaceState.studyProgress
+    ? toCloudJson(workspaceState.studyProgress)
+    : {},
+  settings: workspaceState.settings ? toCloudJson(workspaceState.settings) : {},
+  updated_at: workspaceState.updatedAt || nowIso(),
+})
+
+const collectWidgetIds = (value: unknown, widgetIds: Set<string>): void => {
+  if (!value || typeof value !== 'object') {
+    return
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectWidgetIds(item, widgetIds))
+    return
+  }
+
+  const record = value as Record<string, unknown>
+  const candidates = [
+    record.widgetId,
+    record.customWidgetId,
+    record.savedWidgetId,
+    record.id && record.component === 'CustomWidget' ? record.id : undefined,
+  ]
+
+  candidates.forEach((candidate) => {
+    if (typeof candidate === 'string' && candidate.startsWith('widget-')) {
+      widgetIds.add(candidate)
+    }
+  })
+
+  Object.values(record).forEach((nested) => collectWidgetIds(nested, widgetIds))
+}
+
+export const extractReferencedWidgetIds = (
+  dashboard: Pick<SavedDashboard, 'layout'>,
+): string[] => {
+  const widgetIds = new Set<string>()
+  collectWidgetIds(dashboard.layout, widgetIds)
+  return [...widgetIds]
+}
+
+export const createDashboardMergePlan = (
+  localDashboards: SavedDashboard[],
+  cloudDashboards: SavedDashboard[],
+): DashboardMergeResult => {
+  const cloudById = new Map(
+    cloudDashboards.map((dashboard) => [dashboard.id, dashboard]),
+  )
+  const readyToUpload: SavedDashboard[] = []
+  const conflictedLocalCopies: SavedDashboard[] = []
+
+  localDashboards.forEach((localDashboard) => {
+    const cloudDashboard = cloudById.get(localDashboard.id)
+    if (!cloudDashboard) {
+      readyToUpload.push(localDashboard)
+      return
+    }
+
+    const localTime = new Date(localDashboard.updatedAt).getTime()
+    const cloudTime = new Date(cloudDashboard.updatedAt).getTime()
+    if (localTime > cloudTime) {
+      readyToUpload.push(localDashboard)
+      return
+    }
+
+    if (JSON.stringify(localDashboard) !== JSON.stringify(cloudDashboard)) {
+      conflictedLocalCopies.push({
+        ...localDashboard,
+        id: `${localDashboard.id}-local-${Date.now()}`,
+        name: `${localDashboard.name} (local copy)`,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+      })
+    }
+  })
+
+  return { readyToUpload, conflictedLocalCopies }
+}
+
+export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
+  async getProfile(userId: string): Promise<UserProfile | null> {
+    const row = await assertSingle<ProfileRow>(
+      client.from('profiles').select('*').eq('id', userId).maybeSingle(),
+    )
+    return row ? profileFromRow(row) : null
+  },
+
+  async upsertProfile(profile: UserProfile): Promise<UserProfile> {
+    const row = await assertSingle<ProfileRow>(
+      client
+        .from('profiles')
+        .upsert(profileToRow(profile), { onConflict: 'id' })
+        .select('*')
+        .single(),
+    )
+    if (!row) {
+      throw new Error('Profile upsert returned no row')
+    }
+
+    return profileFromRow(row)
+  },
+
+  async listDashboards(ownerId: string): Promise<SavedDashboard[]> {
+    const rows = await assertMany<DashboardRow>(
+      client
+        .from('user_dashboards')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .is('deleted_at', null)
+        .order('updated_at', { ascending: false }),
+    )
+    return rows.map(mapDashboardRowToSavedDashboard)
+  },
+
+  async getDashboard(
+    ownerId: string,
+    dashboardId: string,
+  ): Promise<SavedDashboard | null> {
+    const row = await assertSingle<DashboardRow>(
+      client
+        .from('user_dashboards')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .eq('id', dashboardId)
+        .is('deleted_at', null)
+        .maybeSingle(),
+    )
+    return row ? mapDashboardRowToSavedDashboard(row) : null
+  },
+
+  async upsertDashboard(
+    ownerId: string,
+    dashboard: SavedDashboard,
+  ): Promise<SavedDashboard> {
+    const row = await assertSingle<DashboardRow>(
+      client
+        .from('user_dashboards')
+        .upsert(mapSavedDashboardToDashboardRow(ownerId, dashboard), {
+          onConflict: 'owner_id,id',
+        })
+        .select('*')
+        .single(),
+    )
+    if (!row) {
+      throw new Error('Dashboard upsert returned no row')
+    }
+
+    return mapDashboardRowToSavedDashboard(row)
+  },
+
+  async deleteDashboard(ownerId: string, dashboardId: string): Promise<void> {
+    await assertSingle<DashboardRow>(
+      client
+        .from('user_dashboards')
+        .update({ deleted_at: nowIso(), updated_at: nowIso() })
+        .eq('owner_id', ownerId)
+        .eq('id', dashboardId)
+        .select('*')
+        .single(),
+    )
+  },
+
+  async listWidgets(ownerId: string): Promise<CustomWidget[]> {
+    const rows = await assertMany<WidgetRow>(
+      client
+        .from('user_widgets')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .is('deleted_at', null)
+        .order('updated_at', { ascending: false }),
+    )
+    return rows.map(widgetFromRow)
+  },
+
+  async getWidget(ownerId: string, widgetId: string): Promise<CustomWidget | null> {
+    const row = await assertSingle<WidgetRow>(
+      client
+        .from('user_widgets')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .eq('id', widgetId)
+        .is('deleted_at', null)
+        .maybeSingle(),
+    )
+    return row ? widgetFromRow(row) : null
+  },
+
+  async upsertWidget(
+    ownerId: string,
+    widget: CustomWidget,
+  ): Promise<CustomWidget> {
+    const row = await assertSingle<WidgetRow>(
+      client
+        .from('user_widgets')
+        .upsert(widgetToRow(ownerId, widget), { onConflict: 'owner_id,id' })
+        .select('*')
+        .single(),
+    )
+    if (!row) {
+      throw new Error('Widget upsert returned no row')
+    }
+
+    return widgetFromRow(row)
+  },
+
+  async deleteWidget(ownerId: string, widgetId: string): Promise<void> {
+    await assertSingle<WidgetRow>(
+      client
+        .from('user_widgets')
+        .update({ deleted_at: nowIso() })
+        .eq('owner_id', ownerId)
+        .eq('id', widgetId)
+        .select('*')
+        .single(),
+    )
+  },
+
+  async listWidgetVersions(
+    ownerId: string,
+    widgetId?: string,
+  ): Promise<WidgetVersion[]> {
+    let query = client
+      .from('user_widget_versions')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .order('created_at', { ascending: false })
+
+    if (widgetId) {
+      query = query.eq('widget_id', widgetId)
+    }
+
+    const rows = await assertMany<WidgetVersionRow>(query)
+    return rows.map(widgetVersionFromRow)
+  },
+
+  async upsertWidgetVersion(
+    ownerId: string,
+    version: WidgetVersion,
+  ): Promise<WidgetVersion> {
+    const row = await assertSingle<WidgetVersionRow>(
+      client
+        .from('user_widget_versions')
+        .upsert(widgetVersionToRow(ownerId, version), {
+          onConflict: 'owner_id,widget_id,version',
+        })
+        .select('*')
+        .single(),
+    )
+    if (!row) {
+      throw new Error('Widget version upsert returned no row')
+    }
+
+    return widgetVersionFromRow(row)
+  },
+
+  async deleteWidgetVersions(ownerId: string, widgetId: string): Promise<void> {
+    const { error } = await client
+      .from('user_widget_versions')
+      .delete()
+      .eq('owner_id', ownerId)
+      .eq('widget_id', widgetId)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+  },
+
+  async getWorkspaceState(ownerId: string): Promise<WorkspaceState | null> {
+    const row = await assertSingle<WorkspaceStateRow>(
+      client
+        .from('user_workspace_state')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .maybeSingle(),
+    )
+    return row ? workspaceStateFromRow(row) : null
+  },
+
+  async upsertWorkspaceState(
+    workspaceState: WorkspaceState,
+  ): Promise<WorkspaceState> {
+    const row = await assertSingle<WorkspaceStateRow>(
+      client
+        .from('user_workspace_state')
+        .upsert(workspaceStateToRow(workspaceState), {
+          onConflict: 'owner_id',
+        })
+        .select('*')
+        .single(),
+    )
+    if (!row) {
+      throw new Error('Workspace state upsert returned no row')
+    }
+
+    return workspaceStateFromRow(row)
+  },
+
+  async loadWorkspaceBundle(ownerId: string): Promise<CloudWorkspaceBundle> {
+    const [profile, dashboards, widgets, widgetVersions, workspaceState] =
+      await Promise.all([
+        this.getProfile(ownerId),
+        this.listDashboards(ownerId),
+        this.listWidgets(ownerId),
+        this.listWidgetVersions(ownerId),
+        this.getWorkspaceState(ownerId),
+      ])
+
+    return {
+      profile,
+      dashboards,
+      widgets,
+      widgetVersions,
+      workspaceState,
+    }
+  },
+
+  async saveWorkspaceBundle(
+    ownerId: string,
+    bundle: Omit<CloudWorkspaceBundle, 'profile'> & {
+      profile?: UserProfile | null
+    },
+  ): Promise<CloudWorkspaceBundle> {
+    const profile = bundle.profile
+      ? await this.upsertProfile(bundle.profile)
+      : await this.getProfile(ownerId)
+
+    const widgets = await Promise.all(
+      bundle.widgets.map((widget) => this.upsertWidget(ownerId, widget)),
+    )
+    const dashboards = await Promise.all(
+      bundle.dashboards.map((dashboard) =>
+        this.upsertDashboard(ownerId, dashboard),
+      ),
+    )
+    const widgetVersions = await Promise.all(
+      bundle.widgetVersions.map((version) =>
+        this.upsertWidgetVersion(ownerId, version),
+      ),
+    )
+    const workspaceState = bundle.workspaceState
+      ? await this.upsertWorkspaceState(bundle.workspaceState)
+      : null
+
+    return {
+      profile,
+      dashboards,
+      widgets,
+      widgetVersions,
+      workspaceState,
+    }
+  },
+})
+
+export type CloudRepository = ReturnType<typeof createCloudRepository>

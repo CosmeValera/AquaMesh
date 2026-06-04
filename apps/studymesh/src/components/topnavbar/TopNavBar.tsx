@@ -31,7 +31,6 @@ import ColorLensIcon from '@mui/icons-material/ColorLens'
 import Brightness6Icon from '@mui/icons-material/Brightness6'
 import CloseIcon from '@mui/icons-material/Close'
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts'
-import SwitchAccountIcon from '@mui/icons-material/SwitchAccount'
 import PersonIcon from '@mui/icons-material/Person'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
@@ -82,6 +81,7 @@ import {
 import { WORKSPACE_DASHBOARD_TABS_SLOT_ID } from '../workspace/workspaceEvents'
 import WidgetEditorDialog from '../workspace/WidgetEditorDialog'
 import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceMode'
+import { useAuth } from '../../auth/AuthProvider'
 
 // Define user data type
 interface UserData {
@@ -98,12 +98,6 @@ const adminUser: UserData = {
   role: 'ADMIN_ROLE',
 }
 
-const viewerUser: UserData = {
-  id: 'viewer',
-  name: 'Viewer',
-  role: 'VIEWER_ROLE',
-}
-
 const readCurrentUserData = (fallbackUserData: UserData) => {
   try {
     const storedUserData = localStorage.getItem('userData')
@@ -117,7 +111,7 @@ const readCurrentUserData = (fallbackUserData: UserData) => {
 }
 
 const isAdminUser = (userData: UserData) =>
-  userData.id === 'admin' && userData.role === 'ADMIN_ROLE'
+  userData.role === 'ADMIN_ROLE'
 
 const canOpenStudyPathForCurrentState = (userData: UserData) => {
   const provider = readStudyPackAiSettings().provider || 'basic'
@@ -373,9 +367,8 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const [avatarSrc, setAvatarSrc] = useState(() => readUserAvatar(adminUser.id))
   const [dashboardSelectorOpen, setDashboardSelectorOpen] = useState(false)
   const isAdmin = isAdminUser(userData)
-  const userModeLabel = isAdmin
-    ? studyPackAiProviderLabels[studyPackAiProvider]
-    : 'Viewer mode'
+  const userModeLabel = studyPackAiProviderLabels[studyPackAiProvider]
+  const auth = useAuth()
   const {
     openCreateWidget,
     openCreateDashboard,
@@ -528,8 +521,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         console.error('Failed to parse user data from localStorage', error)
       }
 
-      const canEdit =
-        parsedUserData.id === 'admin' && parsedUserData.role === 'ADMIN_ROLE'
+      const canEdit = parsedUserData.role === 'ADMIN_ROLE'
 
       if (!canEdit) {
         return
@@ -609,19 +601,13 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
 
   const handleLogout = () => {
     handleClose()
-    // Clear user data from localStorage
-    localStorage.removeItem('userData')
-    navigate('/')
-  }
-
-  const switchUser = (nextUser: UserData) => {
-    localStorage.setItem('userData', JSON.stringify(nextUser))
-    setUserData(nextUser)
-    setAvatarSrc(readUserAvatar(nextUser.id))
-    window.dispatchEvent(
-      new CustomEvent(USER_ROLE_CHANGED_EVENT, { detail: nextUser }),
-    )
-    handleClose()
+    auth
+      .signOut()
+      .catch((error) => {
+        console.error('Failed to sign out', error)
+        localStorage.removeItem('userData')
+      })
+      .finally(() => navigate('/login', { replace: true }))
   }
 
   const openUserSettings = () => {
@@ -1054,19 +1040,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   </MenuItem>
                   <Divider sx={{ borderColor: 'divider' }} />
                   <MenuItem
-                    onClick={() => switchUser(isAdmin ? viewerUser : adminUser)}
-                    sx={{ color: 'text.primary' }}
-                  >
-                    <ListItemIcon>
-                      <SwitchAccountIcon
-                        fontSize="small"
-                        sx={{ color: 'text.secondary' }}
-                      />
-                    </ListItemIcon>
-                    {isAdmin ? 'Log in as Viewer' : 'Log in as Admin'}
-                  </MenuItem>
-                  <Divider sx={{ borderColor: 'divider' }} />
-                  <MenuItem
                     onClick={handleLogout}
                     sx={{ color: 'text.primary' }}
                   >
@@ -1204,19 +1177,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
               <WidgetsIcon fontSize="small" sx={{ color: 'text.secondary' }} />
             </ListItemIcon>
             Create Widget
-          </MenuItem>
-          <Divider sx={{ borderColor: 'divider' }} />
-          <MenuItem
-            onClick={() => switchUser(isAdmin ? viewerUser : adminUser)}
-            sx={{ color: 'text.primary' }}
-          >
-            <ListItemIcon>
-              <SwitchAccountIcon
-                fontSize="small"
-                sx={{ color: 'text.secondary' }}
-              />
-            </ListItemIcon>
-            {isAdmin ? 'Log in as Viewer' : 'Log in as Admin'}
           </MenuItem>
           <Divider sx={{ borderColor: 'divider' }} />
           <MenuItem onClick={handleLogout} sx={{ color: 'text.primary' }}>

@@ -7,6 +7,7 @@ import WidgetStorage from '../components/WidgetEditor/WidgetStorage'
 import { cloneTemplate } from '../components/WidgetEditor/constants/templateWidgets'
 import { DashboardLayout } from '../state/store'
 import { createStudyPathContainerState } from '../components/Dasboard/studyPathContainer'
+import { SAVED_DASHBOARDS_CHANGED_EVENT } from '../components/Dasboard/dashboardStorage'
 import {
   createStudyPackDashboardLayout,
   StudyPackDashboardLayoutMode,
@@ -126,6 +127,7 @@ const saveStudyPackDashboard = (
     'customDashboards',
     JSON.stringify([...dashboards, dashboard]),
   )
+  window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
 
   return dashboard
 }

@@ -21,6 +21,15 @@ import StudyMeshLanding from './components/landing/StudyMeshLanding'
 import { useWorkspaceActions } from './customHooks/useWorkspaceActions'
 import LocalAiDebugPanel from './components/debug/LocalAiDebugPanel'
 import { cancelAllLocalAiSessions } from './studyPack/ai'
+import {
+  AuthCallbackPage,
+  LoginPage,
+  ResetPasswordPage,
+  SignupPage,
+  UpdatePasswordPage,
+} from './auth'
+import { AuthProvider, RequireAuth } from './auth/AuthProvider'
+import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
 
 import { createStudyMeshTheme } from './theme'
 import { AccentColorProvider } from './theme/AccentColorContext'
@@ -42,23 +51,6 @@ import '../../../style/themes/studymesh-theme/theme.scss'
 
 import './variables.scss'
 import './hide-overlay.scss'
-
-// Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const userData = localStorage.getItem('userData')
-
-  // If no user data exists, automatically set admin user and continue to app
-  if (!userData) {
-    const defaultAdminUser = {
-      id: 'admin',
-      name: 'Admin',
-      role: 'ADMIN_ROLE',
-    }
-    localStorage.setItem('userData', JSON.stringify(defaultAdminUser))
-  }
-
-  return <>{children}</>
-}
 
 const WorkspacePage = () => {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -189,16 +181,28 @@ const AppShell = () => {
         <PrimeReactProvider value={{ ripple: true }}>
           <CssBaseline />
           <LocalAiDebugPanel />
+          <CloudWorkspaceSync />
           <DashboardProvider>
             <LayoutProvider>
               <Routes>
                 <Route path="/" element={<StudyMeshLanding />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route
+                  path="/auth/callback"
+                  element={<AuthCallbackPage />}
+                />
+                <Route
+                  path="/account/update-password"
+                  element={<UpdatePasswordPage />}
+                />
                 <Route
                   path="/workspace"
                   element={
-                    <ProtectedRoute>
+                    <RequireAuth>
                       <WorkspacePage />
-                    </ProtectedRoute>
+                    </RequireAuth>
                   }
                 />
                 <Route path="*" element={<Navigate to="/" replace />} />
@@ -214,9 +218,11 @@ const AppShell = () => {
 const App = () => {
   return (
     <BrowserRouter>
-      <ThemeModeProvider>
-        <AppShell />
-      </ThemeModeProvider>
+      <AuthProvider>
+        <ThemeModeProvider>
+          <AppShell />
+        </ThemeModeProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

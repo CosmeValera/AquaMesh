@@ -162,7 +162,7 @@ export const readIsAdmin = () => {
     }
 
     const userData = JSON.parse(storedUserData)
-    return userData.id === 'admin' && userData.role === 'ADMIN_ROLE'
+    return userData.role === 'ADMIN_ROLE'
   } catch (error) {
     console.error('Failed to read user data', error)
     return false

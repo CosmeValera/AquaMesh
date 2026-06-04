@@ -772,9 +772,7 @@ const Dashboards = () => {
         const userData = localStorage.getItem('userData')
         if (userData) {
           const parsedData = JSON.parse(userData)
-          setIsAdmin(
-            parsedData.id === 'admin' && parsedData.role === 'ADMIN_ROLE',
-          )
+          setIsAdmin(parsedData.role === 'ADMIN_ROLE')
           if (parsedData.id !== 'admin' || parsedData.role !== 'ADMIN_ROLE') {
             closeDashboardEditor()
           }

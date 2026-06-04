@@ -105,7 +105,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({
         const storedUserData = localStorage.getItem('userData')
         if (storedUserData) {
           const userData = JSON.parse(storedUserData)
-          setIsAdmin(userData.id === 'admin' && userData.role === 'ADMIN_ROLE')
+          setIsAdmin(userData.role === 'ADMIN_ROLE')
           return
         }
         setIsAdmin(false)

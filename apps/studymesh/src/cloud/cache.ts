@@ -6,6 +6,7 @@ import type {
 import type { StateDashboard } from '../state/store'
 import type {
   LocalWorkspaceSnapshot,
+  StudyGuideRecord,
   StudyPathProgressCache,
 } from './types'
 
@@ -14,6 +15,7 @@ export const CLOUD_CACHE_KEYS = {
   workspaceState: 'studymesh-storage',
   widgets: 'studymesh_custom_widgets',
   widgetVersions: 'studymesh_widget_versions',
+  studyGuides: 'studymesh_study_guides',
   studyPathProgress: 'studymesh-study-path-progress-v1',
   owner: 'studymesh-cloud-cache-owner-v1',
 } as const
@@ -78,6 +80,15 @@ export const writeWidgetVersionsCache = (
   widgetVersions: WidgetVersion[],
 ): void => {
   writeJsonCache(CLOUD_CACHE_KEYS.widgetVersions, widgetVersions)
+}
+
+export const readStudyGuidesCache = (): StudyGuideRecord[] =>
+  readJsonCache<StudyGuideRecord[]>(CLOUD_CACHE_KEYS.studyGuides, [])
+
+export const writeStudyGuidesCache = (
+  studyGuides: StudyGuideRecord[],
+): void => {
+  writeJsonCache(CLOUD_CACHE_KEYS.studyGuides, studyGuides)
 }
 
 export const readWorkspaceStateCache = (): {
@@ -159,6 +170,7 @@ export const isWorkspaceCacheUnowned = (): boolean =>
 
 export const readLocalWorkspaceSnapshot = (): LocalWorkspaceSnapshot => ({
   dashboards: readDashboardsCache(),
+  studyGuides: readStudyGuidesCache(),
   widgets: readWidgetsCache(),
   widgetVersions: readWidgetVersionsCache(),
   workspaceState: readWorkspaceStateCache(),
@@ -169,6 +181,7 @@ export const writeLocalWorkspaceSnapshot = (
   snapshot: LocalWorkspaceSnapshot,
 ): void => {
   writeDashboardsCache(snapshot.dashboards)
+  writeStudyGuidesCache(snapshot.studyGuides)
   writeWidgetsCache(snapshot.widgets)
   writeWidgetVersionsCache(snapshot.widgetVersions)
 

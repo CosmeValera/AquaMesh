@@ -258,6 +258,68 @@ describe('workspace cloud repository', () => {
     expect(builder.eq).toHaveBeenCalledWith('id', 'dash-1')
   })
 
+  it('upserts and deletes Study Guides as owner-scoped cloud rows', async () => {
+    const upsertBuilder = createQueryBuilder()
+    upsertBuilder.single.mockResolvedValue({
+      data: {
+        id: 'guide-1',
+        owner_id: 'user-1',
+        title: 'Physics Guide',
+        folder_name: 'Physics',
+        description: null,
+        study_path: {
+          pathId: 'guide-1',
+          title: 'Physics Guide',
+          folderName: 'Physics',
+          selectedIndex: 0,
+          dashboards: [],
+        },
+        created_at: '2026-06-01T10:00:00.000Z',
+        updated_at: '2026-06-02T10:00:00.000Z',
+      },
+      error: null,
+    })
+    const deleteBuilder = createQueryBuilder()
+    const supabase = {
+      from: vi
+        .fn()
+        .mockReturnValueOnce(upsertBuilder)
+        .mockReturnValueOnce(deleteBuilder),
+    }
+    const repository = createCloudRepository(supabase as never)
+
+    await repository.upsertStudyGuide('user-1', {
+      id: 'guide-1',
+      title: 'Physics Guide',
+      folderName: 'Physics',
+      studyPath: {
+        pathId: 'guide-1',
+        title: 'Physics Guide',
+        folderName: 'Physics',
+        selectedIndex: 0,
+        dashboards: [],
+      },
+      createdAt: '2026-06-01T10:00:00.000Z',
+      updatedAt: '2026-06-02T10:00:00.000Z',
+    })
+    await repository.deleteStudyGuide('user-1', 'guide-1')
+
+    expect(supabase.from).toHaveBeenNthCalledWith(1, 'user_study_guides')
+    expect(upsertBuilder.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'guide-1',
+        owner_id: 'user-1',
+        title: 'Physics Guide',
+        folder_name: 'Physics',
+      }),
+      { onConflict: 'owner_id,id' },
+    )
+    expect(supabase.from).toHaveBeenNthCalledWith(2, 'user_study_guides')
+    expect(deleteBuilder.delete).toHaveBeenCalled()
+    expect(deleteBuilder.eq).toHaveBeenCalledWith('owner_id', 'user-1')
+    expect(deleteBuilder.eq).toHaveBeenCalledWith('id', 'guide-1')
+  })
+
   it('deletes widgets and their version history from cloud storage', async () => {
     const versionBuilder = createQueryBuilder()
     const widgetBuilder = createQueryBuilder()
@@ -298,6 +360,8 @@ describe('workspace cloud repository', () => {
     expect(sql).toContain(
       'references public.user_widgets(owner_id, id) on delete cascade',
     )
+    expect(sql).toContain('create table if not exists public.user_study_guides')
+    expect(sql).toContain('primary key (owner_id, id)')
   })
 
   it('keeps a Supabase cascade repair script for existing projects', () => {
@@ -308,9 +372,12 @@ describe('workspace cloud repository', () => {
     const sql = readFileSync(sqlPath, 'utf8').replace(/\s+/g, ' ')
 
     expect(sql).toContain('delete from public.user_dashboards')
+    expect(sql).toContain('delete from public.user_study_guides')
     expect(sql).toContain('delete from public.user_widgets')
     expect(sql).toContain('delete from public.user_widget_versions')
-    expect(sql).toContain('where owner_id not in (select id from public.profiles)')
+    expect(sql).toContain(
+      'where owner_id not in (select id from public.profiles)',
+    )
     expect(sql).toContain('references auth.users(id) on delete cascade')
     expect(sql).toContain('references public.profiles(id) on delete cascade')
     expect(sql).toContain(

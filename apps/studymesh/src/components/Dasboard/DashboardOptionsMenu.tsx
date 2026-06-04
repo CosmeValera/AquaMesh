@@ -36,6 +36,7 @@ import {
   getDashboardCreatedTime,
 } from './studyPathContainer'
 import { dispatchWorkspaceOnboardingEvent } from '../onboarding/onboardingEvents'
+import { StudyGuideStorage } from '../../studyGuides/storage'
 
 const USER_ROLE_CHANGED_EVENT = 'studymesh-user-role-changed'
 const MAX_MENU_ITEMS_PER_FOLDER = 15
@@ -57,6 +58,7 @@ interface SavedDashboard {
 }
 
 interface StudyPathMenuGroup {
+  id: string
   folderName: string
   dashboards: SavedDashboard[]
   studyPath: StudyPathContainerState
@@ -126,6 +128,9 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [customDashboards, setCustomDashboards] = useState<SavedDashboard[]>([])
+  const [studyGuides, setStudyGuides] = useState<
+    ReturnType<typeof StudyGuideStorage.getAll>
+  >([])
   const [expandedDashboardFolders, setExpandedDashboardFolders] = useState<
     string[]
   >([])
@@ -219,6 +224,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
       if (dashboards) {
         setCustomDashboards(JSON.parse(dashboards))
       }
+      setStudyGuides(StudyGuideStorage.getAll())
     } catch (error) {
       console.error('Failed to load saved dashboards', error)
     }
@@ -260,7 +266,15 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
       {},
     ),
   )
-  const studyPathGroups: StudyPathMenuGroup[] = rawStudyPackFolders
+  const storedStudyPathGroups: StudyPathMenuGroup[] = studyGuides.map(
+    (studyGuide) => ({
+      id: studyGuide.id,
+      folderName: studyGuide.folderName,
+      dashboards: studyGuide.studyPath.dashboards,
+      studyPath: studyGuide.studyPath,
+    }),
+  )
+  const legacyStudyPathGroups: StudyPathMenuGroup[] = rawStudyPackFolders
     .map(([folderName, dashboards]) => {
       const orderedDashboards = [...dashboards].sort(
         (firstDashboard, secondDashboard) =>
@@ -270,10 +284,16 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
       const studyPath = createStudyPathContainerState(orderedDashboards)
 
       return studyPath
-        ? { folderName, dashboards: orderedDashboards, studyPath }
+        ? {
+            id: studyPath.pathId || folderName,
+            folderName,
+            dashboards: orderedDashboards,
+            studyPath,
+          }
         : null
     })
     .filter((group): group is StudyPathMenuGroup => Boolean(group))
+  const studyPathGroups = [...storedStudyPathGroups, ...legacyStudyPathGroups]
   const studyPathFolderNames = new Set(
     studyPathGroups.map((group) => group.folderName),
   )
@@ -589,7 +609,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
               const isExpanded = expandedStudyPathFolders.includes(folderName)
 
               return (
-                <React.Fragment key={folderName}>
+                <React.Fragment key={group.id}>
                   <Box
                     component="div"
                     role="button"

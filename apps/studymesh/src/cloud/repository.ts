@@ -7,6 +7,7 @@ import type {
   CloudJson,
   CloudWorkspaceBundle,
   DashboardMergeResult,
+  StudyGuideRecord,
   StudyMeshSupabaseClient,
   StudyPathProgressCache,
   UserProfile,
@@ -98,6 +99,17 @@ export interface WorkspaceStateRow {
   updated_at: string
 }
 
+export interface StudyGuideRow {
+  id: string
+  owner_id: string
+  title: string
+  folder_name: string
+  description?: string | null
+  study_path: CloudJson
+  created_at: string
+  updated_at: string
+}
+
 const profileFromRow = (row: ProfileRow): UserProfile => ({
   id: row.id,
   email: row.email || undefined,
@@ -117,10 +129,7 @@ const profileToRow = (profile: UserProfile): ProfileRow => ({
   updated_at: profile.updatedAt || nowIso(),
 })
 
-const metadataValue = (
-  metadata: CloudJson | null | undefined,
-  key: string,
-) =>
+const metadataValue = (metadata: CloudJson | null | undefined, key: string) =>
   typeof metadata === 'object' && metadata && !Array.isArray(metadata)
     ? metadata[key]
     : undefined
@@ -160,7 +169,9 @@ export const mapSavedDashboardToDashboardRow = (
 const widgetFromRow = (row: WidgetRow): CustomWidget => ({
   id: row.id,
   name: row.title,
-  components: cloneJson(row.components) as unknown as CustomWidget['components'],
+  components: cloneJson(
+    row.components,
+  ) as unknown as CustomWidget['components'],
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   category:
@@ -216,7 +227,9 @@ const widgetVersionFromRow = (row: WidgetVersionRow): WidgetVersion => ({
   id: row.id || `${row.widget_id}-version-${row.version}`,
   widgetId: row.widget_id,
   version: widgetVersionFromNumber(row.version),
-  components: cloneJson(row.components) as unknown as WidgetVersion['components'],
+  components: cloneJson(
+    row.components,
+  ) as unknown as WidgetVersion['components'],
   createdAt: row.created_at,
   notes: row.notes || undefined,
   isCurrent: metadataValue(row.metadata, 'isCurrent') === true || undefined,
@@ -266,6 +279,32 @@ const workspaceStateToRow = (
     : {},
   settings: workspaceState.settings ? toCloudJson(workspaceState.settings) : {},
   updated_at: workspaceState.updatedAt || nowIso(),
+})
+
+const studyGuideFromRow = (row: StudyGuideRow): StudyGuideRecord => ({
+  id: row.id,
+  title: row.title,
+  folderName: row.folder_name,
+  description: row.description || undefined,
+  studyPath: cloneJson(
+    row.study_path,
+  ) as unknown as StudyGuideRecord['studyPath'],
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+})
+
+const studyGuideToRow = (
+  ownerId: string,
+  studyGuide: StudyGuideRecord,
+): StudyGuideRow => ({
+  id: studyGuide.id,
+  owner_id: ownerId,
+  title: studyGuide.title,
+  folder_name: studyGuide.folderName,
+  description: studyGuide.description,
+  study_path: toCloudJson(studyGuide.studyPath),
+  created_at: studyGuide.createdAt,
+  updated_at: studyGuide.updatedAt || nowIso(),
 })
 
 const collectWidgetIds = (value: unknown, widgetIds: Set<string>): void => {
@@ -436,7 +475,10 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
     return rows.map(widgetFromRow)
   },
 
-  async getWidget(ownerId: string, widgetId: string): Promise<CustomWidget | null> {
+  async getWidget(
+    ownerId: string,
+    widgetId: string,
+  ): Promise<CustomWidget | null> {
     const row = await assertSingle<WidgetRow>(
       client
         .from('user_widgets')
@@ -559,19 +601,70 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
     return workspaceStateFromRow(row)
   },
 
+  async listStudyGuides(ownerId: string): Promise<StudyGuideRecord[]> {
+    const rows = await assertMany<StudyGuideRow>(
+      client
+        .from('user_study_guides')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .order('updated_at', { ascending: false }),
+    )
+    return rows.map(studyGuideFromRow)
+  },
+
+  async upsertStudyGuide(
+    ownerId: string,
+    studyGuide: StudyGuideRecord,
+  ): Promise<StudyGuideRecord> {
+    const row = await assertSingle<StudyGuideRow>(
+      client
+        .from('user_study_guides')
+        .upsert(studyGuideToRow(ownerId, studyGuide), {
+          onConflict: 'owner_id,id',
+        })
+        .select('*')
+        .single(),
+    )
+    if (!row) {
+      throw new Error('Study Guide upsert returned no row')
+    }
+
+    return studyGuideFromRow(row)
+  },
+
+  async deleteStudyGuide(ownerId: string, studyGuideId: string): Promise<void> {
+    const { error } = await client
+      .from('user_study_guides')
+      .delete()
+      .eq('owner_id', ownerId)
+      .eq('id', studyGuideId)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+  },
+
   async loadWorkspaceBundle(ownerId: string): Promise<CloudWorkspaceBundle> {
-    const [profile, dashboards, widgets, widgetVersions, workspaceState] =
-      await Promise.all([
-        this.getProfile(ownerId),
-        this.listDashboards(ownerId),
-        this.listWidgets(ownerId),
-        this.listWidgetVersions(ownerId),
-        this.getWorkspaceState(ownerId),
-      ])
+    const [
+      profile,
+      dashboards,
+      studyGuides,
+      widgets,
+      widgetVersions,
+      workspaceState,
+    ] = await Promise.all([
+      this.getProfile(ownerId),
+      this.listDashboards(ownerId),
+      this.listStudyGuides(ownerId),
+      this.listWidgets(ownerId),
+      this.listWidgetVersions(ownerId),
+      this.getWorkspaceState(ownerId),
+    ])
 
     return {
       profile,
       dashboards,
+      studyGuides,
       widgets,
       widgetVersions,
       workspaceState,
@@ -596,6 +689,11 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
         this.upsertDashboard(ownerId, dashboard),
       ),
     )
+    const studyGuides = await Promise.all(
+      bundle.studyGuides.map((studyGuide) =>
+        this.upsertStudyGuide(ownerId, studyGuide),
+      ),
+    )
     const widgetVersions = await Promise.all(
       bundle.widgetVersions.map((version) =>
         this.upsertWidgetVersion(ownerId, version),
@@ -608,6 +706,7 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
     return {
       profile,
       dashboards,
+      studyGuides,
       widgets,
       widgetVersions,
       workspaceState,

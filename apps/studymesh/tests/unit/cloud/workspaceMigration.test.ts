@@ -8,7 +8,10 @@ import {
   writeLocalWorkspaceSnapshot,
   writeWorkspaceCacheOwner,
 } from '../../../src/cloud/cache'
-import type { CloudWorkspaceBundle, LocalWorkspaceSnapshot } from '../../../src/cloud/types'
+import type {
+  CloudWorkspaceBundle,
+  LocalWorkspaceSnapshot,
+} from '../../../src/cloud/types'
 import { createDashboardMergePlan } from '../../../src/cloud/repository'
 
 const installLocalStorageMock = () => {
@@ -22,9 +25,11 @@ const installLocalStorageMock = () => {
       storage.set(key, value)
     },
   )
-  vi.mocked(window.localStorage.removeItem).mockImplementation((key: string) => {
-    storage.delete(key)
-  })
+  vi.mocked(window.localStorage.removeItem).mockImplementation(
+    (key: string) => {
+      storage.delete(key)
+    },
+  )
   vi.mocked(window.localStorage.clear).mockImplementation(() => {
     storage.clear()
   })
@@ -120,6 +125,7 @@ describe('dashboard migration planning', () => {
 
 const emptyLocalSnapshot = (): LocalWorkspaceSnapshot => ({
   dashboards: [],
+  studyGuides: [],
   widgets: [],
   widgetVersions: [],
   workspaceState: null,
@@ -129,6 +135,7 @@ const emptyLocalSnapshot = (): LocalWorkspaceSnapshot => ({
 const emptyCloudBundle = (): CloudWorkspaceBundle => ({
   profile: null,
   dashboards: [],
+  studyGuides: [],
   widgets: [],
   widgetVersions: [],
   workspaceState: null,
@@ -243,7 +250,9 @@ describe('cloud-first workspace hydration planning', () => {
 
     expect(readLocalWorkspaceSnapshot().workspaceState).toBeNull()
     expect(readLocalWorkspaceSnapshot().studyProgress).toBeNull()
-    expect(window.localStorage.getItem(CLOUD_CACHE_KEYS.workspaceState)).toBeNull()
+    expect(
+      window.localStorage.getItem(CLOUD_CACHE_KEYS.workspaceState),
+    ).toBeNull()
     expect(
       window.localStorage.getItem(CLOUD_CACHE_KEYS.studyPathProgress),
     ).toBeNull()

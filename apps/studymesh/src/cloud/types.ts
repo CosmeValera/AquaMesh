@@ -5,6 +5,7 @@ import type {
   WidgetVersion,
 } from '../components/WidgetEditor/WidgetStorage'
 import type { StateDashboard } from '../state/store'
+import type { StudyPathContainerState } from '../state/store'
 
 export type CloudJson =
   | string
@@ -39,6 +40,7 @@ export interface WorkspaceState {
 
 export interface LocalWorkspaceSnapshot {
   dashboards: SavedDashboard[]
+  studyGuides: StudyGuideRecord[]
   widgets: CustomWidget[]
   widgetVersions: WidgetVersion[]
   workspaceState: {
@@ -51,9 +53,20 @@ export interface LocalWorkspaceSnapshot {
 export interface CloudWorkspaceBundle {
   profile: UserProfile | null
   dashboards: SavedDashboard[]
+  studyGuides: StudyGuideRecord[]
   widgets: CustomWidget[]
   widgetVersions: WidgetVersion[]
   workspaceState: WorkspaceState | null
+}
+
+export interface StudyGuideRecord {
+  id: string
+  title: string
+  folderName: string
+  description?: string
+  studyPath: StudyPathContainerState
+  createdAt: string
+  updatedAt: string
 }
 
 export interface DashboardMergeResult {
@@ -62,4 +75,3 @@ export interface DashboardMergeResult {
 }
 
 export type StudyMeshSupabaseClient = SupabaseClient
-

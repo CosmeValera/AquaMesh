@@ -11,6 +11,7 @@ import {
   type WidgetStorageUpdatedDetail,
 } from '../components/WidgetEditor/WidgetStorage'
 import { useStore } from '../state/store'
+import { STUDY_GUIDES_CHANGED_EVENT } from '../studyGuides/storage'
 import {
   readLocalWorkspaceSnapshot,
   readWorkspaceCacheOwner,
@@ -22,10 +23,18 @@ import type { CloudWorkspaceBundle, UserProfile, WorkspaceState } from './types'
 
 export const CLOUD_SYNC_STATUS_EVENT = 'studymesh-cloud-sync-status'
 
-export type CloudSyncStatus = 'idle' | 'loading' | 'syncing' | 'synced' | 'error'
+export type CloudSyncStatus =
+  | 'idle'
+  | 'loading'
+  | 'syncing'
+  | 'synced'
+  | 'error'
 
-const hasLocalWorkspaceData = (bundle: ReturnType<typeof readLocalWorkspaceSnapshot>) =>
+const hasLocalWorkspaceData = (
+  bundle: ReturnType<typeof readLocalWorkspaceSnapshot>,
+) =>
   bundle.dashboards.length > 0 ||
+  bundle.studyGuides.length > 0 ||
   bundle.widgets.length > 0 ||
   bundle.widgetVersions.length > 0 ||
   Boolean(bundle.workspaceState?.openDashboards.length) ||
@@ -33,6 +42,7 @@ const hasLocalWorkspaceData = (bundle: ReturnType<typeof readLocalWorkspaceSnaps
 
 const hasCloudWorkspaceData = (bundle: CloudWorkspaceBundle) =>
   bundle.dashboards.length > 0 ||
+  bundle.studyGuides.length > 0 ||
   bundle.widgets.length > 0 ||
   bundle.widgetVersions.length > 0 ||
   Boolean(bundle.workspaceState?.openDashboards.length) ||
@@ -79,7 +89,10 @@ const dispatchCloudSyncStatus = (
   )
 }
 
-const getUserDisplayName = (user: { email?: string; user_metadata?: Record<string, unknown> }) => {
+const getUserDisplayName = (user: {
+  email?: string
+  user_metadata?: Record<string, unknown>
+}) => {
   const displayName = user.user_metadata?.display_name
   const fullName = user.user_metadata?.full_name
 
@@ -93,6 +106,7 @@ const getUserDisplayName = (user: { email?: string; user_metadata?: Record<strin
 const applyCloudBundleToLocalCache = (bundle: CloudWorkspaceBundle): void => {
   writeLocalWorkspaceSnapshot({
     dashboards: bundle.dashboards,
+    studyGuides: bundle.studyGuides,
     widgets: bundle.widgets,
     widgetVersions: bundle.widgetVersions,
     workspaceState: bundle.workspaceState
@@ -107,13 +121,17 @@ const applyCloudBundleToLocalCache = (bundle: CloudWorkspaceBundle): void => {
   window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
   window.dispatchEvent(new CustomEvent('dashboardStorageUpdated'))
   document.dispatchEvent(new CustomEvent(WIDGET_STORAGE_UPDATED))
+  window.dispatchEvent(new Event(STUDY_GUIDES_CHANGED_EVENT))
 }
 
 const buildWorkspaceBundleFromLocalCache = (
   ownerId: string,
   profile: UserProfile,
   overrides: Partial<
-    Pick<CloudWorkspaceBundle, 'dashboards' | 'widgets' | 'widgetVersions'>
+    Pick<
+      CloudWorkspaceBundle,
+      'dashboards' | 'studyGuides' | 'widgets' | 'widgetVersions'
+    >
   > = {},
 ): Omit<CloudWorkspaceBundle, 'profile'> & { profile: UserProfile } => {
   const snapshot = readLocalWorkspaceSnapshot()
@@ -128,6 +146,7 @@ const buildWorkspaceBundleFromLocalCache = (
   return {
     profile,
     dashboards: overrides.dashboards || snapshot.dashboards,
+    studyGuides: overrides.studyGuides || snapshot.studyGuides,
     widgets: overrides.widgets || snapshot.widgets,
     widgetVersions: overrides.widgetVersions || snapshot.widgetVersions,
     workspaceState,
@@ -295,6 +314,20 @@ const CloudWorkspaceSync = () => {
       }
     }
 
+    const runCloudStudyGuideDelete = async (studyGuideId: string) => {
+      try {
+        dispatchCloudSyncStatus('syncing')
+        await repository.deleteStudyGuide(ownerId, studyGuideId)
+        dispatchCloudSyncStatus('synced')
+      } catch (error) {
+        console.error('StudyMesh cloud Study Guide delete failed', error)
+        dispatchCloudSyncStatus(
+          'error',
+          error instanceof Error ? error.message : 'Cloud delete failed.',
+        )
+      }
+    }
+
     const scheduleSync = () => {
       if (syncTimeoutRef.current !== null) {
         window.clearTimeout(syncTimeoutRef.current)
@@ -328,6 +361,19 @@ const CloudWorkspaceSync = () => {
       scheduleSync()
     }
 
+    const handleStudyGuidesUpdated = (event: Event) => {
+      const detail = (
+        event as CustomEvent<{ action?: string; studyGuideId?: string }>
+      ).detail
+
+      if (detail?.action === 'delete' && detail.studyGuideId) {
+        void runCloudStudyGuideDelete(detail.studyGuideId)
+        return
+      }
+
+      scheduleSync()
+    }
+
     const unsubscribeStore = useStore.subscribe(scheduleSync)
 
     window.addEventListener(
@@ -335,7 +381,14 @@ const CloudWorkspaceSync = () => {
       handleDashboardStorageUpdated,
     )
     window.addEventListener('dashboardStorageUpdated', scheduleSync)
-    document.addEventListener(WIDGET_STORAGE_UPDATED, handleWidgetStorageUpdated)
+    document.addEventListener(
+      WIDGET_STORAGE_UPDATED,
+      handleWidgetStorageUpdated,
+    )
+    window.addEventListener(
+      STUDY_GUIDES_CHANGED_EVENT,
+      handleStudyGuidesUpdated,
+    )
 
     return () => {
       if (syncTimeoutRef.current !== null) {
@@ -350,6 +403,10 @@ const CloudWorkspaceSync = () => {
       document.removeEventListener(
         WIDGET_STORAGE_UPDATED,
         handleWidgetStorageUpdated,
+      )
+      window.removeEventListener(
+        STUDY_GUIDES_CHANGED_EVENT,
+        handleStudyGuidesUpdated,
       )
     }
   }, [hasHydrated, repository, user])

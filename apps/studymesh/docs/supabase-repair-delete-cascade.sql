@@ -8,6 +8,18 @@
 
 begin;
 
+create table if not exists public.user_study_guides (
+  id text not null,
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  title text not null,
+  folder_name text not null default 'Study Guide',
+  description text,
+  study_path jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (owner_id, id)
+);
+
 -- Remove rows for profiles/Auth users that no longer exist. App tables are
 -- profile-owned, and profiles cascade from auth.users.
 delete from public.user_widget_versions
@@ -28,6 +40,12 @@ delete from public.user_dashboards
 where owner_id not in (select id from auth.users);
 
 delete from public.user_dashboards
+where owner_id not in (select id from public.profiles);
+
+delete from public.user_study_guides
+where owner_id not in (select id from auth.users);
+
+delete from public.user_study_guides
 where owner_id not in (select id from public.profiles);
 
 delete from public.user_widgets
@@ -69,6 +87,15 @@ alter table public.user_widgets
 
 alter table public.user_widgets
   add constraint user_widgets_owner_id_fkey
+  foreign key (owner_id)
+  references public.profiles(id)
+  on delete cascade;
+
+alter table public.user_study_guides
+  drop constraint if exists user_study_guides_owner_id_fkey;
+
+alter table public.user_study_guides
+  add constraint user_study_guides_owner_id_fkey
   foreign key (owner_id)
   references public.profiles(id)
   on delete cascade;

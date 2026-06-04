@@ -46,6 +46,19 @@ create table if not exists public.user_dashboards (
   constraint user_dashboards_visibility_check check (visibility in ('private'))
 );
 
+-- Study Guide JSON, owned by one user. Lessons store embedded dashboard/widget data.
+create table if not exists public.user_study_guides (
+  id text not null,
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  title text not null,
+  folder_name text not null default 'Study Guide',
+  description text,
+  study_path jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (owner_id, id)
+);
+
 -- Custom widget JSON, owned by one user. `components` stores app-native widget state.
 create table if not exists public.user_widgets (
   id text not null,
@@ -98,6 +111,11 @@ create trigger user_dashboards_set_updated_at
 before update on public.user_dashboards
 for each row execute function public.set_updated_at();
 
+drop trigger if exists user_study_guides_set_updated_at on public.user_study_guides;
+create trigger user_study_guides_set_updated_at
+before update on public.user_study_guides
+for each row execute function public.set_updated_at();
+
 drop trigger if exists user_widgets_set_updated_at on public.user_widgets;
 create trigger user_widgets_set_updated_at
 before update on public.user_widgets
@@ -123,6 +141,9 @@ create index if not exists user_dashboards_owner_visibility_idx
 
 create index if not exists user_dashboards_referenced_widget_ids_gin_idx
   on public.user_dashboards using gin(referenced_widget_ids);
+
+create index if not exists user_study_guides_owner_updated_idx
+  on public.user_study_guides(owner_id, updated_at desc);
 
 create index if not exists user_widgets_owner_updated_idx
   on public.user_widgets(owner_id, updated_at desc);
@@ -168,6 +189,7 @@ for each row execute function public.handle_new_user();
 -- Row level security
 alter table public.profiles enable row level security;
 alter table public.user_dashboards enable row level security;
+alter table public.user_study_guides enable row level security;
 alter table public.user_widgets enable row level security;
 alter table public.user_widget_versions enable row level security;
 alter table public.user_workspace_state enable row level security;
@@ -213,6 +235,31 @@ with check (owner_id = auth.uid());
 drop policy if exists "user_dashboards_delete_own" on public.user_dashboards;
 create policy "user_dashboards_delete_own"
 on public.user_dashboards for delete
+to authenticated
+using (owner_id = auth.uid());
+
+drop policy if exists "user_study_guides_select_own" on public.user_study_guides;
+create policy "user_study_guides_select_own"
+on public.user_study_guides for select
+to authenticated
+using (owner_id = auth.uid());
+
+drop policy if exists "user_study_guides_insert_own" on public.user_study_guides;
+create policy "user_study_guides_insert_own"
+on public.user_study_guides for insert
+to authenticated
+with check (owner_id = auth.uid());
+
+drop policy if exists "user_study_guides_update_own" on public.user_study_guides;
+create policy "user_study_guides_update_own"
+on public.user_study_guides for update
+to authenticated
+using (owner_id = auth.uid())
+with check (owner_id = auth.uid());
+
+drop policy if exists "user_study_guides_delete_own" on public.user_study_guides;
+create policy "user_study_guides_delete_own"
+on public.user_study_guides for delete
 to authenticated
 using (owner_id = auth.uid());
 

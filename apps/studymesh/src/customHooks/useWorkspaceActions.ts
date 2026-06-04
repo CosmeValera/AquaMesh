@@ -9,6 +9,10 @@ import { DashboardLayout } from '../state/store'
 import { createStudyPathContainerState } from '../components/Dasboard/studyPathContainer'
 import { SAVED_DASHBOARDS_CHANGED_EVENT } from '../components/Dasboard/dashboardStorage'
 import {
+  StudyGuideStorage,
+  createStudyGuideRecord,
+} from '../studyGuides/storage'
+import {
   createStudyPackDashboardLayout,
   StudyPackDashboardLayoutMode,
 } from '../studyPack'
@@ -294,20 +298,23 @@ export const useWorkspaceActions = () => {
       layoutMode?: StudyPackDashboardLayoutMode
       folderName?: string
     }) => {
-      const savedWidgets = widgets.map((widget) =>
-        WidgetStorage.saveWidget({
+      const layout = createStudyPackDashboardLayout(
+        widgets.map((widget) => ({
+          id: `embedded-widget-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
           name: widget.name,
           components: widget.components,
           category: widget.category || 'Study Pack',
-          tags: widget.tags || ['study-pack'],
+          tags: widget.tags || ['study-pack', 'embedded-generated'],
           description: widget.description || 'Generated from student notes.',
           version: widget.version || '1.0',
           author: widget.author || 'StudyMesh',
-        }),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })),
+        {
+          mode: layoutMode,
+        },
       )
-      const layout = createStudyPackDashboardLayout(savedWidgets, {
-        mode: layoutMode,
-      })
       const dashboard = saveStudyPackDashboard(name, layout, folderName)
 
       addDashboard({
@@ -343,32 +350,55 @@ export const useWorkspaceActions = () => {
         folderName?: string
       }>
     }) => {
-      const savedDashboards = dashboards.map((dashboard) => {
-        const savedWidgets = dashboard.widgets.map((widget) =>
-          WidgetStorage.saveWidget({
-            name: widget.name,
-            components: widget.components,
-            category: widget.category || 'Study Pack',
-            tags: widget.tags || ['study-pack'],
-            description: widget.description || 'Generated from student notes.',
-            version: widget.version || '1.0',
-            author: widget.author || 'StudyMesh',
-          }),
-        )
-        const layout = createStudyPackDashboardLayout(savedWidgets, {
+      const generatedDashboards = dashboards.map((dashboard) => {
+        const now = new Date().toISOString()
+        const embeddedWidgets = dashboard.widgets.map((widget) => ({
+          id: `embedded-widget-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+          name: widget.name,
+          components: widget.components,
+          category: widget.category || 'Study Pack',
+          tags: widget.tags || ['study-pack', 'embedded-generated'],
+          description: widget.description || 'Generated from student notes.',
+          version: widget.version || '1.0',
+          author: widget.author || 'StudyMesh',
+          createdAt: now,
+          updatedAt: now,
+        }))
+        const layout = createStudyPackDashboardLayout(embeddedWidgets, {
           mode: dashboard.layoutMode || 'smart',
         })
 
-        return saveStudyPackDashboard(
-          dashboard.name,
+        return {
+          id: `study-pack-dashboard-${Date.now()}-${Math.floor(
+            Math.random() * 1000000,
+          )}`,
+          name: dashboard.name,
+          folder: (dashboard.folderName || folderName).trim() || 'Study Packs',
+          folderColor: '#007C66',
           layout,
-          dashboard.folderName || folderName,
-        )
+          description: 'Generated from student notes.',
+          tags: ['study-pack', 'notes'],
+          isPublic: false,
+          createdAt: now,
+          updatedAt: now,
+        }
       })
+      const studyPath = createStudyPathContainerState(generatedDashboards)
+      const savedDashboards = studyPath
+        ? generatedDashboards
+        : generatedDashboards.map((dashboard) =>
+            saveStudyPackDashboard(
+              dashboard.name,
+              dashboard.layout,
+              dashboard.folder || folderName,
+            ),
+          )
+
+      if (studyPath) {
+        StudyGuideStorage.save(createStudyGuideRecord(studyPath))
+      }
 
       if (openInWorkspace) {
-        const studyPath = createStudyPathContainerState(savedDashboards)
-
         if (studyPath) {
           addStudyPathContainer(studyPath)
         } else {

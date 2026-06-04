@@ -44,7 +44,7 @@ import LockIcon from '@mui/icons-material/Lock'
 import ReplayIcon from '@mui/icons-material/Replay'
 import QuizIcon from '@mui/icons-material/Quiz'
 import SchoolIcon from '@mui/icons-material/School'
-import { DashboardLayout } from '../../state/store'
+import { DashboardLayout, StudyPathContainerState } from '../../state/store'
 import { useDashboards } from './DashboardProvider'
 import { DefaultDashboard } from './fixture'
 import { ensureStarterDashboards } from '../../customHooks/useWorkspaceActions'
@@ -59,13 +59,16 @@ import {
   DashboardStorage,
   SAVED_DASHBOARDS_CHANGED_EVENT,
 } from './dashboardStorage'
+import { StudyGuideStorage } from '../../studyGuides/storage'
 
 interface SavedDashboard {
   id: string
   name: string
+  itemType?: 'dashboard' | 'studyGuide'
   folder?: string
   folderColor?: string
   layout: DashboardLayout
+  studyGuide?: StudyPathContainerState
   description?: string
   tags?: string[]
   isPublic?: boolean
@@ -149,7 +152,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
   )
 
   // Access dashboards context
-  const { addDashboard } = useDashboards()
+  const { addDashboard, addStudyPathContainer } = useDashboards()
 
   // Add state for edit dialog
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -205,11 +208,13 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
     try {
       ensureStarterDashboards()
       const savedDashboards = localStorage.getItem('customDashboards')
+      let formattedDashboards: SavedDashboard[] = []
+
       if (savedDashboards) {
         const parsedDashboards = JSON.parse(savedDashboards)
 
         // Transform to ensure all required fields
-        const formattedDashboards = parsedDashboards.map(
+        formattedDashboards = parsedDashboards.map(
           (dashboard: {
             id: string
             name: string
@@ -235,9 +240,29 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
             componentsCount: calculateComponentsCount(dashboard.layout),
           }),
         )
-
-        setDashboards(formattedDashboards)
       }
+      const formattedStudyGuides: SavedDashboard[] =
+        StudyGuideStorage.getAll().map((studyGuide) => ({
+          id: studyGuide.id,
+          name: studyGuide.title,
+          itemType: 'studyGuide',
+          folder: normalizeFolderName(studyGuide.folderName),
+          folderColor: DEFAULT_FOLDER_COLOR,
+          layout:
+            studyGuide.studyPath.dashboards[0]?.layout ||
+            ({ type: 'row', children: [] } as DashboardLayout),
+          studyGuide: studyGuide.studyPath,
+          description:
+            studyGuide.description ||
+            `${studyGuide.studyPath.dashboards.length} lesson Study Guide`,
+          tags: ['study-guide'],
+          isPublic: false,
+          createdAt: studyGuide.createdAt,
+          updatedAt: studyGuide.updatedAt,
+          componentsCount: studyGuide.studyPath.dashboards.length,
+        }))
+
+      setDashboards([...formattedStudyGuides, ...formattedDashboards])
     } catch (error) {
       console.error('Failed to load dashboards from localStorage', error)
       setDashboards([])
@@ -322,6 +347,12 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
 
   // Handle opening a dashboard
   const handleOpenDashboard = (dashboard: SavedDashboard) => {
+    if (dashboard.itemType === 'studyGuide' && dashboard.studyGuide) {
+      addStudyPathContainer(dashboard.studyGuide)
+      onClose()
+      return
+    }
+
     if (mode === 'builder') {
       onOpenInBuilder?.(dashboard)
       onClose()
@@ -364,8 +395,13 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
   // Function to actually delete the dashboard
   const deleteDashboard = (id: string) => {
     try {
-      DashboardStorage.delete(id)
-      setDashboards(DashboardStorage.getAll() as SavedDashboard[])
+      const dashboard = dashboards.find((item) => item.id === id)
+      if (dashboard?.itemType === 'studyGuide') {
+        StudyGuideStorage.delete(id)
+      } else {
+        DashboardStorage.delete(id)
+      }
+      loadDashboards()
     } catch (error) {
       console.error('Failed to delete dashboard', error)
     }
@@ -409,11 +445,15 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
 
     try {
       bulkDeleteSelectedIds.forEach((dashboardId) => {
-        DashboardStorage.delete(dashboardId)
+        const dashboard = dashboards.find((item) => item.id === dashboardId)
+        if (dashboard?.itemType === 'studyGuide') {
+          StudyGuideStorage.delete(dashboardId)
+        } else {
+          DashboardStorage.delete(dashboardId)
+        }
       })
-      const updatedDashboards = DashboardStorage.getAll() as SavedDashboard[]
 
-      setDashboards(updatedDashboards)
+      loadDashboards()
       setMenuAnchorEl(null)
       setMenuDashboard(null)
     } catch (error) {
@@ -487,6 +527,13 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
 
     e.stopPropagation()
     try {
+      const targetDashboard = dashboards.find(
+        (dashboard) => dashboard.id === id,
+      )
+      if (targetDashboard?.itemType === 'studyGuide') {
+        return
+      }
+
       const updatedDashboards = dashboards.map((dashboard) => {
         if (dashboard.id === id) {
           return { ...dashboard, isPublic: !dashboard.isPublic }
@@ -496,7 +543,11 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
       setDashboards(updatedDashboards)
       localStorage.setItem(
         'customDashboards',
-        JSON.stringify(updatedDashboards),
+        JSON.stringify(
+          updatedDashboards.filter(
+            (dashboard) => dashboard.itemType !== 'studyGuide',
+          ),
+        ),
       )
       window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
     } catch (error) {
@@ -528,7 +579,10 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
 
     // If not admin, only show public dashboards
     if (!isAdmin) {
-      filtered = filtered.filter((dashboard) => dashboard.isPublic)
+      filtered = filtered.filter(
+        (dashboard) =>
+          dashboard.itemType === 'studyGuide' || dashboard.isPublic,
+      )
     }
 
     return filtered
@@ -754,7 +808,11 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
       setDashboards(updatedDashboards)
       localStorage.setItem(
         'customDashboards',
-        JSON.stringify(updatedDashboards),
+        JSON.stringify(
+          updatedDashboards.filter(
+            (dashboard) => dashboard.itemType !== 'studyGuide',
+          ),
+        ),
       )
       window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
       setEditDialogOpen(false)
@@ -1117,17 +1175,17 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                 {searchTerm
                   ? 'No Matching Study Guides'
                   : folderFilter
-                  ? 'No Study Guides In Subject'
-                  : 'No Study Guides Available'}
+                    ? 'No Study Guides In Subject'
+                    : 'No Study Guides Available'}
               </Typography>
               <Typography color="text.secondary" variant="body2">
                 {searchTerm
                   ? 'Try a different search term or clear the search'
                   : folderFilter
-                  ? 'Select a different subject or clear the filter'
-                  : !isAdmin
-                  ? 'No public Study Guides are currently available'
-                  : 'Create a Study Guide from notes to start your library'}
+                    ? 'Select a different subject or clear the filter'
+                    : !isAdmin
+                      ? 'No public Study Guides are currently available'
+                      : 'Create a Study Guide from notes to start your library'}
               </Typography>
             </Paper>
           ) : (
@@ -1533,56 +1591,67 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                                         display: { xs: 'none', sm: 'flex' },
                                       }}
                                     >
-                                      <Tooltip title="Edit details">
-                                        <IconButton
-                                          size="small"
-                                          onClick={(e) =>
-                                            handleEditDashboard(dashboard, e)
-                                          }
-                                          sx={{
-                                            mr: 1,
-                                            bgcolor: 'rgba(0,150,136,0.1)',
-                                            color: 'primary.dark',
-                                            '&:hover': {
-                                              bgcolor: 'rgba(0,150,136,0.18)',
-                                            },
-                                          }}
-                                        >
-                                          <EditIcon fontSize="small" />
-                                        </IconButton>
-                                      </Tooltip>
-                                      <Tooltip
-                                        title={
-                                          dashboard.isPublic
-                                            ? 'Make Private'
-                                            : 'Make Public'
-                                        }
-                                      >
-                                        <IconButton
-                                          size="small"
-                                          onClick={(e) =>
-                                            handleTogglePublic(dashboard.id, e)
-                                          }
-                                          sx={{
-                                            mr: 1,
-                                            bgcolor: dashboard.isPublic
-                                              ? 'rgba(0,124,102,0.14)'
-                                              : 'action.hover',
-                                            color: 'primary.dark',
-                                            '&:hover': {
-                                              bgcolor: dashboard.isPublic
-                                                ? 'rgba(0,124,102,0.2)'
-                                                : 'rgba(0,124,102,0.08)',
-                                            },
-                                          }}
-                                        >
-                                          {dashboard.isPublic ? (
-                                            <LockIcon fontSize="small" />
-                                          ) : (
-                                            <PublicIcon fontSize="small" />
-                                          )}
-                                        </IconButton>
-                                      </Tooltip>
+                                      {dashboard.itemType !== 'studyGuide' && (
+                                        <>
+                                          <Tooltip title="Edit details">
+                                            <IconButton
+                                              size="small"
+                                              onClick={(e) =>
+                                                handleEditDashboard(
+                                                  dashboard,
+                                                  e,
+                                                )
+                                              }
+                                              sx={{
+                                                mr: 1,
+                                                bgcolor: 'rgba(0,150,136,0.1)',
+                                                color: 'primary.dark',
+                                                '&:hover': {
+                                                  bgcolor:
+                                                    'rgba(0,150,136,0.18)',
+                                                },
+                                              }}
+                                            >
+                                              <EditIcon fontSize="small" />
+                                            </IconButton>
+                                          </Tooltip>
+                                          <Tooltip
+                                            title={
+                                              dashboard.isPublic
+                                                ? 'Make Private'
+                                                : 'Make Public'
+                                            }
+                                          >
+                                            <IconButton
+                                              size="small"
+                                              onClick={(e) =>
+                                                handleTogglePublic(
+                                                  dashboard.id,
+                                                  e,
+                                                )
+                                              }
+                                              sx={{
+                                                mr: 1,
+                                                bgcolor: dashboard.isPublic
+                                                  ? 'rgba(0,124,102,0.14)'
+                                                  : 'action.hover',
+                                                color: 'primary.dark',
+                                                '&:hover': {
+                                                  bgcolor: dashboard.isPublic
+                                                    ? 'rgba(0,124,102,0.2)'
+                                                    : 'rgba(0,124,102,0.08)',
+                                                },
+                                              }}
+                                            >
+                                              {dashboard.isPublic ? (
+                                                <LockIcon fontSize="small" />
+                                              ) : (
+                                                <PublicIcon fontSize="small" />
+                                              )}
+                                            </IconButton>
+                                          </Tooltip>
+                                        </>
+                                      )}
                                       <Tooltip title="Delete from Library">
                                         <IconButton
                                           size="small"
@@ -1621,28 +1690,35 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                                         horizontal: 'right',
                                       }}
                                     >
-                                      <MenuItem
-                                        onClick={(
-                                          e: React.MouseEvent<HTMLElement>,
-                                        ) => {
-                                          handleEditDashboard(dashboard, e)
-                                          handleMenuClose()
-                                        }}
-                                      >
-                                        Edit
-                                      </MenuItem>
-                                      <MenuItem
-                                        onClick={(
-                                          e: React.MouseEvent<HTMLElement>,
-                                        ) => {
-                                          handleTogglePublic(dashboard.id, e)
-                                          handleMenuClose()
-                                        }}
-                                      >
-                                        {dashboard.isPublic
-                                          ? 'Make Private'
-                                          : 'Make Public'}
-                                      </MenuItem>
+                                      {dashboard.itemType !== 'studyGuide' && (
+                                        <>
+                                          <MenuItem
+                                            onClick={(
+                                              e: React.MouseEvent<HTMLElement>,
+                                            ) => {
+                                              handleEditDashboard(dashboard, e)
+                                              handleMenuClose()
+                                            }}
+                                          >
+                                            Edit
+                                          </MenuItem>
+                                          <MenuItem
+                                            onClick={(
+                                              e: React.MouseEvent<HTMLElement>,
+                                            ) => {
+                                              handleTogglePublic(
+                                                dashboard.id,
+                                                e,
+                                              )
+                                              handleMenuClose()
+                                            }}
+                                          >
+                                            {dashboard.isPublic
+                                              ? 'Make Private'
+                                              : 'Make Public'}
+                                          </MenuItem>
+                                        </>
+                                      )}
                                       <MenuItem
                                         onClick={(
                                           e: React.MouseEvent<HTMLElement>,

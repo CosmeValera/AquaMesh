@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
   Box,
   Button,
@@ -18,8 +18,6 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import KeyIcon from '@mui/icons-material/Key'
 import MemoryIcon from '@mui/icons-material/Memory'
 import CloudQueueIcon from '@mui/icons-material/CloudQueue'
-import QuizIcon from '@mui/icons-material/Quiz'
-import StyleIcon from '@mui/icons-material/Style'
 
 const mainUseCases = [
   {
@@ -58,8 +56,58 @@ const mainUseCases = [
 
 const heroHighlights = [
   'Study guides from any topic',
-  'Quick Create for quizzes, flashcards, and expanded notes',
-  'Practice generated next to the source material',
+  'Create quizzes, flashcards, expanded notes...',
+]
+
+const heroPreviewExamples = [
+  {
+    label: 'Exam',
+    title: 'Create Study Guide',
+    inputLabel: 'Goal',
+    input: 'photosynthesis test',
+    prompt: "Teach me photosynthesis for tomorrow's test.",
+    output: 'guide + quiz + flashcards',
+    outputTitle: 'Photosynthesis Study Guide',
+    outputCount: '3 dashboards',
+    actions: ['Study Guide', 'Quiz', 'Flashcards'],
+    lessons: [
+      ['01', 'Photosynthesis big picture', 'source notes + recap'],
+      ['02', 'Light reactions', 'diagram walkthrough'],
+      ['03', 'Calvin cycle practice', 'quiz + flashcards'],
+    ],
+  },
+  {
+    label: 'Notes',
+    title: 'Create From Notes',
+    inputLabel: 'Source',
+    input: 'messy class notes',
+    prompt: 'Paste lecture notes, board photos, or a PDF chapter.',
+    output: 'clean notes + practice',
+    outputTitle: 'Clean Biology Notes',
+    outputCount: '2 outputs',
+    actions: ['Clean notes', 'Quiz', 'Practice'],
+    lessons: [
+      ['01', 'Clean summary', 'key ideas organized'],
+      ['02', 'Practice quiz', 'checks weak spots'],
+      ['03', 'Flashcards', 'terms + definitions'],
+    ],
+  },
+  {
+    label: 'Skill',
+    title: 'Learn A Skill',
+    inputLabel: 'Goal',
+    input: 'Spanish past tense',
+    prompt: 'Teach me Spanish past tenses from scratch.',
+    output: 'lessons + examples',
+    outputTitle: 'Spanish Past Tenses',
+    outputCount: '4 lessons',
+    actions: ['Lessons', 'Examples', 'Drills'],
+    lessons: [
+      ['01', 'Preterite vs imperfect', 'rules + examples'],
+      ['02', 'Common mistakes', 'quick corrections'],
+      ['03', 'Speaking drills', 'practice prompts'],
+    ],
+  },
 ]
 
 const studyPathPromptExamples = [
@@ -147,25 +195,6 @@ const quickAnswers = [
   },
 ]
 
-const creationFeaturePills = [
-  {
-    label: 'Study Guide',
-    icon: <RouteIcon />,
-  },
-  {
-    label: 'Quiz',
-    icon: <QuizIcon />,
-  },
-  {
-    label: 'Flashcards',
-    icon: <StyleIcon />,
-  },
-  {
-    label: 'Expand',
-    icon: <MenuBookIcon />,
-  },
-]
-
 const aiPricing = [
   {
     title: 'Fallback mode',
@@ -206,12 +235,18 @@ const StudyMeshLanding = () => {
   const navigate = useNavigate()
   const theme = useTheme()
   const [selectedStudyPathExample, setSelectedStudyPathExample] = useState(0)
+  const [activeHeroPreview, setActiveHeroPreview] = useState(0)
+  const [isHeroPreviewBouncing, setIsHeroPreviewBouncing] = useState(false)
+  const heroPreviewBounceTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
   const [selectedNotesAttachments, setSelectedNotesAttachments] = useState([
     'text',
     'image',
   ])
   const activeStudyPathExample =
     studyPathPromptExamples[selectedStudyPathExample]
+  const activeHeroPreviewExample = heroPreviewExamples[activeHeroPreview]
   const activeNotesDashboards = notesAttachmentExamples
     .filter((attachment) => selectedNotesAttachments.includes(attachment.id))
     .flatMap((attachment) => attachment.dashboards)
@@ -229,6 +264,25 @@ const StudyMeshLanding = () => {
 
   const openWorkspace = (action?: string) => {
     navigate(action ? `/workspace?action=${action}` : '/workspace')
+  }
+
+  const changeHeroPreview = (nextPreview: number) => {
+    if (heroPreviewBounceTimer.current) {
+      clearTimeout(heroPreviewBounceTimer.current)
+    }
+
+    setIsHeroPreviewBouncing(false)
+    window.requestAnimationFrame(() => {
+      setIsHeroPreviewBouncing(true)
+      heroPreviewBounceTimer.current = setTimeout(() => {
+        setActiveHeroPreview(nextPreview)
+        setIsHeroPreviewBouncing(false)
+      }, 160)
+    })
+  }
+
+  const cycleHeroPreview = () => {
+    changeHeroPreview((activeHeroPreview + 1) % heroPreviewExamples.length)
   }
 
   return (
@@ -285,9 +339,12 @@ const StudyMeshLanding = () => {
       <Container maxWidth="lg" component="main">
         <Grid
           container
-          spacing={5}
+          spacing={{ xs: 3, md: 5 }}
           alignItems="center"
-          sx={{ minHeight: { xs: 'auto', md: 'calc(100dvh - 120px)' }, py: 6 }}
+          sx={{
+            minHeight: { xs: 'auto', md: 'calc(100dvh - 150px)' },
+            py: { xs: 3, md: 5 },
+          }}
         >
           <Grid item xs={12} md={6}>
             <Typography
@@ -295,7 +352,7 @@ const StudyMeshLanding = () => {
               component="h1"
               sx={{
                 fontWeight: 900,
-                fontSize: { xs: '2.35rem', md: '4rem' },
+                fontSize: { xs: '2.15rem', md: '4rem' },
                 lineHeight: 1.04,
                 mb: 2,
                 display: 'inline-block',
@@ -316,30 +373,40 @@ const StudyMeshLanding = () => {
               StudyMesh
             </Typography>
             <Typography
-              variant="h5"
+              variant="h3"
               component="p"
               sx={{
-                display: 'inline-block',
                 mb: 2,
-                fontWeight: 500,
+                maxWidth: 620,
+                fontWeight: 850,
+                fontSize: { xs: '1.75rem', md: '2.55rem' },
+                lineHeight: { xs: 1.1, md: 1.08 },
               }}
             >
-              Turn{' '}
-              <span style={{ color: '#2196F3', fontWeight: 700 }}>prompts</span>{' '}
-              and{' '}
-              <span style={{ color: '#00C49A', fontWeight: 700 }}>
-                messy notes
-              </span>{' '}
-              into{' '}
-              <Box component="span" sx={{ fontWeight: 700 }}>
-                study guides
+              Turn messy notes into{' '}
+              <Box
+                component="span"
+                sx={{
+                  color: '#00A878',
+                  display: { xs: 'inline', sm: 'inline' },
+                }}
+              >
+                study dashboards
               </Box>
               .
             </Typography>
-            <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
-              Create a full tutorial from a learning goal, or use Quick Create
-              to turn current material into quizzes, flashcards, expanded notes,
-              and practice without designing the dashboard first.
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'text.secondary',
+                mb: 3,
+                maxWidth: 600,
+                lineHeight: 1.45,
+                fontWeight: 500,
+              }}
+            >
+              Create tutorials, quizzes, flashcards, and practice from a
+              learning goal, notes, images, PDFs, or slides.
             </Typography>
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
@@ -352,90 +419,319 @@ const StudyMeshLanding = () => {
                 variant="contained"
                 size="large"
                 onClick={() => openWorkspace()}
-                sx={{ borderRadius: 1, textTransform: 'none' }}
+                sx={{
+                  borderRadius: 1,
+                  minHeight: 52,
+                  px: 4,
+                  textTransform: 'none',
+                  fontWeight: 900,
+                }}
               >
                 Try StudyMesh
               </Button>
-            </Stack>
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
-              flexWrap="wrap"
-              useFlexGap
-              sx={{ mt: 2 }}
-            >
-              <Typography
-                variant="caption"
-                fontWeight={900}
-                color="text.secondary"
-              >
-                Create:
-              </Typography>
-              {creationFeaturePills.map((item) => (
-                <Chip
-                  key={item.label}
-                  size="small"
-                  icon={item.icon}
-                  label={item.label}
-                  sx={{
-                    borderRadius: 1,
-                    fontWeight: 850,
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                    border: '1px solid',
-                    borderColor: alpha(theme.palette.primary.main, 0.16),
-                  }}
-                />
-              ))}
-            </Stack>
-            <Stack spacing={1} sx={{ mt: 3 }}>
-              {heroHighlights.map((highlight) => (
-                <Stack
-                  key={highlight}
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                >
-                  <CheckCircleIcon color="success" fontSize="small" />
-                  <Typography variant="body2" color="text.secondary">
-                    {highlight}
-                  </Typography>
-                </Stack>
-              ))}
             </Stack>
           </Grid>
           <Grid item xs={12} md={6}>
             <Paper
               elevation={0}
+              onClick={cycleHeroPreview}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  cycleHeroPreview()
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Show another StudyMesh example"
               sx={{
-                borderRadius: 2,
+                borderRadius: 2.5,
                 border: '1px solid',
-                borderColor: 'divider',
+                borderColor: alpha(theme.palette.primary.main, 0.18),
                 overflow: 'hidden',
-                bgcolor: 'background.paper',
+                bgcolor:
+                  theme.palette.mode === 'dark'
+                    ? alpha(theme.palette.background.paper, 0.84)
+                    : '#F8FAFA',
                 boxShadow:
                   theme.palette.mode === 'dark'
                     ? `0 22px 60px ${alpha(theme.palette.common.black, 0.42)}`
                     : `0 22px 60px ${alpha(theme.palette.primary.dark, 0.14)}`,
+                cursor: 'pointer',
+                transformOrigin: 'center',
+                animation: isHeroPreviewBouncing
+                  ? 'studyMeshHeroPreviewBounce 260ms ease'
+                  : 'none',
+                '@keyframes studyMeshHeroPreviewBounce': {
+                  '0%': { transform: 'scale(1)' },
+                  '38%': { transform: 'scale(0.985) translateY(2px)' },
+                  '70%': { transform: 'scale(1.012) translateY(-2px)' },
+                  '100%': { transform: 'scale(1)' },
+                },
+                '&:focus-visible': {
+                  outline: '3px solid',
+                  outlineColor: alpha(theme.palette.primary.main, 0.36),
+                  outlineOffset: 4,
+                },
               }}
             >
-              <Box
-                component="img"
-                src="/images/widget_builder_overview.svg"
-                alt="StudyMesh workspace"
+              <Stack
+                direction="row"
+                spacing={1.25}
+                alignItems="center"
                 sx={{
-                  display: 'block',
-                  width: '100%',
-                  aspectRatio: '16 / 10',
-                  objectFit: 'cover',
-                  objectPosition: 'top left',
+                  px: { xs: 1.5, sm: 2 },
+                  py: { xs: 1, sm: 1.35 },
+                  borderBottom: '1px solid',
+                  borderColor: alpha(theme.palette.primary.main, 0.16),
+                  bgcolor: alpha(theme.palette.background.paper, 0.92),
                 }}
-              />
+              >
+                <Box
+                  sx={{
+                    width: 28,
+                    height: 20,
+                    borderRadius: 1,
+                    bgcolor: '#00A878',
+                    boxShadow: `10px 7px 0 ${alpha('#2196F3', 0.38)}`,
+                  }}
+                />
+                <Typography fontWeight={950}>
+                  {activeHeroPreviewExample.title}
+                </Typography>
+                <Box sx={{ flex: 1 }} />
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 8,
+                    borderRadius: 999,
+                    bgcolor: alpha(theme.palette.primary.main, 0.18),
+                  }}
+                />
+              </Stack>
+              <Box
+                sx={{
+                  display: { xs: 'none', sm: 'grid' },
+                  gridTemplateColumns: { xs: '1fr', sm: '0.9fr 1.35fr' },
+                  gap: { xs: 1, sm: 1.5 },
+                  p: { xs: 1, sm: 2 },
+                }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: { xs: 1.25, sm: 1.5 },
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: alpha('#00A878', 0.24),
+                    bgcolor: alpha(theme.palette.background.paper, 0.86),
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    color="#00A878"
+                    fontWeight={950}
+                  >
+                    {activeHeroPreviewExample.inputLabel}
+                  </Typography>
+                  <Typography fontWeight={900} sx={{ mt: 0.5 }}>
+                    {activeHeroPreviewExample.prompt}
+                  </Typography>
+                  <Stack
+                    direction="row"
+                    spacing={0.75}
+                    flexWrap="wrap"
+                    useFlexGap
+                    sx={{ mt: 1.5 }}
+                  >
+                    {activeHeroPreviewExample.actions.map((action) => (
+                      <Box
+                        key={action}
+                        sx={{
+                          px: 1,
+                          py: 0.6,
+                          borderRadius: 1,
+                          bgcolor: alpha('#00A878', 0.1),
+                          color: '#007C66',
+                          fontSize: '0.72rem',
+                          fontWeight: 900,
+                        }}
+                      >
+                        {action}
+                      </Box>
+                    ))}
+                  </Stack>
+                </Paper>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: { xs: 1.25, sm: 1.5 },
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: alpha(theme.palette.primary.main, 0.18),
+                    bgcolor: alpha(theme.palette.background.paper, 0.9),
+                  }}
+                >
+                  <Stack spacing={1.1}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography fontWeight={950}>
+                        {activeHeroPreviewExample.outputTitle}
+                      </Typography>
+                      <Box sx={{ flex: 1 }} />
+                      <Typography
+                        variant="caption"
+                        color="primary.main"
+                        fontWeight={950}
+                      >
+                        {activeHeroPreviewExample.outputCount}
+                      </Typography>
+                    </Stack>
+                    {activeHeroPreviewExample.lessons.map(
+                      ([number, title, detail], index) => (
+                        <Box
+                          key={title}
+                          sx={{
+                            p: 1,
+                            borderRadius: 1.5,
+                            display: {
+                              xs: index ===
+                                activeHeroPreviewExample.lessons.length - 1
+                                  ? 'none'
+                                  : 'block',
+                              sm: 'block',
+                            },
+                            bgcolor: alpha(theme.palette.primary.main, 0.07),
+                            border: '1px solid',
+                            borderColor: alpha(
+                              theme.palette.primary.main,
+                              0.12,
+                            ),
+                          }}
+                        >
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                          >
+                            <Box
+                              sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 1,
+                                display: 'grid',
+                                placeItems: 'center',
+                                bgcolor: alpha('#2196F3', 0.14),
+                                color: '#1976D2',
+                                fontSize: '0.78rem',
+                                fontWeight: 950,
+                                flex: '0 0 auto',
+                              }}
+                            >
+                              {number}
+                            </Box>
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography fontWeight={900} noWrap>
+                                {title}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                noWrap
+                                sx={{ display: 'block' }}
+                              >
+                                {detail}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </Box>
+                      ),
+                    )}
+                  </Stack>
+                </Paper>
+              </Box>
+              <Stack
+                spacing={1}
+                sx={{
+                  display: { xs: 'flex', sm: 'none' },
+                  p: 1,
+                }}
+              >
+                {[
+                  [
+                    activeHeroPreviewExample.inputLabel,
+                    activeHeroPreviewExample.input,
+                  ],
+                  ['Output', activeHeroPreviewExample.output],
+                ].map(([label, value], index) => (
+                  <Box
+                    key={label}
+                    sx={{
+                      p: 1.25,
+                      borderRadius: 1.5,
+                      border: '1px solid',
+                      borderColor:
+                        index === 0
+                          ? alpha('#00A878', 0.24)
+                          : alpha(theme.palette.primary.main, 0.16),
+                      bgcolor:
+                        index === 0
+                          ? alpha('#00A878', 0.06)
+                          : alpha(theme.palette.primary.main, 0.06),
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      color={index === 0 ? '#007C66' : 'primary.main'}
+                      fontWeight={950}
+                    >
+                      {label}
+                    </Typography>
+                    <Typography fontWeight={900}>{value}</Typography>
+                  </Box>
+                ))}
+                <Stack direction="row" spacing={1}>
+                  {heroPreviewExamples.map((example, index) => (
+                    <Box
+                      key={example.label}
+                      component="button"
+                      type="button"
+                      aria-label={`Show ${example.label} example`}
+                      aria-pressed={activeHeroPreview === index}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        changeHeroPreview(index)
+                      }}
+                      sx={{
+                        flex: 1,
+                        height: 22,
+                        px: 0,
+                        py: 0,
+                        borderRadius: 999,
+                        border: 0,
+                        bgcolor:
+                          activeHeroPreview === index
+                            ? '#00A878'
+                            : alpha(theme.palette.primary.main, 0.18),
+                        cursor: 'pointer',
+                        font: 'inherit',
+                        color:
+                          activeHeroPreview === index
+                            ? 'primary.contrastText'
+                            : 'text.secondary',
+                        fontSize: '0.64rem',
+                        fontWeight: 950,
+                      }}
+                    >
+                      {example.label}
+                    </Box>
+                  ))}
+                </Stack>
+              </Stack>
             </Paper>
           </Grid>
         </Grid>
 
-        <Box sx={{ py: { xs: 4, md: 6 } }}>
+        <Box sx={{ py: { xs: 3, md: 6 } }}>
           <Stack spacing={1} textAlign="center" alignItems="center" mb={3}>
             <Typography
               variant="overline"
@@ -456,6 +752,30 @@ const StudyMeshLanding = () => {
               dashboards. Use Quick Create when you already have context and
               want a focused study artifact fast.
             </Typography>
+            <Stack
+              direction="row"
+              spacing={1}
+              justifyContent="center"
+              flexWrap="wrap"
+              useFlexGap
+              sx={{ pt: 1 }}
+            >
+              {heroHighlights.map((highlight) => (
+                <Chip
+                  key={highlight}
+                  size="small"
+                  icon={<CheckCircleIcon />}
+                  label={highlight}
+                  sx={{
+                    borderRadius: 1,
+                    fontWeight: 850,
+                    bgcolor: alpha(theme.palette.success.main, 0.08),
+                    border: '1px solid',
+                    borderColor: alpha(theme.palette.success.main, 0.16),
+                  }}
+                />
+              ))}
+            </Stack>
           </Stack>
 
           <Grid container spacing={2.5} alignItems="stretch">

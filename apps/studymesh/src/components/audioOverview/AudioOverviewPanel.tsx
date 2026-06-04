@@ -10,7 +10,7 @@ import {
   Paper,
 } from '@mui/material'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
-import PauseIcon from '@mui/icons-material/PauseArrow'
+import PauseIcon from '@mui/icons-material/Pause'
 import StopIcon from '@mui/icons-material/Stop'
 import SettingsIcon from '@mui/icons-material/Settings'
 import CloseIcon from '@mui/icons-material/Close'
@@ -73,9 +73,9 @@ const AudioOverviewPanel: React.FC<AudioOverviewPanelProps> = ({
   const availableSources = useMemo<AudioOverviewSource[]>(() => {
     return studyObjects.map((obj) => ({
       id: obj.id,
-      title: obj.displayTitle || obj.title || 'Untitled',
+      title: (obj as any).displayTitle || obj.title || 'Untitled',
       type: 'notes' as const,
-      content: obj.displayTitle || obj.title || '',
+      content: (obj as any).displayTitle || obj.title || '',
     }))
   }, [studyObjects])
 

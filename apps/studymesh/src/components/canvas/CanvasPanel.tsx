@@ -19,6 +19,8 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Tooltip,
+  FormControlLabel,
+  Switch,
 } from '@mui/material'
 import {
   Add as AddIcon,

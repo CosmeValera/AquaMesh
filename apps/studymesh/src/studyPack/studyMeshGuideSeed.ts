@@ -1,10 +1,12 @@
 import { DashboardLayout } from '../state/store'
 import { ComponentData } from '../components/WidgetEditor/types/types'
+import { createStudyPathContainerState } from '../components/Dasboard/studyPathContainer'
+import { StudyGuideStorage } from '../studyGuides/storage'
+import type { StudyGuideRecord } from '../cloud/types'
 
 export const STUDYMESH_GUIDE_STUDY_PATH_ID =
   'studymesh-student-knowledge-wiki-a-beginner-s-guide'
-export const STUDYMESH_GUIDE_TITLE =
-  "StudyMesh Student Knowledge Wiki: A Beginner's Guide"
+export const STUDYMESH_GUIDE_TITLE = 'Welcome to StudyMesh'
 export const STUDYMESH_GUIDE_FOLDER_NAME = 'StudyMesh Guide'
 export const STUDYMESH_GUIDE_FOLDER_COLOR = '#007C66'
 
@@ -494,6 +496,27 @@ export const createStudyMeshGuideDashboards = (): SavedDashboardRecord[] => {
   })
 }
 
+export const createStudyMeshGuideStudyGuide = (): StudyGuideRecord => {
+  const now = '2026-05-19T23:47:47.841Z'
+  const studyPath = createStudyPathContainerState(
+    createStudyMeshGuideDashboards(),
+  )
+
+  if (!studyPath) {
+    throw new Error('StudyMesh Guide Study Guide seed is invalid')
+  }
+
+  return {
+    id: STUDYMESH_GUIDE_STUDY_PATH_ID,
+    title: STUDYMESH_GUIDE_TITLE,
+    folderName: STUDYMESH_GUIDE_FOLDER_NAME,
+    description: 'Built-in StudyMesh guide Study Guide.',
+    studyPath,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
 export const removeOldStarterDashboards = () => {
   if (
     typeof window === 'undefined' ||
@@ -549,16 +572,6 @@ export const seedStudyMeshGuideStudyPath = ({
   const alreadySeeded =
     window.localStorage.getItem(STUDYMESH_GUIDE_SEEDED_KEY) === 'true'
   const dashboards = readArray<SavedDashboardRecord>(DASHBOARD_STORAGE_KEY)
-
-  if (!force && alreadySeeded) {
-    return false
-  }
-
-  if (!force && dashboards.length > 0) {
-    window.localStorage.setItem(STUDYMESH_GUIDE_SEEDED_KEY, 'true')
-    return false
-  }
-
   const guideDashboards = createStudyMeshGuideDashboards()
   const guideIds = new Set(guideDashboards.map((dashboard) => dashboard.id))
   const guideNames = new Set(guideDashboards.map((dashboard) => dashboard.name))
@@ -570,8 +583,31 @@ export const seedStudyMeshGuideStudyPath = ({
         guideNames.has(dashboard.name)
       ),
   )
+  const removedLegacyGuideDashboards =
+    retainedDashboards.length !== dashboards.length
+  const existingGuide = StudyGuideStorage.getAll().some(
+    (studyGuide) => studyGuide.id === STUDYMESH_GUIDE_STUDY_PATH_ID,
+  )
 
-  writeArray(DASHBOARD_STORAGE_KEY, [...retainedDashboards, ...guideDashboards])
+  if (removedLegacyGuideDashboards) {
+    writeArray(DASHBOARD_STORAGE_KEY, retainedDashboards)
+  }
+
+  if (!force && alreadySeeded) {
+    return removedLegacyGuideDashboards
+  }
+
+  if (!force && dashboards.length > 0) {
+    window.localStorage.setItem(STUDYMESH_GUIDE_SEEDED_KEY, 'true')
+    return removedLegacyGuideDashboards
+  }
+
+  if (existingGuide) {
+    window.localStorage.setItem(STUDYMESH_GUIDE_SEEDED_KEY, 'true')
+    return removedLegacyGuideDashboards
+  }
+
+  StudyGuideStorage.save(createStudyMeshGuideStudyGuide())
   window.localStorage.setItem(STUDYMESH_GUIDE_SEEDED_KEY, 'true')
   return true
 }

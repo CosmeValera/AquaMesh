@@ -52,8 +52,9 @@ import {
   ensureStarterDashboards,
   OPEN_DASHBOARD_EDITOR_EVENT,
   OPEN_WIDGET_EDITOR_EVENT,
-  STARTER_STUDY_PATH_FOLDER_NAME,
 } from '../../customHooks/useWorkspaceActions'
+import { StudyGuideStorage } from '../../studyGuides/storage'
+import { STUDYMESH_GUIDE_STUDY_PATH_ID } from '../../studyPack/studyMeshGuideSeed'
 import {
   DEFAULT_FOLDER_COLOR,
   FOLDER_COLOR_PRESETS,
@@ -823,16 +824,15 @@ const Dashboards = () => {
 
     ensureStarterDashboards()
 
-    const starterDashboards = DashboardStorage.getAll().filter(
-      (dashboard) => dashboard.folder === STARTER_STUDY_PATH_FOLDER_NAME,
+    const starterStudyGuide = StudyGuideStorage.getAll().find(
+      (studyGuide) => studyGuide.id === STUDYMESH_GUIDE_STUDY_PATH_ID,
     )
-    const studyPath = createStudyPathContainerState(starterDashboards)
 
-    if (!studyPath) {
+    if (!starterStudyGuide) {
       return
     }
 
-    addStudyPathContainer(studyPath)
+    addStudyPathContainer(starterStudyGuide.studyPath)
     window.localStorage.setItem(DEFAULT_STUDY_PATH_OPENED_KEY, 'true')
   }, [addStudyPathContainer])
 

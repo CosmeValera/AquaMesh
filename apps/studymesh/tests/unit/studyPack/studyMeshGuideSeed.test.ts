@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
-  STUDYMESH_GUIDE_FOLDER_NAME,
-  createStudyMeshGuideDashboards,
+  STUDYMESH_GUIDE_STUDY_PATH_ID,
   ensureStarterDashboards,
   seedStudyMeshGuideStudyPath,
 } from '../../../src/studyPack/studyMeshGuideSeed'
@@ -32,17 +31,22 @@ describe('StudyMesh guide seed', () => {
     const dashboards = JSON.parse(
       window.localStorage.getItem('customDashboards') || '[]',
     )
-    expect(dashboards).toHaveLength(3)
-    expect(dashboards[0]).toMatchObject({
-      folder: STUDYMESH_GUIDE_FOLDER_NAME,
-      name: '01 - StudyMesh Basics: What It Is & Core Concepts',
+    const studyGuides = JSON.parse(
+      window.localStorage.getItem('studymesh_study_guides') || '[]',
+    )
+    expect(dashboards).toEqual([])
+    expect(studyGuides).toHaveLength(1)
+    expect(studyGuides[0]).toMatchObject({
+      id: STUDYMESH_GUIDE_STUDY_PATH_ID,
+      title: 'Welcome to StudyMesh',
     })
+    expect(studyGuides[0].studyPath.dashboards).toHaveLength(3)
 
-    window.localStorage.setItem('customDashboards', JSON.stringify([]))
+    window.localStorage.setItem('studymesh_study_guides', JSON.stringify([]))
 
     expect(seedStudyMeshGuideStudyPath()).toBe(false)
     expect(
-      JSON.parse(window.localStorage.getItem('customDashboards') || '[]'),
+      JSON.parse(window.localStorage.getItem('studymesh_study_guides') || '[]'),
     ).toEqual([])
   })
 
@@ -60,13 +64,12 @@ describe('StudyMesh guide seed', () => {
     const dashboards = JSON.parse(
       window.localStorage.getItem('customDashboards') || '[]',
     )
-    expect(dashboards).toHaveLength(4)
-    expect(
-      dashboards.filter(
-        (dashboard: { folder?: string }) =>
-          dashboard.folder === STUDYMESH_GUIDE_FOLDER_NAME,
-      ),
-    ).toHaveLength(createStudyMeshGuideDashboards().length)
+    const studyGuides = JSON.parse(
+      window.localStorage.getItem('studymesh_study_guides') || '[]',
+    )
+    expect(dashboards).toHaveLength(1)
+    expect(studyGuides).toHaveLength(1)
+    expect(studyGuides[0].id).toBe(STUDYMESH_GUIDE_STUDY_PATH_ID)
   })
 
   it('removes legacy starter dashboards without recreating them', () => {

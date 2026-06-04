@@ -18,6 +18,7 @@ import {
 } from '../studyPack'
 import { ComponentData } from '../components/WidgetEditor/types/types'
 import {
+  STUDYMESH_GUIDE_STUDY_PATH_ID,
   STUDYMESH_GUIDE_FOLDER_NAME,
   ensureStarterDashboards,
 } from '../studyPack/studyMeshGuideSeed'
@@ -478,13 +479,12 @@ export const useWorkspaceActions = () => {
 
   const openStudyMeshGuide = useCallback(() => {
     ensureStarterDashboards()
-    const guideDashboards = getSavedDashboards().filter(
-      (dashboard) => dashboard.folder === STUDYMESH_GUIDE_FOLDER_NAME,
+    const guide = StudyGuideStorage.getAll().find(
+      (studyGuide) => studyGuide.id === STUDYMESH_GUIDE_STUDY_PATH_ID,
     )
-    const studyPath = createStudyPathContainerState(guideDashboards)
 
-    if (studyPath) {
-      addStudyPathContainer(studyPath)
+    if (guide) {
+      addStudyPathContainer(guide.studyPath)
     }
   }, [addStudyPathContainer])
 

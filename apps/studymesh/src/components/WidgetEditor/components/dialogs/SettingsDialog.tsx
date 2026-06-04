@@ -232,8 +232,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         typeof record.name === 'string' && record.name.trim()
           ? record.name.trim()
           : typeof record.title === 'string' && record.title.trim()
-          ? record.title.trim()
-          : `Dashboard ${index + 1}`
+            ? record.title.trim()
+            : `Dashboard ${index + 1}`
       const items = groups.get(folderName) || []
 
       items.push({ dashboard, index, folderName, name })
@@ -723,8 +723,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                         selectedStrongCredential.apiToken.trim()
                           ? 'Settings key active'
                           : hasEnvToken
-                          ? '.env key available'
-                          : 'No key configured'
+                            ? '.env key available'
+                            : 'No key configured'
                       }
                       color={
                         selectedStrongCredential.apiToken.trim() || hasEnvToken

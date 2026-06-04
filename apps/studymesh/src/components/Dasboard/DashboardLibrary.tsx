@@ -55,7 +55,10 @@ import {
   normalizeFolderColor,
   normalizeFolderName,
 } from './folderColors'
-import { SAVED_DASHBOARDS_CHANGED_EVENT } from './dashboardStorage'
+import {
+  DashboardStorage,
+  SAVED_DASHBOARDS_CHANGED_EVENT,
+} from './dashboardStorage'
 
 interface SavedDashboard {
   id: string
@@ -361,15 +364,8 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
   // Function to actually delete the dashboard
   const deleteDashboard = (id: string) => {
     try {
-      const updatedDashboards = dashboards.filter(
-        (dashboard) => dashboard.id !== id,
-      )
-      setDashboards(updatedDashboards)
-      localStorage.setItem(
-        'customDashboards',
-        JSON.stringify(updatedDashboards),
-      )
-      window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
+      DashboardStorage.delete(id)
+      setDashboards(DashboardStorage.getAll() as SavedDashboard[])
     } catch (error) {
       console.error('Failed to delete dashboard', error)
     }
@@ -412,19 +408,14 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
     }
 
     try {
-      const selectedIds = new Set(bulkDeleteSelectedIds)
-      const updatedDashboards = dashboards.filter(
-        (dashboard) => !selectedIds.has(dashboard.id),
-      )
+      bulkDeleteSelectedIds.forEach((dashboardId) => {
+        DashboardStorage.delete(dashboardId)
+      })
+      const updatedDashboards = DashboardStorage.getAll() as SavedDashboard[]
 
       setDashboards(updatedDashboards)
       setMenuAnchorEl(null)
       setMenuDashboard(null)
-      localStorage.setItem(
-        'customDashboards',
-        JSON.stringify(updatedDashboards),
-      )
-      window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
     } catch (error) {
       console.error('Failed to delete selected dashboards', error)
     } finally {

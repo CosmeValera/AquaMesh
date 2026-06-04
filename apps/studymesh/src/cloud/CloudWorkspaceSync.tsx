@@ -268,8 +268,8 @@ const CloudWorkspaceSync = () => {
     const runCloudWidgetDelete = async (widgetId: string) => {
       try {
         dispatchCloudSyncStatus('syncing')
-        await repository.deleteWidget(ownerId, widgetId)
         await repository.deleteWidgetVersions(ownerId, widgetId)
+        await repository.deleteWidget(ownerId, widgetId)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
         console.error('StudyMesh cloud widget delete failed', error)

@@ -415,7 +415,7 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   async deleteDashboard(ownerId: string, dashboardId: string): Promise<void> {
     const { error } = await client
       .from('user_dashboards')
-      .update({ deleted_at: nowIso(), updated_at: nowIso() })
+      .delete()
       .eq('owner_id', ownerId)
       .eq('id', dashboardId)
 
@@ -470,7 +470,7 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   async deleteWidget(ownerId: string, widgetId: string): Promise<void> {
     const { error } = await client
       .from('user_widgets')
-      .update({ deleted_at: nowIso(), updated_at: nowIso() })
+      .delete()
       .eq('owner_id', ownerId)
       .eq('id', widgetId)
 

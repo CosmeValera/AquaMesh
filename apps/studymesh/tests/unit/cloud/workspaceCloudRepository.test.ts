@@ -243,30 +243,15 @@ describe('workspace cloud repository', () => {
     )
   })
 
-  it('soft-deletes dashboards instead of removing cloud rows', async () => {
+  it('deletes dashboards from cloud storage', async () => {
     const builder = createQueryBuilder()
-    builder.single.mockResolvedValue({
-      data: {
-        id: 'dash-1',
-        owner_id: 'user-1',
-        title: 'Deleted dashboard',
-        layout: {},
-        created_at: '2026-06-01T10:00:00.000Z',
-        updated_at: '2026-06-02T10:00:00.000Z',
-        deleted_at: '2026-06-03T10:00:00.000Z',
-      },
-      error: null,
-    })
     const supabase = { from: vi.fn(() => builder) }
     const repository = createCloudRepository(supabase as never)
 
     await repository.deleteDashboard('user-1', 'dash-1')
 
     expect(supabase.from).toHaveBeenCalledWith('user_dashboards')
-    expect(builder.update).toHaveBeenCalledWith({
-      deleted_at: expect.any(String),
-      updated_at: expect.any(String),
-    })
+    expect(builder.delete).toHaveBeenCalled()
     expect(builder.eq).toHaveBeenCalledWith('owner_id', 'user-1')
     expect(builder.eq).toHaveBeenCalledWith('id', 'dash-1')
   })

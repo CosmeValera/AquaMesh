@@ -21,6 +21,7 @@ import {
   List,
   ListItem,
   ListItemText,
+  ListItemIcon,
   ListItemSecondaryAction,
   Menu,
   MenuItem,

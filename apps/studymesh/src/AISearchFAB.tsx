@@ -1,37 +1,27 @@
 import React, { useState } from 'react'
 import { Box, Fab, Tooltip } from '@mui/material'
-import { Search as SearchIcon } from '@mui/icons-material'
-import { AISearchPanel } from './components/aiSmartSearch'
+import { AISearchFAB } from './components/ai-smart-search'
 
 const AISearchFAB: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
     <>
-      <Box
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          zIndex: 9997,
-        }}
-      >
-        <Tooltip title="🤖 AI Smart Search" placement="left">
+      <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9997 }}>
+        <Tooltip title="AISearchFAB" placement="left">
           <Fab
             color="primary"
-            aria-label="AI Search"
+            aria-label="AISearchFAB"
             onClick={() => setIsOpen(true)}
             sx={{
               width: 56,
               height: 56,
               fontSize: '1.5rem',
               bgcolor: 'primary.main',
-              '&:hover': {
-                bgcolor: 'primary.dark',
-              },
+              '&:hover': { bgcolor: 'primary.dark' },
             }}
           >
-            🤖
+            ⚡
           </Fab>
         </Tooltip>
       </Box>
@@ -60,16 +50,8 @@ const AISearchFAB: React.FC = () => {
               pointerEvents: 'auto',
             }}
           />
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              pointerEvents: 'auto',
-            }}
-          >
-            <AISearchPanel onClose={() => setIsOpen(false)} />
+          <Box sx={{ pointerEvents: 'auto' }}>
+            <AISearchFAB onClose={() => setIsOpen(false)} />
           </Box>
         </Box>
       )}

@@ -93,6 +93,21 @@ const DEFAULT_STUDY_PATH_OPENED_KEY = 'studymesh-default-study-path-opened-v1'
 const USER_ROLE_CHANGED_EVENT = 'studymesh-user-role-changed'
 const OPEN_SAVED_DASHBOARDS_EVENT = 'studymesh-open-saved-dashboards'
 
+const readCurrentUserIsAdmin = () => {
+  try {
+    const userData = localStorage.getItem('userData')
+    if (!userData) {
+      return false
+    }
+
+    const parsedData = JSON.parse(userData)
+    return parsedData.role === 'ADMIN_ROLE'
+  } catch (error) {
+    console.error('Failed to parse user data', error)
+    return false
+  }
+}
+
 const Dashboards = () => {
   const {
     theme,
@@ -138,7 +153,7 @@ const Dashboards = () => {
     number | null
   >(null)
   const [hasChanges, setHasChanges] = useState<Record<string, boolean>>({})
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(readCurrentUserIsAdmin)
   const [dashboardOptions, setDashboardOptions] = useState<SavedDashboard[]>([])
   const [dashboardEditorId, setDashboardEditorId] = useState<string | null>(
     null,
@@ -768,21 +783,10 @@ const Dashboards = () => {
   // Check if user is admin on component mount
   useEffect(() => {
     const readUserRole = () => {
-      try {
-        const userData = localStorage.getItem('userData')
-        if (userData) {
-          const parsedData = JSON.parse(userData)
-          setIsAdmin(parsedData.role === 'ADMIN_ROLE')
-          if (parsedData.id !== 'admin' || parsedData.role !== 'ADMIN_ROLE') {
-            closeDashboardEditor()
-          }
-          return
-        }
-        setIsAdmin(false)
+      const nextIsAdmin = readCurrentUserIsAdmin()
+      setIsAdmin(nextIsAdmin)
+      if (!nextIsAdmin) {
         closeDashboardEditor()
-      } catch (error) {
-        console.error('Failed to parse user data', error)
-        setIsAdmin(false)
       }
     }
 

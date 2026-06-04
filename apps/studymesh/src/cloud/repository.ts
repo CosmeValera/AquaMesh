@@ -413,15 +413,15 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   },
 
   async deleteDashboard(ownerId: string, dashboardId: string): Promise<void> {
-    await assertSingle<DashboardRow>(
-      client
-        .from('user_dashboards')
-        .update({ deleted_at: nowIso(), updated_at: nowIso() })
-        .eq('owner_id', ownerId)
-        .eq('id', dashboardId)
-        .select('*')
-        .single(),
-    )
+    const { error } = await client
+      .from('user_dashboards')
+      .update({ deleted_at: nowIso(), updated_at: nowIso() })
+      .eq('owner_id', ownerId)
+      .eq('id', dashboardId)
+
+    if (error) {
+      throw new Error(error.message)
+    }
   },
 
   async listWidgets(ownerId: string): Promise<CustomWidget[]> {
@@ -468,15 +468,15 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   },
 
   async deleteWidget(ownerId: string, widgetId: string): Promise<void> {
-    await assertSingle<WidgetRow>(
-      client
-        .from('user_widgets')
-        .update({ deleted_at: nowIso() })
-        .eq('owner_id', ownerId)
-        .eq('id', widgetId)
-        .select('*')
-        .single(),
-    )
+    const { error } = await client
+      .from('user_widgets')
+      .update({ deleted_at: nowIso(), updated_at: nowIso() })
+      .eq('owner_id', ownerId)
+      .eq('id', widgetId)
+
+    if (error) {
+      throw new Error(error.message)
+    }
   },
 
   async listWidgetVersions(

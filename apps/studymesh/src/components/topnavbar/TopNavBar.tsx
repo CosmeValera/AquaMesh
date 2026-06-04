@@ -1255,6 +1255,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                 />
                 {canEditDashboard && (
                   <IconButton
+                    component="span"
                     aria-label={`Edit ${dashboardTitle}`}
                     size="small"
                     onClick={(event) => {
@@ -1284,6 +1285,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   </IconButton>
                 )}
                 <IconButton
+                  component="span"
                   aria-label={`Close ${dashboardTitle}`}
                   size="small"
                   onClick={(event) => {

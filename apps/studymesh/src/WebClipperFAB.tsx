@@ -8,10 +8,10 @@ const WebClipperFAB: React.FC = () => {
   return (
     <>
       <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9997 }}>
-        <Tooltip title="WebClipperFAB" placement="left">
+        <Tooltip title="📌 Web Clipper" placement="left">
           <Fab
             color="primary"
-            aria-label="WebClipperFAB"
+            aria-label="Web Clipper"
             onClick={() => setIsOpen(true)}
             sx={{
               width: 56,
@@ -21,7 +21,7 @@ const WebClipperFAB: React.FC = () => {
               '&:hover': { bgcolor: 'primary.dark' },
             }}
           >
-            ⚡
+            📌
           </Fab>
         </Tooltip>
       </Box>

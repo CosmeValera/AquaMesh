@@ -8,10 +8,10 @@ const ConceptMapFAB: React.FC = () => {
   return (
     <>
       <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9997 }}>
-        <Tooltip title="🗺️ Concept Map" placement="left">
+        <Tooltip title="ConceptMapFAB" placement="left">
           <Fab
             color="primary"
-            aria-label="Concept Map"
+            aria-label="ConceptMapFAB"
             onClick={() => setIsOpen(true)}
             sx={{
               width: 56,
@@ -21,28 +21,29 @@ const ConceptMapFAB: React.FC = () => {
               '&:hover': { bgcolor: 'primary.dark' },
             }}
           >
-            🗺️
+            ⚡
           </Fab>
         </Tooltip>
       </Box>
 
       {isOpen && (
-        <Box
-          onClick={() => setIsOpen(false)}
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            bgcolor: 'rgba(0,0,0,0.3)',
-            zIndex: 9998,
-          }}
-        >
+        <>
+          <Box
+            onClick={() => setIsOpen(false)}
+            sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              bgcolor: 'rgba(0,0,0,0.3)',
+              zIndex: 9998,
+            }}
+          />
           <Box sx={{ width: '100%', height: '100%' }} onClick={(e) => e.stopPropagation()}>
             <ConceptMapPanel onClose={() => setIsOpen(false)} />
           </Box>
-        </Box>
+        </>
       )}
     </>
   )

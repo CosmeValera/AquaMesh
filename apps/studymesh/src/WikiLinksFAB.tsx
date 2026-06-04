@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Box, Fab, Tooltip } from '@mui/material'
-import { WikiLinksFAB } from './components/wikilinks-bidirectional'
+import { WikiLinksPanel } from './components/wikiLinks'
 
 const WikiLinksFAB: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -8,10 +8,10 @@ const WikiLinksFAB: React.FC = () => {
   return (
     <>
       <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9997 }}>
-        <Tooltip title="WikiLinksFAB" placement="left">
+        <Tooltip title="🔗 WikiLinks" placement="left">
           <Fab
             color="primary"
-            aria-label="WikiLinksFAB"
+            aria-label="WikiLinks"
             onClick={() => setIsOpen(true)}
             sx={{
               width: 56,
@@ -21,39 +21,29 @@ const WikiLinksFAB: React.FC = () => {
               '&:hover': { bgcolor: 'primary.dark' },
             }}
           >
-            ⚡
+            🔗
           </Fab>
         </Tooltip>
       </Box>
 
       {isOpen && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 9998,
-            pointerEvents: 'none',
-          }}
-        >
+        <>
           <Box
             onClick={() => setIsOpen(false)}
             sx={{
-              position: 'absolute',
+              position: 'fixed',
               top: 0,
               left: 0,
               right: 0,
               bottom: 0,
               bgcolor: 'rgba(0,0,0,0.3)',
-              pointerEvents: 'auto',
+              zIndex: 9998,
             }}
           />
-          <Box sx={{ pointerEvents: 'auto' }}>
-            <WikiLinksFAB onClose={() => setIsOpen(false)} />
+          <Box sx={{ width: '100%', height: '100%' }} onClick={(e) => e.stopPropagation()}>
+            <WikiLinksPanel onClose={() => setIsOpen(false)} />
           </Box>
-        </Box>
+        </>
       )}
     </>
   )

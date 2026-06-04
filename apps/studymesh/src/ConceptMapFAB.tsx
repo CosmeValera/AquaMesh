@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Box, Fab, Tooltip } from '@mui/material'
-import { ConceptMapFAB } from './components/concept-map'
+import { ConceptMapPanel } from './components/conceptMap'
 
 const ConceptMapFAB: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -8,10 +8,10 @@ const ConceptMapFAB: React.FC = () => {
   return (
     <>
       <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9997 }}>
-        <Tooltip title="ConceptMapFAB" placement="left">
+        <Tooltip title="🗺️ Concept Map" placement="left">
           <Fab
             color="primary"
-            aria-label="ConceptMapFAB"
+            aria-label="Concept Map"
             onClick={() => setIsOpen(true)}
             sx={{
               width: 56,
@@ -21,7 +21,7 @@ const ConceptMapFAB: React.FC = () => {
               '&:hover': { bgcolor: 'primary.dark' },
             }}
           >
-            ⚡
+            🗺️
           </Fab>
         </Tooltip>
       </Box>
@@ -51,7 +51,7 @@ const ConceptMapFAB: React.FC = () => {
             }}
           />
           <Box sx={{ pointerEvents: 'auto' }}>
-            <ConceptMapFAB onClose={() => setIsOpen(false)} />
+            <ConceptMapPanel onClose={() => setIsOpen(false)} />
           </Box>
         </Box>
       )}

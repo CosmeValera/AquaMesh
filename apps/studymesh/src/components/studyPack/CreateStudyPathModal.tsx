@@ -95,6 +95,11 @@ const generationAmountOptions: Array<{
   helper: string
 }> = [
   {
+    label: 'Auto',
+    value: 'auto',
+    helper: 'AI chooses 3-7 dashboards from topic complexity',
+  },
+  {
     label: 'Super small',
     value: 'superSmall',
     helper: '1 lesson dashboard + exercises',
@@ -372,6 +377,12 @@ const getGenerationAmountHelper = (
   option: (typeof generationAmountOptions)[number],
   provider: StudyPackAiProvider,
 ): string => {
+  if (option.value === 'auto') {
+    return isStrongAiProvider(provider)
+      ? option.helper
+      : 'Auto depth is available with Gemini or Cerebras.'
+  }
+
   if (provider !== 'local') {
     return option.helper
   }
@@ -560,7 +571,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   )
   const [aiProvider, setAiProvider] = useState<StudyPackAiProvider>('basic')
   const [generationAmount, setGenerationAmount] =
-    useState<GenerationAmount>('average')
+    useState<GenerationAmount>('auto')
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [mustInclude, setMustInclude] = useState('')
   const [avoidTopics, setAvoidTopics] = useState('')
@@ -685,7 +696,11 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
 
       if (!isGenerating) {
         setGenerationAmount((current) =>
-          provider === 'local' && current === 'deep' ? 'superSmall' : current,
+          provider === 'local' && (current === 'deep' || current === 'auto')
+            ? 'superSmall'
+            : provider === 'basic' && current === 'auto'
+            ? 'average'
+            : current,
         )
       }
     }
@@ -694,7 +709,13 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       refreshAiProvider()
       if (!initializedProviderRef.current) {
         const provider = readStudyPackAiSettings().provider || 'basic'
-        setGenerationAmount(provider === 'local' ? 'superSmall' : 'average')
+        setGenerationAmount(
+          isStrongAiProvider(provider)
+            ? 'auto'
+            : provider === 'local'
+            ? 'superSmall'
+            : 'average',
+        )
         setLocalAiDashboardConcurrency(2)
         initializedProviderRef.current = true
       }
@@ -717,7 +738,13 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     setStep('prompt')
     setSourceMode('prompt')
     setPrompt(initialPrompt || DEFAULT_STUDY_PATH_PROMPT)
-    setGenerationAmount(aiProvider === 'local' ? 'superSmall' : 'average')
+    setGenerationAmount(
+      isStrongAiProvider(aiProvider)
+        ? 'auto'
+        : aiProvider === 'local'
+        ? 'superSmall'
+        : 'average',
+    )
     setAdvancedOpen(false)
     setMustInclude('')
     setAvoidTopics('')
@@ -788,6 +815,13 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       return
     }
 
+    const effectiveGenerationAmount =
+      generationAmount === 'auto' && !isStrongAiProvider(effectiveAiProvider)
+        ? effectiveAiProvider === 'local'
+          ? 'superSmall'
+          : 'average'
+        : generationAmount
+
     cancelActiveGeneration()
     const generationController = new AbortController()
     activeGenerationRef.current = generationController
@@ -800,7 +834,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
             effectiveAiProvider === 'cerebras'
               ? CEREBRAS_STUDY_PATH_ESTIMATE_MS
               : GEMINI_STUDY_PATH_ESTIMATES_MS[
-                  normalizeStudyPathGenerationAmount(generationAmount)
+                  normalizeStudyPathGenerationAmount(effectiveGenerationAmount)
                 ],
           )
         : null,
@@ -825,7 +859,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
         prompt: effectivePrompt,
         mustInclude: mustInclude.trim() || undefined,
         avoidTopics: avoidTopics.trim() || undefined,
-        generationAmount,
+        generationAmount: effectiveGenerationAmount,
         localAiDashboardConcurrency:
           effectiveAiProvider === 'local'
             ? localAiDashboardConcurrency
@@ -1218,7 +1252,10 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
                             option.label
                           } - ${getGenerationAmountHelper(option, aiProvider)}`}
                           disabled={
-                            aiProvider === 'local' && option.value === 'deep'
+                            (aiProvider === 'local' &&
+                              option.value === 'deep') ||
+                            (option.value === 'auto' &&
+                              !isStrongAiProvider(aiProvider))
                           }
                         >
                           {option.label}

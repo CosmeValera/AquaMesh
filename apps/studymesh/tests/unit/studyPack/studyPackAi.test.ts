@@ -2609,10 +2609,26 @@ describe('Gemini study pack client', () => {
     ],
   })
 
-  it('plans Study Guides before generating and evaluating individual dashboards', async () => {
+  const contentModes = [
+    'orientationMap',
+    'conceptLesson',
+    'workedExampleLab',
+    'contrastLab',
+    'practiceCheckpoint',
+    'synthesisReview',
+    'procedureGuide',
+    'vocabularyReference',
+  ] as const
+
+  it('auto-plans Study Guides before generating and evaluating individual dashboards', async () => {
     const blueprint = {
       title: 'Python Loops',
       folderName: 'Python Loops',
+      pathPromise: 'Build a zero-to-map overview of Python loops.',
+      entryLevel: 'Beginner',
+      exitCapability: 'Explain loop types and attempt first loop tasks.',
+      dashboardCount: 3,
+      dashboardCountReason: 'Three dashboards are enough for a first map.',
       learnerProfile: 'Beginner programming student.',
       scope: 'Learn loop fundamentals and common mistakes.',
       prerequisites: ['Variables', 'basic expressions'],
@@ -2635,6 +2651,13 @@ describe('Gemini study pack client', () => {
         layoutArchetype:
           index === 3 ? 'splitReferenceExercise' : 'learnPracticeTabs',
         practiceType: index === 3 ? 'mixed' : 'none',
+        contentMode:
+          index === 1
+            ? 'orientationMap'
+            : index === 3
+            ? 'practiceCheckpoint'
+            : 'workedExampleLab',
+        sectionPlan: ['Topic map', 'Worked loop', 'Try it'],
         mustTeach: [`Loop idea ${index}`],
         workedExample: `Loop worked example ${index}.`,
         misconceptionChecks: [`Loop mistake ${index}.`],
@@ -2661,9 +2684,38 @@ describe('Gemini study pack client', () => {
                 content: {
                   parts: [
                     {
-                      text: JSON.stringify(
-                        makeRichPathDashboard(index, `Loop lesson ${index}`),
-                      ),
+                      text: JSON.stringify({
+                        ...makeRichPathDashboard(index, `Loop lesson ${index}`),
+                        contentMode:
+                          index === 1
+                            ? 'orientationMap'
+                            : index === 3
+                            ? 'practiceCheckpoint'
+                            : 'workedExampleLab',
+                        supportArtifacts:
+                          index === 1
+                            ? {
+                                glossary: [
+                                  {
+                                    term: 'for loop',
+                                    definition:
+                                      'A loop that repeats over items in a sequence.',
+                                  },
+                                ],
+                                contrastTable: {
+                                  title: 'Loop choice',
+                                  headers: ['Use case', 'Loop'],
+                                  rows: [
+                                    ['Known sequence', 'for loop'],
+                                    ['Unknown stopping point', 'while loop'],
+                                  ],
+                                },
+                                discussionPrompts: [
+                                  'When would a while loop be clearer than a for loop?',
+                                ],
+                              }
+                            : undefined,
+                      }),
                     },
                   ],
                 },
@@ -2700,12 +2752,14 @@ describe('Gemini study pack client', () => {
       title: 'Python Loops',
       prompt: 'Teach me Python loops',
       folderName: '',
-      generationAmount: 'few',
     })
 
     expect(fetchMock).toHaveBeenCalledTimes(7)
     expect(fetchMock.mock.calls[0][1].body).toContain(
       'Plan a high-quality StudyMesh Study Guide',
+    )
+    expect(fetchMock.mock.calls[0][1].body).toContain(
+      'Choose dashboardCount between 3 and 7',
     )
     expect(fetchMock.mock.calls[1][1].body).toContain(
       'Create one StudyMesh Study Guide dashboard',
@@ -2716,12 +2770,136 @@ describe('Gemini study pack client', () => {
     expect(draft.blueprint?.learningObjectives).toContain('Use for loops')
     expect(draft.dashboards[0]).toMatchObject({
       moduleTitle: 'Loop foundations',
+      contentMode: 'orientationMap',
       learnerQuestion: 'How do loops work in case 1?',
       learningOutcome: 'Apply loop pattern 1.',
       suggestedPractice: ['Generate quiz for loop lesson 1'],
       qualityScore: 4,
       qualityIssues: [],
     })
+    expect(draft.dashboardCountReason).toBe(
+      'Three dashboards are enough for a first map.',
+    )
+    expect(draft.dashboards[0].objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: 'term', term: 'for loop' }),
+        expect.objectContaining({ kind: 'table', title: 'Loop choice' }),
+        expect.objectContaining({
+          kind: 'reviewPrompt',
+          prompt: 'When would a while loop be clearer than a for loop?',
+        }),
+      ]),
+    )
+  })
+
+  it('normalizes invalid Auto Study Guide dashboard counts to five dashboards', async () => {
+    const blueprint = {
+      title: 'Invalid Count Path',
+      folderName: 'Invalid Count Path',
+      pathPromise: 'Build a first map.',
+      entryLevel: 'Beginner',
+      exitCapability: 'Explain the topic shape.',
+      dashboardCount: 8,
+      dashboardCountReason: 'The planner tried to make a long path.',
+      learnerProfile: 'Beginner.',
+      scope: 'Bounded sprint.',
+      prerequisites: [],
+      learningObjectives: ['Understand the map'],
+      conceptGraph: ['map -> practice'],
+      modules: [
+        {
+          title: 'Core',
+          goal: 'Understand the topic.',
+          lessonIndexes: [0, 1, 2, 3, 4],
+        },
+      ],
+      lessons: Array.from({ length: 8 }, (_value, index) => ({
+        title: `Auto lesson ${index + 1}`,
+        moduleTitle: 'Core',
+        lessonType: index === 0 ? 'orientation' : 'concept',
+        learnerQuestion: `Question ${index + 1}?`,
+        learningOutcome: `Outcome ${index + 1}.`,
+        dashboardPurpose: 'lesson',
+        layoutArchetype: 'learnPracticeTabs',
+        practiceType: 'none',
+        contentMode: contentModes[index],
+        sectionPlan: ['Map', 'Example'],
+        mustTeach: [`Idea ${index + 1}`],
+        workedExample: `Example ${index + 1}.`,
+        misconceptionChecks: [],
+        retrievalPractice: [],
+        suggestedPractice: [],
+      })),
+      finalReviewPlan: [],
+    }
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        candidates: [
+          { content: { parts: [{ text: JSON.stringify(blueprint) }] } },
+        ],
+      }),
+    })
+
+    Array.from({ length: 5 }, (_value, index) => {
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        ...makeRichPathDashboard(
+                          index + 1,
+                          `Auto lesson ${index + 1}`,
+                        ),
+                        contentMode: contentModes[index],
+                      }),
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        score: 4,
+                        issues: [],
+                        repairInstructions: [],
+                      }),
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const draft = await generateStudyPathWithAi({
+      apiToken: 'test-token',
+      model: 'gemini-test',
+      title: 'Invalid Count Path',
+      prompt: 'Teach a broad topic',
+      folderName: '',
+    })
+
+    expect(draft.dashboards).toHaveLength(5)
+    expect(draft.dashboardCountReason).toContain(
+      'Planner requested 8 dashboards',
+    )
   })
 
   it('requests structured JSON and normalizes generated study objects', async () => {

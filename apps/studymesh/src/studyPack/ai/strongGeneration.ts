@@ -105,6 +105,7 @@ export interface GenerateStudyPackWithAiOptions {
 }
 
 export type StudyPathGenerationAmount =
+  | 'auto'
   | 'superSmall'
   | 'compact'
   | 'average'
@@ -113,9 +114,32 @@ export type StudyPathGenerationAmount =
   | 'medium'
   | 'many'
 
+export type StudyPathContentMode =
+  | 'orientationMap'
+  | 'conceptLesson'
+  | 'contrastLab'
+  | 'workedExampleLab'
+  | 'procedureGuide'
+  | 'vocabularyReference'
+  | 'practiceCheckpoint'
+  | 'synthesisReview'
+
+interface AiStudyPathSupportArtifacts {
+  glossary?: Array<{ term: string; definition: string }>
+  contrastTable?: {
+    title?: string
+    headers: string[]
+    rows: string[][]
+  }
+  discussionPrompts?: string[]
+  answerKey?: Array<{ question: string; answer: string }>
+  checkpointRubric?: string[]
+}
+
 export interface AiStudyPathDashboardDraft extends AiStudyPackDraft {
   summary: string
   dashboardRole: StudyPathDashboardRole
+  contentMode?: StudyPathContentMode
   moduleTitle?: string
   lessonType?:
     | 'orientation'
@@ -130,6 +154,7 @@ export interface AiStudyPathDashboardDraft extends AiStudyPackDraft {
   learnerQuestion?: string
   learningOutcome?: string
   suggestedPractice?: string[]
+  supportArtifacts?: AiStudyPathSupportArtifacts
   qualityScore?: number
   qualityIssues?: string[]
 }
@@ -140,6 +165,7 @@ export interface AiStudyPathDraft {
   dashboards: AiStudyPathDashboardDraft[]
   warnings: string[]
   blueprint?: AiStudyPathBlueprint
+  dashboardCountReason?: string
 }
 
 interface AiStudyPathBlueprintLesson {
@@ -151,6 +177,8 @@ interface AiStudyPathBlueprintLesson {
   dashboardPurpose: string
   layoutArchetype: string
   practiceType: string
+  contentMode: StudyPathContentMode
+  sectionPlan: string[]
   mustTeach: string[]
   workedExample: string
   misconceptionChecks: string[]
@@ -161,6 +189,11 @@ interface AiStudyPathBlueprintLesson {
 interface AiStudyPathBlueprint {
   title: string
   folderName: string
+  pathPromise: string
+  entryLevel: string
+  exitCapability: string
+  dashboardCount: number
+  dashboardCountReason: string
   learnerProfile: string
   scope: string
   prerequisites: string[]
@@ -191,6 +224,10 @@ export interface GenerateStudyPathWithAiOptions {
 export const normalizeStudyPathGenerationAmount = (
   generationAmount: StudyPathGenerationAmount = 'average',
 ): 'superSmall' | 'compact' | 'average' | 'deep' => {
+  if (generationAmount === 'auto') {
+    return 'average'
+  }
+
   if (generationAmount === 'few') {
     return 'compact'
   }
@@ -365,6 +402,67 @@ export interface ExtractRawNotesWithAiOptions {
 
 const textArraySchema = { type: 'ARRAY', items: { type: 'STRING' } }
 
+const contentModeValues: StudyPathContentMode[] = [
+  'orientationMap',
+  'conceptLesson',
+  'contrastLab',
+  'workedExampleLab',
+  'procedureGuide',
+  'vocabularyReference',
+  'practiceCheckpoint',
+  'synthesisReview',
+]
+
+const contentModeSchema = {
+  type: 'STRING',
+  enum: contentModeValues,
+}
+
+const studyPathSupportArtifactsSchema = {
+  type: 'OBJECT',
+  properties: {
+    glossary: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          term: { type: 'STRING' },
+          definition: { type: 'STRING' },
+        },
+        required: ['term', 'definition'],
+      },
+    },
+    contrastTable: {
+      type: 'OBJECT',
+      properties: {
+        title: { type: 'STRING' },
+        headers: textArraySchema,
+        rows: {
+          type: 'ARRAY',
+          items: {
+            type: 'ARRAY',
+            items: { type: 'STRING' },
+          },
+        },
+      },
+      required: ['headers', 'rows'],
+    },
+    discussionPrompts: textArraySchema,
+    answerKey: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          question: { type: 'STRING' },
+          answer: { type: 'STRING' },
+        },
+        required: ['question', 'answer'],
+      },
+    },
+    checkpointRubric: textArraySchema,
+  },
+}
+
 const dashboardContractProperties = {
   sourceSummary: {
     type: 'OBJECT',
@@ -501,6 +599,7 @@ const studyPathSchema = {
             enum: ['none', 'quiz', 'flashcards', 'mixed'],
           },
           layoutReason: { type: 'STRING' },
+          contentMode: contentModeSchema,
           moduleTitle: { type: 'STRING' },
           lessonType: {
             type: 'STRING',
@@ -522,6 +621,7 @@ const studyPathSchema = {
             type: 'ARRAY',
             items: { type: 'STRING' },
           },
+          supportArtifacts: studyPathSupportArtifactsSchema,
           sourceRefs: {
             type: 'ARRAY',
             items: {
@@ -597,6 +697,8 @@ const studyPathBlueprintLessonSchema = {
       type: 'STRING',
       enum: ['none', 'quiz', 'flashcards', 'mixed'],
     },
+    contentMode: contentModeSchema,
+    sectionPlan: textArraySchema,
     mustTeach: textArraySchema,
     workedExample: { type: 'STRING' },
     misconceptionChecks: textArraySchema,
@@ -612,6 +714,8 @@ const studyPathBlueprintLessonSchema = {
     'dashboardPurpose',
     'layoutArchetype',
     'practiceType',
+    'contentMode',
+    'sectionPlan',
     'mustTeach',
     'workedExample',
     'misconceptionChecks',
@@ -625,6 +729,11 @@ const studyPathBlueprintSchema = {
   properties: {
     title: { type: 'STRING' },
     folderName: { type: 'STRING' },
+    pathPromise: { type: 'STRING' },
+    entryLevel: { type: 'STRING' },
+    exitCapability: { type: 'STRING' },
+    dashboardCount: { type: 'NUMBER' },
+    dashboardCountReason: { type: 'STRING' },
     learnerProfile: { type: 'STRING' },
     scope: { type: 'STRING' },
     prerequisites: textArraySchema,
@@ -651,6 +760,11 @@ const studyPathBlueprintSchema = {
   required: [
     'title',
     'folderName',
+    'pathPromise',
+    'entryLevel',
+    'exitCapability',
+    'dashboardCount',
+    'dashboardCountReason',
     'learnerProfile',
     'scope',
     'prerequisites',
@@ -1002,10 +1116,121 @@ const buildFallbackObjectsForDashboardRole = ({
   ]
 }
 
+const createSupportArtifactObjects = (
+  packId: string,
+  artifacts?: AiStudyPathSupportArtifacts,
+): StudyObject[] => {
+  if (!artifacts) {
+    return []
+  }
+
+  const objects: StudyObject[] = []
+  ;(artifacts.glossary || []).slice(0, 12).forEach((item, index) => {
+    objects.push({
+      id: `${packId}-support-term-${index + 1}`,
+      kind: 'term',
+      title: item.term,
+      sourceLine: index + 1,
+      tags: ['study-pack', 'ai-generated', 'support-artifact'],
+      term: item.term,
+      definition: item.definition,
+    })
+  })
+
+  if (artifacts.contrastTable) {
+    objects.push({
+      id: `${packId}-support-contrast-table-1`,
+      kind: 'table',
+      title: artifacts.contrastTable.title || 'Contrast table',
+      sourceLine: 1,
+      tags: ['study-pack', 'ai-generated', 'support-artifact'],
+      headers: artifacts.contrastTable.headers,
+      rows: artifacts.contrastTable.rows,
+    })
+  }
+
+  ;(artifacts.discussionPrompts || []).slice(0, 5).forEach((prompt, index) => {
+    objects.push({
+      id: `${packId}-support-discussion-${index + 1}`,
+      kind: 'reviewPrompt',
+      title: `Discussion ${index + 1}`,
+      sourceLine: index + 1,
+      tags: ['study-pack', 'ai-generated', 'support-artifact'],
+      prompt,
+      reason: 'Use this prompt to connect and explain the lesson.',
+      status: 'needsReview',
+    })
+  })
+  ;(artifacts.answerKey || []).slice(0, 8).forEach((item, index) => {
+    objects.push({
+      id: `${packId}-support-answer-${index + 1}`,
+      kind: 'qa',
+      title: `Answer key ${index + 1}`,
+      sourceLine: index + 1,
+      tags: ['study-pack', 'ai-generated', 'support-artifact'],
+      question: item.question,
+      answer: item.answer,
+    })
+  })
+
+  if (artifacts.checkpointRubric?.length) {
+    objects.push({
+      id: `${packId}-support-rubric-1`,
+      kind: 'list',
+      title: 'Checkpoint rubric',
+      sourceLine: 1,
+      tags: ['study-pack', 'ai-generated', 'support-artifact'],
+      items: artifacts.checkpointRubric.slice(0, 8),
+      ordered: false,
+      checklist: true,
+    })
+  }
+
+  return objects
+}
+
+const supportObjectAllowedForContentMode = (
+  object: StudyObject,
+  contentMode?: StudyPathContentMode,
+): boolean => {
+  if (!object.tags.includes('support-artifact')) {
+    return false
+  }
+
+  if (
+    contentMode === 'orientationMap' ||
+    contentMode === 'vocabularyReference'
+  ) {
+    return (
+      object.kind === 'term' ||
+      object.kind === 'table' ||
+      object.kind === 'reviewPrompt'
+    )
+  }
+
+  if (contentMode === 'contrastLab') {
+    return object.kind === 'table' || object.kind === 'qa'
+  }
+
+  if (
+    contentMode === 'practiceCheckpoint' ||
+    contentMode === 'synthesisReview'
+  ) {
+    return (
+      object.kind === 'qa' ||
+      object.kind === 'list' ||
+      object.kind === 'reviewPrompt'
+    )
+  }
+
+  return false
+}
+
 const getStudyPathVisibleObjectsForRole = (
   objects: StudyObject[],
   dashboardRole: StudyPathDashboardRole,
   events: string[],
+  contentMode?: StudyPathContentMode,
 ): StudyObject[] => {
   if (dashboardRole !== 'normal') {
     return objects
@@ -1015,7 +1240,8 @@ const getStudyPathVisibleObjectsForRole = (
     (object) =>
       object.kind === 'quiz' ||
       object.kind === 'qa' ||
-      object.kind === 'reveal',
+      object.kind === 'reveal' ||
+      supportObjectAllowedForContentMode(object, contentMode),
   )
   const suppressedCount = objects.length - visibleObjects.length
 
@@ -1426,6 +1652,99 @@ const numberArrayFromUnknown = (value: unknown): number[] =>
         .filter((item) => Number.isFinite(item))
     : []
 
+const numberFromUnknown = (value: unknown): number | undefined => {
+  const numberValue = typeof value === 'number' ? value : Number(value)
+
+  return Number.isFinite(numberValue) ? numberValue : undefined
+}
+
+const isStudyPathContentMode = (
+  value: unknown,
+): value is StudyPathContentMode =>
+  typeof value === 'string' &&
+  contentModeValues.includes(value as StudyPathContentMode)
+
+const normalizeContentMode = (
+  value: unknown,
+  fallback: StudyPathContentMode = 'conceptLesson',
+): StudyPathContentMode => (isStudyPathContentMode(value) ? value : fallback)
+
+const clampAutoDashboardCount = (value: unknown, fallback = 5): number => {
+  const count = Math.round(numberFromUnknown(value) || fallback)
+
+  return count >= 3 && count <= 7 ? count : fallback
+}
+
+const normalizeSupportArtifacts = (
+  value: unknown,
+): AiStudyPathSupportArtifacts | undefined => {
+  const record =
+    value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
+  const glossary = Array.isArray(record.glossary)
+    ? record.glossary
+        .map((item) => {
+          const itemRecord =
+            item && typeof item === 'object'
+              ? (item as Record<string, unknown>)
+              : {}
+          const term = stringFromUnknown(itemRecord.term)
+          const definition = stringFromUnknown(itemRecord.definition)
+
+          return term && definition ? { term, definition } : null
+        })
+        .filter((item): item is { term: string; definition: string } =>
+          Boolean(item),
+        )
+    : undefined
+  const contrastRecord =
+    record.contrastTable && typeof record.contrastTable === 'object'
+      ? (record.contrastTable as Record<string, unknown>)
+      : {}
+  const contrastHeaders = stringArrayFromUnknown(contrastRecord.headers)
+  const contrastRows = Array.isArray(contrastRecord.rows)
+    ? contrastRecord.rows
+        .map((row) => stringArrayFromUnknown(row))
+        .filter((row) => row.length === contrastHeaders.length)
+    : []
+  const contrastTable =
+    contrastHeaders.length >= 2 && contrastRows.length > 0
+      ? {
+          title: stringFromUnknown(contrastRecord.title),
+          headers: contrastHeaders,
+          rows: contrastRows,
+        }
+      : undefined
+  const answerKey = Array.isArray(record.answerKey)
+    ? record.answerKey
+        .map((item) => {
+          const itemRecord =
+            item && typeof item === 'object'
+              ? (item as Record<string, unknown>)
+              : {}
+          const question = stringFromUnknown(itemRecord.question)
+          const answer = stringFromUnknown(itemRecord.answer)
+
+          return question && answer ? { question, answer } : null
+        })
+        .filter((item): item is { question: string; answer: string } =>
+          Boolean(item),
+        )
+    : undefined
+  const artifacts = {
+    glossary,
+    contrastTable,
+    discussionPrompts: stringArrayFromUnknown(record.discussionPrompts),
+    answerKey,
+    checkpointRubric: stringArrayFromUnknown(record.checkpointRubric),
+  }
+
+  return Object.values(artifacts).some((item) =>
+    Array.isArray(item) ? item.length > 0 : Boolean(item),
+  )
+    ? artifacts
+    : undefined
+}
+
 const normalizeBlueprintLesson = (
   value: unknown,
   index: number,
@@ -1451,6 +1770,8 @@ const normalizeBlueprintLesson = (
     layoutArchetype:
       stringFromUnknown(record.layoutArchetype) || 'learnPracticeTabs',
     practiceType: stringFromUnknown(record.practiceType) || 'none',
+    contentMode: normalizeContentMode(record.contentMode),
+    sectionPlan: stringArrayFromUnknown(record.sectionPlan),
     mustTeach: stringArrayFromUnknown(record.mustTeach),
     workedExample: stringFromUnknown(record.workedExample),
     misconceptionChecks: stringArrayFromUnknown(record.misconceptionChecks),
@@ -1470,14 +1791,38 @@ const normalizeStudyPathBlueprint = (
       ? (parsed as Record<string, unknown>)
       : {}
   const rawModules = Array.isArray(record.modules) ? record.modules : []
+  const requestedDashboardCount = Math.round(
+    numberFromUnknown(record.dashboardCount) || dashboardCount,
+  )
+  const rawDashboardCount = clampAutoDashboardCount(
+    record.dashboardCount,
+    dashboardCount,
+  )
   const rawLessons = Array.isArray(record.lessons) ? record.lessons : []
-  const lessons = Array.from({ length: dashboardCount }).map((_item, index) =>
-    normalizeBlueprintLesson(rawLessons[index], index),
+  const effectiveDashboardCount =
+    rawLessons.length >= 3 && rawLessons.length <= 7
+      ? rawDashboardCount
+      : dashboardCount
+  const lessons = Array.from({ length: effectiveDashboardCount }).map(
+    (_item, index) => normalizeBlueprintLesson(rawLessons[index], index),
   )
 
   return {
     title: stringFromUnknown(record.title) || fallbackTitle,
     folderName: stringFromUnknown(record.folderName) || fallbackFolderName,
+    pathPromise:
+      stringFromUnknown(record.pathPromise) ||
+      'Build a useful beginner mental map of the topic.',
+    entryLevel: stringFromUnknown(record.entryLevel) || 'Beginner',
+    exitCapability:
+      stringFromUnknown(record.exitCapability) ||
+      'Explain what the topic is and attempt first practice tasks.',
+    dashboardCount: effectiveDashboardCount,
+    dashboardCountReason:
+      requestedDashboardCount !== rawDashboardCount
+        ? `Planner requested ${requestedDashboardCount} dashboards, so StudyMesh normalized the path to ${effectiveDashboardCount}.`
+        : stringFromUnknown(record.dashboardCountReason) ||
+          `${effectiveDashboardCount} dashboards are enough for a focused learning sprint.`,
     learnerProfile:
       stringFromUnknown(record.learnerProfile) ||
       'Student learning from a short prompt with unknown prior knowledge.',
@@ -1510,27 +1855,39 @@ const createStudyPathBlueprintPrompt = ({
   folderName,
   prompt,
   dashboardCount,
+  autoDashboardCount,
   advancedGuidance,
 }: {
   title: string
   folderName: string
   prompt: string
   dashboardCount: number
+  autoDashboardCount: boolean
   advancedGuidance: string
 }): string => `Plan a high-quality StudyMesh Study Guide before writing dashboards.
 
-Return strict JSON only. Create exactly ${dashboardCount} lessons.
+Return strict JSON only. ${
+  autoDashboardCount
+    ? 'Choose dashboardCount between 3 and 7 from topic complexity, then create exactly dashboardCount lessons.'
+    : `Create exactly ${dashboardCount} lessons.`
+}
 
 Planning requirements:
+- The default promise is zero-to-map: bring someone from zero to knowing what the topic is about, why it matters, what parts exist, and how to start using it.
+- Do not pretend to take the learner from beginner to expert. Treat this as a bounded learning sprint, not a full course.
 - Infer likely learner level, goal, prerequisites, and useful scope from the user request.
-- Treat this as a bounded learning sprint, not a full course.
+- Include pathPromise, entryLevel, exitCapability, dashboardCount, and dashboardCountReason.
 - Use learning science: retrieval practice, worked examples, misconception checks, spaced review, and mixed practice.
 - Use dashboard layouts by teaching need, not by fixed position.
 - Do not follow a fixed role template by position; pick each layoutArchetype from learning need.
+- Pick a contentMode for each lesson from: orientationMap, conceptLesson, contrastLab, workedExampleLab, procedureGuide, vocabularyReference, practiceCheckpoint, synthesisReview.
+- First dashboard should usually be orientationMap unless the prompt asks for a narrow drill.
+- Paths with 4 or more dashboards should usually include one practiceCheckpoint or synthesisReview.
+- No more than two dashboards may share the same contentMode unless the topic truly demands it.
 - Use student-friendly language and concrete objectives.
 - Avoid vague lesson titles such as "Introduction", "Practice", or "Review" unless they include topic-specific words.
 - Include 1-3 modules. lessonIndexes are zero-based indexes into lessons.
-- For each lesson, include mustTeach, workedExample, misconceptionChecks, retrievalPractice, and suggestedPractice.
+- For each lesson, include contentMode, sectionPlan, mustTeach, workedExample, misconceptionChecks, retrievalPractice, and suggestedPractice.
 - For normal teaching lessons, practice and flashcards should usually be empty unless the lesson is a checkpoint, review, remediation, or applied practice step.
 - Do not write full dashboard notes yet.
 ${
@@ -1587,11 +1944,19 @@ Required dashboard fields:
   "dashboardPurpose": "overview | lesson | practice | review | finalReview | projectLab",
   "practiceType": "none | quiz | flashcards | mixed",
   "layoutReason": "Why this layout helps learning",
+  "contentMode": "orientationMap | conceptLesson | contrastLab | workedExampleLab | procedureGuide | vocabularyReference | practiceCheckpoint | synthesisReview",
   "moduleTitle": "...",
   "lessonType": "...",
   "learnerQuestion": "...",
   "learningOutcome": "...",
   "suggestedPractice": ["..."],
+  "supportArtifacts": {
+    "glossary": [{ "term": "...", "definition": "..." }],
+    "contrastTable": { "title": "...", "headers": ["...", "..."], "rows": [["...", "..."]] },
+    "discussionPrompts": ["..."],
+    "answerKey": [{ "question": "...", "answer": "..." }],
+    "checkpointRubric": ["..."]
+  },
   "rawNotes": "Complete readable Markdown lesson",
   "sourceSummary": { "title": "...", "bullets": ["..."] },
   "conceptRecap": { "title": "...", "sections": [{ "title": "...", "bullets": ["..."], "example": "..." }] },
@@ -1600,13 +1965,24 @@ Required dashboard fields:
 }
 
 Quality rules:
-- rawNotes must be 350-750 words of real teaching, formatted as Markdown with short sections.
-- Include: goal, explanation, worked example, common mistakes/misconceptions, and quick recall.
+- rawNotes must be 350-800 words of real teaching, formatted as Markdown with short topic-specific sections.
+- Never reuse a generic section scaffold across dashboards. Avoid generic headings like "Goal", "Content", "Common Mistakes/Misconceptions", and "Quick Recall".
+- Use the lesson contentMode:
+  - orientationMap: why this topic exists, mental map, core vocabulary, first useful example, where to go next.
+  - conceptLesson: core idea, when it applies, examples, boundary cases, mini-check.
+  - contrastLab: decision table, near-miss pairs, misleading examples, choose-the-right-case practice.
+  - workedExampleLab: problem, step-by-step solution, why each step matters, transfer case.
+  - procedureGuide: workflow, checklist, failure points, apply-it task.
+  - vocabularyReference: term clusters, nuance table, usage examples, memory hooks.
+  - practiceCheckpoint: skills checklist, short-answer quiz, answer key, transfer challenge.
+  - synthesisReview: big picture, connections, mixed challenge, next learning path.
+- Use NotebookLM-style material only where useful: glossary, contrast table, answer key, and discussion prompts should support the dashboard purpose, not become the whole format.
 - Avoid filler, generic questions, copied headings as questions, and obvious answer choices.
 - Practice questions must include recall, application, error diagnosis, or transfer.
 - If practiceType is "none", practice and flashcards may be empty, but rawNotes still needs quick recall prompts.
 - For checkpoint/review/remediation, include focused practice and flashcards.
 - Use simple dashboard layout. Reduce cognitive load: clear hierarchy, signal key ideas, keep examples near rules.
+- Keep prompt-only Study Guides useful without sources. Add accurate general teaching content, but do not invent fake citations or source claims.
 - Do not output objects/kind/widget renderer fields.
 ${
   advancedGuidance
@@ -1618,6 +1994,7 @@ ${prompt}`
 
 const createStudyPathQualityPrompt = (
   dashboard: Record<string, unknown>,
+  pathIssues: string[] = [],
 ): string => `Evaluate this StudyMesh Study Guide dashboard for student learning quality.
 
 Return strict JSON only:
@@ -1628,13 +2005,20 @@ Return strict JSON only:
 }
 
 Rubric:
-- 5: specific, clear, well-scaffolded, useful examples, strong retrieval practice, good layout fit, low cognitive load.
+- 5: specific, clear, varied format, well-scaffolded, useful examples, strong retrieval practice, good layout fit, low cognitive load.
 - 4: good, minor gaps.
 - 3: usable but generic, thin, weak practice, or layout mismatch.
 - 2: poor teaching, vague, too short, generic practice, likely confusing.
 - 1: unusable or malformed.
 
-Check for: progression, specificity, misconceptions, worked example, retrieval practice, student-friendly explanation, layout fit, schema completeness.
+Check for: progression, specificity, contentMode fit, non-repetitive headings, misconceptions, worked example, retrieval practice, student-friendly explanation, layout fit, schema completeness.
+${
+  pathIssues.length > 0
+    ? `\nDeterministic path scan issues to consider:\n${pathIssues
+        .map((issue) => `- ${issue}`)
+        .join('\n')}\n`
+    : ''
+}
 
 Dashboard JSON:
 ${JSON.stringify(dashboard)}`
@@ -1655,6 +2039,99 @@ Preserve topic, title intent, module, and dashboard count position. Improve teac
 Dashboard JSON:
 ${JSON.stringify(dashboard)}`
 
+const markdownHeadingSignature = (rawNotes: unknown): string => {
+  const text = stringFromUnknown(rawNotes)
+  const headings = text
+    .split(/\r?\n/)
+    .map((line) => line.match(/^#{1,3}\s+(.+)$/)?.[1]?.trim())
+    .filter((heading): heading is string => Boolean(heading))
+    .map((heading) =>
+      heading
+        .toLowerCase()
+        .replace(/[^a-z0-9 ]+/g, '')
+        .replace(/\s+/g, ' ')
+        .trim(),
+    )
+    .filter(Boolean)
+    .slice(0, 5)
+
+  return headings.join('|')
+}
+
+const genericStudyPathHeadingPattern =
+  /^(goal|content|key points|examples|common mistakes(?:\/misconceptions)?|common mistakes and misconceptions|quick recall)$/i
+
+const scanStudyPathDashboards = (
+  dashboards: Array<Record<string, unknown>>,
+): string[] => {
+  const issues: string[] = []
+  const signatures = new Map<string, number>()
+  const contentModes = new Map<string, number>()
+
+  dashboards.forEach((dashboard, index) => {
+    const signature = markdownHeadingSignature(dashboard.rawNotes)
+    if (signature) {
+      signatures.set(signature, (signatures.get(signature) || 0) + 1)
+    }
+
+    const contentMode = stringFromUnknown(dashboard.contentMode)
+    if (contentMode) {
+      contentModes.set(contentMode, (contentModes.get(contentMode) || 0) + 1)
+    }
+
+    const rawNotes = stringFromUnknown(dashboard.rawNotes)
+    if (/Ã.|Â./.test(rawNotes)) {
+      issues.push(`Dashboard ${index + 1} appears to contain mojibake.`)
+    }
+
+    const genericHeadings = rawNotes
+      .split(/\r?\n/)
+      .map((line) => line.match(/^#{1,3}\s+(.+)$/)?.[1]?.trim() || '')
+      .filter((heading) => genericStudyPathHeadingPattern.test(heading))
+    if (genericHeadings.length >= 2) {
+      issues.push(
+        `Dashboard ${
+          index + 1
+        } uses generic repeated headings: ${genericHeadings.join(', ')}.`,
+      )
+    }
+  })
+
+  Array.from(signatures.entries()).forEach(([signature, count]) => {
+    if (count > 1 && signature.split('|').length >= 3) {
+      issues.push(
+        `Repeated heading signature appears ${count} times: ${signature}.`,
+      )
+    }
+  })
+
+  Array.from(contentModes.entries()).forEach(([contentMode, count]) => {
+    if (count > 2) {
+      issues.push(`contentMode ${contentMode} appears ${count} times.`)
+    }
+  })
+
+  const firstContentMode = stringFromUnknown(dashboards[0]?.contentMode)
+  if (dashboards.length >= 3 && firstContentMode !== 'orientationMap') {
+    issues.push('First dashboard should usually use orientationMap.')
+  }
+
+  if (
+    dashboards.length >= 4 &&
+    !dashboards.some((dashboard) =>
+      ['practiceCheckpoint', 'synthesisReview'].includes(
+        stringFromUnknown(dashboard.contentMode),
+      ),
+    )
+  ) {
+    issues.push(
+      'Path with 4+ dashboards lacks practiceCheckpoint or synthesisReview.',
+    )
+  }
+
+  return issues
+}
+
 const generateStudyPathJsonWithPipeline = async ({
   apiToken,
   model,
@@ -1663,6 +2140,7 @@ const generateStudyPathJsonWithPipeline = async ({
   prompt,
   folderName,
   dashboardCount,
+  autoDashboardCount,
   advancedGuidance,
 }: {
   apiToken: string
@@ -1672,6 +2150,7 @@ const generateStudyPathJsonWithPipeline = async ({
   prompt: string
   folderName: string
   dashboardCount: number
+  autoDashboardCount: boolean
   advancedGuidance: string
 }): Promise<{
   text: string
@@ -1689,6 +2168,7 @@ const generateStudyPathJsonWithPipeline = async ({
           folderName,
           prompt,
           dashboardCount,
+          autoDashboardCount,
           advancedGuidance,
         }),
       },
@@ -1718,8 +2198,9 @@ const generateStudyPathJsonWithPipeline = async ({
   )
   const qualityByIndex = new Map<number, { score: number; issues: string[] }>()
   const dashboards: Record<string, unknown>[] = []
+  const effectiveDashboardCount = blueprint.dashboardCount || dashboardCount
 
-  for (let index = 0; index < dashboardCount; index += 1) {
+  for (let index = 0; index < effectiveDashboardCount; index += 1) {
     const lesson = blueprint.lessons[index]
     const dashboardText = await callStrongModel(
       apiToken,
@@ -1729,7 +2210,7 @@ const generateStudyPathJsonWithPipeline = async ({
           text: createStudyPathDashboardPrompt({
             title,
             prompt,
-            dashboardCount,
+            dashboardCount: effectiveDashboardCount,
             lesson,
             lessonIndex: index,
             blueprint,
@@ -1745,12 +2226,20 @@ const generateStudyPathJsonWithPipeline = async ({
       parsedDashboard && typeof parsedDashboard === 'object'
         ? (parsedDashboard as Record<string, unknown>)
         : {}
+    const deterministicIssues = scanStudyPathDashboards([
+      ...dashboards,
+      dashboard,
+    ])
 
     try {
       const qualityText = await callStrongModel(
         apiToken,
         model,
-        [{ text: createStudyPathQualityPrompt(dashboard) }],
+        [
+          {
+            text: createStudyPathQualityPrompt(dashboard, deterministicIssues),
+          },
+        ],
         studyPathQualitySchema,
         strongProvider,
       )
@@ -1765,9 +2254,13 @@ const generateStudyPathJsonWithPipeline = async ({
       const repairInstructions = stringArrayFromUnknown(
         qualityRecord.repairInstructions,
       )
-      qualityByIndex.set(index, { score, issues })
+      const combinedIssues = [...issues, ...deterministicIssues]
+      qualityByIndex.set(index, { score, issues: combinedIssues })
 
-      if (score < 4 && repairInstructions.length > 0) {
+      if (
+        (score < 4 || deterministicIssues.length > 0) &&
+        (repairInstructions.length > 0 || deterministicIssues.length > 0)
+      ) {
         const repairText = await callStrongModel(
           apiToken,
           model,
@@ -1775,7 +2268,10 @@ const generateStudyPathJsonWithPipeline = async ({
             {
               text: createStudyPathDashboardRepairPrompt({
                 dashboard,
-                repairInstructions,
+                repairInstructions:
+                  repairInstructions.length > 0
+                    ? repairInstructions
+                    : deterministicIssues,
               }),
             },
           ],
@@ -1804,6 +2300,10 @@ const generateStudyPathJsonWithPipeline = async ({
       moduleTitle:
         stringFromUnknown(dashboard.moduleTitle) || lesson.moduleTitle,
       lessonType: stringFromUnknown(dashboard.lessonType) || lesson.lessonType,
+      contentMode: normalizeContentMode(
+        dashboard.contentMode,
+        lesson.contentMode,
+      ),
       learnerQuestion:
         stringFromUnknown(dashboard.learnerQuestion) || lesson.learnerQuestion,
       learningOutcome:
@@ -1819,12 +2319,14 @@ const generateStudyPathJsonWithPipeline = async ({
         lesson.dashboardPurpose,
       practiceType:
         stringFromUnknown(dashboard.practiceType) || lesson.practiceType,
+      supportArtifacts: normalizeSupportArtifacts(dashboard.supportArtifacts),
     })
   }
 
   const pathJson = {
     title: blueprint.title || title,
     folderName: blueprint.folderName || folderName,
+    dashboardCountReason: blueprint.dashboardCountReason,
     dashboards,
   }
   const text = JSON.stringify(pathJson)
@@ -1844,7 +2346,7 @@ export const generateStudyPathWithAi = async ({
   title,
   prompt,
   folderName,
-  generationAmount = 'medium',
+  generationAmount = 'auto',
   mustInclude,
   avoidTopics,
 }: GenerateStudyPathWithAiOptions): Promise<AiStudyPathDraft> => {
@@ -1873,6 +2375,7 @@ Return exactly this structure:
       "dashboardPurpose": "lesson",
       "practiceType": "none",
       "layoutReason": "Short reason for the selected learning layout",
+      "contentMode": "conceptLesson",
       "sourceRefs": [{ "label": "optional source/chunk label" }],
       "moduleTitle": "Module title",
       "lessonType": "concept",
@@ -1908,7 +2411,7 @@ Rules:
 - Each dashboard must be useful by itself as teaching content, not as a container for many practice widgets.
 - Always return exactly ${stepNames.length} dashboards total.
 - rawNotes must be real lesson notes for that dashboard, not a one-line summary. Write 250-600 words with explanations, examples, key points, and common mistakes when relevant.
-- Format rawNotes as readable Markdown, not one long paragraph. Use short sections like "## Goal", "## Key points", "## Examples", "## Common mistakes", and bullet lists where helpful.
+- Format rawNotes as readable Markdown, not one long paragraph. Use short topic-specific sections chosen from that dashboard's teaching purpose. Do not reuse the same heading scaffold across dashboards.
 - sourceSummary and conceptRecap should match the selected layout. For normal teaching lessons, practice and flashcards should usually be empty. For checkpoint/review/remediation lessons, include one focused practice set if useful.
 - conceptRecap is used internally to structure the lesson. StudyMesh renders quiz/flashcard materials on demand in the Creation side panel.
 - Do not output "objects", "kind", "quizMode", internal block names, widget names, or any StudyMesh renderer fields. StudyMesh decides widget types.
@@ -1975,6 +2478,7 @@ ${originalJson}`
       prompt,
       folderName: folderName || 'Study Guide',
       dashboardCount,
+      autoDashboardCount: generationAmount === 'auto',
       advancedGuidance,
     })
     text = pipelineResult.text
@@ -2218,6 +2722,12 @@ ${prompt}`
         rawAiResponse: text,
         dashboardRole,
       })
+      const contentMode = normalizeContentMode(input.contentMode)
+      const supportArtifacts = normalizeSupportArtifacts(input.supportArtifacts)
+      const supportObjects = createSupportArtifactObjects(
+        packId,
+        supportArtifacts,
+      )
       const finalEvents = [...(draft.debugTrace?.droppedOrRepairedItems || [])]
       if (
         dashboardRole === 'normal' &&
@@ -2241,7 +2751,7 @@ ${prompt}`
         finalEvents.push('AI missing normal-dashboard practice/flashcards.')
       }
       const roleFilteredObjects = filterStudyObjectsForDashboardRole(
-        draft.objects,
+        [...draft.objects, ...supportObjects],
         dashboardRole,
         finalEvents,
       )
@@ -2249,6 +2759,7 @@ ${prompt}`
         roleFilteredObjects,
         dashboardRole,
         finalEvents,
+        contentMode,
       )
       const visiblePracticeTarget =
         layoutMetadata.layoutArchetype === 'focusLesson' ||
@@ -2337,9 +2848,11 @@ ${prompt}`
         lessonType: stringFromUnknown(
           input.lessonType,
         ) as AiStudyPathDashboardDraft['lessonType'],
+        contentMode,
         learnerQuestion: stringFromUnknown(input.learnerQuestion),
         learningOutcome: stringFromUnknown(input.learningOutcome),
         suggestedPractice: stringArrayFromUnknown(input.suggestedPractice),
+        supportArtifacts,
         qualityScore: quality?.score,
         qualityIssues: quality?.issues,
         objects: finalObjects,
@@ -2360,6 +2873,16 @@ ${prompt}`
     throw new Error('Gemini did not return any usable Study Guide dashboards.')
   }
 
+  const finalPathIssues = scanStudyPathDashboards(
+    dashboards.map((dashboard) => ({
+      rawNotes: dashboard.rawNotes,
+      contentMode: dashboard.contentMode,
+    })),
+  )
+  warnings.push(
+    ...finalPathIssues.map((issue) => `Study Guide quality scan: ${issue}`),
+  )
+
   return {
     title:
       typeof record.title === 'string' && record.title.trim()
@@ -2372,5 +2895,8 @@ ${prompt}`
     dashboards,
     warnings,
     blueprint,
+    dashboardCountReason:
+      stringFromUnknown(record.dashboardCountReason) ||
+      blueprint?.dashboardCountReason,
   }
 }

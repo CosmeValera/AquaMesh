@@ -251,10 +251,10 @@ const getStudyPathDashboardCount = (
   return normalized === 'superSmall'
     ? 2
     : normalized === 'compact'
-    ? 3
-    : normalized === 'deep'
-    ? 7
-    : 5
+      ? 3
+      : normalized === 'deep'
+        ? 7
+        : 5
 }
 
 const getStudyPathStepNames = (
@@ -1081,8 +1081,8 @@ const buildFallbackObjectsForDashboardRole = ({
       concepts.length > 0
         ? concepts.map((concept) => `How would you apply ${concept}?`)
         : practiceSource
-        ? ['What is one key idea from the previous Study Guide material?']
-        : []
+          ? ['What is one key idea from the previous Study Guide material?']
+          : []
 
     return prompts.map((question, index) => ({
       ...createFallbackBase(
@@ -1273,8 +1273,8 @@ const getStudyPathVisiblePracticeTarget = (
     return normalized === 'superSmall' || normalized === 'compact'
       ? 10
       : normalized === 'deep'
-      ? 18
-      : 14
+        ? 18
+        : 14
   }
 
   return 0
@@ -1416,30 +1416,30 @@ export const generateStudyPackWithAi = async ({
     resourceType === 'flashcards'
       ? `Create ${resourceTarget} when possible. Never create fewer than 40 flashcards at Medium or Long detail if the notes contain enough usable facts.`
       : resourceType === 'quiz'
-      ? `Create ${resourceTarget} when possible. Never create fewer than 40 multiple-choice questions at Medium or Long detail if the notes contain enough usable facts.`
-      : `Create ${practiceProfile.targetTotal} reviewable study items when possible, never fewer than ${practiceProfile.minTotal} if the notes contain usable facts. Keep the total within ${practiceProfile.minTotal}-${practiceProfile.maxTotal} items.`
+        ? `Create ${resourceTarget} when possible. Never create fewer than 40 multiple-choice questions at Medium or Long detail if the notes contain enough usable facts.`
+        : `Create ${practiceProfile.targetTotal} reviewable study items when possible, never fewer than ${practiceProfile.minTotal} if the notes contain usable facts. Keep the total within ${practiceProfile.minTotal}-${practiceProfile.maxTotal} items.`
   const mixInstruction =
     resourceType === 'flashcards'
       ? 'All reviewable items must be flashcards. Do not create quizzes, short-answer practice, summaries, definitions, or support review objects.'
       : resourceType === 'quiz'
-      ? 'All reviewable items must be multiple-choice quiz questions. Do not create short-answer questions, typed-answer questions, quizSingle items, flashcards, summaries, definitions, or support review objects.'
-      : practiceProfile.enforceQuizzes || practiceProfile.enforceFlashcards
-      ? `Use an active-practice mix: ${practiceProfile.targetQuizzes} quizzes, ${practiceProfile.targetFlashcards} flashcards, and about ${practiceProfile.targetSupport} summaries/definitions/review prompts. Quizzes should be 50-60% of the pack and flashcards 20-30%.`
-      : 'Use the selected non-practice targets and still create the requested number of useful reviewable items.'
+        ? 'All reviewable items must be multiple-choice quiz questions. Do not create short-answer questions, typed-answer questions, quizSingle items, flashcards, summaries, definitions, or support review objects.'
+        : practiceProfile.enforceQuizzes || practiceProfile.enforceFlashcards
+          ? `Use an active-practice mix: ${practiceProfile.targetQuizzes} quizzes, ${practiceProfile.targetFlashcards} flashcards, and about ${practiceProfile.targetSupport} summaries/definitions/review prompts. Quizzes should be 50-60% of the pack and flashcards 20-30%.`
+          : 'Use the selected non-practice targets and still create the requested number of useful reviewable items.'
   const resourceInstruction =
     resourceType === 'improvedNotes'
       ? 'Selected resource type: Expand on this. Create one polished expanded note set from the source. Stay close to the provided content and preserve the same learner level, vocabulary difficulty, and topic depth as the original source. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless they are clearly needed to explain the source. Organize the notes into teachable sections such as: source summary, key concepts, examples, common mistakes or misconceptions, and compact takeaways. Use clear explanations, but keep the complexity appropriate to the source. Do not create a quiz, multiple choice questions, short answer practice, or flashcards. Leave practice.shortAnswer, practice.multipleChoice, and flashcards empty.'
       : resourceType === 'flashcards'
-      ? 'Selected resource type: Flashcards. Create only atomic flashcards from the source. Each flashcard must test one term, rule, contrast, formula step, exception, process step, or use case. Match the source’s learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Use answer backs that teach briefly, not one-word fragments. Keep sourceSummary brief, leave conceptRecap sections empty, and leave practice.shortAnswer and practice.multipleChoice empty.'
-      : resourceType === 'quiz'
-      ? 'Selected resource type: Quiz. Create only multiple-choice quiz questions from the source. Fill practice.multipleChoice only. Leave practice.shortAnswer empty. Never create typed-answer, short-answer, quizSingle, or free-response questions. Match the source’s learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Prefer scenario, application, contrast, error-fixing, and why/how questions over simple recall. Keep sourceSummary brief, leave conceptRecap sections empty, and leave flashcards empty.'
-      : 'Wrong Selected resource type.'
+        ? 'Selected resource type: Flashcards. Create only atomic flashcards from the source. Each flashcard must test one term, rule, contrast, formula step, exception, process step, or use case. Match the source’s learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Use answer backs that teach briefly, not one-word fragments. Keep sourceSummary brief, leave conceptRecap sections empty, and leave practice.shortAnswer and practice.multipleChoice empty.'
+        : resourceType === 'quiz'
+          ? 'Selected resource type: Quiz. Create only multiple-choice quiz questions from the source. Fill practice.multipleChoice only. Leave practice.shortAnswer empty. Never create typed-answer, short-answer, quizSingle, or free-response questions. Match the source’s learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Prefer scenario, application, contrast, error-fixing, and why/how questions over simple recall. Keep sourceSummary brief, leave conceptRecap sections empty, and leave flashcards empty.'
+          : 'Wrong Selected resource type.'
   const detailInstruction =
     detailLevel === 'short'
       ? 'Detail level: Short. Keep notes concise and generate a small focused set.'
       : detailLevel === 'long'
-      ? 'Detail level: Long. Create deeper explanations or a larger practice set while staying grounded.'
-      : 'Detail level: Medium. Use balanced depth and amount.'
+        ? 'Detail level: Long. Create deeper explanations or a larger practice set while staying grounded.'
+        : 'Detail level: Medium. Use balanced depth and amount.'
   const hardDetailInstruction = resourceType
     ? `The selected detail level is a hard constraint. Target ${geminiDetailTargets[resourceType][detailLevel]}. Match the target length/count exactly or as close as possible. Do not ignore it.`
     : 'The selected detail level is a hard constraint. Match the requested amount as closely as possible. Do not ignore it.'
@@ -1447,8 +1447,8 @@ export const generateStudyPackWithAi = async ({
     quizQuestionStyle === 'conceptual'
       ? 'Quiz style preference: Conceptual. Prioritize why/how questions, comparisons, cause/effect, inference, and common misconceptions. Include only enough recall to anchor the reasoning.'
       : quizQuestionStyle === 'examLike'
-      ? 'Quiz style preference: Exam-like. Write assessment-style questions that require applying concepts under realistic test conditions. Mix multiple-choice and short-answer when appropriate, with clear plausible distractors.'
-      : 'Quiz style preference: Mixed. Use a balanced mix of recall and reasoning questions, including conceptual understanding, applied scenarios, comparisons, and common mistakes.'
+        ? 'Quiz style preference: Exam-like. Write assessment-style questions that require applying concepts under realistic test conditions. Mix multiple-choice and short-answer when appropriate, with clear plausible distractors.'
+        : 'Quiz style preference: Mixed. Use a balanced mix of recall and reasoning questions, including conceptual understanding, applied scenarios, comparisons, and common mistakes.'
   const sourceInstruction = promptMode
     ? 'The raw input is a learning prompt, not notes. Teach the requested topic from scratch. Because the input is not source notes, you may use accurate general knowledge for this topic. First create concise source notes/explanations, then generate practice grounded in those generated explanations. Include explanation/theory objects before exercises.'
     : 'The raw input is source notes. Stay grounded in those notes.'
@@ -1976,11 +1976,14 @@ Quality rules:
   - vocabularyReference: term clusters, nuance table, usage examples, memory hooks.
   - practiceCheckpoint: skills checklist, short-answer quiz, answer key, transfer challenge.
   - synthesisReview: big picture, connections, mixed challenge, next learning path.
-- Use NotebookLM-style material only where useful: glossary, contrast table, answer key, and discussion prompts should support the dashboard purpose, not become the whole format.
+- Use NotebookLM-style material only where useful inside rawNotes. Do not claim the dashboard contains a separate glossary, contrast table, answer key, rubric, drag-and-drop board, or tabs unless that content is actually present in rawNotes.
 - Avoid filler, generic questions, copied headings as questions, and obvious answer choices.
-- Practice questions must include recall, application, error diagnosis, or transfer.
-- If practiceType is "none", practice and flashcards may be empty, but rawNotes still needs quick recall prompts.
-- For checkpoint/review/remediation, include focused practice and flashcards.
+- Visible dashboard rule: one Markdown lesson widget by default. Sometimes StudyMesh may add one visible QuizCarouselBlock on the right when you set practiceType to "quiz" or "mixed" and provide useful practice.multipleChoice questions.
+- Decide whether the dashboard deserves a QuizCarouselBlock. Use practiceType "none" when the lesson is best studied as one clear lesson. Use "quiz" or "mixed" only when active practice materially improves the dashboard.
+- When adding practice.multipleChoice, create an adaptive number of questions: about one per important concept, plus at most one synthesis question when useful. Normal lessons should usually have 2-5 questions; checkpoint/review/synthesis dashboards may have 4-8.
+- After dashboard 2, you may include 0-2 light spiral-review questions from previous dashboards, but only when they naturally connect to the current lesson.
+- Practice questions must be answerable from rawNotes but should require recall, application, comparison, error diagnosis, prediction, explanation, or transfer. Do not copy lesson sentences as questions.
+- Do not add visible flashcards by default. Flashcards are on-demand support, not a second dashboard widget.
 - Use simple dashboard layout. Reduce cognitive load: clear hierarchy, signal key ideas, keep examples near rules.
 - Keep prompt-only Study Guides useful without sources. Add accurate general teaching content, but do not invent fake citations or source claims.
 - Do not output objects/kind/widget renderer fields.
@@ -2011,7 +2014,7 @@ Rubric:
 - 2: poor teaching, vague, too short, generic practice, likely confusing.
 - 1: unusable or malformed.
 
-Check for: progression, specificity, contentMode fit, non-repetitive headings, misconceptions, worked example, retrieval practice, student-friendly explanation, layout fit, schema completeness.
+Check for: progression, specificity, contentMode fit, non-repetitive headings, misconceptions, worked example, useful optional quiz practice, student-friendly explanation, layout fit, schema completeness, and no fake claims about dashboard widgets that are not actually rendered.
 ${
   pathIssues.length > 0
     ? `\nDeterministic path scan issues to consider:\n${pathIssues
@@ -2082,6 +2085,22 @@ const scanStudyPathDashboards = (
     const rawNotes = stringFromUnknown(dashboard.rawNotes)
     if (/Ã.|Â./.test(rawNotes)) {
       issues.push(`Dashboard ${index + 1} appears to contain mojibake.`)
+    }
+
+    const fakeWidgetClaims = [
+      /drag[-\s]?and[-\s]?drop/i,
+      /\bthe dashboard uses\b/i,
+      /\btabs?\b/i,
+      /\bsupport\s*artifacts?\b/i,
+      /\banswer key widget\b/i,
+      /\brubric widget\b/i,
+    ].filter((pattern) => pattern.test(rawNotes))
+    if (fakeWidgetClaims.length > 0) {
+      issues.push(
+        `Dashboard ${
+          index + 1
+        } appears to claim UI/widgets that may not exist.`,
+      )
     }
 
     const genericHeadings = rawNotes
@@ -2404,16 +2423,20 @@ Rules:
 - Use splitReferenceExercise only when side-by-side reference clearly improves studying, such as programming, math, formulas, grammar, or comparison. Use multiWidgetLab only for project/lab steps.
 - Do not choose the same layout for every normal dashboard unless the topic truly demands it. For paths with 3 or more dashboards, prefer at least two archetypes when educationally reasonable.
 - Pick the layout from the lesson's teaching need, not from a fixed template: reading-heavy concepts can be focusLesson, explanation plus recall can be learnPracticeTabs, reference-heavy applied work can be splitReferenceExercise, and hands-on build steps can be multiWidgetLab.
-- SourceSummary, conceptRecap, practice, and flashcards are internal support material. The visible lesson comes mainly from rawNotes, so rawNotes must carry the actual lesson.
+- SourceSummary, conceptRecap, practice, and flashcards are support material. The visible lesson comes mainly from rawNotes, so rawNotes must carry the actual lesson.
 - Do not make dashboards feel like random widget collections. Use the simplest layout that supports the learning goal.
-- Do not generate full quizzes or flashcards inside every lesson by default. StudyMesh has on-demand Quick Create for quiz, flashcards, Expand on this, and exercises from each lesson.
-- For most lessons, set practiceType to none and use suggestedPractice text to recommend useful follow-up actions. Add practice/flashcards only when the lesson is explicitly a checkpoint, review, remediation, or applied practice step.
+- Visible dashboard rule: one Markdown lesson widget by default. Sometimes StudyMesh may add one visible QuizCarouselBlock on the right when you set practiceType to "quiz" or "mixed" and provide useful practice.multipleChoice questions.
+- You decide whether each dashboard deserves that QuizCarouselBlock. For most reading/theory dashboards, set practiceType to "none". Use "quiz" or "mixed" only when active recall materially improves the dashboard, such as concept-heavy lessons, checkpoints, review, remediation, or applied practice.
+- When adding practice.multipleChoice, create an adaptive number of questions: about one per important concept, plus at most one synthesis question when useful. Normal lessons should usually have 2-5 questions; checkpoint/review/synthesis dashboards may have 4-8.
+- After dashboard 2, you may include 0-2 light spiral-review questions from previous dashboards, but only when they naturally connect to the current lesson.
+- Practice questions must be answerable from rawNotes but should require recall, application, comparison, error diagnosis, prediction, explanation, or transfer. Do not copy lesson sentences as questions.
+- Do not add visible flashcards by default. Flashcards are on-demand support, not a second dashboard widget.
 - Each dashboard must be useful by itself as teaching content, not as a container for many practice widgets.
 - Always return exactly ${stepNames.length} dashboards total.
 - rawNotes must be real lesson notes for that dashboard, not a one-line summary. Write 250-600 words with explanations, examples, key points, and common mistakes when relevant.
 - Format rawNotes as readable Markdown, not one long paragraph. Use short topic-specific sections chosen from that dashboard's teaching purpose. Do not reuse the same heading scaffold across dashboards.
 - sourceSummary and conceptRecap should match the selected layout. For normal teaching lessons, practice and flashcards should usually be empty. For checkpoint/review/remediation lessons, include one focused practice set if useful.
-- conceptRecap is used internally to structure the lesson. StudyMesh renders quiz/flashcard materials on demand in the Creation side panel.
+- conceptRecap is used internally to structure the lesson.
 - Do not output "objects", "kind", "quizMode", internal block names, widget names, or any StudyMesh renderer fields. StudyMesh decides widget types.
 - Use concrete rule labels in conceptRecap sections, such as "Subjunctive trigger: il faut que", not headings or sentence fragments.
 - Generate summaries, flashcards, and quizzes from structured concepts, not from first sentences, headings, copied examples, or instructions.
@@ -2421,11 +2444,12 @@ Rules:
 - Practice questions must test concepts and uses, not copied headings or answer options made obvious by the dashboard title.
 - Never use weak standalone concepts such as Goal, Example, Active, It, Avoir, Etre, Quantity, or De. Do not create title-like, instruction-like, or very short fragments as study objects.
 - Flashcards should ask useful rule-specific prompts such as "How do you form the present subjunctive for most verbs?" instead of "What should you remember about <copied line>?".
-- Include suggestedPractice for each lesson as short user-facing actions, such as "Generate quiz for this lesson" or "Generate flashcards for this lesson".
+- Include suggestedPractice for each lesson as short user-facing actions, such as "Review the lesson with a quick quiz" or "Generate flashcards for this lesson".
 - Every dashboard needs a short "summary" sentence so the review screen can preview it.
 - Do not wrap JSON in markdown. Do not add commentary outside JSON.
 - Do not create PDFs/images/resources unless the user explicitly asks for heavy media.
 - For multiple-choice questions, include 3-4 meaningful options, correctOptionIndex, and explanation.
+- Do not claim the dashboard contains separate tabs, an interactive drag-and-drop board, support artifacts, answer key widgets, or rubric widgets. If you want an answer key or rubric, include it as plain rawNotes text.
 - Keep content concise, beginner-friendly, and appropriate for the requested topic.
 - Aim for about ${practiceProfile.minTotal}-${
     practiceProfile.maxTotal
@@ -2457,9 +2481,10 @@ The previous response was valid JSON, but one or more normal dashboards were inc
 Repair the JSON instead of simplifying it:
 - Preserve the exact dashboard count, order, titles, summaries, and rawNotes.
 - Every dashboard is a normal Study Guide dashboard.
-- Fill missing conceptRecap/practice/flashcards from that dashboard's rawNotes when the selected layout and practiceType call for active recall.
+- Fill missing conceptRecap/practice from that dashboard's rawNotes when practiceType calls for active recall.
 - For focusLesson or practiceType none, practice and flashcards may stay empty if rawNotes contains a complete learning explanation.
-- For learnPracticeTabs or splitReferenceExercise, include sourceSummary with 3-5 bullets, conceptRecap with 2-4 sections, practice.shortAnswer with 1-2 questions, practice.multipleChoice with 1-2 questions, and flashcards with 2-5 cards.
+- For practiceType quiz or mixed, include enough practice.multipleChoice questions to justify one visible QuizCarouselBlock: usually 2-5 for normal lessons and 4-8 for checkpoint/review/synthesis dashboards.
+- Do not create flashcards unless they are clearly useful for on-demand follow-up; they are not rendered as the visible second widget.
 - Return plain JSON only.
 
 Original JSON:
@@ -2796,15 +2821,15 @@ ${prompt}`
         filledVisibleObjects && filledVisibleObjects.objects.length > 0
           ? filledVisibleObjects.objects
           : visibleRoleObjects.length > 0
-          ? visibleRoleObjects
-          : buildFallbackObjectsForDashboardRole({
-              packId,
-              dashboardTitle,
-              dashboardRole,
-              rawNotes: input.rawNotes,
-              sourceSummary: draft.sourceSummary,
-              accumulatedContentNotes,
-            })
+            ? visibleRoleObjects
+            : buildFallbackObjectsForDashboardRole({
+                packId,
+                dashboardTitle,
+                dashboardRole,
+                rawNotes: input.rawNotes,
+                sourceSummary: draft.sourceSummary,
+                accumulatedContentNotes,
+              })
       if (visibleRoleObjects.length === 0 && finalObjects.length > 0) {
         finalEvents.push(
           `Fallback used: created ${dashboardRole} object because role filtering left no visible study objects.`,

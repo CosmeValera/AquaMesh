@@ -270,8 +270,12 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     const lessonFourCard = screen.getByTestId('study-path-dashboard-4')
     const lessonFiveCard = screen.getByTestId('study-path-dashboard-5')
 
-    expect(within(lessonFourCard).getByText('7 study items')).toBeInTheDocument()
-    expect(within(lessonFiveCard).getByText('7 study items')).toBeInTheDocument()
+    expect(
+      within(lessonFourCard).getByText('7 study items'),
+    ).toBeInTheDocument()
+    expect(
+      within(lessonFiveCard).getByText('7 study items'),
+    ).toBeInTheDocument()
     expect(within(lessonFiveCard).getByText('lesson')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('AI generation debug'))
@@ -293,13 +297,13 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     expect(rawDashboardInput).toHaveTextContent('Lesson 5 concept recap/list')
     expect(sanitizedInput).toHaveTextContent('Lesson 4 short-answer')
     expect(sanitizedInput).toHaveTextContent('Lesson 5 concept recap/list')
-    expect(finalMapping).not.toHaveTextContent('study-path-5-concept-recap')
-    expect(finalMapping).toHaveTextContent('study-path-4-short-answer')
-    expect(finalMapping).toHaveTextContent('study-path-4-multiple-choice')
-    expect(finalMapping).toHaveTextContent('study-path-4-flashcard')
-    expect(finalMapping).toHaveTextContent('study-path-5-short-answer')
-    expect(finalMapping).toHaveTextContent('study-path-5-multiple-choice')
-    expect(finalMapping).toHaveTextContent('study-path-5-flashcard')
+    expect(finalMapping).not.toHaveTextContent('concept-recap')
+    expect(finalMapping).toHaveTextContent('study-guide-4-short-answer')
+    expect(finalMapping).toHaveTextContent('study-guide-4-multiple-choice')
+    expect(finalMapping).toHaveTextContent('study-guide-4-flashcard')
+    expect(finalMapping).toHaveTextContent('study-guide-5-short-answer')
+    expect(finalMapping).toHaveTextContent('study-guide-5-multiple-choice')
+    expect(finalMapping).toHaveTextContent('study-guide-5-flashcard')
 
     fireEvent.click(
       screen.getByRole('button', { name: /^create 5 dashboards$/i }),
@@ -311,18 +315,23 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     const lessonFiveWidgets = JSON.stringify(payload.dashboards[4].widgets)
 
     expect(lessonFourWidgets).toContain('QuizCarouselBlock')
-    expect(lessonFourWidgets).toContain('FlashcardCarouselBlock')
     expect(lessonFiveWidgets).toContain('QuizCarouselBlock')
-    expect(lessonFiveWidgets).toContain('FlashcardCarouselBlock')
+    expect(lessonFourWidgets).not.toContain('FlashcardCarouselBlock')
+    expect(lessonFiveWidgets).not.toContain('FlashcardCarouselBlock')
     expect(lessonFiveWidgets).not.toContain('Lesson 5 concept recap/list')
   })
 
   it('shows Gemini elapsed and estimated Study Guide timing capped at 99%', async () => {
     vi.useFakeTimers()
     const pendingFetch = new Promise(() => undefined)
-    vi.stubGlobal('fetch', vi.fn(() => pendingFetch))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => pendingFetch),
+    )
 
-    render(<CreateStudyPathModal open onClose={vi.fn()} onCreatePath={vi.fn()} />)
+    render(
+      <CreateStudyPathModal open onClose={vi.fn()} onCreatePath={vi.fn()} />,
+    )
 
     fireEvent.change(
       screen.getByRole('textbox', { name: /what should StudyMesh teach/i }),
@@ -365,10 +374,10 @@ describe('CreateStudyPathModal Study Guide generation', () => {
       'study-path-debug-final-studyobject-mapping',
     )
 
-    expect(finalMapping).not.toHaveTextContent('study-path-3-concept-recap')
-    expect(finalMapping).toHaveTextContent('study-path-3-short-answer')
-    expect(finalMapping).toHaveTextContent('study-path-3-multiple-choice')
-    expect(finalMapping).toHaveTextContent('study-path-3-flashcard')
+    expect(finalMapping).not.toHaveTextContent('concept-recap')
+    expect(finalMapping).toHaveTextContent('study-guide-3-short-answer')
+    expect(finalMapping).toHaveTextContent('study-guide-3-multiple-choice')
+    expect(finalMapping).toHaveTextContent('study-guide-3-flashcard')
   })
 
   it('previews extended paths without fixed positional roles', async () => {
@@ -386,20 +395,22 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     expect(within(lessonSixCard).getByText('lesson')).toBeInTheDocument()
     expect(within(lessonSixCard).getByText('7 study items')).toBeInTheDocument()
     expect(within(lessonSevenCard).getByText('lesson')).toBeInTheDocument()
-    expect(within(lessonSevenCard).getByText('7 study items')).toBeInTheDocument()
+    expect(
+      within(lessonSevenCard).getByText('7 study items'),
+    ).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('AI generation debug'))
     const finalMapping = screen.getByTestId(
       'study-path-debug-final-studyobject-mapping',
     )
 
-    expect(finalMapping).toHaveTextContent('study-path-6-short-answer')
-    expect(finalMapping).toHaveTextContent('study-path-6-multiple-choice')
-    expect(finalMapping).toHaveTextContent('study-path-6-flashcard')
-    expect(finalMapping).not.toHaveTextContent('study-path-7-concept-recap')
-    expect(finalMapping).toHaveTextContent('study-path-7-short-answer')
-    expect(finalMapping).toHaveTextContent('study-path-7-multiple-choice')
-    expect(finalMapping).toHaveTextContent('study-path-7-flashcard')
+    expect(finalMapping).toHaveTextContent('study-guide-6-short-answer')
+    expect(finalMapping).toHaveTextContent('study-guide-6-multiple-choice')
+    expect(finalMapping).toHaveTextContent('study-guide-6-flashcard')
+    expect(finalMapping).not.toHaveTextContent('concept-recap')
+    expect(finalMapping).toHaveTextContent('study-guide-7-short-answer')
+    expect(finalMapping).toHaveTextContent('study-guide-7-multiple-choice')
+    expect(finalMapping).toHaveTextContent('study-guide-7-flashcard')
   })
 
   it('blocks Deep Study Guide when Local AI is selected', async () => {
@@ -517,7 +528,7 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     ).toHaveTextContent('Broken')
   })
 
-  it('creates Local AI Study Guide dashboards with visible source notes widgets', async () => {
+  it('creates Local AI Study Guide dashboards with visible lesson widgets', async () => {
     vi.mocked(readStudyPackAiSettings).mockReturnValue({
       provider: 'local',
       apiToken: '',
@@ -688,12 +699,12 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     const payload = onCreatePath.mock.calls[0][0]
     const firstDashboardWidgets = JSON.stringify(payload.dashboards[0].widgets)
 
-    expect(firstDashboardWidgets).toContain('Source notes')
+    expect(firstDashboardWidgets).toContain('Lesson')
     expect(firstDashboardWidgets).toContain(
       'German A2 routines use time phrases',
     )
-    expect(firstDashboardWidgets).toContain('FlashcardCarouselBlock')
-    expect(firstDashboardWidgets).toContain('QuizCarouselBlock')
+    expect(firstDashboardWidgets).not.toContain('QuizCarouselBlock')
+    expect(firstDashboardWidgets).not.toContain('FlashcardCarouselBlock')
     expect(firstDashboardWidgets).not.toContain('"Chart"')
     expect(firstDashboardWidgets).not.toContain('Summary')
   })

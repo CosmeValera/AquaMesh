@@ -456,7 +456,7 @@ A: Back
     expect(JSON.stringify(widgets)).not.toContain('"Chart"')
   })
 
-  it('adds Study Guide progress metadata without auto-rendering practice widgets', () => {
+  it('renders Study Guide lessons as one learning widget when practice is not useful', () => {
     const pack = parseStudyPack(
       `Quiz:: Which rule handles x^n? | Power rule | Chain rule | Product rule
 Q: When is the power rule used?
@@ -475,12 +475,12 @@ A: When differentiating x raised to a constant power.`,
         folderName: 'Derivatives Path',
         layoutArchetype: 'learnPracticeTabs',
         dashboardPurpose: 'lesson',
-        practiceType: 'mixed',
+        practiceType: 'none',
       },
     })
     const serialized = JSON.stringify(widgets)
 
-    expect(widgets.map((widget) => widget.name)).toEqual(['Derivatives Source'])
+    expect(widgets.map((widget) => widget.name)).toEqual(['Derivatives Lesson'])
     expect(serialized).toContain('StudyPathProgressBlock')
     expect(serialized).toContain('studyPathLayoutArchetype')
     expect(serialized).toContain('derivatives-path-1')
@@ -489,7 +489,53 @@ A: When differentiating x raised to a constant power.`,
     expect(serialized).not.toContain('FlashcardCarouselBlock')
   })
 
-  it('keeps split reference Study Guide dashboards in a richer source plus summary layout', () => {
+  it('adds one right-side QuizCarouselBlock for Study Guide lessons with useful quiz practice', () => {
+    const pack = parseStudyPack(
+      `Quiz:: Which rule handles x^n? | Power rule | Chain rule | Product rule
+Quiz:: What changes when the exponent is 4? | Multiply by 4 and reduce the exponent | Keep the exponent unchanged | Use the product rule
+Quiz:: What mistake should you avoid? | Dropping the coefficient | Changing x to y | Ignoring all exponents
+Q: When is the power rule used?
+A: When differentiating x raised to a constant power.`,
+      { title: 'Derivatives', sourceFormat: 'text' },
+    )
+    const widgets = createStudyPackOrchestratorWidgets(pack, {
+      rawSource: 'The power rule differentiates x raised to a constant power.',
+      studyPath: {
+        pathId: 'derivatives-path',
+        title: 'Derivatives Path',
+        dashboardKey: 'derivatives-path-2',
+        dashboardName: '02 - Practice power rule',
+        dashboardIndex: 2,
+        dashboardCount: 7,
+        folderName: 'Derivatives Path',
+        layoutArchetype: 'learnPracticeTabs',
+        dashboardPurpose: 'lesson',
+        practiceType: 'mixed',
+      },
+    })
+    const layout = createStudyPackDashboardLayout(widgets)
+    const serialized = JSON.stringify(widgets)
+
+    expect(widgets.map((widget) => widget.name)).toEqual([
+      'Derivatives Lesson',
+      'Derivatives Quiz',
+    ])
+    expect(serialized).toContain('QuizCarouselBlock')
+    expect(serialized).not.toContain('FlashcardCarouselBlock')
+    expect(layout.children).toHaveLength(2)
+    expect(layout.children?.[0]).toMatchObject({ type: 'tabset', weight: 50 })
+    expect(layout.children?.[1]).toMatchObject({ type: 'tabset', weight: 50 })
+    expect(layout.children?.[0].children?.[0]).toMatchObject({
+      type: 'tab',
+      name: 'Derivatives Lesson',
+    })
+    expect(layout.children?.[1].children?.[0]).toMatchObject({
+      type: 'tab',
+      name: 'Derivatives Quiz',
+    })
+  })
+
+  it('keeps split reference Study Guide dashboards as one lesson when quiz practice is too thin', () => {
     const pack = parseStudyPack(
       `Quiz:: Which rule handles x^n? | Power rule | Chain rule | Product rule
 Q: When is the power rule used?
@@ -512,10 +558,8 @@ A: When differentiating x raised to a constant power.`,
       },
     })
 
-    expect(widgets.map((widget) => widget.name)).toEqual([
-      'Derivatives Source',
-      'Derivatives Summary',
-    ])
+    expect(widgets.map((widget) => widget.name)).toEqual(['Derivatives Lesson'])
+    expect(JSON.stringify(widgets)).not.toContain('QuizCarouselBlock')
   })
 
   it('renders summary Study Guide dashboards as recap-only', () => {
@@ -545,7 +589,7 @@ A: The mixed rules.`,
     const serialized = JSON.stringify(widgets)
 
     expect(widgets.map((widget) => widget.name)).toEqual([
-      'French Summary Source',
+      'French Summary Lesson',
     ])
     expect(serialized).not.toContain('QuizBlock')
     expect(serialized).not.toContain('FlashcardBlock')
@@ -579,7 +623,7 @@ A: partions`,
     const serialized = JSON.stringify(widgets)
 
     expect(widgets.map((widget) => widget.name)).toEqual([
-      'French Exercises Source',
+      'French Exercises Lesson',
     ])
     expect(serialized).not.toContain('QuizCarouselBlock')
     expect(serialized).not.toContain('FlashcardCarouselBlock')
@@ -613,7 +657,7 @@ A: The concept.`,
     })
 
     expect(widgets.map((widget) => widget.name)).toEqual([
-      'Focused Concept Source',
+      'Focused Concept Lesson',
     ])
     expect(JSON.stringify(widgets)).not.toContain('QuizCarouselBlock')
     expect(JSON.stringify(widgets)).not.toContain('FlashcardCarouselBlock')

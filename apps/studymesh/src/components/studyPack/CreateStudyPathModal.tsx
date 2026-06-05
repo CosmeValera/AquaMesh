@@ -148,17 +148,8 @@ const DEFAULT_STUDY_PATH_PROMPT =
   'Study basic human anatomy focusing on organs and systems (cardiovascular, respiratory, digestive)'
 
 const layoutModeForStudyPathArchetype = (
-  archetype?: StudyPathLayoutArchetype,
-): StudyPackDashboardLayoutMode => {
-  if (
-    archetype === 'splitReferenceExercise' ||
-    archetype === 'multiWidgetLab'
-  ) {
-    return 'orchestrator'
-  }
-
-  return 'tabs'
-}
+  _archetype?: StudyPathLayoutArchetype,
+): StudyPackDashboardLayoutMode => 'smart'
 
 interface GeminiTimedProgress {
   startedAt: number
@@ -172,19 +163,19 @@ const getProviderPathProgressLabel = (provider: StudyPackAiProvider): string =>
   provider === 'local'
     ? 'Generating dashboards with Google Local AI...'
     : isStrongAiProvider(provider)
-    ? `Generating ordered dashboards with ${providerLabels[provider]}...`
-    : provider === 'basic'
-    ? 'Generating ordered dashboards with Basic fallback...'
-    : 'Checking hosted AI configuration...'
+      ? `Generating ordered dashboards with ${providerLabels[provider]}...`
+      : provider === 'basic'
+        ? 'Generating ordered dashboards with Basic fallback...'
+        : 'Checking hosted AI configuration...'
 
 const getProviderPathDescription = (provider: StudyPackAiProvider): string =>
   provider === 'local'
     ? 'Local AI is running on your device. StudyMesh plans the path first, then generates each lesson dashboard with its own estimated timer.'
     : isStrongAiProvider(provider)
-    ? `StudyMesh is sending the request to ${providerLabels[provider]} and converting the response into dashboards.`
-    : provider === 'basic'
-    ? 'StudyMesh is using local parsing and practice generation without AI API calls.'
-    : 'Hosted AI is not configured yet.'
+      ? `StudyMesh is sending the request to ${providerLabels[provider]} and converting the response into dashboards.`
+      : provider === 'basic'
+        ? 'StudyMesh is using local parsing and practice generation without AI API calls.'
+        : 'Hosted AI is not configured yet.'
 
 const formatPipelineRemaining = (remainingMs: number): string => {
   const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000))
@@ -273,10 +264,10 @@ const statusColor = (status: LocalPipelineStep['status']) =>
   status === 'failed'
     ? 'error'
     : status === 'complete'
-    ? 'success'
-    : status === 'running'
-    ? 'primary'
-    : 'default'
+      ? 'success'
+      : status === 'running'
+        ? 'primary'
+        : 'default'
 
 const aggregatePipelineSteps = (
   steps: LocalPipelineStep[],
@@ -300,10 +291,10 @@ const aggregatePipelineSteps = (
       )
         ? 'failed'
         : groupSteps.some((step) => step.status === 'running')
-        ? 'running'
-        : completeCount === groupSteps.length
-        ? 'complete'
-        : 'pending'
+          ? 'running'
+          : completeCount === groupSteps.length
+            ? 'complete'
+            : 'pending'
       const percent = Math.round(
         groupSteps.reduce((total, step) => total + step.percent, 0) /
           groupSteps.length,
@@ -699,8 +690,8 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
           provider === 'local' && (current === 'deep' || current === 'auto')
             ? 'superSmall'
             : provider === 'basic' && current === 'auto'
-            ? 'average'
-            : current,
+              ? 'average'
+              : current,
         )
       }
     }
@@ -713,8 +704,8 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
           isStrongAiProvider(provider)
             ? 'auto'
             : provider === 'local'
-            ? 'superSmall'
-            : 'average',
+              ? 'superSmall'
+              : 'average',
         )
         setLocalAiDashboardConcurrency(2)
         initializedProviderRef.current = true
@@ -742,8 +733,8 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       isStrongAiProvider(aiProvider)
         ? 'auto'
         : aiProvider === 'local'
-        ? 'superSmall'
-        : 'average',
+          ? 'superSmall'
+          : 'average',
     )
     setAdvancedOpen(false)
     setMustInclude('')
@@ -1474,8 +1465,8 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
                                           lane.active?.status === 'failed'
                                             ? 'error'
                                             : lane.active?.status === 'complete'
-                                            ? 'success'
-                                            : 'primary'
+                                              ? 'success'
+                                              : 'primary'
                                         }
                                       />
                                       {lane.steps.length > 0 ? (

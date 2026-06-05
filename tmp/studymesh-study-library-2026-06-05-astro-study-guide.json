@@ -1,0 +1,669 @@
+{
+  "version": 1,
+  "exportedAt": "2026-06-05T23:38:20.840Z",
+  "dashboards": [],
+  "studyGuides": [
+    {
+      "id": "astro-study-guide",
+      "title": "Astro Study Guide",
+      "folderName": "Astro Study Guide",
+      "studyPath": {
+        "title": "Astro Study Guide",
+        "pathId": "astro-study-guide",
+        "dashboards": [
+          {
+            "id": "study-pack-dashboard-1780701088217-413703",
+            "name": "01 - What is Astro and Why It Matters?",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "01 - What is Astro and Why It Matters? Lesson",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780701088217-216063",
+                          "components": [
+                            {
+                              "id": "01-what-is-astro-and-why-it-matters-1-01-what-is-astro-and-why-it-matters-1-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "01 - What is Astro and Why It Matters?",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "astro-study-guide-1-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "astro-study-guide",
+                                "studyPathTitle": "Astro Study Guide",
+                                "studyPathFolderName": "Astro Study Guide",
+                                "studyPathDashboardKey": "astro-study-guide-1",
+                                "studyPathLayoutReason": "An overview‑review layout presents the orientation map as a single, scrollable lesson, letting the learner build a mental model before any active practice is introduced.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "01 - What is Astro and Why It Matters?",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 1,
+                                "studyPathLayoutArchetype": "overviewReview",
+                                "studyPathDashboardPurpose": "overview"
+                              }
+                            },
+                            {
+                              "id": "01-what-is-astro-and-why-it-matters-1-01-what-is-astro-and-why-it-matters-1-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Lesson",
+                                "markdown": "# Why Astro Exists\nWeb developers today juggle many frameworks—static site generators like Zola, component libraries like React, and full‑stack frameworks like Next.js. Each solves a slice of the problem, but they also introduce trade‑offs: Zola gives you pure static output with no JavaScript, React gives you rich interactivity but often ships more JavaScript than needed, and Next blends both but can be heavyweight for simple content sites. Astro was created to give developers the best of both worlds: **zero‑JS by default** and **framework‑agnostic islands** that hydrate only where interaction is required.\n\n# Core Vocabulary\n- **Component Island** – a self‑contained UI fragment (e.g., a React button) that lives inside a static HTML page. Astro renders the surrounding page to static HTML and then hydrates the island on the client.\n- **Partial Hydration** – the process of loading JavaScript only for the islands that need it, leaving the rest of the page inert. This reduces bundle size and improves First Contentful Paint.\n- **Static Output** – the final HTML files generated at build time. Astro’s default is a fully static site, but you can opt‑in to server‑side rendering for specific routes.\n\n# High‑Level Architecture\nAstro treats each page as a **template** written in its own syntax (MDX, .astro, or plain Markdown). Inside the template you can import components from any supported framework (React, Vue, Svelte, Solid, etc.). When the build runs, Astro:\n1. Parses the template and extracts all component islands.\n2. Renders the non‑interactive parts to static HTML.\n3. Generates a small runtime script that lazily loads the JavaScript for each island based on the browser’s needs.\nThe result is a page that loads instantly, with interactive widgets appearing only when the user interacts with them.\n\n# Performance Benefits\n- **Reduced JavaScript Payload** – Only the code for islands is sent to the client, often under 10 KB for a typical blog page.\n- **Better SEO** – Since the bulk of the content is static HTML, crawlers see the full text without needing JavaScript execution.\n- **Faster Time‑to‑Interactive** – The browser can render the page immediately; interactive components hydrate after the initial paint.\n\n# First Useful Example\nCreate a new Astro project (`npm create astro@latest`) and add a React component called `Counter.jsx`:\n```jsx\nimport { useState } from 'react';\nexport default function Counter() {\n  const [count, setCount] = useState(0);\n  return <button onClick={() => setCount(c => c + 1)}>Clicked {count} times</button>;\n}\n```\nIn `src/pages/index.astro` embed the component as an island:\n```astro\n---\nimport Counter from '../components/Counter.jsx';\n---\n<html>\n  <head><title>My Astro Blog</title></head>\n  <body>\n    <h1>Hello, Astro!</h1>\n    <p>This page is static HTML.</p>\n    <Counter client:idle />\n  </body>\n</html>\n```\nThe `client:idle` directive tells Astro to load the React bundle after the page becomes idle, keeping the initial load tiny.\n\n# Where to Go Next\nAfter mastering islands, you can explore:\n- **Selective JS Loading** – different directives (`client:load`, `client:visible`, `client:media`) to control when each island hydrates.\n- **Hybrid Rendering** – mixing static pages with server‑rendered routes for dynamic data.\n- **Decision Matrix** – a systematic way to pick Astro, Zola, React, or Next based on project constraints (see the contrast table below).\n\n---\n*This orientation map equips you with the mental model of Astro’s architecture, the key terms you’ll encounter, and a concrete starter project. The next lesson will dive deeper into component islands and partial hydration.*",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Astro Study Guide",
+            "dashboardKey": "astro-study-guide-1",
+            "layoutReason": "An overview‑review layout presents the orientation map as a single, scrollable lesson, letting the learner build a mental model before any active practice is introduced.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 1,
+            "layoutArchetype": "overviewReview",
+            "dashboardPurpose": "overview"
+          },
+          {
+            "id": "study-pack-dashboard-1780701088217-863048",
+            "name": "02 - Astro Islands, Partial Hydration, and Integrations",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "02 - Astro Islands, Partial Hydration, and Integrations Lesson",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780701088217-433544",
+                          "components": [
+                            {
+                              "id": "02-astro-islands-partial-hydration-and-integrations-2-02-astro-islands-partial-hydration-and-integrations-2-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "02 - Astro Islands, Partial Hydration, and Integrations",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "astro-study-guide-2-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "astro-study-guide",
+                                "studyPathTitle": "Astro Study Guide",
+                                "studyPathFolderName": "Astro Study Guide",
+                                "studyPathDashboardKey": "astro-study-guide-2",
+                                "studyPathLayoutReason": "A focused lesson layout lets the learner build a coherent mental model of Astro’s core concepts before tackling hands‑on labs, reducing cognitive overload and supporting deep understanding.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "02 - Astro Islands, Partial Hydration, and Integrations",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 2,
+                                "studyPathLayoutArchetype": "focusLesson",
+                                "studyPathDashboardPurpose": "lesson"
+                              }
+                            },
+                            {
+                              "id": "02-astro-islands-partial-hydration-and-integrations-2-02-astro-islands-partial-hydration-and-integrations-2-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Lesson",
+                                "markdown": "# Island Architecture\nAstro treats every UI piece as an **island** – a self‑contained component that lives on a static HTML page but can be hydrated on demand. Unlike a traditional SPA where the entire page is a JavaScript bundle, Astro ships the page as pure HTML and CSS first. Each island is declared with a `<Component />` tag inside an `.astro` file. At build time Astro analyses the component tree, extracts the islands, and generates separate JavaScript chunks for each one. The result is a page that loads instantly, with only the interactive parts receiving JavaScript.\n\n# Partial Hydration Explained\nPartial hydration is the process of loading JavaScript only for the islands that need it. Astro supports three hydration strategies:\n- **client:load** – hydrate as soon as the component appears in the viewport.\n- **client:idle** – wait until the browser is idle.\n- **client:media** – hydrate only when a media query matches (e.g., mobile‑only UI).\nThese strategies let developers balance interactivity with performance. If an island never becomes interactive, its JavaScript never runs, keeping the page lightweight.\n\n# Supported UI Frameworks\nAstro is framework‑agnostic. It can embed React, Vue, Svelte, Solid, and many others. The integration works by wrapping the foreign component in an Astro island. For example, a React button can be placed inside an `.astro` page with:\n```astro\n---\nimport MyButton from '../components/MyButton.jsx';\n---\n<div>\n  <MyButton client:load />\n</div>\n```\nAstro’s compiler handles the JSX compilation, bundles the React runtime only for that island, and leaves the rest of the page untouched.\n\n# Astro Config Basics\nA minimal `astro.config.mjs` looks like:\n```js\nimport { defineConfig } from 'astro/config';\nimport react from '@astrojs/react';\n\nexport default defineConfig({\n  integrations: [react()],\n  build: { format: 'directory' },\n});\n```\nThe `integrations` array registers the UI frameworks you plan to use. The `build.format` option controls whether the output is a flat file or a directory structure. Most developers keep the default `directory` format for clean URLs.\n\n# Worked Example: React Island\n1. **Create a project** – `npm create astro@latest my‑site` and choose the “minimal” starter.\n2. **Add React** – `npm i @astrojs/react` and update `astro.config.mjs` as shown above.\n3. **Write a React component** – `src/components/Counter.jsx`:\n```jsx\nimport { useState } from 'react';\nexport default function Counter() {\n  const [count, setCount] = useState(0);\n  return <button onClick={() => setCount(c => c + 1)}>Clicked {count} times</button>;\n}\n```\n4. **Create an Astro page** – `src/pages/index.astro`:\n```astro\n---\nimport Counter from '../components/Counter.jsx';\n---\n<html>\n  <head><title>Astro + React</title></head>\n  <body>\n    <h1>Welcome to Astro</h1>\n    <Counter client:load />\n  </body>\n</html>\n```\nWhen you run `npm run dev`, the page loads as static HTML. The button’s JavaScript is fetched only after the component appears, demonstrating partial hydration.\n\n# Misconception Checks\n- **All islands load at page load** – False. Hydration strategy determines when each island’s script runs.\n- **Only React can be used as islands** – False. Astro supports many UI frameworks; you can mix and match within the same page.\n\n# Retrieval Practice\n1. *What is partial hydration?*  \n2. *Name three UI frameworks you can embed in Astro.*  \n3. *Explain why an Astro page without islands still benefits from the framework.*",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Astro Study Guide",
+            "dashboardKey": "astro-study-guide-2",
+            "layoutReason": "A focused lesson layout lets the learner build a coherent mental model of Astro’s core concepts before tackling hands‑on labs, reducing cognitive overload and supporting deep understanding.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 2,
+            "layoutArchetype": "focusLesson",
+            "dashboardPurpose": "lesson"
+          },
+          {
+            "id": "study-pack-dashboard-1780701088217-239848",
+            "name": "Astro vs Zula, React, and Next: A Comparative Lens",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "Astro vs Zula, React, and Next: A Comparative Lens Lesson",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780701088217-497091",
+                          "components": [
+                            {
+                              "id": "astro-vs-zula-react-and-next-a-comparative-lens-3-astro-vs-zula-react-and-next-a-comparative-lens-3-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "Astro vs Zula, React, and Next: A Comparative Lens",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "astro-study-guide-3-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "astro-study-guide",
+                                "studyPathTitle": "Astro Study Guide",
+                                "studyPathFolderName": "Astro Study Guide",
+                                "studyPathDashboardKey": "astro-study-guide-3",
+                                "studyPathLayoutReason": "A splitReferenceExercise lets learners see the comparative tables and code snippets side‑by‑side while working through the decision matrix, reinforcing contrast learning.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "Astro vs Zula, React, and Next: A Comparative Lens",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 3,
+                                "studyPathLayoutArchetype": "splitReferenceExercise",
+                                "studyPathDashboardPurpose": "lesson"
+                              }
+                            },
+                            {
+                              "id": "astro-vs-zula-react-and-next-a-comparative-lens-3-astro-vs-zula-react-and-next-a-comparative-lens-3-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Lesson",
+                                "markdown": "### Static‑site focus (Zula)\nZula builds pure HTML from Markdown and optional shortcodes. No JavaScript is emitted unless you explicitly add it, so the final site is a bundle of static files that can be served from any CDN. This model is ideal for documentation, blogs, and marketing pages where interactivity is minimal.\n\n### Full‑SPA approach (React)\nA React‑only project ships a JavaScript bundle that hydrates the entire page on the client. The server may deliver a minimal HTML shell, but the browser must download and execute the full React runtime before any content becomes interactive. This gives a seamless single‑page experience but incurs a larger initial payload and slower Time‑to‑Interactive (TTI).\n\n### Hybrid SSR/SSG (Next)\nNext adds two rendering modes: **Static Site Generation (SSG)** with `getStaticProps` and **Server‑Side Rendering (SSR)** with `getServerSideProps`. Pages can be pre‑rendered at build time or on each request, and Next automatically splits JavaScript per page. The framework also supports API routes, making it a full‑stack solution.\n\n### Astro’s middle ground\nAstro generates static HTML by default, like Zula, but lets you drop in **component islands**—framework components (React, Vue, Svelte, etc.) that hydrate only when they appear in the viewport. This **partial hydration** means the bulk of the page loads instantly, while interactive parts load on demand. Astro’s build step strips unused framework code, resulting in a smaller JavaScript footprint than a full React SPA.\n\n### Decision matrix\n| Feature | Zula | React SPA | Next (SSG/SSR) | Astro |\n|---|---|---|---|---|\n| Rendering model | Pure static | Client‑side SPA | Hybrid SSG / SSR | Static HTML + optional islands |\n| JS payload (initial) | 0 KB | 100‑200 KB+ | 30‑150 KB (depends) | 0 KB + island chunks |\n| SEO friendliness | Excellent | Good (needs SSR) | Excellent | Excellent |\n| Interactivity style | Minimal | Full UI | Mixed | Targeted islands |\n| Learning curve | Low | Medium‑high | Medium‑high | Low‑medium |\n| When to choose | Content‑driven sites | Complex UI, app‑like | Need mix of static & dynamic, API routes | Mostly static sites that need a few interactive widgets |\n\n**Choose‑the‑right‑case practice**: Look at a project description (e.g., \"A product landing page with a carousel and a contact form\") and decide which framework best satisfies performance, SEO, and development speed. Explain your choice in one sentence.\n\n### Misconception check\n- *Astro cannot do server‑side rendering.* → Astro can pre‑render pages at build time and also supports SSR via adapters, though its primary strength is static output.\n- *Astro forces you to use only one UI framework.* → Astro lets you embed React, Vue, Svelte, or Solid components side‑by‑side; you pick the best tool for each island.\n\n### Retrieval practice\n1. Which framework provides built‑in server‑side rendering? *(Answer: Next)*\n2. How does Astro achieve faster load times compared to a pure React SPA? *(Answer: By delivering static HTML first and hydrating only the interactive islands on demand.)*",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Astro Study Guide",
+            "dashboardKey": "astro-study-guide-3",
+            "layoutReason": "A splitReferenceExercise lets learners see the comparative tables and code snippets side‑by‑side while working through the decision matrix, reinforcing contrast learning.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 3,
+            "layoutArchetype": "splitReferenceExercise",
+            "dashboardPurpose": "lesson"
+          },
+          {
+            "id": "study-pack-dashboard-1780701088217-377552",
+            "name": "04 - Building Your First Astro Project: From Init to Deploy",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 50,
+                  "children": [
+                    {
+                      "name": "04 - Building Your First Astro Project: From Init to Deploy Lesson",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780701088217-267384",
+                          "components": [
+                            {
+                              "id": "04-building-your-first-astro-project-from-init-to-deploy-4-04-building-your-first-astro-project-from-init-to-deploy-4-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "04 - Building Your First Astro Project: From Init to Deploy",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "astro-study-guide-4-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "astro-study-guide",
+                                "studyPathTitle": "Astro Study Guide",
+                                "studyPathFolderName": "Astro Study Guide",
+                                "studyPathDashboardKey": "astro-study-guide-4",
+                                "studyPathLayoutReason": "A multi‑widget lab lets learners see the full procedural flow, a checklist, and immediate practice questions side‑by‑side, reinforcing each step while keeping the workflow visible.",
+                                "studyPathPracticeType": "mixed",
+                                "studyPathDashboardName": "04 - Building Your First Astro Project: From Init to Deploy",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 4,
+                                "studyPathLayoutArchetype": "multiWidgetLab",
+                                "studyPathDashboardPurpose": "practice"
+                              }
+                            },
+                            {
+                              "id": "04-building-your-first-astro-project-from-init-to-deploy-4-04-building-your-first-astro-project-from-init-to-deploy-4-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Lesson",
+                                "markdown": "## Install Astro CLI\nFirst, ensure you have Node ≥ 18. Open a terminal and run:\n```bash\nnpm create astro@latest my-astro-site\n```\nThe CLI scaffolds a project with a sensible folder layout (`src/pages`, `src/components`, etc.) and a default static‑site build configuration. Choose the \"minimal\" starter when prompted.\n\n## Initialize a New Project\nNavigate into the folder and install dependencies:\n```bash\ncd my-astro-site\nnpm install\n```\nRun the dev server to confirm the scaffold works:\n```bash\nnpm run dev\n```\nYou should see a preview at `http://localhost:4321` showing Astro’s default homepage.\n\n## Add React Integration\nAstro supports many UI frameworks via integrations. To add React, execute:\n```bash\nnpm astro add react\n```\nThe command installs `@astrojs/react` and updates `astro.config.mjs` with the React integration. This enables you to write React components and embed them as islands.\n\n## Create a React Island Component\nCreate a file `src/components/Counter.jsx`:\n```jsx\nimport { useState } from 'react';\nexport default function Counter() {\n  const [count, setCount] = useState(0);\n  return (\n    <button onClick={() => setCount(count + 1)}>\n      Clicked {count} times\n    </button>\n  );\n}\n```\nNotice the component is a normal React function; Astro will only hydrate it where you request.\n\n## Reference the Island in a Page\nOpen `src/pages/index.astro` and replace the default content with:\n```astro\n---\nimport Counter from '../components/Counter.jsx';\n---\n<html lang=\"en\">\n  <head>\n    <title>My Astro Site</title>\n  </head>\n  <body>\n    <h1>Welcome to Astro</h1>\n    <!-- The island is loaded on client when the page renders -->\n    <Counter client:load />\n  </body>\n</html>\n```\nThe `client:load` directive tells Astro to ship the component’s JavaScript to the browser and hydrate it as soon as the page loads. Other directives (`client:idle`, `client:visible`, `client:media`) let you defer hydration.\n\n## Run Dev Server and Build\nBack in the terminal, restart the dev server if needed. You’ll see the Counter button working. When you’re ready to produce a production build, run:\n```bash\nnpm run build\n```\nAstro outputs a fully static `dist/` folder. The React island’s JavaScript is split into a tiny chunk that loads only for the component, keeping the rest of the page static.\n\n## Deploy to Netlify/Vercel\nBoth platforms accept a static `dist/` folder. For Netlify, create a `netlify.toml`:\n```toml\n[build]\n  publish = \"dist\"\n```\nPush the repo to GitHub and link it in Netlify; the build command is `npm run build`. Vercel works similarly—just set the output directory to `dist`. After deployment, the site remains fast because only the island’s JS is sent to the client.\n\n## Failure Points & Checklist\n- **Node version** – older Node versions can break the CLI.\n- **Missing React integration** – forgetting `npm astro add react` results in a runtime error when the island is imported.\n- **Wrong directive** – using `client:only` on a component that needs server‑side data will cause a blank render.\n- **Deploy config** – ensure the build output directory matches the platform’s expectations.\n\n## Apply‑It Task (Scaffolded)\n1. **Clone the repo you just built**\n   - Open a terminal in your workspace.\n   - Run `git clone <your‑repo‑url>` and `cd <repo‑folder>`.\n2. **Change the Counter to hydrate on click using `client:idle`**\n   - Open `src/pages/index.astro`.\n   - Replace `client:load` with `client:idle` on the `<Counter>` tag.\n   - Hint: `client:idle` defers hydration until the browser is idle, which often follows a user interaction.\n3. **Add a second island written in Svelte**\n   - Run `npm astro add svelte` to install the Svelte integration.\n   - Create `src/components/HelloSvelte.svelte` with a simple `<script>` that defines a `name` prop and displays `Hello {name}!`.\n   - Import the Svelte component in `src/pages/index.astro` and add `<HelloSvelte client:load name=\"Astro\" />` below the React Counter.\n   - Hint: Svelte islands use the same `client:*` directives as React.\n4. **Deploy the updated site and verify both islands load correctly**\n   - Commit your changes and push to GitHub.\n   - Trigger a new Netlify/Vercel build (or run `npm run build` locally and push the `dist/` folder).\n   - Open the deployed URL and confirm:\n     * The Counter button works after the page becomes idle.\n     * The Svelte greeting appears and is interactive.\n   - Hint: Use the browser dev tools → Network tab to see that only two small JS chunks are loaded.\n\nBy completing these steps you’ll have a working Astro project, understand how islands keep JavaScript minimal, and be ready to experiment with other frameworks inside Astro.\n\n## Synthesis Review\n- **Summarize**: In a few sentences, describe the final site you built (what islands you added, which hydration directives you used, and where the site is hosted).\n- **Reflect**: What challenges did you encounter when switching hydration strategies or adding a second framework? How did you resolve them?\n- **Plan Next Steps**: Identify one additional feature you could add (e.g., a Markdown blog page, a third‑party widget, or a custom build script) and outline the steps you would take to implement it.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                },
+                {
+                  "type": "tabset",
+                  "active": false,
+                  "weight": 50,
+                  "children": [
+                    {
+                      "name": "04 - Building Your First Astro Project: From Init to Deploy Quiz",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780701088217-296279",
+                          "components": [
+                            {
+                              "id": "04-building-your-first-astro-project-from-init-to-deploy-4-1-focused-session",
+                              "type": "QuizCarouselBlock",
+                              "props": {
+                                "items": [
+                                  {
+                                    "id": "study-guide-4-short-answer-1",
+                                    "kind": "quiz",
+                                    "tags": [
+                                      "study-pack",
+                                      "ai-generated"
+                                    ],
+                                    "title": "Practice 1",
+                                    "answer": "npm astro add react",
+                                    "options": [],
+                                    "question": "What command adds React support to an Astro project?",
+                                    "quizMode": "shortAnswer",
+                                    "sourceLine": 1,
+                                    "explanation": "The Astro CLI provides the 'astro add' subcommand to install framework integrations; 'react' is the package name.",
+                                    "correctIndex": 0
+                                  },
+                                  {
+                                    "id": "study-guide-4-short-answer-2",
+                                    "kind": "quiz",
+                                    "tags": [
+                                      "study-pack",
+                                      "ai-generated"
+                                    ],
+                                    "title": "Practice 2",
+                                    "answer": "It tells Astro to load and hydrate the component as soon as the page loads, enabling interactivity while keeping the rest of the page static.",
+                                    "options": [],
+                                    "question": "Explain the purpose of the 'client:load' directive.",
+                                    "quizMode": "shortAnswer",
+                                    "sourceLine": 2,
+                                    "explanation": "'client:load' is one of several hydration directives; it ensures the component’s JavaScript is fetched immediately.",
+                                    "correctIndex": 0
+                                  },
+                                  {
+                                    "id": "study-guide-4-multiple-choice-1",
+                                    "kind": "quiz",
+                                    "tags": [
+                                      "study-pack",
+                                      "ai-generated"
+                                    ],
+                                    "title": "Multiple choice 1",
+                                    "answer": "Static HTML with optional per‑component hydration",
+                                    "options": [
+                                      "Full client‑side rendering like a SPA",
+                                      "Server‑side rendering on every request",
+                                      "Hybrid SSR + SSG only for React pages",
+                                      "Static HTML with optional per‑component hydration"
+                                    ],
+                                    "question": "Which of the following best describes Astro’s rendering model?",
+                                    "quizMode": "multipleChoice",
+                                    "sourceLine": 1,
+                                    "explanation": "Astro generates static HTML by default and lets you hydrate individual components (islands) as needed.",
+                                    "correctIndex": 3
+                                  },
+                                  {
+                                    "id": "study-guide-4-multiple-choice-2",
+                                    "kind": "quiz",
+                                    "tags": [
+                                      "study-pack",
+                                      "ai-generated"
+                                    ],
+                                    "title": "Multiple choice 2",
+                                    "answer": "Fully static with minimal JavaScript",
+                                    "options": [
+                                      "Server‑rendered on each request",
+                                      "A mix of static and server‑rendered pages",
+                                      "Fully static with minimal JavaScript",
+                                      "Client‑side only"
+                                    ],
+                                    "question": "Compared to Next.js, Astro’s default output is:",
+                                    "quizMode": "multipleChoice",
+                                    "sourceLine": 2,
+                                    "explanation": "Next.js defaults to server‑rendered pages unless you opt into static generation; Astro’s default is static with optional islands.",
+                                    "correctIndex": 2
+                                  },
+                                  {
+                                    "id": "study-guide-4-multiple-choice-3",
+                                    "kind": "quiz",
+                                    "tags": [
+                                      "study-pack",
+                                      "ai-generated"
+                                    ],
+                                    "title": "Multiple choice 3",
+                                    "answer": "client:idle",
+                                    "options": [
+                                      "client:load",
+                                      "client:visible",
+                                      "client:media",
+                                      "client:idle"
+                                    ],
+                                    "question": "If you want a component to hydrate only after the user interacts, which directive should you use?",
+                                    "quizMode": "multipleChoice",
+                                    "sourceLine": 3,
+                                    "explanation": "'client:idle' defers hydration until the browser is idle, which often follows user interaction.",
+                                    "correctIndex": 3
+                                  },
+                                  {
+                                    "id": "study-guide-4-multiple-choice-4",
+                                    "kind": "quiz",
+                                    "tags": [
+                                      "study-pack",
+                                      "ai-generated"
+                                    ],
+                                    "title": "Multiple choice 4",
+                                    "answer": "A blog with a few interactive widgets",
+                                    "options": [
+                                      "A data‑driven dashboard requiring real‑time updates",
+                                      "A full‑stack e‑commerce site with server‑side APIs",
+                                      "A blog with a few interactive widgets",
+                                      "A single‑page application with heavy client logic"
+                                    ],
+                                    "question": "Which scenario is a strong fit for Astro over Zola?",
+                                    "quizMode": "multipleChoice",
+                                    "sourceLine": 4,
+                                    "explanation": "Astro excels when you need a primarily static site but want selective interactivity via islands, whereas Zola is static‑only.",
+                                    "correctIndex": 2
+                                  }
+                                ],
+                                "title": "04 - Building Your First Astro Project: From Init to Deploy",
+                                "__blockType": "QuizCarouselBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Astro Study Guide",
+            "dashboardKey": "astro-study-guide-4",
+            "layoutReason": "A multi‑widget lab lets learners see the full procedural flow, a checklist, and immediate practice questions side‑by‑side, reinforcing each step while keeping the workflow visible.",
+            "practiceType": "mixed",
+            "dashboardCount": 5,
+            "dashboardIndex": 4,
+            "layoutArchetype": "multiWidgetLab",
+            "dashboardPurpose": "practice"
+          },
+          {
+            "id": "study-pack-dashboard-1780701088217-715545",
+            "name": "Choosing the Right Tool: Synthesis Review and Next Steps",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 50,
+                  "children": [
+                    {
+                      "name": "Choosing the Right Tool: Synthesis Review and Next Steps Lesson",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780701088217-433750",
+                          "components": [
+                            {
+                              "id": "choosing-the-right-tool-synthesis-review-and-next-steps-5-choosing-the-right-tool-synthesis-review-and-next-steps-5-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "Choosing the Right Tool: Synthesis Review and Next Steps",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "astro-study-guide-5-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "astro-study-guide",
+                                "studyPathTitle": "Astro Study Guide",
+                                "studyPathFolderName": "Astro Study Guide",
+                                "studyPathDashboardKey": "astro-study-guide-5",
+                                "studyPathLayoutReason": "An overview‑review layout lets learners see the big picture, compare frameworks side‑by‑side, and immediately apply a decision matrix, which is ideal for synthesis and next‑step planning.",
+                                "studyPathPracticeType": "quiz",
+                                "studyPathDashboardName": "Choosing the Right Tool: Synthesis Review and Next Steps",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 5,
+                                "studyPathLayoutArchetype": "overviewReview",
+                                "studyPathDashboardPurpose": "finalReview"
+                              }
+                            },
+                            {
+                              "id": "choosing-the-right-tool-synthesis-review-and-next-steps-5-choosing-the-right-tool-synthesis-review-and-next-steps-5-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Lesson",
+                                "markdown": "# Recap of Core Ideas\nAstro’s **component‑islands** model treats each UI piece as an isolated island that can be hydrated on demand. Unlike traditional SPA frameworks, Astro ships **static HTML** first, then injects JavaScript only for the islands that need interactivity. This *partial hydration* dramatically reduces the amount of JavaScript sent to the browser, improving first‑paint performance and SEO.\n\n# Scenario Analysis\nImagine three common project briefs:\n1. **Marketing site with a blog and a few interactive widgets** – heavy on content, light on client‑side logic.\n2. **Dashboard‑style admin panel** – many data tables, filters, and real‑time updates.\n3. **E‑commerce storefront** – SEO‑critical product pages, plus a checkout flow that requires complex client‑side interactions.\nFor each scenario we ask: *What is the primary performance goal?* *How much JavaScript is truly needed?* *What build complexity are we willing to manage?* The answers drive the framework choice.\n\n# Decision Matrix Application\n| Requirement | Astro | Zola | React (CRA) | Next.js |\n|---|---|---|---|---|\n| **Static‑first rendering** | ✅ (HTML‑first, islands) | ✅ (pure static) | ❌ (SPA) | ✅ (Hybrid) |\n| **Selective JS loading** | ✅ (per‑island) | ❌ (all or nothing) | ✅ (code‑splitting) | ✅ (dynamic imports) |\n| **Built‑in routing & API** | ⚠️ (basic) | ⚠️ (none) | ⚠️ (needs router) | ✅ (full) |\n| **SEO friendliness** | ✅ (static markup) | ✅ (static markup) | ❌ (needs SSR) | ✅ (SSR/SSG) |\n| **Learning curve for web devs** | 🟢 (HTML + component syntax) | 🟢 (Markdown) | 🟡 (JSX + state) | 🟡 (JSX + conventions) |\n| **Complex interactivity** | 🟡 (islands) | ❌ (static only) | ✅ (full SPA) | ✅ (SSR + SPA) |\nThe matrix shows that a **content‑heavy site with minimal JS** (Scenario 1) aligns best with Astro or Zola; Astro wins when you need a few interactive widgets without abandoning the static‑first advantage. A **data‑rich admin panel** (Scenario 2) leans toward React or Next because they excel at state management and routing. The **e‑commerce case** (Scenario 3) often benefits from Next’s hybrid rendering, though Astro can still be viable if you keep the checkout logic lightweight.\n\n## Summary of Key Take‑aways\n- **Static‑first + selective hydration** = best performance for content‑heavy sites.\n- **Full SPA capabilities** (React/Next) are only needed when the UI demands complex state and routing.\n- **SEO** is high for Astro, Zola, and Next; it drops sharply for pure SPAs.\n- Use the matrix to **score** each framework against project criteria; the highest‑scoring option should be prototyped first.\n\n## Worked Example: Scoring a Project Scenario\n**Scenario:** A marketing site with a blog, a contact‑form island, and a lightweight newsletter signup widget.\n1. **Define criteria (rows) and assign weights (0‑5):**\n   - Static‑first rendering (weight 5) → Astro 5, Zola 5, React 0, Next 5\n   - Selective JS loading (weight 4) → Astro 5, Zola 0, React 4, Next 4\n   - Built‑in routing & API (weight 2) → Astro 2, Zola 0, React 0, Next 5\n   - SEO friendliness (weight 5) → Astro 5, Zola 5, React 0, Next 5\n   - Learning curve (weight 3) → Astro 4, Zola 4, React 2, Next 2\n   - Complex interactivity (weight 1) → Astro 2, Zola 0, React 5, Next 5\n2. **Calculate total scores:**\n   - Astro = (5×5)+(4×5)+(2×2)+(5×5)+(3×4)+(1×2) = 25+20+4+25+12+2 = **88**\n   - Zola = (5×5)+(4×0)+(2×0)+(5×5)+(3×4)+(1×0) = 25+0+0+25+12+0 = **62**\n   - React = (5×0)+(4×4)+(2×0)+(5×0)+(3×2)+(1×5) = 0+16+0+0+6+5 = **27**\n   - Next = (5×5)+(4×4)+(2×5)+(5×5)+(3×2)+(1×5) = 25+16+10+25+6+5 = **87**\n3. **Interpretation:** Astro scores highest (88) – a narrow margin over Next (87) but Astro wins because the project needs minimal interactivity and a simple routing setup. The next step is to prototype the homepage in Astro, add the contact‑form island, and verify bundle size.\n\n# Action Plan\n1. **Define project priorities** – list SEO, interactivity, build time, team familiarity.\n2. **Score each framework** against the matrix (0‑5 per criterion).\n3. **Select the highest‑scoring option** and prototype a single page to validate assumptions.\n4. **Iterate** – if the prototype reveals hidden performance costs, revisit the matrix.\n\nBy repeatedly applying this decision workflow, you turn abstract comparisons into concrete, repeatable choices.\n\n---\n**Next steps**: Build a minimal Astro starter (`npm init astro`) and add a React island (`<ReactComponent client:load />`). Observe the generated HTML, the network waterfall, and the JavaScript bundle size. Compare those metrics to a comparable Next page built with `next dev`. Use the insights to refine your matrix scores for future projects.\n\n## Common Misconceptions\n- **\"Astro is only for static sites\"** – Incorrect. Astro can handle dynamic islands and even server‑side rendering via adapters; it simply starts with static HTML.\n- **\"All islands load at once\"** – Wrong. Each island can be configured with `client:load`, `client:idle`, `client:visible`, etc., controlling exactly when its JavaScript is fetched.\n- **\"Partial hydration eliminates all JavaScript\"** – Misleading. It reduces the amount of JavaScript sent, not removes it entirely; interactive components still receive the code they need.\n- **\"If I need a router, Astro is unusable\"** – False. Astro provides basic routing and can be extended with community routers or by pairing with frameworks like Remix.\n- **\"Next.js always beats Astro for performance\"** – Not always. For content‑heavy sites with few islands, Astro’s static‑first approach often yields smaller payloads and faster first‑paint.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                },
+                {
+                  "type": "tabset",
+                  "active": false,
+                  "weight": 50,
+                  "children": [
+                    {
+                      "name": "Choosing the Right Tool: Synthesis Review and Next Steps Quiz",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780701088217-618792",
+                          "components": [
+                            {
+                              "id": "choosing-the-right-tool-synthesis-review-and-next-steps-5-1-focused-session",
+                              "type": "QuizCarouselBlock",
+                              "props": {
+                                "items": [
+                                  {
+                                    "id": "study-guide-5-short-answer-1",
+                                    "kind": "quiz",
+                                    "tags": [
+                                      "study-pack",
+                                      "ai-generated"
+                                    ],
+                                    "title": "Practice 1",
+                                    "answer": "Because Astro delivers a fully rendered HTML page before any JavaScript runs, search crawlers see the content immediately, whereas an SPA often requires JS execution to populate the DOM.",
+                                    "options": [],
+                                    "question": "Explain why Astro’s component‑island model (row **Static‑first rendering** in the matrix) benefits SEO compared to a pure SPA.",
+                                    "quizMode": "shortAnswer",
+                                    "sourceLine": 1,
+                                    "explanation": "Static HTML ensures crawlers index content without waiting for client‑side rendering, leading to better SEO.",
+                                    "correctIndex": 0
+                                  },
+                                  {
+                                    "id": "study-guide-5-short-answer-2",
+                                    "kind": "quiz",
+                                    "tags": [
+                                      "study-pack",
+                                      "ai-generated"
+                                    ],
+                                    "title": "Practice 2",
+                                    "answer": "1) The site is purely content‑driven with no interactive widgets, so selective JS loading is irrelevant. 2) The team prefers a Markdown‑centric workflow and wants zero JavaScript overhead, avoiding the need for per‑island loading control that Astro provides.",
+                                    "options": [],
+                                    "question": "List two project characteristics that would make Zola a better choice than Astro, referencing the **Selective JS loading** row of the matrix.",
+                                    "quizMode": "shortAnswer",
+                                    "sourceLine": 2,
+                                    "explanation": "Zola excels at pure static sites; Astro’s islands add unnecessary complexity if no interactivity is needed.",
+                                    "correctIndex": 0
+                                  },
+                                  {
+                                    "id": "study-guide-5-multiple-choice-1",
+                                    "kind": "quiz",
+                                    "tags": [
+                                      "study-pack",
+                                      "ai-generated"
+                                    ],
+                                    "title": "Multiple choice 1",
+                                    "answer": "Astro",
+                                    "options": [
+                                      "Zola",
+                                      "React (CRA)",
+                                      "Next.js",
+                                      "Astro"
+                                    ],
+                                    "question": "Which framework provides the most granular control over which components receive JavaScript (see the **Selective JS loading** row)?",
+                                    "quizMode": "multipleChoice",
+                                    "sourceLine": 1,
+                                    "explanation": "Astro’s island architecture lets you specify hydration mode per component, unlike the other options.",
+                                    "correctIndex": 3
+                                  },
+                                  {
+                                    "id": "study-guide-5-multiple-choice-2",
+                                    "kind": "quiz",
+                                    "tags": [
+                                      "study-pack",
+                                      "ai-generated"
+                                    ],
+                                    "title": "Multiple choice 2",
+                                    "answer": "Built‑in routing",
+                                    "options": [
+                                      "Selective JS loading",
+                                      "Static‑first rendering",
+                                      "SEO friendliness",
+                                      "Built‑in routing"
+                                    ],
+                                    "question": "In the decision matrix, which criterion is *not* directly addressed by Astro (see the **Built‑in routing & API** row)?",
+                                    "quizMode": "multipleChoice",
+                                    "sourceLine": 2,
+                                    "explanation": "Astro offers basic routing but not the full‑featured routing system that Next.js provides.",
+                                    "correctIndex": 3
+                                  },
+                                  {
+                                    "id": "study-guide-5-multiple-choice-3",
+                                    "kind": "quiz",
+                                    "tags": [
+                                      "study-pack",
+                                      "ai-generated"
+                                    ],
+                                    "title": "Multiple choice 3",
+                                    "answer": "Astro",
+                                    "options": [
+                                      "Astro",
+                                      "Zola",
+                                      "React (CRA)",
+                                      "Next.js"
+                                    ],
+                                    "question": "A marketing site with a blog and a few interactive widgets should most likely start with which framework (refer to the **Static‑first rendering** and **Selective JS loading** rows)?",
+                                    "quizMode": "multipleChoice",
+                                    "sourceLine": 3,
+                                    "explanation": "Astro gives static‑first performance while still allowing the needed interactive widgets via islands.",
+                                    "correctIndex": 0
+                                  }
+                                ],
+                                "title": "Choosing the Right Tool: Synthesis Review and Next Steps",
+                                "__blockType": "QuizCarouselBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Astro Study Guide",
+            "dashboardKey": "astro-study-guide-5",
+            "layoutReason": "An overview‑review layout lets learners see the big picture, compare frameworks side‑by‑side, and immediately apply a decision matrix, which is ideal for synthesis and next‑step planning.",
+            "practiceType": "quiz",
+            "dashboardCount": 5,
+            "dashboardIndex": 5,
+            "layoutArchetype": "overviewReview",
+            "dashboardPurpose": "finalReview"
+          }
+        ],
+        "folderName": "Astro Study Guide",
+        "selectedIndex": 0,
+        "pinnedDashboardKeys": []
+      },
+      "createdAt": "2026-06-05T23:11:28.217+00:00",
+      "updatedAt": "2026-06-05T23:34:54.886621+00:00"
+    }
+  ]
+}

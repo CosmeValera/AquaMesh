@@ -714,7 +714,7 @@ const createRawSourceWidget = (
         type: 'TableBlock',
         props: {
           __blockType: 'TableBlock',
-          title: 'Source table',
+          title: options.studyPath ? 'Lesson' : 'Source table',
           headers: csvTable.headers,
           rows: csvTable.rows,
         },
@@ -724,14 +724,14 @@ const createRawSourceWidget = (
         type: 'MarkdownBlock',
         props: {
           __blockType: 'MarkdownBlock',
-          title: 'Source notes',
+          title: options.studyPath ? 'Lesson' : 'Source notes',
           markdown: sourceText,
         },
       }
 
   return {
     id: widgetId,
-    name: `${pack.title} Source`,
+    name: options.studyPath ? `${pack.title} Lesson` : `${pack.title} Source`,
     components: [
       createLabel(`${widgetId}-title`, pack.title, 'h6'),
       ...(options.studyPath
@@ -875,17 +875,10 @@ const shouldRenderStudyPathSourceSummary = (
     return false
   }
 
-  if (!studyPath) {
-    return true
-  }
-
-  return (
-    studyPath.layoutArchetype === 'splitReferenceExercise' ||
-    studyPath.layoutArchetype === 'multiWidgetLab'
-  )
+  return !studyPath
 }
 
-const shouldRenderStudyPathGeneratedWidgets = (
+const shouldRenderGeneratedWidgets = (
   studyPath: StudyPathDashboardContext | undefined,
   dashboardRole: string,
 ): boolean => {
@@ -902,6 +895,54 @@ const shouldRenderStudyPathGeneratedWidgets = (
   }
 
   return true
+}
+
+const createStudyPathVisibleQuizGroups = (
+  pack: StudyPack,
+): StudyPackWidgetGroupInput[] => {
+  const quizObjects = orderObjectsForGeneratedWidget(
+    pack.objects.filter(
+      (object) =>
+        object.kind === 'quiz' && !isLowQualityStudyObject(object, pack.title),
+    ),
+  )
+
+  if (quizObjects.length < 2) {
+    return []
+  }
+
+  return [
+    {
+      name: `${pack.title} Quiz`,
+      objects: quizObjects,
+    },
+  ]
+}
+
+const createVisibleStudyPathWidgetGroups = (
+  pack: StudyPack,
+  studyPath: StudyPathDashboardContext | undefined,
+): StudyPackWidgetGroupInput[] | null => {
+  if (!studyPath) {
+    return null
+  }
+
+  const dashboardRole = studyPath.dashboardRole || pack.dashboardRole
+
+  if (
+    dashboardRole === 'summary' ||
+    dashboardRole === 'exercises' ||
+    studyPath.layoutArchetype === 'focusLesson' ||
+    studyPath.practiceType === 'none'
+  ) {
+    return []
+  }
+
+  if (studyPath.practiceType === 'quiz' || studyPath.practiceType === 'mixed') {
+    return createStudyPathVisibleQuizGroups(pack)
+  }
+
+  return []
 }
 
 export const createStudyPackSmartWidgetGroups = (
@@ -1009,16 +1050,23 @@ export const createStudyPackOrchestratorWidgets = (
             ]),
       ]
     : []
-  const generatedGroups = !shouldRenderStudyPathGeneratedWidgets(
+  const studyPathGeneratedGroups = createVisibleStudyPathWidgetGroups(
+    pack,
     normalizedOptions.studyPath,
-    dashboardRole,
   )
-    ? []
-    : options.widgetGroups ||
-      createStudyPackSmartWidgetGroups(
-        pack,
-        normalizedOptions.groupingThreshold,
-      )
+  const generatedGroups =
+    studyPathGeneratedGroups !== null
+      ? studyPathGeneratedGroups
+      : !shouldRenderGeneratedWidgets(
+            normalizedOptions.studyPath,
+            dashboardRole,
+          )
+        ? []
+        : options.widgetGroups ||
+          createStudyPackSmartWidgetGroups(
+            pack,
+            normalizedOptions.groupingThreshold,
+          )
 
   if (generatedGroups.length === 0) {
     return sourceWidgets

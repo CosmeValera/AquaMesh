@@ -1,0 +1,1310 @@
+{
+  "version": 1,
+  "exportedAt": "2026-06-05T22:05:29.717Z",
+  "dashboards": [],
+  "studyGuides": [
+    {
+      "id": "cellular-respiration-study-guide",
+      "title": "Cellular Respiration Study Guide",
+      "folderName": "Cellular Respiration",
+      "studyPath": {
+        "title": "Cellular Respiration Study Guide",
+        "pathId": "cellular-respiration-study-guide",
+        "dashboards": [
+          {
+            "id": "study-pack-dashboard-1780696484319-45132",
+            "name": "01 - Why Cells Need Respiration: Mapping the Energy Landscape",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "01 - Why Cells Need Respiration: Mapping the Energy Landscape Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696484319-248127",
+                          "components": [
+                            {
+                              "id": "01-why-cells-need-respiration-mapping-the-energy-landscape-1-01-why-cells-need-respiration-mapping-the-energy-landscape-1-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "01 - Why Cells Need Respiration: Mapping the Energy Landscape",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "cellular-respiration-study-guide-1-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "cellular-respiration-study-guide",
+                                "studyPathTitle": "Cellular Respiration Study Guide",
+                                "studyPathFolderName": "Cellular Respiration",
+                                "studyPathDashboardKey": "cellular-respiration-study-guide-1",
+                                "studyPathLayoutReason": "A focused lesson layout concentrates attention on the big‑picture map, helping high‑school learners build a mental scaffold before tackling detailed reactions.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "01 - Why Cells Need Respiration: Mapping the Energy Landscape",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 1,
+                                "studyPathLayoutArchetype": "focusLesson",
+                                "studyPathDashboardPurpose": "overview"
+                              }
+                            },
+                            {
+                              "id": "01-why-cells-need-respiration-mapping-the-energy-landscape-1-01-why-cells-need-respiration-mapping-the-energy-landscape-1-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "# Motivation: Energy Needs of Cells\nCells are tiny factories that must constantly power biochemical work—muscle contraction, active transport, biosynthesis, and signaling. The only usable energy currency is **ATP**. To keep a steady supply of ATP, cells must convert chemical energy stored in nutrients into a form that can be quickly accessed. Glucose, a six‑carbon sugar, is the primary fuel for many organisms because its bonds hold a large amount of free energy.\n\n# Big‑Picture Map of Respiration Stages\nCellular respiration is a **four‑step pathway** that transforms one molecule of glucose into carbon dioxide, water, and usable energy:\n1. **Glycolysis** – occurs in the cytosol; splits glucose into two three‑carbon molecules (pyruvate) and produces a net gain of 2 ATP and 2 NADH.\n2. **Link Reaction & Krebs Cycle** – takes place in the mitochondrial matrix; each pyruvate is converted to acetyl‑CoA, then cycles through a series of reactions that release CO₂, generate 2 ATP (per glucose), 6 NADH, and 2 FADH₂.\n3. **Electron Transport Chain (ETC)** – embedded in the inner mitochondrial membrane; electrons from NADH and FADH₂ travel through protein complexes, pumping protons to create an electrochemical gradient.\n4. **Oxidative Phosphorylation** – the proton gradient drives ATP synthase, producing ~34 ATP from the flow of protons back into the matrix.\n\nThe map shows how **energy carriers** (NADH, FADH₂) shuttle electrons from the early stages to the ETC, where the bulk of ATP is synthesized.\n\n# Key Terms: ATP, Glucose, Oxygen\n- **ATP (adenosine triphosphate)** – the universal energy‑transfer molecule; hydrolysis of its terminal phosphate releases ~7.3 kcal mol⁻¹.\n- **Glucose (C₆H₁₂O₆)** – a six‑carbon carbohydrate that can be oxidized completely to CO₂.\n- **Oxygen (O₂)** – the final electron acceptor in the ETC; it combines with electrons and protons to form water, allowing the chain to keep flowing.\n\n# Why Respiration Matters for Organisms\nRespiration links **catabolism** (breakdown of nutrients) to **anabolism** (building of cellular structures). Without a reliable ATP supply, cells cannot maintain ion gradients, synthesize macromolecules, or respond to environmental cues. Moreover, the production of CO₂ and H₂O as waste products is essential for maintaining acid‑base balance in multicellular organisms. Understanding respiration also clarifies why aerobic organisms generate far more ATP than anaerobic pathways like fermentation.\n\n# Quick Recall Prompts (Embedded in the lesson)\n- *What is the overall goal of cellular respiration?* (To convert glucose into ATP, CO₂, and H₂O.)\n- *Name the three stages of respiration in order.* (Glycolysis → Krebs Cycle → Electron Transport Chain.)\n- *Which molecule accepts the final electrons in the ETC?* (Oxygen.)\n\nThese prompts reinforce the orientation map and prepare learners for deeper dives into each stage.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Cellular Respiration",
+            "dashboardKey": "cellular-respiration-study-guide-1",
+            "layoutReason": "A focused lesson layout concentrates attention on the big‑picture map, helping high‑school learners build a mental scaffold before tackling detailed reactions.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 1,
+            "layoutArchetype": "focusLesson",
+            "dashboardPurpose": "overview"
+          },
+          {
+            "id": "study-pack-dashboard-1780696484319-909921",
+            "name": "02 - Glycolysis: From Glucose to Pyruvate",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "02 - Glycolysis: From Glucose to Pyruvate Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696484319-650958",
+                          "components": [
+                            {
+                              "id": "02-glycolysis-from-glucose-to-pyruvate-2-02-glycolysis-from-glucose-to-pyruvate-2-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "02 - Glycolysis: From Glucose to Pyruvate",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "cellular-respiration-study-guide-2-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "cellular-respiration-study-guide",
+                                "studyPathTitle": "Cellular Respiration Study Guide",
+                                "studyPathFolderName": "Cellular Respiration",
+                                "studyPathDashboardKey": "cellular-respiration-study-guide-2",
+                                "studyPathLayoutReason": "The learn‑practice‑tabs layout lets students explore the stepwise pathway (learn tab) and then immediately apply knowledge through embedded recall prompts (practice tab), reducing split‑attention and supporting rapid consolidation.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "02 - Glycolysis: From Glucose to Pyruvate",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 2,
+                                "studyPathLayoutArchetype": "learnPracticeTabs",
+                                "studyPathDashboardPurpose": "lesson"
+                              }
+                            },
+                            {
+                              "id": "02-glycolysis-from-glucose-to-pyruvate-2-02-glycolysis-from-glucose-to-pyruvate-2-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "## Stepwise Breakdown of Glucose\nGlycolysis is the ten‑step enzymatic pathway that converts one molecule of glucose (a six‑carbon sugar) into two molecules of pyruvate (three‑carbon acids). The pathway occurs in the cytosol, does **not** require oxygen, and provides the foundation for later aerobic steps. Each step is catalyzed by a specific enzyme that both speeds the reaction and ensures fidelity.\n\n## Energy Investment Phase (Steps 1‑5)\n1. **Hexokinase** phosphorylates glucose using one ATP, forming glucose‑6‑phosphate (G6P). This traps glucose inside the cell.\n2. **Phosphoglucose isomerase** rearranges G6P into fructose‑6‑phosphate (F6P).\n3. **Phosphofructokinase‑1 (PFK‑1)** adds a second ATP to F6P, yielding fructose‑1,6‑bisphosphate (FBP). This is the committed step; once FBP forms, the molecule is destined for glycolysis.\n4. **Aldolase** cleaves FBP into two three‑carbon sugars: glyceraldehyde‑3‑phosphate (G3P) and dihydroxyacetone phosphate (DHAP).\n5. **Triose phosphate isomerase** rapidly interconverts DHAP into a second G3P, so the pathway proceeds with two G3P molecules.\n\n## Energy Payoff Phase (Steps 6‑10)\n6. **Glyceraldehyde‑3‑phosphate dehydrogenase** oxidizes each G3P, reducing NAD⁺ to NADH and attaching an inorganic phosphate, producing 1,3‑bisphosphoglycerate (1,3‑BPG).\n7. **Phosphoglycerate kinase** transfers a phosphate from 1,3‑BPG to ADP, generating ATP and 3‑phosphoglycerate (3‑PG). Two ATP are made here (one per G3P).\n8. **Phosphoglycerate mutase** moves the phosphate on 3‑PG to produce 2‑phosphoglycerate (2‑PG).\n9. **Enolase** removes water from 2‑PG, forming phosphoenolpyruvate (PEP), a high‑energy compound.\n10. **Pyruvate kinase** transfers the phosphate from PEP to ADP, yielding a second ATP and pyruvate.\n\n## Key Enzymes and Intermediates\n- **Hexokinase** – first phosphorylation, uses ATP.\n- **PFK‑1** – rate‑limiting, regulated by ATP, AMP, and citrate.\n- **Pyruvate kinase** – final step, activated by fructose‑1,6‑bisphosphate (feed‑forward).\n- Intermediates such as **1,3‑BPG** and **PEP** store high‑energy phosphate bonds that drive ATP synthesis.\n\n## Net Yield Summary\nFrom one glucose molecule, glycolysis consumes 2 ATP (investment) and produces 4 ATP (payoff), giving a **net gain of 2 ATP**. It also generates **2 NADH** molecules, which later feed electrons into the electron transport chain. No CO₂ is released during glycolysis; carbon atoms remain in the two pyruvate products, ready for the Krebs cycle if oxygen is present.\n\n### Quick Recall Prompts (embedded in the lesson)\n- *What enzyme commits glucose to glycolysis?* – PFK‑1.\n- *How many ATP molecules are produced per glucose in the payoff phase?* – Four (two per G3P).\n- *Which step creates NADH?* – Step 6, catalyzed by glyceraldehyde‑3‑phosphate dehydrogenase.\n\nThese prompts reinforce the core ideas and prepare the learner for the next dashboard on the Krebs cycle.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Cellular Respiration",
+            "dashboardKey": "cellular-respiration-study-guide-2",
+            "layoutReason": "The learn‑practice‑tabs layout lets students explore the stepwise pathway (learn tab) and then immediately apply knowledge through embedded recall prompts (practice tab), reducing split‑attention and supporting rapid consolidation.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 2,
+            "layoutArchetype": "learnPracticeTabs",
+            "dashboardPurpose": "lesson"
+          },
+          {
+            "id": "study-pack-dashboard-1780696484319-265711",
+            "name": "03 - Krebs Cycle: Turning Acetyl‑CoA into Electron Carriers",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "03 - Krebs Cycle: Turning Acetyl‑CoA into Electron Carriers Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696484319-15679",
+                          "components": [
+                            {
+                              "id": "03-krebs-cycle-turning-acetyl-coa-into-electron-carriers-3-03-krebs-cycle-turning-acetyl-coa-into-electron-carriers-3-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "03 - Krebs Cycle: Turning Acetyl‑CoA into Electron Carriers",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "cellular-respiration-study-guide-3-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "cellular-respiration-study-guide",
+                                "studyPathTitle": "Cellular Respiration Study Guide",
+                                "studyPathFolderName": "Cellular Respiration",
+                                "studyPathDashboardKey": "cellular-respiration-study-guide-3",
+                                "studyPathLayoutReason": "A split‑reference‑exercise layout lets students view the concise concept lesson on one side while instantly accessing supporting artifacts (glossary, contrast table, discussion prompts) for deeper exploration, matching the high‑school learner’s need for visual clarity and concrete examples.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "03 - Krebs Cycle: Turning Acetyl‑CoA into Electron Carriers",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 3,
+                                "studyPathLayoutArchetype": "splitReferenceExercise",
+                                "studyPathDashboardPurpose": "lesson"
+                              }
+                            },
+                            {
+                              "id": "03-krebs-cycle-turning-acetyl-coa-into-electron-carriers-3-03-krebs-cycle-turning-acetyl-coa-into-electron-carriers-3-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "## Why the Krebs Cycle matters\nCellular respiration is the cell’s way of turning the chemical energy stored in glucose into usable ATP. After glycolysis splits glucose into two three‑carbon molecules, those molecules are converted to **acetyl‑CoA**, which then feeds the Krebs cycle. The cycle not only extracts more energy from the carbon skeletons but also creates the electron carriers (NADH, FADH₂) that power the downstream electron transport chain.\n\n## Acetyl‑CoA entry\nAcetyl‑CoA (2‑C) combines with a four‑carbon molecule, **oxaloacetate**, to form the six‑carbon **citrate**. This condensation is catalyzed by **citrate synthase** and is essentially irreversible, committing the carbon atoms to the cycle.\n\n## Citrate formation & isomerization\nCitrate is rearranged to **isocitrate** by **aconitase**. This is a simple isomerization that prepares the molecule for the first oxidative decarboxylation.\n\n## Decarboxylations and NADH production\n1. **Isocitrate dehydrogenase** removes a CO₂ and reduces NAD⁺ to NADH, yielding **α‑ketoglutarate**.\n2. **α‑Ketoglutarate dehydrogenase** performs a second decarboxylation, releasing another CO₂ and generating a second NADH, producing **succinyl‑CoA**.\n\n## Substrate‑level phosphorylation and FADH₂\nSuccinyl‑CoA is converted to **succinate** by **succinyl‑CoA synthetase**, producing **GTP** (or ATP) directly. Succinate is then oxidized to **fumarate** by **succinate dehydrogenase**, reducing **FAD** to **FADH₂**.\n\n## Regeneration of oxaloacetate\nFumarate is hydrated to **malate** (fumarase), and malate is oxidized by **malate dehydrogenase**, producing the third NADH of the turn and regenerating oxaloacetate, ready for another acetyl‑CoA.\n\n## Energy carrier outputs per acetyl‑CoA\n- **3 NADH** → each will donate electrons to the electron transport chain, ultimately yielding ~2.5 ATP each.\n- **1 FADH₂** → yields ~1.5 ATP.\n- **1 GTP (or ATP)** → direct substrate‑level phosphorylation.\n- **2 CO₂** are released, accounting for the carbon atoms originally in acetyl‑CoA.\n\n## Mini‑check\n1. *Recall*: How many NADH molecules are produced per turn of the Krebs cycle?\n2. *Application*: If one glucose yields two acetyl‑CoA molecules, what is the total NADH output from the Krebs cycle alone?\n\nAnswers are provided in the **Answer Key** support artifact.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    },
+                    {
+                      "name": "03 - Krebs Cycle: Turning Acetyl‑CoA into Electron Carriers Summary",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696484319-242177",
+                          "components": [
+                            {
+                              "id": "03-krebs-cycle-turning-acetyl-coa-into-electron-carriers-3-03-krebs-cycle-turning-acetyl-coa-into-electron-carriers-3-summary-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "Summary",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "03-krebs-cycle-turning-acetyl-coa-into-electron-carriers-3-03-krebs-cycle-turning-acetyl-coa-into-electron-carriers-3-summary-summary-list",
+                              "type": "ListBlock",
+                              "props": {
+                                "items": "Acetyl‑CoA + oxaloacetate → citrate (citrate synthase)\nThree NADH, one FADH₂, one GTP produced per turn\nTwo CO₂ molecules released per acetyl‑CoA",
+                                "title": "Key Points on the Krebs Cycle",
+                                "ordered": false,
+                                "__blockType": "ListBlock",
+                                "interactiveChecklist": false
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Cellular Respiration",
+            "dashboardKey": "cellular-respiration-study-guide-3",
+            "layoutReason": "A split‑reference‑exercise layout lets students view the concise concept lesson on one side while instantly accessing supporting artifacts (glossary, contrast table, discussion prompts) for deeper exploration, matching the high‑school learner’s need for visual clarity and concrete examples.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 3,
+            "layoutArchetype": "splitReferenceExercise",
+            "dashboardPurpose": "lesson"
+          },
+          {
+            "id": "study-pack-dashboard-1780696484319-785924",
+            "name": "04 - Electron Transport Chain Worked Example",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "04 - Electron Transport Chain Worked Example Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696484319-791979",
+                          "components": [
+                            {
+                              "id": "04-electron-transport-chain-worked-example-4-04-electron-transport-chain-worked-example-4-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "04 - Electron Transport Chain Worked Example",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "cellular-respiration-study-guide-4-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "cellular-respiration-study-guide",
+                                "studyPathTitle": "Cellular Respiration Study Guide",
+                                "studyPathFolderName": "Cellular Respiration",
+                                "studyPathDashboardKey": "cellular-respiration-study-guide-4",
+                                "studyPathLayoutReason": "A multi‑widget lab lets students view the electron flow diagram, read the step‑by‑step narrative, and interact with a quick‑check table—all in one screen, reducing split‑attention and supporting concrete visual learning. The checkpointRubric is tied to an embedded checkpoint widget so learners can submit their answers and receive rubric‑based evaluation instantly.",
+                                "studyPathPracticeType": "mixed",
+                                "studyPathDashboardName": "04 - Electron Transport Chain Worked Example",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 4,
+                                "studyPathLayoutArchetype": "multiWidgetLab",
+                                "studyPathDashboardPurpose": "practice"
+                              }
+                            },
+                            {
+                              "id": "04-electron-transport-chain-worked-example-4-04-electron-transport-chain-worked-example-4-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "### Entry of NADH at Complex I\nWhen NADH is oxidized in the mitochondrial matrix, two high‑energy electrons are transferred to **Complex I (NADH:ubiquinone oxidoreductase)**. The electrons travel through a series of iron‑sulfur (Fe‑S) clusters, releasing energy that is used to pump **four protons** from the matrix into the inter‑membrane space. The oxidized NAD⁺ returns to the matrix to be regenerated in glycolysis or the Krebs cycle.\n\n### Transfer to Coenzyme Q (CoQ)\nThe electrons leave Complex I bound to **Coenzyme Q (ubiquinone)**, a lipid‑soluble carrier that shuttles them through the inner membrane to **Complex III**. CoQ picks up the electrons and, in the process, picks up two protons from the matrix, becoming ubiquinol (CoQH₂).\n\n### Q‑Cycle at Complex III\nAt **Complex III (cytochrome bc₁ complex)** the Q‑cycle splits the two electrons. One electron travels to cytochrome c via the Rieske iron‑sulfur protein, while the other returns to a second CoQ molecule, regenerating ubiquinone. The energy released pumps **four additional protons** across the membrane (two per electron pair). The net result for one NADH is **eight protons** moved so far.\n\n### Electron Transfer to Cytochrome c and Reduction of Oxygen at Complex IV\n**Cytochrome c**, a small soluble protein, ferries the remaining electrons to **Complex IV (cytochrome c oxidase)**. Here the electrons reduce molecular **O₂** to water. For each NADH, Complex IV pumps **two more protons**, bringing the total to **ten protons** per NADH molecule.\n\n### Proton Gradient Summary\nThe ten protons pumped by Complexes I, III, and IV create an electrochemical gradient (ΔpH + Δψ) across the inner mitochondrial membrane. This gradient stores potential energy that the cell can harness.\n\n### ATP Synthesis via ATP Synthase\n**ATP synthase (Complex V)** allows protons to flow back into the matrix through its F₀ channel. The flow drives rotation of the F₁ catalytic domain, synthesizing **≈2.5 ATP** per NADH (≈3.3 kJ · mol⁻¹ per proton, with ten protons yielding about 2.5 ATP). The exact yield can vary, but the textbook value of 2.5 ATP per NADH is a useful approximation for calculations.\n\n### Worked Example Recap\n1. **Start** – One NADH in the matrix.\n2. **Complex I** – 4 protons pumped.\n3. **CoQ** – Carries electrons to Complex III.\n4. **Complex III (Q‑cycle)** – 4 more protons pumped.\n5. **Cytochrome c → Complex IV** – 2 protons pumped, O₂ reduced to H₂O.\n6. **Total protons** – 10 per NADH.\n7. **ATP synthase** – Uses the gradient to generate ~2.5 ATP.\n\nBy tracing a single NADH through the chain, learners see how the sequential complexes, coordinated proton pumping, and final oxygen reduction together power oxidative phosphorylation.\n\n---\n**Retrieval practice** (see discussion prompts) can be used to reinforce each step, and the contrast table helps differentiate NADH from FADH₂ contributions.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    },
+                    {
+                      "name": "04 - Electron Transport Chain Worked Example Summary",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696484319-834641",
+                          "components": [
+                            {
+                              "id": "04-electron-transport-chain-worked-example-4-04-electron-transport-chain-worked-example-4-summary-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "Summary",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "04-electron-transport-chain-worked-example-4-04-electron-transport-chain-worked-example-4-summary-summary-list",
+                              "type": "ListBlock",
+                              "props": {
+                                "items": "NADH donates electrons to Complex I, initiating the chain.\nComplexes I, III, and IV pump protons to build a gradient.\nOxygen serves as the terminal electron acceptor, forming water.\nThe proton gradient drives ATP synthase to produce ATP.",
+                                "title": "Core Concepts of the Mitochondrial Electron Transport Chain",
+                                "ordered": false,
+                                "__blockType": "ListBlock",
+                                "interactiveChecklist": false
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Cellular Respiration",
+            "dashboardKey": "cellular-respiration-study-guide-4",
+            "layoutReason": "A multi‑widget lab lets students view the electron flow diagram, read the step‑by‑step narrative, and interact with a quick‑check table—all in one screen, reducing split‑attention and supporting concrete visual learning. The checkpointRubric is tied to an embedded checkpoint widget so learners can submit their answers and receive rubric‑based evaluation instantly.",
+            "practiceType": "mixed",
+            "dashboardCount": 5,
+            "dashboardIndex": 4,
+            "layoutArchetype": "multiWidgetLab",
+            "dashboardPurpose": "practice"
+          },
+          {
+            "id": "study-pack-dashboard-1780696484319-255180",
+            "name": "5 - Putting It All Together: Calculating Net ATP from One Glucose",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "5 - Putting It All Together: Calculating Net ATP from One Glucose Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696484319-133663",
+                          "components": [
+                            {
+                              "id": "5-putting-it-all-together-calculating-net-atp-from-one-glucose-5-5-putting-it-all-together-calculating-net-atp-from-one-glucose-5-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "5 - Putting It All Together: Calculating Net ATP from One Glucose",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "cellular-respiration-study-guide-5-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "cellular-respiration-study-guide",
+                                "studyPathTitle": "Cellular Respiration Study Guide",
+                                "studyPathFolderName": "Cellular Respiration",
+                                "studyPathDashboardKey": "cellular-respiration-study-guide-5",
+                                "studyPathLayoutReason": "An overview‑review layout lets learners see the whole ATP calculation at once while still providing focused practice and flashcards to solidify each component.",
+                                "studyPathPracticeType": "mixed",
+                                "studyPathDashboardName": "5 - Putting It All Together: Calculating Net ATP from One Glucose",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 5,
+                                "studyPathLayoutArchetype": "overviewReview",
+                                "studyPathDashboardPurpose": "finalReview"
+                              }
+                            },
+                            {
+                              "id": "5-putting-it-all-together-calculating-net-atp-from-one-glucose-5-5-putting-it-all-together-calculating-net-atp-from-one-glucose-5-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "## Stage Yields Recap\n- **Glycolysis** (cytosol): 2 ATP produced by substrate‑level phosphorylation and 2 NADH molecules that must be shuttled into the mitochondrion.\n- **Krebs Cycle** (mitochondrial matrix): For each glucose (two turns) the cycle generates 2 ATP (as GTP), 6 NADH, and 2 FADH₂.\n\n## ATP from Electron Carriers\n- Each **NADH** that reaches the inner mitochondrial membrane yields roughly **2.5 ATP** via the electron transport chain (ETC).\n- Each **FADH₂** yields about **1.5 ATP**.\n- Cytosolic NADH can enter the mitochondrion via two shuttles:\n  - **Malate‑aspartate shuttle** – no ATP cost, NADH retains the full 2.5‑ATP value.\n  - **Glycerol‑phosphate shuttle** – transfers electrons to FAD, reducing the yield to ~1.5 ATP per NADH.\n\n## Putting the Numbers Together\n1. **Substrate‑level ATP**: 2 (glycolysis) + 2 (Krebs) = **4 ATP**.\n2. **NADH‑derived ATP**:\n   - Glycolytic NADH: 2 × 2.5 = **5 ATP** (malate‑aspartate) or 2 × 1.5 = **3 ATP** (glycerol‑phosphate).\n   - Krebs NADH: 6 × 2.5 = **15 ATP**.\n3. **FADH₂‑derived ATP**: 2 × 1.5 = **3 ATP**.\n4. **Total** (malate‑aspartate): 4 + 5 + 15 + 3 = **27 ATP**. Adding the 2‑ATP cost of transporting ADP/Pi into the matrix brings the commonly quoted range to **30–32 ATP**.\n5. **Total** (glycerol‑phosphate): 4 + 3 + 15 + 3 = **25 ATP**, which after the same transport adjustments yields **≈30 ATP**.\n\n## Why Numbers Vary\n- Different cell types favor different NADH shuttles, altering the effective ATP per cytosolic NADH.\n- The proton‑to‑ATP ratio of ATP synthase can shift between 3 and 4 protons per ATP, affecting the conversion factor.\n- Experimental measurements in isolated mitochondria often report slightly higher yields than in intact cells because of membrane potential losses.\n\n## Check Your Understanding\n- **Recall**: List the exact number of NADH and FADH₂ molecules produced from one glucose.\n- **Application**: Using the malate‑aspartate shuttle, calculate the net ATP yield step‑by‑step.\n- **Error Diagnosis**: If you obtain 28 ATP, identify which conversion factor or shuttle assumption is likely incorrect.\n- **Transfer**: Explain how a defect in Complex IV (cytochrome c oxidase) would impact the overall ATP yield.\n\nThese prompts reinforce the synthesis of the three stages and prepare you for higher‑order questions on metabolic efficiency.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Cellular Respiration",
+            "dashboardKey": "cellular-respiration-study-guide-5",
+            "layoutReason": "An overview‑review layout lets learners see the whole ATP calculation at once while still providing focused practice and flashcards to solidify each component.",
+            "practiceType": "mixed",
+            "dashboardCount": 5,
+            "dashboardIndex": 5,
+            "layoutArchetype": "overviewReview",
+            "dashboardPurpose": "finalReview"
+          }
+        ],
+        "folderName": "Cellular Respiration",
+        "selectedIndex": 0,
+        "pinnedDashboardKeys": []
+      },
+      "createdAt": "2026-06-05T21:54:44.319+00:00",
+      "updatedAt": "2026-06-05T21:57:37.224372+00:00"
+    },
+    {
+      "id": "causes-and-consequences-of-the-french-revolution",
+      "title": "Causes and Consequences of the French Revolution",
+      "folderName": "French Revolution Study Guide",
+      "studyPath": {
+        "title": "Causes and Consequences of the French Revolution",
+        "pathId": "causes-and-consequences-of-the-french-revolution",
+        "dashboards": [
+          {
+            "id": "study-pack-dashboard-1780696424964-588535",
+            "name": "01 - Why the French Revolution mattered: an overview",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "01 - Why the French Revolution mattered: an overview Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696424964-984402",
+                          "components": [
+                            {
+                              "id": "01-why-the-french-revolution-mattered-an-overview-1-01-why-the-french-revolution-mattered-an-overview-1-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "01 - Why the French Revolution mattered: an overview",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "causes-and-consequences-of-the-french-revolution-1-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "causes-and-consequences-of-the-french-revolution",
+                                "studyPathTitle": "Causes and Consequences of the French Revolution",
+                                "studyPathFolderName": "French Revolution Study Guide",
+                                "studyPathDashboardKey": "causes-and-consequences-of-the-french-revolution-1",
+                                "studyPathLayoutReason": "A focus‑lesson layout concentrates attention on a single, high‑impact orientation, giving students a clear mental map before they dive into deeper cause‑and‑effect analysis.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "01 - Why the French Revolution mattered: an overview",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 1,
+                                "studyPathLayoutArchetype": "focusLesson",
+                                "studyPathDashboardPurpose": "overview"
+                              }
+                            },
+                            {
+                              "id": "01-why-the-french-revolution-mattered-an-overview-1-01-why-the-french-revolution-mattered-an-overview-1-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "### Why the French Revolution Exists\nThe French Revolution did not appear in a vacuum. By the late 18th century France was a **financially exhausted monarchy** burdened by wars, a bloated bureaucracy, and a tax system that spared the privileged nobility and clergy. At the same time, **Enlightenment philosophers**—Voltaire, Rousseau, Montesquieu—were circulating ideas about liberty, equality, and popular sovereignty. Those ideas gave ordinary people a language to articulate their grievances.\n\n### Mental Map of the Revolution\n1. **Social Inequality** → Three estates (Clergy, Nobility, Third Estate) each with distinct rights and tax obligations.  \n2. **Fiscal Crisis** → Crown’s debt forces Louis XVI to call the **Estates‑General** (1789).  \n3. **Enlightenment Ideas** → Calls for liberty and representation fuel the **National Assembly**.  \n4. **Abolition of Feudalism** → National Assembly votes away seigneurial dues, reshaping French society.  \n5. **Revolutionary Momentum** → Radicalization, the Reign of Terror, and eventually the rise of **Napoleon**.  \n6. **Global Spread** → Revolutionary ideals inspire movements in Europe and the Americas.\n\n### Core Vocabulary (Mini‑Glossary)\n- **Estates‑General**: A traditional assembly of the three estates summoned to advise the king on fiscal matters.  \n- **National Assembly**: The body formed by the Third Estate in June 1789, claiming to represent the nation.  \n- **Feudalism**: The medieval system of land‑based obligations that the Revolution dismantled.  \n- **Reign of Terror**: 1793‑1794 period of radical Jacobin rule marked by mass executions.\n\n### First Useful Example\nWhen the king’s finance minister, **Charles Alexandre de Calonne**, proposed new taxes on the privileged estates, the **Third Estate** protested, demanding a *single* legislative body with equal voting. Their refusal to accept the traditional *voting by order* forced the Estates‑General to transform into the **National Assembly**, a decisive break from the old regime.\n\n### Where to Go Next\nAfter this orientation, learners should explore the **social and economic grievances** of each estate, then trace how **Enlightenment ideas** turned those grievances into a political program. Subsequent lessons will map the **consequences**—from the abolition of feudal privileges to the diffusion of revolutionary rhetoric across the Atlantic.\n\n### Quick Recall Prompts (Embedded Retrieval Practice)\n- What year did the French Revolution begin?  \n- Name the three estates and one grievance for each.  \n- Which Enlightenment thinker argued that legitimate political authority derives from the consent of the governed?\n\n### Discussion Prompt\n*If the French monarchy had successfully reformed its tax system without calling the Estates‑General, could the Revolution have been avoided?*",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "French Revolution Study Guide",
+            "dashboardKey": "causes-and-consequences-of-the-french-revolution-1",
+            "layoutReason": "A focus‑lesson layout concentrates attention on a single, high‑impact orientation, giving students a clear mental map before they dive into deeper cause‑and‑effect analysis.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 1,
+            "layoutArchetype": "focusLesson",
+            "dashboardPurpose": "overview"
+          },
+          {
+            "id": "study-pack-dashboard-1780696424964-390969",
+            "name": "02 - Root causes: social inequality, fiscal crisis, and Enlightenment ideas",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "02 - Root causes: social inequality, fiscal crisis, and Enlightenment ideas Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696424964-883950",
+                          "components": [
+                            {
+                              "id": "02-root-causes-social-inequality-fiscal-crisis-and-enlightenment-ideas-2-02-root-causes-social-inequality-fiscal-crisis-and-enlightenment-ideas-2-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "02 - Root causes: social inequality, fiscal crisis, and Enlightenment ideas",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "causes-and-consequences-of-the-french-revolution-2-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "causes-and-consequences-of-the-french-revolution",
+                                "studyPathTitle": "Causes and Consequences of the French Revolution",
+                                "studyPathFolderName": "French Revolution Study Guide",
+                                "studyPathDashboardKey": "causes-and-consequences-of-the-french-revolution-2",
+                                "studyPathLayoutReason": "The learn‑practice‑tabs layout lets students first absorb the conceptual narrative, then instantly apply knowledge through embedded mini‑checks, keeping cognitive load low while reinforcing retention.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "02 - Root causes: social inequality, fiscal crisis, and Enlightenment ideas",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 2,
+                                "studyPathLayoutArchetype": "learnPracticeTabs",
+                                "studyPathDashboardPurpose": "lesson"
+                              }
+                            },
+                            {
+                              "id": "02-root-causes-social-inequality-fiscal-crisis-and-enlightenment-ideas-2-02-root-causes-social-inequality-fiscal-crisis-and-enlightenment-ideas-2-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "### Social Inequality and the Three Estates\nThe Ancien Régime organized French society into three estates. The **First Estate** (clergy) owned about 0.5 % of the population but collected tithes and enjoyed tax exemptions. The **Second Estate** (nobility) comprised roughly 2 % of the people, held vast land, and were also largely exempt from direct taxes. The **Third Estate** (commoners) made up 97 % of the population, shouldered the bulk of taxation, and faced legal restrictions that limited political voice. Their grievances—high taxes, lack of representation, and feudal dues—created a volatile mix of resentment.\n\n### Fiscal Crisis and the Tax Burden\nBy the 1780s France faced a severe fiscal crisis. Decades of war (the Seven Years’ War, American Revolution) and lavish court spending left the crown deeply in debt. The monarchy relied on **extraordinary taxes** (the *vingtième* and *capitation*) that disproportionately affected peasants, while the privileged estates remained largely untaxed. Attempts to reform the tax system were blocked by the Parlements, leading to a budget shortfall that forced Louis XVI to call the **Estates‑General** in 1789—a body that had not met since 1614.\n\n### Enlightenment Ideas as Intellectual Fuel\nParallel to economic strain, Enlightenment philosophers circulated ideas that questioned traditional authority. **John Locke** emphasized natural rights and consent of the governed; **Montesquieu** advocated separation of powers; **Rousseau** argued that sovereignty resides with the people. These concepts coalesced into a rallying cry of **liberty, equality, fraternity**, providing a moral justification for overturning the old order.\n\n### From Estates‑General to National Assembly\nWhen the Estates‑General convened, the Third Estate demanded voting by head rather than by estate, a procedural change that would give them a majority. The king’s refusal prompted the Third Estate to declare itself the **National Assembly**, asserting that they represented the nation itself. This act transformed a fiscal‑driven meeting into a political revolution, setting the stage for the abolition of feudal privileges and the eventual radical phase of the Revolution.\n\n### Mini‑Check\n- **Recall**: List the three estates and one grievance for each.\n- **Application**: Explain why the king’s refusal to allow voting by head accelerated the revolutionary momentum.\n- **Boundary case**: If the clergy had agreed to share tax burdens, would the Revolution have been delayed? Discuss the interplay of economic and ideological factors.\n\n### Quick Recall Prompts (embedded in the lesson)\n1. *What percentage of the population did the nobility represent?*  \n2. *Name one Enlightenment principle that inspired revolutionary demands.*  \n3. *Why was the calling of the Estates‑General in 1789 historically significant?*",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "French Revolution Study Guide",
+            "dashboardKey": "causes-and-consequences-of-the-french-revolution-2",
+            "layoutReason": "The learn‑practice‑tabs layout lets students first absorb the conceptual narrative, then instantly apply knowledge through embedded mini‑checks, keeping cognitive load low while reinforcing retention.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 2,
+            "layoutArchetype": "learnPracticeTabs",
+            "dashboardPurpose": "lesson"
+          },
+          {
+            "id": "study-pack-dashboard-1780696424964-249341",
+            "name": "03 - From Estates‑General to National Assembly: a step‑by‑step example",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "03 - From Estates‑General to National Assembly: a step‑by‑step example Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696424964-625475",
+                          "components": [
+                            {
+                              "id": "03-from-estates-general-to-national-assembly-a-step-by-step-example-3-03-from-estates-general-to-national-assembly-a-step-by-step-example-3-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "03 - From Estates‑General to National Assembly: a step‑by‑step example",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "causes-and-consequences-of-the-french-revolution-3-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "causes-and-consequences-of-the-french-revolution",
+                                "studyPathTitle": "Causes and Consequences of the French Revolution",
+                                "studyPathFolderName": "French Revolution Study Guide",
+                                "studyPathDashboardKey": "causes-and-consequences-of-the-french-revolution-3",
+                                "studyPathLayoutReason": "A split‑reference‑exercise layout lets students see the worked example side‑by‑side with supporting artifacts (glossary, contrast table, discussion prompts), reducing cognitive load while they trace each transformation step.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "03 - From Estates‑General to National Assembly: a step‑by‑step example",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 3,
+                                "studyPathLayoutArchetype": "splitReferenceExercise",
+                                "studyPathDashboardPurpose": "lesson"
+                              }
+                            },
+                            {
+                              "id": "03-from-estates-general-to-national-assembly-a-step-by-step-example-3-03-from-estates-general-to-national-assembly-a-step-by-step-example-3-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "### Calling the Estates‑General\nIn May 1789 Louis XVI, facing a dire fiscal crisis, summoned the **Estates‑General**—the traditional representative body of the **First Estate** (clergy), **Second Estate** (nobility), and **Third Estate** (commoners).  The king hoped the assembly would approve new taxes, but the meeting quickly exposed deep **social inequality**: the privileged estates enjoyed tax exemptions while the Third Estate shouldered the bulk of the burden.  The Third Estate demanded *double representation* and *voting by head* rather than by estate, arguing that their larger population warranted greater influence.\n\n### The Tennis Court Oath\nWhen the king’s delegates refused to recognize the Third Estate’s demand for a separate voting bloc, the Third Estate’s leaders—most notably **Abbé Sieyès** and **Honoré Mirabeau**—declared themselves the **National Assembly** on June 17, 1789.  Locked out of their meeting hall, they reconvened in a nearby indoor tennis court.  There, they took the **Tennis Court Oath**, pledging not to disperse until a constitution was drafted.  This oath was a turning point: it transformed a grievance‑driven assembly into a **political body** asserting sovereign authority.  The oath also signaled the spread of **Enlightenment ideas**—liberty, equality, and popular sovereignty—into concrete action.\n\n### Formation of the National Assembly\nOn June 20, the king’s troops attempted to disperse the assembly, but the crowd’s resistance forced Louis XVI to recognize the **National Assembly** in the **Tennis Court Oath**’s aftermath.  The new body immediately set about **abolishing feudal privileges**, issuing the *Declaration of the Rights of Man and of the Citizen* (August 1789), and **reforming taxation** to address the fiscal crisis.  By declaring themselves the legitimate voice of the nation, the National Assembly shifted the revolution from a **parliamentary dispute** to a **mass movement** that would reshape French society and inspire revolutionary movements worldwide.\n\n### Why Each Step Matters\n1. **Summoning the Estates‑General** exposed the structural inequities that had long simmered under the Ancien Régime.  Without this crisis, the revolutionary spark might never have ignited.\n2. **The Tennis Court Oath** provided a clear, collective commitment that unified the Third Estate around a shared purpose, turning abstract Enlightenment ideals into a concrete political program.\n3. **Recognition of the National Assembly** marked the moment the monarchy’s authority was openly challenged, paving the way for radical reforms such as the abolition of feudalism and the eventual rise of Napoleon.\n\n### Transfer Case\nImagine a modern parliament where a minority bloc refuses to accept a proposed tax reform that disproportionately harms lower‑income citizens.  If that bloc declares a new “People’s Assembly” and vows to draft its own fiscal policy, the scenario mirrors the French Revolution’s shift: a **structural grievance → collective oath → new governing body**.  Understanding this pattern helps students recognize how political crises can catalyze systemic change.\n\n---\n**Quick Recall Prompts**\n- What was the primary grievance of the Third Estate at the Estates‑General?\n- How did the Tennis Court Oath change the political landscape?\n- Which king finally recognized the National Assembly, and why?\n- In what way did Enlightenment ideas shape the National Assembly’s agenda?",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    },
+                    {
+                      "name": "03 - From Estates‑General to National Assembly: a step‑by‑step example Summary",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696424964-869372",
+                          "components": [
+                            {
+                              "id": "03-from-estates-general-to-national-assembly-a-step-by-step-example-3-03-from-estates-general-to-national-assembly-a-step-by-step-example-3-summary-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "Summary",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "03-from-estates-general-to-national-assembly-a-step-by-step-example-3-03-from-estates-general-to-national-assembly-a-step-by-step-example-3-summary-summary-list",
+                              "type": "ListBlock",
+                              "props": {
+                                "items": "Primary accounts from the National Assembly’s proceedings (1789‑1791)\nFiscal records showing the monarchy’s debt crisis\nEnlightenment texts by Voltaire, Rousseau, and Montesquieu",
+                                "title": "Key Sources on the French Revolution",
+                                "ordered": false,
+                                "__blockType": "ListBlock",
+                                "interactiveChecklist": false
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "French Revolution Study Guide",
+            "dashboardKey": "causes-and-consequences-of-the-french-revolution-3",
+            "layoutReason": "A split‑reference‑exercise layout lets students see the worked example side‑by‑side with supporting artifacts (glossary, contrast table, discussion prompts), reducing cognitive load while they trace each transformation step.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 3,
+            "layoutArchetype": "splitReferenceExercise",
+            "dashboardPurpose": "lesson"
+          },
+          {
+            "id": "study-pack-dashboard-1780696424964-453479",
+            "name": "Cause‑and‑Consequence Matching Activity – French Revolution",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "Cause‑and‑Consequence Matching Activity – French Revolution Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696424964-148995",
+                          "components": [
+                            {
+                              "id": "cause-and-consequence-matching-activity-french-revolution-4-cause-and-consequence-matching-activity-french-revolution-4-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "Cause‑and‑Consequence Matching Activity – French Revolution",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "causes-and-consequences-of-the-french-revolution-4-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "causes-and-consequences-of-the-french-revolution",
+                                "studyPathTitle": "Causes and Consequences of the French Revolution",
+                                "studyPathFolderName": "French Revolution Study Guide",
+                                "studyPathDashboardKey": "causes-and-consequences-of-the-french-revolution-4",
+                                "studyPathLayoutReason": "An overview‑review layout clusters the matching activity, feedback, and transfer challenge in a single scrollable view, reducing navigation overhead and allowing learners to see cause‑effect relationships holistically before moving to independent practice.",
+                                "studyPathPracticeType": "mixed",
+                                "studyPathDashboardName": "Cause‑and‑Consequence Matching Activity – French Revolution",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 4,
+                                "studyPathLayoutArchetype": "overviewReview",
+                                "studyPathDashboardPurpose": "practice"
+                              }
+                            },
+                            {
+                              "id": "cause-and-consequence-matching-activity-french-revolution-4-cause-and-consequence-matching-activity-french-revolution-4-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "### Matching Exercise Overview\nIn this checkpoint you will work with an interactive drag‑and‑drop board that lists eight major causes on the left and eight major consequences on the right. Your task is to draw a line from each cause to the consequence you think it most directly produced. After you submit, the system reveals the correct pairings and a brief explanation for each link.\n\n### How to Match Causes and Consequences\n1. **Read each cause statement carefully** – note the underlying driver (e.g., fiscal strain, Enlightenment philosophy, social inequality).\n2. **Scan the consequence list** – look for outcomes that reflect a political shift, a social restructuring, or a ripple effect beyond France.\n3. **Make a tentative match** – you can change any line before final submission.\n4. **Submit** – the platform will highlight correct matches in green and incorrect ones in red.\n5. **Review the feedback** – each explanation ties the cause to the consequence with a concrete historical example (e.g., “Fiscal crisis → abolition of feudal dues”).\n\n### Feedback Mechanics\n- **Correct Pair**: A concise paragraph explains why historians view the link as causal, citing a specific event or decree.\n- **Incorrect Pair**: The system points out the logical gap and suggests a more plausible match, encouraging you to reconsider the underlying mechanism.\n\n### Common Pitfall to Watch\nA frequent misconception is to assume a single cause leads directly to a dramatic event (e.g., “Economic crisis caused the Reign of Terror directly”). In reality, the Reign of Terror emerged from a cascade of political power struggles after the initial fiscal crisis. When you see a consequence that seems extreme, ask whether an intermediate step (like the rise of the Committee of Public Safety) is missing.\n\n### Transfer Challenge\nAfter completing the matching, create your own cause‑consequence map for the **Rise of Napoleon**. Identify at least three antecedent causes (e.g., power vacuum, military victories, political instability) and three downstream consequences (e.g., spread of Napoleonic Code, reshaping of European borders, rise of nationalism). Write a brief paragraph explaining one of your links and why it matters for understanding the broader revolutionary legacy.\n\n### Quick Recall Prompts\n- *Recall*: Name one fiscal measure that intensified the monarchy’s debt.\n- *Recall*: Which Enlightenment philosopher argued for popular sovereignty?\n- *Application*: If the Estates‑General had remained a purely advisory body, how might the abolition of feudalism have been delayed?\n\nThese prompts can be revisited anytime to reinforce the mental map you are building.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "French Revolution Study Guide",
+            "dashboardKey": "causes-and-consequences-of-the-french-revolution-4",
+            "layoutReason": "An overview‑review layout clusters the matching activity, feedback, and transfer challenge in a single scrollable view, reducing navigation overhead and allowing learners to see cause‑effect relationships holistically before moving to independent practice.",
+            "practiceType": "mixed",
+            "dashboardCount": 5,
+            "dashboardIndex": 4,
+            "layoutArchetype": "overviewReview",
+            "dashboardPurpose": "practice"
+          },
+          {
+            "id": "study-pack-dashboard-1780696424964-136161",
+            "name": "05 - Summarizing the Revolution: causes, events, and legacy",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "05 - Summarizing the Revolution: causes, events, and legacy Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696424964-853325",
+                          "components": [
+                            {
+                              "id": "05-summarizing-the-revolution-causes-events-and-legacy-5-05-summarizing-the-revolution-causes-events-and-legacy-5-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "05 - Summarizing the Revolution: causes, events, and legacy",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "causes-and-consequences-of-the-french-revolution-5-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "causes-and-consequences-of-the-french-revolution",
+                                "studyPathTitle": "Causes and Consequences of the French Revolution",
+                                "studyPathFolderName": "French Revolution Study Guide",
+                                "studyPathDashboardKey": "causes-and-consequences-of-the-french-revolution-5",
+                                "studyPathLayoutReason": "An overview‑review layout lets learners see the big‑picture narrative, connect causes to outcomes, and consolidate knowledge before a final assessment.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "05 - Summarizing the Revolution: causes, events, and legacy",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 5,
+                                "studyPathLayoutArchetype": "overviewReview",
+                                "studyPathDashboardPurpose": "finalReview"
+                              }
+                            },
+                            {
+                              "id": "05-summarizing-the-revolution-causes-events-and-legacy-5-05-summarizing-the-revolution-causes-events-and-legacy-5-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "### Recap of Major Causes\nThe French Revolution erupted in 1789 because three interlocking pressures destabilized the Ancien Régime.  First, **social inequality** was stark: the First Estate (clergy) and Second Estate (nobility) enjoyed tax exemptions, while the Third Estate—peasants, artisans, and the burgeoning bourgeoisie—shouldered the bulk of fiscal burdens.  Their grievances ranged from feudal dues to a lack of political voice.  Second, a **fiscal crisis** crippled the monarchy.  Decades of costly wars (including the Seven Years’ War and support for the American Revolution) depleted the treasury, and Louis XVI’s attempts to reform taxation met fierce aristocratic resistance.  Third, **Enlightenment ideas**—especially notions of liberty, equality, and popular sovereignty articulated by Voltaire, Rousseau, and Montesquieu—provided an intellectual framework that turned economic discontent into a demand for systemic change.\n\n### Key Outcomes and Reforms\nWhen the Estates‑General convened in May 1789, the Third Estate’s declaration of a **National Assembly** marked a decisive break from feudal tradition.  Over the next decade the Assembly enacted sweeping reforms: the **Abolition of Feudalism** (August 1789) eliminated seigneurial dues; the **Declaration of the Rights of Man and of the Citizen** codified universal rights; and the **Civil Constitution of the Clergy** re‑organized the Church under state control.  Politically, the monarchy was stripped of absolute power, culminating in the 1792 proclamation of the First French Republic.  Socially, the Revolution unleashed a new civic identity, promoted merit‑based advancement, and sparked a secular public sphere.\n\n### Long‑Term Legacy and Global Influence\nThe Revolution’s ripple effects extended far beyond France’s borders.  Domestically, the radical phase (1793‑1794) demonstrated the dangers of unchecked popular power, prompting later leaders to balance liberty with order.  Internationally, the revolutionary model inspired movements in Haiti, Latin America, and the 19th‑century European liberal revolts.  The Napoleonic Wars (1799‑1815) spread French legal codes, administrative reforms, and the principle of nation‑state sovereignty across Europe, reshaping the continent’s political map.  In the long view, the French Revolution planted the seed for modern democracy, human rights discourse, and the idea that citizens can demand systemic change.\n\n---\n**Retrieval Practice**\n- Summarize the main cause of the Revolution in one sentence.\n- State one major consequence for French society and one for world politics.\n\n**Discussion Prompts**\n1. How did the fiscal crisis create a bridge between economic hardship and Enlightenment ideals?\n2. In what ways did the abolition of feudalism alter everyday life for peasants?\n3. Compare the French revolutionary legacy with that of the American Revolution—what similarities and differences stand out?\n\n---\n**Quick Check**\n- *Misconception*: \"The Revolution ended with Napoleon’s rise immediately.\"  *Clarification*: The Revolution’s institutional changes persisted after Napoleon seized power; his regime both built on and altered revolutionary principles.\n\n---\n**Next Steps**\nStudents should map each cause to its primary outcome, then trace how those outcomes fed into later global movements.  This mental map will prepare them for deeper analysis of 19th‑century nationalism and the spread of democratic ideals.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "French Revolution Study Guide",
+            "dashboardKey": "causes-and-consequences-of-the-french-revolution-5",
+            "layoutReason": "An overview‑review layout lets learners see the big‑picture narrative, connect causes to outcomes, and consolidate knowledge before a final assessment.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 5,
+            "layoutArchetype": "overviewReview",
+            "dashboardPurpose": "finalReview"
+          }
+        ],
+        "folderName": "French Revolution Study Guide",
+        "selectedIndex": 0,
+        "pinnedDashboardKeys": []
+      },
+      "createdAt": "2026-06-05T21:53:44.964+00:00",
+      "updatedAt": "2026-06-05T21:57:37.216605+00:00"
+    },
+    {
+      "id": "supply-and-demand-how-prices-respond-in-real-markets",
+      "title": "Supply and Demand: How Prices Respond in Real Markets",
+      "folderName": "Supply and Demand Study Guide",
+      "studyPath": {
+        "title": "Supply and Demand: How Prices Respond in Real Markets",
+        "pathId": "supply-and-demand-how-prices-respond-in-real-markets",
+        "dashboards": [
+          {
+            "id": "study-pack-dashboard-1780696335001-898635",
+            "name": "01 - Why Prices Move: The Role of Supply and Demand",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "01 - Why Prices Move: The Role of Supply and Demand Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696335001-167373",
+                          "components": [
+                            {
+                              "id": "01-why-prices-move-the-role-of-supply-and-demand-1-01-why-prices-move-the-role-of-supply-and-demand-1-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "01 - Why Prices Move: The Role of Supply and Demand",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "supply-and-demand-how-prices-respond-in-real-markets-1-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "supply-and-demand-how-prices-respond-in-real-markets",
+                                "studyPathTitle": "Supply and Demand: How Prices Respond in Real Markets",
+                                "studyPathFolderName": "Supply and Demand Study Guide",
+                                "studyPathDashboardKey": "supply-and-demand-how-prices-respond-in-real-markets-1",
+                                "studyPathLayoutReason": "A focused lesson layout lets learners build a mental map of the key concepts before tackling graph interpretation, reducing cognitive overload and establishing a solid foundation for later practice.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "01 - Why Prices Move: The Role of Supply and Demand",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 1,
+                                "studyPathLayoutArchetype": "focusLesson",
+                                "studyPathDashboardPurpose": "overview"
+                              }
+                            },
+                            {
+                              "id": "01-why-prices-move-the-role-of-supply-and-demand-1-01-why-prices-move-the-role-of-supply-and-demand-1-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "# Why Prices Move: The Role of Supply and Demand\n\n## Real‑World Hook\nImagine stepping into a gas station and seeing the price per gallon jump from $2.79 to $3.09 overnight. Or notice a sudden surge in the price of a new smartphone model after its launch. These everyday moments are not random; they are the visible outcomes of a market mechanism that balances what producers are willing to sell with what consumers are willing to buy.\n\n## Core Vocabulary Map\n| Concept | Definition |\n|---|---|\n| **Supply** | The quantity of a good that producers are ready to sell at each possible price. |\n| **Demand** | The quantity of a good that consumers are ready to purchase at each possible price. |\n| **Equilibrium Price** | The price at which the amount supplied equals the amount demanded. |\n| **Equilibrium Quantity** | The quantity exchanged when the market clears at the equilibrium price. |\n| **Shift in Supply** | A change in the entire supply curve caused by factors like production costs, technology, or input prices. |\n| **Shift in Demand** | A change in the entire demand curve caused by income changes, preferences, or prices of related goods. |\n\n## First Useful Example: Gasoline Market\n- **Demand side:** Drivers need fuel to get to work, school, and errands. When gasoline prices rise, some drivers may cut back on non‑essential trips, reducing demand.\n- **Supply side:** Refineries may face higher crude‑oil costs or maintenance shutdowns, reducing the amount of gasoline they can produce.\n- **Result:** If supply falls while demand stays steady, the equilibrium price moves upward, explaining the price spike you observed.\n\n## How the Interaction Works\n1. **Draw the curves:** On a graph, the upward‑sloping line is the supply curve; the downward‑sloping line is the demand curve.\n2. **Find the intersection:** The point where they cross marks the equilibrium price and quantity.\n3. **Identify shifts:** A rightward shift of the demand curve (higher demand) pushes the equilibrium price up; a leftward shift of the supply curve (lower supply) also pushes the price up. Conversely, a rightward shift of supply or leftward shift of demand pulls the price down.\n\n## Why It Matters for Consumers and Producers\n- **Consumers** can anticipate price trends by watching news about production cuts, seasonal demand spikes, or changes in consumer preferences.\n- **Producers** use the model to decide whether to expand capacity, invest in new technology, or adjust output to capture higher prices.\n\n## Quick Recall Prompt\n> *Recall the definition of demand and write one real‑world factor that can shift the demand curve for housing.*\n\n## Where to Go Next\nHaving mapped the basic concepts, the next lesson will dive deeper into reading actual supply‑demand graphs, interpreting shifts, and applying the model to markets like housing, electronics, and labor.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Supply and Demand Study Guide",
+            "dashboardKey": "supply-and-demand-how-prices-respond-in-real-markets-1",
+            "layoutReason": "A focused lesson layout lets learners build a mental map of the key concepts before tackling graph interpretation, reducing cognitive overload and establishing a solid foundation for later practice.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 1,
+            "layoutArchetype": "focusLesson",
+            "dashboardPurpose": "overview"
+          },
+          {
+            "id": "study-pack-dashboard-1780696335001-437858",
+            "name": "Supply and Demand: How Prices Respond in Real Markets – Lesson 2",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "Supply and Demand: How Prices Respond in Real Markets – Lesson 2 Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696335001-101341",
+                          "components": [
+                            {
+                              "id": "supply-and-demand-how-prices-respond-in-real-markets-lesson-2-2-supply-and-demand-how-prices-respond-in-real-markets-lesson-2-2-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "Supply and Demand: How Prices Respond in Real Markets – Lesson 2",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "supply-and-demand-how-prices-respond-in-real-markets-2-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "supply-and-demand-how-prices-respond-in-real-markets",
+                                "studyPathTitle": "Supply and Demand: How Prices Respond in Real Markets",
+                                "studyPathFolderName": "Supply and Demand Study Guide",
+                                "studyPathDashboardKey": "supply-and-demand-how-prices-respond-in-real-markets-2",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "Supply and Demand: How Prices Respond in Real Markets – Lesson 2",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 2,
+                                "studyPathLayoutArchetype": "learnPracticeTabs",
+                                "studyPathDashboardPurpose": "lesson"
+                              }
+                            },
+                            {
+                              "id": "supply-and-demand-how-prices-respond-in-real-markets-lesson-2-2-supply-and-demand-how-prices-respond-in-real-markets-lesson-2-2-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "### Axes and Variables\nThe first step in any market‑analysis diagram is to label the axes. The vertical axis represents **price (P)** – the amount of money buyers must pay for one unit of the good. The horizontal axis represents **quantity (Q)** – the total number of units bought and sold. Together they form a Cartesian plane where every point tells a story about how much of a product is exchanged at a particular price.\n\n### The Downward‑Sloping Demand Curve\nA demand curve slopes downward because of the **law of demand**: as price rises, the quantity demanded falls, and vice‑versa. This reflects two intuitive forces. First, higher prices reduce purchasing power, so consumers buy less. Second, at a lower price, the good becomes relatively cheaper compared with alternatives, encouraging substitution toward it. Plotting several price‑quantity pairs (e.g., $10 → 100 units, $5 → 200 units) and connecting them yields a smooth, negatively sloped line.\n\n### The Upward‑Sloping Supply Curve\nSupply behaves oppositely. Producers are willing to offer more of a good when its price is high because the potential profit rises. At a low price, many firms cannot cover marginal costs, so they produce less. By charting price‑quantity pairs for suppliers (e.g., $10 → 150 units, $5 → 80 units) and joining the points, we obtain a positively sloped line.\n\n### Finding the Intersection – Equilibrium\nThe **equilibrium** is the point where the demand and supply curves intersect. At this price‑quantity pair, the amount consumers want to buy exactly matches the amount producers want to sell. No excess inventory accumulates, and there is no pressure for the price to move. In the diagram, draw a vertical line from the intersection to the price axis (equilibrium price) and a horizontal line to the quantity axis (equilibrium quantity). This single point captures the market’s “clearing” condition.\n\n### What Moves the Curves?\nReal markets rarely stay static. Two primary forces shift the curves:\n- **Shift in Demand**: Changes in consumer preferences, income, prices of related goods, or expectations can move the entire demand curve left (decrease) or right (increase). A rightward shift raises both equilibrium price and quantity; a leftward shift lowers them.\n- **Shift in Supply**: Technological advances, input‑price changes, taxes, or the number of sellers shift the supply curve. A rightward shift (more supply) lowers equilibrium price and raises quantity; a leftward shift does the opposite.\nUnderstanding which curve moves—and in which direction—lets us predict how real‑world events (e.g., a hurricane disrupting oil production) will affect market outcomes.\n\n### Mini‑Check: Quick Recall\n1. **Shape Question** – *What shape does a demand curve have and why?*  \n   *Answer:* Downward‑sloping because higher prices reduce quantity demanded.\n2. **Intersection Question** – *If the demand curve moves right while supply stays fixed, what happens to equilibrium price?*  \n   *Answer:* Price rises.\n3. **Application Prompt** – *Imagine a new technology halves the cost of producing smartphones. Sketch the effect on the supply curve and state the expected change in price and quantity.*\nThese prompts reinforce the core ideas before students move on to more complex scenarios like gasoline markets or housing.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Supply and Demand Study Guide",
+            "dashboardKey": "supply-and-demand-how-prices-respond-in-real-markets-2",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 2,
+            "layoutArchetype": "learnPracticeTabs",
+            "dashboardPurpose": "lesson"
+          },
+          {
+            "id": "study-pack-dashboard-1780696335001-268688",
+            "name": "03 - Worked Example: Gasoline Price Spike",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "03 - Worked Example: Gasoline Price Spike Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696335001-429822",
+                          "components": [
+                            {
+                              "id": "03-worked-example-gasoline-price-spike-3-03-worked-example-gasoline-price-spike-3-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "03 - Worked Example: Gasoline Price Spike",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "supply-and-demand-how-prices-respond-in-real-markets-3-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "supply-and-demand-how-prices-respond-in-real-markets",
+                                "studyPathTitle": "Supply and Demand: How Prices Respond in Real Markets",
+                                "studyPathFolderName": "Supply and Demand Study Guide",
+                                "studyPathDashboardKey": "supply-and-demand-how-prices-respond-in-real-markets-3",
+                                "studyPathLayoutReason": "The splitReferenceExercise layout lets learners see the worked example side‑by‑side with reference material (glossary, contrast table) and a short retrieval prompt, supporting deep processing of the graph shift.",
+                                "studyPathPracticeType": "none",
+                                "studyPathDashboardName": "03 - Worked Example: Gasoline Price Spike",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 3,
+                                "studyPathLayoutArchetype": "splitReferenceExercise",
+                                "studyPathDashboardPurpose": "lesson"
+                              }
+                            },
+                            {
+                              "id": "03-worked-example-gasoline-price-spike-3-03-worked-example-gasoline-price-spike-3-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "### Scenario\nA major refinery experiences an unexpected outage, cutting the daily gasoline supply by 20 %. Demand for gasoline remains unchanged because commuters still need to fill their tanks. This real‑world shock creates a classic supply‑side disturbance that we can model on a standard supply‑demand diagram.\n\n### Identifying the Supply Shift\nOn the graph, the supply curve moves **leftward** (upward) because at every price fewer gallons are offered. The demand curve stays put. The leftward shift is the visual cue that the market is now “short‑of‑gas.”\n\n### Predicting the Direction of Price Change\nWhen supply falls while demand stays constant, the new intersection lies **higher on the price axis** and **lower on the quantity axis**. Hence, the equilibrium price **rises** and the equilibrium quantity **falls**. This is the core rule learners must internalize: *a leftward supply shift → higher price, lower quantity*.\n\n### Equilibrium Movement Explained\nBefore the outage, the market cleared at $2.00 per gallon with 100 units sold. After the shift, the supply curve intersects the unchanged demand curve at a new point: $2.50 per gallon and 80 units. The price increase reflects the scarcity of gasoline; the quantity drop reflects the reduced amount producers can deliver.\n\n### Numeric Illustration\n| Situation | Supply (units) | Demand (units) | Equilibrium Price | Equilibrium Quantity |\n|----------|----------------|----------------|-------------------|----------------------|\n| Before outage | 100 | 100 | $2.00 | 100 |\n| After outage | 80 | 100 | $2.50 | 80 |\n\nThe numbers show that a 20 % supply reduction pushes price up by 25 % while quantity falls by the same 20 %.\n\n### Why Each Step Matters\n1. **Locate the shift** – Recognizing a leftward move prevents mis‑reading the graph.\n2. **Hold demand constant** – Many students mistakenly think demand must also move; the example isolates the supply effect.\n3. **Read the new intersection** – The price axis tells you the market’s response; the quantity axis tells you how much is actually traded.\n4. **Translate to reality** – Higher pump prices are the direct consequence of the supply shortfall; drivers may respond by driving less, but that is a secondary demand response.\n\n### Transfer Case\nImagine a sudden surge in demand for electric vehicles. If the gasoline market’s supply stays the same, the demand curve would shift **rightward**, moving the equilibrium to a higher price *and* higher quantity. Comparing the two scenarios helps students see that the direction of the shift (supply vs. demand) determines whether price and quantity move together or in opposite directions.\n\n### Key Takeaways\n- A leftward supply shift raises equilibrium price and lowers quantity.\n- The demand curve remains unchanged unless a separate factor moves it.\n- Graphical analysis provides a quick visual prediction of market outcomes.\n- Real‑world events (refinery outages, natural disasters) map cleanly onto these textbook shifts.\n\n---\n**Quick Recall Prompt**: *What happens to the equilibrium price when supply decreases while demand stays constant?*",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    },
+                    {
+                      "name": "03 - Worked Example: Gasoline Price Spike Summary",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696335001-223559",
+                          "components": [
+                            {
+                              "id": "03-worked-example-gasoline-price-spike-3-03-worked-example-gasoline-price-spike-3-summary-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "Summary",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "03-worked-example-gasoline-price-spike-3-03-worked-example-gasoline-price-spike-3-summary-summary-list",
+                              "type": "ListBlock",
+                              "props": {
+                                "items": "Supply and demand curves intersect at the market’s equilibrium price and quantity.\nA leftward shift of the supply curve raises price and lowers quantity when demand is unchanged.\nA rightward shift of the demand curve raises both price and quantity when supply is unchanged.\nGraphical analysis provides a visual shortcut to predict market outcomes.",
+                                "title": "Key Points on Supply‑Demand Mechanics",
+                                "ordered": false,
+                                "__blockType": "ListBlock",
+                                "interactiveChecklist": false
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Supply and Demand Study Guide",
+            "dashboardKey": "supply-and-demand-how-prices-respond-in-real-markets-3",
+            "layoutReason": "The splitReferenceExercise layout lets learners see the worked example side‑by‑side with reference material (glossary, contrast table) and a short retrieval prompt, supporting deep processing of the graph shift.",
+            "practiceType": "none",
+            "dashboardCount": 5,
+            "dashboardIndex": 3,
+            "layoutArchetype": "splitReferenceExercise",
+            "dashboardPurpose": "lesson"
+          },
+          {
+            "id": "study-pack-dashboard-1780696335001-209842",
+            "name": "Checkpoint: Predicting Price Changes",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "Checkpoint: Predicting Price Changes Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696335001-516033",
+                          "components": [
+                            {
+                              "id": "checkpoint-predicting-price-changes-4-checkpoint-predicting-price-changes-4-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "Checkpoint: Predicting Price Changes",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "supply-and-demand-how-prices-respond-in-real-markets-4-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "supply-and-demand-how-prices-respond-in-real-markets",
+                                "studyPathTitle": "Supply and Demand: How Prices Respond in Real Markets",
+                                "studyPathFolderName": "Supply and Demand Study Guide",
+                                "studyPathDashboardKey": "supply-and-demand-how-prices-respond-in-real-markets-4",
+                                "studyPathLayoutReason": "Tabs let students view the shift rules and immediately test themselves, reducing the time between concept exposure and retrieval practice.",
+                                "studyPathPracticeType": "quiz",
+                                "studyPathDashboardName": "Checkpoint: Predicting Price Changes",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 4,
+                                "studyPathLayoutArchetype": "learnPracticeTabs",
+                                "studyPathDashboardPurpose": "practice"
+                              }
+                            },
+                            {
+                              "id": "checkpoint-predicting-price-changes-4-checkpoint-predicting-price-changes-4-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "### Understanding Shift Scenarios\n\nWhen a market experiences a **change in demand** (consumers want more or less of a good) the demand curve moves.  An **increase in demand** pushes the curve rightward, raising both the equilibrium price and quantity.  A **decrease in demand** shifts the curve leftward, lowering price and quantity.\n\nConversely, a **change in supply** (producers can offer more or less) moves the supply curve.  An **increase in supply** shifts the curve rightward, driving the equilibrium price down while raising quantity.  A **decrease in supply** moves the curve leftward, lifting price but reducing quantity.\n\n### Quick Quiz Tabs\n\nThe dashboard uses two tabs.  The **Theory** tab repeats the shift rules in a concise table.  The **Practice** tab presents four prompts that require a single‑sentence answer about price direction.  Learners can toggle back and forth, checking the answer key after each attempt.  This back‑and‑forth reinforces the mental map of how each shift affects price.\n\n### Prompt 1 – Demand Increases\n\n*Scenario*: A new smartphone model becomes popular, and consumers want more of it.\n\n*Question*: What happens to the market price?\n\n*Answer*: The price **rises** because the demand curve moves rightward, intersecting the supply curve at a higher price level.\n\n### Prompt 2 – Supply Increases\n\n*Scenario*: A refinery upgrades its equipment, allowing it to produce more gasoline at the same cost.\n\n*Question*: What happens to the market price?\n\n*Answer*: The price **falls** as the supply curve shifts rightward, intersecting demand at a lower price.\n\n### Prompt 3 – Both Increase\n\n*Scenario*: The housing market sees a surge in both new construction (supply) and buyer interest (demand).\n\n*Question*: What is the likely effect on price?\n\n*Answer*: **Price direction depends on which shift dominates**.  If demand grows faster than supply, price rises; if supply outpaces demand, price falls.  Quantity definitely rises.\n\n### Prompt 4 – Demand Decreases\n\n*Scenario*: A health study warns that a certain snack is unhealthy, reducing consumer appetite.\n\n*Question*: What happens to the market price?\n\n*Answer*: The price **drops** because the demand curve moves leftward, meeting supply at a lower price.\n\n### Misconception Check\n\nMany students think that when both supply and demand increase, price must go up.  The table in the **Theory** tab shows that the price outcome is **ambiguous**—only the relative magnitude of the shifts decides.\n\n### Transfer Challenge\n\nPick a market you encounter daily (e.g., coffee, concert tickets, or video‑game consoles).  Identify a recent news event that likely shifted supply or demand, then predict the price direction using the rules above.  Write a brief explanation and compare your prediction to the actual price change you observe.\n\n---\n\n### Answer Key & Rubric\n\nThe answer key (see *supportArtifacts*) provides the correct price direction for each prompt.  The rubric awards a point for a correct direction, a half‑point for a correct explanation of the shift, and zero for an incorrect answer.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Supply and Demand Study Guide",
+            "dashboardKey": "supply-and-demand-how-prices-respond-in-real-markets-4",
+            "layoutReason": "Tabs let students view the shift rules and immediately test themselves, reducing the time between concept exposure and retrieval practice.",
+            "practiceType": "quiz",
+            "dashboardCount": 5,
+            "dashboardIndex": 4,
+            "layoutArchetype": "learnPracticeTabs",
+            "dashboardPurpose": "practice"
+          },
+          {
+            "id": "study-pack-dashboard-1780696335001-365950",
+            "name": "05 - Synthesis: Analyzing a Real Market",
+            "layout": {
+              "type": "row",
+              "weight": 100,
+              "children": [
+                {
+                  "type": "tabset",
+                  "active": true,
+                  "weight": 100,
+                  "children": [
+                    {
+                      "name": "05 - Synthesis: Analyzing a Real Market Source",
+                      "type": "tab",
+                      "config": {
+                        "customProps": {
+                          "widgetId": "embedded-widget-1780696335001-446726",
+                          "components": [
+                            {
+                              "id": "05-synthesis-analyzing-a-real-market-5-05-synthesis-analyzing-a-real-market-5-source-title",
+                              "type": "Label",
+                              "props": {
+                                "text": "05 - Synthesis: Analyzing a Real Market",
+                                "variant": "h6",
+                                "fontWeight": 700,
+                                "gutterBottom": true
+                              }
+                            },
+                            {
+                              "id": "supply-and-demand-how-prices-respond-in-real-markets-5-progress",
+                              "type": "StudyPathProgressBlock",
+                              "props": {
+                                "__blockType": "StudyPathProgressBlock",
+                                "studyPathId": "supply-and-demand-how-prices-respond-in-real-markets",
+                                "studyPathTitle": "Supply and Demand: How Prices Respond in Real Markets",
+                                "studyPathFolderName": "Supply and Demand Study Guide",
+                                "studyPathDashboardKey": "supply-and-demand-how-prices-respond-in-real-markets-5",
+                                "studyPathLayoutReason": "An overview‑review layout lets learners see the whole analysis process at once, then dive into mixed practice that reinforces synthesis while still providing quick checks.",
+                                "studyPathPracticeType": "mixed",
+                                "studyPathDashboardName": "05 - Synthesis: Analyzing a Real Market",
+                                "studyPathDashboardCount": 5,
+                                "studyPathDashboardIndex": 5,
+                                "studyPathLayoutArchetype": "overviewReview",
+                                "studyPathDashboardPurpose": "finalReview"
+                              }
+                            },
+                            {
+                              "id": "05-synthesis-analyzing-a-real-market-5-05-synthesis-analyzing-a-real-market-5-source-markdown",
+                              "type": "MarkdownBlock",
+                              "props": {
+                                "title": "Source notes",
+                                "markdown": "### Choosing a Market\nBegin by picking a familiar market—housing, smartphones, gasoline, or any product you encounter daily. Write down the time frame you’ll examine (e.g., the past 12 months) and note any headline events that might have nudged supply or demand.\n\n### Spotting Shifts\nFor each event, decide whether it primarily affects **supply** (the quantity producers are willing to sell at each price) or **demand** (the quantity consumers are willing to buy at each price).  \n- **Supply‑side cues**: new factories opening, raw‑material shortages, labor strikes, regulatory changes.  \n- **Demand‑side cues**: income growth, seasonal holidays, shifts in consumer preferences, advertising campaigns.\nRecord the direction of the shift (increase or decrease) and the likely magnitude (small, moderate, large).\n\n### Sketching Curves\nDraw a simple Cartesian graph: price on the vertical axis, quantity on the horizontal. Plot the original **supply** and **demand** curves, label the intersection as *P*ₑ (equilibrium price) and *Q*ₑ (equilibrium quantity).  \n- If **supply increases**, shift the supply curve rightward; the new equilibrium will have a lower price and higher quantity.  \n- If **demand decreases**, shift the demand curve leftward; the new equilibrium will have a lower price and lower quantity.  \nCombine multiple shifts by moving each curve in turn; the net effect depends on which shift dominates.\n\n### Linking Shifts to Price\nExplain, in a paragraph, how the identified shifts moved the market from the original equilibrium to the new one.  \n- State which curve moved first and why.  \n- Describe the intermediate price‑quantity outcome after the first shift.  \n- Show how the second shift altered the picture, arriving at the final *P*ₑ and *Q*ₑ.  \nEmphasize the causal chain: event → curve shift → new equilibrium → observed price change.\n\n### Putting It Together\nConclude with a concise synthesis paragraph (3‑4 sentences) that connects the specific market analysis to the broader principle: **price is the outcome of the interaction between supply and demand, and any real‑world price movement can be traced to shifts in one or both curves**.  \nHighlight any lingering uncertainties (e.g., simultaneous shifts of similar magnitude) and suggest how future data could clarify the dominant force.\n\n---\n**Retrieval Prompt**: *What is equilibrium quantity and why does it matter?*  \n**Misconception Check**: *Only supply matters for housing prices* – explain why demand also plays a crucial role.\n---\n**Suggested Practice**: Write a brief analysis of current smartphone prices using supply‑demand concepts.",
+                                "__blockType": "MarkdownBlock"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "component": "CustomWidget"
+                    }
+                  ],
+                  "selected": 0
+                }
+              ]
+            },
+            "folderName": "Supply and Demand Study Guide",
+            "dashboardKey": "supply-and-demand-how-prices-respond-in-real-markets-5",
+            "layoutReason": "An overview‑review layout lets learners see the whole analysis process at once, then dive into mixed practice that reinforces synthesis while still providing quick checks.",
+            "practiceType": "mixed",
+            "dashboardCount": 5,
+            "dashboardIndex": 5,
+            "layoutArchetype": "overviewReview",
+            "dashboardPurpose": "finalReview"
+          }
+        ],
+        "folderName": "Supply and Demand Study Guide",
+        "selectedIndex": 0,
+        "pinnedDashboardKeys": []
+      },
+      "createdAt": "2026-06-05T21:52:15.001+00:00",
+      "updatedAt": "2026-06-05T21:57:37.215308+00:00"
+    }
+  ]
+}

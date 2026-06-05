@@ -52,6 +52,11 @@ import {
   testLocalLanguageModel,
 } from '../../../../studyPack/ai'
 import { seedStudyMeshGuideStudyPath } from '../../../../studyPack/studyMeshGuideSeed'
+import {
+  STUDY_GUIDES_CHANGED_EVENT,
+  STUDY_GUIDES_STORAGE_KEY,
+  StudyGuideStorage,
+} from '../../../../studyGuides/storage'
 
 const WORKSPACE_ONBOARDING_KEY = 'studymesh-workspace-onboarding-v1'
 const LOCAL_AI_ESTIMATE_COPY =
@@ -63,19 +68,47 @@ const aiProviderLabels: Record<StudyPackAiProvider, string> = {
   cerebras: 'Own Cerebras API key',
   hosted: 'Hosted AI tokens',
 }
+type ExportLibraryItemType = 'dashboard' | 'studyGuide'
+
 const normalizeExportFolderName = (folder?: unknown) =>
   typeof folder === 'string' && folder.trim() ? folder.trim() : 'Default'
 
-interface ExportDashboardItem {
-  dashboard: unknown
+const createExportLibraryItem = (
+  item: unknown,
+  itemType: ExportLibraryItemType,
+  index: number,
+): ExportLibraryItem => {
+  const record =
+    item && typeof item === 'object' ? (item as Record<string, unknown>) : {}
+  const folderName =
+    itemType === 'studyGuide'
+      ? normalizeExportFolderName(record.folderName)
+      : normalizeExportFolderName(record.folder)
+  const fallbackName =
+    itemType === 'studyGuide'
+      ? `Study Guide ${index + 1}`
+      : `Dashboard ${index + 1}`
+  const name =
+    typeof record.name === 'string' && record.name.trim()
+      ? record.name.trim()
+      : typeof record.title === 'string' && record.title.trim()
+        ? record.title.trim()
+        : fallbackName
+
+  return { item, itemType, index, folderName, name }
+}
+
+interface ExportLibraryItem {
+  item: unknown
+  itemType: ExportLibraryItemType
   index: number
   folderName: string
   name: string
 }
 
-interface ExportDashboardGroup {
+interface ExportLibraryGroup {
   folderName: string
-  items: ExportDashboardItem[]
+  items: ExportLibraryItem[]
 }
 
 interface SettingsDialogProps {
@@ -199,7 +232,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   const [isTestingLocalAi, setIsTestingLocalAi] = React.useState(false)
   const [libraryTransferStatus, setLibraryTransferStatus] = React.useState('')
   const [exportModalOpen, setExportModalOpen] = React.useState(false)
-  const [exportDashboards, setExportDashboards] = React.useState<unknown[]>([])
+  const [exportLibraryItems, setExportLibraryItems] = React.useState<
+    ExportLibraryItem[]
+  >([])
   const [selectedExportIndexes, setSelectedExportIndexes] = React.useState<
     Set<number>
   >(new Set())
@@ -219,25 +254,14 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     getEnvStrongAiProviderApiKey(selectedStrongProvider),
   )
 
-  const exportDashboardGroups = React.useMemo<ExportDashboardGroup[]>(() => {
-    const groups = new Map<string, ExportDashboardItem[]>()
+  const exportLibraryGroups = React.useMemo<ExportLibraryGroup[]>(() => {
+    const groups = new Map<string, ExportLibraryItem[]>()
 
-    exportDashboards.forEach((dashboard, index) => {
-      const record =
-        dashboard && typeof dashboard === 'object'
-          ? (dashboard as Record<string, unknown>)
-          : {}
-      const folderName = normalizeExportFolderName(record.folder)
-      const name =
-        typeof record.name === 'string' && record.name.trim()
-          ? record.name.trim()
-          : typeof record.title === 'string' && record.title.trim()
-            ? record.title.trim()
-            : `Dashboard ${index + 1}`
-      const items = groups.get(folderName) || []
+    exportLibraryItems.forEach((item) => {
+      const items = groups.get(item.folderName) || []
 
-      items.push({ dashboard, index, folderName, name })
-      groups.set(folderName, items)
+      items.push(item)
+      groups.set(item.folderName, items)
     })
 
     return Array.from(groups.entries())
@@ -246,7 +270,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         items: [...items].sort((a, b) => a.name.localeCompare(b.name)),
       }))
       .sort((a, b) => a.folderName.localeCompare(b.folderName))
-  }, [exportDashboards])
+  }, [exportLibraryItems])
 
   const selectedExportCount = selectedExportIndexes.size
 
@@ -409,16 +433,28 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     try {
       const savedDashboards = window.localStorage.getItem('customDashboards')
       const dashboards = savedDashboards ? JSON.parse(savedDashboards) : []
+      const studyGuides = StudyGuideStorage.getAll()
 
       if (!Array.isArray(dashboards)) {
         setLibraryTransferStatus('Could not read the saved library.')
         return
       }
 
-      setExportDashboards(dashboards)
-      setSelectedExportIndexes(
-        new Set(dashboards.map((_, index: number) => index)),
-      )
+      const libraryItems = [
+        ...dashboards.map((dashboard, index) =>
+          createExportLibraryItem(dashboard, 'dashboard', index),
+        ),
+        ...studyGuides.map((studyGuide, index) =>
+          createExportLibraryItem(
+            studyGuide,
+            'studyGuide',
+            dashboards.length + index,
+          ),
+        ),
+      ]
+
+      setExportLibraryItems(libraryItems)
+      setSelectedExportIndexes(new Set(libraryItems.map(({ index }) => index)))
       setExportModalOpen(true)
       setLibraryTransferStatus('')
     } catch (error) {
@@ -442,7 +478,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   }
 
   const handleToggleExportFolder = (
-    items: ExportDashboardItem[],
+    items: ExportLibraryItem[],
     checked: boolean,
   ) => {
     setSelectedExportIndexes((current) => {
@@ -462,13 +498,20 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
   const handleExportSelectedLibrary = () => {
     try {
-      const selectedDashboards = exportDashboards.filter((_, index) =>
+      const selectedItems = exportLibraryItems.filter(({ index }) =>
         selectedExportIndexes.has(index),
       )
+      const selectedDashboards = selectedItems
+        .filter(({ itemType }) => itemType === 'dashboard')
+        .map(({ item }) => item)
+      const selectedStudyGuides = selectedItems
+        .filter(({ itemType }) => itemType === 'studyGuide')
+        .map(({ item }) => item)
       const payload = {
         version: 1,
         exportedAt: new Date().toISOString(),
         dashboards: selectedDashboards,
+        studyGuides: selectedStudyGuides,
       }
       const blob = new Blob([JSON.stringify(payload, null, 2)], {
         type: 'application/json',
@@ -485,8 +528,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       URL.revokeObjectURL(url)
       setExportModalOpen(false)
       setLibraryTransferStatus(
-        `Library export created with ${selectedDashboards.length} item${
-          selectedDashboards.length === 1 ? '' : 's'
+        `Library export created with ${selectedItems.length} item${
+          selectedItems.length === 1 ? '' : 's'
         }.`,
       )
     } catch (error) {
@@ -508,20 +551,41 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     try {
       const payload = JSON.parse(await file.text()) as {
         dashboards?: unknown
+        studyGuides?: unknown
       }
-      if (!Array.isArray(payload.dashboards)) {
-        setLibraryTransferStatus('Import file must include a dashboards array.')
+      const hasDashboards = Array.isArray(payload.dashboards)
+      const hasStudyGuides = Array.isArray(payload.studyGuides)
+
+      if (!hasDashboards && !hasStudyGuides) {
+        setLibraryTransferStatus(
+          'Import file must include a dashboards or studyGuides array.',
+        )
         return
       }
 
-      window.localStorage.setItem(
-        'customDashboards',
-        JSON.stringify(payload.dashboards),
-      )
-      window.dispatchEvent(new CustomEvent('dashboardStorageUpdated'))
+      if (hasDashboards) {
+        window.localStorage.setItem(
+          'customDashboards',
+          JSON.stringify(payload.dashboards),
+        )
+        window.dispatchEvent(new CustomEvent('dashboardStorageUpdated'))
+      }
+
+      if (hasStudyGuides) {
+        window.localStorage.setItem(
+          STUDY_GUIDES_STORAGE_KEY,
+          JSON.stringify(payload.studyGuides),
+        )
+        window.dispatchEvent(new CustomEvent(STUDY_GUIDES_CHANGED_EVENT))
+      }
+
+      const importedCount =
+        (hasDashboards ? payload.dashboards.length : 0) +
+        (hasStudyGuides ? (payload.studyGuides as unknown[]).length : 0)
+
       setLibraryTransferStatus(
-        `Imported ${payload.dashboards.length} library item${
-          payload.dashboards.length === 1 ? '' : 's'
+        `Imported ${importedCount} library item${
+          importedCount === 1 ? '' : 's'
         }.`,
       )
     } catch (error) {
@@ -1294,15 +1358,16 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Choose which saved dashboards to include in this backup.
+            Choose which saved dashboards and Study Guides to include in this
+            backup.
           </Typography>
-          {exportDashboardGroups.length === 0 ? (
+          {exportLibraryGroups.length === 0 ? (
             <Alert severity="info">
-              There are no saved dashboards to export.
+              There are no saved library items to export.
             </Alert>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              {exportDashboardGroups.map((group) => {
+              {exportLibraryGroups.map((group) => {
                 const selectedInFolder = group.items.filter(({ index }) =>
                   selectedExportIndexes.has(index),
                 )

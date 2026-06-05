@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import SettingsDialog from '../../../../src/components/WidgetEditor/components/dialogs/SettingsDialog'
 import { STUDYMESH_ONBOARDING_NOTICE_EVENT } from '../../../../src/components/onboarding/onboardingEvents'
+import { STUDY_GUIDES_STORAGE_KEY } from '../../../../src/studyGuides/storage'
 
 vi.mock('../../../../src/studyPack/ai', () => ({
   STRONG_AI_PROVIDERS: {
@@ -159,6 +160,53 @@ describe('SettingsDialog study library export', () => {
     expect(payload.dashboards).toEqual([
       { id: 'bio-1', name: 'Cells', folder: 'Biology' },
     ])
+    expect(payload.studyGuides).toEqual([])
+  })
+
+  it('exports saved Study Guides when no dashboards are saved', async () => {
+    const storage = createMemoryStorage()
+    const studyGuide = {
+      id: 'spanish-b2',
+      title: 'Spanish B2',
+      folderName: 'Languages',
+      studyPath: {
+        pathId: 'spanish-b2',
+        title: 'Spanish B2',
+        folderName: 'Languages',
+        dashboards: [],
+        selectedIndex: 0,
+      },
+      createdAt: '2026-06-05T00:00:00.000Z',
+      updatedAt: '2026-06-05T00:00:00.000Z',
+    }
+    storage.set(STUDY_GUIDES_STORAGE_KEY, JSON.stringify([studyGuide]))
+
+    render(<SettingsDialog open onClose={vi.fn()} scope="global" />)
+
+    fireEvent.click(screen.getByRole('button', { name: /export library/i }))
+
+    const exportDialog = await screen.findByRole('dialog', {
+      name: /export study library/i,
+    })
+
+    expect(
+      within(exportDialog).getByRole('checkbox', {
+        name: /select languages folder/i,
+      }),
+    ).toBeChecked()
+    expect(
+      within(exportDialog).getByRole('checkbox', {
+        name: /select spanish b2/i,
+      }),
+    ).toBeChecked()
+
+    fireEvent.click(
+      within(exportDialog).getByRole('button', { name: /export selected/i }),
+    )
+
+    const payload = JSON.parse(await readBlobText(exportedBlob!))
+    expect(payload.dashboards).toEqual([])
+    expect(payload.studyGuides).toEqual([studyGuide])
   })
 
   it('announces the selected AI mode after saving AI settings', () => {

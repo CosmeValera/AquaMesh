@@ -22,6 +22,8 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen'
 import { createStudyPathContainerState } from './studyPathContainer'
 import { normalizeFolderColor } from './folderColors'
 import { DashboardStorage, SavedDashboard } from './dashboardStorage'
+import type { StudyGuideRecord } from '../../cloud/types'
+import type { StudyPathContainerState } from '../../state/store'
 
 type EmptyDashboardBlock = 'creation' | 'studyMaterial'
 type EmptyDashboardStudyMaterialMode = 'recent' | 'custom'
@@ -48,6 +50,7 @@ interface StudyMaterialEntry {
   folderName: string
   dashboards: SavedDashboard[]
   firstDashboard?: SavedDashboard
+  studyPath?: StudyPathContainerState
   title: string
   isStudyPath: boolean
   colorSourceFolder: string
@@ -56,8 +59,10 @@ interface StudyMaterialEntry {
 interface DashboardEmptyStateProps {
   onOpenSavedLibrary: () => void
   dashboardOptions: SavedDashboard[]
+  studyGuideOptions: StudyGuideRecord[]
   onOpenDashboard: (dashboard: SavedDashboard) => void
   onOpenStudyGuide: (dashboards: SavedDashboard[]) => void
+  onOpenStoredStudyGuide: (studyPath: StudyPathContainerState) => void
 }
 
 const EMPTY_DASHBOARD_SETTINGS_KEY = 'studymesh-empty-dashboard-settings-v1'
@@ -313,12 +318,17 @@ const saveEmptyDashboardLayouts = (
 const getStudyPathEntryId = (folderName: string) =>
   `studyPath:${folderName.trim().toLowerCase()}`
 
+const getStoredStudyGuideEntryId = (studyGuideId: string) =>
+  `studyGuide:${studyGuideId}`
+
 const getDashboardEntryId = (dashboardId: string) => `dashboard:${dashboardId}`
 
 const DashboardEmptyState = ({
   dashboardOptions,
+  studyGuideOptions,
   onOpenDashboard,
   onOpenStudyGuide,
+  onOpenStoredStudyGuide,
 }: DashboardEmptyStateProps) => {
   const [activeLayoutId, setActiveLayoutId] = useState(
     readActiveEmptyDashboardLayoutId,
@@ -338,7 +348,7 @@ const DashboardEmptyState = ({
     folders[folderName].push(dashboard)
     return folders
   }, {})
-  const folderEntries: StudyMaterialEntry[] = Object.entries(
+  const dashboardFolderEntries: StudyMaterialEntry[] = Object.entries(
     dashboardsByFolder,
   ).flatMap(([folderName, dashboards]) => {
     const studyGuide = createStudyPathContainerState(dashboards)
@@ -367,6 +377,21 @@ const DashboardEmptyState = ({
       colorSourceFolder: dashboard.folder?.trim() || 'Default',
     }))
   })
+  const storedStudyGuideEntries: StudyMaterialEntry[] = studyGuideOptions.map(
+    (studyGuide) => ({
+      id: getStoredStudyGuideEntryId(studyGuide.id),
+      folderName: studyGuide.folderName?.trim() || 'Study Guides',
+      dashboards: [],
+      studyPath: studyGuide.studyPath,
+      title: studyGuide.title || studyGuide.studyPath.title || 'Study Guide',
+      isStudyPath: true,
+      colorSourceFolder: studyGuide.folderName?.trim() || 'Study Guides',
+    }),
+  )
+  const folderEntries: StudyMaterialEntry[] = [
+    ...storedStudyGuideEntries,
+    ...dashboardFolderEntries,
+  ]
   const entryById = new Map(folderEntries.map((entry) => [entry.id, entry]))
   const selectedCustomIds = new Set(settings.customEntryIds)
   const availableCustomEntries = folderEntries.filter(
@@ -816,9 +841,11 @@ const DashboardEmptyState = ({
         key={entry.id}
         variant="text"
         onClick={() =>
-          entry.isStudyPath
-            ? onOpenStudyGuide(entry.dashboards)
-            : entry.firstDashboard && onOpenDashboard(entry.firstDashboard)
+          entry.studyPath
+            ? onOpenStoredStudyGuide(entry.studyPath)
+            : entry.isStudyPath
+              ? onOpenStudyGuide(entry.dashboards)
+              : entry.firstDashboard && onOpenDashboard(entry.firstDashboard)
         }
         sx={{
           width: '100%',

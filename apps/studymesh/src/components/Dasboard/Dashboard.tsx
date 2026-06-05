@@ -53,7 +53,10 @@ import {
   OPEN_DASHBOARD_EDITOR_EVENT,
   OPEN_WIDGET_EDITOR_EVENT,
 } from '../../customHooks/useWorkspaceActions'
-import { StudyGuideStorage } from '../../studyGuides/storage'
+import {
+  STUDY_GUIDES_CHANGED_EVENT,
+  StudyGuideStorage,
+} from '../../studyGuides/storage'
 import { STUDYMESH_GUIDE_STUDY_PATH_ID } from '../../studyPack/studyMeshGuideSeed'
 import {
   DEFAULT_FOLDER_COLOR,
@@ -156,6 +159,9 @@ const Dashboards = () => {
   const [hasChanges, setHasChanges] = useState<Record<string, boolean>>({})
   const [isAdmin, setIsAdmin] = useState(readCurrentUserIsAdmin)
   const [dashboardOptions, setDashboardOptions] = useState<SavedDashboard[]>([])
+  const [studyGuideOptions, setStudyGuideOptions] = useState(
+    StudyGuideStorage.getAll,
+  )
   const [dashboardEditorId, setDashboardEditorId] = useState<string | null>(
     null,
   )
@@ -379,6 +385,7 @@ const Dashboards = () => {
   const visibleDashboardOptions = isAdmin
     ? dashboardOptions
     : dashboardOptions.filter((dashboard) => dashboard.isPublic)
+  const visibleStudyGuideOptions = studyGuideOptions
   const dashboardFolderOptions = useMemo(
     () =>
       Array.from(
@@ -414,6 +421,7 @@ const Dashboards = () => {
   const loadDashboardOptions = () => {
     ensureStarterDashboards()
     setDashboardOptions([...DashboardStorage.getAll()].reverse())
+    setStudyGuideOptions([...StudyGuideStorage.getAll()].reverse())
   }
 
   const openDashboardEditor = (dashboardId: string) => {
@@ -552,6 +560,14 @@ const Dashboards = () => {
   const openStudyGuideFromEmptyState = (dashboards: SavedDashboard[]) => {
     const studyPath = createStudyPathContainerState(dashboards)
 
+    if (studyPath) {
+      openStoredStudyGuideFromEmptyState(studyPath)
+    }
+  }
+
+  const openStoredStudyGuideFromEmptyState = (
+    studyPath: StateDashboard['studyPath'],
+  ) => {
     if (studyPath) {
       addStudyPathContainer(studyPath)
       dispatchWorkspaceOnboardingEvent({ type: 'saved-dashboard-opened' })
@@ -806,11 +822,16 @@ const Dashboards = () => {
       SAVED_DASHBOARDS_CHANGED_EVENT,
       loadDashboardOptions,
     )
+    window.addEventListener(STUDY_GUIDES_CHANGED_EVENT, loadDashboardOptions)
     window.addEventListener('focus', loadDashboardOptions)
 
     return () => {
       window.removeEventListener(
         SAVED_DASHBOARDS_CHANGED_EVENT,
+        loadDashboardOptions,
+      )
+      window.removeEventListener(
+        STUDY_GUIDES_CHANGED_EVENT,
         loadDashboardOptions,
       )
       window.removeEventListener('focus', loadDashboardOptions)
@@ -1679,8 +1700,12 @@ const Dashboards = () => {
                       <DashboardEmptyState
                         onOpenSavedLibrary={openSavedLibraryFromEmptyState}
                         dashboardOptions={visibleDashboardOptions}
+                        studyGuideOptions={visibleStudyGuideOptions}
                         onOpenDashboard={openSavedDashboardInWorkspace}
                         onOpenStudyGuide={openStudyGuideFromEmptyState}
+                        onOpenStoredStudyGuide={
+                          openStoredStudyGuideFromEmptyState
+                        }
                       />
                     ) : (
                       <DashboardLayoutView
@@ -1919,8 +1944,10 @@ const Dashboards = () => {
         <DashboardEmptyState
           onOpenSavedLibrary={openSavedLibraryFromEmptyState}
           dashboardOptions={visibleDashboardOptions}
+          studyGuideOptions={visibleStudyGuideOptions}
           onOpenDashboard={openSavedDashboardFromEmptyState}
           onOpenStudyGuide={openStudyGuideFromEmptyState}
+          onOpenStoredStudyGuide={openStoredStudyGuideFromEmptyState}
         />
       )}
 

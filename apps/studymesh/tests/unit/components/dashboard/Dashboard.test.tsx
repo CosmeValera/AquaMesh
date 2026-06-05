@@ -6,6 +6,7 @@ import * as DashboardProviderModule from '../../../../src/components/Dasboard/Da
 import * as WorkspaceActionsModule from '../../../../src/customHooks/useWorkspaceActions'
 import * as LayoutProviderModule from '../../../../src/components/Layout/LayoutProvider'
 import * as useTopNavBarWidgetsModule from '../../../../src/customHooks/useTopNavBarWidgets'
+import { STUDY_GUIDES_STORAGE_KEY } from '../../../../src/studyGuides/storage'
 
 vi.mock('../../../../src/components/Dasboard/DashboardProvider', () => ({
   __esModule: true,
@@ -133,6 +134,38 @@ const createSavedDashboard = (
   isPublic: true,
   createdAt: '2026-05-15T10:00:00.000Z',
   updatedAt: '2026-05-15T10:00:00.000Z',
+})
+
+const createStoredStudyGuide = () => ({
+  id: 'spanish-b2-guide',
+  title: 'Spanish B2 Study Guide',
+  folderName: 'Languages',
+  studyPath: {
+    pathId: 'spanish-b2-guide',
+    title: 'Spanish B2 Study Guide',
+    folderName: 'Languages',
+    selectedIndex: 0,
+    dashboards: [
+      {
+        name: 'Spanish B2 Lesson 1',
+        dashboardKey: 'spanish-b2-lesson-1',
+        dashboardIndex: 1,
+        dashboardCount: 2,
+        folderName: 'Languages',
+        layout: { type: 'row', children: [] },
+      },
+      {
+        name: 'Spanish B2 Lesson 2',
+        dashboardKey: 'spanish-b2-lesson-2',
+        dashboardIndex: 2,
+        dashboardCount: 2,
+        folderName: 'Languages',
+        layout: { type: 'row', children: [] },
+      },
+    ],
+  },
+  createdAt: '2026-06-05T00:00:00.000Z',
+  updatedAt: '2026-06-05T00:00:00.000Z',
 })
 
 const mockPhoneViewport = () => {
@@ -357,6 +390,103 @@ describe('Dashboards', () => {
     expect(screen.queryByText('Algebra Intro')).not.toBeInTheDocument()
     expect(screen.queryByText('Chemistry Intro')).not.toBeInTheDocument()
     expect(screen.getAllByText('Custom').length).toBeGreaterThan(0)
+  })
+
+  it('shows saved Study Guides as one empty dashboard option', async () => {
+    const addDashboard = vi.fn()
+    const addStudyPathContainer = vi.fn()
+    const studyGuide = createStoredStudyGuide()
+
+    localStorage.getItem.mockImplementation((key: string) => {
+      if (key === 'userData') {
+        return JSON.stringify({
+          id: 'admin',
+          name: 'Admin User',
+          role: 'ADMIN_ROLE',
+        })
+      }
+
+      if (key === 'customDashboards') {
+        return JSON.stringify([])
+      }
+
+      if (key === STUDY_GUIDES_STORAGE_KEY) {
+        return JSON.stringify([studyGuide])
+      }
+
+      return null
+    })
+    mockDashboardProvider({
+      openDashboards: [],
+      selectedDashboard: -1,
+      addDashboard,
+      addStudyPathContainer,
+    })
+
+    render(<Dashboards />)
+
+    const studyGuideButton = await screen.findByRole('button', {
+      name: /spanish b2 study guide/i,
+    })
+
+    expect(screen.queryByText('Spanish B2 Lesson 1')).not.toBeInTheDocument()
+    expect(screen.queryByText('Spanish B2 Lesson 2')).not.toBeInTheDocument()
+
+    fireEvent.click(studyGuideButton)
+
+    expect(addStudyPathContainer).toHaveBeenCalledWith(studyGuide.studyPath)
+    expect(addDashboard).not.toHaveBeenCalled()
+  })
+
+  it('shows saved Study Guides as one customizer slot option', async () => {
+    const studyGuide = createStoredStudyGuide()
+
+    localStorage.getItem.mockImplementation((key: string) => {
+      if (key === 'userData') {
+        return JSON.stringify({
+          id: 'admin',
+          name: 'Admin User',
+          role: 'ADMIN_ROLE',
+        })
+      }
+
+      if (key === 'customDashboards') {
+        return JSON.stringify([])
+      }
+
+      if (key === STUDY_GUIDES_STORAGE_KEY) {
+        return JSON.stringify([studyGuide])
+      }
+
+      return null
+    })
+    mockDashboardProvider({
+      openDashboards: [],
+      selectedDashboard: -1,
+    })
+
+    render(<Dashboards />)
+
+    await screen.findByRole('button', {
+      name: /spanish b2 study guide/i,
+    })
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /customize this page/i }),
+    )
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', { name: /^study material$/i }),
+    )
+    fireEvent.click(screen.getByRole('option', { name: /custom/i }))
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', { name: /add to custom/i }),
+    )
+
+    expect(
+      screen.getByRole('option', { name: /spanish b2 study guide/i }),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Spanish B2 Lesson 1')).not.toBeInTheDocument()
+    expect(screen.queryByText('Spanish B2 Lesson 2')).not.toBeInTheDocument()
   })
 
   it('opens and closes the empty dashboard customizer as a full-page modal', async () => {
@@ -1134,7 +1264,7 @@ describe('Dashboards', () => {
 
     expect(
       screen.getByRole('heading', {
-      name: /open study material/i,
+        name: /open study material/i,
       }),
     ).toBeInTheDocument()
     expect(
@@ -1149,6 +1279,27 @@ describe('Dashboards', () => {
       createStarterStudyPathDashboard(1),
       createStarterStudyPathDashboard(2),
     ]
+    const starterStudyGuide = {
+      id: 'studymesh-student-knowledge-wiki-a-beginner-s-guide',
+      title: "StudyMesh Student Knowledge Wiki: A Beginner's Guide",
+      folderName: 'StudyMesh Guide',
+      studyPath: {
+        pathId: 'studymesh-student-knowledge-wiki-a-beginner-s-guide',
+        title: "StudyMesh Student Knowledge Wiki: A Beginner's Guide",
+        folderName: 'StudyMesh Guide',
+        selectedIndex: 0,
+        dashboards: starterDashboards.map((dashboard, index) => ({
+          name: dashboard.name,
+          layout: dashboard.layout,
+          dashboardKey: `studymesh-guide-${index + 1}`,
+          dashboardIndex: index + 1,
+          dashboardCount: starterDashboards.length,
+          folderName: 'StudyMesh Guide',
+        })),
+      },
+      createdAt: '2026-05-15T10:00:00.000Z',
+      updatedAt: '2026-05-15T10:00:00.000Z',
+    }
 
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
@@ -1161,6 +1312,10 @@ describe('Dashboards', () => {
 
       if (key === 'customDashboards') {
         return JSON.stringify(starterDashboards)
+      }
+
+      if (key === STUDY_GUIDES_STORAGE_KEY) {
+        return JSON.stringify([starterStudyGuide])
       }
 
       return null

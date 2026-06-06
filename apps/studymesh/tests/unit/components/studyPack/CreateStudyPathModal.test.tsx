@@ -112,15 +112,8 @@ const mockGeminiDashboards = (dashboardCount: number) => {
   )
 }
 
-const generatePath = async (amount?: 'Compact' | 'Deep') => {
+const generatePath = async () => {
   render(<CreateStudyPathModal open onClose={vi.fn()} onCreatePath={vi.fn()} />)
-
-  if (amount) {
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: /path depth/i }))
-    fireEvent.click(
-      screen.getByRole('option', { name: new RegExp(amount, 'i') }),
-    )
-  }
 
   fireEvent.change(
     screen.getByRole('textbox', { name: /what should StudyMesh teach/i }),
@@ -147,18 +140,8 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     })
   })
 
-  it('hides dashboard source controls when dashboard sources are disabled', () => {
-    render(
-      <CreateStudyPathModal
-        open
-        onClose={vi.fn()}
-        onCreatePath={vi.fn()}
-        allowDashboardSource={false}
-        hasCurrentDashboardContext
-        currentDashboardTitle="Biology Dashboard"
-        currentDashboardContext="Dashboard notes"
-      />,
-    )
+  it('uses a prompt-only Study Guide input without legacy source controls', () => {
+    render(<CreateStudyPathModal open onClose={vi.fn()} onCreatePath={vi.fn()} />)
 
     expect(
       screen.queryByRole('button', { name: /current dashboard/i }),
@@ -343,9 +326,9 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     vi.useRealTimers()
   })
 
-  it('previews compact paths without fixed positional roles', async () => {
+  it('previews shorter auto-planned paths without fixed positional roles', async () => {
     mockGeminiDashboards(3)
-    await generatePath('Compact')
+    await generatePath()
 
     await waitFor(() => {
       expect(screen.getByText('03 - Lesson 3')).toBeInTheDocument()
@@ -353,7 +336,7 @@ describe('CreateStudyPathModal Study Guide generation', () => {
 
     const finalCard = screen.getByTestId('study-path-dashboard-3')
     expect(within(finalCard).getByText('lesson')).toBeInTheDocument()
-    expect(within(finalCard).getByText('5 study items')).toBeInTheDocument()
+    expect(within(finalCard).getByText('7 study items')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('AI generation debug'))
     const finalMapping = screen.getByTestId(
@@ -366,9 +349,9 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     expect(finalMapping).toHaveTextContent('study-guide-3-flashcard')
   })
 
-  it('previews extended paths without fixed positional roles', async () => {
+  it('previews longer auto-planned paths without fixed positional roles', async () => {
     mockGeminiDashboards(7)
-    await generatePath('Deep')
+    await generatePath()
 
     await waitFor(() => {
       expect(screen.getByText('06 - Lesson 6')).toBeInTheDocument()
@@ -398,43 +381,6 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     expect(finalMapping).toHaveTextContent('study-guide-7-flashcard')
   })
 
-  it('blocks Deep Study Guide when Local AI is selected', async () => {
-    vi.mocked(readStudyPackAiSettings).mockReturnValue({
-      provider: 'local',
-      apiToken: '',
-      model: 'gemini-test',
-    })
-    vi.mocked(resolveStudyPackAiCredentials).mockReturnValue({
-      provider: 'local',
-      apiToken: '',
-      model: 'gemini-test',
-      tokenSource: 'none',
-    })
-    render(
-      <CreateStudyPathModal open onClose={vi.fn()} onCreatePath={vi.fn()} />,
-    )
-
-    expect(
-      screen.getByText(/Super small usually takes 12-15 min/i),
-    ).toBeInTheDocument()
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: /path depth/i }))
-    expect(
-      screen.getByRole('option', {
-        name: /Super small - 2 lesson dashboards/i,
-      }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('option', { name: /Compact - 3 lesson dashboards/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('option', { name: /Average - 5 lesson dashboards/i }),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: /Deep/i })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    )
-  })
-
   it('shows Local AI failure debug after failed Study Guide generation', async () => {
     vi.mocked(readStudyPackAiSettings).mockReturnValue({
       provider: 'local',
@@ -447,31 +393,35 @@ describe('CreateStudyPathModal Study Guide generation', () => {
       model: 'gemini-test',
       tokenSource: 'none',
     })
-    const prompt = vi
-      .fn()
-      .mockResolvedValueOnce(
-        JSON.stringify({
-          title: 'Italian B1',
-          folderName: 'Italian B1',
-          dashboards: [
-            {
-              title: '01 - Modal verbs',
-              goal: 'Learn modal verbs.',
-              topics: ['potere', 'dovere'],
-              avoid: ['summary dashboard'],
-            },
-            {
-              title: '02 - Practice contexts',
-              goal: 'Use modal verbs in context.',
-              topics: ['travel', 'study'],
-              avoid: ['exercises-only dashboard'],
-            },
-          ],
-        }),
-      )
-      .mockResolvedValueOnce('{"title":"Broken",')
-      .mockResolvedValueOnce('{"title":"Broken again",')
-      .mockResolvedValueOnce('{"title":"Broken final",')
+    const prompt = vi.fn().mockResolvedValueOnce(
+      JSON.stringify({
+        title: 'Italian B1',
+        folderName: 'Italian B1',
+        dashboards: [
+          {
+            title: '01 - Modal verbs',
+            goal: 'Learn modal verbs.',
+            topics: ['potere', 'dovere'],
+            avoid: ['summary dashboard'],
+          },
+          {
+            title: '02 - Practice contexts',
+            goal: 'Use modal verbs in context.',
+            topics: ['travel', 'study'],
+            avoid: ['exercises-only dashboard'],
+          },
+          {
+            title: '03 - Speaking drills',
+            goal: 'Practice modal verbs aloud.',
+            topics: ['requests', 'advice'],
+            avoid: ['exercises-only dashboard'],
+          },
+        ],
+      }),
+    )
+    Array.from({ length: 9 }, (_value, index) =>
+      prompt.mockResolvedValueOnce(`{"title":"Broken attempt ${index + 1}",`),
+    )
     vi.stubGlobal('LanguageModel', {
       availability: vi.fn().mockResolvedValue('available'),
       create: vi.fn().mockResolvedValue({ prompt, destroy: vi.fn() }),
@@ -479,13 +429,6 @@ describe('CreateStudyPathModal Study Guide generation', () => {
 
     render(
       <CreateStudyPathModal open onClose={vi.fn()} onCreatePath={vi.fn()} />,
-    )
-
-    fireEvent.mouseDown(
-      screen.getByRole('combobox', { name: /local ai concurrency/i }),
-    )
-    fireEvent.click(
-      screen.getByRole('option', { name: /1 dashboard at once/i }),
     )
 
     fireEvent.change(
@@ -504,7 +447,7 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     expect(screen.getByText('Local AI failure debug')).toBeInTheDocument()
     expect(
       screen.getByTestId('local-ai-failure-debug-raw-dashboard-response'),
-    ).toHaveTextContent('{"title":"Broken final",')
+    ).toHaveTextContent('Broken attempt')
     expect(
       screen.getByTestId('local-ai-failure-debug-mapping-error'),
     ).toHaveTextContent(/JSON instead of Markdown notes/i)
@@ -537,10 +480,9 @@ describe('CreateStudyPathModal Study Guide generation', () => {
 - Use short examples for quick speaking practice.
 - Use polite forms with staff or strangers.
 - Check word order before answering practice questions.`
-    const prompt = vi
-      .fn()
-      .mockResolvedValueOnce(
-        JSON.stringify({
+    const prompt = vi.fn(async (input: string) => {
+      if (input.includes('Plan a Study Guide')) {
+        return JSON.stringify({
           title: 'German A2',
           folderName: 'German A2',
           dashboards: [
@@ -574,74 +516,77 @@ describe('CreateStudyPathModal Study Guide generation', () => {
               ],
               avoid: ['exercises-only dashboard'],
             },
+            {
+              title: '03 - Everyday speaking',
+              goal: 'Use routine and travel phrases aloud.',
+              sections: [
+                {
+                  title: 'Requests',
+                  goal: 'Practice short polite requests.',
+                },
+                {
+                  title: 'Corrections',
+                  goal: 'Fix common speaking mistakes.',
+                },
+              ],
+              avoid: ['exercises-only dashboard'],
+            },
           ],
-        }),
-      )
-      .mockResolvedValueOnce(
-        sectionMarkdown(
+        })
+      }
+
+      if (input.includes('Create flashcards')) {
+        return JSON.stringify({
+          flashcards: [
+            {
+              question: 'What reusable phrase should students know?',
+              answer: 'A short phrase from the notes.',
+            },
+            {
+              question: 'What should examples stay close to?',
+              answer: 'The generated lesson notes.',
+            },
+          ],
+        })
+      }
+      if (input.includes('Create quizzes')) {
+        return JSON.stringify({
+          quizzes: [
+            {
+              question: 'What is useful for German A2 practice?',
+              options: ['reusable phrases', 'advanced poetry', 'chemical symbols'],
+              correctIndex: 0,
+            },
+          ],
+        })
+      }
+
+      if (input.includes('## Time phrases')) {
+        return sectionMarkdown(
           'Time phrases',
           'German A2 routines use time phrases like jeden Morgen',
-        ),
-      )
-      .mockResolvedValueOnce(
-        sectionMarkdown('Separable verbs', 'Separable verbs describe routines'),
-      )
-      .mockResolvedValueOnce(
-        JSON.stringify({
-          flashcards: [
-            {
-              question: 'What does jeden Morgen mean?',
-              answer: 'Every morning.',
-            },
-            {
-              question: 'Where does a separable prefix go?',
-              answer: 'To the end in simple present main clauses.',
-            },
-          ],
-        }),
-      )
-      .mockResolvedValueOnce(
-        JSON.stringify({
-          quizzes: [
-            {
-              question: 'Which phrase means every morning?',
-              options: ['jeden Morgen', 'gestern Abend', 'naechste Woche'],
-              correctIndex: 0,
-            },
-          ],
-        }),
-      )
-      .mockResolvedValueOnce(
-        sectionMarkdown('Tickets', 'German A2 travel uses ticket requests'),
-      )
-      .mockResolvedValueOnce(
-        sectionMarkdown('Directions', 'Direction phrases help find stations'),
-      )
-      .mockResolvedValueOnce(
-        JSON.stringify({
-          flashcards: [
-            {
-              question: 'What should travel requests be?',
-              answer: 'Polite and short.',
-            },
-            {
-              question: 'What is the lesson focus?',
-              answer: 'Tickets and directions.',
-            },
-          ],
-        }),
-      )
-      .mockResolvedValueOnce(
-        JSON.stringify({
-          quizzes: [
-            {
-              question: 'What is useful in travel situations?',
-              options: ['directions', 'advanced poetry', 'chemical symbols'],
-              correctIndex: 0,
-            },
-          ],
-        }),
-      )
+        )
+      }
+      if (input.includes('## Separable verbs')) {
+        return sectionMarkdown(
+          'Separable verbs',
+          'Separable verbs describe routines',
+        )
+      }
+      if (input.includes('## Tickets')) {
+        return sectionMarkdown('Tickets', 'German A2 travel uses ticket requests')
+      }
+      if (input.includes('## Directions')) {
+        return sectionMarkdown('Directions', 'Direction phrases help find stations')
+      }
+      if (input.includes('## Requests')) {
+        return sectionMarkdown('Requests', 'German A2 speaking uses polite requests')
+      }
+      if (input.includes('## Corrections')) {
+        return sectionMarkdown('Corrections', 'Correction drills improve speaking')
+      }
+      return sectionMarkdown('Fallback', 'German A2 fallback lesson notes')
+    })
     vi.stubGlobal('LanguageModel', {
       availability: vi.fn().mockResolvedValue('available'),
       create: vi.fn().mockResolvedValue({ prompt, destroy: vi.fn() }),
@@ -653,13 +598,6 @@ describe('CreateStudyPathModal Study Guide generation', () => {
         onClose={vi.fn()}
         onCreatePath={onCreatePath}
       />,
-    )
-
-    fireEvent.mouseDown(
-      screen.getByRole('combobox', { name: /local ai concurrency/i }),
-    )
-    fireEvent.click(
-      screen.getByRole('option', { name: /1 dashboard at once/i }),
     )
 
     fireEvent.change(
@@ -677,7 +615,7 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     })
 
     fireEvent.click(
-      screen.getByRole('button', { name: /^create 2 dashboards$/i }),
+      screen.getByRole('button', { name: /^create 3 dashboards$/i }),
     )
 
     expect(onCreatePath).toHaveBeenCalledTimes(1)

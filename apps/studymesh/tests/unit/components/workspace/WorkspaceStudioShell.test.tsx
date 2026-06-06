@@ -119,15 +119,15 @@ vi.mock('../../../../src/studyPack/imageOcr', () => ({
 vi.mock('../../../../src/components/studyPack/CreateStudyPathModal', () => ({
   __esModule: true,
   default: (props: {
-    allowDashboardSource?: boolean
+    autoCreateOnGenerate?: boolean
     autoGenerateRequest?: { prompt: string }
-  }) => (
-    <div
-      data-testid="create-study-path-modal"
-      data-allow-dashboard-source={String(props.allowDashboardSource)}
-      data-auto-generate-prompt={props.autoGenerateRequest?.prompt || ''}
-    />
-  ),
+  }) =>
+    props.autoCreateOnGenerate ? null : (
+      <div
+        data-testid="create-study-path-modal"
+        data-auto-generate-prompt={props.autoGenerateRequest?.prompt || ''}
+      />
+    ),
 }))
 
 vi.mock('../../../../src/components/workspace/WidgetEditorDialog', () => ({
@@ -356,7 +356,7 @@ describe('WorkspaceStudioShell Quick Create', () => {
     expect(
       screen.getByRole('textbox', { name: /What do you want to learn/i }),
     ).toBeInTheDocument()
-    expect(screen.queryByTestId('create-study-path-modal')).not.toBeVisible()
+    expect(screen.queryByTestId('create-study-path-modal')).not.toBeInTheDocument()
   })
 
   it('starts Study Guide generation from the inline prompt', async () => {
@@ -376,16 +376,10 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
 
     await waitFor(() =>
-      expect(
-        screen
-          .getAllByTestId('create-study-path-modal')
-          .some(
-            (element) =>
-              element.getAttribute('data-auto-generate-prompt') ===
-              'Learn Spanish B2 grammar',
-          ),
-      ).toBe(true),
+      expect(screen.getByText(/Creating study guide/i)).toBeInTheDocument(),
     )
+    expect(screen.getByRole('heading', { name: /^Study Guide$/i })).toBeVisible()
+    expect(screen.queryByTestId('create-study-path-modal')).not.toBeInTheDocument()
   })
 
   it('disables quick create when there is no usable dashboard or sources', () => {

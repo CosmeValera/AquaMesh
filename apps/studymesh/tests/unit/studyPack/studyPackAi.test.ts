@@ -697,7 +697,6 @@ describe('local AI helpers', () => {
       title: 'Spanish B1',
       prompt: 'I want to learn Spanish level B1',
       folderName: '',
-      generationAmount: 'compact',
     })
 
     expect(draft.folderName).toBe('Spanish B1')
@@ -798,7 +797,6 @@ describe('local AI helpers', () => {
         title: 'Italian A1',
         prompt: 'Teach Italian A1 greetings and introductions',
         folderName: '',
-        generationAmount: 'superSmall',
       },
       { dashboardConcurrency: 1 },
     )
@@ -830,7 +828,7 @@ describe('local AI helpers', () => {
     expect(practicePrompt).toContain('## Examples and mistakes')
   })
 
-  it('plans Local AI compact paths before generating three normal dashboards', async () => {
+  it('plans Local AI Study Guides before generating three normal dashboards', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce(
@@ -875,7 +873,6 @@ describe('local AI helpers', () => {
       title: 'Italian B1',
       prompt: 'Learn Italian level B1',
       folderName: '',
-      generationAmount: 'compact',
     })
 
     expect(draft.folderName).toBe('Italian B1')
@@ -929,7 +926,6 @@ describe('local AI helpers', () => {
       title: 'Study Guide',
       prompt: 'learn german b1',
       folderName: '',
-      generationAmount: 'superSmall',
     })
 
     expect(draft.folderName).toBe('Learn German B1')
@@ -967,7 +963,6 @@ describe('local AI helpers', () => {
         title: 'Italian B2',
         prompt: 'learn italian b2',
         folderName: '',
-        generationAmount: 'superSmall',
       },
       { dashboardConcurrency: 1 },
     )
@@ -1223,7 +1218,6 @@ describe('local AI helpers', () => {
         title: 'Spanish B1',
         prompt: 'I want to learn Spanish level B1',
         folderName: '',
-        generationAmount: 'average',
       },
       { onProgress: (event) => events.push(event) },
     )
@@ -1290,7 +1284,6 @@ describe('local AI helpers', () => {
         title: 'Spanish B1',
         prompt: 'I want to learn Spanish level B1',
         folderName: '',
-        generationAmount: 'deep',
       }),
     ).rejects.toThrow(/Deep Study Guide is not available with Local AI/i)
     expect(create).not.toHaveBeenCalled()
@@ -1508,7 +1501,6 @@ describe('local AI helpers', () => {
         title: 'Spanish B1',
         prompt: 'I want to learn Spanish level B1',
         folderName: '',
-        generationAmount: 'superSmall',
       },
       { dashboardConcurrency: 1 },
     )
@@ -1543,7 +1535,6 @@ describe('local AI helpers', () => {
           title: 'Italian B1',
           prompt: 'Teach Italian B1 modal verbs',
           folderName: '',
-          generationAmount: 'superSmall',
         },
         { dashboardConcurrency: 1 },
       )
@@ -1592,7 +1583,6 @@ describe('local AI helpers', () => {
         title: 'Italian B1',
         prompt: 'Teach Italian B1 modal verbs',
         folderName: '',
-        generationAmount: 'superSmall',
       },
       { dashboardConcurrency: 1 },
     )
@@ -1714,7 +1704,6 @@ describe('local AI helpers', () => {
       title: 'Japanese A1',
       prompt: 'Teach Japanese A1 introductions',
       folderName: '',
-      generationAmount: 'superSmall',
     })
 
     expect(draft.dashboards).toHaveLength(2)
@@ -1788,7 +1777,6 @@ describe('local AI helpers', () => {
       title: 'Italian B1',
       prompt: 'Teach Italian B1 modal verbs',
       folderName: '',
-      generationAmount: 'superSmall',
     })
 
     expect(draft.dashboards[0].objects.map((object) => object.kind)).toEqual([
@@ -1834,7 +1822,6 @@ describe('local AI helpers', () => {
       title: 'Italian B1',
       prompt: 'Teach Italian B1 modal verbs',
       folderName: '',
-      generationAmount: 'superSmall',
     })
 
     expect(draft.dashboards[0].objects.map((object) => object.kind)).toEqual([
@@ -1874,7 +1861,6 @@ describe('local AI helpers', () => {
       title: 'Italian B1',
       prompt: 'Teach Italian B1 modal verbs',
       folderName: '',
-      generationAmount: 'superSmall',
     })
 
     expect(
@@ -1920,7 +1906,6 @@ describe('local AI helpers', () => {
       title: 'Italian B1',
       prompt: 'Teach Italian B1 modal verbs',
       folderName: '',
-      generationAmount: 'superSmall',
     })
 
     expect(draft.dashboards[0].objects.map((object) => object.kind)).toEqual([
@@ -1967,7 +1952,6 @@ describe('local AI helpers', () => {
       title: 'Italian B1',
       prompt: 'Teach Italian B1 modal verbs',
       folderName: '',
-      generationAmount: 'superSmall',
     })
 
     expect(draft.dashboards[0].objects.map((object) => object.kind)).toEqual([
@@ -2015,7 +1999,6 @@ describe('local AI helpers', () => {
         title: 'Italian B1',
         prompt: 'Teach Italian B1 modal verbs',
         folderName: '',
-        generationAmount: 'superSmall',
       },
       { dashboardConcurrency: 1 },
     )
@@ -2077,7 +2060,6 @@ describe('local AI helpers', () => {
         title: 'Italian B1',
         prompt: 'Teach Italian B1 modal verbs',
         folderName: '',
-        generationAmount: 'superSmall',
       },
       { dashboardConcurrency: 1 },
     )
@@ -2136,7 +2118,6 @@ describe('local AI helpers', () => {
         title: 'Italian B1',
         prompt: 'Teach Italian B1 modal verbs',
         folderName: '',
-        generationAmount: 'compact',
       },
       { dashboardConcurrency: 1 },
     )
@@ -2209,7 +2190,6 @@ describe('local AI helpers', () => {
       title: 'Italian B1',
       prompt: 'Teach Italian B1 modal verbs',
       folderName: '',
-      generationAmount: 'superSmall',
     })
 
     expect(draft.dashboards[0].rawNotes).toContain('Modal verb notes')
@@ -2280,7 +2260,6 @@ describe('local AI helpers', () => {
         title: 'French B2',
         prompt: 'Teach French B2 argument connectors',
         folderName: '',
-        generationAmount: 'superSmall',
       })
       throw new Error('Expected Local AI generation to fail.')
     } catch (error) {
@@ -2306,7 +2285,6 @@ describe('local AI helpers', () => {
         title: 'German B1',
         prompt: 'Teach German B1 word order',
         folderName: '',
-        generationAmount: 'superSmall',
       })
       throw new Error('Expected unsupported Local AI generation to fail.')
     } catch (error) {
@@ -2332,7 +2310,6 @@ describe('local AI helpers', () => {
         title: 'German B1',
         prompt: 'Teach German B1 word order',
         folderName: '',
-        generationAmount: 'superSmall',
       })
       throw new Error('Expected unknown Local AI generation to fail.')
     } catch (error) {
@@ -2369,7 +2346,6 @@ describe('local AI helpers', () => {
       title: 'Italian B2',
       prompt: 'Teach Italian B2 conversation',
       folderName: '',
-      generationAmount: 'superSmall',
     })
 
     const dashboardPrompt = String(prompt.mock.calls[1][0])

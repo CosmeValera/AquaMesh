@@ -25,8 +25,6 @@ import {
   AiStudyPathDraft,
   GenerateStudyPackWithAiOptions,
   GenerateStudyPathWithAiOptions,
-  normalizeStudyPathGenerationAmount,
-  StudyPathGenerationAmount,
 } from './strongGeneration'
 
 type LocalObjectKind =
@@ -102,8 +100,6 @@ const LOCAL_STUDY_PATH_PRACTICE_TIMEOUT_MS = 240 * 1000
 const LOCAL_STUDY_PATH_DASHBOARD_MAX_ATTEMPTS = 3
 const LOCAL_STUDY_PACK_MAX_ATTEMPTS = 3
 const LOCAL_AI_RETRY_COOLDOWN_MS = 8500
-const LOCAL_DEEP_BLOCKED_MESSAGE =
-  'Deep Study Guide is not available with Local AI. Use Average, Compact, Super small, or switch to Own Gemini token.'
 const LOCAL_STUDY_PATH_TIMEOUT_MESSAGE =
   'Local AI timed out. Try again, choose a smaller path, or use Own Gemini token.'
 const LOCAL_STUDY_PATH_INVALID_JSON_MESSAGE =
@@ -630,7 +626,6 @@ const localObjectToStudyObject = (
   packId: string,
   index: number,
   events: string[],
-  options: NormalizeAiStudyPackDraftOptions = {},
 ): StudyObject | null => {
   const kind = repairKind(input.kind)
   if (!kind) {
@@ -798,10 +793,7 @@ const conceptFromRecord = (
   }
 }
 
-const conceptFromText = (
-  value: string,
-  index: number,
-): LocalConceptContract | null => {
+const conceptFromText = (value: string): LocalConceptContract | null => {
   const cleaned = normalizeSpaces(value.replace(/^#{1,6}\s*/, ''))
   if (!cleaned || localBadTextPattern.test(cleaned)) {
     return null
@@ -828,7 +820,7 @@ const conceptsFromRawNotes = (rawNotes: string): LocalConceptContract[] =>
   uniqueByKey(
     rawNotes
       .split(/\r?\n|(?<=[.!?])\s+/)
-      .map((line, index) => conceptFromText(line, index))
+      .map((line) => conceptFromText(line))
       .filter((concept): concept is LocalConceptContract => Boolean(concept))
       .slice(0, 6),
     (concept) => concept.concept,
@@ -958,7 +950,6 @@ const contractFromRecord = (
                 'debug',
                 0,
                 [],
-                {},
               )
             : null,
         )
@@ -1287,7 +1278,6 @@ export const normalizeLocalAiStudyPackDraft = (
             packId,
             index,
             events,
-            options,
           )
         : null,
     )
@@ -1360,20 +1350,7 @@ export const normalizeLocalAiStudyPackDraft = (
   }
 }
 
-const getLocalStudyPathDashboardCount = (
-  generationAmount: StudyPathGenerationAmount = 'compact',
-): number => {
-  const normalized = normalizeStudyPathGenerationAmount(generationAmount)
-  if (normalized === 'superSmall') {
-    return 2
-  }
-
-  if (normalized === 'average') {
-    return 5
-  }
-
-  return 3
-}
+const LOCAL_STUDY_PATH_DASHBOARD_COUNT = 3
 
 const localStudyPackPrompt = ({
   title,
@@ -1446,31 +1423,12 @@ Input: ${promptMode ? 'learning goal' : 'source notes'}
 ${compactNotes}`
 }
 
-const localStudyPathAdvancedPromptGuidance = (
-  options: GenerateStudyPathWithAiOptions,
-): string => {
-  const include = options.mustInclude?.replace(/\s+/g, ' ').trim().slice(0, 500)
-  const avoid = options.avoidTopics?.replace(/\s+/g, ' ').trim().slice(0, 500)
-
-  if (!include && !avoid) {
-    return ''
-  }
-
-  return [
-    include ? `Must include/learn: ${include}` : '',
-    avoid ? `Avoid/already known: ${avoid}` : '',
-  ]
-    .filter(Boolean)
-    .join('\n')
-}
-
 const localStudyPathPlannerPrompt = (
   options: GenerateStudyPathWithAiOptions,
   count: number,
 ): string => {
   const { title, prompt } = options
   const compactPrompt = prompt.replace(/\s+/g, ' ').trim().slice(0, 800)
-  const advancedGuidance = localStudyPathAdvancedPromptGuidance(options)
 
   return `Return JSON only. Start with { and end with }.
 
@@ -1481,7 +1439,6 @@ Shape:
 
 Topic:
 ${compactPrompt}
-${advancedGuidance ? `\nAdvanced user guidance:\n${advancedGuidance}\n` : ''}
 
 Rules:
 - Return exactly one JSON object.
@@ -1497,7 +1454,6 @@ Rules:
 - No markdown.
 - No code fences.
 - No explanations outside JSON.
-- Respect advanced user guidance when choosing dashboard goals, section focus, and avoid fields.
 - Use short strings.`
 }
 
@@ -1522,7 +1478,6 @@ const localStudyPathMarkdownSectionPrompt = (
   attempt: number,
 ): string => {
   const compactPrompt = options.prompt.replace(/\s+/g, ' ').trim().slice(0, 900)
-  const advancedGuidance = localStudyPathAdvancedPromptGuidance(options)
   const outlineTitles = outline.map((entry) => entry.title).join(' | ')
   const wordTarget = localStudyPathMarkdownWordTarget(attempt)
   const role =
@@ -1587,7 +1542,6 @@ Rules:
 ${structure}
 
 Study path topic: ${compactPrompt}
-${advancedGuidance ? `Advanced user guidance: ${advancedGuidance}\n` : ''}
 Outline titles: ${outlineTitles}
 Current page goal: ${item.goal}
 Current section title: ${section.title}
@@ -1604,12 +1558,10 @@ const localStudyPathPracticePromptBase = (
   notes: string,
 ): string => {
   const compactPrompt = options.prompt.replace(/\s+/g, ' ').trim().slice(0, 900)
-  const advancedGuidance = localStudyPathAdvancedPromptGuidance(options)
   const outlineTitles = outline.map((entry) => entry.title).join(' | ')
   const compactNotes = notes.replace(/\s+/g, ' ').trim().slice(0, 1800)
 
   return `Topic: ${compactPrompt}
-${advancedGuidance ? `Advanced user guidance: ${advancedGuidance}\n` : ''}
 Outline titles: ${outlineTitles}
 Goal: ${item.goal}
 Topics: ${item.topics.join(', ')}
@@ -1816,34 +1768,6 @@ const cleanLocalStudyPathSectionMarkdown = (
   }
 
   return cleaned
-}
-
-const fillDashboardObjects = (
-  objects: StudyObject[],
-  contract: LocalRepairedContract,
-  packId: string,
-  targetCount: number,
-  events: string[],
-): StudyObject[] => {
-  const filled = [...objects]
-  const concepts = (
-    Array.isArray(contract.concepts) ? contract.concepts : []
-  ).filter((concept) => !isBadConcept(concept.concept))
-  let cursor = 0
-
-  while (filled.length < targetCount && concepts.length > 0) {
-    const concept = concepts[cursor % concepts.length]
-    const index = filled.length
-    filled.push(
-      index % 2 === 0
-        ? conceptQuiz(packId, concept, index)
-        : conceptFlashcard(packId, concept, index),
-    )
-    cursor += 1
-    events.push('Augmented Local AI dashboard: added concept practice object.')
-  }
-
-  return filled
 }
 
 const wordCount = (value: string): number =>
@@ -4021,13 +3945,7 @@ export const generateStudyPathWithLocalAi = async (
   options: GenerateStudyPathWithAiOptions,
   localOptions: LocalGenerationOptions = {},
 ): Promise<AiStudyPathDraft> => {
-  if (normalizeStudyPathGenerationAmount(options.generationAmount) === 'deep') {
-    throw new Error(LOCAL_DEEP_BLOCKED_MESSAGE)
-  }
-
-  const expectedCount = getLocalStudyPathDashboardCount(
-    options.generationAmount,
-  )
+  const expectedCount = LOCAL_STUDY_PATH_DASHBOARD_COUNT
   const concurrency = normalizeLocalStudyPathConcurrency(
     localOptions.dashboardConcurrency,
   )
@@ -4099,9 +4017,7 @@ export const generateStudyPathWithLocalAi = async (
     dashboards,
     warnings: [
       ...warnings,
-      expectedCount > 2
-        ? `Google Local AI generated this path with up to ${concurrency} dashboards at a time.`
-        : `Google Local AI generated this Super small path with up to ${concurrency} dashboards at a time.`,
+      `Google Local AI generated this path with up to ${concurrency} dashboards at a time.`,
     ],
   }
 }
@@ -4127,25 +4043,15 @@ export const generateStudyPathWithBasicFallback = ({
   title,
   prompt,
   folderName,
-  generationAmount = 'compact',
 }: GenerateStudyPathWithAiOptions): AiStudyPathDraft => {
-  const roles = Array.from(
-    { length: getLocalStudyPathDashboardCount(generationAmount) },
-    () => 'normal' as const,
+  const roles: StudyPathDashboardRole[] = Array.from(
+    { length: LOCAL_STUDY_PATH_DASHBOARD_COUNT },
+    () => 'normal',
   )
-  const practiceAmount =
-    normalizeStudyPathGenerationAmount(generationAmount) === 'deep'
-      ? 'many'
-      : normalizeStudyPathGenerationAmount(generationAmount) === 'average'
-      ? 'medium'
-      : 'few'
+  const practiceAmount = 'few'
   const dashboards = roles.map((role, index) => {
-    const dashboardTitle = `${String(index + 1).padStart(2, '0')} - ${
-      role === 'summary'
-        ? 'Summary'
-        : role === 'exercises'
-        ? 'Exercises'
-        : `Lesson ${index + 1}`
+    const dashboardTitle = `${String(index + 1).padStart(2, '0')} - Lesson ${
+      index + 1
     }`
     const rawNotes = fallbackPromptForDashboard(
       prompt,
@@ -4179,19 +4085,16 @@ export const generateStudyPathWithBasicFallback = ({
       ],
       generationAmount: practiceAmount,
       visiblePracticeTarget: Math.max(3, profile.minTotal - 1),
-      visiblePracticeOnly: role === 'exercises',
+      visiblePracticeOnly: false,
     })
 
     return {
       title: dashboardTitle,
-      summary:
-        role === 'exercises'
-          ? 'Practice generated from the Study Guide source.'
-          : 'Basic fallback lesson generated from the request.',
+      summary: 'Basic fallback lesson generated from the request.',
       rawNotes,
       dashboardRole: role,
-      dashboardPurpose: 'lesson',
-      practiceType: 'quiz',
+      dashboardPurpose: 'lesson' as const,
+      practiceType: 'quiz' as const,
       layoutReason: 'Basic fallback generated a simple lesson with practice.',
       sourceFormat: parsed.sourceFormat,
       objects: augmented.objects,

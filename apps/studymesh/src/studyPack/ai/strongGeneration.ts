@@ -7,8 +7,6 @@ import {
   StudyPathSourceRef,
 } from '../types'
 import {
-  conceptExplanation,
-  conceptRecapGroups,
   conceptSummaryItem,
   extractLearningConcepts,
 } from '../concepts'
@@ -16,7 +14,6 @@ import {
   augmentStudyPackPracticeObjects,
   createStudyPackPracticeProfile,
   getEffectiveGenerationTargets,
-  isVisiblePracticeStudyObject,
 } from '../practice'
 import {
   assertRoleObjectsAreClean,
@@ -44,8 +41,6 @@ interface GeminiPart {
 const GEMINI_REQUEST_TIMEOUT_MS = 5 * 60 * 1000
 const GEMINI_TIMEOUT_MESSAGE =
   'Gemini took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or Basic fallback.'
-const GEMINI_RATE_LIMIT_MESSAGE =
-  'Gemini rate limit reached for today. Try again later, use Basic fallback, or check your Gemini API quota.'
 const GEMINI_OUTPUT_FORMAT_MESSAGE =
   'Gemini could not follow the requested output format. StudyMesh retried with a simpler JSON prompt, but the response was still unusable.'
 
@@ -102,16 +97,6 @@ export interface GenerateStudyPackWithAiOptions {
   promptMode?: boolean
   studyPathMode?: boolean
 }
-
-export type StudyPathGenerationAmount =
-  | 'auto'
-  | 'superSmall'
-  | 'compact'
-  | 'average'
-  | 'deep'
-  | 'few'
-  | 'medium'
-  | 'many'
 
 export type StudyPathContentMode =
   | 'orientationMap'
@@ -213,52 +198,12 @@ export interface GenerateStudyPathWithAiOptions {
   title: string
   prompt: string
   folderName: string
-  generationAmount?: StudyPathGenerationAmount
-  localAiDashboardConcurrency?: 1 | 2 | 3 | 5
-  mustInclude?: string
-  avoidTopics?: string
 }
 
-export const normalizeStudyPathGenerationAmount = (
-  generationAmount: StudyPathGenerationAmount = 'average',
-): 'superSmall' | 'compact' | 'average' | 'deep' => {
-  if (generationAmount === 'auto') {
-    return 'average'
-  }
+const STUDY_PATH_FALLBACK_DASHBOARD_COUNT = 5
 
-  if (generationAmount === 'few') {
-    return 'compact'
-  }
-
-  if (generationAmount === 'medium') {
-    return 'average'
-  }
-
-  if (generationAmount === 'many') {
-    return 'deep'
-  }
-
-  return generationAmount
-}
-
-const getStudyPathDashboardCount = (
-  generationAmount: StudyPathGenerationAmount = 'average',
-): number => {
-  const normalized = normalizeStudyPathGenerationAmount(generationAmount)
-
-  return normalized === 'superSmall'
-    ? 2
-    : normalized === 'compact'
-      ? 3
-      : normalized === 'deep'
-        ? 7
-        : 5
-}
-
-const getStudyPathStepNames = (
-  generationAmount: StudyPathGenerationAmount = 'average',
-): string[] =>
-  Array.from({ length: getStudyPathDashboardCount(generationAmount) }).map(
+const getStudyPathStepNames = (): string[] =>
+  Array.from({ length: STUDY_PATH_FALLBACK_DASHBOARD_COUNT }).map(
     (_role, index) => `Lesson ${index + 1}`,
   )
 
@@ -1029,40 +974,6 @@ const sourceSummaryBullets = (
     .filter(Boolean)
     .slice(0, 5) || []
 
-const normalizeSummaryText = (value: string): string =>
-  value.replace(/\s+/g, ' ').trim()
-
-const stripRepeatedSummaryPrefix = (value: string): string => {
-  const normalized = normalizeSummaryText(value)
-  const repeated = normalized.match(/^([^:]{3,60}):\s+\1\b\s*/i)
-
-  if (!repeated) {
-    return normalized
-  }
-
-  const prefix = `${repeated[1]}:`
-  return normalizeSummaryText(normalized.slice(prefix.length))
-}
-
-const isLowQualitySummaryLine = (value: string): boolean => {
-  const normalized = normalizeSummaryText(value)
-
-  return (
-    normalized.length < 18 ||
-    /^([^:]{2,40}):\s+\1\b/i.test(normalized) ||
-    /^(?:there|these|this|it|they|mastering these):/i.test(normalized) ||
-    /^[A-Z][a-z]+:\s+(?:These|This|There|It)\b/.test(normalized)
-  )
-}
-
-const formatSummaryHeading = (value: string): string => {
-  const normalized = normalizeSummaryText(value.replace(/:.*$/, ''))
-  const words = normalized.split(/\s+/).filter(Boolean).slice(0, 7)
-  const heading = words.join(' ')
-
-  return heading || 'Key concept'
-}
-
 const createFallbackBase = (packId: string, suffix: string, title: string) => ({
   id: `${packId}-fallback-${suffix}`,
   title,
@@ -1289,41 +1200,16 @@ const getStudyPathVisibleObjectsForRole = (
 
 const getStudyPathVisiblePracticeTarget = (
   dashboardRole: StudyPathDashboardRole,
-  generationAmount: StudyPathGenerationAmount,
 ): number => {
-  const normalized = normalizeStudyPathGenerationAmount(generationAmount)
-
   if (dashboardRole === 'normal') {
-    return normalized === 'superSmall' ||
-      (normalized === 'compact' && generationAmount !== 'few')
-      ? 5
-      : 7
+    return 7
   }
 
   if (dashboardRole === 'exercises') {
-    return normalized === 'superSmall' || normalized === 'compact'
-      ? 10
-      : normalized === 'deep'
-        ? 18
-        : 14
+    return 14
   }
 
   return 0
-}
-
-const studyPathAmountToPracticeAmount = (
-  generationAmount: StudyPathGenerationAmount,
-): 'few' | 'medium' | 'many' => {
-  const normalized = normalizeStudyPathGenerationAmount(generationAmount)
-  if (normalized === 'superSmall' || normalized === 'compact') {
-    return 'few'
-  }
-
-  if (normalized === 'deep') {
-    return 'many'
-  }
-
-  return 'medium'
 }
 
 const parseGeminiJson = (text: string): unknown => {
@@ -1641,29 +1527,6 @@ The previous response failed JSON formatting. Retry with a simpler response:
   }
 }
 
-const studyPathAdvancedPromptGuidance = (
-  mustInclude?: string,
-  avoidTopics?: string,
-): string => {
-  const include = mustInclude?.trim()
-  const avoid = avoidTopics?.trim()
-
-  if (!include && !avoid) {
-    return ''
-  }
-
-  return [
-    include
-      ? `User says these topics/details must be included or learned if relevant:\n${include}`
-      : '',
-    avoid
-      ? `User says these topics/details should be avoided, skipped, or treated as already known:\n${avoid}`
-      : '',
-  ]
-    .filter(Boolean)
-    .join('\n\n')
-}
-
 const stringArrayFromUnknown = (value: unknown): string[] =>
   Array.isArray(value)
     ? value
@@ -1883,14 +1746,12 @@ const createStudyPathBlueprintPrompt = ({
   prompt,
   dashboardCount,
   autoDashboardCount,
-  advancedGuidance,
 }: {
   title: string
   folderName: string
   prompt: string
   dashboardCount: number
   autoDashboardCount: boolean
-  advancedGuidance: string
 }): string => `Plan a high-quality StudyMesh Study Guide before writing dashboards.
 
 Return strict JSON only. ${
@@ -1915,11 +1776,6 @@ Planning requirements:
 - For each lesson, include contentMode, sectionPlan, mustTeach, workedExample, misconceptionChecks, retrievalPractice, and suggestedPractice.
 - For normal teaching lessons, practice and flashcards should usually be empty unless the lesson is a checkpoint, review, remediation, or applied practice step. When practice is useful, plan multiple-choice retrieval questions.
 - Do not write full dashboard notes yet.
-${
-  advancedGuidance
-    ? `- Respect advanced user guidance below.\n\nAdvanced user guidance:\n${advancedGuidance}\n`
-    : ''
-}
 Title fallback: ${title}
 Folder fallback: ${folderName}
 
@@ -1933,7 +1789,6 @@ const createStudyPathDashboardPrompt = ({
   lesson,
   lessonIndex,
   blueprint,
-  advancedGuidance,
 }: {
   title: string
   prompt: string
@@ -1941,7 +1796,6 @@ const createStudyPathDashboardPrompt = ({
   lesson: AiStudyPathBlueprintLesson
   lessonIndex: number
   blueprint: AiStudyPathBlueprint
-  advancedGuidance: string
 }): string => `Create one StudyMesh Study Guide dashboard as strict JSON.
 
 Return exactly one dashboard object. No Markdown fences. No extra prose.
@@ -2013,11 +1867,6 @@ Quality rules:
 - Use simple dashboard layout. Reduce cognitive load: clear hierarchy, signal key ideas, keep examples near rules.
 - Keep prompt-only Study Guides useful without sources. Add accurate general teaching content, but do not invent fake citations or source claims.
 - Do not output objects/kind/widget renderer fields.
-${
-  advancedGuidance
-    ? `- Respect advanced user guidance:\n${advancedGuidance}\n`
-    : ''
-}
 Original user request/topic:
 ${prompt}`
 
@@ -2186,7 +2035,6 @@ const generateStudyPathJsonWithPipeline = async ({
   folderName,
   dashboardCount,
   autoDashboardCount,
-  advancedGuidance,
 }: {
   apiToken: string
   model: string
@@ -2196,7 +2044,6 @@ const generateStudyPathJsonWithPipeline = async ({
   folderName: string
   dashboardCount: number
   autoDashboardCount: boolean
-  advancedGuidance: string
 }): Promise<{
   text: string
   parsed: unknown
@@ -2214,7 +2061,6 @@ const generateStudyPathJsonWithPipeline = async ({
           prompt,
           dashboardCount,
           autoDashboardCount,
-          advancedGuidance,
         }),
       },
     ],
@@ -2259,7 +2105,6 @@ const generateStudyPathJsonWithPipeline = async ({
             lesson,
             lessonIndex: index,
             blueprint,
-            advancedGuidance,
           }),
         },
       ],
@@ -2393,21 +2238,14 @@ export const generateStudyPathWithAi = async ({
   title,
   prompt,
   folderName,
-  generationAmount = 'auto',
-  mustInclude,
-  avoidTopics,
 }: GenerateStudyPathWithAiOptions): Promise<AiStudyPathDraft> => {
-  const stepNames = getStudyPathStepNames(generationAmount)
+  const stepNames = getStudyPathStepNames()
   const dashboardCount = stepNames.length
-  const practiceAmount = studyPathAmountToPracticeAmount(generationAmount)
+  const practiceAmount = 'medium'
   const practiceProfile = createStudyPackPracticeProfile(practiceAmount, [
     'summaries',
     'definitions',
   ])
-  const advancedGuidance = studyPathAdvancedPromptGuidance(
-    mustInclude,
-    avoidTopics,
-  )
   const promptText = `Create a Study Guide JSON object. A Study Guide is NOT one dashboard. It is a folder containing multiple ordered dashboards/study packs.
 
 Return exactly this structure:
@@ -2456,7 +2294,7 @@ Rules:
 - Practice questions must be answerable from rawNotes but should require recall, application, comparison, error diagnosis, prediction, explanation, or transfer. Do not copy lesson sentences as questions.
 - Do not add visible flashcards by default. Flashcards are on-demand support, not a second dashboard widget.
 - Each dashboard must be useful by itself as teaching content, not as a container for many practice widgets.
-- Always return exactly ${stepNames.length} dashboards total.
+- Usually return ${stepNames.length} dashboards, but choose 3-7 dashboards when the topic is clearly narrower or broader.
 - rawNotes must be real lesson notes for that dashboard, not a one-line summary. Write 250-600 words with explanations, examples, key points, and common mistakes when relevant.
 - Format rawNotes as readable Markdown, not one long paragraph. Use short topic-specific sections chosen from that dashboard's teaching purpose. Do not reuse the same heading scaffold across dashboards.
 - sourceSummary and conceptRecap should match the selected layout. For normal teaching lessons, practice and flashcards should usually be empty. For checkpoint/review/remediation lessons, include one focused practice set if useful.
@@ -2478,14 +2316,7 @@ Rules:
 - Aim for about ${practiceProfile.minTotal}-${
     practiceProfile.maxTotal
   } support concepts across the whole path. Do not pad with quiz/flashcard items.
-${
-  advancedGuidance
-    ? `- Respect the user's advanced guidance below when planning lessons, rawNotes, examples, and practice. Do not make avoided/already-known topics a focus unless needed for context.\n`
-    : ''
-}
-${
-  advancedGuidance ? `Advanced user guidance:\n${advancedGuidance}\n\n` : ''
-}Path title fallback: ${title}
+Path title fallback: ${title}
 Folder name fallback if you cannot infer a better one: ${
     folderName || 'Study Guide'
   }
@@ -2527,8 +2358,7 @@ ${originalJson}`
       prompt,
       folderName: folderName || 'Study Guide',
       dashboardCount,
-      autoDashboardCount: generationAmount === 'auto',
-      advancedGuidance,
+      autoDashboardCount: true,
     })
     text = pipelineResult.text
     parsed = pipelineResult.parsed
@@ -2614,9 +2444,13 @@ ${originalJson}`
       repairRetryUsed = false
     }
   }
+  const autoPlannedDashboardCount =
+    rawDashboards.length >= 3
+      ? Math.min(7, rawDashboards.length)
+      : STUDY_PATH_FALLBACK_DASHBOARD_COUNT
   const normalizedRawDashboards =
-    rawDashboards.length >= stepNames.length
-      ? rawDashboards.slice(0, stepNames.length)
+    rawDashboards.length >= 3
+      ? rawDashboards.slice(0, autoPlannedDashboardCount)
       : stepNames.map((stepName, index) => {
           const existing = rawDashboards[index]
           if (existing) {
@@ -2664,61 +2498,6 @@ ${prompt}`
         })
   const warnings: string[] = []
   const accumulatedContentNotes: string[] = []
-  const buildGlobalNotes = (
-    dashboardTitle: string,
-    mode: 'summary' | 'exercises',
-  ) => {
-    const source = accumulatedContentNotes.join('\n\n')
-    const concepts = extractLearningConcepts(source, title)
-    const conceptGroups = conceptRecapGroups(concepts).slice(0, 5)
-
-    if (mode === 'summary' && conceptGroups.length > 0) {
-      return [
-        `# ${dashboardTitle}`,
-        'Use this recap to connect the major ideas from the Study Guide before moving into mixed practice.',
-        ...conceptGroups.map((group) => {
-          const items = group.items
-            .map(stripRepeatedSummaryPrefix)
-            .filter((item) => !isLowQualitySummaryLine(item))
-            .slice(0, 4)
-
-          if (items.length === 0) {
-            return ''
-          }
-
-          return [
-            `## ${formatSummaryHeading(group.label)}`,
-            ...items.map((item) => `- ${item}`),
-          ].join('\n')
-        }),
-      ]
-        .map((part) => part.trim())
-        .filter(Boolean)
-        .join('\n\n')
-    }
-
-    const conceptList = concepts
-      .map((concept) =>
-        stripRepeatedSummaryPrefix(
-          `${formatSummaryHeading(concept.concept)}: ${conceptExplanation(
-            concept,
-          )}`,
-        ),
-      )
-      .filter((item) => !isLowQualitySummaryLine(item))
-      .slice(0, 12)
-
-    return [
-      `# ${dashboardTitle}`,
-      mode === 'summary' ? '## Global recap' : '## Mixed practice source',
-      conceptList.length > 0
-        ? conceptList.map((item) => `- ${item}`).join('\n')
-        : source,
-    ]
-      .map((part) => part.trim())
-      .filter(Boolean)
-      .join('\n\n')
-  }
   const dashboards = normalizedRawDashboards
     .map((item, index): AiStudyPathDashboardDraft | null => {
       const input =
@@ -2809,7 +2588,7 @@ ${prompt}`
       const visiblePracticeTarget =
         practiceType === 'none'
           ? 0
-          : getStudyPathVisiblePracticeTarget(dashboardRole, generationAmount)
+          : getStudyPathVisiblePracticeTarget(dashboardRole)
       const filledVisibleObjects =
         visiblePracticeTarget > 0
           ? augmentStudyPackPracticeObjects(visibleRoleObjects, {

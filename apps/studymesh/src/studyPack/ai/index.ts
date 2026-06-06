@@ -25,14 +25,12 @@ export {
   STRONG_AI_PROVIDERS,
 } from './strongProviders'
 export type { StrongAiProviderId } from './strongProviders'
-export { normalizeStudyPathGenerationAmount } from './strongGeneration'
 export type {
   AiStudyPathDashboardDraft,
   AiStudyPathDraft,
   ExtractRawNotesWithAiOptions,
   GenerateStudyPackWithAiOptions,
   GenerateStudyPathWithAiOptions,
-  StudyPathGenerationAmount,
 } from './strongGeneration'
 export { extractRawNotesWithAi } from './strongGeneration'
 export {

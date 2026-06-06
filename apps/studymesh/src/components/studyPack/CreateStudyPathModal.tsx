@@ -5,7 +5,6 @@ import {
   Button,
   Checkbox,
   Chip,
-  Collapse,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,7 +13,6 @@ import {
   FormControlLabel,
   IconButton,
   LinearProgress,
-  MenuItem,
   Paper,
   Stack,
   TextField,
@@ -24,7 +22,6 @@ import {
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import RouteIcon from '@mui/icons-material/Route'
-import TuneIcon from '@mui/icons-material/Tune'
 import {
   createStudyPackOrchestratorWidgets,
   StudyObject,
@@ -41,17 +38,12 @@ import {
   isLocalAiGenerationError,
   LocalAiGenerationFailureDebug,
   LocalAiProgressEvent,
-  normalizeStudyPathGenerationAmount,
   readStudyPackAiSettings,
   resolveStudyPackAiCredentials,
   STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
   StudyPackAiProvider,
-  StudyPathGenerationAmount,
 } from '../../studyPack/ai'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
-
-type GenerationAmount = StudyPathGenerationAmount
-type LocalAiDashboardConcurrency = 1 | 2 | 3 | 5
 
 interface CreateStudyPathModalProps {
   open: boolean
@@ -79,46 +71,9 @@ interface CreateStudyPathModalProps {
   onDraftMetaChange?: (metadata: {
     title: string
     inputSummary: string
-    detailLevel: string
   }) => void
   initialPrompt?: string
-  currentDashboardContext?: string
-  currentDashboardTitle?: string
-  hasCurrentDashboardContext?: boolean
-  allowDashboardSource?: boolean
 }
-
-const generationAmountOptions: Array<{
-  label: string
-  value: GenerationAmount
-  helper: string
-}> = [
-  {
-    label: 'Auto',
-    value: 'auto',
-    helper: 'AI chooses 3-7 dashboards from topic complexity',
-  },
-  {
-    label: 'Super small',
-    value: 'superSmall',
-    helper: '1 lesson dashboard + exercises',
-  },
-  {
-    label: 'Compact',
-    value: 'compact',
-    helper: '2 content dashboards + exercises',
-  },
-  {
-    label: 'Average',
-    value: 'average',
-    helper: '3 content dashboards + summary + exercises',
-  },
-  {
-    label: 'Deep',
-    value: 'deep',
-    helper: '5 content dashboards + summary + exercises',
-  },
-]
 
 const providerLabels: Record<StudyPackAiProvider, string> = {
   basic: 'Basic fallback',
@@ -129,18 +84,8 @@ const providerLabels: Record<StudyPackAiProvider, string> = {
 }
 
 const LOCAL_AI_ESTIMATE_COPY =
-  'Local AI runs on your device and can be slow. Super small usually takes 12-15 min, Compact 14-17 min, Average 15-20 min. For faster/deeper paths, use Own Gemini token.'
-const LOCAL_DEEP_BLOCKED_MESSAGE =
-  'Deep Study Guide is not available with Local AI. Use Average, Compact, Super small, or switch to Own Gemini token.'
-const GEMINI_STUDY_PATH_ESTIMATES_MS: Record<
-  ReturnType<typeof normalizeStudyPathGenerationAmount>,
-  number
-> = {
-  superSmall: 30 * 1000,
-  compact: 40 * 1000,
-  average: 60 * 1000,
-  deep: 90 * 1000,
-}
+  'Local AI runs on your device and can be slow. For faster, richer Study Guides, use a Gemini or Cerebras API key.'
+const GEMINI_STUDY_PATH_ESTIMATE_MS = 60 * 1000
 const CEREBRAS_STUDY_PATH_ESTIMATE_MS = 10 * 1000
 const BASIC_FALLBACK_STUDY_PATH_DELAY_MS = 10 * 1000
 const DEFAULT_STUDY_PATH_PROMPT =
@@ -359,35 +304,6 @@ const localThreadLanes = (
   })
 }
 
-const getGenerationAmountHelper = (
-  option: (typeof generationAmountOptions)[number],
-  provider: StudyPackAiProvider,
-): string => {
-  if (option.value === 'auto') {
-    return isStrongAiProvider(provider)
-      ? option.helper
-      : 'Auto depth is available with Gemini or Cerebras.'
-  }
-
-  if (provider !== 'local') {
-    return option.helper
-  }
-
-  if (option.value === 'superSmall') {
-    return '2 lesson dashboards'
-  }
-
-  if (option.value === 'compact') {
-    return '3 lesson dashboards'
-  }
-
-  if (option.value === 'average') {
-    return '5 lesson dashboards'
-  }
-
-  return 'unavailable with Local AI'
-}
-
 const getObjectPreview = (object?: StudyObject) => {
   if (!object) {
     return 'Generated study widgets for this lesson.'
@@ -545,24 +461,12 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   onStatusChange,
   onDraftMetaChange,
   initialPrompt,
-  currentDashboardContext = '',
-  currentDashboardTitle = 'Current dashboard',
-  hasCurrentDashboardContext = false,
-  allowDashboardSource = true,
 }) => {
   const [step, setStep] = useState<'prompt' | 'review'>('prompt')
-  const [sourceMode, setSourceMode] = useState<'prompt' | 'dashboard'>('prompt')
   const [prompt, setPrompt] = useState(
     initialPrompt || DEFAULT_STUDY_PATH_PROMPT,
   )
   const [aiProvider, setAiProvider] = useState<StudyPackAiProvider>('basic')
-  const [generationAmount, setGenerationAmount] =
-    useState<GenerationAmount>('auto')
-  const [advancedOpen, setAdvancedOpen] = useState(false)
-  const [mustInclude, setMustInclude] = useState('')
-  const [avoidTopics, setAvoidTopics] = useState('')
-  const [localAiDashboardConcurrency, setLocalAiDashboardConcurrency] =
-    useState<LocalAiDashboardConcurrency>(2)
   const [draft, setDraft] = useState<AiStudyPathDraft | null>(null)
   const [reviewFolderName, setReviewFolderName] = useState('')
   const [openInWorkspace, setOpenInWorkspace] = useState(true)
@@ -579,35 +483,13 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   const autoRetrySignalRef = useRef(autoRetrySignal)
   const autoCancelSignalRef = useRef(autoCancelSignal)
   const debugTrace = combinedDebugTrace(draft)
-  const canUseDashboardSource =
-    allowDashboardSource && hasCurrentDashboardContext
-
-  React.useEffect(() => {
-    if (!allowDashboardSource && sourceMode === 'dashboard') {
-      setSourceMode('prompt')
-    }
-  }, [allowDashboardSource, sourceMode])
 
   React.useEffect(() => {
     onDraftMetaChange?.({
-      title:
-        sourceMode === 'dashboard' && allowDashboardSource
-          ? currentDashboardTitle
-          : prompt.trim() || 'Study Guide',
-      inputSummary:
-        sourceMode === 'dashboard' && allowDashboardSource
-          ? `Current dashboard: ${currentDashboardTitle}`
-          : prompt.trim() || 'Learning prompt',
-      detailLevel: generationAmount,
+      title: prompt.trim() || 'Study Guide',
+      inputSummary: prompt.trim() || 'Learning prompt',
     })
-  }, [
-    currentDashboardTitle,
-    generationAmount,
-    allowDashboardSource,
-    onDraftMetaChange,
-    prompt,
-    sourceMode,
-  ])
+  }, [onDraftMetaChange, prompt])
 
   React.useEffect(() => {
     if (isGenerating) {
@@ -679,30 +561,11 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     const refreshAiProvider = () => {
       const provider = readStudyPackAiSettings().provider || 'basic'
       setAiProvider(provider)
-
-      if (!isGenerating) {
-        setGenerationAmount((current) =>
-          provider === 'local' && (current === 'deep' || current === 'auto')
-            ? 'superSmall'
-            : provider === 'basic' && current === 'auto'
-              ? 'average'
-              : current,
-        )
-      }
     }
 
     if (open) {
       refreshAiProvider()
       if (!initializedProviderRef.current) {
-        const provider = readStudyPackAiSettings().provider || 'basic'
-        setGenerationAmount(
-          isStrongAiProvider(provider)
-            ? 'auto'
-            : provider === 'local'
-              ? 'superSmall'
-              : 'average',
-        )
-        setLocalAiDashboardConcurrency(2)
         initializedProviderRef.current = true
       }
     }
@@ -722,19 +585,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
 
   const reset = () => {
     setStep('prompt')
-    setSourceMode('prompt')
     setPrompt(initialPrompt || DEFAULT_STUDY_PATH_PROMPT)
-    setGenerationAmount(
-      isStrongAiProvider(aiProvider)
-        ? 'auto'
-        : aiProvider === 'local'
-          ? 'superSmall'
-          : 'average',
-    )
-    setAdvancedOpen(false)
-    setMustInclude('')
-    setAvoidTopics('')
-    setLocalAiDashboardConcurrency(2)
     setDraft(null)
     setReviewFolderName('')
     setOpenInWorkspace(true)
@@ -757,27 +608,10 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     setAiProvider(effectiveAiProvider)
     const basePrompt =
       typeof promptOverride === 'string' ? promptOverride.trim() : prompt.trim()
-    const effectivePrompt = [
-      sourceMode === 'dashboard' && allowDashboardSource && !basePrompt
-        ? `Create a Study Guide from current dashboard: ${currentDashboardTitle}`
-        : basePrompt,
-      sourceMode === 'dashboard' && allowDashboardSource
-        ? `Use current dashboard as source context: ${currentDashboardTitle}\n\n${currentDashboardContext}`
-        : '',
-      mustInclude.trim()
-        ? `Optional focus / instructions: ${mustInclude.trim()}`
-        : '',
-    ]
-      .filter(Boolean)
-      .join('\n\n')
+    const effectivePrompt = basePrompt
 
-    if (sourceMode === 'prompt' && !basePrompt) {
+    if (!basePrompt) {
       setError('Describe what you want StudyMesh to teach.')
-      return
-    }
-
-    if (sourceMode === 'dashboard' && !canUseDashboardSource) {
-      setError('Current dashboard has no usable study content.')
       return
     }
 
@@ -796,18 +630,6 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       return
     }
 
-    if (effectiveAiProvider === 'local' && generationAmount === 'deep') {
-      setError(LOCAL_DEEP_BLOCKED_MESSAGE)
-      return
-    }
-
-    const effectiveGenerationAmount =
-      generationAmount === 'auto' && !isStrongAiProvider(effectiveAiProvider)
-        ? effectiveAiProvider === 'local'
-          ? 'superSmall'
-          : 'average'
-        : generationAmount
-
     cancelActiveGeneration()
     const generationController = new AbortController()
     activeGenerationRef.current = generationController
@@ -819,9 +641,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
             Date.now(),
             effectiveAiProvider === 'cerebras'
               ? CEREBRAS_STUDY_PATH_ESTIMATE_MS
-              : GEMINI_STUDY_PATH_ESTIMATES_MS[
-                  normalizeStudyPathGenerationAmount(effectiveGenerationAmount)
-                ],
+              : GEMINI_STUDY_PATH_ESTIMATE_MS,
           )
         : null,
     )
@@ -843,13 +663,6 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
         title: 'Study Guide',
         folderName: '',
         prompt: effectivePrompt,
-        mustInclude: mustInclude.trim() || undefined,
-        avoidTopics: avoidTopics.trim() || undefined,
-        generationAmount: effectiveGenerationAmount,
-        localAiDashboardConcurrency:
-          effectiveAiProvider === 'local'
-            ? localAiDashboardConcurrency
-            : undefined,
         signal: generationController.signal,
         onProgress: (event) => {
           if (generationController.signal.aborted) {
@@ -960,7 +773,6 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     }
 
     const nextPrompt = autoGenerateRequest.prompt.trim()
-    setSourceMode('prompt')
     setPrompt(nextPrompt)
     setError('')
     void generatePath(nextPrompt)
@@ -1082,7 +894,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
                 Create Study Guide
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Build an ordered lesson path from a goal or dashboard.
+                Build an ordered lesson path from a learning goal.
               </Typography>
             </Box>
           </Stack>
@@ -1128,196 +940,23 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
                 }}
               >
                 <Stack spacing={2}>
-                  {allowDashboardSource ? (
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={900}>
-                        Start from
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mt: 0.3 }}
-                      >
-                        Use a new learning goal, or let the current dashboard
-                        drive the path.
-                      </Typography>
-                      <Stack
-                        direction={{ xs: 'column', sm: 'row' }}
-                        gap={1}
-                        sx={{ mt: 1.25 }}
-                      >
-                        <Button
-                          variant={
-                            sourceMode === 'prompt' ? 'contained' : 'outlined'
-                          }
-                          onClick={() => {
-                            setSourceMode('prompt')
-                            setError('')
-                          }}
-                          sx={{ textTransform: 'none', flex: 1 }}
-                        >
-                          Prompt only
-                        </Button>
-                        <Button
-                          variant={
-                            sourceMode === 'dashboard'
-                              ? 'contained'
-                              : 'outlined'
-                          }
-                          disabled={!canUseDashboardSource}
-                          onClick={() => {
-                            setSourceMode('dashboard')
-                            setError('')
-                          }}
-                          sx={{ textTransform: 'none', flex: 1 }}
-                        >
-                          Current dashboard
-                        </Button>
-                      </Stack>
-                      {sourceMode === 'dashboard' ? (
-                        <Alert severity="info" sx={{ mt: 1.25 }}>
-                          Using current dashboard: {currentDashboardTitle}. The
-                          prompt below is optional.
-                        </Alert>
-                      ) : !canUseDashboardSource ? (
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ mt: 0.9, display: 'block' }}
-                        >
-                          Current dashboard has no usable study content.
-                        </Typography>
-                      ) : null}
-                    </Box>
-                  ) : null}
                   <TextField
-                    label={
-                      sourceMode === 'dashboard' && allowDashboardSource
-                        ? 'Optional learning focus'
-                        : 'Study Guide prompt'
-                    }
+                    label="Study Guide prompt"
                     inputProps={{
                       'aria-label': 'What should StudyMesh teach?',
                     }}
                     value={prompt}
                     onChange={(event) => setPrompt(event.target.value)}
-                    placeholder={
-                      sourceMode === 'dashboard' && allowDashboardSource
-                        ? 'Optional: focus on missed exercises, exam prep, or the next lesson...'
-                        : 'Example: Help me learn React hooks as a beginner/someone with JS experience...'
-                    }
+                    placeholder="Example: Help me learn React hooks as a beginner/someone with JS experience..."
                     multiline
                     minRows={presentation === 'embedded' ? 5 : 6}
-                    required={sourceMode === 'prompt' || !allowDashboardSource}
+                    required
                     fullWidth
                   />
-                  <Stack spacing={presentation === 'embedded' ? 1.25 : 2}>
-                    <TextField
-                      select
-                      label="Path depth"
-                      value={generationAmount}
-                      onChange={(event) =>
-                        setGenerationAmount(
-                          event.target.value as GenerationAmount,
-                        )
-                      }
-                      helperText={getGenerationAmountHelper(
-                        generationAmountOptions.find(
-                          (option) => option.value === generationAmount,
-                        ) || generationAmountOptions[0],
-                        aiProvider,
-                      )}
-                      fullWidth
-                    >
-                      {generationAmountOptions.map((option) => (
-                        <MenuItem
-                          key={option.value}
-                          value={option.value}
-                          aria-label={`${
-                            option.label
-                          } - ${getGenerationAmountHelper(option, aiProvider)}`}
-                          disabled={
-                            (aiProvider === 'local' &&
-                              option.value === 'deep') ||
-                            (option.value === 'auto' &&
-                              !isStrongAiProvider(aiProvider))
-                          }
-                        >
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                    {aiProvider === 'local' && (
-                      <TextField
-                        select
-                        label="Local AI concurrency"
-                        value={localAiDashboardConcurrency}
-                        onChange={(event) =>
-                          setLocalAiDashboardConcurrency(
-                            Number(
-                              event.target.value,
-                            ) as LocalAiDashboardConcurrency,
-                          )
-                        }
-                        helperText="How many lesson dashboards Local AI tries to generate at once."
-                        sx={{ maxWidth: { xs: '100%', sm: 320 }, flex: 1 }}
-                      >
-                        {[1, 2, 3, 5].map((value) => (
-                          <MenuItem key={value} value={value}>
-                            {value} dashboard{value === 1 ? '' : 's'} at once
-                            {value === 2 ? ' (default)' : ''}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    )}
-                  </Stack>
-                  <Box>
-                    <Button
-                      size="small"
-                      startIcon={<TuneIcon />}
-                      onClick={() => setAdvancedOpen((current) => !current)}
-                    >
-                      {advancedOpen
-                        ? 'Hide advanced options'
-                        : 'Advanced options'}
-                    </Button>
-                    <Collapse in={advancedOpen} unmountOnExit>
-                      <Stack spacing={1.5} sx={{ mt: 1.5 }}>
-                        <TextField
-                          label="Must include / I want to learn"
-                          value={mustInclude}
-                          onChange={(event) =>
-                            setMustInclude(event.target.value)
-                          }
-                          placeholder="Example: include irregular verbs, common mistakes, exam-style examples..."
-                          multiline
-                          minRows={presentation === 'embedded' ? 2 : 3}
-                          fullWidth
-                        />
-                        <TextField
-                          label="Avoid / I already know"
-                          value={avoidTopics}
-                          onChange={(event) =>
-                            setAvoidTopics(event.target.value)
-                          }
-                          placeholder="Example: skip basic greetings, avoid beginner grammar, no PDF resources..."
-                          multiline
-                          minRows={presentation === 'embedded' ? 2 : 3}
-                          fullWidth
-                        />
-                      </Stack>
-                    </Collapse>
-                  </Box>
                 </Stack>
               </Paper>
               {aiProvider === 'local' && (
-                <Alert
-                  severity={generationAmount === 'deep' ? 'error' : 'info'}
-                >
-                  {generationAmount === 'deep'
-                    ? LOCAL_DEEP_BLOCKED_MESSAGE
-                    : LOCAL_AI_ESTIMATE_COPY}
-                </Alert>
+                <Alert severity="info">{LOCAL_AI_ESTIMATE_COPY}</Alert>
               )}
               {aiProvider === 'hosted' && (
                 <Alert severity="warning">
@@ -1779,11 +1418,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
           <Button
             variant="contained"
             onClick={() => void generatePath()}
-            disabled={
-              isGenerating ||
-              (sourceMode === 'prompt' && !prompt.trim()) ||
-              (sourceMode === 'dashboard' && !hasCurrentDashboardContext)
-            }
+            disabled={isGenerating || !prompt.trim()}
           >
             {isGenerating ? 'Generating...' : 'Generate Study Guide'}
           </Button>
@@ -1797,7 +1432,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   )
 
   if (presentation === 'embedded') {
-    if (!open) {
+    if (!open || autoCreateOnGenerate) {
       return null
     }
 

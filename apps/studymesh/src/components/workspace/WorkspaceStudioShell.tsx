@@ -280,14 +280,6 @@ const formatQueueDuration = (durationMs: number) => {
 const estimateQueueDuration = (draft: GenerationDraft) => {
   if (draft.aiProvider === 'local') {
     if (draft.flow === 'study-path') {
-      if (draft.detailLevel === 'superSmall') {
-        return 'est. 12-15m'
-      }
-
-      if (draft.detailLevel === 'compact') {
-        return 'est. 14-17m'
-      }
-
       return 'est. 15-20m'
     }
 
@@ -295,7 +287,7 @@ const estimateQueueDuration = (draft: GenerationDraft) => {
   }
 
   if (draft.aiProvider === 'gemini') {
-    if (draft.detailLevel === 'long' || draft.detailLevel === 'deep') {
+    if (draft.detailLevel === 'long') {
       return 'est. 1-2m'
     }
 
@@ -496,7 +488,9 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const [studyPathPrompt, setStudyPathPrompt] = useState('')
   const [studyPathPromptError, setStudyPathPromptError] = useState('')
   const [studyPathAutoGenerateRequest, setStudyPathAutoGenerateRequest] =
-    useState<{ id: number; prompt: string } | undefined>(undefined)
+    useState<{ id: number; draftId: string; prompt: string } | undefined>(
+      undefined,
+    )
   const [quickDetailLevel] = useState<StudyMaterialDetailLevel>('medium')
   const [quickDifficulty] = useState('standard')
   const [quickSourceText, setQuickSourceText] = useState('')
@@ -651,6 +645,10 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         setStudyPathPromptError('')
         setActiveFlow('hub')
         setIsStudioOpen(true)
+        if (isMobile) {
+          window.dispatchEvent(new Event(CLOSE_DASHBOARD_CHAT_EVENT))
+          setMobileSection('creation')
+        }
         return
       }
 
@@ -812,10 +810,12 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const createNewDraft = (
     flow: Exclude<StudioFlow, 'hub'>,
     options: Partial<GenerationDraft> = {},
+    behavior: { activate?: boolean } = {},
   ) => {
     if (isMobile) {
       window.dispatchEvent(new Event(CLOSE_DASHBOARD_CHAT_EVENT))
     }
+    const shouldActivate = behavior.activate !== false
     const draft = createGenerationDraft(flow, options)
     setGenerationDrafts((current) => [
       ...current.filter(
@@ -825,7 +825,9 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       draft,
     ])
     setActiveDraftByFlow((current) => ({ ...current, [flow]: draft.id }))
-    setActiveFlow(flow)
+    if (shouldActivate) {
+      setActiveFlow(flow)
+    }
     setIsStudioOpen(true)
     if (isMobile) {
       setMobileSection('creation')
@@ -1936,11 +1938,22 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
     setStudyPathPromptError('')
     setActiveMaterialDraftId(null)
-    createNewDraft('study-path', {
-      title: prompt,
-      inputSummary: prompt,
+    const draft = createNewDraft(
+      'study-path',
+      {
+        title: prompt,
+        inputSummary: prompt,
+        status: 'generating',
+        aiProvider,
+      },
+      { activate: false },
+    )
+    setActiveFlow('hub')
+    setStudyPathAutoGenerateRequest({
+      id: Date.now(),
+      draftId: draft.id,
+      prompt,
     })
-    setStudyPathAutoGenerateRequest({ id: Date.now(), prompt })
   }
 
   const materialDetailContent = activeMaterial ? (
@@ -2840,7 +2853,11 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 presentation="embedded"
                 onCollapse={isMobile ? undefined : returnToCreateHub}
                 autoCreateOnGenerate
-                autoGenerateRequest={studyPathAutoGenerateRequest}
+                autoGenerateRequest={
+                  studyPathAutoGenerateRequest?.draftId === draft.id
+                    ? studyPathAutoGenerateRequest
+                    : undefined
+                }
                 autoRetrySignal={studyPathRetrySignals[draft.id] || 0}
                 autoCancelSignal={studyPathCancelSignals[draft.id] || 0}
                 openGeneratedInWorkspace={false}
@@ -2880,16 +2897,11 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   )
                   return dashboards
                 }}
-                currentDashboardContext={currentDashboardContext}
-                currentDashboardTitle={currentDashboardTitle}
-                hasCurrentDashboardContext={hasCurrentDashboardContext}
-                allowDashboardSource={false}
                 onStatusChange={makeDraftStatusHandler(draft.id, 'study-path')}
                 onDraftMetaChange={(metadata) =>
                   updateDraft(draft.id, {
                     title: metadata.title,
                     inputSummary: metadata.inputSummary,
-                    detailLevel: metadata.detailLevel,
                     aiProvider,
                   })
                 }

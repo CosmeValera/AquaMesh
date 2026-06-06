@@ -127,7 +127,6 @@ export const generateStudyPathWithAi = async (
   if (provider === 'local') {
     return generateStudyPathWithLocalAi(options, {
       onProgress: options.onProgress,
-      dashboardConcurrency: options.localAiDashboardConcurrency,
       signal: options.signal,
     })
   }

@@ -451,6 +451,11 @@ const formatDraftTitle = (draft: GenerationDraft) => {
   }`
 }
 
+const isTerminalGenerationStatus = (draft: GenerationDraft) =>
+  draft.status === 'ready' ||
+  draft.status === 'failed' ||
+  draft.status === 'cancelled'
+
 const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const { theme, isPhoneOrTablet: isMobile } = useResponsiveWorkspaceMode()
   const initialDrafts = useMemo(() => {
@@ -859,11 +864,27 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   }
 
   const makeDraftStatusHandler =
-    (draftId: string, flow: Exclude<StudioFlow, 'hub'>) =>
+    (
+      draftId: string,
+      flow: Exclude<StudioFlow, 'hub'>,
+      generationRequestId?: number,
+    ) =>
     (state: WorkspaceCreationTaskState, message?: string) => {
       setGenerationDrafts((current) =>
         current.map((draft) => {
           if (draft.id !== draftId) {
+            return draft
+          }
+
+          if (
+            flow === 'study-path' &&
+            generationRequestId &&
+            draft.generationRequestId !== generationRequestId
+          ) {
+            return draft
+          }
+
+          if (isTerminalGenerationStatus(draft)) {
             return draft
           }
 
@@ -1267,8 +1288,10 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     }
 
     if (draft.flow === 'study-path') {
+      const generationRequestId = Date.now()
       updateDraft(draft.id, {
         status: 'generating',
+        generationRequestId,
         error: undefined,
         acknowledgedAt: undefined,
         openedAt: undefined,
@@ -1938,6 +1961,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
     setStudyPathPromptError('')
     setActiveMaterialDraftId(null)
+    const generationRequestId = Date.now()
     const draft = createNewDraft(
       'study-path',
       {
@@ -1945,12 +1969,13 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         inputSummary: prompt,
         status: 'generating',
         aiProvider,
+        generationRequestId,
       },
       { activate: false },
     )
     setActiveFlow('hub')
     setStudyPathAutoGenerateRequest({
-      id: Date.now(),
+      id: generationRequestId,
       draftId: draft.id,
       prompt,
     })
@@ -2897,13 +2922,38 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   )
                   return dashboards
                 }}
-                onStatusChange={makeDraftStatusHandler(draft.id, 'study-path')}
+                onStatusChange={makeDraftStatusHandler(
+                  draft.id,
+                  'study-path',
+                  draft.generationRequestId,
+                )}
                 onDraftMetaChange={(metadata) =>
-                  updateDraft(draft.id, {
-                    title: metadata.title,
-                    inputSummary: metadata.inputSummary,
-                    aiProvider,
-                  })
+                  setGenerationDrafts((current) =>
+                    current.map((existingDraft) => {
+                      if (existingDraft.id !== draft.id) {
+                        return existingDraft
+                      }
+
+                      if (
+                        draft.generationRequestId &&
+                        existingDraft.generationRequestId !==
+                          draft.generationRequestId
+                      ) {
+                        return existingDraft
+                      }
+
+                      if (isTerminalGenerationStatus(existingDraft)) {
+                        return existingDraft
+                      }
+
+                      return {
+                        ...existingDraft,
+                        title: metadata.title,
+                        inputSummary: metadata.inputSummary,
+                        aiProvider,
+                      }
+                    }),
+                  )
                 }
               />
             </Box>

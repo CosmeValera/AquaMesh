@@ -36,6 +36,7 @@ export interface GenerationDraft {
   acknowledgedAt?: string
   openedAt?: string
   aiProvider?: string
+  generationRequestId?: number
   retrySourceText?: string
   retryTitle?: string
   retrySourceMode?: 'dashboard' | 'sources'

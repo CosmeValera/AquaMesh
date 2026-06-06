@@ -8,6 +8,22 @@ import { generateStudyPackWithAi } from '../../../../src/studyPack/ai'
 const createStudyPackDashboardsMock = vi.fn()
 let dashboardContextText = 'Dashboard notes about photosynthesis'
 let dashboardContextChunks: unknown[] = [{ text: dashboardContextText }]
+const studyPathModalProps = vi.hoisted(
+  () =>
+    [] as Array<{
+      autoCreateOnGenerate?: boolean
+      autoGenerateRequest?: { prompt: string }
+      onCreatePath?: (payload: {
+        folderName: string
+        dashboards: Array<{ name: string }>
+      }) => void
+      onStatusChange?: (state: string, message?: string) => void
+      onDraftMetaChange?: (metadata: {
+        title: string
+        inputSummary: string
+      }) => void
+    }>,
+)
 
 vi.mock('../../../../src/customHooks/useWorkspaceActions', () => ({
   __esModule: true,
@@ -121,13 +137,24 @@ vi.mock('../../../../src/components/studyPack/CreateStudyPathModal', () => ({
   default: (props: {
     autoCreateOnGenerate?: boolean
     autoGenerateRequest?: { prompt: string }
-  }) =>
-    props.autoCreateOnGenerate ? null : (
+    onCreatePath?: (payload: {
+      folderName: string
+      dashboards: Array<{ name: string }>
+    }) => void
+    onStatusChange?: (state: string, message?: string) => void
+    onDraftMetaChange?: (metadata: {
+      title: string
+      inputSummary: string
+    }) => void
+  }) => {
+    studyPathModalProps.push(props)
+    return props.autoCreateOnGenerate ? null : (
       <div
         data-testid="create-study-path-modal"
         data-auto-generate-prompt={props.autoGenerateRequest?.prompt || ''}
       />
-    ),
+    )
+  },
 }))
 
 vi.mock('../../../../src/components/workspace/WidgetEditorDialog', () => ({
@@ -171,6 +198,17 @@ describe('WorkspaceStudioShell Quick Create', () => {
   beforeEach(() => {
     dashboardContextText = 'Dashboard notes about photosynthesis'
     dashboardContextChunks = [{ text: dashboardContextText }]
+    studyPathModalProps.length = 0
+    vi.mocked(window.matchMedia).mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
     Element.prototype.scrollIntoView = vi.fn()
     createStudyPackDashboardsMock.mockClear()
     createStudyPackDashboardsMock.mockReturnValue([
@@ -327,6 +365,62 @@ describe('WorkspaceStudioShell Quick Create', () => {
     expect(createStudyPackDashboardsMock).not.toHaveBeenCalled()
   })
 
+  it('keeps a completed quick-create pill ready while another quick create runs', async () => {
+    let resolveSecondGeneration: (
+      value: Awaited<ReturnType<typeof generateStudyPackWithAi>>,
+    ) => void = () => {}
+    const secondGeneration = new Promise<
+      Awaited<ReturnType<typeof generateStudyPackWithAi>>
+    >((resolve) => {
+      resolveSecondGeneration = resolve
+    })
+    const generatedPack = {
+      id: 'draft-pack',
+      title: 'Generated Dashboard',
+      sourceFormat: 'text' as const,
+      objects: [
+        {
+          id: 'quiz-1',
+          kind: 'quiz' as const,
+          question: 'What is photosynthesis?',
+          options: ['A plant process', 'A mineral', 'A planet'],
+          answer: 'A plant process',
+          correctIndex: 0,
+        },
+      ],
+      warnings: [],
+      sourceSummary: { title: 'Summary', bullets: [] },
+    }
+    vi.mocked(generateStudyPackWithAi)
+      .mockResolvedValueOnce(generatedPack)
+      .mockReturnValueOnce(secondGeneration)
+
+    render(
+      <WorkspaceStudioShell>
+        <div>Dashboard canvas</div>
+      </WorkspaceStudioShell>,
+    )
+
+    openCreation()
+    clickQuickCard('Quiz')
+
+    await waitFor(() =>
+      expect(screen.getByText(/Ready - Open/i)).toBeInTheDocument(),
+    )
+
+    clickQuickCard('Flashcards')
+
+    await waitFor(() =>
+      expect(screen.getByText(/Generating flashcards/i)).toBeInTheDocument(),
+    )
+    expect(screen.getByText(/Ready - Open/i)).toBeInTheDocument()
+
+    await act(async () => {
+      resolveSecondGeneration(generatedPack)
+      await secondGeneration
+    })
+  })
+
   it('opens inline source controls from Add sources optional', () => {
     render(
       <WorkspaceStudioShell>
@@ -380,6 +474,74 @@ describe('WorkspaceStudioShell Quick Create', () => {
     )
     expect(screen.getByRole('heading', { name: /^Study Guide$/i })).toBeVisible()
     expect(screen.queryByTestId('create-study-path-modal')).not.toBeInTheDocument()
+  })
+
+  it('does not let an old Study Guide pill reuse a newer prompt or status', async () => {
+    render(
+      <WorkspaceStudioShell>
+        <div>Dashboard canvas</div>
+      </WorkspaceStudioShell>,
+    )
+
+    openCreation()
+    fireEvent.change(
+      screen.getByRole('textbox', { name: /What do you want to learn/i }),
+      { target: { value: 'Learn medieval history' } },
+    )
+    fireEvent.click(
+      screen.getByRole('button', { name: /^Create Study Guide$/i }),
+    )
+
+    await waitFor(() =>
+      expect(screen.getByText(/Creating study guide/i)).toBeInTheDocument(),
+    )
+    const firstGenerationProps = [...studyPathModalProps]
+      .reverse()
+      .find(
+        (props) =>
+          props.autoGenerateRequest?.prompt === 'Learn medieval history',
+      )
+    expect(firstGenerationProps).toBeTruthy()
+
+    act(() => {
+      firstGenerationProps?.onCreatePath?.({
+        folderName: 'Medieval History',
+        dashboards: [{ name: 'Feudalism' }],
+      })
+    })
+
+    await waitFor(() =>
+      expect(screen.getByText(/Ready - Open/i)).toBeInTheDocument(),
+    )
+
+    fireEvent.change(
+      screen.getByRole('textbox', { name: /What do you want to learn/i }),
+      { target: { value: 'Learn organic chemistry' } },
+    )
+    fireEvent.click(
+      screen.getByRole('button', { name: /^Create Study Guide$/i }),
+    )
+
+    await waitFor(() =>
+      expect(screen.getByText(/Creating study guide/i)).toBeInTheDocument(),
+    )
+
+    act(() => {
+      firstGenerationProps?.onDraftMetaChange?.({
+        title: 'Learn organic chemistry',
+        inputSummary: 'Learn organic chemistry',
+      })
+      firstGenerationProps?.onStatusChange?.(
+        'running',
+        'Create Study Guide is working',
+      )
+    })
+
+    expect(screen.getAllByText(/Creating study guide/i)).toHaveLength(1)
+    expect(screen.getByText(/Ready - Open/i)).toBeInTheDocument()
+    expect(
+      screen.queryByText(/Study Guide: Learn organic chemistry/i),
+    ).not.toBeInTheDocument()
   })
 
   it('disables quick create when there is no usable dashboard or sources', () => {

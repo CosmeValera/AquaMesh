@@ -9,18 +9,6 @@ export {
 } from './generator'
 export { detectMarkdownSource, parseStudyPack } from './parser'
 export {
-  STUDY_PATH_LAYOUT_ARCHETYPES,
-  getDefaultStudyPathLayoutMetadata,
-  normalizeStudyPathLayoutMetadata,
-} from './studyPathArchetypes'
-export type {
-  StudyPathDashboardPurpose,
-  StudyPathLayoutArchetype,
-  StudyPathLayoutMetadata,
-  StudyPathPracticeType,
-  StudyPathSourceRef,
-} from './studyPathArchetypes'
-export {
   augmentStudyPackPracticeObjects,
   createStudyPackPracticeProfile,
   getEffectiveGenerationTargets,
@@ -58,7 +46,10 @@ export type {
   StudyPackSourceFormat,
   StudyPackWidgetGroupInput,
   StudyPackWidgetRecord,
+  StudyPathDashboardPurpose,
   StudyPathDashboardRole,
+  StudyPathPracticeType,
+  StudyPathSourceRef,
   StudyQAObject,
   StudyQuizObject,
   StudyRevealObject,

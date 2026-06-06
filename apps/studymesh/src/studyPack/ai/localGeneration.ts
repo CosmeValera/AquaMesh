@@ -7,8 +7,8 @@ import {
   StudyObject,
   StudyPackSourceFormat,
   StudyPathDashboardRole,
+  StudyPathPracticeType,
 } from '../types'
-import { getDefaultStudyPathLayoutMetadata } from '../studyPathArchetypes'
 import {
   applyStudyMaterialResourceTypeToDraft,
   AiStudyPackDraft,
@@ -693,7 +693,7 @@ const localObjectToStudyObject = (
     }
 
     const quizOptions =
-      options.resourceType === 'quiz' && quiz.options.length < 3
+      quiz.options.length < 3
         ? [
             quiz.answer,
             'Not supported by the source notes',
@@ -701,20 +701,17 @@ const localObjectToStudyObject = (
           ].filter(Boolean)
         : quiz.options
     const quizCorrectIndex =
-      options.resourceType === 'quiz' && quiz.options.length < 3
+      quiz.options.length < 3
         ? 0
         : quiz.correctIndex
 
     return {
       ...base,
       kind,
-      quizMode:
-        options.resourceType === 'quiz' || quizOptions.length >= 3
-          ? 'multipleChoice'
-          : 'shortAnswer',
+      quizMode: 'multipleChoice',
       question: quiz.question,
-      options: quizOptions.length >= 3 ? quizOptions : [],
-      correctIndex: quizOptions.length >= 3 ? quizCorrectIndex : 0,
+      options: quizOptions,
+      correctIndex: quizCorrectIndex,
       answer: quiz.answer,
       explanation: quiz.explanation,
     }
@@ -1078,17 +1075,21 @@ const conceptQuiz = (
     concept.definition,
     index,
   )
-  const useMultipleChoice = optionSet.options.length >= 3
+  const fallbackOptions = [
+    concept.definition,
+    'Not supported by this material',
+    'The opposite of the lesson explanation',
+  ].filter(Boolean)
+  const quizOptions =
+    optionSet.options.length >= 3 ? optionSet.options : fallbackOptions
 
   return {
     ...createBase(packId, 'quiz', index, `${concept.concept} practice`),
     kind: 'quiz',
-    quizMode: useMultipleChoice ? 'multipleChoice' : 'shortAnswer',
-    question: useMultipleChoice
-      ? `In this material, what does "${concept.concept}" mean or do?`
-      : conceptQuestion(concept, index),
-    options: useMultipleChoice ? optionSet.options : [],
-    correctIndex: useMultipleChoice ? optionSet.correctIndex : 0,
+    quizMode: 'multipleChoice',
+    question: `In this material, what does "${concept.concept}" mean or do?`,
+    options: quizOptions,
+    correctIndex: optionSet.options.length >= 3 ? optionSet.correctIndex : 0,
     answer: concept.keyFact || concept.definition,
     explanation: concept.definition,
   }
@@ -1196,7 +1197,7 @@ const objectsFromContract = (
 
   quizzes.slice(0, quizMax).forEach((quiz, index) => {
     const quizOptions =
-      options.resourceType === 'quiz' && quiz.options.length < 3
+      quiz.options.length < 3
         ? [
             quiz.answer,
             'Not supported by the source notes',
@@ -1204,20 +1205,17 @@ const objectsFromContract = (
           ].filter(Boolean)
         : quiz.options
     const quizCorrectIndex =
-      options.resourceType === 'quiz' && quiz.options.length < 3
+      quiz.options.length < 3
         ? 0
         : quiz.correctIndex
 
     objects.push({
       ...createBase(packId, 'quiz', index, `Quiz ${index + 1}`),
       kind: 'quiz',
-      quizMode:
-        options.resourceType === 'quiz' || quizOptions.length >= 3
-          ? 'multipleChoice'
-          : 'shortAnswer',
+      quizMode: 'multipleChoice',
       question: quiz.question,
-      options: quizOptions.length >= 3 ? quizOptions : [],
-      correctIndex: quizOptions.length >= 3 ? quizCorrectIndex : 0,
+      options: quizOptions,
+      correctIndex: quizCorrectIndex,
       answer: quiz.answer,
       explanation: quiz.explanation,
     })
@@ -1246,10 +1244,6 @@ const objectsFromContract = (
       index,
       usableConcepts,
     )
-    if (options.resourceType === 'quiz' && quiz.quizMode !== 'multipleChoice') {
-      break
-    }
-
     objects.push(quiz)
     events.push('Augmented Local AI output: added concept quiz.')
   }
@@ -2132,7 +2126,7 @@ const mapLocalDashboard = (
   const summary =
     summaryString(record.summary) ||
     previewSummaryFromNotes(rawNotes, title || 'Generated local AI lesson.')
-  const layoutMetadata = getDefaultStudyPathLayoutMetadata(role, index)
+  const practiceType: StudyPathPracticeType = 'quiz'
   const contract = isLocalRepairedContract(draft.debugTrace?.validatedContract)
     ? draft.debugTrace.validatedContract
     : fallbackContractFromDashboard(title, summary, rawNotes)
@@ -2221,7 +2215,9 @@ const mapLocalDashboard = (
     summary,
     rawNotes,
     dashboardRole: role,
-    ...layoutMetadata,
+    dashboardPurpose: 'lesson',
+    practiceType,
+    layoutReason: 'Local AI generated a simple lesson with optional practice.',
     sourceFormat: 'text',
     objects: finalObjects,
     debugTrace: draft.debugTrace
@@ -4144,11 +4140,6 @@ export const generateStudyPathWithBasicFallback = ({
       ? 'medium'
       : 'few'
   const dashboards = roles.map((role, index) => {
-    const layoutMetadata = getDefaultStudyPathLayoutMetadata(
-      role,
-      index,
-      roles.length,
-    )
     const dashboardTitle = `${String(index + 1).padStart(2, '0')} - ${
       role === 'summary'
         ? 'Summary'
@@ -4199,7 +4190,9 @@ export const generateStudyPathWithBasicFallback = ({
           : 'Basic fallback lesson generated from the request.',
       rawNotes,
       dashboardRole: role,
-      ...layoutMetadata,
+      dashboardPurpose: 'lesson',
+      practiceType: 'quiz',
+      layoutReason: 'Basic fallback generated a simple lesson with practice.',
       sourceFormat: parsed.sourceFormat,
       objects: augmented.objects,
       warnings: [...parsed.warnings, ...augmented.warnings],

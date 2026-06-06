@@ -116,7 +116,6 @@ const objectToComponents = (
         studyPathDashboardIndex: studyPath.dashboardIndex,
         studyPathDashboardCount: studyPath.dashboardCount,
         studyPathFolderName: studyPath.folderName,
-        studyPathLayoutArchetype: studyPath.layoutArchetype,
         studyPathDashboardPurpose: studyPath.dashboardPurpose,
         studyPathPracticeType: studyPath.practiceType,
         studyPathLayoutReason: studyPath.layoutReason,
@@ -572,7 +571,6 @@ const createStudyPathProgressBlock = (
     studyPathDashboardIndex: studyPath.dashboardIndex,
     studyPathDashboardCount: studyPath.dashboardCount,
     studyPathFolderName: studyPath.folderName,
-    studyPathLayoutArchetype: studyPath.layoutArchetype,
     studyPathDashboardPurpose: studyPath.dashboardPurpose,
     studyPathPracticeType: studyPath.practiceType,
     studyPathLayoutReason: studyPath.layoutReason,
@@ -890,10 +888,6 @@ const shouldRenderGeneratedWidgets = (
     return false
   }
 
-  if (studyPath?.layoutArchetype === 'focusLesson') {
-    return false
-  }
-
   return true
 }
 
@@ -903,7 +897,10 @@ const createStudyPathVisibleQuizGroups = (
   const quizObjects = orderObjectsForGeneratedWidget(
     pack.objects.filter(
       (object) =>
-        object.kind === 'quiz' && !isLowQualityStudyObject(object, pack.title),
+        object.kind === 'quiz' &&
+        object.quizMode === 'multipleChoice' &&
+        object.options.length >= 2 &&
+        !isLowQualityStudyObject(object, pack.title),
     ),
   )
 
@@ -932,7 +929,6 @@ const createVisibleStudyPathWidgetGroups = (
   if (
     dashboardRole === 'summary' ||
     dashboardRole === 'exercises' ||
-    studyPath.layoutArchetype === 'focusLesson' ||
     studyPath.practiceType === 'none'
   ) {
     return []

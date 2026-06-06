@@ -2,10 +2,9 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type {
   StudyPathDashboardPurpose,
-  StudyPathLayoutArchetype,
   StudyPathPracticeType,
   StudyPathSourceRef,
-} from '../studyPack/studyPathArchetypes'
+} from '../studyPack/types'
 
 export interface StateDashboard {
   id: string
@@ -25,7 +24,6 @@ export interface StudyPathDashboardItem {
   dashboardIndex: number
   dashboardCount: number
   folderName: string
-  layoutArchetype?: StudyPathLayoutArchetype
   dashboardPurpose?: StudyPathDashboardPurpose
   practiceType?: StudyPathPracticeType
   layoutReason?: string

@@ -134,7 +134,7 @@ describe('StudyBlockView', () => {
     expect(screen.getByText('What did workers repeat?')).toBeInTheDocument()
   })
 
-  it('renders quiz carousel with multiple-choice and short-answer scoring', () => {
+  it('renders quiz carousel with multiple-choice items only', () => {
     render(
       <StudyBlockView
         type="QuizCarouselBlock"
@@ -163,18 +163,12 @@ describe('StudyBlockView', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Wrong option' }))
-    expect(screen.getByText('Answered 1/2')).toBeInTheDocument()
+    expect(screen.getByText('Answered 1/1')).toBeInTheDocument()
     expect(screen.getByText('Correct 0')).toBeInTheDocument()
     expect(screen.getByText('Wrong 1')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
-    fireEvent.change(screen.getByLabelText('Answer'), {
-      target: { value: 'industrialization' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Check answer' }))
-
-    expect(screen.getByText('Answered 2/2')).toBeInTheDocument()
-    expect(screen.getByText('Correct 1')).toBeInTheDocument()
-    expect(screen.getByText('Wrong 1')).toBeInTheDocument()
+    expect(screen.queryByText('What is the key term?')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Answer')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
   })
 })

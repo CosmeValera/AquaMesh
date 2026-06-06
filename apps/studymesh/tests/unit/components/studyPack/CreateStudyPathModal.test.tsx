@@ -58,13 +58,6 @@ const makeDashboard = (index: number, dashboardCount: number) => {
       ],
     },
     practice: {
-      shortAnswer: [
-        {
-          question: `Complete a new ${label.toLowerCase()} example with the correct form.`,
-          expectedAnswer: `${label} answer`,
-          explanation: `${label} short-answer explanation.`,
-        },
-      ],
       multipleChoice: [
         {
           question: `Which option applies ${label.toLowerCase()} in a new context?`,
@@ -84,12 +77,6 @@ const makeDashboard = (index: number, dashboardCount: number) => {
         back: `Use ${label.toLowerCase()} for the matching rule.`,
       },
     ],
-    layoutArchetype:
-      index % 3 === 1
-        ? 'learnPracticeTabs'
-        : index % 3 === 2
-          ? 'splitReferenceExercise'
-          : 'overviewReview',
     dashboardPurpose: index === 1 ? 'overview' : 'lesson',
     practiceType: index === 1 ? 'quiz' : 'mixed',
   }
@@ -293,15 +280,14 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     )
 
     expect(roleFilteredContract).toHaveTextContent('roleFilteredContract')
-    expect(rawDashboardInput).toHaveTextContent('Lesson 4 short-answer')
+    expect(rawDashboardInput).toHaveTextContent('Lesson 4 multiple-choice')
     expect(rawDashboardInput).toHaveTextContent('Lesson 5 concept recap/list')
-    expect(sanitizedInput).toHaveTextContent('Lesson 4 short-answer')
+    expect(sanitizedInput).toHaveTextContent('Lesson 4 multiple-choice')
     expect(sanitizedInput).toHaveTextContent('Lesson 5 concept recap/list')
     expect(finalMapping).not.toHaveTextContent('concept-recap')
-    expect(finalMapping).toHaveTextContent('study-guide-4-short-answer')
+    expect(finalMapping).not.toHaveTextContent('short-answer')
     expect(finalMapping).toHaveTextContent('study-guide-4-multiple-choice')
     expect(finalMapping).toHaveTextContent('study-guide-4-flashcard')
-    expect(finalMapping).toHaveTextContent('study-guide-5-short-answer')
     expect(finalMapping).toHaveTextContent('study-guide-5-multiple-choice')
     expect(finalMapping).toHaveTextContent('study-guide-5-flashcard')
 
@@ -375,7 +361,7 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     )
 
     expect(finalMapping).not.toHaveTextContent('concept-recap')
-    expect(finalMapping).toHaveTextContent('study-guide-3-short-answer')
+    expect(finalMapping).not.toHaveTextContent('short-answer')
     expect(finalMapping).toHaveTextContent('study-guide-3-multiple-choice')
     expect(finalMapping).toHaveTextContent('study-guide-3-flashcard')
   })
@@ -404,11 +390,10 @@ describe('CreateStudyPathModal Study Guide generation', () => {
       'study-path-debug-final-studyobject-mapping',
     )
 
-    expect(finalMapping).toHaveTextContent('study-guide-6-short-answer')
+    expect(finalMapping).not.toHaveTextContent('short-answer')
     expect(finalMapping).toHaveTextContent('study-guide-6-multiple-choice')
     expect(finalMapping).toHaveTextContent('study-guide-6-flashcard')
     expect(finalMapping).not.toHaveTextContent('concept-recap')
-    expect(finalMapping).toHaveTextContent('study-guide-7-short-answer')
     expect(finalMapping).toHaveTextContent('study-guide-7-multiple-choice')
     expect(finalMapping).toHaveTextContent('study-guide-7-flashcard')
   })

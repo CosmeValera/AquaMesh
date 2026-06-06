@@ -46,7 +46,6 @@ import {
   resolveStudyPackAiCredentials,
   STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
   StudyPackAiProvider,
-  StudyPathLayoutArchetype,
   StudyPathGenerationAmount,
 } from '../../studyPack/ai'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
@@ -146,10 +145,6 @@ const CEREBRAS_STUDY_PATH_ESTIMATE_MS = 10 * 1000
 const BASIC_FALLBACK_STUDY_PATH_DELAY_MS = 10 * 1000
 const DEFAULT_STUDY_PATH_PROMPT =
   'Study basic human anatomy focusing on organs and systems (cardiovascular, respiratory, digestive)'
-
-const layoutModeForStudyPathArchetype = (
-  _archetype?: StudyPathLayoutArchetype,
-): StudyPackDashboardLayoutMode => 'smart'
 
 interface GeminiTimedProgress {
   startedAt: number
@@ -1008,7 +1003,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       dashboards: pathDraft.dashboards.map((dashboard, index) => ({
         name: dashboard.title || `${pathDraft.title} ${index + 1}`,
         folderName: effectiveFolder,
-        layoutMode: layoutModeForStudyPathArchetype(dashboard.layoutArchetype),
+        layoutMode: 'smart',
         widgets: createStudyPackOrchestratorWidgets(
           {
             id: makePackId(dashboard.title || pathDraft.title, index),
@@ -1038,7 +1033,6 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
               dashboardCount,
               folderName: effectiveFolder,
               dashboardRole: dashboard.dashboardRole,
-              layoutArchetype: dashboard.layoutArchetype,
               dashboardPurpose: dashboard.dashboardPurpose,
               practiceType: dashboard.practiceType,
               layoutReason: dashboard.layoutReason,
@@ -1672,12 +1666,6 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
                         {dashboard.dashboardPurpose ? (
                           <Chip
                             label={dashboard.dashboardPurpose}
-                            size="small"
-                          />
-                        ) : null}
-                        {dashboard.layoutArchetype ? (
-                          <Chip
-                            label={dashboard.layoutArchetype}
                             size="small"
                           />
                         ) : null}

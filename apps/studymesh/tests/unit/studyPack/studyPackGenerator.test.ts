@@ -6,55 +6,11 @@ import {
   createStudyPackWidgets,
   createStudyPackWidgetsFromGroups,
   extractLearningConcepts,
-  getDefaultStudyPathLayoutMetadata,
   isBadConceptCandidate,
-  normalizeStudyPathLayoutMetadata,
   parseStudyPack,
 } from '../../../src/studyPack'
 
 describe('study pack generator', () => {
-  it('normalizes Study Guide layout archetype metadata with safe fallbacks', () => {
-    expect(getDefaultStudyPathLayoutMetadata('normal')).toMatchObject({
-      layoutArchetype: 'learnPracticeTabs',
-      dashboardPurpose: 'lesson',
-      practiceType: 'mixed',
-    })
-    expect(getDefaultStudyPathLayoutMetadata('summary')).toMatchObject({
-      layoutArchetype: 'overviewReview',
-      dashboardPurpose: 'overview',
-      practiceType: 'none',
-    })
-    expect(
-      normalizeStudyPathLayoutMetadata(
-        {
-          layoutArchetype: 'splitReferenceExercise',
-          dashboardPurpose: 'lesson',
-          practiceType: 'quiz',
-          layoutReason: 'Reference beside exercise.',
-        },
-        getDefaultStudyPathLayoutMetadata('normal'),
-      ),
-    ).toMatchObject({
-      layoutArchetype: 'splitReferenceExercise',
-      dashboardPurpose: 'lesson',
-      practiceType: 'quiz',
-    })
-    expect(
-      normalizeStudyPathLayoutMetadata(
-        {
-          layoutArchetype: 'bad-layout',
-          dashboardPurpose: 'bad-purpose',
-          practiceType: 'bad-practice',
-        },
-        getDefaultStudyPathLayoutMetadata('normal'),
-      ),
-    ).toMatchObject({
-      layoutArchetype: 'learnPracticeTabs',
-      dashboardPurpose: 'lesson',
-      practiceType: 'mixed',
-    })
-  })
-
   it('extracts concept-first practice and blocks weak candidates', () => {
     const source = `Goal
 Example
@@ -231,7 +187,7 @@ Erreur fréquente: utiliser l'indicatif après il faut que au lieu du subjonctif
       expect.arrayContaining([
         expect.objectContaining({
           kind: 'quiz',
-          quizMode: expect.stringMatching(/multipleChoice|shortAnswer/),
+          quizMode: 'multipleChoice',
         }),
       ]),
     )
@@ -473,7 +429,6 @@ A: When differentiating x raised to a constant power.`,
         dashboardIndex: 1,
         dashboardCount: 7,
         folderName: 'Derivatives Path',
-        layoutArchetype: 'learnPracticeTabs',
         dashboardPurpose: 'lesson',
         practiceType: 'none',
       },
@@ -482,7 +437,7 @@ A: When differentiating x raised to a constant power.`,
 
     expect(widgets.map((widget) => widget.name)).toEqual(['Derivatives Lesson'])
     expect(serialized).toContain('StudyPathProgressBlock')
-    expect(serialized).toContain('studyPathLayoutArchetype')
+    expect(serialized).not.toContain('studyPathLayoutArchetype')
     expect(serialized).toContain('derivatives-path-1')
     expect(serialized).not.toContain('Derivatives Summary')
     expect(serialized).not.toContain('QuizCarouselBlock')
@@ -508,7 +463,6 @@ A: When differentiating x raised to a constant power.`,
         dashboardIndex: 2,
         dashboardCount: 7,
         folderName: 'Derivatives Path',
-        layoutArchetype: 'learnPracticeTabs',
         dashboardPurpose: 'lesson',
         practiceType: 'mixed',
       },
@@ -535,7 +489,7 @@ A: When differentiating x raised to a constant power.`,
     })
   })
 
-  it('keeps split reference Study Guide dashboards as one lesson when quiz practice is too thin', () => {
+  it('keeps Study Guide dashboards as one lesson when quiz practice is too thin', () => {
     const pack = parseStudyPack(
       `Quiz:: Which rule handles x^n? | Power rule | Chain rule | Product rule
 Q: When is the power rule used?
@@ -552,7 +506,6 @@ A: When differentiating x raised to a constant power.`,
         dashboardIndex: 1,
         dashboardCount: 3,
         folderName: 'Derivatives Path',
-        layoutArchetype: 'splitReferenceExercise',
         dashboardPurpose: 'lesson',
         practiceType: 'quiz',
       },
@@ -631,7 +584,7 @@ A: partions`,
     expect(serialized).not.toContain('This recap should not render')
   })
 
-  it('renders focus lesson Study Guide dashboards as one learning surface', () => {
+  it('renders Study Guide dashboards with practiceType none as one learning surface', () => {
     const pack = parseStudyPack(
       `# Concept
 Read one careful explanation.
@@ -650,7 +603,6 @@ A: The concept.`,
         dashboardIndex: 1,
         dashboardCount: 3,
         folderName: 'Focus Path',
-        layoutArchetype: 'focusLesson',
         dashboardPurpose: 'lesson',
         practiceType: 'none',
       },
@@ -687,7 +639,27 @@ A: Back`,
   })
 
   it('can force short-answer quizzes to render as QuizBlock components', () => {
-    const pack = parseStudyPack('Quiz:: What is a derivative? | Rate of change')
+    const pack = {
+      id: 'legacy-short-answer',
+      title: 'Legacy short answer',
+      sourceFormat: 'text' as const,
+      warnings: [],
+      objects: [
+        {
+          id: 'legacy-short-answer-quiz',
+          kind: 'quiz' as const,
+          title: 'Legacy quiz',
+          sourceLine: 1,
+          tags: [],
+          quizMode: 'shortAnswer' as const,
+          question: 'What is a derivative?',
+          options: [],
+          correctIndex: 0,
+          answer: 'Rate of change',
+          explanation: 'A derivative measures rate of change.',
+        },
+      ],
+    }
     const widgets = createStudyPackOrchestratorWidgets(pack, {
       forceQuizBlockComponent: true,
       includeSourceWidget: false,

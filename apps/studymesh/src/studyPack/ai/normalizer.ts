@@ -2,14 +2,11 @@ import { z } from 'zod'
 import {
   StudyObject,
   StudyPackSourceFormat,
-  StudyPathDashboardRole,
-} from '../types'
-import type {
   StudyPathDashboardPurpose,
-  StudyPathLayoutArchetype,
+  StudyPathDashboardRole,
   StudyPathPracticeType,
   StudyPathSourceRef,
-} from '../studyPathArchetypes'
+} from '../types'
 
 const normalizeSpaces = (value: string): string =>
   value.replace(/\s+/g, ' ').trim()
@@ -79,12 +76,6 @@ const conceptRecapSchema = z.object({
   sections: z.array(conceptSectionSchema).default([]),
 })
 
-const shortAnswerSchema = z.object({
-  question: stringValue,
-  expectedAnswer: stringValue,
-  explanation: stringValue,
-})
-
 const multipleChoiceSchema = z.object({
   question: stringValue,
   options: z.array(stringValue),
@@ -101,7 +92,6 @@ const strictDashboardSchema = z.object({
   sourceSummary: sourceSummarySchema,
   conceptRecap: conceptRecapSchema,
   practice: z.object({
-    shortAnswer: z.array(shortAnswerSchema).default([]),
     multipleChoice: z.array(multipleChoiceSchema).default([]),
   }),
   flashcards: z.array(flashcardSchema).default([]),
@@ -130,7 +120,6 @@ export interface AiStudyPackDraft {
   sourceFormat?: StudyPackSourceFormat
   rawNotes?: string
   dashboardRole?: StudyPathDashboardRole
-  layoutArchetype?: StudyPathLayoutArchetype
   dashboardPurpose?: StudyPathDashboardPurpose
   practiceType?: StudyPathPracticeType
   layoutReason?: string
@@ -256,23 +245,7 @@ export const applyStudyMaterialResourceTypeToDraft = (
     objects = draft.objects
       .filter(
         (object): object is Extract<StudyObject, { kind: 'quiz' }> =>
-          object.kind === 'quiz',
-      )
-      .map((object) =>
-        object.quizMode === 'multipleChoice'
-          ? object
-          : {
-              ...object,
-              quizMode: 'multipleChoice' as const,
-              options: [
-                object.answer,
-                'Not supported by the source notes',
-                'The opposite of the source explanation',
-              ].filter(Boolean),
-              correctIndex: 0,
-              explanation:
-                object.explanation || `Correct answer: ${object.answer}`,
-            },
+          object.kind === 'quiz' && object.quizMode === 'multipleChoice',
       )
   }
 
@@ -406,14 +379,6 @@ const normalizeStrictContract = (
       Boolean(section),
     )
 
-  const shortAnswer = contract.practice.shortAnswer.filter((item, index) => {
-    if (!isUsefulQuestion(item.question, rawNotes)) {
-      events.push(`Dropped shortAnswer ${index + 1}: weak or copied question.`)
-      return false
-    }
-
-    return true
-  })
   const multipleChoice = contract.practice.multipleChoice
     .map((item, index) =>
       normalizeMultipleChoice(item, index, rawNotes, events),
@@ -440,7 +405,7 @@ const normalizeStrictContract = (
         ...contract.conceptRecap,
         sections: conceptSections,
       },
-      practice: { shortAnswer, multipleChoice },
+      practice: { multipleChoice },
       flashcards,
     },
     events,
@@ -454,10 +419,7 @@ const applyDashboardRoleFilter = (
   const events: string[] = []
 
   if (dashboardRole === 'summary') {
-    if (
-      contract.practice.shortAnswer.length > 0 ||
-      contract.practice.multipleChoice.length > 0
-    ) {
+    if (contract.practice.multipleChoice.length > 0) {
       events.push('Dropped practice: summary dashboards are recap-only.')
     }
 
@@ -468,7 +430,7 @@ const applyDashboardRoleFilter = (
     return {
       contract: {
         ...contract,
-        practice: { shortAnswer: [], multipleChoice: [] },
+        practice: { multipleChoice: [] },
         flashcards: [],
       },
       events,
@@ -567,18 +529,6 @@ export const mapStrictContractToStudyObjects = (
       checklist: false,
     }),
   )
-  const shortAnswerObjects: StudyObject[] = contract.practice.shortAnswer.map(
-    (item, index) => ({
-      ...createBase(packId, 'short-answer', index, `Practice ${index + 1}`),
-      kind: 'quiz' as const,
-      quizMode: 'shortAnswer' as const,
-      question: item.question,
-      options: [],
-      correctIndex: 0,
-      answer: item.expectedAnswer,
-      explanation: item.explanation,
-    }),
-  )
   const multipleChoiceObjects: StudyObject[] =
     contract.practice.multipleChoice.map((item, index) => ({
       ...createBase(
@@ -606,7 +556,6 @@ export const mapStrictContractToStudyObjects = (
 
   return [
     ...recapObjects,
-    ...shortAnswerObjects,
     ...multipleChoiceObjects,
     ...flashcardObjects,
   ]

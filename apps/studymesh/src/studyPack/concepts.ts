@@ -561,10 +561,14 @@ export const createApplicationQuestion = (
   const options =
     distractors.length > 0
       ? [answer, ...distractors].slice(0, 4)
-      : []
+      : [
+          answer,
+          'Not supported by the lesson explanation',
+          'The opposite of the lesson explanation',
+        ]
 
   return {
-    quizMode: options.length >= 2 ? 'multipleChoice' : 'shortAnswer',
+    quizMode: 'multipleChoice',
     question: createQuestionStem(concept),
     options,
     correctIndex: 0,

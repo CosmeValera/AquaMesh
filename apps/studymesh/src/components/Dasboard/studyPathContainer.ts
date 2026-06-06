@@ -5,10 +5,9 @@ import {
 } from '../../state/store'
 import type {
   StudyPathDashboardPurpose,
-  StudyPathLayoutArchetype,
   StudyPathPracticeType,
   StudyPathSourceRef,
-} from '../../studyPack/studyPathArchetypes'
+} from '../../studyPack/types'
 
 interface SavedDashboardLike {
   id?: string
@@ -27,7 +26,6 @@ interface StudyPathMeta {
   dashboardIndex: number
   dashboardCount: number
   folderName: string
-  layoutArchetype?: StudyPathLayoutArchetype
   dashboardPurpose?: StudyPathDashboardPurpose
   practiceType?: StudyPathPracticeType
   layoutReason?: string
@@ -57,27 +55,23 @@ const readMetaFromCustomProps = (
     dashboardKey,
     dashboardName: String(customProps.studyPathDashboardName || 'Lesson'),
     dashboardIndex: Number(customProps.studyPathDashboardIndex || 1),
-      dashboardCount: Number(customProps.studyPathDashboardCount || 1),
-      folderName: String(customProps.studyPathFolderName || 'Study Guide'),
-      layoutArchetype:
-        typeof customProps.studyPathLayoutArchetype === 'string'
-          ? (customProps.studyPathLayoutArchetype as StudyPathLayoutArchetype)
-          : undefined,
-      dashboardPurpose:
-        typeof customProps.studyPathDashboardPurpose === 'string'
-          ? (customProps.studyPathDashboardPurpose as StudyPathDashboardPurpose)
-          : undefined,
-      practiceType:
-        typeof customProps.studyPathPracticeType === 'string'
-          ? (customProps.studyPathPracticeType as StudyPathPracticeType)
-          : undefined,
-      layoutReason:
-        typeof customProps.studyPathLayoutReason === 'string'
-          ? customProps.studyPathLayoutReason
-          : undefined,
-      sourceRefs: Array.isArray(customProps.studyPathSourceRefs)
-        ? (customProps.studyPathSourceRefs as StudyPathSourceRef[])
+    dashboardCount: Number(customProps.studyPathDashboardCount || 1),
+    folderName: String(customProps.studyPathFolderName || 'Study Guide'),
+    dashboardPurpose:
+      typeof customProps.studyPathDashboardPurpose === 'string'
+        ? (customProps.studyPathDashboardPurpose as StudyPathDashboardPurpose)
         : undefined,
+    practiceType:
+      typeof customProps.studyPathPracticeType === 'string'
+        ? (customProps.studyPathPracticeType as StudyPathPracticeType)
+        : undefined,
+    layoutReason:
+      typeof customProps.studyPathLayoutReason === 'string'
+        ? customProps.studyPathLayoutReason
+        : undefined,
+    sourceRefs: Array.isArray(customProps.studyPathSourceRefs)
+      ? (customProps.studyPathSourceRefs as StudyPathSourceRef[])
+      : undefined,
   }
 }
 
@@ -186,7 +180,6 @@ export const createStudyPathContainerState = (
       dashboardIndex: meta.dashboardIndex,
       dashboardCount: meta.dashboardCount,
       folderName: meta.folderName || dashboard.folder || 'Study Guide',
-      layoutArchetype: meta.layoutArchetype,
       dashboardPurpose: meta.dashboardPurpose,
       practiceType: meta.practiceType,
       layoutReason: meta.layoutReason,

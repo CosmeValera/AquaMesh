@@ -366,12 +366,16 @@ const createQuiz = (
     title: `${concept} practice`,
     sourceLine: index + 1,
     tags: ['study-pack', 'practice'],
-    quizMode: 'shortAnswer',
+    quizMode: 'multipleChoice',
     question:
       concept === 'this lesson point'
         ? 'How would you apply this lesson point in a new example?'
         : `How would you apply ${concept} in a new example?`,
-    options: [],
+    options: [
+      fact,
+      'Ignore the lesson and guess from the title only.',
+      'Use the opposite of the lesson explanation.',
+    ],
     correctIndex: 0,
     answer: fact,
     explanation: fact,

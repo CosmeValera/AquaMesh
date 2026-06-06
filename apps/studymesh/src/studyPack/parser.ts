@@ -969,15 +969,20 @@ const parseTextLike = (
             explanation: '',
           })
         } else if (question && answer) {
+          const options = [
+            answer,
+            'Not supported by these notes',
+            'The opposite of the note explanation',
+          ]
           objects.push({
             id: buildId(packId, 'quiz', objects.length),
             kind: 'quiz',
             title: 'Quiz',
             sourceLine: line.lineNumber,
             tags: defaultTags,
-            quizMode: 'shortAnswer',
+            quizMode: 'multipleChoice',
             question,
-            options: [],
+            options,
             correctIndex: 0,
             answer,
             explanation: '',

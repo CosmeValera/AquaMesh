@@ -3098,6 +3098,83 @@ describe('Gemini study pack client', () => {
     )
   })
 
+  it('asks strong models for quiz-style flashcards around the requested count', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: JSON.stringify({
+                    title: 'Subjunctive',
+                    sourceFormat: 'text',
+                    sourceSummary: {
+                      title: 'Source summary',
+                      bullets: ['The subjunctive appears after doubt.'],
+                    },
+                    conceptRecap: {
+                      title: 'Concept recap',
+                      sections: [],
+                    },
+                    practice: {
+                      multipleChoice: [
+                        {
+                          question: 'Which sentence needs subjunctive?',
+                          options: [
+                            'A doubt trigger with a new subject',
+                            'A confirmed fact',
+                            'A direct command',
+                          ],
+                          correctOptionIndex: 0,
+                          explanation: 'Doubt can trigger subjunctive.',
+                        },
+                      ],
+                    },
+                    flashcards: [
+                      {
+                        front:
+                          'A sentence has doubt plus a new subject. What mood should the verb use?',
+                        back: 'Use the subjunctive because doubt with a new subject triggers it.',
+                      },
+                    ],
+                  }),
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const draft = await generateStudyPackWithAi({
+      apiToken: 'test-token',
+      model: 'gemini-test',
+      title: 'Subjunctive',
+      rawNotes: 'Use subjunctive after doubt when subjects change.',
+      packId: 'subjunctive',
+      resourceType: 'flashcards',
+      detailLevel: 'long',
+      generationTargets: ['flashcards'],
+      generationAmount: 'many',
+    })
+
+    const body = fetchMock.mock.calls[0][1].body
+    expect(body).toContain('Selected resource type: Flashcards')
+    expect(body).toContain('40-50 flashcards')
+    expect(body).toContain(
+      'same reasoning/application quality expected from quizzes',
+    )
+    expect(body).toContain('Prefer scenario, application, contrast')
+    expect(body).toContain('Do not copy headings, first sentences')
+    expect(draft.objects.map((object) => object.kind)).toEqual(['qa'])
+    expect(draft.warnings).toContain(
+      'Filtered generated content to the selected resource type.',
+    )
+  })
+
   it('retries Study Guide generation when Gemini returns malformed JSON with strict dashboards', async () => {
     const fetchMock = vi
       .fn()

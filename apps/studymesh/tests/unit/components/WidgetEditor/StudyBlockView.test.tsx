@@ -171,4 +171,25 @@ describe('StudyBlockView', () => {
     expect(screen.queryByLabelText('Answer')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
   })
+
+  it('renders markdown thematic breaks as horizontal rules', () => {
+    render(
+      <StudyBlockView
+        type="MarkdownBlock"
+        props={{
+          markdown:
+            'First section\n\n---\n\nSecond section\n\n***\n\nThird section\n\n- - -\n\nFourth section',
+        }}
+      />,
+    )
+
+    expect(screen.getByText('First section')).toBeInTheDocument()
+    expect(screen.getByText('Second section')).toBeInTheDocument()
+    expect(screen.getByText('Third section')).toBeInTheDocument()
+    expect(screen.getByText('Fourth section')).toBeInTheDocument()
+    expect(screen.getAllByRole('separator')).toHaveLength(3)
+    expect(screen.queryByText('---')).not.toBeInTheDocument()
+    expect(screen.queryByText('***')).not.toBeInTheDocument()
+    expect(screen.queryByText('- - -')).not.toBeInTheDocument()
+  })
 })

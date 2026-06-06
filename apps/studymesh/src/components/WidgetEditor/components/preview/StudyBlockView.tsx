@@ -171,6 +171,9 @@ const toRows = (value: unknown): string[][] =>
 const isMarkdownTableDivider = (line: string): boolean =>
   /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line)
 
+const isMarkdownThematicBreak = (line: string): boolean =>
+  /^(?:(?:-\s*){3,}|(?:\*\s*){3,}|(?:_\s*){3,})$/.test(line.trim())
+
 const splitMarkdownTableRow = (line: string): string[] =>
   line
     .trim()
@@ -252,6 +255,24 @@ export const renderMarkdown = (markdown: string): React.ReactNode[] => {
     const trimmed = line.trim()
 
     if (!trimmed) {
+      index += 1
+      continue
+    }
+
+    if (isMarkdownThematicBreak(trimmed)) {
+      blocks.push(
+        <Box
+          key={`hr-${index}`}
+          component="hr"
+          sx={{
+            width: '100%',
+            border: 0,
+            borderTop: 1,
+            borderColor: 'divider',
+            my: 1,
+          }}
+        />,
+      )
       index += 1
       continue
     }
@@ -467,6 +488,7 @@ export const renderMarkdown = (markdown: string): React.ReactNode[] => {
       index < lines.length &&
       lines[index].trim() &&
       !/^(#{1,6}\s+|```|[-*]\s+|\d+[.)]\s+|>)/.test(lines[index].trim()) &&
+      !isMarkdownThematicBreak(lines[index].trim()) &&
       !(
         lines[index].includes('|') &&
         lines[index + 1] &&

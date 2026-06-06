@@ -71,7 +71,7 @@ const geminiDetailTargets: Record<
   flashcards: {
     short: '20-30 flashcards',
     medium: '40-50 flashcards',
-    long: '50-65 flashcards',
+    long: '40-50 flashcards',
   },
   quiz: {
     short: '20-30 multiple-choice questions',
@@ -1331,7 +1331,7 @@ export const generateStudyPackWithAi = async ({
     : null
   const amountInstruction =
     resourceType === 'flashcards'
-      ? `Create ${resourceTarget} when possible. Never create fewer than 40 flashcards at Medium or Long detail if the notes contain enough usable facts.`
+      ? `Create ${resourceTarget} when possible. For Medium or Long detail, aim for around 40-50 flashcards and never create fewer than 40 if the notes contain enough usable facts.`
       : resourceType === 'quiz'
         ? `Create ${resourceTarget} when possible. Never create fewer than 40 multiple-choice questions at Medium or Long detail if the notes contain enough usable facts.`
         : `Create ${practiceProfile.targetTotal} reviewable study items when possible, never fewer than ${practiceProfile.minTotal} if the notes contain usable facts. Keep the total within ${practiceProfile.minTotal}-${practiceProfile.maxTotal} items.`
@@ -1347,7 +1347,7 @@ export const generateStudyPackWithAi = async ({
     resourceType === 'improvedNotes'
       ? 'Selected resource type: Expand on this. Create one polished expanded note set from the source. Stay close to the provided content and preserve the same learner level, vocabulary difficulty, and topic depth as the original source. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless they are clearly needed to explain the source. Organize the notes into teachable sections such as: source summary, key concepts, examples, common mistakes or misconceptions, and compact takeaways. Use clear explanations, but keep the complexity appropriate to the source. Do not create quiz questions or flashcards. Leave practice.multipleChoice and flashcards empty.'
       : resourceType === 'flashcards'
-        ? 'Selected resource type: Flashcards. Create only atomic flashcards from the source. Each flashcard must test one term, rule, contrast, formula step, exception, process step, or use case. Match the source learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Use answer backs that teach briefly, not one-word fragments. Keep sourceSummary brief, leave conceptRecap sections empty, and leave practice.multipleChoice empty.'
+        ? 'Selected resource type: Flashcards. Create only active-recall flashcards from the source, with the same reasoning/application quality expected from quizzes. Each front should ask the learner to use, choose, compare, diagnose, predict, explain, or repair a concept, not repeat a source sentence or ask for a pasted definition. Match the source learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Use answer backs that teach briefly, not one-word fragments. Keep sourceSummary brief, leave conceptRecap sections empty, and leave practice.multipleChoice empty.'
         : resourceType === 'quiz'
           ? 'Selected resource type: Quiz. Create only multiple-choice quiz questions from the source. Fill practice.multipleChoice only. Never create typed-answer, short-answer, quizSingle, or free-response questions. Match the source learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Prefer scenario, application, contrast, error-fixing, and why/how questions over simple recall. Keep sourceSummary brief, leave conceptRecap sections empty, and leave flashcards empty.'
           : 'Wrong Selected resource type.'
@@ -1410,7 +1410,9 @@ Rules:
 - Generate summaries, flashcards, and quizzes from learning concepts, not by copying first sentences, headings, examples, or dashboard instructions.
 - Never use weak standalone concepts such as Goal, Example, Active, It, Avoir, Etre, Quantity, or De. Do not create title-like, instruction-like, or very short fragments as study objects.
 - Expand on this must read like a useful student handout: headings, concise explanations, examples, contrasts, and common mistakes when grounded. Do not just summarize the input paragraph-by-paragraph.
-- Flashcards must be atomic and rule-specific, such as "How do you form the present subjunctive for most verbs?" Back sides must be self-contained and include enough context to learn from the card alone.
+- Flashcards must behave like quiz-style retrieval prompts without answer options. Prefer scenario, application, contrast, error-fixing, why/how, exception, and common-mistake fronts over "What is X?" definition cards.
+- Flashcards must be atomic and rule-specific, such as "A sentence uses il faut que before a new subject. What mood should the following verb use, and why?" Back sides must be self-contained and include enough context to learn from the card alone.
+- Flashcard fronts must be original prompts. Do not copy headings, first sentences, examples, or glossary lines from the source. Avoid text-literal fronts like "Define X", "What does the text say about X?", or "What is the meaning of X?" unless the source is purely vocabulary.
 - ${quizStyleInstruction}
 - Quiz and flashcard prompts must paraphrase the source. Do not copy exact source sentences as questions, answers, or distractors.
 - Quiz questions must test conceptual understanding and application, not only memorization. Mix recall and reasoning questions: definitions/facts, applied scenarios, comparisons, cause/effect, inference, identifying common mistakes, and fixing errors.

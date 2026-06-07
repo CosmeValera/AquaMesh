@@ -27,6 +27,7 @@ const cloudSyncMocks = vi.hoisted(() => {
     readWorkspaceCacheOwner: vi.fn(),
     writeLocalWorkspaceSnapshot: vi.fn(),
     writeWorkspaceCacheOwner: vi.fn(),
+    clearStudyMeshGuideSeedMarker: vi.fn(),
   }
 })
 
@@ -72,6 +73,11 @@ vi.mock('../../../src/components/WidgetEditor/WidgetStorage', () => ({
 
 vi.mock('../../../src/studyGuides/storage', () => ({
   STUDY_GUIDES_CHANGED_EVENT: 'studyGuidesChanged',
+}))
+
+vi.mock('../../../src/studyPack/studyMeshGuideSeed', () => ({
+  clearStudyMeshGuideSeedMarker:
+    cloudSyncMocks.clearStudyMeshGuideSeedMarker,
 }))
 
 vi.mock('../../../src/state/store', () => ({
@@ -132,5 +138,33 @@ describe('CloudWorkspaceSync profile deletion guard', () => {
     await new Promise((resolve) => window.setTimeout(resolve, 950))
 
     expect(cloudSyncMocks.repository.saveWorkspaceBundle).not.toHaveBeenCalled()
+  })
+
+  it('clears the StudyMesh Guide seed marker for a different empty owner', async () => {
+    cloudSyncMocks.readWorkspaceCacheOwner.mockReturnValue('old-user')
+
+    render(<CloudWorkspaceSync />)
+
+    await waitFor(() => {
+      expect(
+        cloudSyncMocks.clearStudyMeshGuideSeedMarker,
+      ).toHaveBeenCalled()
+    })
+    expect(cloudSyncMocks.writeWorkspaceCacheOwner).toHaveBeenCalledWith(
+      'user-1',
+    )
+  })
+
+  it('keeps the StudyMesh Guide seed marker for the same empty owner', async () => {
+    cloudSyncMocks.readWorkspaceCacheOwner.mockReturnValue('user-1')
+
+    render(<CloudWorkspaceSync />)
+
+    await waitFor(() => {
+      expect(cloudSyncMocks.repository.upsertProfile).toHaveBeenCalled()
+    })
+    expect(
+      cloudSyncMocks.clearStudyMeshGuideSeedMarker,
+    ).not.toHaveBeenCalled()
   })
 })

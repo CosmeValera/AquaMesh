@@ -19,9 +19,7 @@ const getCredentials = () => ({
   name: window.localStorage.getItem(TWD_NAME_KEY) || defaultCredentials.name,
 })
 
-const clearBrowserState = () => {
-  window.localStorage.clear()
-  window.sessionStorage.clear()
+const setLocalStorageEmailAndPassword = () => {
   window.localStorage.setItem(TWD_EMAIL_KEY, defaultCredentials.email)
   window.localStorage.setItem(TWD_PASSWORD_KEY, defaultCredentials.password)
   window.localStorage.setItem(TWD_NAME_KEY, defaultCredentials.name)
@@ -132,7 +130,7 @@ const openApplicationSettings = async () => {
 
 describe('StudyMesh TWD landing smoke', () => {
   beforeEach(() => {
-    clearBrowserState()
+    setLocalStorageEmailAndPassword()
   })
 
   it('landing sends guests to login', async () => {
@@ -155,7 +153,7 @@ describe('StudyMesh TWD landing smoke', () => {
 
 describe('StudyMesh TWD auth form smoke', () => {
   beforeEach(() => {
-    clearBrowserState()
+    setLocalStorageEmailAndPassword()
   })
 
   it('opens signup and fills the form without submitting', async () => {
@@ -181,7 +179,7 @@ describe('StudyMesh TWD auth form smoke', () => {
 
 describe('StudyMesh TWD signup smoke', () => {
   beforeEach(() => {
-    clearBrowserState()
+    setLocalStorageEmailAndPassword()
   })
 
   it('creates a toy StudyMesh profile and opens the workspace', async () => {
@@ -191,7 +189,7 @@ describe('StudyMesh TWD signup smoke', () => {
 
 describe('StudyMesh TWD login smoke', () => {
   beforeEach(() => {
-    clearBrowserState()
+    setLocalStorageEmailAndPassword()
   })
 
   it('logs into the toy StudyMesh profile and opens the workspace', async () => {
@@ -201,7 +199,7 @@ describe('StudyMesh TWD login smoke', () => {
 
 describe('StudyMesh TWD settings smoke', () => {
   beforeEach(() => {
-    clearBrowserState()
+    setLocalStorageEmailAndPassword()
   })
 
   it('opens Application Settings and shows AI provider controls', async () => {
@@ -222,7 +220,7 @@ describe('StudyMesh TWD settings smoke', () => {
 
 describe('StudyMesh TWD profile cleanup smoke', () => {
   beforeEach(() => {
-    clearBrowserState()
+    setLocalStorageEmailAndPassword()
   })
 
   it('deletes the toy StudyMesh profile row and returns to login', async () => {

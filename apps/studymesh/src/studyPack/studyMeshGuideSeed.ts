@@ -605,6 +605,14 @@ export const seedStudyMeshGuideStudyPath = ({
   return true
 }
 
+export const clearStudyMeshGuideSeedMarker = () => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.removeItem(STUDYMESH_GUIDE_SEEDED_KEY)
+}
+
 export const ensureStarterDashboards = () => {
   const oldStartersRemoved = removeOldStarterDashboards()
   const guideSeeded = seedStudyMeshGuideStudyPath()

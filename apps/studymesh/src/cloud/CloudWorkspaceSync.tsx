@@ -15,6 +15,7 @@ import {
   type WidgetStorageUpdatedDetail,
 } from '../components/WidgetEditor/WidgetStorage'
 import { useStore } from '../state/store'
+import { clearStudyMeshGuideSeedMarker } from '../studyPack/studyMeshGuideSeed'
 import { STUDY_GUIDES_CHANGED_EVENT } from '../studyGuides/storage'
 import {
   readLocalWorkspaceSnapshot,
@@ -262,6 +263,9 @@ const CloudWorkspaceSync = () => {
           writeWorkspaceCacheOwner(ownerId)
         } else {
           isApplyingRemoteRef.current = true
+          if (cacheOwnerId !== ownerId) {
+            clearStudyMeshGuideSeedMarker()
+          }
           applyCloudBundleToLocalCache(cloudBundle)
           writeWorkspaceCacheOwner(ownerId)
           setDashboards([])

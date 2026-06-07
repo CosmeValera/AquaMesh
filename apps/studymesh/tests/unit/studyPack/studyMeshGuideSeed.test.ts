@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   STUDYMESH_GUIDE_STUDY_PATH_ID,
+  clearStudyMeshGuideSeedMarker,
   ensureStarterDashboards,
   seedStudyMeshGuideStudyPath,
 } from '../../../src/studyPack/studyMeshGuideSeed'
@@ -69,6 +70,21 @@ describe('StudyMesh guide seed', () => {
     )
     expect(dashboards).toHaveLength(1)
     expect(studyGuides).toHaveLength(1)
+    expect(studyGuides[0].id).toBe(STUDYMESH_GUIDE_STUDY_PATH_ID)
+  })
+
+  it('can clear the seed marker when a different cloud owner starts empty', () => {
+    expect(seedStudyMeshGuideStudyPath()).toBe(true)
+
+    window.localStorage.setItem('studymesh_study_guides', JSON.stringify([]))
+    expect(seedStudyMeshGuideStudyPath()).toBe(false)
+
+    clearStudyMeshGuideSeedMarker()
+
+    expect(seedStudyMeshGuideStudyPath()).toBe(true)
+    const studyGuides = JSON.parse(
+      window.localStorage.getItem('studymesh_study_guides') || '[]',
+    )
     expect(studyGuides[0].id).toBe(STUDYMESH_GUIDE_STUDY_PATH_ID)
   })
 

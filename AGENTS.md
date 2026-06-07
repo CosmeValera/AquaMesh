@@ -77,9 +77,11 @@ Run commands from the repository root unless noted:
 - `npm run build` runs production builds through Turbo.
 - `npm test` runs package test tasks.
 - `npm run format` formats `ts`, `tsx`, and `md` files with Prettier.
-- `npm --workspace StudyMesh run test:unit` runs StudyMesh Vitest unit tests.
-- `npm --workspace StudyMesh run test:e2e` runs StudyMesh Playwright tests.
-- `npm --workspace StudyMesh run test:snapshot` updates Playwright snapshots.
+- `npm --workspace studymesh run test:unit` runs StudyMesh Vitest unit tests.
+- `npm --workspace studymesh run test:e2e` runs StudyMesh Playwright tests.
+- `npm --workspace studymesh run test:snapshot` updates Playwright snapshots.
+- `npm --workspace studymesh run twd:relay` starts the TWD relay for cheap in-browser smoke tests.
+- `npm --workspace studymesh run test:twd` runs the StudyMesh TWD smoke tests against the active dev app.
 
 For hook tests, run `tools/git-hooks/lib/bashunit tools/git-hooks/tests`.
 
@@ -90,6 +92,8 @@ Use TypeScript/React patterns already present in each app. Components use Pascal
 ## Testing Guidelines
 
 Use Vitest with React Testing Library for unit tests and Playwright for end-to-end coverage. Name unit tests `*.test.ts` or `*.test.tsx`; name e2e specs `*.spec.ts`. Keep snapshots in the existing `*-snapshots` folders and update them only when the visual change is intentional.
+
+StudyMesh also has TWD smoke tests in `apps/studymesh/src/twd/`. Use TWD when a fast browser check is enough for happy paths such as landing to login, signup/login to `/workspace`, opening Application Settings, or deleting the toy `profiles` row. Keep these tests short and workflow-level. Do not replace Vitest unit tests or Playwright e2e/visual coverage with TWD; use TWD to avoid expensive full-browser runs while developing narrow UI/auth flows.
 
 ## Commit & Pull Request Guidelines
 

@@ -396,10 +396,25 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   },
 
   async deleteProfile(userId: string): Promise<void> {
-    const { error } = await client.from('profiles').delete().eq('id', userId)
+    const row = await assertSingle<Pick<ProfileRow, 'id'>>(
+      client
+        .from('profiles')
+        .delete()
+        .eq('id', userId)
+        .select('id')
+        .maybeSingle(),
+    )
 
-    if (error) {
-      throw new Error(error.message)
+    if (!row) {
+      const remainingProfile = await assertSingle<ProfileRow>(
+        client.from('profiles').select('*').eq('id', userId).maybeSingle(),
+      )
+
+      if (remainingProfile) {
+        throw new Error(
+          'StudyMesh profile still exists after delete. Apply the profiles_delete_own Supabase RLS policy, then try again.',
+        )
+      }
     }
   },
 

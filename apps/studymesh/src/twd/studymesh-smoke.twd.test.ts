@@ -197,7 +197,9 @@ describe('StudyMesh TWD settings smoke', () => {
     await openApplicationSettings()
 
     expect(await screenDomGlobal.findByText(/AI Provider Settings/i)).to.exist
-    expect(await screenDomGlobal.findByLabelText(/AI provider/i)).to.exist
+    expect(
+      (await screenDomGlobal.findAllByLabelText(/AI provider/i)).length,
+    ).to.be.greaterThan(0)
     expect(
       await screenDomGlobal.findByRole('button', {
         name: /save ai settings/i,

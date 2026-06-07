@@ -164,6 +164,11 @@ describe('workspace cloud repository', () => {
   it('deletes the signed-in StudyMesh profile row', async () => {
     const builder = createQueryBuilder()
     builder.eq.mockReturnValue(builder)
+    builder.select.mockReturnValue(builder)
+    builder.maybeSingle.mockResolvedValue({
+      data: { id: 'user-1' },
+      error: null,
+    })
     const supabase = { from: vi.fn(() => builder) }
     const repository = createCloudRepository(supabase as never)
 
@@ -172,6 +177,70 @@ describe('workspace cloud repository', () => {
     expect(supabase.from).toHaveBeenCalledWith('profiles')
     expect(builder.delete).toHaveBeenCalled()
     expect(builder.eq).toHaveBeenCalledWith('id', 'user-1')
+    expect(builder.select).toHaveBeenCalledWith('id')
+  })
+
+  it('treats an already-missing StudyMesh profile row as deleted', async () => {
+    const deleteBuilder = createQueryBuilder()
+    deleteBuilder.eq.mockReturnValue(deleteBuilder)
+    deleteBuilder.select.mockReturnValue(deleteBuilder)
+    deleteBuilder.maybeSingle.mockResolvedValue({
+      data: null,
+      error: null,
+    })
+
+    const verifyBuilder = createQueryBuilder()
+    verifyBuilder.eq.mockReturnValue(verifyBuilder)
+    verifyBuilder.select.mockReturnValue(verifyBuilder)
+    verifyBuilder.maybeSingle.mockResolvedValue({
+      data: null,
+      error: null,
+    })
+
+    const supabase = {
+      from: vi
+        .fn()
+        .mockReturnValueOnce(deleteBuilder)
+        .mockReturnValueOnce(verifyBuilder),
+    }
+    const repository = createCloudRepository(supabase as never)
+
+    await repository.deleteProfile('user-1')
+
+    expect(supabase.from).toHaveBeenCalledWith('profiles')
+    expect(deleteBuilder.delete).toHaveBeenCalled()
+    expect(deleteBuilder.select).toHaveBeenCalledWith('id')
+    expect(verifyBuilder.select).toHaveBeenCalledWith('*')
+  })
+
+  it('reports a blocked StudyMesh profile delete when the row still exists', async () => {
+    const deleteBuilder = createQueryBuilder()
+    deleteBuilder.eq.mockReturnValue(deleteBuilder)
+    deleteBuilder.select.mockReturnValue(deleteBuilder)
+    deleteBuilder.maybeSingle.mockResolvedValue({
+      data: null,
+      error: null,
+    })
+
+    const verifyBuilder = createQueryBuilder()
+    verifyBuilder.eq.mockReturnValue(verifyBuilder)
+    verifyBuilder.select.mockReturnValue(verifyBuilder)
+    verifyBuilder.maybeSingle.mockResolvedValue({
+      data: { id: 'user-1' },
+      error: null,
+    })
+
+    const supabase = {
+      from: vi
+        .fn()
+        .mockReturnValueOnce(deleteBuilder)
+        .mockReturnValueOnce(verifyBuilder),
+    }
+    const repository = createCloudRepository(supabase as never)
+
+    await expect(repository.deleteProfile('user-1')).rejects.toThrow(
+      /profiles_delete_own/i,
+    )
   })
 
   it('upserts widgets and workspace state using owner-scoped rows', async () => {

@@ -125,15 +125,20 @@ describe('RequireAuth route guard', () => {
   it('deletes only the signed-in StudyMesh profile row', async () => {
     const builder = {
       delete: vi.fn(() => builder),
-      eq: vi.fn(() => ({ error: null })),
+      eq: vi.fn(() => builder),
+      select: vi.fn(() => builder),
+      maybeSingle: vi.fn(() => ({ data: { id: 'user-1' }, error: null })),
     }
     authMocks.from.mockReturnValue(builder)
+    authMocks.signOut.mockResolvedValue({ error: null })
 
     await deleteStudyMeshProfile('user-1')
 
     expect(authMocks.from).toHaveBeenCalledWith('profiles')
     expect(builder.delete).toHaveBeenCalled()
     expect(builder.eq).toHaveBeenCalledWith('id', 'user-1')
+    expect(builder.select).toHaveBeenCalledWith('id')
+    expect(authMocks.signOut).toHaveBeenCalled()
     expect(localStorage.removeItem).toHaveBeenCalledWith('userData')
   })
 })

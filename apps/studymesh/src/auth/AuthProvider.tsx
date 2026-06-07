@@ -139,6 +139,8 @@ export const updatePassword = async (password: string) => {
 export const deleteStudyMeshProfile = async (profileId: string) => {
   requireSupabaseConfig()
   await createCloudRepository(supabase).deleteProfile(profileId)
+  const { error } = await supabase.auth.signOut()
+  mapAuthError(error)
   clearLocalWorkspaceCache()
   removeUserAvatar(profileId)
   localStorage.removeItem('userData')

@@ -617,7 +617,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
     }
 
     await deleteStudyMeshProfile(auth.user.id)
-    await auth.signOut()
     setIsSettingsOpen(false)
     navigate('/login', { replace: true })
   }

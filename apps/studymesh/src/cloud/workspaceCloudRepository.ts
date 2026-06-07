@@ -12,14 +12,12 @@ import {
 import type {
   CloudJson,
   StudyMeshSupabaseClient,
-  StudyPathProgressCache,
   WorkspaceState,
 } from './types'
 
 interface LocalMigrationWorkspaceState {
   selectedDashboard: number
   openDashboards: StateDashboard[]
-  studyProgress?: StudyPathProgressCache | Record<string, CloudJson>
   settings?: Record<string, CloudJson>
   updatedAt: string
 }

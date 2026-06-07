@@ -28,13 +28,8 @@ const createStudyPathLayout = (index: number): DashboardLayout => ({
           config: {
             customProps: {
               widgetId: `widget-${index}`,
-              components: [
-                {
-                  id: `progress-${index}`,
-                  type: 'StudyProgress',
-                  props: createStudyPathComponentProps(index),
-                },
-              ],
+              ...createStudyPathComponentProps(index),
+              components: [],
             },
           },
         },

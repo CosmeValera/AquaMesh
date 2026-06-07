@@ -80,23 +80,7 @@ const createStarterStudyPathDashboard = (index: number) => ({
             component: 'CustomWidget',
             config: {
               customProps: {
-                components: [
-                  {
-                    id: `starter-progress-${index}`,
-                    type: 'StudyPathProgressBlock',
-                    props: {
-                      studyPathId:
-                        'studymesh-student-knowledge-wiki-a-beginner-s-guide',
-                      studyPathTitle:
-                        "StudyMesh Student Knowledge Wiki: A Beginner's Guide",
-                      studyPathDashboardKey: `studymesh-guide-${index}`,
-                      studyPathDashboardName: `0${index} - StudyMesh Guide ${index}`,
-                      studyPathDashboardIndex: index,
-                      studyPathDashboardCount: 2,
-                      studyPathFolderName: 'StudyMesh Guide',
-                    },
-                  },
-                ],
+                components: [],
               },
             },
           },
@@ -1361,117 +1345,6 @@ describe('Dashboards', () => {
     expect(
       screen.queryByRole('button', { name: /advanced dashboard/i }),
     ).not.toBeInTheDocument()
-  })
-
-  it('adds generated Study Guide review dashboards to the open Course navigator', () => {
-    const addDashboard = vi.fn()
-    const setSelectedDashboard = vi.fn()
-    const updateStudyPathContainer = vi.fn()
-    const reviewLayout = {
-      type: 'row',
-      children: [
-        {
-          type: 'tabset',
-          children: [
-            {
-              type: 'tab',
-              name: 'Review missed exercises',
-              component: 'CustomWidget',
-              config: {
-                customProps: {
-                  studyPathId: 'french-b1',
-                  studyPathTitle: 'French B1',
-                  studyPathDashboardKey: 'study-path-review-french-b1',
-                  studyPathDashboardName: 'Review missed exercises',
-                  studyPathDashboardIndex: 6,
-                  studyPathDashboardCount: 6,
-                  studyPathFolderName: 'French B1',
-                },
-              },
-            },
-          ],
-        },
-      ],
-    }
-
-    mockDashboardProvider({
-      addDashboard,
-      setSelectedDashboard,
-      updateStudyPathContainer,
-      openDashboards: [
-        {
-          id: 'study-path-tab',
-          name: 'French B1',
-          kind: 'studyPathContainer',
-          studyPath: {
-            pathId: 'french-b1',
-            title: 'French B1',
-            folderName: 'French B1',
-            selectedIndex: 4,
-            dashboards: [1, 2, 3, 4, 5].map((index) => ({
-              id: `lesson-${index}`,
-              name: `Lesson ${index}`,
-              layout: { type: 'row', children: [] },
-              dashboardKey: `french-b1-${index}`,
-              dashboardIndex: index,
-              dashboardCount: 5,
-              folderName: 'French B1',
-            })),
-          },
-        },
-      ],
-      selectedDashboard: 0,
-    })
-
-    render(<Dashboards />)
-
-    act(() => {
-      window.dispatchEvent(
-        new CustomEvent('studymesh-open-study-path-review-dashboard', {
-          detail: {
-            dashboard: {
-              id: 'study-path-review-french-b1',
-              name: 'French B1 - Review missed exercises',
-              layout: reviewLayout,
-              createdAt: '2026-05-15T00:00:00.000Z',
-              updatedAt: '2026-05-15T00:00:00.000Z',
-            },
-          },
-        }),
-      )
-    })
-
-    expect(addDashboard).not.toHaveBeenCalled()
-    expect(setSelectedDashboard).toHaveBeenCalledWith(0)
-    expect(updateStudyPathContainer).toHaveBeenCalledWith(
-      'study-path-tab',
-      expect.any(Function),
-    )
-
-    const updater = updateStudyPathContainer.mock.calls[0][1]
-    const updatedStudyPath = updater({
-      pathId: 'french-b1',
-      title: 'French B1',
-      folderName: 'French B1',
-      selectedIndex: 4,
-      dashboards: [1, 2, 3, 4, 5].map((index) => ({
-        id: `lesson-${index}`,
-        name: `Lesson ${index}`,
-        layout: { type: 'row', children: [] },
-        dashboardKey: `french-b1-${index}`,
-        dashboardIndex: index,
-        dashboardCount: 5,
-        folderName: 'French B1',
-      })),
-    })
-
-    expect(updatedStudyPath.selectedIndex).toBe(5)
-    expect(updatedStudyPath.dashboards).toHaveLength(6)
-    expect(updatedStudyPath.dashboards[5]).toMatchObject({
-      dashboardKey: 'study-path-review-french-b1',
-      name: 'French B1 - Review missed exercises',
-      dashboardIndex: 6,
-    })
   })
 
   it('allows a single Study Guide tab to close so the provider can restore the empty workspace', () => {

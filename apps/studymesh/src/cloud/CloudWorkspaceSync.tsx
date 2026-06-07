@@ -37,16 +37,14 @@ const hasLocalWorkspaceData = (
   bundle.studyGuides.length > 0 ||
   bundle.widgets.length > 0 ||
   bundle.widgetVersions.length > 0 ||
-  Boolean(bundle.workspaceState?.openDashboards.length) ||
-  Boolean(bundle.studyProgress)
+  Boolean(bundle.workspaceState?.openDashboards.length)
 
 const hasCloudWorkspaceData = (bundle: CloudWorkspaceBundle) =>
   bundle.dashboards.length > 0 ||
   bundle.studyGuides.length > 0 ||
   bundle.widgets.length > 0 ||
   bundle.widgetVersions.length > 0 ||
-  Boolean(bundle.workspaceState?.openDashboards.length) ||
-  Boolean(bundle.workspaceState?.studyProgress)
+  Boolean(bundle.workspaceState?.openDashboards.length)
 
 export type CloudHydrationAction =
   | 'apply-cloud'
@@ -115,7 +113,6 @@ const applyCloudBundleToLocalCache = (bundle: CloudWorkspaceBundle): void => {
           openDashboards: bundle.workspaceState.openDashboards,
         }
       : null,
-    studyProgress: bundle.workspaceState?.studyProgress || null,
   })
 
   window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
@@ -139,7 +136,6 @@ const buildWorkspaceBundleFromLocalCache = (
     ownerId,
     selectedDashboard: snapshot.workspaceState?.selectedDashboard || 0,
     openDashboards: snapshot.workspaceState?.openDashboards || [],
-    studyProgress: snapshot.studyProgress || undefined,
     updatedAt: new Date().toISOString(),
   }
 

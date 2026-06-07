@@ -314,20 +314,13 @@ const createGuideLayout = (
       },
     },
     {
-      id: `${lesson.id}-progress`,
-      type: 'StudyPathProgressBlock',
-      props: withStudyPathProps(lesson, index, {
-        __blockType: 'StudyPathProgressBlock',
-      }),
-    },
-    {
       id: `${lesson.id}-source-markdown`,
       type: 'MarkdownBlock',
-      props: {
+      props: withStudyPathProps(lesson, index, {
         __blockType: 'MarkdownBlock',
         title: 'Source notes',
         markdown: lesson.sourceMarkdown,
-      },
+      }),
     },
   ]
 

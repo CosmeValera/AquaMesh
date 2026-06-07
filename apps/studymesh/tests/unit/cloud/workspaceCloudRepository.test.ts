@@ -187,7 +187,6 @@ describe('workspace cloud repository', () => {
         owner_id: 'user-1',
         selected_dashboard: 0,
         open_dashboards: [{ id: 'dash-1', name: 'Physics' }],
-        study_progress: {},
         settings: {},
         updated_at: '2026-06-02T10:00:00.000Z',
       },
@@ -218,7 +217,6 @@ describe('workspace cloud repository', () => {
       ownerId: 'user-1',
       selectedDashboard: 0,
       openDashboards: [{ id: 'dash-1', name: 'Physics' }],
-      studyProgress: { paths: {} },
       settings: {},
       updatedAt: '2026-06-02T10:00:00.000Z',
     })
@@ -239,7 +237,6 @@ describe('workspace cloud repository', () => {
         selected_dashboard: '0',
         open_dashboards: [{ id: 'dash-1', name: 'Physics' }],
         settings: {},
-        study_progress: { paths: {} },
       }),
       { onConflict: 'owner_id' },
     )

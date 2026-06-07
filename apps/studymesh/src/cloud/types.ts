@@ -15,10 +15,6 @@ export type CloudJson =
   | CloudJson[]
   | { [key: string]: CloudJson | undefined }
 
-export type StudyPathProgressCache = {
-  paths: Record<string, CloudJson>
-}
-
 export interface UserProfile {
   id: string
   email?: string
@@ -33,7 +29,6 @@ export interface WorkspaceState {
   ownerId: string
   selectedDashboard: number
   openDashboards: StateDashboard[]
-  studyProgress?: StudyPathProgressCache
   settings?: Record<string, CloudJson>
   updatedAt: string
 }
@@ -47,7 +42,6 @@ export interface LocalWorkspaceSnapshot {
     selectedDashboard: number
     openDashboards: StateDashboard[]
   } | null
-  studyProgress: StudyPathProgressCache | null
 }
 
 export interface CloudWorkspaceBundle {

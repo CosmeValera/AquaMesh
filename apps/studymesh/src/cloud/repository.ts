@@ -9,7 +9,6 @@ import type {
   DashboardMergeResult,
   StudyGuideRecord,
   StudyMeshSupabaseClient,
-  StudyPathProgressCache,
   UserProfile,
   WorkspaceState,
 } from './types'
@@ -94,7 +93,6 @@ export interface WorkspaceStateRow {
   owner_id: string
   selected_dashboard: string | null
   open_dashboards: CloudJson
-  study_progress?: CloudJson | null
   settings?: CloudJson | null
   updated_at: string
 }
@@ -259,9 +257,6 @@ const workspaceStateFromRow = (row: WorkspaceStateRow): WorkspaceState => ({
   openDashboards: cloneJson(
     row.open_dashboards,
   ) as unknown as WorkspaceState['openDashboards'],
-  studyProgress: row.study_progress
-    ? (cloneJson(row.study_progress) as StudyPathProgressCache)
-    : undefined,
   settings: row.settings
     ? (cloneJson(row.settings) as Record<string, CloudJson>)
     : undefined,
@@ -274,9 +269,6 @@ const workspaceStateToRow = (
   owner_id: workspaceState.ownerId,
   selected_dashboard: String(workspaceState.selectedDashboard),
   open_dashboards: toCloudJson(workspaceState.openDashboards),
-  study_progress: workspaceState.studyProgress
-    ? toCloudJson(workspaceState.studyProgress)
-    : {},
   settings: workspaceState.settings ? toCloudJson(workspaceState.settings) : {},
   updated_at: workspaceState.updatedAt || nowIso(),
 })

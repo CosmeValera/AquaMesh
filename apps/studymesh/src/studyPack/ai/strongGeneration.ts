@@ -137,7 +137,6 @@ export interface AiStudyPathDashboardDraft extends AiStudyPackDraft {
     | 'remediation'
   learnerQuestion?: string
   learningOutcome?: string
-  suggestedPractice?: string[]
   supportArtifacts?: AiStudyPathSupportArtifacts
   qualityScore?: number
   qualityIssues?: string[]
@@ -166,7 +165,6 @@ interface AiStudyPathBlueprintLesson {
   workedExample: string
   misconceptionChecks: string[]
   retrievalPractice: string[]
-  suggestedPractice: string[]
 }
 
 interface AiStudyPathBlueprint {
@@ -538,10 +536,6 @@ const studyPathSchema = {
           },
           learnerQuestion: { type: 'STRING' },
           learningOutcome: { type: 'STRING' },
-          suggestedPractice: {
-            type: 'ARRAY',
-            items: { type: 'STRING' },
-          },
           supportArtifacts: studyPathSupportArtifactsSchema,
           sourceRefs: {
             type: 'ARRAY',
@@ -614,7 +608,6 @@ const studyPathBlueprintLessonSchema = {
     workedExample: { type: 'STRING' },
     misconceptionChecks: textArraySchema,
     retrievalPractice: textArraySchema,
-    suggestedPractice: textArraySchema,
   },
   required: [
     'title',
@@ -630,7 +623,6 @@ const studyPathBlueprintLessonSchema = {
     'workedExample',
     'misconceptionChecks',
     'retrievalPractice',
-    'suggestedPractice',
   ],
 }
 
@@ -1668,7 +1660,6 @@ const normalizeBlueprintLesson = (
     workedExample: stringFromUnknown(record.workedExample),
     misconceptionChecks: stringArrayFromUnknown(record.misconceptionChecks),
     retrievalPractice: stringArrayFromUnknown(record.retrievalPractice),
-    suggestedPractice: stringArrayFromUnknown(record.suggestedPractice),
   }
 }
 
@@ -1775,7 +1766,7 @@ Planning requirements:
 - Use student-friendly language and concrete objectives.
 - Avoid vague lesson titles such as "Introduction", "Practice", or "Review" unless they include topic-specific words.
 - Include 1-3 modules. lessonIndexes are zero-based indexes into lessons.
-- For each lesson, include contentMode, sectionPlan, mustTeach, workedExample, misconceptionChecks, retrievalPractice, and suggestedPractice.
+- For each lesson, include contentMode, sectionPlan, mustTeach, workedExample, misconceptionChecks, and retrievalPractice.
 - For normal teaching lessons, practice and flashcards should usually be empty unless the lesson is a checkpoint, review, remediation, or applied practice step. When practice is useful, plan multiple-choice retrieval questions.
 - Do not write full dashboard notes yet.
 Title fallback: ${title}
@@ -1829,7 +1820,6 @@ Required dashboard fields:
   "lessonType": "...",
   "learnerQuestion": "...",
   "learningOutcome": "...",
-  "suggestedPractice": ["..."],
   "supportArtifacts": {
     "glossary": [{ "term": "...", "definition": "..." }],
     "contrastTable": { "title": "...", "headers": ["...", "..."], "rows": [["...", "..."]] },
@@ -2200,10 +2190,6 @@ const generateStudyPathJsonWithPipeline = async ({
         stringFromUnknown(dashboard.learnerQuestion) || lesson.learnerQuestion,
       learningOutcome:
         stringFromUnknown(dashboard.learningOutcome) || lesson.learningOutcome,
-      suggestedPractice:
-        stringArrayFromUnknown(dashboard.suggestedPractice).length > 0
-          ? stringArrayFromUnknown(dashboard.suggestedPractice)
-          : lesson.suggestedPractice,
       dashboardPurpose:
         normalizeDashboardPurpose(
           dashboard.dashboardPurpose,
@@ -2267,7 +2253,6 @@ Return exactly this structure:
       "lessonType": "concept",
       "learnerQuestion": "Question this lesson answers",
       "learningOutcome": "Concrete outcome for the learner",
-      "suggestedPractice": ["Generate quiz for this lesson", "Generate flashcards for this lesson"],
       "rawNotes": "Complete lesson notes for this dashboard",
       "sourceSummary": { "title": "Source summary", "bullets": ["..."] },
       "conceptRecap": { "title": "Concept recap", "sections": [{ "title": "Specific concept", "bullets": ["..."], "example": "..." }] },
@@ -2308,8 +2293,7 @@ Rules:
 - Practice questions must test concepts and uses, not copied headings or answer options made obvious by the dashboard title.
 - Never use weak standalone concepts such as Goal, Example, Active, It, Avoir, Etre, Quantity, or De. Do not create title-like, instruction-like, or very short fragments as study objects.
 - Flashcards should ask useful rule-specific prompts such as "How do you form the present subjunctive for most verbs?" instead of "What should you remember about <copied line>?".
-- Include suggestedPractice for each lesson as short user-facing actions, such as "Review the lesson with a quick quiz" or "Generate flashcards for this lesson".
-- Every dashboard needs a short "summary" sentence so the review screen can preview it.
+- Every dashboard needs a short "summary" sentence so workspace previews can show it.
 - Do not wrap JSON in markdown. Do not add commentary outside JSON.
 - Do not create PDFs/images/resources unless the user explicitly asks for heavy media.
 - For multiple-choice questions, include 3-4 meaningful options, correctOptionIndex, and explanation.
@@ -2679,7 +2663,6 @@ ${prompt}`
         contentMode,
         learnerQuestion: stringFromUnknown(input.learnerQuestion),
         learningOutcome: stringFromUnknown(input.learningOutcome),
-        suggestedPractice: stringArrayFromUnknown(input.suggestedPractice),
         supportArtifacts,
         qualityScore: quality?.score,
         qualityIssues: quality?.issues,

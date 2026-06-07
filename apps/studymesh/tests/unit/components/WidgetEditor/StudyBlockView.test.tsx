@@ -62,7 +62,7 @@ describe('StudyBlockView', () => {
     ).toHaveLength(1)
   })
 
-  it('records Study Guide quiz attempts without filled red or green buttons', () => {
+  it('shows Study Guide quiz results without filled red or green buttons', () => {
     render(
       <StudyBlockView
         type="QuizBlock"
@@ -73,14 +73,6 @@ describe('StudyBlockView', () => {
           correctIndex: 1,
           answer: 'For doubt or emotion',
           explanation: 'The subjunctive expresses doubt, wish, or emotion.',
-          studyPathId: 'french-b1',
-          studyPathTitle: 'French B1',
-          studyPathDashboardKey: 'french-b1-1',
-          studyPathDashboardName: '01 - Content 1',
-          studyPathDashboardIndex: 1,
-          studyPathDashboardCount: 7,
-          studyPathFolderName: 'French B1',
-          studyPathItemId: 'quiz-1',
         }}
       />,
     )
@@ -91,9 +83,6 @@ describe('StudyBlockView', () => {
     fireEvent.click(wrongButton)
 
     expect(wrongButton).toHaveClass('MuiButton-outlined')
-    expect(localStorage.getItem('studymesh-study-path-progress-v1')).toContain(
-      '"missed":true',
-    )
   })
 
   it('renders flashcard carousel with one card and grade counters', () => {

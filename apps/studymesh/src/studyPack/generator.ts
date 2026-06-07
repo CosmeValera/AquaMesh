@@ -21,6 +21,27 @@ const DEFAULT_CREATED_AT = '1970-01-01T00:00:00.000Z'
 const STUDY_PACK_CATEGORY = 'Study Pack'
 const STUDY_PACK_AUTHOR = 'StudyMesh'
 
+const createStudyPathProps = (
+  studyPath?: StudyPathDashboardContext,
+  itemId?: string,
+) =>
+  studyPath
+    ? {
+        studyPathId: studyPath.pathId,
+        studyPathTitle: studyPath.title,
+        studyPathDashboardKey: studyPath.dashboardKey,
+        studyPathDashboardName: studyPath.dashboardName,
+        studyPathDashboardIndex: studyPath.dashboardIndex,
+        studyPathDashboardCount: studyPath.dashboardCount,
+        studyPathFolderName: studyPath.folderName,
+        studyPathDashboardPurpose: studyPath.dashboardPurpose,
+        studyPathPracticeType: studyPath.practiceType,
+        studyPathLayoutReason: studyPath.layoutReason,
+        studyPathSourceRefs: studyPath.sourceRefs,
+        ...(itemId ? { studyPathItemId: itemId } : {}),
+      }
+    : {}
+
 const colorPalette = [
   'rgba(54, 162, 235, 0.8)',
   'rgba(75, 192, 192, 0.8)',
@@ -107,22 +128,7 @@ const objectToComponents = (
   studyPath?: StudyPathDashboardContext,
   forceQuizBlockComponent = false,
 ): ComponentData[] => {
-  const studyPathProps = studyPath
-    ? {
-        studyPathId: studyPath.pathId,
-        studyPathTitle: studyPath.title,
-        studyPathDashboardKey: studyPath.dashboardKey,
-        studyPathDashboardName: studyPath.dashboardName,
-        studyPathDashboardIndex: studyPath.dashboardIndex,
-        studyPathDashboardCount: studyPath.dashboardCount,
-        studyPathFolderName: studyPath.folderName,
-        studyPathDashboardPurpose: studyPath.dashboardPurpose,
-        studyPathPracticeType: studyPath.practiceType,
-        studyPathLayoutReason: studyPath.layoutReason,
-        studyPathSourceRefs: studyPath.sourceRefs,
-        studyPathItemId: object.id,
-      }
-    : {}
+  const studyPathProps = createStudyPathProps(studyPath, object.id)
 
   switch (object.kind) {
     case 'markdown':
@@ -557,27 +563,6 @@ const createSummaryItems = (pack: StudyPack, rawSource = ''): string[] => {
   return Array.from(new Set(candidates)).slice(0, 6)
 }
 
-const createStudyPathProgressBlock = (
-  studyPath: StudyPathDashboardContext,
-): ComponentData => ({
-  id: `${studyPath.dashboardKey}-progress`,
-  type: 'StudyPathProgressBlock',
-  props: {
-    __blockType: 'StudyPathProgressBlock',
-    studyPathId: studyPath.pathId,
-    studyPathTitle: studyPath.title,
-    studyPathDashboardKey: studyPath.dashboardKey,
-    studyPathDashboardName: studyPath.dashboardName,
-    studyPathDashboardIndex: studyPath.dashboardIndex,
-    studyPathDashboardCount: studyPath.dashboardCount,
-    studyPathFolderName: studyPath.folderName,
-    studyPathDashboardPurpose: studyPath.dashboardPurpose,
-    studyPathPracticeType: studyPath.practiceType,
-    studyPathLayoutReason: studyPath.layoutReason,
-    studyPathSourceRefs: studyPath.sourceRefs,
-  },
-})
-
 const parseCsvSourceRow = (line: string): string[] => {
   const cells: string[] = []
   let current = ''
@@ -712,6 +697,7 @@ const createRawSourceWidget = (
         type: 'TableBlock',
         props: {
           __blockType: 'TableBlock',
+          ...createStudyPathProps(options.studyPath),
           title: options.studyPath ? 'Lesson' : 'Source table',
           headers: csvTable.headers,
           rows: csvTable.rows,
@@ -722,6 +708,7 @@ const createRawSourceWidget = (
         type: 'MarkdownBlock',
         props: {
           __blockType: 'MarkdownBlock',
+          ...createStudyPathProps(options.studyPath),
           title: options.studyPath ? 'Lesson' : 'Source notes',
           markdown: sourceText,
         },
@@ -732,9 +719,6 @@ const createRawSourceWidget = (
     name: options.studyPath ? `${pack.title} Lesson` : `${pack.title} Source`,
     components: [
       createLabel(`${widgetId}-title`, pack.title, 'h6'),
-      ...(options.studyPath
-        ? [createStudyPathProgressBlock(options.studyPath)]
-        : []),
       sourceComponent,
     ],
     createdAt: options.createdAt,

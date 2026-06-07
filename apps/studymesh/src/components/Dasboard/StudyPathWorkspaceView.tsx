@@ -11,14 +11,12 @@ import {
   Chip,
   Divider,
   IconButton,
-  LinearProgress,
   Paper,
   Stack,
   Tooltip,
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
@@ -27,9 +25,7 @@ import DashboardLayoutView from '../Layout/Layout'
 import {
   DashboardLayout,
   StudyPathContainerState,
-  StudyPathDashboardItem,
 } from '../../state/store'
-import { getStudyPathDashboardProgress } from '../../studyPack/progress'
 
 const STUDY_PATH_NAV_OPEN_STORAGE_KEY = 'studymesh-study-path-navigator-open-v2'
 const LEGACY_STUDY_PATH_NAV_OPEN_STORAGE_KEY =
@@ -46,20 +42,6 @@ interface StudyPathWorkspaceViewProps {
   onStudyPathChange: (studyPath: StudyPathContainerState) => void
   mobileView?: boolean
 }
-
-const getProgressForLesson = (
-  studyPath: StudyPathContainerState,
-  lesson: StudyPathDashboardItem,
-) =>
-  getStudyPathDashboardProgress({
-    studyPathId: studyPath.pathId,
-    studyPathTitle: studyPath.title,
-    dashboardKey: lesson.dashboardKey,
-    dashboardName: lesson.name,
-    dashboardIndex: lesson.dashboardIndex,
-    dashboardCount: lesson.dashboardCount,
-    folderName: lesson.folderName || studyPath.folderName,
-  })
 
 const sanitizeStudentWidgetName = (name?: string): string | undefined => {
   if (!name) {
@@ -148,19 +130,6 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
     Math.max(studyPath.dashboards.length - 1, 0),
   )
   const currentLesson = studyPath.dashboards[selectedIndex]
-  const progressByKey = useMemo(
-    () =>
-      Object.fromEntries(
-        studyPath.dashboards.map((lesson) => [
-          lesson.dashboardKey,
-          getProgressForLesson(studyPath, lesson),
-        ]),
-      ),
-    [studyPath],
-  )
-  const completedCount = Object.values(progressByKey).filter(
-    (progress) => progress.completedAt,
-  ).length
   const studentLayout = useMemo(
     () => sanitizeStudentLayout(currentLesson?.layout),
     [currentLesson?.layout],
@@ -279,10 +248,6 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
 
   const canGoPrevious = selectedIndex > 0
   const canGoNext = selectedIndex < studyPath.dashboards.length - 1
-  const completionPercent =
-    studyPath.dashboards.length > 0
-      ? Math.round((completedCount / studyPath.dashboards.length) * 100)
-      : 0
   const panelHorizontalSx =
     navigatorDock === 'left'
       ? { left: { xs: 8, md: 14 } }
@@ -563,21 +528,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                     studyPath.dashboards.length
                   }`}
                 />
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  noWrap
-                  sx={{ fontSize: { xs: '0.68rem', sm: '0.75rem' } }}
-                >
-                  {completedCount}/{studyPath.dashboards.length} completed
-                </Typography>
               </Stack>
-
-              <LinearProgress
-                variant="determinate"
-                value={completionPercent}
-                sx={{ borderRadius: 999, height: { xs: 4, sm: 5 } }}
-              />
 
               <Paper
                 variant="outlined"
@@ -706,7 +657,6 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
             >
               <Stack spacing={{ xs: 0.4, sm: 0.65 }}>
                 {studyPath.dashboards.map((lesson, index) => {
-                  const progress = progressByKey[lesson.dashboardKey]
                   const active = index === selectedIndex
 
                   return (
@@ -753,11 +703,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                               : 'transparent',
                           }}
                         >
-                          {progress?.completedAt ? (
-                            <CheckCircleIcon sx={{ fontSize: 16 }} />
-                          ) : (
-                            index + 1
-                          )}
+                          {index + 1}
                         </Box>
                         <Box sx={{ minWidth: 0, flex: 1 }}>
                           <Typography
@@ -779,9 +725,6 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                             noWrap
                           >
                             Step {lesson.dashboardIndex}/{lesson.dashboardCount}
-                            {progress?.score
-                              ? ` · Score ${progress.score}%`
-                              : ''}
                           </Typography>
                         </Box>
                       </Stack>

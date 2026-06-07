@@ -16,15 +16,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import {
-  completeStudyPathDashboard,
-  getStudyPathDashboardProgress,
-  OPEN_STUDY_PATH_REVIEW_DASHBOARD_EVENT,
-  registerStudyPathAttempt,
-  StudyPathDashboardMeta,
-} from '../../../../studyPack/progress'
-import { OPEN_CREATE_HUB_EVENT } from '../../../../customHooks/useWorkspaceActions'
-
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -43,7 +34,6 @@ const STUDY_BLOCK_TYPES = [
   'SequenceBlock',
   'ReviewPromptBlock',
   'MarkdownBlock',
-  'StudyPathProgressBlock',
   'FlashcardCarouselBlock',
   'QuizCarouselBlock',
   'FocusedFlashcardSessionBlock',
@@ -54,32 +44,6 @@ export const isStudyBlockType = (type: string) =>
   STUDY_BLOCK_TYPES.includes(type)
 
 const normalizeAnswer = (value: string) => value.trim().toLowerCase()
-
-const getStudyPathMeta = (
-  props: Record<string, unknown>,
-): StudyPathDashboardMeta | null => {
-  const studyPathId = String(props.studyPathId || '')
-  const dashboardKey = String(props.studyPathDashboardKey || '')
-
-  if (!studyPathId || !dashboardKey) {
-    return null
-  }
-
-  return {
-    studyPathId,
-    studyPathTitle: String(props.studyPathTitle || 'Study Guide'),
-    dashboardKey,
-    dashboardName: String(props.studyPathDashboardName || 'Dashboard'),
-    dashboardIndex: Number(props.studyPathDashboardIndex || 1),
-    dashboardCount: Number(props.studyPathDashboardCount || 7),
-    folderName: String(props.studyPathFolderName || 'Study Guide'),
-  }
-}
-
-const getStudyPathItemId = (
-  props: Record<string, unknown>,
-  fallback: string,
-): string => String(props.studyPathItemId || fallback)
 
 const hashValue = (value: string): string => {
   let hash = 0
@@ -543,98 +507,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
   )
   const columns = useMemo(() => toStringArray(props.columns), [props.columns])
   const rows = useMemo(() => toRows(props.rows), [props.rows])
-  const studyPathMeta = useMemo(() => getStudyPathMeta(props), [props])
-  const [studyPathProgress, setStudyPathProgress] = useState(() =>
-    studyPathMeta ? getStudyPathDashboardProgress(studyPathMeta) : null,
-  )
-
-  if (type === 'StudyPathProgressBlock') {
-    const isComplete = Boolean(studyPathProgress?.completedAt)
-    const completeDashboard = () => {
-      if (!studyPathMeta) {
-        return
-      }
-
-      const result = completeStudyPathDashboard(studyPathMeta)
-      setStudyPathProgress(result.dashboard)
-
-      if (result.reviewDashboard) {
-        window.dispatchEvent(
-          new CustomEvent(OPEN_STUDY_PATH_REVIEW_DASHBOARD_EVENT, {
-            detail: { dashboard: result.reviewDashboard },
-          }),
-        )
-      }
-    }
-    const openLessonCreation = (intent: 'quiz' | 'flashcards') => {
-      window.dispatchEvent(
-        new CustomEvent(OPEN_CREATE_HUB_EVENT, {
-          detail: { intent },
-        }),
-      )
-    }
-
-    return (
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Stack spacing={1}>
-          <Stack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            flexWrap="wrap"
-          >
-            <Chip
-              label={`Step ${studyPathMeta?.dashboardIndex || 1}/${
-                studyPathMeta?.dashboardCount || 7
-              }`}
-              color="primary"
-              size="small"
-            />
-            <Chip
-              label={
-                isComplete
-                  ? `Score ${studyPathProgress?.score || 0}%`
-                  : 'In progress'
-              }
-              color={isComplete ? 'success' : 'default'}
-              size="small"
-            />
-          </Stack>
-          <Typography variant="body2" color="text.secondary">
-            {studyPathProgress?.answered || 0} answered /{' '}
-            {studyPathProgress?.correct || 0} correct /{' '}
-            {studyPathProgress?.missed || 0} missed
-          </Typography>
-          <Button
-            variant={isComplete ? 'outlined' : 'contained'}
-            size="small"
-            onClick={completeDashboard}
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            {isComplete ? 'Completed' : 'Complete dashboard'}
-          </Button>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => openLessonCreation('quiz')}
-              sx={{ textTransform: 'none', borderRadius: 999 }}
-            >
-              Generate quiz
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => openLessonCreation('flashcards')}
-              sx={{ textTransform: 'none', borderRadius: 999 }}
-            >
-              Generate flashcards
-            </Button>
-          </Stack>
-        </Stack>
-      </Paper>
-    )
-  }
 
   if (type === 'FlashcardBlock') {
     const front = String(props.front || 'Question')
@@ -643,19 +515,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
     const tag = String(props.tag || '')
     const registerFlashcardGrade = (grade: 'known' | 'missed') => {
       setSelfGrade(grade)
-      if (!studyPathMeta) {
-        return
-      }
-
-      registerStudyPathAttempt({
-        ...studyPathMeta,
-        itemId: getStudyPathItemId(props, hashValue(`${front}:${back}`)),
-        type: 'flashcard',
-        prompt: front,
-        answer: grade === 'known' ? 'I knew it' : "I didn't know it",
-        expectedAnswer: back,
-        correct: grade === 'known',
-      })
     }
 
     return (
@@ -861,28 +720,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
       0,
       Math.min(3, Number(props.correctIndex || 0)),
     )
-    const answer = String(props.answer || options[correctIndex] || '')
     const explanation = String(props.explanation || '')
-    const registerQuizAttempt = (nextSelectedIndex: number) => {
-      if (!studyPathMeta) {
-        return
-      }
-
-      const selectedAnswer = options[nextSelectedIndex] || ''
-
-      registerStudyPathAttempt({
-        ...studyPathMeta,
-        itemId: getStudyPathItemId(props, hashValue(`${question}:${answer}`)),
-        type: 'quiz',
-        prompt: question,
-        answer: selectedAnswer,
-        expectedAnswer: answer,
-        explanation,
-        options,
-        correctIndex,
-        correct: nextSelectedIndex === correctIndex,
-      })
-    }
 
     return (
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
@@ -906,10 +744,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
                   key={`${option}-${index}`}
                   variant="outlined"
                   color="primary"
-                  onClick={() => {
-                    setSelectedIndex(index)
-                    registerQuizAttempt(index)
-                  }}
+                  onClick={() => setSelectedIndex(index)}
                   sx={{
                     justifyContent: 'flex-start',
                     color: 'text.primary',
@@ -976,7 +811,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
     const selected = focusedQuizAnswers[safeIndex]
     const hasMultipleChoiceAnswer = selected !== undefined
     const hasAnswered = hasMultipleChoiceAnswer
-    const answered = questions.reduce((total, item, index) => {
+    const answered = questions.reduce((total, _item, index) => {
       return focusedQuizAnswers[index] !== undefined ? total + 1 : total
     }, 0)
     const correct = questions.reduce((total, item, index) => {
@@ -1115,24 +950,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
     const shortAnswerCorrect =
       submittedShortAnswer &&
       normalizeAnswer(shortAnswer) === normalizeAnswer(answer)
-    const registerSingleAttempt = () => {
-      if (!studyPathMeta || !shortAnswer.trim()) {
-        return
-      }
-
-      registerStudyPathAttempt({
-        ...studyPathMeta,
-        itemId: getStudyPathItemId(props, hashValue(`${question}:${answer}`)),
-        type: 'quiz',
-        prompt: question,
-        answer: shortAnswer,
-        expectedAnswer: answer,
-        explanation,
-        options: [],
-        correctIndex: 0,
-        correct: normalizeAnswer(shortAnswer) === normalizeAnswer(answer),
-      })
-    }
 
     return (
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
@@ -1145,7 +962,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
               label="Answer"
               value={shortAnswer}
               onChange={(event) => setShortAnswer(event.target.value)}
-              onBlur={registerSingleAttempt}
               size="small"
               fullWidth
             />

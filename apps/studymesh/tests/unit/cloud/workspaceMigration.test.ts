@@ -129,7 +129,6 @@ const emptyLocalSnapshot = (): LocalWorkspaceSnapshot => ({
   widgets: [],
   widgetVersions: [],
   workspaceState: null,
-  studyProgress: null,
 })
 
 const emptyCloudBundle = (): CloudWorkspaceBundle => ({
@@ -231,7 +230,7 @@ describe('cloud-first workspace hydration planning', () => {
     expect(readWorkspaceCacheOwner()).toBe('user-1')
   })
 
-  it('clears stale workspace and progress cache when cloud snapshot is empty', () => {
+  it('clears stale workspace cache when cloud snapshot is empty', () => {
     window.localStorage.setItem(
       CLOUD_CACHE_KEYS.workspaceState,
       JSON.stringify({
@@ -241,20 +240,12 @@ describe('cloud-first workspace hydration planning', () => {
         },
       }),
     )
-    window.localStorage.setItem(
-      CLOUD_CACHE_KEYS.studyPathProgress,
-      JSON.stringify({ paths: { old: true } }),
-    )
 
     writeLocalWorkspaceSnapshot(emptyLocalSnapshot())
 
     expect(readLocalWorkspaceSnapshot().workspaceState).toBeNull()
-    expect(readLocalWorkspaceSnapshot().studyProgress).toBeNull()
     expect(
       window.localStorage.getItem(CLOUD_CACHE_KEYS.workspaceState),
-    ).toBeNull()
-    expect(
-      window.localStorage.getItem(CLOUD_CACHE_KEYS.studyPathProgress),
     ).toBeNull()
   })
 })

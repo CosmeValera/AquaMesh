@@ -2631,7 +2631,6 @@ describe('Gemini study pack client', () => {
         workedExample: `Loop worked example ${index}.`,
         misconceptionChecks: [`Loop mistake ${index}.`],
         retrievalPractice: [`Recall loop rule ${index}.`],
-        suggestedPractice: [`Generate quiz for loop lesson ${index}`],
       })),
       finalReviewPlan: ['Mix for and while loop decisions.'],
     }
@@ -2742,7 +2741,6 @@ describe('Gemini study pack client', () => {
       contentMode: 'orientationMap',
       learnerQuestion: 'How do loops work in case 1?',
       learningOutcome: 'Apply loop pattern 1.',
-      suggestedPractice: ['Generate quiz for loop lesson 1'],
       qualityScore: 4,
       qualityIssues: [],
     })
@@ -2796,7 +2794,6 @@ describe('Gemini study pack client', () => {
         workedExample: `Example ${index + 1}.`,
         misconceptionChecks: [],
         retrievalPractice: [],
-        suggestedPractice: [],
       })),
       finalReviewPlan: [],
     }

@@ -43,10 +43,7 @@ import StudyPathWorkspaceView from './StudyPathWorkspaceView'
 import DashboardChatPanel, {
   DashboardChatMessage,
 } from '../dashboardChat/DashboardChatPanel'
-import {
-  createStudyPathContainerState,
-  getStudyPathMetaFromLayout,
-} from './studyPathContainer'
+import { createStudyPathContainerState } from './studyPathContainer'
 import useTopNavBarWidgets from '../../customHooks/useTopNavBarWidgets'
 import {
   ensureStarterDashboards,
@@ -64,7 +61,6 @@ import {
   normalizeFolderColor,
   normalizeFolderName,
 } from './folderColors'
-import { OPEN_STUDY_PATH_REVIEW_DASHBOARD_EVENT } from '../../studyPack/progress'
 import {
   CLOSE_CREATE_STUDIO_EVENT,
   CLOSE_DASHBOARD_CHAT_EVENT,
@@ -931,92 +927,6 @@ const Dashboards = () => {
       )
     }
   }, [])
-
-  useEffect(() => {
-    const handleOpenStudyPathReviewDashboard = (event: Event) => {
-      const customEvent = event as CustomEvent<{ dashboard?: SavedDashboard }>
-      const dashboard = customEvent.detail?.dashboard
-
-      if (!dashboard) {
-        return
-      }
-
-      loadDashboardOptions()
-
-      const reviewMeta = getStudyPathMetaFromLayout(dashboard.layout)
-      const openStudyPathIndex = reviewMeta
-        ? openDashboards.findIndex(
-            (openDashboard) =>
-              openDashboard.kind === 'studyPathContainer' &&
-              openDashboard.studyPath?.pathId === reviewMeta.studyPathId,
-          )
-        : -1
-
-      if (reviewMeta && openStudyPathIndex >= 0) {
-        const openStudyPathDashboard = openDashboards[openStudyPathIndex]
-
-        updateStudyPathContainer(openStudyPathDashboard.id, (studyPath) => {
-          const reviewItem = {
-            id: dashboard.id,
-            name: dashboard.name,
-            layout: dashboard.layout,
-            dashboardKey: reviewMeta.dashboardKey,
-            dashboardIndex: reviewMeta.dashboardIndex,
-            dashboardCount: reviewMeta.dashboardCount,
-            folderName: reviewMeta.folderName,
-          }
-          const existingReviewIndex = studyPath.dashboards.findIndex(
-            (lesson) => lesson.dashboardKey === reviewItem.dashboardKey,
-          )
-          const nextDashboards =
-            existingReviewIndex >= 0
-              ? studyPath.dashboards.map((lesson, index) =>
-                  index === existingReviewIndex ? reviewItem : lesson,
-                )
-              : [...studyPath.dashboards, reviewItem]
-          const orderedDashboards = [...nextDashboards].sort(
-            (first, second) => first.dashboardIndex - second.dashboardIndex,
-          )
-          const selectedIndex = Math.max(
-            0,
-            orderedDashboards.findIndex(
-              (lesson) => lesson.dashboardKey === reviewItem.dashboardKey,
-            ),
-          )
-
-          return {
-            ...studyPath,
-            dashboards: orderedDashboards,
-            selectedIndex,
-          }
-        })
-        setSelectedDashboard(openStudyPathIndex)
-        return
-      }
-
-      addDashboard({
-        name: dashboard.name,
-        layout: dashboard.layout,
-      })
-    }
-
-    window.addEventListener(
-      OPEN_STUDY_PATH_REVIEW_DASHBOARD_EVENT,
-      handleOpenStudyPathReviewDashboard,
-    )
-
-    return () => {
-      window.removeEventListener(
-        OPEN_STUDY_PATH_REVIEW_DASHBOARD_EVENT,
-        handleOpenStudyPathReviewDashboard,
-      )
-    }
-  }, [
-    addDashboard,
-    openDashboards,
-    setSelectedDashboard,
-    updateStudyPathContainer,
-  ])
 
   // Check if current dashboards have changes compared to saved dashboards
   useEffect(() => {

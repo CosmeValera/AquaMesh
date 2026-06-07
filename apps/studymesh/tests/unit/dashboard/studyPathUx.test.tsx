@@ -65,21 +65,14 @@ const createLessonLayout = (index: number): DashboardLayout => ({
           component: 'CustomWidget',
           config: {
             customProps: {
-              components: [
-                {
-                  id: `progress-${index}`,
-                  type: 'StudyProgress',
-                  props: {
-                    studyPathId: 'german-b1-grammar',
-                    studyPathTitle: 'German B1 Grammar',
-                    studyPathDashboardKey: `german-b1-grammar-${index}`,
-                    studyPathDashboardName: `Lesson ${index}`,
-                    studyPathDashboardIndex: index,
-                    studyPathDashboardCount: 5,
-                    studyPathFolderName: 'German B1 Grammar',
-                  },
-                },
-              ],
+              studyPathId: 'german-b1-grammar',
+              studyPathTitle: 'German B1 Grammar',
+              studyPathDashboardKey: `german-b1-grammar-${index}`,
+              studyPathDashboardName: `Lesson ${index}`,
+              studyPathDashboardIndex: index,
+              studyPathDashboardCount: 5,
+              studyPathFolderName: 'German B1 Grammar',
+              components: [],
             },
           },
         },
@@ -234,7 +227,6 @@ describe('Interactive Study Guide UX', () => {
 
     expect(screen.getByTestId('study-path-navigator-panel')).toBeInTheDocument()
     expect(screen.getByText('Course helper')).toBeInTheDocument()
-    expect(screen.getByText('0/5 completed')).toBeInTheDocument()
     expect(screen.getByText('Lesson 1/5')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /dock left/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /dock right/i })).toBeInTheDocument()

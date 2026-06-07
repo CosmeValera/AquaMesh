@@ -436,7 +436,6 @@ A: When differentiating x raised to a constant power.`,
     const serialized = JSON.stringify(widgets)
 
     expect(widgets.map((widget) => widget.name)).toEqual(['Derivatives Lesson'])
-    expect(serialized).toContain('StudyPathProgressBlock')
     expect(serialized).not.toContain('studyPathLayoutArchetype')
     expect(serialized).toContain('derivatives-path-1')
     expect(serialized).not.toContain('Derivatives Summary')

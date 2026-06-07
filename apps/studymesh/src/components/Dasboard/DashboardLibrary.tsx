@@ -33,7 +33,6 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import DeleteIcon from '@mui/icons-material/Delete'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import AutoStoriesIcon from '@mui/icons-material/AutoStories'
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import FolderIcon from '@mui/icons-material/Folder'
 import SearchIcon from '@mui/icons-material/Search'
 import SortIcon from '@mui/icons-material/Sort'
@@ -41,8 +40,6 @@ import CloseIcon from '@mui/icons-material/Close'
 import EditIcon from '@mui/icons-material/Edit'
 import PublicIcon from '@mui/icons-material/Public'
 import LockIcon from '@mui/icons-material/Lock'
-import ReplayIcon from '@mui/icons-material/Replay'
-import QuizIcon from '@mui/icons-material/Quiz'
 import SchoolIcon from '@mui/icons-material/School'
 import { DashboardLayout, StudyPathContainerState } from '../../state/store'
 import { useDashboards } from './DashboardProvider'
@@ -756,24 +753,6 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
       .sort((a, b) => a.folderName.localeCompare(b.folderName))
   }, [bulkDeleteCandidates])
 
-  const handleStudyAction = (
-    action: 'generate-exercises' | 'practice-again' | 'create-quiz',
-    dashboard: SavedDashboard,
-    e: React.MouseEvent,
-  ) => {
-    e.stopPropagation()
-
-    window.dispatchEvent(
-      new CustomEvent('studymesh-study-pack-action-requested', {
-        detail: {
-          action,
-          dashboardId: dashboard.id,
-          dashboardName: dashboard.name,
-        },
-      }),
-    )
-  }
-
   // Function to handle editing a dashboard
   const handleEditDashboard = (
     dashboard: SavedDashboard,
@@ -1460,104 +1439,6 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                                         ))}
                                       </Box>
                                     )}
-                                  {isStudyPackDashboard(dashboard) && (
-                                    <Box
-                                      sx={{
-                                        display: 'flex',
-                                        gap: 1,
-                                        alignItems: 'center',
-                                        mt: 1,
-                                      }}
-                                    >
-                                      <Chip
-                                        size="small"
-                                        label="Progress ready"
-                                        sx={{
-                                          height: 18,
-                                          fontSize: '0.65rem',
-                                          bgcolor: 'action.hover',
-                                          color: 'text.secondary',
-                                        }}
-                                      />
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                      >
-                                        XP, streaks, and mastery can attach here
-                                        after practice data exists.
-                                      </Typography>
-                                    </Box>
-                                  )}
-                                  <Box
-                                    onClick={(e) => e.stopPropagation()}
-                                    sx={{
-                                      display: 'flex',
-                                      gap: 1,
-                                      flexWrap: 'wrap',
-                                      mt: 1.25,
-                                    }}
-                                  >
-                                    <Button
-                                      size="small"
-                                      variant="outlined"
-                                      startIcon={<AutoAwesomeIcon />}
-                                      onClick={(e) =>
-                                        handleStudyAction(
-                                          'generate-exercises',
-                                          dashboard,
-                                          e,
-                                        )
-                                      }
-                                      title="Request new practice exercises from this Study Guide"
-                                      sx={{
-                                        borderColor: 'primary.main',
-                                        color: 'primary.dark',
-                                        bgcolor: 'background.paper',
-                                        textTransform: 'none',
-                                        fontWeight: 800,
-                                      }}
-                                    >
-                                      Generate more exercises
-                                    </Button>
-                                    <Button
-                                      size="small"
-                                      startIcon={<ReplayIcon />}
-                                      onClick={(e) =>
-                                        handleStudyAction(
-                                          'practice-again',
-                                          dashboard,
-                                          e,
-                                        )
-                                      }
-                                      title="Open this Study Guide for another practice session"
-                                      sx={{
-                                        color: 'primary.dark',
-                                        textTransform: 'none',
-                                        fontWeight: 800,
-                                      }}
-                                    >
-                                      Practice again
-                                    </Button>
-                                    <Button
-                                      size="small"
-                                      startIcon={<QuizIcon />}
-                                      onClick={(e) =>
-                                        handleStudyAction(
-                                          'create-quiz',
-                                          dashboard,
-                                          e,
-                                        )
-                                      }
-                                      title="Request a quiz from this Study Guide lesson"
-                                      sx={{
-                                        color: 'primary.dark',
-                                        textTransform: 'none',
-                                        fontWeight: 800,
-                                      }}
-                                    >
-                                      Create quiz from section
-                                    </Button>
-                                  </Box>
                                 </Box>
                               </Box>
                               <Box

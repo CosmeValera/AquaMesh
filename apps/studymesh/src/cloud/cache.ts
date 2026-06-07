@@ -7,7 +7,6 @@ import type { StateDashboard } from '../state/store'
 import type {
   LocalWorkspaceSnapshot,
   StudyGuideRecord,
-  StudyPathProgressCache,
 } from './types'
 
 export const CLOUD_CACHE_KEYS = {
@@ -16,7 +15,6 @@ export const CLOUD_CACHE_KEYS = {
   widgets: 'studymesh_custom_widgets',
   widgetVersions: 'studymesh_widget_versions',
   studyGuides: 'studymesh_study_guides',
-  studyPathProgress: 'studymesh-study-path-progress-v1',
   owner: 'studymesh-cloud-cache-owner-v1',
 } as const
 
@@ -24,7 +22,6 @@ export const CLOUD_LEGACY_CACHE_KEYS = {
   workspaceState: 'aquamesh-storage',
   widgets: 'aquamesh_custom_widgets',
   widgetVersions: 'aquamesh_widget_versions',
-  studyPathProgress: 'aquamesh-study-path-progress-v1',
 } as const
 
 const hasBrowserStorage = () =>
@@ -128,33 +125,6 @@ export const clearWorkspaceStateCache = (): void => {
   removeJsonCache(CLOUD_CACHE_KEYS.workspaceState)
 }
 
-export const readStudyPathProgressCache = (): StudyPathProgressCache | null => {
-  const current = readJsonCache<StudyPathProgressCache | null>(
-    CLOUD_CACHE_KEYS.studyPathProgress,
-    null,
-  )
-
-  if (current) {
-    return current
-  }
-
-  return readJsonCache<StudyPathProgressCache | null>(
-    CLOUD_LEGACY_CACHE_KEYS.studyPathProgress,
-    null,
-  )
-}
-
-export const writeStudyPathProgressCache = (
-  progress: StudyPathProgressCache | null,
-): void => {
-  if (progress) {
-    writeJsonCache(CLOUD_CACHE_KEYS.studyPathProgress, progress)
-  } else {
-    removeJsonCache(CLOUD_CACHE_KEYS.studyPathProgress)
-    removeJsonCache(CLOUD_LEGACY_CACHE_KEYS.studyPathProgress)
-  }
-}
-
 export const readWorkspaceCacheOwner = (): string | null =>
   readJsonCache<string | null>(CLOUD_CACHE_KEYS.owner, null)
 
@@ -174,7 +144,6 @@ export const readLocalWorkspaceSnapshot = (): LocalWorkspaceSnapshot => ({
   widgets: readWidgetsCache(),
   widgetVersions: readWidgetVersionsCache(),
   workspaceState: readWorkspaceStateCache(),
-  studyProgress: readStudyPathProgressCache(),
 })
 
 export const writeLocalWorkspaceSnapshot = (
@@ -190,6 +159,4 @@ export const writeLocalWorkspaceSnapshot = (
   } else {
     clearWorkspaceStateCache()
   }
-
-  writeStudyPathProgressCache(snapshot.studyProgress)
 }

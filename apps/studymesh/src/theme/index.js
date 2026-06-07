@@ -116,6 +116,10 @@ export const createStudyMeshTheme = (
           '::selection': {
             backgroundColor: alpha(themePalette.primary.main, 0.35),
           },
+          'input::placeholder, textarea::placeholder': {
+            color: themePalette.text.disabled,
+            opacity: isDark ? 0.72 : 0.86,
+          },
         },
       },
       MuiTooltip: {

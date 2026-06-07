@@ -40,6 +40,10 @@ export interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
+export const STUDYMESH_PROFILE_DELETE_STARTED_EVENT =
+  'studymesh-profile-delete-started'
+export const STUDYMESH_PROFILE_DELETE_CANCELLED_EVENT =
+  'studymesh-profile-delete-cancelled'
 
 const requireSupabaseConfig = () => {
   if (!isSupabaseConfigured) {
@@ -138,7 +142,16 @@ export const updatePassword = async (password: string) => {
 
 export const deleteStudyMeshProfile = async (profileId: string) => {
   requireSupabaseConfig()
-  await createCloudRepository(supabase).deleteProfile(profileId)
+  window.dispatchEvent(new CustomEvent(STUDYMESH_PROFILE_DELETE_STARTED_EVENT))
+  try {
+    await createCloudRepository(supabase).deleteProfile(profileId)
+  } catch (error) {
+    window.dispatchEvent(
+      new CustomEvent(STUDYMESH_PROFILE_DELETE_CANCELLED_EVENT),
+    )
+    throw error
+  }
+
   const { error } = await supabase.auth.signOut()
   mapAuthError(error)
   clearLocalWorkspaceCache()

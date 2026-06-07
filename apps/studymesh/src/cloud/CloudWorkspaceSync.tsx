@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { useAuth } from '../auth/AuthProvider'
+import {
+  STUDYMESH_PROFILE_DELETE_CANCELLED_EVENT,
+  STUDYMESH_PROFILE_DELETE_STARTED_EVENT,
+  useAuth,
+} from '../auth/AuthProvider'
 import { isSupabaseConfigured, supabase } from '../auth/supabaseClient'
 import {
   SAVED_DASHBOARDS_CHANGED_EVENT,
@@ -155,8 +159,43 @@ const CloudWorkspaceSync = () => {
   const [hasHydrated, setHasHydrated] = useState(false)
   const syncTimeoutRef = useRef<number | null>(null)
   const isApplyingRemoteRef = useRef(false)
+  const isProfileDeleteInProgressRef = useRef(false)
   const setDashboards = useStore((state) => state.setDashboards)
   const setSelectedDashboard = useStore((state) => state.setSelectedDashboard)
+
+  useEffect(() => {
+    const handleProfileDeleteStarted = () => {
+      isProfileDeleteInProgressRef.current = true
+      if (syncTimeoutRef.current !== null) {
+        window.clearTimeout(syncTimeoutRef.current)
+        syncTimeoutRef.current = null
+      }
+    }
+
+    const handleProfileDeleteCancelled = () => {
+      isProfileDeleteInProgressRef.current = false
+    }
+
+    window.addEventListener(
+      STUDYMESH_PROFILE_DELETE_STARTED_EVENT,
+      handleProfileDeleteStarted,
+    )
+    window.addEventListener(
+      STUDYMESH_PROFILE_DELETE_CANCELLED_EVENT,
+      handleProfileDeleteCancelled,
+    )
+
+    return () => {
+      window.removeEventListener(
+        STUDYMESH_PROFILE_DELETE_STARTED_EVENT,
+        handleProfileDeleteStarted,
+      )
+      window.removeEventListener(
+        STUDYMESH_PROFILE_DELETE_CANCELLED_EVENT,
+        handleProfileDeleteCancelled,
+      )
+    }
+  }, [])
 
   useEffect(() => {
     if (loading || !user || !isSupabaseConfigured) {
@@ -175,6 +214,10 @@ const CloudWorkspaceSync = () => {
     }
 
     const hydrate = async () => {
+      if (isProfileDeleteInProgressRef.current) {
+        return
+      }
+
       try {
         dispatchCloudSyncStatus('loading')
         const [cloudBundle, localSnapshot] = await Promise.all([
@@ -183,7 +226,7 @@ const CloudWorkspaceSync = () => {
         ])
         const cacheOwnerId = readWorkspaceCacheOwner()
 
-        if (cancelled) {
+        if (cancelled || isProfileDeleteInProgressRef.current) {
           return
         }
 
@@ -209,6 +252,9 @@ const CloudWorkspaceSync = () => {
             isApplyingRemoteRef.current = false
           }, 0)
         } else if (action === 'upload-local') {
+          if (isProfileDeleteInProgressRef.current) {
+            return
+          }
           await repository.saveWorkspaceBundle(
             ownerId,
             buildWorkspaceBundleFromLocalCache(ownerId, profile),
@@ -223,6 +269,9 @@ const CloudWorkspaceSync = () => {
           window.setTimeout(() => {
             isApplyingRemoteRef.current = false
           }, 0)
+          if (isProfileDeleteInProgressRef.current) {
+            return
+          }
           await repository.upsertProfile(profile)
         }
 
@@ -260,7 +309,10 @@ const CloudWorkspaceSync = () => {
     }
 
     const runSync = async () => {
-      if (isApplyingRemoteRef.current) {
+      if (
+        isApplyingRemoteRef.current ||
+        isProfileDeleteInProgressRef.current
+      ) {
         return
       }
 
@@ -282,6 +334,10 @@ const CloudWorkspaceSync = () => {
     }
 
     const runCloudWidgetDelete = async (widgetId: string) => {
+      if (isProfileDeleteInProgressRef.current) {
+        return
+      }
+
       try {
         dispatchCloudSyncStatus('syncing')
         await repository.deleteWidgetVersions(ownerId, widgetId)
@@ -297,6 +353,10 @@ const CloudWorkspaceSync = () => {
     }
 
     const runCloudDashboardDelete = async (dashboardId: string) => {
+      if (isProfileDeleteInProgressRef.current) {
+        return
+      }
+
       try {
         dispatchCloudSyncStatus('syncing')
         await repository.deleteDashboard(ownerId, dashboardId)
@@ -311,6 +371,10 @@ const CloudWorkspaceSync = () => {
     }
 
     const runCloudStudyGuideDelete = async (studyGuideId: string) => {
+      if (isProfileDeleteInProgressRef.current) {
+        return
+      }
+
       try {
         dispatchCloudSyncStatus('syncing')
         await repository.deleteStudyGuide(ownerId, studyGuideId)
@@ -325,6 +389,10 @@ const CloudWorkspaceSync = () => {
     }
 
     const scheduleSync = () => {
+      if (isProfileDeleteInProgressRef.current) {
+        return
+      }
+
       if (syncTimeoutRef.current !== null) {
         window.clearTimeout(syncTimeoutRef.current)
       }

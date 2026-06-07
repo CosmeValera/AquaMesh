@@ -8,6 +8,7 @@ const authMocks = vi.hoisted(() => ({
   onAuthStateChange: vi.fn(),
   signOut: vi.fn(),
   from: vi.fn(),
+  rpc: vi.fn(),
 }))
 
 vi.mock('../../../src/auth/supabaseClient', () => ({
@@ -16,6 +17,7 @@ vi.mock('../../../src/auth/supabaseClient', () => ({
   supabase: {
     auth: authMocks,
     from: authMocks.from,
+    rpc: authMocks.rpc,
   },
 }))
 
@@ -123,22 +125,24 @@ describe('RequireAuth route guard', () => {
   })
 
   it('deletes only the signed-in StudyMesh profile row', async () => {
-    const builder = {
-      delete: vi.fn(() => builder),
-      eq: vi.fn(() => builder),
-      select: vi.fn(() => builder),
-      maybeSingle: vi.fn(() => ({ data: { id: 'user-1' }, error: null })),
-    }
-    authMocks.from.mockReturnValue(builder)
+    authMocks.rpc.mockResolvedValue({ data: 1, error: null })
     authMocks.signOut.mockResolvedValue({ error: null })
 
     await deleteStudyMeshProfile('user-1')
 
-    expect(authMocks.from).toHaveBeenCalledWith('profiles')
-    expect(builder.delete).toHaveBeenCalled()
-    expect(builder.eq).toHaveBeenCalledWith('id', 'user-1')
-    expect(builder.select).toHaveBeenCalledWith('id')
+    expect(authMocks.rpc).toHaveBeenCalledWith('delete_own_profile')
     expect(authMocks.signOut).toHaveBeenCalled()
     expect(localStorage.removeItem).toHaveBeenCalledWith('userData')
+  })
+
+  it('does not sign out when StudyMesh profile deletion fails', async () => {
+    authMocks.rpc.mockResolvedValue({ data: 0, error: null })
+    authMocks.signOut.mockResolvedValue({ error: null })
+
+    await expect(deleteStudyMeshProfile('user-1')).rejects.toThrow(
+      /delete_own_profile/i,
+    )
+
+    expect(authMocks.signOut).not.toHaveBeenCalled()
   })
 })

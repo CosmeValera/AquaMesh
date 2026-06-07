@@ -186,6 +186,32 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
 
+-- Frontend-safe profile deletion. This deletes only the signed-in StudyMesh
+-- profile row and returns the real row count so the app can verify cleanup.
+create or replace function public.delete_own_profile()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  deleted_count integer;
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  delete from public.profiles
+  where id = auth.uid();
+
+  get diagnostics deleted_count = row_count;
+  return deleted_count;
+end;
+$$;
+
+revoke all on function public.delete_own_profile() from public;
+grant execute on function public.delete_own_profile() to authenticated;
+
 -- Row level security
 alter table public.profiles enable row level security;
 alter table public.user_dashboards enable row level security;

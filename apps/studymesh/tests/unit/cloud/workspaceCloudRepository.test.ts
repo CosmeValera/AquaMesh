@@ -162,84 +162,58 @@ describe('workspace cloud repository', () => {
   })
 
   it('deletes the signed-in StudyMesh profile row', async () => {
-    const builder = createQueryBuilder()
-    builder.eq.mockReturnValue(builder)
-    builder.select.mockReturnValue(builder)
-    builder.maybeSingle.mockResolvedValue({
-      data: { id: 'user-1' },
-      error: null,
-    })
-    const supabase = { from: vi.fn(() => builder) }
-    const repository = createCloudRepository(supabase as never)
-
-    await repository.deleteProfile('user-1')
-
-    expect(supabase.from).toHaveBeenCalledWith('profiles')
-    expect(builder.delete).toHaveBeenCalled()
-    expect(builder.eq).toHaveBeenCalledWith('id', 'user-1')
-    expect(builder.select).toHaveBeenCalledWith('id')
-  })
-
-  it('treats an already-missing StudyMesh profile row as deleted', async () => {
-    const deleteBuilder = createQueryBuilder()
-    deleteBuilder.eq.mockReturnValue(deleteBuilder)
-    deleteBuilder.select.mockReturnValue(deleteBuilder)
-    deleteBuilder.maybeSingle.mockResolvedValue({
-      data: null,
-      error: null,
-    })
-
-    const verifyBuilder = createQueryBuilder()
-    verifyBuilder.eq.mockReturnValue(verifyBuilder)
-    verifyBuilder.select.mockReturnValue(verifyBuilder)
-    verifyBuilder.maybeSingle.mockResolvedValue({
-      data: null,
-      error: null,
-    })
-
     const supabase = {
-      from: vi
-        .fn()
-        .mockReturnValueOnce(deleteBuilder)
-        .mockReturnValueOnce(verifyBuilder),
+      rpc: vi.fn().mockResolvedValue({
+        data: 1,
+        error: null,
+      }),
     }
     const repository = createCloudRepository(supabase as never)
 
     await repository.deleteProfile('user-1')
 
-    expect(supabase.from).toHaveBeenCalledWith('profiles')
-    expect(deleteBuilder.delete).toHaveBeenCalled()
-    expect(deleteBuilder.select).toHaveBeenCalledWith('id')
-    expect(verifyBuilder.select).toHaveBeenCalledWith('*')
+    expect(supabase.rpc).toHaveBeenCalledWith('delete_own_profile')
   })
 
-  it('reports a blocked StudyMesh profile delete when the row still exists', async () => {
-    const deleteBuilder = createQueryBuilder()
-    deleteBuilder.eq.mockReturnValue(deleteBuilder)
-    deleteBuilder.select.mockReturnValue(deleteBuilder)
-    deleteBuilder.maybeSingle.mockResolvedValue({
-      data: null,
-      error: null,
-    })
-
-    const verifyBuilder = createQueryBuilder()
-    verifyBuilder.eq.mockReturnValue(verifyBuilder)
-    verifyBuilder.select.mockReturnValue(verifyBuilder)
-    verifyBuilder.maybeSingle.mockResolvedValue({
-      data: { id: 'user-1' },
-      error: null,
-    })
-
+  it('reports a zero-count StudyMesh profile delete', async () => {
     const supabase = {
-      from: vi
-        .fn()
-        .mockReturnValueOnce(deleteBuilder)
-        .mockReturnValueOnce(verifyBuilder),
+      rpc: vi.fn().mockResolvedValue({
+        data: 0,
+        error: null,
+      }),
     }
     const repository = createCloudRepository(supabase as never)
 
     await expect(repository.deleteProfile('user-1')).rejects.toThrow(
-      /profiles_delete_own/i,
+      /delete_own_profile/i,
+    )
+  })
+
+  it('reports a Supabase RPC failure when deleting the StudyMesh profile row', async () => {
+    const supabase = {
+      rpc: vi.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'Not authenticated' },
+      }),
+    }
+    const repository = createCloudRepository(supabase as never)
+
+    await expect(repository.deleteProfile('user-1')).rejects.toThrow(
+      'Not authenticated',
+    )
+  })
+
+  it('keeps the StudyMesh profile delete RPC in the Supabase schema', () => {
+    const sqlPath = resolve(process.cwd(), 'docs/supabase-auth-sync.sql')
+    const sql = readFileSync(sqlPath, 'utf8').replace(/\s+/g, ' ')
+
+    expect(sql).toContain(
+      'create or replace function public.delete_own_profile()',
+    )
+    expect(sql).toContain('delete from public.profiles where id = auth.uid()')
+    expect(sql).toContain('get diagnostics deleted_count = row_count')
+    expect(sql).toContain(
+      'grant execute on function public.delete_own_profile() to authenticated',
     )
   })
 

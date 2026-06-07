@@ -64,133 +64,36 @@ interface SavedWidgetRecord {
   [key: string]: unknown
 }
 
-interface GuideLesson {
+interface GuideDashboard {
   id: string
   title: string
-  sourceMarkdown: string
-  summaryTitle: string
-  summaryItems: string[]
-  quizzes: Array<{
-    question: string
-    options?: string[]
-    correctIndex?: number
-    answer: string
-    explanation: string
-  }>
-  flashcards: Array<{
-    front: string
-    back: string
-  }>
+  widgetTitle?: string
+  markdown?: string
+  checklistTitle?: string
+  checklistItems?: string[]
 }
 
-const guideLessons: GuideLesson[] = [
+const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
   {
     id: 'studymesh-guide-basics',
-    title: '01 - StudyMesh Basics: What It Is & Core Concepts',
-    sourceMarkdown:
-      '## What StudyMesh Is\nStudyMesh helps students turn prompts, messy notes, files, camera pictures, references, and learning material into structured learning dashboards, tutorials, exercises, and reusable study views.\n\n## Core Concepts\n### Dashboard\nA dashboard is a workspace page or study surface where learning material is presented and used.\n\n### Widget\nA widget is a larger reusable piece inside a dashboard, such as notes, quizzes, flashcards, summaries, lists, tables, or interactive tools.\n\n### Block\nA block is the smallest content or interaction unit inside a widget, such as a paragraph, flashcard, quiz question, checklist item, button, chart element, or input.\n\n### Workspace\nThe Workspace is the main place where Study Guides, Study Packs, and custom dashboards are opened, studied, edited, and reused.',
-    summaryTitle: 'StudyMesh Fundamentals',
-    summaryItems: [
-      'StudyMesh turns raw learning material into structured study dashboards.',
-      'A dashboard is a study surface or workspace page.',
-      'A widget is a larger reusable content or tool area inside a dashboard.',
-      'A block is a granular content or interaction unit inside a widget.',
-      'The Workspace is where saved study material is opened and reused.',
-    ],
-    quizzes: [
-      {
-        question: 'Explain the primary goal of StudyMesh for students.',
-        answer:
-          'StudyMesh helps students organize learning material into dashboards, tutorials, exercises, and reusable study views.',
-        explanation:
-          'The product is moving toward a student knowledge wiki, not only a manual dashboard builder.',
-      },
-      {
-        question: 'Which option best describes a dashboard in StudyMesh?',
-        options: [
-          'A workspace page or study surface that contains learning material.',
-          'A single paragraph or quiz answer.',
-          'Only the top navigation menu.',
-          'A provider setting for AI generation.',
-        ],
-        correctIndex: 0,
-        answer:
-          'A workspace page or study surface that contains learning material.',
-        explanation:
-          'Dashboards hold widgets and blocks for a topic, lesson, pack, or workspace view.',
-      },
-    ],
-    flashcards: [
-      {
-        front: 'What is a dashboard in StudyMesh?',
-        back: 'A workspace page or study surface that contains learning material.',
-      },
-      {
-        front: 'What is a widget?',
-        back: 'A larger reusable piece inside a dashboard, such as notes, quizzes, or flashcards.',
-      },
-      {
-        front: 'What is a block?',
-        back: 'A small content or interaction unit inside a widget, like a paragraph or quiz question.',
-      },
-      {
-        front: 'What is the Workspace?',
-        back: 'The place where Study Guides, Study Packs, and dashboards are opened, studied, edited, and reused.',
-      },
-    ],
+    title: '01 - StudyMesh Basics',
+    widgetTitle: 'Key Concepts',
+    markdown:
+      '## What is StudyMesh?\nStudyMesh is a student knowledge wiki. It helps you turn prompts, notes, files, pictures, references, and learning material into Study Guides, dashboards, widgets, exercises, and reusable workspace views.\n\n## Key concepts\n### Dashboard\nA dashboard is a workspace page for studying or organizing a topic. It can contain notes, practice, references, tools, and custom layouts.\n\n### Widget\nA widget is a reusable piece inside a dashboard. Examples include notes, quizzes, flashcards, checklists, tables, charts, and embedded tools.\n\n### Block\nA block is a smaller unit inside a widget. Examples include one markdown section, one quiz question, one flashcard, one checklist item, or one input.\n\n### Workspace\nThe workspace is the main StudyMesh area where you create, open, edit, and reuse Study Guides, dashboards, widgets, and AI chat.\n\n---\n## Changing AI mode\nOpen the user menu, choose **Settings**, and change the AI provider or mode in **AI Provider Settings**. Options:\n- Basic fallback\n- Google Local AI\n- Own Gemini API token\n- Cerebras API token\n- Future hosted StudyMesh tokens\n---\n## What to do Next?\n This is a **Study Guide**, which is a special type of **dashboard** designed for step-by-step learning. Click the right arrow in the floating element to go to the next lesson to learn the basics features of StudyMesh.',
   },
   {
-    id: 'studymesh-guide-workflows',
-    title: '02 - StudyMesh Main Workflows',
-    sourceMarkdown:
-      '## Main Workflows\n### Create Study Guide\nUse Create Study Guide when you want StudyMesh to teach a new topic step by step. You provide a learning prompt and StudyMesh creates a multi-dashboard tutorial with ordered lessons, quizzes, and flashcards.\n\n### Create From Notes\nUse Create From Notes when you already have material: messy notes, text files, screenshots, or camera pictures. StudyMesh turns that input into a clearer study dashboard with summaries and practice.\n\n### Workspace Path\nOpen an existing Study Guide, Study Pack, or custom dashboard in the main workspace for study, editing, and reuse.\n\n### Advanced Path\nManually create widgets or dashboards when you need direct control. This is useful for advanced users but should be less prominent for beginners.',
-    summaryTitle: 'Workflow Overview',
-    summaryItems: [
-      'Create Study Guide generates a multi-dashboard tutorial from a prompt.',
-      'Create From Notes organizes existing notes, files, screenshots, or images.',
-      'Workspace Path opens saved Study Guides, Study Packs, and dashboards.',
-      'Advanced Path allows manual widget and dashboard creation.',
-    ],
-    quizzes: [
-      {
-        question: "When should a student use 'Create Study Guide'?",
-        answer:
-          'When they want StudyMesh to teach a new topic step by step from a prompt.',
-        explanation:
-          'Create Study Guide is for guided learning across multiple ordered dashboards.',
-      },
-      {
-        question:
-          'Which workflow is best for a photo of class notes that should become a study dashboard?',
-        options: [
-          'Create From Notes',
-          'Create Study Guide',
-          'Advanced Path',
-          'Workspace Path',
-        ],
-        correctIndex: 0,
-        answer: 'Create From Notes',
-        explanation:
-          'Create From Notes starts from existing material, including images and messy notes.',
-      },
-    ],
-    flashcards: [
-      {
-        front: 'What does Create Study Guide do?',
-        back: 'It creates a multi-dashboard tutorial from a learning prompt.',
-      },
-      {
-        front: 'What does Create From Notes do?',
-        back: 'It turns existing notes, files, screenshots, or camera pictures into a study dashboard.',
-      },
-      {
-        front: 'What is the Workspace path for?',
-        back: 'Opening existing Study Guides, Study Packs, and dashboards for study and editing.',
-      },
-      {
-        front: 'What is the Advanced path for?',
-        back: 'Manual creation of widgets or dashboards when direct control is needed.',
-      },
+    id: 'studymesh-guide-practice',
+    title: '02 - First StudyMesh Practice',
+    widgetTitle: 'Starter Checklist',
+    checklistTitle: 'Try these actions',
+    checklistItems: [
+      'Create your first Study Guide.',
+      'Create a quiz to practice with the Study Guide.',
+      'Create flashcards to practice with the Study Guide.',
+      'Open Pomodoro, Canva, or another useful tool from Misc.',
+      'Add your profile picture and display name.',
+      'Publish one dashboard on the internet.',
+      'Create your own custom dashboard.',
     ],
   },
   {
@@ -265,10 +168,8 @@ const writeArray = <T>(key: string, values: T[]) => {
   window.localStorage.setItem(key, JSON.stringify(values))
 }
 
-const textList = (items: string[]) => items.join('\n')
-
 const withStudyPathProps = (
-  lesson: GuideLesson,
+  lesson: GuideDashboard,
   index: number,
   extraProps: Record<string, unknown>,
 ) => ({
@@ -278,132 +179,48 @@ const withStudyPathProps = (
   studyPathDashboardKey: `${STUDYMESH_GUIDE_STUDY_PATH_ID}-${index}`,
   studyPathDashboardName: lesson.title,
   studyPathDashboardIndex: index,
-  studyPathDashboardCount: guideLessons.length,
+  studyPathDashboardCount: guideLessons.slice(0, 2).length,
   studyPathFolderName: STUDYMESH_GUIDE_FOLDER_NAME,
 })
 
 const createGuideLayout = (
-  lesson: GuideLesson,
+  lesson: GuideDashboard,
   index: number,
 ): DashboardLayout => {
-  const createTab = (
-    name: string,
-    widgetId: string,
-    components: ComponentData[],
-  ) => ({
-    type: 'tab',
-    name,
-    component: 'CustomWidget',
-    config: {
-      customProps: {
-        widgetId,
-        components,
-      },
-    },
-  })
-
-  const sourceComponents: ComponentData[] = [
-    {
-      id: `${lesson.id}-source-title`,
-      type: 'Label',
-      props: {
-        text: lesson.title,
-        variant: 'h6',
-        fontWeight: 700,
-        gutterBottom: true,
-      },
-    },
-    {
-      id: `${lesson.id}-source-markdown`,
-      type: 'MarkdownBlock',
-      props: withStudyPathProps(lesson, index, {
-        __blockType: 'MarkdownBlock',
-        title: 'Source notes',
-        markdown: lesson.sourceMarkdown,
-      }),
-    },
-  ]
-
-  const summaryComponents: ComponentData[] = [
-    {
-      id: `${lesson.id}-summary-title`,
-      type: 'Label',
-      props: {
-        text: 'Summary',
-        variant: 'h6',
-        fontWeight: 700,
-        gutterBottom: true,
-      },
-    },
-    {
-      id: `${lesson.id}-summary-list`,
-      type: 'ListBlock',
-      props: {
-        __blockType: 'ListBlock',
-        title: lesson.summaryTitle,
-        items: textList(lesson.summaryItems),
-        ordered: false,
-        interactiveChecklist: false,
-      },
-    },
-  ]
-
-  const quizComponents: ComponentData[] = [
-    {
-      id: `${lesson.id}-quiz-title`,
-      type: 'Label',
-      props: {
-        text: lesson.title,
-        variant: 'h6',
-        fontWeight: 700,
-        gutterBottom: true,
-      },
-    },
-    ...lesson.quizzes.map<ComponentData>((quiz, quizIndex) => {
-      const isMultipleChoice = Boolean(quiz.options?.length)
-
-      return {
-        id: `${lesson.id}-quiz-${quizIndex + 1}`,
-        type: isMultipleChoice ? 'QuizBlock' : 'QuizzSingle',
+  const contentBlock: ComponentData = lesson.markdown
+    ? {
+        id: `${lesson.id}-markdown`,
+        type: 'MarkdownBlock',
         props: withStudyPathProps(lesson, index, {
-          __blockType: isMultipleChoice ? 'QuizBlock' : 'QuizzSingle',
-          quizMode: isMultipleChoice ? 'multi' : 'single',
-          question: quiz.question,
-          options: isMultipleChoice ? quiz.options || [] : [],
-          correctIndex: isMultipleChoice ? quiz.correctIndex || 0 : 0,
-          answer: quiz.answer,
-          explanation: quiz.explanation,
-          shuffleOptions: false,
-          studyPathItemId: `study-path-${index}-quiz-${quizIndex + 1}`,
+          __blockType: 'MarkdownBlock',
+          title: lesson.widgetTitle || lesson.title,
+          markdown: lesson.markdown,
         }),
       }
-    }),
-  ]
+    : {
+        id: `${lesson.id}-checklist`,
+        type: 'ListBlock',
+        props: withStudyPathProps(lesson, index, {
+          __blockType: 'ListBlock',
+          title: lesson.checklistTitle || lesson.widgetTitle || lesson.title,
+          items: (lesson.checklistItems || []).join('\n'),
+          ordered: false,
+          interactiveChecklist: true,
+        }),
+      }
 
-  const flashcardComponents: ComponentData[] = [
+  const components: ComponentData[] = [
     {
-      id: `${lesson.id}-flashcard-title`,
+      id: `${lesson.id}-title`,
       type: 'Label',
       props: {
-        text: lesson.title,
-        variant: 'subtitle1',
+        text: lesson.widgetTitle || lesson.title,
+        variant: 'h6',
         fontWeight: 700,
         gutterBottom: true,
       },
     },
-    ...lesson.flashcards.map<ComponentData>((flashcard, flashcardIndex) => ({
-      id: `${lesson.id}-flashcard-${flashcardIndex + 1}`,
-      type: 'FlashcardBlock',
-      props: withStudyPathProps(lesson, index, {
-        __blockType: 'FlashcardBlock',
-        front: flashcard.front,
-        back: flashcard.back,
-        hint: '',
-        tag: `Flashcard ${flashcardIndex + 1}`,
-        selfGrade: true,
-        studyPathItemId: `study-path-${index}-flashcard-${flashcardIndex + 1}`,
-      }),
-    })),
+    contentBlock,
   ]
 
   return {
@@ -416,47 +233,16 @@ const createGuideLayout = (
         active: true,
         selected: 0,
         children: [
-          createTab(
-            `${lesson.title} Source`,
-            `${lesson.id}-source`,
-            sourceComponents,
-          ),
-          createTab(
-            `${lesson.title} Summary`,
-            `${lesson.id}-summary`,
-            summaryComponents,
-          ),
-        ],
-      },
-      {
-        type: 'row',
-        weight: 50,
-        children: [
           {
-            type: 'tabset',
-            weight: 50,
-            active: true,
-            selected: 0,
-            children: [
-              createTab(
-                `${lesson.title} Quizzes`,
-                `${lesson.id}-quizzes`,
-                quizComponents,
-              ),
-            ],
-          },
-          {
-            type: 'tabset',
-            weight: 50,
-            active: false,
-            selected: 0,
-            children: [
-              createTab(
-                `${lesson.title} Flashcards`,
-                `${lesson.id}-flashcards`,
-                flashcardComponents,
-              ),
-            ],
+            type: 'tab',
+            name: lesson.widgetTitle || lesson.title,
+            component: 'CustomWidget',
+            config: {
+              customProps: {
+                widgetId: `${lesson.id}-source`,
+                components,
+              },
+            },
           },
         ],
       },
@@ -467,7 +253,7 @@ const createGuideLayout = (
 export const createStudyMeshGuideDashboards = (): SavedDashboardRecord[] => {
   const now = '2026-05-19T23:47:47.841Z'
 
-  return guideLessons.map((lesson, lessonIndex) => {
+  return guideLessons.slice(0, 2).map((lesson, lessonIndex) => {
     const index = lessonIndex + 1
     return {
       id: `studymesh-guide-dashboard-${index}`,
@@ -480,11 +266,7 @@ export const createStudyMeshGuideDashboards = (): SavedDashboardRecord[] => {
       isPublic: false,
       createdAt: now,
       updatedAt: now,
-      componentsCount:
-        5 +
-        lesson.summaryItems.length +
-        lesson.quizzes.length +
-        lesson.flashcards.length,
+      componentsCount: 2,
     }
   })
 }

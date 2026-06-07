@@ -41,7 +41,29 @@ describe('StudyMesh guide seed', () => {
       id: STUDYMESH_GUIDE_STUDY_PATH_ID,
       title: 'Welcome to StudyMesh',
     })
-    expect(studyGuides[0].studyPath.dashboards).toHaveLength(3)
+    expect(studyGuides[0].studyPath.dashboards).toHaveLength(2)
+    expect(studyGuides[0].studyPath.dashboards[0].name).toBe(
+      '01 - StudyMesh Basics',
+    )
+    expect(studyGuides[0].studyPath.dashboards[1].name).toBe(
+      '02 - First StudyMesh Practice',
+    )
+
+    const firstLayout =
+      studyGuides[0].studyPath.dashboards[0].layout.children[0].children[0]
+    const secondLayout =
+      studyGuides[0].studyPath.dashboards[1].layout.children[0].children[0]
+    expect(firstLayout.config.customProps.components).toHaveLength(2)
+    expect(secondLayout.config.customProps.components).toHaveLength(2)
+    expect(firstLayout.config.customProps.components[1].type).toBe(
+      'MarkdownBlock',
+    )
+    expect(secondLayout.config.customProps.components[1]).toMatchObject({
+      type: 'ListBlock',
+      props: expect.objectContaining({
+        interactiveChecklist: true,
+      }),
+    })
 
     window.localStorage.setItem('studymesh_study_guides', JSON.stringify([]))
 

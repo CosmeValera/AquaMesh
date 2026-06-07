@@ -174,7 +174,7 @@
       opacity: 1;
 
       &:hover {
-        background-color: var(--background-medium, #f4f7f8);
+        background-color: var(--surface-hover, var(--action-hover));
         border-color: var(--foreground-muted, var(--other-divider));
         opacity: 1;
       }

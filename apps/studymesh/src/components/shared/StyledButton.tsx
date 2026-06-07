@@ -1,5 +1,6 @@
 import React from 'react'
 import { Button, ButtonProps } from '@mui/material'
+import { alpha, darken, useTheme } from '@mui/material/styles'
 
 // Extend ButtonProps with any additional props needed
 interface StyledButtonProps extends ButtonProps {
@@ -9,6 +10,23 @@ interface StyledButtonProps extends ButtonProps {
 // Create a custom button component using forwardRef pattern
 const StyledButton = React.forwardRef<HTMLButtonElement, StyledButtonProps>(
   ({ buttonType = 'primary', variant = 'contained', sx, ...props }, ref) => {
+    const theme = useTheme()
+    const tonalAlpha = theme.palette.mode === 'dark' ? 0.18 : 0.1
+    const secondaryBg =
+      variant === 'contained'
+        ? alpha(
+            theme.palette.primary.main,
+            theme.palette.mode === 'dark' ? 0.22 : 0.12,
+          )
+        : 'transparent'
+    const secondaryHoverBg =
+      variant === 'contained'
+        ? alpha(
+            theme.palette.primary.main,
+            theme.palette.mode === 'dark' ? 0.3 : 0.18,
+          )
+        : theme.palette.action.hover
+
     // Base styles shared across all button types
     const baseStyles = {
       fontWeight: 'bold',
@@ -40,43 +58,46 @@ const StyledButton = React.forwardRef<HTMLButtonElement, StyledButtonProps>(
         },
       },
       secondary: {
-        backgroundColor:
-          variant === 'contained' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-        color: variant === 'contained' ? 'white' : 'rgba(255, 255, 255, 0.8)',
-        borderColor:
-          variant === 'outlined' ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
+        backgroundColor: secondaryBg,
+        color: variant === 'contained' ? 'text.primary' : 'text.secondary',
+        borderColor: variant === 'outlined' ? 'divider' : 'transparent',
         '&:hover': {
-          backgroundColor:
-            variant === 'contained'
-              ? 'rgba(255, 255, 255, 0.25)'
-              : 'rgba(255, 255, 255, 0.1)',
+          backgroundColor: secondaryHoverBg,
         },
       },
       danger: {
-        backgroundColor: variant === 'contained' ? '#d32f2f' : 'transparent',
-        color: variant === 'contained' ? 'white' : '#d32f2f',
-        borderColor: variant === 'outlined' ? '#d32f2f' : 'transparent',
+        backgroundColor: variant === 'contained' ? 'error.main' : 'transparent',
+        color: variant === 'contained' ? 'error.contrastText' : 'error.main',
+        borderColor: variant === 'outlined' ? 'error.main' : 'transparent',
         '&:hover': {
           backgroundColor:
-            variant === 'contained' ? '#b71c1c' : 'rgba(211, 47, 47, 0.08)',
+            variant === 'contained'
+              ? darken(theme.palette.error.main, 0.12)
+              : alpha(theme.palette.error.main, tonalAlpha),
         },
       },
       success: {
-        backgroundColor: variant === 'contained' ? '#2e7d32' : 'transparent',
-        color: variant === 'contained' ? 'white' : '#2e7d32',
-        borderColor: variant === 'outlined' ? '#2e7d32' : 'transparent',
+        backgroundColor:
+          variant === 'contained' ? 'success.main' : 'transparent',
+        color:
+          variant === 'contained' ? 'success.contrastText' : 'success.main',
+        borderColor: variant === 'outlined' ? 'success.main' : 'transparent',
         '&:hover': {
           backgroundColor:
-            variant === 'contained' ? '#1b5e20' : 'rgba(46, 125, 50, 0.08)',
+            variant === 'contained'
+              ? darken(theme.palette.success.main, 0.12)
+              : alpha(theme.palette.success.main, tonalAlpha),
         },
       },
       info: {
-        backgroundColor: variant === 'contained' ? '#0288d1' : 'transparent',
-        color: variant === 'contained' ? 'white' : '#0288d1',
-        borderColor: variant === 'outlined' ? '#0288d1' : 'transparent',
+        backgroundColor: variant === 'contained' ? 'info.main' : 'transparent',
+        color: variant === 'contained' ? 'info.contrastText' : 'info.main',
+        borderColor: variant === 'outlined' ? 'info.main' : 'transparent',
         '&:hover': {
           backgroundColor:
-            variant === 'contained' ? '#01579b' : 'rgba(2, 136, 209, 0.08)',
+            variant === 'contained'
+              ? darken(theme.palette.info.main, 0.12)
+              : alpha(theme.palette.info.main, tonalAlpha),
         },
       },
     }

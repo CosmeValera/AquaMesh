@@ -1,6 +1,5 @@
 import React from 'react'
-import { Box, Typography, Paper, useMediaQuery } from '@mui/material'
-import theme from '../../../../theme'
+import { Box, Typography, Paper, useMediaQuery, useTheme } from '@mui/material'
 
 interface ChartPreviewProps {
   chartType: string
@@ -22,6 +21,7 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
   description,
   data,
 }) => {
+  const theme = useTheme()
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const chartTitle = String(title || '')
   const chartDescription = String(description || '')
@@ -185,7 +185,7 @@ const ChartPreview: React.FC<ChartPreviewProps> = ({
               width: '50%',
               height: '50%',
               borderRadius: '50%',
-              backgroundColor: 'white',
+              backgroundColor: 'background.paper',
               position: 'absolute',
               top: '25%',
               left: '25%',

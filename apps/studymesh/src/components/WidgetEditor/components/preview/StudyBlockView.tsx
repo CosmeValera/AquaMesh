@@ -16,6 +16,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -549,6 +550,14 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
                 variant={selfGrade === 'known' ? 'contained' : 'outlined'}
                 color="success"
                 onClick={() => registerFlashcardGrade('known')}
+                sx={(theme) => ({
+                  '&:hover': {
+                    bgcolor:
+                      selfGrade === 'known'
+                        ? 'success.dark'
+                        : alpha(theme.palette.success.main, 0.18),
+                  },
+                })}
               >
                 I knew it
               </Button>
@@ -557,6 +566,14 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
                 variant={selfGrade === 'missed' ? 'contained' : 'outlined'}
                 color="error"
                 onClick={() => registerFlashcardGrade('missed')}
+                sx={(theme) => ({
+                  '&:hover': {
+                    bgcolor:
+                      selfGrade === 'missed'
+                        ? 'error.dark'
+                        : alpha(theme.palette.error.main, 0.18),
+                  },
+                })}
               >
                 I didn&apos;t know it
               </Button>
@@ -670,6 +687,14 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
               }
               color="success"
               onClick={() => gradeCard('known')}
+              sx={(theme) => ({
+                '&:hover': {
+                  bgcolor:
+                    focusedFlashcardGrades[safeIndex] === 'known'
+                      ? 'success.dark'
+                      : alpha(theme.palette.success.main, 0.18),
+                },
+              })}
             >
               Known
             </Button>
@@ -681,6 +706,14 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
               }
               color="error"
               onClick={() => gradeCard('missed')}
+              sx={(theme) => ({
+                '&:hover': {
+                  bgcolor:
+                    focusedFlashcardGrades[safeIndex] === 'missed'
+                      ? 'error.dark'
+                      : alpha(theme.palette.error.main, 0.18),
+                },
+              })}
             >
               Missed
             </Button>
@@ -745,21 +778,27 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
                   variant="outlined"
                   color="primary"
                   onClick={() => setSelectedIndex(index)}
-                  sx={{
-                    justifyContent: 'flex-start',
-                    color: 'text.primary',
-                    borderColor: showResult ? resultColor : 'divider',
-                    bgcolor:
-                      showResult && (isCorrect || isSelected)
-                        ? `${isCorrect ? '#2E7D32' : '#D32F2F'}14`
-                        : 'transparent',
-                    '&:hover': {
-                      borderColor: showResult ? resultColor : 'primary.main',
+                  sx={(theme) => {
+                    const stateMain = isCorrect
+                      ? theme.palette.success.main
+                      : theme.palette.error.main
+
+                    return {
+                      justifyContent: 'flex-start',
+                      color: 'text.primary',
+                      borderColor: showResult ? resultColor : 'divider',
                       bgcolor:
                         showResult && (isCorrect || isSelected)
-                          ? `${isCorrect ? '#2E7D32' : '#D32F2F'}20`
-                          : 'action.hover',
-                    },
+                          ? alpha(stateMain, 0.12)
+                          : 'transparent',
+                      '&:hover': {
+                        borderColor: showResult ? resultColor : 'primary.main',
+                        bgcolor:
+                          showResult && (isCorrect || isSelected)
+                            ? alpha(stateMain, 0.18)
+                            : 'action.hover',
+                      },
+                    }
                   }}
                 >
                   {option}
@@ -799,10 +838,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
           quizMode: 'multipleChoice' as const,
         }
       })
-      .filter(
-        (item) =>
-          item.question && item.options.length >= 2,
-      )
+      .filter((item) => item.question && item.options.length >= 2)
     const safeIndex = Math.min(
       focusedQuestionIndex,
       Math.max(0, questions.length - 1),
@@ -882,25 +918,37 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
                           [safeIndex]: index,
                         }))
                       }
-                      sx={{
-                        justifyContent: 'flex-start',
-                        textAlign: 'left',
-                        minHeight: 52,
-                        whiteSpace: 'normal',
-                        color: 'text.primary',
-                        borderColor: hasAnswered
-                          ? isCorrect
-                            ? 'success.main'
-                            : isSelected
-                              ? 'error.main'
-                              : 'divider'
-                          : 'divider',
-                        bgcolor:
-                          hasAnswered && (isCorrect || isSelected)
-                            ? isCorrect
-                              ? 'success.light'
-                              : 'error.light'
-                            : 'transparent',
+                      sx={(theme) => {
+                        const stateMain = isCorrect
+                          ? theme.palette.success.main
+                          : theme.palette.error.main
+                        const resultBorder = isCorrect
+                          ? 'success.main'
+                          : isSelected
+                            ? 'error.main'
+                            : 'divider'
+
+                        return {
+                          justifyContent: 'flex-start',
+                          textAlign: 'left',
+                          minHeight: 52,
+                          whiteSpace: 'normal',
+                          color: 'text.primary',
+                          borderColor: hasAnswered ? resultBorder : 'divider',
+                          bgcolor:
+                            hasAnswered && (isCorrect || isSelected)
+                              ? alpha(stateMain, 0.12)
+                              : 'transparent',
+                          '&:hover': {
+                            borderColor: hasAnswered
+                              ? resultBorder
+                              : 'primary.main',
+                            bgcolor:
+                              hasAnswered && (isCorrect || isSelected)
+                                ? alpha(stateMain, 0.18)
+                                : 'action.hover',
+                          },
+                        }
                       }}
                     >
                       {option}

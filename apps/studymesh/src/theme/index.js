@@ -33,6 +33,7 @@ const createCssVariables = (themePalette, mode) => ({
   '--background-header': themePalette.background.header,
   '--background-bar-dark': themePalette.background.barDark,
   '--background-bar-medium': themePalette.background.barMedium,
+  '--background-medium': themePalette.background.barMedium,
   '--background-light': themePalette.background.light,
   '--background-accent-soft': themePalette.background.accentSoft,
   '--background-accent-surface': themePalette.background.accentSurface,

@@ -10,7 +10,10 @@
     "test": "vitest --run --config ./vitest.config.ts ./tests/unit/ --reporter verbose && npx playwright test",
     "test:unit": "vitest --run --config ./vitest.config.ts ./tests/unit/",
     "test:e2e": "npx playwright test",
-    "test:snapshot": "npx playwright test --update-snapshots"
+    "test:snapshot": "npx playwright test --update-snapshots",
+    "twd:relay": "twd-relay --port 9876",
+    "test:twd": "twd-relay run --port 9876",
+    "test:twd:one": "twd-relay run --port 9876 --test"
   },
   "devDependencies": {
     "@babel/core": "^7.24.7",
@@ -49,6 +52,8 @@
     "serve": "^14.2.3",
     "style-loader": "^3.3.4",
     "swc-loader": "^0.2.6",
+    "twd-js": "^1.8.1",
+    "twd-relay": "^1.2.3",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.1.0",
     "url-loader": "^4.1.1",

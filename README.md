@@ -50,7 +50,7 @@ That's it! The StudyMesh application and all its components will be up and runni
 - **Testing Suite:**
   - **Playwright:** End-to-end testing framework
   - **Vitest:** Unit testing framework
-  - **bashunit:** Testing framework for bash scripts
+  - **Vendored bashunit:** Bash script tests via `tools/git-hooks/lib/bashunit`
 
 The most rewarding aspect was solving the technical challenges for designing an intuitive way for users to customize widgets while keeping everything working smoothly.
 

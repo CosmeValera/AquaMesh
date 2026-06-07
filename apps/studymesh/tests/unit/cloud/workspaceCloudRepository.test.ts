@@ -161,6 +161,19 @@ describe('workspace cloud repository', () => {
     expect(builder.single).toHaveBeenCalled()
   })
 
+  it('deletes the signed-in StudyMesh profile row', async () => {
+    const builder = createQueryBuilder()
+    builder.eq.mockReturnValue(builder)
+    const supabase = { from: vi.fn(() => builder) }
+    const repository = createCloudRepository(supabase as never)
+
+    await repository.deleteProfile('user-1')
+
+    expect(supabase.from).toHaveBeenCalledWith('profiles')
+    expect(builder.delete).toHaveBeenCalled()
+    expect(builder.eq).toHaveBeenCalledWith('id', 'user-1')
+  })
+
   it('upserts widgets and workspace state using owner-scoped rows', async () => {
     const widgetBuilder = createQueryBuilder()
     widgetBuilder.single.mockResolvedValue({
@@ -356,6 +369,9 @@ describe('workspace cloud repository', () => {
     )
     expect(sql).toContain(
       'references public.user_widgets(owner_id, id) on delete cascade',
+    )
+    expect(sql).toContain(
+      'create policy "profiles_delete_own" on public.profiles for delete to authenticated using (id = auth.uid())',
     )
     expect(sql).toContain('create table if not exists public.user_study_guides')
     expect(sql).toContain('primary key (owner_id, id)')

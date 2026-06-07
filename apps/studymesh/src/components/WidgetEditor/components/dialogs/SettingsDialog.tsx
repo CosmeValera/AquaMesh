@@ -130,6 +130,7 @@ interface SettingsDialogProps {
   onShowAdvancedInToolbarChange?: (value: boolean) => void
   showDeleteTemplateConfirmation?: boolean
   onShowDeleteTemplateConfirmationChange?: (value: boolean) => void
+  onDeleteStudyMeshProfile?: () => Promise<void>
 }
 
 // Keyboard shortcut card component
@@ -216,6 +217,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   onShowAdvancedInToolbarChange,
   showDeleteTemplateConfirmation,
   onShowDeleteTemplateConfirmationChange,
+  onDeleteStudyMeshProfile,
   title = 'Widget Editor Settings',
   scope = 'editor',
 }) => {
@@ -231,6 +233,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   )
   const [isTestingLocalAi, setIsTestingLocalAi] = React.useState(false)
   const [libraryTransferStatus, setLibraryTransferStatus] = React.useState('')
+  const [profileDeleteConfirmation, setProfileDeleteConfirmation] =
+    React.useState('')
+  const [profileDeleteStatus, setProfileDeleteStatus] = React.useState('')
+  const [isDeletingProfile, setIsDeletingProfile] = React.useState(false)
   const [exportModalOpen, setExportModalOpen] = React.useState(false)
   const [exportLibraryItems, setExportLibraryItems] = React.useState<
     ExportLibraryItem[]
@@ -284,6 +290,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     setStrongCredentials(settings.strongProviders || {})
     setLocalAiStatus('')
     setLocalAiProgress(null)
+    setProfileDeleteConfirmation('')
+    setProfileDeleteStatus('')
   }, [open, showGlobalSettings])
 
   // Create safe handlers for all possibly undefined callbacks
@@ -351,6 +359,26 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     dispatchWorkspaceOnboardingNotice(
       `AI mode changed to ${aiProviderLabels[aiProvider]}.`,
     )
+  }
+
+  const handleDeleteStudyMeshProfile = async () => {
+    if (!onDeleteStudyMeshProfile || profileDeleteConfirmation !== 'DELETE') {
+      return
+    }
+
+    setIsDeletingProfile(true)
+    setProfileDeleteStatus('')
+
+    try {
+      await onDeleteStudyMeshProfile()
+    } catch (error) {
+      setProfileDeleteStatus(
+        error instanceof Error
+          ? error.message
+          : 'Could not delete StudyMesh profile.',
+      )
+      setIsDeletingProfile(false)
+    }
   }
 
   const handleClearAiToken = () => {
@@ -927,6 +955,75 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 >
                   Replay
                 </Button>
+              </Box>
+            </Paper>
+          )}
+
+          {showGlobalSettings && onDeleteStudyMeshProfile && (
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                mb: 2,
+                bgcolor: 'background.default',
+                borderRadius: 2,
+                border: 1,
+                borderColor: 'error.light',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                <DeleteOutlineIcon sx={{ mr: 1.5, color: 'error.main' }} />
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography fontWeight="medium" color="text.primary">
+                    Delete StudyMesh Profile
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 1.5 }}
+                  >
+                    Delete the current StudyMesh profile row and its cloud
+                    study data, then sign out.
+                  </Typography>
+                  <TextField
+                    label="Type DELETE to confirm"
+                    value={profileDeleteConfirmation}
+                    onChange={(event) =>
+                      setProfileDeleteConfirmation(event.target.value)
+                    }
+                    size="small"
+                    fullWidth
+                    sx={{ mb: 1.5 }}
+                  />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      gap: 1,
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      onClick={handleDeleteStudyMeshProfile}
+                      disabled={
+                        isDeletingProfile ||
+                        profileDeleteConfirmation !== 'DELETE'
+                      }
+                    >
+                      {isDeletingProfile
+                        ? 'Deleting profile...'
+                        : 'Delete StudyMesh profile'}
+                    </Button>
+                    {profileDeleteStatus && (
+                      <Typography variant="caption" color="error">
+                        {profileDeleteStatus}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
               </Box>
             </Paper>
           )}

@@ -81,6 +81,7 @@ Recommended migration flow:
 - Dashboards should sync referenced widgets before dashboard rows.
 - Deleting a dashboard should hard-delete only the dashboard row. It must not delete referenced widgets, because widgets can be reused by multiple dashboards.
 - Deleting a widget should hard-delete the widget row and its related `user_widget_versions` rows.
+- Deleting the signed-in StudyMesh profile row should be allowed from the app and should cascade-delete that profile's StudyMesh rows.
 - Deleting an auth user should cascade-delete all StudyMesh rows owned by that user.
 - Conflict default: last-write-wins by `updated_at`, except migration duplicates newer cloud conflicts as described above.
 - User logout should clear in-memory workspace state. Local cache may remain, but should not hydrate into another account without session/user match.
@@ -90,6 +91,7 @@ Recommended migration flow:
 After install, verify from Supabase SQL editor or app tests:
 
 - Signed-in user can insert/select/update/delete own `user_dashboards`.
+- Signed-in user can delete own `profiles` row.
 - Signed-in user cannot read or mutate another user's rows.
 - Anonymous user cannot read or write any sync table.
 - `profiles` row is created on new auth user insert.

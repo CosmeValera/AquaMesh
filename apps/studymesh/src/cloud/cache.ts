@@ -160,3 +160,8 @@ export const writeLocalWorkspaceSnapshot = (
     clearWorkspaceStateCache()
   }
 }
+
+export const clearLocalWorkspaceCache = (): void => {
+  Object.values(CLOUD_CACHE_KEYS).forEach(removeJsonCache)
+  Object.values(CLOUD_LEGACY_CACHE_KEYS).forEach(removeJsonCache)
+}

@@ -7,6 +7,7 @@ const authMocks = vi.hoisted(() => ({
   getSession: vi.fn(),
   onAuthStateChange: vi.fn(),
   signOut: vi.fn(),
+  from: vi.fn(),
 }))
 
 vi.mock('../../../src/auth/supabaseClient', () => ({
@@ -14,10 +15,15 @@ vi.mock('../../../src/auth/supabaseClient', () => ({
   isSupabaseConfigured: true,
   supabase: {
     auth: authMocks,
+    from: authMocks.from,
   },
 }))
 
-import { AuthProvider, RequireAuth } from '../../../src/auth/AuthProvider'
+import {
+  AuthProvider,
+  RequireAuth,
+  deleteStudyMeshProfile,
+} from '../../../src/auth/AuthProvider'
 
 const LocationProbe = ({ onChange }: { onChange: (path: string) => void }) => {
   const location = useLocation()
@@ -50,6 +56,7 @@ const renderProtectedWorkspace = (
 
 describe('RequireAuth route guard', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     authMocks.onAuthStateChange.mockReturnValue({
       data: { subscription: { unsubscribe: vi.fn() } },
     })
@@ -113,5 +120,20 @@ describe('RequireAuth route guard', () => {
     await waitFor(() => {
       expect(authMocks.getSession).toHaveBeenCalled()
     })
+  })
+
+  it('deletes only the signed-in StudyMesh profile row', async () => {
+    const builder = {
+      delete: vi.fn(() => builder),
+      eq: vi.fn(() => ({ error: null })),
+    }
+    authMocks.from.mockReturnValue(builder)
+
+    await deleteStudyMeshProfile('user-1')
+
+    expect(authMocks.from).toHaveBeenCalledWith('profiles')
+    expect(builder.delete).toHaveBeenCalled()
+    expect(builder.eq).toHaveBeenCalledWith('id', 'user-1')
+    expect(localStorage.removeItem).toHaveBeenCalledWith('userData')
   })
 })

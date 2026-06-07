@@ -395,6 +395,14 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
     return profileFromRow(row)
   },
 
+  async deleteProfile(userId: string): Promise<void> {
+    const { error } = await client.from('profiles').delete().eq('id', userId)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+  },
+
   async listDashboards(ownerId: string): Promise<SavedDashboard[]> {
     const rows = await assertMany<DashboardRow>(
       client

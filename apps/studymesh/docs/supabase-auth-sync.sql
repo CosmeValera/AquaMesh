@@ -213,6 +213,12 @@ to authenticated
 using (id = auth.uid())
 with check (id = auth.uid());
 
+drop policy if exists "profiles_delete_own" on public.profiles;
+create policy "profiles_delete_own"
+on public.profiles for delete
+to authenticated
+using (id = auth.uid());
+
 drop policy if exists "user_dashboards_select_own" on public.user_dashboards;
 create policy "user_dashboards_select_own"
 on public.user_dashboards for select

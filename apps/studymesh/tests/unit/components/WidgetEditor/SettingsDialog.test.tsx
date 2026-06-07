@@ -228,4 +228,30 @@ describe('SettingsDialog study library export', () => {
       noticeListener,
     )
   })
+
+  it('requires DELETE before deleting the StudyMesh profile', () => {
+    const onDeleteStudyMeshProfile = vi.fn()
+
+    render(
+      <SettingsDialog
+        open
+        onClose={vi.fn()}
+        scope="global"
+        onDeleteStudyMeshProfile={onDeleteStudyMeshProfile}
+      />,
+    )
+
+    const deleteButton = screen.getByRole('button', {
+      name: /delete studymesh profile/i,
+    })
+
+    expect(deleteButton).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText(/type delete to confirm/i), {
+      target: { value: 'DELETE' },
+    })
+    fireEvent.click(deleteButton)
+
+    expect(onDeleteStudyMeshProfile).toHaveBeenCalledTimes(1)
+  })
 })

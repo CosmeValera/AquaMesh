@@ -10,6 +10,13 @@ import { Navigate, useLocation } from 'react-router-dom'
 import type { Session, User } from '@supabase/supabase-js'
 
 import {
+  createCloudRepository,
+  clearLocalWorkspaceCache,
+} from '../cloud'
+import {
+  removeUserAvatar,
+} from '../userProfile'
+import {
   getSupabaseConfigError,
   isSupabaseConfigured,
   supabase,
@@ -127,6 +134,15 @@ export const updatePassword = async (password: string) => {
   requireSupabaseConfig()
   const { error } = await supabase.auth.updateUser({ password })
   mapAuthError(error)
+}
+
+export const deleteStudyMeshProfile = async (profileId: string) => {
+  requireSupabaseConfig()
+  await createCloudRepository(supabase).deleteProfile(profileId)
+  clearLocalWorkspaceCache()
+  removeUserAvatar(profileId)
+  localStorage.removeItem('userData')
+  window.dispatchEvent(new CustomEvent('studymesh-user-role-changed'))
 }
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {

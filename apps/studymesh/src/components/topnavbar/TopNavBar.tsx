@@ -81,7 +81,7 @@ import {
 import { WORKSPACE_DASHBOARD_TABS_SLOT_ID } from '../workspace/workspaceEvents'
 import WidgetEditorDialog from '../workspace/WidgetEditorDialog'
 import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceMode'
-import { useAuth } from '../../auth/AuthProvider'
+import { deleteStudyMeshProfile, useAuth } from '../../auth/AuthProvider'
 
 // Define user data type
 interface UserData {
@@ -155,6 +155,7 @@ interface ButtonWithLabelProps {
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void
   sx?: React.CSSProperties | Record<string, unknown>
   'data-tutorial-id'?: string
+  'aria-label'?: string
   title?: string
   disabled?: boolean
 }
@@ -610,6 +611,17 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       .finally(() => navigate('/login', { replace: true }))
   }
 
+  const handleDeleteStudyMeshProfile = async () => {
+    if (!auth.user) {
+      throw new Error('No signed-in StudyMesh profile is available.')
+    }
+
+    await deleteStudyMeshProfile(auth.user.id)
+    await auth.signOut()
+    setIsSettingsOpen(false)
+    navigate('/login', { replace: true })
+  }
+
   const openUserSettings = () => {
     setUserSettingsName(userData.name)
     setUserSettingsAvatarStatus('')
@@ -846,12 +858,14 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                       </Avatar>
                     }
                     label="User"
+                    aria-label="Open user menu"
                     onClick={handleUserMenuOpen}
                     sx={{ minWidth: '45px' }}
                   />
                 ) : (
                   <Button
                     onClick={handleUserMenuOpen}
+                    aria-label="Open user menu"
                     sx={{
                       color: 'foreground.contrastPrimary',
                       textTransform: 'none',
@@ -1414,6 +1428,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         onShowDeleteTemplateConfirmationChange={
           setShowDeleteTemplateConfirmation
         }
+        onDeleteStudyMeshProfile={handleDeleteStudyMeshProfile}
       />
       {creationHost === 'navbar' && (
         <>

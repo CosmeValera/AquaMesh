@@ -5,7 +5,7 @@
 
 .flexlayout__layout {
   overflow: visible;
-  background-color: var(--background-bar-medium);
+  background-color: var(--background-default);
 }
 
 /* popup menu */
@@ -38,19 +38,20 @@
 }
 
 .flexlayout__tabset_tabbar_inner_tab_container {
-  background-color: var(--background-bar-medium);
+  background-color: var(--background-bar-dark);
   padding: 0px 0px 1px 0px;
 }
 
 .flexlayout__tabset_tabbar_outer_top {
   border-bottom: 0px;
-  background-color: var(--background-bar-medium);
+  background-color: var(--background-bar-dark);
 }
 
 .flexlayout__tabset {
   border-radius: 8px;
   background-color: var(--background-paper);
   border: 1px solid var(--surface-border, var(--grey-200));
+  box-shadow: 0 10px 28px rgba(16, 42, 45, 0.08);
 
   &
     .flexlayout__tabset-selected
@@ -150,7 +151,7 @@
 }
 
 .flexlayout__tab_button {
-  background-color: var(--background-bar-medium);
+  background-color: var(--background-bar-dark);
   height: 32px;
   line-height: 1;
   min-width: 132px;
@@ -190,7 +191,7 @@
 }
 
 .flexlayout__tab_toolbar {
-  background-color: var(--background-bar-medium);
+  background-color: var(--background-bar-dark);
   gap: 8px;
   padding: 0 8px;
 

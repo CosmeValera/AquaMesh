@@ -2273,6 +2273,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         overflow: 'auto',
         p: { xs: 2, sm: 2.5 },
         pb: { xs: 10, sm: 2.5 },
+        bgcolor: 'background.light',
       }}
     >
       <Stack spacing={1.75}>
@@ -2835,7 +2836,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: 'background.paper',
+        bgcolor: 'background.light',
         overflow: 'hidden',
       }}
     >

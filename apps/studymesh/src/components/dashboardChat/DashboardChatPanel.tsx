@@ -286,7 +286,7 @@ const DashboardChatPanel = ({
           bgcolor:
             theme.palette.mode === 'dark'
               ? 'rgba(2,6,23,0.18)'
-              : 'rgba(248,250,252,0.72)',
+              : 'background.light',
         }}
       >
         {!hasContext ? (

@@ -20,12 +20,11 @@ const getCredentials = () => ({
 })
 
 const clearBrowserState = () => {
-  const credentials = getCredentials()
   window.localStorage.clear()
   window.sessionStorage.clear()
-  window.localStorage.setItem(TWD_EMAIL_KEY, credentials.email)
-  window.localStorage.setItem(TWD_PASSWORD_KEY, credentials.password)
-  window.localStorage.setItem(TWD_NAME_KEY, credentials.name)
+  window.localStorage.setItem(TWD_EMAIL_KEY, defaultCredentials.email)
+  window.localStorage.setItem(TWD_PASSWORD_KEY, defaultCredentials.password)
+  window.localStorage.setItem(TWD_NAME_KEY, defaultCredentials.name)
 }
 
 const fillLoginForm = async () => {
@@ -97,11 +96,24 @@ const loginToyProfile = async () => {
     await screenDom.findByRole('button', { name: /^sign in$/i }),
   )
 
-  try {
-    await assertWorkspaceLoaded()
-  } catch {
+  await twd.waitFor(
+    () => {
+      if (window.location.pathname === '/workspace') {
+        return
+      }
+
+      const alert = document.querySelector('[role="alert"]')
+      expect(alert?.textContent || '').not.to.equal('')
+    },
+    { timeout: 8000, message: 'workspace route or login error' },
+  )
+
+  if (window.location.pathname !== '/workspace') {
     await signupToyProfile()
+    return
   }
+
+  await assertWorkspaceLoaded()
 }
 
 const openApplicationSettings = async () => {

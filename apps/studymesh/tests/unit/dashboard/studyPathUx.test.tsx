@@ -12,6 +12,7 @@ import {
   StudyPathContainerState,
 } from '../../../src/state/store'
 import { useStore } from '../../../src/state/store'
+import { STUDY_GUIDES_STORAGE_KEY } from '../../../src/studyGuides/storage'
 
 vi.mock('../../../src/customHooks/useWorkspaceActions', () => ({
   ensureStarterDashboards: vi.fn(),
@@ -112,6 +113,25 @@ const seedStudyPathDashboards = (storage: Map<string, string>) => {
   }))
 
   storage.set('customDashboards', JSON.stringify(dashboards))
+}
+
+const seedStoredStudyGuide = (storage: Map<string, string>) => {
+  const studyPath = createStudyPath()
+
+  storage.set(
+    STUDY_GUIDES_STORAGE_KEY,
+    JSON.stringify([
+      {
+        id: studyPath.pathId,
+        title: studyPath.title,
+        folderName: studyPath.folderName,
+        description: 'Stored Study Guide',
+        studyPath,
+        createdAt: '2026-05-15T10:00:00.000Z',
+        updatedAt: '2026-05-15T10:00:00.000Z',
+      },
+    ]),
+  )
 }
 
 const StateProbe = () => {
@@ -297,5 +317,20 @@ describe('Interactive Study Guide UX', () => {
         'Existing dashboard|German B1 Grammar|Lesson 3',
       )
     })
+  })
+
+  it('does not show the empty library message when stored Study Guides exist', async () => {
+    const storage = createMemoryStorage()
+    seedStoredStudyGuide(storage)
+
+    renderWithDashboardProvider(<DashboardOptionsMenu />)
+
+    fireEvent.click(screen.getByRole('button', { name: /library/i }))
+
+    expect(await screen.findByText('German B1 Grammar')).toBeInTheDocument()
+    expect(screen.getByText('5 lessons')).toBeInTheDocument()
+    expect(
+      screen.queryByText('No study guides or dashboards yet'),
+    ).not.toBeInTheDocument()
   })
 })

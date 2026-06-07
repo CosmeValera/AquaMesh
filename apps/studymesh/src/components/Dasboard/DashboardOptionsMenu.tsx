@@ -305,6 +305,10 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
       folderName.toLowerCase() !== 'study packs' &&
       dashboards.some((dashboard) => !isStudyPackDashboard(dashboard)),
   )
+  const hasVisibleLibraryItems =
+    studyPathGroups.length > 0 ||
+    studyPackFolders.length > 0 ||
+    customDashboardFolders.length > 0
 
   const getFolderColor = (folderName: string, dashboards: SavedDashboard[]) =>
     normalizeFolderColor(
@@ -1067,7 +1071,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
             })}
           </Box>
         )}
-        {isPhone && visibleCustomDashboards.length === 0 && (
+        {isPhone && !hasVisibleLibraryItems && (
           <MenuItem
             disabled
             sx={{
@@ -1081,7 +1085,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
             No study guides or dashboards yet
           </MenuItem>
         )}
-        {!isPhone && visibleCustomDashboards.length === 0 && (
+        {!isPhone && !hasVisibleLibraryItems && (
           <MenuItem
             disabled
             sx={{

@@ -420,6 +420,26 @@ describe('TopNavBar Component', () => {
   })
 
   it('opens Study Credits details from the top bar balance pill', async () => {
+    localStorage.getItem.mockImplementation((key: string) => {
+      if (key === 'userData') {
+        return JSON.stringify({
+          id: 'admin',
+          name: 'Admin User',
+          role: 'ADMIN_ROLE',
+        })
+      }
+
+      if (key === STUDY_PACK_AI_SETTINGS_KEY) {
+        return JSON.stringify({
+          provider: 'hosted',
+          apiToken: '',
+          model: 'gpt-oss-120b',
+        })
+      }
+
+      return null
+    })
+
     render(
       <BrowserRouter>
         <TopNavBar />
@@ -448,6 +468,38 @@ describe('TopNavBar Component', () => {
         name: /buy 1200 credits for 20 eur.*best value/i,
       }),
     ).toBeEnabled()
+  })
+
+  it('hides the Study Credits pill when the active provider uses an own API key', () => {
+    localStorage.getItem.mockImplementation((key: string) => {
+      if (key === 'userData') {
+        return JSON.stringify({
+          id: 'admin',
+          name: 'Admin User',
+          role: 'ADMIN_ROLE',
+        })
+      }
+
+      if (key === STUDY_PACK_AI_SETTINGS_KEY) {
+        return JSON.stringify({
+          provider: 'cerebras',
+          apiToken: 'own-cerebras-token',
+          model: 'gpt-oss-120b',
+        })
+      }
+
+      return null
+    })
+
+    render(
+      <BrowserRouter>
+        <TopNavBar />
+      </BrowserRouter>,
+    )
+
+    expect(
+      screen.queryByRole('button', { name: `Open ${STUDY_CREDITS_LABEL}` }),
+    ).not.toBeInTheDocument()
   })
 
   it('renders the StudyMesh logo', () => {

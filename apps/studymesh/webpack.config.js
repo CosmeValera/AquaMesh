@@ -14,7 +14,7 @@ const printCompilationMessage = require('./compilation.config.js')
 
 module.exports = (_, argv) => ({
   output: {
-    publicPath: 'http://localhost:3000/',
+    publicPath: '/',
     path: path.resolve(__dirname, 'dist'),
   },
 

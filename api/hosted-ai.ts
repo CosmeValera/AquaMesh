@@ -395,6 +395,46 @@ const buildPrompt = (parts: HostedAiGatewayPart[]): string =>
     .filter(Boolean)
     .join('\n\n')
 
+const convertSchemaType = (type: unknown): string | undefined => {
+  if (typeof type !== 'string') {
+    return undefined
+  }
+
+  const lower = type.toLowerCase()
+  return lower === 'number' ? 'number' : lower
+}
+
+const toJsonSchema = (schema: unknown): unknown => {
+  if (Array.isArray(schema)) {
+    return schema.map(toJsonSchema)
+  }
+
+  if (!schema || typeof schema !== 'object') {
+    return schema
+  }
+
+  const record = schema as Record<string, unknown>
+  const next: Record<string, unknown> = {}
+
+  Object.entries(record).forEach(([key, value]) => {
+    if (key === 'type') {
+      const type = convertSchemaType(value)
+      if (type) {
+        next.type = type
+      }
+      return
+    }
+
+    next[key] = toJsonSchema(value)
+  })
+
+  if (next.type === 'object') {
+    next.additionalProperties = false
+  }
+
+  return next
+}
+
 const callCerebras = async (
   request: HostedAiGatewayRequest,
   model: string,
@@ -414,6 +454,7 @@ const callCerebras = async (
       },
     ],
     temperature: 0.2,
+    max_completion_tokens: 8192,
   }
 
   if (request.responseSchema) {
@@ -422,7 +463,7 @@ const callCerebras = async (
       json_schema: {
         name: 'studymesh_response',
         strict: true,
-        schema: request.responseSchema,
+        schema: toJsonSchema(request.responseSchema),
       },
     }
   }
@@ -446,7 +487,10 @@ const callCerebras = async (
           ? payload.message
           : 'Cerebras hosted AI request failed.')
       const error = new Error(message)
-      error.name = response.status === 429 ? 'rate_limited' : 'provider_error'
+      error.name =
+        response.status === 429 || /rate limit|quota|limit/i.test(message)
+          ? 'rate_limited'
+          : 'provider_error'
       throw error
     }
 

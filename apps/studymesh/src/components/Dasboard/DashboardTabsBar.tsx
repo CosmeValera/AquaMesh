@@ -246,13 +246,21 @@ const DashboardTabsBar = ({
           return (
             <Box
               key={dashboard.id}
-              component="button"
-              type="button"
+              component="div"
+              role="tab"
+              tabIndex={isSelected ? 0 : -1}
+              aria-selected={isSelected}
               draggable
               className={`react-tabs__tab ${
                 isSelected ? 'react-tabs__tab--selected' : ''
               }`.trim()}
               onClick={() => onSelectDashboard(index)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  onSelectDashboard(index)
+                }
+              }}
               onDragStart={(event) => onDragStart(event, index)}
               onDragOver={(event) => {
                 event.preventDefault()

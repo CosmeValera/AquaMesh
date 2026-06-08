@@ -1,4 +1,30 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+const hostedAiClientMock = vi.hoisted(() => ({
+  callHostedAiModel: vi.fn(),
+  getHostedAiStatus: vi.fn(),
+  markHostedAiIntroSeen: vi.fn(),
+}))
+
+vi.mock('../../../src/studyPack/ai/hostedClient', () => ({
+  callHostedAiModel: hostedAiClientMock.callHostedAiModel,
+  createHostedAiTransport:
+    ({ surface, requestId }: { surface: string; requestId?: string }) =>
+    (options: {
+      model: string
+      parts: Array<{ text?: string }>
+      responseSchema?: Record<string, unknown>
+      timeoutMs: number
+    }) =>
+      hostedAiClientMock.callHostedAiModel({
+        surface,
+        requestId,
+        ...options,
+      }),
+  getHostedAiStatus: hostedAiClientMock.getHostedAiStatus,
+  markHostedAiIntroSeen: hostedAiClientMock.markHostedAiIntroSeen,
+}))
+
 import {
   callLocalLanguageModel,
   DEFAULT_STUDY_PACK_AI_MODEL,
@@ -9,6 +35,11 @@ import {
   generateStudyPathWithGemini as generateStudyPathWithAi,
   isLocalAiGenerationError,
   applyStudyMaterialResourceTypeToDraft,
+  getHostedAiCreditCost,
+  HOSTED_AI_CREDIT_COSTS,
+  HOSTED_AI_DAILY_FREE_CREDITS,
+  HOSTED_AI_INITIAL_FREE_CREDITS,
+  STUDY_CREDITS_LABEL,
   normalizeAiStudyPackDraft,
   normalizeLocalAiStudyPackDraft,
   parseLocalAiJson,
@@ -137,9 +168,13 @@ describe('study pack AI settings', () => {
     delete process.env.CEREBRAS_API_KEY
   })
 
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('uses default model and no token when settings are empty', () => {
     expect(readStudyPackAiSettings()).toEqual({
-      provider: 'basic',
+      provider: 'hosted',
       apiToken: '',
       model: DEFAULT_STUDY_PACK_AI_MODEL,
       strongProviders: {
@@ -156,6 +191,78 @@ describe('study pack AI settings', () => {
     expect(resolveStudyPackAiCredentials()).toMatchObject({
       tokenSource: 'none',
     })
+  })
+
+  it('keeps hosted Study Credits costs in the shared contract', () => {
+    expect(STUDY_CREDITS_LABEL).toBe('Study Credits')
+    expect(HOSTED_AI_INITIAL_FREE_CREDITS).toBe(10)
+    expect(HOSTED_AI_DAILY_FREE_CREDITS).toBe(2)
+    expect(HOSTED_AI_CREDIT_COSTS).toEqual({
+      'study-guide': 2,
+      'quick-create': 1,
+      chat: 1,
+    })
+    expect(getHostedAiCreditCost('study-guide')).toBe(2)
+  })
+
+  it('routes hosted Create From Notes through the hosted gateway without a browser API key', async () => {
+    const hostedDraft = {
+      sourceSummary: {
+        title: 'Photosynthesis summary',
+        bullets: ['Plants convert light into chemical energy.'],
+      },
+      conceptRecap: {
+        title: 'Photosynthesis concepts',
+        sections: [
+          {
+            title: 'Light energy conversion',
+            bullets: ['Chloroplasts help convert light into stored energy.'],
+            example: 'A plant leaf uses sunlight to make sugars.',
+          },
+        ],
+      },
+      practice: {
+        multipleChoice: [
+          {
+            question: 'What does photosynthesis store?',
+            options: ['Light energy as chemical energy', 'Sound', 'Heat only'],
+            correctIndex: 0,
+            explanation: 'Photosynthesis stores energy in sugars.',
+          },
+        ],
+      },
+      flashcards: [
+        {
+          front: 'What is photosynthesis?',
+          back: 'A process that converts light into stored chemical energy.',
+        },
+      ],
+    }
+    hostedAiClientMock.callHostedAiModel.mockResolvedValue(
+      JSON.stringify(hostedDraft),
+    )
+
+    const draft = await generateStudyPackWithProvider({
+      provider: 'hosted',
+      apiToken: '',
+      model: '',
+      title: 'Photosynthesis',
+      rawNotes: 'Photosynthesis turns light into chemical energy.',
+      packId: 'photosynthesis',
+    })
+
+    expect(hostedAiClientMock.callHostedAiModel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        surface: 'quick-create',
+        model: expect.any(String),
+        parts: expect.any(Array),
+        responseSchema: expect.any(Object),
+        timeoutMs: expect.any(Number),
+      }),
+    )
+    const request = hostedAiClientMock.callHostedAiModel.mock.calls[0][0]
+    expect(JSON.stringify(request.parts)).not.toContain('inline_data')
+    expect(draft.title).toBe('Photosynthesis')
   })
 
   it('prefers settings token over env token', () => {

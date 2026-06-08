@@ -97,7 +97,7 @@ const defaultProviderForStrongCredentials = (
     return 'cerebras'
   }
 
-  return 'basic'
+  return 'hosted'
 }
 
 const getCredentialForProvider = (

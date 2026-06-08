@@ -1,0 +1,17 @@
+
+> studymesh@1.0.0 start
+> webpack-cli serve --mode development --port 3001
+
+
+
+
+  [94mCompiling...[0m
+
+  Compiling the [1mStudyMesh[0m in the browser.
+  [94mCompiling...[0m
+
+  [1mLocal[0m:  http://localhost:[1m3001[0m
+  [1mLocal[0m:  http://localhost:[1m3001[0m
+
+
+    

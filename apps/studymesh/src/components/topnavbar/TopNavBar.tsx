@@ -82,6 +82,7 @@ import { WORKSPACE_DASHBOARD_TABS_SLOT_ID } from '../workspace/workspaceEvents'
 import WidgetEditorDialog from '../workspace/WidgetEditorDialog'
 import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceMode'
 import { deleteStudyMeshProfile, useAuth } from '../../auth/AuthProvider'
+import StudyCreditsPill from '../hostedAi/StudyCreditsPill'
 
 // Define user data type
 interface UserData {
@@ -114,15 +115,11 @@ const isAdminUser = (userData: UserData) =>
   userData.role === 'ADMIN_ROLE'
 
 const canOpenStudyPathForCurrentState = (userData: UserData) => {
-  const provider = readStudyPackAiSettings().provider || 'basic'
-
-  return isAdminUser(userData) && provider !== 'hosted'
+  return isAdminUser(userData)
 }
 
 const canOpenStudyPackForCurrentState = (userData: UserData) => {
-  const provider = readStudyPackAiSettings().provider || 'basic'
-
-  return isAdminUser(userData) && provider !== 'hosted'
+  return isAdminUser(userData)
 }
 
 const studyPackAiProviderLabels: Record<StudyPackAiProvider, string> = {
@@ -130,7 +127,7 @@ const studyPackAiProviderLabels: Record<StudyPackAiProvider, string> = {
   local: 'Google Local AI',
   gemini: 'Own Gemini API token',
   cerebras: 'Own Cerebras API key',
-  hosted: 'Hosted AI tokens',
+  hosted: 'Hosted AI',
 }
 
 const initialCreationTaskStatuses: Record<
@@ -749,6 +746,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   {currentDashboardTitle || 'Select dashboard'}
                 </Typography>
               </Button>
+              <StudyCreditsPill compact />
               <IconButton
                 onClick={handleUserMenuOpen}
                 aria-label="Open user menu"
@@ -840,6 +838,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   flex: '0 0 auto',
                 }}
               >
+                <StudyCreditsPill compact={isPhone || isTablet} />
                 {/* User Menu */}
                 {isPhone || isTablet ? (
                   <ButtonWithLabel

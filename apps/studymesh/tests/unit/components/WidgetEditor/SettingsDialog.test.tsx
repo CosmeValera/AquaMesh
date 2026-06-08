@@ -4,7 +4,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import SettingsDialog from '../../../../src/components/WidgetEditor/components/dialogs/SettingsDialog'
 import { STUDYMESH_ONBOARDING_NOTICE_EVENT } from '../../../../src/components/onboarding/onboardingEvents'
+import { readStudyPackAiSettings } from '../../../../src/studyPack/ai'
+import { STUDY_CREDITS_LABEL } from '../../../../src/studyPack/ai/hostedCredits'
 import { STUDY_GUIDES_STORAGE_KEY } from '../../../../src/studyGuides/storage'
+
+const hostedAiStatus = vi.hoisted(() => ({
+  available: true,
+  accountReady: true,
+  introSeen: true,
+  studyCredits: 8,
+  dailyFreeCredits: 2,
+  initialFreeCredits: 10,
+  costs: {
+    'study-guide': 2,
+    'quick-create': 1,
+    chat: 1,
+  },
+}))
 
 vi.mock('../../../../src/studyPack/ai', () => ({
   STRONG_AI_PROVIDERS: {
@@ -24,8 +40,19 @@ vi.mock('../../../../src/studyPack/ai', () => ({
     },
   },
   DEFAULT_STUDY_PACK_AI_MODEL: 'gemini-test-model',
+  HOSTED_AI_CREDIT_COSTS: {
+    'study-guide': 2,
+    'quick-create': 1,
+    chat: 1,
+  },
+  HOSTED_AI_DAILY_FREE_CREDITS: 2,
+  HOSTED_AI_INITIAL_FREE_CREDITS: 10,
+  HOSTED_AI_USAGE_CHANGED_EVENT: 'studymesh-hosted-ai-usage-changed',
+  STUDY_CREDITS_LABEL: 'Study Credits',
+  getHostedAiStatus: vi.fn(() => Promise.resolve(hostedAiStatus)),
   getEnvGeminiApiKey: vi.fn(() => ''),
   getEnvStrongAiProviderApiKey: vi.fn(() => ''),
+  markHostedAiIntroSeen: vi.fn(),
   getStudyPackAiCredentialForProvider: vi.fn((settings, provider) => ({
     apiToken: settings.strongProviders?.[provider]?.apiToken || '',
     model:
@@ -47,6 +74,25 @@ vi.mock('../../../../src/studyPack/ai', () => ({
 
 vi.mock('../../../../src/studyPack/studyMeshGuideSeed', () => ({
   seedStudyMeshGuideStudyPath: vi.fn(() => true),
+}))
+
+vi.mock('../../../../src/auth/AuthProvider', () => ({
+  useAuth: () => ({
+    user: { id: 'auth-user', email: 'admin@example.com' },
+    session: { access_token: 'test-access-token' },
+    loading: false,
+    signOut: vi.fn(),
+  }),
+}))
+
+vi.mock('../../../../src/components/hostedAi/useHostedAiStatus', () => ({
+  useHostedAiStatus: () => ({
+    status: hostedAiStatus,
+    loading: false,
+    error: '',
+    refresh: vi.fn(),
+    markIntroSeen: vi.fn(),
+  }),
 }))
 
 const readBlobText = (blob: Blob) =>
@@ -227,6 +273,26 @@ describe('SettingsDialog study library export', () => {
       STUDYMESH_ONBOARDING_NOTICE_EVENT,
       noticeListener,
     )
+  })
+
+  it('shows hosted Study Credits balance, costs, and disabled top-up action', async () => {
+    vi.mocked(readStudyPackAiSettings).mockReturnValue({
+      provider: 'hosted',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+
+    render(<SettingsDialog open onClose={vi.fn()} scope="global" />)
+
+    expect(await screen.findByText(STUDY_CREDITS_LABEL)).toBeInTheDocument()
+    expect(screen.getByText(/8/)).toBeInTheDocument()
+    expect(screen.getByText(/study guide.*2/i)).toBeInTheDocument()
+    expect(screen.getByText(/quick create.*1/i)).toBeInTheDocument()
+    expect(screen.getByText(/chat.*1/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /2 eur top-up coming soon/i }),
+    ).toBeDisabled()
   })
 
   it('requires DELETE before deleting the StudyMesh profile', () => {

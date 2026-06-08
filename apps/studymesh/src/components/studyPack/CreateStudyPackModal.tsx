@@ -1166,11 +1166,6 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
     const credentials = isStrongAiProvider(aiProvider)
       ? resolveStudyPackAiCredentials(aiProvider)
       : resolveStudyPackAiCredentials()
-    if (aiProvider === 'hosted') {
-      setError('Hosted AI is not configured yet.')
-      return
-    }
-
     if (isStrongAiProvider(aiProvider) && !credentials.apiToken) {
       setError(
         `${
@@ -1338,11 +1333,6 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
     const credentials = isStrongAiProvider(aiProvider)
       ? resolveStudyPackAiCredentials(aiProvider)
       : resolveStudyPackAiCredentials()
-    if (aiProvider === 'hosted') {
-      setError('Hosted AI is not configured yet.')
-      return
-    }
-
     if (isStrongAiProvider(aiProvider) && !credentials.apiToken) {
       setError(
         `${

@@ -6,6 +6,7 @@ import {
   readStudyPackAiSettings,
   resolveStudyPackAiCredentials,
 } from '../../../src/studyPack/ai'
+import { callHostedAiModel } from '../../../src/studyPack/ai/hostedClient'
 
 vi.mock('../../../src/studyPack/ai', () => ({
   callLocalLanguageModel: vi.fn(),
@@ -18,6 +19,10 @@ vi.mock('../../../src/studyPack/ai', () => ({
     gemini: { label: 'Gemini', modeLabel: 'Own Gemini API token' },
     cerebras: { label: 'Cerebras', modeLabel: 'Own Cerebras API key' },
   },
+}))
+
+vi.mock('../../../src/studyPack/ai/hostedClient', () => ({
+  callHostedAiModel: vi.fn(),
 }))
 
 const baseOptions = {
@@ -38,6 +43,7 @@ const baseOptions = {
 describe('askDashboardSources', () => {
   beforeEach(() => {
     vi.mocked(callStrongAiModel).mockReset()
+    vi.mocked(callHostedAiModel).mockReset()
     vi.mocked(readStudyPackAiSettings).mockReset()
     vi.mocked(resolveStudyPackAiCredentials).mockReset()
   })
@@ -74,5 +80,38 @@ describe('askDashboardSources', () => {
     expect(result.answer).toBe(
       'Photosynthesis is how plants store light energy.',
     )
+  })
+
+  it('uses hosted Study Credits transport for dashboard chat', async () => {
+    vi.mocked(readStudyPackAiSettings).mockReturnValue({
+      provider: 'hosted',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+    vi.mocked(callHostedAiModel).mockResolvedValue(
+      'Photosynthesis converts light into stored chemical energy.',
+    )
+
+    const result = await askDashboardSources(baseOptions)
+
+    expect(callHostedAiModel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        surface: 'chat',
+        parts: [
+          expect.objectContaining({
+            text: expect.stringContaining(
+              'Student question: What is photosynthesis?',
+            ),
+          }),
+        ],
+        timeoutMs: 45000,
+      }),
+    )
+    expect(callStrongAiModel).not.toHaveBeenCalled()
+    expect(result).toEqual({
+      answer: 'Photosynthesis converts light into stored chemical energy.',
+      sources: ['Lesson notes'],
+    })
   })
 })

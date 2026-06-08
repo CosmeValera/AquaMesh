@@ -57,6 +57,7 @@ import {
   STUDY_GUIDES_STORAGE_KEY,
   StudyGuideStorage,
 } from '../../../../studyGuides/storage'
+import HostedAiSettingsPanel from '../../../hostedAi/HostedAiSettingsPanel'
 
 const WORKSPACE_ONBOARDING_KEY = 'studymesh-workspace-onboarding-v1'
 const LOCAL_AI_ESTIMATE_COPY =
@@ -66,7 +67,7 @@ const aiProviderLabels: Record<StudyPackAiProvider, string> = {
   local: 'Google Local AI',
   gemini: 'Own Gemini API token',
   cerebras: 'Own Cerebras API key',
-  hosted: 'Hosted AI tokens',
+  hosted: 'Hosted AI',
 }
 type ExportLibraryItemType = 'dashboard' | 'studyGuide'
 
@@ -726,7 +727,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     </MenuItem>
                     <MenuItem value="gemini">Own Gemini API token</MenuItem>
                     <MenuItem value="cerebras">Own Cerebras API key</MenuItem>
-                    <MenuItem value="hosted">Hosted AI tokens</MenuItem>
+                    <MenuItem value="hosted">Hosted AI</MenuItem>
                   </TextField>
                   {aiProvider === 'local' && (
                     <Alert severity="info" sx={{ mb: 1.5 }}>
@@ -734,9 +735,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     </Alert>
                   )}
                   {aiProvider === 'hosted' && (
-                    <Alert severity="warning" sx={{ mb: 1.5 }}>
-                      Hosted AI is not configured yet.
-                    </Alert>
+                    <HostedAiSettingsPanel />
                   )}
                   {aiProvider === 'local' && (
                     <Box sx={{ mb: 1.5 }}>

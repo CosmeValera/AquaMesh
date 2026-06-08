@@ -1,5 +1,5 @@
 import React from 'react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import TopNavBar from '../../../../src/components/topnavbar/TopNavBar'
@@ -13,6 +13,21 @@ import {
 } from '../../../../src/customHooks/useWorkspaceActions'
 import { STUDYMESH_ONBOARDING_RESET_EVENT } from '../../../../src/components/onboarding/onboardingEvents'
 import { STUDY_PACK_AI_SETTINGS_KEY } from '../../../../src/studyPack/ai'
+import { STUDY_CREDITS_LABEL } from '../../../../src/studyPack/ai/hostedCredits'
+
+const hostedAiStatus = vi.hoisted(() => ({
+  available: true,
+  accountReady: true,
+  introSeen: true,
+  studyCredits: 8,
+  dailyFreeCredits: 2,
+  initialFreeCredits: 10,
+  costs: {
+    'study-guide': 2,
+    'quick-create': 1,
+    chat: 1,
+  },
+}))
 
 // Mock custom hooks and providers
 vi.mock('../../../../src/customHooks/useTopNavBarWidgets', () => ({
@@ -98,6 +113,25 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+vi.mock('../../../../src/auth/AuthProvider', () => ({
+  useAuth: () => ({
+    user: { id: 'auth-user', email: 'admin@example.com' },
+    session: { access_token: 'test-access-token' },
+    loading: false,
+    signOut: vi.fn(() => Promise.resolve()),
+  }),
+}))
+
+vi.mock('../../../../src/components/hostedAi/useHostedAiStatus', () => ({
+  useHostedAiStatus: () => ({
+    status: hostedAiStatus,
+    loading: false,
+    error: '',
+    refresh: vi.fn(),
+    markIntroSeen: vi.fn(),
+  }),
+}))
+
 const navigateMock = vi.fn()
 
 describe('TopNavBar Component', () => {
@@ -107,7 +141,7 @@ describe('TopNavBar Component', () => {
   const openUserMenu = () => {
     fireEvent.click(
       screen.getByRole('button', {
-        name: /Admin User Own Gemini API token/i,
+        name: /open user menu/i,
       }),
     )
   }
@@ -211,6 +245,10 @@ describe('TopNavBar Component', () => {
     })
   })
 
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('renders correctly with all navigation items', () => {
     render(
       <BrowserRouter>
@@ -243,7 +281,7 @@ describe('TopNavBar Component', () => {
 
     const libraryButton = screen.getByTestId('dashboard-options-menu')
     const userButton = screen.getByRole('button', {
-      name: /Admin User Own Gemini API token/i,
+      name: /open user menu/i,
     })
 
     expect(
@@ -290,7 +328,7 @@ describe('TopNavBar Component', () => {
     expect(await screen.findByTestId('study-pack-modal')).toBeInTheDocument()
   })
 
-  it('disables Study Guide and Create From Notes in Hosted AI tokens mode', () => {
+  it('keeps Study Guide and Create From Notes entry points available in hosted Study Credits mode', async () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -322,8 +360,61 @@ describe('TopNavBar Component', () => {
       window.dispatchEvent(new Event(OPEN_STUDY_PACK_EVENT))
     })
 
-    expect(screen.queryByText('Study Guide Modal')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('study-pack-modal')).not.toBeInTheDocument()
+    expect(await screen.findByText('Study Guide Modal')).toBeInTheDocument()
+    expect(await screen.findByTestId('study-pack-modal')).toBeInTheDocument()
+  })
+
+  it('shows compact hosted Study Credits balance when hosted mode is selected', async () => {
+    localStorage.getItem.mockImplementation((key: string) => {
+      if (key === 'userData') {
+        return JSON.stringify({
+          id: 'admin',
+          name: 'Admin User',
+          role: 'ADMIN_ROLE',
+        })
+      }
+
+      if (key === STUDY_PACK_AI_SETTINGS_KEY) {
+        return JSON.stringify({
+          provider: 'hosted',
+          apiToken: '',
+          model: 'gpt-oss-120b',
+        })
+      }
+
+      return null
+    })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          ok: true,
+          status: {
+            available: true,
+            accountReady: true,
+            introSeen: true,
+            studyCredits: 8,
+            dailyFreeCredits: 2,
+            initialFreeCredits: 10,
+            costs: {
+              'study-guide': 2,
+              'quick-create': 1,
+              chat: 1,
+            },
+          },
+        }),
+      }),
+    )
+
+    render(
+      <BrowserRouter>
+        <TopNavBar />
+      </BrowserRouter>,
+    )
+
+    expect(await screen.findByText('8')).toBeInTheDocument()
+    expect(screen.getByLabelText(STUDY_CREDITS_LABEL)).toBeInTheDocument()
   })
 
   it('renders the StudyMesh logo', () => {
@@ -405,7 +496,7 @@ describe('TopNavBar Component', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: /Viewer User Viewer mode/i,
+        name: /open user menu/i,
       }),
     )
 
@@ -460,7 +551,7 @@ describe('TopNavBar Component', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: /Admin User Own Gemini API token/i,
+        name: /open user menu/i,
       }),
     )
     fireEvent.click(
@@ -489,7 +580,7 @@ describe('TopNavBar Component', () => {
 
     // Click on the user menu button (avatar)
     const userButton = screen.getByRole('button', {
-      name: /Admin User Own Gemini API token/i,
+      name: /open user menu/i,
     })
     fireEvent.click(userButton)
 
@@ -499,6 +590,8 @@ describe('TopNavBar Component', () => {
     })
 
     // Verify navigation to login page
-    expect(navigateMock).toHaveBeenCalledWith('/')
+    await waitFor(() =>
+      expect(navigateMock).toHaveBeenCalledWith('/login', { replace: true }),
+    )
   })
 })

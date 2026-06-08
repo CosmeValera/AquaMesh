@@ -30,6 +30,7 @@ import {
 } from './auth'
 import { AuthProvider, RequireAuth } from './auth/AuthProvider'
 import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
+import HostedAiIntroModal from './components/hostedAi/HostedAiIntroModal'
 
 import { createStudyMeshTheme } from './theme'
 import { AccentColorProvider } from './theme/AccentColorContext'
@@ -134,6 +135,7 @@ const WorkspacePage = () => {
           <Dashboards />
         </WorkspaceStudioShell>
         <WorkspaceOnboarding />
+        <HostedAiIntroModal />
       </Main>
     </Box>
   )

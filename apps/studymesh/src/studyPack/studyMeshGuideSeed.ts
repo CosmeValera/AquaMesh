@@ -100,13 +100,13 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
     id: 'studymesh-guide-ai-modes',
     title: '03 - StudyMesh AI Generation Modes',
     sourceMarkdown:
-      '## StudyMesh AI Generation Modes\n### Basic fallback\nNo AI API. It parses notes locally from obvious structure and keywords. It is fast and free, but weaker, and it supports Create From Notes rather than Study Guide.\n\n### Google Local AI\nRuns on the local Chrome built-in AI model. It is free and can work offline. It is usually better than Basic fallback for messy notes and images, but weaker and slower than Gemini API.\n\n### Own Gemini API token\nUses the user-provided Gemini API key. This is the preferred high-quality path for rich Study Guides and study dashboards.\n\n### Hosted AI tokens\nNot implemented yet. The future idea is to provide a small hosted allowance before users switch to local AI, their own API token, or paid hosted usage.',
+      '## StudyMesh AI Generation Modes\n### Hosted AI\nHosted AI is the default path for new users. It uses Study Credits stored in your StudyMesh account, so your balance follows you across devices. New users start with 10 Study Credits, and the free daily refill brings the balance back up to 2 credits when needed.\n\n### Basic fallback\nNo AI API. It parses notes locally from obvious structure and keywords. It is fast and free, but weaker, and it supports Create From Notes rather than Study Guide.\n\n### Google Local AI\nRuns on the local Chrome built-in AI model. It is free and can work offline. It is usually better than Basic fallback for messy notes and images, but weaker and slower than hosted or own-key strong models.\n\n### Own Gemini API token\nUses the user-provided Gemini API key for rich Study Guides and study dashboards.',
     summaryTitle: 'AI Mode Summary',
     summaryItems: [
       'Basic fallback is fast, free, weak, and limited to Create From Notes.',
       'Google Local AI runs locally and is better than Basic fallback, but slower and weaker than Gemini API.',
       'Own Gemini API token is the preferred high-quality generation mode.',
-      'Hosted AI tokens are planned but not available yet.',
+      'Hosted AI uses Study Credits. Study Guides cost 2 credits, and quick creations or dashboard chat cost 1 credit.',
     ],
     quizzes: [
       {
@@ -123,7 +123,7 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
         options: [
           'Basic fallback',
           'Google Local AI',
-          'Hosted AI tokens',
+          'Hosted AI Study Credits',
           'Own Gemini API token',
         ],
         correctIndex: 3,
@@ -146,8 +146,8 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
         back: 'The high-quality mode that uses the user’s Gemini API key.',
       },
       {
-        front: 'Are Hosted AI tokens available?',
-        back: 'No. They are planned but not implemented yet.',
+        front: 'How do Hosted AI Study Credits work?',
+        back: 'They are account-based credits for hosted AI. New users start with 10, daily free balance refills to 2, Study Guides cost 2, and quick creations or chat cost 1.',
       },
     ],
   },

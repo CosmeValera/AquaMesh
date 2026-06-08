@@ -577,8 +577,8 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
     return {
       canCreateDashboard: isAdmin,
-      canCreateFromNotes: isAdmin && aiProvider !== 'hosted',
-      canCreateStudyPath: isAdmin && aiProvider !== 'hosted',
+      canCreateFromNotes: isAdmin,
+      canCreateStudyPath: isAdmin,
       canCreateWidget: isAdmin,
     }
   }, [aiProvider])

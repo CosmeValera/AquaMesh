@@ -6,6 +6,7 @@ import {
   resolveStudyPackAiCredentials,
   STRONG_AI_PROVIDERS,
 } from '../studyPack/ai'
+import { callHostedAiModel } from '../studyPack/ai/hostedClient'
 import { DashboardSourceChunk } from './contextBuilder'
 
 interface AskDashboardOptions {
@@ -106,12 +107,13 @@ export const askDashboardSources = async (
   let answer: string
 
   if (provider === 'hosted') {
-    throw new Error(
-      'Hosted AI is not configured yet. Choose Basic, Local AI, Gemini, or Cerebras in settings.',
-    )
-  }
-
-  if (provider === 'local') {
+    answer = await callHostedAiModel({
+      surface: 'chat',
+      model: STRONG_AI_PROVIDERS.cerebras.defaultModel,
+      parts: [{ text: prompt }],
+      timeoutMs: STRONG_MODEL_CHAT_TIMEOUT_MS,
+    })
+  } else if (provider === 'local') {
     answer = await callLocalLanguageModel(prompt, {
       promptType: 'notes',
       stepLabel: 'Ask dashboard sources',

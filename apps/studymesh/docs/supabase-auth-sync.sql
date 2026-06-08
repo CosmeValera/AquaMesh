@@ -101,6 +101,52 @@ create table if not exists public.user_workspace_state (
   updated_at timestamptz not null default now()
 );
 
+-- Hosted AI Study Credits. One account per signed-in user so quota follows
+-- the Supabase account across devices.
+create table if not exists public.hosted_ai_accounts (
+  owner_id uuid primary key references public.profiles(id) on delete cascade,
+  study_credit_balance integer not null default 10,
+  intro_seen boolean not null default false,
+  last_daily_refill_date date not null default current_date,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint hosted_ai_accounts_nonnegative_balance_check
+    check (study_credit_balance >= 0)
+);
+
+-- Audit trail for hosted AI gateway usage. The browser may read its own
+-- events, but writes are reserved for the Vercel gateway through service role
+-- RPCs so users cannot mint or spend credits directly from the client.
+create table if not exists public.hosted_ai_usage_events (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  request_id text not null,
+  surface text not null,
+  credits_charged integer not null,
+  credits_refunded integer not null default 0,
+  status text not null default 'reserved',
+  provider text,
+  model text,
+  provider_call_count integer not null default 0,
+  error_code text,
+  error_message text,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  completed_at timestamptz,
+  unique (owner_id, request_id),
+  constraint hosted_ai_usage_events_surface_check
+    check (surface in ('study-guide', 'quick-create', 'chat')),
+  constraint hosted_ai_usage_events_status_check
+    check (status in ('reserved', 'succeeded', 'failed')),
+  constraint hosted_ai_usage_events_nonnegative_credits_check
+    check (credits_charged >= 0 and credits_refunded >= 0),
+  constraint hosted_ai_usage_events_refund_check
+    check (credits_refunded <= credits_charged),
+  constraint hosted_ai_usage_events_provider_call_count_check
+    check (provider_call_count >= 0)
+);
+
 drop trigger if exists profiles_set_updated_at on public.profiles;
 create trigger profiles_set_updated_at
 before update on public.profiles
@@ -124,6 +170,16 @@ for each row execute function public.set_updated_at();
 drop trigger if exists user_workspace_state_set_updated_at on public.user_workspace_state;
 create trigger user_workspace_state_set_updated_at
 before update on public.user_workspace_state
+for each row execute function public.set_updated_at();
+
+drop trigger if exists hosted_ai_accounts_set_updated_at on public.hosted_ai_accounts;
+create trigger hosted_ai_accounts_set_updated_at
+before update on public.hosted_ai_accounts
+for each row execute function public.set_updated_at();
+
+drop trigger if exists hosted_ai_usage_events_set_updated_at on public.hosted_ai_usage_events;
+create trigger hosted_ai_usage_events_set_updated_at
+before update on public.hosted_ai_usage_events
 for each row execute function public.set_updated_at();
 
 -- Indexes for owner fetches, recent-sync ordering, soft-delete filtering.
@@ -157,6 +213,15 @@ create index if not exists user_widget_versions_owner_widget_version_idx
 create index if not exists user_workspace_state_updated_idx
   on public.user_workspace_state(updated_at desc);
 
+create index if not exists hosted_ai_accounts_updated_idx
+  on public.hosted_ai_accounts(updated_at desc);
+
+create index if not exists hosted_ai_usage_events_owner_created_idx
+  on public.hosted_ai_usage_events(owner_id, created_at desc);
+
+create index if not exists hosted_ai_usage_events_owner_status_idx
+  on public.hosted_ai_usage_events(owner_id, status);
+
 -- Optional profile bootstrap. Safe if app also upserts profile on login.
 create or replace function public.handle_new_user()
 returns trigger
@@ -176,6 +241,10 @@ begin
     set email = excluded.email,
         display_name = coalesce(public.profiles.display_name, excluded.display_name),
         avatar_path = coalesce(public.profiles.avatar_path, excluded.avatar_path);
+
+  insert into public.hosted_ai_accounts (owner_id)
+  values (new.id)
+  on conflict (owner_id) do nothing;
 
   return new;
 end;
@@ -212,6 +281,312 @@ $$;
 revoke all on function public.delete_own_profile() from public;
 grant execute on function public.delete_own_profile() to authenticated;
 
+create or replace function public.hosted_ai_credit_cost(p_surface text)
+returns integer
+language sql
+immutable
+as $$
+  select case p_surface
+    when 'study-guide' then 2
+    when 'quick-create' then 1
+    when 'chat' then 1
+    else null
+  end
+$$;
+
+create or replace function public.hosted_ai_get_or_create_account(p_owner_id uuid)
+returns table (
+  owner_id uuid,
+  study_credit_balance integer,
+  intro_seen boolean,
+  last_daily_refill_date date,
+  next_daily_refill_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.hosted_ai_accounts (owner_id)
+  values (p_owner_id)
+  on conflict (owner_id) do nothing;
+
+  update public.hosted_ai_accounts account
+  set study_credit_balance = greatest(account.study_credit_balance, 2),
+      last_daily_refill_date = current_date
+  where account.owner_id = p_owner_id
+    and account.last_daily_refill_date < current_date;
+
+  return query
+  select account.owner_id,
+         account.study_credit_balance,
+         account.intro_seen,
+         account.last_daily_refill_date,
+         (account.last_daily_refill_date + 1)::timestamptz
+  from public.hosted_ai_accounts account
+  where account.owner_id = p_owner_id;
+end;
+$$;
+
+create or replace function public.hosted_ai_mark_intro_seen(p_owner_id uuid)
+returns table (
+  owner_id uuid,
+  study_credit_balance integer,
+  intro_seen boolean,
+  last_daily_refill_date date,
+  next_daily_refill_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform 1
+  from public.hosted_ai_get_or_create_account(p_owner_id);
+
+  update public.hosted_ai_accounts account
+  set intro_seen = true
+  where account.owner_id = p_owner_id;
+
+  return query
+  select account.owner_id,
+         account.study_credit_balance,
+         account.intro_seen,
+         account.last_daily_refill_date,
+         (account.last_daily_refill_date + 1)::timestamptz
+  from public.hosted_ai_accounts account
+  where account.owner_id = p_owner_id;
+end;
+$$;
+
+create or replace function public.hosted_ai_begin_usage(
+  p_owner_id uuid,
+  p_request_id text,
+  p_surface text,
+  p_provider text default null,
+  p_model text default null,
+  p_metadata jsonb default '{}'::jsonb
+)
+returns table (
+  event_id uuid,
+  owner_id uuid,
+  request_id text,
+  surface text,
+  credits_charged integer,
+  study_credit_balance integer,
+  status text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  credit_cost integer;
+  current_balance integer;
+begin
+  if p_request_id is null or btrim(p_request_id) = '' then
+    raise exception 'request_id is required';
+  end if;
+
+  credit_cost := public.hosted_ai_credit_cost(p_surface);
+  if credit_cost is null then
+    raise exception 'invalid hosted AI surface: %', p_surface;
+  end if;
+
+  perform 1
+  from public.hosted_ai_get_or_create_account(p_owner_id);
+
+  return query
+  select event.id,
+         event.owner_id,
+         event.request_id,
+         event.surface,
+         event.credits_charged,
+         account.study_credit_balance,
+         event.status
+  from public.hosted_ai_usage_events event
+  join public.hosted_ai_accounts account on account.owner_id = event.owner_id
+  where event.owner_id = p_owner_id
+    and event.request_id = p_request_id;
+
+  if found then
+    return;
+  end if;
+
+  select account.study_credit_balance
+  into current_balance
+  from public.hosted_ai_accounts account
+  where account.owner_id = p_owner_id
+  for update;
+
+  if current_balance < credit_cost then
+    raise exception 'insufficient Study Credits';
+  end if;
+
+  update public.hosted_ai_accounts account
+  set study_credit_balance = account.study_credit_balance - credit_cost
+  where account.owner_id = p_owner_id
+  returning account.study_credit_balance into current_balance;
+
+  with inserted_event as (
+    insert into public.hosted_ai_usage_events (
+      owner_id,
+      request_id,
+      surface,
+      credits_charged,
+      provider,
+      model,
+      metadata
+    )
+    values (
+      p_owner_id,
+      p_request_id,
+      p_surface,
+      credit_cost,
+      p_provider,
+      p_model,
+      coalesce(p_metadata, '{}'::jsonb)
+    )
+    returning *
+  )
+  select inserted_event.id,
+         inserted_event.owner_id,
+         inserted_event.request_id,
+         inserted_event.surface,
+         inserted_event.credits_charged,
+         current_balance,
+         inserted_event.status
+  into event_id,
+       owner_id,
+       request_id,
+       surface,
+       credits_charged,
+       study_credit_balance,
+       status
+  from inserted_event;
+
+  return next;
+end;
+$$;
+
+create or replace function public.hosted_ai_finish_usage(
+  p_owner_id uuid,
+  p_request_id text,
+  p_status text,
+  p_provider_call_count integer default 1,
+  p_error_code text default null,
+  p_error_message text default null,
+  p_metadata jsonb default '{}'::jsonb
+)
+returns table (
+  event_id uuid,
+  owner_id uuid,
+  request_id text,
+  surface text,
+  credits_charged integer,
+  credits_refunded integer,
+  study_credit_balance integer,
+  status text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  event_row public.hosted_ai_usage_events%rowtype;
+  refund_amount integer := 0;
+  current_balance integer;
+begin
+  if p_status not in ('succeeded', 'failed') then
+    raise exception 'invalid hosted AI usage status: %', p_status;
+  end if;
+
+  select *
+  into event_row
+  from public.hosted_ai_usage_events event
+  where event.owner_id = p_owner_id
+    and event.request_id = p_request_id
+  for update;
+
+  if not found then
+    raise exception 'hosted AI usage event not found';
+  end if;
+
+  if event_row.status <> 'reserved' then
+    select account.study_credit_balance
+    into current_balance
+    from public.hosted_ai_accounts account
+    where account.owner_id = p_owner_id;
+
+    event_id := event_row.id;
+    owner_id := event_row.owner_id;
+    request_id := event_row.request_id;
+    surface := event_row.surface;
+    credits_charged := event_row.credits_charged;
+    credits_refunded := event_row.credits_refunded;
+    study_credit_balance := current_balance;
+    status := event_row.status;
+    return next;
+  end if;
+
+  if event_row.status = 'reserved' and p_status = 'failed' then
+    refund_amount := event_row.credits_charged - event_row.credits_refunded;
+  end if;
+
+  if refund_amount > 0 then
+    update public.hosted_ai_accounts account
+    set study_credit_balance = account.study_credit_balance + refund_amount
+    where account.owner_id = p_owner_id
+    returning account.study_credit_balance into current_balance;
+  else
+    select account.study_credit_balance
+    into current_balance
+    from public.hosted_ai_accounts account
+    where account.owner_id = p_owner_id;
+  end if;
+
+  update public.hosted_ai_usage_events event
+  set status = p_status,
+      provider_call_count = greatest(coalesce(p_provider_call_count, 0), 0),
+      credits_refunded = event.credits_refunded + refund_amount,
+      error_code = p_error_code,
+      error_message = p_error_message,
+      metadata = event.metadata || coalesce(p_metadata, '{}'::jsonb),
+      completed_at = coalesce(event.completed_at, now())
+  where event.id = event_row.id
+  returning event.id,
+            event.owner_id,
+            event.request_id,
+            event.surface,
+            event.credits_charged,
+            event.credits_refunded,
+            current_balance,
+            event.status
+  into event_id,
+       owner_id,
+       request_id,
+       surface,
+       credits_charged,
+       credits_refunded,
+       study_credit_balance,
+       status;
+
+  return next;
+end;
+$$;
+
+revoke all on function public.hosted_ai_credit_cost(text) from public;
+revoke all on function public.hosted_ai_get_or_create_account(uuid) from public;
+revoke all on function public.hosted_ai_mark_intro_seen(uuid) from public;
+revoke all on function public.hosted_ai_begin_usage(uuid, text, text, text, text, jsonb) from public;
+revoke all on function public.hosted_ai_finish_usage(uuid, text, text, integer, text, text, jsonb) from public;
+
+grant execute on function public.hosted_ai_credit_cost(text) to service_role;
+grant execute on function public.hosted_ai_get_or_create_account(uuid) to service_role;
+grant execute on function public.hosted_ai_mark_intro_seen(uuid) to service_role;
+grant execute on function public.hosted_ai_begin_usage(uuid, text, text, text, text, jsonb) to service_role;
+grant execute on function public.hosted_ai_finish_usage(uuid, text, text, integer, text, text, jsonb) to service_role;
+
 -- Row level security
 alter table public.profiles enable row level security;
 alter table public.user_dashboards enable row level security;
@@ -219,6 +594,8 @@ alter table public.user_study_guides enable row level security;
 alter table public.user_widgets enable row level security;
 alter table public.user_widget_versions enable row level security;
 alter table public.user_workspace_state enable row level security;
+alter table public.hosted_ai_accounts enable row level security;
+alter table public.hosted_ai_usage_events enable row level security;
 
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own"
@@ -367,6 +744,18 @@ with check (owner_id = auth.uid());
 drop policy if exists "user_workspace_state_delete_own" on public.user_workspace_state;
 create policy "user_workspace_state_delete_own"
 on public.user_workspace_state for delete
+to authenticated
+using (owner_id = auth.uid());
+
+drop policy if exists "hosted_ai_accounts_select_own" on public.hosted_ai_accounts;
+create policy "hosted_ai_accounts_select_own"
+on public.hosted_ai_accounts for select
+to authenticated
+using (owner_id = auth.uid());
+
+drop policy if exists "hosted_ai_usage_events_select_own" on public.hosted_ai_usage_events;
+create policy "hosted_ai_usage_events_select_own"
+on public.hosted_ai_usage_events for select
 to authenticated
 using (owner_id = auth.uid());
 

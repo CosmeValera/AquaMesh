@@ -21,16 +21,15 @@ import {
   resolveStudyPackAiCredentials,
   StudyPackAiProvider,
 } from './settings'
-import { isStrongAiProvider } from './strongProviders'
+import { isStrongAiProvider, STRONG_AI_PROVIDERS } from './strongProviders'
 import { LocalAiProgressEvent } from './localLanguageModel'
+import { createHostedAiTransport } from './hostedClient'
 
 type ProviderOptions = {
   provider?: StudyPackAiProvider
   onProgress?: (event: LocalAiProgressEvent) => void
   signal?: AbortSignal
 }
-
-const HOSTED_NOT_CONFIGURED_MESSAGE = 'Hosted AI is not configured yet.'
 
 const resolveProvider = (
   explicitProvider: StudyPackAiProvider | undefined,
@@ -86,7 +85,15 @@ export const generateStudyPackWithAi = async (
   }
 
   if (provider === 'hosted') {
-    throw new Error(HOSTED_NOT_CONFIGURED_MESSAGE)
+    return generateStudyPackWithGemini({
+      ...options,
+      apiToken: '',
+      model: STRONG_AI_PROVIDERS.cerebras.defaultModel,
+      strongProvider: 'cerebras',
+      strongTransport: createHostedAiTransport({
+        surface: 'quick-create',
+      }),
+    })
   }
 
   if (!isStrongAiProvider(provider)) {
@@ -132,7 +139,15 @@ export const generateStudyPathWithAi = async (
   }
 
   if (provider === 'hosted') {
-    throw new Error(HOSTED_NOT_CONFIGURED_MESSAGE)
+    return generateStudyPathWithGemini({
+      ...options,
+      apiToken: '',
+      model: STRONG_AI_PROVIDERS.cerebras.defaultModel,
+      strongProvider: 'cerebras',
+      strongTransport: createHostedAiTransport({
+        surface: 'study-guide',
+      }),
+    })
   }
 
   if (!isStrongAiProvider(provider)) {

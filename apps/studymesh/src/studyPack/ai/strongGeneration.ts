@@ -27,8 +27,8 @@ import {
 import {
   callStrongAiModel,
   DEFAULT_STRONG_AI_PROVIDER,
-  StrongAiProviderId,
 } from './strongProviders'
+import type { StrongAiCallOptions, StrongAiProviderId } from './strongProviders'
 
 interface GeminiPart {
   text?: string
@@ -43,6 +43,10 @@ const GEMINI_TIMEOUT_MESSAGE =
   'Gemini took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or Basic fallback.'
 const GEMINI_OUTPUT_FORMAT_MESSAGE =
   'Gemini could not follow the requested output format. StudyMesh retried with a simpler JSON prompt, but the response was still unusable.'
+
+export type StrongAiModelTransport = (
+  options: StrongAiCallOptions,
+) => Promise<string>
 
 const generationTargetLabels: Record<string, string> = {
   quizzes: 'multiple-choice quizzes',
@@ -86,6 +90,7 @@ export interface GenerateStudyPackWithAiOptions {
   apiToken: string
   model: string
   strongProvider?: StrongAiProviderId
+  strongTransport?: StrongAiModelTransport
   title: string
   rawNotes: string
   packId: string
@@ -193,6 +198,7 @@ export interface GenerateStudyPathWithAiOptions {
   apiToken: string
   model: string
   strongProvider?: StrongAiProviderId
+  strongTransport?: StrongAiModelTransport
   title: string
   prompt: string
   folderName: string
@@ -1246,9 +1252,10 @@ const callStrongModel = async (
   parts: GeminiPart[],
   responseSchema?: Record<string, unknown>,
   provider: StrongAiProviderId = DEFAULT_STRONG_AI_PROVIDER,
+  transport: StrongAiModelTransport = callStrongAiModel,
 ): Promise<string> => {
   try {
-    return await callStrongAiModel({
+    return await transport({
       provider,
       apiToken,
       model,
@@ -1309,6 +1316,7 @@ export const generateStudyPackWithAi = async ({
   quizQuestionStyle = 'mixed',
   promptMode = false,
   studyPathMode = false,
+  strongTransport,
 }: GenerateStudyPackWithAiOptions): Promise<AiStudyPackDraft> => {
   const effectiveTargets = getEffectiveGenerationTargets(generationTargets)
   const practiceProfile = createStudyPackPracticeProfile(
@@ -1464,6 +1472,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
       ],
       undefined,
       strongProvider,
+      strongTransport,
     )
 
   let text: string
@@ -1475,6 +1484,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
       [{ text: promptText }],
       objectSchema,
       strongProvider,
+      strongTransport,
     )
   } catch (error) {
     if (!promptMode || !isGeminiOutputFormatError(error)) {
@@ -2022,6 +2032,7 @@ const generateStudyPathJsonWithPipeline = async ({
   apiToken,
   model,
   strongProvider,
+  strongTransport,
   title,
   prompt,
   folderName,
@@ -2031,6 +2042,7 @@ const generateStudyPathJsonWithPipeline = async ({
   apiToken: string
   model: string
   strongProvider: StrongAiProviderId
+  strongTransport?: StrongAiModelTransport
   title: string
   prompt: string
   folderName: string
@@ -2058,6 +2070,7 @@ const generateStudyPathJsonWithPipeline = async ({
     ],
     studyPathBlueprintSchema,
     strongProvider,
+    strongTransport,
   )
   const parsedBlueprint = parseGeminiJson(blueprintText)
   if (
@@ -2102,6 +2115,7 @@ const generateStudyPathJsonWithPipeline = async ({
       ],
       studyPathDashboardSchema,
       strongProvider,
+      strongTransport,
     )
     const parsedDashboard = parseGeminiJson(dashboardText)
     let dashboard =
@@ -2124,6 +2138,7 @@ const generateStudyPathJsonWithPipeline = async ({
         ],
         studyPathQualitySchema,
         strongProvider,
+        strongTransport,
       )
       const qualityParsed = parseGeminiJson(qualityText)
       const qualityRecord =
@@ -2159,6 +2174,7 @@ const generateStudyPathJsonWithPipeline = async ({
           ],
           studyPathDashboardSchema,
           strongProvider,
+          strongTransport,
         )
         const repaired = parseGeminiJson(repairText)
         if (repaired && typeof repaired === 'object') {
@@ -2223,6 +2239,7 @@ export const generateStudyPathWithAi = async ({
   apiToken,
   model,
   strongProvider = DEFAULT_STRONG_AI_PROVIDER,
+  strongTransport,
   title,
   prompt,
   folderName,
@@ -2345,6 +2362,7 @@ ${originalJson}`
       folderName: folderName || 'Study Guide',
       dashboardCount,
       autoDashboardCount: true,
+      strongTransport,
     })
     text = pipelineResult.text
     parsed = pipelineResult.parsed
@@ -2359,6 +2377,7 @@ ${originalJson}`
           [{ text: promptText }],
           studyPathSchema,
           strongProvider,
+          strongTransport,
         )
       } catch {
         throw error
@@ -2370,6 +2389,7 @@ ${originalJson}`
         [{ text: fallbackPrompt }],
         undefined,
         strongProvider,
+        strongTransport,
       )
     }
   }
@@ -2385,6 +2405,7 @@ ${originalJson}`
           [{ text: fallbackPrompt }],
           undefined,
           strongProvider,
+          strongTransport,
         )
         parsed = parseGeminiJson(text)
       } catch {
@@ -2417,6 +2438,7 @@ ${originalJson}`
         [{ text: createRepairPrompt(text) }],
         studyPathSchema,
         strongProvider,
+        strongTransport,
       )
       parsed = parseGeminiJson(repairText)
       record =

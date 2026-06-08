@@ -24,13 +24,14 @@ export {
   isStrongAiProvider,
   STRONG_AI_PROVIDERS,
 } from './strongProviders'
-export type { StrongAiProviderId } from './strongProviders'
+export type { StrongAiCallOptions, StrongAiProviderId } from './strongProviders'
 export type {
   AiStudyPathDashboardDraft,
   AiStudyPathDraft,
   ExtractRawNotesWithAiOptions,
   GenerateStudyPackWithAiOptions,
   GenerateStudyPathWithAiOptions,
+  StrongAiModelTransport,
 } from './strongGeneration'
 export { extractRawNotesWithAi } from './strongGeneration'
 export {
@@ -88,3 +89,26 @@ export type {
   LocalAiGenerationFailureCode,
   LocalAiGenerationFailureDebug,
 } from './localGeneration'
+export {
+  callHostedAiModel,
+  createHostedAiTransport,
+  getHostedAiStatus,
+  markHostedAiIntroSeen,
+} from './hostedClient'
+export type { HostedAiModelOptions, HostedAiTransport } from './hostedClient'
+export {
+  getHostedAiCreditCost,
+  HOSTED_AI_CREDIT_COSTS,
+  HOSTED_AI_DAILY_FREE_CREDITS,
+  HOSTED_AI_INITIAL_FREE_CREDITS,
+  HOSTED_AI_USAGE_CHANGED_EVENT,
+  STUDY_CREDITS_LABEL,
+  STUDY_CREDITS_SYMBOL,
+} from './hostedCredits'
+export type {
+  HostedAiGatewayPart,
+  HostedAiGatewayRequest,
+  HostedAiGatewayResponse,
+  HostedAiStatus,
+  HostedAiSurface,
+} from './hostedCredits'

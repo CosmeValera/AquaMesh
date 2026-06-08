@@ -80,7 +80,7 @@ const providerLabels: Record<StudyPackAiProvider, string> = {
   local: 'Google Local AI',
   gemini: 'Own Gemini API token',
   cerebras: 'Own Cerebras API key',
-  hosted: 'Hosted AI tokens',
+  hosted: 'Hosted AI',
 }
 
 const LOCAL_AI_ESTIMATE_COPY =
@@ -106,7 +106,7 @@ const getProviderPathProgressLabel = (provider: StudyPackAiProvider): string =>
       ? `Generating ordered dashboards with ${providerLabels[provider]}...`
       : provider === 'basic'
         ? 'Generating ordered dashboards with Basic fallback...'
-        : 'Checking hosted AI configuration...'
+        : 'Generating ordered dashboards with Hosted AI...'
 
 const getProviderPathDescription = (provider: StudyPackAiProvider): string =>
   provider === 'local'
@@ -115,7 +115,7 @@ const getProviderPathDescription = (provider: StudyPackAiProvider): string =>
       ? `StudyMesh is sending the request to ${providerLabels[provider]} and converting the response into dashboards.`
       : provider === 'basic'
         ? 'StudyMesh is using local parsing and practice generation without AI API calls.'
-        : 'Hosted AI is not configured yet.'
+        : 'Hosted AI uses Study Credits and the app-hosted Cerebras model.'
 
 const formatPipelineRemaining = (remainingMs: number): string => {
   const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000))
@@ -618,11 +618,6 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     const credentials = isStrongAiProvider(effectiveAiProvider)
       ? resolveStudyPackAiCredentials(effectiveAiProvider)
       : resolveStudyPackAiCredentials()
-    if (effectiveAiProvider === 'hosted') {
-      setError('Hosted AI is not configured yet.')
-      return
-    }
-
     if (isStrongAiProvider(effectiveAiProvider) && !credentials.apiToken) {
       setError(
         `${providerLabels[effectiveAiProvider]} mode needs a configured API key.`,
@@ -959,8 +954,9 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
                 <Alert severity="info">{LOCAL_AI_ESTIMATE_COPY}</Alert>
               )}
               {aiProvider === 'hosted' && (
-                <Alert severity="warning">
-                  Hosted AI is not configured yet.
+                <Alert severity="info">
+                  Hosted AI uses Study Credits. Creating a Study Guide costs 2
+                  credits.
                 </Alert>
               )}
               {isGenerating && !autoCreateOnGenerate && (

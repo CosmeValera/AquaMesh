@@ -1,0 +1,66 @@
+export const STUDY_CREDITS_LABEL = 'Study Credits'
+export const STUDY_CREDITS_SYMBOL = 'SC'
+
+export const HOSTED_AI_USAGE_CHANGED_EVENT =
+  'studymesh-hosted-ai-usage-changed'
+
+export type HostedAiSurface = 'study-guide' | 'quick-create' | 'chat'
+
+export const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
+  'study-guide': 2,
+  'quick-create': 1,
+  chat: 1,
+}
+
+export const HOSTED_AI_INITIAL_FREE_CREDITS = 10
+export const HOSTED_AI_DAILY_FREE_CREDITS = 2
+
+export interface HostedAiStatus {
+  available: boolean
+  accountReady: boolean
+  introSeen: boolean
+  studyCredits: number
+  nextDailyRefillAt?: string
+  dailyFreeCredits: number
+  initialFreeCredits: number
+  costs: Record<HostedAiSurface, number>
+  message?: string
+}
+
+export interface HostedAiGatewayPart {
+  text?: string
+  inline_data?: {
+    mime_type: string
+    data: string
+  }
+}
+
+export interface HostedAiGatewayRequest {
+  action: 'status' | 'markIntroSeen' | 'generate'
+  requestId?: string
+  surface?: HostedAiSurface
+  model?: string
+  parts?: HostedAiGatewayPart[]
+  responseSchema?: Record<string, unknown>
+  timeoutMs?: number
+}
+
+export interface HostedAiGatewayResponse {
+  ok: boolean
+  text?: string
+  status?: HostedAiStatus
+  error?: {
+    code:
+      | 'not_authenticated'
+      | 'not_configured'
+      | 'insufficient_credits'
+      | 'invalid_request'
+      | 'provider_error'
+      | 'rate_limited'
+      | 'server_error'
+    message: string
+  }
+}
+
+export const getHostedAiCreditCost = (surface: HostedAiSurface): number =>
+  HOSTED_AI_CREDIT_COSTS[surface]

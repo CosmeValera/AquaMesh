@@ -414,7 +414,33 @@ describe('TopNavBar Component', () => {
     )
 
     expect(await screen.findByText('8')).toBeInTheDocument()
-    expect(screen.getByLabelText(STUDY_CREDITS_LABEL)).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: `Open ${STUDY_CREDITS_LABEL}` }),
+    ).toBeInTheDocument()
+  })
+
+  it('opens Study Credits details from the top bar balance pill', async () => {
+    render(
+      <BrowserRouter>
+        <TopNavBar />
+      </BrowserRouter>,
+    )
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: `Open ${STUDY_CREDITS_LABEL}`,
+      }),
+    )
+
+    expect(
+      await screen.findByRole('dialog', { name: /Study Credits/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/study guide.*2/i)).toBeInTheDocument()
+    expect(screen.getByText(/quick create.*1/i)).toBeInTheDocument()
+    expect(screen.getByText(/chat.*1/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /2 eur top-up coming soon/i }),
+    ).toBeDisabled()
   })
 
   it('renders the StudyMesh logo', () => {

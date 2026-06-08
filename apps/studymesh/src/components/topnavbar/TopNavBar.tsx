@@ -83,6 +83,7 @@ import WidgetEditorDialog from '../workspace/WidgetEditorDialog'
 import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceMode'
 import { deleteStudyMeshProfile, useAuth } from '../../auth/AuthProvider'
 import StudyCreditsPill from '../hostedAi/StudyCreditsPill'
+import StudyCreditsDialog from '../hostedAi/StudyCreditsDialog'
 
 // Define user data type
 interface UserData {
@@ -323,6 +324,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
+  const [isStudyCreditsOpen, setIsStudyCreditsOpen] = useState(false)
   const [userSettingsName, setUserSettingsName] = useState('')
   const [userSettingsAvatarStatus, setUserSettingsAvatarStatus] = useState('')
   const [studyPackOpen, setStudyPackOpen] = useState(false)
@@ -746,7 +748,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   {currentDashboardTitle || 'Select dashboard'}
                 </Typography>
               </Button>
-              <StudyCreditsPill compact />
+              <StudyCreditsPill
+                compact
+                onClick={() => setIsStudyCreditsOpen(true)}
+              />
               <IconButton
                 onClick={handleUserMenuOpen}
                 aria-label="Open user menu"
@@ -838,7 +843,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   flex: '0 0 auto',
                 }}
               >
-                <StudyCreditsPill compact={isPhone || isTablet} />
+                <StudyCreditsPill
+                  compact={isPhone || isTablet}
+                  onClick={() => setIsStudyCreditsOpen(true)}
+                />
                 {/* User Menu */}
                 {isPhone || isTablet ? (
                   <ButtonWithLabel
@@ -1403,6 +1411,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
           </Button>
         </DialogActions>
       </Dialog>
+      <StudyCreditsDialog
+        open={isStudyCreditsOpen}
+        onClose={() => setIsStudyCreditsOpen(false)}
+      />
       <SettingsDialog
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

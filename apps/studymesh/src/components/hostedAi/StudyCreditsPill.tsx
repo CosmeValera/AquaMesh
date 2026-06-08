@@ -6,20 +6,29 @@ import { useHostedAiStatus } from './useHostedAiStatus'
 
 interface StudyCreditsPillProps {
   compact?: boolean
+  onClick?: () => void
 }
 
-const StudyCreditsPill: React.FC<StudyCreditsPillProps> = ({ compact }) => {
+const StudyCreditsPill: React.FC<StudyCreditsPillProps> = ({
+  compact,
+  onClick,
+}) => {
   const { status, loading, error } = useHostedAiStatus()
   const count = status?.accountReady ? status.studyCredits : null
   const label =
     error && !status ? `${STUDY_CREDITS_LABEL} unavailable` : STUDY_CREDITS_LABEL
   const displayValue = loading || count === null ? '--' : count
+  const isClickable = Boolean(onClick)
 
   return (
     <Tooltip title={label}>
       <Box
-        component="span"
-        aria-label={STUDY_CREDITS_LABEL}
+        component={isClickable ? 'button' : 'span'}
+        type={isClickable ? 'button' : undefined}
+        aria-label={
+          isClickable ? `Open ${STUDY_CREDITS_LABEL}` : STUDY_CREDITS_LABEL
+        }
+        onClick={onClick}
         sx={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -34,6 +43,23 @@ const StudyCreditsPill: React.FC<StudyCreditsPillProps> = ({ compact }) => {
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16)',
           justifyContent: 'center',
           flex: '0 0 auto',
+          font: 'inherit',
+          outline: 0,
+          cursor: isClickable ? 'pointer' : 'default',
+          transition:
+            'background-color 140ms ease, border-color 140ms ease, transform 140ms ease',
+          '&:hover': isClickable
+            ? {
+                bgcolor: 'rgba(255,255,255,0.18)',
+                borderColor: 'rgba(255,255,255,0.4)',
+              }
+            : undefined,
+          '&:focus-visible': isClickable
+            ? {
+                boxShadow:
+                  '0 0 0 3px rgba(255,255,255,0.28), inset 0 1px 0 rgba(255,255,255,0.16)',
+              }
+            : undefined,
         }}
       >
         <Typography

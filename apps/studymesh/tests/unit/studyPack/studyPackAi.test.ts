@@ -31,6 +31,7 @@ import {
   extractNotesFromImageWithLocalLanguageModel,
   generateStudyPathWithLocalAi,
   generateStudyPackWithAi as generateStudyPackWithProvider,
+  generateStudyPathWithAi as generateStudyPathWithProvider,
   generateStudyPackWithGemini as generateStudyPackWithAi,
   generateStudyPathWithGemini as generateStudyPathWithAi,
   isLocalAiGenerationError,
@@ -263,6 +264,81 @@ describe('study pack AI settings', () => {
     const request = hostedAiClientMock.callHostedAiModel.mock.calls[0][0]
     expect(JSON.stringify(request.parts)).not.toContain('inline_data')
     expect(draft.title).toBe('Photosynthesis')
+  })
+
+  it('routes hosted Study Guide through the hosted gateway without a browser API key', async () => {
+    const hostedPathDraft = {
+      title: 'Algebra Study Guide',
+      folderName: 'Algebra Study Guide',
+      dashboards: [
+        {
+          title: '01 - Linear equations',
+          summary: 'Linear equations preview',
+          rawNotes:
+            'Linear equations lesson notes explain solving one-variable equations with examples and common mistakes.',
+          sourceSummary: {
+            title: 'Linear equations source summary',
+            bullets: ['Linear equations balance both sides.'],
+          },
+          conceptRecap: {
+            title: 'Linear equations concept recap',
+            sections: [
+              {
+                title: 'Balance rule',
+                bullets: ['Apply the same operation to both sides.'],
+                example: 'x + 2 = 5 becomes x = 3.',
+              },
+            ],
+          },
+          practice: {
+            shortAnswer: [
+              {
+                question: 'How do you solve x + 2 = 5?',
+                expectedAnswer: 'Subtract 2 from both sides.',
+                explanation: 'Inverse operations isolate x.',
+              },
+            ],
+            multipleChoice: [
+              {
+                question: 'What is x if x + 2 = 5?',
+                options: ['3', '2', '7'],
+                correctOptionIndex: 0,
+                explanation: 'Subtract 2 from both sides.',
+              },
+            ],
+          },
+          flashcards: [
+            {
+              front: 'What keeps an equation balanced?',
+              back: 'Doing the same operation to both sides.',
+            },
+          ],
+        },
+      ],
+    }
+    hostedAiClientMock.callHostedAiModel.mockResolvedValue(
+      JSON.stringify(hostedPathDraft),
+    )
+
+    const draft = await generateStudyPathWithProvider({
+      provider: 'hosted',
+      apiToken: '',
+      model: '',
+      title: 'Algebra',
+      prompt: 'Teach me linear equations',
+      folderName: '',
+      generationAmount: 'few',
+    })
+
+    expect(hostedAiClientMock.callHostedAiModel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        surface: 'study-guide',
+        model: expect.any(String),
+        parts: expect.any(Array),
+        responseSchema: expect.any(Object),
+      }),
+    )
+    expect(draft.title).toBe('Algebra Study Guide')
   })
 
   it('prefers settings token over env token', () => {

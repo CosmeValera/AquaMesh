@@ -2,6 +2,7 @@ import { isSupabaseConfigured, supabase } from '../../auth/supabaseClient'
 import type { StrongAiCallOptions } from './strongProviders'
 import {
   HOSTED_AI_USAGE_CHANGED_EVENT,
+  getHostedAiCreditCost,
 } from './hostedCredits'
 import type {
   HostedAiGatewayRequest,
@@ -113,6 +114,19 @@ const dispatchHostedAiUsageChanged = (): void => {
   }
 }
 
+const assertHostedAiCreditsAvailable = async (
+  surface: HostedAiSurface,
+): Promise<void> => {
+  const status = await getHostedAiStatus()
+  const requiredCredits = getHostedAiCreditCost(surface)
+
+  if (status.studyCredits < requiredCredits) {
+    throw new Error(
+      `Not enough Study Credits. This action needs ${requiredCredits} SC and you have ${status.studyCredits} SC.`,
+    )
+  }
+}
+
 const callHostedAiGateway = async (
   request: HostedAiGatewayRequest,
 ): Promise<HostedAiGatewayResponse> => {
@@ -153,7 +167,7 @@ export const markHostedAiIntroSeen = async (): Promise<HostedAiStatus> => {
   return payload.status
 }
 
-export const callHostedAiModel = async ({
+const callHostedAiModelUnchecked = async ({
   surface,
   requestId = createRequestId(),
   model,
@@ -181,23 +195,38 @@ export const callHostedAiModel = async ({
   return text
 }
 
+export const callHostedAiModel = async (
+  options: HostedAiModelOptions,
+): Promise<string> => {
+  await assertHostedAiCreditsAvailable(options.surface)
+  return callHostedAiModelUnchecked(options)
+}
+
 export const createHostedAiTransport = ({
   surface,
   requestId = createRequestId(),
 }: {
   surface: HostedAiSurface
   requestId?: string
-}): HostedAiTransport => async ({
-  model,
-  parts,
-  responseSchema,
-  timeoutMs,
-}: StrongAiCallOptions) =>
-  callHostedAiModel({
-    surface,
-    requestId,
+}): HostedAiTransport => {
+  let creditCheckPromise: Promise<void> | null = null
+
+  return async ({
     model,
     parts,
     responseSchema,
     timeoutMs,
-  })
+  }: StrongAiCallOptions) => {
+    creditCheckPromise ||= assertHostedAiCreditsAvailable(surface)
+    await creditCheckPromise
+
+    return callHostedAiModelUnchecked({
+      surface,
+      requestId,
+      model,
+      parts,
+      responseSchema,
+      timeoutMs,
+    })
+  }
+}

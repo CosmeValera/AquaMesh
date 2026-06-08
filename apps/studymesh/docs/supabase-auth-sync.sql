@@ -244,7 +244,7 @@ begin
 
   insert into public.hosted_ai_accounts (owner_id)
   values (new.id)
-  on conflict (owner_id) do nothing;
+  on conflict on constraint hosted_ai_accounts_pkey do nothing;
 
   return new;
 end;
@@ -309,7 +309,7 @@ as $$
 begin
   insert into public.hosted_ai_accounts (owner_id)
   values (p_owner_id)
-  on conflict (owner_id) do nothing;
+  on conflict on constraint hosted_ai_accounts_pkey do nothing;
 
   update public.hosted_ai_accounts account
   set study_credit_balance = greatest(account.study_credit_balance, 2),

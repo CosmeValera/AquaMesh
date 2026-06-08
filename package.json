@@ -4,7 +4,8 @@
   "scripts": {
     "build": "turbo build",
     "bashunit": "bash tools/git-hooks/lib/bashunit tools/git-hooks/tests",
-    "start": "turbo start",
+    "start": "vercel dev",
+    "start-dev": "turbo start",
     "test": "turbo test",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
@@ -24,6 +25,7 @@
   "dependencies": {
     "@types/uuid": "^10.0.0",
     "date-fns": "^4.1.0",
+    "stripe": "^22.2.0",
     "uuid": "^11.1.0"
   }
 }

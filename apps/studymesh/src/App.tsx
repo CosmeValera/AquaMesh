@@ -31,6 +31,7 @@ import {
 import { AuthProvider, RequireAuth } from './auth/AuthProvider'
 import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
 import HostedAiIntroModal from './components/hostedAi/HostedAiIntroModal'
+import { notifyHostedAiCreditsChanged } from './studyPack/ai'
 
 import { createStudyMeshTheme } from './theme'
 import { AccentColorProvider } from './theme/AccentColorContext'
@@ -65,15 +66,35 @@ const WorkspacePage = () => {
     openTutorialExample,
   } = useWorkspaceActions()
   const handledActionRef = useRef<string | null>(null)
+  const handledCreditsRef = useRef<string | null>(null)
+  const [creditsNotice, setCreditsNotice] = useState('')
 
   useEffect(() => {
     const action = searchParams.get('action')
+    const credits = searchParams.get('credits')
+    let shouldClearParams = false
+
+    if (credits && handledCreditsRef.current !== credits) {
+      handledCreditsRef.current = credits
+      shouldClearParams = true
+
+      if (credits === 'success') {
+        setCreditsNotice('Payment received. Credits may take a few seconds.')
+        notifyHostedAiCreditsChanged()
+      } else if (credits === 'cancel') {
+        setCreditsNotice('Payment canceled. No credits were added.')
+      }
+    }
 
     if (!action || handledActionRef.current === action) {
+      if (shouldClearParams) {
+        setSearchParams({}, { replace: true })
+      }
       return
     }
 
     handledActionRef.current = action
+    shouldClearParams = true
 
     if (action === 'create-widget') {
       openCreateWidget()
@@ -94,7 +115,9 @@ const WorkspacePage = () => {
       openCreateWidget()
     }
 
-    setSearchParams({}, { replace: true })
+    if (shouldClearParams) {
+      setSearchParams({}, { replace: true })
+    }
   }, [
     openCreateWidget,
     openCreateStudyPack,
@@ -134,6 +157,29 @@ const WorkspacePage = () => {
         <WorkspaceStudioShell>
           <Dashboards />
         </WorkspaceStudioShell>
+        {creditsNotice && (
+          <Box
+            role="status"
+            sx={{
+              position: 'absolute',
+              top: 16,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 20,
+              px: 2,
+              py: 1,
+              borderRadius: 1,
+              bgcolor: 'background.paper',
+              border: 1,
+              borderColor: 'divider',
+              boxShadow: 3,
+              color: 'text.primary',
+              fontWeight: 700,
+            }}
+          >
+            {creditsNotice}
+          </Box>
+        )}
         <WorkspaceOnboarding />
         <HostedAiIntroModal />
       </Main>
@@ -191,10 +237,7 @@ const AppShell = () => {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route
-                  path="/auth/callback"
-                  element={<AuthCallbackPage />}
-                />
+                <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route
                   path="/account/update-password"
                   element={<UpdatePasswordPage />}

@@ -439,8 +439,15 @@ describe('TopNavBar Component', () => {
     expect(screen.getByText(/quick create.*1/i)).toBeInTheDocument()
     expect(screen.getByText(/chat.*1/i)).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /2 eur top-up coming soon/i }),
-    ).toBeDisabled()
+      screen.getByRole('button', {
+        name: /buy 250 credits for 5 eur.*most popular/i,
+      }),
+    ).toBeEnabled()
+    expect(
+      screen.getByRole('button', {
+        name: /buy 1200 credits for 20 eur.*best value/i,
+      }),
+    ).toBeEnabled()
   })
 
   it('renders the StudyMesh logo', () => {

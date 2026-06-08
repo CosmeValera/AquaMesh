@@ -3,6 +3,7 @@ import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material'
 import TollIcon from '@mui/icons-material/Toll'
 
 import { STUDY_CREDITS_LABEL } from '../../studyPack/ai'
+import HostedAiCreditActions from './HostedAiCreditActions'
 import { useHostedAiStatus } from './useHostedAiStatus'
 
 const HostedAiSettingsPanel: React.FC = () => {
@@ -56,9 +57,21 @@ const HostedAiSettingsPanel: React.FC = () => {
           sx={{ fontWeight: 800 }}
         />
       </Stack>
-      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1.5 }}>
-        <Chip size="small" label={`Study Guide: ${status.costs['study-guide']}`} />
-        <Chip size="small" label={`Quick Create: ${status.costs['quick-create']}`} />
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        flexWrap="wrap"
+        sx={{ mt: 1.5 }}
+      >
+        <Chip
+          size="small"
+          label={`Study Guide: ${status.costs['study-guide']}`}
+        />
+        <Chip
+          size="small"
+          label={`Quick Create: ${status.costs['quick-create']}`}
+        />
         <Chip size="small" label={`Chat: ${status.costs.chat}`} />
         <Chip
           size="small"
@@ -66,14 +79,15 @@ const HostedAiSettingsPanel: React.FC = () => {
         />
       </Stack>
       {status.message && (
-        <Alert severity={status.available ? 'info' : 'warning'} sx={{ mt: 1.5 }}>
+        <Alert
+          severity={status.available ? 'info' : 'warning'}
+          sx={{ mt: 1.5 }}
+        >
           {status.message}
         </Alert>
       )}
       <Stack direction="row" spacing={1} sx={{ mt: 1.5 }} flexWrap="wrap">
-        <Button variant="outlined" size="small" disabled>
-          2 EUR top-up coming soon
-        </Button>
+        <HostedAiCreditActions />
         <Button variant="text" size="small" onClick={() => void refresh()}>
           Refresh credits
         </Button>
@@ -83,4 +97,3 @@ const HostedAiSettingsPanel: React.FC = () => {
 }
 
 export default HostedAiSettingsPanel
-

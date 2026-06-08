@@ -36,10 +36,13 @@ import {
   generateStudyPathWithGemini as generateStudyPathWithAi,
   isLocalAiGenerationError,
   applyStudyMaterialResourceTypeToDraft,
+  DEFAULT_HOSTED_AI_CREDIT_PACK_ID,
   getHostedAiCreditCost,
+  HOSTED_AI_CREDIT_PACKS,
   HOSTED_AI_CREDIT_COSTS,
   HOSTED_AI_DAILY_FREE_CREDITS,
   HOSTED_AI_INITIAL_FREE_CREDITS,
+  HOSTED_AI_REFILL_CURRENCY,
   STUDY_CREDITS_LABEL,
   normalizeAiStudyPackDraft,
   normalizeLocalAiStudyPackDraft,
@@ -198,6 +201,40 @@ describe('study pack AI settings', () => {
     expect(STUDY_CREDITS_LABEL).toBe('Study Credits')
     expect(HOSTED_AI_INITIAL_FREE_CREDITS).toBe(10)
     expect(HOSTED_AI_DAILY_FREE_CREDITS).toBe(2)
+    expect(HOSTED_AI_REFILL_CURRENCY).toBe('eur')
+    expect(DEFAULT_HOSTED_AI_CREDIT_PACK_ID).toBe('popular')
+    expect(HOSTED_AI_CREDIT_PACKS).toEqual([
+      {
+        id: 'starter',
+        credits: 80,
+        priceCents: 200,
+        currency: 'eur',
+        label: '2 EUR',
+      },
+      {
+        id: 'popular',
+        credits: 250,
+        priceCents: 500,
+        currency: 'eur',
+        label: '5 EUR',
+        badge: 'Most popular',
+      },
+      {
+        id: 'value',
+        credits: 550,
+        priceCents: 1000,
+        currency: 'eur',
+        label: '10 EUR',
+      },
+      {
+        id: 'max',
+        credits: 1200,
+        priceCents: 2000,
+        currency: 'eur',
+        label: '20 EUR',
+        badge: 'Best value',
+      },
+    ])
     expect(HOSTED_AI_CREDIT_COSTS).toEqual({
       'study-guide': 2,
       'quick-create': 1,
@@ -2807,8 +2844,8 @@ describe('Gemini study pack client', () => {
           index === 1
             ? 'orientationMap'
             : index === 3
-            ? 'practiceCheckpoint'
-            : 'workedExampleLab',
+              ? 'practiceCheckpoint'
+              : 'workedExampleLab',
         sectionPlan: ['Topic map', 'Worked loop', 'Try it'],
         mustTeach: [`Loop idea ${index}`],
         workedExample: `Loop worked example ${index}.`,
@@ -2841,8 +2878,8 @@ describe('Gemini study pack client', () => {
                           index === 1
                             ? 'orientationMap'
                             : index === 3
-                            ? 'practiceCheckpoint'
-                            : 'workedExampleLab',
+                              ? 'practiceCheckpoint'
+                              : 'workedExampleLab',
                         supportArtifacts:
                           index === 1
                             ? {
@@ -3268,7 +3305,9 @@ describe('Gemini study pack client', () => {
     expect(fetchMock.mock.calls[0][1].body).not.toContain(
       `practice.${'shortAnswer'}`,
     )
-    expect(fetchMock.mock.calls[0][1].body).toContain('Never output typed-answer')
+    expect(fetchMock.mock.calls[0][1].body).toContain(
+      'Never output typed-answer',
+    )
     expect(draft.objects.map((object) => object.kind)).toEqual(['quiz'])
     expect(draft.objects).toEqual([
       expect.objectContaining({ quizMode: 'multipleChoice' }),
@@ -3652,9 +3691,7 @@ describe('Gemini study pack client', () => {
     })
     expect(draft.dashboards[0].objects).toHaveLength(1)
     expect(
-      draft.dashboards[0].objects.every(
-        (object) => object.kind === 'list',
-      ),
+      draft.dashboards[0].objects.every((object) => object.kind === 'list'),
     ).toBe(true)
     expect(draft.dashboards[0].debugTrace?.finalObjects).toEqual(
       draft.dashboards[0].objects,

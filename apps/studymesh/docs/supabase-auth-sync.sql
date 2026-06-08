@@ -147,6 +147,31 @@ create table if not exists public.hosted_ai_usage_events (
     check (provider_call_count >= 0)
 );
 
+-- One-time Stripe Checkout credit refills. The browser creates pending rows
+-- through the billing API, but credits are granted only by verified webhook RPC.
+create table if not exists public.hosted_ai_credit_purchases (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  status text not null default 'pending',
+  expected_credits integer not null,
+  expected_amount integer not null,
+  expected_currency text not null,
+  stripe_checkout_session_id text unique,
+  stripe_payment_intent_id text,
+  credited_at timestamptz,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint hosted_ai_credit_purchases_status_check
+    check (status in ('pending', 'checkout_created', 'paid', 'failed', 'expired')),
+  constraint hosted_ai_credit_purchases_expected_credits_check
+    check (expected_credits > 0),
+  constraint hosted_ai_credit_purchases_expected_amount_check
+    check (expected_amount > 0),
+  constraint hosted_ai_credit_purchases_expected_currency_check
+    check (expected_currency = lower(expected_currency))
+);
+
 drop trigger if exists profiles_set_updated_at on public.profiles;
 create trigger profiles_set_updated_at
 before update on public.profiles
@@ -180,6 +205,11 @@ for each row execute function public.set_updated_at();
 drop trigger if exists hosted_ai_usage_events_set_updated_at on public.hosted_ai_usage_events;
 create trigger hosted_ai_usage_events_set_updated_at
 before update on public.hosted_ai_usage_events
+for each row execute function public.set_updated_at();
+
+drop trigger if exists hosted_ai_credit_purchases_set_updated_at on public.hosted_ai_credit_purchases;
+create trigger hosted_ai_credit_purchases_set_updated_at
+before update on public.hosted_ai_credit_purchases
 for each row execute function public.set_updated_at();
 
 -- Indexes for owner fetches, recent-sync ordering, soft-delete filtering.
@@ -221,6 +251,12 @@ create index if not exists hosted_ai_usage_events_owner_created_idx
 
 create index if not exists hosted_ai_usage_events_owner_status_idx
   on public.hosted_ai_usage_events(owner_id, status);
+
+create index if not exists hosted_ai_credit_purchases_owner_created_idx
+  on public.hosted_ai_credit_purchases(owner_id, created_at desc);
+
+create index if not exists hosted_ai_credit_purchases_session_idx
+  on public.hosted_ai_credit_purchases(stripe_checkout_session_id);
 
 -- Optional profile bootstrap. Safe if app also upserts profile on login.
 create or replace function public.handle_new_user()
@@ -575,17 +611,261 @@ begin
 end;
 $$;
 
+create or replace function public.hosted_ai_create_credit_purchase(
+  p_owner_id uuid,
+  p_expected_credits integer,
+  p_expected_amount integer,
+  p_expected_currency text,
+  p_metadata jsonb default '{}'::jsonb
+)
+returns table (
+  purchase_id uuid,
+  status text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  inserted_purchase public.hosted_ai_credit_purchases%rowtype;
+begin
+  if p_expected_credits <= 0 then
+    raise exception 'expected credits must be positive';
+  end if;
+
+  if p_expected_amount <= 0 then
+    raise exception 'expected amount must be positive';
+  end if;
+
+  insert into public.hosted_ai_accounts (owner_id)
+  values (p_owner_id)
+  on conflict on constraint hosted_ai_accounts_pkey do nothing;
+
+  insert into public.hosted_ai_credit_purchases (
+    owner_id,
+    expected_credits,
+    expected_amount,
+    expected_currency,
+    metadata
+  )
+  values (
+    p_owner_id,
+    p_expected_credits,
+    p_expected_amount,
+    lower(p_expected_currency),
+    coalesce(p_metadata, '{}'::jsonb)
+  )
+  returning * into inserted_purchase;
+
+  purchase_id := inserted_purchase.id;
+  status := inserted_purchase.status;
+  return next;
+end;
+$$;
+
+create or replace function public.hosted_ai_attach_checkout_session(
+  p_purchase_id uuid,
+  p_owner_id uuid,
+  p_stripe_checkout_session_id text,
+  p_metadata jsonb default '{}'::jsonb
+)
+returns table (
+  purchase_id uuid,
+  status text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  purchase public.hosted_ai_credit_purchases%rowtype;
+begin
+  select *
+  into purchase
+  from public.hosted_ai_credit_purchases
+  where id = p_purchase_id
+    and owner_id = p_owner_id
+  for update;
+
+  if not found then
+    raise exception 'credit purchase not found';
+  end if;
+
+  if purchase.status not in ('pending', 'checkout_created') then
+    raise exception 'credit purchase is not pending';
+  end if;
+
+  update public.hosted_ai_credit_purchases
+  set status = 'checkout_created',
+      stripe_checkout_session_id = p_stripe_checkout_session_id,
+      metadata = metadata || coalesce(p_metadata, '{}'::jsonb)
+  where id = p_purchase_id
+  returning * into purchase;
+
+  purchase_id := purchase.id;
+  status := purchase.status;
+  return next;
+end;
+$$;
+
+create or replace function public.hosted_ai_mark_credit_purchase_paid(
+  p_purchase_id uuid,
+  p_stripe_checkout_session_id text,
+  p_stripe_payment_intent_id text,
+  p_expected_credits integer,
+  p_expected_amount integer,
+  p_expected_currency text,
+  p_metadata jsonb default '{}'::jsonb
+)
+returns table (
+  purchase_id uuid,
+  status text,
+  study_credit_balance integer,
+  credited_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  purchase public.hosted_ai_credit_purchases%rowtype;
+  current_balance integer;
+begin
+  select *
+  into purchase
+  from public.hosted_ai_credit_purchases
+  where id = p_purchase_id
+  for update;
+
+  if not found then
+    raise exception 'credit purchase not found';
+  end if;
+
+  if purchase.expected_credits <> p_expected_credits
+    or purchase.expected_amount <> p_expected_amount
+    or purchase.expected_currency <> lower(p_expected_currency) then
+    raise exception 'credit purchase expectation mismatch';
+  end if;
+
+  if purchase.stripe_checkout_session_id is not null
+    and purchase.stripe_checkout_session_id <> p_stripe_checkout_session_id then
+    raise exception 'checkout session mismatch';
+  end if;
+
+  if purchase.status = 'paid' then
+    select account.study_credit_balance
+    into current_balance
+    from public.hosted_ai_accounts account
+    where account.owner_id = purchase.owner_id;
+
+    purchase_id := purchase.id;
+    status := purchase.status;
+    study_credit_balance := current_balance;
+    credited_at := purchase.credited_at;
+    return next;
+    return;
+  end if;
+
+  if purchase.status not in ('pending', 'checkout_created') then
+    raise exception 'credit purchase is not payable';
+  end if;
+
+  insert into public.hosted_ai_accounts (owner_id)
+  values (purchase.owner_id)
+  on conflict on constraint hosted_ai_accounts_pkey do nothing;
+
+  update public.hosted_ai_accounts account
+  set study_credit_balance = account.study_credit_balance + purchase.expected_credits
+  where account.owner_id = purchase.owner_id
+  returning account.study_credit_balance into current_balance;
+
+  update public.hosted_ai_credit_purchases
+  set status = 'paid',
+      stripe_checkout_session_id = p_stripe_checkout_session_id,
+      stripe_payment_intent_id = p_stripe_payment_intent_id,
+      credited_at = coalesce(credited_at, now()),
+      metadata = metadata || coalesce(p_metadata, '{}'::jsonb)
+  where id = purchase.id
+  returning * into purchase;
+
+  purchase_id := purchase.id;
+  status := purchase.status;
+  study_credit_balance := current_balance;
+  credited_at := purchase.credited_at;
+  return next;
+end;
+$$;
+
+create or replace function public.hosted_ai_mark_credit_purchase_terminal(
+  p_purchase_id uuid,
+  p_stripe_checkout_session_id text,
+  p_status text,
+  p_metadata jsonb default '{}'::jsonb
+)
+returns table (
+  purchase_id uuid,
+  status text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  purchase public.hosted_ai_credit_purchases%rowtype;
+begin
+  if p_status not in ('failed', 'expired') then
+    raise exception 'invalid terminal purchase status';
+  end if;
+
+  select *
+  into purchase
+  from public.hosted_ai_credit_purchases
+  where id = p_purchase_id
+  for update;
+
+  if not found then
+    raise exception 'credit purchase not found';
+  end if;
+
+  if purchase.status = 'paid' then
+    purchase_id := purchase.id;
+    status := purchase.status;
+    return next;
+    return;
+  end if;
+
+  update public.hosted_ai_credit_purchases
+  set status = p_status,
+      stripe_checkout_session_id = coalesce(stripe_checkout_session_id, p_stripe_checkout_session_id),
+      metadata = metadata || coalesce(p_metadata, '{}'::jsonb)
+  where id = purchase.id
+  returning * into purchase;
+
+  purchase_id := purchase.id;
+  status := purchase.status;
+  return next;
+end;
+$$;
+
 revoke all on function public.hosted_ai_credit_cost(text) from public;
 revoke all on function public.hosted_ai_get_or_create_account(uuid) from public;
 revoke all on function public.hosted_ai_mark_intro_seen(uuid) from public;
 revoke all on function public.hosted_ai_begin_usage(uuid, text, text, text, text, jsonb) from public;
 revoke all on function public.hosted_ai_finish_usage(uuid, text, text, integer, text, text, jsonb) from public;
+revoke all on function public.hosted_ai_create_credit_purchase(uuid, integer, integer, text, jsonb) from public;
+revoke all on function public.hosted_ai_attach_checkout_session(uuid, uuid, text, jsonb) from public;
+revoke all on function public.hosted_ai_mark_credit_purchase_paid(uuid, text, text, integer, integer, text, jsonb) from public;
+revoke all on function public.hosted_ai_mark_credit_purchase_terminal(uuid, text, text, jsonb) from public;
 
 grant execute on function public.hosted_ai_credit_cost(text) to service_role;
 grant execute on function public.hosted_ai_get_or_create_account(uuid) to service_role;
 grant execute on function public.hosted_ai_mark_intro_seen(uuid) to service_role;
 grant execute on function public.hosted_ai_begin_usage(uuid, text, text, text, text, jsonb) to service_role;
 grant execute on function public.hosted_ai_finish_usage(uuid, text, text, integer, text, text, jsonb) to service_role;
+grant execute on function public.hosted_ai_create_credit_purchase(uuid, integer, integer, text, jsonb) to service_role;
+grant execute on function public.hosted_ai_attach_checkout_session(uuid, uuid, text, jsonb) to service_role;
+grant execute on function public.hosted_ai_mark_credit_purchase_paid(uuid, text, text, integer, integer, text, jsonb) to service_role;
+grant execute on function public.hosted_ai_mark_credit_purchase_terminal(uuid, text, text, jsonb) to service_role;
 
 -- Row level security
 alter table public.profiles enable row level security;
@@ -596,6 +876,7 @@ alter table public.user_widget_versions enable row level security;
 alter table public.user_workspace_state enable row level security;
 alter table public.hosted_ai_accounts enable row level security;
 alter table public.hosted_ai_usage_events enable row level security;
+alter table public.hosted_ai_credit_purchases enable row level security;
 
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own"
@@ -756,6 +1037,12 @@ using (owner_id = auth.uid());
 drop policy if exists "hosted_ai_usage_events_select_own" on public.hosted_ai_usage_events;
 create policy "hosted_ai_usage_events_select_own"
 on public.hosted_ai_usage_events for select
+to authenticated
+using (owner_id = auth.uid());
+
+drop policy if exists "hosted_ai_credit_purchases_select_own" on public.hosted_ai_credit_purchases;
+create policy "hosted_ai_credit_purchases_select_own"
+on public.hosted_ai_credit_purchases for select
 to authenticated
 using (owner_id = auth.uid());
 

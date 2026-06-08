@@ -24,6 +24,7 @@ import {
 } from '../../dashboardChat/contextBuilder'
 import { askDashboardSources } from '../../dashboardChat/askDashboard'
 import { readStudyPackAiSettings } from '../../studyPack/ai'
+import HostedAiCreditActions from '../hostedAi/HostedAiCreditActions'
 import { renderMarkdown } from '../WidgetEditor/components/preview/StudyBlockView'
 
 export interface DashboardChatMessage {
@@ -34,6 +35,9 @@ export interface DashboardChatMessage {
   sources?: string[]
   pending?: boolean
 }
+
+const isInsufficientStudyCreditsError = (message: string): boolean =>
+  /not enough study credits|insufficient study credits/i.test(message)
 
 interface DashboardChatPanelProps {
   dashboard?: StateDashboard
@@ -468,6 +472,9 @@ const DashboardChatPanel = ({
             {error}
           </Alert>
         )}
+        {error && isInsufficientStudyCreditsError(error) && (
+          <HostedAiCreditActions />
+        )}
       </Box>
 
       <Box sx={{ borderTop: 1, borderColor: 'divider' }} />
@@ -513,17 +520,19 @@ const DashboardChatPanel = ({
             sx={{
               width: 42,
               height: 42,
-              bgcolor: hasContext && draft.trim()
-                ? 'primary.main'
-                : 'action.disabledBackground',
+              bgcolor:
+                hasContext && draft.trim()
+                  ? 'primary.main'
+                  : 'action.disabledBackground',
               color:
                 hasContext && draft.trim()
                   ? 'primary.contrastText'
                   : 'text.disabled',
               '&:hover': {
-                bgcolor: hasContext && draft.trim()
-                  ? 'primary.dark'
-                  : 'action.disabledBackground',
+                bgcolor:
+                  hasContext && draft.trim()
+                    ? 'primary.dark'
+                    : 'action.disabledBackground',
               },
             }}
           >

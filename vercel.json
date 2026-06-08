@@ -1,8 +1,12 @@
 {
+  "devCommand": "npm --workspace studymesh run start:vercel",
   "buildCommand": "cd apps/studymesh && npm install && npm run build",
   "outputDirectory": "apps/studymesh/dist",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/:path((?!api/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
   ],
   "env": {
     "SYSTEM_LENS_URL": "aquamesh_system_lens@https://aquamesh-system-lens.vercel.app/remoteEntry.js",

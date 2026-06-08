@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "webpack-cli serve --mode development",
+    "start:vercel": "node scripts/start-vercel-dev.cjs",
     "start:live": "webpack-cli serve --mode development --live-reload --hot",
     "build": "webpack-cli --mode production --config webpack.config.prod.js",
     "serve": "serve -l 3000 -s dist",

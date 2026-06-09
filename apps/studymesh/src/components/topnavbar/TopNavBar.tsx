@@ -748,10 +748,12 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   {currentDashboardTitle || 'Select dashboard'}
                 </Typography>
               </Button>
-              <StudyCreditsPill
-                compact
-                onClick={() => setIsStudyCreditsOpen(true)}
-              />
+              {studyPackAiProvider === 'hosted' && (
+                <StudyCreditsPill
+                  compact
+                  onClick={() => setIsStudyCreditsOpen(true)}
+                />
+              )}
               <IconButton
                 onClick={handleUserMenuOpen}
                 aria-label="Open user menu"
@@ -843,10 +845,12 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   flex: '0 0 auto',
                 }}
               >
-                <StudyCreditsPill
-                  compact={isPhone || isTablet}
-                  onClick={() => setIsStudyCreditsOpen(true)}
-                />
+                {studyPackAiProvider === 'hosted' && (
+                  <StudyCreditsPill
+                    compact={isPhone || isTablet}
+                    onClick={() => setIsStudyCreditsOpen(true)}
+                  />
+                )}
                 {/* User Menu */}
                 {isPhone || isTablet ? (
                   <ButtonWithLabel

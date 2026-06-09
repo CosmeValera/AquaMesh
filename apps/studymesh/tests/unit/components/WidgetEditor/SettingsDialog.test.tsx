@@ -40,6 +40,39 @@ vi.mock('../../../../src/studyPack/ai', () => ({
     },
   },
   DEFAULT_STUDY_PACK_AI_MODEL: 'gemini-test-model',
+  DEFAULT_HOSTED_AI_CREDIT_PACK_ID: 'popular',
+  HOSTED_AI_CREDIT_PACKS: [
+    {
+      id: 'starter',
+      credits: 80,
+      priceCents: 200,
+      currency: 'eur',
+      label: '2 EUR',
+    },
+    {
+      id: 'popular',
+      credits: 250,
+      priceCents: 500,
+      currency: 'eur',
+      label: '5 EUR',
+      badge: 'Most popular',
+    },
+    {
+      id: 'value',
+      credits: 550,
+      priceCents: 1000,
+      currency: 'eur',
+      label: '10 EUR',
+    },
+    {
+      id: 'max',
+      credits: 1200,
+      priceCents: 2000,
+      currency: 'eur',
+      label: '20 EUR',
+      badge: 'Best value',
+    },
+  ],
   HOSTED_AI_CREDIT_COSTS: {
     'study-guide': 2,
     'quick-create': 1,
@@ -49,6 +82,7 @@ vi.mock('../../../../src/studyPack/ai', () => ({
   HOSTED_AI_INITIAL_FREE_CREDITS: 10,
   HOSTED_AI_USAGE_CHANGED_EVENT: 'studymesh-hosted-ai-usage-changed',
   STUDY_CREDITS_LABEL: 'Study Credits',
+  redirectToHostedAiCreditCheckout: vi.fn(),
   getHostedAiStatus: vi.fn(() => Promise.resolve(hostedAiStatus)),
   getEnvGeminiApiKey: vi.fn(() => ''),
   getEnvStrongAiProviderApiKey: vi.fn(() => ''),
@@ -275,7 +309,7 @@ describe('SettingsDialog study library export', () => {
     )
   })
 
-  it('shows hosted Study Credits balance, costs, and disabled top-up action', async () => {
+  it('shows hosted Study Credits balance, costs, and refill action', async () => {
     vi.mocked(readStudyPackAiSettings).mockReturnValue({
       provider: 'hosted',
       apiToken: '',
@@ -286,13 +320,20 @@ describe('SettingsDialog study library export', () => {
     render(<SettingsDialog open onClose={vi.fn()} scope="global" />)
 
     expect(await screen.findByText(STUDY_CREDITS_LABEL)).toBeInTheDocument()
-    expect(screen.getByText(/8/)).toBeInTheDocument()
+    expect(screen.getByText('8 credits')).toBeInTheDocument()
     expect(screen.getByText(/study guide.*2/i)).toBeInTheDocument()
     expect(screen.getByText(/quick create.*1/i)).toBeInTheDocument()
     expect(screen.getByText(/chat.*1/i)).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /2 eur top-up coming soon/i }),
-    ).toBeDisabled()
+      screen.getByRole('button', {
+        name: /buy 250 credits for 5 eur.*most popular/i,
+      }),
+    ).toBeEnabled()
+    expect(
+      screen.getByRole('button', {
+        name: /buy 1200 credits for 20 eur.*best value/i,
+      }),
+    ).toBeEnabled()
   })
 
   it('requires DELETE before deleting the StudyMesh profile', () => {

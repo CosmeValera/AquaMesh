@@ -95,12 +95,20 @@ export {
   getHostedAiStatus,
   markHostedAiIntroSeen,
 } from './hostedClient'
+export {
+  createHostedAiCreditCheckout,
+  notifyHostedAiCreditsChanged,
+  redirectToHostedAiCreditCheckout,
+} from './hostedBilling'
 export type { HostedAiModelOptions, HostedAiTransport } from './hostedClient'
 export {
   getHostedAiCreditCost,
+  DEFAULT_HOSTED_AI_CREDIT_PACK_ID,
+  HOSTED_AI_CREDIT_PACKS,
   HOSTED_AI_CREDIT_COSTS,
   HOSTED_AI_DAILY_FREE_CREDITS,
   HOSTED_AI_INITIAL_FREE_CREDITS,
+  HOSTED_AI_REFILL_CURRENCY,
   HOSTED_AI_USAGE_CHANGED_EVENT,
   STUDY_CREDITS_LABEL,
   STUDY_CREDITS_SYMBOL,
@@ -109,6 +117,8 @@ export type {
   HostedAiGatewayPart,
   HostedAiGatewayRequest,
   HostedAiGatewayResponse,
+  HostedAiCreditPack,
+  HostedAiCreditPackId,
   HostedAiStatus,
   HostedAiSurface,
 } from './hostedCredits'

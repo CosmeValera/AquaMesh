@@ -19,6 +19,7 @@ import {
   STUDY_CREDITS_LABEL,
 } from '../../studyPack/ai'
 import { useAuth } from '../../auth/AuthProvider'
+import HostedAiCreditActions from './HostedAiCreditActions'
 import { useHostedAiStatus } from './useHostedAiStatus'
 
 const HostedAiIntroModal: React.FC = () => {
@@ -100,7 +101,10 @@ const HostedAiIntroModal: React.FC = () => {
           }}
         >
           <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-            <Chip icon={<TollIcon />} label={`${status.studyCredits} credits`} />
+            <Chip
+              icon={<TollIcon />}
+              label={`${status.studyCredits} credits`}
+            />
             <Chip label={`Study Guide: ${status.costs['study-guide']}`} />
             <Chip label={`Quick Create: ${status.costs['quick-create']}`} />
             <Chip label={`Chat: ${status.costs.chat}`} />
@@ -112,9 +116,7 @@ const HostedAiIntroModal: React.FC = () => {
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2.5, gap: 1, flexWrap: 'wrap' }}>
-        <Button variant="outlined" disabled>
-          2 EUR top-up coming soon
-        </Button>
+        <HostedAiCreditActions />
         <Box sx={{ flexGrow: 1 }} />
         <Button onClick={handleBringOwnKey} disabled={saving}>
           Bring my own key
@@ -128,4 +130,3 @@ const HostedAiIntroModal: React.FC = () => {
 }
 
 export default HostedAiIntroModal
-

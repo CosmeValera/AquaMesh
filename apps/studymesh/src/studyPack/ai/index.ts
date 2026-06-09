@@ -96,6 +96,7 @@ export {
   markHostedAiIntroSeen,
 } from './hostedClient'
 export {
+  confirmHostedAiCreditCheckout,
   createHostedAiCreditCheckout,
   notifyHostedAiCreditsChanged,
   redirectToHostedAiCreditCheckout,

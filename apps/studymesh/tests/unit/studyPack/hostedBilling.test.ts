@@ -11,7 +11,10 @@ vi.mock('../../../src/auth/supabaseClient', () => ({
   },
 }))
 
-import { createHostedAiCreditCheckout } from '../../../src/studyPack/ai/hostedBilling'
+import {
+  confirmHostedAiCreditCheckout,
+  createHostedAiCreditCheckout,
+} from '../../../src/studyPack/ai/hostedBilling'
 
 describe('hosted Study Credits billing client', () => {
   beforeEach(() => {
@@ -85,5 +88,28 @@ describe('hosted Study Credits billing client', () => {
     await expect(createHostedAiCreditCheckout()).rejects.toThrow(
       'Stripe Checkout failed.',
     )
+  })
+
+  it('confirms a paid Checkout session with the signed-in bearer token', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ ok: true }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(
+      confirmHostedAiCreditCheckout('cs_test_123'),
+    ).resolves.toBeUndefined()
+    expect(fetchMock).toHaveBeenCalledWith('/api/hosted-ai-billing', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer session-token',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'confirmCheckout',
+        sessionId: 'cs_test_123',
+      }),
+    })
   })
 })

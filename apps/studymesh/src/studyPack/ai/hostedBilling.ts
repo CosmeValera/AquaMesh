@@ -104,6 +104,27 @@ export const createHostedAiCreditCheckout = async (
   return payload.checkoutUrl
 }
 
+export const confirmHostedAiCreditCheckout = async (
+  sessionId: string,
+): Promise<void> => {
+  const accessToken = await getAccessToken()
+  const response = await fetch(HOSTED_AI_BILLING_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action: 'confirmCheckout', sessionId }),
+  })
+  const payload = await parseBillingResponse(response)
+
+  if (!response.ok || !payload.ok) {
+    throw formatBillingError(payload, response)
+  }
+
+  notifyHostedAiCreditsChanged()
+}
+
 export const redirectToHostedAiCreditCheckout = async (
   packId: HostedAiCreditPackId = DEFAULT_HOSTED_AI_CREDIT_PACK_ID,
 ): Promise<void> => {

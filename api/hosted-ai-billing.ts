@@ -24,6 +24,21 @@ interface HostedAiPurchase {
   purchase_id?: string
 }
 
+interface CheckoutSession {
+  id: string
+  client_reference_id?: string | null
+  payment_status?: string | null
+  amount_total?: number | null
+  currency?: string | null
+  payment_intent?: string | { id?: string | null } | null
+  metadata?: Record<string, string> | null
+  line_items?: {
+    data?: Array<{
+      price?: string | { id?: string | null } | null
+    }>
+  }
+}
+
 const REFILL_CURRENCY = 'eur'
 const CREDIT_PACKS = [
   {
@@ -189,6 +204,59 @@ const normalizePurchase = (value: unknown): HostedAiPurchase => {
   return isObject(source) ? (source as HostedAiPurchase) : {}
 }
 
+const getLineItemPriceId = (session: CheckoutSession): string => {
+  const lineItem = session.line_items?.data?.[0]
+  const price = lineItem?.price
+  return typeof price === 'string' ? price : price?.id || ''
+}
+
+const getPackForSession = (session: CheckoutSession) => {
+  const priceId = getLineItemPriceId(session)
+  return CREDIT_PACKS.find((pack) => getEnv(pack.envName) === priceId)
+}
+
+const retrieveCheckoutSession = async (
+  sessionId: string,
+): Promise<CheckoutSession> =>
+  (await createStripe().checkout.sessions.retrieve(sessionId, {
+    expand: ['line_items'],
+  })) as CheckoutSession
+
+const validatePaidSession = (
+  session: CheckoutSession,
+  ownerId: string,
+): (typeof CREDIT_PACKS)[number] => {
+  const pack = getPackForSession(session)
+
+  if (!pack) {
+    throw new Error('Checkout Session price does not match Study Credits refill.')
+  }
+
+  if (session.metadata?.owner_id !== ownerId) {
+    throw new Error('Checkout Session does not belong to this user.')
+  }
+
+  if (session.payment_status !== 'paid') {
+    throw new Error('Checkout Session is not paid yet.')
+  }
+
+  if (!session.client_reference_id) {
+    throw new Error('Checkout Session is missing purchase reference.')
+  }
+
+  if (session.amount_total !== pack.priceCents) {
+    throw new Error('Checkout Session amount does not match Study Credits refill.')
+  }
+
+  if ((session.currency || '').toLowerCase() !== REFILL_CURRENCY) {
+    throw new Error(
+      'Checkout Session currency does not match Study Credits refill.',
+    )
+  }
+
+  return pack
+}
+
 const getBaseUrl = (req: VercelRequest): string => {
   const origin = getHeader(req, 'origin')
   if (origin) {
@@ -213,6 +281,11 @@ const createStripe = (): Stripe.Stripe =>
   new Stripe(getEnv('STRIPE_SECRET_KEY'), {
     apiVersion: '2026-05-27.dahlia',
   })
+
+const getAction = (body: unknown): string =>
+  isObject(body) && typeof body.action === 'string'
+    ? body.action
+    : 'createCheckout'
 
 export default async function handler(
   req: VercelRequest,
@@ -257,6 +330,50 @@ export default async function handler(
 
   try {
     const user = await verifyUser(accessToken)
+    const action = getAction(req.body)
+
+    if (action === 'confirmCheckout') {
+      const sessionId =
+        isObject(req.body) && typeof req.body.sessionId === 'string'
+          ? req.body.sessionId
+          : ''
+
+      if (!sessionId) {
+        json(
+          res,
+          400,
+          errorResponse('invalid_request', 'Checkout session id is required.'),
+        )
+        return
+      }
+
+      const session = await retrieveCheckoutSession(sessionId)
+      const pack = validatePaidSession(session, user.id)
+      await callSupabaseRpc('hosted_ai_mark_credit_purchase_paid', {
+        p_purchase_id: session.client_reference_id,
+        p_stripe_checkout_session_id: session.id,
+        p_stripe_payment_intent_id:
+          typeof session.payment_intent === 'string'
+            ? session.payment_intent
+            : session.payment_intent?.id || null,
+        p_expected_credits: pack.credits,
+        p_expected_amount: pack.priceCents,
+        p_expected_currency: REFILL_CURRENCY,
+        p_metadata: {
+          source: 'checkout_return',
+          packId: pack.id,
+        },
+      })
+
+      json(res, 200, { ok: true })
+      return
+    }
+
+    if (action !== 'createCheckout') {
+      json(res, 400, errorResponse('invalid_request', 'Unknown billing action.'))
+      return
+    }
+
     const pack = getRequestedPack(req.body)
     const purchasePayload = await callSupabaseRpc<unknown>(
       'hosted_ai_create_credit_purchase',
@@ -287,7 +404,7 @@ export default async function handler(
           quantity: 1,
         },
       ],
-      success_url: `${baseUrl}/workspace?credits=success`,
+      success_url: `${baseUrl}/workspace?credits=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/workspace?credits=cancel`,
       automatic_tax: {
         enabled: automaticTaxEnabled,

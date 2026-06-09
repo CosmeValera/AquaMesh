@@ -31,7 +31,10 @@ import {
 import { AuthProvider, RequireAuth } from './auth/AuthProvider'
 import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
 import HostedAiIntroModal from './components/hostedAi/HostedAiIntroModal'
-import { notifyHostedAiCreditsChanged } from './studyPack/ai'
+import {
+  confirmHostedAiCreditCheckout,
+  notifyHostedAiCreditsChanged,
+} from './studyPack/ai'
 
 import { createStudyMeshTheme } from './theme'
 import { AccentColorProvider } from './theme/AccentColorContext'
@@ -72,6 +75,7 @@ const WorkspacePage = () => {
   useEffect(() => {
     const action = searchParams.get('action')
     const credits = searchParams.get('credits')
+    const checkoutSessionId = searchParams.get('session_id')
     let shouldClearParams = false
 
     if (credits && handledCreditsRef.current !== credits) {
@@ -79,8 +83,22 @@ const WorkspacePage = () => {
       shouldClearParams = true
 
       if (credits === 'success') {
-        setCreditsNotice('Payment received. Credits may take a few seconds.')
-        notifyHostedAiCreditsChanged()
+        setCreditsNotice('Payment received. Adding credits...')
+        if (checkoutSessionId) {
+          confirmHostedAiCreditCheckout(checkoutSessionId)
+            .then(() => {
+              setCreditsNotice('Study Credits added.')
+            })
+            .catch(() => {
+              setCreditsNotice(
+                'Payment received. Credits may take a few seconds.',
+              )
+              notifyHostedAiCreditsChanged()
+            })
+        } else {
+          setCreditsNotice('Payment received. Credits may take a few seconds.')
+          notifyHostedAiCreditsChanged()
+        }
       } else if (credits === 'cancel') {
         setCreditsNotice('Payment canceled. No credits were added.')
       }

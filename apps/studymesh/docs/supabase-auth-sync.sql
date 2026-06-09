@@ -783,7 +783,7 @@ begin
   set status = 'paid',
       stripe_checkout_session_id = p_stripe_checkout_session_id,
       stripe_payment_intent_id = p_stripe_payment_intent_id,
-      credited_at = coalesce(credited_at, now()),
+      credited_at = coalesce(public.hosted_ai_credit_purchases.credited_at, now()),
       metadata = metadata || coalesce(p_metadata, '{}'::jsonb)
   where id = purchase.id
   returning * into purchase;

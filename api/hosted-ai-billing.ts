@@ -183,6 +183,12 @@ const callSupabaseRpc = async <T>(
   return payload as T
 }
 
+const normalizePurchase = (value: unknown): HostedAiPurchase => {
+  const source = Array.isArray(value) ? value[0] : value
+
+  return isObject(source) ? (source as HostedAiPurchase) : {}
+}
+
 const getBaseUrl = (req: VercelRequest): string => {
   const origin = getHeader(req, 'origin')
   if (origin) {
@@ -252,7 +258,7 @@ export default async function handler(
   try {
     const user = await verifyUser(accessToken)
     const pack = getRequestedPack(req.body)
-    const purchase = await callSupabaseRpc<HostedAiPurchase>(
+    const purchasePayload = await callSupabaseRpc<unknown>(
       'hosted_ai_create_credit_purchase',
       {
         p_owner_id: user.id,
@@ -264,6 +270,7 @@ export default async function handler(
         },
       },
     )
+    const purchase = normalizePurchase(purchasePayload)
     const purchaseId = purchase.purchaseId || purchase.purchase_id
     if (!purchaseId) {
       throw new Error('Credit purchase RPC did not return a purchase id.')

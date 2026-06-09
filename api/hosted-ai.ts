@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
+import { loadLocalApiEnv } from './local-env'
 import type {
   HostedAiGatewayPart,
   HostedAiGatewayRequest,
@@ -7,6 +8,8 @@ import type {
   HostedAiStatus,
   HostedAiSurface,
 } from '../apps/studymesh/src/studyPack/ai/hostedCredits'
+
+loadLocalApiEnv()
 
 type JsonObject = Record<string, unknown>
 

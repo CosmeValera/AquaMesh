@@ -1,5 +1,9 @@
 import Stripe = require('stripe')
 
+import { loadLocalApiEnv } from './local-env'
+
+loadLocalApiEnv()
+
 type JsonObject = Record<string, unknown>
 
 interface VercelRequest {

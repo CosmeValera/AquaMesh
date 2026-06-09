@@ -211,6 +211,12 @@ const getLineItemPriceId = (session: CheckoutSession): string => {
 }
 
 const getPackForSession = (session: CheckoutSession) => {
+  const metadataPackId = session.metadata?.pack_id
+  const metadataPack = CREDIT_PACKS.find((pack) => pack.id === metadataPackId)
+  if (metadataPack) {
+    return metadataPack
+  }
+
   const priceId = getLineItemPriceId(session)
   return CREDIT_PACKS.find((pack) => getEnv(pack.envName) === priceId)
 }
@@ -219,7 +225,7 @@ const retrieveCheckoutSession = async (
   sessionId: string,
 ): Promise<CheckoutSession> =>
   (await createStripe().checkout.sessions.retrieve(sessionId, {
-    expand: ['line_items'],
+    expand: ['line_items.data.price'],
   })) as CheckoutSession
 
 const validatePaidSession = (
@@ -232,7 +238,11 @@ const validatePaidSession = (
     throw new Error('Checkout Session price does not match Study Credits refill.')
   }
 
-  if (session.metadata?.owner_id !== ownerId) {
+  if (!session.metadata?.owner_id) {
+    throw new Error('Checkout Session is missing StudyMesh owner metadata.')
+  }
+
+  if (session.metadata.owner_id !== ownerId) {
     throw new Error('Checkout Session does not belong to this user.')
   }
 
@@ -242,6 +252,22 @@ const validatePaidSession = (
 
   if (!session.client_reference_id) {
     throw new Error('Checkout Session is missing purchase reference.')
+  }
+
+  if (
+    session.metadata?.credits &&
+    Number(session.metadata.credits) !== pack.credits
+  ) {
+    throw new Error('Checkout Session credits do not match Study Credits refill.')
+  }
+
+  if (
+    session.metadata?.expected_amount &&
+    Number(session.metadata.expected_amount) !== pack.priceCents
+  ) {
+    throw new Error(
+      'Checkout Session metadata amount does not match Study Credits refill.',
+    )
   }
 
   if (session.amount_total !== pack.priceCents) {

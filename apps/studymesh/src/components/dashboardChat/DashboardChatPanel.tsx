@@ -4,7 +4,11 @@ import {
   Box,
   Button,
   Chip,
+  Divider,
+  Drawer,
   IconButton,
+  InputAdornment,
+  Popover,
   Stack,
   TextField,
   Tooltip,
@@ -17,6 +21,11 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import SendIcon from '@mui/icons-material/Send'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
+import QuizIcon from '@mui/icons-material/Quiz'
+import StyleIcon from '@mui/icons-material/Style'
+import AutoStoriesIcon from '@mui/icons-material/AutoStories'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import SearchIcon from '@mui/icons-material/Search'
 import { StateDashboard } from '../../state/store'
 import {
   buildDashboardChatContext,
@@ -25,7 +34,14 @@ import {
 } from '../../dashboardChat/contextBuilder'
 import { askDashboardSources } from '../../dashboardChat/askDashboard'
 import { readStudyPackAiSettings } from '../../studyPack/ai'
-import type { StudyMaterialResourceType } from '../../studyPack/ai'
+import {
+  quickCreateActionGroups,
+  quickCreateActions,
+  quickCreateLabels,
+  type QuickCreateAction,
+  type QuickCreateActionId,
+  type QuickCreateActionRequest,
+} from '../../studyPack/quickCreateActions'
 import HostedAiCreditActions from '../hostedAi/HostedAiCreditActions'
 import { renderMarkdown } from '../WidgetEditor/components/preview/StudyBlockView'
 
@@ -48,7 +64,7 @@ interface DashboardChatPanelProps {
   onClose: () => void
   showCloseButton?: boolean
   onAddAssistantMessageToGuide?: (message: DashboardChatMessage) => void
-  onQuickCreatePage?: (resourceType: StudyMaterialResourceType) => Promise<void>
+  onQuickCreatePage?: (request: QuickCreateActionRequest) => Promise<void>
 }
 
 const suggestions = [
@@ -61,10 +77,10 @@ const suggestions = [
 const makeMessageId = () =>
   `dashboard-chat-${Date.now()}-${Math.random().toString(36).slice(2)}`
 
-const quickCreateLabels: Record<StudyMaterialResourceType, string> = {
-  quiz: 'Quiz',
-  flashcards: 'Flashcards',
-  improvedNotes: 'Expand on this',
+const quickCreateIcons: Record<QuickCreateActionId, React.ReactNode> = {
+  quiz: <QuizIcon fontSize="small" />,
+  flashcards: <StyleIcon fontSize="small" />,
+  improvedNotes: <AutoStoriesIcon fontSize="small" />,
 }
 
 const getQuickCreateEstimateSeconds = (): number => {
@@ -103,8 +119,11 @@ const DashboardChatPanel = ({
     number | null
   >(null)
   const [quickCreateElapsedSeconds, setQuickCreateElapsedSeconds] = useState(0)
-  const [quickCreateType, setQuickCreateType] =
-    useState<StudyMaterialResourceType | null>(null)
+  const [quickCreateActionId, setQuickCreateActionId] =
+    useState<QuickCreateActionId | null>(null)
+  const [quickCreateMenuAnchor, setQuickCreateMenuAnchor] =
+    useState<HTMLElement | null>(null)
+  const [quickCreateSearch, setQuickCreateSearch] = useState('')
   const messagesRef = useRef(messages)
   const queueRef = useRef(Promise.resolve())
   const settings = readStudyPackAiSettings()
@@ -251,22 +270,28 @@ const DashboardChatPanel = ({
     )
   }
 
-  const runQuickCreate = async (resourceType: StudyMaterialResourceType) => {
-    if (!onQuickCreatePage || quickCreateType) {
+  const runQuickCreate = async (action: QuickCreateAction) => {
+    if (!onQuickCreatePage || quickCreateActionId) {
       return
     }
 
     setError('')
-    setQuickCreateType(resourceType)
+    setQuickCreateActionId(action.id)
     setQuickCreateStartedAt(Date.now())
+    setQuickCreateMenuAnchor(null)
+    setQuickCreateSearch('')
     try {
-      await onQuickCreatePage(resourceType)
+      await onQuickCreatePage({
+        actionId: action.id,
+        resourceType: action.resourceType,
+        label: action.label,
+      })
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Could not create this page.',
       )
     } finally {
-      setQuickCreateType(null)
+      setQuickCreateActionId(null)
       setQuickCreateStartedAt(null)
     }
   }
@@ -280,6 +305,141 @@ const DashboardChatPanel = ({
   }
 
   const quickCreateEstimateSeconds = getQuickCreateEstimateSeconds()
+  const activeQuickCreateAction = quickCreateActions.find(
+    (action) => action.id === quickCreateActionId,
+  )
+  const quickCreateMenuOpen = Boolean(quickCreateMenuAnchor)
+  const showQuickCreateSearch = quickCreateActions.length > 5
+  const normalizedQuickCreateSearch = quickCreateSearch.trim().toLowerCase()
+  const filteredQuickCreateActions = normalizedQuickCreateSearch
+    ? quickCreateActions.filter((action) =>
+        [action.label, action.shortLabel, action.description, action.group]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuickCreateSearch),
+      )
+    : quickCreateActions
+  const renderQuickCreateMenuContent = () => (
+    <Box
+      sx={{
+        width: isMobile ? '100%' : 340,
+        maxWidth: '100%',
+        p: 1.25,
+      }}
+    >
+      <Stack spacing={1}>
+        <Box sx={{ px: 0.5 }}>
+          <Typography variant="subtitle2" fontWeight={900}>
+            Create from this page
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Generate study material from current dashboard context.
+          </Typography>
+        </Box>
+        {showQuickCreateSearch ? (
+          <TextField
+            value={quickCreateSearch}
+            onChange={(event) => setQuickCreateSearch(event.target.value)}
+            placeholder="Find creation action"
+            size="small"
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        ) : null}
+        {quickCreateActionGroups.map((group) => {
+          const actions = filteredQuickCreateActions.filter(
+            (action) => action.group === group,
+          )
+          if (actions.length === 0) {
+            return null
+          }
+
+          return (
+            <Stack key={group} spacing={0.5}>
+              <Divider textAlign="left">
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={900}
+                >
+                  {group}
+                </Typography>
+              </Divider>
+              {actions.map((action) => {
+                const active = quickCreateActionId === action.id
+                return (
+                  <Button
+                    key={action.id}
+                    fullWidth
+                    aria-label={action.label}
+                    variant={active ? 'contained' : 'text'}
+                    disabled={!hasContext || Boolean(quickCreateActionId)}
+                    onClick={() => void runQuickCreate(action)}
+                    sx={{
+                      justifyContent: 'flex-start',
+                      alignItems: 'flex-start',
+                      gap: 1,
+                      minHeight: 64,
+                      borderRadius: 1.5,
+                      px: 1,
+                      py: 1,
+                      textAlign: 'left',
+                      textTransform: 'none',
+                      color: active ? 'warning.contrastText' : 'text.primary',
+                      ...(active
+                        ? {
+                            bgcolor: 'warning.main',
+                            '&.Mui-disabled': {
+                              bgcolor: 'warning.main',
+                              color: 'warning.contrastText',
+                              opacity: 0.9,
+                            },
+                          }
+                        : {}),
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 1.25,
+                        flex: '0 0 auto',
+                        display: 'grid',
+                        placeItems: 'center',
+                        color: active ? 'inherit' : action.accent,
+                        bgcolor: active
+                          ? 'rgba(255,255,255,0.18)'
+                          : alpha(action.accent, 0.12),
+                      }}
+                    >
+                      {quickCreateIcons[action.id]}
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="body2" fontWeight={900}>
+                        {active ? 'Thinking...' : action.label}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color={active ? 'inherit' : 'text.secondary'}
+                      >
+                        {action.description}
+                      </Typography>
+                    </Box>
+                  </Button>
+                )
+              })}
+            </Stack>
+          )
+        })}
+      </Stack>
+    </Box>
+  )
 
   return (
     <Box
@@ -573,61 +733,83 @@ const DashboardChatPanel = ({
 
       <Box sx={{ borderTop: 1, borderColor: 'divider' }} />
       <Box sx={{ p: 1.5, bgcolor: 'background.paper' }}>
-        {onQuickCreatePage ? (
-          <Stack spacing={0.75} sx={{ mb: 1 }}>
-            <Stack direction="row" spacing={0.75}>
-              {(
-                ['quiz', 'flashcards', 'improvedNotes'] as StudyMaterialResourceType[]
-              ).map((resourceType) => {
-                const active = quickCreateType === resourceType
-                return (
-                  <Button
-                    key={resourceType}
-                    size="small"
-                    variant={active ? 'contained' : 'outlined'}
-                    disabled={!hasContext || Boolean(quickCreateType)}
-                    onClick={() => void runQuickCreate(resourceType)}
-                    sx={{
-                      flex: 1,
-                      minWidth: 0,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      fontSize: { xs: '0.72rem', sm: '0.8125rem' },
-                      ...(active
-                        ? {
-                            bgcolor: 'warning.main',
-                            borderColor: 'warning.main',
-                            color: 'warning.contrastText',
-                            '&.Mui-disabled': {
-                              bgcolor: 'warning.main',
-                              color: 'warning.contrastText',
-                              opacity: 0.9,
-                            },
-                          }
-                        : {}),
-                    }}
-                  >
-                    {active ? 'Thinking...' : quickCreateLabels[resourceType]}
-                  </Button>
-                )
-              })}
-            </Stack>
-            {quickCreateType ? (
-              <Typography variant="caption" color="text.secondary">
-                Creating {quickCreateLabels[quickCreateType]} - Elapsed{' '}
-                {formatSeconds(quickCreateElapsedSeconds)} - Estimate{' '}
-                {formatSeconds(quickCreateEstimateSeconds)}
-              </Typography>
-            ) : null}
-          </Stack>
+        {onQuickCreatePage && activeQuickCreateAction ? (
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', mb: 0.75 }}
+          >
+            Creating {quickCreateLabels[activeQuickCreateAction.resourceType]} -
+            Elapsed {formatSeconds(quickCreateElapsedSeconds)} - Estimate{' '}
+            {formatSeconds(quickCreateEstimateSeconds)}
+          </Typography>
         ) : null}
         <Stack direction="row" spacing={1} alignItems="flex-end">
+          {onQuickCreatePage ? (
+            <>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddCircleOutlineIcon fontSize="small" />}
+                endIcon={<ExpandMoreIcon fontSize="small" />}
+                disabled={!hasContext || Boolean(quickCreateActionId)}
+                onClick={(event) => setQuickCreateMenuAnchor(event.currentTarget)}
+                aria-haspopup="menu"
+                aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
+                sx={{
+                  minHeight: 42,
+                  flex: '0 0 auto',
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  bgcolor: 'background.paper',
+                }}
+              >
+                Create
+              </Button>
+              {isMobile ? (
+                <Drawer
+                  anchor="bottom"
+                  open={quickCreateMenuOpen}
+                  onClose={() => setQuickCreateMenuAnchor(null)}
+                  PaperProps={{
+                    sx: {
+                      borderRadius: '16px 16px 0 0',
+                      pb: 'env(safe-area-inset-bottom)',
+                    },
+                  }}
+                >
+                  {renderQuickCreateMenuContent()}
+                </Drawer>
+              ) : (
+                <Popover
+                  open={quickCreateMenuOpen}
+                  anchorEl={quickCreateMenuAnchor}
+                  onClose={() => setQuickCreateMenuAnchor(null)}
+                  anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+                  transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                  PaperProps={{
+                    sx: {
+                      borderRadius: 2,
+                      border: 1,
+                      borderColor: 'divider',
+                      boxShadow:
+                        theme.palette.mode === 'dark'
+                          ? '0 18px 44px rgba(0,0,0,0.44)'
+                          : '0 18px 44px rgba(16,24,40,0.16)',
+                    },
+                  }}
+                >
+                  {renderQuickCreateMenuContent()}
+                </Popover>
+              )}
+            </>
+          ) : null}
           <TextField
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             placeholder={
               hasContext
-                ? 'Ask about this dashboard...'
+                ? 'Ask anything'
                 : 'Add study material before chatting'
             }
             disabled={!hasContext}

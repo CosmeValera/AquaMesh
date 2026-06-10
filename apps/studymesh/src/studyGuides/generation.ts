@@ -14,6 +14,10 @@ import {
   type AiStudyPathDraft,
   type StudyMaterialResourceType,
 } from '../studyPack/ai'
+import {
+  normalizeQuickCreateActionInput,
+  type QuickCreateActionInput,
+} from '../studyPack/quickCreateActions'
 import type { StudyPathContainerState, StudyPathDashboardItem } from '../state/store'
 import {
   appendStudyGuideMarkdownPage,
@@ -236,17 +240,18 @@ const draftToMarkdown = (draft: AiStudyPackDraft): string => {
 
 export const appendAiQuickCreatePage = async ({
   studyPath,
-  resourceType,
+  resourceType: resourceTypeInput,
   sourceTitle,
   sourceText,
   signal,
 }: {
   studyPath: StudyPathContainerState
-  resourceType: StudyMaterialResourceType
+  resourceType: QuickCreateActionInput
   sourceTitle: string
   sourceText: string
   signal?: AbortSignal
 }): Promise<StudyPathContainerState> => {
+  const { resourceType } = normalizeQuickCreateActionInput(resourceTypeInput)
   const settings = readStudyPackAiSettings()
   const provider = settings.provider || 'basic'
   const credentials = isStrongAiProvider(provider)

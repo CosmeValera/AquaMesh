@@ -15,7 +15,10 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import type { StudyGuideRecord } from '../../cloud/types'
 import type { StateDashboard, StudyPathContainerState } from '../../state/store'
-import type { StudyMaterialResourceType } from '../../studyPack/ai'
+import {
+  normalizeQuickCreateActionInput,
+  type QuickCreateActionInput,
+} from '../../studyPack/quickCreateActions'
 import StudyPathWorkspaceView from '../Dasboard/StudyPathWorkspaceView'
 import DashboardChatPanel, {
   type DashboardChatMessage,
@@ -171,11 +174,12 @@ const GuideWorkspacePage = () => {
     appendMarkdownPage('AI Chat note', message.content, 'chat')
   }
 
-  const quickCreatePage = async (resourceType: StudyMaterialResourceType) => {
+  const quickCreatePage = async (input: QuickCreateActionInput) => {
     if (!record) {
       return
     }
 
+    const request = normalizeQuickCreateActionInput(input)
     setQuickCreateError('')
     const currentPage =
       record.studyPath.dashboards[record.studyPath.selectedIndex] ||
@@ -188,14 +192,14 @@ const GuideWorkspacePage = () => {
     try {
       const nextStudyPath = await appendAiQuickCreatePage({
         studyPath: record.studyPath,
-        resourceType,
+        resourceType: request.resourceType,
         sourceTitle: currentPage?.name || record.title,
         sourceText,
       })
       const nextRecord = persistStudyPath(nextStudyPath)
       const newPage =
         nextRecord.studyPath.dashboards[nextRecord.studyPath.selectedIndex]
-      if (resourceType === 'improvedNotes') {
+      if (request.resourceType === 'improvedNotes') {
         setEditingPageKey(newPage?.dashboardKey || null)
       }
     } catch (error) {

@@ -4,6 +4,12 @@ import type {
 } from '../../studyPack/ai'
 import type { ComponentData } from '../WidgetEditor/types/types'
 import type { DashboardLayout } from '../../state/store'
+export {
+  quickCreateAccents,
+  quickCreateFolders,
+  quickCreateLabels,
+  quickCreateTargets,
+} from '../../studyPack/quickCreateActions'
 
 export type StudioFlow = 'hub' | 'study-path' | 'from-notes'
 export type CreationFlow = Exclude<StudioFlow, 'hub'>
@@ -79,30 +85,6 @@ export interface GeneratedMaterial {
     detailLevel?: StudyMaterialDetailLevel
     sourceMode?: 'dashboard' | 'sources'
   }
-}
-
-export const quickCreateLabels: Record<StudyMaterialResourceType, string> = {
-  quiz: 'Quiz',
-  flashcards: 'Flashcards',
-  improvedNotes: 'Expand on this',
-}
-
-export const quickCreateFolders: Record<StudyMaterialResourceType, string> = {
-  quiz: 'Quizzes',
-  flashcards: 'Flashcards',
-  improvedNotes: 'Expand on this',
-}
-
-export const quickCreateTargets: Record<StudyMaterialResourceType, string[]> = {
-  quiz: ['quizzes'],
-  flashcards: ['flashcards'],
-  improvedNotes: ['summaries', 'definitions', 'lists'],
-}
-
-export const quickCreateAccents: Record<StudyMaterialResourceType, string> = {
-  quiz: '#5b9dff',
-  flashcards: '#b66cff',
-  improvedNotes: '#18b992',
 }
 
 export const quickCreateDetailToAmount: Record<

@@ -46,6 +46,7 @@ vi.mock('../../../../src/studyPack/ai', () => ({
       priceCents: 200,
       currency: 'eur',
       label: '2 EUR',
+      badge: 'Economic',
     },
     {
       id: 'popular',
@@ -57,17 +58,10 @@ vi.mock('../../../../src/studyPack/ai', () => ({
     },
     {
       id: 'value',
-      credits: 550,
+      credits: 600,
       priceCents: 1000,
       currency: 'eur',
       label: '10 EUR',
-    },
-    {
-      id: 'max',
-      credits: 1200,
-      priceCents: 2000,
-      currency: 'eur',
-      label: '20 EUR',
       badge: 'Best value',
     },
   ],

@@ -11,7 +11,6 @@ import {
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 
 import {
-  DEFAULT_HOSTED_AI_CREDIT_PACK_ID,
   HOSTED_AI_CREDIT_PACKS,
   HostedAiCreditPackId,
   redirectToHostedAiCreditCheckout,
@@ -51,14 +50,16 @@ const HostedAiPricingCards: React.FC = () => {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: 'repeat(3, minmax(0, 1fr))',
+          },
           gap: 1.5,
         }}
       >
         {HOSTED_AI_CREDIT_PACKS.map((pack) => {
-          const highlighted = Boolean(pack.badge)
-          const isValue = pack.id === 'value'
-          const isMax = pack.id === 'max'
+          const highlighted = pack.badge !== undefined && pack.id !== 'starter'
+          const isPremium = pack.id === 'value'
           const buying = buyingPackId === pack.id
 
           return (
@@ -67,7 +68,7 @@ const HostedAiPricingCards: React.FC = () => {
               sx={{
                 position: 'relative',
                 borderRadius: 3,
-                ...(isMax && {
+                ...(isPremium && {
                   p: '2px',
                   background:
                     'linear-gradient(115deg, #7c3aed, #22d3ee, #f59e0b, #ec4899, #7c3aed)',
@@ -80,13 +81,6 @@ const HostedAiPricingCards: React.FC = () => {
                     '50%': { backgroundPosition: '100% 50%' },
                     '100%': { backgroundPosition: '0% 50%' },
                   },
-                }),
-                ...(isValue && {
-                  p: '1px',
-                  background:
-                    'linear-gradient(145deg, rgba(25,118,210,0.85), rgba(124,58,237,0.55), rgba(34,211,238,0.65))',
-                  boxShadow:
-                    '0 8px 20px rgba(25,118,210,0.16), 0 0 14px rgba(124,58,237,0.10)',
                 }),
               }}
             >
@@ -110,32 +104,24 @@ const HostedAiPricingCards: React.FC = () => {
                   width: '100%',
                   minHeight: 190,
                   p: 2,
-                  pt: pack.badge ? 2.75 : 2,
-                  borderRadius: isMax
-                    ? 'calc(12px - 2px)'
-                    : isValue
-                      ? 'calc(12px - 1px)'
-                      : 3,
-                  borderWidth: highlighted && !isMax ? 2 : 1,
-                  borderColor: isMax
+                  borderRadius: isPremium ? 'calc(12px - 2px)' : 3,
+                  borderWidth: highlighted && !isPremium ? 2 : 1,
+                  borderColor: isPremium
                     ? 'transparent'
-                    : highlighted || isValue
+                    : highlighted
                       ? 'primary.main'
                       : 'divider',
-                  bgcolor:
-                    isMax || isValue ? 'background.paper' : 'background.paper',
-                  backgroundImage: isMax
+                  bgcolor: 'background.paper',
+                  backgroundImage: isPremium
                     ? 'radial-gradient(circle at 85% 10%, rgba(34,211,238,0.20), transparent 42%), radial-gradient(circle at 8% 88%, rgba(124,58,237,0.20), transparent 48%)'
-                    : isValue
-                      ? 'radial-gradient(circle at 90% 5%, rgba(124,58,237,0.16), transparent 42%), linear-gradient(145deg, rgba(25,118,210,0.13), transparent 68%)'
-                      : 'none',
-                  boxShadow: isValue ? 3 : highlighted && !isMax ? 4 : 0,
+                    : 'none',
+                  boxShadow: highlighted && !isPremium ? 4 : 0,
                   transition:
                     'transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease',
                   '&:hover': {
                     transform: 'translateY(-3px)',
-                    boxShadow: isMax ? 8 : highlighted || isValue ? 6 : 3,
-                    borderColor: isMax ? 'transparent' : 'primary.main',
+                    boxShadow: isPremium ? 8 : highlighted ? 6 : 3,
+                    borderColor: isPremium ? 'transparent' : 'primary.main',
                   },
                   '&.Mui-disabled': {
                     color: 'text.primary',
@@ -144,20 +130,33 @@ const HostedAiPricingCards: React.FC = () => {
                 }}
               >
                 {pack.badge && (
-                  <Chip
-                    icon={<AutoAwesomeIcon />}
-                    label={pack.badge}
-                    color="primary"
-                    size="small"
-                    sx={{
-                      position: 'absolute',
-                      top: 8,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      fontWeight: 900,
-                      whiteSpace: 'nowrap',
-                    }}
-                  />
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    <Chip
+                      icon={<AutoAwesomeIcon />}
+                      label={pack.badge}
+                      size="small"
+                      sx={{
+                        fontWeight: 900,
+                        whiteSpace: 'nowrap',
+                        ...(isPremium && {
+                          color: '#fff',
+                          background:
+                            'linear-gradient(115deg, #7c3aed, #22d3ee, #f59e0b, #ec4899, #7c3aed)',
+                          backgroundSize: '300% 300%',
+                          animation: 'premiumBorderFlow 5s ease infinite',
+                          boxShadow:
+                            '0 4px 12px rgba(124,58,237,0.28), 0 0 12px rgba(34,211,238,0.16)',
+                          '& .MuiChip-icon': {
+                            color: '#fff',
+                          },
+                        }),
+                        ...(!isPremium && {
+                          color: 'primary.contrastText',
+                          bgcolor: 'primary.main',
+                        }),
+                      }}
+                    />
+                  </Box>
                 )}
                 <Typography
                   variant="overline"
@@ -184,14 +183,8 @@ const HostedAiPricingCards: React.FC = () => {
                     borderRadius: 1.5,
                     textAlign: 'center',
                     fontWeight: 900,
-                    color:
-                      pack.id === DEFAULT_HOSTED_AI_CREDIT_PACK_ID
-                        ? 'primary.contrastText'
-                        : 'primary.main',
-                    bgcolor:
-                      pack.id === DEFAULT_HOSTED_AI_CREDIT_PACK_ID
-                        ? 'primary.main'
-                        : 'transparent',
+                    color: 'primary.main',
+                    bgcolor: 'transparent',
                     border: 1,
                     borderColor: 'primary.main',
                   }}

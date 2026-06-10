@@ -60,15 +60,9 @@ const CREDIT_PACKS = [
   },
   {
     id: 'value',
-    credits: 550,
+    credits: 600,
     priceCents: 1000,
     envName: 'STRIPE_STUDY_CREDITS_PRICE_ID_10_EUR',
-  },
-  {
-    id: 'max',
-    credits: 1200,
-    priceCents: 2000,
-    envName: 'STRIPE_STUDY_CREDITS_PRICE_ID_20_EUR',
   },
 ] as const
 

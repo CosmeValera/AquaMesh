@@ -215,6 +215,7 @@ describe('study pack AI settings', () => {
         priceCents: 200,
         currency: 'eur',
         label: '2 EUR',
+        badge: 'Economic',
       },
       {
         id: 'popular',
@@ -226,17 +227,10 @@ describe('study pack AI settings', () => {
       },
       {
         id: 'value',
-        credits: 550,
+        credits: 600,
         priceCents: 1000,
         currency: 'eur',
         label: '10 EUR',
-      },
-      {
-        id: 'max',
-        credits: 1200,
-        priceCents: 2000,
-        currency: 'eur',
-        label: '20 EUR',
         badge: 'Best value',
       },
     ])

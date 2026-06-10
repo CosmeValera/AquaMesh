@@ -468,9 +468,12 @@ describe('TopNavBar Component', () => {
     ).toBeEnabled()
     expect(
       screen.getByRole('button', {
-        name: /buy 1200 credits for 20 eur.*best value/i,
+        name: /buy 600 credits for 10 eur.*best value/i,
       }),
     ).toBeEnabled()
+    expect(
+      screen.queryByRole('button', { name: /buy .* credits for 20 eur/i }),
+    ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /refresh credits/i }),
     ).not.toBeInTheDocument()

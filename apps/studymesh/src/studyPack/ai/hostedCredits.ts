@@ -16,7 +16,7 @@ export const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
 export const HOSTED_AI_INITIAL_FREE_CREDITS = 10
 export const HOSTED_AI_DAILY_FREE_CREDITS = 2
 export const HOSTED_AI_REFILL_CURRENCY = 'eur'
-export type HostedAiCreditPackId = 'starter' | 'popular' | 'value' | 'max'
+export type HostedAiCreditPackId = 'starter' | 'popular' | 'value'
 
 export interface HostedAiCreditPack {
   id: HostedAiCreditPackId
@@ -24,7 +24,7 @@ export interface HostedAiCreditPack {
   priceCents: number
   currency: typeof HOSTED_AI_REFILL_CURRENCY
   label: string
-  badge?: 'Most popular' | 'Best value'
+  badge?: 'Economic' | 'Most popular' | 'Best value'
 }
 
 export const HOSTED_AI_CREDIT_PACKS: HostedAiCreditPack[] = [
@@ -34,6 +34,7 @@ export const HOSTED_AI_CREDIT_PACKS: HostedAiCreditPack[] = [
     priceCents: 200,
     currency: HOSTED_AI_REFILL_CURRENCY,
     label: '2 EUR',
+    badge: 'Economic',
   },
   {
     id: 'popular',
@@ -45,17 +46,10 @@ export const HOSTED_AI_CREDIT_PACKS: HostedAiCreditPack[] = [
   },
   {
     id: 'value',
-    credits: 550,
+    credits: 600,
     priceCents: 1000,
     currency: HOSTED_AI_REFILL_CURRENCY,
     label: '10 EUR',
-  },
-  {
-    id: 'max',
-    credits: 1200,
-    priceCents: 2000,
-    currency: HOSTED_AI_REFILL_CURRENCY,
-    label: '20 EUR',
     badge: 'Best value',
   },
 ]

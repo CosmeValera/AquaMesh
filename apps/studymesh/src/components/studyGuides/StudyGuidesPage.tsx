@@ -494,6 +494,25 @@ const StudyGuidesPage = () => {
                         <IconButton
                           aria-label={`Open ${guide.title} options`}
                           onClick={(event) => openMenu(event, guide)}
+                          sx={(theme) => ({
+                            width: 34,
+                            height: 34,
+                            border: 1,
+                            borderColor: alpha(theme.palette.primary.main, 0.44),
+                            bgcolor: alpha(
+                              theme.palette.primary.main,
+                              theme.palette.mode === 'dark' ? 0.18 : 0.1,
+                            ),
+                            color: 'primary.main',
+                            '&:hover': {
+                              borderColor: 'primary.main',
+                              bgcolor: alpha(
+                                theme.palette.primary.main,
+                                theme.palette.mode === 'dark' ? 0.28 : 0.18,
+                              ),
+                              color: 'primary.dark',
+                            },
+                          })}
                         >
                           <MoreVertIcon />
                         </IconButton>

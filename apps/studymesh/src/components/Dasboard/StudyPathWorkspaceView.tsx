@@ -1,9 +1,4 @@
-import React, {
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   Box,
   Button,
@@ -20,10 +15,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
-import {
-  DashboardLayout,
-  StudyPathContainerState,
-} from '../../state/store'
+import { DashboardLayout, StudyPathContainerState } from '../../state/store'
 import {
   deleteStudyGuidePage,
   getStudyGuidePageMarkdown,
@@ -40,33 +32,38 @@ const STUDY_GUIDE_EDITOR_LAYOUT_KEY = 'studymesh-study-guide-editor-layout-v1'
 type EditorLayoutMode = 'split' | 'stacked'
 type PageIconTone = 'primary' | 'error'
 
-const pageIconButtonSx = (tone: PageIconTone = 'primary') => (theme: Theme) => {
-  const paletteColor =
-    tone === 'error' ? theme.palette.error.main : theme.palette.primary.main
-  const hoverColor =
-    tone === 'error' ? theme.palette.error.dark : theme.palette.primary.dark
+const pageIconButtonSx =
+  (tone: PageIconTone = 'primary') =>
+  (theme: Theme) => {
+    const paletteColor =
+      tone === 'error' ? theme.palette.error.main : theme.palette.primary.main
+    const hoverColor =
+      tone === 'error' ? theme.palette.error.dark : theme.palette.primary.dark
 
-  return {
-    width: 34,
-    height: 34,
-    border: 1,
-    borderColor: alpha(paletteColor, 0.44),
-    bgcolor: alpha(paletteColor, theme.palette.mode === 'dark' ? 0.18 : 0.1),
-    color: paletteColor,
-    flex: '0 0 auto',
-    '&:hover': {
-      borderColor: paletteColor,
-      bgcolor: alpha(paletteColor, theme.palette.mode === 'dark' ? 0.28 : 0.18),
-      color: hoverColor,
-    },
-    '&.Mui-disabled': {
-      borderColor: theme.palette.divider,
-      bgcolor: theme.palette.action.disabledBackground,
-      color: theme.palette.text.disabled,
-      opacity: 0.72,
-    },
+    return {
+      width: 34,
+      height: 34,
+      border: 1,
+      borderColor: alpha(paletteColor, 0.44),
+      bgcolor: alpha(paletteColor, theme.palette.mode === 'dark' ? 0.18 : 0.1),
+      color: paletteColor,
+      flex: '0 0 auto',
+      '&:hover': {
+        borderColor: paletteColor,
+        bgcolor: alpha(
+          paletteColor,
+          theme.palette.mode === 'dark' ? 0.28 : 0.18,
+        ),
+        color: hoverColor,
+      },
+      '&.Mui-disabled': {
+        borderColor: theme.palette.divider,
+        bgcolor: theme.palette.action.disabledBackground,
+        color: theme.palette.text.disabled,
+        opacity: 0.72,
+      },
+    }
   }
-}
 
 const readEditorLayoutPreference = (): EditorLayoutMode => {
   try {
@@ -318,20 +315,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
           bgcolor: 'background.paper',
         }}
       >
-        <Stack direction="row" spacing={0.75} alignItems="center" minWidth={0}>
-          <Tooltip title="Previous page">
-            <span>
-              <IconButton
-                size="small"
-                aria-label="Previous page"
-                disabled={!canGoPrevious}
-                onClick={() => selectLesson(selectedIndex - 1)}
-                sx={pageIconButtonSx()}
-              >
-                <ChevronLeftIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
+        <Stack spacing={0.25} minWidth={0}>
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="subtitle2" fontWeight={900} noWrap>
               {currentLesson.name}
@@ -340,21 +324,13 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               Page {selectedIndex + 1}/{studyPath.dashboards.length}
             </Typography>
           </Box>
-          <Tooltip title="Next page">
-            <span>
-              <IconButton
-                size="small"
-                aria-label="Next page"
-                disabled={!canGoNext}
-                onClick={() => selectLesson(selectedIndex + 1)}
-                sx={pageIconButtonSx()}
-              >
-                <ChevronRightIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
         </Stack>
-        <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+        <Stack
+          direction="row"
+          spacing={0.75}
+          alignItems="center"
+          flexWrap="wrap"
+        >
           <Button
             size="small"
             variant={editPagesMode ? 'contained' : 'outlined'}
@@ -370,7 +346,9 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               onClick={toggleCurrentPageEditing}
               sx={{ borderRadius: 2, textTransform: 'none' }}
             >
-              {isEditingCurrentPage ? 'Preview current page' : 'Edit current page'}
+              {isEditingCurrentPage
+                ? 'Preview current page'
+                : 'Edit current page'}
             </Button>
           ) : null}
           {onAddPage ? (
@@ -384,6 +362,34 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               Add Page
             </Button>
           ) : null}
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <Tooltip title="Previous page">
+              <span>
+                <IconButton
+                  size="small"
+                  aria-label="Previous page"
+                  disabled={!canGoPrevious}
+                  onClick={() => selectLesson(selectedIndex - 1)}
+                  sx={pageIconButtonSx()}
+                >
+                  <ChevronLeftIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="Next page">
+              <span>
+                <IconButton
+                  size="small"
+                  aria-label="Next page"
+                  disabled={!canGoNext}
+                  onClick={() => selectLesson(selectedIndex + 1)}
+                  sx={pageIconButtonSx()}
+                >
+                  <ChevronRightIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Stack>
         </Stack>
       </Box>
       <Box
@@ -505,7 +511,10 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
             })}
           </Box>
         ) : isEditingCurrentPage ? (
-          <Stack spacing={2} sx={{ maxWidth: editorLayout === 'split' ? 1280 : 920, mx: 'auto' }}>
+          <Stack
+            spacing={2}
+            sx={{ maxWidth: editorLayout === 'split' ? 1280 : 920, mx: 'auto' }}
+          >
             <Stack direction="row" spacing={1} justifyContent="flex-end">
               {(['split', 'stacked'] as EditorLayoutMode[]).map((mode) => (
                 <Button
@@ -535,7 +544,10 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                   label="Page title"
                   value={currentLesson.name}
                   onChange={(event) =>
-                    updateCurrentMarkdownPage(event.target.value, currentMarkdown)
+                    updateCurrentMarkdownPage(
+                      event.target.value,
+                      currentMarkdown,
+                    )
                   }
                   fullWidth
                 />

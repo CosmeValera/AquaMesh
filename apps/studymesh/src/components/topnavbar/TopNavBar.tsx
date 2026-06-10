@@ -719,35 +719,72 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         >
           {isMobileWorkspaceHeader ? (
             <>
-              <Box sx={{ flex: '0 0 44px', display: 'flex' }}>
-                <DashboardOptionsMenu compactMobile />
-              </Box>
-              <Button
-                onClick={() => setDashboardSelectorOpen(true)}
-                endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 18 }} />}
-                sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  height: 44,
-                  px: 1,
-                  color: 'foreground.contrastPrimary',
-                  textTransform: 'none',
-                  borderRadius: 999,
-                  bgcolor: 'rgba(255,255,255,0.08)',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.14)' },
-                  '& .MuiButton-endIcon': { ml: 0.25, mr: 0 },
-                }}
-              >
-                <Typography
-                  component="span"
-                  variant="subtitle2"
-                  fontWeight={800}
-                  noWrap
-                  sx={{ minWidth: 0, maxWidth: '100%' }}
+              {creationHost === 'external' ? (
+                <Box
+                  aria-label="StudyMesh logo"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate('/study-guides')}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      navigate('/study-guides')
+                    }
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    flex: 1,
+                    minWidth: 0,
+                    color: 'foreground.contrastPrimary',
+                    cursor: 'pointer',
+                  }}
                 >
-                  {currentDashboardTitle || 'Select dashboard'}
-                </Typography>
-              </Button>
+                  <Box
+                    data-testid="logo"
+                    component="img"
+                    src="/logo.png"
+                    alt=""
+                    sx={{ width: 30, height: 30, display: 'block' }}
+                  />
+                  <Typography variant="subtitle2" fontWeight={900} noWrap>
+                    StudyMesh
+                  </Typography>
+                </Box>
+              ) : (
+                <>
+                  <Box sx={{ flex: '0 0 44px', display: 'flex' }}>
+                    <DashboardOptionsMenu compactMobile />
+                  </Box>
+                  <Button
+                    onClick={() => setDashboardSelectorOpen(true)}
+                    endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 18 }} />}
+                    sx={{
+                      flex: 1,
+                      minWidth: 0,
+                      height: 44,
+                      px: 1,
+                      color: 'foreground.contrastPrimary',
+                      textTransform: 'none',
+                      borderRadius: 999,
+                      bgcolor: 'rgba(255,255,255,0.08)',
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.14)' },
+                      '& .MuiButton-endIcon': { ml: 0.25, mr: 0 },
+                    }}
+                  >
+                    <Typography
+                      component="span"
+                      variant="subtitle2"
+                      fontWeight={800}
+                      noWrap
+                      sx={{ minWidth: 0, maxWidth: '100%' }}
+                    >
+                      {currentDashboardTitle || 'Select dashboard'}
+                    </Typography>
+                  </Button>
+                </>
+              )}
               {studyPackAiProvider === 'hosted' && (
                 <StudyCreditsPill
                   compact
@@ -1174,40 +1211,47 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
             </ListItemIcon>
             Settings
           </MenuItem>
-          <MenuItem
-            onClick={() => {
-              openCreateDashboard()
-              handleClose()
-            }}
-            disabled={!isAdmin}
-            data-tutorial-id="create-dashboard-button"
-            data-onboarding-id="create-dashboard"
-            sx={{ color: 'text.primary' }}
-          >
-            <ListItemIcon>
-              <AddToPhotosIcon
-                fontSize="small"
-                sx={{ color: 'text.secondary' }}
-              />
-            </ListItemIcon>
-            Create Dashboard
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              openCreateWidget()
-              handleClose()
-            }}
-            disabled={!isAdmin}
-            data-tutorial-id="create-widget-button"
-            data-onboarding-id="dashboard-widget-create"
-            sx={{ color: 'text.primary' }}
-          >
-            <ListItemIcon>
-              <WidgetsIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-            </ListItemIcon>
-            Create Widget
-          </MenuItem>
-          <Divider sx={{ borderColor: 'divider' }} />
+          {creationHost !== 'external' ? (
+            <>
+              <MenuItem
+                onClick={() => {
+                  openCreateDashboard()
+                  handleClose()
+                }}
+                disabled={!isAdmin}
+                data-tutorial-id="create-dashboard-button"
+                data-onboarding-id="create-dashboard"
+                sx={{ color: 'text.primary' }}
+              >
+                <ListItemIcon>
+                  <AddToPhotosIcon
+                    fontSize="small"
+                    sx={{ color: 'text.secondary' }}
+                  />
+                </ListItemIcon>
+                Create Dashboard
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  openCreateWidget()
+                  handleClose()
+                }}
+                disabled={!isAdmin}
+                data-tutorial-id="create-widget-button"
+                data-onboarding-id="dashboard-widget-create"
+                sx={{ color: 'text.primary' }}
+              >
+                <ListItemIcon>
+                  <WidgetsIcon
+                    fontSize="small"
+                    sx={{ color: 'text.secondary' }}
+                  />
+                </ListItemIcon>
+                Create Widget
+              </MenuItem>
+              <Divider sx={{ borderColor: 'divider' }} />
+            </>
+          ) : null}
           <MenuItem onClick={handleLogout} sx={{ color: 'text.primary' }}>
             <ListItemIcon>
               <LogoutIcon fontSize="small" sx={{ color: 'text.secondary' }} />
@@ -1217,6 +1261,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         </Menu>
       )}
 
+      {creationHost !== 'external' ? (
       <Drawer
         anchor="bottom"
         open={isMobileWorkspaceHeader && dashboardSelectorOpen}
@@ -1352,6 +1397,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
           </MenuItem>
         </Box>
       </Drawer>
+      ) : null}
 
       <Dialog
         open={isUserSettingsOpen}

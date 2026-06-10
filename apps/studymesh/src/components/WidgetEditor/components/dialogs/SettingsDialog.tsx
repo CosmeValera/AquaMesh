@@ -35,7 +35,7 @@ import ReplayIcon from '@mui/icons-material/Replay'
 import {
   STUDYMESH_ONBOARDING_RESET_EVENT,
 } from '../../../onboarding/onboardingEvents'
-import { seedStudyMeshGuideStudyPath } from '../../../../studyPack/studyMeshGuideSeed'
+import { seedStudyMeshGuideStudyPath } from '../../../../studyGuides/studyMeshGuideSeed'
 import {
   STUDY_GUIDES_CHANGED_EVENT,
   STUDY_GUIDES_STORAGE_KEY,
@@ -332,7 +332,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       setExportModalOpen(true)
       setLibraryTransferStatus('')
     } catch (error) {
-      console.error('Failed to prepare Study Pack library export', error)
+      console.error('Failed to prepare Quick Create library export', error)
       setLibraryTransferStatus('Could not read the saved library.')
     }
   }
@@ -407,7 +407,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         }.`,
       )
     } catch (error) {
-      console.error('Failed to export Study Pack library', error)
+      console.error('Failed to export Quick Create library', error)
       setLibraryTransferStatus('Could not export the library.')
     }
   }
@@ -463,7 +463,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         }.`,
       )
     } catch (error) {
-      console.error('Failed to import Study Pack library', error)
+      console.error('Failed to import Quick Create library', error)
       setLibraryTransferStatus('Could not import that library file.')
     }
   }
@@ -550,7 +550,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     color="text.secondary"
                     sx={{ mb: 1.5 }}
                   >
-                    Export or replace all saved Study Packs, subjects, and
+                    Export or replace all saved Quick Creates, subjects, and
                     advanced workspaces stored in this browser.
                   </Typography>
                   <Box

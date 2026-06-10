@@ -13,22 +13,21 @@ import {
   createStudyGuideRecord,
 } from '../studyGuides/storage'
 import {
-  createStudyPackDashboardLayout,
-  StudyPackDashboardLayoutMode,
-} from '../studyPack'
+  createQuickCreateDashboardLayout,
+  QuickCreateDashboardLayoutMode,
+} from '../quickCreate'
 import { ComponentData } from '../components/WidgetEditor/types/types'
 import {
   STUDYMESH_GUIDE_STUDY_PATH_ID,
   STUDYMESH_GUIDE_FOLDER_NAME,
   ensureStarterDashboards,
-} from '../studyPack/studyMeshGuideSeed'
+} from '../studyGuides/studyMeshGuideSeed'
 
-export { ensureStarterDashboards } from '../studyPack/studyMeshGuideSeed'
+export { ensureStarterDashboards } from '../studyGuides/studyMeshGuideSeed'
 
 export const OPEN_WIDGET_EDITOR_EVENT = 'studymesh-open-widget-editor'
 export const OPEN_DASHBOARD_EDITOR_EVENT = 'studymesh-open-dashboard-editor'
 export const OPEN_SAVED_DASHBOARDS_EVENT = 'studymesh-open-saved-dashboards'
-export const OPEN_STUDY_PACK_EVENT = 'studymesh-open-study-pack'
 export const OPEN_STUDY_PATH_EVENT = 'studymesh-open-study-path'
 export const OPEN_CREATE_HUB_EVENT = 'studymesh-open-create-hub'
 export const STARTER_STUDY_PATH_FOLDER_NAME = STUDYMESH_GUIDE_FOLDER_NAME
@@ -91,7 +90,7 @@ const getUniqueSavedDashboardName = (
   requestedName: string,
   dashboards: SavedDashboardRecord[],
 ) => {
-  const baseName = requestedName.trim() || 'Study Pack'
+  const baseName = requestedName.trim() || 'Quick Create'
   const usedNames = new Set(dashboards.map((dashboard) => dashboard.name))
 
   if (!usedNames.has(baseName)) {
@@ -108,21 +107,21 @@ const getUniqueSavedDashboardName = (
   return candidate
 }
 
-const saveStudyPackDashboard = (
+const saveQuickCreateDashboard = (
   name: string,
   layout: DashboardLayout,
-  folderName = 'Study Packs',
+  folderName = 'Quick Creates',
 ): SavedDashboardRecord => {
   const dashboards = getSavedDashboards()
   const now = new Date().toISOString()
   const dashboard: SavedDashboardRecord = {
-    id: `study-pack-dashboard-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+    id: `quick-create-dashboard-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
     name: getUniqueSavedDashboardName(name, dashboards),
-    folder: folderName.trim() || 'Study Packs',
+    folder: folderName.trim() || 'Quick Creates',
     folderColor: '#007C66',
     layout,
     description: 'Generated from student notes.',
-    tags: ['study-pack', 'notes'],
+    tags: ['quick-create', 'notes'],
     isPublic: false,
     createdAt: now,
     updatedAt: now,
@@ -258,12 +257,6 @@ export const useWorkspaceActions = () => {
     )
   }, [])
 
-  const openCreateStudyPack = useCallback((options?: { toggle?: boolean }) => {
-    window.dispatchEvent(
-      new CustomEvent(OPEN_STUDY_PACK_EVENT, { detail: options }),
-    )
-  }, [])
-
   const openCreateStudyPath = useCallback((options?: { toggle?: boolean }) => {
     window.dispatchEvent(
       new CustomEvent(OPEN_STUDY_PATH_EVENT, { detail: options }),
@@ -279,59 +272,10 @@ export const useWorkspaceActions = () => {
     [],
   )
 
-  const createStudyPackDashboard = useCallback(
-    ({
-      name,
-      widgets,
-      layoutMode = 'smart',
-      folderName = 'Study Packs',
-    }: {
-      name: string
-      widgets: Array<{
-        name: string
-        components: ComponentData[]
-        category?: string
-        tags?: string[]
-        description?: string
-        version?: string
-        author?: string
-      }>
-      layoutMode?: StudyPackDashboardLayoutMode
-      folderName?: string
-    }) => {
-      const layout = createStudyPackDashboardLayout(
-        widgets.map((widget) => ({
-          id: `embedded-widget-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-          name: widget.name,
-          components: widget.components,
-          category: widget.category || 'Study Pack',
-          tags: widget.tags || ['study-pack', 'embedded-generated'],
-          description: widget.description || 'Generated from student notes.',
-          version: widget.version || '1.0',
-          author: widget.author || 'StudyMesh',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })),
-        {
-          mode: layoutMode,
-        },
-      )
-      const dashboard = saveStudyPackDashboard(name, layout, folderName)
-
-      addDashboard({
-        name: dashboard.name,
-        layout: dashboard.layout,
-      })
-
-      return dashboard
-    },
-    [addDashboard],
-  )
-
-  const createStudyPackDashboards = useCallback(
+  const createQuickCreateDashboards = useCallback(
     ({
       dashboards,
-      folderName = 'Study Packs',
+      folderName = 'Quick Creates',
       openInWorkspace = true,
     }: {
       folderName?: string
@@ -347,7 +291,7 @@ export const useWorkspaceActions = () => {
           version?: string
           author?: string
         }>
-        layoutMode?: StudyPackDashboardLayoutMode
+        layoutMode?: QuickCreateDashboardLayoutMode
         folderName?: string
       }>
     }) => {
@@ -357,28 +301,28 @@ export const useWorkspaceActions = () => {
           id: `embedded-widget-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
           name: widget.name,
           components: widget.components,
-          category: widget.category || 'Study Pack',
-          tags: widget.tags || ['study-pack', 'embedded-generated'],
+          category: widget.category || 'Quick Create',
+          tags: widget.tags || ['quick-create', 'embedded-generated'],
           description: widget.description || 'Generated from student notes.',
           version: widget.version || '1.0',
           author: widget.author || 'StudyMesh',
           createdAt: now,
           updatedAt: now,
         }))
-        const layout = createStudyPackDashboardLayout(embeddedWidgets, {
+        const layout = createQuickCreateDashboardLayout(embeddedWidgets, {
           mode: dashboard.layoutMode || 'smart',
         })
 
         return {
-          id: `study-pack-dashboard-${Date.now()}-${Math.floor(
+          id: `quick-create-dashboard-${Date.now()}-${Math.floor(
             Math.random() * 1000000,
           )}`,
           name: dashboard.name,
-          folder: (dashboard.folderName || folderName).trim() || 'Study Packs',
+          folder: (dashboard.folderName || folderName).trim() || 'Quick Creates',
           folderColor: '#007C66',
           layout,
           description: 'Generated from student notes.',
-          tags: ['study-pack', 'notes'],
+          tags: ['quick-create', 'notes'],
           isPublic: false,
           createdAt: now,
           updatedAt: now,
@@ -388,7 +332,7 @@ export const useWorkspaceActions = () => {
       const savedDashboards = studyPath
         ? generatedDashboards
         : generatedDashboards.map((dashboard) =>
-            saveStudyPackDashboard(
+            saveQuickCreateDashboard(
               dashboard.name,
               dashboard.layout,
               dashboard.folder || folderName,
@@ -495,11 +439,9 @@ export const useWorkspaceActions = () => {
     ensureDashboardAndAddComponent,
     openCreateWidget,
     openCreateDashboard,
-    openCreateStudyPack,
     openCreateStudyPath,
     openCreateHub,
-    createStudyPackDashboard,
-    createStudyPackDashboards,
+    createQuickCreateDashboards,
     openOperationsExample,
     openMathExample,
     openTutorialExample,

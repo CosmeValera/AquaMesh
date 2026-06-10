@@ -14,7 +14,7 @@ import {
   HOSTED_AI_CREDIT_PACKS,
   HostedAiCreditPackId,
   redirectToHostedAiCreditCheckout,
-} from '../../studyPack/ai'
+} from '../../quickCreate/ai'
 
 const HostedAiPricingCards: React.FC = () => {
   const [buyingPackId, setBuyingPackId] =

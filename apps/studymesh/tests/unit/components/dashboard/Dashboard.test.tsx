@@ -18,7 +18,6 @@ vi.mock('../../../../src/customHooks/useWorkspaceActions', () => ({
   OPEN_CREATE_HUB_EVENT: 'studymesh-open-create-hub',
   OPEN_DASHBOARD_EDITOR_EVENT: 'studymesh-open-dashboard-editor',
   OPEN_WIDGET_EDITOR_EVENT: 'studymesh-open-widget-editor',
-  OPEN_STUDY_PACK_EVENT: 'studymesh-open-study-pack',
   OPEN_STUDY_PATH_EVENT: 'studymesh-open-study-path',
   STARTER_STUDY_PATH_FOLDER_NAME: 'StudyMesh Guide',
   ensureStarterDashboards: vi.fn(),
@@ -231,8 +230,6 @@ describe('Dashboards', () => {
       ensureDashboardAndAddComponent: vi.fn(),
       openCreateWidget: openCreateWidgetMock,
       openCreateDashboard: openCreateDashboardMock,
-      openCreateStudyPack: vi.fn(),
-      createStudyPackDashboard: vi.fn(),
       openOperationsExample: openOperationsExampleMock,
       openWidgetMenu: openWidgetMenuMock,
     })

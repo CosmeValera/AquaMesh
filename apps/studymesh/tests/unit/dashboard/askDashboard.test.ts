@@ -3,25 +3,25 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { askDashboardSources } from '../../../src/dashboardChat/askDashboard'
 import {
   callStrongAiModel,
-  readStudyPackAiSettings,
-  resolveStudyPackAiCredentials,
-} from '../../../src/studyPack/ai'
-import { callHostedAiModel } from '../../../src/studyPack/ai/hostedClient'
+  readQuickCreateAiSettings,
+  resolveQuickCreateAiCredentials,
+} from '../../../src/quickCreate/ai'
+import { callHostedAiModel } from '../../../src/quickCreate/ai/hostedClient'
 
-vi.mock('../../../src/studyPack/ai', () => ({
+vi.mock('../../../src/quickCreate/ai', () => ({
   callLocalLanguageModel: vi.fn(),
   callStrongAiModel: vi.fn(),
   isStrongAiProvider: (provider: unknown) =>
     provider === 'gemini' || provider === 'cerebras',
-  readStudyPackAiSettings: vi.fn(),
-  resolveStudyPackAiCredentials: vi.fn(),
+  readQuickCreateAiSettings: vi.fn(),
+  resolveQuickCreateAiCredentials: vi.fn(),
   STRONG_AI_PROVIDERS: {
     gemini: { label: 'Gemini', modeLabel: 'Own Gemini API token' },
     cerebras: { label: 'Cerebras', modeLabel: 'Own Cerebras API key' },
   },
 }))
 
-vi.mock('../../../src/studyPack/ai/hostedClient', () => ({
+vi.mock('../../../src/quickCreate/ai/hostedClient', () => ({
   callHostedAiModel: vi.fn(),
 }))
 
@@ -44,18 +44,18 @@ describe('askDashboardSources', () => {
   beforeEach(() => {
     vi.mocked(callStrongAiModel).mockReset()
     vi.mocked(callHostedAiModel).mockReset()
-    vi.mocked(readStudyPackAiSettings).mockReset()
-    vi.mocked(resolveStudyPackAiCredentials).mockReset()
+    vi.mocked(readQuickCreateAiSettings).mockReset()
+    vi.mocked(resolveQuickCreateAiCredentials).mockReset()
   })
 
   it('uses the selected Cerebras strong provider for dashboard chat', async () => {
-    vi.mocked(readStudyPackAiSettings).mockReturnValue({
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
       provider: 'cerebras',
       apiToken: '',
       model: 'gpt-oss-120b',
       strongProviders: {},
     })
-    vi.mocked(resolveStudyPackAiCredentials).mockReturnValue({
+    vi.mocked(resolveQuickCreateAiCredentials).mockReturnValue({
       provider: 'cerebras',
       apiToken: 'cerebras-key',
       model: 'gpt-oss-120b',
@@ -68,7 +68,7 @@ describe('askDashboardSources', () => {
 
     const result = await askDashboardSources(baseOptions)
 
-    expect(resolveStudyPackAiCredentials).toHaveBeenCalledWith('cerebras')
+    expect(resolveQuickCreateAiCredentials).toHaveBeenCalledWith('cerebras')
     expect(callStrongAiModel).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: 'cerebras',
@@ -83,7 +83,7 @@ describe('askDashboardSources', () => {
   })
 
   it('uses hosted Study Credits transport for dashboard chat', async () => {
-    vi.mocked(readStudyPackAiSettings).mockReturnValue({
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
       provider: 'hosted',
       apiToken: '',
       model: 'gpt-oss-120b',

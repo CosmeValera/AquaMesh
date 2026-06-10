@@ -31,7 +31,7 @@ import {
   createStudyGuideRecord,
 } from '../../studyGuides/storage'
 import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
-import { readStudyPackAiSettings } from '../../studyPack/ai'
+import { readQuickCreateAiSettings } from '../../quickCreate/ai'
 import TopNavBar from '../topnavbar/TopNavBar'
 
 interface PendingGuide {
@@ -59,7 +59,7 @@ const quickPromptOptions = [
 ]
 
 const getGenerationEstimateSeconds = (): number => {
-  const provider = readStudyPackAiSettings().provider || 'hosted'
+  const provider = readQuickCreateAiSettings().provider || 'hosted'
 
   if (provider === 'local') {
     return 90

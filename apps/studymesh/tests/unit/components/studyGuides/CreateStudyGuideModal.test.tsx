@@ -9,25 +9,25 @@ import {
   waitFor,
   within,
 } from '@testing-library/react'
-import CreateStudyPathModal from '../../../../src/components/studyPack/CreateStudyPathModal'
+import CreateStudyGuideModal from '../../../../src/components/studyGuides/CreateStudyGuideModal'
 import {
-  readStudyPackAiSettings,
-  resolveStudyPackAiCredentials,
-} from '../../../../src/studyPack/ai'
+  readQuickCreateAiSettings,
+  resolveQuickCreateAiCredentials,
+} from '../../../../src/quickCreate/ai'
 
-vi.mock('../../../../src/studyPack/ai', async () => {
+vi.mock('../../../../src/quickCreate/ai', async () => {
   const actual = await vi.importActual<
-    typeof import('../../../../src/studyPack/ai')
-  >('../../../../src/studyPack/ai')
+    typeof import('../../../../src/quickCreate/ai')
+  >('../../../../src/quickCreate/ai')
 
   return {
     ...actual,
-    readStudyPackAiSettings: vi.fn(() => ({
+    readQuickCreateAiSettings: vi.fn(() => ({
       provider: 'gemini',
       apiToken: 'test-token',
       model: 'gemini-test',
     })),
-    resolveStudyPackAiCredentials: vi.fn(() => ({
+    resolveQuickCreateAiCredentials: vi.fn(() => ({
       provider: 'gemini',
       apiToken: 'test-token',
       model: 'gemini-test',
@@ -113,7 +113,7 @@ const mockGeminiDashboards = (dashboardCount: number) => {
 }
 
 const generatePath = async () => {
-  render(<CreateStudyPathModal open onClose={vi.fn()} onCreatePath={vi.fn()} />)
+  render(<CreateStudyGuideModal open onClose={vi.fn()} onCreatePath={vi.fn()} />)
 
   fireEvent.change(
     screen.getByRole('textbox', { name: /what should StudyMesh teach/i }),
@@ -124,15 +124,15 @@ const generatePath = async () => {
   fireEvent.click(screen.getByRole('button', { name: /generate study guide/i }))
 }
 
-describe('CreateStudyPathModal Study Guide generation', () => {
+describe('CreateStudyGuideModal Study Guide generation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(readStudyPackAiSettings).mockReturnValue({
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
       provider: 'gemini',
       apiToken: 'test-token',
       model: 'gemini-test',
     })
-    vi.mocked(resolveStudyPackAiCredentials).mockReturnValue({
+    vi.mocked(resolveQuickCreateAiCredentials).mockReturnValue({
       provider: 'gemini',
       apiToken: 'test-token',
       model: 'gemini-test',
@@ -141,7 +141,7 @@ describe('CreateStudyPathModal Study Guide generation', () => {
   })
 
   it('uses a prompt-only Study Guide input without legacy source controls', () => {
-    render(<CreateStudyPathModal open onClose={vi.fn()} onCreatePath={vi.fn()} />)
+    render(<CreateStudyGuideModal open onClose={vi.fn()} onCreatePath={vi.fn()} />)
 
     expect(
       screen.queryByRole('button', { name: /current dashboard/i }),
@@ -155,12 +155,12 @@ describe('CreateStudyPathModal Study Guide generation', () => {
   })
 
   it('uses the current Cerebras provider when inline auto-generation starts', async () => {
-    vi.mocked(readStudyPackAiSettings).mockReturnValue({
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
       provider: 'cerebras',
       apiToken: 'cerebras-token',
       model: 'gpt-oss-120b',
     })
-    vi.mocked(resolveStudyPackAiCredentials).mockReturnValue({
+    vi.mocked(resolveQuickCreateAiCredentials).mockReturnValue({
       provider: 'cerebras',
       apiToken: 'cerebras-token',
       model: 'gpt-oss-120b',
@@ -187,7 +187,7 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     )
 
     render(
-      <CreateStudyPathModal
+      <CreateStudyGuideModal
         open
         onClose={vi.fn()}
         onCreatePath={vi.fn()}
@@ -215,7 +215,7 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     const onCreatePath = vi.fn()
     mockGeminiDashboards(5)
     render(
-      <CreateStudyPathModal
+      <CreateStudyGuideModal
         open
         onClose={vi.fn()}
         onCreatePath={onCreatePath}
@@ -299,7 +299,7 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     )
 
     render(
-      <CreateStudyPathModal open onClose={vi.fn()} onCreatePath={vi.fn()} />,
+      <CreateStudyGuideModal open onClose={vi.fn()} onCreatePath={vi.fn()} />,
     )
 
     fireEvent.change(
@@ -382,12 +382,12 @@ describe('CreateStudyPathModal Study Guide generation', () => {
   })
 
   it('shows Local AI failure debug after failed Study Guide generation', async () => {
-    vi.mocked(readStudyPackAiSettings).mockReturnValue({
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
       provider: 'local',
       apiToken: '',
       model: 'gemini-test',
     })
-    vi.mocked(resolveStudyPackAiCredentials).mockReturnValue({
+    vi.mocked(resolveQuickCreateAiCredentials).mockReturnValue({
       provider: 'local',
       apiToken: '',
       model: 'gemini-test',
@@ -428,7 +428,7 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     })
 
     render(
-      <CreateStudyPathModal open onClose={vi.fn()} onCreatePath={vi.fn()} />,
+      <CreateStudyGuideModal open onClose={vi.fn()} onCreatePath={vi.fn()} />,
     )
 
     fireEvent.change(
@@ -457,12 +457,12 @@ describe('CreateStudyPathModal Study Guide generation', () => {
   })
 
   it('creates Local AI Study Guide dashboards with visible lesson widgets', async () => {
-    vi.mocked(readStudyPackAiSettings).mockReturnValue({
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
       provider: 'local',
       apiToken: '',
       model: 'gemini-test',
     })
-    vi.mocked(resolveStudyPackAiCredentials).mockReturnValue({
+    vi.mocked(resolveQuickCreateAiCredentials).mockReturnValue({
       provider: 'local',
       apiToken: '',
       model: 'gemini-test',
@@ -593,7 +593,7 @@ describe('CreateStudyPathModal Study Guide generation', () => {
     })
 
     render(
-      <CreateStudyPathModal
+      <CreateStudyGuideModal
         open
         onClose={vi.fn()}
         onCreatePath={onCreatePath}

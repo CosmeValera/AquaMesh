@@ -6,8 +6,8 @@ import type {
   StudyPathDashboardItem,
 } from '../state/store'
 import type { ComponentData } from '../components/WidgetEditor/types/types'
-import type { StudyPackWidgetRecord } from '../studyPack'
-import { createStudyPackDashboardLayout } from '../studyPack'
+import type { QuickCreateWidgetRecord } from '../quickCreate'
+import { createQuickCreateDashboardLayout } from '../quickCreate'
 
 export type StudyGuidePageSource = 'manual' | 'chat' | 'quickCreate'
 
@@ -341,7 +341,7 @@ export const appendStudyGuideWidgetPage = (
     source,
   }: {
     title: string
-    widgets: StudyPackWidgetRecord[]
+    widgets: QuickCreateWidgetRecord[]
     layoutMode?: 'smart' | 'tabs' | 'orchestrator'
     source: StudyGuidePageSource
   },
@@ -352,7 +352,7 @@ export const appendStudyGuideWidgetPage = (
   const safeTitle = title.trim() || `Page ${pageIndex}`
   const page: StudyPathDashboardItem = {
     name: safeTitle,
-    layout: createStudyPackDashboardLayout(widgets, { mode: layoutMode }),
+    layout: createQuickCreateDashboardLayout(widgets, { mode: layoutMode }),
     dashboardKey: pageKey,
     dashboardIndex: pageIndex,
     dashboardCount: pageCount,

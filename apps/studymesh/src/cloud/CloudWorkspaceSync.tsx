@@ -15,7 +15,7 @@ import {
   type WidgetStorageUpdatedDetail,
 } from '../components/WidgetEditor/WidgetStorage'
 import { useStore } from '../state/store'
-import { clearStudyMeshGuideSeedMarker } from '../studyPack/studyMeshGuideSeed'
+import { clearStudyMeshGuideSeedMarker } from '../studyGuides/studyMeshGuideSeed'
 import { STUDY_GUIDES_CHANGED_EVENT } from '../studyGuides/storage'
 import {
   readLocalWorkspaceSnapshot,

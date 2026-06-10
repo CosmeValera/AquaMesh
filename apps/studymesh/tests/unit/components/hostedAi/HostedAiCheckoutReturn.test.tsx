@@ -4,7 +4,7 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import HostedAiCheckoutReturn from '../../../../src/components/hostedAi/HostedAiCheckoutReturn'
-import { confirmHostedAiCreditCheckout } from '../../../../src/studyPack/ai'
+import { confirmHostedAiCreditCheckout } from '../../../../src/quickCreate/ai'
 
 vi.mock('../../../../src/auth/AuthProvider', () => ({
   useAuth: () => ({
@@ -13,7 +13,7 @@ vi.mock('../../../../src/auth/AuthProvider', () => ({
   }),
 }))
 
-vi.mock('../../../../src/studyPack/ai', () => ({
+vi.mock('../../../../src/quickCreate/ai', () => ({
   confirmHostedAiCreditCheckout: vi.fn(),
 }))
 

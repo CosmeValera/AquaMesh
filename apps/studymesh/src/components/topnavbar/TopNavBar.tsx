@@ -6,7 +6,6 @@ import {
   Toolbar,
   Typography,
   Button,
-  CircularProgress,
   Menu,
   MenuItem,
   Divider,
@@ -47,7 +46,6 @@ import DashboardOptionsMenu from '../Dasboard/DashboardOptionsMenu'
 import { useDashboards } from '../Dasboard/DashboardProvider'
 import {
   OPEN_DASHBOARD_EDITOR_EVENT,
-  OPEN_STUDY_PACK_EVENT,
   OPEN_STUDY_PATH_EVENT,
   OPEN_WIDGET_EDITOR_EVENT,
   useWorkspaceActions,
@@ -56,14 +54,13 @@ import ThemeModeToggle from '../shared/ThemeModeToggle'
 import { CustomWidget } from '../WidgetEditor/WidgetStorage'
 import SettingsDialog from '../WidgetEditor/components/dialogs/SettingsDialog'
 import { dispatchWorkspaceOnboardingEvent } from '../onboarding/onboardingEvents'
-import CreateStudyPackModal from '../studyPack/CreateStudyPackModal'
-import CreateStudyPathModal from '../studyPack/CreateStudyPathModal'
+import CreateStudyGuideModal from '../studyGuides/CreateStudyGuideModal'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
-  readStudyPackAiSettings,
-  STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
-  StudyPackAiProvider,
-} from '../../studyPack/ai'
+  readQuickCreateAiSettings,
+  QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
+  QuickCreateAiProvider,
+} from '../../quickCreate/ai'
 import {
   createSquareAvatarDataUrl,
   readUserAvatar,
@@ -120,11 +117,7 @@ const canOpenStudyPathForCurrentState = (userData: UserData) => {
   return isAdminUser(userData)
 }
 
-const canOpenStudyPackForCurrentState = (userData: UserData) => {
-  return isAdminUser(userData)
-}
-
-const studyPackAiProviderLabels: Record<StudyPackAiProvider, string> = {
+const quickCreateAiProviderLabels: Record<QuickCreateAiProvider, string> = {
   local: 'Google Local AI',
   gemini: 'Own Gemini API token',
   cerebras: 'Own Cerebras API key',
@@ -136,7 +129,7 @@ const initialCreationTaskStatuses: Record<
   WorkspaceCreationTaskState
 > = {
   'study-path': 'idle',
-  'from-notes': 'idle',
+  'quick-create': 'idle',
 }
 
 // Define component props interface
@@ -198,109 +191,6 @@ const ButtonWithLabel: React.FC<ButtonWithLabelProps> = ({
   )
 }
 
-const getCreationStatusColor = (state: WorkspaceCreationTaskState) => {
-  if (state === 'running') {
-    return 'warning.main'
-  }
-
-  if (state === 'complete') {
-    return 'success.main'
-  }
-
-  if (state === 'error') {
-    return 'error.main'
-  }
-
-  return 'transparent'
-}
-
-const getCreationStatusBackground = (state: WorkspaceCreationTaskState) => {
-  if (state === 'running') {
-    return 'warning.light'
-  }
-
-  if (state === 'complete') {
-    return 'success.light'
-  }
-
-  if (state === 'error') {
-    return 'error.light'
-  }
-
-  return 'transparent'
-}
-
-const CreationStatusDot = ({
-  state,
-}: {
-  state: WorkspaceCreationTaskState
-}) => {
-  if (state === 'idle') {
-    return null
-  }
-
-  const isRunning = state === 'running'
-  const symbol = state === 'complete' ? '✓' : state === 'error' ? '!' : ''
-
-  return (
-    <Box
-      component="span"
-      sx={{
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 18,
-        height: 18,
-        borderRadius: '50%',
-        border: 1,
-        borderColor: 'rgba(255,255,255,0.9)',
-        bgcolor: getCreationStatusBackground(state),
-        color: getCreationStatusColor(state),
-        boxShadow:
-          '0 0 0 2px rgba(255,255,255,0.18), 0 4px 10px rgba(0,0,0,0.22)',
-        flex: '0 0 auto',
-        fontSize: 11,
-        fontWeight: 900,
-        lineHeight: 1,
-      }}
-    >
-      {isRunning ? (
-        <CircularProgress
-          size={14}
-          thickness={5}
-          sx={{ color: getCreationStatusColor(state) }}
-        />
-      ) : (
-        symbol
-      )}
-    </Box>
-  )
-}
-
-const CreationStatusLabel = ({
-  label,
-  state,
-}: {
-  label: string
-  state: WorkspaceCreationTaskState
-}) => (
-  <Box
-    component="span"
-    sx={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 0.85,
-      minWidth: 0,
-    }}
-  >
-    <Box component="span" sx={{ minWidth: 0 }}>
-      {label}
-    </Box>
-    <CreationStatusDot state={state} />
-  </Box>
-)
-
 const useStoredBoolean = (key: string, defaultValue: boolean) => {
   const [value, setValue] = useState<boolean>(() => {
     try {
@@ -328,16 +218,15 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const [aiModeNotice, setAiModeNotice] = useState('')
   const [userSettingsName, setUserSettingsName] = useState('')
   const [userSettingsAvatarStatus, setUserSettingsAvatarStatus] = useState('')
-  const [studyPackOpen, setStudyPackOpen] = useState(false)
   const [studyPathOpen, setStudyPathOpen] = useState(false)
   const creationTaskStatusesRef = useRef(initialCreationTaskStatuses)
   const [creationToast, setCreationToast] = useState<{
     severity: 'success' | 'error'
     message: string
   } | null>(null)
-  const [studyPackAiProvider, setStudyPackAiProvider] =
-    useState<StudyPackAiProvider>(
-      () => readStudyPackAiSettings().provider || 'hosted',
+  const [quickCreateAiProvider, setQuickCreateAiProvider] =
+    useState<QuickCreateAiProvider>(
+      () => readQuickCreateAiSettings().provider || 'hosted',
     )
   const [widgetEditorOpen, setWidgetEditorOpen] = useState(false)
   const [widgetEditorPayload, setWidgetEditorPayload] = useState<{
@@ -368,13 +257,12 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const [avatarSrc, setAvatarSrc] = useState(() => readUserAvatar(adminUser.id))
   const [dashboardSelectorOpen, setDashboardSelectorOpen] = useState(false)
   const isAdmin = isAdminUser(userData)
-  const userModeLabel = studyPackAiProviderLabels[studyPackAiProvider]
+  const userModeLabel = quickCreateAiProviderLabels[quickCreateAiProvider]
   const auth = useAuth()
   const {
     openCreateWidget,
     openCreateDashboard,
-    createStudyPackDashboard,
-    createStudyPackDashboards,
+    createQuickCreateDashboards,
   } = useWorkspaceActions()
   const {
     addDashboard,
@@ -389,7 +277,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const navigate = useNavigate()
 
   const {
-    theme,
     isPhone,
     isTablet,
     isDesktopWorkspace: isDesktop,
@@ -439,18 +326,18 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
 
   useEffect(() => {
     const refreshAiProvider = () => {
-      setStudyPackAiProvider(readStudyPackAiSettings().provider || 'hosted')
+      setQuickCreateAiProvider(readQuickCreateAiSettings().provider || 'hosted')
     }
 
     window.addEventListener(
-      STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
+      QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
       refreshAiProvider,
     )
     window.addEventListener('storage', refreshAiProvider)
 
     return () => {
       window.removeEventListener(
-        STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
+        QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
         refreshAiProvider,
       )
       window.removeEventListener('storage', refreshAiProvider)
@@ -565,28 +452,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         OPEN_WIDGET_EDITOR_EVENT,
         handleOpenWidgetEditor,
       )
-    }
-  }, [creationHost, userData])
-
-  useEffect(() => {
-    if (creationHost === 'external') {
-      return
-    }
-
-    const handleOpenStudyPack = () => {
-      const parsedUserData = readCurrentUserData(userData)
-
-      if (!canOpenStudyPackForCurrentState(parsedUserData)) {
-        return
-      }
-
-      setStudyPackOpen(true)
-    }
-
-    window.addEventListener(OPEN_STUDY_PACK_EVENT, handleOpenStudyPack)
-
-    return () => {
-      window.removeEventListener(OPEN_STUDY_PACK_EVENT, handleOpenStudyPack)
     }
   }, [creationHost, userData])
 
@@ -710,17 +575,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
     [],
   )
 
-  const reportFromNotesStatus = useCallback(
-    (state: WorkspaceCreationTaskState, message?: string) => {
-      dispatchWorkspaceCreationStatus({
-        task: 'from-notes',
-        state,
-        message,
-      })
-    },
-    [],
-  )
-
   return (
     <>
       <AppBar
@@ -809,7 +663,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
               )}
               <AiModePill
                 compact
-                provider={studyPackAiProvider}
+                provider={quickCreateAiProvider}
                 onClick={() => {
                   setAiModeNotice('')
                   setIsAiModeOpen(true)
@@ -913,7 +767,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
               >
                 <AiModePill
                   compact={isPhone || isTablet}
-                  provider={studyPackAiProvider}
+                  provider={quickCreateAiProvider}
                   onClick={() => {
                     setAiModeNotice('')
                     setIsAiModeOpen(true)
@@ -1527,16 +1381,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       />
       {creationHost === 'navbar' && (
         <>
-          <CreateStudyPackModal
-            open={studyPackOpen}
-            onClose={() => setStudyPackOpen(false)}
-            onCreatePack={createStudyPackDashboard}
-            onStatusChange={reportFromNotesStatus}
-          />
-          <CreateStudyPathModal
+          <CreateStudyGuideModal
             open={studyPathOpen}
             onClose={() => setStudyPathOpen(false)}
-            onCreatePath={createStudyPackDashboards}
+            onCreatePath={createQuickCreateDashboards}
             onStatusChange={reportStudyPathStatus}
           />
           <WidgetEditorDialog

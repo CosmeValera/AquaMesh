@@ -2,11 +2,11 @@ import {
   callLocalLanguageModel,
   callStrongAiModel,
   isStrongAiProvider,
-  readStudyPackAiSettings,
-  resolveStudyPackAiCredentials,
+  readQuickCreateAiSettings,
+  resolveQuickCreateAiCredentials,
   STRONG_AI_PROVIDERS,
-} from '../studyPack/ai'
-import { callHostedAiModel } from '../studyPack/ai/hostedClient'
+} from '../quickCreate/ai'
+import { callHostedAiModel } from '../quickCreate/ai/hostedClient'
 import { DashboardSourceChunk } from './contextBuilder'
 
 interface AskDashboardOptions {
@@ -89,7 +89,7 @@ const callStrongModelText = async (
 export const askDashboardSources = async (
   options: AskDashboardOptions,
 ): Promise<AskDashboardResult> => {
-  const settings = readStudyPackAiSettings()
+  const settings = readQuickCreateAiSettings()
   const provider = settings.provider || 'hosted'
   const prompt = buildPrompt(options)
   let answer: string
@@ -107,7 +107,7 @@ export const askDashboardSources = async (
       stepLabel: 'Ask dashboard sources',
     })
   } else if (isStrongAiProvider(provider)) {
-    const credentials = resolveStudyPackAiCredentials(provider)
+    const credentials = resolveQuickCreateAiCredentials(provider)
     if (!credentials.apiToken) {
       throw new Error(
         `${STRONG_AI_PROVIDERS[provider].modeLabel} mode needs a configured API key.`,

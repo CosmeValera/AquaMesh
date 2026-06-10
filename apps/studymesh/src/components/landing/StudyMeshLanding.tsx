@@ -34,23 +34,22 @@ const mainUseCases = [
       'Teach me Spanish past tenses from scratch, with examples, mistakes to avoid, and practice.',
     outputLabel: 'Generated path',
     output:
-      'Lesson dashboards with source notes, guided explanations, flashcards, and exercises.',
+      'Lesson dashboards with guided explanations, flashcards, and exercises.',
   },
   {
     title: 'Quick Create',
     eyebrow: 'From your workspace',
-    body: 'Turn the current dashboard, pasted text, uploaded files, images, PDFs, or slides into focused quizzes, flashcards, or clearer notes.',
+    body: 'Turn the current study dashboard into a focused quiz, flashcards, or a clearer explanation.',
     icon: <MenuBookIcon />,
-    action: 'create-from-notes',
+    action: 'create-quick-create',
     cta: 'Open Quick Create',
     accent: '#00A878',
-    steps: ['Pick a source', 'Choose a format', 'Study the result'],
-    inputLabel: 'Source options',
-    input:
-      'Current dashboard, copied notes, screenshots, PDF, or PowerPoint deck.',
+    steps: ['Open a dashboard', 'Choose a format', 'Study the result'],
+    inputLabel: 'Current context',
+    input: 'The lesson or dashboard you are currently studying.',
     outputLabel: 'Quick result',
     output:
-      'Quiz, flashcards, expanded notes, and practice tied to the selected source.',
+      'Quiz, flashcards, expanded notes, and practice tied to your current dashboard.',
   },
 ]
 
@@ -71,19 +70,19 @@ const heroPreviewExamples = [
     outputCount: '3 dashboards',
     actions: ['Study Guide', 'Quiz', 'Flashcards'],
     lessons: [
-      ['01', 'Photosynthesis big picture', 'source notes + recap'],
+      ['01', 'Photosynthesis big picture', 'guided explanation + recap'],
       ['02', 'Light reactions', 'diagram walkthrough'],
       ['03', 'Calvin cycle practice', 'quiz + flashcards'],
     ],
   },
   {
-    label: 'Notes',
-    title: 'Create From Notes',
-    inputLabel: 'Source',
-    input: 'messy class notes',
-    prompt: 'Paste lecture notes, board photos, or a PDF chapter.',
-    output: 'clean notes + practice',
-    outputTitle: 'Clean Biology Notes',
+    label: 'Review',
+    title: 'Quick Create',
+    inputLabel: 'Dashboard',
+    input: 'photosynthesis lesson',
+    prompt: 'Create focused review material from the current dashboard.',
+    output: 'quiz + flashcards',
+    outputTitle: 'Photosynthesis Review',
     outputCount: '2 outputs',
     actions: ['Clean notes', 'Quiz', 'Practice'],
     lessons: [
@@ -142,38 +141,38 @@ const studyPathPromptExamples = [
 
 const notesAttachmentExamples = [
   {
-    id: 'text',
-    icon: '📝',
-    label: 'Text notes',
-    lines: ['definitions', 'teacher comments'],
+    id: 'lesson',
+    icon: '01',
+    label: 'Current lesson',
+    lines: ['key concepts', 'worked examples'],
     dashboards: [
-      ['Clean summary', 'organized key ideas', 92],
+      ['Focused summary', 'organized key ideas', 92],
       ['Flashcards', 'definitions + terms', 70],
     ],
   },
   {
-    id: 'image',
-    icon: '📸',
-    label: 'Images',
-    lines: ['board photo', 'diagram snapshot'],
+    id: 'guide',
+    icon: '02',
+    label: 'Study Guide',
+    lines: ['ordered lessons', 'learning goals'],
     dashboards: [
-      ['Visual recap', 'diagrams explained', 82],
-      ['Image Q&A', 'labels + concepts', 62],
+      ['Review quiz', 'questions from current context', 82],
+      ['Recall cards', 'key concepts', 62],
     ],
   },
   {
-    id: 'slides',
-    icon: '📊',
-    label: 'Slides',
-    lines: ['unit deck', 'class examples'],
-    dashboards: [['Slide walkthrough', 'deck turned into lessons', 76]],
+    id: 'review',
+    icon: '03',
+    label: 'Review dashboard',
+    lines: ['recap', 'practice'],
+    dashboards: [['Focused quiz', 'practice from current context', 76]],
   },
   {
-    id: 'pdf',
-    icon: '📄',
-    label: 'PDF',
-    lines: ['chapter pack', 'exam guide'],
-    dashboards: [['Reading guide', 'PDF highlights', 86]],
+    id: 'topic',
+    icon: '04',
+    label: 'Topic dashboard',
+    lines: ['explanations', 'examples'],
+    dashboards: [['Flashcards', 'recall from current context', 86]],
   },
 ]
 
@@ -181,7 +180,7 @@ const quickAnswers = [
   {
     question: 'What is StudyMesh for?',
     answer:
-      'StudyMesh helps students turn learning goals, notes, images, and references into study guides, clean dashboards, exercises, and review material.',
+      'StudyMesh helps students turn learning goals into study guides, dashboards, exercises, and reusable review material.',
   },
   {
     question: 'What should I do first?',
@@ -191,7 +190,7 @@ const quickAnswers = [
   {
     question: 'How are dashboards organized?',
     answer:
-      'Study Guides, Quick Create results, Study Packs, and custom dashboards open in the workspace and can be reused by folder.',
+      'Study Guides, Quick Create results, and custom dashboards open in the workspace and can be reused by folder.',
   },
 ]
 
@@ -216,7 +215,7 @@ const aiPricing = [
     title: 'BYOK Gemini',
     price: '0€',
     label: 'Use your own key',
-    body: 'Bring your Gemini API key and StudyMesh uses it directly for deeper study guides and notes cleanup.',
+    body: 'Bring your Gemini API key and StudyMesh uses it directly for deeper study guides and Quick Create results.',
     icon: <KeyIcon />,
     features: ['Your quota', 'Your control', 'Great quality'],
   },
@@ -241,8 +240,8 @@ const StudyMeshLanding = () => {
     null,
   )
   const [selectedNotesAttachments, setSelectedNotesAttachments] = useState([
-    'text',
-    'image',
+    'lesson',
+    'guide',
   ])
   const activeStudyPathExample =
     studyPathPromptExamples[selectedStudyPathExample]
@@ -383,7 +382,7 @@ const StudyMeshLanding = () => {
                 lineHeight: { xs: 1.1, md: 1.08 },
               }}
             >
-              Turn messy notes into{' '}
+              Turn learning goals into{' '}
               <Box
                 component="span"
                 sx={{
@@ -406,7 +405,7 @@ const StudyMeshLanding = () => {
               }}
             >
               Create tutorials, quizzes, flashcards, and practice from a
-              learning goal, notes, images, PDFs, or slides.
+              learning goal or current study dashboard.
             </Typography>
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
@@ -1228,7 +1227,7 @@ const StudyMeshLanding = () => {
                               color="text.secondary"
                               fontWeight={800}
                             >
-                              Click a source on the left to see the focused
+                              Choose a dashboard context to see the focused
                               study outputs Quick Create can generate.
                             </Typography>
                           </Box>
@@ -1508,7 +1507,7 @@ const StudyMeshLanding = () => {
               mb: 3,
             }}
           >
-            Start with a learning goal or current study material, then open the
+            Start with a learning goal or current study dashboard, then open the
             generated Study Guide or Quick Create result in your workspace.
           </Typography>
           <Stack

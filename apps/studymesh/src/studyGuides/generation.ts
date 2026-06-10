@@ -1,23 +1,23 @@
 import {
-  createStudyPackDashboardLayout,
-  createStudyPackOrchestratorWidgets,
+  createQuickCreateDashboardLayout,
+  createQuickCreateOrchestratorWidgets,
   type StudyObject,
-  type StudyPackDashboardLayoutMode,
-} from '../studyPack'
+  type QuickCreateDashboardLayoutMode,
+} from '../quickCreate'
 import {
-  generateStudyPackWithAi,
+  generateQuickCreateWithAi,
   generateStudyPathWithAi,
   isStrongAiProvider,
-  readStudyPackAiSettings,
-  resolveStudyPackAiCredentials,
-  type AiStudyPackDraft,
+  readQuickCreateAiSettings,
+  resolveQuickCreateAiCredentials,
+  type AiQuickCreateDraft,
   type AiStudyPathDraft,
   type StudyMaterialResourceType,
-} from '../studyPack/ai'
+} from '../quickCreate/ai'
 import {
   normalizeQuickCreateActionInput,
   type QuickCreateActionInput,
-} from '../studyPack/quickCreateActions'
+} from '../quickCreate/quickCreateActions'
 import type { StudyPathContainerState, StudyPathDashboardItem } from '../state/store'
 import {
   appendStudyGuideMarkdownPage,
@@ -28,8 +28,8 @@ type CreatePathPayload = {
   folderName: string
   dashboards: Array<{
     name: string
-    widgets: ReturnType<typeof createStudyPackOrchestratorWidgets>
-    layoutMode?: StudyPackDashboardLayoutMode
+    widgets: ReturnType<typeof createQuickCreateOrchestratorWidgets>
+    layoutMode?: QuickCreateDashboardLayoutMode
     folderName: string
   }>
 }
@@ -61,7 +61,7 @@ export const buildStudyPathFromPayload = (
       id: `${id}-dashboard-${index + 1}`,
       name: dashboard.name,
       folderName: dashboard.folderName || folderName,
-      layout: createStudyPackDashboardLayout(dashboard.widgets, {
+      layout: createQuickCreateDashboardLayout(dashboard.widgets, {
         mode: dashboard.layoutMode || 'smart',
       }),
       dashboardKey: `${id}-${index + 1}`,
@@ -100,11 +100,11 @@ export const generateStudyPathStateFromPrompt = async ({
   prompt: string
   signal?: AbortSignal
 }): Promise<StudyPathContainerState> => {
-  const settings = readStudyPackAiSettings()
+  const settings = readQuickCreateAiSettings()
   const provider = settings.provider || 'hosted'
   const credentials = isStrongAiProvider(provider)
-    ? resolveStudyPackAiCredentials(provider)
-    : resolveStudyPackAiCredentials()
+    ? resolveQuickCreateAiCredentials(provider)
+    : resolveQuickCreateAiCredentials()
   const draft = await generateStudyPathWithAi({
     provider,
     apiToken: credentials.apiToken,
@@ -121,7 +121,7 @@ export const generateStudyPathStateFromPrompt = async ({
       const dashboardKey = `${id}-${index + 1}`
       const dashboardName = dashboard.title || `${title} ${index + 1}`
       const packId = makePackId(dashboardName, index)
-      const widgets = createStudyPackOrchestratorWidgets(
+      const widgets = createQuickCreateOrchestratorWidgets(
         {
           id: packId,
           title: dashboardName,
@@ -157,7 +157,7 @@ export const generateStudyPathStateFromPrompt = async ({
       return {
         id: `${id}-dashboard-${index + 1}`,
         name: dashboardName,
-        layout: createStudyPackDashboardLayout(widgets, { mode: 'smart' }),
+        layout: createQuickCreateDashboardLayout(widgets, { mode: 'smart' }),
         dashboardKey,
         dashboardIndex: index + 1,
         dashboardCount: count,
@@ -218,7 +218,7 @@ const objectToMarkdown = (object: StudyObject): string => {
   return title || ''
 }
 
-const draftToMarkdown = (draft: AiStudyPackDraft): string => {
+const draftToMarkdown = (draft: AiQuickCreateDraft): string => {
   const chunks = [`# ${draft.title || 'Expanded notes'}`]
   if (draft.sourceSummary?.bullets?.length) {
     chunks.push(
@@ -252,17 +252,17 @@ export const appendAiQuickCreatePage = async ({
   signal?: AbortSignal
 }): Promise<StudyPathContainerState> => {
   const { resourceType } = normalizeQuickCreateActionInput(resourceTypeInput)
-  const settings = readStudyPackAiSettings()
+  const settings = readQuickCreateAiSettings()
   const provider = settings.provider || 'hosted'
   const credentials = isStrongAiProvider(provider)
-    ? resolveStudyPackAiCredentials(provider)
-    : resolveStudyPackAiCredentials()
+    ? resolveQuickCreateAiCredentials(provider)
+    : resolveQuickCreateAiCredentials()
   const labels: Record<StudyMaterialResourceType, string> = {
     quiz: 'Quiz',
     flashcards: 'Flashcards',
     improvedNotes: 'Expanded notes',
   }
-  const draft = await generateStudyPackWithAi({
+  const draft = await generateQuickCreateWithAi({
     provider,
     apiToken: credentials.apiToken,
     model: credentials.model,
@@ -290,7 +290,7 @@ export const appendAiQuickCreatePage = async ({
     })
   }
 
-  const widgets = createStudyPackOrchestratorWidgets(
+  const widgets = createQuickCreateOrchestratorWidgets(
     {
       id: makeSlug(`${resourceType}-${sourceTitle}`, 'quick-create'),
       title: draft.title || labels[resourceType],

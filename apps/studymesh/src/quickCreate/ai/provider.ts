@@ -1,34 +1,34 @@
-import { AiStudyPackDraft } from './normalizer'
+import { AiQuickCreateDraft } from './normalizer'
 import {
-  generateStudyPackWithAi as generateStudyPackWithGemini,
+  generateQuickCreateWithAi as generateQuickCreateWithGemini,
   generateStudyPathWithAi as generateStudyPathWithGemini,
-  GenerateStudyPackWithAiOptions,
+  GenerateQuickCreateWithAiOptions,
   GenerateStudyPathWithAiOptions,
   AiStudyPathDraft,
 } from './strongGeneration'
 import {
-  generateStudyPackWithLocalAi,
+  generateQuickCreateWithLocalAi,
   generateStudyPathWithLocalAi,
 } from './localGeneration'
 import {
-  readStudyPackAiSettings,
-  resolveStudyPackAiCredentials,
-  StudyPackAiProvider,
+  readQuickCreateAiSettings,
+  resolveQuickCreateAiCredentials,
+  QuickCreateAiProvider,
 } from './settings'
 import { isStrongAiProvider, STRONG_AI_PROVIDERS } from './strongProviders'
 import { LocalAiProgressEvent } from './localLanguageModel'
 import { createHostedAiTransport } from './hostedClient'
 
 type ProviderOptions = {
-  provider?: StudyPackAiProvider
+  provider?: QuickCreateAiProvider
   onProgress?: (event: LocalAiProgressEvent) => void
   signal?: AbortSignal
 }
 
 const resolveProvider = (
-  explicitProvider: StudyPackAiProvider | undefined,
+  explicitProvider: QuickCreateAiProvider | undefined,
   apiToken: string,
-): StudyPackAiProvider => {
+): QuickCreateAiProvider => {
   if (explicitProvider) {
     return explicitProvider
   }
@@ -37,23 +37,23 @@ const resolveProvider = (
     return 'gemini'
   }
 
-  return readStudyPackAiSettings().provider || 'hosted'
+  return readQuickCreateAiSettings().provider || 'hosted'
 }
 
-export const generateStudyPackWithAi = async (
-  options: GenerateStudyPackWithAiOptions & ProviderOptions,
-): Promise<AiStudyPackDraft> => {
+export const generateQuickCreateWithAi = async (
+  options: GenerateQuickCreateWithAiOptions & ProviderOptions,
+): Promise<AiQuickCreateDraft> => {
   const provider = resolveProvider(options.provider, options.apiToken)
 
   if (provider === 'local') {
-    return generateStudyPackWithLocalAi(options, {
+    return generateQuickCreateWithLocalAi(options, {
       onProgress: options.onProgress,
       signal: options.signal,
     })
   }
 
   if (provider === 'hosted') {
-    return generateStudyPackWithGemini({
+    return generateQuickCreateWithGemini({
       ...options,
       apiToken: '',
       model: STRONG_AI_PROVIDERS.cerebras.defaultModel,
@@ -73,7 +73,7 @@ export const generateStudyPackWithAi = async (
         apiToken: options.apiToken,
         model: options.model,
       }
-    : resolveStudyPackAiCredentials(provider)
+    : resolveQuickCreateAiCredentials(provider)
   if (!credentials.apiToken) {
     throw new Error(
       `${
@@ -82,7 +82,7 @@ export const generateStudyPackWithAi = async (
     )
   }
 
-  return generateStudyPackWithGemini({
+  return generateQuickCreateWithGemini({
     ...options,
     apiToken: credentials.apiToken,
     model: credentials.model,
@@ -123,7 +123,7 @@ export const generateStudyPathWithAi = async (
         apiToken: options.apiToken,
         model: options.model,
       }
-    : resolveStudyPackAiCredentials(provider)
+    : resolveQuickCreateAiCredentials(provider)
   if (!credentials.apiToken) {
     throw new Error(
       `${

@@ -4,7 +4,7 @@ import type {
   StudyPathDashboardPurpose,
   StudyPathPracticeType,
   StudyPathSourceRef,
-} from '../studyPack/types'
+} from '../quickCreate/types'
 
 export interface StateDashboard {
   id: string

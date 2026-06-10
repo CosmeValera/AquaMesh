@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Chip,
-  Collapse,
   Divider,
   Paper,
   Stack,
@@ -12,18 +11,14 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import CloseIcon from '@mui/icons-material/Close'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import AddIcon from '@mui/icons-material/Add'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import AutoStoriesIcon from '@mui/icons-material/AutoStories'
-import ContentPasteIcon from '@mui/icons-material/ContentPaste'
-import DescriptionIcon from '@mui/icons-material/Description'
 import QuizIcon from '@mui/icons-material/Quiz'
 import RouteIcon from '@mui/icons-material/Route'
 import StyleIcon from '@mui/icons-material/Style'
-import UploadFileIcon from '@mui/icons-material/UploadFile'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import LoopIcon from '@mui/icons-material/Loop'
@@ -31,30 +26,24 @@ import LoopIcon from '@mui/icons-material/Loop'
 import {
   OPEN_CREATE_HUB_EVENT,
   OPEN_DASHBOARD_EDITOR_EVENT,
-  OPEN_STUDY_PACK_EVENT,
   OPEN_STUDY_PATH_EVENT,
   OPEN_WIDGET_EDITOR_EVENT,
   useWorkspaceActions,
 } from '../../customHooks/useWorkspaceActions'
 import { dispatchWorkspaceOnboardingEvent } from '../onboarding/onboardingEvents'
-import CreateStudyPathModal from '../studyPack/CreateStudyPathModal'
-import StrongAiSessionKeyDialog from '../studyPack/StrongAiSessionKeyDialog'
+import CreateStudyGuideModal from '../studyGuides/CreateStudyGuideModal'
+import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
 import {
-  generateStudyPackWithAi,
+  generateQuickCreateWithAi,
   isStrongAiProvider,
-  readStudyPackAiSettings,
-  resolveStudyPackAiCredentials,
+  readQuickCreateAiSettings,
+  resolveQuickCreateAiCredentials,
   StrongAiProviderId,
-  STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
+  QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
   StudyMaterialDetailLevel,
   StudyMaterialResourceType,
-  StudyPackAiProvider,
-} from '../../studyPack/ai'
-import {
-  extractTextFromPdf,
-  extractTextFromPptx,
-} from '../../studyPack/documentExtraction'
-import { extractRawNotesFromImage } from '../../studyPack/imageOcr'
+  QuickCreateAiProvider,
+} from '../../quickCreate/ai'
 import { CustomWidget } from '../WidgetEditor/WidgetStorage'
 import { useDashboards } from '../Dasboard/DashboardProvider'
 import { createStudyPathContainerState } from '../Dasboard/studyPathContainer'
@@ -73,19 +62,16 @@ import {
   OPEN_DASHBOARD_CHAT_EVENT,
 } from './workspaceEvents'
 import {
-  appendQuickSourceText,
   createGenerationDraft,
   CreationFlow,
   GenerationDraft,
   OpenCreateHubDetail,
-  QuickSourceFocus,
   readIsAdmin,
   quickCreateAccents,
   quickCreateDetailToAmount,
   quickCreateFolders,
   quickCreateLabels,
   quickCreateTargets,
-  quickSourceAcceptValue,
   statusMarkerGlow,
   studioPanelMaxWidth,
   studioPanelMinWidth,
@@ -97,9 +83,9 @@ import {
   WorkspaceDesktopLayout,
   WorkspaceMobileLayout,
 } from './WorkspaceStudioLayouts'
-import { createStudyPackOrchestratorWidgets } from '../../studyPack'
-import { augmentStudyPackPracticeObjects } from '../../studyPack/practice'
-import { StudyObject } from '../../studyPack/types'
+import { createQuickCreateOrchestratorWidgets } from '../../quickCreate'
+import { augmentQuickCreatePracticeObjects } from '../../quickCreate/practice'
+import { StudyObject } from '../../quickCreate/types'
 import WidgetEditorDialog from './WidgetEditorDialog'
 import { useResponsiveWorkspaceMode } from './useResponsiveWorkspaceMode'
 import StudyBlockView, {
@@ -112,28 +98,20 @@ const quickCreateIcons: Record<StudyMaterialResourceType, React.ReactNode> = {
   improvedNotes: <AutoStoriesIcon fontSize="small" />,
 }
 
-type QuickSourceMode = 'dashboard' | 'sources'
-
-interface QuickDashboardSource {
-  title: string
-  text: string
-}
-
 const GENERATION_RETRY_STORE_KEY = 'studymesh-generation-retry-snapshots'
 const GENERATION_QUEUE_STORE_KEY = 'studymesh-generation-queue-v1'
 
-interface FromNotesRetrySnapshot {
-  flow: 'from-notes'
+interface QuickCreateRetrySnapshot {
+  flow: 'quick-create'
   resourceType: StudyMaterialResourceType
   sourceText: string
   title: string
-  sourceMode: QuickSourceMode
   detailLevel: StudyMaterialDetailLevel
   difficulty: string
-  provider: StudyPackAiProvider
+  provider: QuickCreateAiProvider
 }
 
-type GenerationRetrySnapshot = FromNotesRetrySnapshot
+type GenerationRetrySnapshot = QuickCreateRetrySnapshot
 
 
 const detailLevelCountLimits: Record<
@@ -158,7 +136,7 @@ const detailLevelCountLimits: Record<
 }
 
 const getPackId = (title: string) =>
-  title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'study-pack'
+  title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'quick-create'
 
 const truncateQuickCreationContext = (title: string) => {
   const cleaned = title.trim() || 'Sources'
@@ -313,7 +291,7 @@ const sanitizePersistedGenerationDraft = (
   const draft = value as Partial<GenerationDraft>
   if (
     typeof draft.id !== 'string' ||
-    (draft.flow !== 'study-path' && draft.flow !== 'from-notes') ||
+    (draft.flow !== 'study-path' && draft.flow !== 'quick-create') ||
     typeof draft.title !== 'string' ||
     typeof draft.createdAt !== 'string'
   ) {
@@ -468,7 +446,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const initialDrafts = useMemo(() => {
     const placeholders = [
       createGenerationDraft('study-path', { isPlaceholder: true }),
-      createGenerationDraft('from-notes', { isPlaceholder: true }),
+      createGenerationDraft('quick-create', { isPlaceholder: true }),
     ]
 
     return [...placeholders, ...readPersistedGenerationQueue()]
@@ -488,14 +466,14 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       initialDrafts.find(
         (draft) => draft.flow === 'study-path' && draft.isPlaceholder,
       )?.id || initialDrafts[0].id,
-    'from-notes':
+    'quick-create':
       initialDrafts.find(
-        (draft) => draft.flow === 'from-notes' && draft.isPlaceholder,
+        (draft) => draft.flow === 'quick-create' && draft.isPlaceholder,
       )?.id || initialDrafts[1].id,
   }))
   const openingMobileAiChatRef = useRef(false)
   const [aiProvider, setAiProvider] = useState(
-    () => readStudyPackAiSettings().provider || 'hosted',
+    () => readQuickCreateAiSettings().provider || 'hosted',
   )
   const [studyPathPrompt, setStudyPathPrompt] = useState('')
   const [studyPathPromptError, setStudyPathPromptError] = useState('')
@@ -505,29 +483,21 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     )
   const [quickDetailLevel] = useState<StudyMaterialDetailLevel>('medium')
   const [quickDifficulty] = useState('standard')
-  const [quickSourceText, setQuickSourceText] = useState('')
-  const [quickDashboardSource, setQuickDashboardSource] =
-    useState<QuickDashboardSource | null>(null)
-  const [quickCopiedTextDraft, setQuickCopiedTextDraft] = useState('')
-  const [quickCopiedTextOpen, setQuickCopiedTextOpen] = useState(false)
-  const [quickSourceFiles, setQuickSourceFiles] = useState<File[]>([])
-  const [quickSourcesExpanded, setQuickSourcesExpanded] = useState(false)
-  const [quickSourceStatus, setQuickSourceStatus] = useState('')
+  const [quickCreateStatus, setQuickCreateStatus] = useState('')
   const [sessionKeyRequest, setSessionKeyRequest] = useState<{
     provider: StrongAiProviderId
     model: string
     retry:
       | {
-          kind: 'from-notes'
+          kind: 'quick-create'
           resourceType: StudyMaterialResourceType
           sourceText: string
           title: string
-          sourceMode: QuickSourceMode
           retryOptions?: {
             draftId?: string
             detailLevel?: StudyMaterialDetailLevel
             difficulty?: string
-            provider?: StudyPackAiProvider
+            provider?: QuickCreateAiProvider
           }
         }
       | {
@@ -542,8 +512,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const [studyPathCancelSignals, setStudyPathCancelSignals] = useState<
     Record<string, number>
   >({})
-  const [pendingQuickSourceFocus, setPendingQuickSourceFocus] =
-    useState<QuickSourceFocus | null>(null)
   const [activeMaterialDraftId, setActiveMaterialDraftId] = useState<
     string | null
   >(null)
@@ -557,11 +525,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     loadWidget?: CustomWidget
     initialEditMode?: boolean
   } | null>(null)
-  const quickOptionsPanelRef = useRef<HTMLDivElement | null>(null)
-  const quickUploadButtonRef = useRef<HTMLLabelElement | null>(null)
-  const quickPasteButtonRef = useRef<HTMLButtonElement | null>(null)
-  const quickCopiedTextInputRef = useRef<HTMLTextAreaElement | null>(null)
-  const { createStudyPackDashboards } = useWorkspaceActions()
+  const { createQuickCreateDashboards } = useWorkspaceActions()
   const {
     addDashboards,
     addStudyPathContainer,
@@ -606,7 +570,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
     return {
       canCreateDashboard: isAdmin,
-      canCreateFromNotes: isAdmin,
+      canCreateQuickCreate: isAdmin,
       canCreateStudyPath: isAdmin,
       canCreateWidget: isAdmin,
     }
@@ -641,17 +605,17 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const refreshAiProvider = () => {
-      setAiProvider(readStudyPackAiSettings().provider || 'hosted')
+      setAiProvider(readQuickCreateAiSettings().provider || 'hosted')
     }
 
     window.addEventListener(
-      STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
+      QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
       refreshAiProvider,
     )
 
     return () => {
       window.removeEventListener(
-        STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
+        QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
         refreshAiProvider,
       )
     }
@@ -685,17 +649,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         }
         return
       }
-
-      if (detail.openQuickOptions) {
-        setQuickSourcesExpanded(true)
-      }
-      if (detail.quickSourceFocus) {
-        setQuickSourcesExpanded(true)
-        setPendingQuickSourceFocus(detail.quickSourceFocus)
-        if (detail.quickSourceFocus === 'paste') {
-          setQuickCopiedTextOpen(true)
-        }
-      }
       setActiveFlow('hub')
       setIsStudioOpen(true)
       if (isMobile) {
@@ -720,17 +673,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       })
       setIsStudioOpen(false)
       dispatchWorkspaceOnboardingEvent({ type: 'widget-editor-opened' })
-    }
-    const handleOpenStudyPack = () => {
-      if (permissions.canCreateFromNotes) {
-        setActiveMaterialDraftId(null)
-        setActiveFlow('hub')
-        setQuickSourcesExpanded(true)
-        setIsStudioOpen(true)
-        if (isMobile) {
-          setMobileSection('creation')
-        }
-      }
     }
     const handleOpenStudyPath = () => {
       if (permissions.canCreateStudyPath) {
@@ -761,7 +703,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
     window.addEventListener(OPEN_CREATE_HUB_EVENT, handleOpenCreateHub)
     window.addEventListener(OPEN_WIDGET_EDITOR_EVENT, handleOpenWidgetEditor)
-    window.addEventListener(OPEN_STUDY_PACK_EVENT, handleOpenStudyPack)
     window.addEventListener(OPEN_STUDY_PATH_EVENT, handleOpenStudyPath)
     window.addEventListener(OPEN_DASHBOARD_EDITOR_EVENT, handleOpenDashboard)
     window.addEventListener(CLOSE_CREATE_STUDIO_EVENT, handleCloseCreateStudio)
@@ -772,7 +713,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         OPEN_WIDGET_EDITOR_EVENT,
         handleOpenWidgetEditor,
       )
-      window.removeEventListener(OPEN_STUDY_PACK_EVENT, handleOpenStudyPack)
       window.removeEventListener(OPEN_STUDY_PATH_EVENT, handleOpenStudyPath)
       window.removeEventListener(
         OPEN_DASHBOARD_EDITOR_EVENT,
@@ -786,7 +726,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   }, [
     isMobile,
     mobileSection,
-    permissions.canCreateFromNotes,
+    permissions.canCreateQuickCreate,
     permissions.canCreateStudyPath,
   ])
 
@@ -823,9 +763,9 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     [reportCreationStatus],
   )
 
-  const reportFromNotesStatus = useCallback(
+  const reportQuickCreateStatus = useCallback(
     (state: WorkspaceCreationTaskState, message?: string) => {
-      reportCreationStatus('from-notes', state, message)
+      reportCreationStatus('quick-create', state, message)
     },
     [reportCreationStatus],
   )
@@ -942,7 +882,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       if (flow === 'study-path') {
         reportStudyPathStatus(state, message)
       } else {
-        reportFromNotesStatus(state, message)
+        reportQuickCreateStatus(state, message)
       }
     }
 
@@ -1270,45 +1210,42 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     }
 
     const storedSnapshot = getGenerationRetrySnapshot(draft.id)
-    const fromNotesRetry =
-      storedSnapshot?.flow === 'from-notes'
+    const quickCreateRetry =
+      storedSnapshot?.flow === 'quick-create'
         ? storedSnapshot
-        : draft.flow === 'from-notes' &&
+        : draft.flow === 'quick-create' &&
           draft.retryResourceType &&
           draft.retrySourceText &&
-          draft.retryTitle &&
-          draft.retrySourceMode
+          draft.retryTitle
         ? {
-            flow: 'from-notes' as const,
+            flow: 'quick-create' as const,
             resourceType: draft.retryResourceType,
             sourceText: draft.retrySourceText,
             title: draft.retryTitle,
-            sourceMode: draft.retrySourceMode,
             detailLevel:
               (draft.detailLevel as StudyMaterialDetailLevel) ||
               quickDetailLevel,
             difficulty: draft.retryDifficulty || quickDifficulty,
-            provider: (draft.aiProvider as StudyPackAiProvider) || aiProvider,
+            provider: (draft.aiProvider as QuickCreateAiProvider) || aiProvider,
           }
         : null
 
-    if (draft.flow === 'from-notes' && fromNotesRetry) {
-      void runDirectStudyPackCreate(
-        fromNotesRetry.resourceType,
-        fromNotesRetry.sourceText,
-        fromNotesRetry.title,
-        fromNotesRetry.sourceMode,
+    if (draft.flow === 'quick-create' && quickCreateRetry) {
+      void runDirectQuickCreateCreate(
+        quickCreateRetry.resourceType,
+        quickCreateRetry.sourceText,
+        quickCreateRetry.title,
         {
           draftId: draft.id,
-          detailLevel: fromNotesRetry.detailLevel,
-          difficulty: fromNotesRetry.difficulty,
-          provider: fromNotesRetry.provider,
+          detailLevel: quickCreateRetry.detailLevel,
+          difficulty: quickCreateRetry.difficulty,
+          provider: quickCreateRetry.provider,
         },
       )
       return
     }
 
-    if (draft.flow === 'from-notes') {
+    if (draft.flow === 'quick-create') {
       updateDraft(draft.id, {
         error:
           'Retry data is missing for this older failed job. Start it again from Creation once; future failed jobs keep a retry snapshot.',
@@ -1367,22 +1304,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     currentDashboard?.studyPath?.title ||
     currentDashboard?.name ||
     'Current dashboard'
-  const quickHasCustomSources =
-    quickSourceText.trim().length > 0 ||
-    quickSourceFiles.length > 0 ||
-    Boolean(quickDashboardSource)
-  const quickCustomSourceCount =
-    (quickSourceText.trim() ? 1 : 0) +
-    quickSourceFiles.length +
-    (quickDashboardSource ? 1 : 0)
-  const canRunQuickCreate = quickHasCustomSources || hasCurrentDashboardContext
-  const quickSourceLabel = quickHasCustomSources
-    ? `${quickCustomSourceCount} custom source${
-        quickCustomSourceCount === 1 ? '' : 's'
-      }`
-    : hasCurrentDashboardContext
-    ? currentDashboardTitle
-    : 'Sources required'
+  const canRunQuickCreate = hasCurrentDashboardContext
   const getNextQuickCreationIndex = (
     resourceType: StudyMaterialResourceType,
   ) => {
@@ -1402,223 +1324,55 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
     return usedIndexes.length > 0 ? Math.max(...usedIndexes) + 1 : 1
   }
-  const buildQuickCreationTitle = (
-    resourceType: StudyMaterialResourceType,
-    sourceMode: QuickSourceMode,
-  ) => {
+  const buildQuickCreationTitle = (resourceType: StudyMaterialResourceType) => {
     const label = quickCreateLabels[resourceType]
-    const contextTitle =
-      sourceMode === 'dashboard' ? currentDashboardTitle : quickSourceLabel
     return `${label} #${getNextQuickCreationIndex(
       resourceType,
-    )} · ${truncateQuickCreationContext(contextTitle)}`
-  }
-  useEffect(() => {
-    if (
-      !pendingQuickSourceFocus ||
-      activeFlow !== 'hub'
-    ) {
-      return
-    }
-
-    const focusTimer = window.setTimeout(() => {
-      quickOptionsPanelRef.current?.scrollIntoView({
-        block: 'nearest',
-        behavior: 'smooth',
-      })
-
-      if (pendingQuickSourceFocus === 'paste') {
-        const target =
-          quickCopiedTextInputRef.current || quickPasteButtonRef.current
-        target?.focus()
-      } else {
-        quickUploadButtonRef.current?.focus()
-      }
-
-      setPendingQuickSourceFocus(null)
-    }, 180)
-
-    return () => window.clearTimeout(focusTimer)
-  }, [
-    activeFlow,
-    pendingQuickSourceFocus,
-    quickCopiedTextOpen,
-  ])
-
-  const addQuickSourceFiles = (files: FileList | File[]) => {
-    const nextFiles = Array.from(files)
-    setQuickSourceFiles((current) => [
-      ...current,
-      ...nextFiles.filter(
-        (nextFile) =>
-          !current.some(
-            (file) =>
-              file.name === nextFile.name &&
-              file.size === nextFile.size &&
-              file.lastModified === nextFile.lastModified,
-          ),
-      ),
-    ])
-    setQuickSourcesExpanded(true)
-    setQuickSourceStatus('')
+    )} - ${truncateQuickCreationContext(currentDashboardTitle)}`
   }
 
-  const removeQuickSourceFile = (index: number) => {
-    setQuickSourceFiles((current) =>
-      current.filter((_, fileIndex) => fileIndex !== index),
-    )
-  }
-
-  const clearQuickSources = () => {
-    setQuickSourceText('')
-    setQuickDashboardSource(null)
-    setQuickCopiedTextDraft('')
-    setQuickCopiedTextOpen(false)
-    setQuickSourceFiles([])
-    setQuickSourceStatus('')
-  }
-
-  const addQuickCopiedText = () => {
-    const text = quickCopiedTextDraft.trim()
-    if (!text) {
-      setQuickSourceStatus('Paste copied text before adding it.')
-      return
-    }
-
-    setQuickSourceText((current) => appendQuickSourceText(current, text))
-    setQuickSourcesExpanded(true)
-    setQuickCopiedTextDraft('')
-    setQuickCopiedTextOpen(false)
-    setQuickSourceStatus('')
-  }
-
-  const handleQuickSourceDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    if (event.dataTransfer.files.length > 0) {
-      addQuickSourceFiles(event.dataTransfer.files)
-    }
-  }
-
-  const extractQuickSourceFile = async (file: File) => {
-    const fileName = file.name.toLowerCase()
-
-    if (
-      file.type.startsWith('text/') ||
-      fileName.endsWith('.txt') ||
-      fileName.endsWith('.md') ||
-      fileName.endsWith('.csv')
-    ) {
-      return `# ${file.name}\n\n${await file.text()}`
-    }
-
-    if (file.type === 'application/pdf' || fileName.endsWith('.pdf')) {
-      const extracted = await extractTextFromPdf(file)
-      return extracted.text
-    }
-
-    if (
-      file.type ===
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
-      fileName.endsWith('.pptx')
-    ) {
-      const extracted = await extractTextFromPptx(file)
-      return extracted.text
-    }
-
-    if (file.type.startsWith('image/')) {
-      const text = await extractRawNotesFromImage(file)
-      return text ? `# ${file.name}\n\n${text}` : ''
-    }
-
-    throw new Error(`${file.name} is not a supported source file.`)
-  }
-
-  const buildQuickSourceText = async (sourceMode: QuickSourceMode) => {
-    if (sourceMode === 'dashboard') {
-      setQuickSourceStatus('')
-      return hasCurrentDashboardContext ? currentDashboardContext : ''
-    }
-
-    const sourceParts: string[] = []
-
-    if (quickSourceText.trim()) {
-      sourceParts.push(`# Pasted text\n\n${quickSourceText.trim()}`)
-    }
-
-    if (quickDashboardSource) {
-      sourceParts.push(
-        `# ${quickDashboardSource.title}\n\n${quickDashboardSource.text}`,
-      )
-    }
-
-    if (quickSourceFiles.length > 0) {
-      setQuickSourceStatus(
-        `Reading ${quickSourceFiles.length} source file${
-          quickSourceFiles.length === 1 ? '' : 's'
-        }`,
-      )
-      for (const file of quickSourceFiles) {
-        const extracted = await extractQuickSourceFile(file)
-        if (extracted.trim()) {
-          sourceParts.push(extracted.trim())
-        }
-      }
-    }
-
-    if (sourceParts.length > 0) {
-      setQuickSourceStatus('')
-      return sourceParts.join('\n\n')
-    }
-
-    setQuickSourceStatus('')
-    return ''
-  }
-
-  const runDirectStudyPackCreate = async (
+  const runDirectQuickCreateCreate = async (
     resourceType: StudyMaterialResourceType,
     sourceText: string,
     title: string,
-    sourceMode: QuickSourceMode,
     retryOptions: {
       draftId?: string
       detailLevel?: StudyMaterialDetailLevel
       difficulty?: string
-      provider?: StudyPackAiProvider
+      provider?: QuickCreateAiProvider
     } = {},
   ) => {
     const effectiveDetailLevel = retryOptions.detailLevel || quickDetailLevel
     const effectiveDifficulty = retryOptions.difficulty || quickDifficulty
     const effectiveProvider = retryOptions.provider || aiProvider
     const credentials = isStrongAiProvider(effectiveProvider)
-      ? resolveStudyPackAiCredentials(effectiveProvider)
-      : resolveStudyPackAiCredentials()
+      ? resolveQuickCreateAiCredentials(effectiveProvider)
+      : resolveQuickCreateAiCredentials()
     if (isStrongAiProvider(effectiveProvider) && !credentials.apiToken) {
       setSessionKeyRequest({
         provider: effectiveProvider,
         model: credentials.model,
         retry: {
-          kind: 'from-notes',
+          kind: 'quick-create',
           resourceType,
           sourceText,
           title,
-          sourceMode,
+          
           retryOptions,
         },
       })
-      setQuickSourceStatus('')
+      setQuickCreateStatus('')
       return
     }
-    const draft = createGenerationDraft('from-notes', {
+    const draft = createGenerationDraft('quick-create', {
       quickCreate: true,
       title,
-      inputSummary:
-        sourceMode === 'dashboard' ? 'current dashboard' : 'sources',
+      inputSummary: 'current dashboard',
       selectedResourceType: resourceType,
       detailLevel: effectiveDetailLevel,
       aiProvider: effectiveProvider,
       retrySourceText: sourceText,
       retryTitle: title,
-      retrySourceMode: sourceMode,
       retryResourceType: resourceType,
       retryDifficulty: effectiveDifficulty,
     })
@@ -1629,18 +1383,18 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       status: 'generating',
     }
     saveGenerationRetrySnapshot(draftId, {
-      flow: 'from-notes',
+      flow: 'quick-create',
       resourceType,
       sourceText,
       title,
-      sourceMode,
+      
       detailLevel: effectiveDetailLevel,
       difficulty: effectiveDifficulty,
       provider: effectiveProvider,
     })
 
     setActiveFlow('hub')
-    setQuickSourceStatus('')
+    setQuickCreateStatus('')
     setGenerationDrafts((current) => {
       if (retryOptions.draftId) {
         return current.map((existingDraft) =>
@@ -1662,15 +1416,15 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       return [
         ...current.filter(
           (existingDraft) =>
-            existingDraft.flow !== 'from-notes' ||
+            existingDraft.flow !== 'quick-create' ||
             existingDraft.status !== 'editing',
         ),
         generationDraft,
       ]
     })
-    setActiveDraftByFlow((current) => ({ ...current, 'from-notes': draftId }))
+    setActiveDraftByFlow((current) => ({ ...current, 'quick-create': draftId }))
     dispatchWorkspaceCreationStatus({
-      task: 'from-notes',
+      task: 'quick-create',
       state: 'running',
       message: 'Creating study material',
     })
@@ -1690,13 +1444,13 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
               }...`,
             })
             dispatchWorkspaceCreationStatus({
-              task: 'from-notes',
+              task: 'quick-create',
               state: 'running',
               message: `Retrying ${quickCreateLabels[resourceType]} (${attempt}/${maxAttempts})...`,
             })
           }
 
-          const generated = await generateStudyPackWithAi({
+          const generated = await generateQuickCreateWithAi({
             provider: effectiveProvider,
             apiToken: credentials.apiToken,
             model: credentials.model,
@@ -1721,7 +1475,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
           }
 
           const nextTitle = title
-          const augmented = augmentStudyPackPracticeObjects(generated.objects, {
+          const augmented = augmentQuickCreatePracticeObjects(generated.objects, {
             packId: getPackId(nextTitle),
             title: nextTitle,
             rawNotes: sourceText,
@@ -1754,7 +1508,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
             warnings: [],
             sourceSummary: generated.sourceSummary || undefined,
           }
-          const widgets = createStudyPackOrchestratorWidgets(pack, {
+          const widgets = createQuickCreateOrchestratorWidgets(pack, {
             forceQuizBlockComponent: resourceType === 'quiz',
             focusedResourceType:
               resourceType === 'flashcards' || resourceType === 'quiz'
@@ -1777,16 +1531,13 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
               type: resourceType,
               title: nextTitle,
               sourceDashboardId:
-                sourceMode === 'dashboard' ? currentDashboard?.id : undefined,
+                currentDashboard?.id,
               sourceStudyPathId: currentDashboard?.studyPath?.pathId,
               sourceLessonId:
                 currentDashboard?.studyPath?.dashboards[
                   currentDashboard.studyPath.selectedIndex
                 ]?.dashboardKey,
-              sourceLabel:
-                sourceMode === 'dashboard'
-                  ? currentDashboardTitle
-                  : quickSourceLabel,
+              contextLabel: currentDashboardTitle,
               createdAt: generationDraft.createdAt,
               updatedAt: now,
               content: {
@@ -1796,13 +1547,13 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
               generationConfig: {
                 difficulty: effectiveDifficulty,
                 detailLevel: effectiveDetailLevel,
-                sourceMode,
+                
               },
             },
           })
           removeGenerationRetrySnapshot(draftId)
           dispatchWorkspaceCreationStatus({
-            task: 'from-notes',
+            task: 'quick-create',
             state: 'complete',
             message: `${quickCreateLabels[resourceType]} ready`,
           })
@@ -1830,11 +1581,11 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
           : `Could not create ${quickCreateLabels[resourceType]}.`
       updateDraft(draftId, { status: 'failed', error: message })
       dispatchWorkspaceCreationStatus({
-        task: 'from-notes',
+        task: 'quick-create',
         state: 'error',
         message,
       })
-      setQuickSourceStatus(message)
+      setQuickCreateStatus(message)
     } finally {
       if (
         generationAbortControllersRef.current[draftId] === generationController
@@ -1844,99 +1595,34 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
-  const runQuickCreate = async (
-    resourceType: StudyMaterialResourceType,
-    sourceMode: QuickSourceMode = quickHasCustomSources
-      ? 'sources'
-      : 'dashboard',
-  ) => {
-    const titleBase = quickCreateLabels[resourceType]
-    const usesSources = sourceMode === 'sources'
-    const hasUsableSource = usesSources
-      ? quickHasCustomSources
-      : hasCurrentDashboardContext
-
-    if (!hasUsableSource) {
-      openCreateFromMaterial(resourceType, 'upload')
-      setQuickSourceStatus(
-        `Add sources or open a dashboard`,
-      )
+  const runQuickCreate = async (resourceType: StudyMaterialResourceType) => {
+    if (!hasCurrentDashboardContext) {
+      setQuickCreateStatus('Open a study dashboard first.')
       return
     }
 
-    try {
-      const sourceText = await buildQuickSourceText(sourceMode)
-
-      if (!sourceText.trim()) {
-        openCreateFromMaterial(resourceType, 'upload')
-        setQuickSourceStatus(`Add material to create ${titleBase}.`)
-        return
-      }
-
-      await runDirectStudyPackCreate(
-        resourceType,
-        sourceText,
-        buildQuickCreationTitle(resourceType, sourceMode),
-        sourceMode,
-      )
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : `Could not read source material for ${titleBase}.`
-      setQuickSourceStatus(message)
-      openCreateFromMaterial(resourceType, 'upload')
-    }
-  }
-
-  const openCreateFromMaterial = (
-    resourceType?: StudyMaterialResourceType,
-    focus?: QuickSourceFocus,
-  ) => {
-    setActiveMaterialDraftId(null)
-    setQuickSourcesExpanded(true)
-    setQuickSourceStatus(
-      resourceType
-        ? `Add material to create ${quickCreateLabels[resourceType]}.`
-        : '',
+    setQuickCreateStatus('')
+    await runDirectQuickCreateCreate(
+      resourceType,
+      currentDashboardContext,
+      buildQuickCreationTitle(resourceType),
     )
-    if (focus) {
-      setPendingQuickSourceFocus(focus)
-      if (focus === 'paste') {
-        setQuickCopiedTextOpen(true)
-      }
-    }
   }
 
-  const handleQuickCreateCardClick = (
-    resourceType: StudyMaterialResourceType,
-  ) => {
-    if (!quickHasCustomSources && !hasCurrentDashboardContext) {
-      openCreateFromMaterial(resourceType, 'upload')
-      setQuickSourceStatus(
-        `Add sources or open a dashboard`,
-      )
-      return
-    }
-
-    runQuickCreate(resourceType)
-  }
-
-  const handleCollapsedQuickCreateClick = (
-    resourceType: StudyMaterialResourceType,
-  ) => {
-    if (!quickHasCustomSources && !hasCurrentDashboardContext) {
+  const handleCollapsedQuickCreateClick = (resourceType: StudyMaterialResourceType) => {
+    if (!hasCurrentDashboardContext) {
       setActiveMaterialDraftId(null)
-      setQuickSourcesExpanded(true)
       setActiveFlow('hub')
       setIsStudioOpen(true)
       if (isMobile) {
         window.dispatchEvent(new Event(CLOSE_DASHBOARD_CHAT_EVENT))
         setMobileSection('creation')
       }
+      setQuickCreateStatus('Open a study dashboard first.')
+      return
     }
 
-    handleQuickCreateCardClick(resourceType)
+    void runQuickCreate(resourceType)
   }
 
   const returnToCreateHub = () => {
@@ -1973,7 +1659,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       return
     }
 
-    createStudyPackDashboards({
+    createQuickCreateDashboards({
       dashboards: [
         {
           name: activeMaterial.title,
@@ -1999,7 +1685,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
   const beginInlineStudyPathGeneration = (
     prompt: string,
-    provider: StudyPackAiProvider,
+    provider: QuickCreateAiProvider,
   ) => {
     setStudyPathPromptError('')
     setActiveMaterialDraftId(null)
@@ -2030,11 +1716,11 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       return
     }
 
-    const effectiveProvider = readStudyPackAiSettings().provider || 'hosted'
+    const effectiveProvider = readQuickCreateAiSettings().provider || 'hosted'
     setAiProvider(effectiveProvider)
     const credentials = isStrongAiProvider(effectiveProvider)
-      ? resolveStudyPackAiCredentials(effectiveProvider)
-      : resolveStudyPackAiCredentials()
+      ? resolveQuickCreateAiCredentials(effectiveProvider)
+      : resolveQuickCreateAiCredentials()
     if (isStrongAiProvider(effectiveProvider) && !credentials.apiToken) {
       setStudyPathPromptError('')
       setSessionKeyRequest({
@@ -2088,7 +1774,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 whiteSpace: 'nowrap',
               }}
             >
-              From: {activeMaterial.sourceLabel}
+              From: {activeMaterial.contextLabel}
             </Typography>
           </Box>
         </Stack>
@@ -2139,24 +1825,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     </Box>
   ) : null
 
-  const importCurrentDashboardSource = () => {
-    if (!hasCurrentDashboardContext) {
-      setQuickSourceStatus('Open a dashboard with study content first.')
-      return
-    }
-
-    setQuickDashboardSource({
-      title: currentDashboardTitle,
-      text: currentDashboardContext,
-    })
-    setQuickSourcesExpanded(true)
-    setQuickSourceStatus(`Imported ${currentDashboardTitle}.`)
-  }
-
-  const renderQuickCreateCards = (
-    sourceMode: QuickSourceMode,
-    canCreate: boolean,
-  ) => (
+  const renderQuickCreateCards = (canCreate: boolean) => (
     <Box
       sx={{
         display: 'grid',
@@ -2174,7 +1843,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
           return (
             <Paper
-              key={`${sourceMode}-${resourceType}`}
+              key={resourceType}
               component="button"
               type="button"
               aria-label={`Quick Create ${displayLabel}`}
@@ -2217,123 +1886,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         },
       )}
     </Box>
-  )
-
-  const sourceControls = (
-    <Stack spacing={1.5}>
-      <Box
-        onDrop={handleQuickSourceDrop}
-        onDragOver={(event) => event.preventDefault()}
-        sx={{
-          minHeight: 210,
-          p: 2,
-          border: '1.5px dashed',
-          borderColor: quickHasCustomSources ? 'primary.main' : 'divider',
-          borderRadius: 2.25,
-          bgcolor: quickHasCustomSources
-            ? alpha(theme.palette.primary.main, 0.025)
-            : 'background.paper',
-          display: 'grid',
-          placeItems: 'center',
-          textAlign: 'center',
-        }}
-      >
-        <Stack spacing={1.2} alignItems="center" sx={{ width: '100%' }}>
-          <UploadFileIcon color="primary" />
-          <Box>
-            <Typography variant="subtitle1" fontWeight={900}>
-              Add sources
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Drop notes here, upload files, paste text, or import the current
-              dashboard.
-            </Typography>
-          </Box>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            <Button
-              ref={quickUploadButtonRef}
-              component="label"
-              variant="contained"
-              startIcon={<UploadFileIcon />}
-              sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 900 }}
-            >
-              Upload files
-              <input
-                hidden
-                type="file"
-                multiple
-                accept={quickSourceAcceptValue}
-                onChange={(event) => {
-                  if (event.target.files) {
-                    addQuickSourceFiles(event.target.files)
-                  }
-                  event.target.value = ''
-                }}
-              />
-            </Button>
-            <Button
-              ref={quickPasteButtonRef}
-              variant="outlined"
-              startIcon={<ContentPasteIcon />}
-              onClick={() => {
-                setQuickCopiedTextOpen(true)
-                setQuickSourceStatus('')
-              }}
-              sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 900 }}
-            >
-              Copied text
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<DashboardIcon />}
-              disabled={!hasCurrentDashboardContext}
-              onClick={importCurrentDashboardSource}
-              sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 900 }}
-            >
-              Import current dashboard
-            </Button>
-          </Stack>
-        </Stack>
-      </Box>
-      <Collapse in={quickCopiedTextOpen} unmountOnExit>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 1.5,
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 2,
-            bgcolor: 'background.paper',
-          }}
-        >
-          <Stack spacing={1.25}>
-            <TextField
-              label="Copied text"
-              inputRef={quickCopiedTextInputRef}
-              value={quickCopiedTextDraft}
-              onChange={(event) => setQuickCopiedTextDraft(event.target.value)}
-              placeholder="Paste notes, assignment text, transcript excerpts, or anything Sources should use."
-              multiline
-              minRows={5}
-              fullWidth
-            />
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
-              <Button
-                onClick={() => {
-                  setQuickCopiedTextDraft('')
-                  setQuickCopiedTextOpen(false)
-                }}
-              >
-                Cancel
-              </Button>
-              <Button variant="contained" onClick={addQuickCopiedText}>
-                Add copied text
-              </Button>
-            </Stack>
-          </Stack>
-        </Paper>
-      </Collapse>
-    </Stack>
   )
 
   const creationHubContent = (
@@ -2444,135 +1996,24 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         </Divider>
 
         <Stack spacing={1.25}>
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            gap={1}
-          >
+          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
             <Typography variant="subtitle2" fontWeight={950}>
               Quick create
             </Typography>
             <Chip
               size="small"
-              icon={quickHasCustomSources ? <UploadFileIcon /> : undefined}
-              label={
-                quickHasCustomSources
-                  ? 'From sources'
-                  : hasCurrentDashboardContext
-                  ? 'From current dashboard'
-                  : 'No dashboard or sources'
-              }
-              color={
-                canRunQuickCreate
-                  ? 'primary'
-                  : 'default'
-              }
-              variant={quickHasCustomSources ? 'filled' : 'outlined'}
+              label={hasCurrentDashboardContext ? `From ${currentDashboardTitle}` : 'Open a study dashboard first'}
+              color={canRunQuickCreate ? 'primary' : 'default'}
+              variant="outlined"
               sx={{ fontWeight: 900 }}
             />
           </Stack>
-
-          {renderQuickCreateCards(
-            quickHasCustomSources ? 'sources' : 'dashboard',
-            canRunQuickCreate,
-          )}
-
-          <Paper
-            ref={quickOptionsPanelRef}
-            elevation={0}
-            sx={{
-              border: '1.5px dashed',
-              borderColor: quickHasCustomSources
-                ? alpha(theme.palette.primary.main, 0.45)
-                : 'divider',
-              borderRadius: 2,
-              overflow: 'hidden',
-              bgcolor: quickHasCustomSources
-                ? alpha(theme.palette.primary.main, 0.035)
-                : 'background.paper',
-            }}
-          >
-            <Button
-              fullWidth
-              startIcon={<UploadFileIcon fontSize="small" />}
-              endIcon={
-                quickSourcesExpanded ? (
-                  <CloseIcon fontSize="small" />
-                ) : (
-                  <ChevronRightIcon
-                    fontSize="small"
-                    sx={{ transform: 'rotate(90deg)' }}
-                  />
-                )
-              }
-              onClick={() => setQuickSourcesExpanded((current) => !current)}
-              sx={{
-                justifyContent: 'flex-start',
-                px: 1.25,
-                py: 1,
-                textTransform: 'none',
-                fontWeight: 850,
-                color: quickHasCustomSources ? 'primary.main' : 'text.primary',
-                '& .MuiButton-endIcon': { ml: 'auto' },
-              }}
-            >
-              Add sources (optional)
-            </Button>
-            <Collapse in={quickSourcesExpanded} unmountOnExit>
-              <Box sx={{ p: 1.25, pt: 0 }}>{sourceControls}</Box>
-            </Collapse>
-          </Paper>
-
-          {(quickHasCustomSources || quickSourceStatus) && (
-            <Stack spacing={1}>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                gap={1}
-              >
-                <Typography variant="caption" fontWeight={900}>
-                  Sources
-                </Typography>
-                {quickHasCustomSources ? (
-                  <Button size="small" onClick={clearQuickSources}>
-                    Clear all
-                  </Button>
-                ) : null}
-              </Stack>
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
-                {quickSourceText.trim() ? (
-                  <Chip
-                    size="small"
-                    icon={<ContentPasteIcon />}
-                    label="Pasted text"
-                    onDelete={() => setQuickSourceText('')}
-                  />
-                ) : null}
-                {quickDashboardSource ? (
-                  <Chip
-                    size="small"
-                    icon={<DashboardIcon />}
-                    label={quickDashboardSource.title}
-                    onDelete={() => setQuickDashboardSource(null)}
-                  />
-                ) : null}
-                {quickSourceFiles.map((file, index) => (
-                  <Chip
-                    key={`${file.name}-${index}`}
-                    size="small"
-                    icon={<DescriptionIcon />}
-                    label={file.name}
-                    onDelete={() => removeQuickSourceFile(index)}
-                  />
-                ))}
-                {quickSourceStatus ? (
-                  <Chip size="small" color="primary" label={quickSourceStatus} />
-                ) : null}
-              </Stack>
-            </Stack>
-          )}
+          {renderQuickCreateCards(canRunQuickCreate)}
+          {quickCreateStatus ? (
+            <Typography variant="caption" color="text.secondary">
+              {quickCreateStatus}
+            </Typography>
+          ) : null}
         </Stack>
 
         {sortedQueueJobs.length > 0 ? (
@@ -2676,12 +2117,12 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                       ? [
                           elapsed ? `${elapsed} elapsed` : '',
                           estimate,
-                          draft.inputSummary || 'based on source',
+                          draft.inputSummary || 'based on dashboard context',
                         ]
                           .filter(Boolean)
                           .join(' - ')
                       : [
-                          draft.inputSummary || 'based on source',
+                          draft.inputSummary || 'based on dashboard context',
                           elapsed ? `${elapsed} elapsed` : '',
                           estimate,
                         ]
@@ -2944,7 +2385,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 flexDirection: 'column',
               }}
             >
-              <CreateStudyPathModal
+              <CreateStudyGuideModal
                 open
                 presentation="embedded"
                 onCollapse={isMobile ? undefined : returnToCreateHub}
@@ -2969,7 +2410,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   cancelDraftAndReturnToHub(draft.id, 'study-path')
                 }
                 onCreatePath={(payload) => {
-                  const dashboards = createStudyPackDashboards({
+                  const dashboards = createQuickCreateDashboards({
                     ...payload,
                     openInWorkspace: false,
                   })
@@ -3422,11 +2863,10 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
           return
         }
 
-        void runDirectStudyPackCreate(
+        void runDirectQuickCreateCreate(
           retry.resourceType,
           retry.sourceText,
           retry.title,
-          retry.sourceMode,
           retry.retryOptions,
         )
       }}

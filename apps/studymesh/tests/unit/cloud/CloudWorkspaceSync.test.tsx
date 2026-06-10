@@ -75,7 +75,7 @@ vi.mock('../../../src/studyGuides/storage', () => ({
   STUDY_GUIDES_CHANGED_EVENT: 'studyGuidesChanged',
 }))
 
-vi.mock('../../../src/studyPack/studyMeshGuideSeed', () => ({
+vi.mock('../../../src/studyGuides/studyMeshGuideSeed', () => ({
   clearStudyMeshGuideSeedMarker:
     cloudSyncMocks.clearStudyMeshGuideSeedMarker,
 }))

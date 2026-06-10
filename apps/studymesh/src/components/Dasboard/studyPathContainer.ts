@@ -7,7 +7,7 @@ import type {
   StudyPathDashboardPurpose,
   StudyPathPracticeType,
   StudyPathSourceRef,
-} from '../../studyPack/types'
+} from '../../quickCreate/types'
 
 interface SavedDashboardLike {
   id?: string

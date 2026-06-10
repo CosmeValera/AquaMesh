@@ -5,7 +5,7 @@ import {
   clearStudyMeshGuideSeedMarker,
   ensureStarterDashboards,
   seedStudyMeshGuideStudyPath,
-} from '../../../src/studyPack/studyMeshGuideSeed'
+} from '../../../src/studyGuides/studyMeshGuideSeed'
 
 describe('StudyMesh guide seed', () => {
   const storage = new Map<string, string>()

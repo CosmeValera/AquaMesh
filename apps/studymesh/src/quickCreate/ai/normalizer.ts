@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import {
   StudyObject,
-  StudyPackSourceFormat,
+  QuickCreateSourceFormat,
   StudyPathDashboardPurpose,
   StudyPathDashboardRole,
   StudyPathPracticeType,
@@ -115,9 +115,9 @@ export interface AiGenerationDebugTrace {
   localAiFailedAttempts?: unknown[]
 }
 
-export interface AiStudyPackDraft {
+export interface AiQuickCreateDraft {
   title?: string
-  sourceFormat?: StudyPackSourceFormat
+  sourceFormat?: QuickCreateSourceFormat
   rawNotes?: string
   dashboardRole?: StudyPathDashboardRole
   dashboardPurpose?: StudyPathDashboardPurpose
@@ -134,7 +134,7 @@ export interface AiStudyPackDraft {
 export type StudyMaterialResourceType = 'improvedNotes' | 'flashcards' | 'quiz'
 export type StudyMaterialDetailLevel = 'short' | 'medium' | 'long'
 
-export interface NormalizeAiStudyPackDraftOptions {
+export interface NormalizeAiQuickCreateDraftOptions {
   rawNotes?: string
   rawAiResponse?: string
   dashboardRole?: StudyPathDashboardRole
@@ -143,7 +143,7 @@ export interface NormalizeAiStudyPackDraftOptions {
 }
 
 const markdownFromImprovedNotesDraft = (
-  draft: AiStudyPackDraft,
+  draft: AiQuickCreateDraft,
   fallbackTitle: string,
 ): string => {
   const parts: string[] = []
@@ -211,10 +211,10 @@ const markdownFromImprovedNotesDraft = (
 }
 
 export const applyStudyMaterialResourceTypeToDraft = (
-  draft: AiStudyPackDraft,
+  draft: AiQuickCreateDraft,
   packId: string,
   resourceType?: StudyMaterialResourceType,
-): AiStudyPackDraft => {
+): AiQuickCreateDraft => {
   if (!resourceType) {
     return draft
   }
@@ -232,7 +232,7 @@ export const applyStudyMaterialResourceTypeToDraft = (
             kind: 'markdown',
             title: 'Expand on this',
             sourceLine: 1,
-            tags: ['study-pack', 'ai-generated', 'improved-notes'],
+            tags: ['quick-create', 'ai-generated', 'improved-notes'],
             markdown,
           },
         ]
@@ -284,7 +284,7 @@ const createBase = (
   id: `${packId}-${suffix}-${index + 1}`,
   title,
   sourceLine: index + 1,
-  tags: ['study-pack', 'ai-generated'],
+  tags: ['quick-create', 'ai-generated'],
 })
 
 const dedupe = (values: string[]): string[] => {
@@ -561,11 +561,11 @@ export const mapStrictContractToStudyObjects = (
   ]
 }
 
-export const normalizeAiStudyPackDraft = (
+export const normalizeAiQuickCreateDraft = (
   value: unknown,
   packId: string,
-  options: NormalizeAiStudyPackDraftOptions = {},
-): AiStudyPackDraft => {
+  options: NormalizeAiQuickCreateDraftOptions = {},
+): AiQuickCreateDraft => {
   const warnings: string[] = []
   const record =
     value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
@@ -573,7 +573,7 @@ export const normalizeAiStudyPackDraft = (
     typeof record.title === 'string' ? normalizeSpaces(record.title) : undefined
   const sourceFormat =
     typeof record.sourceFormat === 'string'
-      ? (record.sourceFormat as StudyPackSourceFormat)
+      ? (record.sourceFormat as QuickCreateSourceFormat)
       : undefined
   const rawNotes =
     typeof record.rawNotes === 'string' ? normalizeSpaces(record.rawNotes) : ''
@@ -587,7 +587,7 @@ export const normalizeAiStudyPackDraft = (
           issue.message
         }`,
     )
-    warnings.push('AI response did not match the strict Study Pack schema.')
+    warnings.push('AI response did not match the strict Quick Create schema.')
 
     return {
       title,

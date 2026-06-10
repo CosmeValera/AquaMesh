@@ -40,7 +40,7 @@ const createDashboard = (id: string, name: string, folder = 'Biology') => ({
     ],
   },
   description: 'Saved dashboard',
-  tags: ['study-pack'],
+  tags: ['quick-create'],
   isPublic: true,
   createdAt: '2026-05-19T10:00:00.000Z',
   updatedAt: '2026-05-19T10:00:00.000Z',

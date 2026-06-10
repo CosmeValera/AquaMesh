@@ -21,7 +21,7 @@ describe('StudyBlockView', () => {
     vi.mocked(localStorage.clear).mockImplementation(() => storage.clear())
   })
 
-  it('renders ListBlock items generated from study packs', () => {
+  it('renders ListBlock items generated from quick creates', () => {
     render(
       <StudyBlockView
         type="ListBlock"

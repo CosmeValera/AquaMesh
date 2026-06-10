@@ -14,8 +14,8 @@ vi.mock('../../../src/auth/supabaseClient', () => ({
 import {
   callHostedAiModel,
   createHostedAiTransport,
-} from '../../../src/studyPack/ai/hostedClient'
-import { HOSTED_AI_INSUFFICIENT_CREDITS_EVENT } from '../../../src/studyPack/ai/hostedCredits'
+} from '../../../src/quickCreate/ai/hostedClient'
+import { HOSTED_AI_INSUFFICIENT_CREDITS_EVENT } from '../../../src/quickCreate/ai/hostedCredits'
 
 const statusPayload = (studyCredits: number) => ({
   ok: true,

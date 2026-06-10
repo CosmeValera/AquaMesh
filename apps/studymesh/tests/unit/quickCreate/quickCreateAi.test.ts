@@ -6,7 +6,7 @@ const hostedAiClientMock = vi.hoisted(() => ({
   markHostedAiIntroSeen: vi.fn(),
 }))
 
-vi.mock('../../../src/studyPack/ai/hostedClient', () => ({
+vi.mock('../../../src/quickCreate/ai/hostedClient', () => ({
   callHostedAiModel: hostedAiClientMock.callHostedAiModel,
   createHostedAiTransport:
     ({ surface, requestId }: { surface: string; requestId?: string }) =>
@@ -27,12 +27,11 @@ vi.mock('../../../src/studyPack/ai/hostedClient', () => ({
 
 import {
   callLocalLanguageModel,
-  DEFAULT_STUDY_PACK_AI_MODEL,
-  extractNotesFromImageWithLocalLanguageModel,
+  DEFAULT_QUICK_CREATE_AI_MODEL,
   generateStudyPathWithLocalAi,
-  generateStudyPackWithAi as generateStudyPackWithProvider,
+  generateQuickCreateWithAi as generateQuickCreateWithProvider,
   generateStudyPathWithAi as generateStudyPathWithProvider,
-  generateStudyPackWithGemini as generateStudyPackWithAi,
+  generateQuickCreateWithGemini as generateQuickCreateWithAi,
   generateStudyPathWithGemini as generateStudyPathWithAi,
   isLocalAiGenerationError,
   applyStudyMaterialResourceTypeToDraft,
@@ -44,20 +43,20 @@ import {
   HOSTED_AI_INITIAL_FREE_CREDITS,
   HOSTED_AI_REFILL_CURRENCY,
   STUDY_CREDITS_LABEL,
-  normalizeAiStudyPackDraft,
-  normalizeLocalAiStudyPackDraft,
+  normalizeAiQuickCreateDraft,
+  normalizeLocalAiQuickCreateDraft,
   parseLocalAiJson,
-  readStudyPackAiSettings,
+  readQuickCreateAiSettings,
   resetLocalLanguageModelCooldownForTests,
-  resolveStudyPackAiCredentials,
-  saveStudyPackAiSettings,
-  STUDY_PACK_AI_SETTINGS_KEY,
+  resolveQuickCreateAiCredentials,
+  saveQuickCreateAiSettings,
+  QUICK_CREATE_AI_SETTINGS_KEY,
   testLocalLanguageModel,
-  clearStudyPackAiToken,
-  saveStudyPackAiSessionKey,
-} from '../../../src/studyPack/ai'
+  clearQuickCreateAiToken,
+  saveQuickCreateAiSessionKey,
+} from '../../../src/quickCreate/ai'
 
-const STUDY_PACK_AI_SESSION_KEY = 'studymesh-study-pack-ai-session-keys-v1'
+const QUICK_CREATE_AI_SESSION_KEY = 'studymesh-quick-create-ai-session-keys-v1'
 
 const localStudyPathPlanJson = (
   count: number,
@@ -152,7 +151,7 @@ const localStudyPathMarkdownFromPrompt = (
 - Keep practice focused on the current topic before mixing older material.`
 }
 
-describe('study pack AI settings', () => {
+describe('quick create AI settings', () => {
   let storage: Record<string, string>
 
   beforeEach(() => {
@@ -182,10 +181,10 @@ describe('study pack AI settings', () => {
   })
 
   it('uses default model and no token when settings are empty', () => {
-    expect(readStudyPackAiSettings()).toEqual({
+    expect(readQuickCreateAiSettings()).toEqual({
       provider: 'hosted',
       apiToken: '',
-      model: DEFAULT_STUDY_PACK_AI_MODEL,
+      model: DEFAULT_QUICK_CREATE_AI_MODEL,
       strongProviders: {
         gemini: {
           apiToken: '',
@@ -197,7 +196,7 @@ describe('study pack AI settings', () => {
         },
       },
     })
-    expect(resolveStudyPackAiCredentials()).toMatchObject({
+    expect(resolveQuickCreateAiCredentials()).toMatchObject({
       tokenSource: 'none',
     })
   })
@@ -242,7 +241,7 @@ describe('study pack AI settings', () => {
     expect(getHostedAiCreditCost('study-guide')).toBe(2)
   })
 
-  it('routes hosted Create From Notes through the hosted gateway without a browser API key', async () => {
+  it('routes hosted Quick Create through the hosted gateway without a browser API key', async () => {
     const hostedDraft = {
       sourceSummary: {
         title: 'Photosynthesis summary',
@@ -279,7 +278,7 @@ describe('study pack AI settings', () => {
       JSON.stringify(hostedDraft),
     )
 
-    const draft = await generateStudyPackWithProvider({
+    const draft = await generateQuickCreateWithProvider({
       provider: 'hosted',
       apiToken: '',
       model: '',
@@ -379,18 +378,18 @@ describe('study pack AI settings', () => {
 
   it('prefers settings token over env token', () => {
     process.env.GEMINI_API_KEY = 'env-token'
-    saveStudyPackAiSettings({
+    saveQuickCreateAiSettings({
       provider: 'gemini',
       apiToken: 'settings-token',
       model: 'gemini-test',
       strongProviders: {},
     })
 
-    expect(storage[STUDY_PACK_AI_SETTINGS_KEY]).not.toContain('settings-token')
-    expect(sessionStorage.getItem(STUDY_PACK_AI_SESSION_KEY)).toContain(
+    expect(storage[QUICK_CREATE_AI_SETTINGS_KEY]).not.toContain('settings-token')
+    expect(sessionStorage.getItem(QUICK_CREATE_AI_SESSION_KEY)).toContain(
       'settings-token',
     )
-    expect(resolveStudyPackAiCredentials()).toMatchObject({
+    expect(resolveQuickCreateAiCredentials()).toMatchObject({
       provider: 'gemini',
       apiToken: 'settings-token',
       model: 'gemini-test',
@@ -400,14 +399,14 @@ describe('study pack AI settings', () => {
 
   it('falls back to env token when settings token is empty', () => {
     process.env.GEMINI_API_KEY = 'env-token'
-    saveStudyPackAiSettings({
+    saveQuickCreateAiSettings({
       provider: 'gemini',
       apiToken: '',
       model: 'gemini-test',
       strongProviders: {},
     })
 
-    expect(resolveStudyPackAiCredentials()).toMatchObject({
+    expect(resolveQuickCreateAiCredentials()).toMatchObject({
       provider: 'gemini',
       apiToken: 'env-token',
       model: 'gemini-test',
@@ -416,20 +415,20 @@ describe('study pack AI settings', () => {
   })
 
   it('keeps Gemini and Cerebras credentials separate', () => {
-    saveStudyPackAiSettings({
+    saveQuickCreateAiSettings({
       provider: 'gemini',
       apiToken: 'gemini-token',
       model: 'gemini-test',
       strongProviders: {},
     })
-    saveStudyPackAiSettings({
-      ...readStudyPackAiSettings(),
+    saveQuickCreateAiSettings({
+      ...readQuickCreateAiSettings(),
       provider: 'cerebras',
       apiToken: 'cerebras-token',
       model: 'gpt-oss-120b',
     })
 
-    const settings = readStudyPackAiSettings()
+    const settings = readQuickCreateAiSettings()
     expect(settings.strongProviders.gemini).toEqual({
       apiToken: 'gemini-token',
       model: 'gemini-test',
@@ -438,7 +437,7 @@ describe('study pack AI settings', () => {
       apiToken: 'cerebras-token',
       model: 'gpt-oss-120b',
     })
-    expect(resolveStudyPackAiCredentials('cerebras')).toMatchObject({
+    expect(resolveQuickCreateAiCredentials('cerebras')).toMatchObject({
       provider: 'cerebras',
       apiToken: 'cerebras-token',
       model: 'gpt-oss-120b',
@@ -447,7 +446,7 @@ describe('study pack AI settings', () => {
   })
 
   it('migrates legacy localStorage tokens into sessionStorage and strips local storage', () => {
-    storage[STUDY_PACK_AI_SETTINGS_KEY] = JSON.stringify({
+    storage[QUICK_CREATE_AI_SETTINGS_KEY] = JSON.stringify({
       provider: 'cerebras',
       apiToken: 'legacy-gemini-token',
       model: 'gemini-legacy',
@@ -459,96 +458,96 @@ describe('study pack AI settings', () => {
       },
     })
 
-    const settings = readStudyPackAiSettings()
+    const settings = readQuickCreateAiSettings()
 
     expect(settings).toMatchObject({
       provider: 'cerebras',
       apiToken: 'legacy-cerebras-token',
       model: 'cerebras-legacy',
     })
-    expect(storage[STUDY_PACK_AI_SETTINGS_KEY]).not.toContain(
+    expect(storage[QUICK_CREATE_AI_SETTINGS_KEY]).not.toContain(
       'legacy-gemini-token',
     )
-    expect(storage[STUDY_PACK_AI_SETTINGS_KEY]).not.toContain(
+    expect(storage[QUICK_CREATE_AI_SETTINGS_KEY]).not.toContain(
       'legacy-cerebras-token',
     )
-    expect(sessionStorage.getItem(STUDY_PACK_AI_SESSION_KEY)).toContain(
+    expect(sessionStorage.getItem(QUICK_CREATE_AI_SESSION_KEY)).toContain(
       'legacy-cerebras-token',
     )
   })
 
   it('keeps missing selected strong provider credentials empty until a session key is saved', () => {
-    saveStudyPackAiSettings({
+    saveQuickCreateAiSettings({
       provider: 'cerebras',
       apiToken: '',
       model: 'gpt-oss-120b',
       strongProviders: {},
     })
 
-    expect(resolveStudyPackAiCredentials('cerebras')).toMatchObject({
+    expect(resolveQuickCreateAiCredentials('cerebras')).toMatchObject({
       provider: 'cerebras',
       apiToken: '',
       model: 'gpt-oss-120b',
       tokenSource: 'none',
     })
 
-    saveStudyPackAiSessionKey(
+    saveQuickCreateAiSessionKey(
       'cerebras',
       'session-cerebras-token',
       'gpt-oss-120b',
     )
 
-    expect(resolveStudyPackAiCredentials('cerebras')).toMatchObject({
+    expect(resolveQuickCreateAiCredentials('cerebras')).toMatchObject({
       provider: 'cerebras',
       apiToken: 'session-cerebras-token',
       model: 'gpt-oss-120b',
       tokenSource: 'settings',
     })
-    expect(storage[STUDY_PACK_AI_SETTINGS_KEY]).not.toContain(
+    expect(storage[QUICK_CREATE_AI_SETTINGS_KEY]).not.toContain(
       'session-cerebras-token',
     )
-    expect(sessionStorage.getItem(STUDY_PACK_AI_SESSION_KEY)).toContain(
+    expect(sessionStorage.getItem(QUICK_CREATE_AI_SESSION_KEY)).toContain(
       'session-cerebras-token',
     )
   })
 
   it('clears only the selected provider session key', () => {
-    saveStudyPackAiSettings({
+    saveQuickCreateAiSettings({
       provider: 'gemini',
       apiToken: 'gemini-session-token',
       model: 'gemini-test',
       strongProviders: {},
     })
-    saveStudyPackAiSettings({
-      ...readStudyPackAiSettings(),
+    saveQuickCreateAiSettings({
+      ...readQuickCreateAiSettings(),
       provider: 'cerebras',
       apiToken: 'cerebras-session-token',
       model: 'gpt-oss-120b',
     })
 
-    clearStudyPackAiToken()
+    clearQuickCreateAiToken()
 
-    expect(resolveStudyPackAiCredentials('cerebras')).toMatchObject({
+    expect(resolveQuickCreateAiCredentials('cerebras')).toMatchObject({
       apiToken: '',
       tokenSource: 'none',
     })
-    expect(resolveStudyPackAiCredentials('gemini')).toMatchObject({
+    expect(resolveQuickCreateAiCredentials('gemini')).toMatchObject({
       apiToken: 'gemini-session-token',
       tokenSource: 'settings',
     })
-    expect(storage[STUDY_PACK_AI_SETTINGS_KEY]).not.toContain('session-token')
+    expect(storage[QUICK_CREATE_AI_SETTINGS_KEY]).not.toContain('session-token')
   })
 
   it('falls back to Cerebras env token for Cerebras provider', () => {
     process.env.CEREBRAS_API_KEY = 'cerebras-env-token'
-    saveStudyPackAiSettings({
+    saveQuickCreateAiSettings({
       provider: 'cerebras',
       apiToken: '',
       model: 'gpt-oss-120b',
       strongProviders: {},
     })
 
-    expect(resolveStudyPackAiCredentials('cerebras')).toMatchObject({
+    expect(resolveQuickCreateAiCredentials('cerebras')).toMatchObject({
       provider: 'cerebras',
       apiToken: 'cerebras-env-token',
       model: 'gpt-oss-120b',
@@ -557,7 +556,7 @@ describe('study pack AI settings', () => {
   })
 })
 
-describe('study pack AI normalizer', () => {
+describe('quick create AI normalizer', () => {
   const strictContract = {
     title: 'French Subjunctive',
     sourceSummary: {
@@ -601,7 +600,7 @@ describe('study pack AI normalizer', () => {
   }
 
   it('maps a strict AI contract and drops invalid nested items', () => {
-    const draft = normalizeAiStudyPackDraft(
+    const draft = normalizeAiQuickCreateDraft(
       {
         title: 'Cell Biology',
         sourceSummary: {
@@ -677,7 +676,7 @@ describe('study pack AI normalizer', () => {
   })
 
   it('rejects loose AI objects instead of guessing kinds', () => {
-    const draft = normalizeAiStudyPackDraft(
+    const draft = normalizeAiQuickCreateDraft(
       {
         title: 'Loose',
         objects: [{ kind: 'flashcard', front: 'A', back: 'B' }],
@@ -687,13 +686,13 @@ describe('study pack AI normalizer', () => {
 
     expect(draft.objects).toEqual([])
     expect(draft.warnings).toEqual([
-      'AI response did not match the strict Study Pack schema.',
+      'AI response did not match the strict Quick Create schema.',
     ])
     expect(draft.debugTrace?.validatedContract).toBeNull()
   })
 
   it('enforces summary dashboards as recap-only', () => {
-    const draft = normalizeAiStudyPackDraft(strictContract, 'summary-pack', {
+    const draft = normalizeAiQuickCreateDraft(strictContract, 'summary-pack', {
       dashboardRole: 'summary',
     })
 
@@ -709,7 +708,7 @@ describe('study pack AI normalizer', () => {
   })
 
   it('enforces exercises dashboards as practice-only', () => {
-    const draft = normalizeAiStudyPackDraft(strictContract, 'exercise-pack', {
+    const draft = normalizeAiQuickCreateDraft(strictContract, 'exercise-pack', {
       dashboardRole: 'exercises',
     })
 
@@ -723,8 +722,8 @@ describe('study pack AI normalizer', () => {
     )
   })
 
-  it('filters normalized drafts to the selected Create From Notes resource type', () => {
-    const draft = normalizeAiStudyPackDraft(strictContract, 'resource-pack', {
+  it('filters normalized drafts to the selected Quick Create resource type', () => {
+    const draft = normalizeAiQuickCreateDraft(strictContract, 'resource-pack', {
       rawNotes:
         'Il faut que triggers the subjunctive and students should practice the rule.',
     })
@@ -776,7 +775,7 @@ describe('local AI helpers', () => {
 ]}
 \`\`\``)
 
-    const draft = normalizeLocalAiStudyPackDraft(parsed, 'local')
+    const draft = normalizeLocalAiQuickCreateDraft(parsed, 'local')
 
     expect(draft.objects.map((object) => object.kind)).toEqual([
       'markdown',
@@ -797,7 +796,7 @@ describe('local AI helpers', () => {
   })
 
   it('repairs local concept contracts and drops weak generated practice', () => {
-    const draft = normalizeLocalAiStudyPackDraft(
+    const draft = normalizeLocalAiQuickCreateDraft(
       {
         title: 'Atomic theories',
         summary: { content: 'Atomic theory changed through evidence.' },
@@ -865,7 +864,7 @@ describe('local AI helpers', () => {
   })
 
   it('builds usable multiple-choice quizzes from Local AI concepts when quiz output is missing', () => {
-    const draft = normalizeLocalAiStudyPackDraft(
+    const draft = normalizeLocalAiQuickCreateDraft(
       {
         title: 'Cell transport',
         summary: 'Cells move material across membranes in different ways.',
@@ -1364,7 +1363,7 @@ describe('local AI helpers', () => {
     expect(destroy).toHaveBeenCalled()
   })
 
-  it('uses 4 minutes for Local Study Pack prompting progress', async () => {
+  it('uses 4 minutes for Local Quick Create prompting progress', async () => {
     vi.useFakeTimers({ now: 0 })
     const events: Array<{
       phase: string
@@ -1379,7 +1378,7 @@ describe('local AI helpers', () => {
       }),
     })
 
-    const request = generateStudyPackWithProvider({
+    const request = generateQuickCreateWithProvider({
       provider: 'local',
       apiToken: '',
       model: '',
@@ -1423,7 +1422,7 @@ describe('local AI helpers', () => {
     expect(events.at(-1)).toMatchObject({ phase: 'timeout', percent: 100 })
   })
 
-  it('passes Create From Notes resource choice into Local AI prompts', async () => {
+  it('passes Quick Create resource choice into Local AI prompts', async () => {
     const prompt = vi.fn().mockResolvedValue(
       JSON.stringify({
         title: 'Atomic theories',
@@ -1450,7 +1449,7 @@ describe('local AI helpers', () => {
       create: vi.fn().mockResolvedValue({ prompt, destroy: vi.fn() }),
     })
 
-    const draft = await generateStudyPackWithProvider({
+    const draft = await generateQuickCreateWithProvider({
       provider: 'local',
       apiToken: '',
       model: '',
@@ -1468,7 +1467,7 @@ describe('local AI helpers', () => {
     expect(draft.objects.map((object) => object.kind)).toEqual(['qa'])
   })
 
-  it('retries Local AI Study Pack generation when JSON is invalid', async () => {
+  it('retries Local AI Quick Create generation when JSON is invalid', async () => {
     const prompt = vi
       .fn()
       .mockResolvedValueOnce('not json')
@@ -1489,7 +1488,7 @@ describe('local AI helpers', () => {
       create: vi.fn().mockResolvedValue({ prompt, destroy: vi.fn() }),
     })
 
-    const draft = await generateStudyPackWithProvider({
+    const draft = await generateQuickCreateWithProvider({
       provider: 'local',
       apiToken: '',
       model: '',
@@ -1641,49 +1640,6 @@ describe('local AI helpers', () => {
     })
   })
 
-  it('passes image modality when extracting image notes locally', async () => {
-    const destroy = vi.fn()
-    const prompt = vi.fn().mockResolvedValue('Expand on this notes')
-    const availability = vi.fn().mockResolvedValue('available')
-    const create = vi.fn().mockResolvedValue({ prompt, destroy })
-    const image = new Blob(['image'], { type: 'image/png' })
-    vi.stubGlobal('LanguageModel', { availability, create })
-
-    await expect(
-      extractNotesFromImageWithLocalLanguageModel(image),
-    ).resolves.toBe('Expand on this notes')
-    expect(availability).toHaveBeenCalledWith(
-      expect.objectContaining({
-        expectedInputs: [
-          { type: 'text', languages: ['en'] },
-          { type: 'image' },
-        ],
-      }),
-    )
-    expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        expectedInputs: [
-          { type: 'text', languages: ['en'] },
-          { type: 'image' },
-        ],
-        monitor: expect.any(Function),
-      }),
-    )
-    expect(prompt).toHaveBeenCalledWith(
-      [
-        {
-          role: 'user',
-          content: [
-            expect.objectContaining({ type: 'text' }),
-            { type: 'image', value: image },
-          ],
-        },
-      ],
-      expect.objectContaining({ signal: expect.any(Object) }),
-    )
-    expect(destroy).toHaveBeenCalled()
-  })
-
   it('times out local AI session creation, cools down, and destroys late sessions', async () => {
     vi.useFakeTimers({ now: 0 })
     const lateDestroy = vi.fn()
@@ -1759,7 +1715,7 @@ describe('local AI helpers', () => {
     vi.useRealTimers()
   })
 
-  it('does not auto-use Basic fallback when Local Study Pack prompting times out', async () => {
+  it('does not auto-use Basic fallback when Local Quick Create prompting times out', async () => {
     vi.useFakeTimers({ now: 0 })
     const destroy = vi.fn()
     const prompt = vi.fn().mockImplementation(() => new Promise(() => {}))
@@ -1771,7 +1727,7 @@ describe('local AI helpers', () => {
       }),
     })
 
-    const request = generateStudyPackWithProvider({
+    const request = generateQuickCreateWithProvider({
       provider: 'local',
       apiToken: '',
       model: '',
@@ -2687,7 +2643,7 @@ describe('local AI helpers', () => {
   })
 })
 
-describe('Gemini study pack client', () => {
+describe('Gemini quick create client', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
   })
@@ -3244,7 +3200,7 @@ describe('Gemini study pack client', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const draft = await generateStudyPackWithAi({
+    const draft = await generateQuickCreateWithAi({
       apiToken: 'test-token',
       model: 'gemini-test',
       title: 'Derivatives',
@@ -3303,7 +3259,7 @@ describe('Gemini study pack client', () => {
     expect(fetchMock.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal)
   })
 
-  it('passes Create From Notes resource choice into Gemini and filters extras', async () => {
+  it('passes Quick Create resource choice into Gemini and filters extras', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -3375,7 +3331,7 @@ describe('Gemini study pack client', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const draft = await generateStudyPackWithAi({
+    const draft = await generateQuickCreateWithAi({
       apiToken: 'test-token',
       model: 'gemini-test',
       title: 'Derivatives',
@@ -3463,7 +3419,7 @@ describe('Gemini study pack client', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const draft = await generateStudyPackWithAi({
+    const draft = await generateQuickCreateWithAi({
       apiToken: 'test-token',
       model: 'gemini-test',
       title: 'Subjunctive',
@@ -4097,7 +4053,7 @@ describe('Gemini study pack client', () => {
     )
     vi.stubGlobal('fetch', fetchMock)
 
-    const request = generateStudyPackWithAi({
+    const request = generateQuickCreateWithAi({
       apiToken: 'test-token',
       model: 'gemini-test',
       title: 'Derivatives',
@@ -4127,7 +4083,7 @@ describe('Gemini study pack client', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     await expect(
-      generateStudyPackWithAi({
+      generateQuickCreateWithAi({
         apiToken: 'test-token',
         model: 'gemini-test',
         title: 'Derivatives',
@@ -4178,7 +4134,7 @@ describe('Gemini study pack client', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const draft = await generateStudyPackWithAi({
+    const draft = await generateQuickCreateWithAi({
       strongProvider: 'cerebras',
       apiToken: 'cerebras-token',
       model: 'gpt-oss-120b',
@@ -4222,7 +4178,7 @@ describe('Gemini study pack client', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     await expect(
-      generateStudyPackWithAi({
+      generateQuickCreateWithAi({
         strongProvider: 'cerebras',
         apiToken: 'cerebras-token',
         model: 'gpt-oss-120b',

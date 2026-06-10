@@ -155,8 +155,8 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'lg'))
   const isDarkMode = theme.palette.mode === 'dark'
-  const studyPackHeaderColor = isDarkMode ? '#7FE3C4' : '#007C66'
-  const studyPackHeaderBackground = isDarkMode ? '#007C6652' : '#007C6624'
+  const studyGuideHeaderColor = isDarkMode ? '#7FE3C4' : '#007C66'
+  const studyGuideHeaderBackground = isDarkMode ? '#007C6652' : '#007C6624'
   const quickCreateHeaderColor = isDarkMode ? '#FFD166' : '#B26A00'
   const quickCreateHeaderBackground = isDarkMode ? '#FFD16633' : '#B26A0024'
   const customDashboardHeaderColor = isDarkMode ? '#C5D0D6' : '#455A64'
@@ -244,19 +244,19 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
     return folders
   }, {})
 
-  const isStudyPackDashboard = (dashboard: SavedDashboard) => {
+  const isQuickCreateDashboard = (dashboard: SavedDashboard) => {
     const folderName = normalizeFolderName(dashboard.folder).toLowerCase()
     return (
-      folderName === 'study packs' ||
-      dashboard.id.startsWith('study-pack-dashboard-') ||
-      Boolean(dashboard.tags?.includes('study-pack'))
+      folderName === 'quick creates' ||
+      dashboard.id.startsWith('quick-create-dashboard-') ||
+      Boolean(dashboard.tags?.includes('quick-create'))
     )
   }
 
-  const studyPackDashboards =
-    visibleCustomDashboards.filter(isStudyPackDashboard)
-  const rawStudyPackFolders = Object.entries(
-    studyPackDashboards.reduce<Record<string, SavedDashboard[]>>(
+  const quickCreateDashboards =
+    visibleCustomDashboards.filter(isQuickCreateDashboard)
+  const rawQuickCreateFolders = Object.entries(
+    quickCreateDashboards.reduce<Record<string, SavedDashboard[]>>(
       (folders, dashboard) => {
         const folderName = normalizeFolderName(dashboard.folder)
         folders[folderName] = folders[folderName] || []
@@ -274,40 +274,21 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
       studyPath: studyGuide.studyPath,
     }),
   )
-  const legacyStudyPathGroups: StudyPathMenuGroup[] = rawStudyPackFolders
-    .map(([folderName, dashboards]) => {
-      const orderedDashboards = [...dashboards].sort(
-        (firstDashboard, secondDashboard) =>
-          getDashboardCreatedTime(firstDashboard) -
-          getDashboardCreatedTime(secondDashboard),
-      )
-      const studyPath = createStudyPathContainerState(orderedDashboards)
-
-      return studyPath
-        ? {
-            id: studyPath.pathId || folderName,
-            folderName,
-            dashboards: orderedDashboards,
-            studyPath,
-          }
-        : null
-    })
-    .filter((group): group is StudyPathMenuGroup => Boolean(group))
-  const studyPathGroups = [...storedStudyPathGroups, ...legacyStudyPathGroups]
+  const studyPathGroups = storedStudyPathGroups
   const studyPathFolderNames = new Set(
     studyPathGroups.map((group) => group.folderName),
   )
-  const studyPackFolders = rawStudyPackFolders.filter(
+  const quickCreateFolders = rawQuickCreateFolders.filter(
     ([folderName]) => !studyPathFolderNames.has(folderName),
   )
   const customDashboardFolders = Object.entries(dashboardsByFolder).filter(
     ([folderName, dashboards]) =>
-      folderName.toLowerCase() !== 'study packs' &&
-      dashboards.some((dashboard) => !isStudyPackDashboard(dashboard)),
+      folderName.toLowerCase() !== 'quick creates' &&
+      dashboards.some((dashboard) => !isQuickCreateDashboard(dashboard)),
   )
   const hasVisibleLibraryItems =
     studyPathGroups.length > 0 ||
-    studyPackFolders.length > 0 ||
+    quickCreateFolders.length > 0 ||
     customDashboardFolders.length > 0
 
   const getFolderColor = (folderName: string, dashboards: SavedDashboard[]) =>
@@ -581,18 +562,18 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
                 py: 0.7,
                 fontWeight: 800,
                 mt: 0.5,
-                color: studyPackHeaderColor,
+                color: studyGuideHeaderColor,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
-                bgcolor: studyPackHeaderBackground,
+                bgcolor: studyGuideHeaderBackground,
                 borderLeft: '4px solid',
-                borderLeftColor: studyPackHeaderColor,
+                borderLeftColor: studyGuideHeaderColor,
               }}
             >
               <AutoStoriesIcon
                 fontSize="small"
-                sx={{ color: studyPackHeaderColor }}
+                sx={{ color: studyGuideHeaderColor }}
               />
               <Box
                 component="span"
@@ -738,7 +719,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
           </Box>
         )}
 
-        {studyPackFolders.length > 0 && (
+        {quickCreateFolders.length > 0 && (
           <Box component="div">
             <Typography
               component="div"
@@ -773,7 +754,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
                 Quick Create Results
               </Box>
             </Typography>
-            {studyPackFolders.map(([folderName, dashboards]) => {
+            {quickCreateFolders.map(([folderName, dashboards]) => {
               const folderColor = getFolderColor(folderName, dashboards)
               const orderedDashboards = [...dashboards].reverse()
               const isFolderExpanded =
@@ -933,7 +914,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
             {customDashboardFolders.map(([folderName, dashboards]) => {
               const folderColor = getFolderColor(folderName, dashboards)
               const nonStudyDashboards = dashboards.filter(
-                (dashboard) => !isStudyPackDashboard(dashboard),
+                (dashboard) => !isQuickCreateDashboard(dashboard),
               )
               const orderedNonStudyDashboards = [
                 ...nonStudyDashboards,

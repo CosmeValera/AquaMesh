@@ -1,4 +1,4 @@
-export type WorkspaceCreationTask = 'study-path' | 'from-notes'
+export type WorkspaceCreationTask = 'study-path' | 'quick-create'
 
 export type WorkspaceCreationTaskState =
   | 'idle'
@@ -18,7 +18,7 @@ export const WORKSPACE_CREATION_STATUS_EVENT =
 export const workspaceCreationTaskLabels: Record<WorkspaceCreationTask, string> =
   {
     'study-path': 'Create Study Guide',
-    'from-notes': 'Create From Notes',
+    'quick-create': 'Quick Create',
   }
 
 export const dispatchWorkspaceCreationStatus = (

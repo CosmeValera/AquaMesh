@@ -1,23 +1,23 @@
 export {
-  DEFAULT_STUDY_PACK_AI_MODEL,
+  DEFAULT_QUICK_CREATE_AI_MODEL,
   getEnvCerebrasApiKey,
-  STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
-  STUDY_PACK_AI_SETTINGS_KEY,
-  clearStudyPackAiToken,
+  QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
+  QUICK_CREATE_AI_SETTINGS_KEY,
+  clearQuickCreateAiToken,
   getEnvGeminiApiKey,
   getEnvStrongAiProviderApiKey,
-  getStudyPackAiCredentialForProvider,
-  readStudyPackAiSettings,
-  resolveStudyPackAiCredentials,
-  saveStudyPackAiSessionKey,
-  saveStudyPackAiSettings,
+  getQuickCreateAiCredentialForProvider,
+  readQuickCreateAiSettings,
+  resolveQuickCreateAiCredentials,
+  saveQuickCreateAiSessionKey,
+  saveQuickCreateAiSettings,
 } from './settings'
 export type {
   StrongAiProviderCredential,
   StrongAiProviderCredentials,
-  StudyPackAiSettings,
+  QuickCreateAiSettings,
 } from './settings'
-export type { StudyPackAiProvider } from './settings'
+export type { QuickCreateAiProvider } from './settings'
 export {
   callStrongAiModel,
   DEFAULT_STRONG_AI_PROVIDER,
@@ -29,36 +29,32 @@ export type { StrongAiCallOptions, StrongAiProviderId } from './strongProviders'
 export type {
   AiStudyPathDashboardDraft,
   AiStudyPathDraft,
-  ExtractRawNotesWithAiOptions,
-  GenerateStudyPackWithAiOptions,
+  GenerateQuickCreateWithAiOptions,
   GenerateStudyPathWithAiOptions,
   StrongAiModelTransport,
 } from './strongGeneration'
-export { extractRawNotesWithAi } from './strongGeneration'
 export {
-  generateStudyPackWithAi as generateStudyPackWithGemini,
+  generateQuickCreateWithAi as generateQuickCreateWithGemini,
   generateStudyPathWithAi as generateStudyPathWithGemini,
 } from './strongGeneration'
-export { generateStudyPackWithAi, generateStudyPathWithAi } from './provider'
+export { generateQuickCreateWithAi, generateStudyPathWithAi } from './provider'
 export {
   assertRoleObjectsAreClean,
   filterStudyObjectsForDashboardRole,
   applyStudyMaterialResourceTypeToDraft,
-  normalizeAiStudyPackDraft,
+  normalizeAiQuickCreateDraft,
   studyObjectAllowedForDashboardRole,
 } from './normalizer'
 export type {
   AiGenerationDebugTrace,
   AiSourceSummary,
-  AiStudyPackDraft,
+  AiQuickCreateDraft,
   StrictAiDashboardContract,
   StudyMaterialDetailLevel,
   StudyMaterialResourceType,
 } from './normalizer'
 export {
   callLocalLanguageModel,
-  extractNotesFromImageWithLocalLanguageModel,
-  getLocalLanguageModelImageAvailability,
   getLocalLanguageModelAvailability,
   isLocalLanguageModelSupported,
   resetLocalLanguageModelCooldownForTests,
@@ -83,7 +79,7 @@ export type {
 export {
   generateStudyPathWithLocalAi,
   isLocalAiGenerationError,
-  normalizeLocalAiStudyPackDraft,
+  normalizeLocalAiQuickCreateDraft,
   parseLocalAiJson,
 } from './localGeneration'
 export type {

@@ -3,7 +3,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import SettingsDialog from '../../../../src/components/WidgetEditor/components/dialogs/SettingsDialog'
-import { STUDY_CREDITS_LABEL } from '../../../../src/studyPack/ai/hostedCredits'
+import { STUDY_CREDITS_LABEL } from '../../../../src/quickCreate/ai/hostedCredits'
 import { STUDY_GUIDES_STORAGE_KEY } from '../../../../src/studyGuides/storage'
 
 const hostedAiStatus = vi.hoisted(() => ({
@@ -20,7 +20,7 @@ const hostedAiStatus = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('../../../../src/studyPack/ai', () => ({
+vi.mock('../../../../src/quickCreate/ai', () => ({
   STRONG_AI_PROVIDERS: {
     gemini: {
       id: 'gemini',
@@ -37,7 +37,7 @@ vi.mock('../../../../src/studyPack/ai', () => ({
       supportsImageInput: false,
     },
   },
-  DEFAULT_STUDY_PACK_AI_MODEL: 'gemini-test-model',
+  DEFAULT_QUICK_CREATE_AI_MODEL: 'gemini-test-model',
   DEFAULT_HOSTED_AI_CREDIT_PACK_ID: 'popular',
   HOSTED_AI_CREDIT_PACKS: [
     {
@@ -79,7 +79,7 @@ vi.mock('../../../../src/studyPack/ai', () => ({
   getEnvGeminiApiKey: vi.fn(() => ''),
   getEnvStrongAiProviderApiKey: vi.fn(() => ''),
   markHostedAiIntroSeen: vi.fn(),
-  getStudyPackAiCredentialForProvider: vi.fn((settings, provider) => ({
+  getQuickCreateAiCredentialForProvider: vi.fn((settings, provider) => ({
     apiToken: settings.strongProviders?.[provider]?.apiToken || '',
     model:
       settings.strongProviders?.[provider]?.model ||
@@ -88,17 +88,17 @@ vi.mock('../../../../src/studyPack/ai', () => ({
   isStrongAiProvider: vi.fn(
     (provider) => provider === 'gemini' || provider === 'cerebras',
   ),
-  readStudyPackAiSettings: vi.fn(() => ({
+  readQuickCreateAiSettings: vi.fn(() => ({
     provider: 'hosted',
     apiToken: '',
     model: 'gemini-test-model',
     strongProviders: {},
   })),
-  saveStudyPackAiSettings: vi.fn(),
+  saveQuickCreateAiSettings: vi.fn(),
   testLocalLanguageModel: vi.fn(),
 }))
 
-vi.mock('../../../../src/studyPack/studyMeshGuideSeed', () => ({
+vi.mock('../../../../src/studyGuides/studyMeshGuideSeed', () => ({
   seedStudyMeshGuideStudyPath: vi.fn(() => true),
 }))
 

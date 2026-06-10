@@ -23,10 +23,10 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import RouteIcon from '@mui/icons-material/Route'
 import {
-  createStudyPackOrchestratorWidgets,
+  createQuickCreateOrchestratorWidgets,
   StudyObject,
-  StudyPackDashboardLayoutMode,
-} from '../../studyPack'
+  QuickCreateDashboardLayoutMode,
+} from '../../quickCreate'
 import {
   AiGenerationDebugTrace,
   AiStudyPathDashboardDraft,
@@ -38,16 +38,16 @@ import {
   isLocalAiGenerationError,
   LocalAiGenerationFailureDebug,
   LocalAiProgressEvent,
-  readStudyPackAiSettings,
-  resolveStudyPackAiCredentials,
+  readQuickCreateAiSettings,
+  resolveQuickCreateAiCredentials,
   StrongAiProviderId,
-  STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
-  StudyPackAiProvider,
-} from '../../studyPack/ai'
+  QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
+  QuickCreateAiProvider,
+} from '../../quickCreate/ai'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
-import StrongAiSessionKeyDialog from './StrongAiSessionKeyDialog'
+import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
 
-interface CreateStudyPathModalProps {
+interface CreateStudyGuideModalProps {
   open: boolean
   onClose: () => void
   onCreatePath: (payload: {
@@ -55,8 +55,8 @@ interface CreateStudyPathModalProps {
     openInWorkspace?: boolean
     dashboards: Array<{
       name: string
-      widgets: ReturnType<typeof createStudyPackOrchestratorWidgets>
-      layoutMode?: StudyPackDashboardLayoutMode
+      widgets: ReturnType<typeof createQuickCreateOrchestratorWidgets>
+      layoutMode?: QuickCreateDashboardLayoutMode
       folderName: string
     }>
   }) => void
@@ -77,7 +77,7 @@ interface CreateStudyPathModalProps {
   initialPrompt?: string
 }
 
-const providerLabels: Record<StudyPackAiProvider, string> = {
+const providerLabels: Record<QuickCreateAiProvider, string> = {
   local: 'Google Local AI',
   gemini: 'Own Gemini API token',
   cerebras: 'Own Cerebras API key',
@@ -99,14 +99,14 @@ interface GeminiTimedProgress {
   percent: number
 }
 
-const getProviderPathProgressLabel = (provider: StudyPackAiProvider): string =>
+const getProviderPathProgressLabel = (provider: QuickCreateAiProvider): string =>
   provider === 'local'
     ? 'Generating dashboards with Google Local AI...'
     : isStrongAiProvider(provider)
       ? `Generating ordered dashboards with ${providerLabels[provider]}...`
       : 'Generating ordered dashboards with Hosted AI...'
 
-const getProviderPathDescription = (provider: StudyPackAiProvider): string =>
+const getProviderPathDescription = (provider: QuickCreateAiProvider): string =>
   provider === 'local'
     ? 'Local AI is running on your device. StudyMesh plans the path first, then generates each lesson dashboard with its own estimated timer.'
     : isStrongAiProvider(provider)
@@ -320,7 +320,7 @@ const getObjectPreview = (object?: StudyObject) => {
 
 const getDashboardPreviewSummary = (
   dashboard: AiStudyPathDashboardDraft,
-  provider: StudyPackAiProvider,
+  provider: QuickCreateAiProvider,
 ): string =>
   provider === 'local' && !dashboard.summary
     ? truncate(getObjectPreview(dashboard.objects[0]))
@@ -422,7 +422,7 @@ const combinedDebugTrace = (
 const makeStudyPathId = (title: string) =>
   title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'study-path'
 
-const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
+const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
   open,
   onClose,
   onCreatePath,
@@ -443,7 +443,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   const [prompt, setPrompt] = useState(
     initialPrompt || DEFAULT_STUDY_PATH_PROMPT,
   )
-  const [aiProvider, setAiProvider] = useState<StudyPackAiProvider>('hosted')
+  const [aiProvider, setAiProvider] = useState<QuickCreateAiProvider>('hosted')
   const [draft, setDraft] = useState<AiStudyPathDraft | null>(null)
   const [reviewFolderName, setReviewFolderName] = useState('')
   const [openInWorkspace, setOpenInWorkspace] = useState(true)
@@ -541,7 +541,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
 
   React.useEffect(() => {
     const refreshAiProvider = () => {
-      const provider = readStudyPackAiSettings().provider || 'hosted'
+      const provider = readQuickCreateAiSettings().provider || 'hosted'
       setAiProvider(provider)
     }
 
@@ -553,13 +553,13 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     }
 
     window.addEventListener(
-      STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
+      QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
       refreshAiProvider,
     )
 
     return () => {
       window.removeEventListener(
-        STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
+        QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
         refreshAiProvider,
       )
     }
@@ -595,7 +595,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   }
 
   const generatePath = async (promptOverride?: string) => {
-    const settingsProvider = readStudyPackAiSettings().provider || 'hosted'
+    const settingsProvider = readQuickCreateAiSettings().provider || 'hosted'
     const effectiveAiProvider = settingsProvider
     setAiProvider(effectiveAiProvider)
     const basePrompt =
@@ -608,8 +608,8 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     }
 
     const credentials = isStrongAiProvider(effectiveAiProvider)
-      ? resolveStudyPackAiCredentials(effectiveAiProvider)
-      : resolveStudyPackAiCredentials()
+      ? resolveQuickCreateAiCredentials(effectiveAiProvider)
+      : resolveQuickCreateAiCredentials()
     if (isStrongAiProvider(effectiveAiProvider) && !credentials.apiToken) {
       setSessionKeyRequest({
         provider: effectiveAiProvider,
@@ -777,7 +777,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
 
   const buildPathPayload = (
     pathDraft: AiStudyPathDraft,
-  ): Parameters<CreateStudyPathModalProps['onCreatePath']>[0] => {
+  ): Parameters<CreateStudyGuideModalProps['onCreatePath']>[0] => {
     const effectiveFolder =
       reviewFolderName.trim() ||
       pathDraft.folderName ||
@@ -802,7 +802,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
         name: dashboard.title || `${pathDraft.title} ${index + 1}`,
         folderName: effectiveFolder,
         layoutMode: 'smart',
-        widgets: createStudyPackOrchestratorWidgets(
+        widgets: createQuickCreateOrchestratorWidgets(
           {
             id: makePackId(dashboard.title || pathDraft.title, index),
             title: dashboard.title || `${pathDraft.title} ${index + 1}`,
@@ -1512,4 +1512,4 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   )
 }
 
-export default CreateStudyPathModal
+export default CreateStudyGuideModal

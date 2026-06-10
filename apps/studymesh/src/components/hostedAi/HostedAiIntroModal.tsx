@@ -14,10 +14,10 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import TollIcon from '@mui/icons-material/Toll'
 
 import {
-  readStudyPackAiSettings,
-  saveStudyPackAiSettings,
+  readQuickCreateAiSettings,
+  saveQuickCreateAiSettings,
   STUDY_CREDITS_LABEL,
-} from '../../studyPack/ai'
+} from '../../quickCreate/ai'
 import { useAuth } from '../../auth/AuthProvider'
 import { useHostedAiStatus } from './useHostedAiStatus'
 
@@ -31,8 +31,8 @@ const HostedAiIntroModal: React.FC = () => {
   )
 
   const saveProvider = (provider: 'hosted' | 'gemini') => {
-    const current = readStudyPackAiSettings()
-    saveStudyPackAiSettings({
+    const current = readQuickCreateAiSettings()
+    saveQuickCreateAiSettings({
       ...current,
       provider,
     })

@@ -14,7 +14,7 @@ vi.mock('../../../src/auth/supabaseClient', () => ({
 import {
   confirmHostedAiCreditCheckout,
   createHostedAiCreditCheckout,
-} from '../../../src/studyPack/ai/hostedBilling'
+} from '../../../src/quickCreate/ai/hostedBilling'
 
 describe('hosted Study Credits billing client', () => {
   beforeEach(() => {

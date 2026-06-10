@@ -1,5 +1,5 @@
 import {
-  DEFAULT_STUDY_PACK_AI_MODEL,
+  DEFAULT_QUICK_CREATE_AI_MODEL,
   DEFAULT_STRONG_AI_PROVIDER,
   getEnvStrongProviderApiKey,
   isStrongAiProvider,
@@ -7,7 +7,7 @@ import {
   STRONG_AI_PROVIDERS,
 } from './strongProviders'
 
-export type StudyPackAiProvider = 'local' | 'hosted' | StrongAiProviderId
+export type QuickCreateAiProvider = 'local' | 'hosted' | StrongAiProviderId
 
 export interface StrongAiProviderCredential {
   apiToken: string
@@ -18,21 +18,20 @@ export type StrongAiProviderCredentials = Partial<
   Record<StrongAiProviderId, StrongAiProviderCredential>
 >
 
-export interface StudyPackAiSettings {
-  provider?: StudyPackAiProvider
+export interface QuickCreateAiSettings {
+  provider?: QuickCreateAiProvider
   apiToken: string
   model: string
   strongProviders?: StrongAiProviderCredentials
 }
 
-export const STUDY_PACK_AI_SETTINGS_KEY = 'studymesh-study-pack-ai-settings-v1'
-export const STUDY_PACK_AI_SESSION_KEY =
-  'studymesh-study-pack-ai-session-keys-v1'
-const LEGACY_STUDY_PACK_AI_SETTINGS_KEY = 'aquamesh-study-pack-ai-settings-v1'
-export const STUDY_PACK_AI_SETTINGS_CHANGED_EVENT =
-  'studymesh-study-pack-ai-settings-changed'
+export const QUICK_CREATE_AI_SETTINGS_KEY = 'studymesh-quick-create-ai-settings-v1'
+export const QUICK_CREATE_AI_SESSION_KEY =
+  'studymesh-quick-create-ai-session-keys-v1'
+export const QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT =
+  'studymesh-quick-create-ai-settings-changed'
 
-export { DEFAULT_STUDY_PACK_AI_MODEL }
+export { DEFAULT_QUICK_CREATE_AI_MODEL }
 
 export const getEnvGeminiApiKey = (): string =>
   getEnvStrongProviderApiKey('gemini')
@@ -44,7 +43,7 @@ export const getEnvStrongAiProviderApiKey = (
   provider: StrongAiProviderId,
 ): string => getEnvStrongProviderApiKey(provider)
 
-const isStudyPackAiProvider = (value: unknown): value is StudyPackAiProvider =>
+const isQuickCreateAiProvider = (value: unknown): value is QuickCreateAiProvider =>
   value === 'local' ||
   value === 'hosted' ||
   isStrongAiProvider(value)
@@ -79,7 +78,7 @@ const normalizeStrongProviders = (
 
 const readSessionStrongProviders = (): StrongAiProviderCredentials => {
   try {
-    const stored = window.sessionStorage.getItem(STUDY_PACK_AI_SESSION_KEY)
+    const stored = window.sessionStorage.getItem(QUICK_CREATE_AI_SESSION_KEY)
     if (!stored) {
       return {}
     }
@@ -101,7 +100,7 @@ const writeSessionStrongProvider = (
     strongProviders[provider] = credential
 
     window.sessionStorage.setItem(
-      STUDY_PACK_AI_SESSION_KEY,
+      QUICK_CREATE_AI_SESSION_KEY,
       JSON.stringify(strongProviders),
     )
   } catch {
@@ -122,7 +121,7 @@ const clearSessionStrongProviderToken = (
     }
 
     window.sessionStorage.setItem(
-      STUDY_PACK_AI_SESSION_KEY,
+      QUICK_CREATE_AI_SESSION_KEY,
       JSON.stringify(strongProviders),
     )
   } catch {
@@ -148,7 +147,7 @@ const mergeSessionTokens = (
 }
 
 const persistSanitizedSettings = (
-  provider: StudyPackAiProvider,
+  provider: QuickCreateAiProvider,
   strongProviders: Required<
     Record<StrongAiProviderId, StrongAiProviderCredential>
   >,
@@ -156,7 +155,7 @@ const persistSanitizedSettings = (
   const credential = getCredentialForProvider({ provider, strongProviders })
 
   window.localStorage.setItem(
-    STUDY_PACK_AI_SETTINGS_KEY,
+    QUICK_CREATE_AI_SETTINGS_KEY,
     JSON.stringify({
       provider,
       apiToken: '',
@@ -177,7 +176,7 @@ const persistSanitizedSettings = (
 
 const defaultProviderForStrongCredentials = (
   strongProviders: StrongAiProviderCredentials,
-): StudyPackAiProvider => {
+): QuickCreateAiProvider => {
   if (
     strongProviders.gemini?.apiToken ||
     getEnvStrongProviderApiKey('gemini')
@@ -196,7 +195,7 @@ const defaultProviderForStrongCredentials = (
 }
 
 const getCredentialForProvider = (
-  settings: Pick<StudyPackAiSettings, 'provider' | 'strongProviders'>,
+  settings: Pick<QuickCreateAiSettings, 'provider' | 'strongProviders'>,
   fallbackProvider: StrongAiProviderId = DEFAULT_STRONG_AI_PROVIDER,
 ): StrongAiProviderCredential => {
   const provider = isStrongAiProvider(settings.provider)
@@ -212,11 +211,9 @@ const getCredentialForProvider = (
   )
 }
 
-export const readStudyPackAiSettings = (): StudyPackAiSettings => {
+export const readQuickCreateAiSettings = (): QuickCreateAiSettings => {
   try {
-    const stored =
-      window.localStorage.getItem(STUDY_PACK_AI_SETTINGS_KEY) ||
-      window.localStorage.getItem(LEGACY_STUDY_PACK_AI_SETTINGS_KEY)
+    const stored = window.localStorage.getItem(QUICK_CREATE_AI_SETTINGS_KEY)
     if (!stored) {
       const strongProviders = mergeSessionTokens(normalizeStrongProviders({}))
       const provider = defaultProviderForStrongCredentials(strongProviders)
@@ -233,13 +230,13 @@ export const readStudyPackAiSettings = (): StudyPackAiSettings => {
       }
     }
 
-    const parsed = JSON.parse(stored) as Partial<StudyPackAiSettings>
+    const parsed = JSON.parse(stored) as Partial<QuickCreateAiSettings>
     const legacyApiToken =
       typeof parsed.apiToken === 'string' ? parsed.apiToken.trim() : ''
     const legacyModel =
       typeof parsed.model === 'string' && parsed.model.trim()
         ? parsed.model.trim()
-        : DEFAULT_STUDY_PACK_AI_MODEL
+        : DEFAULT_QUICK_CREATE_AI_MODEL
     const strongProviders = normalizeStrongProviders(parsed.strongProviders)
 
     if (legacyApiToken && !strongProviders.gemini.apiToken) {
@@ -257,13 +254,12 @@ export const readStudyPackAiSettings = (): StudyPackAiSettings => {
       }
     }
 
-    const provider = isStudyPackAiProvider(parsed.provider)
+    const provider = isQuickCreateAiProvider(parsed.provider)
       ? parsed.provider
       : defaultProviderForStrongCredentials(strongProviders)
     const sessionStrongProviders = mergeSessionTokens(strongProviders)
 
     persistSanitizedSettings(provider, strongProviders)
-    window.localStorage.removeItem(LEGACY_STUDY_PACK_AI_SETTINGS_KEY)
 
     const credential = getCredentialForProvider({
       provider,
@@ -290,8 +286,8 @@ export const readStudyPackAiSettings = (): StudyPackAiSettings => {
   }
 }
 
-export const saveStudyPackAiSettings = (
-  settings: StudyPackAiSettings,
+export const saveQuickCreateAiSettings = (
+  settings: QuickCreateAiSettings,
 ): void => {
   const strongProviders = normalizeStrongProviders(settings.strongProviders)
   const provider =
@@ -316,17 +312,17 @@ export const saveStudyPackAiSettings = (
   }
 
   persistSanitizedSettings(provider, strongProviders)
-  window.dispatchEvent(new CustomEvent(STUDY_PACK_AI_SETTINGS_CHANGED_EVENT))
+  window.dispatchEvent(new CustomEvent(QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT))
 }
 
-export const clearStudyPackAiToken = (): void => {
-  const current = readStudyPackAiSettings()
+export const clearQuickCreateAiToken = (): void => {
+  const current = readQuickCreateAiSettings()
   const provider = isStrongAiProvider(current.provider)
     ? current.provider
     : DEFAULT_STRONG_AI_PROVIDER
   const strongProviders = normalizeStrongProviders(current.strongProviders)
   clearSessionStrongProviderToken(provider)
-  saveStudyPackAiSettings({
+  saveQuickCreateAiSettings({
     ...current,
     apiToken: '',
     model: strongProviders[provider]?.model || current.model,
@@ -342,8 +338,8 @@ export const clearStudyPackAiToken = (): void => {
   })
 }
 
-export const getStudyPackAiCredentialForProvider = (
-  settings: StudyPackAiSettings,
+export const getQuickCreateAiCredentialForProvider = (
+  settings: QuickCreateAiSettings,
   provider: StrongAiProviderId,
 ): StrongAiProviderCredential =>
   normalizeStrongProviders(settings.strongProviders)[provider] || {
@@ -351,7 +347,7 @@ export const getStudyPackAiCredentialForProvider = (
     model: STRONG_AI_PROVIDERS[provider].defaultModel,
   }
 
-export const saveStudyPackAiSessionKey = (
+export const saveQuickCreateAiSessionKey = (
   provider: StrongAiProviderId,
   apiToken: string,
   model?: string,
@@ -361,18 +357,18 @@ export const saveStudyPackAiSessionKey = (
     model: model?.trim() || STRONG_AI_PROVIDERS[provider].defaultModel,
   })
 
-export const resolveStudyPackAiCredentials = (
+export const resolveQuickCreateAiCredentials = (
   requestedProvider?: StrongAiProviderId,
-): StudyPackAiSettings & {
+): QuickCreateAiSettings & {
   tokenSource: 'settings' | 'env' | 'none'
 } => {
-  const settings = readStudyPackAiSettings()
+  const settings = readQuickCreateAiSettings()
   const strongProvider =
     requestedProvider ||
     (isStrongAiProvider(settings.provider)
       ? settings.provider
       : DEFAULT_STRONG_AI_PROVIDER)
-  const credential = getStudyPackAiCredentialForProvider(
+  const credential = getQuickCreateAiCredentialForProvider(
     settings,
     strongProvider,
   )

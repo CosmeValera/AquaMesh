@@ -26,24 +26,24 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 
 import { dispatchWorkspaceOnboardingNotice } from '../onboarding/onboardingEvents'
 import {
-  DEFAULT_STUDY_PACK_AI_MODEL,
+  DEFAULT_QUICK_CREATE_AI_MODEL,
   getEnvStrongAiProviderApiKey,
-  getStudyPackAiCredentialForProvider,
+  getQuickCreateAiCredentialForProvider,
   isStrongAiProvider,
-  readStudyPackAiSettings,
-  saveStudyPackAiSettings,
+  readQuickCreateAiSettings,
+  saveQuickCreateAiSettings,
   StrongAiProviderCredentials,
   StrongAiProviderId,
   STRONG_AI_PROVIDERS,
-  StudyPackAiProvider,
+  QuickCreateAiProvider,
   testLocalLanguageModel,
-} from '../../studyPack/ai'
+} from '../../quickCreate/ai'
 import HostedAiSettingsPanel from './HostedAiSettingsPanel'
 
 const LOCAL_AI_ESTIMATE_COPY =
   'Local AI runs on your device and can be slow. Performance depends on your hardware but it may take around 10 mins for each prompt.'
 
-const aiProviderLabels: Record<StudyPackAiProvider, string> = {
+const aiProviderLabels: Record<QuickCreateAiProvider, string> = {
   local: 'Google Local AI',
   gemini: 'Own Gemini API token',
   cerebras: 'Own Cerebras API key',
@@ -62,7 +62,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
   notice,
 }) => {
   const [aiProvider, setAiProvider] =
-    React.useState<StudyPackAiProvider>('hosted')
+    React.useState<QuickCreateAiProvider>('hosted')
   const [strongCredentials, setStrongCredentials] =
     React.useState<StrongAiProviderCredentials>({})
   const [localAiStatus, setLocalAiStatus] = React.useState('')
@@ -94,7 +94,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
       return
     }
 
-    const settings = readStudyPackAiSettings()
+    const settings = readQuickCreateAiSettings()
     setAiProvider(settings.provider || 'hosted')
     setStrongCredentials(settings.strongProviders || {})
     setLocalAiStatus('')
@@ -117,7 +117,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
 
   const handleSaveAiSettings = () => {
     const credential = isStrongAiProvider(aiProvider)
-      ? getStudyPackAiCredentialForProvider(
+      ? getQuickCreateAiCredentialForProvider(
           {
             provider: aiProvider,
             apiToken: '',
@@ -126,9 +126,9 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
           },
           aiProvider,
         )
-      : { apiToken: '', model: DEFAULT_STUDY_PACK_AI_MODEL }
+      : { apiToken: '', model: DEFAULT_QUICK_CREATE_AI_MODEL }
 
-    saveStudyPackAiSettings({
+    saveQuickCreateAiSettings({
       provider: aiProvider,
       apiToken: credential.apiToken,
       model: credential.model,
@@ -156,7 +156,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
     }
 
     setStrongCredentials(nextCredentials)
-    saveStudyPackAiSettings({
+    saveQuickCreateAiSettings({
       provider: aiProvider,
       apiToken: '',
       model,
@@ -247,11 +247,11 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
               label="AI provider"
               value={aiProvider}
               onChange={(event) =>
-                setAiProvider(event.target.value as StudyPackAiProvider)
+                setAiProvider(event.target.value as QuickCreateAiProvider)
               }
               fullWidth
               size="small"
-              helperText="Used by Create From Notes, Create Study Guide, and dashboard chat."
+              helperText="Used by Quick Create, Create Study Guide, and dashboard chat."
             >
               <MenuItem value="hosted">Hosted AI</MenuItem>
               <MenuItem value="local">Google Local AI</MenuItem>

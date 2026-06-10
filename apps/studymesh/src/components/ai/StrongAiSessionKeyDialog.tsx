@@ -11,10 +11,10 @@ import {
   Typography,
 } from '@mui/material'
 import {
-  saveStudyPackAiSessionKey,
+  saveQuickCreateAiSessionKey,
   StrongAiProviderId,
   STRONG_AI_PROVIDERS,
-} from '../../studyPack/ai'
+} from '../../quickCreate/ai'
 
 interface StrongAiSessionKeyDialogProps {
   open: boolean
@@ -49,7 +49,7 @@ const StrongAiSessionKeyDialog: React.FC<StrongAiSessionKeyDialogProps> = ({
       return
     }
 
-    saveStudyPackAiSessionKey(provider, token, model)
+    saveQuickCreateAiSessionKey(provider, token, model)
     onSaved()
   }
 

@@ -5,7 +5,7 @@ import {
   HOSTED_AI_USAGE_CHANGED_EVENT,
   HostedAiStatus,
   markHostedAiIntroSeen,
-} from '../../studyPack/ai'
+} from '../../quickCreate/ai'
 import { useAuth } from '../../auth/AuthProvider'
 
 interface UseHostedAiStatusResult {

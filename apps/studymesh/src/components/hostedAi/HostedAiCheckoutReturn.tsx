@@ -3,7 +3,7 @@ import { Alert, Snackbar } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../auth/AuthProvider'
-import { confirmHostedAiCreditCheckout } from '../../studyPack/ai'
+import { confirmHostedAiCreditCheckout } from '../../quickCreate/ai'
 
 interface CheckoutNotice {
   severity: 'error' | 'success' | 'info'

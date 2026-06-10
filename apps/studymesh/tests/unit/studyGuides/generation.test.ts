@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import { appendAiQuickCreatePage } from '../../../src/studyGuides/generation'
-import { generateStudyPackWithAi } from '../../../src/studyPack/ai'
+import { generateQuickCreateWithAi } from '../../../src/quickCreate/ai'
 import type { StudyPathContainerState } from '../../../src/state/store'
 
-vi.mock('../../../src/studyPack/ai', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../../src/studyPack/ai')>()
+vi.mock('../../../src/quickCreate/ai', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../src/quickCreate/ai')>()
   return {
     ...actual,
-    generateStudyPackWithAi: vi.fn().mockResolvedValue({
+    generateQuickCreateWithAi: vi.fn().mockResolvedValue({
       title: 'Expanded notes',
       sourceFormat: 'text',
       rawNotes: 'Source notes',
@@ -23,8 +23,8 @@ vi.mock('../../../src/studyPack/ai', async (importOriginal) => {
       ],
       warnings: [],
     }),
-    readStudyPackAiSettings: () => ({ provider: 'gemini' }),
-    resolveStudyPackAiCredentials: () => ({
+    readQuickCreateAiSettings: () => ({ provider: 'gemini' }),
+    resolveQuickCreateAiCredentials: () => ({
       apiToken: 'token',
       model: 'model',
     }),
@@ -53,7 +53,7 @@ describe('appendAiQuickCreatePage', () => {
       sourceText: 'Source notes',
     })
 
-    expect(generateStudyPackWithAi).toHaveBeenCalledWith(
+    expect(generateQuickCreateWithAi).toHaveBeenCalledWith(
       expect.objectContaining({
         resourceType: 'improvedNotes',
         detailLevel: 'medium',

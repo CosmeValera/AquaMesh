@@ -35,7 +35,7 @@ import {
   selectDashboardChatChunks,
 } from '../../dashboardChat/contextBuilder'
 import { askDashboardSources } from '../../dashboardChat/askDashboard'
-import { readStudyPackAiSettings } from '../../studyPack/ai'
+import { readQuickCreateAiSettings } from '../../quickCreate/ai'
 import {
   quickCreateActionGroups,
   quickCreateActions,
@@ -44,7 +44,7 @@ import {
   type QuickCreateActionId,
   type QuickCreateActionRequest,
   type QuickCreateSourceScope,
-} from '../../studyPack/quickCreateActions'
+} from '../../quickCreate/quickCreateActions'
 import { renderMarkdown } from '../WidgetEditor/components/preview/StudyBlockView'
 
 export interface DashboardChatMessage {
@@ -84,7 +84,7 @@ const quickCreateIcons: Record<QuickCreateActionId, React.ReactNode> = {
 }
 
 const getQuickCreateEstimateSeconds = (): number => {
-  const provider = readStudyPackAiSettings().provider || 'hosted'
+  const provider = readQuickCreateAiSettings().provider || 'hosted'
 
   if (provider === 'local') {
     return 90
@@ -128,7 +128,7 @@ const DashboardChatPanel = ({
     )
   const messagesRef = useRef(messages)
   const queueRef = useRef(Promise.resolve())
-  const settings = readStudyPackAiSettings()
+  const settings = readQuickCreateAiSettings()
   const isLocalAi = settings.provider === 'local'
   const context = useMemo(
     () =>

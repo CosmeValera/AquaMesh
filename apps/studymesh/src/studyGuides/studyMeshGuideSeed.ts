@@ -258,7 +258,7 @@ export const createStudyMeshGuideDashboards = (): SavedDashboardRecord[] => {
       folderColor: STUDYMESH_GUIDE_FOLDER_COLOR,
       layout: createGuideLayout(lesson, index),
       description: 'Built-in StudyMesh guide Study Guide.',
-      tags: ['study-pack', 'study-path', 'starter', 'guide'],
+      tags: ['quick-create', 'study-path', 'starter', 'guide'],
       isPublic: false,
       createdAt: now,
       updatedAt: now,

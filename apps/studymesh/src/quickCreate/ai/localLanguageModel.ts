@@ -514,65 +514,6 @@ export const resetLocalLanguageModelCooldownForTests = (): void => {
   localAiLastTimeoutStage = null
 }
 
-export const getLocalLanguageModelImageAvailability = async (
-  language: LocalLanguage = 'en',
-): Promise<LocalLanguageModelAvailability> =>
-  getLocalLanguageModelAvailability(language, [
-    { type: 'text', languages: [language] },
-    { type: 'image' },
-  ])
-
-export const extractNotesFromImageWithLocalLanguageModel = async (
-  image: Blob,
-  options: {
-    outputLanguage?: LocalLanguage
-    timeoutMs?: number
-    onProgress?: (percent: number) => void
-    signal?: AbortSignal
-  } = {},
-): Promise<string> => {
-  const outputLanguage = options.outputLanguage || 'en'
-  const availability = await getLocalLanguageModelImageAvailability(
-    outputLanguage,
-  )
-  if (availability === 'unavailable') {
-    throw new Error(
-      'Google Local AI image input is unavailable in this browser or model.',
-    )
-  }
-
-  return callLocalLanguageModel(
-    [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            value:
-              'Extract clean study notes from this image. Return concise Markdown only.',
-          },
-          {
-            type: 'image',
-            value: image,
-          },
-        ],
-      },
-    ],
-    {
-      outputLanguage,
-      timeoutMs: options.timeoutMs || LOCAL_AI_TIMEOUT_MS,
-      onProgress: (event) => {
-        options.onProgress?.(event.percent)
-      },
-      expectedInputs: [
-        { type: 'text', languages: [outputLanguage] },
-        { type: 'image' },
-      ],
-      promptType: 'image-notes',
-      signal: options.signal,
-    },
-  )
-}
 
 export const testLocalLanguageModel = async (
   onProgress?: (percent: number) => void,

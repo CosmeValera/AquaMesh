@@ -6,11 +6,11 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import {
   STUDY_CREDITS_LABEL,
   STUDY_CREDITS_SYMBOL,
-  StudyPackAiProvider,
-} from '../../studyPack/ai'
+  QuickCreateAiProvider,
+} from '../../quickCreate/ai'
 import { useHostedAiStatus } from './useHostedAiStatus'
 
-export const aiModeShortLabels: Record<StudyPackAiProvider, string> = {
+export const aiModeShortLabels: Record<QuickCreateAiProvider, string> = {
   local: 'AI: Local',
   gemini: 'AI: Gemini',
   cerebras: 'AI: Cerebras',
@@ -19,7 +19,7 @@ export const aiModeShortLabels: Record<StudyPackAiProvider, string> = {
 
 interface AiModePillProps {
   compact?: boolean
-  provider: StudyPackAiProvider
+  provider: QuickCreateAiProvider
   onClick: () => void
 }
 

@@ -99,22 +99,6 @@ const createStudyPath = (): StudyPathContainerState => ({
   pinnedDashboardKeys: [],
 })
 
-const seedStudyPathDashboards = (storage: Map<string, string>) => {
-  const dashboards = createStudyPath().dashboards.map((lesson, index) => ({
-    id: lesson.id,
-    name: lesson.name,
-    folder: 'German B1 Grammar',
-    folderColor: '#007C66',
-    layout: lesson.layout,
-    tags: ['study-pack'],
-    isPublic: true,
-    createdAt: `2026-05-15T10:0${index}:00.000Z`,
-    updatedAt: `2026-05-15T10:0${index}:00.000Z`,
-  }))
-
-  storage.set('customDashboards', JSON.stringify(dashboards))
-}
-
 const seedStoredStudyGuide = (storage: Map<string, string>) => {
   const studyPath = createStudyPath()
 
@@ -266,7 +250,7 @@ describe('Interactive Study Guide UX', () => {
 
   it('keeps Study Guides dropdown actions focused and opens lessons as standalone tabs', async () => {
     const storage = createMemoryStorage()
-    seedStudyPathDashboards(storage)
+    seedStoredStudyGuide(storage)
 
     renderWithDashboardProvider(
       <>

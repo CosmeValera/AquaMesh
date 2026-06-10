@@ -5,7 +5,7 @@ import {
   getLocalAiSessionDebugState,
   resetLocalAiSessionManagerForTests,
   runLocalAiPrompt,
-} from '../../../src/studyPack/ai'
+} from '../../../src/quickCreate/ai'
 
 const createAbortAwarePrompt = (resolveAfterMs = 1000) =>
   vi.fn(
@@ -61,7 +61,7 @@ describe('localAiSessionManager', () => {
       runLocalAiPrompt({
         createSession: async () => ({ prompt, destroy }),
         prompt: 'Fail',
-        promptType: 'study-pack',
+        promptType: 'quick-create',
       }),
     ).rejects.toThrow('failed')
 

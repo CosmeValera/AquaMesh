@@ -1,7 +1,7 @@
 import type {
   StudyMaterialDetailLevel,
   StudyMaterialResourceType,
-} from '../../studyPack/ai'
+} from '../../quickCreate/ai'
 import type { ComponentData } from '../WidgetEditor/types/types'
 import type { DashboardLayout } from '../../state/store'
 export {
@@ -9,16 +9,13 @@ export {
   quickCreateFolders,
   quickCreateLabels,
   quickCreateTargets,
-} from '../../studyPack/quickCreateActions'
+} from '../../quickCreate/quickCreateActions'
 
-export type StudioFlow = 'hub' | 'study-path' | 'from-notes'
+export type StudioFlow = 'hub' | 'study-path' | 'quick-create'
 export type CreationFlow = Exclude<StudioFlow, 'hub'>
 export type CreateIntent = 'study-path' | StudyMaterialResourceType
-export type QuickSourceFocus = 'upload' | 'paste'
 export interface OpenCreateHubDetail {
   intent?: CreateIntent
-  openQuickOptions?: boolean
-  quickSourceFocus?: QuickSourceFocus
 }
 export type GenerationDraftStatus =
   | 'generating'
@@ -45,7 +42,6 @@ export interface GenerationDraft {
   generationRequestId?: number
   retrySourceText?: string
   retryTitle?: string
-  retrySourceMode?: 'dashboard' | 'sources'
   retryResourceType?: StudyMaterialResourceType
   retryDifficulty?: string
   generatedMaterial?: GeneratedMaterial
@@ -65,7 +61,7 @@ export interface GeneratedMaterial {
   sourceStudyPathId?: string
   sourceLessonId?: string
   sourceModuleId?: string
-  sourceLabel: string
+  contextLabel: string
   createdAt: string
   updatedAt: string
   content: {
@@ -83,7 +79,7 @@ export interface GeneratedMaterial {
   generationConfig: {
     difficulty?: string
     detailLevel?: StudyMaterialDetailLevel
-    sourceMode?: 'dashboard' | 'sources'
+    contextMode?: 'dashboard'
   }
 }
 
@@ -95,26 +91,6 @@ export const quickCreateDetailToAmount: Record<
   medium: 'medium',
   long: 'many',
 }
-
-export const quickSourceAcceptValue = [
-  '.md',
-  '.txt',
-  '.csv',
-  '.pdf',
-  '.pptx',
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-  'text/markdown',
-  'text/plain',
-  'text/csv',
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-].join(',')
-
-export const appendQuickSourceText = (current: string, next: string) =>
-  [current.trim(), next.trim()].filter(Boolean).join('\n\n---\n\n')
 
 export const statusMarkerGlow: Record<
   'editing' | 'running' | 'complete' | 'error',
@@ -164,7 +140,7 @@ export const createGenerationDraft = (
       ? 'Study basic human anatomy focusing on organs and systems (cardiovascular, respiratory, digestive)'
       : 'Notes draft',
   createdAt: new Date().toISOString(),
-  inputSummary: flow === 'study-path' ? 'Learning prompt' : 'Sources',
+  inputSummary: flow === 'study-path' ? 'Learning prompt' : 'Current dashboard',
   ...options,
 })
 

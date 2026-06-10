@@ -21,7 +21,7 @@ import {
   getLocalAiSessionDebugState,
   LocalAiManagedSession,
   subscribeToLocalAiSessionDebugState,
-} from '../../studyPack/ai'
+} from '../../quickCreate/ai'
 
 export const showLocalAiDebugPanel = (): boolean => {
   const envValue = String(process.env.VITE_SHOW_LOCAL_AI_DEBUG_PANEL || '')

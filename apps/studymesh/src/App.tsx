@@ -13,7 +13,7 @@ import DashboardProvider from './components/Dasboard/DashboardProvider'
 import LayoutProvider from './components/Layout/LayoutProvider'
 import StudyMeshLanding from './components/landing/StudyMeshLanding'
 import LocalAiDebugPanel from './components/debug/LocalAiDebugPanel'
-import { cancelAllLocalAiSessions } from './studyPack/ai'
+import { cancelAllLocalAiSessions } from './quickCreate/ai'
 import {
   AuthCallbackPage,
   LoginPage,

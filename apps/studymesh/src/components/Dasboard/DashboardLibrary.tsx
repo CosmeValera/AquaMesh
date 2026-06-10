@@ -607,12 +607,12 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
     }, {})
   }, [dashboards])
 
-  const isStudyPackDashboard = (dashboard: SavedDashboard) => {
+  const isQuickCreateDashboard = (dashboard: SavedDashboard) => {
     const folderName = normalizeFolderName(dashboard.folder).toLowerCase()
     return (
-      folderName === 'study packs' ||
-      dashboard.id.startsWith('study-pack-dashboard-') ||
-      Boolean(dashboard.tags?.includes('study-pack'))
+      folderName === 'quick creates' ||
+      dashboard.id.startsWith('quick-create-dashboard-') ||
+      Boolean(dashboard.tags?.includes('quick-create'))
     )
   }
 
@@ -1197,7 +1197,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                       </Typography>
                       <Chip
                         size="small"
-                        label={`${dashboards.length} study pack${
+                        label={`${dashboards.length} quick create${
                           dashboards.length === 1 ? '' : 's'
                         }`}
                         sx={{
@@ -1302,7 +1302,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                                     mr: 2,
                                   }}
                                 >
-                                  {isStudyPackDashboard(dashboard) ? (
+                                  {isQuickCreateDashboard(dashboard) ? (
                                     <AutoStoriesIcon
                                       fontSize={isXs ? 'small' : 'medium'}
                                     />
@@ -1362,7 +1362,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                                         ml: { xs: 0, sm: 2 },
                                       }}
                                     >
-                                      {!isStudyPackDashboard(dashboard) && (
+                                      {!isQuickCreateDashboard(dashboard) && (
                                         <Chip
                                           size="small"
                                           label={`${dashboard.componentsCount} blocks`}
@@ -1378,7 +1378,7 @@ const SavedDashboardsDialog: React.FC<SavedDashboardsDialogProps> = ({
                                         size="small"
                                         label={dashboard.folder || 'Unsorted'}
                                         sx={{
-                                          ml: isStudyPackDashboard(dashboard)
+                                          ml: isQuickCreateDashboard(dashboard)
                                             ? 0
                                             : 1,
                                           height: 20,

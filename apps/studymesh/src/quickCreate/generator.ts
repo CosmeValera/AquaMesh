@@ -7,18 +7,18 @@ import {
   isLowQualityStudyObject,
 } from './concepts'
 import {
-  GeneratedStudyPack,
+  GeneratedQuickCreate,
   StudyObject,
-  StudyPack,
-  StudyPackDashboardLayoutOptions,
-  StudyPackGeneratorOptions,
-  StudyPackSaveWidgetInput,
+  QuickCreate,
+  QuickCreateDashboardLayoutOptions,
+  QuickCreateGeneratorOptions,
+  QuickCreateSaveWidgetInput,
   StudyPathDashboardContext,
-  StudyPackWidgetGroupInput,
+  QuickCreateWidgetGroupInput,
 } from './types'
 
 const DEFAULT_CREATED_AT = '1970-01-01T00:00:00.000Z'
-const STUDY_PACK_CATEGORY = 'Study Pack'
+const STUDY_PACK_CATEGORY = 'Quick Create'
 const STUDY_PACK_AUTHOR = 'StudyMesh'
 
 const createStudyPathProps = (
@@ -57,7 +57,7 @@ const sanitizeIdPart = (value: string): string => {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 
-  return sanitized || 'study-pack'
+  return sanitized || 'quick-create'
 }
 
 const createComponentId = (
@@ -376,7 +376,7 @@ const objectToComponents = (
 }
 
 const createFocusedStudySessionWidget = (
-  pack: StudyPack,
+  pack: QuickCreate,
   objects: StudyObject[],
   index: number,
   options: {
@@ -415,7 +415,7 @@ const createFocusedStudySessionWidget = (
       },
     ],
     category: options.category,
-    tags: ['study-pack', 'focused-study', options.focusedResourceType],
+    tags: ['quick-create', 'focused-study', options.focusedResourceType],
     description:
       options.focusedResourceType === 'flashcards'
         ? 'Focused flashcard study session.'
@@ -448,7 +448,7 @@ const getFocusedPracticeType = (
 }
 
 const createSummaryChart = (
-  pack: StudyPack,
+  pack: QuickCreate,
   widgetId: string,
   extraCounts: Record<string, number> = {},
 ): ComponentData => {
@@ -540,7 +540,7 @@ const summarizeText = (value: string): string => {
   return `${normalized.slice(0, 137).trim()}...`
 }
 
-const createSummaryItems = (pack: StudyPack, rawSource = ''): string[] => {
+const createSummaryItems = (pack: QuickCreate, rawSource = ''): string[] => {
   if (pack.sourceSummary?.bullets.length) {
     return pack.sourceSummary.bullets
   }
@@ -618,12 +618,12 @@ const chunkObjects = (
 }
 
 const createWidgetRecord = (
-  pack: StudyPack,
+  pack: QuickCreate,
   objects: StudyObject[],
   widgetIndex: number,
   options: Required<
     Pick<
-      StudyPackGeneratorOptions,
+      QuickCreateGeneratorOptions,
       | 'author'
       | 'category'
       | 'createdAt'
@@ -667,7 +667,7 @@ const createWidgetRecord = (
     createdAt: options.createdAt,
     updatedAt: options.createdAt,
     category: options.category,
-    tags: ['study-pack', pack.sourceFormat],
+    tags: ['quick-create', pack.sourceFormat],
     description: `Generated from ${pack.sourceFormat} with ${objects.length} study objects.`,
     version: '1.0',
     author: options.author,
@@ -675,11 +675,11 @@ const createWidgetRecord = (
 }
 
 const createRawSourceWidget = (
-  pack: StudyPack,
+  pack: QuickCreate,
   sourceText: string,
   options: Required<
     Pick<
-      StudyPackGeneratorOptions,
+      QuickCreateGeneratorOptions,
       | 'author'
       | 'category'
       | 'createdAt'
@@ -724,7 +724,7 @@ const createRawSourceWidget = (
     createdAt: options.createdAt,
     updatedAt: options.createdAt,
     category: options.category,
-    tags: ['study-pack', 'source', pack.sourceFormat],
+    tags: ['quick-create', 'source', pack.sourceFormat],
     description: csvTable
       ? 'Original CSV source rendered as a table.'
       : 'Original study notes rendered as Markdown.',
@@ -734,11 +734,11 @@ const createRawSourceWidget = (
 }
 
 const createSourceSummaryWidget = (
-  pack: StudyPack,
+  pack: QuickCreate,
   sourceText: string,
   options: Required<
     Pick<
-      StudyPackGeneratorOptions,
+      QuickCreateGeneratorOptions,
       'author' | 'category' | 'createdAt' | 'widgetIdPrefix'
     >
   >,
@@ -771,8 +771,8 @@ const createSourceSummaryWidget = (
     createdAt: options.createdAt,
     updatedAt: options.createdAt,
     category: options.category,
-    tags: ['study-pack', 'summary', pack.sourceFormat],
-    description: 'Generated summary of the Study Pack source.',
+    tags: ['quick-create', 'summary', pack.sourceFormat],
+    description: 'Generated summary of the Quick Create source.',
     version: '1.0',
     author: options.author,
   }
@@ -876,8 +876,8 @@ const shouldRenderGeneratedWidgets = (
 }
 
 const createStudyPathVisibleQuizGroups = (
-  pack: StudyPack,
-): StudyPackWidgetGroupInput[] => {
+  pack: QuickCreate,
+): QuickCreateWidgetGroupInput[] => {
   const quizObjects = orderObjectsForGeneratedWidget(
     pack.objects.filter(
       (object) =>
@@ -901,9 +901,9 @@ const createStudyPathVisibleQuizGroups = (
 }
 
 const createVisibleStudyPathWidgetGroups = (
-  pack: StudyPack,
+  pack: QuickCreate,
   studyPath: StudyPathDashboardContext | undefined,
-): StudyPackWidgetGroupInput[] | null => {
+): QuickCreateWidgetGroupInput[] | null => {
   if (!studyPath) {
     return null
   }
@@ -925,10 +925,10 @@ const createVisibleStudyPathWidgetGroups = (
   return []
 }
 
-export const createStudyPackSmartWidgetGroups = (
-  pack: StudyPack,
+export const createQuickCreateSmartWidgetGroups = (
+  pack: QuickCreate,
   groupingThreshold: number,
-): StudyPackWidgetGroupInput[] => {
+): QuickCreateWidgetGroupInput[] => {
   const seen = new Set<string>()
   const dashboardRole = pack.dashboardRole || 'normal'
   const interestingObjects = pack.objects.filter((object) => {
@@ -957,7 +957,7 @@ export const createStudyPackSmartWidgetGroups = (
     },
     {},
   )
-  const groups: StudyPackWidgetGroupInput[] = []
+  const groups: QuickCreateWidgetGroupInput[] = []
   const miscObjects: StudyObject[] = []
 
   Object.entries(buckets).forEach(([bucket, objects]) => {
@@ -983,9 +983,9 @@ export const createStudyPackSmartWidgetGroups = (
   return groups
 }
 
-export const createStudyPackOrchestratorWidgets = (
-  pack: StudyPack,
-  options: StudyPackGeneratorOptions = {},
+export const createQuickCreateOrchestratorWidgets = (
+  pack: QuickCreate,
+  options: QuickCreateGeneratorOptions = {},
 ): CustomWidget[] => {
   const normalizedOptions = {
     author: options.author || STUDY_PACK_AUTHOR,
@@ -1043,7 +1043,7 @@ export const createStudyPackOrchestratorWidgets = (
           )
         ? []
         : options.widgetGroups ||
-          createStudyPackSmartWidgetGroups(
+          createQuickCreateSmartWidgetGroups(
             pack,
             normalizedOptions.groupingThreshold,
           )
@@ -1052,7 +1052,7 @@ export const createStudyPackOrchestratorWidgets = (
     return sourceWidgets
   }
 
-  const generatedWidgets = createStudyPackWidgetsFromGroups(
+  const generatedWidgets = createQuickCreateWidgetsFromGroups(
     pack,
     generatedGroups,
     {
@@ -1064,9 +1064,9 @@ export const createStudyPackOrchestratorWidgets = (
   return [...sourceWidgets, ...generatedWidgets]
 }
 
-export const createStudyPackWidgets = (
-  pack: StudyPack,
-  options: StudyPackGeneratorOptions = {},
+export const createQuickCreateWidgets = (
+  pack: QuickCreate,
+  options: QuickCreateGeneratorOptions = {},
 ): CustomWidget[] => {
   const normalizedOptions = {
     author: options.author || STUDY_PACK_AUTHOR,
@@ -1086,10 +1086,10 @@ export const createStudyPackWidgets = (
   )
 }
 
-export const createStudyPackWidgetsFromGroups = (
-  pack: StudyPack,
-  groups: StudyPackWidgetGroupInput[],
-  options: StudyPackGeneratorOptions = {},
+export const createQuickCreateWidgetsFromGroups = (
+  pack: QuickCreate,
+  groups: QuickCreateWidgetGroupInput[],
+  options: QuickCreateGeneratorOptions = {},
 ): CustomWidget[] => {
   const normalizedOptions = {
     author: options.author || STUDY_PACK_AUTHOR,
@@ -1276,9 +1276,9 @@ const createOrchestratorDashboardLayout = (
   }
 }
 
-export const createStudyPackDashboardLayout = (
+export const createQuickCreateDashboardLayout = (
   widgets: CustomWidget[],
-  options: StudyPackDashboardLayoutOptions = {},
+  options: QuickCreateDashboardLayoutOptions = {},
 ): DashboardLayout =>
   options.mode === 'orchestrator'
     ? createOrchestratorDashboardLayout(widgets)
@@ -1286,9 +1286,9 @@ export const createStudyPackDashboardLayout = (
       ? createTabbedDashboardLayout(widgets)
       : createSmartDashboardLayout(widgets)
 
-export const createStudyPackSaveWidgetInputs = (
+export const createQuickCreateSaveWidgetInputs = (
   widgets: CustomWidget[],
-): StudyPackSaveWidgetInput[] =>
+): QuickCreateSaveWidgetInput[] =>
   widgets.map((widget) => ({
     name: widget.name,
     components: widget.components,
@@ -1299,18 +1299,18 @@ export const createStudyPackSaveWidgetInputs = (
     author: widget.author,
   }))
 
-export const generateStudyPack = (
-  pack: StudyPack,
-  options: StudyPackGeneratorOptions = {},
-): GeneratedStudyPack => {
-  const widgets = createStudyPackWidgets(pack, options)
+export const generateQuickCreate = (
+  pack: QuickCreate,
+  options: QuickCreateGeneratorOptions = {},
+): GeneratedQuickCreate => {
+  const widgets = createQuickCreateWidgets(pack, options)
 
   return {
     pack,
     widgets,
     dashboard: {
       name: options.dashboardName || pack.title,
-      layout: createStudyPackDashboardLayout(widgets),
+      layout: createQuickCreateDashboardLayout(widgets),
     },
   }
 }

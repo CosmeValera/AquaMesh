@@ -1,12 +1,13 @@
 import {
   StudyObject,
-  StudyPackSourceFormat,
+  QuickCreateSourceFormat,
+  StudyPathDashboardRole,
   StudyPathPracticeType,
 } from '../types'
 import {
   applyStudyMaterialResourceTypeToDraft,
-  AiStudyPackDraft,
-  NormalizeAiStudyPackDraftOptions,
+  AiQuickCreateDraft,
+  NormalizeAiQuickCreateDraftOptions,
   StudyMaterialDetailLevel,
   StudyMaterialResourceType,
 } from './normalizer'
@@ -17,7 +18,7 @@ import {
 import {
   AiStudyPathDashboardDraft,
   AiStudyPathDraft,
-  GenerateStudyPackWithAiOptions,
+  GenerateQuickCreateWithAiOptions,
   GenerateStudyPathWithAiOptions,
 } from './strongGeneration'
 
@@ -204,7 +205,7 @@ const genericFolderNames = new Set([
   'lesson plan',
   'local ai study guide',
   'study guide',
-  'study pack',
+  'quick create',
   'untitled',
 ])
 
@@ -455,7 +456,7 @@ const createBase = (
   id: `${packId}-${kind}-${index + 1}`,
   title,
   sourceLine: index + 1,
-  tags: ['study-pack', 'ai-generated', 'local-ai'],
+  tags: ['quick-create', 'ai-generated', 'local-ai'],
 })
 
 const repairKind = (value: unknown): LocalObjectKind | '' => {
@@ -1108,7 +1109,7 @@ const localResourceLimits: Record<
 }
 
 const getLocalResourceLimits = (
-  options: NormalizeAiStudyPackDraftOptions,
+  options: NormalizeAiQuickCreateDraftOptions,
 ): { min: number; max: number } | null => {
   if (
     options.resourceType !== 'flashcards' &&
@@ -1126,7 +1127,7 @@ const objectsFromContract = (
   contract: LocalRepairedContract,
   packId: string,
   events: string[],
-  options: NormalizeAiStudyPackDraftOptions = {},
+  options: NormalizeAiQuickCreateDraftOptions = {},
 ): StudyObject[] => {
   const sourceSummary = Array.isArray(contract.sourceSummary)
     ? contract.sourceSummary
@@ -1149,7 +1150,7 @@ const objectsFromContract = (
       ...createBase(packId, 'markdown', 0, 'Source summary'),
       kind: 'markdown',
       markdown: buildSummaryMarkdown(
-        contract.title || 'Study Pack',
+        contract.title || 'Quick Create',
         contract.summary,
         sourceSummary,
         concepts,
@@ -1251,11 +1252,11 @@ const objectsFromContract = (
   return objects
 }
 
-export const normalizeLocalAiStudyPackDraft = (
+export const normalizeLocalAiQuickCreateDraft = (
   value: unknown,
   packId: string,
-  options: NormalizeAiStudyPackDraftOptions = {},
-): AiStudyPackDraft => {
+  options: NormalizeAiQuickCreateDraftOptions = {},
+): AiQuickCreateDraft => {
   const record =
     value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
   const events: string[] = []
@@ -1287,7 +1288,7 @@ export const normalizeLocalAiStudyPackDraft = (
         typeof record.title === 'string' && record.title.trim()
           ? normalizeSpaces(record.title)
           : undefined,
-      sourceFormat: 'text' as StudyPackSourceFormat,
+      sourceFormat: 'text' as QuickCreateSourceFormat,
       rawNotes:
         blockValue(record.rawNotes) ||
         blockValue(record.notes) ||
@@ -1310,7 +1311,7 @@ export const normalizeLocalAiStudyPackDraft = (
 
   const contract = contractFromRecord(
     record,
-    'Study Pack',
+    'Quick Create',
     options.rawNotes || '',
     events,
   )
@@ -1329,7 +1330,7 @@ export const normalizeLocalAiStudyPackDraft = (
 
   return {
     title: contract.title,
-    sourceFormat: 'text' as StudyPackSourceFormat,
+    sourceFormat: 'text' as QuickCreateSourceFormat,
     rawNotes: contract.rawNotes,
     dashboardRole: options.dashboardRole,
     objects,
@@ -1346,14 +1347,14 @@ export const normalizeLocalAiStudyPackDraft = (
 
 const LOCAL_STUDY_PATH_DASHBOARD_COUNT = 3
 
-const localStudyPackPrompt = ({
+const localQuickCreatePrompt = ({
   title,
   rawNotes,
   resourceType,
   detailLevel = 'medium',
   quizQuestionStyle = 'mixed',
   promptMode = false,
-}: GenerateStudyPackWithAiOptions): string => {
+}: GenerateQuickCreateWithAiOptions): string => {
   const compactNotes = rawNotes.replace(/\s+/g, ' ').trim().slice(0, 1800)
   const flashcardCount =
     detailLevel === 'short' ? '3-4' : detailLevel === 'long' ? '12-18' : '6-9'
@@ -1601,11 +1602,11 @@ Practice must be answerable from the notes.
 Quiz options must be real answer choices, not A/B/C placeholders. Avoid duplicate options. correctIndex must point to the right option.
 ${localStudyPathPracticePromptBase(options, outline, item, notes)}`
 
-export const generateStudyPackWithLocalAi = async (
-  options: GenerateStudyPackWithAiOptions,
+export const generateQuickCreateWithLocalAi = async (
+  options: GenerateQuickCreateWithAiOptions,
   localOptions: LocalGenerationOptions = {},
-): Promise<AiStudyPackDraft> => {
-  const prompt = localStudyPackPrompt(options)
+): Promise<AiQuickCreateDraft> => {
+  const prompt = localQuickCreatePrompt(options)
   let lastError: unknown
 
   for (
@@ -1622,14 +1623,14 @@ export const generateStudyPackWithLocalAi = async (
             ? 'Estimated Local AI generation time'
             : `Retrying Local AI generation (${attempt}/${LOCAL_STUDY_PACK_MAX_ATTEMPTS})`,
         signal: localOptions.signal,
-        promptType: 'study-pack',
+        promptType: 'quick-create',
         stepLabel: options.title,
         attempt,
         attemptCount: LOCAL_STUDY_PACK_MAX_ATTEMPTS,
       })
       const parsed = parseLocalAiJson(text)
       const draft = applyStudyMaterialResourceTypeToDraft(
-        normalizeLocalAiStudyPackDraft(parsed, options.packId, {
+        normalizeLocalAiQuickCreateDraft(parsed, options.packId, {
           rawNotes: options.rawNotes,
           rawAiResponse: text,
           resourceType: options.resourceType,
@@ -1654,7 +1655,7 @@ export const generateStudyPackWithLocalAi = async (
       if (
         localOptions.signal?.aborted ||
         attempt === LOCAL_STUDY_PACK_MAX_ATTEMPTS ||
-        !localAiStudyPackFailureIsRetryable(error)
+        !localAiQuickCreateFailureIsRetryable(error)
       ) {
         break
       }
@@ -1722,7 +1723,7 @@ const sanitizeLocalLessonNotesMarkdown = (markdown: string): string =>
     .replace(/^(#{1,6}\s*)Summary\b/gim, '$1Lesson notes')
     .replace(/^(#{1,6}\s*)Source summary\b/gim, '$1Source notes')
 
-const stripLocalPracticeSectionsFromNotes = (markdown: string): string => {
+const stripLocalPracticeSectionsQuickCreate = (markdown: string): string => {
   const practiceStart = markdown.search(
     /^#{1,6}\s*(?:(?:practice\s+(?:questions?|exercises?|tasks?))|quiz|quizzes|flashcards?)\b|^\*{0,2}(?:quiz|flashcard)\s*\d*\*{0,2}\s*:/im,
   )
@@ -1767,7 +1768,7 @@ const cleanLocalStudyPathSectionMarkdown = (
 const wordCount = (value: string): number =>
   value.split(/\s+/).filter(Boolean).length
 
-const previewSummaryFromNotes = (notes: string, fallback: string): string => {
+const previewSummaryQuickCreate = (notes: string, fallback: string): string => {
   const cleaned = normalizeSpaces(notes.replace(/^#{1,6}\s*/gm, ''))
   const sentence = cleaned.match(/^[^.!?]+[.!?]/)?.[0]
 
@@ -2025,7 +2026,7 @@ const mapLocalDashboard = (
   const packId = `${options.title}-${index + 1}`
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-  const draft = normalizeLocalAiStudyPackDraft(record, packId, {
+  const draft = normalizeLocalAiQuickCreateDraft(record, packId, {
     rawNotes: blockValue(record.rawNotes) || blockValue(record.notes),
     rawAiResponse,
     dashboardRole: role,
@@ -2043,7 +2044,7 @@ const mapLocalDashboard = (
     ''
   const summary =
     summaryString(record.summary) ||
-    previewSummaryFromNotes(rawNotes, title || 'Generated local AI lesson.')
+    previewSummaryQuickCreate(rawNotes, title || 'Generated local AI lesson.')
   const practiceType: StudyPathPracticeType = 'quiz'
   const contract = isLocalRepairedContract(draft.debugTrace?.validatedContract)
     ? draft.debugTrace.validatedContract
@@ -2565,7 +2566,7 @@ const localAiStudyPathFailureIsRetryable = (
   error.code === 'noUsableObjects' ||
   error.code === 'timeout'
 
-const localAiStudyPackFailureIsRetryable = (error: unknown): boolean =>
+const localAiQuickCreateFailureIsRetryable = (error: unknown): boolean =>
   /invalid JSON|Unexpected|truncated JSON|timed out|timeout|cooling down/i.test(
     errorMessage(error),
   )
@@ -3526,7 +3527,7 @@ const generateLocalStudyPathNotes = async (
 
   return {
     title: plannerItem.title,
-    notes: stripLocalPracticeSectionsFromNotes(notes),
+    notes: stripLocalPracticeSectionsQuickCreate(notes),
     rawResponse: JSON.stringify(
       {
         sectionOneResponse: sectionOne.rawResponse,

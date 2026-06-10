@@ -4,9 +4,9 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import DashboardChatPanel from '../../../../src/components/dashboardChat/DashboardChatPanel'
 import type { StateDashboard } from '../../../../src/state/store'
 
-vi.mock('../../../../src/studyPack/ai', () => ({
+vi.mock('../../../../src/quickCreate/ai', () => ({
   __esModule: true,
-  readStudyPackAiSettings: () => ({ provider: 'gemini' }),
+  readQuickCreateAiSettings: () => ({ provider: 'gemini' }),
 }))
 
 vi.mock(

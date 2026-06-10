@@ -18,7 +18,7 @@ import type { StateDashboard, StudyPathContainerState } from '../../state/store'
 import {
   normalizeQuickCreateActionInput,
   type QuickCreateActionInput,
-} from '../../studyPack/quickCreateActions'
+} from '../../quickCreate/quickCreateActions'
 import StudyPathWorkspaceView from '../Dasboard/StudyPathWorkspaceView'
 import DashboardChatPanel, {
   type DashboardChatMessage,

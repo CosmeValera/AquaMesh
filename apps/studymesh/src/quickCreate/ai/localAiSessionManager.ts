@@ -8,8 +8,7 @@ type LocalAiPromptStatus =
   | 'destroyed'
 
 export type LocalAiPromptType =
-  | 'study-pack'
-  | 'image-notes'
+  | 'quick-create'
   | 'smoke'
   | 'planner'
   | 'concepts'

@@ -84,7 +84,7 @@ export const STRONG_AI_PROVIDERS: Record<
 }
 
 export const DEFAULT_STRONG_AI_PROVIDER: StrongAiProviderId = 'gemini'
-export const DEFAULT_STUDY_PACK_AI_MODEL =
+export const DEFAULT_QUICK_CREATE_AI_MODEL =
   STRONG_AI_PROVIDERS[DEFAULT_STRONG_AI_PROVIDER].defaultModel
 
 export const isStrongAiProvider = (
@@ -240,7 +240,7 @@ const callCerebras = async ({
 }: StrongAiCallOptions): Promise<string> => {
   if (parts.some((part) => part.inline_data)) {
     throw new Error(
-      'Cerebras text mode cannot read images directly. Use Basic OCR, Google Local AI, or Gemini image extraction for images.',
+      'Cerebras text mode accepts text context only.',
     )
   }
 

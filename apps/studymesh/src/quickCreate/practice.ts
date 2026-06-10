@@ -10,10 +10,10 @@ import {
 } from './concepts'
 import { StudyObject, StudyObjectKind, StudyQuizObject } from './types'
 
-export type StudyPackGenerationAmount = 'few' | 'medium' | 'many'
+export type QuickCreateGenerationAmount = 'few' | 'medium' | 'many'
 
-export interface StudyPackPracticeProfile {
-  amount: StudyPackGenerationAmount
+export interface QuickCreatePracticeProfile {
+  amount: QuickCreateGenerationAmount
   targetTotal: number
   minTotal: number
   maxTotal: number
@@ -26,23 +26,23 @@ export interface StudyPackPracticeProfile {
   enforceFlashcards: boolean
 }
 
-export interface AugmentStudyPackPracticeOptions {
+export interface AugmentQuickCreatePracticeOptions {
   packId: string
   title: string
   rawNotes: string
   generationTargets?: string[]
-  generationAmount?: StudyPackGenerationAmount
+  generationAmount?: QuickCreateGenerationAmount
   visiblePracticeTarget?: number
   visiblePracticeOnly?: boolean
 }
 
-export interface AugmentStudyPackPracticeResult {
+export interface AugmentQuickCreatePracticeResult {
   objects: StudyObject[]
   addedCount: number
   visiblePracticeCount: number
   visiblePracticeAddedCount: number
   warnings: string[]
-  profile: StudyPackPracticeProfile
+  profile: QuickCreatePracticeProfile
 }
 
 const DEFAULT_TARGETS = [
@@ -58,8 +58,8 @@ const DEFAULT_TARGETS = [
 ]
 
 const amountProfiles: Record<
-  StudyPackGenerationAmount,
-  Pick<StudyPackPracticeProfile, 'targetTotal' | 'minTotal' | 'maxTotal'>
+  QuickCreateGenerationAmount,
+  Pick<QuickCreatePracticeProfile, 'targetTotal' | 'minTotal' | 'maxTotal'>
 > = {
   few: { targetTotal: 6, minTotal: 4, maxTotal: 7 },
   medium: { targetTotal: 11, minTotal: 8, maxTotal: 14 },
@@ -102,10 +102,10 @@ export const getEffectiveGenerationTargets = (
 ): string[] =>
   generationTargets.length > 0 ? generationTargets : DEFAULT_TARGETS
 
-export const createStudyPackPracticeProfile = (
-  generationAmount: StudyPackGenerationAmount = 'medium',
+export const createQuickCreatePracticeProfile = (
+  generationAmount: QuickCreateGenerationAmount = 'medium',
   generationTargets: string[] = [],
-): StudyPackPracticeProfile => {
+): QuickCreatePracticeProfile => {
   const amount = generationAmount
   const base = amountProfiles[amount]
   const targets = getEffectiveGenerationTargets(generationTargets)
@@ -247,7 +247,7 @@ const sanitizeIdPart = (value: string): string => {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 
-  return sanitized || 'study-pack'
+  return sanitized || 'quick-create'
 }
 
 const normalizeSpaces = (value: string): string =>
@@ -365,7 +365,7 @@ const createQuiz = (
     kind: 'quiz',
     title: `${concept} practice`,
     sourceLine: index + 1,
-    tags: ['study-pack', 'practice'],
+    tags: ['quick-create', 'practice'],
     quizMode: 'multipleChoice',
     question:
       concept === 'this lesson point'
@@ -394,7 +394,7 @@ const createConceptQuiz = (
     kind: 'quiz',
     title: `${concept.concept} practice`,
     sourceLine: concept.sourceLine,
-    tags: ['study-pack', 'practice', 'concept-first'],
+    tags: ['quick-create', 'practice', 'concept-first'],
     ...question,
   }
 }
@@ -408,7 +408,7 @@ const createConceptFlashcard = (
   kind: 'qa',
   title: `${concept.concept} flashcard`,
   sourceLine: concept.sourceLine,
-  tags: ['study-pack', 'practice', 'concept-first'],
+  tags: ['quick-create', 'practice', 'concept-first'],
   question: createFlashcardPrompt(concept),
   answer: conceptExplanation(concept),
 })
@@ -422,7 +422,7 @@ const createConceptDefinition = (
   kind: 'term',
   title: `${concept.concept} definition`,
   sourceLine: concept.sourceLine,
-  tags: ['study-pack', 'practice', 'concept-first'],
+  tags: ['quick-create', 'practice', 'concept-first'],
   term: concept.concept,
   definition: conceptExplanation(concept),
 })
@@ -445,9 +445,9 @@ const createConceptSummaryList = (
   return {
     id: `${packId}-practice-summary-${index + 1}`,
     kind: 'list',
-    title: `${title || 'Study Pack'} concept recap`,
+    title: `${title || 'Quick Create'} concept recap`,
     sourceLine: concepts[index]?.sourceLine || index + 1,
-    tags: ['study-pack', 'practice', 'concept-first'],
+    tags: ['quick-create', 'practice', 'concept-first'],
     items,
     ordered: false,
     checklist: false,
@@ -463,7 +463,7 @@ const createConceptReviewPrompt = (
   kind: 'reviewPrompt',
   title: `${concept.concept} review`,
   sourceLine: concept.sourceLine,
-  tags: ['study-pack', 'practice', 'concept-first'],
+  tags: ['quick-create', 'practice', 'concept-first'],
   prompt: `Apply ${concept.concept} to a fresh example and explain the rule you used.`,
   reason: conceptExplanation(concept),
   status: 'needsReview',
@@ -482,7 +482,7 @@ const createFlashcard = (
     kind: 'qa',
     title: `${concept} flashcard`,
     sourceLine: index + 1,
-    tags: ['study-pack', 'practice'],
+    tags: ['quick-create', 'practice'],
     question:
       concept === 'this lesson point'
         ? 'What is the key idea in this note?'
@@ -504,7 +504,7 @@ const createDefinition = (
     kind: 'term',
     title: `${concept} definition`,
     sourceLine: index + 1,
-    tags: ['study-pack', 'practice'],
+    tags: ['quick-create', 'practice'],
     term: concept,
     definition: fact,
   }
@@ -522,9 +522,9 @@ const createSummaryList = (
   return {
     id: `${packId}-practice-summary-${index + 1}`,
     kind: 'list',
-    title: `${title || 'Study Pack'} summary`,
+    title: `${title || 'Quick Create'} summary`,
     sourceLine: index + 1,
-    tags: ['study-pack', 'practice'],
+    tags: ['quick-create', 'practice'],
     items,
     ordered: false,
     checklist: false,
@@ -544,9 +544,9 @@ const createFactTable = (
   return {
     id: `${packId}-practice-table-${index + 1}`,
     kind: 'table',
-    title: `${title || 'Study Pack'} key facts`,
+    title: `${title || 'Quick Create'} key facts`,
     sourceLine: index + 1,
-    tags: ['study-pack', 'practice'],
+    tags: ['quick-create', 'practice'],
     headers: ['#', 'Source fact'],
     rows,
   }
@@ -565,9 +565,9 @@ const createSupportPrompt = (
     kind: 'reviewPrompt',
     title: `${concept} review`,
     sourceLine: index + 1,
-    tags: ['study-pack', 'practice'],
+    tags: ['quick-create', 'practice'],
     prompt: `Review this source point: ${fact}`,
-    reason: 'Generated to keep the Study Pack practice-focused.',
+    reason: 'Generated to keep the Quick Create practice-focused.',
     status: 'needsReview',
   }
 }
@@ -692,11 +692,11 @@ const pushNextFlashcard = ({
   )
 }
 
-export const augmentStudyPackPracticeObjects = (
+export const augmentQuickCreatePracticeObjects = (
   inputObjects: StudyObject[],
-  options: AugmentStudyPackPracticeOptions,
-): AugmentStudyPackPracticeResult => {
-  const profile = createStudyPackPracticeProfile(
+  options: AugmentQuickCreatePracticeOptions,
+): AugmentQuickCreatePracticeResult => {
+  const profile = createQuickCreatePracticeProfile(
     options.generationAmount,
     options.generationTargets,
   )

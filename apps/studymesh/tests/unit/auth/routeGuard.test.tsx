@@ -94,7 +94,7 @@ describe('RequireAuth route guard', () => {
     })
 
     renderProtectedWorkspace(
-      '/workspace?action=create-from-notes',
+      '/workspace?action=create-quick-create',
       (path) => {
         currentPath = path
       },
@@ -103,7 +103,7 @@ describe('RequireAuth route guard', () => {
     expect(await screen.findByText('Login page')).toBeInTheDocument()
     expect(currentPath).toContain('/login')
     expect(currentPath).toContain(
-      'redirect=%2Fworkspace%3Faction%3Dcreate-from-notes',
+      'redirect=%2Fworkspace%3Faction%3Dcreate-quick-create',
     )
     expect(localStorage.setItem).not.toHaveBeenCalledWith(
       'userData',

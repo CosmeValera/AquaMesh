@@ -2,7 +2,7 @@ import { CustomWidget } from '../components/WidgetEditor/WidgetStorage'
 import { ComponentData } from '../components/WidgetEditor/types/types'
 import { DashboardLayout } from '../state/store'
 
-export type StudyPackSourceFormat =
+export type QuickCreateSourceFormat =
   | 'paste'
   | 'markdown'
   | 'text'
@@ -152,10 +152,10 @@ export type StudyObject =
   | StudyTableObject
   | StudyResourceObject
 
-export interface StudyPack {
+export interface QuickCreate {
   id: string
   title: string
-  sourceFormat: StudyPackSourceFormat
+  sourceFormat: QuickCreateSourceFormat
   objects: StudyObject[]
   warnings: string[]
   sourceSummary?: {
@@ -165,14 +165,14 @@ export interface StudyPack {
   dashboardRole?: StudyPathDashboardRole
 }
 
-export interface StudyPackParseOptions {
+export interface QuickCreateParseOptions {
   title?: string
-  sourceFormat?: StudyPackSourceFormat
+  sourceFormat?: QuickCreateSourceFormat
   packId?: string
   defaultTags?: string[]
 }
 
-export interface StudyPackGeneratorOptions {
+export interface QuickCreateGeneratorOptions {
   author?: string
   category?: string
   createdAt?: string
@@ -186,7 +186,7 @@ export interface StudyPackGeneratorOptions {
   rawSource?: string
   maxObjectsPerWidget?: number
   widgetIdPrefix?: string
-  widgetGroups?: StudyPackWidgetGroupInput[]
+  widgetGroups?: QuickCreateWidgetGroupInput[]
   studyPath?: StudyPathDashboardContext
 }
 
@@ -205,33 +205,33 @@ export interface StudyPathDashboardContext {
   sourceRefs?: StudyPathSourceRef[]
 }
 
-export type StudyPackDashboardLayoutMode = 'smart' | 'tabs' | 'orchestrator'
+export type QuickCreateDashboardLayoutMode = 'smart' | 'tabs' | 'orchestrator'
 
-export interface StudyPackDashboardLayoutOptions {
-  mode?: StudyPackDashboardLayoutMode
+export interface QuickCreateDashboardLayoutOptions {
+  mode?: QuickCreateDashboardLayoutMode
 }
 
-export interface StudyPackWidgetGroupInput {
+export interface QuickCreateWidgetGroupInput {
   name: string
   objects: StudyObject[]
 }
 
-export type StudyPackWidgetRecord = CustomWidget
+export type QuickCreateWidgetRecord = CustomWidget
 
-export type StudyPackSaveWidgetInput = Omit<
+export type QuickCreateSaveWidgetInput = Omit<
   CustomWidget,
   'id' | 'createdAt' | 'updatedAt'
 >
 
-export interface StudyPackGeneratedDashboard {
+export interface QuickCreateGeneratedDashboard {
   name: string
   layout: DashboardLayout
 }
 
-export interface GeneratedStudyPack {
-  pack: StudyPack
-  widgets: StudyPackWidgetRecord[]
-  dashboard: StudyPackGeneratedDashboard
+export interface GeneratedQuickCreate {
+  pack: QuickCreate
+  widgets: QuickCreateWidgetRecord[]
+  dashboard: QuickCreateGeneratedDashboard
 }
 
-export type StudyPackComponent = ComponentData
+export type QuickCreateComponent = ComponentData

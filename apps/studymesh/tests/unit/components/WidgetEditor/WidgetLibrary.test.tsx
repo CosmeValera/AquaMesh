@@ -8,7 +8,7 @@ import { CustomWidget } from '../../../../src/components/WidgetEditor/WidgetStor
 const createWidget = (
   id: string,
   name: string,
-  category = 'Study Pack',
+  category = 'Quick Create',
 ): CustomWidget => ({
   id,
   name,
@@ -36,8 +36,8 @@ describe('WidgetLibrary bulk actions', () => {
   it('lets users choose which saved widgets delete all removes', async () => {
     const onDelete = vi.fn()
     const widgets = [
-      createWidget('study-1', 'Vocabulary Cards', 'Study Pack'),
-      createWidget('study-2', 'Grammar Quiz', 'Study Pack'),
+      createWidget('study-1', 'Vocabulary Cards', 'Quick Create'),
+      createWidget('study-2', 'Grammar Quiz', 'Quick Create'),
       createWidget('chart-1', 'Progress Chart', 'Dashboard'),
     ]
 
@@ -61,7 +61,7 @@ describe('WidgetLibrary bulk actions', () => {
     const deleteDialog = await screen.findByRole('dialog', {
       name: /delete all saved widgets/i,
     })
-    expect(within(deleteDialog).getByText('Study Pack')).toBeInTheDocument()
+    expect(within(deleteDialog).getByText('Quick Create')).toBeInTheDocument()
     expect(within(deleteDialog).getByText('Dashboard')).toBeInTheDocument()
     expect(
       within(deleteDialog).getByText('Vocabulary Cards'),

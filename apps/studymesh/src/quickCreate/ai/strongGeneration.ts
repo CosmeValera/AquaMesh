@@ -1,6 +1,6 @@
 import {
   StudyObject,
-  StudyPackSourceFormat,
+  QuickCreateSourceFormat,
   StudyPathDashboardPurpose,
   StudyPathDashboardRole,
   StudyPathPracticeType,
@@ -11,16 +11,16 @@ import {
   extractLearningConcepts,
 } from '../concepts'
 import {
-  augmentStudyPackPracticeObjects,
-  createStudyPackPracticeProfile,
+  augmentQuickCreatePracticeObjects,
+  createQuickCreatePracticeProfile,
   getEffectiveGenerationTargets,
 } from '../practice'
 import {
   assertRoleObjectsAreClean,
   applyStudyMaterialResourceTypeToDraft,
   filterStudyObjectsForDashboardRole,
-  normalizeAiStudyPackDraft,
-  AiStudyPackDraft,
+  normalizeAiQuickCreateDraft,
+  AiQuickCreateDraft,
   StudyMaterialDetailLevel,
   StudyMaterialResourceType,
 } from './normalizer'
@@ -86,7 +86,7 @@ const geminiDetailTargets: Record<
 
 export type QuizQuestionStyle = 'mixed' | 'conceptual' | 'examLike'
 
-export interface GenerateStudyPackWithAiOptions {
+export interface GenerateQuickCreateWithAiOptions {
   apiToken: string
   model: string
   strongProvider?: StrongAiProviderId
@@ -125,7 +125,7 @@ interface AiStudyPathSupportArtifacts {
   checkpointRubric?: string[]
 }
 
-export interface AiStudyPathDashboardDraft extends AiStudyPackDraft {
+export interface AiStudyPathDashboardDraft extends AiQuickCreateDraft {
   summary: string
   dashboardRole: StudyPathDashboardRole
   contentMode?: StudyPathContentMode
@@ -279,7 +279,7 @@ const formatLessonNotesForReading = (
 }
 
 const studyObjectToLessonNote = (
-  object: AiStudyPackDraft['objects'][number],
+  object: AiQuickCreateDraft['objects'][number],
 ): string => {
   switch (object.kind) {
     case 'markdown':
@@ -323,7 +323,7 @@ const buildStudyPathLessonNotes = (
   title: string,
   summary: string,
   rawNotes: string,
-  objects: AiStudyPackDraft['objects'],
+  objects: AiQuickCreateDraft['objects'],
 ): string => {
   if (hasUsefulLessonNotes(rawNotes)) {
     return formatLessonNotesForReading(title, summary, rawNotes)
@@ -339,12 +339,6 @@ const buildStudyPathLessonNotes = (
     .map((part) => part.trim())
     .filter(Boolean)
     .join('\n\n')
-}
-
-export interface ExtractRawNotesWithAiOptions {
-  apiToken: string
-  model: string
-  image: File
 }
 
 const textArraySchema = { type: 'ARRAY', items: { type: 'STRING' } }
@@ -965,7 +959,7 @@ const textFromRawNotes = (rawNotes: unknown): string =>
   typeof rawNotes === 'string' ? rawNotes.replace(/\s+/g, ' ').trim() : ''
 
 const sourceSummaryBullets = (
-  sourceSummary: AiStudyPackDraft['sourceSummary'],
+  sourceSummary: AiQuickCreateDraft['sourceSummary'],
 ): string[] =>
   sourceSummary?.bullets
     .map((bullet) => bullet.replace(/\s+/g, ' ').trim())
@@ -991,7 +985,7 @@ const buildFallbackObjectsForDashboardRole = ({
   dashboardTitle: string
   dashboardRole: StudyPathDashboardRole
   rawNotes: unknown
-  sourceSummary: AiStudyPackDraft['sourceSummary']
+  sourceSummary: AiQuickCreateDraft['sourceSummary']
   accumulatedContentNotes: string[]
 }): StudyObject[] => {
   const bullets = sourceSummaryBullets(sourceSummary)
@@ -1071,7 +1065,7 @@ const createSupportArtifactObjects = (
       kind: 'term',
       title: item.term,
       sourceLine: index + 1,
-      tags: ['study-pack', 'ai-generated', 'support-artifact'],
+      tags: ['quick-create', 'ai-generated', 'support-artifact'],
       term: item.term,
       definition: item.definition,
     })
@@ -1083,7 +1077,7 @@ const createSupportArtifactObjects = (
       kind: 'table',
       title: artifacts.contrastTable.title || 'Contrast table',
       sourceLine: 1,
-      tags: ['study-pack', 'ai-generated', 'support-artifact'],
+      tags: ['quick-create', 'ai-generated', 'support-artifact'],
       headers: artifacts.contrastTable.headers,
       rows: artifacts.contrastTable.rows,
     })
@@ -1095,7 +1089,7 @@ const createSupportArtifactObjects = (
       kind: 'reviewPrompt',
       title: `Discussion ${index + 1}`,
       sourceLine: index + 1,
-      tags: ['study-pack', 'ai-generated', 'support-artifact'],
+      tags: ['quick-create', 'ai-generated', 'support-artifact'],
       prompt,
       reason: 'Use this prompt to connect and explain the lesson.',
       status: 'needsReview',
@@ -1107,7 +1101,7 @@ const createSupportArtifactObjects = (
       kind: 'qa',
       title: `Answer key ${index + 1}`,
       sourceLine: index + 1,
-      tags: ['study-pack', 'ai-generated', 'support-artifact'],
+      tags: ['quick-create', 'ai-generated', 'support-artifact'],
       question: item.question,
       answer: item.answer,
     })
@@ -1119,7 +1113,7 @@ const createSupportArtifactObjects = (
       kind: 'list',
       title: 'Checkpoint rubric',
       sourceLine: 1,
-      tags: ['study-pack', 'ai-generated', 'support-artifact'],
+      tags: ['quick-create', 'ai-generated', 'support-artifact'],
       items: artifacts.checkpointRubric.slice(0, 8),
       ordered: false,
       checklist: true,
@@ -1235,17 +1229,6 @@ const isGeminiOutputFormatError = (error: unknown): boolean =>
     error.message,
   )
 
-const fileToBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = String(reader.result || '')
-      resolve(result.includes(',') ? result.split(',')[1] : result)
-    }
-    reader.onerror = () => reject(new Error('Could not read image file.'))
-    reader.readAsDataURL(file)
-  })
-
 const callStrongModel = async (
   apiToken: string,
   model: string,
@@ -1275,34 +1258,7 @@ const callStrongModel = async (
   }
 }
 
-export const extractRawNotesWithAi = async ({
-  apiToken,
-  model,
-  image,
-}: ExtractRawNotesWithAiOptions): Promise<string> => {
-  const data = await fileToBase64(image)
-  const text = await callStrongModel(
-    apiToken,
-    model,
-    [
-      {
-        text: 'Extract study notes from this image. Correct likely OCR mistakes, preserve headings, formulas, lists, and questions. Return only clean Markdown notes grounded in the image.',
-      },
-      {
-        inline_data: {
-          mime_type: image.type || 'image/png',
-          data,
-        },
-      },
-    ],
-    undefined,
-    'gemini',
-  )
-
-  return text.trim()
-}
-
-export const generateStudyPackWithAi = async ({
+export const generateQuickCreateWithAi = async ({
   apiToken,
   model,
   strongProvider = DEFAULT_STRONG_AI_PROVIDER,
@@ -1317,9 +1273,9 @@ export const generateStudyPackWithAi = async ({
   promptMode = false,
   studyPathMode = false,
   strongTransport,
-}: GenerateStudyPackWithAiOptions): Promise<AiStudyPackDraft> => {
+}: GenerateQuickCreateWithAiOptions): Promise<AiQuickCreateDraft> => {
   const effectiveTargets = getEffectiveGenerationTargets(generationTargets)
-  const practiceProfile = createStudyPackPracticeProfile(
+  const practiceProfile = createQuickCreatePracticeProfile(
     generationAmount,
     generationTargets,
   )
@@ -1371,15 +1327,15 @@ export const generateStudyPackWithAi = async ({
     : 'The raw input is source notes. Stay grounded in those notes.'
   const pathInstruction = studyPathMode
     ? 'Organize the material as a Study Guide progression. Use titles/tags that clearly fit: Introduction, Theory, Examples, Practice, Final Review.'
-    : 'Organize the material as a single Study Pack.'
+    : 'Organize the material as a single Quick Create.'
 
-  const promptText = `Create a study pack JSON object ${
+  const promptText = `Create a quick create JSON object ${
     promptMode ? 'from this learning prompt' : 'from these raw notes'
   }.
 
 Return exactly one JSON object with this shape:
 {
-  "title": "Short study pack title",
+  "title": "Short quick create title",
   "sourceFormat": "text",
   "sourceSummary": { "title": "Source summary", "bullets": ["..."] },
   "conceptRecap": {
@@ -1421,7 +1377,7 @@ Rules:
 - Avoid "According to the text..." style questions unless strictly necessary.
 - Every quiz explanation must teach why the correct answer is correct.
 - Quizzes must test application, usage, contrast, formation, exceptions, or common mistakes with a concrete expected answer. Do not ask "Which statement best explains X?", "Which statement matches the notes?", "What does X help you understand or do?", "What is the core idea behind X?", or questions about what the notes say.
-- For language-learning Study Packs, generate grammar/application questions from accepted concepts only: complete a form, choose the trigger expression, choose indicative vs subjunctive, or fix a common mistake.
+- For language-learning Quick Creates, generate grammar/application questions from accepted concepts only: complete a form, choose the trigger expression, choose indicative vs subjunctive, or fix a common mistake.
 - ${
     promptMode
       ? 'Use accurate general knowledge to teach the requested topic; do not pretend the prompt is source notes.'
@@ -1465,7 +1421,7 @@ ${rawNotes}`
 The previous response failed JSON formatting. Retry with a simpler response:
 - Return plain JSON only.
 - Return syntactically valid JSON with all commas and braces in place.
-- Use only the strict Study Pack fields: sourceSummary, conceptRecap, practice, flashcards.
+- Use only the strict Quick Create fields: sourceSummary, conceptRecap, practice, flashcards.
 - Do not use markdown code fences.
 - Do not include comments, trailing commas, undefined, NaN, or extra text.`,
         },
@@ -1516,7 +1472,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
   }
 
   const draft = applyStudyMaterialResourceTypeToDraft(
-    normalizeAiStudyPackDraft(parsed, packId, {
+    normalizeAiQuickCreateDraft(parsed, packId, {
       rawNotes,
       rawAiResponse: text,
     }),
@@ -1527,7 +1483,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
   return {
     ...draft,
     title: draft.title || title,
-    sourceFormat: draft.sourceFormat || ('text' as StudyPackSourceFormat),
+    sourceFormat: draft.sourceFormat || ('text' as QuickCreateSourceFormat),
   }
 }
 
@@ -2247,11 +2203,11 @@ export const generateStudyPathWithAi = async ({
   const stepNames = getStudyPathStepNames()
   const dashboardCount = stepNames.length
   const practiceAmount = 'medium'
-  const practiceProfile = createStudyPackPracticeProfile(practiceAmount, [
+  const practiceProfile = createQuickCreatePracticeProfile(practiceAmount, [
     'summaries',
     'definitions',
   ])
-  const promptText = `Create a Study Guide JSON object. A Study Guide is NOT one dashboard. It is a folder containing multiple ordered dashboards/study packs.
+  const promptText = `Create a Study Guide JSON object. A Study Guide is NOT one dashboard. It is a folder containing multiple ordered dashboards/quick creates.
 
 Return exactly this structure:
 {
@@ -2549,7 +2505,7 @@ ${prompt}`
         dashboardRole,
         dashboardTitle,
       )
-      const draft = normalizeAiStudyPackDraft(roleSanitizedInput, packId, {
+      const draft = normalizeAiQuickCreateDraft(roleSanitizedInput, packId, {
         rawNotes: typeof input.rawNotes === 'string' ? input.rawNotes : '',
         rawAiResponse: text,
         dashboardRole,
@@ -2599,7 +2555,7 @@ ${prompt}`
           : getStudyPathVisiblePracticeTarget(dashboardRole)
       const filledVisibleObjects =
         visiblePracticeTarget > 0
-          ? augmentStudyPackPracticeObjects(visibleRoleObjects, {
+          ? augmentQuickCreatePracticeObjects(visibleRoleObjects, {
               packId,
               title: dashboardTitle,
               rawNotes: textFromRawNotes(input.rawNotes),
@@ -2691,7 +2647,7 @@ ${prompt}`
         objects: finalObjects,
         warnings: [],
         debugTrace,
-        sourceFormat: 'text' as StudyPackSourceFormat,
+        sourceFormat: 'text' as QuickCreateSourceFormat,
       }
 
       accumulatedContentNotes.push(lessonNotes)

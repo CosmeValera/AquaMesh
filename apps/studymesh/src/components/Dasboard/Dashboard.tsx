@@ -54,7 +54,7 @@ import {
   STUDY_GUIDES_CHANGED_EVENT,
   StudyGuideStorage,
 } from '../../studyGuides/storage'
-import { STUDYMESH_GUIDE_STUDY_PATH_ID } from '../../studyPack/studyMeshGuideSeed'
+import { STUDYMESH_GUIDE_STUDY_PATH_ID } from '../../studyGuides/studyMeshGuideSeed'
 import {
   DEFAULT_FOLDER_COLOR,
   FOLDER_COLOR_PRESETS,

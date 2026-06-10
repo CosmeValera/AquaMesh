@@ -8,14 +8,13 @@ import * as LayoutProviderModule from '../../../../src/components/Layout/LayoutP
 import * as DashboardProviderModule from '../../../../src/components/Dasboard/DashboardProvider'
 import {
   OPEN_DASHBOARD_EDITOR_EVENT,
-  OPEN_STUDY_PACK_EVENT,
   OPEN_STUDY_PATH_EVENT,
 } from '../../../../src/customHooks/useWorkspaceActions'
 import { STUDYMESH_ONBOARDING_RESET_EVENT } from '../../../../src/components/onboarding/onboardingEvents'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
-  STUDY_PACK_AI_SETTINGS_KEY,
-} from '../../../../src/studyPack/ai'
+  QUICK_CREATE_AI_SETTINGS_KEY,
+} from '../../../../src/quickCreate/ai'
 
 const hostedAiStatus = vi.hoisted(() => ({
   available: true,
@@ -62,13 +61,7 @@ vi.mock('../../../../src/components/WidgetEditor/WidgetEditor', () => ({
   default: () => <div data-testid="widget-editor">Widget Editor</div>,
 }))
 
-vi.mock('../../../../src/components/studyPack/CreateStudyPackModal', () => ({
-  __esModule: true,
-  default: ({ open }: { open: boolean }) =>
-    open ? <div data-testid="study-pack-modal">Study Pack Modal</div> : null,
-}))
-
-vi.mock('../../../../src/components/studyPack/CreateStudyPathModal', () => ({
+vi.mock('../../../../src/components/studyGuides/CreateStudyGuideModal', () => ({
   __esModule: true,
   default: ({ open }: { open: boolean }) =>
     open ? <div data-testid="study-path-modal">Study Guide Modal</div> : null,
@@ -163,7 +156,7 @@ describe('TopNavBar Component', () => {
         })
       }
 
-      if (key === STUDY_PACK_AI_SETTINGS_KEY) {
+      if (key === QUICK_CREATE_AI_SETTINGS_KEY) {
         return JSON.stringify({
           provider: 'gemini',
           apiToken: 'test-token',
@@ -262,7 +255,7 @@ describe('TopNavBar Component', () => {
     expect(screen.getByTestId('logo')).toBeInTheDocument()
     expect(screen.getByTestId('dashboard-options-menu')).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /create from notes/i }),
+      screen.queryByRole('button', { name: /quick create/i }),
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /create study guide/i }),
@@ -292,7 +285,7 @@ describe('TopNavBar Component', () => {
     ).toBeTruthy()
   })
 
-  it('keeps Study Guide and Create From Notes event entry points available in Local AI mode', async () => {
+  it('keeps Study Guide and Quick Create event entry points available in Local AI mode', async () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -302,7 +295,7 @@ describe('TopNavBar Component', () => {
         })
       }
 
-      if (key === STUDY_PACK_AI_SETTINGS_KEY) {
+      if (key === QUICK_CREATE_AI_SETTINGS_KEY) {
         return JSON.stringify({
           provider: 'local',
           apiToken: '',
@@ -324,14 +317,10 @@ describe('TopNavBar Component', () => {
     })
     expect(await screen.findByText('Study Guide Modal')).toBeInTheDocument()
 
-    act(() => {
-      window.dispatchEvent(new Event(OPEN_STUDY_PACK_EVENT))
-    })
-    expect(await screen.findByTestId('study-pack-modal')).toBeInTheDocument()
     expect(screen.getByText('AI: Local')).toBeInTheDocument()
   })
 
-  it('keeps Study Guide and Create From Notes entry points available in hosted Study Credits mode', async () => {
+  it('keeps Study Guide and Quick Create entry points available in hosted Study Credits mode', async () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -341,7 +330,7 @@ describe('TopNavBar Component', () => {
         })
       }
 
-      if (key === STUDY_PACK_AI_SETTINGS_KEY) {
+      if (key === QUICK_CREATE_AI_SETTINGS_KEY) {
         return JSON.stringify({
           provider: 'hosted',
           apiToken: '',
@@ -360,11 +349,9 @@ describe('TopNavBar Component', () => {
 
     act(() => {
       window.dispatchEvent(new Event(OPEN_STUDY_PATH_EVENT))
-      window.dispatchEvent(new Event(OPEN_STUDY_PACK_EVENT))
     })
 
     expect(await screen.findByText('Study Guide Modal')).toBeInTheDocument()
-    expect(await screen.findByTestId('study-pack-modal')).toBeInTheDocument()
   })
 
   it('shows compact hosted Study Credits balance when hosted mode is selected', async () => {
@@ -377,7 +364,7 @@ describe('TopNavBar Component', () => {
         })
       }
 
-      if (key === STUDY_PACK_AI_SETTINGS_KEY) {
+      if (key === QUICK_CREATE_AI_SETTINGS_KEY) {
         return JSON.stringify({
           provider: 'hosted',
           apiToken: '',
@@ -432,7 +419,7 @@ describe('TopNavBar Component', () => {
         })
       }
 
-      if (key === STUDY_PACK_AI_SETTINGS_KEY) {
+      if (key === QUICK_CREATE_AI_SETTINGS_KEY) {
         return JSON.stringify({
           provider: 'hosted',
           apiToken: '',
@@ -521,7 +508,7 @@ describe('TopNavBar Component', () => {
         })
       }
 
-      if (key === STUDY_PACK_AI_SETTINGS_KEY) {
+      if (key === QUICK_CREATE_AI_SETTINGS_KEY) {
         return JSON.stringify({
           provider: 'cerebras',
           apiToken: 'own-cerebras-token',
@@ -604,7 +591,7 @@ describe('TopNavBar Component', () => {
         })
       }
 
-      if (key === STUDY_PACK_AI_SETTINGS_KEY) {
+      if (key === QUICK_CREATE_AI_SETTINGS_KEY) {
         return JSON.stringify({
           provider: 'gemini',
           apiToken: 'test-token',
@@ -635,36 +622,6 @@ describe('TopNavBar Component', () => {
     ).toHaveAttribute('aria-disabled', 'true')
   })
 
-  it('opens Create From Notes from the workspace event without opening Widget or Dashboard', async () => {
-    const dashboardEditorListener = vi.fn()
-    const studyPackListener = vi.fn()
-    window.addEventListener(
-      OPEN_DASHBOARD_EDITOR_EVENT,
-      dashboardEditorListener,
-    )
-    window.addEventListener(OPEN_STUDY_PACK_EVENT, studyPackListener)
-
-    render(
-      <BrowserRouter>
-        <TopNavBar />
-      </BrowserRouter>,
-    )
-
-    act(() => {
-      window.dispatchEvent(new Event(OPEN_STUDY_PACK_EVENT))
-    })
-
-    expect(studyPackListener).toHaveBeenCalledTimes(1)
-    expect(dashboardEditorListener).not.toHaveBeenCalled()
-    expect(await screen.findByTestId('study-pack-modal')).toBeInTheDocument()
-    expect(screen.queryByTestId('widget-editor')).not.toBeInTheDocument()
-
-    window.removeEventListener(
-      OPEN_DASHBOARD_EDITOR_EVENT,
-      dashboardEditorListener,
-    )
-    window.removeEventListener(OPEN_STUDY_PACK_EVENT, studyPackListener)
-  })
 
   it('replays the workspace tutorial from application settings', async () => {
     const resetListener = vi.fn()

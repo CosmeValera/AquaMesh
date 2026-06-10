@@ -3,7 +3,7 @@ import { Alert, Box, Chip, Stack, Typography } from '@mui/material'
 import TollIcon from '@mui/icons-material/Toll'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 
-import { STUDY_CREDITS_LABEL } from '../../studyPack/ai'
+import { STUDY_CREDITS_LABEL } from '../../quickCreate/ai'
 import HostedAiPricingCards from './HostedAiPricingCards'
 import { useHostedAiStatus } from './useHostedAiStatus'
 
@@ -47,8 +47,7 @@ const HostedAiSettingsPanel: React.FC = () => {
             {STUDY_CREDITS_LABEL}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Hosted AI uses app credits. Images still use OCR or image-capable
-            providers before text generation.
+            Hosted AI uses app credits for Study Guides and Quick Create.
           </Typography>
         </Box>
         <Chip

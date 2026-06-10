@@ -59,6 +59,7 @@ const renderPanel = (
     onQuickCreatePage?: React.ComponentProps<
       typeof DashboardChatPanel
     >['onQuickCreatePage']
+    supportsStudyGuideCreateScope?: boolean
   } = {},
 ) =>
   render(
@@ -68,6 +69,7 @@ const renderPanel = (
       onMessagesChange={vi.fn()}
       onClose={vi.fn()}
       onQuickCreatePage={options.onQuickCreatePage ?? vi.fn()}
+      supportsStudyGuideCreateScope={options.supportsStudyGuideCreateScope}
     />,
   )
 
@@ -101,6 +103,45 @@ describe('DashboardChatPanel quick create menu', () => {
         actionId: 'quiz',
         resourceType: 'quiz',
         label: 'Quiz',
+      }),
+    )
+  })
+
+  it('defaults Study Guide Create to Study Guide source', async () => {
+    const onQuickCreatePage = vi.fn().mockResolvedValue(undefined)
+    renderPanel({ onQuickCreatePage, supportsStudyGuideCreateScope: true })
+
+    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
+
+    expect(
+      screen.getByText(/Excludes previous Quick Create results/i),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /^Quiz$/i }))
+
+    await waitFor(() =>
+      expect(onQuickCreatePage).toHaveBeenCalledWith({
+        actionId: 'quiz',
+        resourceType: 'quiz',
+        label: 'Quiz',
+        sourceScope: 'studyGuide',
+      }),
+    )
+  })
+
+  it('can create from only the current Study Guide page', async () => {
+    const onQuickCreatePage = vi.fn().mockResolvedValue(undefined)
+    renderPanel({ onQuickCreatePage, supportsStudyGuideCreateScope: true })
+
+    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Current page$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Flashcards$/i }))
+
+    await waitFor(() =>
+      expect(onQuickCreatePage).toHaveBeenCalledWith({
+        actionId: 'flashcards',
+        resourceType: 'flashcards',
+        label: 'Flashcards',
+        sourceScope: 'currentPage',
       }),
     )
   })

@@ -29,6 +29,7 @@ import HostedAiIntroModal from '../hostedAi/HostedAiIntroModal'
 import {
   appendStudyGuideMarkdownPage,
   createMarkdownStudyGuidePageLayout,
+  getStudyGuideCreationSourceText,
   getStudyGuidePageText,
 } from '../../studyGuides/pages'
 import { appendAiQuickCreatePage } from '../../studyGuides/generation'
@@ -184,16 +185,26 @@ const GuideWorkspacePage = () => {
     const currentPage =
       record.studyPath.dashboards[record.studyPath.selectedIndex] ||
       record.studyPath.dashboards[0]
-    const sourceText =
-      getStudyGuidePageText(currentPage) ||
-      record.studyPath.title ||
-      'Study Guide'
+    const currentPageText = getStudyGuidePageText(currentPage)
+    const studyGuideSourceText = getStudyGuideCreationSourceText(
+      record.studyPath,
+    )
+    const useCurrentPage = request.sourceScope === 'currentPage'
+    const sourceText = useCurrentPage
+      ? currentPageText || studyGuideSourceText || record.studyPath.title
+      : studyGuideSourceText ||
+        currentPageText ||
+        record.studyPath.title ||
+        'Study Guide'
+    const sourceTitle = useCurrentPage
+      ? currentPage?.name || record.title
+      : record.studyPath.title || record.title
 
     try {
       const nextStudyPath = await appendAiQuickCreatePage({
         studyPath: record.studyPath,
         resourceType: request.resourceType,
-        sourceTitle: currentPage?.name || record.title,
+        sourceTitle,
         sourceText,
       })
       const nextRecord = persistStudyPath(nextStudyPath)
@@ -292,6 +303,7 @@ const GuideWorkspacePage = () => {
         showCloseButton
         onAddAssistantMessageToGuide={addAssistantMessageToGuide}
         onQuickCreatePage={quickCreatePage}
+        supportsStudyGuideCreateScope
       />
       {quickCreateError ? (
         <Alert

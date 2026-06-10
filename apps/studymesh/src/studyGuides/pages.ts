@@ -14,6 +14,8 @@ export type StudyGuidePageSource = 'manual' | 'chat' | 'quickCreate'
 const makePageKey = (studyPathId: string) =>
   `${studyPathId}-page-${Date.now()}-${nanoid(6)}`
 
+const MAX_STUDY_GUIDE_CREATION_SOURCE_LENGTH = 24000
+
 const withStudyPathProps = (
   studyPath: StudyPathContainerState,
   pageKey: string,
@@ -265,6 +267,27 @@ export const getStudyGuidePageText = (
     .map((chunk) => chunk.trim())
     .filter(Boolean)
     .join('\n\n')
+}
+
+export const getStudyGuideCreationSourceText = (
+  studyPath: StudyPathContainerState,
+): string => {
+  const source = studyPath.dashboards
+    .filter((page) => page.createdBy !== 'quickCreate')
+    .map((page) => {
+      const text = getStudyGuidePageText(page)
+      return text ? `# ${page.name}\n\n${text}` : ''
+    })
+    .filter(Boolean)
+    .join('\n\n---\n\n')
+
+  if (source.length <= MAX_STUDY_GUIDE_CREATION_SOURCE_LENGTH) {
+    return source
+  }
+
+  return `${source
+    .slice(0, MAX_STUDY_GUIDE_CREATION_SOURCE_LENGTH)
+    .trimEnd()}\n\n[Study Guide source truncated]`
 }
 
 export const appendStudyGuideMarkdownPage = (

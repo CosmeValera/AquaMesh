@@ -2,6 +2,7 @@ import type { StudyMaterialResourceType } from './ai'
 
 export type QuickCreateActionId = 'quiz' | 'flashcards' | 'improvedNotes'
 export type QuickCreateActionGroup = 'Practice' | 'Notes'
+export type QuickCreateSourceScope = 'studyGuide' | 'currentPage'
 
 export interface QuickCreateAction {
   id: QuickCreateActionId
@@ -19,6 +20,7 @@ export interface QuickCreateActionRequest {
   actionId: QuickCreateActionId
   resourceType: StudyMaterialResourceType
   label: string
+  sourceScope?: QuickCreateSourceScope
 }
 
 export type QuickCreateActionInput =
@@ -120,6 +122,7 @@ export const normalizeQuickCreateActionInput = (
       actionId: inputActionId || action?.id || input.resourceType,
       resourceType: input.resourceType,
       label: input.label || quickCreateLabels[input.resourceType],
+      sourceScope: 'sourceScope' in input ? input.sourceScope : undefined,
     }
   }
 

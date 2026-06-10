@@ -12,6 +12,8 @@ import {
   Stack,
   TextField,
   Tooltip,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
   useMediaQuery,
   useTheme,
@@ -41,6 +43,7 @@ import {
   type QuickCreateAction,
   type QuickCreateActionId,
   type QuickCreateActionRequest,
+  type QuickCreateSourceScope,
 } from '../../studyPack/quickCreateActions'
 import { renderMarkdown } from '../WidgetEditor/components/preview/StudyBlockView'
 
@@ -61,6 +64,7 @@ interface DashboardChatPanelProps {
   showCloseButton?: boolean
   onAddAssistantMessageToGuide?: (message: DashboardChatMessage) => void
   onQuickCreatePage?: (request: QuickCreateActionRequest) => Promise<void>
+  supportsStudyGuideCreateScope?: boolean
 }
 
 const suggestions = [
@@ -101,6 +105,7 @@ const DashboardChatPanel = ({
   showCloseButton = true,
   onAddAssistantMessageToGuide,
   onQuickCreatePage,
+  supportsStudyGuideCreateScope = false,
 }: DashboardChatPanelProps) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -117,6 +122,10 @@ const DashboardChatPanel = ({
   const [quickCreateMenuAnchor, setQuickCreateMenuAnchor] =
     useState<HTMLElement | null>(null)
   const [quickCreateSearch, setQuickCreateSearch] = useState('')
+  const [quickCreateSourceScope, setQuickCreateSourceScope] =
+    useState<QuickCreateSourceScope>(
+      supportsStudyGuideCreateScope ? 'studyGuide' : 'currentPage',
+    )
   const messagesRef = useRef(messages)
   const queueRef = useRef(Promise.resolve())
   const settings = readStudyPackAiSettings()
@@ -278,6 +287,9 @@ const DashboardChatPanel = ({
         actionId: action.id,
         resourceType: action.resourceType,
         label: action.label,
+        ...(supportsStudyGuideCreateScope
+          ? { sourceScope: quickCreateSourceScope }
+          : {}),
       })
     } catch (err) {
       setError(
@@ -323,12 +335,37 @@ const DashboardChatPanel = ({
       <Stack spacing={1}>
         <Box sx={{ px: 0.5 }}>
           <Typography variant="subtitle2" fontWeight={900}>
-            Create from this page
+            {supportsStudyGuideCreateScope
+              ? quickCreateSourceScope === 'studyGuide'
+                ? 'Create from Study Guide source'
+                : 'Create from current page'
+              : 'Create from this page'}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Generate study material from current dashboard context.
+            {supportsStudyGuideCreateScope
+              ? quickCreateSourceScope === 'studyGuide'
+                ? 'Uses lesson, manual, and chat-note pages. Excludes previous Quick Create results.'
+                : 'Uses only the page currently open in the Study Guide.'
+              : 'Generate study material from current dashboard context.'}
           </Typography>
         </Box>
+        {supportsStudyGuideCreateScope ? (
+          <ToggleButtonGroup
+            value={quickCreateSourceScope}
+            exclusive
+            fullWidth
+            size="small"
+            onChange={(_, value: QuickCreateSourceScope | null) => {
+              if (value) {
+                setQuickCreateSourceScope(value)
+              }
+            }}
+            aria-label="Quick Create source scope"
+          >
+            <ToggleButton value="studyGuide">Study Guide source</ToggleButton>
+            <ToggleButton value="currentPage">Current page</ToggleButton>
+          </ToggleButtonGroup>
+        ) : null}
         {showQuickCreateSearch ? (
           <TextField
             value={quickCreateSearch}

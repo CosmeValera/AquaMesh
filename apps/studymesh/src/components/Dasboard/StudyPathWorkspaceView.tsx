@@ -14,6 +14,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
+import { alpha, type Theme } from '@mui/material/styles'
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
@@ -37,6 +38,35 @@ import { renderMarkdown } from '../WidgetEditor/components/preview/StudyBlockVie
 const STUDY_GUIDE_EDITOR_LAYOUT_KEY = 'studymesh-study-guide-editor-layout-v1'
 
 type EditorLayoutMode = 'split' | 'stacked'
+type PageIconTone = 'primary' | 'error'
+
+const pageIconButtonSx = (tone: PageIconTone = 'primary') => (theme: Theme) => {
+  const paletteColor =
+    tone === 'error' ? theme.palette.error.main : theme.palette.primary.main
+  const hoverColor =
+    tone === 'error' ? theme.palette.error.dark : theme.palette.primary.dark
+
+  return {
+    width: 34,
+    height: 34,
+    border: 1,
+    borderColor: alpha(paletteColor, 0.44),
+    bgcolor: alpha(paletteColor, theme.palette.mode === 'dark' ? 0.18 : 0.1),
+    color: paletteColor,
+    flex: '0 0 auto',
+    '&:hover': {
+      borderColor: paletteColor,
+      bgcolor: alpha(paletteColor, theme.palette.mode === 'dark' ? 0.28 : 0.18),
+      color: hoverColor,
+    },
+    '&.Mui-disabled': {
+      borderColor: theme.palette.divider,
+      bgcolor: theme.palette.action.disabledBackground,
+      color: theme.palette.text.disabled,
+      opacity: 0.72,
+    },
+  }
+}
 
 const readEditorLayoutPreference = (): EditorLayoutMode => {
   try {
@@ -296,6 +326,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                 aria-label="Previous page"
                 disabled={!canGoPrevious}
                 onClick={() => selectLesson(selectedIndex - 1)}
+                sx={pageIconButtonSx()}
               >
                 <ChevronLeftIcon fontSize="small" />
               </IconButton>
@@ -316,6 +347,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                 aria-label="Next page"
                 disabled={!canGoNext}
                 onClick={() => selectLesson(selectedIndex + 1)}
+                sx={pageIconButtonSx()}
               >
                 <ChevronRightIcon fontSize="small" />
               </IconButton>
@@ -428,6 +460,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                             aria-label={`Move ${lesson.name} up`}
                             disabled={index === 0}
                             onClick={() => moveLesson(index, -1)}
+                            sx={pageIconButtonSx()}
                           >
                             <ArrowUpwardIcon fontSize="small" />
                           </IconButton>
@@ -440,6 +473,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                             aria-label={`Move ${lesson.name} down`}
                             disabled={index === studyPath.dashboards.length - 1}
                             onClick={() => moveLesson(index, 1)}
+                            sx={pageIconButtonSx()}
                           >
                             <ArrowDownwardIcon fontSize="small" />
                           </IconButton>
@@ -458,6 +492,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                             aria-label={`Delete ${lesson.name}`}
                             disabled={!lesson.deletable}
                             onClick={() => deleteLesson(lesson.dashboardKey)}
+                            sx={pageIconButtonSx('error')}
                           >
                             <DeleteOutlineIcon fontSize="small" />
                           </IconButton>

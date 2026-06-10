@@ -89,6 +89,10 @@ For hook tests, run `tools/git-hooks/lib/bashunit tools/git-hooks/tests`.
 
 Use TypeScript/React patterns already present in each app. Components use PascalCase filenames such as `WidgetEditor.tsx`; hooks use `useX.ts`; SCSS modules use `*.module.scss`. StudyMesh ESLint requires 2-space indentation, no semicolons, `eqeqeq`, and braces for all control blocks. Prefer named exports for reusable shared code and keep app-specific code inside its app boundary.
 
+## UI Contrast Requirements
+
+Icon-only controls must not rely on default MUI `IconButton` colors. For toolbar/navigation/destructive icon buttons, always set explicit `color`, `bgcolor`, `borderColor`, hover styles, and disabled styles with readable contrast in both light and dark themes. This is required for page navigation, reorder, delete, close/open, resize-adjacent, and similar controls on desktop and phone/tablet. Disabled icons may be muted, but they must remain visibly intentional, not nearly invisible.
+
 ## Testing Guidelines
 
 Use Vitest with React Testing Library for unit tests and Playwright for end-to-end coverage. Name unit tests `*.test.ts` or `*.test.tsx`; name e2e specs `*.spec.ts`. Keep snapshots in the existing `*-snapshots` folders and update them only when the visual change is intentional.

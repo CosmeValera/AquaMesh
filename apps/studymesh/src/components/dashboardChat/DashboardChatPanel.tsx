@@ -61,6 +61,29 @@ const suggestions = [
 const makeMessageId = () =>
   `dashboard-chat-${Date.now()}-${Math.random().toString(36).slice(2)}`
 
+const quickCreateLabels: Record<StudyMaterialResourceType, string> = {
+  quiz: 'Quiz',
+  flashcards: 'Flashcards',
+  improvedNotes: 'Expand on this',
+}
+
+const getQuickCreateEstimateSeconds = (): number => {
+  const provider = readStudyPackAiSettings().provider || 'basic'
+  if (provider === 'basic') {
+    return 10
+  }
+
+  if (provider === 'local') {
+    return 90
+  }
+
+  if (provider === 'cerebras' || provider === 'hosted') {
+    return 20
+  }
+
+  return 60
+}
+
 const DashboardChatPanel = ({
   dashboard,
   messages,
@@ -76,6 +99,10 @@ const DashboardChatPanel = ({
   const [error, setError] = useState('')
   const [activeStartedAt, setActiveStartedAt] = useState<number | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [quickCreateStartedAt, setQuickCreateStartedAt] = useState<
+    number | null
+  >(null)
+  const [quickCreateElapsedSeconds, setQuickCreateElapsedSeconds] = useState(0)
   const [quickCreateType, setQuickCreateType] =
     useState<StudyMaterialResourceType | null>(null)
   const messagesRef = useRef(messages)
@@ -113,6 +140,21 @@ const DashboardChatPanel = ({
 
     return () => window.clearInterval(interval)
   }, [activeStartedAt])
+
+  useEffect(() => {
+    if (!quickCreateStartedAt) {
+      setQuickCreateElapsedSeconds(0)
+      return undefined
+    }
+
+    const interval = window.setInterval(() => {
+      setQuickCreateElapsedSeconds(
+        Math.floor((Date.now() - quickCreateStartedAt) / 1000),
+      )
+    }, 1000)
+
+    return () => window.clearInterval(interval)
+  }, [quickCreateStartedAt])
 
   const updateMessage = (
     messageId: string,
@@ -216,6 +258,7 @@ const DashboardChatPanel = ({
 
     setError('')
     setQuickCreateType(resourceType)
+    setQuickCreateStartedAt(Date.now())
     try {
       await onQuickCreatePage(resourceType)
     } catch (err) {
@@ -224,6 +267,7 @@ const DashboardChatPanel = ({
       )
     } finally {
       setQuickCreateType(null)
+      setQuickCreateStartedAt(null)
     }
   }
 
@@ -234,6 +278,8 @@ const DashboardChatPanel = ({
       ? `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
       : `${remainingSeconds}s`
   }
+
+  const quickCreateEstimateSeconds = getQuickCreateEstimateSeconds()
 
   return (
     <Box
@@ -528,31 +574,51 @@ const DashboardChatPanel = ({
       <Box sx={{ borderTop: 1, borderColor: 'divider' }} />
       <Box sx={{ p: 1.5, bgcolor: 'background.paper' }}>
         {onQuickCreatePage ? (
-          <Stack direction="row" spacing={0.75} sx={{ mb: 1 }}>
-            {[
-              ['quiz', 'Quiz'],
-              ['flashcards', 'Flashcards'],
-              ['improvedNotes', 'Expand on this'],
-            ].map(([resourceType, label]) => (
-              <Button
-                key={resourceType}
-                size="small"
-                variant="outlined"
-                disabled={!hasContext || Boolean(quickCreateType)}
-                onClick={() =>
-                  void runQuickCreate(resourceType as StudyMaterialResourceType)
-                }
-                sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontSize: { xs: '0.72rem', sm: '0.8125rem' },
-                }}
-              >
-                {quickCreateType === resourceType ? 'Creating...' : label}
-              </Button>
-            ))}
+          <Stack spacing={0.75} sx={{ mb: 1 }}>
+            <Stack direction="row" spacing={0.75}>
+              {(
+                ['quiz', 'flashcards', 'improvedNotes'] as StudyMaterialResourceType[]
+              ).map((resourceType) => {
+                const active = quickCreateType === resourceType
+                return (
+                  <Button
+                    key={resourceType}
+                    size="small"
+                    variant={active ? 'contained' : 'outlined'}
+                    disabled={!hasContext || Boolean(quickCreateType)}
+                    onClick={() => void runQuickCreate(resourceType)}
+                    sx={{
+                      flex: 1,
+                      minWidth: 0,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontSize: { xs: '0.72rem', sm: '0.8125rem' },
+                      ...(active
+                        ? {
+                            bgcolor: 'warning.main',
+                            borderColor: 'warning.main',
+                            color: 'warning.contrastText',
+                            '&.Mui-disabled': {
+                              bgcolor: 'warning.main',
+                              color: 'warning.contrastText',
+                              opacity: 0.9,
+                            },
+                          }
+                        : {}),
+                    }}
+                  >
+                    {active ? 'Thinking...' : quickCreateLabels[resourceType]}
+                  </Button>
+                )
+              })}
+            </Stack>
+            {quickCreateType ? (
+              <Typography variant="caption" color="text.secondary">
+                Creating {quickCreateLabels[quickCreateType]} - Elapsed{' '}
+                {formatSeconds(quickCreateElapsedSeconds)} - Estimate{' '}
+                {formatSeconds(quickCreateEstimateSeconds)}
+              </Typography>
+            ) : null}
           </Stack>
         ) : null}
         <Stack direction="row" spacing={1} alignItems="flex-end">

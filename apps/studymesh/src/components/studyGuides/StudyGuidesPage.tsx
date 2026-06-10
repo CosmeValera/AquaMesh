@@ -33,8 +33,7 @@ import {
 } from '../../studyGuides/storage'
 import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
 import { readStudyPackAiSettings } from '../../studyPack/ai'
-import ThemeModeToggle from '../shared/ThemeModeToggle'
-import StudyCreditsPill from '../hostedAi/StudyCreditsPill'
+import TopNavBar from '../topnavbar/TopNavBar'
 
 interface PendingGuide {
   id: string
@@ -254,35 +253,7 @@ const StudyGuidesPage = () => {
         color: 'text.primary',
       })}
     >
-      <Box
-        component="header"
-        sx={{
-          height: 64,
-          px: { xs: 2, md: 4 },
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-        }}
-      >
-        <Stack direction="row" spacing={1.25} alignItems="center">
-          <Box
-            component="img"
-            src="/logo.png"
-            alt=""
-            sx={{ width: 32, height: 32 }}
-          />
-          <Typography variant="h6" fontWeight={900}>
-            StudyMesh
-          </Typography>
-        </Stack>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <StudyCreditsPill compact />
-          <ThemeModeToggle />
-        </Stack>
-      </Box>
+      <TopNavBar creationHost="external" />
 
       <Box
         component="main"

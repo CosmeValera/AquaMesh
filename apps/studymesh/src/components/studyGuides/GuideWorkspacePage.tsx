@@ -3,9 +3,14 @@ import {
   Alert,
   Box,
   Button,
+  IconButton,
   Paper,
+  Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import type { StudyGuideRecord } from '../../cloud/types'
@@ -28,6 +33,10 @@ import {
   StudyGuideStorage,
   createStudyGuideRecord,
 } from '../../studyGuides/storage'
+
+const AI_CHAT_MIN_WIDTH = 420
+const AI_CHAT_MAX_WIDTH = 720
+const AI_CHAT_RAIL_WIDTH = 58
 
 const normalizeGeneratedPageLayouts = (
   studyPath: StudyPathContainerState,
@@ -60,6 +69,8 @@ const normalizeGeneratedPageLayouts = (
 }
 
 const GuideWorkspacePage = () => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const { studyGuideId = '' } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -68,6 +79,10 @@ const GuideWorkspacePage = () => {
   const [messages, setMessages] = useState<DashboardChatMessage[]>([])
   const [editingPageKey, setEditingPageKey] = useState<string | null>(null)
   const [quickCreateError, setQuickCreateError] = useState('')
+  const [aiChatOpen, setAiChatOpen] = useState(true)
+  const [aiChatWidth, setAiChatWidth] = useState(AI_CHAT_MIN_WIDTH)
+  const [mobileSection, setMobileSection] =
+    useState<'study-guide' | 'ai-chat'>('study-guide')
   const isCreateRoute = searchParams.get('create') === '1'
 
   const loadRecord = () => {
@@ -192,6 +207,105 @@ const GuideWorkspacePage = () => {
     }
   }
 
+  const startAiChatResize = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    const startX = event.clientX
+    const startWidth = aiChatWidth
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const availableWidth = Math.max(
+        AI_CHAT_MIN_WIDTH,
+        window.innerWidth - 520,
+      )
+      const maxWidth = Math.min(AI_CHAT_MAX_WIDTH, availableWidth)
+      const nextWidth = Math.max(
+        AI_CHAT_MIN_WIDTH,
+        Math.min(maxWidth, startWidth + startX - moveEvent.clientX),
+      )
+      setAiChatWidth(nextWidth)
+    }
+
+    const stopResize = () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', stopResize)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', stopResize)
+  }
+
+  const studyGuidePanel = record ? (
+    <Paper
+      elevation={0}
+      sx={{
+        height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 2,
+        bgcolor: 'background.paper',
+        position: 'relative',
+        flex: 1,
+      }}
+    >
+      <StudyPathWorkspaceView
+        studyPath={record.studyPath}
+        onStudyPathChange={persistStudyPath}
+        mobileView
+        editingPageKey={editingPageKey}
+        onEditingPageKeyChange={setEditingPageKey}
+        onAddPage={addManualPage}
+      />
+    </Paper>
+  ) : null
+
+  const chatPanel = record ? (
+    <Paper
+      elevation={0}
+      sx={{
+        height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 2,
+        bgcolor: 'background.paper',
+        position: 'relative',
+      }}
+    >
+      <DashboardChatPanel
+        dashboard={dashboard}
+        messages={messages}
+        onMessagesChange={setMessages}
+        onClose={() =>
+          isMobile ? setMobileSection('study-guide') : setAiChatOpen(false)
+        }
+        showCloseButton
+        onAddAssistantMessageToGuide={addAssistantMessageToGuide}
+        onQuickCreatePage={quickCreatePage}
+      />
+      {quickCreateError ? (
+        <Alert
+          severity="error"
+          sx={{
+            position: 'absolute',
+            right: 16,
+            bottom: 16,
+            maxWidth: 420,
+            zIndex: 10,
+          }}
+        >
+          {quickCreateError}
+        </Alert>
+      ) : null}
+    </Paper>
+  ) : null
+
   return (
     <Box
       sx={{
@@ -253,75 +367,137 @@ const GuideWorkspacePage = () => {
             sx={{
               height: '100%',
               minHeight: 0,
-              display: { xs: 'flex', md: 'grid' },
-              flexDirection: { xs: 'column', md: 'row' },
-              gridTemplateColumns: { md: 'minmax(0, 1fr) 420px' },
-              gap: { md: 1 },
+              display: 'flex',
+              flexDirection: 'column',
               p: 1,
               bgcolor: 'background.default',
               overflow: 'hidden',
             }}
           >
-            <Paper
-              elevation={0}
-              sx={{
-                height: { xs: '58%', md: '100%' },
-                minHeight: 0,
-                overflow: 'hidden',
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 2,
-                bgcolor: 'background.paper',
-                position: 'relative',
-              }}
-            >
-              <StudyPathWorkspaceView
-                studyPath={record.studyPath}
-                onStudyPathChange={persistStudyPath}
-                mobileView
-                editingPageKey={editingPageKey}
-                onEditingPageKeyChange={setEditingPageKey}
-                onAddPage={addManualPage}
-              />
-            </Paper>
-            <Paper
-              elevation={0}
-              sx={{
-                mt: { xs: 1, md: 0 },
-                height: { xs: 'calc(42% - 8px)', md: '100%' },
-                minHeight: 0,
-                overflow: 'hidden',
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 2,
-                bgcolor: 'background.paper',
-                position: 'relative',
-              }}
-            >
-              <DashboardChatPanel
-                dashboard={dashboard}
-                messages={messages}
-                onMessagesChange={setMessages}
-                onClose={() => undefined}
-                showCloseButton={false}
-                onAddAssistantMessageToGuide={addAssistantMessageToGuide}
-                onQuickCreatePage={quickCreatePage}
-              />
-              {quickCreateError ? (
-                <Alert
-                  severity="error"
+            {isMobile ? (
+              <>
+                <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                  {mobileSection === 'study-guide' ? studyGuidePanel : chatPanel}
+                </Box>
+                <Box
                   sx={{
-                    position: 'absolute',
-                    right: 16,
-                    bottom: 16,
-                    maxWidth: 420,
-                    zIndex: 10,
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                    gap: 0.75,
+                    pt: 0.75,
+                    pb: 'calc(0.75rem + env(safe-area-inset-bottom))',
+                    bgcolor: 'background.default',
+                    flex: '0 0 auto',
                   }}
                 >
-                  {quickCreateError}
-                </Alert>
-              ) : null}
-            </Paper>
+                  {[
+                    ['study-guide', 'Study Guide'],
+                    ['ai-chat', 'AI Chat'],
+                  ].map(([key, label]) => (
+                    <Button
+                      key={key}
+                      size="small"
+                      variant={mobileSection === key ? 'contained' : 'outlined'}
+                      onClick={() =>
+                        setMobileSection(key as 'study-guide' | 'ai-chat')
+                      }
+                      sx={{ borderRadius: 999, textTransform: 'none' }}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </Box>
+              </>
+            ) : (
+              <Box
+                sx={{
+                  flex: 1,
+                  minHeight: 0,
+                  display: 'flex',
+                  gap: 1,
+                  overflow: 'hidden',
+                }}
+              >
+                {studyGuidePanel}
+                <Box
+                  sx={{
+                    width: aiChatOpen ? aiChatWidth : AI_CHAT_RAIL_WIDTH,
+                    flex: '0 0 auto',
+                    minHeight: 0,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    transition: theme.transitions.create('width', {
+                      duration: theme.transitions.duration.shorter,
+                    }),
+                  }}
+                >
+                  {aiChatOpen ? (
+                    chatPanel
+                  ) : (
+                    <Tooltip title="Open AI Chat">
+                      <Box
+                        component="button"
+                        type="button"
+                        aria-label="Open AI Chat panel"
+                        onClick={() => setAiChatOpen(true)}
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          border: 1,
+                          borderColor: 'divider',
+                          borderRadius: 2,
+                          bgcolor: 'background.paper',
+                          color: 'primary.main',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: 1,
+                          py: 1,
+                        }}
+                      >
+                        <IconButton size="small" tabIndex={-1}>
+                          <ChatBubbleOutlineIcon fontSize="small" />
+                        </IconButton>
+                        <Typography
+                          variant="caption"
+                          sx={{ writingMode: 'vertical-rl', fontWeight: 900 }}
+                        >
+                          AI Chat
+                        </Typography>
+                      </Box>
+                    </Tooltip>
+                  )}
+                  {aiChatOpen ? (
+                    <Box
+                      role="separator"
+                      aria-label="Resize AI Chat panel"
+                      onMouseDown={startAiChatResize}
+                      sx={{
+                        position: 'absolute',
+                        top: 14,
+                        left: -3,
+                        width: 8,
+                        height: 'calc(100% - 28px)',
+                        cursor: 'col-resize',
+                        zIndex: 2,
+                        '&::after': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          bottom: 0,
+                          left: 3,
+                          width: 2,
+                          borderRadius: 999,
+                          bgcolor: 'divider',
+                        },
+                        '&:hover::after': { bgcolor: 'primary.main' },
+                      }}
+                    />
+                  ) : null}
+                </Box>
+              </Box>
+            )}
           </Box>
         ) : null}
         <HostedAiIntroModal />

@@ -23,13 +23,21 @@ import {
   subscribeToLocalAiSessionDebugState,
 } from '../../studyPack/ai'
 
-const showLocalAiDebugPanel = (): boolean => {
-  const envValue = String(
-    process.env.VITE_SHOW_LOCAL_AI_DEBUG_PANEL ||
-      '',
-  ).toLowerCase()
+export const showLocalAiDebugPanel = (): boolean => {
+  const envValue = String(process.env.VITE_SHOW_LOCAL_AI_DEBUG_PANEL || '')
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .toLowerCase()
 
-  return process.env.NODE_ENV !== 'production' || envValue === 'true'
+  if (['false', '0', 'off', 'no'].includes(envValue)) {
+    return false
+  }
+
+  if (['true', '1', 'on', 'yes'].includes(envValue)) {
+    return true
+  }
+
+  return process.env.NODE_ENV !== 'production'
 }
 
 const formatDuration = (durationMs: number): string => {

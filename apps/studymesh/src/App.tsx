@@ -25,6 +25,7 @@ import { AuthProvider, RequireAuth } from './auth/AuthProvider'
 import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
 import StudyGuidesPage from './components/studyGuides/StudyGuidesPage'
 import GuideWorkspacePage from './components/studyGuides/GuideWorkspacePage'
+import HostedAiCheckoutReturn from './components/hostedAi/HostedAiCheckoutReturn'
 
 import { createStudyMeshTheme } from './theme'
 import { AccentColorProvider } from './theme/AccentColorContext'
@@ -90,6 +91,7 @@ const AppShell = () => {
           <CssBaseline />
           <LocalAiDebugPanel />
           <CloudWorkspaceSync />
+          <HostedAiCheckoutReturn />
           <DashboardProvider>
             <LayoutProvider>
               <Routes>
@@ -112,7 +114,15 @@ const AppShell = () => {
                 />
                 <Route
                   path="/workspace"
-                  element={<Navigate to="/study-guides" replace />}
+                  element={
+                    <Navigate
+                      to={{
+                        pathname: '/study-guides',
+                        search: location.search,
+                      }}
+                      replace
+                    />
+                  }
                 />
                 <Route
                   path="/workspace/:studyGuideId"

@@ -416,8 +416,8 @@ export default async function handler(
           quantity: 1,
         },
       ],
-      success_url: `${baseUrl}/workspace?credits=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/workspace?credits=cancel`,
+      success_url: `${baseUrl}/study-guides?credits=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/study-guides?credits=cancel`,
       automatic_tax: {
         enabled: automaticTaxEnabled,
       },

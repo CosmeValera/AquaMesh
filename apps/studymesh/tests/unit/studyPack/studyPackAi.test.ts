@@ -53,7 +53,11 @@ import {
   saveStudyPackAiSettings,
   STUDY_PACK_AI_SETTINGS_KEY,
   testLocalLanguageModel,
+  clearStudyPackAiToken,
+  saveStudyPackAiSessionKey,
 } from '../../../src/studyPack/ai'
+
+const STUDY_PACK_AI_SESSION_KEY = 'studymesh-study-pack-ai-session-keys-v1'
 
 const localStudyPathPlanJson = (
   count: number,
@@ -168,6 +172,7 @@ describe('study pack AI settings', () => {
       storage = {}
     })
     localStorage.clear()
+    sessionStorage.clear()
     delete process.env.GEMINI_API_KEY
     delete process.env.CEREBRAS_API_KEY
   })
@@ -387,7 +392,10 @@ describe('study pack AI settings', () => {
       strongProviders: {},
     })
 
-    expect(storage[STUDY_PACK_AI_SETTINGS_KEY]).toContain('settings-token')
+    expect(storage[STUDY_PACK_AI_SETTINGS_KEY]).not.toContain('settings-token')
+    expect(sessionStorage.getItem(STUDY_PACK_AI_SESSION_KEY)).toContain(
+      'settings-token',
+    )
     expect(resolveStudyPackAiCredentials()).toMatchObject({
       provider: 'gemini',
       apiToken: 'settings-token',
@@ -442,6 +450,99 @@ describe('study pack AI settings', () => {
       model: 'gpt-oss-120b',
       tokenSource: 'settings',
     })
+  })
+
+  it('migrates legacy localStorage tokens into sessionStorage and strips local storage', () => {
+    storage[STUDY_PACK_AI_SETTINGS_KEY] = JSON.stringify({
+      provider: 'cerebras',
+      apiToken: 'legacy-gemini-token',
+      model: 'gemini-legacy',
+      strongProviders: {
+        cerebras: {
+          apiToken: 'legacy-cerebras-token',
+          model: 'cerebras-legacy',
+        },
+      },
+    })
+
+    const settings = readStudyPackAiSettings()
+
+    expect(settings).toMatchObject({
+      provider: 'cerebras',
+      apiToken: 'legacy-cerebras-token',
+      model: 'cerebras-legacy',
+    })
+    expect(storage[STUDY_PACK_AI_SETTINGS_KEY]).not.toContain(
+      'legacy-gemini-token',
+    )
+    expect(storage[STUDY_PACK_AI_SETTINGS_KEY]).not.toContain(
+      'legacy-cerebras-token',
+    )
+    expect(sessionStorage.getItem(STUDY_PACK_AI_SESSION_KEY)).toContain(
+      'legacy-cerebras-token',
+    )
+  })
+
+  it('keeps missing selected strong provider credentials empty until a session key is saved', () => {
+    saveStudyPackAiSettings({
+      provider: 'cerebras',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+
+    expect(resolveStudyPackAiCredentials('cerebras')).toMatchObject({
+      provider: 'cerebras',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      tokenSource: 'none',
+    })
+
+    saveStudyPackAiSessionKey(
+      'cerebras',
+      'session-cerebras-token',
+      'gpt-oss-120b',
+    )
+
+    expect(resolveStudyPackAiCredentials('cerebras')).toMatchObject({
+      provider: 'cerebras',
+      apiToken: 'session-cerebras-token',
+      model: 'gpt-oss-120b',
+      tokenSource: 'settings',
+    })
+    expect(storage[STUDY_PACK_AI_SETTINGS_KEY]).not.toContain(
+      'session-cerebras-token',
+    )
+    expect(sessionStorage.getItem(STUDY_PACK_AI_SESSION_KEY)).toContain(
+      'session-cerebras-token',
+    )
+  })
+
+  it('clears only the selected provider session key', () => {
+    saveStudyPackAiSettings({
+      provider: 'gemini',
+      apiToken: 'gemini-session-token',
+      model: 'gemini-test',
+      strongProviders: {},
+    })
+    saveStudyPackAiSettings({
+      ...readStudyPackAiSettings(),
+      provider: 'cerebras',
+      apiToken: 'cerebras-session-token',
+      model: 'gpt-oss-120b',
+    })
+
+    clearStudyPackAiToken()
+
+    expect(resolveStudyPackAiCredentials('cerebras')).toMatchObject({
+      apiToken: '',
+      tokenSource: 'none',
+    })
+    expect(resolveStudyPackAiCredentials('gemini')).toMatchObject({
+      apiToken: 'gemini-session-token',
+      tokenSource: 'settings',
+    })
+    expect(storage[STUDY_PACK_AI_SETTINGS_KEY]).not.toContain('session-token')
   })
 
   it('falls back to Cerebras env token for Cerebras provider', () => {

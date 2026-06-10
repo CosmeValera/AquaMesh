@@ -40,11 +40,13 @@ import {
   LocalAiProgressEvent,
   readStudyPackAiSettings,
   resolveStudyPackAiCredentials,
+  StrongAiProviderId,
   STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
   StudyPackAiProvider,
 } from '../../studyPack/ai'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
 import HostedAiCreditActions from '../hostedAi/HostedAiCreditActions'
+import StrongAiSessionKeyDialog from './StrongAiSessionKeyDialog'
 
 interface CreateStudyPathModalProps {
   open: boolean
@@ -482,6 +484,11 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   const [localAiFailureDebug, setLocalAiFailureDebug] =
     useState<LocalAiGenerationFailureDebug | null>(null)
   const [error, setError] = useState('')
+  const [sessionKeyRequest, setSessionKeyRequest] = useState<{
+    provider: StrongAiProviderId
+    model: string
+    promptOverride?: string
+  } | null>(null)
   const activeGenerationRef = useRef<AbortController | null>(null)
   const initializedProviderRef = useRef(false)
   const autoRetrySignalRef = useRef(autoRetrySignal)
@@ -606,6 +613,16 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     onClose()
   }
 
+  const cancelSessionKeyRequest = () => {
+    const missingKeyProvider = sessionKeyRequest?.provider || aiProvider
+    const message = `${providerLabels[missingKeyProvider]} needs an API key before StudyMesh can create a Study Guide.`
+    setSessionKeyRequest(null)
+    setError(message)
+    if (autoCreateOnGenerate) {
+      onStatusChange?.('error', message)
+    }
+  }
+
   const generatePath = async (promptOverride?: string) => {
     const settingsProvider = readStudyPackAiSettings().provider || 'basic'
     const effectiveAiProvider = settingsProvider
@@ -623,9 +640,12 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
       ? resolveStudyPackAiCredentials(effectiveAiProvider)
       : resolveStudyPackAiCredentials()
     if (isStrongAiProvider(effectiveAiProvider) && !credentials.apiToken) {
-      setError(
-        `${providerLabels[effectiveAiProvider]} mode needs a configured API key.`,
-      )
+      setSessionKeyRequest({
+        provider: effectiveAiProvider,
+        model: credentials.model,
+        promptOverride,
+      })
+      setError('')
       return
     }
 
@@ -1439,46 +1459,92 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   )
 
   if (presentation === 'embedded') {
-    if (!open || autoCreateOnGenerate) {
+    if (!open || (autoCreateOnGenerate && !sessionKeyRequest)) {
       return null
     }
 
+    if (autoCreateOnGenerate && sessionKeyRequest) {
+      return (
+        <StrongAiSessionKeyDialog
+          open
+          provider={sessionKeyRequest.provider}
+          model={sessionKeyRequest.model}
+          onCancel={cancelSessionKeyRequest}
+          onSaved={() => {
+            const promptOverride = sessionKeyRequest.promptOverride
+            setSessionKeyRequest(null)
+            void generatePath(promptOverride)
+          }}
+        />
+      )
+    }
+
     return (
-      <Box
-        sx={{
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          bgcolor: 'background.paper',
-          overflow: 'hidden',
-          '& .MuiDialogContent-root': {
-            flex: 1,
-            minHeight: 0,
-            overflow: 'auto',
-          },
-        }}
-      >
-        {content}
-      </Box>
+      <>
+        <Box
+          sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            bgcolor: 'background.paper',
+            overflow: 'hidden',
+            '& .MuiDialogContent-root': {
+              flex: 1,
+              minHeight: 0,
+              overflow: 'auto',
+            },
+          }}
+        >
+          {content}
+        </Box>
+        {sessionKeyRequest ? (
+          <StrongAiSessionKeyDialog
+            open
+            provider={sessionKeyRequest.provider}
+            model={sessionKeyRequest.model}
+            onCancel={cancelSessionKeyRequest}
+            onSaved={() => {
+              const promptOverride = sessionKeyRequest.promptOverride
+              setSessionKeyRequest(null)
+              void generatePath(promptOverride)
+            }}
+          />
+        ) : null}
+      </>
     )
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          bgcolor: 'background.paper',
-          borderRadius: 3,
-          minHeight: { xs: '100dvh', md: 620 },
-        },
-      }}
-    >
-      {content}
-    </Dialog>
+    <>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: 'background.paper',
+            borderRadius: 3,
+            minHeight: { xs: '100dvh', md: 620 },
+          },
+        }}
+      >
+        {content}
+      </Dialog>
+      {sessionKeyRequest ? (
+        <StrongAiSessionKeyDialog
+          open
+          provider={sessionKeyRequest.provider}
+          model={sessionKeyRequest.model}
+          onCancel={cancelSessionKeyRequest}
+          onSaved={() => {
+            const promptOverride = sessionKeyRequest.promptOverride
+            setSessionKeyRequest(null)
+            void generatePath(promptOverride)
+          }}
+        />
+      ) : null}
+    </>
   )
 }
 

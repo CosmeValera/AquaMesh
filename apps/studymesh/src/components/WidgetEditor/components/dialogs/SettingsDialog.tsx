@@ -17,6 +17,9 @@ import {
   Alert,
   LinearProgress,
   Checkbox,
+  IconButton,
+  InputAdornment,
+  Tooltip,
 } from '@mui/material'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
@@ -33,6 +36,9 @@ import DashboardIcon from '@mui/icons-material/Dashboard'
 import SearchIcon from '@mui/icons-material/Search'
 import ReplayIcon from '@mui/icons-material/Replay'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 
 import {
   STUDYMESH_ONBOARDING_RESET_EVENT,
@@ -238,6 +244,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     React.useState('')
   const [profileDeleteStatus, setProfileDeleteStatus] = React.useState('')
   const [isDeletingProfile, setIsDeletingProfile] = React.useState(false)
+  const [showAiKey, setShowAiKey] = React.useState(false)
   const [exportModalOpen, setExportModalOpen] = React.useState(false)
   const [exportLibraryItems, setExportLibraryItems] = React.useState<
     ExportLibraryItem[]
@@ -260,6 +267,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   const hasEnvToken = Boolean(
     getEnvStrongAiProviderApiKey(selectedStrongProvider),
   )
+  const hasTypedAiKey = Boolean(selectedStrongCredential.apiToken.trim())
 
   const exportLibraryGroups = React.useMemo<ExportLibraryGroup[]>(() => {
     const groups = new Map<string, ExportLibraryItem[]>()
@@ -293,6 +301,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     setLocalAiProgress(null)
     setProfileDeleteConfirmation('')
     setProfileDeleteStatus('')
+    setShowAiKey(false)
   }, [open, showGlobalSettings])
 
   // Create safe handlers for all possibly undefined callbacks
@@ -405,6 +414,20 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       model,
       strongProviders: nextCredentials,
     })
+  }
+
+  const handleCopyAiToken = async () => {
+    const token = selectedStrongCredential.apiToken.trim()
+    if (!token || !navigator.clipboard) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(token)
+      dispatchWorkspaceOnboardingNotice('API key copied.')
+    } catch {
+      dispatchWorkspaceOnboardingNotice('Could not copy API key.')
+    }
   }
 
   const updateSelectedStrongCredential = (
@@ -771,7 +794,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     <>
                       <TextField
                         label="API key"
-                        type="password"
+                        type={showAiKey ? 'text' : 'password'}
                         value={selectedStrongCredential.apiToken}
                         onChange={(event) =>
                           updateSelectedStrongCredential({
@@ -783,8 +806,66 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                         placeholder={
                           hasEnvToken
                             ? 'Using .env key unless you enter one here'
-                            : `Paste your ${selectedStrongConfig.label} API key`
+                            : `Paste your ${selectedStrongConfig.label} API key for this session`
                         }
+                        helperText="Saved for this browser session only."
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <Tooltip
+                                title={
+                                  showAiKey ? 'Hide API key' : 'Show API key'
+                                }
+                              >
+                                <IconButton
+                                  aria-label={
+                                    showAiKey ? 'Hide API key' : 'Show API key'
+                                  }
+                                  edge="end"
+                                  size="small"
+                                  onClick={() => setShowAiKey((shown) => !shown)}
+                                  sx={{
+                                    color: 'text.secondary',
+                                    '&:hover': {
+                                      bgcolor: 'action.hover',
+                                      color: 'text.primary',
+                                    },
+                                  }}
+                                >
+                                  {showAiKey ? (
+                                    <VisibilityOffIcon fontSize="small" />
+                                  ) : (
+                                    <VisibilityIcon fontSize="small" />
+                                  )}
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Copy API key">
+                                <span>
+                                  <IconButton
+                                    aria-label="Copy API key"
+                                    edge="end"
+                                    size="small"
+                                    disabled={!hasTypedAiKey}
+                                    onClick={handleCopyAiToken}
+                                    sx={{
+                                      color: 'text.secondary',
+                                      '&.Mui-disabled': {
+                                        color: 'text.primary',
+                                        opacity: 0.72,
+                                      },
+                                      '&:hover': {
+                                        bgcolor: 'action.hover',
+                                        color: 'text.primary',
+                                      },
+                                    }}
+                                  >
+                                    <ContentCopyIcon fontSize="small" />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            </InputAdornment>
+                          ),
+                        }}
                         sx={{ mb: 1.5 }}
                       />
                       <TextField
@@ -812,7 +893,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       size="small"
                       label={
                         selectedStrongCredential.apiToken.trim()
-                          ? 'Settings key active'
+                          ? 'Session key active'
                           : hasEnvToken
                             ? '.env key available'
                             : 'No key configured'

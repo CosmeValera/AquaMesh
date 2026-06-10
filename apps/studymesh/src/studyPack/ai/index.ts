@@ -9,6 +9,7 @@ export {
   getStudyPackAiCredentialForProvider,
   readStudyPackAiSettings,
   resolveStudyPackAiCredentials,
+  saveStudyPackAiSessionKey,
   saveStudyPackAiSettings,
 } from './settings'
 export type {

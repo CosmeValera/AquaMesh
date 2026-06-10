@@ -30,6 +30,8 @@ export interface StudyPackAiSettings {
 }
 
 export const STUDY_PACK_AI_SETTINGS_KEY = 'studymesh-study-pack-ai-settings-v1'
+export const STUDY_PACK_AI_SESSION_KEY =
+  'studymesh-study-pack-ai-session-keys-v1'
 const LEGACY_STUDY_PACK_AI_SETTINGS_KEY = 'aquamesh-study-pack-ai-settings-v1'
 export const STUDY_PACK_AI_SETTINGS_CHANGED_EVENT =
   'studymesh-study-pack-ai-settings-changed'
@@ -80,6 +82,104 @@ const normalizeStrongProviders = (
   }
 }
 
+const readSessionStrongProviders = (): StrongAiProviderCredentials => {
+  try {
+    const stored = window.sessionStorage.getItem(STUDY_PACK_AI_SESSION_KEY)
+    if (!stored) {
+      return {}
+    }
+
+    return normalizeStrongProviders(JSON.parse(stored))
+  } catch {
+    return {}
+  }
+}
+
+const writeSessionStrongProvider = (
+  provider: StrongAiProviderId,
+  credential: StrongAiProviderCredential,
+): void => {
+  try {
+    const strongProviders = normalizeStrongProviders(
+      readSessionStrongProviders(),
+    )
+    strongProviders[provider] = credential
+
+    window.sessionStorage.setItem(
+      STUDY_PACK_AI_SESSION_KEY,
+      JSON.stringify(strongProviders),
+    )
+  } catch {
+    // Session-only key storage is best-effort.
+  }
+}
+
+const clearSessionStrongProviderToken = (
+  provider: StrongAiProviderId,
+): void => {
+  try {
+    const strongProviders = normalizeStrongProviders(
+      readSessionStrongProviders(),
+    )
+    strongProviders[provider] = {
+      apiToken: '',
+      model: strongProviders[provider].model,
+    }
+
+    window.sessionStorage.setItem(
+      STUDY_PACK_AI_SESSION_KEY,
+      JSON.stringify(strongProviders),
+    )
+  } catch {
+    // Session-only key storage is best-effort.
+  }
+}
+
+const mergeSessionTokens = (
+  persisted: Required<Record<StrongAiProviderId, StrongAiProviderCredential>>,
+): Required<Record<StrongAiProviderId, StrongAiProviderCredential>> => {
+  const session = normalizeStrongProviders(readSessionStrongProviders())
+
+  return {
+    gemini: {
+      apiToken: session.gemini.apiToken,
+      model: persisted.gemini.model,
+    },
+    cerebras: {
+      apiToken: session.cerebras.apiToken,
+      model: persisted.cerebras.model,
+    },
+  }
+}
+
+const persistSanitizedSettings = (
+  provider: StudyPackAiProvider,
+  strongProviders: Required<
+    Record<StrongAiProviderId, StrongAiProviderCredential>
+  >,
+): void => {
+  const credential = getCredentialForProvider({ provider, strongProviders })
+
+  window.localStorage.setItem(
+    STUDY_PACK_AI_SETTINGS_KEY,
+    JSON.stringify({
+      provider,
+      apiToken: '',
+      model: credential.model,
+      strongProviders: {
+        gemini: {
+          apiToken: '',
+          model: strongProviders.gemini.model,
+        },
+        cerebras: {
+          apiToken: '',
+          model: strongProviders.cerebras.model,
+        },
+      },
+    }),
+  )
+}
+
 const defaultProviderForStrongCredentials = (
   strongProviders: StrongAiProviderCredentials,
 ): StudyPackAiProvider => {
@@ -123,7 +223,7 @@ export const readStudyPackAiSettings = (): StudyPackAiSettings => {
       window.localStorage.getItem(STUDY_PACK_AI_SETTINGS_KEY) ||
       window.localStorage.getItem(LEGACY_STUDY_PACK_AI_SETTINGS_KEY)
     if (!stored) {
-      const strongProviders = normalizeStrongProviders({})
+      const strongProviders = mergeSessionTokens(normalizeStrongProviders({}))
       const provider = defaultProviderForStrongCredentials(strongProviders)
       const credential = getCredentialForProvider({
         provider,
@@ -154,22 +254,35 @@ export const readStudyPackAiSettings = (): StudyPackAiSettings => {
       }
     }
 
+    for (const provider of Object.keys(
+      STRONG_AI_PROVIDERS,
+    ) as StrongAiProviderId[]) {
+      if (strongProviders[provider].apiToken) {
+        writeSessionStrongProvider(provider, strongProviders[provider])
+      }
+    }
+
     const provider = isStudyPackAiProvider(parsed.provider)
       ? parsed.provider
       : defaultProviderForStrongCredentials(strongProviders)
+    const sessionStrongProviders = mergeSessionTokens(strongProviders)
+
+    persistSanitizedSettings(provider, strongProviders)
+    window.localStorage.removeItem(LEGACY_STUDY_PACK_AI_SETTINGS_KEY)
+
     const credential = getCredentialForProvider({
       provider,
-      strongProviders,
+      strongProviders: sessionStrongProviders,
     })
 
     return {
       provider,
       apiToken: credential.apiToken,
       model: credential.model,
-      strongProviders,
+      strongProviders: sessionStrongProviders,
     }
   } catch {
-    const strongProviders = normalizeStrongProviders({})
+    const strongProviders = mergeSessionTokens(normalizeStrongProviders({}))
     const provider = defaultProviderForStrongCredentials(strongProviders)
     const credential = getCredentialForProvider({ provider, strongProviders })
 
@@ -190,24 +303,24 @@ export const saveStudyPackAiSettings = (
     settings.provider || defaultProviderForStrongCredentials(strongProviders)
 
   if (isStrongAiProvider(provider)) {
+    if (settings.apiToken.trim()) {
+      writeSessionStrongProvider(provider, {
+        apiToken: settings.apiToken.trim(),
+        model:
+          settings.model.trim() || STRONG_AI_PROVIDERS[provider].defaultModel,
+      })
+    } else {
+      clearSessionStrongProviderToken(provider)
+    }
+
     strongProviders[provider] = {
-      apiToken: settings.apiToken.trim(),
+      apiToken: '',
       model:
         settings.model.trim() || STRONG_AI_PROVIDERS[provider].defaultModel,
     }
   }
 
-  const credential = getCredentialForProvider({ provider, strongProviders })
-
-  window.localStorage.setItem(
-    STUDY_PACK_AI_SETTINGS_KEY,
-    JSON.stringify({
-      provider,
-      apiToken: credential.apiToken,
-      model: credential.model,
-      strongProviders,
-    }),
-  )
+  persistSanitizedSettings(provider, strongProviders)
   window.dispatchEvent(new CustomEvent(STUDY_PACK_AI_SETTINGS_CHANGED_EVENT))
 }
 
@@ -217,6 +330,7 @@ export const clearStudyPackAiToken = (): void => {
     ? current.provider
     : DEFAULT_STRONG_AI_PROVIDER
   const strongProviders = normalizeStrongProviders(current.strongProviders)
+  clearSessionStrongProviderToken(provider)
   saveStudyPackAiSettings({
     ...current,
     apiToken: '',
@@ -241,6 +355,16 @@ export const getStudyPackAiCredentialForProvider = (
     apiToken: '',
     model: STRONG_AI_PROVIDERS[provider].defaultModel,
   }
+
+export const saveStudyPackAiSessionKey = (
+  provider: StrongAiProviderId,
+  apiToken: string,
+  model?: string,
+): void =>
+  writeSessionStrongProvider(provider, {
+    apiToken: apiToken.trim(),
+    model: model?.trim() || STRONG_AI_PROVIDERS[provider].defaultModel,
+  })
 
 export const resolveStudyPackAiCredentials = (
   requestedProvider?: StrongAiProviderId,

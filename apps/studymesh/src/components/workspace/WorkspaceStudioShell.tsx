@@ -38,11 +38,13 @@ import {
 } from '../../customHooks/useWorkspaceActions'
 import { dispatchWorkspaceOnboardingEvent } from '../onboarding/onboardingEvents'
 import CreateStudyPathModal from '../studyPack/CreateStudyPathModal'
+import StrongAiSessionKeyDialog from '../studyPack/StrongAiSessionKeyDialog'
 import {
   generateStudyPackWithAi,
   isStrongAiProvider,
   readStudyPackAiSettings,
   resolveStudyPackAiCredentials,
+  StrongAiProviderId,
   STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
   StudyMaterialDetailLevel,
   StudyMaterialResourceType,
@@ -506,6 +508,28 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const [quickSourceFiles, setQuickSourceFiles] = useState<File[]>([])
   const [quickSourcesExpanded, setQuickSourcesExpanded] = useState(false)
   const [quickSourceStatus, setQuickSourceStatus] = useState('')
+  const [sessionKeyRequest, setSessionKeyRequest] = useState<{
+    provider: StrongAiProviderId
+    model: string
+    retry:
+      | {
+          kind: 'from-notes'
+          resourceType: StudyMaterialResourceType
+          sourceText: string
+          title: string
+          sourceMode: QuickSourceMode
+          retryOptions?: {
+            draftId?: string
+            detailLevel?: StudyMaterialDetailLevel
+            difficulty?: string
+            provider?: StudyPackAiProvider
+          }
+        }
+      | {
+          kind: 'study-path'
+          prompt: string
+      }
+  } | null>(null)
   const [queueClockMs, setQueueClockMs] = useState(() => Date.now())
   const [studyPathRetrySignals, setStudyPathRetrySignals] = useState<
     Record<string, number>
@@ -1560,6 +1584,25 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     const effectiveDetailLevel = retryOptions.detailLevel || quickDetailLevel
     const effectiveDifficulty = retryOptions.difficulty || quickDifficulty
     const effectiveProvider = retryOptions.provider || aiProvider
+    const credentials = isStrongAiProvider(effectiveProvider)
+      ? resolveStudyPackAiCredentials(effectiveProvider)
+      : resolveStudyPackAiCredentials()
+    if (isStrongAiProvider(effectiveProvider) && !credentials.apiToken) {
+      setSessionKeyRequest({
+        provider: effectiveProvider,
+        model: credentials.model,
+        retry: {
+          kind: 'from-notes',
+          resourceType,
+          sourceText,
+          title,
+          sourceMode,
+          retryOptions,
+        },
+      })
+      setQuickSourceStatus('')
+      return
+    }
     const draft = createGenerationDraft('from-notes', {
       quickCreate: true,
       title,
@@ -1648,9 +1691,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
             })
           }
 
-          const credentials = isStrongAiProvider(effectiveProvider)
-            ? resolveStudyPackAiCredentials(effectiveProvider)
-            : resolveStudyPackAiCredentials()
           const generated = await generateStudyPackWithAi({
             provider: effectiveProvider,
             apiToken: credentials.apiToken,
@@ -1952,13 +1992,10 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     setActiveMaterialDraftId(null)
   }
 
-  const startInlineStudyPath = () => {
-    const prompt = studyPathPrompt.trim()
-    if (!prompt) {
-      setStudyPathPromptError('Describe what you want to learn first.')
-      return
-    }
-
+  const beginInlineStudyPathGeneration = (
+    prompt: string,
+    provider: StudyPackAiProvider,
+  ) => {
     setStudyPathPromptError('')
     setActiveMaterialDraftId(null)
     const generationRequestId = Date.now()
@@ -1968,7 +2005,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         title: prompt,
         inputSummary: prompt,
         status: 'generating',
-        aiProvider,
+        aiProvider: provider,
         generationRequestId,
       },
       { activate: false },
@@ -1979,6 +2016,34 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       draftId: draft.id,
       prompt,
     })
+  }
+
+  const startInlineStudyPath = () => {
+    const prompt = studyPathPrompt.trim()
+    if (!prompt) {
+      setStudyPathPromptError('Describe what you want to learn first.')
+      return
+    }
+
+    const effectiveProvider = readStudyPackAiSettings().provider || 'basic'
+    setAiProvider(effectiveProvider)
+    const credentials = isStrongAiProvider(effectiveProvider)
+      ? resolveStudyPackAiCredentials(effectiveProvider)
+      : resolveStudyPackAiCredentials()
+    if (isStrongAiProvider(effectiveProvider) && !credentials.apiToken) {
+      setStudyPathPromptError('')
+      setSessionKeyRequest({
+        provider: effectiveProvider,
+        model: credentials.model,
+        retry: {
+          kind: 'study-path',
+          prompt,
+        },
+      })
+      return
+    }
+
+    beginInlineStudyPathGeneration(prompt, effectiveProvider)
   }
 
   const materialDetailContent = activeMaterial ? (
@@ -3338,38 +3403,68 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       onSaveComplete={closeFullScreenWidgetEditor}
     />
   )
+  const sessionKeyDialog = sessionKeyRequest ? (
+    <StrongAiSessionKeyDialog
+      open
+      provider={sessionKeyRequest.provider}
+      model={sessionKeyRequest.model}
+      onCancel={() => setSessionKeyRequest(null)}
+      onSaved={() => {
+        const { provider, retry } = sessionKeyRequest
+        setSessionKeyRequest(null)
+        if (retry.kind === 'study-path') {
+          beginInlineStudyPathGeneration(retry.prompt, provider)
+          return
+        }
+
+        void runDirectStudyPackCreate(
+          retry.resourceType,
+          retry.sourceText,
+          retry.title,
+          retry.sourceMode,
+          retry.retryOptions,
+        )
+      }}
+    />
+  ) : null
 
   if (isMobile) {
     return (
-      <WorkspaceMobileLayout
-        studioContent={studioContent}
-        mobileCreationStatusTray={mobileCreationStatusTray}
-        mobileSectionTabs={mobileSectionTabs}
-        widgetBuilderDialog={widgetBuilderDialog}
-        isStudioOpen={isStudioOpen}
-        mobileSection={mobileSection}
-        visibleCreationMarkerCount={hasQueueMarker ? 1 : 0}
-        theme={theme}
-      >
-        {children}
-      </WorkspaceMobileLayout>
+      <>
+        <WorkspaceMobileLayout
+          studioContent={studioContent}
+          mobileCreationStatusTray={mobileCreationStatusTray}
+          mobileSectionTabs={mobileSectionTabs}
+          widgetBuilderDialog={widgetBuilderDialog}
+          isStudioOpen={isStudioOpen}
+          mobileSection={mobileSection}
+          visibleCreationMarkerCount={hasQueueMarker ? 1 : 0}
+          theme={theme}
+        >
+          {children}
+        </WorkspaceMobileLayout>
+        {sessionKeyDialog}
+      </>
     )
   }
 
   return (
-    <WorkspaceDesktopLayout
-      studioContent={studioContent}
-      creationStatusMarkers={creationStatusMarkers}
-      widgetBuilderDialog={widgetBuilderDialog}
-      isStudioOpen={isStudioOpen}
-      studioWidth={studioWidth}
-      toggleCreatePanel={toggleCreatePanel}
-      collapsedCreationActions={collapsedCreationActions}
-      startStudioResize={startStudioResize}
-      theme={theme}
-    >
-      {children}
-    </WorkspaceDesktopLayout>
+    <>
+      <WorkspaceDesktopLayout
+        studioContent={studioContent}
+        creationStatusMarkers={creationStatusMarkers}
+        widgetBuilderDialog={widgetBuilderDialog}
+        isStudioOpen={isStudioOpen}
+        studioWidth={studioWidth}
+        toggleCreatePanel={toggleCreatePanel}
+        collapsedCreationActions={collapsedCreationActions}
+        startStudioResize={startStudioResize}
+        theme={theme}
+      >
+        {children}
+      </WorkspaceDesktopLayout>
+      {sessionKeyDialog}
+    </>
   )
 }
 

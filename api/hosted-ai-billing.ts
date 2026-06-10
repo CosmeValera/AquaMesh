@@ -1,5 +1,6 @@
 import Stripe = require('stripe')
 
+import { applyCors, getHeader } from './cors'
 import { loadLocalApiEnv } from './local-env'
 
 loadLocalApiEnv()
@@ -72,14 +73,6 @@ const CREDIT_PACKS = [
 ] as const
 
 const getEnv = (name: string): string => process.env[name]?.trim() || ''
-
-const getHeader = (req: VercelRequest, name: string): string => {
-  const match = Object.entries(req.headers).find(
-    ([key]) => key.toLowerCase() === name.toLowerCase(),
-  )?.[1]
-
-  return Array.isArray(match) ? match[0] || '' : match || ''
-}
 
 const json = (
   res: VercelResponse,
@@ -157,7 +150,7 @@ const getSupabaseErrorMessage = (payload: unknown): string => {
 }
 
 const getBearerToken = (req: VercelRequest): string => {
-  const authorization = getHeader(req, 'authorization')
+  const authorization = getHeader(req.headers, 'authorization')
   return authorization.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() || ''
 }
 
@@ -287,19 +280,12 @@ const validatePaidSession = (
   return pack
 }
 
-const getBaseUrl = (req: VercelRequest): string => {
-  const origin = getHeader(req, 'origin')
-  if (origin) {
-    return origin.replace(/\/+$/, '')
-  }
-
-  const host = getHeader(req, 'x-forwarded-host') || getHeader(req, 'host')
-  const protocol = getHeader(req, 'x-forwarded-proto') || 'https'
-  return `${protocol}://${host}`.replace(/\/+$/, '')
-}
+export const getStudyMeshAppUrl = (): string =>
+  getEnv('STUDYMESH_APP_URL').replace(/\/+$/, '')
 
 const ensureConfigured = (): string[] =>
   [
+    'STUDYMESH_APP_URL',
     'STRIPE_SECRET_KEY',
     'SUPABASE_URL',
     'SUPABASE_ANON_KEY',
@@ -321,9 +307,11 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
 ): Promise<void> {
-  res.setHeader('access-control-allow-origin', '*')
-  res.setHeader('access-control-allow-methods', 'POST, OPTIONS')
-  res.setHeader('access-control-allow-headers', 'authorization, content-type')
+  const cors = applyCors(req, res)
+  if (!cors.allowed) {
+    json(res, 403, errorResponse('invalid_request', 'Origin is not allowed.'))
+    return
+  }
 
   if (req.method === 'OPTIONS') {
     res.status(204).end()
@@ -423,7 +411,7 @@ export default async function handler(
       throw new Error('Credit purchase RPC did not return a purchase id.')
     }
 
-    const baseUrl = getBaseUrl(req)
+    const baseUrl = getStudyMeshAppUrl()
     const automaticTaxEnabled = getEnv('STRIPE_AUTOMATIC_TAX') === 'true'
     const session = await createStripe().checkout.sessions.create({
       mode: 'payment',

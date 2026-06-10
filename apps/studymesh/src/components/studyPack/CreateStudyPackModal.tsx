@@ -46,6 +46,7 @@ import {
   LocalAiProgressEvent,
   readStudyPackAiSettings,
   resolveStudyPackAiCredentials,
+  StrongAiProviderId,
   STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
   QuizQuestionStyle,
   StudyMaterialDetailLevel,
@@ -59,6 +60,7 @@ import {
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
 import HostedAiCreditActions from '../hostedAi/HostedAiCreditActions'
 import { quickCreateFolders } from '../workspace/workspaceStudioModel'
+import StrongAiSessionKeyDialog from './StrongAiSessionKeyDialog'
 
 type ReviewType =
   | 'flashcard'
@@ -80,6 +82,9 @@ const isInsufficientStudyCreditsError = (message: string): boolean =>
 type SourceInputType = 'text' | 'image' | 'pdf' | 'powerpoint'
 type GenerationAmount = 'few' | 'medium' | 'many'
 type DocumentSourceType = 'pdf' | 'powerpoint'
+type SessionKeyContinuation =
+  | { action: 'generate'; rawSource: string }
+  | { action: 'extractImage' }
 
 interface DocumentSource {
   file: File
@@ -683,6 +688,11 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
   const [layoutMode, setLayoutMode] =
     useState<StudyPackDashboardLayoutMode>('orchestrator')
   const [error, setError] = useState('')
+  const [sessionKeyRequest, setSessionKeyRequest] = useState<{
+    provider: StrongAiProviderId
+    model: string
+    continuation: SessionKeyContinuation
+  } | null>(null)
   const activeOperationRef = useRef<AbortController | null>(null)
   const appliedInitialSourceRef = useRef(false)
 
@@ -1161,6 +1171,15 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
     setStep('review')
   }
 
+  const requestSessionKey = (
+    provider: StrongAiProviderId,
+    model: string,
+    continuation: SessionKeyContinuation,
+  ) => {
+    setSessionKeyRequest({ provider, model, continuation })
+    setError('')
+  }
+
   const parseSourceWithAi = async (rawSource = sourceText) => {
     if (!resourceType) {
       setError('Choose a resource type before continuing.')
@@ -1171,13 +1190,10 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
       ? resolveStudyPackAiCredentials(aiProvider)
       : resolveStudyPackAiCredentials()
     if (isStrongAiProvider(aiProvider) && !credentials.apiToken) {
-      setError(
-        `${
-          aiProvider === 'cerebras'
-            ? 'Own Cerebras API key'
-            : 'Own Gemini API token'
-        } mode needs a configured API key.`,
-      )
+      requestSessionKey(aiProvider, credentials.model, {
+        action: 'generate',
+        rawSource,
+      })
       return
     }
 
@@ -1338,13 +1354,9 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
       ? resolveStudyPackAiCredentials(aiProvider)
       : resolveStudyPackAiCredentials()
     if (isStrongAiProvider(aiProvider) && !credentials.apiToken) {
-      setError(
-        `${
-          aiProvider === 'cerebras'
-            ? 'Own Cerebras API key'
-            : 'Own Gemini API token'
-        } mode needs a configured API key.`,
-      )
+      requestSessionKey(aiProvider, credentials.model, {
+        action: 'extractImage',
+      })
       return
     }
 
@@ -2398,42 +2410,80 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
     }
 
     return (
-      <Box
-        data-testid="study-pack-modal"
-        sx={{
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          bgcolor: 'background.paper',
-          overflow: 'hidden',
-          '& .MuiDialogContent-root': {
-            flex: 1,
-            minHeight: 0,
-            overflow: 'auto',
-          },
-        }}
-      >
-        {content}
-      </Box>
+      <>
+        <Box
+          data-testid="study-pack-modal"
+          sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            bgcolor: 'background.paper',
+            overflow: 'hidden',
+            '& .MuiDialogContent-root': {
+              flex: 1,
+              minHeight: 0,
+              overflow: 'auto',
+            },
+          }}
+        >
+          {content}
+        </Box>
+        {sessionKeyRequest ? (
+          <StrongAiSessionKeyDialog
+            open
+            provider={sessionKeyRequest.provider}
+            model={sessionKeyRequest.model}
+            onCancel={() => setSessionKeyRequest(null)}
+            onSaved={() => {
+              const continuation = sessionKeyRequest.continuation
+              setSessionKeyRequest(null)
+              if (continuation.action === 'generate') {
+                void parseSourceWithAi(continuation.rawSource)
+              } else {
+                void extractImageNotes()
+              }
+            }}
+          />
+        ) : null}
+      </>
     )
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          bgcolor: 'background.paper',
-          borderRadius: 3,
-          minHeight: { xs: '100dvh', md: 620 },
-        },
-      }}
-    >
-      {content}
-    </Dialog>
+    <>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: 'background.paper',
+            borderRadius: 3,
+            minHeight: { xs: '100dvh', md: 620 },
+          },
+        }}
+      >
+        {content}
+      </Dialog>
+      {sessionKeyRequest ? (
+        <StrongAiSessionKeyDialog
+          open
+          provider={sessionKeyRequest.provider}
+          model={sessionKeyRequest.model}
+          onCancel={() => setSessionKeyRequest(null)}
+          onSaved={() => {
+            const continuation = sessionKeyRequest.continuation
+            setSessionKeyRequest(null)
+            if (continuation.action === 'generate') {
+              void parseSourceWithAi(continuation.rawSource)
+            } else {
+              void extractImageNotes()
+            }
+          }}
+        />
+      ) : null}
+    </>
   )
 }
 

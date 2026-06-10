@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
+import { applyCors, getHeader } from './cors'
 import { loadLocalApiEnv } from './local-env'
 import type {
   HostedAiGatewayPart,
@@ -59,7 +60,7 @@ const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
 
 const HOSTED_AI_INITIAL_FREE_CREDITS = 10
 const HOSTED_AI_DAILY_FREE_CREDITS = 2
-const DEFAULT_CEREBRAS_MODEL = 'gpt-oss-120b'
+export const DEFAULT_CEREBRAS_MODEL = 'gpt-oss-120b'
 const MAX_TEXT_CHARS = 120_000
 const CEREBRAS_CHAT_COMPLETIONS_URL =
   'https://api.cerebras.ai/v1/chat/completions'
@@ -72,13 +73,8 @@ const VALID_SURFACES = new Set<HostedAiSurface>([
 
 const getEnv = (name: string): string => process.env[name]?.trim() || ''
 
-const getHeader = (req: VercelRequest, name: string): string => {
-  const match = Object.entries(req.headers).find(
-    ([key]) => key.toLowerCase() === name.toLowerCase(),
-  )?.[1]
-
-  return Array.isArray(match) ? match[0] || '' : match || ''
-}
+export const getHostedCerebrasModel = (): string =>
+  getEnv('HOSTED_CEREBRAS_MODEL') || DEFAULT_CEREBRAS_MODEL
 
 const json = (
   res: VercelResponse,
@@ -116,7 +112,7 @@ const normalizeRequest = (body: unknown): HostedAiGatewayRequest | null => {
 }
 
 const getBearerToken = (req: VercelRequest): string => {
-  const authorization = getHeader(req, 'authorization')
+  const authorization = getHeader(req.headers, 'authorization')
   const match = authorization.match(/^Bearer\s+(.+)$/i)
 
   return match?.[1]?.trim() || ''
@@ -590,8 +586,7 @@ const handleGenerate = async (
     return invalid
   }
 
-  const model =
-    request.model || getEnv('HOSTED_CEREBRAS_MODEL') || DEFAULT_CEREBRAS_MODEL
+  const model = getHostedCerebrasModel()
   const requestId = request.requestId || randomUUID()
   const usageRequest = { ...request, requestId }
   const started = await startHostedUsage(userId, usageRequest, model)
@@ -623,9 +618,15 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
 ): Promise<void> {
-  res.setHeader('access-control-allow-origin', '*')
-  res.setHeader('access-control-allow-methods', 'POST, OPTIONS')
-  res.setHeader('access-control-allow-headers', 'authorization, content-type')
+  const cors = applyCors(req, res)
+  if (!cors.allowed) {
+    json(
+      res,
+      403,
+      errorResponse('invalid_request', 'Origin is not allowed.'),
+    )
+    return
+  }
 
   if (req.method === 'OPTIONS') {
     res.status(204).end()

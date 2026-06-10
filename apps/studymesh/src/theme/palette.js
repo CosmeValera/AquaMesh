@@ -167,7 +167,7 @@ const createPalette = (accent, mode = 'light') => {
       accentSurface,
     },
     action: {
-      active: isDark ? `${accent.main}3D` : `${accent.light}33`,
+      active: base.text.primary,
       contrastActive: isDark ? `${accent.main}3D` : '#FFFFFF7a',
       hover: isDark ? `${accent.main}26` : `${accent.light}24`,
       contrastHover: '#FFFFFF14',

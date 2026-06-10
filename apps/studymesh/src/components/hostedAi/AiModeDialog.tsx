@@ -25,6 +25,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 
 import { dispatchWorkspaceOnboardingNotice } from '../onboarding/onboardingEvents'
+import { dialogStyles } from '../shared/DialogStyles'
 import {
   DEFAULT_QUICK_CREATE_AI_MODEL,
   getEnvStrongAiProviderApiKey,
@@ -207,9 +208,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
       }
     } catch (error) {
       setLocalAiStatus(
-        error instanceof Error
-          ? error.message
-          : 'Google Local AI test failed.',
+        error instanceof Error ? error.message : 'Google Local AI test failed.',
       )
     } finally {
       setIsTestingLocalAi(false)
@@ -233,7 +232,12 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
         <IconButton
           aria-label="Close AI mode"
           onClick={onClose}
-          sx={{ position: 'absolute', right: 12, top: 12 }}
+          sx={{
+            ...dialogStyles.closeButton,
+            right: 12,
+            top: 12,
+            transform: 'none',
+          }}
         >
           <CloseIcon />
         </IconButton>
@@ -316,9 +320,13 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Tooltip title={showAiKey ? 'Hide API key' : 'Show API key'}>
+                      <Tooltip
+                        title={showAiKey ? 'Hide API key' : 'Show API key'}
+                      >
                         <IconButton
-                          aria-label={showAiKey ? 'Hide API key' : 'Show API key'}
+                          aria-label={
+                            showAiKey ? 'Hide API key' : 'Show API key'
+                          }
                           edge="end"
                           size="small"
                           onClick={() => setShowAiKey((shown) => !shown)}
@@ -406,9 +414,16 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
           )}
 
           <Stack direction="row" spacing={1} alignItems="center">
-            <Chip size="small" label={`Mode: ${aiProviderLabels[aiProvider]}`} />
+            <Chip
+              size="small"
+              label={`Mode: ${aiProviderLabels[aiProvider]}`}
+            />
             <Box sx={{ flexGrow: 1 }} />
-            <Button variant="contained" size="small" onClick={handleSaveAiSettings}>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={handleSaveAiSettings}
+            >
               Save AI mode
             </Button>
           </Stack>

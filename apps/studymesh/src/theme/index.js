@@ -96,6 +96,19 @@ export const createStudyMeshTheme = (
   const themePalette = createPalette(getAccentColorById(accentColorId), mode)
   const isDark = mode === 'dark'
   const cssVariables = createCssVariables(themePalette, mode)
+  const iconButtonHoverBackground = alpha(
+    themePalette.primary.main,
+    isDark ? 0.18 : 0.1,
+  )
+  const iconButtonPaletteState = (color) => ({
+    color,
+    borderColor: 'transparent',
+    '&:hover': {
+      backgroundColor: iconButtonHoverBackground,
+      borderColor: alpha(color, isDark ? 0.52 : 0.42),
+      color,
+    },
+  })
 
   return createTheme({
     palette: themePalette,
@@ -177,6 +190,49 @@ export const createStudyMeshTheme = (
             boxShadow: isDark
               ? `0 10px 24px ${alpha(themePalette.primary.main, 0.22)}`
               : undefined,
+          },
+        },
+      },
+      MuiIconButton: {
+        styleOverrides: {
+          root: {
+            color: themePalette.text.primary,
+            backgroundColor: 'transparent',
+            border: '1px solid transparent',
+            borderColor: 'transparent',
+            '&:hover': {
+              backgroundColor: themePalette.action.hover,
+              borderColor: themePalette.divider,
+              color: themePalette.text.primary,
+            },
+            '&.Mui-focusVisible': {
+              outline: `2px solid ${alpha(themePalette.primary.main, 0.48)}`,
+              outlineOffset: 2,
+            },
+            '&.Mui-disabled': {
+              color: themePalette.text.disabled,
+              backgroundColor: 'transparent',
+              borderColor: 'transparent',
+            },
+          },
+          colorPrimary: iconButtonPaletteState(themePalette.primary.main),
+          colorSecondary: iconButtonPaletteState(themePalette.secondary.dark),
+          colorError: iconButtonPaletteState(themePalette.critical.main),
+          colorInfo: iconButtonPaletteState(themePalette.primary.main),
+          colorSuccess: iconButtonPaletteState(themePalette.normal.main),
+          colorWarning: iconButtonPaletteState(themePalette.serious.main),
+        },
+      },
+      MuiSelect: {
+        styleOverrides: {
+          icon: {
+            color: themePalette.text.primary,
+            '&.MuiSelect-iconOpen': {
+              color: themePalette.text.primary,
+            },
+            '&.Mui-disabled': {
+              color: themePalette.text.disabled,
+            },
           },
         },
       },

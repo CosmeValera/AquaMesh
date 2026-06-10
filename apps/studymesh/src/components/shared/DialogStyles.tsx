@@ -66,9 +66,19 @@ export const dialogStyles = {
     right: 8,
     top: '50%',
     transform: 'translateY(-50%)',
-    color: 'text.secondary',
+    color: 'text.primary',
+    bgcolor: 'transparent',
+    border: '1px solid',
+    borderColor: 'transparent',
     '&:hover': {
       bgcolor: 'action.hover',
+      borderColor: 'divider',
+      color: 'text.primary',
+    },
+    '&.Mui-disabled': {
+      bgcolor: 'transparent',
+      borderColor: 'transparent',
+      color: 'text.disabled',
     },
   },
 
@@ -198,9 +208,19 @@ export const buttonStyles = {
 
   // Icon button styles
   icon: {
-    color: 'text.secondary',
+    color: 'text.primary',
+    bgcolor: 'transparent',
+    border: '1px solid',
+    borderColor: 'transparent',
     '&:hover': {
       bgcolor: 'action.hover',
+      borderColor: 'divider',
+      color: 'text.primary',
+    },
+    '&.Mui-disabled': {
+      bgcolor: 'transparent',
+      borderColor: 'transparent',
+      color: 'text.disabled',
     },
   },
 } as const
@@ -326,7 +346,10 @@ export const formFieldStyles = {
   },
   select: {
     '& .MuiSelect-icon': {
-      color: 'text.secondary',
+      color: 'text.primary',
+    },
+    '& .MuiSelect-icon.Mui-disabled': {
+      color: 'text.disabled',
     },
   },
   checkbox: {

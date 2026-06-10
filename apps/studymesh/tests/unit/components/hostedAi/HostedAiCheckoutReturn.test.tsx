@@ -47,6 +47,9 @@ describe('HostedAiCheckoutReturn', () => {
     expect(
       await screen.findByText('Payment confirmed. Study Credits added.'),
     ).toBeInTheDocument()
+    expect(document.querySelectorAll('.studymesh-confetti-piece')).toHaveLength(
+      72,
+    )
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/study-guides')
     })

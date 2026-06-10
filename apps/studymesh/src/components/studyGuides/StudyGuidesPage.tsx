@@ -17,7 +17,6 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
-import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import EditIcon from '@mui/icons-material/Edit'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
@@ -287,48 +286,72 @@ const StudyGuidesPage = () => {
           </Button>
         </Stack>
 
-        {sortedGuides.length === 0 && pendingGuides.length === 0 ? (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              lg: 'repeat(3, minmax(0, 1fr))',
+            },
+            gap: 2,
+          }}
+        >
           <Paper
+            component="button"
+            type="button"
+            aria-label="New Study Guide"
+            onClick={openCreateGuide}
             elevation={0}
-            sx={{
-              minHeight: 280,
+            sx={(theme) => ({
+              minHeight: 180,
               border: 1,
-              borderColor: 'divider',
+              borderStyle: 'dashed',
+              borderColor: alpha(theme.palette.primary.main, 0.55),
               borderRadius: 3,
               display: 'grid',
               placeItems: 'center',
               textAlign: 'center',
-              p: 4,
-              bgcolor: 'background.paper',
-            }}
+              p: 2.25,
+              bgcolor: alpha(
+                theme.palette.primary.main,
+                theme.palette.mode === 'dark' ? 0.08 : 0.035,
+              ),
+              color: 'primary.main',
+              cursor: 'pointer',
+              font: 'inherit',
+              transition: theme.transitions.create([
+                'transform',
+                'box-shadow',
+                'border-color',
+                'background-color',
+              ]),
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                borderColor: 'primary.main',
+                bgcolor: alpha(
+                  theme.palette.primary.main,
+                  theme.palette.mode === 'dark' ? 0.15 : 0.08,
+                ),
+                boxShadow:
+                  theme.palette.mode === 'dark'
+                    ? '0 18px 44px rgba(0,0,0,0.3)'
+                    : '0 18px 44px rgba(15,23,42,0.1)',
+              },
+              '&:focus-visible': {
+                outline: `3px solid ${alpha(theme.palette.primary.main, 0.45)}`,
+                outlineOffset: 3,
+              },
+            })}
           >
-            <Stack spacing={1.5} alignItems="center">
-              <AutoStoriesIcon sx={{ fontSize: 48, color: 'primary.main' }} />
-              <Typography variant="h6" fontWeight={900}>
-                No Study Guides yet
+            <Stack spacing={1} alignItems="center">
+              <AddIcon sx={{ fontSize: 58 }} />
+              <Typography fontWeight={900} color="text.primary">
+                New Study Guide
               </Typography>
-              <Typography color="text.secondary" maxWidth={420}>
-                Start with a prompt and StudyMesh will build the first guide
-                pages.
-              </Typography>
-              <Button variant="contained" onClick={openCreateGuide}>
-                Create Study Guide
-              </Button>
             </Stack>
           </Paper>
-        ) : (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, minmax(0, 1fr))',
-                lg: 'repeat(3, minmax(0, 1fr))',
-              },
-              gap: 2,
-            }}
-          >
-            {pendingGuides.map((guide) => {
+          {pendingGuides.map((guide) => {
               const elapsedSeconds = Math.max(
                 0,
                 Math.floor((now - Date.parse(guide.createdAt)) / 1000),
@@ -431,8 +454,8 @@ const StudyGuidesPage = () => {
                   </Stack>
                 </Paper>
               )
-            })}
-            {sortedGuides.map((guide) => {
+          })}
+          {sortedGuides.map((guide) => {
               const pageCount = guide.studyPath.dashboards.length
               return (
                 <Paper
@@ -537,9 +560,8 @@ const StudyGuidesPage = () => {
                   </Stack>
                 </Paper>
               )
-            })}
-          </Box>
-        )}
+          })}
+        </Box>
       </Box>
 
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={closeMenu}>

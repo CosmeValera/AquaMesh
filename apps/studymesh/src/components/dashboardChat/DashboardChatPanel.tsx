@@ -14,6 +14,7 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import SendIcon from '@mui/icons-material/Send'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import { StateDashboard } from '../../state/store'
@@ -24,6 +25,7 @@ import {
 } from '../../dashboardChat/contextBuilder'
 import { askDashboardSources } from '../../dashboardChat/askDashboard'
 import { readStudyPackAiSettings } from '../../studyPack/ai'
+import type { StudyMaterialResourceType } from '../../studyPack/ai'
 import HostedAiCreditActions from '../hostedAi/HostedAiCreditActions'
 import { renderMarkdown } from '../WidgetEditor/components/preview/StudyBlockView'
 
@@ -45,6 +47,8 @@ interface DashboardChatPanelProps {
   onMessagesChange: (messages: DashboardChatMessage[]) => void
   onClose: () => void
   showCloseButton?: boolean
+  onAddAssistantMessageToGuide?: (message: DashboardChatMessage) => void
+  onQuickCreatePage?: (resourceType: StudyMaterialResourceType) => void
 }
 
 const suggestions = [
@@ -63,6 +67,8 @@ const DashboardChatPanel = ({
   onMessagesChange,
   onClose,
   showCloseButton = true,
+  onAddAssistantMessageToGuide,
+  onQuickCreatePage,
 }: DashboardChatPanelProps) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -85,6 +91,9 @@ const DashboardChatPanel = ({
     [dashboard, isLocalAi],
   )
   const hasContext = context.chunks.length > 0
+  const latestAssistantMessageId = [...messages]
+    .reverse()
+    .find((message) => message.role === 'assistant' && !message.pending)?.id
 
   useEffect(() => {
     messagesRef.current = messages
@@ -463,6 +472,25 @@ const DashboardChatPanel = ({
                     ))}
                   </Stack>
                 ) : null}
+                {message.role === 'assistant' &&
+                !message.pending &&
+                onAddAssistantMessageToGuide &&
+                message.id === latestAssistantMessageId ? (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<AddCircleOutlineIcon fontSize="small" />}
+                    onClick={() => onAddAssistantMessageToGuide(message)}
+                    sx={{
+                      mt: 0.75,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      bgcolor: 'background.paper',
+                    }}
+                  >
+                    Add to Study Guide
+                  </Button>
+                ) : null}
               </Box>
             ))}
           </Stack>
@@ -479,6 +507,34 @@ const DashboardChatPanel = ({
 
       <Box sx={{ borderTop: 1, borderColor: 'divider' }} />
       <Box sx={{ p: 1.5, bgcolor: 'background.paper' }}>
+        {onQuickCreatePage ? (
+          <Stack direction="row" spacing={0.75} sx={{ mb: 1 }}>
+            {[
+              ['quiz', 'Quiz'],
+              ['flashcards', 'Flashcards'],
+              ['improvedNotes', 'Expand on this'],
+            ].map(([resourceType, label]) => (
+              <Button
+                key={resourceType}
+                size="small"
+                variant="outlined"
+                disabled={!hasContext}
+                onClick={() =>
+                  onQuickCreatePage(resourceType as StudyMaterialResourceType)
+                }
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontSize: { xs: '0.72rem', sm: '0.8125rem' },
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+          </Stack>
+        ) : null}
         <Stack direction="row" spacing={1} alignItems="flex-end">
           <TextField
             value={draft}

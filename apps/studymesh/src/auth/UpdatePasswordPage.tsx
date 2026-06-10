@@ -40,7 +40,7 @@ const UpdatePasswordPage = () => {
       await updatePassword(password)
       setSuccessMessage('Password updated. Redirecting to your workspace...')
       window.setTimeout(() => {
-        navigate('/workspace', { replace: true })
+        navigate('/study-guides', { replace: true })
       }, 900)
     } catch (error) {
       setErrorMessage(getErrorMessage(error, 'Could not update password.'))

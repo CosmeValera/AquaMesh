@@ -790,6 +790,15 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                 {/* Logo and Brand */}
                 <Box
                   aria-label="StudyMesh logo"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate('/study-guides')}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      navigate('/study-guides')
+                    }
+                  }}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -798,6 +807,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                     color: 'foreground.contrastPrimary',
                     px: 0,
                     whiteSpace: 'nowrap',
+                    cursor: 'pointer',
                   }}
                 >
                   <Box
@@ -815,12 +825,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   {isDesktop && 'StudyMesh'}
                 </Box>
 
-                {/* Library */}
-                {isPhone || isTablet ? (
-                  <DashboardOptionsMenu />
-                ) : (
-                  <DashboardOptionsMenu />
-                )}
+                {creationHost !== 'external' ? <DashboardOptionsMenu /> : null}
               </Box>
 
               <Box

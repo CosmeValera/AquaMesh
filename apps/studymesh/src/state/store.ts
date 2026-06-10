@@ -28,6 +28,8 @@ export interface StudyPathDashboardItem {
   practiceType?: StudyPathPracticeType
   layoutReason?: string
   sourceRefs?: StudyPathSourceRef[]
+  createdBy?: 'generator' | 'chat' | 'quickCreate' | 'manual'
+  deletable?: boolean
 }
 
 export interface StudyPathContainerState {

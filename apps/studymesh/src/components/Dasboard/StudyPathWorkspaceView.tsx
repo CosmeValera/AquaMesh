@@ -18,14 +18,21 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import AutoStoriesIcon from '@mui/icons-material/AutoStories'
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import CloseIcon from '@mui/icons-material/Close'
-import DashboardLayoutView from '../Layout/Layout'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import {
   DashboardLayout,
   StudyPathContainerState,
 } from '../../state/store'
+import {
+  deleteStudyGuidePage,
+  reorderStudyGuidePage,
+} from '../../studyGuides/pages'
+import StudyGuideLinearLayout from './StudyGuideLinearLayout'
 
 const STUDY_PATH_NAV_OPEN_STORAGE_KEY = 'studymesh-study-path-navigator-open-v2'
 const LEGACY_STUDY_PATH_NAV_OPEN_STORAGE_KEY =
@@ -235,6 +242,15 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
     })
   }
 
+  const moveLesson = (index: number, direction: -1 | 1) => {
+    const nextIndex = index + direction
+    onStudyPathChange(reorderStudyGuidePage(studyPath, index, nextIndex))
+  }
+
+  const deleteLesson = (dashboardKey: string) => {
+    onStudyPathChange(deleteStudyGuidePage(studyPath, dashboardKey))
+  }
+
   if (!currentLesson) {
     return (
       <Paper sx={{ p: 3, m: 2 }}>
@@ -278,12 +294,9 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
           overflow: 'visible',
         }}
       >
-        <DashboardLayoutView
+        <StudyGuideLinearLayout
           key={currentLesson.dashboardKey}
           layout={studentLayout}
-          readOnly
-          mobileView={mobileView}
-          updateLayout={(model) => updateCurrentLayout(model.toJson().layout)}
         />
       </Box>
 
@@ -660,29 +673,45 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                   const active = index === selectedIndex
 
                   return (
-                    <Button
+                    <Box
                       key={lesson.dashboardKey}
-                      onClick={() => selectLesson(index)}
-                      variant="text"
-                      color="inherit"
                       sx={{
-                        justifyContent: 'flex-start',
-                        textAlign: 'left',
-                        alignItems: 'center',
                         borderRadius: 2,
-                        py: { xs: 0.5, sm: 0.75 },
-                        px: { xs: 0.75, sm: 1 },
                         border: 1,
                         borderColor: active ? 'primary.main' : 'transparent',
                         bgcolor: active ? 'action.selected' : 'transparent',
                         color: 'text.primary',
                         boxShadow: active ? 1 : 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        p: { xs: 0.4, sm: 0.5 },
                         '&:hover': {
                           bgcolor: active ? 'action.selected' : 'action.hover',
                         },
                       }}
                     >
-                      <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
+                      <Button
+                        onClick={() => selectLesson(index)}
+                        variant="text"
+                        color="inherit"
+                        sx={{
+                          minWidth: 0,
+                          flex: 1,
+                          justifyContent: 'flex-start',
+                          textAlign: 'left',
+                          alignItems: 'center',
+                          borderRadius: 1.5,
+                          p: { xs: 0.25, sm: 0.5 },
+                          color: 'text.primary',
+                          textTransform: 'none',
+                        }}
+                      >
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          sx={{ width: '100%' }}
+                        >
                         <Box
                           sx={{
                             width: { xs: 22, sm: 26 },
@@ -727,8 +756,54 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                             Step {lesson.dashboardIndex}/{lesson.dashboardCount}
                           </Typography>
                         </Box>
-                      </Stack>
-                    </Button>
+                        </Stack>
+                      </Button>
+                      <Tooltip title="Move page up">
+                        <span>
+                          <IconButton
+                            size="small"
+                            aria-label={`Move ${lesson.name} up`}
+                            disabled={index === 0}
+                            onClick={() => moveLesson(index, -1)}
+                            sx={{ width: 28, height: 28 }}
+                          >
+                            <ArrowUpwardIcon fontSize="inherit" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title="Move page down">
+                        <span>
+                          <IconButton
+                            size="small"
+                            aria-label={`Move ${lesson.name} down`}
+                            disabled={index === studyPath.dashboards.length - 1}
+                            onClick={() => moveLesson(index, 1)}
+                            sx={{ width: 28, height: 28 }}
+                          >
+                            <ArrowDownwardIcon fontSize="inherit" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip
+                        title={
+                          lesson.deletable
+                            ? 'Delete page'
+                            : 'Generated Study Guide pages cannot be deleted yet'
+                        }
+                      >
+                        <span>
+                          <IconButton
+                            size="small"
+                            aria-label={`Delete ${lesson.name}`}
+                            disabled={!lesson.deletable}
+                            onClick={() => deleteLesson(lesson.dashboardKey)}
+                            sx={{ width: 28, height: 28 }}
+                          >
+                            <DeleteOutlineIcon fontSize="inherit" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </Box>
                   )
                 })}
               </Stack>

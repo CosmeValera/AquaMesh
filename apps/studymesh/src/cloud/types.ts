@@ -58,6 +58,8 @@ export interface StudyGuideRecord {
   title: string
   folderName: string
   description?: string
+  emoji?: string
+  pinnedAt?: string | null
   studyPath: StudyPathContainerState
   createdAt: string
   updatedAt: string

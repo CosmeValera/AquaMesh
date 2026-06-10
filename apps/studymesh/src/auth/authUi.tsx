@@ -119,7 +119,7 @@ export const getRedirectPath = (search: string) => {
   const redirect = new URLSearchParams(search).get('redirect')
 
   if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) {
-    return '/workspace'
+    return '/study-guides'
   }
 
   return redirect

@@ -263,7 +263,7 @@ const StudyMeshLanding = () => {
   }
 
   const openWorkspace = (action?: string) => {
-    navigate(action ? `/workspace?action=${action}` : '/workspace')
+    navigate(action ? `/study-guides?action=${action}` : '/study-guides')
   }
 
   const changeHeroPreview = (nextPreview: number) => {

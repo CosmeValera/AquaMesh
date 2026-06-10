@@ -1,6 +1,7 @@
 import React from 'react'
 import { Box, Tooltip, Typography } from '@mui/material'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 
 import {
   STUDY_CREDITS_LABEL,
@@ -31,6 +32,7 @@ const AiModePill: React.FC<AiModePillProps> = ({
   const count = status?.accountReady ? status.studyCredits : null
   const hostedValue = loading || count === null ? '--' : count
   const isHosted = provider === 'hosted'
+  const hasNoCredits = isHosted && count === 0
   const tooltip = isHosted
     ? error && !status
       ? `${STUDY_CREDITS_LABEL} unavailable`
@@ -53,10 +55,14 @@ const AiModePill: React.FC<AiModePillProps> = ({
           maxWidth: compact && !isHosted ? 88 : 128,
           px: compact ? 1 : 1.2,
           borderRadius: 999,
-          border: '1px solid rgba(255,255,255,0.28)',
-          color: 'foreground.contrastPrimary',
-          bgcolor: 'rgba(255,255,255,0.1)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16)',
+          border: hasNoCredits
+            ? '1px solid rgba(255,255,255,0.55)'
+            : '1px solid rgba(255,255,255,0.28)',
+          color: hasNoCredits ? '#fff' : 'foreground.contrastPrimary',
+          bgcolor: hasNoCredits ? 'error.main' : 'rgba(255,255,255,0.1)',
+          boxShadow: hasNoCredits
+            ? '0 0 0 2px rgba(211,47,47,0.25), inset 0 1px 0 rgba(255,255,255,0.2)'
+            : 'inset 0 1px 0 rgba(255,255,255,0.16)',
           justifyContent: 'center',
           flex: '0 0 auto',
           font: 'inherit',
@@ -65,7 +71,7 @@ const AiModePill: React.FC<AiModePillProps> = ({
           transition:
             'background-color 140ms ease, border-color 140ms ease, transform 140ms ease',
           '&:hover': {
-            bgcolor: 'rgba(255,255,255,0.18)',
+            bgcolor: hasNoCredits ? 'error.dark' : 'rgba(255,255,255,0.18)',
             borderColor: 'rgba(255,255,255,0.4)',
           },
           '&:focus-visible': {
@@ -76,19 +82,23 @@ const AiModePill: React.FC<AiModePillProps> = ({
       >
         {isHosted ? (
           <>
-            <Typography
-              component="span"
-              variant="caption"
-              fontWeight={900}
-              sx={{ lineHeight: 1, letterSpacing: 0 }}
-            >
-              {STUDY_CREDITS_SYMBOL}
-            </Typography>
+            {hasNoCredits ? (
+              <ErrorOutlineIcon sx={{ fontSize: 17, color: '#fff' }} />
+            ) : (
+              <Typography
+                component="span"
+                variant="caption"
+                fontWeight={900}
+                sx={{ lineHeight: 1, letterSpacing: 0 }}
+              >
+                {STUDY_CREDITS_SYMBOL}
+              </Typography>
+            )}
             <Typography
               component="span"
               variant="body2"
               fontWeight={900}
-              sx={{ lineHeight: 1 }}
+              sx={{ lineHeight: 1, color: hasNoCredits ? '#fff' : 'inherit' }}
             >
               {hostedValue}
             </Typography>

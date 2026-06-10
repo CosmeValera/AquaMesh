@@ -378,12 +378,6 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
                 size="small"
                 sx={{ mb: 1.5 }}
               />
-              {aiProvider === 'cerebras' && (
-                <Alert severity="info" sx={{ mb: 1.5 }}>
-                  Cerebras is used as a strong text model. Image extraction
-                  still uses existing OCR, Gemini, or Local AI paths.
-                </Alert>
-              )}
               <Stack direction="row" spacing={1} alignItems="center">
                 <Chip
                   size="small"

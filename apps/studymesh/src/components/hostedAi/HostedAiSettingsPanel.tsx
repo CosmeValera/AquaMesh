@@ -1,6 +1,7 @@
 import React from 'react'
 import { Alert, Box, Chip, Stack, Typography } from '@mui/material'
 import TollIcon from '@mui/icons-material/Toll'
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 
 import { STUDY_CREDITS_LABEL } from '../../studyPack/ai'
 import HostedAiPricingCards from './HostedAiPricingCards'
@@ -51,10 +52,21 @@ const HostedAiSettingsPanel: React.FC = () => {
           </Typography>
         </Box>
         <Chip
-          icon={<TollIcon />}
-          color={status.available ? 'primary' : 'default'}
+          icon={status.studyCredits === 0 ? <ErrorOutlineIcon /> : <TollIcon />}
+          color={
+            status.studyCredits === 0
+              ? 'error'
+              : status.available
+                ? 'primary'
+                : 'default'
+          }
           label={`${status.studyCredits} credits`}
-          sx={{ fontWeight: 800 }}
+          sx={{
+            fontWeight: 900,
+            ...(status.studyCredits === 0 && {
+              boxShadow: '0 0 0 3px rgba(211,47,47,0.14)',
+            }),
+          }}
         />
       </Stack>
       <Stack

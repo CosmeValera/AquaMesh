@@ -59,6 +59,7 @@ import { dispatchWorkspaceOnboardingEvent } from '../onboarding/onboardingEvents
 import CreateStudyPackModal from '../studyPack/CreateStudyPackModal'
 import CreateStudyPathModal from '../studyPack/CreateStudyPathModal'
 import {
+  HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   readStudyPackAiSettings,
   STUDY_PACK_AI_SETTINGS_CHANGED_EVENT,
   StudyPackAiProvider,
@@ -324,6 +325,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
   const [isAiModeOpen, setIsAiModeOpen] = useState(false)
+  const [aiModeNotice, setAiModeNotice] = useState('')
   const [userSettingsName, setUserSettingsName] = useState('')
   const [userSettingsAvatarStatus, setUserSettingsAvatarStatus] = useState('')
   const [studyPackOpen, setStudyPackOpen] = useState(false)
@@ -452,6 +454,27 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         refreshAiProvider,
       )
       window.removeEventListener('storage', refreshAiProvider)
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleInsufficientCredits = () => {
+      setAiModeNotice(
+        'You do not have enough Study Credits for that action. Buy a credit pack, switch to your own API key, or wait for the next daily refill.',
+      )
+      setIsAiModeOpen(true)
+    }
+
+    window.addEventListener(
+      HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
+      handleInsufficientCredits,
+    )
+
+    return () => {
+      window.removeEventListener(
+        HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
+        handleInsufficientCredits,
+      )
     }
   }, [])
 
@@ -787,7 +810,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
               <AiModePill
                 compact
                 provider={studyPackAiProvider}
-                onClick={() => setIsAiModeOpen(true)}
+                onClick={() => {
+                  setAiModeNotice('')
+                  setIsAiModeOpen(true)
+                }}
               />
               <IconButton
                 onClick={handleUserMenuOpen}
@@ -888,7 +914,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                 <AiModePill
                   compact={isPhone || isTablet}
                   provider={studyPackAiProvider}
-                  onClick={() => setIsAiModeOpen(true)}
+                  onClick={() => {
+                    setAiModeNotice('')
+                    setIsAiModeOpen(true)
+                  }}
                 />
                 {/* User Menu */}
                 {isPhone || isTablet ? (
@@ -1465,7 +1494,11 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       </Dialog>
       <AiModeDialog
         open={isAiModeOpen}
-        onClose={() => setIsAiModeOpen(false)}
+        notice={aiModeNotice}
+        onClose={() => {
+          setIsAiModeOpen(false)
+          setAiModeNotice('')
+        }}
       />
       <SettingsDialog
         open={isSettingsOpen}

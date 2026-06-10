@@ -1,13 +1,13 @@
 import React from 'react'
-import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material'
+import { Alert, Box, Chip, Stack, Typography } from '@mui/material'
 import TollIcon from '@mui/icons-material/Toll'
 
 import { STUDY_CREDITS_LABEL } from '../../studyPack/ai'
-import HostedAiCreditActions from './HostedAiCreditActions'
+import HostedAiPricingCards from './HostedAiPricingCards'
 import { useHostedAiStatus } from './useHostedAiStatus'
 
 const HostedAiSettingsPanel: React.FC = () => {
-  const { status, loading, error, refresh } = useHostedAiStatus()
+  const { status, loading, error } = useHostedAiStatus()
 
   if (!status && loading) {
     return (
@@ -86,12 +86,7 @@ const HostedAiSettingsPanel: React.FC = () => {
           {status.message}
         </Alert>
       )}
-      <Stack direction="row" spacing={1} sx={{ mt: 1.5 }} flexWrap="wrap">
-        <HostedAiCreditActions />
-        <Button variant="text" size="small" onClick={() => void refresh()}>
-          Refresh credits
-        </Button>
-      </Stack>
+      <HostedAiPricingCards />
     </Box>
   )
 }

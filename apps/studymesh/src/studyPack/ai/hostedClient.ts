@@ -1,6 +1,7 @@
 import { isSupabaseConfigured, supabase } from '../../auth/supabaseClient'
 import type { StrongAiCallOptions } from './strongProviders'
 import {
+  HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   HOSTED_AI_USAGE_CHANGED_EVENT,
   getHostedAiCreditCost,
 } from './hostedCredits'
@@ -24,6 +25,12 @@ export type HostedAiTransport = (
 ) => Promise<string>
 
 const HOSTED_AI_ENDPOINT = '/api/hosted-ai'
+
+const dispatchInsufficientCredits = (): void => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT))
+  }
+}
 
 const createRequestId = (): string => {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -75,6 +82,7 @@ const formatHostedAiError = (
   const message = payload.error?.message
 
   if (code === 'insufficient_credits') {
+    dispatchInsufficientCredits()
     return new Error(
       message ||
         'Not enough Study Credits. Wait for the daily refill, switch provider, or bring your own key.',
@@ -121,6 +129,7 @@ const assertHostedAiCreditsAvailable = async (
   const requiredCredits = getHostedAiCreditCost(surface)
 
   if (status.studyCredits < requiredCredits) {
+    dispatchInsufficientCredits()
     throw new Error(
       `Not enough Study Credits. This action needs ${requiredCredits} SC and you have ${status.studyCredits} SC.`,
     )

@@ -53,9 +53,14 @@ const aiProviderLabels: Record<StudyPackAiProvider, string> = {
 interface AiModeDialogProps {
   open: boolean
   onClose: () => void
+  notice?: string
 }
 
-const AiModeDialog: React.FC<AiModeDialogProps> = ({ open, onClose }) => {
+const AiModeDialog: React.FC<AiModeDialogProps> = ({
+  open,
+  onClose,
+  notice,
+}) => {
   const [aiProvider, setAiProvider] =
     React.useState<StudyPackAiProvider>('hosted')
   const [strongCredentials, setStrongCredentials] =
@@ -212,7 +217,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({ open, onClose }) => {
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pr: 7 }}>
         <Stack direction="row" spacing={1.25} alignItems="center">
           <AutoAwesomeIcon color="primary" />
@@ -235,6 +240,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({ open, onClose }) => {
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 2 }}>
+          {notice && <Alert severity="warning">{notice}</Alert>}
           <Box>
             <TextField
               select
@@ -413,8 +419,12 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({ open, onClose }) => {
             </Button>
           </Stack>
 
-          <Divider />
-          <HostedAiSettingsPanel />
+          {aiProvider === 'hosted' && (
+            <>
+              <Divider />
+              <HostedAiSettingsPanel />
+            </>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>

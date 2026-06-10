@@ -56,7 +56,6 @@ import {
   extractTextFromPptx,
 } from '../../studyPack/documentExtraction'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
-import HostedAiCreditActions from '../hostedAi/HostedAiCreditActions'
 import { quickCreateFolders } from '../workspace/workspaceStudioModel'
 import StrongAiSessionKeyDialog from './StrongAiSessionKeyDialog'
 
@@ -69,14 +68,11 @@ type ReviewType =
   | 'list'
   | 'table'
   | 'reviewPrompt'
-
-const isInsufficientStudyCreditsError = (message: string): boolean =>
-  /not enough study credits|insufficient study credits/i.test(message) |
-  'note' |
-  'reveal' |
-  'sequence' |
-  'markdown' |
-  'ignore'
+  | 'note'
+  | 'reveal'
+  | 'sequence'
+  | 'markdown'
+  | 'ignore'
 type SourceInputType = 'text' | 'image' | 'pdf' | 'powerpoint'
 type GenerationAmount = 'few' | 'medium' | 'many'
 type DocumentSourceType = 'pdf' | 'powerpoint'
@@ -1703,9 +1699,6 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
             <Alert severity={step === 'review' ? 'info' : 'error'}>
               {error}
             </Alert>
-            {step !== 'review' && isInsufficientStudyCreditsError(error) && (
-              <HostedAiCreditActions />
-            )}
           </Box>
         )}
 

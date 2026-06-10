@@ -12,7 +12,10 @@ import {
   OPEN_STUDY_PATH_EVENT,
 } from '../../../../src/customHooks/useWorkspaceActions'
 import { STUDYMESH_ONBOARDING_RESET_EVENT } from '../../../../src/components/onboarding/onboardingEvents'
-import { STUDY_PACK_AI_SETTINGS_KEY } from '../../../../src/studyPack/ai'
+import {
+  HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
+  STUDY_PACK_AI_SETTINGS_KEY,
+} from '../../../../src/studyPack/ai'
 
 const hostedAiStatus = vi.hoisted(() => ({
   available: true,
@@ -468,6 +471,41 @@ describe('TopNavBar Component', () => {
         name: /buy 1200 credits for 20 eur.*best value/i,
       }),
     ).toBeEnabled()
+    expect(
+      screen.queryByRole('button', { name: /refresh credits/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /use own api key/i }),
+    ).not.toBeInTheDocument()
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /ai provider/i }))
+    fireEvent.click(await screen.findByRole('option', { name: /google local ai/i }))
+
+    expect(screen.queryByText('Study Credits')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /buy .* credits/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('opens AI Mode with purchase guidance when hosted credits run out', async () => {
+    render(
+      <BrowserRouter>
+        <TopNavBar />
+      </BrowserRouter>,
+    )
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT),
+      )
+    })
+
+    expect(
+      await screen.findByRole('dialog', { name: /AI Mode/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/you do not have enough study credits/i),
+    ).toBeInTheDocument()
   })
 
   it('shows the active own-key mode in the AI pill', () => {

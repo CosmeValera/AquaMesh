@@ -19,7 +19,6 @@ import {
   STUDY_CREDITS_LABEL,
 } from '../../studyPack/ai'
 import { useAuth } from '../../auth/AuthProvider'
-import HostedAiCreditActions from './HostedAiCreditActions'
 import { useHostedAiStatus } from './useHostedAiStatus'
 
 const HostedAiIntroModal: React.FC = () => {
@@ -116,7 +115,6 @@ const HostedAiIntroModal: React.FC = () => {
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2.5, gap: 1, flexWrap: 'wrap' }}>
-        <HostedAiCreditActions />
         <Box sx={{ flexGrow: 1 }} />
         <Button onClick={handleBringOwnKey} disabled={saving}>
           Bring my own key

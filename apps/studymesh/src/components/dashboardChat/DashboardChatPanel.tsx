@@ -42,7 +42,6 @@ import {
   type QuickCreateActionId,
   type QuickCreateActionRequest,
 } from '../../studyPack/quickCreateActions'
-import HostedAiCreditActions from '../hostedAi/HostedAiCreditActions'
 import { renderMarkdown } from '../WidgetEditor/components/preview/StudyBlockView'
 
 export interface DashboardChatMessage {
@@ -53,9 +52,6 @@ export interface DashboardChatMessage {
   sources?: string[]
   pending?: boolean
 }
-
-const isInsufficientStudyCreditsError = (message: string): boolean =>
-  /not enough study credits|insufficient study credits/i.test(message)
 
 interface DashboardChatPanelProps {
   dashboard?: StateDashboard
@@ -722,9 +718,6 @@ const DashboardChatPanel = ({
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}
           </Alert>
-        )}
-        {error && isInsufficientStudyCreditsError(error) && (
-          <HostedAiCreditActions />
         )}
       </Box>
 

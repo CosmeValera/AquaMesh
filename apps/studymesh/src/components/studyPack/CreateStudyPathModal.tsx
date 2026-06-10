@@ -45,7 +45,6 @@ import {
   StudyPackAiProvider,
 } from '../../studyPack/ai'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
-import HostedAiCreditActions from '../hostedAi/HostedAiCreditActions'
 import StrongAiSessionKeyDialog from './StrongAiSessionKeyDialog'
 
 interface CreateStudyPathModalProps {
@@ -84,9 +83,6 @@ const providerLabels: Record<StudyPackAiProvider, string> = {
   cerebras: 'Own Cerebras API key',
   hosted: 'Hosted AI',
 }
-
-const isInsufficientStudyCreditsError = (message: string): boolean =>
-  /not enough study credits|insufficient study credits/i.test(message)
 
 const LOCAL_AI_ESTIMATE_COPY =
   'Local AI runs on your device and can be slow. For faster, richer Study Guides, use a Gemini or Cerebras API key.'
@@ -920,9 +916,6 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
           {error && (
             <>
               <Alert severity="error">{error}</Alert>
-              {isInsufficientStudyCreditsError(error) && (
-                <HostedAiCreditActions compact />
-              )}
             </>
           )}
           {step === 'prompt' ? (

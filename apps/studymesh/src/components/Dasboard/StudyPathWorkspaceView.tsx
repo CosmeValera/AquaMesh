@@ -13,6 +13,7 @@ import {
   IconButton,
   Paper,
   Stack,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material'
@@ -30,9 +31,14 @@ import {
 } from '../../state/store'
 import {
   deleteStudyGuidePage,
+  getStudyGuidePageMarkdown,
+  isEditableMarkdownStudyGuidePage,
   reorderStudyGuidePage,
+  updateStudyGuideMarkdownPage,
 } from '../../studyGuides/pages'
 import StudyGuideLinearLayout from './StudyGuideLinearLayout'
+import AddIcon from '@mui/icons-material/Add'
+import { renderMarkdown } from '../WidgetEditor/components/preview/StudyBlockView'
 
 const STUDY_PATH_NAV_OPEN_STORAGE_KEY = 'studymesh-study-path-navigator-open-v2'
 const LEGACY_STUDY_PATH_NAV_OPEN_STORAGE_KEY =
@@ -48,6 +54,9 @@ interface StudyPathWorkspaceViewProps {
   studyPath: StudyPathContainerState
   onStudyPathChange: (studyPath: StudyPathContainerState) => void
   mobileView?: boolean
+  editingPageKey?: string | null
+  onEditingPageKeyChange?: (pageKey: string | null) => void
+  onAddPage?: () => void
 }
 
 const sanitizeStudentWidgetName = (name?: string): string | undefined => {
@@ -128,6 +137,9 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   studyPath,
   onStudyPathChange,
   mobileView = false,
+  editingPageKey = null,
+  onEditingPageKeyChange,
+  onAddPage,
 }) => {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [navigatorOpen, setNavigatorOpen] = useState(false)
@@ -137,6 +149,11 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
     Math.max(studyPath.dashboards.length - 1, 0),
   )
   const currentLesson = studyPath.dashboards[selectedIndex]
+  const currentPageKey = currentLesson?.dashboardKey || null
+  const currentPageEditable = isEditableMarkdownStudyGuidePage(currentLesson)
+  const isEditingCurrentPage =
+    currentPageEditable && currentPageKey === editingPageKey
+  const currentMarkdown = getStudyGuidePageMarkdown(currentLesson)
   const studentLayout = useMemo(
     () => sanitizeStudentLayout(currentLesson?.layout),
     [currentLesson?.layout],
@@ -242,6 +259,19 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
     })
   }
 
+  const updateCurrentMarkdownPage = (title: string, markdown: string) => {
+    if (!currentLesson) {
+      return
+    }
+
+    onStudyPathChange(
+      updateStudyGuideMarkdownPage(studyPath, currentLesson.dashboardKey, {
+        title,
+        markdown,
+      }),
+    )
+  }
+
   const moveLesson = (index: number, direction: -1 | 1) => {
     const nextIndex = index + direction
     onStudyPathChange(reorderStudyGuidePage(studyPath, index, nextIndex))
@@ -282,22 +312,111 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
         minHeight: 0,
         width: '100%',
         position: 'relative',
-        overflow: 'visible',
+        overflow: 'hidden',
         backgroundColor: 'background.default',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <Box
-        data-testid="study-path-dashboard-content"
         sx={{
-          height: '100%',
-          minHeight: 0,
-          overflow: 'visible',
+          flex: '0 0 auto',
+          px: 1.5,
+          py: 1,
+          borderBottom: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          bgcolor: 'background.paper',
         }}
       >
-        <StudyGuideLinearLayout
-          key={currentLesson.dashboardKey}
-          layout={studentLayout}
-        />
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle2" fontWeight={900} noWrap>
+            {currentLesson.name}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Page {selectedIndex + 1}/{studyPath.dashboards.length}
+          </Typography>
+        </Box>
+        <Stack direction="row" spacing={0.75} alignItems="center">
+          {currentPageEditable ? (
+            <Button
+              size="small"
+              variant={isEditingCurrentPage ? 'contained' : 'outlined'}
+              onClick={() =>
+                onEditingPageKeyChange?.(
+                  isEditingCurrentPage ? null : currentLesson.dashboardKey,
+                )
+              }
+              sx={{ borderRadius: 2, textTransform: 'none' }}
+            >
+              {isEditingCurrentPage ? 'Preview' : 'Edit'}
+            </Button>
+          ) : null}
+          {onAddPage ? (
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<AddIcon fontSize="small" />}
+              onClick={onAddPage}
+              sx={{ borderRadius: 2, textTransform: 'none' }}
+            >
+              Add Page
+            </Button>
+          ) : null}
+        </Stack>
+      </Box>
+      <Box
+        data-testid="study-path-dashboard-content"
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          p: isEditingCurrentPage ? 2 : 0,
+        }}
+      >
+        {isEditingCurrentPage ? (
+          <Stack spacing={2} sx={{ maxWidth: 920, mx: 'auto' }}>
+            <TextField
+              label="Page title"
+              value={currentLesson.name}
+              onChange={(event) =>
+                updateCurrentMarkdownPage(event.target.value, currentMarkdown)
+              }
+              fullWidth
+            />
+            <TextField
+              label="Markdown"
+              value={currentMarkdown}
+              onChange={(event) =>
+                updateCurrentMarkdownPage(currentLesson.name, event.target.value)
+              }
+              fullWidth
+              multiline
+              minRows={18}
+              InputProps={{
+                sx: {
+                  fontFamily: 'JetBrains Mono, Consolas, monospace',
+                  alignItems: 'flex-start',
+                },
+              }}
+            />
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Typography variant="overline" color="text.secondary">
+                Preview
+              </Typography>
+              <Stack spacing={1.25}>{renderMarkdown(currentMarkdown)}</Stack>
+            </Paper>
+          </Stack>
+        ) : (
+          <StudyGuideLinearLayout
+            key={currentLesson.dashboardKey}
+            layout={studentLayout}
+          />
+        )}
       </Box>
 
       <Box

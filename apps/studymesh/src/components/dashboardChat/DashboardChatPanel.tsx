@@ -48,7 +48,7 @@ interface DashboardChatPanelProps {
   onClose: () => void
   showCloseButton?: boolean
   onAddAssistantMessageToGuide?: (message: DashboardChatMessage) => void
-  onQuickCreatePage?: (resourceType: StudyMaterialResourceType) => void
+  onQuickCreatePage?: (resourceType: StudyMaterialResourceType) => Promise<void>
 }
 
 const suggestions = [
@@ -76,6 +76,8 @@ const DashboardChatPanel = ({
   const [error, setError] = useState('')
   const [activeStartedAt, setActiveStartedAt] = useState<number | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [quickCreateType, setQuickCreateType] =
+    useState<StudyMaterialResourceType | null>(null)
   const messagesRef = useRef(messages)
   const queueRef = useRef(Promise.resolve())
   const settings = readStudyPackAiSettings()
@@ -205,6 +207,24 @@ const DashboardChatPanel = ({
     queueRef.current = queueRef.current.then(() =>
       answerQuestion(trimmed, pendingMessage.id, previousMessages),
     )
+  }
+
+  const runQuickCreate = async (resourceType: StudyMaterialResourceType) => {
+    if (!onQuickCreatePage || quickCreateType) {
+      return
+    }
+
+    setError('')
+    setQuickCreateType(resourceType)
+    try {
+      await onQuickCreatePage(resourceType)
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Could not create this page.',
+      )
+    } finally {
+      setQuickCreateType(null)
+    }
   }
 
   const formatSeconds = (seconds: number) => {
@@ -518,9 +538,9 @@ const DashboardChatPanel = ({
                 key={resourceType}
                 size="small"
                 variant="outlined"
-                disabled={!hasContext}
+                disabled={!hasContext || Boolean(quickCreateType)}
                 onClick={() =>
-                  onQuickCreatePage(resourceType as StudyMaterialResourceType)
+                  void runQuickCreate(resourceType as StudyMaterialResourceType)
                 }
                 sx={{
                   flex: 1,
@@ -530,7 +550,7 @@ const DashboardChatPanel = ({
                   fontSize: { xs: '0.72rem', sm: '0.8125rem' },
                 }}
               >
-                {label}
+                {quickCreateType === resourceType ? 'Creating...' : label}
               </Button>
             ))}
           </Stack>

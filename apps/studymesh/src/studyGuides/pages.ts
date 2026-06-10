@@ -6,6 +6,8 @@ import type {
   StudyPathDashboardItem,
 } from '../state/store'
 import type { ComponentData } from '../components/WidgetEditor/types/types'
+import type { StudyPackWidgetRecord } from '../studyPack'
+import { createStudyPackDashboardLayout } from '../studyPack'
 
 export type StudyGuidePageSource = 'manual' | 'chat' | 'quickCreate'
 
@@ -119,6 +121,152 @@ const refreshPageNumbers = (
   }
 }
 
+const visitLayoutComponents = (
+  layout: DashboardLayout | undefined,
+  visitor: (component: ComponentData) => ComponentData,
+): DashboardLayout | undefined => {
+  if (!layout) {
+    return layout
+  }
+
+  const customProps = layout.config?.customProps
+  const components = Array.isArray(customProps?.components)
+    ? (customProps.components as ComponentData[]).map(visitor)
+    : customProps?.components
+
+  return {
+    ...layout,
+    config: layout.config
+      ? {
+          ...layout.config,
+          customProps: customProps
+            ? {
+                ...customProps,
+                components,
+              }
+            : customProps,
+        }
+      : layout.config,
+    children: layout.children?.map((child) =>
+      visitLayoutComponents(child, visitor) as DashboardLayout,
+    ),
+  }
+}
+
+const findMarkdownComponent = (
+  layout: DashboardLayout | undefined,
+): ComponentData | null => {
+  let match: ComponentData | null = null
+  visitLayoutComponents(layout, (component) => {
+    if (!match && component.type === 'MarkdownBlock') {
+      match = component
+    }
+
+    return component
+  })
+
+  return match
+}
+
+export const getStudyGuidePageMarkdown = (
+  page: StudyPathDashboardItem | undefined,
+): string => {
+  const markdownComponent = findMarkdownComponent(page?.layout)
+  const markdown = markdownComponent?.props?.markdown
+  return typeof markdown === 'string' ? markdown : ''
+}
+
+export const isEditableMarkdownStudyGuidePage = (
+  page: StudyPathDashboardItem | undefined,
+): boolean =>
+  Boolean(page?.deletable) &&
+  (page?.createdBy === 'manual' ||
+    page?.createdBy === 'chat' ||
+    page?.createdBy === 'quickCreate') &&
+  Boolean(findMarkdownComponent(page?.layout))
+
+export const updateStudyGuideMarkdownPage = (
+  studyPath: StudyPathContainerState,
+  dashboardKey: string,
+  {
+    title,
+    markdown,
+  }: {
+    title: string
+    markdown: string
+  },
+): StudyPathContainerState =>
+  refreshPageNumbers({
+    ...studyPath,
+    dashboards: studyPath.dashboards.map((dashboard) => {
+      if (dashboard.dashboardKey !== dashboardKey) {
+        return dashboard
+      }
+
+      const safeTitle = title.trim() || dashboard.name || 'Untitled page'
+      const nextLayout = visitLayoutComponents(dashboard.layout, (component) => {
+        if (component.type === 'MarkdownBlock') {
+          return {
+            ...component,
+            props: {
+              ...component.props,
+              title: safeTitle,
+              markdown,
+              studyPathDashboardName: safeTitle,
+            },
+          }
+        }
+
+        if (component.type === 'Label') {
+          return {
+            ...component,
+            props: {
+              ...component.props,
+              text: safeTitle,
+            },
+          }
+        }
+
+        return component
+      })
+
+      return {
+        ...dashboard,
+        name: safeTitle,
+        layout: nextLayout || dashboard.layout,
+      }
+    }),
+  })
+
+export const getStudyGuidePageText = (
+  page: StudyPathDashboardItem | undefined,
+): string => {
+  if (!page) {
+    return ''
+  }
+
+  const chunks: string[] = [page.name]
+  visitLayoutComponents(page.layout, (component) => {
+    Object.values(component.props || {}).forEach((value) => {
+      if (typeof value === 'string') {
+        chunks.push(value)
+      } else if (
+        Array.isArray(value) &&
+        value.every((item) => typeof item === 'string')
+      ) {
+        chunks.push(value.join('\n'))
+      }
+    })
+
+    return component
+  })
+
+  return chunks
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .join('\n\n')
+}
+
 export const appendStudyGuideMarkdownPage = (
   studyPath: StudyPathContainerState,
   {
@@ -150,6 +298,43 @@ export const appendStudyGuideMarkdownPage = (
     dashboardCount: pageCount,
     folderName: studyPath.folderName,
     dashboardPurpose: 'lesson',
+    createdBy: source,
+    deletable: true,
+  }
+
+  return refreshPageNumbers({
+    ...studyPath,
+    dashboards: [...studyPath.dashboards, page],
+    selectedIndex: pageIndex - 1,
+  })
+}
+
+export const appendStudyGuideWidgetPage = (
+  studyPath: StudyPathContainerState,
+  {
+    title,
+    widgets,
+    layoutMode = 'tabs',
+    source,
+  }: {
+    title: string
+    widgets: StudyPackWidgetRecord[]
+    layoutMode?: 'smart' | 'tabs' | 'orchestrator'
+    source: StudyGuidePageSource
+  },
+): StudyPathContainerState => {
+  const pageKey = makePageKey(studyPath.pathId)
+  const pageCount = studyPath.dashboards.length + 1
+  const pageIndex = pageCount
+  const safeTitle = title.trim() || `Page ${pageIndex}`
+  const page: StudyPathDashboardItem = {
+    name: safeTitle,
+    layout: createStudyPackDashboardLayout(widgets, { mode: layoutMode }),
+    dashboardKey: pageKey,
+    dashboardIndex: pageIndex,
+    dashboardCount: pageCount,
+    folderName: studyPath.folderName,
+    dashboardPurpose: source === 'quickCreate' ? 'practice' : 'lesson',
     createdBy: source,
     deletable: true,
   }

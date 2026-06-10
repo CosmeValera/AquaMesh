@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -28,9 +29,65 @@ import type { StudyGuideRecord } from '../../cloud/types'
 import {
   STUDY_GUIDES_CHANGED_EVENT,
   StudyGuideStorage,
+  createStudyGuideRecord,
 } from '../../studyGuides/storage'
+import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
+import { readStudyPackAiSettings } from '../../studyPack/ai'
 import ThemeModeToggle from '../shared/ThemeModeToggle'
 import StudyCreditsPill from '../hostedAi/StudyCreditsPill'
+
+interface PendingGuide {
+  id: string
+  prompt: string
+  createdAt: string
+  estimateSeconds: number
+  error?: string
+}
+
+const quickPromptOptions = [
+  {
+    label: 'Human anatomy',
+    prompt: 'Teach me the basics of human anatomy for an exam.',
+  },
+  {
+    label: 'Spanish subjunctive',
+    prompt: 'Create a Study Guide for Spanish subjunctive with examples and practice.',
+  },
+  {
+    label: 'Photosynthesis',
+    prompt:
+      'Explain photosynthesis from beginner level to exam-ready understanding.',
+  },
+]
+
+const getGenerationEstimateSeconds = (): number => {
+  const provider = readStudyPackAiSettings().provider || 'basic'
+  if (provider === 'basic') {
+    return 10
+  }
+
+  if (provider === 'local') {
+    return 90
+  }
+
+  if (provider === 'cerebras' || provider === 'hosted') {
+    return 20
+  }
+
+  return 60
+}
+
+const formatDuration = (seconds: number): string => {
+  const safeSeconds = Math.max(0, Math.floor(seconds))
+  const minutes = Math.floor(safeSeconds / 60)
+  const remainingSeconds = safeSeconds % 60
+
+  if (minutes <= 0) {
+    return `${remainingSeconds}s`
+  }
+
+  return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`
+}
 
 const formatGuideDate = (value: string) => {
   const date = new Date(value)
@@ -63,6 +120,10 @@ const StudyGuidesPage = () => {
   const [menuGuide, setMenuGuide] = useState<StudyGuideRecord | null>(null)
   const [renameGuide, setRenameGuide] = useState<StudyGuideRecord | null>(null)
   const [renameTitle, setRenameTitle] = useState('')
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createPrompt, setCreatePrompt] = useState('')
+  const [pendingGuides, setPendingGuides] = useState<PendingGuide[]>([])
+  const [now, setNow] = useState(Date.now())
 
   const loadGuides = () => setGuides(StudyGuideStorage.getAll())
 
@@ -77,10 +138,61 @@ const StudyGuidesPage = () => {
     }
   }, [])
 
+  useEffect(() => {
+    if (!pendingGuides.some((guide) => !guide.error)) {
+      return undefined
+    }
+
+    const interval = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(interval)
+  }, [pendingGuides])
+
   const sortedGuides = useMemo(() => sortGuides(guides), [guides])
 
-  const createGuide = () => {
-    navigate(`/workspace/${nanoid()}?create=1`)
+  const openCreateGuide = () => {
+    setCreateOpen(true)
+  }
+
+  const submitCreateGuide = async () => {
+    const prompt = createPrompt.trim()
+    if (!prompt) {
+      return
+    }
+
+    const id = nanoid()
+    const pendingGuide: PendingGuide = {
+      id,
+      prompt,
+      createdAt: new Date().toISOString(),
+      estimateSeconds: getGenerationEstimateSeconds(),
+    }
+    setPendingGuides((current) => [pendingGuide, ...current])
+    setCreateOpen(false)
+    setCreatePrompt('')
+
+    try {
+      const studyPath = await generateStudyPathStateFromPrompt({ id, prompt })
+      StudyGuideStorage.save(createStudyGuideRecord(studyPath, { id }))
+      setPendingGuides((current) =>
+        current.filter((guide) => guide.id !== id),
+      )
+      loadGuides()
+      navigate(`/workspace/${id}`)
+    } catch (error) {
+      setPendingGuides((current) =>
+        current.map((guide) =>
+          guide.id === id
+            ? {
+                ...guide,
+                error:
+                  error instanceof Error
+                    ? error.message
+                    : 'Could not create this Study Guide.',
+              }
+            : guide,
+        ),
+      )
+    }
   }
 
   const openMenu = (
@@ -200,14 +312,14 @@ const StudyGuidesPage = () => {
             variant="contained"
             size="large"
             startIcon={<AddIcon />}
-            onClick={createGuide}
+            onClick={openCreateGuide}
             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 800 }}
           >
             New Study Guide
           </Button>
         </Stack>
 
-        {sortedGuides.length === 0 ? (
+        {sortedGuides.length === 0 && pendingGuides.length === 0 ? (
           <Paper
             elevation={0}
             sx={{
@@ -231,7 +343,7 @@ const StudyGuidesPage = () => {
                 Start with a prompt and StudyMesh will build the first guide
                 pages.
               </Typography>
-              <Button variant="contained" onClick={createGuide}>
+              <Button variant="contained" onClick={openCreateGuide}>
                 Create Study Guide
               </Button>
             </Stack>
@@ -248,6 +360,110 @@ const StudyGuidesPage = () => {
               gap: 2,
             }}
           >
+            {pendingGuides.map((guide) => {
+              const elapsedSeconds = Math.max(
+                0,
+                Math.floor((now - Date.parse(guide.createdAt)) / 1000),
+              )
+              const progress = guide.error
+                ? 0
+                : Math.min(100, (elapsedSeconds / guide.estimateSeconds) * 100)
+
+              return (
+                <Paper
+                  key={guide.id}
+                  elevation={0}
+                  sx={(theme) => ({
+                    minHeight: 180,
+                    p: 2.25,
+                    borderRadius: 3,
+                    border: 1,
+                    borderColor: guide.error ? 'error.main' : 'primary.main',
+                    bgcolor: 'background.paper',
+                    overflow: 'hidden',
+                    boxShadow:
+                      theme.palette.mode === 'dark'
+                        ? '0 18px 44px rgba(0,0,0,0.28)'
+                        : '0 18px 44px rgba(15,23,42,0.1)',
+                  })}
+                >
+                  <Stack spacing={2} sx={{ height: '100%' }}>
+                    <Stack direction="row" justifyContent="space-between">
+                      <Box
+                        sx={{
+                          width: 42,
+                          height: 42,
+                          borderRadius: 2,
+                          display: 'grid',
+                          placeItems: 'center',
+                          bgcolor: guide.error ? 'error.light' : 'action.hover',
+                          color: guide.error ? 'error.contrastText' : 'inherit',
+                        }}
+                      >
+                        {guide.error ? '!' : <CircularProgress size={22} />}
+                      </Box>
+                      <Typography variant="caption" color="text.secondary">
+                        {guide.error ? 'Failed' : 'Creating'}
+                      </Typography>
+                    </Stack>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography
+                        variant="h6"
+                        fontWeight={900}
+                        sx={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          lineHeight: 1.18,
+                        }}
+                      >
+                        {guide.prompt}
+                      </Typography>
+                    </Box>
+                    {guide.error ? (
+                      <Typography
+                        variant="body2"
+                        color="error.main"
+                        sx={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {guide.error}
+                      </Typography>
+                    ) : (
+                      <Box>
+                        <Box
+                          sx={{
+                            height: 6,
+                            borderRadius: 99,
+                            bgcolor: 'action.hover',
+                            overflow: 'hidden',
+                            mb: 0.75,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: `${progress}%`,
+                              height: '100%',
+                              bgcolor: 'primary.main',
+                              transition: 'width 300ms ease',
+                            }}
+                          />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Elapsed {formatDuration(elapsedSeconds)} · Estimate{' '}
+                          {formatDuration(guide.estimateSeconds)}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Stack>
+                </Paper>
+              )
+            })}
             {sortedGuides.map((guide) => {
               const pageCount = guide.studyPath.dashboards.length
               return (
@@ -374,6 +590,71 @@ const StudyGuidesPage = () => {
             disabled={!renameTitle.trim()}
           >
             Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Stack spacing={0.5}>
+            <Typography variant="h6" fontWeight={900}>
+              New Study Guide
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Describe what you want to learn.
+            </Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
+            {quickPromptOptions.map((option) => (
+              <Button
+                key={option.label}
+                size="small"
+                variant={
+                  createPrompt === option.prompt ? 'contained' : 'outlined'
+                }
+                onClick={() => setCreatePrompt(option.prompt)}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  mb: 1,
+                }}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </Stack>
+          <TextField
+            autoFocus
+            fullWidth
+            multiline
+            minRows={5}
+            label="Prompt"
+            value={createPrompt}
+            onChange={(event) => setCreatePrompt(event.target.value)}
+            placeholder="Example: Teach me the basics of human anatomy for an exam."
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={() => void submitCreateGuide()}
+            disabled={!createPrompt.trim()}
+          >
+            Create Study Guide
           </Button>
         </DialogActions>
       </Dialog>

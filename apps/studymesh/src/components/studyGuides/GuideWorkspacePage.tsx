@@ -1,113 +1,33 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import {
+  Alert,
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Paper,
-  Stack,
-  TextField,
   Typography,
 } from '@mui/material'
-import AddIcon from '@mui/icons-material/Add'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import type { StudyGuideRecord } from '../../cloud/types'
 import type { StateDashboard, StudyPathContainerState } from '../../state/store'
-import {
-  createStudyPackDashboardLayout,
-  createStudyPackOrchestratorWidgets,
-  type StudyPackDashboardLayoutMode,
-} from '../../studyPack'
 import type { StudyMaterialResourceType } from '../../studyPack/ai'
-import { createStudyPathContainerState } from '../Dasboard/studyPathContainer'
 import StudyPathWorkspaceView from '../Dasboard/StudyPathWorkspaceView'
 import DashboardChatPanel, {
   type DashboardChatMessage,
 } from '../dashboardChat/DashboardChatPanel'
-import CreateStudyPathModal from '../studyPack/CreateStudyPathModal'
 import TopNavBar from '../topnavbar/TopNavBar'
 import Main from '../Main'
 import HostedAiIntroModal from '../hostedAi/HostedAiIntroModal'
 import {
   appendStudyGuideMarkdownPage,
   createMarkdownStudyGuidePageLayout,
+  getStudyGuidePageText,
 } from '../../studyGuides/pages'
+import { appendAiQuickCreatePage } from '../../studyGuides/generation'
 import {
   StudyGuideStorage,
   createStudyGuideRecord,
 } from '../../studyGuides/storage'
-
-type CreatePathPayload = {
-  folderName: string
-  openInWorkspace?: boolean
-  dashboards: Array<{
-    name: string
-    widgets: ReturnType<typeof createStudyPackOrchestratorWidgets>
-    layoutMode?: StudyPackDashboardLayoutMode
-    folderName: string
-  }>
-}
-
-const emptyStudyPath = (id: string): StudyPathContainerState => ({
-  pathId: id,
-  title: 'Study Guide',
-  folderName: 'Study Guide',
-  dashboards: [],
-  selectedIndex: 0,
-  pinnedDashboardKeys: [],
-})
-
-const quickCreateCopy: Record<StudyMaterialResourceType, string> = {
-  quiz: '## Quiz\n\nUse this page to turn the current lesson into exam-style questions.',
-  flashcards:
-    '## Flashcards\n\nUse this page to turn the current lesson into active-recall cards.',
-  improvedNotes:
-    '## Expanded notes\n\nUse this page to expand and clarify the current lesson.',
-}
-
-const buildStudyPathFromPayload = (
-  id: string,
-  payload: CreatePathPayload,
-): StudyPathContainerState => {
-  const now = new Date().toISOString()
-  const dashboards = payload.dashboards.map((dashboard, index) => ({
-    id: `${id}-dashboard-${index + 1}`,
-    name: dashboard.name,
-    folder: dashboard.folderName || payload.folderName,
-    layout: createStudyPackDashboardLayout(dashboard.widgets, {
-      mode: dashboard.layoutMode || 'smart',
-    }),
-    createdAt: now,
-    updatedAt: now,
-  }))
-  const generatedStudyPath =
-    createStudyPathContainerState(dashboards) || emptyStudyPath(id)
-  const title =
-    generatedStudyPath.title || payload.folderName || dashboards[0]?.name ||
-    'Study Guide'
-  const folderName = payload.folderName || generatedStudyPath.folderName || title
-  const count = generatedStudyPath.dashboards.length
-
-  return {
-    ...generatedStudyPath,
-    pathId: id,
-    title,
-    folderName,
-    selectedIndex: 0,
-    dashboards: generatedStudyPath.dashboards.map((dashboard, index) => ({
-      ...dashboard,
-      dashboardKey: `${id}-${index + 1}`,
-      dashboardIndex: index + 1,
-      dashboardCount: count,
-      folderName,
-      createdBy: 'generator',
-      deletable: false,
-    })),
-  }
-}
 
 const normalizeGeneratedPageLayouts = (
   studyPath: StudyPathContainerState,
@@ -145,11 +65,9 @@ const GuideWorkspacePage = () => {
   const navigate = useNavigate()
   const [record, setRecord] = useState<StudyGuideRecord | null>(null)
   const [notFound, setNotFound] = useState(false)
-  const [createOpen, setCreateOpen] = useState(false)
-  const [addPageOpen, setAddPageOpen] = useState(false)
-  const [pageTitle, setPageTitle] = useState('')
-  const [pageMarkdown, setPageMarkdown] = useState('')
   const [messages, setMessages] = useState<DashboardChatMessage[]>([])
+  const [editingPageKey, setEditingPageKey] = useState<string | null>(null)
+  const [quickCreateError, setQuickCreateError] = useState('')
   const isCreateRoute = searchParams.get('create') === '1'
 
   const loadRecord = () => {
@@ -160,13 +78,14 @@ const GuideWorkspacePage = () => {
     if (existing) {
       setRecord(existing)
       setNotFound(false)
-      setCreateOpen(false)
       return
     }
 
     setRecord(null)
     setNotFound(!isCreateRoute)
-    setCreateOpen(isCreateRoute)
+    if (isCreateRoute) {
+      navigate('/study-guides', { replace: true })
+    }
   }
 
   useEffect(loadRecord, [studyGuideId, isCreateRoute])
@@ -197,23 +116,7 @@ const GuideWorkspacePage = () => {
           id: studyGuideId,
         }))
     setRecord(nextRecord)
-  }
-
-  const createStudyGuide = (payload: CreatePathPayload) => {
-    const studyPath = buildStudyPathFromPayload(studyGuideId, payload)
-    const nextRecord = StudyGuideStorage.save(
-      createStudyGuideRecord(studyPath, { id: studyGuideId }),
-    )
-    setRecord(nextRecord)
-    setCreateOpen(false)
-    navigate(`/workspace/${studyGuideId}`, { replace: true })
-  }
-
-  const cancelCreate = () => {
-    setCreateOpen(false)
-    if (!record) {
-      navigate('/study-guides', { replace: true })
-    }
+    return nextRecord
   }
 
   const appendMarkdownPage = (
@@ -234,28 +137,59 @@ const GuideWorkspacePage = () => {
     )
   }
 
-  const saveManualPage = () => {
-    appendMarkdownPage(pageTitle, pageMarkdown, 'manual')
-    setPageTitle('')
-    setPageMarkdown('')
-    setAddPageOpen(false)
+  const addManualPage = () => {
+    if (!record) {
+      return
+    }
+
+    const nextStudyPath = appendStudyGuideMarkdownPage(record.studyPath, {
+      title: 'Untitled page',
+      markdown: '# Untitled page\n\n',
+      source: 'manual',
+    })
+    const nextRecord = persistStudyPath(nextStudyPath)
+    const newPage = nextRecord.studyPath.dashboards[nextRecord.studyPath.selectedIndex]
+    setEditingPageKey(newPage?.dashboardKey || null)
   }
 
   const addAssistantMessageToGuide = (message: DashboardChatMessage) => {
     appendMarkdownPage('AI Chat note', message.content, 'chat')
   }
 
-  const quickCreatePage = (resourceType: StudyMaterialResourceType) => {
-    const labels: Record<StudyMaterialResourceType, string> = {
-      quiz: 'Quiz',
-      flashcards: 'Flashcards',
-      improvedNotes: 'Expanded notes',
+  const quickCreatePage = async (resourceType: StudyMaterialResourceType) => {
+    if (!record) {
+      return
     }
-    appendMarkdownPage(
-      labels[resourceType],
-      quickCreateCopy[resourceType],
-      'quickCreate',
-    )
+
+    setQuickCreateError('')
+    const currentPage =
+      record.studyPath.dashboards[record.studyPath.selectedIndex] ||
+      record.studyPath.dashboards[0]
+    const sourceText =
+      getStudyGuidePageText(currentPage) ||
+      record.studyPath.title ||
+      'Study Guide'
+
+    try {
+      const nextStudyPath = await appendAiQuickCreatePage({
+        studyPath: record.studyPath,
+        resourceType,
+        sourceTitle: currentPage?.name || record.title,
+        sourceText,
+      })
+      const nextRecord = persistStudyPath(nextStudyPath)
+      const newPage =
+        nextRecord.studyPath.dashboards[nextRecord.studyPath.selectedIndex]
+      if (resourceType === 'improvedNotes') {
+        setEditingPageKey(newPage?.dashboardKey || null)
+      }
+    } catch (error) {
+      setQuickCreateError(
+        error instanceof Error
+          ? error.message
+          : 'Could not create this page.',
+      )
+    }
   }
 
   return (
@@ -319,7 +253,8 @@ const GuideWorkspacePage = () => {
             sx={{
               height: '100%',
               minHeight: 0,
-              display: { xs: 'block', md: 'grid' },
+              display: { xs: 'flex', md: 'grid' },
+              flexDirection: { xs: 'column', md: 'row' },
               gridTemplateColumns: { md: 'minmax(0, 1fr) 420px' },
               gap: { md: 1 },
               p: 1,
@@ -340,26 +275,13 @@ const GuideWorkspacePage = () => {
                 position: 'relative',
               }}
             >
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setAddPageOpen(true)}
-                sx={{
-                  position: 'absolute',
-                  top: 12,
-                  left: 12,
-                  zIndex: 9,
-                  borderRadius: 2,
-                  textTransform: 'none',
-                }}
-              >
-                Add Page
-              </Button>
               <StudyPathWorkspaceView
                 studyPath={record.studyPath}
                 onStudyPathChange={persistStudyPath}
                 mobileView
+                editingPageKey={editingPageKey}
+                onEditingPageKeyChange={setEditingPageKey}
+                onAddPage={addManualPage}
               />
             </Paper>
             <Paper
@@ -373,6 +295,7 @@ const GuideWorkspacePage = () => {
                 borderColor: 'divider',
                 borderRadius: 2,
                 bgcolor: 'background.paper',
+                position: 'relative',
               }}
             >
               <DashboardChatPanel
@@ -384,51 +307,25 @@ const GuideWorkspacePage = () => {
                 onAddAssistantMessageToGuide={addAssistantMessageToGuide}
                 onQuickCreatePage={quickCreatePage}
               />
+              {quickCreateError ? (
+                <Alert
+                  severity="error"
+                  sx={{
+                    position: 'absolute',
+                    right: 16,
+                    bottom: 16,
+                    maxWidth: 420,
+                    zIndex: 10,
+                  }}
+                >
+                  {quickCreateError}
+                </Alert>
+              ) : null}
             </Paper>
           </Box>
         ) : null}
         <HostedAiIntroModal />
       </Main>
-
-      <CreateStudyPathModal
-        open={createOpen}
-        onClose={cancelCreate}
-        onCreatePath={createStudyGuide}
-        openGeneratedInWorkspace
-      />
-
-      <Dialog open={addPageOpen} onClose={() => setAddPageOpen(false)}>
-        <DialogTitle>Add Page</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1, minWidth: { xs: 280, sm: 520 } }}>
-            <TextField
-              autoFocus
-              label="Page title"
-              value={pageTitle}
-              onChange={(event) => setPageTitle(event.target.value)}
-              fullWidth
-            />
-            <TextField
-              label="Markdown"
-              value={pageMarkdown}
-              onChange={(event) => setPageMarkdown(event.target.value)}
-              fullWidth
-              multiline
-              minRows={8}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAddPageOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={saveManualPage}
-            disabled={!pageTitle.trim() && !pageMarkdown.trim()}
-          >
-            Add Page
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   )
 }

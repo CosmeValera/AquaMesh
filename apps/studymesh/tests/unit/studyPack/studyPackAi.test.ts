@@ -204,8 +204,8 @@ describe('study pack AI settings', () => {
 
   it('keeps hosted Study Credits costs in the shared contract', () => {
     expect(STUDY_CREDITS_LABEL).toBe('Study Credits')
-    expect(HOSTED_AI_INITIAL_FREE_CREDITS).toBe(10)
-    expect(HOSTED_AI_DAILY_FREE_CREDITS).toBe(2)
+    expect(HOSTED_AI_INITIAL_FREE_CREDITS).toBe(20)
+    expect(HOSTED_AI_DAILY_FREE_CREDITS).toBe(5)
     expect(HOSTED_AI_REFILL_CURRENCY).toBe('eur')
     expect(DEFAULT_HOSTED_AI_CREDIT_PACK_ID).toBe('popular')
     expect(HOSTED_AI_CREDIT_PACKS).toEqual([

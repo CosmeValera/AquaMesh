@@ -13,8 +13,8 @@ export const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
   chat: 1,
 }
 
-export const HOSTED_AI_INITIAL_FREE_CREDITS = 10
-export const HOSTED_AI_DAILY_FREE_CREDITS = 2
+export const HOSTED_AI_INITIAL_FREE_CREDITS = 20
+export const HOSTED_AI_DAILY_FREE_CREDITS = 5
 export const HOSTED_AI_REFILL_CURRENCY = 'eur'
 export type HostedAiCreditPackId = 'starter' | 'popular' | 'value'
 

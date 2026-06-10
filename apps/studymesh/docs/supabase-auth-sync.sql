@@ -105,7 +105,7 @@ create table if not exists public.user_workspace_state (
 -- the Supabase account across devices.
 create table if not exists public.hosted_ai_accounts (
   owner_id uuid primary key references public.profiles(id) on delete cascade,
-  study_credit_balance integer not null default 10,
+  study_credit_balance integer not null default 20,
   intro_seen boolean not null default false,
   last_daily_refill_date date not null default current_date,
   created_at timestamptz not null default now(),
@@ -113,6 +113,9 @@ create table if not exists public.hosted_ai_accounts (
   constraint hosted_ai_accounts_nonnegative_balance_check
     check (study_credit_balance >= 0)
 );
+
+alter table public.hosted_ai_accounts
+  alter column study_credit_balance set default 20;
 
 -- Audit trail for hosted AI gateway usage. The browser may read its own
 -- events, but writes are reserved for the Vercel gateway through service role
@@ -348,7 +351,7 @@ begin
   on conflict on constraint hosted_ai_accounts_pkey do nothing;
 
   update public.hosted_ai_accounts account
-  set study_credit_balance = greatest(account.study_credit_balance, 2),
+  set study_credit_balance = greatest(account.study_credit_balance, 5),
       last_daily_refill_date = current_date
   where account.owner_id = p_owner_id
     and account.last_daily_refill_date < current_date;

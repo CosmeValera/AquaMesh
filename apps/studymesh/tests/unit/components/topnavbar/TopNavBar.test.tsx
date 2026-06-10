@@ -22,8 +22,8 @@ const hostedAiStatus = vi.hoisted(() => ({
   accountReady: true,
   introSeen: true,
   studyCredits: 8,
-  dailyFreeCredits: 2,
-  initialFreeCredits: 10,
+  dailyFreeCredits: 5,
+  initialFreeCredits: 20,
   costs: {
     'study-guide': 2,
     'quick-create': 1,
@@ -398,8 +398,8 @@ describe('TopNavBar Component', () => {
             accountReady: true,
             introSeen: true,
             studyCredits: 8,
-            dailyFreeCredits: 2,
-            initialFreeCredits: 10,
+            dailyFreeCredits: 5,
+            initialFreeCredits: 20,
             costs: {
               'study-guide': 2,
               'quick-create': 1,

@@ -1,9 +1,4 @@
-import { parseStudyPack } from '../parser'
-import { augmentStudyPackPracticeObjects } from '../practice'
-import {
-  AiStudyPackDraft,
-  applyStudyMaterialResourceTypeToDraft,
-} from './normalizer'
+import { AiStudyPackDraft } from './normalizer'
 import {
   generateStudyPackWithAi as generateStudyPackWithGemini,
   generateStudyPathWithAi as generateStudyPathWithGemini,
@@ -13,7 +8,6 @@ import {
 } from './strongGeneration'
 import {
   generateStudyPackWithLocalAi,
-  generateStudyPathWithBasicFallback,
   generateStudyPathWithLocalAi,
 } from './localGeneration'
 import {
@@ -43,39 +37,13 @@ const resolveProvider = (
     return 'gemini'
   }
 
-  return readStudyPackAiSettings().provider || 'basic'
+  return readStudyPackAiSettings().provider || 'hosted'
 }
 
 export const generateStudyPackWithAi = async (
   options: GenerateStudyPackWithAiOptions & ProviderOptions,
 ): Promise<AiStudyPackDraft> => {
   const provider = resolveProvider(options.provider, options.apiToken)
-
-  if (provider === 'basic') {
-    const parsed = parseStudyPack(options.rawNotes, {
-      title: options.title,
-      defaultTags: ['study-pack'],
-    })
-    const augmented = augmentStudyPackPracticeObjects(parsed.objects, {
-      packId: parsed.id,
-      title: parsed.title,
-      rawNotes: options.rawNotes,
-      generationTargets: options.generationTargets,
-      generationAmount: options.generationAmount,
-    })
-
-    return applyStudyMaterialResourceTypeToDraft(
-      {
-        title: parsed.title,
-        sourceFormat: parsed.sourceFormat,
-        rawNotes: options.rawNotes,
-        objects: augmented.objects,
-        warnings: [...parsed.warnings, ...augmented.warnings],
-      },
-      parsed.id,
-      options.resourceType,
-    )
-  }
 
   if (provider === 'local') {
     return generateStudyPackWithLocalAi(options, {
@@ -110,7 +78,7 @@ export const generateStudyPackWithAi = async (
     throw new Error(
       `${
         provider === 'cerebras' ? 'Cerebras' : 'Gemini'
-      } mode needs a configured provider key. Add one in Settings, or switch to Basic fallback.`,
+      } mode needs a configured provider key. Open the AI mode selector and add one, or switch to Hosted AI.`,
     )
   }
 
@@ -126,10 +94,6 @@ export const generateStudyPathWithAi = async (
   options: GenerateStudyPathWithAiOptions & ProviderOptions,
 ): Promise<AiStudyPathDraft> => {
   const provider = resolveProvider(options.provider, options.apiToken)
-
-  if (provider === 'basic') {
-    return generateStudyPathWithBasicFallback(options)
-  }
 
   if (provider === 'local') {
     return generateStudyPathWithLocalAi(options, {
@@ -164,7 +128,7 @@ export const generateStudyPathWithAi = async (
     throw new Error(
       `${
         provider === 'cerebras' ? 'Cerebras' : 'Gemini'
-      } mode needs a configured provider key. Add one in Settings, or switch to Basic fallback.`,
+      } mode needs a configured provider key. Open the AI mode selector and add one, or switch to Hosted AI.`,
     )
   }
 

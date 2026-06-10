@@ -86,23 +86,11 @@ const callStrongModelText = async (
   }
 }
 
-const basicAnswer = ({
-  question,
-  sourceChunks,
-}: AskDashboardOptions): string => {
-  const snippets = sourceChunks
-    .slice(0, 3)
-    .map((chunk) => `- ${chunk.title}: ${chunk.text.slice(0, 420).trim()}`)
-    .join('\n')
-
-  return `I can answer from the dashboard sources, but Basic mode does not call an external AI model.\n\nMost relevant source notes for "${question}":\n${snippets}\n\nSwitch to a strong model or Local AI in StudyMesh settings for a synthesized chat answer.`
-}
-
 export const askDashboardSources = async (
   options: AskDashboardOptions,
 ): Promise<AskDashboardResult> => {
   const settings = readStudyPackAiSettings()
-  const provider = settings.provider || 'basic'
+  const provider = settings.provider || 'hosted'
   const prompt = buildPrompt(options)
   let answer: string
 
@@ -132,7 +120,7 @@ export const askDashboardSources = async (
       prompt,
     )
   } else {
-    answer = basicAnswer(options)
+    throw new Error('Choose a supported AI mode before asking the dashboard.')
   }
 
   return {

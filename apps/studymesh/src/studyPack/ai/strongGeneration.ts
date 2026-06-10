@@ -40,7 +40,7 @@ interface GeminiPart {
 
 const GEMINI_REQUEST_TIMEOUT_MS = 5 * 60 * 1000
 const GEMINI_TIMEOUT_MESSAGE =
-  'Gemini took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or Basic fallback.'
+  'Gemini took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or another AI mode.'
 const GEMINI_OUTPUT_FORMAT_MESSAGE =
   'Gemini could not follow the requested output format. StudyMesh retried with a simpler JSON prompt, but the response was still unusable.'
 

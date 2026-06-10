@@ -7,11 +7,7 @@ import {
   STRONG_AI_PROVIDERS,
 } from './strongProviders'
 
-export type StudyPackAiProvider =
-  | 'basic'
-  | 'local'
-  | 'hosted'
-  | StrongAiProviderId
+export type StudyPackAiProvider = 'local' | 'hosted' | StrongAiProviderId
 
 export interface StrongAiProviderCredential {
   apiToken: string
@@ -49,7 +45,6 @@ export const getEnvStrongAiProviderApiKey = (
 ): string => getEnvStrongProviderApiKey(provider)
 
 const isStudyPackAiProvider = (value: unknown): value is StudyPackAiProvider =>
-  value === 'basic' ||
   value === 'local' ||
   value === 'hosted' ||
   isStrongAiProvider(value)

@@ -79,7 +79,7 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
     title: '01 - StudyMesh Basics',
     widgetTitle: 'Key Concepts',
     markdown:
-      '## What is StudyMesh?\nStudyMesh is a student knowledge wiki. It helps you turn prompts, notes, files, pictures, references, and learning material into Study Guides, dashboards, widgets, exercises, and reusable workspace views.\n\n## Key concepts\n### Dashboard\nA dashboard is a workspace page for studying or organizing a topic. It can contain notes, practice, references, tools, and custom layouts.\n\n### Widget\nA widget is a reusable piece inside a dashboard. Examples include notes, quizzes, flashcards, checklists, tables, charts, and embedded tools.\n\n### Block\nA block is a smaller unit inside a widget. Examples include one markdown section, one quiz question, one flashcard, one checklist item, or one input.\n\n### Workspace\nThe workspace is the main StudyMesh area where you create, open, edit, and reuse Study Guides, dashboards, widgets, and AI chat.\n\n---\n## Changing AI mode\nOpen the user menu, choose **Settings**, and change the AI provider or mode in **AI Provider Settings**. Options:\n- Basic fallback\n- Google Local AI\n- Own Gemini API token\n- Cerebras API token\n- Future hosted StudyMesh tokens\n---\n## What to do Next?\n This is a **Study Guide**, which is a special type of **Dashboard** designed for step-by-step learning. Click the right arrow in the floating element to go to the next lesson to learn the basics features of StudyMesh.',
+      '## What is StudyMesh?\nStudyMesh is a student knowledge wiki. It helps you turn prompts, notes, files, pictures, references, and learning material into Study Guides, dashboards, widgets, exercises, and reusable workspace views.\n\n## Key concepts\n### Dashboard\nA dashboard is a workspace page for studying or organizing a topic. It can contain notes, practice, references, tools, and custom layouts.\n\n### Widget\nA widget is a reusable piece inside a dashboard. Examples include notes, quizzes, flashcards, checklists, tables, charts, and embedded tools.\n\n### Block\nA block is a smaller unit inside a widget. Examples include one markdown section, one quiz question, one flashcard, one checklist item, or one input.\n\n### Workspace\nThe workspace is the main StudyMesh area where you create, open, edit, and reuse Study Guides, dashboards, widgets, and AI chat.\n\n---\n## Changing AI mode\nClick the AI mode pill in the top bar to choose Hosted AI, Google Local AI, Own Gemini API token, or Own Cerebras API key.\n\n---\n## What to do Next?\n This is a **Study Guide**, which is a special type of **Dashboard** designed for step-by-step learning. Click the right arrow in the floating element to go to the next lesson to learn the basics features of StudyMesh.',
   },
   {
     id: 'studymesh-guide-practice',
@@ -100,33 +100,33 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
     id: 'studymesh-guide-ai-modes',
     title: '03 - StudyMesh AI Generation Modes',
     sourceMarkdown:
-      '## StudyMesh AI Generation Modes\n### Hosted AI\nHosted AI is the default path for new users. It uses Study Credits stored in your StudyMesh account, so your balance follows you across devices. New users start with 10 Study Credits, and the free daily refill brings the balance back up to 2 credits when needed.\n\n### Basic fallback\nNo AI API. It parses notes locally from obvious structure and keywords. It is fast and free, but weaker, and it supports Create From Notes rather than Study Guide.\n\n### Google Local AI\nRuns on the local Chrome built-in AI model. It is free and can work offline. It is usually better than Basic fallback for messy notes and images, but weaker and slower than hosted or own-key strong models.\n\n### Own Gemini API token\nUses the user-provided Gemini API key for rich Study Guides and study dashboards.',
+      '## StudyMesh AI Generation Modes\n### Hosted AI\nHosted AI is the default path for new users. It uses Study Credits stored in your StudyMesh account, so your balance follows you across devices. New users start with 10 Study Credits, and the free daily refill brings the balance back up to 2 credits when needed.\n\n### Google Local AI\nRuns on the local Chrome built-in AI model. It is free and can work offline. It is slower and weaker than hosted or own-key strong models, but it keeps generation on your device.\n\n### Own Gemini API token\nUses the user-provided Gemini API key for rich Study Guides and study dashboards.\n\n### Own Cerebras API key\nUses the user-provided Cerebras API key for fast hosted text generation.',
     summaryTitle: 'AI Mode Summary',
     summaryItems: [
-      'Basic fallback is fast, free, weak, and limited to Create From Notes.',
-      'Google Local AI runs locally and is better than Basic fallback, but slower and weaker than Gemini API.',
-      'Own Gemini API token is the preferred high-quality generation mode.',
       'Hosted AI uses Study Credits. Study Guides cost 2 credits, and quick creations or dashboard chat cost 1 credit.',
+      'Google Local AI runs locally, but is slower and weaker than hosted or own-key strong models.',
+      'Own Gemini API token is the preferred high-quality generation mode.',
+      'Own Cerebras API key is useful for fast hosted text generation.',
     ],
     quizzes: [
       {
         question:
-          "What is the main tradeoff of the 'Basic fallback' generation mode?",
+          'How do Hosted AI Study Credits work?',
         answer:
-          'It is fast, free, and local, but produces weaker output and does not support Study Guide generation.',
+          'They are account-based credits for hosted AI generation.',
         explanation:
-          'Basic fallback relies on programmatic parsing rather than a strong AI model.',
+          'Hosted AI uses Study Credits for Study Guides, quick creations, and dashboard chat.',
       },
       {
         question:
           'Which mode should a user choose for the highest quality Study Guide if they have an API key?',
         options: [
-          'Basic fallback',
           'Google Local AI',
           'Hosted AI Study Credits',
           'Own Gemini API token',
+          'Own Cerebras API key',
         ],
-        correctIndex: 3,
+        correctIndex: 2,
         answer: 'Own Gemini API token',
         explanation:
           'Gemini API mode uses a stronger hosted model and produces richer study material.',
@@ -134,12 +134,8 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
     ],
     flashcards: [
       {
-        front: 'What is Basic fallback?',
-        back: 'A non-AI local parser that is fast and free but weaker.',
-      },
-      {
         front: 'What is Google Local AI?',
-        back: 'A local Chrome AI mode that can work offline and is better than Basic fallback.',
+        back: 'A local Chrome AI mode that can work offline.',
       },
       {
         front: 'What is Own Gemini API token mode?',

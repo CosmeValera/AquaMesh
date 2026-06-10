@@ -1,12 +1,6 @@
-import { parseStudyPack } from '../parser'
-import {
-  augmentStudyPackPracticeObjects,
-  createStudyPackPracticeProfile,
-} from '../practice'
 import {
   StudyObject,
   StudyPackSourceFormat,
-  StudyPathDashboardRole,
   StudyPathPracticeType,
 } from '../types'
 import {
@@ -4022,90 +4016,3 @@ export const generateStudyPathWithLocalAi = async (
   }
 }
 
-const fallbackPromptForDashboard = (
-  prompt: string,
-  index: number,
-  count: number,
-  role: StudyPathDashboardRole,
-): string => {
-  if (role === 'exercises') {
-    return `# Mixed Practice\n\nUse these notes to review the whole path:\n\n${prompt}`
-  }
-
-  if (role === 'summary') {
-    return `# Summary\n\nReview these key ideas from the path:\n\n${prompt}`
-  }
-
-  return `# Lesson ${index + 1} of ${count}\n\n${prompt}`
-}
-
-export const generateStudyPathWithBasicFallback = ({
-  title,
-  prompt,
-  folderName,
-}: GenerateStudyPathWithAiOptions): AiStudyPathDraft => {
-  const roles: StudyPathDashboardRole[] = Array.from(
-    { length: LOCAL_STUDY_PATH_DASHBOARD_COUNT },
-    () => 'normal',
-  )
-  const practiceAmount = 'few'
-  const dashboards = roles.map((role, index) => {
-    const dashboardTitle = `${String(index + 1).padStart(2, '0')} - Lesson ${
-      index + 1
-    }`
-    const rawNotes = fallbackPromptForDashboard(
-      prompt,
-      index,
-      roles.length,
-      role,
-    )
-    const parsed = parseStudyPack(rawNotes, {
-      title: dashboardTitle,
-      defaultTags: ['study-pack'],
-    })
-    const profile = createStudyPackPracticeProfile(practiceAmount, [
-      'quizzes',
-      'flashcards',
-      'summaries',
-      'definitions',
-      'reviewPrompts',
-      'lists',
-    ])
-    const augmented = augmentStudyPackPracticeObjects(parsed.objects, {
-      packId: parsed.id,
-      title: parsed.title,
-      rawNotes,
-      generationTargets: [
-        'quizzes',
-        'flashcards',
-        'summaries',
-        'definitions',
-        'reviewPrompts',
-        'lists',
-      ],
-      generationAmount: practiceAmount,
-      visiblePracticeTarget: Math.max(3, profile.minTotal - 1),
-      visiblePracticeOnly: false,
-    })
-
-    return {
-      title: dashboardTitle,
-      summary: 'Basic fallback lesson generated from the request.',
-      rawNotes,
-      dashboardRole: role,
-      dashboardPurpose: 'lesson' as const,
-      practiceType: 'quiz' as const,
-      layoutReason: 'Basic fallback generated a simple lesson with practice.',
-      sourceFormat: parsed.sourceFormat,
-      objects: augmented.objects,
-      warnings: [...parsed.warnings, ...augmented.warnings],
-    }
-  })
-
-  return {
-    title: title || 'Study Guide',
-    folderName: folderName || title || 'Study Guide',
-    dashboards,
-    warnings: ['Basic fallback used local parsing and practice generation.'],
-  }
-}

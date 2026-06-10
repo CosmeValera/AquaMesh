@@ -84,10 +84,7 @@ const quickCreateIcons: Record<QuickCreateActionId, React.ReactNode> = {
 }
 
 const getQuickCreateEstimateSeconds = (): number => {
-  const provider = readStudyPackAiSettings().provider || 'basic'
-  if (provider === 'basic') {
-    return 10
-  }
+  const provider = readStudyPackAiSettings().provider || 'hosted'
 
   if (provider === 'local') {
     return 90

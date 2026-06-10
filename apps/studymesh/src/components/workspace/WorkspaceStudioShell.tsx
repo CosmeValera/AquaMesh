@@ -300,10 +300,6 @@ const estimateQueueDuration = (draft: GenerationDraft) => {
     return 'est. 2-10s'
   }
 
-  if (draft.aiProvider === 'basic') {
-    return 'est. seconds'
-  }
-
   return ''
 }
 
@@ -320,6 +316,15 @@ const sanitizePersistedGenerationDraft = (
     (draft.flow !== 'study-path' && draft.flow !== 'from-notes') ||
     typeof draft.title !== 'string' ||
     typeof draft.createdAt !== 'string'
+  ) {
+    return null
+  }
+
+  if (
+    draft.aiProvider &&
+    draft.aiProvider !== 'hosted' &&
+    draft.aiProvider !== 'local' &&
+    !isStrongAiProvider(draft.aiProvider)
   ) {
     return null
   }
@@ -490,7 +495,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   }))
   const openingMobileAiChatRef = useRef(false)
   const [aiProvider, setAiProvider] = useState(
-    () => readStudyPackAiSettings().provider || 'basic',
+    () => readStudyPackAiSettings().provider || 'hosted',
   )
   const [studyPathPrompt, setStudyPathPrompt] = useState('')
   const [studyPathPromptError, setStudyPathPromptError] = useState('')
@@ -636,7 +641,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const refreshAiProvider = () => {
-      setAiProvider(readStudyPackAiSettings().provider || 'basic')
+      setAiProvider(readStudyPackAiSettings().provider || 'hosted')
     }
 
     window.addEventListener(
@@ -2025,7 +2030,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       return
     }
 
-    const effectiveProvider = readStudyPackAiSettings().provider || 'basic'
+    const effectiveProvider = readStudyPackAiSettings().provider || 'hosted'
     setAiProvider(effectiveProvider)
     const credentials = isStrongAiProvider(effectiveProvider)
       ? resolveStudyPackAiCredentials(effectiveProvider)

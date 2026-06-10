@@ -79,7 +79,6 @@ interface CreateStudyPathModalProps {
 }
 
 const providerLabels: Record<StudyPackAiProvider, string> = {
-  basic: 'Basic fallback',
   local: 'Google Local AI',
   gemini: 'Own Gemini API token',
   cerebras: 'Own Cerebras API key',
@@ -93,7 +92,6 @@ const LOCAL_AI_ESTIMATE_COPY =
   'Local AI runs on your device and can be slow. For faster, richer Study Guides, use a Gemini or Cerebras API key.'
 const GEMINI_STUDY_PATH_ESTIMATE_MS = 60 * 1000
 const CEREBRAS_STUDY_PATH_ESTIMATE_MS = 10 * 1000
-const BASIC_FALLBACK_STUDY_PATH_DELAY_MS = 10 * 1000
 const DEFAULT_STUDY_PATH_PROMPT =
   'Study basic human anatomy focusing on organs and systems (cardiovascular, respiratory, digestive)'
 
@@ -110,18 +108,14 @@ const getProviderPathProgressLabel = (provider: StudyPackAiProvider): string =>
     ? 'Generating dashboards with Google Local AI...'
     : isStrongAiProvider(provider)
       ? `Generating ordered dashboards with ${providerLabels[provider]}...`
-      : provider === 'basic'
-        ? 'Generating ordered dashboards with Basic fallback...'
-        : 'Generating ordered dashboards with Hosted AI...'
+      : 'Generating ordered dashboards with Hosted AI...'
 
 const getProviderPathDescription = (provider: StudyPackAiProvider): string =>
   provider === 'local'
     ? 'Local AI is running on your device. StudyMesh plans the path first, then generates each lesson dashboard with its own estimated timer.'
     : isStrongAiProvider(provider)
       ? `StudyMesh is sending the request to ${providerLabels[provider]} and converting the response into dashboards.`
-      : provider === 'basic'
-        ? 'StudyMesh is using local parsing and practice generation without AI API calls.'
-        : 'Hosted AI uses Study Credits and the app-hosted Cerebras model.'
+      : 'Hosted AI uses Study Credits and the app-hosted Cerebras model.'
 
 const formatPipelineRemaining = (remainingMs: number): string => {
   const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000))
@@ -168,25 +162,6 @@ const makeGeminiTimedProgress = (
     ),
   }
 }
-
-const waitForBasicFallbackDelay = (signal: AbortSignal) =>
-  new Promise<void>((resolve, reject) => {
-    if (signal.aborted) {
-      reject(new DOMException('Aborted', 'AbortError'))
-      return
-    }
-
-    const timeoutId = window.setTimeout(
-      resolve,
-      BASIC_FALLBACK_STUDY_PATH_DELAY_MS,
-    )
-    const abortDelay = () => {
-      window.clearTimeout(timeoutId)
-      reject(new DOMException('Aborted', 'AbortError'))
-    }
-
-    signal.addEventListener('abort', abortDelay, { once: true })
-  })
 
 type LocalPipelineStep = NonNullable<
   LocalAiProgressEvent['studyPathPipeline']
@@ -472,7 +447,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   const [prompt, setPrompt] = useState(
     initialPrompt || DEFAULT_STUDY_PATH_PROMPT,
   )
-  const [aiProvider, setAiProvider] = useState<StudyPackAiProvider>('basic')
+  const [aiProvider, setAiProvider] = useState<StudyPackAiProvider>('hosted')
   const [draft, setDraft] = useState<AiStudyPathDraft | null>(null)
   const [reviewFolderName, setReviewFolderName] = useState('')
   const [openInWorkspace, setOpenInWorkspace] = useState(true)
@@ -570,7 +545,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
 
   React.useEffect(() => {
     const refreshAiProvider = () => {
-      const provider = readStudyPackAiSettings().provider || 'basic'
+      const provider = readStudyPackAiSettings().provider || 'hosted'
       setAiProvider(provider)
     }
 
@@ -624,7 +599,7 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
   }
 
   const generatePath = async (promptOverride?: string) => {
-    const settingsProvider = readStudyPackAiSettings().provider || 'basic'
+    const settingsProvider = readStudyPackAiSettings().provider || 'hosted'
     const effectiveAiProvider = settingsProvider
     setAiProvider(effectiveAiProvider)
     const basePrompt =
@@ -671,10 +646,6 @@ const CreateStudyPathModal: React.FC<CreateStudyPathModalProps> = ({
     }
 
     try {
-      if (effectiveAiProvider === 'basic') {
-        await waitForBasicFallbackDelay(generationController.signal)
-      }
-
       const nextDraft = await generateStudyPathWithAi({
         provider: effectiveAiProvider,
         apiToken: credentials.apiToken,

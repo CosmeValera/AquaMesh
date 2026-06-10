@@ -13,7 +13,6 @@ import {
 } from '../../../../src/customHooks/useWorkspaceActions'
 import { STUDYMESH_ONBOARDING_RESET_EVENT } from '../../../../src/components/onboarding/onboardingEvents'
 import { STUDY_PACK_AI_SETTINGS_KEY } from '../../../../src/studyPack/ai'
-import { STUDY_CREDITS_LABEL } from '../../../../src/studyPack/ai/hostedCredits'
 
 const hostedAiStatus = vi.hoisted(() => ({
   available: true,
@@ -290,7 +289,7 @@ describe('TopNavBar Component', () => {
     ).toBeTruthy()
   })
 
-  it('keeps Study Guide and Create From Notes event entry points available in Basic fallback mode', async () => {
+  it('keeps Study Guide and Create From Notes event entry points available in Local AI mode', async () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -302,7 +301,7 @@ describe('TopNavBar Component', () => {
 
       if (key === STUDY_PACK_AI_SETTINGS_KEY) {
         return JSON.stringify({
-          provider: 'basic',
+          provider: 'local',
           apiToken: '',
           model: 'gemini-test',
         })
@@ -326,6 +325,7 @@ describe('TopNavBar Component', () => {
       window.dispatchEvent(new Event(OPEN_STUDY_PACK_EVENT))
     })
     expect(await screen.findByTestId('study-pack-modal')).toBeInTheDocument()
+    expect(screen.getByText('AI: Local')).toBeInTheDocument()
   })
 
   it('keeps Study Guide and Create From Notes entry points available in hosted Study Credits mode', async () => {
@@ -415,7 +415,7 @@ describe('TopNavBar Component', () => {
 
     expect(await screen.findByText('8')).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: `Open ${STUDY_CREDITS_LABEL}` }),
+      screen.getByRole('button', { name: /open ai mode selector/i }),
     ).toBeInTheDocument()
   })
 
@@ -448,12 +448,12 @@ describe('TopNavBar Component', () => {
 
     fireEvent.click(
       await screen.findByRole('button', {
-        name: `Open ${STUDY_CREDITS_LABEL}`,
+        name: /open ai mode selector/i,
       }),
     )
 
     expect(
-      await screen.findByRole('dialog', { name: /Study Credits/i }),
+      await screen.findByRole('dialog', { name: /AI Mode/i }),
     ).toBeInTheDocument()
     expect(screen.getByText(/study guide.*2/i)).toBeInTheDocument()
     expect(screen.getByText(/quick create.*1/i)).toBeInTheDocument()
@@ -470,7 +470,7 @@ describe('TopNavBar Component', () => {
     ).toBeEnabled()
   })
 
-  it('hides the Study Credits pill when the active provider uses an own API key', () => {
+  it('shows the active own-key mode in the AI pill', () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -497,9 +497,10 @@ describe('TopNavBar Component', () => {
       </BrowserRouter>,
     )
 
+    expect(screen.getByText('AI: Cerebras')).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: `Open ${STUDY_CREDITS_LABEL}` }),
-    ).not.toBeInTheDocument()
+      screen.getByRole('button', { name: /open ai mode selector/i }),
+    ).toBeInTheDocument()
   })
 
   it('renders the StudyMesh logo', () => {

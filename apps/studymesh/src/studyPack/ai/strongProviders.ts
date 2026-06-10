@@ -68,7 +68,7 @@ export const STRONG_AI_PROVIDERS: Record<
     docsUrl: 'https://ai.google.dev/gemini-api/docs',
     supportsImageInput: true,
     rateLimitMessage:
-      'Gemini rate limit reached for today. Try again later, use Basic fallback, or check your Gemini API quota.',
+      'Gemini rate limit reached for today. Try again later, switch AI mode, or check your Gemini API quota.',
   },
   cerebras: {
     id: 'cerebras',
@@ -114,7 +114,7 @@ const withTimeout = async (
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
       throw new Error(
-        'Strong model request took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or Basic fallback.',
+        'Strong model request took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or another AI mode.',
       )
     }
 

@@ -101,7 +101,7 @@ export const generateStudyPathStateFromPrompt = async ({
   signal?: AbortSignal
 }): Promise<StudyPathContainerState> => {
   const settings = readStudyPackAiSettings()
-  const provider = settings.provider || 'basic'
+  const provider = settings.provider || 'hosted'
   const credentials = isStrongAiProvider(provider)
     ? resolveStudyPackAiCredentials(provider)
     : resolveStudyPackAiCredentials()
@@ -253,7 +253,7 @@ export const appendAiQuickCreatePage = async ({
 }): Promise<StudyPathContainerState> => {
   const { resourceType } = normalizeQuickCreateActionInput(resourceTypeInput)
   const settings = readStudyPackAiSettings()
-  const provider = settings.provider || 'basic'
+  const provider = settings.provider || 'hosted'
   const credentials = isStrongAiProvider(provider)
     ? resolveStudyPackAiCredentials(provider)
     : resolveStudyPackAiCredentials()

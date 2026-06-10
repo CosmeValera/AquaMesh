@@ -7,7 +7,6 @@ export {
   createStudyPackWidgetsFromGroups,
   generateStudyPack,
 } from './generator'
-export { detectMarkdownSource, parseStudyPack } from './parser'
 export {
   augmentStudyPackPracticeObjects,
   createStudyPackPracticeProfile,

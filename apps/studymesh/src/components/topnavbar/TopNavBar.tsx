@@ -82,8 +82,8 @@ import { WORKSPACE_DASHBOARD_TABS_SLOT_ID } from '../workspace/workspaceEvents'
 import WidgetEditorDialog from '../workspace/WidgetEditorDialog'
 import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceMode'
 import { deleteStudyMeshProfile, useAuth } from '../../auth/AuthProvider'
-import StudyCreditsPill from '../hostedAi/StudyCreditsPill'
-import StudyCreditsDialog from '../hostedAi/StudyCreditsDialog'
+import AiModePill from '../hostedAi/AiModePill'
+import AiModeDialog from '../hostedAi/AiModeDialog'
 
 // Define user data type
 interface UserData {
@@ -124,7 +124,6 @@ const canOpenStudyPackForCurrentState = (userData: UserData) => {
 }
 
 const studyPackAiProviderLabels: Record<StudyPackAiProvider, string> = {
-  basic: 'Basic fallback',
   local: 'Google Local AI',
   gemini: 'Own Gemini API token',
   cerebras: 'Own Cerebras API key',
@@ -324,7 +323,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
-  const [isStudyCreditsOpen, setIsStudyCreditsOpen] = useState(false)
+  const [isAiModeOpen, setIsAiModeOpen] = useState(false)
   const [userSettingsName, setUserSettingsName] = useState('')
   const [userSettingsAvatarStatus, setUserSettingsAvatarStatus] = useState('')
   const [studyPackOpen, setStudyPackOpen] = useState(false)
@@ -336,7 +335,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   } | null>(null)
   const [studyPackAiProvider, setStudyPackAiProvider] =
     useState<StudyPackAiProvider>(
-      () => readStudyPackAiSettings().provider || 'basic',
+      () => readStudyPackAiSettings().provider || 'hosted',
     )
   const [widgetEditorOpen, setWidgetEditorOpen] = useState(false)
   const [widgetEditorPayload, setWidgetEditorPayload] = useState<{
@@ -438,7 +437,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
 
   useEffect(() => {
     const refreshAiProvider = () => {
-      setStudyPackAiProvider(readStudyPackAiSettings().provider || 'basic')
+      setStudyPackAiProvider(readStudyPackAiSettings().provider || 'hosted')
     }
 
     window.addEventListener(
@@ -785,12 +784,11 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   </Button>
                 </>
               )}
-              {studyPackAiProvider === 'hosted' && (
-                <StudyCreditsPill
-                  compact
-                  onClick={() => setIsStudyCreditsOpen(true)}
-                />
-              )}
+              <AiModePill
+                compact
+                provider={studyPackAiProvider}
+                onClick={() => setIsAiModeOpen(true)}
+              />
               <IconButton
                 onClick={handleUserMenuOpen}
                 aria-label="Open user menu"
@@ -887,12 +885,11 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   flex: '0 0 auto',
                 }}
               >
-                {studyPackAiProvider === 'hosted' && (
-                  <StudyCreditsPill
-                    compact={isPhone || isTablet}
-                    onClick={() => setIsStudyCreditsOpen(true)}
-                  />
-                )}
+                <AiModePill
+                  compact={isPhone || isTablet}
+                  provider={studyPackAiProvider}
+                  onClick={() => setIsAiModeOpen(true)}
+                />
                 {/* User Menu */}
                 {isPhone || isTablet ? (
                   <ButtonWithLabel
@@ -1466,9 +1463,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
           </Button>
         </DialogActions>
       </Dialog>
-      <StudyCreditsDialog
-        open={isStudyCreditsOpen}
-        onClose={() => setIsStudyCreditsOpen(false)}
+      <AiModeDialog
+        open={isAiModeOpen}
+        onClose={() => setIsAiModeOpen(false)}
       />
       <SettingsDialog
         open={isSettingsOpen}

@@ -3,8 +3,6 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import SettingsDialog from '../../../../src/components/WidgetEditor/components/dialogs/SettingsDialog'
-import { STUDYMESH_ONBOARDING_NOTICE_EVENT } from '../../../../src/components/onboarding/onboardingEvents'
-import { readStudyPackAiSettings } from '../../../../src/studyPack/ai'
 import { STUDY_CREDITS_LABEL } from '../../../../src/studyPack/ai/hostedCredits'
 import { STUDY_GUIDES_STORAGE_KEY } from '../../../../src/studyGuides/storage'
 
@@ -97,7 +95,7 @@ vi.mock('../../../../src/studyPack/ai', () => ({
     (provider) => provider === 'gemini' || provider === 'cerebras',
   ),
   readStudyPackAiSettings: vi.fn(() => ({
-    provider: 'basic',
+    provider: 'hosted',
     apiToken: '',
     model: 'gemini-test-model',
     strongProviders: {},
@@ -289,51 +287,11 @@ describe('SettingsDialog study library export', () => {
     expect(payload.studyGuides).toEqual([studyGuide])
   })
 
-  it('announces the selected AI mode after saving AI settings', () => {
-    const noticeListener = vi.fn()
-    window.addEventListener(STUDYMESH_ONBOARDING_NOTICE_EVENT, noticeListener)
-
+  it('keeps AI provider controls out of Application Settings', () => {
     render(<SettingsDialog open onClose={vi.fn()} scope="global" />)
 
-    fireEvent.click(screen.getByRole('button', { name: /save ai settings/i }))
-
-    expect(noticeListener).toHaveBeenCalledTimes(1)
-    expect(
-      (noticeListener.mock.calls[0][0] as CustomEvent<{ message: string }>)
-        .detail.message,
-    ).toBe('AI mode changed to Basic fallback.')
-
-    window.removeEventListener(
-      STUDYMESH_ONBOARDING_NOTICE_EVENT,
-      noticeListener,
-    )
-  })
-
-  it('shows hosted Study Credits balance, costs, and refill action', async () => {
-    vi.mocked(readStudyPackAiSettings).mockReturnValue({
-      provider: 'hosted',
-      apiToken: '',
-      model: 'gpt-oss-120b',
-      strongProviders: {},
-    })
-
-    render(<SettingsDialog open onClose={vi.fn()} scope="global" />)
-
-    expect(await screen.findByText(STUDY_CREDITS_LABEL)).toBeInTheDocument()
-    expect(screen.getByText('8 credits')).toBeInTheDocument()
-    expect(screen.getByText(/study guide.*2/i)).toBeInTheDocument()
-    expect(screen.getByText(/quick create.*1/i)).toBeInTheDocument()
-    expect(screen.getByText(/chat.*1/i)).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', {
-        name: /buy 250 credits for 5 eur.*most popular/i,
-      }),
-    ).toBeEnabled()
-    expect(
-      screen.getByRole('button', {
-        name: /buy 1200 credits for 20 eur.*best value/i,
-      }),
-    ).toBeEnabled()
+    expect(screen.queryByLabelText(/AI provider/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(STUDY_CREDITS_LABEL)).not.toBeInTheDocument()
   })
 
   it('requires DELETE before deleting the StudyMesh profile', () => {

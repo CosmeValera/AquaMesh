@@ -3,10 +3,7 @@ import React from 'react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import CreateStudyPackModal from '../../../../src/components/studyPack/CreateStudyPackModal'
-import {
-  createStudyPackOrchestratorWidgets,
-  parseStudyPack,
-} from '../../../../src/studyPack'
+import { createStudyPackOrchestratorWidgets } from '../../../../src/studyPack'
 import { extractRawNotesFromImage } from '../../../../src/studyPack/imageOcr'
 import {
   extractRawNotesWithAi,
@@ -75,12 +72,12 @@ vi.mock('../../../../src/studyPack/ai', () => ({
     ['gemini', 'cerebras'].includes(provider),
   ),
   readStudyPackAiSettings: vi.fn(() => ({
-    provider: 'basic',
+    provider: 'hosted',
     apiToken: '',
     model: 'gemini-test',
   })),
   resolveStudyPackAiCredentials: vi.fn(() => ({
-    provider: 'basic',
+    provider: 'hosted',
     apiToken: '',
     model: 'gemini-test',
     tokenSource: 'none',
@@ -121,77 +118,6 @@ vi.mock('../../../../src/studyPack', async () => {
         ? [{ name: `${pack.title} Generated`, objects }]
         : []
     }),
-    parseStudyPack: vi.fn(
-      (source: string, options: { sourceFormat?: string } = {}) => {
-        const basePack = {
-          id: 'study-pack',
-          title: 'Study Pack',
-          sourceFormat: options.sourceFormat || 'text',
-          warnings: [],
-        }
-
-        if (source.includes('Rule,Formula')) {
-          return {
-            ...basePack,
-            sourceFormat: 'csv',
-            objects: [
-              {
-                id: 'study-pack-table-1',
-                kind: 'table',
-                title: 'CSV Table',
-                sourceLine: 1,
-                tags: [],
-                headers: ['Rule', 'Formula'],
-                rows: [['Power', 'nx^(n-1)']],
-              },
-            ],
-          }
-        }
-
-        if (source.includes('Only loose')) {
-          return {
-            ...basePack,
-            objects: [
-              {
-                id: 'study-pack-note-1',
-                kind: 'note',
-                title: 'Loose note',
-                sourceLine: 1,
-                tags: [],
-                body: 'Only loose notes here',
-              },
-            ],
-          }
-        }
-
-        return {
-          ...basePack,
-          objects: [
-            {
-              id: 'study-pack-note-1',
-              kind: 'note',
-              title: 'Loose note',
-              sourceLine: 1,
-              tags: [],
-              body: 'Loose text that should stay in the source widget.',
-            },
-            {
-              id: 'study-pack-quiz-1',
-              kind: 'quiz',
-              quizMode: 'shortAnswer',
-              title: 'Derivative quiz',
-              sourceLine: 1,
-              tags: [],
-              question: 'What is a derivative?',
-              options: [],
-              correctIndex: 0,
-              answer: 'Rate of change',
-              explanation: '',
-            },
-          ],
-        }
-      },
-    ),
   }
 })
 
@@ -199,12 +125,12 @@ describe('CreateStudyPackModal create from notes flow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(readStudyPackAiSettings).mockReturnValue({
-      provider: 'basic',
+    provider: 'hosted',
       apiToken: '',
       model: 'gemini-test',
     })
     vi.mocked(resolveStudyPackAiCredentials).mockReturnValue({
-      provider: 'basic',
+      provider: 'hosted',
       apiToken: '',
       model: 'gemini-test',
       tokenSource: 'none',
@@ -538,16 +464,17 @@ describe('CreateStudyPackModal create from notes flow', () => {
         expect.any(Function),
       )
     })
-    expect(parseStudyPack).not.toHaveBeenCalled()
+    expect(generateStudyPackWithAi).not.toHaveBeenCalled()
     await waitFor(() => {
       expect(
         screen.getByRole('button', { name: /continue/i }),
       ).toBeInTheDocument()
     })
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
-    expect(parseStudyPack).toHaveBeenCalledWith(
-      expect.stringMatching(/# lecture[\s\S]*Quiz:: What is OCR/i),
-      expect.any(Object),
+    expect(generateStudyPackWithAi).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rawNotes: expect.stringMatching(/# lecture[\s\S]*Quiz:: What is OCR/i),
+      }),
     )
   })
 
@@ -586,9 +513,10 @@ describe('CreateStudyPackModal create from notes flow', () => {
       ).toBeInTheDocument()
     })
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
-    expect(parseStudyPack).toHaveBeenCalledWith(
-      expect.stringMatching(/# second[\s\S]*Quiz:: What is OCR/i),
-      expect.any(Object),
+    expect(generateStudyPackWithAi).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rawNotes: expect.stringMatching(/# second[\s\S]*Quiz:: What is OCR/i),
+      }),
     )
   })
 
@@ -817,6 +745,6 @@ describe('CreateStudyPackModal create from notes flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
 
     expect(await screen.findByText('Quiz')).toBeInTheDocument()
-    expect(parseStudyPack).toHaveBeenCalled()
+    expect(generateStudyPackWithAi).toHaveBeenCalled()
   })
 })

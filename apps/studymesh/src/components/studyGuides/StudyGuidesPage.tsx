@@ -60,10 +60,7 @@ const quickPromptOptions = [
 ]
 
 const getGenerationEstimateSeconds = (): number => {
-  const provider = readStudyPackAiSettings().provider || 'basic'
-  if (provider === 'basic') {
-    return 10
-  }
+  const provider = readStudyPackAiSettings().provider || 'hosted'
 
   if (provider === 'local') {
     return 90

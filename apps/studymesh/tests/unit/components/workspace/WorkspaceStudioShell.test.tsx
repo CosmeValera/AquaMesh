@@ -89,7 +89,7 @@ vi.mock('../../../../src/studyPack/ai', () => ({
   isStrongAiProvider: (provider: unknown) =>
     provider === 'gemini' || provider === 'cerebras',
   callStrongAiModel: vi.fn(),
-  readStudyPackAiSettings: () => ({ provider: 'basic' }),
+  readStudyPackAiSettings: () => ({ provider: 'hosted' }),
   resolveStudyPackAiCredentials: () => ({ apiToken: '', model: '' }),
   generateStudyPackWithAi: vi.fn(),
 }))

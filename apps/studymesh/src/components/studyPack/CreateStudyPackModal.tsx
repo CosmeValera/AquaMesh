@@ -30,7 +30,6 @@ import {
   augmentStudyPackPracticeObjects,
   createStudyPackPracticeProfile,
   isReviewableStudyObject,
-  parseStudyPack,
   StudyObject,
   StudyPackSourceFormat,
   StudyPackDashboardLayoutMode,
@@ -38,7 +37,6 @@ import {
 import { extractRawNotesFromImage } from '../../studyPack/imageOcr'
 import {
   AiSourceSummary,
-  applyStudyMaterialResourceTypeToDraft,
   extractNotesFromImageWithLocalLanguageModel,
   extractRawNotesWithAi,
   generateStudyPackWithAi,
@@ -641,7 +639,7 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
   hasCurrentDashboardContext = false,
 }) => {
   const [step, setStep] = useState<'source' | 'review'>('source')
-  const [aiProvider, setAiProvider] = useState<StudyPackAiProvider>('basic')
+  const [aiProvider, setAiProvider] = useState<StudyPackAiProvider>('hosted')
   const [sourceMode, setSourceMode] = useState<'sources' | 'dashboard'>(
     'sources',
   )
@@ -815,7 +813,7 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
 
   useEffect(() => {
     const refreshAiProvider = () => {
-      setAiProvider(readStudyPackAiSettings().provider || 'basic')
+      setAiProvider(readStudyPackAiSettings().provider || 'hosted')
     }
 
     if (open && !isGeneratingAi && !isExtractingImage) {
@@ -1119,56 +1117,6 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
       setSourceInputType('image')
       selectImageFiles(imageSourceFiles)
     }
-  }
-
-  const parseSource = (rawSource = sourceText) => {
-    if (!resourceType) {
-      setError('Choose a resource type before continuing.')
-      return
-    }
-
-    const parsed = parseStudyPack(rawSource, {
-      title: packTitle,
-      defaultTags: ['study-pack'],
-    })
-    const augmented = augmentStudyPackPracticeObjects(parsed.objects, {
-      packId: parsed.id,
-      title: parsed.title,
-      rawNotes: rawSource,
-      generationTargets,
-      generationAmount,
-      visiblePracticeTarget: Math.max(0, practiceProfile.targetTotal - 2),
-    })
-    const draft = applyStudyMaterialResourceTypeToDraft(
-      {
-        title: parsed.title,
-        sourceFormat: parsed.sourceFormat,
-        rawNotes: rawSource,
-        objects: augmented.objects,
-        warnings: [...parsed.warnings, ...augmented.warnings],
-      },
-      parsed.id,
-      resourceType,
-    )
-    const reviewableItems = limitReviewItemsForDetailLevel(
-      toReviewItems(draft.objects, resourceType),
-      resourceType,
-      detailLevel,
-    )
-    const nextTitle = packTitle.trim() || parsed.title
-    setPackTitle(nextTitle)
-    setSourceFormat(draft.sourceFormat || parsed.sourceFormat)
-    setReviewItems(reviewableItems)
-    setAiSourceSummary(null)
-    setWidgetGroups(
-      createPreviewWidgetGroups(
-        reviewableItems.map((item) => item.object),
-        nextTitle,
-        resourceType,
-      ),
-    )
-    setError(draft.warnings[0] || '')
-    setStep('review')
   }
 
   const requestSessionKey = (
@@ -1488,7 +1436,7 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
 
       setError(
         aiProvider === 'gemini'
-          ? 'Could not extract notes with AI. Check your Gemini API key or use Basic mode.'
+          ? 'Could not extract notes with AI. Check your Gemini API key or switch AI mode.'
           : 'Could not extract notes from this image.',
       )
       setImageTextExtracted(false)
@@ -1574,12 +1522,7 @@ const CreateStudyPackModal: React.FC<CreateStudyPackModalProps> = ({
       return
     }
 
-    if (aiProvider !== 'basic') {
-      await parseSourceWithAi(rawSource)
-      return
-    }
-
-    parseSource(rawSource)
+    await parseSourceWithAi(rawSource)
   }
 
   const handleUnifiedFileUpload = async (

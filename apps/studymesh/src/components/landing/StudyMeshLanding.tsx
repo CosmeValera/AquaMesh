@@ -219,30 +219,54 @@ const StudyMeshLanding = () => {
                   maxWidth: { xs: 960, md: 1120 },
                   fontFamily:
                     '"Readex Pro", "Inter", "Segoe UI", Arial, sans-serif',
-                  fontWeight: 900,
+                  fontWeight: 500,
                   fontSize: {
-                    xs: '3.1rem',
-                    sm: '4.7rem',
-                    md: '5.35rem',
+                    xs: '3rem',
+                    sm: '4.4rem',
+                    md: '5.2rem',
                   },
-                  lineHeight: { xs: 1.12, md: 1.08 },
+                  lineHeight: { xs: 1.1, md: 1 },
                   letterSpacing: 0,
                   pb: '0.08em',
-                  background:
-                    theme.palette.mode === 'dark'
-                      ? 'linear-gradient(90deg, #7DD3FC 0%, #5EEAD4 42%, #34D399 100%)'
-                      : 'linear-gradient(90deg, #1D4ED8 0%, #00A878 48%, #0EA5E9 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  color: 'transparent',
-                  WebkitTextFillColor: 'transparent',
+                  color: 'text.primary',
                   textWrap: 'balance',
                 }}
               >
-                Study guides that
-                <Box component="span" sx={{ display: { xs: 'inline', md: 'block' } }}>
-                  {' '}
-                  grow with you.
+                <Box
+                  component="span"
+                  sx={{
+                    display: { xs: 'inline', md: 'block' },
+                    background:
+                      theme.palette.mode === 'dark'
+                        ? 'linear-gradient(90deg, #7DD3FC 0%, #5EEAD4 42%, #34D399 100%)'
+                        : 'linear-gradient(90deg, #1D4ED8 0%, #00A878 48%, #0EA5E9 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    color: 'transparent',
+                    WebkitTextFillColor: 'transparent',
+                    lineHeight: { xs: 1.12, md: 1.06 },
+                    pb: { xs: 0, md: '0.06em' },
+                    mb: { xs: 0, md: '-0.08em' },
+                  }}
+                >
+                  Study guides
+                </Box>
+                <Box
+                  component="span"
+                  sx={{
+                    display: { xs: 'inline', md: 'block' },
+                    color: 'text.primary',
+                    lineHeight: { xs: 1.1, md: 1.02 },
+                    WebkitTextFillColor: 'currentColor',
+                  }}
+                >
+                  <Box
+                    component="span"
+                    sx={{ display: { xs: 'inline', md: 'none' } }}
+                  >
+                    {' '}
+                  </Box>
+                  that grow with you.
                 </Box>
               </Typography>
               <Typography

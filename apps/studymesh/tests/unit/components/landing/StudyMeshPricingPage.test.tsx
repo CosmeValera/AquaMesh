@@ -28,15 +28,21 @@ describe('StudyMeshPricingPage', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /free forever with your own ai key/i,
+        name: /free without a subscription/i,
       }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/no app subscription/i)).toBeInTheDocument()
+    expect(screen.getByText(/no credit card required/i)).toBeInTheDocument()
+    expect(screen.getByText('Free product')).toBeInTheDocument()
+    expect(screen.getByText('0€')).toBeInTheDocument()
 
-    expect(screen.getByText('Own AI key')).toBeInTheDocument()
+    expect(screen.getByText('Bring your own key')).toBeInTheDocument()
     expect(screen.getByText('Local AI')).toBeInTheDocument()
+    expect(screen.queryByText('Own AI key')).not.toBeInTheDocument()
     expect(screen.queryByText('Basic fallback')).not.toBeInTheDocument()
+    expect(screen.queryByText(/strong ai quality/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/good privacy path/i)).not.toBeInTheDocument()
 
+    expect(screen.getByText(/Study Credits \(SC\)/i)).toBeInTheDocument()
     expect(screen.getByText('80 SC')).toBeInTheDocument()
     expect(screen.getByText('2€')).toBeInTheDocument()
     expect(screen.getByText('250 SC')).toBeInTheDocument()
@@ -51,7 +57,9 @@ describe('StudyMeshPricingPage', () => {
       screen.getByText(/daily refill brings your balance back up to 5 SC/i),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/study guides cost 2 SC; quick create and chat cost 1 SC/i),
+      screen.getByText(
+        /study guides cost 2 SC; quick create and chat cost 1 SC/i,
+      ),
     ).toBeInTheDocument()
 
     const signupButtons = screen.getAllByRole('link', { name: /^sign up$/i })

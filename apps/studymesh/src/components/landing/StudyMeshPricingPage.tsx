@@ -22,6 +22,7 @@ import {
   HOSTED_AI_CREDIT_PACKS,
   HOSTED_AI_DAILY_FREE_CREDITS,
   HOSTED_AI_INITIAL_FREE_CREDITS,
+  STUDY_CREDITS_LABEL,
   STUDY_CREDITS_SYMBOL,
   getHostedAiCreditCost,
 } from '../../quickCreate/ai'
@@ -30,24 +31,18 @@ const formatCreditPackPrice = (label: string) => label.replace(' EUR', '€')
 
 const freeOptions = [
   {
-    title: 'Own AI key',
-    price: '0€',
+    title: 'Bring your own key',
     label: 'Use your own key',
-    body: 'Bring your Gemini or Cerebras API key and StudyMesh stays free for Study Guides, Quick Create, and chat.',
+    body: 'Connect Gemini or Cerebras and use your own provider quota for Study Guides, Quick Create, and chat.',
     icon: <KeyIcon />,
-    features: [
-      'No StudyMesh subscription',
-      'Your provider quota',
-      'Strong AI quality',
-    ],
+    features: ['Your provider quota', 'Gemini or Cerebras', 'Direct control'],
   },
   {
     title: 'Local AI',
-    price: '0€',
     label: 'Private on-device AI',
-    body: 'Run compatible browser-local AI when available. It is slower, private, and free to use.',
+    body: 'Run compatible browser-local AI when available, with generation kept on your device.',
     icon: <MemoryIcon />,
-    features: ['No hosted tokens', 'Runs locally', 'Good privacy path'],
+    features: ['No hosted credits', 'Works locally', 'Private by design'],
   },
 ]
 
@@ -215,95 +210,140 @@ const StudyMeshPricingPage = () => {
                 Pricing
               </Typography>
               <Typography variant="h4" component="h1" fontWeight={900}>
-                Free forever with your own AI key.
+                Free without a subscription.
               </Typography>
               <Typography
                 variant="body1"
                 color="text.secondary"
                 sx={{ maxWidth: 720 }}
               >
-                No app subscription. No credit card required to start. Use
-                StudyMesh for free with your own API key or local AI. Hosted AI
-                is optional when you want setup-free generation.
+                No credit card required to start. Use StudyMesh for free with
+                your own API key or local AI. Hosted AI is optional when you
+                want setup-free generation.
               </Typography>
             </Stack>
 
-            <Grid container spacing={2} alignItems="stretch">
-              {freeOptions.map((plan) => (
-                <Grid item xs={12} md={6} key={plan.title}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      height: '100%',
-                      p: 2.25,
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: alpha(theme.palette.success.main, 0.3),
-                      bgcolor: alpha(theme.palette.background.paper, 0.86),
-                    }}
-                  >
-                    <Stack spacing={1.5} height="100%">
-                      <Stack direction="row" spacing={1} alignItems="center">
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 2.5, md: 3.5 },
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: alpha(theme.palette.success.main, 0.36),
+                bgcolor: alpha(theme.palette.background.paper, 0.9),
+                boxShadow: `0 20px 54px ${alpha(
+                  theme.palette.success.main,
+                  0.12,
+                )}`,
+              }}
+            >
+              <Grid container spacing={3} alignItems="stretch">
+                <Grid item xs={12} md={4}>
+                  <Stack spacing={1.5} height="100%">
+                    <Typography variant="overline" fontWeight={900}>
+                      Free product
+                    </Typography>
+                    <Typography variant="h2" fontWeight={950} lineHeight={1}>
+                      0€
+                    </Typography>
+                    <Typography color="text.secondary">
+                      Create Study Guides, Quick Create results, and chat with
+                      your study workspace without a StudyMesh subscription.
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      href="/signup"
+                      sx={{
+                        mt: 'auto',
+                        borderRadius: 999,
+                        textTransform: 'none',
+                        fontWeight: 900,
+                      }}
+                    >
+                      Start free
+                    </Button>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} md={8}>
+                  <Grid container spacing={2} height="100%">
+                    {freeOptions.map((option) => (
+                      <Grid item xs={12} sm={6} key={option.title}>
                         <Box
                           sx={{
-                            width: 38,
-                            height: 38,
-                            borderRadius: '50%',
-                            display: 'grid',
-                            placeItems: 'center',
-                            color: 'success.main',
-                            bgcolor: alpha(theme.palette.success.main, 0.12),
+                            height: '100%',
+                            p: 2,
+                            borderRadius: 2,
+                            border: '1px solid',
+                            borderColor: alpha(theme.palette.divider, 0.72),
+                            bgcolor: alpha(
+                              theme.palette.background.default,
+                              0.42,
+                            ),
                           }}
                         >
-                          {plan.icon}
-                        </Box>
-                        <Typography variant="caption" color="text.secondary">
-                          {plan.label}
-                        </Typography>
-                      </Stack>
-                      <Box>
-                        <Typography variant="h6" fontWeight={900}>
-                          {plan.title}
-                        </Typography>
-                        <Typography variant="h3" fontWeight={950}>
-                          {plan.price}
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {plan.body}
-                      </Typography>
-                      <Stack spacing={0.75} sx={{ mt: 'auto' }}>
-                        {plan.features.map((feature) => (
-                          <Stack
-                            key={feature}
-                            direction="row"
-                            spacing={0.75}
-                            alignItems="center"
-                          >
-                            <CheckCircleIcon fontSize="small" color="success" />
-                            <Typography variant="body2">{feature}</Typography>
+                          <Stack spacing={1.25} height="100%">
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                            >
+                              <Box
+                                sx={{
+                                  width: 38,
+                                  height: 38,
+                                  borderRadius: '50%',
+                                  display: 'grid',
+                                  placeItems: 'center',
+                                  color: 'success.main',
+                                  bgcolor: alpha(
+                                    theme.palette.success.main,
+                                    0.12,
+                                  ),
+                                }}
+                              >
+                                {option.icon}
+                              </Box>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {option.label}
+                              </Typography>
+                            </Stack>
+                            <Typography variant="h6" fontWeight={900}>
+                              {option.title}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {option.body}
+                            </Typography>
+                            <Stack spacing={0.75} sx={{ mt: 'auto' }}>
+                              {option.features.map((feature) => (
+                                <Stack
+                                  key={feature}
+                                  direction="row"
+                                  spacing={0.75}
+                                  alignItems="center"
+                                >
+                                  <CheckCircleIcon
+                                    fontSize="small"
+                                    color="success"
+                                  />
+                                  <Typography variant="body2">
+                                    {feature}
+                                  </Typography>
+                                </Stack>
+                              ))}
+                            </Stack>
                           </Stack>
-                        ))}
-                      </Stack>
-                      <Button
-                        variant="outlined"
-                        href="/signup"
-                        sx={{
-                          mt: 1,
-                          borderRadius: 999,
-                          textTransform: 'none',
-                          fontWeight: 900,
-                        }}
-                      >
-                        Start free
-                      </Button>
-                    </Stack>
-                  </Paper>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
                 </Grid>
-              ))}
-            </Grid>
+              </Grid>
+            </Paper>
 
-            <Box sx={{ mt: { xs: 4, md: 5 } }}>
+            <Box sx={{ mt: { xs: 4.5, md: 6 } }}>
               <Stack spacing={1} alignItems="center" textAlign="center" mb={3}>
                 <Typography
                   variant="overline"
@@ -313,21 +353,15 @@ const StudyMeshPricingPage = () => {
                   Optional Hosted AI
                 </Typography>
                 <Typography variant="h5" component="h2" fontWeight={900}>
-                  Need setup-free AI? Use Study Credits.
+                  Buy Study Credits for setup-free AI.
                 </Typography>
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ maxWidth: 760 }}
+                  sx={{ maxWidth: 680 }}
                 >
-                  New accounts start with {HOSTED_AI_INITIAL_FREE_CREDITS}{' '}
-                  {STUDY_CREDITS_SYMBOL}. Free daily refill brings your balance
-                  back up to {HOSTED_AI_DAILY_FREE_CREDITS}{' '}
-                  {STUDY_CREDITS_SYMBOL}. Study Guides cost{' '}
-                  {getHostedAiCreditCost('study-guide')}{' '}
-                  {STUDY_CREDITS_SYMBOL}; Quick Create and chat cost{' '}
-                  {getHostedAiCreditCost('quick-create')}{' '}
-                  {STUDY_CREDITS_SYMBOL}.
+                  {STUDY_CREDITS_LABEL} ({STUDY_CREDITS_SYMBOL}) pay for
+                  hosted generation when you do not want to manage an API key.
                 </Typography>
               </Stack>
 
@@ -341,24 +375,18 @@ const StudyMeshPricingPage = () => {
                         elevation={0}
                         sx={{
                           height: '100%',
-                          p: 2.25,
+                          p: 2,
                           borderRadius: 2,
                           border: '1px solid',
                           borderColor: highlighted
-                            ? 'primary.main'
+                            ? alpha(theme.palette.primary.main, 0.62)
                             : alpha(theme.palette.divider, 0.9),
                           bgcolor: highlighted
-                            ? alpha(theme.palette.primary.main, 0.1)
-                            : alpha(theme.palette.background.paper, 0.86),
-                          boxShadow: highlighted
-                            ? `0 18px 44px ${alpha(
-                                theme.palette.primary.main,
-                                0.16,
-                              )}`
-                            : 'none',
+                            ? alpha(theme.palette.primary.main, 0.08)
+                            : alpha(theme.palette.background.paper, 0.78),
                         }}
                       >
-                        <Stack spacing={1.5} height="100%">
+                        <Stack spacing={1.35} height="100%">
                           <Stack
                             direction="row"
                             spacing={1}
@@ -366,8 +394,8 @@ const StudyMeshPricingPage = () => {
                           >
                             <Box
                               sx={{
-                                width: 38,
-                                height: 38,
+                                width: 34,
+                                height: 34,
                                 borderRadius: '50%',
                                 display: 'grid',
                                 placeItems: 'center',
@@ -380,9 +408,9 @@ const StudyMeshPricingPage = () => {
                               }}
                             >
                               {highlighted ? (
-                                <AutoAwesomeIcon />
+                                <AutoAwesomeIcon fontSize="small" />
                               ) : (
-                                <CloudQueueIcon />
+                                <CloudQueueIcon fontSize="small" />
                               )}
                             </Box>
                             <Typography
@@ -396,13 +424,13 @@ const StudyMeshPricingPage = () => {
                             <Typography variant="h6" fontWeight={900}>
                               {pack.credits} {STUDY_CREDITS_SYMBOL}
                             </Typography>
-                            <Typography variant="h3" fontWeight={950}>
+                            <Typography variant="h4" fontWeight={950}>
                               {formatCreditPackPrice(pack.label)}
                             </Typography>
                           </Box>
                           <Typography variant="body2" color="text.secondary">
-                            One-time Study Credits purchase for hosted AI.
-                            Credits stay in your StudyMesh account.
+                            One-time credit purchase. Credits stay in your
+                            StudyMesh account.
                           </Typography>
                           <Stack spacing={0.75} sx={{ mt: 'auto' }}>
                             {[
@@ -444,6 +472,29 @@ const StudyMeshPricingPage = () => {
                   )
                 })}
               </Grid>
+
+              <Paper
+                elevation={0}
+                sx={{
+                  mt: 2,
+                  p: 1.5,
+                  borderRadius: 2,
+                  border: '1px solid',
+                  borderColor: alpha(theme.palette.divider, 0.8),
+                  bgcolor: alpha(theme.palette.background.paper, 0.66),
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  New accounts start with {HOSTED_AI_INITIAL_FREE_CREDITS}{' '}
+                  {STUDY_CREDITS_SYMBOL}. Free daily refill brings your balance
+                  back up to {HOSTED_AI_DAILY_FREE_CREDITS}{' '}
+                  {STUDY_CREDITS_SYMBOL}. Study Guides cost{' '}
+                  {getHostedAiCreditCost('study-guide')}{' '}
+                  {STUDY_CREDITS_SYMBOL}; Quick Create and chat cost{' '}
+                  {getHostedAiCreditCost('quick-create')}{' '}
+                  {STUDY_CREDITS_SYMBOL}.
+                </Typography>
+              </Paper>
             </Box>
           </Paper>
         </Box>

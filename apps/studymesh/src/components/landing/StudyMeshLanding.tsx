@@ -236,6 +236,7 @@ const StudyMeshLanding = () => {
                   component="span"
                   sx={{
                     display: { xs: 'inline', md: 'block' },
+                    overflow: 'visible',
                     background:
                       theme.palette.mode === 'dark'
                         ? 'linear-gradient(90deg, #7DD3FC 0%, #5EEAD4 42%, #34D399 100%)'
@@ -245,8 +246,8 @@ const StudyMeshLanding = () => {
                     color: 'transparent',
                     WebkitTextFillColor: 'transparent',
                     lineHeight: { xs: 1.12, md: 1.06 },
-                    pb: { xs: 0, md: '0.06em' },
-                    mb: { xs: 0, md: '-0.08em' },
+                    pb: { xs: '0.06em', md: '0.12em' },
+                    mb: { xs: 0, md: '-0.04em' },
                   }}
                 >
                   Study guides

@@ -83,11 +83,12 @@ const StudyMeshPricingPage = () => {
         <Container
           maxWidth="lg"
           sx={{
-            height: 72,
+            height: { xs: 64, sm: 72 },
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr auto', md: '1fr auto 1fr' },
+            gridTemplateColumns: { xs: 'auto 1fr auto', md: '1fr auto 1fr' },
             alignItems: 'center',
-            columnGap: 2,
+            justifyContent: { xs: 'space-between', md: 'stretch' },
+            columnGap: { xs: 1.25, sm: 2 },
           }}
         >
           <Button
@@ -107,9 +108,17 @@ const StudyMeshPricingPage = () => {
                 component="img"
                 src="/logo.png"
                 alt="StudyMesh logo"
-                sx={{ width: 36, height: 36, display: 'block' }}
+                sx={{
+                  width: { xs: 32, sm: 36 },
+                  height: { xs: 32, sm: 36 },
+                  display: 'block',
+                }}
               />
-              <Typography variant="h6" fontWeight={900}>
+              <Typography
+                variant="h6"
+                fontWeight={900}
+                sx={{ display: { xs: 'none', sm: 'block' } }}
+              >
                 StudyMesh
               </Typography>
             </Stack>
@@ -117,10 +126,10 @@ const StudyMeshPricingPage = () => {
           <Stack
             component="nav"
             direction="row"
-            spacing={4}
+            spacing={{ xs: 1.5, md: 4 }}
             alignItems="center"
             justifyContent="center"
-            sx={{ display: { xs: 'none', md: 'flex' } }}
+            sx={{ display: 'flex' }}
           >
             {navItems.map(([label, href]) => (
               <Button
@@ -128,6 +137,10 @@ const StudyMeshPricingPage = () => {
                 href={href}
                 variant="text"
                 sx={{
+                  display: {
+                    xs: label === 'Pricing' ? 'inline-flex' : 'none',
+                    md: 'inline-flex',
+                  },
                   minWidth: 'auto',
                   px: 0,
                   color: alpha(theme.palette.text.primary, 0.78),
@@ -151,8 +164,9 @@ const StudyMeshPricingPage = () => {
             sx={{
               justifySelf: 'end',
               borderRadius: 999,
-              px: { xs: 2, sm: 3 },
-              py: 1.05,
+              minWidth: { xs: 88, sm: 'auto' },
+              px: { xs: 1.75, sm: 3 },
+              py: { xs: 0.85, sm: 1.05 },
               color: 'primary.dark',
               borderColor: alpha(theme.palette.primary.main, 0.32),
               bgcolor: alpha(theme.palette.background.paper, 0.72),
@@ -163,9 +177,17 @@ const StudyMeshPricingPage = () => {
                 borderColor: alpha(theme.palette.primary.main, 0.5),
                 bgcolor: alpha(theme.palette.primary.main, 0.08),
               },
+              '& .MuiButton-endIcon': {
+                display: { xs: 'none', sm: 'inherit' },
+              },
             }}
           >
-            Create a Study Guide
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              Create a Study Guide
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+              Create
+            </Box>
           </Button>
         </Container>
       </Box>

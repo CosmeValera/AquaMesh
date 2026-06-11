@@ -230,6 +230,11 @@ const StudyMeshLanding = () => {
                   pb: '0.08em',
                   color: 'text.primary',
                   textWrap: 'balance',
+                  '@keyframes studyMeshHeroGradientShift': {
+                    '0%': { backgroundPosition: '0% center' },
+                    '50%': { backgroundPosition: '95% center' },
+                    '100%': { backgroundPosition: '0% center' },
+                  },
                 }}
               >
                 <Box
@@ -238,9 +243,8 @@ const StudyMeshLanding = () => {
                     display: { xs: 'inline', md: 'block' },
                     overflow: 'visible',
                     background:
-                      theme.palette.mode === 'dark'
-                        ? 'linear-gradient(90deg, #7DD3FC 0%, #5EEAD4 42%, #34D399 100%)'
-                        : 'linear-gradient(90deg, #1D4ED8 0%, #00A878 48%, #0EA5E9 100%)',
+                      'linear-gradient(90deg, rgb(33, 150, 243), rgb(0, 196, 154), rgb(33, 150, 243))',
+                    backgroundSize: '190% auto',
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     color: 'transparent',
@@ -248,6 +252,8 @@ const StudyMeshLanding = () => {
                     lineHeight: { xs: 1.12, md: 1.06 },
                     pb: { xs: '0.06em', md: '0.12em' },
                     mb: { xs: 0, md: '-0.04em' },
+                    animation:
+                      'studyMeshHeroGradientShift 4s ease infinite',
                   }}
                 >
                   Study guides

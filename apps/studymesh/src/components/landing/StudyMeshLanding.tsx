@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Button,
@@ -10,7 +10,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
@@ -140,6 +140,7 @@ const navItems = [
 ]
 
 const StudyMeshLanding = () => {
+  const location = useLocation()
   const navigate = useNavigate()
   const theme = useTheme()
   const [activeExample, setActiveExample] = useState(0)
@@ -149,6 +150,18 @@ const StudyMeshLanding = () => {
   const openCreateStudyGuide = () => {
     navigate('/study-guides?create=1')
   }
+
+  useEffect(() => {
+    if (!location.hash) {
+      return
+    }
+
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById(location.hash.slice(1))
+        ?.scrollIntoView({ block: 'start' })
+    })
+  }, [location.hash])
 
   return (
     <Box
@@ -385,7 +398,7 @@ const StudyMeshLanding = () => {
                     Create a Study Guide
                   </Button>
                   <Button
-                    href="#how-it-works"
+                    href="#features"
                     variant="text"
                     endIcon={<ArrowForwardIcon />}
                     sx={{

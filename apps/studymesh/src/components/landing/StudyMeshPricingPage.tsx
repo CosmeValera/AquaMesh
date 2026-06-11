@@ -12,44 +12,42 @@ import {
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CloudQueueIcon from '@mui/icons-material/CloudQueue'
 import KeyIcon from '@mui/icons-material/Key'
 import MemoryIcon from '@mui/icons-material/Memory'
 
-const aiPricing = [
+import {
+  HOSTED_AI_CREDIT_PACKS,
+  HOSTED_AI_DAILY_FREE_CREDITS,
+  HOSTED_AI_INITIAL_FREE_CREDITS,
+  STUDY_CREDITS_SYMBOL,
+  getHostedAiCreditCost,
+} from '../../quickCreate/ai'
+
+const formatCreditPackPrice = (label: string) => label.replace(' EUR', '€')
+
+const freeOptions = [
   {
-    title: 'Fallback mode',
-    price: '0€',
-    label: 'Always available',
-    body: 'Basic local parsing and practice generation when you just want a quick dashboard without configuring AI.',
-    icon: <CheckCircleIcon />,
-    features: ['No API key', 'No payment', 'Good for quick notes'],
-  },
-  {
-    title: 'Local Gemini Nano',
-    price: '0€',
-    label: 'Private on-device AI',
-    body: 'Run compatible local AI in the browser when available. Slower, but private and free to use.',
-    icon: <MemoryIcon />,
-    features: ['No server tokens', 'Runs locally', 'Best for privacy'],
-  },
-  {
-    title: 'BYOK Gemini',
+    title: 'Own AI key',
     price: '0€',
     label: 'Use your own key',
-    body: 'Bring your Gemini API key and StudyMesh uses it directly for deeper study guides and Quick Create results.',
+    body: 'Bring your Gemini or Cerebras API key and StudyMesh stays free for Study Guides, Quick Create, and chat.',
     icon: <KeyIcon />,
-    features: ['Your quota', 'Your control', 'Great quality'],
+    features: [
+      'No StudyMesh subscription',
+      'Your provider quota',
+      'Strong AI quality',
+    ],
   },
   {
-    title: 'Hosted API tokens',
-    price: '2€',
-    label: 'No API keys to manage',
-    body: 'Start with 5-10 free tries. If you need more, make a one-time 2€ payment for greater hourly limits.',
-    icon: <CloudQueueIcon />,
-    features: ['5-10 free tries', 'One-time payment', 'Higher hourly limits'],
-    highlighted: true,
+    title: 'Local AI',
+    price: '0€',
+    label: 'Private on-device AI',
+    body: 'Run compatible browser-local AI when available. It is slower, private, and free to use.',
+    icon: <MemoryIcon />,
+    features: ['No hosted tokens', 'Runs locally', 'Good privacy path'],
   },
 ]
 
@@ -217,22 +215,22 @@ const StudyMeshPricingPage = () => {
                 Pricing
               </Typography>
               <Typography variant="h4" component="h1" fontWeight={900}>
-                Choose the AI mode that fits you
+                Free forever with your own AI key.
               </Typography>
               <Typography
                 variant="body1"
                 color="text.secondary"
                 sx={{ maxWidth: 720 }}
               >
-                StudyMesh is designed to stay useful even at 0€. Use free modes,
-                bring your own Gemini key, run local AI, or choose hosted tokens
-                when you do not want to worry about API keys, quotas, or setup.
+                No app subscription. No credit card required to start. Use
+                StudyMesh for free with your own API key or local AI. Hosted AI
+                is optional when you want setup-free generation.
               </Typography>
             </Stack>
 
             <Grid container spacing={2} alignItems="stretch">
-              {aiPricing.map((plan) => (
-                <Grid item xs={12} sm={6} md={3} key={plan.title}>
+              {freeOptions.map((plan) => (
+                <Grid item xs={12} md={6} key={plan.title}>
                   <Paper
                     elevation={0}
                     sx={{
@@ -240,18 +238,8 @@ const StudyMeshPricingPage = () => {
                       p: 2.25,
                       borderRadius: 2,
                       border: '1px solid',
-                      borderColor: plan.highlighted
-                        ? 'primary.main'
-                        : alpha(theme.palette.divider, 0.9),
-                      bgcolor: plan.highlighted
-                        ? alpha(theme.palette.primary.main, 0.1)
-                        : alpha(theme.palette.background.paper, 0.86),
-                      boxShadow: plan.highlighted
-                        ? `0 18px 44px ${alpha(
-                            theme.palette.primary.main,
-                            0.18,
-                          )}`
-                        : 'none',
+                      borderColor: alpha(theme.palette.success.main, 0.3),
+                      bgcolor: alpha(theme.palette.background.paper, 0.86),
                     }}
                   >
                     <Stack spacing={1.5} height="100%">
@@ -263,12 +251,8 @@ const StudyMeshPricingPage = () => {
                             borderRadius: '50%',
                             display: 'grid',
                             placeItems: 'center',
-                            color: plan.highlighted
-                              ? 'primary.contrastText'
-                              : 'primary.main',
-                            bgcolor: plan.highlighted
-                              ? 'primary.main'
-                              : alpha(theme.palette.primary.main, 0.1),
+                            color: 'success.main',
+                            bgcolor: alpha(theme.palette.success.main, 0.12),
                           }}
                         >
                           {plan.icon}
@@ -281,20 +265,9 @@ const StudyMeshPricingPage = () => {
                         <Typography variant="h6" fontWeight={900}>
                           {plan.title}
                         </Typography>
-                        <Stack direction="row" spacing={0.75} alignItems="end">
-                          <Typography variant="h3" fontWeight={950}>
-                            {plan.price}
-                          </Typography>
-                          {plan.highlighted && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ pb: 0.75 }}
-                            >
-                              one-time
-                            </Typography>
-                          )}
-                        </Stack>
+                        <Typography variant="h3" fontWeight={950}>
+                          {plan.price}
+                        </Typography>
                       </Box>
                       <Typography variant="body2" color="text.secondary">
                         {plan.body}
@@ -307,19 +280,171 @@ const StudyMeshPricingPage = () => {
                             spacing={0.75}
                             alignItems="center"
                           >
-                            <CheckCircleIcon
-                              fontSize="small"
-                              color={plan.highlighted ? 'primary' : 'success'}
-                            />
+                            <CheckCircleIcon fontSize="small" color="success" />
                             <Typography variant="body2">{feature}</Typography>
                           </Stack>
                         ))}
                       </Stack>
+                      <Button
+                        variant="outlined"
+                        href="/signup"
+                        sx={{
+                          mt: 1,
+                          borderRadius: 999,
+                          textTransform: 'none',
+                          fontWeight: 900,
+                        }}
+                      >
+                        Start free
+                      </Button>
                     </Stack>
                   </Paper>
                 </Grid>
               ))}
             </Grid>
+
+            <Box sx={{ mt: { xs: 4, md: 5 } }}>
+              <Stack spacing={1} alignItems="center" textAlign="center" mb={3}>
+                <Typography
+                  variant="overline"
+                  fontWeight={900}
+                  color="primary.main"
+                >
+                  Optional Hosted AI
+                </Typography>
+                <Typography variant="h5" component="h2" fontWeight={900}>
+                  Need setup-free AI? Use Study Credits.
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ maxWidth: 760 }}
+                >
+                  New accounts start with {HOSTED_AI_INITIAL_FREE_CREDITS}{' '}
+                  {STUDY_CREDITS_SYMBOL}. Free daily refill brings your balance
+                  back up to {HOSTED_AI_DAILY_FREE_CREDITS}{' '}
+                  {STUDY_CREDITS_SYMBOL}. Study Guides cost{' '}
+                  {getHostedAiCreditCost('study-guide')}{' '}
+                  {STUDY_CREDITS_SYMBOL}; Quick Create and chat cost{' '}
+                  {getHostedAiCreditCost('quick-create')}{' '}
+                  {STUDY_CREDITS_SYMBOL}.
+                </Typography>
+              </Stack>
+
+              <Grid container spacing={2} alignItems="stretch">
+                {HOSTED_AI_CREDIT_PACKS.map((pack) => {
+                  const highlighted = pack.id !== 'starter'
+
+                  return (
+                    <Grid item xs={12} md={4} key={pack.id}>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          height: '100%',
+                          p: 2.25,
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: highlighted
+                            ? 'primary.main'
+                            : alpha(theme.palette.divider, 0.9),
+                          bgcolor: highlighted
+                            ? alpha(theme.palette.primary.main, 0.1)
+                            : alpha(theme.palette.background.paper, 0.86),
+                          boxShadow: highlighted
+                            ? `0 18px 44px ${alpha(
+                                theme.palette.primary.main,
+                                0.16,
+                              )}`
+                            : 'none',
+                        }}
+                      >
+                        <Stack spacing={1.5} height="100%">
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                          >
+                            <Box
+                              sx={{
+                                width: 38,
+                                height: 38,
+                                borderRadius: '50%',
+                                display: 'grid',
+                                placeItems: 'center',
+                                color: highlighted
+                                  ? 'primary.contrastText'
+                                  : 'primary.main',
+                                bgcolor: highlighted
+                                  ? 'primary.main'
+                                  : alpha(theme.palette.primary.main, 0.1),
+                              }}
+                            >
+                              {highlighted ? (
+                                <AutoAwesomeIcon />
+                              ) : (
+                                <CloudQueueIcon />
+                              )}
+                            </Box>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {pack.badge ?? 'Credit pack'}
+                            </Typography>
+                          </Stack>
+                          <Box>
+                            <Typography variant="h6" fontWeight={900}>
+                              {pack.credits} {STUDY_CREDITS_SYMBOL}
+                            </Typography>
+                            <Typography variant="h3" fontWeight={950}>
+                              {formatCreditPackPrice(pack.label)}
+                            </Typography>
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            One-time Study Credits purchase for hosted AI.
+                            Credits stay in your StudyMesh account.
+                          </Typography>
+                          <Stack spacing={0.75} sx={{ mt: 'auto' }}>
+                            {[
+                              'No API key to manage',
+                              'Use for Study Guides',
+                              'Use for Quick Create and chat',
+                            ].map((feature) => (
+                              <Stack
+                                key={feature}
+                                direction="row"
+                                spacing={0.75}
+                                alignItems="center"
+                              >
+                                <CheckCircleIcon
+                                  fontSize="small"
+                                  color={highlighted ? 'primary' : 'success'}
+                                />
+                                <Typography variant="body2">
+                                  {feature}
+                                </Typography>
+                              </Stack>
+                            ))}
+                          </Stack>
+                          <Button
+                            variant={highlighted ? 'contained' : 'outlined'}
+                            href="/signup"
+                            sx={{
+                              mt: 1,
+                              borderRadius: 999,
+                              textTransform: 'none',
+                              fontWeight: 900,
+                            }}
+                          >
+                            Sign up
+                          </Button>
+                        </Stack>
+                      </Paper>
+                    </Grid>
+                  )
+                })}
+              </Grid>
+            </Box>
           </Paper>
         </Box>
       </Container>

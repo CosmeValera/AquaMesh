@@ -1,0 +1,68 @@
+/// <reference types="@testing-library/jest-dom" />
+import React from 'react'
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { CssBaseline } from '@mui/material'
+import { ThemeProvider } from '@mui/material/styles'
+import { MemoryRouter } from 'react-router-dom'
+
+import StudyMeshPricingPage from '../../../../src/components/landing/StudyMeshPricingPage'
+import { createStudyMeshTheme } from '../../../../src/theme'
+
+const renderPricingPage = () => {
+  const theme = createStudyMeshTheme('light')
+
+  return render(
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <StudyMeshPricingPage />
+      </ThemeProvider>
+    </MemoryRouter>,
+  )
+}
+
+describe('StudyMeshPricingPage', () => {
+  it('markets free use first and shows hosted Study Credit packs', () => {
+    renderPricingPage()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /free forever with your own ai key/i,
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/no app subscription/i)).toBeInTheDocument()
+
+    expect(screen.getByText('Own AI key')).toBeInTheDocument()
+    expect(screen.getByText('Local AI')).toBeInTheDocument()
+    expect(screen.queryByText('Basic fallback')).not.toBeInTheDocument()
+
+    expect(screen.getByText('80 SC')).toBeInTheDocument()
+    expect(screen.getByText('2€')).toBeInTheDocument()
+    expect(screen.getByText('250 SC')).toBeInTheDocument()
+    expect(screen.getByText('5€')).toBeInTheDocument()
+    expect(screen.getByText('600 SC')).toBeInTheDocument()
+    expect(screen.getByText('10€')).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/new accounts start with 20 SC/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/daily refill brings your balance back up to 5 SC/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/study guides cost 2 SC; quick create and chat cost 1 SC/i),
+    ).toBeInTheDocument()
+
+    const signupButtons = screen.getAllByRole('link', { name: /^sign up$/i })
+    expect(signupButtons).toHaveLength(3)
+    signupButtons.forEach((button) => {
+      expect(button).toHaveAttribute('href', '/signup')
+    })
+
+    expect(screen.queryByText(/yearly billing/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/monthly billing/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/higher hourly limits/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/one-time 2/i)).not.toBeInTheDocument()
+  })
+})

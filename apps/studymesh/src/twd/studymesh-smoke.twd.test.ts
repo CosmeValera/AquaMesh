@@ -40,7 +40,10 @@ const fillSignupForm = async () => {
   const user = userEvent.setup()
   const passwordInputs = await twd.getAll('input[type="password"]')
 
-  await user.type((await twd.get('input[autocomplete="name"]')).el, credentials.name)
+  await user.type(
+    (await twd.get('input[autocomplete="name"]')).el,
+    credentials.name,
+  )
   await user.type((await twd.get('input[type="email"]')).el, credentials.email)
   await user.type(passwordInputs[0].el, credentials.password)
   await user.type(passwordInputs[1].el, credentials.password)
@@ -55,7 +58,9 @@ const assertWorkspaceLoaded = async () => {
   )
 
   expect(await screenDom.findByText(/Creation/i)).to.exist
-  expect((await screenDom.findAllByText(/Dashboards/i)).length).to.be.greaterThan(0)
+  expect(
+    (await screenDom.findAllByText(/Dashboards/i)).length,
+  ).to.be.greaterThan(0)
 }
 
 const signupToyProfile = async () => {
@@ -136,16 +141,21 @@ describe('StudyMesh TWD landing smoke', () => {
   it('landing sends guests to login', async () => {
     await twd.visit('/', true)
 
-    expect(await screenDom.findByText(/turn messy notes into/i)).to.exist
+    expect(await screenDom.findByText(/study guides that grow with you/i)).to
+      .exist
 
     await userEvent.click(
-      (await screenDom.findAllByRole('button', { name: /try studymesh/i }))[0],
+      (
+        await screenDom.findAllByRole('button', {
+          name: /create a study guide/i,
+        })
+      )[0],
     )
 
     await twd.waitFor(() => {
       expect(window.location.pathname).to.equal('/login')
       expect(new URLSearchParams(window.location.search).get('redirect')).to.eq(
-        '/workspace',
+        '/study-guides?create=1',
       )
     })
   })
@@ -163,9 +173,8 @@ describe('StudyMesh TWD auth form smoke', () => {
       await screenDom.findByRole('link', { name: /create an account/i }),
     )
 
-    expect(
-      await screenDom.findByRole('heading', { name: /create account/i }),
-    ).to.exist
+    expect(await screenDom.findByRole('heading', { name: /create account/i }))
+      .to.exist
 
     await fillSignupForm()
 

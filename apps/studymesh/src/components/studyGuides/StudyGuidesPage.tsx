@@ -22,7 +22,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import PushPinIcon from '@mui/icons-material/PushPin'
 import { nanoid } from 'nanoid'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import type { StudyGuideRecord } from '../../cloud/types'
 import {
@@ -49,7 +49,8 @@ const quickPromptOptions = [
   },
   {
     label: 'Spanish subjunctive',
-    prompt: 'Create a Study Guide for Spanish subjunctive with examples and practice.',
+    prompt:
+      'Create a Study Guide for Spanish subjunctive with examples and practice.',
   },
   {
     label: 'Photosynthesis',
@@ -110,6 +111,7 @@ const sortGuides = (guides: StudyGuideRecord[]) =>
 
 const StudyGuidesPage = () => {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [guides, setGuides] = useState<StudyGuideRecord[]>([])
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
   const [menuGuide, setMenuGuide] = useState<StudyGuideRecord | null>(null)
@@ -132,6 +134,17 @@ const StudyGuidesPage = () => {
       window.removeEventListener('storage', loadGuides)
     }
   }, [])
+
+  useEffect(() => {
+    if (searchParams.get('create') !== '1') {
+      return
+    }
+
+    setCreateOpen(true)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('create')
+    setSearchParams(nextParams, { replace: true })
+  }, [searchParams, setSearchParams])
 
   useEffect(() => {
     if (!pendingGuides.some((guide) => !guide.error)) {
@@ -168,9 +181,7 @@ const StudyGuidesPage = () => {
     try {
       const studyPath = await generateStudyPathStateFromPrompt({ id, prompt })
       StudyGuideStorage.save(createStudyGuideRecord(studyPath, { id }))
-      setPendingGuides((current) =>
-        current.filter((guide) => guide.id !== id),
-      )
+      setPendingGuides((current) => current.filter((guide) => guide.id !== id))
       loadGuides()
       navigate(`/workspace/${id}`)
     } catch (error) {
@@ -352,219 +363,223 @@ const StudyGuidesPage = () => {
             </Stack>
           </Paper>
           {pendingGuides.map((guide) => {
-              const elapsedSeconds = Math.max(
-                0,
-                Math.floor((now - Date.parse(guide.createdAt)) / 1000),
-              )
-              const progress = guide.error
-                ? 0
-                : Math.min(100, (elapsedSeconds / guide.estimateSeconds) * 100)
+            const elapsedSeconds = Math.max(
+              0,
+              Math.floor((now - Date.parse(guide.createdAt)) / 1000),
+            )
+            const progress = guide.error
+              ? 0
+              : Math.min(100, (elapsedSeconds / guide.estimateSeconds) * 100)
 
-              return (
-                <Paper
-                  key={guide.id}
-                  elevation={0}
-                  sx={(theme) => ({
-                    minHeight: 180,
-                    p: 2.25,
-                    borderRadius: 3,
-                    border: 1,
-                    borderColor: guide.error ? 'error.main' : 'primary.main',
-                    bgcolor: 'background.paper',
-                    overflow: 'hidden',
-                    boxShadow:
-                      theme.palette.mode === 'dark'
-                        ? '0 18px 44px rgba(0,0,0,0.28)'
-                        : '0 18px 44px rgba(15,23,42,0.1)',
-                  })}
-                >
-                  <Stack spacing={2} sx={{ height: '100%' }}>
-                    <Stack direction="row" justifyContent="space-between">
-                      <Box
-                        sx={{
-                          width: 42,
-                          height: 42,
-                          borderRadius: 2,
-                          display: 'grid',
-                          placeItems: 'center',
-                          bgcolor: guide.error ? 'error.light' : 'action.hover',
-                          color: guide.error ? 'error.contrastText' : 'inherit',
-                        }}
-                      >
-                        {guide.error ? '!' : <CircularProgress size={22} />}
-                      </Box>
-                      <Typography variant="caption" color="text.secondary">
-                        {guide.error ? 'Failed' : 'Creating'}
-                      </Typography>
-                    </Stack>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography
-                        variant="h6"
-                        fontWeight={900}
-                        sx={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          lineHeight: 1.18,
-                        }}
-                      >
-                        {guide.prompt}
-                      </Typography>
+            return (
+              <Paper
+                key={guide.id}
+                elevation={0}
+                sx={(theme) => ({
+                  minHeight: 180,
+                  p: 2.25,
+                  borderRadius: 3,
+                  border: 1,
+                  borderColor: guide.error ? 'error.main' : 'primary.main',
+                  bgcolor: 'background.paper',
+                  overflow: 'hidden',
+                  boxShadow:
+                    theme.palette.mode === 'dark'
+                      ? '0 18px 44px rgba(0,0,0,0.28)'
+                      : '0 18px 44px rgba(15,23,42,0.1)',
+                })}
+              >
+                <Stack spacing={2} sx={{ height: '100%' }}>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Box
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 2,
+                        display: 'grid',
+                        placeItems: 'center',
+                        bgcolor: guide.error ? 'error.light' : 'action.hover',
+                        color: guide.error ? 'error.contrastText' : 'inherit',
+                      }}
+                    >
+                      {guide.error ? '!' : <CircularProgress size={22} />}
                     </Box>
-                    {guide.error ? (
-                      <Typography
-                        variant="body2"
-                        color="error.main"
-                        sx={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        {guide.error}
-                      </Typography>
-                    ) : (
-                      <Box>
-                        <Box
-                          sx={{
-                            height: 6,
-                            borderRadius: 99,
-                            bgcolor: 'action.hover',
-                            overflow: 'hidden',
-                            mb: 0.75,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              width: `${progress}%`,
-                              height: '100%',
-                              bgcolor: 'primary.main',
-                              transition: 'width 300ms ease',
-                            }}
-                          />
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                          Elapsed {formatDuration(elapsedSeconds)} · Estimate{' '}
-                          {formatDuration(guide.estimateSeconds)}
-                        </Typography>
-                      </Box>
-                    )}
-                  </Stack>
-                </Paper>
-              )
-          })}
-          {sortedGuides.map((guide) => {
-              const pageCount = guide.studyPath.dashboards.length
-              return (
-                <Paper
-                  key={guide.id}
-                  elevation={0}
-                  onClick={() => navigate(`/workspace/${guide.id}`)}
-                  sx={(theme) => ({
-                    position: 'relative',
-                    minHeight: 180,
-                    p: 2.25,
-                    borderRadius: 3,
-                    border: 1,
-                    borderColor: guide.pinnedAt
-                      ? alpha(theme.palette.primary.main, 0.5)
-                      : 'divider',
-                    bgcolor: 'background.paper',
-                    cursor: 'pointer',
-                    overflow: 'hidden',
-                    transition: theme.transitions.create([
-                      'transform',
-                      'box-shadow',
-                      'border-color',
-                    ]),
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      borderColor: 'primary.main',
-                      boxShadow:
-                        theme.palette.mode === 'dark'
-                          ? '0 18px 44px rgba(0,0,0,0.36)'
-                          : '0 18px 44px rgba(15,23,42,0.12)',
-                    },
-                  })}
-                >
-                  <Stack spacing={2} sx={{ height: '100%' }}>
-                    <Stack direction="row" justifyContent="space-between">
-                      <Box
-                        sx={{
-                          width: 42,
-                          height: 42,
-                          borderRadius: 2,
-                          display: 'grid',
-                          placeItems: 'center',
-                          bgcolor: 'action.hover',
-                          fontSize: 24,
-                        }}
-                      >
-                        {guide.emoji || '\u2728'}
-                      </Box>
-                      <Stack direction="row" spacing={0.25}>
-                        {guide.pinnedAt ? (
-                          <PushPinIcon
-                            fontSize="small"
-                            sx={{ color: 'primary.main', mt: 0.75 }}
-                          />
-                        ) : null}
-                        <IconButton
-                          aria-label={`Open ${guide.title} options`}
-                          onClick={(event) => openMenu(event, guide)}
-                          sx={(theme) => ({
-                            width: 34,
-                            height: 34,
-                            border: 1,
-                            borderColor: alpha(theme.palette.primary.main, 0.44),
-                            bgcolor: alpha(
-                              theme.palette.primary.main,
-                              theme.palette.mode === 'dark' ? 0.18 : 0.1,
-                            ),
-                            color: 'primary.main',
-                            '&:hover': {
-                              borderColor: 'primary.main',
-                              bgcolor: alpha(
-                                theme.palette.primary.main,
-                                theme.palette.mode === 'dark' ? 0.28 : 0.18,
-                              ),
-                              color: 'primary.dark',
-                            },
-                          })}
-                        >
-                          <MoreVertIcon />
-                        </IconButton>
-                      </Stack>
-                    </Stack>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography
-                        variant="h6"
-                        fontWeight={900}
-                        sx={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          lineHeight: 1.18,
-                        }}
-                      >
-                        {guide.title}
-                      </Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      {formatGuideDate(guide.createdAt)} &middot; {pageCount}{' '}
-                      {pageCount === 1 ? 'page' : 'pages'}
+                    <Typography variant="caption" color="text.secondary">
+                      {guide.error ? 'Failed' : 'Creating'}
                     </Typography>
                   </Stack>
-                </Paper>
-              )
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      variant="h6"
+                      fontWeight={900}
+                      sx={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        lineHeight: 1.18,
+                      }}
+                    >
+                      {guide.prompt}
+                    </Typography>
+                  </Box>
+                  {guide.error ? (
+                    <Typography
+                      variant="body2"
+                      color="error.main"
+                      sx={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {guide.error}
+                    </Typography>
+                  ) : (
+                    <Box>
+                      <Box
+                        sx={{
+                          height: 6,
+                          borderRadius: 99,
+                          bgcolor: 'action.hover',
+                          overflow: 'hidden',
+                          mb: 0.75,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: `${progress}%`,
+                            height: '100%',
+                            bgcolor: 'primary.main',
+                            transition: 'width 300ms ease',
+                          }}
+                        />
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Elapsed {formatDuration(elapsedSeconds)} · Estimate{' '}
+                        {formatDuration(guide.estimateSeconds)}
+                      </Typography>
+                    </Box>
+                  )}
+                </Stack>
+              </Paper>
+            )
+          })}
+          {sortedGuides.map((guide) => {
+            const pageCount = guide.studyPath.dashboards.length
+            return (
+              <Paper
+                key={guide.id}
+                elevation={0}
+                onClick={() => navigate(`/workspace/${guide.id}`)}
+                sx={(theme) => ({
+                  position: 'relative',
+                  minHeight: 180,
+                  p: 2.25,
+                  borderRadius: 3,
+                  border: 1,
+                  borderColor: guide.pinnedAt
+                    ? alpha(theme.palette.primary.main, 0.5)
+                    : 'divider',
+                  bgcolor: 'background.paper',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  transition: theme.transitions.create([
+                    'transform',
+                    'box-shadow',
+                    'border-color',
+                  ]),
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: 'primary.main',
+                    boxShadow:
+                      theme.palette.mode === 'dark'
+                        ? '0 18px 44px rgba(0,0,0,0.36)'
+                        : '0 18px 44px rgba(15,23,42,0.12)',
+                  },
+                })}
+              >
+                <Stack spacing={2} sx={{ height: '100%' }}>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Box
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 2,
+                        display: 'grid',
+                        placeItems: 'center',
+                        bgcolor: 'action.hover',
+                        fontSize: 24,
+                      }}
+                    >
+                      {guide.emoji || '\u2728'}
+                    </Box>
+                    <Stack direction="row" spacing={0.25}>
+                      {guide.pinnedAt ? (
+                        <PushPinIcon
+                          fontSize="small"
+                          sx={{ color: 'primary.main', mt: 0.75 }}
+                        />
+                      ) : null}
+                      <IconButton
+                        aria-label={`Open ${guide.title} options`}
+                        onClick={(event) => openMenu(event, guide)}
+                        sx={(theme) => ({
+                          width: 34,
+                          height: 34,
+                          border: 1,
+                          borderColor: alpha(theme.palette.primary.main, 0.44),
+                          bgcolor: alpha(
+                            theme.palette.primary.main,
+                            theme.palette.mode === 'dark' ? 0.18 : 0.1,
+                          ),
+                          color: 'primary.main',
+                          '&:hover': {
+                            borderColor: 'primary.main',
+                            bgcolor: alpha(
+                              theme.palette.primary.main,
+                              theme.palette.mode === 'dark' ? 0.28 : 0.18,
+                            ),
+                            color: 'primary.dark',
+                          },
+                        })}
+                      >
+                        <MoreVertIcon />
+                      </IconButton>
+                    </Stack>
+                  </Stack>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      variant="h6"
+                      fontWeight={900}
+                      sx={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        lineHeight: 1.18,
+                      }}
+                    >
+                      {guide.title}
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    {formatGuideDate(guide.createdAt)} &middot; {pageCount}{' '}
+                    {pageCount === 1 ? 'page' : 'pages'}
+                  </Typography>
+                </Stack>
+              </Paper>
+            )
           })}
         </Box>
       </Box>
 
-      <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={closeMenu}>
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={closeMenu}
+      >
         <MenuItem onClick={startRename}>
           <EditIcon fontSize="small" sx={{ mr: 1 }} />
           Edit title

@@ -249,7 +249,7 @@ const StudyMeshLanding = () => {
                 variant="h5"
                 component="p"
                 sx={{
-                  maxWidth: 840,
+                  maxWidth: 880,
                   color: alpha(theme.palette.text.primary, 0.8),
                   fontFamily:
                     '"Readex Pro", "Inter", "Segoe UI", Arial, sans-serif',
@@ -258,9 +258,7 @@ const StudyMeshLanding = () => {
                   fontSize: { xs: '1.1rem', md: '1.42rem' },
                 }}
               >
-                Create an AI study guide from any learning goal, then keep
-                learning with practice, quizzes, flashcards, and explanations
-                that adapt around you.
+                Build interactive study guides with AI, then keep learning as they adapt with you.
               </Typography>
               <Button
                 variant="contained"

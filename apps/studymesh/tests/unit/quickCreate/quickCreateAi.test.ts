@@ -9,7 +9,7 @@ const hostedAiClientMock = vi.hoisted(() => ({
 vi.mock('../../../src/quickCreate/ai/hostedClient', () => ({
   callHostedAiModel: hostedAiClientMock.callHostedAiModel,
   createHostedAiTransport:
-    ({ surface, requestId }: { surface: string; requestId?: string }) =>
+    ({ surface }: { surface: string }) =>
     (options: {
       model: string
       parts: Array<{ text?: string }>
@@ -18,7 +18,6 @@ vi.mock('../../../src/quickCreate/ai/hostedClient', () => ({
     }) =>
       hostedAiClientMock.callHostedAiModel({
         surface,
-        requestId,
         ...options,
       }),
   getHostedAiStatus: hostedAiClientMock.getHostedAiStatus,
@@ -385,7 +384,9 @@ describe('quick create AI settings', () => {
       strongProviders: {},
     })
 
-    expect(storage[QUICK_CREATE_AI_SETTINGS_KEY]).not.toContain('settings-token')
+    expect(storage[QUICK_CREATE_AI_SETTINGS_KEY]).not.toContain(
+      'settings-token',
+    )
     expect(sessionStorage.getItem(QUICK_CREATE_AI_SESSION_KEY)).toContain(
       'settings-token',
     )

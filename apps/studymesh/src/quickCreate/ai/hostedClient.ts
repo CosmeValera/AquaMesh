@@ -17,7 +17,6 @@ export type HostedAiModelOptions = Pick<
   'model' | 'parts' | 'responseSchema' | 'timeoutMs'
 > & {
   surface: HostedAiSurface
-  requestId?: string
 }
 
 export type HostedAiTransport = (
@@ -30,14 +29,6 @@ const dispatchInsufficientCredits = (): void => {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT))
   }
-}
-
-const createRequestId = (): string => {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
-  }
-
-  return `hosted-${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
 const getHostedAiAccessToken = async (): Promise<string> => {
@@ -178,7 +169,6 @@ export const markHostedAiIntroSeen = async (): Promise<HostedAiStatus> => {
 
 const callHostedAiModelUnchecked = async ({
   surface,
-  requestId = createRequestId(),
   model,
   parts,
   responseSchema,
@@ -186,7 +176,6 @@ const callHostedAiModelUnchecked = async ({
 }: HostedAiModelOptions): Promise<string> => {
   const payload = await callHostedAiGateway({
     action: 'generate',
-    requestId,
     surface,
     model,
     parts,
@@ -213,25 +202,19 @@ export const callHostedAiModel = async (
 
 export const createHostedAiTransport = ({
   surface,
-  requestId = createRequestId(),
 }: {
   surface: HostedAiSurface
-  requestId?: string
 }): HostedAiTransport => {
-  let creditCheckPromise: Promise<void> | null = null
-
   return async ({
     model,
     parts,
     responseSchema,
     timeoutMs,
   }: StrongAiCallOptions) => {
-    creditCheckPromise ||= assertHostedAiCreditsAvailable(surface)
-    await creditCheckPromise
+    await assertHostedAiCreditsAvailable(surface)
 
     return callHostedAiModelUnchecked({
       surface,
-      requestId,
       model,
       parts,
       responseSchema,

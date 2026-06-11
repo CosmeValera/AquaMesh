@@ -100,11 +100,42 @@ describe('hosted AI client credit failures', () => {
     )
 
     const transport = createHostedAiTransport({ surface: 'study-guide' })
-    await expect(transport({ parts: [{ text: 'Create guide' }] })).rejects.toThrow(
-      'Insufficient Study Credits.',
-    )
+    await expect(
+      transport({ parts: [{ text: 'Create guide' }] }),
+    ).rejects.toThrow('Insufficient Study Credits.')
     expect(listener).toHaveBeenCalledTimes(1)
 
     window.removeEventListener(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT, listener)
+  })
+
+  it('does not send reusable request ids for hosted AI generation calls', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(gatewayResponse(statusPayload(5)))
+      .mockResolvedValueOnce(gatewayResponse({ ok: true, text: 'first' }))
+      .mockResolvedValueOnce(gatewayResponse(statusPayload(5)))
+      .mockResolvedValueOnce(gatewayResponse({ ok: true, text: 'second' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const transport = createHostedAiTransport({ surface: 'study-guide' })
+
+    await expect(transport({ parts: [{ text: 'Plan guide' }] })).resolves.toBe(
+      'first',
+    )
+    await expect(
+      transport({ parts: [{ text: 'Repair guide' }] }),
+    ).resolves.toBe('second')
+
+    const requestBodies = fetchMock.mock.calls.map(([, init]) =>
+      JSON.parse(String(init?.body)),
+    )
+    expect(requestBodies.map((body) => body.action)).toEqual([
+      'status',
+      'generate',
+      'status',
+      'generate',
+    ])
+    expect(requestBodies[1]).not.toHaveProperty('requestId')
+    expect(requestBodies[3]).not.toHaveProperty('requestId')
   })
 })

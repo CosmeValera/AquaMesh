@@ -78,7 +78,6 @@ export interface HostedAiGatewayPart {
 
 export interface HostedAiGatewayRequest {
   action: 'status' | 'markIntroSeen' | 'generate'
-  requestId?: string
   surface?: HostedAiSurface
   model?: string
   parts?: HostedAiGatewayPart[]

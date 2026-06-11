@@ -38,7 +38,9 @@ const makeResponse = () => {
 
 describe('API payment and hosted AI hardening', () => {
   afterEach(() => {
+    vi.restoreAllMocks()
     vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
   })
 
   it('allows configured app and extra origins', () => {
@@ -168,5 +170,90 @@ describe('API payment and hosted AI hardening', () => {
     vi.stubEnv('HOSTED_CEREBRAS_MODEL', 'server-model')
 
     expect(getHostedCerebrasModel()).toBe('server-model')
+  })
+
+  it('ignores caller supplied hosted AI request ids for usage accounting', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+    vi.stubEnv('HOSTED_CEREBRAS_API_KEY', 'hosted-cerebras-key')
+
+    const rpcBodies: Record<string, unknown>[] = []
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    })
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve(jsonResponse({ id: 'user-1' }))
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            status: {
+              studyCredits: 8,
+              introSeen: true,
+            },
+          }),
+        )
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_finish_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            status: {
+              studyCredits: 6,
+              introSeen: true,
+            },
+          }),
+        )
+      }
+
+      if (target.includes('api.cerebras.ai')) {
+        return Promise.resolve(
+          jsonResponse({
+            choices: [{ message: { content: 'Generated study material.' } }],
+          }),
+        )
+      }
+
+      return Promise.resolve(
+        jsonResponse({ message: 'unexpected url' }, false, 500),
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer user-token',
+        },
+        body: {
+          action: 'generate',
+          requestId: 'client-reused-id',
+          surface: 'quick-create',
+          parts: [{ text: 'Make flashcards' }],
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      text: 'Generated study material.',
+    })
+    expect(rpcBodies).toHaveLength(2)
+    expect(rpcBodies[0].p_request_id).toEqual(rpcBodies[1].p_request_id)
+    expect(rpcBodies[0].p_request_id).not.toBe('client-reused-id')
   })
 })

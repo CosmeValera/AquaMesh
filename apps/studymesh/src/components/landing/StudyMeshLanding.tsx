@@ -12,6 +12,7 @@ import {
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import KeyIcon from '@mui/icons-material/Key'
 import MemoryIcon from '@mui/icons-material/Memory'
@@ -133,6 +134,11 @@ const quickAnswers = [
   },
 ]
 
+const navItems = [
+  ['Features', '#features'],
+  ['Pricing', '/pricing'],
+]
+
 const StudyMeshLanding = () => {
   const navigate = useNavigate()
   const theme = useTheme()
@@ -150,15 +156,16 @@ const StudyMeshLanding = () => {
         minHeight: '100dvh',
         bgcolor: landingCanvasColor,
         color: 'text.primary',
-        overflowX: 'hidden',
+        overflowX: 'clip',
       }}
     >
       <Box
         component="header"
         sx={{
           borderBottom: '1px solid',
-          borderColor: 'divider',
-          bgcolor: landingCanvasColor,
+          borderColor: alpha(theme.palette.divider, 0.56),
+          bgcolor: alpha(landingCanvasColor, 0.86),
+          backdropFilter: 'blur(18px)',
           position: 'sticky',
           top: 0,
           zIndex: 10,
@@ -168,26 +175,86 @@ const StudyMeshLanding = () => {
           maxWidth="lg"
           sx={{
             height: 72,
-            display: 'flex',
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr auto', md: '1fr auto 1fr' },
             alignItems: 'center',
-            justifyContent: 'space-between',
+            columnGap: 2,
           }}
         >
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <Box
-              component="img"
-              src="/logo.png"
-              alt="StudyMesh logo"
-              sx={{ width: 36, height: 36, display: 'block' }}
-            />
-            <Typography variant="h6" fontWeight={900}>
-              StudyMesh
-            </Typography>
+          <Button
+            variant="text"
+            onClick={() => navigate('/')}
+            sx={{
+              justifySelf: 'start',
+              minWidth: 'auto',
+              p: 0,
+              color: 'text.primary',
+              textTransform: 'none',
+              '&:hover': { bgcolor: 'transparent' },
+            }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Box
+                component="img"
+                src="/logo.png"
+                alt="StudyMesh logo"
+                sx={{ width: 36, height: 36, display: 'block' }}
+              />
+              <Typography variant="h6" fontWeight={900}>
+                StudyMesh
+              </Typography>
+            </Stack>
+          </Button>
+          <Stack
+            component="nav"
+            direction="row"
+            spacing={4}
+            alignItems="center"
+            justifyContent="center"
+            sx={{ display: { xs: 'none', md: 'flex' } }}
+          >
+            {navItems.map(([label, href]) => (
+              <Button
+                key={label}
+                href={href}
+                variant="text"
+                sx={{
+                  minWidth: 'auto',
+                  px: 0,
+                  color: alpha(theme.palette.text.primary, 0.78),
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.98rem',
+                  '&:hover': {
+                    bgcolor: 'transparent',
+                    color: 'primary.main',
+                  },
+                }}
+              >
+                {label}
+              </Button>
+            ))}
           </Stack>
           <Button
             variant="outlined"
+            endIcon={<ArrowForwardIcon />}
             onClick={openCreateStudyGuide}
-            sx={{ borderRadius: 1, textTransform: 'none', fontWeight: 800 }}
+            sx={{
+              justifySelf: 'end',
+              borderRadius: 999,
+              px: { xs: 2, sm: 3 },
+              py: 1.05,
+              color: 'primary.dark',
+              borderColor: alpha(theme.palette.primary.main, 0.32),
+              bgcolor: alpha(theme.palette.background.paper, 0.72),
+              boxShadow: `0 10px 24px ${alpha(theme.palette.common.black, 0.08)}`,
+              textTransform: 'none',
+              fontWeight: 900,
+              '&:hover': {
+                borderColor: alpha(theme.palette.primary.main, 0.5),
+                bgcolor: alpha(theme.palette.primary.main, 0.08),
+              },
+            }}
           >
             Create a Study Guide
           </Button>
@@ -291,27 +358,75 @@ const StudyMeshLanding = () => {
               >
                 Build interactive study guides with AI, then keep learning as they adapt with you.
               </Typography>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={openCreateStudyGuide}
-                sx={{
-                  minHeight: 58,
-                  px: 5,
-                  borderRadius: 1.5,
-                  textTransform: 'none',
-                  fontWeight: 950,
-                  fontSize: '1.05rem',
-                }}
-              >
-                Create a Study Guide
-              </Button>
+              <Stack spacing={2.75} alignItems="center">
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={{ xs: 1, sm: 1.5 }}
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Button
+                    variant="contained"
+                    size="large"
+                    endIcon={<ArrowForwardIcon />}
+                    onClick={openCreateStudyGuide}
+                    sx={{
+                      minHeight: 58,
+                      px: 5,
+                      borderRadius: 999,
+                      textTransform: 'none',
+                      fontWeight: 950,
+                      fontSize: '1.05rem',
+                      bgcolor: 'primary.dark',
+                      boxShadow: `0 18px 36px ${alpha(theme.palette.primary.dark, 0.2)}`,
+                      '&:hover': { bgcolor: 'primary.main' },
+                    }}
+                  >
+                    Create a Study Guide
+                  </Button>
+                  <Button
+                    href="#how-it-works"
+                    variant="text"
+                    endIcon={<ArrowForwardIcon />}
+                    sx={{
+                      minHeight: 48,
+                      px: 1,
+                      color: alpha(theme.palette.text.primary, 0.78),
+                      textTransform: 'none',
+                      fontWeight: 850,
+                      '&:hover': {
+                        bgcolor: 'transparent',
+                        color: 'primary.main',
+                      },
+                    }}
+                  >
+                    See how it works
+                  </Button>
+                </Stack>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    color: alpha(theme.palette.text.primary, 0.58),
+                    fontWeight: 500,
+                    letterSpacing: '0.22em',
+                  }}
+                >
+                  Free to start · No credit card required
+                </Typography>
+              </Stack>
             </Stack>
           </Container>
         </Box>
 
         <Container maxWidth="lg">
-          <Box sx={{ pt: { xs: 4, md: 6 }, pb: { xs: 5, md: 7 } }}>
+          <Box
+            id="features"
+            sx={{
+              pt: { xs: 4, md: 6 },
+              pb: { xs: 5, md: 7 },
+              scrollMarginTop: 88,
+            }}
+          >
             <Grid container spacing={2.5} alignItems="center">
               <Grid item xs={12} md={4}>
                 <Stack spacing={1}>
@@ -363,7 +478,10 @@ const StudyMeshLanding = () => {
             </Grid>
           </Box>
 
-          <Box sx={{ py: { xs: 5, md: 8 } }}>
+          <Box
+            id="how-it-works"
+            sx={{ py: { xs: 5, md: 8 }, scrollMarginTop: 88 }}
+          >
             <Stack spacing={1} textAlign="center" alignItems="center" mb={3}>
               <Typography
                 variant="overline"
@@ -441,7 +559,10 @@ const StudyMeshLanding = () => {
             </Grid>
           </Box>
 
-          <Box sx={{ py: { xs: 5, md: 8 } }}>
+          <Box
+            id="pricing"
+            sx={{ py: { xs: 5, md: 8 }, scrollMarginTop: 88 }}
+          >
             <Grid container spacing={4} alignItems="center">
               <Grid item xs={12} md={5}>
                 <Stack spacing={1.5}>

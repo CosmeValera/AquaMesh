@@ -12,6 +12,7 @@ import {
 import DashboardProvider from './components/Dasboard/DashboardProvider'
 import LayoutProvider from './components/Layout/LayoutProvider'
 import StudyMeshLanding from './components/landing/StudyMeshLanding'
+import StudyMeshPricingPage from './components/landing/StudyMeshPricingPage'
 import LocalAiDebugPanel from './components/debug/LocalAiDebugPanel'
 import { cancelAllLocalAiSessions } from './quickCreate/ai'
 import {
@@ -96,6 +97,7 @@ const AppShell = () => {
             <LayoutProvider>
               <Routes>
                 <Route path="/" element={<StudyMeshLanding />} />
+                <Route path="/pricing" element={<StudyMeshPricingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />

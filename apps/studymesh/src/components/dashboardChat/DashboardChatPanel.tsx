@@ -174,15 +174,21 @@ export const aiChatPets: Array<{
 export const isAiChatPetId = (value: string | null): value is AiChatPetId =>
   aiChatPets.some((pet) => pet.id === value)
 
-const AiChatPet = ({ pet }: { pet?: (typeof aiChatPets)[number] }) => {
+const AiChatPet = ({
+  pet,
+  compact = false,
+}: {
+  pet?: (typeof aiChatPets)[number]
+  compact?: boolean
+}) => {
   const resolvedPet = pet || aiChatPets[0]
 
   return (
     <Box
       aria-hidden
       sx={{
-        width: { xs: 138, sm: 154 },
-        height: { xs: 138, sm: 154 },
+        width: compact ? { xs: 108, sm: 96 } : { xs: 112, sm: 154 },
+        height: compact ? { xs: 108, sm: 96 } : { xs: 112, sm: 154 },
         flex: '0 0 auto',
         backgroundImage: `url(${resolvedPet.src})`,
         backgroundSize: 'contain',
@@ -220,6 +226,7 @@ const DashboardChatPanel = ({
 }: DashboardChatPanelProps) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const [draft, setDraft] = useState('')
   const [error, setError] = useState('')
   const [activeStartedAt, setActiveStartedAt] = useState<number | null>(null)
@@ -329,6 +336,24 @@ const DashboardChatPanel = ({
     messagesRef.current = session.messages
     onMessagesChange(session.messages)
     setChatMenuAnchor(null)
+  }
+
+  const deleteChatSession = (sessionId: string) => {
+    const remainingSessions = chatSessionsRef.current.filter(
+      (session) => session.id !== sessionId,
+    )
+    const nextSessions =
+      remainingSessions.length > 0
+        ? remainingSessions
+        : [createEmptyChatSession()]
+    persistChatSessions(nextSessions)
+
+    if (sessionId === activeChatId) {
+      const nextActiveSession = nextSessions[0]
+      setActiveChatId(nextActiveSession.id)
+      messagesRef.current = nextActiveSession.messages
+      onMessagesChange(nextActiveSession.messages)
+    }
   }
 
   useEffect(() => {
@@ -755,30 +780,40 @@ const DashboardChatPanel = ({
             </Typography>
           </Box>
         </Stack>
-        <Stack direction="row" spacing={0.5}>
-          <Tooltip title="New chat">
-            <IconButton
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          {messages.length > 0 && (
+            <Tooltip title="New chat">
+              <IconButton
+                size="small"
+                onClick={startNewChat}
+                aria-label="Start new AI chat"
+                sx={{
+                  color: 'primary.main',
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  },
+                }}
+              >
+                <AddCircleOutlineIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {chatSessions.length > 1 && (
+            <Button
               size="small"
-              onClick={startNewChat}
-              aria-label="Start new AI chat"
+              onClick={(event) => setChatMenuAnchor(event.currentTarget)}
+              endIcon={<ExpandMoreIcon sx={{ fontSize: 16 }} />}
+              sx={{
+                minWidth: 0,
+                px: 1,
+                borderRadius: 1.25,
+                textTransform: 'none',
+                fontWeight: 800,
+              }}
             >
-              <AddCircleOutlineIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Button
-            size="small"
-            onClick={(event) => setChatMenuAnchor(event.currentTarget)}
-            endIcon={<ExpandMoreIcon sx={{ fontSize: 16 }} />}
-            sx={{
-              minWidth: 0,
-              px: 1,
-              borderRadius: 1.25,
-              textTransform: 'none',
-              fontWeight: 800,
-            }}
-          >
-            Chats
-          </Button>
+              Chats
+            </Button>
+          )}
           {messages.length > 0 && (
             <Tooltip title="Clear chat">
               <IconButton
@@ -817,7 +852,10 @@ const DashboardChatPanel = ({
                   },
                 }}
               >
-                <ChatBubbleOutlineIcon fontSize="small" />
+                <ChatBubbleOutlineIcon
+                  fontSize="small"
+                  sx={{ transform: 'translateY(1px)' }}
+                />
               </IconButton>
             </Tooltip>
           ) : null}
@@ -848,6 +886,24 @@ const DashboardChatPanel = ({
                 {session.messages.length} messages
               </Typography>
             </Box>
+            <IconButton
+              size="small"
+              aria-label={`Delete ${session.title}`}
+              onClick={(event) => {
+                event.stopPropagation()
+                deleteChatSession(session.id)
+              }}
+              sx={{
+                ml: 'auto',
+                color: 'text.secondary',
+                '&:hover': {
+                  color: 'error.main',
+                  bgcolor: alpha(theme.palette.error.main, 0.1),
+                },
+              }}
+            >
+              <DeleteOutlineIcon fontSize="small" />
+            </IconButton>
           </MenuItem>
         ))}
       </Menu>
@@ -857,7 +913,7 @@ const DashboardChatPanel = ({
           flex: 1,
           minHeight: 0,
           overflow: 'auto',
-          p: 2,
+          p: isPhone ? 1.25 : 2,
           bgcolor:
             theme.palette.mode === 'dark'
               ? 'rgba(2,6,23,0.18)'
@@ -873,12 +929,12 @@ const DashboardChatPanel = ({
             <Box
               sx={(theme) => ({
                 position: 'relative',
-                minHeight: isMobile ? 232 : 190,
+                minHeight: isPhone ? 150 : isMobile ? 232 : 190,
                 mt: 0,
-                p: isMobile ? 2.5 : 2,
-                pl: isMobile ? 3 : 2,
-                pt: isMobile ? 2.5 : 2,
-                pr: isMobile ? 18 : 17,
+                p: isPhone ? 2 : isMobile ? 2.5 : 2,
+                pl: isPhone ? 2 : isMobile ? 3 : 2,
+                pt: isPhone ? 2 : isMobile ? 2.5 : 2,
+                pr: isPhone ? 14 : isMobile ? 18 : 17,
                 border: 1,
                 borderColor: 'divider',
                 borderRadius: isMobile ? 3 : 2,
@@ -939,7 +995,11 @@ const DashboardChatPanel = ({
               <Typography
                 variant="h6"
                 fontWeight={900}
-                sx={{ maxWidth: isMobile ? '58%' : '64%' }}
+                sx={{
+                  maxWidth: isPhone ? '58%' : isMobile ? '58%' : '64%',
+                  fontSize: isPhone ? 18 : undefined,
+                  lineHeight: isPhone ? 1.2 : undefined,
+                }}
               >
                 What do you want to understand?
               </Typography>
@@ -951,7 +1011,7 @@ const DashboardChatPanel = ({
                   pointerEvents: 'none',
                 }}
               >
-                <AiChatPet pet={activePet} />
+                <AiChatPet pet={activePet} compact={isPhone} />
               </Box>
               <Typography
                 variant="body2"
@@ -960,6 +1020,7 @@ const DashboardChatPanel = ({
                   maxWidth: isMobile ? '58%' : '66%',
                   mt: 1,
                   fontWeight: 600,
+                  display: isPhone ? 'none' : 'block',
                 }}
               >
                 Ask questions based on the sources and study material in this
@@ -974,7 +1035,7 @@ const DashboardChatPanel = ({
                   disabled={!hasContext}
                   onClick={() => sendQuestion(suggestion.label)}
                   sx={{
-                    minHeight: isMobile ? 64 : 42,
+                    minHeight: isPhone ? 50 : isMobile ? 64 : 42,
                     justifyContent: 'space-between',
                     borderRadius: 2,
                     py: 1,
@@ -1013,6 +1074,37 @@ const DashboardChatPanel = ({
           </Stack>
         ) : (
           <Stack spacing={1.5}>
+            <Box
+              sx={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 2,
+                alignSelf: 'flex-end',
+                width: isPhone ? 48 : 58,
+                height: isPhone ? 48 : 58,
+                display: 'grid',
+                placeItems: 'center',
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: '50%',
+                bgcolor: 'background.paper',
+                boxShadow:
+                  theme.palette.mode === 'dark'
+                    ? '0 8px 18px rgba(0,0,0,0.28)'
+                    : '0 8px 18px rgba(16,24,40,0.12)',
+              }}
+            >
+              <Box
+                component="img"
+                src={activePet.src}
+                alt=""
+                sx={{
+                  width: isPhone ? 42 : 52,
+                  height: isPhone ? 42 : 52,
+                  objectFit: 'contain',
+                }}
+              />
+            </Box>
             {messages.map((message) => (
               <Box
                 key={message.id}

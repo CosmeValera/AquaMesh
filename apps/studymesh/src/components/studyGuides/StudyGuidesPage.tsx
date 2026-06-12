@@ -14,6 +14,8 @@ import {
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
@@ -113,6 +115,8 @@ const sortGuides = (guides: StudyGuideRecord[]) =>
 
 const StudyGuidesPage = () => {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const [searchParams, setSearchParams] = useSearchParams()
   const [guides, setGuides] = useState<StudyGuideRecord[]>([])
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
@@ -398,6 +402,7 @@ const StudyGuidesPage = () => {
             onClick={openCreateGuide}
             elevation={0}
             sx={(theme) => ({
+              display: isPhone ? 'none' : 'grid',
               minHeight: 190,
               p: 2.4,
               borderRadius: 2,
@@ -411,7 +416,6 @@ const StudyGuidesPage = () => {
               color: 'primary.main',
               cursor: 'pointer',
               font: 'inherit',
-              display: 'grid',
               placeItems: 'center',
               textAlign: 'center',
               transition: theme.transitions.create([

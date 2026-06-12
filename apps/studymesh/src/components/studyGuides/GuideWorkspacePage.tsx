@@ -550,10 +550,10 @@ const GuideWorkspacePage = () => {
                       onMouseDown={startAiChatResize}
                       sx={{
                         position: 'absolute',
-                        top: 14,
-                        left: -3,
+                        top: 0,
+                        bottom: 0,
+                        left: 0,
                         width: 8,
-                        height: 'calc(100% - 28px)',
                         cursor: 'col-resize',
                         zIndex: 2,
                         '&::after': {
@@ -561,7 +561,7 @@ const GuideWorkspacePage = () => {
                           position: 'absolute',
                           top: 0,
                           bottom: 0,
-                          left: 3,
+                          left: 0,
                           width: 2,
                           borderRadius: 999,
                           bgcolor: 'divider',

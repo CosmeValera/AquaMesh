@@ -431,10 +431,10 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
           onMouseDown={startPanelResize}
           sx={{
             position: 'absolute',
-            top: 10,
+            top: 0,
+            bottom: 0,
             right: 0,
             width: 9,
-            height: 'calc(100% - 20px)',
             cursor: 'col-resize',
             zIndex: 3,
             '&::after': {

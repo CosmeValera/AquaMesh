@@ -93,8 +93,9 @@ export const StudyGuideStorage = {
   getAll: readStoredStudyGuides,
 
   getById(id: string): StudyGuideRecord | null {
-    return readStoredStudyGuides().find((studyGuide) => studyGuide.id === id) ||
-      null
+    return (
+      readStoredStudyGuides().find((studyGuide) => studyGuide.id === id) || null
+    )
   },
 
   save(studyGuide: StudyGuideRecord): StudyGuideRecord {
@@ -106,7 +107,9 @@ export const StudyGuideStorage = {
       ...current[existingIndex],
       ...studyGuide,
       emoji: studyGuide.emoji || getStudyGuideEmoji(studyGuide.title),
-      pinnedAt: studyGuide.pinnedAt ?? current[existingIndex]?.pinnedAt ?? null,
+      pinnedAt: Object.prototype.hasOwnProperty.call(studyGuide, 'pinnedAt')
+        ? (studyGuide.pinnedAt ?? null)
+        : (current[existingIndex]?.pinnedAt ?? null),
       createdAt:
         studyGuide.createdAt || current[existingIndex]?.createdAt || nowIso(),
       updatedAt: nowIso(),

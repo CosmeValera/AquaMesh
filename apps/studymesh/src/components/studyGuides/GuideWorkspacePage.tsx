@@ -49,7 +49,8 @@ const normalizeGeneratedPageLayouts = (
   return {
     ...studyPath,
     dashboards: studyPath.dashboards.map((dashboard, index) => {
-      const pageKey = dashboard.dashboardKey || `${studyPath.pathId}-${index + 1}`
+      const pageKey =
+        dashboard.dashboardKey || `${studyPath.pathId}-${index + 1}`
       return {
         ...dashboard,
         dashboardKey: pageKey,
@@ -85,8 +86,9 @@ const GuideWorkspacePage = () => {
   const [quickCreateError, setQuickCreateError] = useState('')
   const [aiChatOpen, setAiChatOpen] = useState(true)
   const [aiChatWidth, setAiChatWidth] = useState(AI_CHAT_MIN_WIDTH)
-  const [mobileSection, setMobileSection] =
-    useState<'study-guide' | 'ai-chat'>('study-guide')
+  const [mobileSection, setMobileSection] = useState<'study-guide' | 'ai-chat'>(
+    'study-guide',
+  )
   const isCreateRoute = searchParams.get('create') === '1'
 
   const loadRecord = () => {
@@ -122,6 +124,26 @@ const GuideWorkspacePage = () => {
     }
   }, [record])
 
+  useEffect(() => {
+    if (!record) {
+      return
+    }
+
+    const currentPage =
+      record.studyPath.dashboards[record.studyPath.selectedIndex] ||
+      record.studyPath.dashboards[0]
+    const pageKey = currentPage?.dashboardKey
+    if (!pageKey || record.visitedPageKeys?.includes(pageKey)) {
+      return
+    }
+
+    const nextRecord = StudyGuideStorage.save({
+      ...record,
+      visitedPageKeys: [...(record.visitedPageKeys || []), pageKey],
+    })
+    setRecord(nextRecord)
+  }, [record?.id, record?.studyPath.selectedIndex])
+
   const persistStudyPath = (studyPath: StudyPathContainerState) => {
     const normalized = normalizeGeneratedPageLayouts(studyPath)
     const nextRecord = record
@@ -131,9 +153,11 @@ const GuideWorkspacePage = () => {
           folderName: normalized.folderName || record.folderName,
           studyPath: normalized,
         })
-      : StudyGuideStorage.save(createStudyGuideRecord(normalized, {
-          id: studyGuideId,
-        }))
+      : StudyGuideStorage.save(
+          createStudyGuideRecord(normalized, {
+            id: studyGuideId,
+          }),
+        )
     setRecord(nextRecord)
     return nextRecord
   }
@@ -167,7 +191,8 @@ const GuideWorkspacePage = () => {
       source: 'manual',
     })
     const nextRecord = persistStudyPath(nextStudyPath)
-    const newPage = nextRecord.studyPath.dashboards[nextRecord.studyPath.selectedIndex]
+    const newPage =
+      nextRecord.studyPath.dashboards[nextRecord.studyPath.selectedIndex]
     setEditingPageKey(newPage?.dashboardKey || null)
   }
 
@@ -215,9 +240,7 @@ const GuideWorkspacePage = () => {
       }
     } catch (error) {
       setQuickCreateError(
-        error instanceof Error
-          ? error.message
-          : 'Could not create this page.',
+        error instanceof Error ? error.message : 'Could not create this page.',
       )
     }
   }
@@ -262,7 +285,7 @@ const GuideWorkspacePage = () => {
         overflow: 'hidden',
         border: 1,
         borderColor: 'divider',
-        borderRadius: 2,
+        borderRadius: isMobile ? 2 : 0,
         bgcolor: 'background.paper',
         position: 'relative',
         flex: 1,
@@ -288,7 +311,7 @@ const GuideWorkspacePage = () => {
         overflow: 'hidden',
         border: 1,
         borderColor: 'divider',
-        borderRadius: 2,
+        borderRadius: isMobile ? 2 : 0,
         bgcolor: 'background.paper',
         position: 'relative',
       }}
@@ -385,7 +408,7 @@ const GuideWorkspacePage = () => {
               minHeight: 0,
               display: 'flex',
               flexDirection: 'column',
-              p: 1,
+              p: isMobile ? 1 : 0,
               bgcolor: 'background.default',
               overflow: 'hidden',
             }}
@@ -393,7 +416,9 @@ const GuideWorkspacePage = () => {
             {isMobile ? (
               <>
                 <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                  {mobileSection === 'study-guide' ? studyGuidePanel : chatPanel}
+                  {mobileSection === 'study-guide'
+                    ? studyGuidePanel
+                    : chatPanel}
                 </Box>
                 <Box
                   sx={{
@@ -430,7 +455,7 @@ const GuideWorkspacePage = () => {
                   flex: 1,
                   minHeight: 0,
                   display: 'flex',
-                  gap: 1,
+                  gap: 0,
                   overflow: 'hidden',
                 }}
               >

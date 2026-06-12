@@ -17,10 +17,12 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import EditIcon from '@mui/icons-material/Edit'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import PushPinIcon from '@mui/icons-material/PushPin'
+import SearchIcon from '@mui/icons-material/Search'
 import { nanoid } from 'nanoid'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
@@ -118,7 +120,9 @@ const StudyGuidesPage = () => {
   const [renameGuide, setRenameGuide] = useState<StudyGuideRecord | null>(null)
   const [renameTitle, setRenameTitle] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
-  const [createPrompt, setCreatePrompt] = useState('')
+  const [createGuideName, setCreateGuideName] = useState('')
+  const [createGuideDescription, setCreateGuideDescription] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [pendingGuides, setPendingGuides] = useState<PendingGuide[]>([])
   const [now, setNow] = useState(Date.now())
 
@@ -156,16 +160,34 @@ const StudyGuidesPage = () => {
   }, [pendingGuides])
 
   const sortedGuides = useMemo(() => sortGuides(guides), [guides])
+  const filteredGuides = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) {
+      return sortedGuides
+    }
+
+    return sortedGuides.filter((guide) =>
+      [guide.title, guide.description, guide.folderName]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(query),
+    )
+  }, [searchQuery, sortedGuides])
 
   const openCreateGuide = () => {
     setCreateOpen(true)
   }
 
   const submitCreateGuide = async () => {
-    const prompt = createPrompt.trim()
-    if (!prompt) {
+    const guideName = createGuideName.trim()
+    const description = createGuideDescription.trim()
+    if (!guideName) {
       return
     }
+    const prompt = description
+      ? `Create a Study Guide named "${guideName}". Focus: ${description}`
+      : `Create a Study Guide named "${guideName}".`
 
     const id = nanoid()
     const pendingGuide: PendingGuide = {
@@ -176,11 +198,22 @@ const StudyGuidesPage = () => {
     }
     setPendingGuides((current) => [pendingGuide, ...current])
     setCreateOpen(false)
-    setCreatePrompt('')
+    setCreateGuideName('')
+    setCreateGuideDescription('')
 
     try {
       const studyPath = await generateStudyPathStateFromPrompt({ id, prompt })
-      StudyGuideStorage.save(createStudyGuideRecord(studyPath, { id }))
+      StudyGuideStorage.save({
+        ...createStudyGuideRecord(
+          {
+            ...studyPath,
+            title: guideName,
+            folderName: guideName,
+          },
+          { id },
+        ),
+        description,
+      })
       setPendingGuides((current) => current.filter((guide) => guide.id !== id))
       loadGuides()
       navigate(`/workspace/${id}`)
@@ -241,6 +274,32 @@ const StudyGuidesPage = () => {
     closeMenu()
   }
 
+  const duplicateGuide = () => {
+    if (!menuGuide) {
+      return
+    }
+
+    const id = nanoid()
+    const title = `${menuGuide.title} copy`
+    StudyGuideStorage.save({
+      ...menuGuide,
+      id,
+      title,
+      folderName: title,
+      pinnedAt: null,
+      studyPath: {
+        ...menuGuide.studyPath,
+        pathId: id,
+        title,
+        folderName: title,
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+    loadGuides()
+    closeMenu()
+  }
+
   const deleteGuide = () => {
     if (menuGuide) {
       StudyGuideStorage.delete(menuGuide.id)
@@ -276,7 +335,7 @@ const StudyGuidesPage = () => {
           spacing={2}
           alignItems={{ xs: 'stretch', sm: 'center' }}
           justifyContent="space-between"
-          sx={{ mb: 3 }}
+          sx={{ mb: 2.5 }}
         >
           <Box>
             <Typography variant="h4" fontWeight={950}>
@@ -291,11 +350,35 @@ const StudyGuidesPage = () => {
             size="large"
             startIcon={<AddIcon />}
             onClick={openCreateGuide}
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 800 }}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 900,
+              px: 2.25,
+              boxShadow: 'none',
+            }}
           >
             New Study Guide
           </Button>
         </Stack>
+
+        <TextField
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search guides..."
+          size="small"
+          sx={{
+            width: { xs: '100%', sm: 300 },
+            mb: 2.25,
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              bgcolor: 'background.paper',
+            },
+          }}
+          InputProps={{
+            startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1 }} />,
+          }}
+        />
 
         <Box
           sx={{
@@ -315,15 +398,12 @@ const StudyGuidesPage = () => {
             onClick={openCreateGuide}
             elevation={0}
             sx={(theme) => ({
-              minHeight: 180,
+              minHeight: 190,
+              p: 2.4,
+              borderRadius: 2,
               border: 1,
               borderStyle: 'dashed',
-              borderColor: alpha(theme.palette.primary.main, 0.55),
-              borderRadius: 3,
-              display: 'grid',
-              placeItems: 'center',
-              textAlign: 'center',
-              p: 2.25,
+              borderColor: alpha(theme.palette.primary.main, 0.36),
               bgcolor: alpha(
                 theme.palette.primary.main,
                 theme.palette.mode === 'dark' ? 0.08 : 0.035,
@@ -331,6 +411,9 @@ const StudyGuidesPage = () => {
               color: 'primary.main',
               cursor: 'pointer',
               font: 'inherit',
+              display: 'grid',
+              placeItems: 'center',
+              textAlign: 'center',
               transition: theme.transitions.create([
                 'transform',
                 'box-shadow',
@@ -347,7 +430,7 @@ const StudyGuidesPage = () => {
                 boxShadow:
                   theme.palette.mode === 'dark'
                     ? '0 18px 44px rgba(0,0,0,0.3)'
-                    : '0 18px 44px rgba(15,23,42,0.1)',
+                    : '0 20px 46px rgba(15,23,42,0.11)',
               },
               '&:focus-visible': {
                 outline: `3px solid ${alpha(theme.palette.primary.main, 0.45)}`,
@@ -355,9 +438,21 @@ const StudyGuidesPage = () => {
               },
             })}
           >
-            <Stack spacing={1} alignItems="center">
-              <AddIcon sx={{ fontSize: 58 }} />
-              <Typography fontWeight={900} color="text.primary">
+            <Stack spacing={2} alignItems="center">
+              <Box
+                sx={(theme) => ({
+                  width: 76,
+                  height: 76,
+                  borderRadius: '50%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  bgcolor: alpha(theme.palette.primary.main, 0.14),
+                  color: 'primary.main',
+                })}
+              >
+                <AddIcon sx={{ fontSize: 34 }} />
+              </Box>
+              <Typography variant="h6" fontWeight={950} color="text.primary">
                 New Study Guide
               </Typography>
             </Stack>
@@ -466,8 +561,28 @@ const StudyGuidesPage = () => {
               </Paper>
             )
           })}
-          {sortedGuides.map((guide) => {
+          {filteredGuides.map((guide) => {
             const pageCount = guide.studyPath.dashboards.length
+            const pageKeys = guide.studyPath.dashboards
+              .map((dashboard) => dashboard.dashboardKey)
+              .filter(Boolean)
+            const visitedPageCount = new Set(
+              (guide.visitedPageKeys || []).filter((pageKey) =>
+                pageKeys.includes(pageKey),
+              ),
+            ).size
+            const percentRead =
+              pageCount > 0
+                ? Math.round((visitedPageCount / pageCount) * 100)
+                : 0
+            const accent =
+              guide.emoji === '🧬'
+                ? '#0b84a5'
+                : guide.emoji === '📚'
+                  ? '#5b3f92'
+                  : guide.emoji === '🎨'
+                    ? '#b86b2d'
+                    : '#0b6f4f'
             return (
               <Paper
                 key={guide.id}
@@ -475,9 +590,9 @@ const StudyGuidesPage = () => {
                 onClick={() => navigate(`/workspace/${guide.id}`)}
                 sx={(theme) => ({
                   position: 'relative',
-                  minHeight: 180,
-                  p: 2.25,
-                  borderRadius: 3,
+                  minHeight: 190,
+                  p: 2.4,
+                  borderRadius: 2,
                   border: 1,
                   borderColor: guide.pinnedAt
                     ? alpha(theme.palette.primary.main, 0.5)
@@ -496,21 +611,22 @@ const StudyGuidesPage = () => {
                     boxShadow:
                       theme.palette.mode === 'dark'
                         ? '0 18px 44px rgba(0,0,0,0.36)'
-                        : '0 18px 44px rgba(15,23,42,0.12)',
+                        : '0 20px 46px rgba(15,23,42,0.11)',
                   },
                 })}
               >
-                <Stack spacing={2} sx={{ height: '100%' }}>
+                <Stack spacing={1.35} sx={{ height: '100%' }}>
                   <Stack direction="row" justifyContent="space-between">
                     <Box
                       sx={{
-                        width: 42,
-                        height: 42,
+                        width: 44,
+                        height: 44,
                         borderRadius: 2,
                         display: 'grid',
                         placeItems: 'center',
-                        bgcolor: 'action.hover',
-                        fontSize: 24,
+                        bgcolor: alpha(accent, 0.12),
+                        color: accent,
+                        fontSize: 22,
                       }}
                     >
                       {guide.emoji || '\u2728'}
@@ -529,19 +645,19 @@ const StudyGuidesPage = () => {
                           width: 34,
                           height: 34,
                           border: 1,
-                          borderColor: alpha(theme.palette.primary.main, 0.44),
-                          bgcolor: alpha(
-                            theme.palette.primary.main,
-                            theme.palette.mode === 'dark' ? 0.18 : 0.1,
-                          ),
-                          color: 'primary.main',
+                          borderColor: 'transparent',
+                          bgcolor: alpha(theme.palette.primary.main, 0.06),
+                          color: 'text.secondary',
                           '&:hover': {
-                            borderColor: 'primary.main',
+                            borderColor: alpha(
+                              theme.palette.primary.main,
+                              0.28,
+                            ),
                             bgcolor: alpha(
                               theme.palette.primary.main,
                               theme.palette.mode === 'dark' ? 0.28 : 0.18,
                             ),
-                            color: 'primary.dark',
+                            color: 'primary.main',
                           },
                         })}
                       >
@@ -563,11 +679,66 @@ const StudyGuidesPage = () => {
                     >
                       {guide.title}
                     </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 1,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {guide.description ||
+                        guide.studyPath.dashboards[0]?.name ||
+                        'Open this learning workspace.'}
+                    </Typography>
                   </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    {formatGuideDate(guide.createdAt)} &middot; {pageCount}{' '}
-                    {pageCount === 1 ? 'page' : 'pages'}
-                  </Typography>
+                  <Box>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      gap={1}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {formatGuideDate(guide.createdAt)} &middot; {pageCount}{' '}
+                        {pageCount === 1 ? 'page' : 'pages'}
+                      </Typography>
+                      <Box
+                        sx={{
+                          px: 0.8,
+                          py: 0.25,
+                          borderRadius: 999,
+                          bgcolor: alpha(accent, 0.12),
+                          color: accent,
+                          fontWeight: 900,
+                          fontSize: 12,
+                          flex: '0 0 auto',
+                        }}
+                      >
+                        {percentRead}% read
+                      </Box>
+                    </Stack>
+                    <Box
+                      sx={{
+                        mt: 1.25,
+                        height: 4,
+                        borderRadius: 999,
+                        bgcolor: 'divider',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: `${percentRead}%`,
+                          height: '100%',
+                          bgcolor: accent,
+                        }}
+                      />
+                    </Box>
+                  </Box>
                 </Stack>
               </Paper>
             )
@@ -579,10 +750,21 @@ const StudyGuidesPage = () => {
         anchorEl={menuAnchor}
         open={Boolean(menuAnchor)}
         onClose={closeMenu}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            minWidth: 150,
+            boxShadow: '0 18px 40px rgba(15,23,42,0.16)',
+          },
+        }}
       >
         <MenuItem onClick={startRename}>
           <EditIcon fontSize="small" sx={{ mr: 1 }} />
-          Edit title
+          Rename
+        </MenuItem>
+        <MenuItem onClick={duplicateGuide}>
+          <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
+          Duplicate
         </MenuItem>
         <MenuItem onClick={togglePinned}>
           <PushPinIcon fontSize="small" sx={{ mr: 1 }} />
@@ -625,30 +807,40 @@ const StudyGuidesPage = () => {
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: 3,
+            borderRadius: 2,
           },
         }}
       >
-        <DialogTitle sx={{ pb: 1 }}>
-          <Stack spacing={0.5}>
-            <Typography variant="h6" fontWeight={900}>
-              New Study Guide
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Describe what you want to learn.
-            </Typography>
-          </Stack>
+        <DialogTitle sx={{ pb: 1, fontWeight: 900 }}>
+          New Study Guide
         </DialogTitle>
         <DialogContent>
-          <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Guide name"
+            value={createGuideName}
+            onChange={(event) => setCreateGuideName(event.target.value)}
+            placeholder="e.g. French Grammar Basics"
+            sx={{ mt: 1, mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Description"
+            value={createGuideDescription}
+            onChange={(event) => setCreateGuideDescription(event.target.value)}
+            placeholder="What will you be studying?"
+          />
+          <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap' }}>
             {quickPromptOptions.map((option) => (
               <Button
                 key={option.label}
                 size="small"
-                variant={
-                  createPrompt === option.prompt ? 'contained' : 'outlined'
-                }
-                onClick={() => setCreatePrompt(option.prompt)}
+                variant="outlined"
+                onClick={() => {
+                  setCreateGuideName(option.label)
+                  setCreateGuideDescription(option.prompt)
+                }}
                 sx={{
                   borderRadius: 2,
                   textTransform: 'none',
@@ -659,26 +851,15 @@ const StudyGuidesPage = () => {
               </Button>
             ))}
           </Stack>
-          <TextField
-            autoFocus
-            fullWidth
-            multiline
-            minRows={5}
-            label="Prompt"
-            value={createPrompt}
-            onChange={(event) => setCreatePrompt(event.target.value)}
-            placeholder="Example: Teach me the basics of human anatomy for an exam."
-            sx={{ mt: 1 }}
-          />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
           <Button
             variant="contained"
             onClick={() => void submitCreateGuide()}
-            disabled={!createPrompt.trim()}
+            disabled={!createGuideName.trim()}
           >
-            Create Study Guide
+            Create Guide
           </Button>
         </DialogActions>
       </Dialog>

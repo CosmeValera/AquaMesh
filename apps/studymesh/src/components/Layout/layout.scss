@@ -251,6 +251,21 @@
   overflow: visible;
 }
 
+@media (min-width: 900px) {
+  .studymesh-mobile-dashboard-layout {
+    align-items: center;
+    padding: 32px 24px 72px;
+  }
+
+  .studymesh-mobile-widget-card {
+    max-width: 640px;
+    border: 1px solid var(--surface-border, #d8e0e4);
+    border-radius: 8px;
+    background: var(--surface-card, #fff);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+  }
+}
+
 .studymesh-mobile-dashboard-empty {
   min-height: 220px;
   border-radius: 16px;

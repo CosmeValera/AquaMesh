@@ -46,34 +46,35 @@ interface StudyGuidePageEditorProps {
 
 const SAVE_DELAY_MS = 450
 
-const toolbarButtonSx =
-  (active: boolean) =>
-  (theme: Theme) => ({
-    width: 34,
-    height: 34,
-    border: 1,
-    borderColor: active
-      ? theme.palette.primary.main
-      : alpha(theme.palette.text.primary, 0.22),
-    bgcolor: active
-      ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.28 : 0.14)
-      : theme.palette.background.paper,
-    color: active ? theme.palette.primary.main : theme.palette.text.secondary,
-    '&:hover': {
-      borderColor: theme.palette.primary.main,
-      bgcolor: alpha(
+const toolbarButtonSx = (active: boolean) => (theme: Theme) => ({
+  width: 34,
+  height: 34,
+  border: 1,
+  borderColor: active
+    ? theme.palette.primary.main
+    : alpha(theme.palette.text.primary, 0.22),
+  bgcolor: active
+    ? alpha(
         theme.palette.primary.main,
-        theme.palette.mode === 'dark' ? 0.34 : 0.12,
-      ),
-      color: theme.palette.primary.main,
-    },
-    '&.Mui-disabled': {
-      borderColor: theme.palette.divider,
-      bgcolor: theme.palette.action.disabledBackground,
-      color: theme.palette.text.disabled,
-      opacity: 0.72,
-    },
-  })
+        theme.palette.mode === 'dark' ? 0.28 : 0.14,
+      )
+    : theme.palette.background.paper,
+  color: active ? theme.palette.primary.main : theme.palette.text.secondary,
+  '&:hover': {
+    borderColor: theme.palette.primary.main,
+    bgcolor: alpha(
+      theme.palette.primary.main,
+      theme.palette.mode === 'dark' ? 0.34 : 0.12,
+    ),
+    color: theme.palette.primary.main,
+  },
+  '&.Mui-disabled': {
+    borderColor: theme.palette.divider,
+    bgcolor: theme.palette.action.disabledBackground,
+    color: theme.palette.text.disabled,
+    opacity: 0.72,
+  },
+})
 
 const normalizeMarkdown = (value: string) => value.replace(/\r\n/g, '\n')
 
@@ -164,7 +165,8 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
         },
       }),
       Placeholder.configure({
-        placeholder: 'Start writing notes...',
+        placeholder: ({ editor }) =>
+          editor.isEmpty ? 'Start writing notes...' : '',
       }),
       Markdown.configure({
         indentation: { style: 'space', size: 2 },
@@ -257,7 +259,12 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
       return
     }
 
-    editor.chain().focus().extendMarkRange('link').setLink({ href: trimmed }).run()
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange('link')
+      .setLink({ href: trimmed })
+      .run()
   }
 
   const insertTable = (rows = tableRows, cols = tableColumns) => {
@@ -380,7 +387,9 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                   key={level}
                   size="small"
                   variant={
-                    editor?.isActive('heading', { level }) ? 'contained' : 'outlined'
+                    editor?.isActive('heading', { level })
+                      ? 'contained'
+                      : 'outlined'
                   }
                   onClick={() => setHeading(level as 1 | 2 | 3)}
                   sx={{ minWidth: 38, px: 1, borderRadius: 1.5 }}
@@ -420,7 +429,9 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
               <ToolbarButton
                 label="Numbered list"
                 active={Boolean(editor?.isActive('orderedList'))}
-                onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                onClick={() =>
+                  editor?.chain().focus().toggleOrderedList().run()
+                }
               >
                 <FormatListNumberedIcon fontSize="small" />
               </ToolbarButton>
@@ -440,7 +451,9 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
               </ToolbarButton>
               <ToolbarButton
                 label="Divider"
-                onClick={() => editor?.chain().focus().setHorizontalRule().run()}
+                onClick={() =>
+                  editor?.chain().focus().setHorizontalRule().run()
+                }
               >
                 <HorizontalRuleIcon fontSize="small" />
               </ToolbarButton>
@@ -456,7 +469,12 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                 label="Remove link"
                 disabled={!editor?.isActive('link')}
                 onClick={() =>
-                  editor?.chain().focus().extendMarkRange('link').unsetLink().run()
+                  editor
+                    ?.chain()
+                    .focus()
+                    .extendMarkRange('link')
+                    .unsetLink()
+                    .run()
                 }
               >
                 <LinkOffIcon fontSize="small" />

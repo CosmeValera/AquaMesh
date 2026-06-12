@@ -8,6 +8,8 @@ import {
   Drawer,
   IconButton,
   InputAdornment,
+  Menu,
+  MenuItem,
   Popover,
   Stack,
   TextField,
@@ -28,6 +30,11 @@ import StyleIcon from '@mui/icons-material/Style'
 import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SearchIcon from '@mui/icons-material/Search'
+import ArticleIcon from '@mui/icons-material/Article'
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import LightbulbIcon from '@mui/icons-material/Lightbulb'
+import TrackChangesIcon from '@mui/icons-material/TrackChanges'
 import { StateDashboard } from '../../state/store'
 import {
   buildDashboardChatContext,
@@ -56,6 +63,14 @@ export interface DashboardChatMessage {
   pending?: boolean
 }
 
+interface DashboardChatSession {
+  id: string
+  title: string
+  messages: DashboardChatMessage[]
+  createdAt: number
+  updatedAt: number
+}
+
 interface DashboardChatPanelProps {
   dashboard?: StateDashboard
   messages: DashboardChatMessage[]
@@ -67,20 +82,116 @@ interface DashboardChatPanelProps {
   supportsStudyGuideCreateScope?: boolean
 }
 
-const suggestions = [
+const legacySuggestionLabels = [
   'Summarize the key ideas',
   'Explain this like I’m new',
   'Generate exam-style questions',
   'What should I review first?',
 ]
 
+const suggestions = [
+  {
+    label: 'Summarize the key ideas',
+    icon: <ArticleIcon fontSize="small" />,
+  },
+  {
+    label: "Explain this like I'm new",
+    icon: <LightbulbIcon fontSize="small" />,
+  },
+  {
+    label: 'Generate exam-style questions',
+    icon: <HelpOutlineIcon fontSize="small" />,
+  },
+  {
+    label: 'What should I review first?',
+    icon: <TrackChangesIcon fontSize="small" />,
+  },
+]
+
 const makeMessageId = () =>
   `dashboard-chat-${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+const makeChatSessionId = () =>
+  `dashboard-chat-session-${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+const getChatSessionStorageKey = (dashboardId?: string) =>
+  `studymesh-dashboard-chat-sessions-${dashboardId || 'workspace'}`
+
+const createEmptyChatSession = (): DashboardChatSession => ({
+  id: makeChatSessionId(),
+  title: 'New chat',
+  messages: [],
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+})
+
+const titleFromQuestion = (question: string) => {
+  const words = question
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 7)
+  const title = words.join(' ')
+  return title.length > 44
+    ? `${title.slice(0, 43).trim()}...`
+    : title || 'New chat'
+}
 
 const quickCreateIcons: Record<QuickCreateActionId, React.ReactNode> = {
   quiz: <QuizIcon fontSize="small" />,
   flashcards: <StyleIcon fontSize="small" />,
   improvedNotes: <AutoStoriesIcon fontSize="small" />,
+}
+
+type AiChatPetId = 'axolotl' | 'dolphin' | 'parrot'
+
+export const AI_CHAT_PET_STORAGE_KEY = 'studymesh-ai-chat-pet'
+export const AI_CHAT_PET_CHANGED_EVENT = 'studymesh-ai-chat-pet-changed'
+
+export const aiChatPets: Array<{
+  id: AiChatPetId
+  label: string
+  src: string
+}> = [
+  {
+    id: 'axolotl',
+    label: 'Axolotl',
+    src: '/images/studymesh-ai-pet-axolotl.png',
+  },
+  {
+    id: 'dolphin',
+    label: 'Dolphin',
+    src: '/images/studymesh-ai-pet-dolphin.png',
+  },
+  {
+    id: 'parrot',
+    label: 'Parrot',
+    src: '/images/studymesh-ai-pet-parrot.png',
+  },
+]
+
+export const isAiChatPetId = (value: string | null): value is AiChatPetId =>
+  aiChatPets.some((pet) => pet.id === value)
+
+const AiChatPet = ({ pet }: { pet?: (typeof aiChatPets)[number] }) => {
+  const resolvedPet = pet || aiChatPets[0]
+
+  return (
+    <Box
+      aria-hidden
+      sx={{
+        width: { xs: 138, sm: 154 },
+        height: { xs: 138, sm: 154 },
+        flex: '0 0 auto',
+        backgroundImage: `url(${resolvedPet.src})`,
+        backgroundSize: 'contain',
+        backgroundPosition: 'center bottom',
+        backgroundRepeat: 'no-repeat',
+        filter: 'drop-shadow(0 16px 18px rgba(139,92,246,0.14))',
+      }}
+    />
+  )
 }
 
 const getQuickCreateEstimateSeconds = (): number => {
@@ -121,6 +232,17 @@ const DashboardChatPanel = ({
     useState<QuickCreateActionId | null>(null)
   const [quickCreateMenuAnchor, setQuickCreateMenuAnchor] =
     useState<HTMLElement | null>(null)
+  const [chatMenuAnchor, setChatMenuAnchor] = useState<HTMLElement | null>(null)
+  const [chatSessions, setChatSessions] = useState<DashboardChatSession[]>([])
+  const [activeChatId, setActiveChatId] = useState('')
+  const [activePetId, setActivePetId] = useState<AiChatPetId>(() => {
+    try {
+      const stored = window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY)
+      return isAiChatPetId(stored) ? stored : 'axolotl'
+    } catch {
+      return 'axolotl'
+    }
+  })
   const [quickCreateSearch, setQuickCreateSearch] = useState('')
   const [quickCreateSourceScope, setQuickCreateSourceScope] =
     useState<QuickCreateSourceScope>(
@@ -128,6 +250,7 @@ const DashboardChatPanel = ({
     )
   const messagesRef = useRef(messages)
   const queueRef = useRef(Promise.resolve())
+  const chatSessionsRef = useRef<DashboardChatSession[]>([])
   const settings = readQuickCreateAiSettings()
   const isLocalAi = settings.provider === 'local'
   const context = useMemo(
@@ -144,10 +267,115 @@ const DashboardChatPanel = ({
   const latestAssistantMessageId = [...messages]
     .reverse()
     .find((message) => message.role === 'assistant' && !message.pending)?.id
+  const activePet =
+    aiChatPets.find((pet) => pet.id === activePetId) || aiChatPets[0]
+  const activeChatTitle =
+    chatSessions.find((session) => session.id === activeChatId)?.title ||
+    'New chat'
+
+  const persistChatSessions = (nextSessions: DashboardChatSession[]) => {
+    chatSessionsRef.current = nextSessions
+    setChatSessions(nextSessions)
+    try {
+      window.localStorage.setItem(
+        getChatSessionStorageKey(dashboard?.id),
+        JSON.stringify(nextSessions),
+      )
+    } catch (storageError) {
+      console.error('Failed to persist dashboard chat sessions', storageError)
+    }
+  }
+
+  const replaceActiveChatMessages = (
+    nextMessages: DashboardChatMessage[],
+    title?: string,
+  ) => {
+    const now = Date.now()
+    const currentSessions = chatSessionsRef.current.length
+      ? chatSessionsRef.current
+      : [createEmptyChatSession()]
+    const sessionId = activeChatId || currentSessions[0].id
+    const nextSessions = currentSessions.map((session) =>
+      session.id === sessionId
+        ? {
+            ...session,
+            title:
+              title ||
+              (session.title === 'New chat' && nextMessages[0]?.role === 'user'
+                ? titleFromQuestion(nextMessages[0].content)
+                : session.title),
+            messages: nextMessages,
+            updatedAt: now,
+          }
+        : session,
+    )
+    persistChatSessions(nextSessions)
+    messagesRef.current = nextMessages
+    onMessagesChange(nextMessages)
+  }
+
+  const startNewChat = () => {
+    const nextSession = createEmptyChatSession()
+    const nextSessions = [nextSession, ...chatSessionsRef.current]
+    setActiveChatId(nextSession.id)
+    persistChatSessions(nextSessions)
+    messagesRef.current = []
+    onMessagesChange([])
+    setChatMenuAnchor(null)
+  }
+
+  const selectChatSession = (session: DashboardChatSession) => {
+    setActiveChatId(session.id)
+    messagesRef.current = session.messages
+    onMessagesChange(session.messages)
+    setChatMenuAnchor(null)
+  }
 
   useEffect(() => {
     messagesRef.current = messages
   }, [messages])
+
+  useEffect(() => {
+    const refreshPet = () => {
+      try {
+        const stored = window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY)
+        setActivePetId(isAiChatPetId(stored) ? stored : 'axolotl')
+      } catch {
+        setActivePetId('axolotl')
+      }
+    }
+
+    window.addEventListener(AI_CHAT_PET_CHANGED_EVENT, refreshPet)
+    window.addEventListener('storage', refreshPet)
+
+    return () => {
+      window.removeEventListener(AI_CHAT_PET_CHANGED_EVENT, refreshPet)
+      window.removeEventListener('storage', refreshPet)
+    }
+  }, [])
+
+  useEffect(() => {
+    let nextSessions: DashboardChatSession[] = []
+    try {
+      const stored = window.localStorage.getItem(
+        getChatSessionStorageKey(dashboard?.id),
+      )
+      const parsed = stored ? JSON.parse(stored) : []
+      nextSessions = Array.isArray(parsed) ? parsed : []
+    } catch (storageError) {
+      console.error('Failed to read dashboard chat sessions', storageError)
+    }
+
+    if (nextSessions.length === 0) {
+      nextSessions = [createEmptyChatSession()]
+    }
+
+    chatSessionsRef.current = nextSessions
+    setChatSessions(nextSessions)
+    setActiveChatId(nextSessions[0].id)
+    messagesRef.current = nextSessions[0].messages
+    onMessagesChange(nextSessions[0].messages)
+  }, [dashboard?.id])
 
   useEffect(() => {
     if (!activeStartedAt) {
@@ -184,8 +412,7 @@ const DashboardChatPanel = ({
     const updated = messagesRef.current.map((message) =>
       message.id === messageId ? updater(message) : message,
     )
-    messagesRef.current = updated
-    onMessagesChange(updated)
+    replaceActiveChatMessages(updated)
   }
 
   const answerQuestion = async (
@@ -262,8 +489,10 @@ const DashboardChatPanel = ({
     }
     const previousMessages = messagesRef.current
     const nextMessages = [...previousMessages, userMessage, pendingMessage]
-    messagesRef.current = nextMessages
-    onMessagesChange(nextMessages)
+    replaceActiveChatMessages(
+      nextMessages,
+      previousMessages.length === 0 ? titleFromQuestion(trimmed) : undefined,
+    )
     setDraft('')
     setError('')
 
@@ -495,17 +724,66 @@ const DashboardChatPanel = ({
           borderColor: 'divider',
         }}
       >
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="subtitle2" fontWeight={900} noWrap>
-            AI Chat
-          </Typography>
-        </Box>
+        <Stack
+          direction="row"
+          spacing={0.75}
+          alignItems="center"
+          sx={{ minWidth: 0 }}
+        >
+          <Box
+            component="img"
+            src={activePet.src}
+            alt=""
+            sx={{
+              width: 34,
+              height: 34,
+              objectFit: 'contain',
+              flex: '0 0 auto',
+            }}
+          />
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="subtitle2" fontWeight={900} noWrap>
+              AI Chat
+            </Typography>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              noWrap
+              sx={{ display: 'block', lineHeight: 1.1 }}
+            >
+              {activeChatTitle}
+            </Typography>
+          </Box>
+        </Stack>
         <Stack direction="row" spacing={0.5}>
+          <Tooltip title="New chat">
+            <IconButton
+              size="small"
+              onClick={startNewChat}
+              aria-label="Start new AI chat"
+            >
+              <AddCircleOutlineIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Button
+            size="small"
+            onClick={(event) => setChatMenuAnchor(event.currentTarget)}
+            endIcon={<ExpandMoreIcon sx={{ fontSize: 16 }} />}
+            sx={{
+              minWidth: 0,
+              px: 1,
+              borderRadius: 1.25,
+              textTransform: 'none',
+              fontWeight: 800,
+            }}
+          >
+            Chats
+          </Button>
           {messages.length > 0 && (
             <Tooltip title="Clear chat">
               <IconButton
                 size="small"
-                onClick={() => onMessagesChange([])}
+                onClick={() => replaceActiveChatMessages([])}
                 aria-label="Clear dashboard chat"
               >
                 <DeleteOutlineIcon />
@@ -545,6 +823,34 @@ const DashboardChatPanel = ({
           ) : null}
         </Stack>
       </Box>
+      <Menu
+        anchorEl={chatMenuAnchor}
+        open={Boolean(chatMenuAnchor)}
+        onClose={() => setChatMenuAnchor(null)}
+        PaperProps={{ sx: { width: 260, maxWidth: '90vw' } }}
+      >
+        {chatSessions.map((session) => (
+          <MenuItem
+            key={session.id}
+            selected={session.id === activeChatId}
+            onClick={() => selectChatSession(session)}
+            sx={{ alignItems: 'flex-start', gap: 1 }}
+          >
+            <ChatBubbleOutlineIcon
+              fontSize="small"
+              color={session.id === activeChatId ? 'primary' : 'inherit'}
+            />
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" fontWeight={800} noWrap>
+                {session.title}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {session.messages.length} messages
+              </Typography>
+            </Box>
+          </MenuItem>
+        ))}
+      </Menu>
 
       <Box
         sx={{
@@ -565,32 +871,111 @@ const DashboardChatPanel = ({
         ) : messages.length === 0 ? (
           <Stack spacing={2.25}>
             <Box
-              sx={{
-                p: 2,
+              sx={(theme) => ({
+                position: 'relative',
+                minHeight: isMobile ? 232 : 190,
+                mt: 0,
+                p: isMobile ? 2.5 : 2,
+                pl: isMobile ? 3 : 2,
+                pt: isMobile ? 2.5 : 2,
+                pr: isMobile ? 18 : 17,
                 border: 1,
                 borderColor: 'divider',
-                borderRadius: 2.5,
+                borderRadius: isMobile ? 3 : 2,
                 bgcolor: 'background.paper',
-              }}
+                overflow: 'hidden',
+                boxShadow:
+                  theme.palette.mode === 'dark'
+                    ? '0 16px 36px rgba(0,0,0,0.28)'
+                    : '0 18px 44px rgba(16,24,40,0.10)',
+              })}
             >
-              <Typography variant="h6" fontWeight={900}>
+              <Box
+                aria-hidden
+                sx={{
+                  display: 'none',
+                  position: 'absolute',
+                  left: isMobile ? -8 : -10,
+                  top: isMobile ? -94 : -76,
+                  width: isMobile ? 174 : 142,
+                  height: isMobile ? 178 : 146,
+                  backgroundImage: 'none',
+                  backgroundSize: isMobile ? '360px auto' : '294px auto',
+                  backgroundPosition: isMobile
+                    ? '-16px -176px'
+                    : '-13px -144px',
+                  backgroundRepeat: 'no-repeat',
+                  filter: 'drop-shadow(0 16px 20px rgba(15,118,110,0.18))',
+                  pointerEvents: 'none',
+                }}
+              />
+              <Box
+                sx={{
+                  display: 'none',
+                  position: 'absolute',
+                  left: isMobile ? 150 : 120,
+                  top: isMobile ? -48 : -38,
+                  maxWidth: isMobile
+                    ? 'min(220px, calc(100% - 165px))'
+                    : 'min(190px, calc(100% - 130px))',
+                  px: 1.25,
+                  py: 0.85,
+                  border: 1,
+                  borderColor: alpha(theme.palette.primary.main, 0.28),
+                  borderRadius: 2,
+                  bgcolor: 'background.paper',
+                  color: 'text.primary',
+                  fontWeight: 900,
+                  fontSize: isMobile ? 14 : 12,
+                  lineHeight: 1.25,
+                  boxShadow:
+                    theme.palette.mode === 'dark'
+                      ? '0 10px 22px rgba(0,0,0,0.28)'
+                      : '0 10px 22px rgba(16,24,40,0.08)',
+                }}
+              >
+                Hi! I&apos;m your StudyMesh AI.
+              </Box>
+              <Typography
+                variant="h6"
+                fontWeight={900}
+                sx={{ maxWidth: isMobile ? '58%' : '64%' }}
+              >
                 What do you want to understand?
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Box
+                sx={{
+                  position: 'absolute',
+                  right: 8,
+                  bottom: 8,
+                  pointerEvents: 'none',
+                }}
+              >
+                <AiChatPet pet={activePet} />
+              </Box>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  maxWidth: isMobile ? '58%' : '66%',
+                  mt: 1,
+                  fontWeight: 600,
+                }}
+              >
                 Ask questions based on the sources and study material in this
-                dashboard. I’ll keep answers grounded in what’s here.
+                dashboard. I&apos;ll keep answers grounded in what&apos;s here.
               </Typography>
             </Box>
             <Stack spacing={1}>
               {suggestions.map((suggestion) => (
                 <Button
-                  key={suggestion}
+                  key={suggestion.label}
                   variant="outlined"
-                  size="small"
                   disabled={!hasContext}
-                  onClick={() => sendQuestion(suggestion)}
+                  onClick={() => sendQuestion(suggestion.label)}
                   sx={{
-                    justifyContent: 'flex-start',
+                    minHeight: isMobile ? 64 : 42,
+                    justifyContent: 'space-between',
                     borderRadius: 2,
                     py: 1,
                     px: 1.25,
@@ -598,9 +983,30 @@ const DashboardChatPanel = ({
                     borderColor: 'divider',
                     color: 'text.primary',
                     textTransform: 'none',
+                    fontWeight: 900,
+                    gap: 1,
                   }}
                 >
-                  {suggestion}
+                  <Stack direction="row" spacing={1.25} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 1.5,
+                        display: 'grid',
+                        placeItems: 'center',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: 'primary.main',
+                        flex: '0 0 auto',
+                      }}
+                    >
+                      {suggestion.icon}
+                    </Box>
+                    <Typography variant="body2" fontWeight={900}>
+                      {suggestion.label}
+                    </Typography>
+                  </Stack>
+                  <ArrowForwardIosIcon sx={{ fontSize: 16 }} />
                 </Button>
               ))}
             </Stack>
@@ -780,7 +1186,9 @@ const DashboardChatPanel = ({
                 startIcon={<AddCircleOutlineIcon fontSize="small" />}
                 endIcon={<ExpandMoreIcon fontSize="small" />}
                 disabled={!hasContext || Boolean(quickCreateActionId)}
-                onClick={(event) => setQuickCreateMenuAnchor(event.currentTarget)}
+                onClick={(event) =>
+                  setQuickCreateMenuAnchor(event.currentTarget)
+                }
                 aria-haspopup="menu"
                 aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
                 sx={{
@@ -835,9 +1243,7 @@ const DashboardChatPanel = ({
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             placeholder={
-              hasContext
-                ? 'Ask anything'
-                : 'Add study material before chatting'
+              hasContext ? 'Ask anything' : 'Add study material before chatting'
             }
             disabled={!hasContext}
             fullWidth

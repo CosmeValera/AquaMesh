@@ -48,7 +48,7 @@ describe('StudyGuidesPage create route', () => {
     renderStudyGuidesPage('/study-guides?create=1')
 
     expect(await screen.findByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByLabelText(/prompt/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/guide name/i)).toBeInTheDocument()
 
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/study-guides')

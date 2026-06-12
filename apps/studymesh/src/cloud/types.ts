@@ -60,6 +60,7 @@ export interface StudyGuideRecord {
   description?: string
   emoji?: string
   pinnedAt?: string | null
+  visitedPageKeys?: string[]
   studyPath: StudyPathContainerState
   createdAt: string
   updatedAt: string

@@ -4,6 +4,7 @@ import {
   appendStudyGuideMarkdownPage,
   getStudyGuideCreationSourceText,
   getStudyGuidePageMarkdown,
+  stripDuplicateStudyGuideMarkdownTitle,
 } from '../../../src/studyGuides/pages'
 import type {
   StudyPathContainerState,
@@ -91,5 +92,14 @@ describe('appendStudyGuideMarkdownPage', () => {
     })
 
     expect(getStudyGuidePageMarkdown(next.dashboards[0])).toBe('')
+  })
+
+  it('strips a duplicate leading heading that matches the page title', () => {
+    expect(
+      stripDuplicateStudyGuideMarkdownTitle(
+        '# Cell Biology\n\nCells have membranes.',
+        'Cell Biology',
+      ),
+    ).toBe('Cells have membranes.')
   })
 })

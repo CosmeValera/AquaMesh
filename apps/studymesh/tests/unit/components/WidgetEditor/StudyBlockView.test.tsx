@@ -181,4 +181,35 @@ describe('StudyBlockView', () => {
     expect(screen.queryByText('***')).not.toBeInTheDocument()
     expect(screen.queryByText('- - -')).not.toBeInTheDocument()
   })
+
+  it('renders safe Markdown links without requiring http URLs', () => {
+    render(
+      <StudyBlockView
+        type="MarkdownBlock"
+        props={{
+          markdown: '[asdf](asd)',
+        }}
+      />,
+    )
+
+    const link = screen.getByRole('link', { name: 'asdf' })
+    expect(link).toHaveAttribute('href', 'asd')
+    expect(screen.queryByText('[asdf](asd)')).not.toBeInTheDocument()
+  })
+
+  it('hides duplicate Study Guide page titles from Markdown blocks', () => {
+    render(
+      <StudyBlockView
+        type="MarkdownBlock"
+        props={{
+          title: 'Cell Biology',
+          studyPathId: 'guide-1',
+          markdown: '# Cell Biology\n\nCells have membranes.',
+        }}
+      />,
+    )
+
+    expect(screen.queryByText('Cell Biology')).not.toBeInTheDocument()
+    expect(screen.getByText('Cells have membranes.')).toBeInTheDocument()
+  })
 })

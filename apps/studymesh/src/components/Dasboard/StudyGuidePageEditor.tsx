@@ -5,6 +5,7 @@ import {
   Button,
   Divider,
   IconButton,
+  Menu,
   Stack,
   Tab,
   Tabs,
@@ -93,6 +94,11 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
   const [titleValue, setTitleValue] = useState(title)
   const [sourceValue, setSourceValue] = useState(normalizeMarkdown(markdown))
   const [sourceError, setSourceError] = useState('')
+  const [tableMenuAnchor, setTableMenuAnchor] = useState<HTMLElement | null>(
+    null,
+  )
+  const [tableRows, setTableRows] = useState(3)
+  const [tableColumns, setTableColumns] = useState(3)
   const pendingRef = useRef({
     title,
     markdown: normalizeMarkdown(markdown),
@@ -254,12 +260,24 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
     editor.chain().focus().extendMarkRange('link').setLink({ href: trimmed }).run()
   }
 
-  const insertTable = () => {
+  const insertTable = (rows = tableRows, cols = tableColumns) => {
     editor
       ?.chain()
       .focus()
-      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+      .insertTable({ rows, cols, withHeaderRow: true })
       .run()
+    setTableMenuAnchor(null)
+  }
+
+  const normalizeTableSize = (value: number, max: number): number =>
+    Math.max(1, Math.min(max, Number.isFinite(value) ? value : 1))
+
+  const updateTableRows = (value: string) => {
+    setTableRows(normalizeTableSize(Number(value), 12))
+  }
+
+  const updateTableColumns = (value: string) => {
+    setTableColumns(normalizeTableSize(Number(value), 8))
   }
 
   const ToolbarButton = ({
@@ -443,9 +461,55 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
               >
                 <LinkOffIcon fontSize="small" />
               </ToolbarButton>
-              <ToolbarButton label="Insert table" onClick={insertTable}>
-                <TableChartIcon fontSize="small" />
-              </ToolbarButton>
+              <Tooltip title="Insert table">
+                <span>
+                  <IconButton
+                    size="small"
+                    aria-label="Insert table"
+                    onClick={(event) => setTableMenuAnchor(event.currentTarget)}
+                    sx={toolbarButtonSx(Boolean(tableMenuAnchor))}
+                  >
+                    <TableChartIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Menu
+                anchorEl={tableMenuAnchor}
+                open={Boolean(tableMenuAnchor)}
+                onClose={() => setTableMenuAnchor(null)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              >
+                <Stack spacing={1.25} sx={{ width: 220, p: 1.5 }}>
+                  <Stack direction="row" spacing={1}>
+                    <TextField
+                      label="Rows"
+                      type="number"
+                      value={tableRows}
+                      size="small"
+                      inputProps={{ min: 1, max: 12 }}
+                      onChange={(event) => updateTableRows(event.target.value)}
+                    />
+                    <TextField
+                      label="Columns"
+                      type="number"
+                      value={tableColumns}
+                      size="small"
+                      inputProps={{ min: 1, max: 8 }}
+                      onChange={(event) =>
+                        updateTableColumns(event.target.value)
+                      }
+                    />
+                  </Stack>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => insertTable()}
+                  >
+                    Insert table
+                  </Button>
+                </Stack>
+              </Menu>
             </Stack>
           ) : null}
         </Box>

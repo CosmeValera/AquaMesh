@@ -17,6 +17,7 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import { stripDuplicateStudyGuideMarkdownTitle } from '../../../../studyGuides/pages'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -147,10 +148,22 @@ const splitMarkdownTableRow = (line: string): string[] =>
     .split('|')
     .map((cell) => cell.trim())
 
+const isSafeMarkdownHref = (href: string): boolean => {
+  const trimmed = href.trim()
+  const schemeMatch = trimmed.match(/^([a-z][a-z0-9+.-]*):/i)
+  if (!schemeMatch) {
+    return Boolean(trimmed)
+  }
+
+  return ['http', 'https', 'mailto', 'tel'].includes(
+    schemeMatch[1].toLowerCase(),
+  )
+}
+
 const renderMarkdownInline = (value: string): React.ReactNode[] => {
   const nodes: React.ReactNode[] = []
   const tokenPattern =
-    /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\(https?:\/\/[^)]+\)|\*[^*]+\*)/g
+    /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|\*[^*]+\*)/g
   let cursor = 0
   let match: RegExpExecArray | null
 
@@ -161,14 +174,16 @@ const renderMarkdownInline = (value: string): React.ReactNode[] => {
 
     const token = match[0]
     const key = `${token}-${match.index}`
-    const linkMatch = token.match(/^\[([^\]]+)\]\((https?:\/\/[^)]+)\)$/)
+    const linkMatch = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
 
-    if (linkMatch) {
+    if (linkMatch && isSafeMarkdownHref(linkMatch[2])) {
       nodes.push(
         <Link key={key} href={linkMatch[2]} target="_blank" rel="noreferrer">
           {linkMatch[1]}
         </Link>,
       )
+    } else if (linkMatch) {
+      nodes.push(linkMatch[1])
     } else if (token.startsWith('**')) {
       nodes.push(
         <Box component="strong" key={key}>
@@ -1192,12 +1207,15 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
 
   if (type === 'MarkdownBlock') {
     const title = String(props.title || 'Markdown notes')
-    const markdown = String(props.markdown || '')
+    const isStudyGuidePage = Boolean(props.studyPathId)
+    const markdown = isStudyGuidePage
+      ? stripDuplicateStudyGuideMarkdownTitle(String(props.markdown || ''), title)
+      : String(props.markdown || '')
 
     return (
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Stack spacing={1.5}>
-          {title && (
+          {title && !isStudyGuidePage && (
             <Typography variant="subtitle1" fontWeight={700}>
               {title}
             </Typography>

@@ -179,4 +179,30 @@ describe('StudyGuidePageEditor', () => {
 
     expect(onChange).toHaveBeenCalledWith('Finished page', 'Body')
   })
+
+  it('inserts a table with the selected row and column count', () => {
+    render(
+      <StudyGuidePageEditor
+        title="Tables"
+        markdown=""
+        onChange={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Insert table' }))
+    fireEvent.change(screen.getByLabelText('Rows'), {
+      target: { value: '5' },
+    })
+    fireEvent.change(screen.getByLabelText('Columns'), {
+      target: { value: '4' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Insert table' }))
+
+    expect(tiptapMock.editor.chain).toHaveBeenCalled()
+    expect(tiptapMock.editor.chain().insertTable).toHaveBeenCalledWith({
+      rows: 5,
+      cols: 4,
+      withHeaderRow: true,
+    })
+  })
 })

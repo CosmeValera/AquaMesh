@@ -16,6 +16,42 @@ const makePageKey = (studyPathId: string) =>
 
 const MAX_STUDY_GUIDE_CREATION_SOURCE_LENGTH = 24000
 
+const normalizeComparableTitle = (value: string): string =>
+  value
+    .trim()
+    .replace(/^\d+\s*[-.)]\s+/, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+
+export const stripDuplicateStudyGuideMarkdownTitle = (
+  markdown: string,
+  title: string,
+): string => {
+  const normalizedTitle = normalizeComparableTitle(title)
+  if (!normalizedTitle) {
+    return markdown
+  }
+
+  const normalizedMarkdown = markdown.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  const lines = normalizedMarkdown.split('\n')
+  const firstContentIndex = lines.findIndex((line) => line.trim())
+  if (firstContentIndex < 0) {
+    return ''
+  }
+
+  const firstLine = lines[firstContentIndex].trim()
+  const headingMatch = firstLine.match(/^#{1,6}\s+(.+)$/)
+  const firstLineTitle = headingMatch?.[1] || firstLine
+  if (normalizeComparableTitle(firstLineTitle) !== normalizedTitle) {
+    return markdown
+  }
+
+  return lines
+    .slice(firstContentIndex + 1)
+    .join('\n')
+    .replace(/^\n+/, '')
+}
+
 const withStudyPathProps = (
   studyPath: StudyPathContainerState,
   pageKey: string,
@@ -175,7 +211,9 @@ export const getStudyGuidePageMarkdown = (
 ): string => {
   const markdownComponent = findMarkdownComponent(page?.layout)
   const markdown = markdownComponent?.props?.markdown
-  return typeof markdown === 'string' ? markdown : ''
+  return typeof markdown === 'string'
+    ? stripDuplicateStudyGuideMarkdownTitle(markdown, page?.name || '')
+    : ''
 }
 
 export const isEditableMarkdownStudyGuidePage = (
@@ -206,6 +244,10 @@ export const updateStudyGuideMarkdownPage = (
       }
 
       const safeTitle = title.trim() || dashboard.name || 'Untitled page'
+      const safeMarkdown = stripDuplicateStudyGuideMarkdownTitle(
+        markdown,
+        safeTitle,
+      )
       const nextLayout = visitLayoutComponents(dashboard.layout, (component) => {
         if (component.type === 'MarkdownBlock') {
           return {
@@ -213,7 +255,7 @@ export const updateStudyGuideMarkdownPage = (
             props: {
               ...component.props,
               title: safeTitle,
-              markdown,
+              markdown: safeMarkdown,
               studyPathDashboardName: safeTitle,
             },
           }
@@ -306,13 +348,17 @@ export const appendStudyGuideMarkdownPage = (
   const pageCount = studyPath.dashboards.length + 1
   const pageIndex = pageCount
   const safeTitle = title.trim() || `Page ${pageIndex}`
+  const safeMarkdown = stripDuplicateStudyGuideMarkdownTitle(
+    markdown.trim(),
+    safeTitle,
+  )
   const page: StudyPathDashboardItem = {
     name: safeTitle,
     layout: createMarkdownStudyGuidePageLayout({
       studyPath,
       pageKey,
       title: safeTitle,
-      markdown: markdown.trim(),
+      markdown: safeMarkdown,
       pageIndex,
       pageCount,
     }),

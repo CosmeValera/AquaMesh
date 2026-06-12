@@ -13,7 +13,6 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 
 import type { StudyPathContainerState } from '../../state/store'
@@ -251,6 +250,26 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                 data-drop-before={
                   !mobile && insertionIndex === index ? 'true' : undefined
                 }
+                draggable={!mobile}
+                aria-label={mobile ? undefined : `Drag ${page.name} to reorder`}
+                onDragStart={
+                  mobile
+                    ? undefined
+                    : (event) => {
+                        setDraggedIndex(index)
+                        setInsertionIndex(index)
+                        event.dataTransfer.effectAllowed = 'move'
+                        event.dataTransfer.setData('text/plain', String(index))
+                      }
+                }
+                onDragEnd={
+                  mobile
+                    ? undefined
+                    : () => {
+                        setDraggedIndex(null)
+                        setInsertionIndex(null)
+                      }
+                }
                 sx={(theme) => ({
                   mx: 0.75,
                   px: 0.5,
@@ -266,6 +285,11 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                   gap: 0.5,
                   position: 'relative',
                   opacity: draggedIndex === index ? 0.52 : 1,
+                  cursor: mobile
+                    ? 'default'
+                    : draggedIndex === index
+                    ? 'grabbing'
+                    : 'grab',
                   transition: theme.transitions.create([
                     'background-color',
                     'border-color',
@@ -289,33 +313,6 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                   },
                 })}
               >
-                {!mobile ? (
-                  <Tooltip title="Drag to reorder">
-                    <Box
-                      component="span"
-                      draggable
-                      aria-label={`Drag ${page.name} to reorder`}
-                      onDragStart={(event) => {
-                        setDraggedIndex(index)
-                        setInsertionIndex(index)
-                        event.dataTransfer.effectAllowed = 'move'
-                        event.dataTransfer.setData('text/plain', String(index))
-                      }}
-                      onDragEnd={() => {
-                        setDraggedIndex(null)
-                        setInsertionIndex(null)
-                      }}
-                      sx={{
-                        display: 'grid',
-                        placeItems: 'center',
-                        color: 'text.secondary',
-                        cursor: draggedIndex === index ? 'grabbing' : 'grab',
-                      }}
-                    >
-                      <DragIndicatorIcon fontSize="small" />
-                    </Box>
-                  </Tooltip>
-                ) : null}
                 <Button
                   onClick={() => selectPage(index)}
                   sx={{

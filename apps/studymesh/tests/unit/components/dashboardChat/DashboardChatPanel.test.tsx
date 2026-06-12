@@ -77,9 +77,10 @@ describe('DashboardChatPanel quick create menu', () => {
   it('shows one Create entry point instead of permanent quick-create buttons', () => {
     renderPanel()
 
-    expect(
-      screen.getByRole('button', { name: /^Create$/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Create$/i })).toHaveStyle({
+      height: '40px',
+      minHeight: '40px',
+    })
     expect(
       screen.queryByRole('button', { name: /^Quiz$/i }),
     ).not.toBeInTheDocument()
@@ -178,3 +179,57 @@ describe('DashboardChatPanel quick create menu', () => {
   })
 })
 
+describe('DashboardChatPanel chat management', () => {
+  it('only offers delete inside Chats and closes the menu after deleting', async () => {
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === 'studymesh-dashboard-chat-sessions-dashboard-1'
+        ? JSON.stringify([
+            {
+              id: 'chat-1',
+              title: 'First chat',
+              messages: [
+                {
+                  id: 'message-1',
+                  role: 'user',
+                  content: 'First question',
+                },
+                {
+                  id: 'message-2',
+                  role: 'assistant',
+                  content: 'First answer',
+                },
+              ],
+              createdAt: 1,
+              updatedAt: 1,
+            },
+            {
+              id: 'chat-2',
+              title: 'Second chat',
+              messages: [],
+              createdAt: 2,
+              updatedAt: 2,
+            },
+          ])
+        : null,
+    )
+
+    renderPanel()
+
+    expect(
+      screen.queryByRole('button', { name: 'Clear dashboard chat' }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(await screen.findByRole('button', { name: 'Chats' }))
+    expect(screen.getByLabelText('Delete First chat')).toBeInTheDocument()
+    expect(screen.getByText('1 reply')).toBeInTheDocument()
+    expect(screen.getByText('0 replies')).toBeInTheDocument()
+    expect(screen.queryByText(/messages/)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Delete First chat'))
+
+    await waitFor(() =>
+      expect(
+        screen.queryByLabelText('Delete Second chat'),
+      ).not.toBeInTheDocument(),
+    )
+  })
+})

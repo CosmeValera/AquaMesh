@@ -354,6 +354,7 @@ const DashboardChatPanel = ({
       messagesRef.current = nextActiveSession.messages
       onMessagesChange(nextActiveSession.messages)
     }
+    setChatMenuAnchor(null)
   }
 
   useEffect(() => {
@@ -814,17 +815,6 @@ const DashboardChatPanel = ({
               Chats
             </Button>
           )}
-          {messages.length > 0 && (
-            <Tooltip title="Clear chat">
-              <IconButton
-                size="small"
-                onClick={() => replaceActiveChatMessages([])}
-                aria-label="Clear dashboard chat"
-              >
-                <DeleteOutlineIcon />
-              </IconButton>
-            </Tooltip>
-          )}
           {showCloseButton ? (
             <Tooltip title="Close">
               <IconButton
@@ -867,45 +857,50 @@ const DashboardChatPanel = ({
         onClose={() => setChatMenuAnchor(null)}
         PaperProps={{ sx: { width: 260, maxWidth: '90vw' } }}
       >
-        {chatSessions.map((session) => (
-          <MenuItem
-            key={session.id}
-            selected={session.id === activeChatId}
-            onClick={() => selectChatSession(session)}
-            sx={{ alignItems: 'flex-start', gap: 1 }}
-          >
-            <ChatBubbleOutlineIcon
-              fontSize="small"
-              color={session.id === activeChatId ? 'primary' : 'inherit'}
-            />
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="body2" fontWeight={800} noWrap>
-                {session.title}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {session.messages.length} messages
-              </Typography>
-            </Box>
-            <IconButton
-              size="small"
-              aria-label={`Delete ${session.title}`}
-              onClick={(event) => {
-                event.stopPropagation()
-                deleteChatSession(session.id)
-              }}
-              sx={{
-                ml: 'auto',
-                color: 'text.secondary',
-                '&:hover': {
-                  color: 'error.main',
-                  bgcolor: alpha(theme.palette.error.main, 0.1),
-                },
-              }}
+        {chatSessions.map((session) => {
+          const replyCount = session.messages.filter(
+            (message) => message.role === 'assistant',
+          ).length
+          return (
+            <MenuItem
+              key={session.id}
+              selected={session.id === activeChatId}
+              onClick={() => selectChatSession(session)}
+              sx={{ alignItems: 'flex-start', gap: 1 }}
             >
-              <DeleteOutlineIcon fontSize="small" />
-            </IconButton>
-          </MenuItem>
-        ))}
+              <ChatBubbleOutlineIcon
+                fontSize="small"
+                color={session.id === activeChatId ? 'primary' : 'inherit'}
+              />
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="body2" fontWeight={800} noWrap>
+                  {session.title}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+                </Typography>
+              </Box>
+              <IconButton
+                size="small"
+                aria-label={`Delete ${session.title}`}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  deleteChatSession(session.id)
+                }}
+                sx={{
+                  ml: 'auto',
+                  color: 'text.secondary',
+                  '&:hover': {
+                    color: 'error.main',
+                    bgcolor: alpha(theme.palette.error.main, 0.1),
+                  },
+                }}
+              >
+                <DeleteOutlineIcon fontSize="small" />
+              </IconButton>
+            </MenuItem>
+          )
+        })}
       </Menu>
 
       <Box
@@ -1290,7 +1285,8 @@ const DashboardChatPanel = ({
                 aria-haspopup="menu"
                 aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
                 sx={{
-                  minHeight: 42,
+                  height: 40,
+                  minHeight: 40,
                   flex: '0 0 auto',
                   borderRadius: 2,
                   textTransform: 'none',

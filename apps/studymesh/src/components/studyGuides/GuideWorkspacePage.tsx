@@ -163,7 +163,7 @@ const GuideWorkspacePage = () => {
 
     const nextStudyPath = appendStudyGuideMarkdownPage(record.studyPath, {
       title: 'Untitled page',
-      markdown: '# Untitled page\n\n',
+      markdown: '',
       source: 'manual',
     })
     const nextRecord = persistStudyPath(nextStudyPath)

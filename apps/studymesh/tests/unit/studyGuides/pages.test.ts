@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { getStudyGuideCreationSourceText } from '../../../src/studyGuides/pages'
+import {
+  appendStudyGuideMarkdownPage,
+  getStudyGuideCreationSourceText,
+  getStudyGuidePageMarkdown,
+} from '../../../src/studyGuides/pages'
 import type {
   StudyPathContainerState,
   StudyPathDashboardItem,
@@ -66,5 +70,26 @@ describe('getStudyGuideCreationSourceText', () => {
     expect(source.indexOf('# Manual note')).toBeLessThan(
       source.indexOf('# Chat note'),
     )
+  })
+})
+
+describe('appendStudyGuideMarkdownPage', () => {
+  it('keeps a new manual page body empty for the WYSIWYG editor', () => {
+    const studyPath: StudyPathContainerState = {
+      pathId: 'guide-1',
+      title: 'Biology',
+      folderName: 'Biology',
+      selectedIndex: 0,
+      pinnedDashboardKeys: [],
+      dashboards: [],
+    }
+
+    const next = appendStudyGuideMarkdownPage(studyPath, {
+      title: 'Untitled page',
+      markdown: '',
+      source: 'manual',
+    })
+
+    expect(getStudyGuidePageMarkdown(next.dashboards[0])).toBe('')
   })
 })

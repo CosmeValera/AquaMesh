@@ -5,7 +5,6 @@ import {
   IconButton,
   Paper,
   Stack,
-  TextField,
   Tooltip,
   Typography,
 } from '@mui/material'
@@ -25,11 +24,8 @@ import {
 } from '../../studyGuides/pages'
 import StudyGuideLinearLayout from './StudyGuideLinearLayout'
 import AddIcon from '@mui/icons-material/Add'
-import { renderMarkdown } from '../WidgetEditor/components/preview/StudyBlockView'
+import StudyGuidePageEditor from './StudyGuidePageEditor'
 
-const STUDY_GUIDE_EDITOR_LAYOUT_KEY = 'studymesh-study-guide-editor-layout-v1'
-
-type EditorLayoutMode = 'split' | 'stacked'
 type PageIconTone = 'primary' | 'error'
 
 const pageIconButtonSx =
@@ -64,21 +60,6 @@ const pageIconButtonSx =
       },
     }
   }
-
-const readEditorLayoutPreference = (): EditorLayoutMode => {
-  try {
-    const stored = localStorage.getItem(STUDY_GUIDE_EDITOR_LAYOUT_KEY)
-    if (stored === 'split' || stored === 'stacked') {
-      return stored
-    }
-
-    return window.matchMedia('(max-width: 899.95px)').matches
-      ? 'stacked'
-      : 'split'
-  } catch (error) {
-    return 'split'
-  }
-}
 
 interface StudyPathWorkspaceViewProps {
   studyPath: StudyPathContainerState
@@ -173,9 +154,6 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
 }) => {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [editPagesMode, setEditPagesMode] = useState(false)
-  const [editorLayout, setEditorLayout] = useState<EditorLayoutMode>(
-    readEditorLayoutPreference,
-  )
   const selectedIndex = Math.min(
     Math.max(studyPath.selectedIndex || 0, 0),
     Math.max(studyPath.dashboards.length - 1, 0),
@@ -190,15 +168,6 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
     () => sanitizeStudentLayout(currentLesson?.layout),
     [currentLesson?.layout],
   )
-
-  const updateEditorLayout = (nextLayout: EditorLayoutMode) => {
-    setEditorLayout(nextLayout)
-    try {
-      localStorage.setItem(STUDY_GUIDE_EDITOR_LAYOUT_KEY, nextLayout)
-    } catch (error) {
-      console.error('Failed to save Study Guide editor layout', error)
-    }
-  }
 
   useLayoutEffect(() => {
     if (!mobileView) {
@@ -511,74 +480,11 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
             })}
           </Box>
         ) : isEditingCurrentPage ? (
-          <Stack
-            spacing={2}
-            sx={{ maxWidth: editorLayout === 'split' ? 1280 : 920, mx: 'auto' }}
-          >
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
-              {(['split', 'stacked'] as EditorLayoutMode[]).map((mode) => (
-                <Button
-                  key={mode}
-                  size="small"
-                  variant={editorLayout === mode ? 'contained' : 'outlined'}
-                  onClick={() => updateEditorLayout(mode)}
-                  sx={{ borderRadius: 2, textTransform: 'none' }}
-                >
-                  {mode === 'split' ? 'Split' : 'Stacked'}
-                </Button>
-              ))}
-            </Stack>
-            <Box
-              sx={{
-                display: {
-                  xs: 'flex',
-                  md: editorLayout === 'split' ? 'grid' : 'flex',
-                },
-                gridTemplateColumns: { md: 'minmax(0, 1fr) minmax(0, 1fr)' },
-                flexDirection: 'column',
-                gap: 2,
-              }}
-            >
-              <Stack spacing={2} minWidth={0}>
-                <TextField
-                  label="Page title"
-                  value={currentLesson.name}
-                  onChange={(event) =>
-                    updateCurrentMarkdownPage(
-                      event.target.value,
-                      currentMarkdown,
-                    )
-                  }
-                  fullWidth
-                />
-                <TextField
-                  label="Markdown"
-                  value={currentMarkdown}
-                  onChange={(event) =>
-                    updateCurrentMarkdownPage(
-                      currentLesson.name,
-                      event.target.value,
-                    )
-                  }
-                  fullWidth
-                  multiline
-                  minRows={editorLayout === 'split' ? 24 : 18}
-                  InputProps={{
-                    sx: {
-                      fontFamily: 'JetBrains Mono, Consolas, monospace',
-                      alignItems: 'flex-start',
-                    },
-                  }}
-                />
-              </Stack>
-              <Paper variant="outlined" sx={{ p: 2, minWidth: 0 }}>
-                <Typography variant="overline" color="text.secondary">
-                  Preview
-                </Typography>
-                <Stack spacing={1.25}>{renderMarkdown(currentMarkdown)}</Stack>
-              </Paper>
-            </Box>
-          </Stack>
+          <StudyGuidePageEditor
+            title={currentLesson.name}
+            markdown={currentMarkdown}
+            onChange={updateCurrentMarkdownPage}
+          />
         ) : (
           <StudyGuideLinearLayout
             key={currentLesson.dashboardKey}

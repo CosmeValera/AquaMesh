@@ -312,7 +312,7 @@ export const appendStudyGuideMarkdownPage = (
       studyPath,
       pageKey,
       title: safeTitle,
-      markdown: markdown.trim() || `# ${safeTitle}`,
+      markdown: markdown.trim(),
       pageIndex,
       pageCount,
     }),

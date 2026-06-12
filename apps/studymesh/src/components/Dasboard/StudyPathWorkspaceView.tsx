@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, { useLayoutEffect, useMemo, useRef } from 'react'
 import {
   Box,
   Button,
@@ -11,23 +11,18 @@ import {
   useTheme,
 } from '@mui/material'
 import { alpha, type Theme } from '@mui/material/styles'
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { DashboardLayout, StudyPathContainerState } from '../../state/store'
 import {
-  deleteStudyGuidePage,
   getStudyGuidePageMarkdown,
   isEditableMarkdownStudyGuidePage,
-  reorderStudyGuidePage,
   updateStudyGuideMarkdownPage,
 } from '../../studyGuides/pages'
 import StudyGuideLinearLayout from './StudyGuideLinearLayout'
-import AddIcon from '@mui/icons-material/Add'
 import StudyGuidePageEditor from './StudyGuidePageEditor'
 import { useNavigate } from 'react-router-dom'
+import StudyGuidePagesPanel from './StudyGuidePagesPanel'
 
 type PageIconTone = 'primary' | 'error'
 
@@ -157,9 +152,8 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
 }) => {
   const theme = useTheme()
   const navigate = useNavigate()
-  const showPageRail = useMediaQuery(theme.breakpoints.up('md'))
+  const showPageRail = useMediaQuery(theme.breakpoints.up('lg'))
   const rootRef = useRef<HTMLDivElement | null>(null)
-  const [editPagesMode, setEditPagesMode] = useState(false)
   const selectedIndex = Math.min(
     Math.max(studyPath.selectedIndex || 0, 0),
     Math.max(studyPath.dashboards.length - 1, 0),
@@ -225,15 +219,6 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
         markdown,
       }),
     )
-  }
-
-  const moveLesson = (index: number, direction: -1 | 1) => {
-    const nextIndex = index + direction
-    onStudyPathChange(reorderStudyGuidePage(studyPath, index, nextIndex))
-  }
-
-  const deleteLesson = (dashboardKey: string) => {
-    onStudyPathChange(deleteStudyGuidePage(studyPath, dashboardKey))
   }
 
   const toggleCurrentPageEditing = () => {
@@ -321,14 +306,6 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
           alignItems="center"
           flexWrap="wrap"
         >
-          <Button
-            size="small"
-            variant={editPagesMode ? 'contained' : 'outlined'}
-            onClick={() => setEditPagesMode((current) => !current)}
-            sx={{ borderRadius: 2, textTransform: 'none' }}
-          >
-            Edit Pages
-          </Button>
           {currentPageEditable ? (
             <Button
               size="small"
@@ -339,17 +316,6 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               {isEditingCurrentPage
                 ? 'Preview current page'
                 : 'Edit current page'}
-            </Button>
-          ) : null}
-          {onAddPage ? (
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<AddIcon fontSize="small" />}
-              onClick={onAddPage}
-              sx={{ borderRadius: 2, textTransform: 'none' }}
-            >
-              Add Page
             </Button>
           ) : null}
           <Stack direction="row" spacing={0.75} alignItems="center">
@@ -392,77 +358,12 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
         }}
       >
         {showPageRail ? (
-          <Box
-            sx={{
-              width: 188,
-              flex: '0 0 auto',
-              borderRight: 1,
-              borderColor: 'divider',
-              bgcolor: 'background.paper',
-              overflowY: 'auto',
-              py: 1.25,
-            }}
-          >
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={900}
-              sx={{ display: 'block', px: 1.5, mb: 0.75 }}
-            >
-              PAGES
-            </Typography>
-            <Stack spacing={0.25}>
-              {studyPath.dashboards.map((lesson, index) => {
-                const active = index === selectedIndex
-                return (
-                  <Box
-                    key={lesson.dashboardKey}
-                    component="button"
-                    type="button"
-                    onClick={() => selectLesson(index)}
-                    sx={(theme) => ({
-                      width: '100%',
-                      border: 0,
-                      borderLeft: 3,
-                      borderLeftColor: active ? 'primary.main' : 'transparent',
-                      bgcolor: active
-                        ? alpha(theme.palette.primary.main, 0.12)
-                        : 'transparent',
-                      color: active ? 'primary.dark' : 'text.secondary',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      gap: 1,
-                      px: 1.25,
-                      py: 1,
-                      textAlign: 'left',
-                      font: 'inherit',
-                      '&:hover': {
-                        bgcolor: alpha(theme.palette.primary.main, 0.08),
-                        color: 'text.primary',
-                      },
-                    })}
-                  >
-                    <Typography variant="caption" fontWeight={900}>
-                      {String(index + 1).padStart(2, '0')}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      fontWeight={active ? 900 : 500}
-                      sx={{
-                        lineHeight: 1.25,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {lesson.name}
-                    </Typography>
-                  </Box>
-                )
-              })}
-            </Stack>
-          </Box>
+          <StudyGuidePagesPanel
+            studyPath={studyPath}
+            onStudyPathChange={onStudyPathChange}
+            onAddPage={onAddPage}
+            variant="desktop"
+          />
         ) : null}
         <Box
           sx={{
@@ -471,120 +372,10 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
             minHeight: 0,
             overflowY: 'auto',
             overflowX: 'hidden',
-            p: editPagesMode || isEditingCurrentPage ? 2 : 0,
+            p: isEditingCurrentPage ? 2 : 0,
           }}
         >
-          {editPagesMode ? (
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: 'repeat(2, minmax(0, 1fr))',
-                  lg: 'repeat(3, minmax(0, 1fr))',
-                },
-                gap: 1.5,
-              }}
-            >
-              {studyPath.dashboards.map((lesson, index) => {
-                const active = index === selectedIndex
-                return (
-                  <Paper
-                    key={lesson.dashboardKey}
-                    elevation={0}
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 2,
-                      border: 1,
-                      borderColor: active ? 'primary.main' : 'divider',
-                      bgcolor: active ? 'action.selected' : 'background.paper',
-                    }}
-                  >
-                    <Stack spacing={1.25}>
-                      <Button
-                        variant="text"
-                        onClick={() => selectLesson(index)}
-                        sx={{
-                          p: 0,
-                          color: 'text.primary',
-                          textAlign: 'left',
-                          justifyContent: 'flex-start',
-                          textTransform: 'none',
-                        }}
-                      >
-                        <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-                          <Typography variant="caption" color="text.secondary">
-                            Page {index + 1}
-                          </Typography>
-                          <Typography
-                            variant="subtitle2"
-                            fontWeight={900}
-                            sx={{
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                              overflow: 'hidden',
-                            }}
-                          >
-                            {lesson.name}
-                          </Typography>
-                        </Stack>
-                      </Button>
-                      <Stack direction="row" spacing={0.75}>
-                        <Tooltip title="Move page up">
-                          <span>
-                            <IconButton
-                              size="small"
-                              aria-label={`Move ${lesson.name} up`}
-                              disabled={index === 0}
-                              onClick={() => moveLesson(index, -1)}
-                              sx={pageIconButtonSx()}
-                            >
-                              <ArrowUpwardIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                        <Tooltip title="Move page down">
-                          <span>
-                            <IconButton
-                              size="small"
-                              aria-label={`Move ${lesson.name} down`}
-                              disabled={
-                                index === studyPath.dashboards.length - 1
-                              }
-                              onClick={() => moveLesson(index, 1)}
-                              sx={pageIconButtonSx()}
-                            >
-                              <ArrowDownwardIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                        <Tooltip
-                          title={
-                            lesson.deletable
-                              ? 'Delete page'
-                              : 'Generated Study Guide pages cannot be deleted yet'
-                          }
-                        >
-                          <span>
-                            <IconButton
-                              size="small"
-                              aria-label={`Delete ${lesson.name}`}
-                              disabled={!lesson.deletable}
-                              onClick={() => deleteLesson(lesson.dashboardKey)}
-                              sx={pageIconButtonSx('error')}
-                            >
-                              <DeleteOutlineIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      </Stack>
-                    </Stack>
-                  </Paper>
-                )
-              })}
-            </Box>
-          ) : isEditingCurrentPage ? (
+          {isEditingCurrentPage ? (
             <StudyGuidePageEditor
               title={currentLesson.name}
               markdown={currentMarkdown}

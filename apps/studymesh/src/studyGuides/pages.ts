@@ -32,7 +32,9 @@ export const stripDuplicateStudyGuideMarkdownTitle = (
     return markdown
   }
 
-  const normalizedMarkdown = markdown.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  const normalizedMarkdown = markdown
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
   const lines = normalizedMarkdown.split('\n')
   const firstContentIndex = lines.findIndex((line) => line.trim())
   if (firstContentIndex < 0) {
@@ -185,8 +187,8 @@ const visitLayoutComponents = (
             : customProps,
         }
       : layout.config,
-    children: layout.children?.map((child) =>
-      visitLayoutComponents(child, visitor) as DashboardLayout,
+    children: layout.children?.map(
+      (child) => visitLayoutComponents(child, visitor) as DashboardLayout,
     ),
   }
 }
@@ -248,31 +250,34 @@ export const updateStudyGuideMarkdownPage = (
         markdown,
         safeTitle,
       )
-      const nextLayout = visitLayoutComponents(dashboard.layout, (component) => {
-        if (component.type === 'MarkdownBlock') {
-          return {
-            ...component,
-            props: {
-              ...component.props,
-              title: safeTitle,
-              markdown: safeMarkdown,
-              studyPathDashboardName: safeTitle,
-            },
+      const nextLayout = visitLayoutComponents(
+        dashboard.layout,
+        (component) => {
+          if (component.type === 'MarkdownBlock') {
+            return {
+              ...component,
+              props: {
+                ...component.props,
+                title: safeTitle,
+                markdown: safeMarkdown,
+                studyPathDashboardName: safeTitle,
+              },
+            }
           }
-        }
 
-        if (component.type === 'Label') {
-          return {
-            ...component,
-            props: {
-              ...component.props,
-              text: safeTitle,
-            },
+          if (component.type === 'Label') {
+            return {
+              ...component,
+              props: {
+                ...component.props,
+                text: safeTitle,
+              },
+            }
           }
-        }
 
-        return component
-      })
+          return component
+        },
+      )
 
       return {
         ...dashboard,
@@ -430,6 +435,8 @@ export const reorderStudyGuidePage = (
     return studyPath
   }
 
+  const selectedPageKey =
+    studyPath.dashboards[studyPath.selectedIndex]?.dashboardKey
   const dashboards = [...studyPath.dashboards]
   const [page] = dashboards.splice(fromIndex, 1)
   dashboards.splice(toIndex, 0, page)
@@ -437,7 +444,12 @@ export const reorderStudyGuidePage = (
   return refreshPageNumbers({
     ...studyPath,
     dashboards,
-    selectedIndex: toIndex,
+    selectedIndex: Math.max(
+      dashboards.findIndex(
+        (dashboard) => dashboard.dashboardKey === selectedPageKey,
+      ),
+      0,
+    ),
   })
 }
 
@@ -455,13 +467,24 @@ export const deleteStudyGuidePage = (
   const targetIndex = studyPath.dashboards.findIndex(
     (dashboard) => dashboard.dashboardKey === dashboardKey,
   )
+  const selectedPageKey =
+    studyPath.dashboards[studyPath.selectedIndex]?.dashboardKey
   const dashboards = studyPath.dashboards.filter(
     (dashboard) => dashboard.dashboardKey !== dashboardKey,
   )
+  const selectedIndex =
+    selectedPageKey === dashboardKey
+      ? Math.min(targetIndex, dashboards.length - 1)
+      : Math.max(
+          dashboards.findIndex(
+            (dashboard) => dashboard.dashboardKey === selectedPageKey,
+          ),
+          0,
+        )
 
   return refreshPageNumbers({
     ...studyPath,
     dashboards,
-    selectedIndex: Math.min(studyPath.selectedIndex, targetIndex),
+    selectedIndex,
   })
 }

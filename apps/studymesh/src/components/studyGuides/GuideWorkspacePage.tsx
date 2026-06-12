@@ -20,6 +20,7 @@ import {
   type QuickCreateActionInput,
 } from '../../quickCreate/quickCreateActions'
 import StudyPathWorkspaceView from '../Dasboard/StudyPathWorkspaceView'
+import StudyGuidePagesPanel from '../Dasboard/StudyGuidePagesPanel'
 import DashboardChatPanel, {
   type DashboardChatMessage,
 } from '../dashboardChat/DashboardChatPanel'
@@ -75,7 +76,7 @@ const normalizeGeneratedPageLayouts = (
 
 const GuideWorkspacePage = () => {
   const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'))
   const { studyGuideId = '' } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -86,9 +87,9 @@ const GuideWorkspacePage = () => {
   const [quickCreateError, setQuickCreateError] = useState('')
   const [aiChatOpen, setAiChatOpen] = useState(true)
   const [aiChatWidth, setAiChatWidth] = useState(AI_CHAT_MIN_WIDTH)
-  const [mobileSection, setMobileSection] = useState<'study-guide' | 'ai-chat'>(
-    'study-guide',
-  )
+  const [mobileSection, setMobileSection] = useState<
+    'pages' | 'study-guide' | 'ai-chat'
+  >('study-guide')
   const isCreateRoute = searchParams.get('create') === '1'
 
   const loadRecord = () => {
@@ -302,6 +303,34 @@ const GuideWorkspacePage = () => {
     </Paper>
   ) : null
 
+  const pagesPanel = record ? (
+    <Paper
+      elevation={0}
+      sx={{
+        height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 2,
+        bgcolor: 'background.paper',
+        position: 'relative',
+        display: 'flex',
+      }}
+    >
+      <StudyGuidePagesPanel
+        studyPath={record.studyPath}
+        onStudyPathChange={persistStudyPath}
+        onPageSelected={() => setMobileSection('study-guide')}
+        onAddPage={() => {
+          addManualPage()
+          setMobileSection('study-guide')
+        }}
+        variant="mobile"
+      />
+    </Paper>
+  ) : null
+
   const chatPanel = record ? (
     <Paper
       elevation={0}
@@ -416,14 +445,16 @@ const GuideWorkspacePage = () => {
             {isMobile ? (
               <>
                 <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                  {mobileSection === 'study-guide'
+                  {mobileSection === 'pages'
+                    ? pagesPanel
+                    : mobileSection === 'study-guide'
                     ? studyGuidePanel
                     : chatPanel}
                 </Box>
                 <Box
                   sx={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
                     gap: 0.75,
                     pt: 0.75,
                     pb: 'calc(0.75rem + env(safe-area-inset-bottom))',
@@ -432,6 +463,7 @@ const GuideWorkspacePage = () => {
                   }}
                 >
                   {[
+                    ['pages', 'Pages'],
                     ['study-guide', 'Study Guide'],
                     ['ai-chat', 'AI Chat'],
                   ].map(([key, label]) => (
@@ -440,7 +472,9 @@ const GuideWorkspacePage = () => {
                       size="small"
                       variant={mobileSection === key ? 'contained' : 'outlined'}
                       onClick={() =>
-                        setMobileSection(key as 'study-guide' | 'ai-chat')
+                        setMobileSection(
+                          key as 'pages' | 'study-guide' | 'ai-chat',
+                        )
                       }
                       sx={{ borderRadius: 999, textTransform: 'none' }}
                     >

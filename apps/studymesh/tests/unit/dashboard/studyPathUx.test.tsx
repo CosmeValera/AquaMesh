@@ -1,6 +1,7 @@
 import React from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 
 import DashboardOptionsMenu from '../../../src/components/Dasboard/DashboardOptionsMenu'
 import DashboardProvider, {
@@ -196,56 +197,30 @@ describe('Interactive Study Guide UX', () => {
     expect(screen.getByTestId('selected-lesson')).toHaveTextContent('3')
   })
 
-  it('uses a subtle floating navigator that overlays the dashboard and can be collapsed', () => {
+  it('keeps reading navigation in the Study Guide without the Edit Pages canvas', () => {
     const onStudyPathChange = vi.fn()
 
     render(
-      <StudyPathWorkspaceView
-        studyPath={createStudyPath()}
-        onStudyPathChange={onStudyPathChange}
-      />,
+      <MemoryRouter>
+        <StudyPathWorkspaceView
+          studyPath={createStudyPath()}
+          onStudyPathChange={onStudyPathChange}
+        />
+      </MemoryRouter>,
     )
 
-    expect(screen.getByTestId('mock-dashboard-layout')).toBeInTheDocument()
     expect(
-      screen.getByTestId('mock-selected-widget-border'),
-    ).toBeInTheDocument()
-    expect(screen.getByTestId('study-path-navigator-pill')).toBeInTheDocument()
-    expect(
-      screen.queryByTestId('study-path-navigator-panel'),
+      screen.queryByRole('button', { name: 'Edit Pages' }),
     ).not.toBeInTheDocument()
-
-    expect(screen.getByTestId('study-path-workspace')).toHaveStyle({
-      overflow: 'visible',
-    })
-    expect(screen.getByTestId('study-path-dashboard-content')).toHaveStyle({
-      overflow: 'visible',
-    })
-
-    const overlay = screen.getByTestId('study-path-navigator-overlay')
-    expect(overlay).toHaveStyle({ pointerEvents: 'none' })
-
-    fireEvent.click(
-      screen.getByRole('button', { name: /open course navigator/i }),
-    )
-
-    expect(screen.getByTestId('study-path-navigator-panel')).toBeInTheDocument()
-    expect(screen.getByText('Course helper')).toBeInTheDocument()
-    expect(screen.getByText('Lesson 1/5')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /dock left/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /dock right/i })).toBeInTheDocument()
     expect(
-      screen.getByTestId('mock-selected-widget-border'),
-    ).toBeInTheDocument()
+      screen.getByRole('button', { name: 'Previous page' }),
+    ).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeEnabled()
 
-    fireEvent.click(
-      screen.getByRole('button', { name: /collapse course navigator/i }),
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+    expect(onStudyPathChange).toHaveBeenCalledWith(
+      expect.objectContaining({ selectedIndex: 1 }),
     )
-
-    expect(
-      screen.queryByTestId('study-path-navigator-panel'),
-    ).not.toBeInTheDocument()
-    expect(screen.getByTestId('study-path-navigator-pill')).toBeInTheDocument()
   })
 
   it('keeps Study Guides dropdown actions focused and opens lessons as standalone tabs', async () => {

@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import {
   appendStudyGuideMarkdownPage,
+  deleteStudyGuidePage,
   getStudyGuideCreationSourceText,
   getStudyGuidePageMarkdown,
+  reorderStudyGuidePage,
   stripDuplicateStudyGuideMarkdownTitle,
 } from '../../../src/studyGuides/pages'
 import type {
@@ -101,5 +103,75 @@ describe('appendStudyGuideMarkdownPage', () => {
         'Cell Biology',
       ),
     ).toBe('Cells have membranes.')
+  })
+})
+
+describe('Study Guide page management', () => {
+  const makeStudyPath = (): StudyPathContainerState => ({
+    pathId: 'guide-1',
+    title: 'Biology',
+    folderName: 'Biology',
+    selectedIndex: 1,
+    pinnedDashboardKeys: [],
+    dashboards: [
+      {
+        ...makePage('Generated lesson', 'Core lesson', 'generator'),
+        dashboardKey: 'generated',
+        dashboardIndex: 1,
+        dashboardCount: 3,
+        folderName: 'Biology',
+        deletable: false,
+      },
+      {
+        ...makePage('Manual note', 'My note', 'manual'),
+        dashboardKey: 'manual',
+        dashboardIndex: 2,
+        dashboardCount: 3,
+        folderName: 'Biology',
+        deletable: true,
+      },
+      {
+        ...makePage('Quiz', 'Practice', 'quickCreate'),
+        dashboardKey: 'quiz',
+        dashboardIndex: 3,
+        dashboardCount: 3,
+        folderName: 'Biology',
+        deletable: true,
+      },
+    ],
+  })
+
+  it('protects generated pages from deletion', () => {
+    const studyPath = makeStudyPath()
+
+    expect(deleteStudyGuidePage(studyPath, 'generated')).toBe(studyPath)
+  })
+
+  it('keeps the selected page open when another page moves or is deleted', () => {
+    const reordered = reorderStudyGuidePage(makeStudyPath(), 2, 0)
+
+    expect(reordered.dashboards.map((page) => page.dashboardKey)).toEqual([
+      'quiz',
+      'generated',
+      'manual',
+    ])
+    expect(reordered.dashboards[reordered.selectedIndex].dashboardKey).toBe(
+      'manual',
+    )
+
+    const deleted = deleteStudyGuidePage(reordered, 'quiz')
+
+    expect(deleted.dashboards.map((page) => page.dashboardIndex)).toEqual([
+      1, 2,
+    ])
+    expect(deleted.dashboards[deleted.selectedIndex].dashboardKey).toBe(
+      'manual',
+    )
+  })
+
+  it('selects the nearest remaining page after deleting the current page', () => {
+    const deleted = deleteStudyGuidePage(makeStudyPath(), 'manual')
+
+    expect(deleted.dashboards[deleted.selectedIndex].dashboardKey).toBe('quiz')
   })
 })

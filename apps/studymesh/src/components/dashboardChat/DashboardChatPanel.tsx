@@ -1079,7 +1079,7 @@ const DashboardChatPanel = ({
                 position: 'sticky',
                 top: 0,
                 zIndex: 2,
-                alignSelf: 'flex-end',
+                alignSelf: 'flex-start',
                 width: isPhone ? 48 : 58,
                 height: isPhone ? 48 : 58,
                 display: 'grid',

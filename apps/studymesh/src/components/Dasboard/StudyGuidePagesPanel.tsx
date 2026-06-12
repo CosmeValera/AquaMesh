@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
   Box,
   Button,
@@ -68,6 +68,8 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
 }) => {
   const [open, setOpen] = useState(true)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [insertionIndex, setInsertionIndex] = useState<number | null>(null)
+  const pageRowRefs = useRef<Array<HTMLDivElement | null>>([])
   const mobile = variant === 'mobile'
   const selectedIndex = Math.min(
     Math.max(studyPath.selectedIndex || 0, 0),
@@ -83,14 +85,44 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
     onStudyPathChange(reorderStudyGuidePage(studyPath, fromIndex, toIndex))
   }
 
-  const dropPage = (event: React.DragEvent, targetIndex: number) => {
+  const getInsertionIndex = (clientY: number): number => {
+    const targetIndex = pageRowRefs.current.findIndex((row) => {
+      if (!row) {
+        return false
+      }
+
+      const rect = row.getBoundingClientRect()
+      return clientY < rect.top + rect.height / 2
+    })
+
+    return targetIndex < 0 ? studyPath.dashboards.length : targetIndex
+  }
+
+  const allowPanelDrop = (event: React.DragEvent) => {
+    if (mobile || draggedIndex === null) {
+      return
+    }
+
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    setInsertionIndex(getInsertionIndex(event.clientY))
+  }
+
+  const dropPage = (event: React.DragEvent) => {
     event.preventDefault()
     const rawIndex = event.dataTransfer.getData('text/plain')
     const sourceIndex = draggedIndex ?? Number.parseInt(rawIndex, 10)
-    if (Number.isInteger(sourceIndex)) {
-      movePage(sourceIndex, targetIndex)
+    const targetSlot = insertionIndex ?? getInsertionIndex(event.clientY)
+    if (Number.isInteger(sourceIndex) && sourceIndex !== null) {
+      const targetIndex =
+        sourceIndex < targetSlot ? targetSlot - 1 : targetSlot
+      movePage(
+        sourceIndex,
+        Math.max(0, Math.min(studyPath.dashboards.length - 1, targetIndex)),
+      )
     }
     setDraggedIndex(null)
+    setInsertionIndex(null)
   }
 
   if (!mobile && !open) {
@@ -133,6 +165,8 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
   return (
     <Box
       data-testid={`study-guide-pages-panel-${variant}`}
+      onDragOver={mobile ? undefined : allowPanelDrop}
+      onDrop={mobile ? undefined : dropPage}
       sx={{
         width: mobile ? '100%' : 248,
         height: '100%',
@@ -176,15 +210,13 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
             return (
               <Box
                 key={page.dashboardKey}
-                onDragOver={
-                  mobile
-                    ? undefined
-                    : (event) => {
-                        event.preventDefault()
-                        event.dataTransfer.dropEffect = 'move'
-                      }
+                ref={(element: HTMLDivElement | null) => {
+                  pageRowRefs.current[index] = element
                 }
-                onDrop={mobile ? undefined : (event) => dropPage(event, index)}
+                data-testid={`study-guide-page-row-${index}`}
+                data-drop-before={
+                  !mobile && insertionIndex === index ? 'true' : undefined
+                }
                 sx={(theme) => ({
                   mx: 0.75,
                   px: 0.5,
@@ -198,28 +230,52 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: 0.5,
+                  position: 'relative',
+                  opacity: draggedIndex === index ? 0.52 : 1,
+                  transition: theme.transitions.create([
+                    'background-color',
+                    'border-color',
+                    'opacity',
+                  ]),
+                  '&::before': {
+                    content: '""',
+                    display:
+                      !mobile && insertionIndex === index ? 'block' : 'none',
+                    position: 'absolute',
+                    top: -4,
+                    left: 4,
+                    right: 4,
+                    height: 3,
+                    borderRadius: 999,
+                    bgcolor: 'primary.main',
+                    pointerEvents: 'none',
+                  },
                   '&:hover': {
                     bgcolor: alpha(theme.palette.primary.main, 0.08),
                   },
                 })}
               >
                 {!mobile ? (
-                  <Tooltip>
+                  <Tooltip title="Drag to reorder">
                     <Box
                       component="span"
                       draggable
                       aria-label={`Drag ${page.name} to reorder`}
                       onDragStart={(event) => {
                         setDraggedIndex(index)
+                        setInsertionIndex(index)
                         event.dataTransfer.effectAllowed = 'move'
                         event.dataTransfer.setData('text/plain', String(index))
                       }}
-                      onDragEnd={() => setDraggedIndex(null)}
+                      onDragEnd={() => {
+                        setDraggedIndex(null)
+                        setInsertionIndex(null)
+                      }}
                       sx={{
                         display: 'grid',
                         placeItems: 'center',
                         color: 'text.secondary',
-                        cursor: 'grab',
+                        cursor: draggedIndex === index ? 'grabbing' : 'grab',
                       }}
                     >
                       <DragIndicatorIcon fontSize="small" />
@@ -299,6 +355,26 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
               </Box>
             )
           })}
+          {!mobile ? (
+            <Box
+              data-testid="study-guide-page-end-slot"
+              data-drop-active={
+                insertionIndex === studyPath.dashboards.length
+                  ? 'true'
+                  : undefined
+              }
+              sx={{
+                height: 3,
+                mx: 1.25,
+                borderRadius: 999,
+                bgcolor:
+                  insertionIndex === studyPath.dashboards.length
+                    ? 'primary.main'
+                    : 'transparent',
+                pointerEvents: 'none',
+              }}
+            />
+          ) : null}
         </Stack>
       </Box>
       {onAddPage ? (

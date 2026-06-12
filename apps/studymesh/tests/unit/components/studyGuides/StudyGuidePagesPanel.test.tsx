@@ -44,6 +44,29 @@ const createStudyPath = (): StudyPathContainerState => ({
   ],
 })
 
+const createDataTransfer = (index: number) => ({
+  effectAllowed: 'none',
+  dropEffect: 'none',
+  setData: vi.fn(),
+  getData: vi.fn(() => String(index)),
+})
+
+const setPageRowRects = () => {
+  screen.getAllByTestId(/^study-guide-page-row-/).forEach((row, index) => {
+    vi.spyOn(row, 'getBoundingClientRect').mockReturnValue({
+      top: 100 + index * 100,
+      bottom: 160 + index * 100,
+      left: 0,
+      right: 240,
+      width: 240,
+      height: 60,
+      x: 0,
+      y: 100 + index * 100,
+      toJSON: () => ({}),
+    })
+  })
+}
+
 describe('StudyGuidePagesPanel', () => {
   it('collapses, opens, selects pages, and only exposes deletable trash actions', () => {
     const onStudyPathChange = vi.fn()
@@ -75,14 +98,9 @@ describe('StudyGuidePagesPanel', () => {
     ).toBeInTheDocument()
   })
 
-  it('reorders pages by drag on desktop', () => {
+  it('uses the full panel as a drop target and inserts before the nearest row', () => {
     const onStudyPathChange = vi.fn()
-    const dataTransfer = {
-      effectAllowed: 'none',
-      dropEffect: 'none',
-      setData: vi.fn(),
-      getData: vi.fn(() => '2'),
-    }
+    const dataTransfer = createDataTransfer(2)
 
     render(
       <StudyGuidePagesPanel
@@ -91,16 +109,18 @@ describe('StudyGuidePagesPanel', () => {
         variant="desktop"
       />,
     )
+    setPageRowRects()
+    const panel = screen.getByTestId('study-guide-pages-panel-desktop')
 
     fireEvent.dragStart(screen.getByLabelText('Drag Quiz to reorder'), {
       dataTransfer,
     })
-    fireEvent.drop(
-      screen.getByRole('button', { name: /^01 Core lesson$/ }).parentElement!,
-      {
-        dataTransfer,
-      },
+    fireEvent.dragOver(panel, { clientY: 80, dataTransfer })
+    expect(screen.getByTestId('study-guide-page-row-0')).toHaveAttribute(
+      'data-drop-before',
+      'true',
     )
+    fireEvent.drop(panel, { clientY: 80, dataTransfer })
 
     const nextStudyPath = onStudyPathChange.mock.calls[0][0]
     expect(
@@ -111,6 +131,65 @@ describe('StudyGuidePagesPanel', () => {
     expect(
       nextStudyPath.dashboards[nextStudyPath.selectedIndex].dashboardKey,
     ).toBe('manual')
+    expect(screen.getByTestId('study-guide-page-row-0')).not.toHaveAttribute(
+      'data-drop-before',
+    )
+  })
+
+  it('accepts footer drops and adjusts downward insertion indexes', () => {
+    const onStudyPathChange = vi.fn()
+    const dataTransfer = createDataTransfer(0)
+
+    render(
+      <StudyGuidePagesPanel
+        studyPath={createStudyPath()}
+        onStudyPathChange={onStudyPathChange}
+        variant="desktop"
+      />,
+    )
+    setPageRowRects()
+    const panel = screen.getByTestId('study-guide-pages-panel-desktop')
+
+    fireEvent.dragStart(screen.getByLabelText('Drag Core lesson to reorder'), {
+      dataTransfer,
+    })
+    fireEvent.dragOver(panel, { clientY: 500, dataTransfer })
+    expect(screen.getByTestId('study-guide-page-end-slot')).toHaveAttribute(
+      'data-drop-active',
+      'true',
+    )
+    fireEvent.drop(panel, { clientY: 500, dataTransfer })
+
+    expect(
+      onStudyPathChange.mock.calls[0][0].dashboards.map(
+        (page: { dashboardKey: string }) => page.dashboardKey,
+      ),
+    ).toEqual(['manual', 'quiz', 'core'])
+  })
+
+  it('clears insertion state when drag ends without dropping', () => {
+    const dataTransfer = createDataTransfer(1)
+
+    render(
+      <StudyGuidePagesPanel
+        studyPath={createStudyPath()}
+        onStudyPathChange={vi.fn()}
+        variant="desktop"
+      />,
+    )
+    setPageRowRects()
+    const handle = screen.getByLabelText('Drag Manual note to reorder')
+    const row = screen.getByTestId('study-guide-page-row-1')
+
+    fireEvent.dragStart(handle, { dataTransfer })
+    fireEvent.dragOver(screen.getByTestId('study-guide-pages-panel-desktop'), {
+      clientY: 190,
+      dataTransfer,
+    })
+    expect(row).toHaveAttribute('data-drop-before', 'true')
+
+    fireEvent.dragEnd(handle, { dataTransfer })
+    expect(row).not.toHaveAttribute('data-drop-before')
   })
 
   it('uses arrows on mobile and supports immediate delete and Add Page', () => {

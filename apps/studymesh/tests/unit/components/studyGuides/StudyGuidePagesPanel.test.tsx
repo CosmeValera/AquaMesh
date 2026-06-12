@@ -1,5 +1,5 @@
 import React from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { createEvent, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import StudyGuidePagesPanel from '../../../../src/components/Dasboard/StudyGuidePagesPanel'
@@ -67,6 +67,26 @@ const setPageRowRects = () => {
   })
 }
 
+const dragOverAt = (
+  element: HTMLElement,
+  clientY: number,
+  dataTransfer: ReturnType<typeof createDataTransfer>,
+) => {
+  const event = createEvent.dragOver(element, { dataTransfer })
+  Object.defineProperty(event, 'clientY', { value: clientY })
+  fireEvent(element, event)
+}
+
+const dropAt = (
+  element: HTMLElement,
+  clientY: number,
+  dataTransfer: ReturnType<typeof createDataTransfer>,
+) => {
+  const event = createEvent.drop(element, { dataTransfer })
+  Object.defineProperty(event, 'clientY', { value: clientY })
+  fireEvent(element, event)
+}
+
 describe('StudyGuidePagesPanel', () => {
   it('collapses, opens, selects pages, and only exposes deletable trash actions', () => {
     const onStudyPathChange = vi.fn()
@@ -115,12 +135,12 @@ describe('StudyGuidePagesPanel', () => {
     fireEvent.dragStart(screen.getByLabelText('Drag Quiz to reorder'), {
       dataTransfer,
     })
-    fireEvent.dragOver(panel, { clientY: 80, dataTransfer })
+    dragOverAt(panel, 80, dataTransfer)
     expect(screen.getByTestId('study-guide-page-row-0')).toHaveAttribute(
       'data-drop-before',
       'true',
     )
-    fireEvent.drop(panel, { clientY: 80, dataTransfer })
+    dropAt(panel, 80, dataTransfer)
 
     const nextStudyPath = onStudyPathChange.mock.calls[0][0]
     expect(
@@ -153,12 +173,12 @@ describe('StudyGuidePagesPanel', () => {
     fireEvent.dragStart(screen.getByLabelText('Drag Core lesson to reorder'), {
       dataTransfer,
     })
-    fireEvent.dragOver(panel, { clientY: 500, dataTransfer })
+    dragOverAt(panel, 500, dataTransfer)
     expect(screen.getByTestId('study-guide-page-end-slot')).toHaveAttribute(
       'data-drop-active',
       'true',
     )
-    fireEvent.drop(panel, { clientY: 500, dataTransfer })
+    dropAt(panel, 500, dataTransfer)
 
     expect(
       onStudyPathChange.mock.calls[0][0].dashboards.map(
@@ -182,14 +202,34 @@ describe('StudyGuidePagesPanel', () => {
     const row = screen.getByTestId('study-guide-page-row-1')
 
     fireEvent.dragStart(handle, { dataTransfer })
-    fireEvent.dragOver(screen.getByTestId('study-guide-pages-panel-desktop'), {
-      clientY: 190,
+    dragOverAt(
+      screen.getByTestId('study-guide-pages-panel-desktop'),
+      190,
       dataTransfer,
-    })
+    )
     expect(row).toHaveAttribute('data-drop-before', 'true')
 
     fireEvent.dragEnd(handle, { dataTransfer })
     expect(row).not.toHaveAttribute('data-drop-before')
+  })
+
+  it('resizes the desktop Pages panel from its right border', () => {
+    render(
+      <StudyGuidePagesPanel
+        studyPath={createStudyPath()}
+        onStudyPathChange={vi.fn()}
+        variant="desktop"
+      />,
+    )
+    const panel = screen.getByTestId('study-guide-pages-panel-desktop')
+
+    fireEvent.mouseDown(screen.getByLabelText('Resize Pages panel'), {
+      clientX: 248,
+    })
+    fireEvent.mouseMove(window, { clientX: 348 })
+    fireEvent.mouseUp(window)
+
+    expect(panel).toHaveStyle({ width: '348px' })
   })
 
   it('uses arrows on mobile and supports immediate delete and Add Page', () => {

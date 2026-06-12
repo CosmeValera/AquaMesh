@@ -24,6 +24,9 @@ import {
 
 type StudyGuidePagesPanelVariant = 'desktop' | 'mobile'
 
+const PAGES_PANEL_MIN_WIDTH = 220
+const PAGES_PANEL_MAX_WIDTH = 440
+
 interface StudyGuidePagesPanelProps {
   studyPath: StudyPathContainerState
   onStudyPathChange: (studyPath: StudyPathContainerState) => void
@@ -67,6 +70,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
   variant,
 }) => {
   const [open, setOpen] = useState(true)
+  const [panelWidth, setPanelWidth] = useState(248)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [insertionIndex, setInsertionIndex] = useState<number | null>(null)
   const pageRowRefs = useRef<Array<HTMLDivElement | null>>([])
@@ -114,8 +118,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
     const sourceIndex = draggedIndex ?? Number.parseInt(rawIndex, 10)
     const targetSlot = insertionIndex ?? getInsertionIndex(event.clientY)
     if (Number.isInteger(sourceIndex) && sourceIndex !== null) {
-      const targetIndex =
-        sourceIndex < targetSlot ? targetSlot - 1 : targetSlot
+      const targetIndex = sourceIndex < targetSlot ? targetSlot - 1 : targetSlot
       movePage(
         sourceIndex,
         Math.max(0, Math.min(studyPath.dashboards.length - 1, targetIndex)),
@@ -123,6 +126,36 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
     }
     setDraggedIndex(null)
     setInsertionIndex(null)
+  }
+
+  const startPanelResize = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    const startX = event.clientX
+    const startWidth = panelWidth
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      setPanelWidth(
+        Math.max(
+          PAGES_PANEL_MIN_WIDTH,
+          Math.min(
+            PAGES_PANEL_MAX_WIDTH,
+            startWidth + moveEvent.clientX - startX,
+          ),
+        ),
+      )
+    }
+
+    const stopResize = () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', stopResize)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', stopResize)
   }
 
   if (!mobile && !open) {
@@ -168,7 +201,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
       onDragOver={mobile ? undefined : allowPanelDrop}
       onDrop={mobile ? undefined : dropPage}
       sx={{
-        width: mobile ? '100%' : 248,
+        width: mobile ? '100%' : panelWidth,
         height: '100%',
         flex: mobile ? 1 : '0 0 auto',
         minHeight: 0,
@@ -178,6 +211,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        position: 'relative',
       }}
     >
       <Stack
@@ -212,7 +246,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                 key={page.dashboardKey}
                 ref={(element: HTMLDivElement | null) => {
                   pageRowRefs.current[index] = element
-                }
+                }}
                 data-testid={`study-guide-page-row-${index}`}
                 data-drop-before={
                   !mobile && insertionIndex === index ? 'true' : undefined
@@ -243,7 +277,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                       !mobile && insertionIndex === index ? 'block' : 'none',
                     position: 'absolute',
                     top: -4,
-                    left: 4,
+                    left: 8,
                     right: 4,
                     height: 3,
                     borderRadius: 999,
@@ -389,6 +423,33 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
             Add Page
           </Button>
         </Box>
+      ) : null}
+      {!mobile ? (
+        <Box
+          role="separator"
+          aria-label="Resize Pages panel"
+          onMouseDown={startPanelResize}
+          sx={{
+            position: 'absolute',
+            top: 10,
+            right: 0,
+            width: 9,
+            height: 'calc(100% - 20px)',
+            cursor: 'col-resize',
+            zIndex: 3,
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              right: 0,
+              width: 2,
+              borderRadius: 999,
+              bgcolor: 'divider',
+            },
+            '&:hover::after': { bgcolor: 'primary.main' },
+          }}
+        />
       ) : null}
     </Box>
   )

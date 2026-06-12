@@ -1074,139 +1074,144 @@ const DashboardChatPanel = ({
           </Stack>
         ) : (
           <Stack spacing={1.5}>
-            <Box
-              sx={{
-                position: 'sticky',
-                top: 0,
-                zIndex: 2,
-                alignSelf: 'flex-start',
-                width: isPhone ? 48 : 58,
-                height: isPhone ? 48 : 58,
-                display: 'grid',
-                placeItems: 'center',
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: '50%',
-                bgcolor: 'background.paper',
-                boxShadow:
-                  theme.palette.mode === 'dark'
-                    ? '0 8px 18px rgba(0,0,0,0.28)'
-                    : '0 8px 18px rgba(16,24,40,0.12)',
-              }}
-            >
-              <Box
-                component="img"
-                src={activePet.src}
-                alt=""
-                sx={{
-                  width: isPhone ? 42 : 52,
-                  height: isPhone ? 42 : 52,
-                  objectFit: 'contain',
-                }}
-              />
-            </Box>
             {messages.map((message) => (
               <Box
                 key={message.id}
                 sx={{
                   alignSelf:
                     message.role === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '90%',
+                  maxWidth: message.role === 'user' ? '90%' : '96%',
                 }}
               >
-                <Box
-                  sx={{
-                    px: 1.5,
-                    py: 1.1,
-                    borderRadius:
-                      message.role === 'user'
-                        ? '18px 18px 6px 18px'
-                        : '18px 18px 18px 6px',
-                    bgcolor:
-                      message.role === 'user'
-                        ? 'primary.main'
-                        : 'background.paper',
-                    color:
-                      message.role === 'user'
-                        ? 'primary.contrastText'
-                        : 'text.primary',
-                    border: message.role === 'assistant' ? 1 : 0,
-                    borderColor: 'divider',
-                    boxShadow:
-                      message.role === 'assistant'
-                        ? theme.palette.mode === 'dark'
-                          ? '0 10px 24px rgba(0,0,0,0.22)'
-                          : '0 10px 24px rgba(16,24,40,0.08)'
-                        : 'none',
-                    whiteSpace: 'pre-wrap',
-                  }}
-                >
-                  {message.pending ? (
-                    <Stack spacing={0.75}>
-                      <Stack direction="row" spacing={0.5} alignItems="center">
-                        {[0, 1, 2].map((dot) => (
-                          <Box
-                            key={dot}
-                            sx={{
-                              width: 6,
-                              height: 6,
-                              borderRadius: '50%',
-                              bgcolor: 'text.secondary',
-                              animation:
-                                'studymesh-chat-dot 1s infinite ease-in-out',
-                              animationDelay: `${dot * 140}ms`,
-                              '@keyframes studymesh-chat-dot': {
-                                '0%, 80%, 100%': {
-                                  opacity: 0.35,
-                                  transform: 'translateY(0)',
-                                },
-                                '40%': {
-                                  opacity: 1,
-                                  transform: 'translateY(-3px)',
-                                },
-                              },
-                            }}
-                          />
-                        ))}
-                      </Stack>
-                      <Typography variant="caption" color="text.secondary">
-                        {activeStartedAt &&
-                        messages.findIndex(({ id }) => id === message.id) ===
-                          messages.findIndex(
-                            ({ role, pending }) =>
-                              role === 'assistant' && pending,
-                          )
-                          ? isLocalAi
-                            ? `Local AI is replying… ${formatSeconds(
-                                elapsedSeconds,
-                              )} elapsed. Estimate: about 1:30.`
-                            : `Replying… ${formatSeconds(
-                                elapsedSeconds,
-                              )} elapsed.`
-                          : 'Queued — I’ll answer this after the previous question.'}
-                      </Typography>
-                    </Stack>
-                  ) : message.role === 'assistant' ? (
+                <Stack direction="row" spacing={0.75} alignItems="flex-end">
+                  {message.role === 'assistant' && (
                     <Box
                       sx={{
-                        '& p': { m: 0, mb: 1 },
-                        '& p:last-child': { mb: 0 },
-                        '& ul, & ol': { pl: 2.5, my: 0.75 },
-                        '& pre': { maxWidth: '100%' },
+                        width: isPhone ? 34 : 40,
+                        height: isPhone ? 34 : 40,
+                        flex: '0 0 auto',
+                        display: 'grid',
+                        placeItems: 'center',
+                        border: 1,
+                        borderColor: 'divider',
+                        borderRadius: '50%',
+                        bgcolor: 'background.paper',
                       }}
                     >
-                      {renderMarkdown(message.content)}
+                      <Box
+                        component="img"
+                        src={activePet.src}
+                        alt=""
+                        sx={{
+                          width: isPhone ? 30 : 36,
+                          height: isPhone ? 30 : 36,
+                          objectFit: 'contain',
+                        }}
+                      />
                     </Box>
-                  ) : (
-                    <Typography variant="body2">{message.content}</Typography>
                   )}
-                </Box>
+                  <Box
+                    sx={{
+                      minWidth: 0,
+                      px: 1.5,
+                      py: 1.1,
+                      borderRadius:
+                        message.role === 'user'
+                          ? '18px 18px 6px 18px'
+                          : '18px 18px 18px 6px',
+                      bgcolor:
+                        message.role === 'user'
+                          ? 'primary.main'
+                          : 'background.paper',
+                      color:
+                        message.role === 'user'
+                          ? 'primary.contrastText'
+                          : 'text.primary',
+                      border: message.role === 'assistant' ? 1 : 0,
+                      borderColor: 'divider',
+                      boxShadow:
+                        message.role === 'assistant'
+                          ? theme.palette.mode === 'dark'
+                            ? '0 10px 24px rgba(0,0,0,0.22)'
+                            : '0 10px 24px rgba(16,24,40,0.08)'
+                          : 'none',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {message.pending ? (
+                      <Stack spacing={0.75}>
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          alignItems="center"
+                        >
+                          {[0, 1, 2].map((dot) => (
+                            <Box
+                              key={dot}
+                              sx={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
+                                bgcolor: 'text.secondary',
+                                animation:
+                                  'studymesh-chat-dot 1s infinite ease-in-out',
+                                animationDelay: `${dot * 140}ms`,
+                                '@keyframes studymesh-chat-dot': {
+                                  '0%, 80%, 100%': {
+                                    opacity: 0.35,
+                                    transform: 'translateY(0)',
+                                  },
+                                  '40%': {
+                                    opacity: 1,
+                                    transform: 'translateY(-3px)',
+                                  },
+                                },
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                        <Typography variant="caption" color="text.secondary">
+                          {activeStartedAt &&
+                          messages.findIndex(({ id }) => id === message.id) ===
+                            messages.findIndex(
+                              ({ role, pending }) =>
+                                role === 'assistant' && pending,
+                            )
+                            ? isLocalAi
+                              ? `Local AI is replying… ${formatSeconds(
+                                  elapsedSeconds,
+                                )} elapsed. Estimate: about 1:30.`
+                              : `Replying… ${formatSeconds(
+                                  elapsedSeconds,
+                                )} elapsed.`
+                            : 'Queued — I’ll answer this after the previous question.'}
+                        </Typography>
+                      </Stack>
+                    ) : message.role === 'assistant' ? (
+                      <Box
+                        sx={{
+                          '& p': { m: 0, mb: 1 },
+                          '& p:last-child': { mb: 0 },
+                          '& ul, & ol': { pl: 2.5, my: 0.75 },
+                          '& pre': { maxWidth: '100%' },
+                        }}
+                      >
+                        {renderMarkdown(message.content)}
+                      </Box>
+                    ) : (
+                      <Typography variant="body2">{message.content}</Typography>
+                    )}
+                  </Box>
+                </Stack>
                 {message.sources?.length ? (
                   <Stack
                     direction="row"
                     spacing={0.5}
                     flexWrap="wrap"
-                    sx={{ mt: 0.75 }}
+                    sx={{
+                      mt: 0.75,
+                      ml: message.role === 'assistant' ? (isPhone ? 5 : 6) : 0,
+                    }}
                   >
                     <Typography
                       variant="caption"
@@ -1237,6 +1242,7 @@ const DashboardChatPanel = ({
                     onClick={() => onAddAssistantMessageToGuide(message)}
                     sx={{
                       mt: 0.75,
+                      ml: isPhone ? 5 : 6,
                       borderRadius: 2,
                       textTransform: 'none',
                       bgcolor: 'background.paper',

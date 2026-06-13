@@ -90,7 +90,7 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
       'Create your first Study Guide.',
       'Create a quiz to practice with the Study Guide.',
       'Create flashcards to practice with the Study Guide.',
-      'Open Pomodoro, Canva, or another useful tool from Misc.',
+      'Open Canvas, Pomodoro, Todo, Scratchpad, or Private Chat from Tools.',
       'Add your profile picture and display name.',
       'Publish one dashboard on the internet.',
       'Create your own custom dashboard.',

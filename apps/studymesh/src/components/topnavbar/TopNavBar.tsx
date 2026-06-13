@@ -40,6 +40,12 @@ import WidgetsIcon from '@mui/icons-material/Widgets'
 import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications'
 import ExtensionIcon from '@mui/icons-material/Extension'
 import EditIcon from '@mui/icons-material/Edit'
+import BuildIcon from '@mui/icons-material/Build'
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
+import DrawIcon from '@mui/icons-material/Draw'
+import NotesIcon from '@mui/icons-material/Notes'
+import TimerIcon from '@mui/icons-material/Timer'
 
 import AccentColorPicker from '../../theme/AccentColorPicker'
 import DashboardOptionsMenu from '../Dasboard/DashboardOptionsMenu'
@@ -82,6 +88,8 @@ import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceM
 import { deleteStudyMeshProfile, useAuth } from '../../auth/AuthProvider'
 import AiModePill from '../hostedAi/AiModePill'
 import AiModeDialog from '../hostedAi/AiModeDialog'
+import { useStudyTools } from '../studyTools'
+import type { StudyToolId } from '../studyTools'
 
 // Define user data type
 interface UserData {
@@ -212,6 +220,7 @@ const useStoredBoolean = (key: string, defaultValue: boolean) => {
 const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   // State for different dropdown menus
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null)
+  const [toolsAnchorEl, setToolsAnchorEl] = useState<null | HTMLElement>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
   const [isAiModeOpen, setIsAiModeOpen] = useState(false)
@@ -275,6 +284,26 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const currentDashboardTitle =
     currentDashboard?.studyPath?.title || currentDashboard?.name || 'StudyMesh'
   const navigate = useNavigate()
+  const { openTool, state: studyToolsState } = useStudyTools()
+  const tools: Array<{
+    id: StudyToolId
+    label: string
+    description: string
+    icon: React.ReactNode
+  }> = [
+    { id: 'canvas', label: 'Canvas', description: 'Spatial notes and links', icon: <DrawIcon /> },
+    { id: 'pomodoro', label: 'Pomodoro', description: 'Focus timer', icon: <TimerIcon /> },
+    { id: 'todo', label: 'Todo', description: 'Personal task list', icon: <CheckBoxIcon /> },
+    { id: 'scratchpad', label: 'Scratchpad', description: 'Quick personal notes', icon: <NotesIcon /> },
+    {
+      id: 'private-chat',
+      label: studyToolsState.privateChat.enabled ? 'Restore AI Chat' : 'Private Chat',
+      description: studyToolsState.privateChat.enabled
+        ? 'Put AI Chat back in the chat section'
+        : 'Show Private Chat in this panel',
+      icon: <ChatBubbleOutlineIcon />,
+    },
+  ]
 
   const {
     isPhone,
@@ -661,6 +690,19 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   </Button>
                 </>
               )}
+              <IconButton
+                aria-label="Open Tools"
+                onClick={(event) => setToolsAnchorEl(event.currentTarget)}
+                sx={{
+                  width: 44,
+                  height: 44,
+                  color: 'foreground.contrastPrimary',
+                  bgcolor: 'rgba(255,255,255,0.08)',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.14)' },
+                }}
+              >
+                <BuildIcon />
+              </IconButton>
               <AiModePill
                 compact
                 provider={quickCreateAiProvider}
@@ -765,6 +807,19 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   flex: '0 0 auto',
                 }}
               >
+                <Button
+                  aria-label="Open Tools"
+                  onClick={(event) => setToolsAnchorEl(event.currentTarget)}
+                  startIcon={<BuildIcon />}
+                  sx={{
+                    color: 'foreground.contrastPrimary',
+                    textTransform: 'none',
+                    minWidth: isTablet ? 44 : 'auto',
+                    px: isTablet ? 1 : 1.5,
+                  }}
+                >
+                  {isTablet ? null : 'Tools'}
+                </Button>
                 <AiModePill
                   compact={isPhone || isTablet}
                   provider={quickCreateAiProvider}
@@ -1003,6 +1058,44 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
           )}
         </Toolbar>
       </AppBar>
+
+      <Menu
+        anchorEl={toolsAnchorEl}
+        open={Boolean(toolsAnchorEl)}
+        onClose={() => setToolsAnchorEl(null)}
+        PaperProps={{
+          sx: {
+            width: 320,
+            maxWidth: 'calc(100vw - 24px)',
+            bgcolor: 'background.paper',
+            border: 1,
+            borderColor: 'divider',
+          },
+        }}
+      >
+        <Box sx={{ px: 2, py: 1.25 }}>
+          <Typography fontWeight={900}>Tools</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Personal study utilities
+          </Typography>
+        </Box>
+        <Divider />
+        {tools.map((tool) => (
+          <MenuItem
+            key={tool.id}
+            onClick={() => {
+              openTool(tool.id)
+              setToolsAnchorEl(null)
+            }}
+            sx={{ py: 1.25 }}
+          >
+            <ListItemIcon sx={{ color: 'primary.main' }}>
+              {tool.icon}
+            </ListItemIcon>
+            <ListItemText primary={tool.label} secondary={tool.description} />
+          </MenuItem>
+        ))}
+      </Menu>
 
       {isMobileWorkspaceHeader && (
         <Menu

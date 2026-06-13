@@ -16,6 +16,8 @@ import {
   QUICK_CREATE_AI_SETTINGS_KEY,
 } from '../../../../src/quickCreate/ai'
 
+const openToolMock = vi.fn()
+
 const hostedAiStatus = vi.hoisted(() => ({
   available: true,
   accountReady: true,
@@ -124,6 +126,13 @@ vi.mock('../../../../src/components/hostedAi/useHostedAiStatus', () => ({
     error: '',
     refresh: vi.fn(),
     markIntroSeen: vi.fn(),
+  }),
+}))
+
+vi.mock('../../../../src/components/studyTools', () => ({
+  useStudyTools: () => ({
+    openTool: openToolMock,
+    state: { privateChat: { enabled: false } },
   }),
 }))
 
@@ -254,6 +263,7 @@ describe('TopNavBar Component', () => {
     // Verify main elements are rendered
     expect(screen.getByTestId('logo')).toBeInTheDocument()
     expect(screen.getByTestId('dashboard-options-menu')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /open tools/i })).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /quick create/i }),
     ).not.toBeInTheDocument()
@@ -283,6 +293,19 @@ describe('TopNavBar Component', () => {
       libraryButton.compareDocumentPosition(userButton) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
+  })
+
+  it('opens Canvas from Tools', () => {
+    render(
+      <BrowserRouter>
+        <TopNavBar />
+      </BrowserRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /open tools/i }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /canvas/i }))
+
+    expect(openToolMock).toHaveBeenCalledWith('canvas')
   })
 
   it('keeps Study Guide and Quick Create event entry points available in Local AI mode', async () => {

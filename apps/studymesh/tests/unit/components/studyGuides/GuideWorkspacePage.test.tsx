@@ -4,6 +4,13 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import GuideWorkspacePage from '../../../../src/components/studyGuides/GuideWorkspacePage'
+
+vi.mock('../../../../src/components/studyTools', () => ({
+  useStudyTools: () => ({
+    state: { privateChat: { enabled: false, messages: [] } },
+    updateState: vi.fn(),
+  }),
+}))
 import { STUDY_GUIDES_STORAGE_KEY } from '../../../../src/studyGuides/storage'
 
 vi.mock('../../../../src/components/topnavbar/TopNavBar', () => ({

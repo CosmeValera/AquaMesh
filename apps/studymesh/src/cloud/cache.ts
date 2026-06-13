@@ -4,7 +4,13 @@ import type {
   WidgetVersion,
 } from '../components/WidgetEditor/WidgetStorage'
 import type { StateDashboard } from '../state/store'
+import {
+  hasStoredStudyToolsState,
+  readStudyToolsState,
+  STUDY_TOOLS_STORAGE_KEY,
+} from '../components/studyTools/storage'
 import type {
+  CloudJson,
   LocalWorkspaceSnapshot,
   StudyGuideRecord,
 } from './types'
@@ -91,11 +97,13 @@ export const writeStudyGuidesCache = (
 export const readWorkspaceStateCache = (): {
   selectedDashboard: number
   openDashboards: StateDashboard[]
+  settings?: Record<string, CloudJson>
 } | null => {
   const stored = readJsonCache<{
     state?: {
       selectedDashboard?: number
       openDashboards?: StateDashboard[]
+      settings?: Record<string, CloudJson>
     }
   } | null>(CLOUD_CACHE_KEYS.workspaceState, null)
 
@@ -108,12 +116,14 @@ export const readWorkspaceStateCache = (): {
     selectedDashboard:
       typeof state.selectedDashboard === 'number' ? state.selectedDashboard : 0,
     openDashboards: state.openDashboards,
+    settings: state.settings,
   }
 }
 
 export const writeWorkspaceStateCache = (workspaceState: {
   selectedDashboard: number
   openDashboards: StateDashboard[]
+  settings?: Record<string, CloudJson>
 }): void => {
   writeJsonCache(CLOUD_CACHE_KEYS.workspaceState, {
     state: workspaceState,
@@ -138,13 +148,30 @@ export const isWorkspaceCacheOwnedBy = (ownerId: string): boolean =>
 export const isWorkspaceCacheUnowned = (): boolean =>
   readWorkspaceCacheOwner() === null
 
-export const readLocalWorkspaceSnapshot = (): LocalWorkspaceSnapshot => ({
-  dashboards: readDashboardsCache(),
-  studyGuides: readStudyGuidesCache(),
-  widgets: readWidgetsCache(),
-  widgetVersions: readWidgetVersionsCache(),
-  workspaceState: readWorkspaceStateCache(),
-})
+export const readLocalWorkspaceSnapshot = (): LocalWorkspaceSnapshot => {
+  const workspaceState = readWorkspaceStateCache()
+  const tools = hasStoredStudyToolsState()
+    ? (readStudyToolsState() as unknown as CloudJson)
+    : undefined
+
+  return {
+    dashboards: readDashboardsCache(),
+    studyGuides: readStudyGuidesCache(),
+    widgets: readWidgetsCache(),
+    widgetVersions: readWidgetVersionsCache(),
+    workspaceState:
+      workspaceState || tools
+        ? {
+            selectedDashboard: workspaceState?.selectedDashboard || 0,
+            openDashboards: workspaceState?.openDashboards || [],
+            settings: {
+              ...(workspaceState?.settings || {}),
+              ...(tools ? { tools } : {}),
+            },
+          }
+        : null,
+  }
+}
 
 export const writeLocalWorkspaceSnapshot = (
   snapshot: LocalWorkspaceSnapshot,
@@ -164,4 +191,5 @@ export const writeLocalWorkspaceSnapshot = (
 export const clearLocalWorkspaceCache = (): void => {
   Object.values(CLOUD_CACHE_KEYS).forEach(removeJsonCache)
   Object.values(CLOUD_LEGACY_CACHE_KEYS).forEach(removeJsonCache)
+  removeJsonCache(STUDY_TOOLS_STORAGE_KEY)
 }

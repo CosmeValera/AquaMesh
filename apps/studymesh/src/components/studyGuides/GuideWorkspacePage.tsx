@@ -27,6 +27,8 @@ import DashboardChatPanel, {
 import TopNavBar from '../topnavbar/TopNavBar'
 import Main from '../Main'
 import HostedAiIntroModal from '../hostedAi/HostedAiIntroModal'
+import { useStudyTools } from '../studyTools'
+import { PrivateChatTool } from '../studyTools/tools/SimpleTools'
 import {
   appendStudyGuideMarkdownPage,
   createMarkdownStudyGuidePageLayout,
@@ -90,6 +92,9 @@ const GuideWorkspacePage = () => {
   const [mobileSection, setMobileSection] = useState<
     'pages' | 'study-guide' | 'ai-chat'
   >('study-guide')
+  const { state: studyToolsState } = useStudyTools()
+  const privateChatEnabled = studyToolsState.privateChat.enabled
+  const chatLabel = privateChatEnabled ? 'Private Chat' : 'AI Chat'
   const isCreateRoute = searchParams.get('create') === '1'
 
   const loadRecord = () => {
@@ -345,19 +350,27 @@ const GuideWorkspacePage = () => {
         position: 'relative',
       }}
     >
-      <DashboardChatPanel
-        dashboard={dashboard}
-        messages={messages}
-        onMessagesChange={setMessages}
-        onClose={() =>
-          isMobile ? setMobileSection('study-guide') : setAiChatOpen(false)
-        }
-        showCloseButton
-        onAddAssistantMessageToGuide={addAssistantMessageToGuide}
-        onQuickCreatePage={quickCreatePage}
-        supportsStudyGuideCreateScope
-      />
-      {quickCreateError ? (
+      {privateChatEnabled ? (
+        <PrivateChatTool
+          onClose={() =>
+            isMobile ? setMobileSection('study-guide') : setAiChatOpen(false)
+          }
+        />
+      ) : (
+        <DashboardChatPanel
+          dashboard={dashboard}
+          messages={messages}
+          onMessagesChange={setMessages}
+          onClose={() =>
+            isMobile ? setMobileSection('study-guide') : setAiChatOpen(false)
+          }
+          showCloseButton
+          onAddAssistantMessageToGuide={addAssistantMessageToGuide}
+          onQuickCreatePage={quickCreatePage}
+          supportsStudyGuideCreateScope
+        />
+      )}
+      {!privateChatEnabled && quickCreateError ? (
         <Alert
           severity="error"
           sx={{
@@ -465,7 +478,7 @@ const GuideWorkspacePage = () => {
                   {[
                     ['pages', 'Pages'],
                     ['study-guide', 'Study Guide'],
-                    ['ai-chat', 'AI Chat'],
+                    ['ai-chat', chatLabel],
                   ].map(([key, label]) => (
                     <Button
                       key={key}
@@ -509,11 +522,11 @@ const GuideWorkspacePage = () => {
                   {aiChatOpen ? (
                     chatPanel
                   ) : (
-                    <Tooltip title="Open AI Chat">
+                    <Tooltip title={`Open ${chatLabel}`}>
                       <Box
                         component="button"
                         type="button"
-                        aria-label="Open AI Chat panel"
+                        aria-label={`Open ${chatLabel} panel`}
                         onClick={() => setAiChatOpen(true)}
                         sx={{
                           width: '100%',
@@ -538,7 +551,7 @@ const GuideWorkspacePage = () => {
                           variant="caption"
                           sx={{ writingMode: 'vertical-rl', fontWeight: 900 }}
                         >
-                          AI Chat
+                          {chatLabel}
                         </Typography>
                       </Box>
                     </Tooltip>
@@ -546,7 +559,7 @@ const GuideWorkspacePage = () => {
                   {aiChatOpen ? (
                     <Box
                       role="separator"
-                      aria-label="Resize AI Chat panel"
+                      aria-label={`Resize ${chatLabel} panel`}
                       onMouseDown={startAiChatResize}
                       sx={{
                         position: 'absolute',

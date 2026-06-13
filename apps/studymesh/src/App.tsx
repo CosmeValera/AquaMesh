@@ -27,6 +27,7 @@ import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
 import StudyGuidesPage from './components/studyGuides/StudyGuidesPage'
 import GuideWorkspacePage from './components/studyGuides/GuideWorkspacePage'
 import HostedAiCheckoutReturn from './components/hostedAi/HostedAiCheckoutReturn'
+import { StudyToolsProvider } from './components/studyTools'
 
 import { createStudyMeshTheme } from './theme'
 import { AccentColorProvider } from './theme/AccentColorContext'
@@ -93,9 +94,10 @@ const AppShell = () => {
           <LocalAiDebugPanel />
           <CloudWorkspaceSync />
           <HostedAiCheckoutReturn />
-          <DashboardProvider>
-            <LayoutProvider>
-              <Routes>
+          <StudyToolsProvider>
+            <DashboardProvider>
+              <LayoutProvider>
+                <Routes>
                 <Route path="/" element={<StudyMeshLanding />} />
                 <Route path="/pricing" element={<StudyMeshPricingPage />} />
                 <Route path="/login" element={<LoginPage />} />
@@ -135,9 +137,10 @@ const AppShell = () => {
                   }
                 />
                 <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </LayoutProvider>
-          </DashboardProvider>
+                </Routes>
+              </LayoutProvider>
+            </DashboardProvider>
+          </StudyToolsProvider>
         </PrimeReactProvider>
       </ThemeProvider>
     </AccentColorProvider>

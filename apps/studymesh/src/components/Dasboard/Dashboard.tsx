@@ -73,6 +73,8 @@ import { DashboardEditorResponsivePanels } from './DashboardEditorResponsivePane
 import type { DashboardEditorWidgetConfig } from './dashboardEditorTypes'
 import DashboardEmptyState from './DashboardEmptyState'
 import DashboardTabsBar from './DashboardTabsBar'
+import { useOptionalStudyTools } from '../studyTools'
+import { PrivateChatTool } from '../studyTools/tools/SimpleTools'
 import {
   collectDashboardWidgetTabs,
   countDashboardNodes,
@@ -109,6 +111,9 @@ const readCurrentUserIsAdmin = () => {
 }
 
 const Dashboards = () => {
+  const studyTools = useOptionalStudyTools()
+  const privateChatEnabled = Boolean(studyTools?.state.privateChat.enabled)
+  const chatLabel = privateChatEnabled ? 'Private Chat' : 'AI Chat'
   const {
     theme,
     isPhone,
@@ -1448,17 +1453,21 @@ const Dashboards = () => {
   }
 
   const dashboardChatPanel = (
-    <DashboardChatPanel
-      dashboard={currentDashboard}
-      messages={
-        currentDashboard ? dashboardChatMessages[currentDashboard.id] || [] : []
-      }
-      onMessagesChange={(messages) =>
-        updateDashboardChatMessages(currentDashboard, messages)
-      }
-      onClose={closeDashboardChatPanel}
-      showCloseButton={!isMobileDashboardView}
-    />
+    privateChatEnabled ? (
+      <PrivateChatTool onClose={closeDashboardChatPanel} />
+    ) : (
+      <DashboardChatPanel
+        dashboard={currentDashboard}
+        messages={
+          currentDashboard ? dashboardChatMessages[currentDashboard.id] || [] : []
+        }
+        onMessagesChange={(messages) =>
+          updateDashboardChatMessages(currentDashboard, messages)
+        }
+        onClose={closeDashboardChatPanel}
+        showCloseButton={!isMobileDashboardView}
+      />
+    )
   )
 
   const editDashboardFromTabs = (dashboard: StateDashboard) => {
@@ -1716,11 +1725,11 @@ const Dashboards = () => {
               {dashboardChatPanel}
             </Box>
           ) : (
-            <TooltipStyled title="Open AI Chat">
+            <TooltipStyled title={`Open ${chatLabel}`}>
               <Box
                 component="button"
                 type="button"
-                aria-label="Open AI Chat panel"
+                aria-label={`Open ${chatLabel} panel`}
                 onClick={() => setDashboardChatOpen(true)}
                 sx={{
                   width: '100%',
@@ -1782,7 +1791,7 @@ const Dashboards = () => {
                     letterSpacing: 0.4,
                   }}
                 >
-                  AI Chat
+                  {chatLabel}
                 </Typography>
               </Box>
             </TooltipStyled>
@@ -1790,7 +1799,7 @@ const Dashboards = () => {
           {dashboardChatOpen && (
             <Box
               role="separator"
-              aria-label="Resize AI Chat panel"
+              aria-label={`Resize ${chatLabel} panel`}
               onMouseDown={startDashboardChatResize}
               sx={{
                 position: 'absolute',

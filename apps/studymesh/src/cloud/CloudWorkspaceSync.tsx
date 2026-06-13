@@ -18,6 +18,12 @@ import { useStore } from '../state/store'
 import { clearStudyMeshGuideSeedMarker } from '../studyGuides/studyMeshGuideSeed'
 import { STUDY_GUIDES_CHANGED_EVENT } from '../studyGuides/storage'
 import {
+  normalizeStudyToolsState,
+  readStudyToolsState,
+  STUDY_TOOLS_CHANGED_EVENT,
+  writeStudyToolsState,
+} from '../components/studyTools'
+import {
   readLocalWorkspaceSnapshot,
   readWorkspaceCacheOwner,
   writeLocalWorkspaceSnapshot,
@@ -42,14 +48,16 @@ const hasLocalWorkspaceData = (
   bundle.studyGuides.length > 0 ||
   bundle.widgets.length > 0 ||
   bundle.widgetVersions.length > 0 ||
-  Boolean(bundle.workspaceState?.openDashboards.length)
+  Boolean(bundle.workspaceState?.openDashboards.length) ||
+  Boolean(bundle.workspaceState?.settings?.tools)
 
 const hasCloudWorkspaceData = (bundle: CloudWorkspaceBundle) =>
   bundle.dashboards.length > 0 ||
   bundle.studyGuides.length > 0 ||
   bundle.widgets.length > 0 ||
   bundle.widgetVersions.length > 0 ||
-  Boolean(bundle.workspaceState?.openDashboards.length)
+  Boolean(bundle.workspaceState?.openDashboards.length) ||
+  Boolean(bundle.workspaceState?.settings?.tools)
 
 export type CloudHydrationAction =
   | 'apply-cloud'
@@ -116,14 +124,22 @@ const applyCloudBundleToLocalCache = (bundle: CloudWorkspaceBundle): void => {
       ? {
           selectedDashboard: bundle.workspaceState.selectedDashboard,
           openDashboards: bundle.workspaceState.openDashboards,
+          settings: bundle.workspaceState.settings,
         }
       : null,
   })
+  if (bundle.workspaceState?.settings?.tools) {
+    writeStudyToolsState(
+      normalizeStudyToolsState(bundle.workspaceState.settings.tools),
+      false,
+    )
+  }
 
   window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
   window.dispatchEvent(new CustomEvent('dashboardStorageUpdated'))
   document.dispatchEvent(new CustomEvent(WIDGET_STORAGE_UPDATED))
   window.dispatchEvent(new Event(STUDY_GUIDES_CHANGED_EVENT))
+  window.dispatchEvent(new Event(STUDY_TOOLS_CHANGED_EVENT))
 }
 
 const buildWorkspaceBundleFromLocalCache = (
@@ -141,6 +157,10 @@ const buildWorkspaceBundleFromLocalCache = (
     ownerId,
     selectedDashboard: snapshot.workspaceState?.selectedDashboard || 0,
     openDashboards: snapshot.workspaceState?.openDashboards || [],
+    settings: {
+      ...(snapshot.workspaceState?.settings || {}),
+      tools: readStudyToolsState() as unknown as import('./types').CloudJson,
+    },
     updatedAt: new Date().toISOString(),
   }
 
@@ -457,6 +477,7 @@ const CloudWorkspaceSync = () => {
       STUDY_GUIDES_CHANGED_EVENT,
       handleStudyGuidesUpdated,
     )
+    window.addEventListener(STUDY_TOOLS_CHANGED_EVENT, scheduleSync)
 
     return () => {
       if (syncTimeoutRef.current !== null) {
@@ -476,6 +497,7 @@ const CloudWorkspaceSync = () => {
         STUDY_GUIDES_CHANGED_EVENT,
         handleStudyGuidesUpdated,
       )
+      window.removeEventListener(STUDY_TOOLS_CHANGED_EVENT, scheduleSync)
     }
   }, [hasHydrated, repository, user])
 

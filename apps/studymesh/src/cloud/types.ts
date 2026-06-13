@@ -41,6 +41,7 @@ export interface LocalWorkspaceSnapshot {
   workspaceState: {
     selectedDashboard: number
     openDashboards: StateDashboard[]
+    settings?: Record<string, CloudJson>
   } | null
 }
 

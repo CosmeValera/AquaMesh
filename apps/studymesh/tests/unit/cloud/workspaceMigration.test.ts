@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { chooseCloudHydrationAction } from '../../../src/cloud/CloudWorkspaceSync'
 import {
   CLOUD_CACHE_KEYS,
+  clearLocalWorkspaceCache,
   readLocalWorkspaceSnapshot,
   readWorkspaceCacheOwner,
   writeLocalWorkspaceSnapshot,
@@ -13,6 +14,10 @@ import type {
   LocalWorkspaceSnapshot,
 } from '../../../src/cloud/types'
 import { createDashboardMergePlan } from '../../../src/cloud/repository'
+import {
+  createDefaultStudyToolsState,
+  STUDY_TOOLS_STORAGE_KEY,
+} from '../../../src/components/studyTools/storage'
 
 const installLocalStorageMock = () => {
   const storage = new Map<string, string>()
@@ -43,6 +48,41 @@ describe('dashboard migration planning', () => {
 
   afterEach(() => {
     vi.useRealTimers()
+  })
+
+  it('uploads standalone local tools when the cloud account is empty', () => {
+    const tools = createDefaultStudyToolsState()
+    tools.scratchpad.content = 'Local note'
+    window.localStorage.setItem(STUDY_TOOLS_STORAGE_KEY, JSON.stringify(tools))
+    const localSnapshot = readLocalWorkspaceSnapshot()
+
+    expect(localSnapshot.workspaceState?.settings?.tools).toBeTruthy()
+    expect(
+      chooseCloudHydrationAction({
+        cloudBundle: {
+          profile: null,
+          dashboards: [],
+          studyGuides: [],
+          widgets: [],
+          widgetVersions: [],
+          workspaceState: null,
+        },
+        localSnapshot,
+        cacheOwnerId: null,
+        currentOwnerId: 'owner-1',
+      }),
+    ).toBe('upload-local')
+  })
+
+  it('clears private tools data with the account workspace cache', () => {
+    window.localStorage.setItem(
+      STUDY_TOOLS_STORAGE_KEY,
+      JSON.stringify(createDefaultStudyToolsState()),
+    )
+
+    clearLocalWorkspaceCache()
+
+    expect(window.localStorage.getItem(STUDY_TOOLS_STORAGE_KEY)).toBeNull()
   })
 
   it('uploads local dashboards when the cloud account is empty', () => {

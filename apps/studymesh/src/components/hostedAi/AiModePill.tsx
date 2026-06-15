@@ -28,9 +28,9 @@ const AiModePill: React.FC<AiModePillProps> = ({
   provider,
   onClick,
 }) => {
-  const { status, loading, error } = useHostedAiStatus()
+  const { status, error } = useHostedAiStatus()
   const count = status?.accountReady ? status.studyCredits : null
-  const hostedValue = loading || count === null ? '--' : count
+  const hostedValue = count === null ? '--' : count
   const isHosted = provider === 'hosted'
   const hasNoCredits = isHosted && count === 0
   const tooltip = isHosted

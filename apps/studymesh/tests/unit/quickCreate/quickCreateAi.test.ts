@@ -372,6 +372,7 @@ describe('quick create AI settings', () => {
         responseSchema: expect.any(Object),
       }),
     )
+    expect(hostedAiClientMock.callHostedAiModel).toHaveBeenCalledTimes(1)
     expect(draft.title).toBe('Algebra Study Guide')
   })
 
@@ -2896,8 +2897,8 @@ describe('Gemini quick create client', () => {
           index === 1
             ? 'orientationMap'
             : index === 3
-              ? 'practiceCheckpoint'
-              : 'workedExampleLab',
+            ? 'practiceCheckpoint'
+            : 'workedExampleLab',
         sectionPlan: ['Topic map', 'Worked loop', 'Try it'],
         mustTeach: [`Loop idea ${index}`],
         workedExample: `Loop worked example ${index}.`,
@@ -2930,8 +2931,8 @@ describe('Gemini quick create client', () => {
                           index === 1
                             ? 'orientationMap'
                             : index === 3
-                              ? 'practiceCheckpoint'
-                              : 'workedExampleLab',
+                            ? 'practiceCheckpoint'
+                            : 'workedExampleLab',
                         supportArtifacts:
                           index === 1
                             ? {

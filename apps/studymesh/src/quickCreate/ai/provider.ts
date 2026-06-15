@@ -108,6 +108,8 @@ export const generateStudyPathWithAi = async (
       apiToken: '',
       model: STRONG_AI_PROVIDERS.cerebras.defaultModel,
       strongProvider: 'cerebras',
+      // Hosted billing is per gateway call, so one guide must use one call.
+      singleRequest: true,
       strongTransport: createHostedAiTransport({
         surface: 'study-guide',
       }),

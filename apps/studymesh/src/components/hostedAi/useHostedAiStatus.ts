@@ -3,39 +3,46 @@ import React from 'react'
 import {
   getHostedAiStatus,
   HOSTED_AI_USAGE_CHANGED_EVENT,
+  HOSTED_AI_VISUAL_SPEND_EVENT,
   HostedAiStatus,
   markHostedAiIntroSeen,
 } from '../../quickCreate/ai'
 import { useAuth } from '../../auth/AuthProvider'
 
-const HOSTED_AI_STATUS_CACHE_KEY = 'studymesh-hosted-ai-status-v1'
+const HOSTED_AI_CREDITS_CACHE_KEY = 'studymesh-hosted-ai-credits-v1'
 
-interface HostedAiStatusCache {
+interface HostedAiCreditsCache {
   ownerId: string
-  status: HostedAiStatus
+  studyCredits: number
 }
 
-const readCachedStatus = (ownerId?: string): HostedAiStatus | null => {
+const readCachedStudyCredits = (ownerId?: string): number | null => {
   if (!ownerId) {
     return null
   }
 
   try {
     const cached = JSON.parse(
-      window.localStorage.getItem(HOSTED_AI_STATUS_CACHE_KEY) || 'null',
-    ) as HostedAiStatusCache | null
+      window.localStorage.getItem(HOSTED_AI_CREDITS_CACHE_KEY) || 'null',
+    ) as HostedAiCreditsCache | null
 
-    return cached?.ownerId === ownerId ? cached.status : null
+    return cached?.ownerId === ownerId &&
+      typeof cached.studyCredits === 'number'
+      ? cached.studyCredits
+      : null
   } catch {
     return null
   }
 }
 
-const writeCachedStatus = (ownerId: string, status: HostedAiStatus): void => {
+const writeCachedStudyCredits = (
+  ownerId: string,
+  studyCredits: number,
+): void => {
   try {
     window.localStorage.setItem(
-      HOSTED_AI_STATUS_CACHE_KEY,
-      JSON.stringify({ ownerId, status }),
+      HOSTED_AI_CREDITS_CACHE_KEY,
+      JSON.stringify({ ownerId, studyCredits }),
     )
   } catch {
     // Cache is visual-only; status fetch remains authoritative.
@@ -44,6 +51,7 @@ const writeCachedStatus = (ownerId: string, status: HostedAiStatus): void => {
 
 interface UseHostedAiStatusResult {
   status: HostedAiStatus | null
+  displayStudyCredits: number | null
   loading: boolean
   error: string
   refresh: () => Promise<void>
@@ -53,15 +61,20 @@ interface UseHostedAiStatusResult {
 export const useHostedAiStatus = (): UseHostedAiStatusResult => {
   const auth = useAuth()
   const ownerId = auth.user?.id
-  const [status, setStatus] = React.useState<HostedAiStatus | null>(() =>
-    readCachedStatus(ownerId),
-  )
+  const [status, setStatus] = React.useState<HostedAiStatus | null>(null)
+  const [cachedStudyCredits, setCachedStudyCredits] = React.useState<
+    number | null
+  >(() => readCachedStudyCredits(ownerId))
+  const displayStudyCredits = status?.accountReady
+    ? cachedStudyCredits ?? status.studyCredits
+    : cachedStudyCredits
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
 
   const refresh = React.useCallback(async () => {
     if (!ownerId) {
       setStatus(null)
+      setCachedStudyCredits(null)
       setError('')
       return
     }
@@ -70,7 +83,8 @@ export const useHostedAiStatus = (): UseHostedAiStatusResult => {
     try {
       const nextStatus = await getHostedAiStatus()
       setStatus(nextStatus)
-      writeCachedStatus(ownerId, nextStatus)
+      setCachedStudyCredits(nextStatus.studyCredits)
+      writeCachedStudyCredits(ownerId, nextStatus.studyCredits)
       setError(nextStatus.message || '')
     } catch (refreshError) {
       setError(
@@ -84,32 +98,63 @@ export const useHostedAiStatus = (): UseHostedAiStatusResult => {
   }, [ownerId])
 
   React.useEffect(() => {
-    setStatus(readCachedStatus(ownerId))
+    setStatus(null)
+    setCachedStudyCredits(readCachedStudyCredits(ownerId))
     void refresh()
 
-    const syncCachedStatus = (event: StorageEvent): void => {
-      if (event.key === HOSTED_AI_STATUS_CACHE_KEY) {
-        setStatus(readCachedStatus(ownerId))
+    const syncCachedStudyCredits = (event: StorageEvent): void => {
+      if (event.key === HOSTED_AI_CREDITS_CACHE_KEY) {
+        setCachedStudyCredits(readCachedStudyCredits(ownerId))
       }
     }
 
+    const applyVisualSpend = (event: Event): void => {
+      const credits = (event as CustomEvent<{ credits?: unknown }>).detail
+        ?.credits
+      if (typeof credits !== 'number' || credits <= 0) {
+        return
+      }
+
+      setCachedStudyCredits((current) => {
+        if (current === null) {
+          return current
+        }
+
+        const next = Math.max(0, current - credits)
+        if (ownerId) {
+          writeCachedStudyCredits(ownerId, next)
+        }
+        return next
+      })
+    }
+
     window.addEventListener(HOSTED_AI_USAGE_CHANGED_EVENT, refresh)
-    window.addEventListener('storage', syncCachedStatus)
+    window.addEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, applyVisualSpend)
+    window.addEventListener('storage', syncCachedStudyCredits)
 
     return () => {
       window.removeEventListener(HOSTED_AI_USAGE_CHANGED_EVENT, refresh)
-      window.removeEventListener('storage', syncCachedStatus)
+      window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, applyVisualSpend)
+      window.removeEventListener('storage', syncCachedStudyCredits)
     }
   }, [ownerId, refresh])
 
   const markIntroSeen = React.useCallback(async () => {
     const nextStatus = await markHostedAiIntroSeen()
     setStatus(nextStatus)
+    setCachedStudyCredits(nextStatus.studyCredits)
     if (ownerId) {
-      writeCachedStatus(ownerId, nextStatus)
+      writeCachedStudyCredits(ownerId, nextStatus.studyCredits)
     }
     setError(nextStatus.message || '')
   }, [ownerId])
 
-  return { status, loading, error, refresh, markIntroSeen }
+  return {
+    status,
+    displayStudyCredits,
+    loading,
+    error,
+    refresh,
+    markIntroSeen,
+  }
 }

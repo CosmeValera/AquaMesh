@@ -15,7 +15,10 @@ import {
   callHostedAiModel,
   createHostedAiTransport,
 } from '../../../src/quickCreate/ai/hostedClient'
-import { HOSTED_AI_INSUFFICIENT_CREDITS_EVENT } from '../../../src/quickCreate/ai/hostedCredits'
+import {
+  HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
+  HOSTED_AI_VISUAL_SPEND_EVENT,
+} from '../../../src/quickCreate/ai/hostedCredits'
 
 const statusPayload = (studyCredits: number) => ({
   ok: true,
@@ -137,5 +140,41 @@ describe('hosted AI client credit failures', () => {
     ])
     expect(requestBodies[1]).not.toHaveProperty('requestId')
     expect(requestBodies[3]).not.toHaveProperty('requestId')
+  })
+
+  it('announces the visual credit cost before hosted generation finishes', async () => {
+    let resolveGeneration: (
+      response: ReturnType<typeof gatewayResponse>,
+    ) => void
+    const listener = vi.fn()
+    window.addEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, listener)
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(gatewayResponse(statusPayload(8)))
+        .mockReturnValueOnce(
+          new Promise((resolve) => {
+            resolveGeneration = resolve
+          }),
+        ),
+    )
+
+    const pending = callHostedAiModel({
+      surface: 'chat',
+      parts: [{ text: 'Question' }],
+    })
+
+    await vi.waitFor(() => {
+      expect(listener).toHaveBeenCalledTimes(1)
+    })
+    expect(listener.mock.calls[0][0]).toMatchObject({
+      detail: { credits: 1 },
+    })
+
+    resolveGeneration!(gatewayResponse({ ok: true, text: 'Answer' }))
+    await expect(pending).resolves.toBe('Answer')
+
+    window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, listener)
   })
 })

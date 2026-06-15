@@ -28,13 +28,13 @@ const AiModePill: React.FC<AiModePillProps> = ({
   provider,
   onClick,
 }) => {
-  const { status, error } = useHostedAiStatus()
-  const count = status?.accountReady ? status.studyCredits : null
+  const { status, displayStudyCredits, error } = useHostedAiStatus()
+  const count = displayStudyCredits
   const hostedValue = count === null ? '--' : count
   const isHosted = provider === 'hosted'
   const hasNoCredits = isHosted && count === 0
   const tooltip = isHosted
-    ? error && !status
+    ? error && !status && count === null
       ? `${STUDY_CREDITS_LABEL} unavailable`
       : `${STUDY_CREDITS_LABEL}: ${hostedValue}`
     : aiModeShortLabels[provider]

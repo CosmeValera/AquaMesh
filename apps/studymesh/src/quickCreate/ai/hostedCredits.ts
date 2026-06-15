@@ -2,6 +2,7 @@ export const STUDY_CREDITS_LABEL = 'Study Credits'
 export const STUDY_CREDITS_SYMBOL = 'SC'
 
 export const HOSTED_AI_USAGE_CHANGED_EVENT = 'studymesh-hosted-ai-usage-changed'
+export const HOSTED_AI_VISUAL_SPEND_EVENT = 'studymesh-hosted-ai-visual-spend'
 export const HOSTED_AI_INSUFFICIENT_CREDITS_EVENT =
   'studymesh-hosted-ai-insufficient-credits'
 

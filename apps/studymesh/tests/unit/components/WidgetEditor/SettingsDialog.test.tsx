@@ -114,6 +114,7 @@ vi.mock('../../../../src/auth/AuthProvider', () => ({
 vi.mock('../../../../src/components/hostedAi/useHostedAiStatus', () => ({
   useHostedAiStatus: () => ({
     status: hostedAiStatus,
+    displayStudyCredits: hostedAiStatus.studyCredits,
     loading: false,
     error: '',
     refresh: vi.fn(),

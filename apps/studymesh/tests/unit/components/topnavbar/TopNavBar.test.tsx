@@ -120,6 +120,7 @@ vi.mock('../../../../src/auth/AuthProvider', () => ({
 vi.mock('../../../../src/components/hostedAi/useHostedAiStatus', () => ({
   useHostedAiStatus: () => ({
     status: hostedAiStatus,
+    displayStudyCredits: hostedAiStatus.studyCredits,
     loading: false,
     error: '',
     refresh: vi.fn(),
@@ -469,7 +470,9 @@ describe('TopNavBar Component', () => {
     ).not.toBeInTheDocument()
 
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /ai provider/i }))
-    fireEvent.click(await screen.findByRole('option', { name: /google local ai/i }))
+    fireEvent.click(
+      await screen.findByRole('option', { name: /google local ai/i }),
+    )
 
     expect(screen.queryByText('Study Credits')).not.toBeInTheDocument()
     expect(
@@ -621,7 +624,6 @@ describe('TopNavBar Component', () => {
       screen.getByRole('menuitem', { name: /create widget/i }),
     ).toHaveAttribute('aria-disabled', 'true')
   })
-
 
   it('replays the workspace tutorial from application settings', async () => {
     const resetListener = vi.fn()

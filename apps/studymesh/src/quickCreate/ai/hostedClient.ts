@@ -3,6 +3,7 @@ import type { StrongAiCallOptions } from './strongProviders'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   HOSTED_AI_USAGE_CHANGED_EVENT,
+  HOSTED_AI_VISUAL_SPEND_EVENT,
   getHostedAiCreditCost,
 } from './hostedCredits'
 import type {
@@ -113,6 +114,16 @@ const dispatchHostedAiUsageChanged = (): void => {
   }
 }
 
+const dispatchHostedAiVisualSpend = (surface: HostedAiSurface): void => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent(HOSTED_AI_VISUAL_SPEND_EVENT, {
+        detail: { credits: getHostedAiCreditCost(surface) },
+      }),
+    )
+  }
+}
+
 const assertHostedAiCreditsAvailable = async (
   surface: HostedAiSurface,
 ): Promise<void> => {
@@ -174,23 +185,27 @@ const callHostedAiModelUnchecked = async ({
   responseSchema,
   timeoutMs,
 }: HostedAiModelOptions): Promise<string> => {
-  const payload = await callHostedAiGateway({
-    action: 'generate',
-    surface,
-    model,
-    parts,
-    responseSchema,
-    timeoutMs,
-  })
-  const text = payload.text?.trim()
+  dispatchHostedAiVisualSpend(surface)
 
-  dispatchHostedAiUsageChanged()
+  try {
+    const payload = await callHostedAiGateway({
+      action: 'generate',
+      surface,
+      model,
+      parts,
+      responseSchema,
+      timeoutMs,
+    })
+    const text = payload.text?.trim()
 
-  if (!text) {
-    throw new Error('Hosted AI returned no text.')
+    if (!text) {
+      throw new Error('Hosted AI returned no text.')
+    }
+
+    return text
+  } finally {
+    dispatchHostedAiUsageChanged()
   }
-
-  return text
 }
 
 export const callHostedAiModel = async (

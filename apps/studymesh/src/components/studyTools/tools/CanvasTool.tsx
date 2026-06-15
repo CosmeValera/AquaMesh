@@ -9,7 +9,6 @@ import {
   Typography,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
-import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import GridOnIcon from '@mui/icons-material/GridOn'
 import LinkIcon from '@mui/icons-material/Link'
@@ -20,6 +19,8 @@ import ZoomInIcon from '@mui/icons-material/ZoomIn'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import CloseFullscreenIcon from '@mui/icons-material/CloseFullscreen'
+import OpenInFullIcon from '@mui/icons-material/OpenInFull'
 
 import { useStudyTools } from '../StudyToolsProvider'
 import type { CanvasItem } from '../types'
@@ -35,7 +36,13 @@ const id = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`
 const now = () => new Date().toISOString()
 
-const CanvasTool = ({ onClose }: { onClose: () => void }) => {
+const CanvasTool = ({
+  fullscreen,
+  onFullscreenChange,
+}: {
+  fullscreen: boolean
+  onFullscreenChange: (fullscreen: boolean) => void
+}) => {
   const { state, updateState } = useStudyTools()
   const canvas = state.canvas
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -46,6 +53,7 @@ const CanvasTool = ({ onClose }: { onClose: () => void }) => {
   const [panMode, setPanMode] = useState(false)
   const history = useRef<typeof canvas[]>([])
   const future = useRef<typeof canvas[]>([])
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const interaction = useRef<{
     kind: 'item' | 'pan' | 'resize'
     id?: string
@@ -74,8 +82,9 @@ const CanvasTool = ({ onClose }: { onClose: () => void }) => {
   }
 
   const addItem = () => {
-    const firstX = (window.innerWidth / 2 - canvas.viewportX) / canvas.zoom - 110
-    const firstY = (window.innerHeight / 2 - canvas.viewportY) / canvas.zoom - 70
+    const bounds = containerRef.current?.getBoundingClientRect()
+    const firstX = ((bounds?.width || window.innerWidth) / 2 - canvas.viewportX) / canvas.zoom - 110
+    const firstY = ((bounds?.height || window.innerHeight) / 2 - canvas.viewportY) / canvas.zoom - 70
     const previous = canvas.items[canvas.items.length - 1]
     const item: CanvasItem = {
       id: id('canvas-item'),
@@ -164,9 +173,10 @@ const CanvasTool = ({ onClose }: { onClose: () => void }) => {
 
   const pointerMove = (event: React.PointerEvent) => {
     if (connectFrom) {
+      const bounds = containerRef.current?.getBoundingClientRect()
       setPointer({
-        x: (event.clientX - canvas.viewportX) / canvas.zoom,
-        y: (event.clientY - canvas.viewportY) / canvas.zoom,
+        x: (event.clientX - (bounds?.left || 0) - canvas.viewportX) / canvas.zoom,
+        y: (event.clientY - (bounds?.top || 0) - canvas.viewportY) / canvas.zoom,
       })
     }
     const active = interaction.current
@@ -254,7 +264,18 @@ const CanvasTool = ({ onClose }: { onClose: () => void }) => {
   }>
 
   return (
-    <Box sx={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden' }}>
+    <Box
+      ref={containerRef}
+      sx={{
+        position: fullscreen ? 'fixed' : 'relative',
+        inset: fullscreen ? 0 : undefined,
+        zIndex: fullscreen ? 1500 : undefined,
+        width: '100%',
+        height: fullscreen ? '100dvh' : '100%',
+        overflow: 'hidden',
+        bgcolor: 'background.default',
+      }}
+    >
       <Box
         sx={{
           position: 'absolute',
@@ -391,9 +412,10 @@ const CanvasTool = ({ onClose }: { onClose: () => void }) => {
             const minY = Math.min(...canvas.items.map((item) => item.y))
             const maxX = Math.max(...canvas.items.map((item) => item.x + item.width))
             const maxY = Math.max(...canvas.items.map((item) => item.y + item.height))
+            const bounds = containerRef.current?.getBoundingClientRect()
             const zoom = Math.min(1.5, Math.max(0.3, Math.min(
-              (window.innerWidth - 160) / Math.max(1, maxX - minX),
-              (window.innerHeight - 200) / Math.max(1, maxY - minY),
+              ((bounds?.width || window.innerWidth) - 80) / Math.max(1, maxX - minX),
+              ((bounds?.height || window.innerHeight) - 120) / Math.max(1, maxY - minY),
             )))
             setCanvas((current) => ({
               ...current,
@@ -415,11 +437,11 @@ const CanvasTool = ({ onClose }: { onClose: () => void }) => {
           Clear links
         </Button>
         <IconButton
-          aria-label="Close Canvas"
-          onClick={onClose}
+          aria-label={fullscreen ? 'Restore Canvas to Study Tools' : 'Maximize Canvas'}
+          onClick={() => onFullscreenChange(!fullscreen)}
           sx={{ color: 'text.primary', bgcolor: 'action.hover' }}
         >
-          <CloseIcon />
+          {fullscreen ? <CloseFullscreenIcon /> : <OpenInFullIcon />}
         </IconButton>
       </Box>
 
@@ -462,13 +484,16 @@ const CanvasTool = ({ onClose }: { onClose: () => void }) => {
           if (!event.ctrlKey && !event.metaKey) return
           event.preventDefault()
           const nextZoom = Math.min(3, Math.max(0.3, canvas.zoom + (event.deltaY > 0 ? -0.1 : 0.1)))
-          const canvasX = (event.clientX - canvas.viewportX) / canvas.zoom
-          const canvasY = (event.clientY - canvas.viewportY) / canvas.zoom
+          const bounds = containerRef.current?.getBoundingClientRect()
+          const localX = event.clientX - (bounds?.left || 0)
+          const localY = event.clientY - (bounds?.top || 0)
+          const canvasX = (localX - canvas.viewportX) / canvas.zoom
+          const canvasY = (localY - canvas.viewportY) / canvas.zoom
           setCanvas((current) => ({
             ...current,
             zoom: nextZoom,
-            viewportX: event.clientX - canvasX * nextZoom,
-            viewportY: event.clientY - canvasY * nextZoom,
+            viewportX: localX - canvasX * nextZoom,
+            viewportY: localY - canvasY * nextZoom,
           }), false)
         }}
         onDoubleClick={(event) => {

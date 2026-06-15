@@ -10,7 +10,6 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import type { StudyGuideRecord } from '../../cloud/types'
@@ -27,8 +26,12 @@ import DashboardChatPanel, {
 import TopNavBar from '../topnavbar/TopNavBar'
 import Main from '../Main'
 import HostedAiIntroModal from '../hostedAi/HostedAiIntroModal'
-import { useStudyTools } from '../studyTools'
-import { PrivateChatTool } from '../studyTools/tools/SimpleTools'
+import {
+  CompanionPanel,
+  CompanionModeIcon,
+  companionSectionLabel,
+  useStudyTools,
+} from '../studyTools'
 import {
   appendStudyGuideMarkdownPage,
   createMarkdownStudyGuidePageLayout,
@@ -92,9 +95,8 @@ const GuideWorkspacePage = () => {
   const [mobileSection, setMobileSection] = useState<
     'pages' | 'study-guide' | 'ai-chat'
   >('study-guide')
-  const { state: studyToolsState } = useStudyTools()
-  const privateChatEnabled = studyToolsState.privateChat.enabled
-  const chatLabel = privateChatEnabled ? 'Private Chat' : 'AI Chat'
+  const { activeMode, pomodoroStatus } = useStudyTools()
+  const chatLabel = companionSectionLabel(activeMode, pomodoroStatus)
   const isCreateRoute = searchParams.get('create') === '1'
 
   const loadRecord = () => {
@@ -350,13 +352,11 @@ const GuideWorkspacePage = () => {
         position: 'relative',
       }}
     >
-      {privateChatEnabled ? (
-        <PrivateChatTool
-          onClose={() =>
-            isMobile ? setMobileSection('study-guide') : setAiChatOpen(false)
-          }
-        />
-      ) : (
+      <CompanionPanel
+        onClose={() =>
+          isMobile ? setMobileSection('study-guide') : setAiChatOpen(false)
+        }
+        aiChat={
         <DashboardChatPanel
           dashboard={dashboard}
           messages={messages}
@@ -364,13 +364,14 @@ const GuideWorkspacePage = () => {
           onClose={() =>
             isMobile ? setMobileSection('study-guide') : setAiChatOpen(false)
           }
-          showCloseButton
+          showCloseButton={false}
           onAddAssistantMessageToGuide={addAssistantMessageToGuide}
           onQuickCreatePage={quickCreatePage}
           supportsStudyGuideCreateScope
         />
-      )}
-      {!privateChatEnabled && quickCreateError ? (
+        }
+      />
+      {activeMode === 'ai-chat' && quickCreateError ? (
         <Alert
           severity="error"
           sx={{
@@ -545,7 +546,7 @@ const GuideWorkspacePage = () => {
                         }}
                       >
                         <IconButton size="small" tabIndex={-1}>
-                          <ChatBubbleOutlineIcon fontSize="small" />
+                          <CompanionModeIcon mode={activeMode} />
                         </IconButton>
                         <Typography
                           variant="caption"

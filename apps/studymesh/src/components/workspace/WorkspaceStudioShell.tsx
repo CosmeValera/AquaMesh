@@ -12,7 +12,6 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import DashboardIcon from '@mui/icons-material/Dashboard'
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import AddIcon from '@mui/icons-material/Add'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import AutoStoriesIcon from '@mui/icons-material/AutoStories'
@@ -91,6 +90,11 @@ import { useResponsiveWorkspaceMode } from './useResponsiveWorkspaceMode'
 import StudyBlockView, {
   isStudyBlockType,
 } from '../WidgetEditor/components/preview/StudyBlockView'
+import {
+  CompanionModeIcon,
+  companionSectionLabel,
+  useStudyTools,
+} from '../studyTools'
 
 const quickCreateIcons: Record<StudyMaterialResourceType, React.ReactNode> = {
   quiz: <QuizIcon fontSize="small" />,
@@ -443,6 +447,7 @@ const isTerminalGenerationStatus = (draft: GenerationDraft) =>
 
 const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const { theme, isPhoneOrTablet: isMobile } = useResponsiveWorkspaceMode()
+  const { activeMode, pomodoroStatus } = useStudyTools()
   const initialDrafts = useMemo(() => {
     const placeholders = [
       createGenerationDraft('study-path', { isPlaceholder: true }),
@@ -2688,8 +2693,8 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         },
         {
           key: 'ai-chat',
-          label: 'AI Chat',
-          icon: <ChatBubbleOutlineIcon fontSize="small" />,
+          label: companionSectionLabel(activeMode, pomodoroStatus),
+          icon: <CompanionModeIcon mode={activeMode} />,
           onClick: openMobileAiChat,
         },
       ].map((item) => (

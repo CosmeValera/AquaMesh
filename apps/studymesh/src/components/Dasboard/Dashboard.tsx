@@ -33,7 +33,6 @@ import EditIcon from '@mui/icons-material/Edit'
 import ExtensionIcon from '@mui/icons-material/Extension'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
 import OpenInBrowserIcon from '@mui/icons-material/OpenInBrowser'
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import DashboardLayoutView from '../Layout/Layout'
 import { useLayout } from '../Layout/LayoutProvider'
 import { DashboardLayout, StateDashboard } from '../../state/store'
@@ -73,8 +72,12 @@ import { DashboardEditorResponsivePanels } from './DashboardEditorResponsivePane
 import type { DashboardEditorWidgetConfig } from './dashboardEditorTypes'
 import DashboardEmptyState from './DashboardEmptyState'
 import DashboardTabsBar from './DashboardTabsBar'
-import { useOptionalStudyTools } from '../studyTools'
-import { PrivateChatTool } from '../studyTools/tools/SimpleTools'
+import {
+  CompanionPanel,
+  CompanionModeIcon,
+  companionSectionLabel,
+  useStudyTools,
+} from '../studyTools'
 import {
   collectDashboardWidgetTabs,
   countDashboardNodes,
@@ -111,9 +114,8 @@ const readCurrentUserIsAdmin = () => {
 }
 
 const Dashboards = () => {
-  const studyTools = useOptionalStudyTools()
-  const privateChatEnabled = Boolean(studyTools?.state.privateChat.enabled)
-  const chatLabel = privateChatEnabled ? 'Private Chat' : 'AI Chat'
+  const { activeMode, pomodoroStatus } = useStudyTools()
+  const chatLabel = companionSectionLabel(activeMode, pomodoroStatus)
   const {
     theme,
     isPhone,
@@ -1453,9 +1455,9 @@ const Dashboards = () => {
   }
 
   const dashboardChatPanel = (
-    privateChatEnabled ? (
-      <PrivateChatTool onClose={closeDashboardChatPanel} />
-    ) : (
+    <CompanionPanel
+      onClose={closeDashboardChatPanel}
+      aiChat={
       <DashboardChatPanel
         dashboard={currentDashboard}
         messages={
@@ -1465,9 +1467,10 @@ const Dashboards = () => {
           updateDashboardChatMessages(currentDashboard, messages)
         }
         onClose={closeDashboardChatPanel}
-        showCloseButton={!isMobileDashboardView}
+        showCloseButton={false}
       />
-    )
+      }
+    />
   )
 
   const editDashboardFromTabs = (dashboard: StateDashboard) => {
@@ -1778,7 +1781,7 @@ const Dashboards = () => {
                     ),
                   }}
                 >
-                  <ChatBubbleOutlineIcon fontSize="small" />
+                  <CompanionModeIcon mode={activeMode} />
                 </Box>
                 <Box
                   sx={{ width: '100%', borderTop: 1, borderColor: 'divider' }}

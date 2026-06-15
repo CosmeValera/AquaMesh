@@ -3,7 +3,10 @@ export type StudyToolId =
   | 'pomodoro'
   | 'todo'
   | 'scratchpad'
-  | 'private-chat'
+  | 'quick-capture'
+
+export type CompanionMode = 'ai-chat' | StudyToolId
+export const POMODORO_RUNTIME_EVENT = 'studymesh-pomodoro-runtime'
 
 export interface CanvasItem {
   id: string
@@ -31,7 +34,7 @@ export interface TodoItem {
   dueDate?: string
 }
 
-export interface PrivateChatMessage {
+export interface QuickCaptureMessage {
   id: string
   content: string
   createdAt: number
@@ -44,8 +47,8 @@ export interface PrivateChatMessage {
   }>
 }
 
-export interface StudyToolsStateV1 {
-  version: 1
+export interface StudyToolsStateV2 {
+  version: 2
   canvas: {
     items: CanvasItem[]
     connections: CanvasConnection[]
@@ -65,9 +68,8 @@ export interface StudyToolsStateV1 {
     content: string
     updatedAt: string
   }
-  privateChat: {
-    enabled: boolean
-    messages: PrivateChatMessage[]
+  quickCapture: {
+    messages: QuickCaptureMessage[]
     updatedAt: string
   }
 }

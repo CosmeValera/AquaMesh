@@ -12,15 +12,21 @@ import {
   STUDY_TOOLS_CHANGED_EVENT,
   writeStudyToolsState,
 } from './storage'
-import type { StudyToolId, StudyToolsStateV1 } from './types'
-import StudyToolsShell from './StudyToolsShell'
+import {
+  POMODORO_RUNTIME_EVENT,
+  type CompanionMode,
+  type StudyToolId,
+  type StudyToolsStateV2,
+} from './types'
+import { Snackbar } from '@mui/material'
 
 interface StudyToolsContextValue {
-  activeTool: StudyToolId | null
+  activeMode: CompanionMode
   openTool: (tool: StudyToolId) => void
-  closeTool: () => void
-  state: StudyToolsStateV1
-  updateState: (updater: (state: StudyToolsStateV1) => StudyToolsStateV1) => void
+  setActiveMode: (mode: CompanionMode) => void
+  pomodoroStatus: string
+  state: StudyToolsStateV2
+  updateState: (updater: (state: StudyToolsStateV2) => StudyToolsStateV2) => void
   storageError: string
   clearStorageError: () => void
 }
@@ -32,9 +38,10 @@ export const StudyToolsProvider = ({
 }: {
   children: React.ReactNode
 }) => {
-  const [activeTool, setActiveTool] = useState<StudyToolId | null>(null)
+  const [activeMode, setActiveMode] = useState<CompanionMode>('ai-chat')
   const [state, setState] = useState(readStudyToolsState)
   const [storageError, setStorageError] = useState('')
+  const [pomodoroStatus, setPomodoroStatus] = useState('')
 
   useEffect(() => {
     const refresh = (event?: Event) => {
@@ -52,8 +59,17 @@ export const StudyToolsProvider = ({
     }
   }, [])
 
+  useEffect(() => {
+    const updatePomodoroStatus = (event: Event) => {
+      const detail = (event as CustomEvent<{ running?: boolean; time?: string }>).detail
+      setPomodoroStatus(detail?.running && detail.time ? detail.time : '')
+    }
+    window.addEventListener(POMODORO_RUNTIME_EVENT, updatePomodoroStatus)
+    return () => window.removeEventListener(POMODORO_RUNTIME_EVENT, updatePomodoroStatus)
+  }, [])
+
   const updateState = useCallback(
-    (updater: (current: StudyToolsStateV1) => StudyToolsStateV1) => {
+    (updater: (current: StudyToolsStateV2) => StudyToolsStateV2) => {
       setState((current) => {
         const next = updater(current)
         if (!writeStudyToolsState(next, true, 'provider')) {
@@ -69,35 +85,27 @@ export const StudyToolsProvider = ({
 
   const value = useMemo(
     () => ({
-      activeTool,
-      openTool: (tool: StudyToolId) => {
-        if (tool === 'private-chat') {
-          updateState((current) => ({
-            ...current,
-            privateChat: {
-              ...current.privateChat,
-              enabled: !current.privateChat.enabled,
-              updatedAt: new Date().toISOString(),
-            },
-          }))
-          setActiveTool(null)
-          return
-        }
-        setActiveTool(tool)
-      },
-      closeTool: () => setActiveTool(null),
+      activeMode,
+      openTool: (tool: StudyToolId) => setActiveMode(tool),
+      setActiveMode,
+      pomodoroStatus,
       state,
       updateState,
       storageError,
       clearStorageError: () => setStorageError(''),
     }),
-    [activeTool, state, storageError, updateState],
+    [activeMode, pomodoroStatus, state, storageError, updateState],
   )
 
   return (
     <StudyToolsContext.Provider value={value}>
       {children}
-      <StudyToolsShell />
+      <Snackbar
+        open={Boolean(storageError)}
+        autoHideDuration={6000}
+        message={storageError}
+        onClose={() => setStorageError('')}
+      />
     </StudyToolsContext.Provider>
   )
 }

@@ -1,12 +1,12 @@
-import type { StudyToolsStateV1 } from './types'
+import type { StudyToolsStateV2 } from './types'
 
-export const STUDY_TOOLS_STORAGE_KEY = 'studymesh-study-tools-v1'
+export const STUDY_TOOLS_STORAGE_KEY = 'studymesh-study-tools-v2'
 export const STUDY_TOOLS_CHANGED_EVENT = 'studymesh-study-tools-changed'
 
 const now = () => new Date().toISOString()
 
-export const createDefaultStudyToolsState = (): StudyToolsStateV1 => ({
-  version: 1,
+export const createDefaultStudyToolsState = (): StudyToolsStateV2 => ({
+  version: 2,
   canvas: {
     items: [],
     connections: [],
@@ -20,24 +20,24 @@ export const createDefaultStudyToolsState = (): StudyToolsStateV1 => ({
   },
   todo: { items: [], updatedAt: now() },
   scratchpad: { content: '', updatedAt: now() },
-  privateChat: { enabled: false, messages: [], updatedAt: now() },
+  quickCapture: { messages: [], updatedAt: now() },
 })
 
 export const normalizeStudyToolsState = (
   value: unknown,
-): StudyToolsStateV1 => {
+): StudyToolsStateV2 => {
   const fallback = createDefaultStudyToolsState()
   if (!value || typeof value !== 'object') {
     return fallback
   }
 
-  const state = value as Partial<StudyToolsStateV1>
-  if (state.version !== 1) {
+  const state = value as Partial<StudyToolsStateV2>
+  if (state.version !== 2) {
     return fallback
   }
 
   return {
-    version: 1,
+    version: 2,
     canvas: {
       ...fallback.canvas,
       ...(state.canvas || {}),
@@ -52,17 +52,17 @@ export const normalizeStudyToolsState = (
       items: Array.isArray(state.todo?.items) ? state.todo.items : [],
     },
     scratchpad: { ...fallback.scratchpad, ...(state.scratchpad || {}) },
-    privateChat: {
-      ...fallback.privateChat,
-      ...(state.privateChat || {}),
-      messages: Array.isArray(state.privateChat?.messages)
-        ? state.privateChat.messages
+    quickCapture: {
+      ...fallback.quickCapture,
+      ...(state.quickCapture || {}),
+      messages: Array.isArray(state.quickCapture?.messages)
+        ? state.quickCapture.messages
         : [],
     },
   }
 }
 
-export const readStudyToolsState = (): StudyToolsStateV1 => {
+export const readStudyToolsState = (): StudyToolsStateV2 => {
   try {
     return normalizeStudyToolsState(
       JSON.parse(window.localStorage.getItem(STUDY_TOOLS_STORAGE_KEY) || 'null'),
@@ -77,7 +77,7 @@ export const hasStoredStudyToolsState = (): boolean =>
   window.localStorage.getItem(STUDY_TOOLS_STORAGE_KEY) !== null
 
 export const writeStudyToolsState = (
-  state: StudyToolsStateV1,
+  state: StudyToolsStateV2,
   dispatch = true,
   source = 'external',
 ): boolean => {

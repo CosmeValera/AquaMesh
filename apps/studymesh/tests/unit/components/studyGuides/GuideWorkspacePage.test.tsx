@@ -7,9 +7,11 @@ import GuideWorkspacePage from '../../../../src/components/studyGuides/GuideWork
 
 vi.mock('../../../../src/components/studyTools', () => ({
   useStudyTools: () => ({
-    state: { privateChat: { enabled: false, messages: [] } },
-    updateState: vi.fn(),
+    activeMode: 'ai-chat',
   }),
+  companionSectionLabel: () => 'Companion',
+  CompanionModeIcon: () => <span />,
+  CompanionPanel: ({ aiChat }: { aiChat: React.ReactNode }) => <>{aiChat}</>,
 }))
 import { STUDY_GUIDES_STORAGE_KEY } from '../../../../src/studyGuides/storage'
 
@@ -82,7 +84,7 @@ describe('GuideWorkspacePage responsive sections', () => {
     )
   })
 
-  it('shows Pages, Study Guide, and AI Chat as phone/tablet peer sections', async () => {
+  it('shows Pages, Study Guide, and Companion as phone/tablet peer sections', async () => {
     render(
       <MemoryRouter initialEntries={['/workspace/guide-1']}>
         <Routes>
@@ -99,12 +101,12 @@ describe('GuideWorkspacePage responsive sections', () => {
     expect(
       screen.getByRole('button', { name: 'Study Guide' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'AI Chat' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Companion' })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Pages' }))
     expect(screen.getByTestId('pages-panel')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'AI Chat' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Companion' }))
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
   })
 })

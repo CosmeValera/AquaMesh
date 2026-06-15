@@ -4,66 +4,66 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  CompanionPanel,
   StudyToolsProvider,
   useStudyTools,
 } from '../../../../src/components/studyTools'
-import { PrivateChatTool } from '../../../../src/components/studyTools/tools/SimpleTools'
 
-const Probe = ({ chat = false }: { chat?: boolean }) => {
-  const { openTool, state } = useStudyTools()
+const Probe = () => {
+  const { activeMode, state } = useStudyTools()
   return (
     <>
-      <button onClick={() => openTool('canvas')}>Open Canvas</button>
-      <button onClick={() => openTool('private-chat')}>Toggle Private Chat</button>
+      <output aria-label="active mode">{activeMode}</output>
       <output aria-label="tools state">{JSON.stringify(state)}</output>
-      {chat && <PrivateChatTool />}
+      <CompanionPanel aiChat={<div>Dashboard AI</div>} onClose={vi.fn()} />
     </>
   )
 }
 
-describe('study tools workflows', () => {
+describe('Companion and study tools workflows', () => {
   beforeEach(() => {
     vi.mocked(window.localStorage.getItem).mockReturnValue(null)
     vi.mocked(window.localStorage.setItem).mockImplementation(() => undefined)
   })
 
-  it('keeps Private Chat enabled after sending a message', async () => {
+  const switchMode = async (name: string) => {
     const user = userEvent.setup()
-    render(
-      <StudyToolsProvider>
-        <Probe chat />
-      </StudyToolsProvider>,
-    )
+    await user.click(screen.getByRole('button', { name: 'Switch Companion mode' }))
+    await user.click(screen.getByRole('menuitem', { name: new RegExp(name, 'i') }))
+    return user
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Toggle Private Chat' }))
-    await user.type(screen.getByPlaceholderText('Message yourself...'), 'Remember this')
-    await user.click(screen.getByRole('button', { name: 'Send private message' }))
-
-    const state = JSON.parse(screen.getByLabelText('tools state').textContent || '{}')
-    expect(state.privateChat.enabled).toBe(true)
-    expect(state.privateChat.messages[0].content).toBe('Remember this')
-  })
-
-  it('stagger-adds Canvas cards and keeps arrow keys inside inline text', async () => {
-    const user = userEvent.setup()
+  it('defaults to AI Chat and switches to Quick Capture', async () => {
     render(
       <StudyToolsProvider>
         <Probe />
       </StudyToolsProvider>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Open Canvas' }))
-    await user.click(screen.getAllByRole('button', { name: 'Add note' })[0])
-    await user.type(screen.getByPlaceholderText('Write on this card...'), 'abc')
-    await user.keyboard('{ArrowLeft}')
-    await user.click(screen.getByRole('button', { name: 'Add note' }))
+    expect(screen.getByLabelText('active mode')).toHaveTextContent('ai-chat')
+    const user = await switchMode('Quick Capture')
+    await user.type(screen.getByPlaceholderText('Message yourself...'), 'Remember this')
+    await user.click(screen.getByRole('button', { name: 'Save quick capture' }))
 
     const state = JSON.parse(screen.getByLabelText('tools state').textContent || '{}')
-    expect(state.canvas.items).toHaveLength(2)
-    expect(state.canvas.items[0].content).toBe('abc')
-    expect(state.canvas.items[0].x).not.toBe(state.canvas.items[1].x)
-    expect(state.canvas.items[1].x).toBeGreaterThan(
-      state.canvas.items[0].x + state.canvas.items[0].width,
+    expect(screen.getByLabelText('active mode')).toHaveTextContent('quick-capture')
+    expect(state.quickCapture.messages[0].content).toBe('Remember this')
+  })
+
+  it('edits Canvas in the panel and maximizes the same Canvas instance', async () => {
+    render(
+      <StudyToolsProvider>
+        <Probe />
+      </StudyToolsProvider>,
     )
+
+    const user = await switchMode('Canvas')
+    await user.click(screen.getAllByRole('button', { name: 'Add note' })[0])
+    await user.type(screen.getByPlaceholderText('Write on this card...'), 'abc')
+    await user.click(screen.getByRole('button', { name: 'Maximize Canvas' }))
+
+    expect(screen.getByRole('button', { name: 'Restore Canvas to Study Tools' })).toBeInTheDocument()
+    const state = JSON.parse(screen.getByLabelText('tools state').textContent || '{}')
+    expect(state.canvas.items[0].content).toBe('abc')
   })
 })

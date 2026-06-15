@@ -20,20 +20,20 @@ describe('study tools storage', () => {
 
     const state = readStudyToolsState()
 
-    expect(state.version).toBe(1)
+    expect(state.version).toBe(2)
     expect(state.canvas.items).toEqual([])
     expect(state.todo.items).toEqual([])
   })
 
   it('normalizes missing tool sections', () => {
     const state = normalizeStudyToolsState({
-      version: 1,
+      version: 2,
       scratchpad: { content: 'Remember this' },
     })
 
     expect(state.scratchpad.content).toBe('Remember this')
     expect(state.canvas.connections).toEqual([])
-    expect(state.privateChat.messages).toEqual([])
+    expect(state.quickCapture.messages).toEqual([])
   })
 
   it('persists state and announces changes', () => {

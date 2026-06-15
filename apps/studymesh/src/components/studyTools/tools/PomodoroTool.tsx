@@ -12,15 +12,14 @@ import {
   Switch,
   TextField,
   Typography,
-  useMediaQuery,
   useTheme,
 } from '@mui/material'
-import CloseIcon from '@mui/icons-material/Close'
 import PauseIcon from '@mui/icons-material/Pause'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import SettingsIcon from '@mui/icons-material/Settings'
 import SkipNextIcon from '@mui/icons-material/SkipNext'
+import { POMODORO_RUNTIME_EVENT } from '../types'
 
 const STORAGE_KEY = 'studymesh-pomodoro-config-v1'
 const RUNTIME_KEY = 'studymesh-pomodoro-runtime-v1'
@@ -54,15 +53,8 @@ const secondsFor = (phase: Phase, config: Config) => config[phase] * 60
 const labelFor = (phase: Phase) =>
   phase === 'focus' ? 'Focus time' : phase === 'shortBreak' ? 'Short break' : 'Long break'
 
-const PomodoroTool = ({
-  open,
-  onClose,
-}: {
-  open: boolean
-  onClose: () => void
-}) => {
+const PomodoroTool = () => {
   const theme = useTheme()
-  const mobile = useMediaQuery(theme.breakpoints.down('md'))
   const [config, setConfig] = useState(readConfig)
   const [editingConfig, setEditingConfig] = useState(config)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -153,6 +145,16 @@ const PomodoroTool = ({
       history,
       savedAt: Date.now(),
     }))
+    window.dispatchEvent(
+      new CustomEvent(POMODORO_RUNTIME_EVENT, {
+        detail: {
+          running,
+          time: `${Math.floor(remaining / 60).toString().padStart(2, '0')}:${(remaining % 60)
+            .toString()
+            .padStart(2, '0')}`,
+        },
+      }),
+    )
   }, [completed, focusLabel, history, phase, remaining, running])
 
   useEffect(() => {
@@ -168,12 +170,12 @@ const PomodoroTool = ({
 
   const panel = (
     <Paper
-      elevation={10}
+      elevation={0}
       sx={{
-        width: mobile ? '100%' : 370,
-        maxHeight: mobile ? '92dvh' : 'calc(100dvh - 32px)',
+        width: '100%',
+        height: '100%',
         overflow: 'auto',
-        borderRadius: mobile ? '20px 20px 0 0' : 3,
+        borderRadius: 0,
       }}
     >
       <Box
@@ -189,9 +191,6 @@ const PomodoroTool = ({
         <Typography fontWeight={900} sx={{ flex: 1 }}>Pomodoro</Typography>
         <IconButton aria-label="Pomodoro settings" sx={{ color: 'inherit' }} onClick={() => setSettingsOpen(true)}>
           <SettingsIcon />
-        </IconButton>
-        <IconButton aria-label="Close Pomodoro" sx={{ color: 'inherit' }} onClick={onClose}>
-          <CloseIcon />
         </IconButton>
       </Box>
       <Stack spacing={2.5} alignItems="center" sx={{ p: 3 }}>
@@ -310,18 +309,7 @@ const PomodoroTool = ({
 
   return (
     <>
-      {open && (
-        <Box
-          sx={{
-            position: 'fixed',
-            left: mobile ? 0 : 16,
-            bottom: mobile ? 0 : 16,
-            zIndex: 1400,
-          }}
-        >
-          {panel}
-        </Box>
-      )}
+      {panel}
       <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} fullWidth maxWidth="xs">
         <DialogTitle>Pomodoro settings</DialogTitle>
         <DialogContent>

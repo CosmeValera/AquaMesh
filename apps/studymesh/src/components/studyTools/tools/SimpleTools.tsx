@@ -18,7 +18,6 @@ import SendIcon from '@mui/icons-material/Send'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
 import MicIcon from '@mui/icons-material/Mic'
 import StopIcon from '@mui/icons-material/Stop'
-import CloseIcon from '@mui/icons-material/Close'
 
 import { useStudyTools } from '../StudyToolsProvider'
 
@@ -356,28 +355,28 @@ export const ScratchpadTool = () => {
   )
 }
 
-export const PrivateChatTool = ({ onClose }: { onClose?: () => void }) => {
+export const QuickCaptureTool = () => {
   const { state, updateState } = useStudyTools()
   const [draft, setDraft] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [pendingAttachments, setPendingAttachments] = useState<
-    NonNullable<(typeof state.privateChat.messages)[number]['attachments']>
+    NonNullable<(typeof state.quickCapture.messages)[number]['attachments']>
   >([])
   const [recording, setRecording] = useState(false)
   const [mediaError, setMediaError] = useState('')
   const [search, setSearch] = useState('')
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
-  const updateMessages = (messages: typeof state.privateChat.messages) =>
+  const updateMessages = (messages: typeof state.quickCapture.messages) =>
     updateState((current) => ({
       ...current,
-      privateChat: { ...current.privateChat, messages, updatedAt: now() },
+      quickCapture: { ...current.quickCapture, messages, updatedAt: now() },
     }))
   const send = () => {
     const content = draft.trim()
     if (!content && pendingAttachments.length === 0) return
     updateMessages([
-      ...state.privateChat.messages,
+      ...state.quickCapture.messages,
       {
         id: id('message'),
         content,
@@ -464,36 +463,31 @@ export const PrivateChatTool = ({ onClose }: { onClose?: () => void }) => {
     <Stack spacing={1.5} sx={{ height: '100%', minHeight: 0, p: 1.5 }}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <Box sx={{ flex: 1 }}>
-          <Typography fontWeight={900}>Private Chat</Typography>
+          <Typography fontWeight={900}>Quick Capture</Typography>
           <Typography color="text.secondary" variant="caption">
-            Message yourself without AI. Synced with your StudyMesh workspace.
+            Capture thoughts, images, and voice notes without leaving your workspace.
           </Typography>
         </Box>
         <Button
           size="small"
-          disabled={!state.privateChat.messages.length}
+          disabled={!state.quickCapture.messages.length}
           onClick={() => {
-            const text = state.privateChat.messages
+            const text = state.quickCapture.messages
               .map((message) => `[${new Date(message.createdAt).toLocaleString()}] ${message.content}`)
               .join('\n\n')
             const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }))
             const link = document.createElement('a')
             link.href = url
-            link.download = 'studymesh-private-chat.txt'
+            link.download = 'studymesh-quick-capture.txt'
             link.click()
             URL.revokeObjectURL(url)
           }}
         >
           Export
         </Button>
-        {onClose && (
-          <IconButton aria-label="Close Private Chat" onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
-        )}
       </Box>
       <Stack spacing={1} sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-        {state.privateChat.messages
+        {state.quickCapture.messages
           .filter((message) =>
             message.content.toLowerCase().includes(search.trim().toLowerCase()),
           )
@@ -517,7 +511,7 @@ export const PrivateChatTool = ({ onClose }: { onClose?: () => void }) => {
                 value={message.content}
                 onChange={(event) =>
                   updateMessages(
-                    state.privateChat.messages.map((entry) =>
+                    state.quickCapture.messages.map((entry) =>
                       entry.id === message.id
                         ? { ...entry, content: event.target.value, updatedAt: Date.now() }
                         : entry,
@@ -568,7 +562,7 @@ export const PrivateChatTool = ({ onClose }: { onClose?: () => void }) => {
                 sx={{ color: 'inherit' }}
                 onClick={() =>
                   updateMessages(
-                    state.privateChat.messages.filter(
+                    state.quickCapture.messages.filter(
                       (entry) => entry.id !== message.id,
                     ),
                   )
@@ -605,7 +599,7 @@ export const PrivateChatTool = ({ onClose }: { onClose?: () => void }) => {
       </Stack>
       <TextField
         size="small"
-        label="Search private messages"
+        label="Search captures"
         value={search}
         onChange={(event) => setSearch(event.target.value)}
       />
@@ -659,7 +653,7 @@ export const PrivateChatTool = ({ onClose }: { onClose?: () => void }) => {
           }}
         />
         <IconButton
-          aria-label="Send private message"
+          aria-label="Save quick capture"
           onClick={send}
           sx={{
             width: 56,

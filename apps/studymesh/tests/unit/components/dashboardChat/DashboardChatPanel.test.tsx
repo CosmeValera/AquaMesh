@@ -1,7 +1,10 @@
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import DashboardChatPanel from '../../../../src/components/dashboardChat/DashboardChatPanel'
+import DashboardChatPanel, {
+  aiChatPets,
+  getAiChatPetSrc,
+} from '../../../../src/components/dashboardChat/DashboardChatPanel'
 import type { StateDashboard } from '../../../../src/state/store'
 
 vi.mock('../../../../src/quickCreate/ai', () => ({
@@ -180,6 +183,17 @@ describe('DashboardChatPanel quick create menu', () => {
 })
 
 describe('DashboardChatPanel chat management', () => {
+  it('uses each pet face image in chat and full image in the empty-chat hero', () => {
+    aiChatPets.forEach((pet) => {
+      expect(getAiChatPetSrc(pet, 'full')).toBe(
+        `/images/studymesh-ai-pet-${pet.id}.png`,
+      )
+      expect(getAiChatPetSrc(pet, 'face')).toBe(
+        `/images/studymesh-ai-pet-${pet.id}-face.png`,
+      )
+    })
+  })
+
   it('only offers delete inside Chats and closes the menu after deleting', async () => {
     vi.mocked(localStorage.getItem).mockImplementation((key) =>
       key === 'studymesh-dashboard-chat-sessions-dashboard-1'

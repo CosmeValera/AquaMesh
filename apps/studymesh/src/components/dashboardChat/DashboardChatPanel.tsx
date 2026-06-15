@@ -146,33 +146,44 @@ const quickCreateIcons: Record<QuickCreateActionId, React.ReactNode> = {
 
 type AiChatPetId = 'axolotl' | 'dolphin' | 'parrot'
 
-export const AI_CHAT_PET_STORAGE_KEY = 'studymesh-ai-chat-pet'
-export const AI_CHAT_PET_CHANGED_EVENT = 'studymesh-ai-chat-pet-changed'
-
-export const aiChatPets: Array<{
+interface AiChatPetDefinition {
   id: AiChatPetId
   label: string
   src: string
-}> = [
+  faceSrc: string
+}
+
+export const AI_CHAT_PET_STORAGE_KEY = 'studymesh-ai-chat-pet'
+export const AI_CHAT_PET_CHANGED_EVENT = 'studymesh-ai-chat-pet-changed'
+
+export const aiChatPets: AiChatPetDefinition[] = [
   {
     id: 'axolotl',
     label: 'Axolotl',
     src: '/images/studymesh-ai-pet-axolotl.png',
+    faceSrc: '/images/studymesh-ai-pet-axolotl-face.png',
   },
   {
     id: 'dolphin',
     label: 'Dolphin',
     src: '/images/studymesh-ai-pet-dolphin.png',
+    faceSrc: '/images/studymesh-ai-pet-dolphin-face.png',
   },
   {
     id: 'parrot',
     label: 'Parrot',
     src: '/images/studymesh-ai-pet-parrot.png',
+    faceSrc: '/images/studymesh-ai-pet-parrot-face.png',
   },
 ]
 
 export const isAiChatPetId = (value: string | null): value is AiChatPetId =>
   aiChatPets.some((pet) => pet.id === value)
+
+export const getAiChatPetSrc = (
+  pet: AiChatPetDefinition,
+  variant: 'face' | 'full',
+): string => (variant === 'face' ? pet.faceSrc : pet.src)
 
 const AiChatPet = ({
   pet,
@@ -190,7 +201,7 @@ const AiChatPet = ({
         width: compact ? { xs: 108, sm: 96 } : { xs: 112, sm: 154 },
         height: compact ? { xs: 108, sm: 96 } : { xs: 112, sm: 154 },
         flex: '0 0 auto',
-        backgroundImage: `url(${resolvedPet.src})`,
+        backgroundImage: `url(${getAiChatPetSrc(resolvedPet, 'full')})`,
         backgroundSize: 'contain',
         backgroundPosition: 'center bottom',
         backgroundRepeat: 'no-repeat',
@@ -758,7 +769,7 @@ const DashboardChatPanel = ({
         >
           <Box
             component="img"
-            src={activePet.src}
+            src={getAiChatPetSrc(activePet, 'face')}
             alt=""
             sx={{
               width: 34,
@@ -1002,7 +1013,7 @@ const DashboardChatPanel = ({
                 sx={{
                   position: 'absolute',
                   right: 8,
-                  bottom: 8,
+                  top: isPhone ? 28 : isMobile ? 40 : 28,
                   pointerEvents: 'none',
                 }}
               >
@@ -1095,7 +1106,7 @@ const DashboardChatPanel = ({
                     >
                       <Box
                         component="img"
-                        src={activePet.src}
+                        src={getAiChatPetSrc(activePet, 'face')}
                         alt=""
                         sx={{
                           width: isPhone ? 30 : 36,

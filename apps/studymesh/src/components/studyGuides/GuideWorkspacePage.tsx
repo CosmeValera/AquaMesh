@@ -39,7 +39,7 @@ import {
   createStudyGuideRecord,
 } from '../../studyGuides/storage'
 
-const AI_CHAT_MIN_WIDTH = 420
+export const AI_CHAT_MIN_WIDTH = 310
 const AI_CHAT_MAX_WIDTH = 720
 const AI_CHAT_RAIL_WIDTH = 58
 

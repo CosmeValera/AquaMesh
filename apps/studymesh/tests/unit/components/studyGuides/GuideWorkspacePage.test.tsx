@@ -3,7 +3,9 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import GuideWorkspacePage from '../../../../src/components/studyGuides/GuideWorkspacePage'
+import GuideWorkspacePage, {
+  AI_CHAT_MIN_WIDTH,
+} from '../../../../src/components/studyGuides/GuideWorkspacePage'
 import { STUDY_GUIDES_STORAGE_KEY } from '../../../../src/studyGuides/storage'
 
 vi.mock('../../../../src/components/topnavbar/TopNavBar', () => ({
@@ -59,6 +61,10 @@ const storedGuide = {
 }
 
 describe('GuideWorkspacePage responsive sections', () => {
+  it('allows the desktop AI Chat panel to shrink to 310px', () => {
+    expect(AI_CHAT_MIN_WIDTH).toBe(310)
+  })
+
   beforeEach(() => {
     vi.mocked(window.matchMedia).mockImplementation((query) => ({
       matches: query.includes('max-width'),

@@ -1193,28 +1193,43 @@ const DashboardChatPanel = ({
         <Stack direction="row" spacing={1} alignItems="flex-end">
           {onQuickCreatePage ? (
             <>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<AddCircleOutlineIcon fontSize="small" />}
-                endIcon={<ExpandMoreIcon fontSize="small" />}
-                disabled={!hasContext || Boolean(quickCreateActionId)}
-                onClick={(event) =>
-                  setQuickCreateMenuAnchor(event.currentTarget)
-                }
-                aria-haspopup="menu"
-                aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
-                sx={{
-                  height: 40,
-                  minHeight: 40,
-                  flex: '0 0 auto',
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  bgcolor: 'background.paper',
-                }}
-              >
-                Create
-              </Button>
+              <Tooltip title="Create">
+                <span>
+                  <IconButton
+                    size="small"
+                    aria-label="Create"
+                    disabled={!hasContext || Boolean(quickCreateActionId)}
+                    onClick={(event) =>
+                      setQuickCreateMenuAnchor(event.currentTarget)
+                    }
+                    aria-haspopup="menu"
+                    aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
+                    sx={{
+                      height: 40,
+                      minHeight: 40,
+                      width: 40,
+                      flex: '0 0 auto',
+                      borderRadius: 2,
+                      border: 1,
+                      borderColor: 'primary.main',
+                      color: 'primary.main',
+                      bgcolor: 'background.paper',
+                      '&:hover': {
+                        borderColor: 'primary.dark',
+                        color: 'primary.dark',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      },
+                      '&.Mui-disabled': {
+                        borderColor: 'divider',
+                        color: 'text.disabled',
+                        bgcolor: 'action.disabledBackground',
+                      },
+                    }}
+                  >
+                    <AddCircleOutlineIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
               {isMobile ? (
                 <Drawer
                   anchor="bottom"

@@ -107,7 +107,11 @@ describe('DashboardChatPanel quick create menu', () => {
     expect(screen.getByRole('button', { name: /^Create$/i })).toHaveStyle({
       height: '40px',
       minHeight: '40px',
+      width: '40px',
     })
+    expect(
+      screen.getByRole('button', { name: /^Create$/i }),
+    ).not.toHaveTextContent('Create')
     expect(
       screen.queryByRole('button', { name: /^Quiz$/i }),
     ).not.toBeInTheDocument()

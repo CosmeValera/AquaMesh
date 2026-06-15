@@ -77,6 +77,29 @@ const renderPanel = (
   )
 
 describe('DashboardChatPanel quick create menu', () => {
+  it('keeps the empty chat compact and shows its prompt ideas directly', () => {
+    renderPanel()
+
+    expect(
+      screen.queryByText(/Ask questions based on the sources/i),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Summarize the key ideas' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: "Explain this like I'm new" }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Generate exam-style questions' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'What should I review first?' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'More ideas' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('shows one Create entry point instead of permanent quick-create buttons', () => {
     renderPanel()
 

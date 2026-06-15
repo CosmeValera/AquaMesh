@@ -31,10 +31,8 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SearchIcon from '@mui/icons-material/Search'
 import ArticleIcon from '@mui/icons-material/Article'
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
-import TrackChangesIcon from '@mui/icons-material/TrackChanges'
 import { StateDashboard } from '../../state/store'
 import {
   buildDashboardChatContext,
@@ -82,13 +80,6 @@ interface DashboardChatPanelProps {
   supportsStudyGuideCreateScope?: boolean
 }
 
-const legacySuggestionLabels = [
-  'Summarize the key ideas',
-  'Explain this like I’m new',
-  'Generate exam-style questions',
-  'What should I review first?',
-]
-
 const suggestions = [
   {
     label: 'Summarize the key ideas',
@@ -101,10 +92,6 @@ const suggestions = [
   {
     label: 'Generate exam-style questions',
     icon: <HelpOutlineIcon fontSize="small" />,
-  },
-  {
-    label: 'What should I review first?',
-    icon: <TrackChangesIcon fontSize="small" />,
   },
 ]
 
@@ -931,19 +918,16 @@ const DashboardChatPanel = ({
             This dashboard does not have enough source content to chat with yet.
           </Alert>
         ) : messages.length === 0 ? (
-          <Stack spacing={2.25}>
+          <Stack spacing={1.25}>
             <Box
               sx={(theme) => ({
                 position: 'relative',
-                minHeight: isPhone ? 150 : isMobile ? 232 : 190,
-                mt: 0,
-                p: isPhone ? 2 : isMobile ? 2.5 : 2,
-                pl: isPhone ? 2 : isMobile ? 3 : 2,
-                pt: isPhone ? 2 : isMobile ? 2.5 : 2,
-                pr: isPhone ? 14 : isMobile ? 18 : 17,
+                minHeight: 154,
+                p: 2,
+                pr: isPhone ? 14 : 17,
                 border: 1,
                 borderColor: 'divider',
-                borderRadius: isMobile ? 3 : 2,
+                borderRadius: 2,
                 bgcolor: 'background.paper',
                 overflow: 'hidden',
                 boxShadow:
@@ -952,57 +936,10 @@ const DashboardChatPanel = ({
                     : '0 18px 44px rgba(16,24,40,0.10)',
               })}
             >
-              <Box
-                aria-hidden
-                sx={{
-                  display: 'none',
-                  position: 'absolute',
-                  left: isMobile ? -8 : -10,
-                  top: isMobile ? -94 : -76,
-                  width: isMobile ? 174 : 142,
-                  height: isMobile ? 178 : 146,
-                  backgroundImage: 'none',
-                  backgroundSize: isMobile ? '360px auto' : '294px auto',
-                  backgroundPosition: isMobile
-                    ? '-16px -176px'
-                    : '-13px -144px',
-                  backgroundRepeat: 'no-repeat',
-                  filter: 'drop-shadow(0 16px 20px rgba(15,118,110,0.18))',
-                  pointerEvents: 'none',
-                }}
-              />
-              <Box
-                sx={{
-                  display: 'none',
-                  position: 'absolute',
-                  left: isMobile ? 150 : 120,
-                  top: isMobile ? -48 : -38,
-                  maxWidth: isMobile
-                    ? 'min(220px, calc(100% - 165px))'
-                    : 'min(190px, calc(100% - 130px))',
-                  px: 1.25,
-                  py: 0.85,
-                  border: 1,
-                  borderColor: alpha(theme.palette.primary.main, 0.28),
-                  borderRadius: 2,
-                  bgcolor: 'background.paper',
-                  color: 'text.primary',
-                  fontWeight: 900,
-                  fontSize: isMobile ? 14 : 12,
-                  lineHeight: 1.25,
-                  boxShadow:
-                    theme.palette.mode === 'dark'
-                      ? '0 10px 22px rgba(0,0,0,0.28)'
-                      : '0 10px 22px rgba(16,24,40,0.08)',
-                }}
-              >
-                Hi! I&apos;m your StudyMesh AI.
-              </Box>
               <Typography
                 variant="h6"
                 fontWeight={900}
                 sx={{
-                  maxWidth: isPhone ? '58%' : isMobile ? '58%' : '64%',
                   fontSize: isPhone ? 18 : undefined,
                   lineHeight: isPhone ? 1.2 : undefined,
                 }}
@@ -1013,67 +950,37 @@ const DashboardChatPanel = ({
                 sx={{
                   position: 'absolute',
                   right: 8,
-                  top: isPhone ? 28 : isMobile ? 40 : 28,
+                  top: 20,
                   pointerEvents: 'none',
                 }}
               >
-                <AiChatPet pet={activePet} compact={isPhone} />
+                <AiChatPet pet={activePet} compact />
               </Box>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  maxWidth: isMobile ? '58%' : '66%',
-                  mt: 1,
-                  fontWeight: 600,
-                  display: isPhone ? 'none' : 'block',
-                }}
-              >
-                Ask questions based on the sources and study material in this
-                dashboard. I&apos;ll keep answers grounded in what&apos;s here.
-              </Typography>
             </Box>
-            <Stack spacing={1}>
+            <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
               {suggestions.map((suggestion) => (
                 <Button
                   key={suggestion.label}
-                  variant="outlined"
-                  disabled={!hasContext}
-                  onClick={() => sendQuestion(suggestion.label)}
-                  sx={{
-                    minHeight: isPhone ? 50 : isMobile ? 64 : 42,
-                    justifyContent: 'space-between',
-                    borderRadius: 2,
-                    py: 1,
-                    px: 1.25,
-                    bgcolor: 'background.paper',
-                    borderColor: 'divider',
-                    color: 'text.primary',
-                    textTransform: 'none',
-                    fontWeight: 900,
-                    gap: 1,
-                  }}
-                >
-                  <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box
-                      sx={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 1.5,
-                        display: 'grid',
-                        placeItems: 'center',
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                        color: 'primary.main',
-                        flex: '0 0 auto',
-                      }}
-                    >
+                    variant="outlined"
+                    disabled={!hasContext}
+                    onClick={() => sendQuestion(suggestion.label)}
+                    sx={{
+                      minHeight: 38,
+                      borderRadius: 999,
+                      py: 0.5,
+                      px: 1,
+                      bgcolor: 'background.paper',
+                      borderColor: 'divider',
+                      color: 'text.primary',
+                      textTransform: 'none',
+                      fontWeight: 800,
+                      gap: 0.75,
+                    }}
+                  >
+                    <Box sx={{ color: 'primary.main', display: 'flex' }}>
                       {suggestion.icon}
                     </Box>
-                    <Typography variant="body2" fontWeight={900}>
-                      {suggestion.label}
-                    </Typography>
-                  </Stack>
-                  <ArrowForwardIosIcon sx={{ fontSize: 16 }} />
+                  {suggestion.label}
                 </Button>
               ))}
             </Stack>

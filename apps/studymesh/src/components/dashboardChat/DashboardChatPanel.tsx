@@ -1009,16 +1009,18 @@ const DashboardChatPanel = ({
                         borderColor: 'divider',
                         borderRadius: '50%',
                         bgcolor: 'background.paper',
+                        overflow: 'hidden',
                       }}
                     >
                       <Box
                         component="img"
                         src={getAiChatPetSrc(activePet, 'face')}
                         alt=""
+                        data-testid="assistant-pet-face"
                         sx={{
-                          width: isPhone ? 30 : 36,
-                          height: isPhone ? 30 : 36,
-                          objectFit: 'contain',
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
                         }}
                       />
                     </Box>

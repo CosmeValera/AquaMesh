@@ -63,12 +63,13 @@ const renderPanel = (
       typeof DashboardChatPanel
     >['onQuickCreatePage']
     supportsStudyGuideCreateScope?: boolean
+    messages?: React.ComponentProps<typeof DashboardChatPanel>['messages']
   } = {},
 ) =>
   render(
     <DashboardChatPanel
       dashboard={options.dashboard ?? dashboardWithContext}
-      messages={[]}
+      messages={options.messages ?? []}
       onMessagesChange={vi.fn()}
       onClose={vi.fn()}
       onQuickCreatePage={options.onQuickCreatePage ?? vi.fn()}
@@ -214,6 +215,33 @@ describe('DashboardChatPanel chat management', () => {
       expect(getAiChatPetSrc(pet, 'face')).toBe(
         `/images/studymesh-ai-pet-${pet.id}-face.png`,
       )
+    })
+  })
+
+  it('clips assistant face images inside their circular avatars', () => {
+    const { container } = renderPanel({
+      messages: [
+        {
+          id: 'assistant-1',
+          role: 'assistant',
+          content: 'Answer',
+          createdAt: 1,
+        },
+      ],
+    })
+
+    const faceImage = container.querySelector<HTMLImageElement>(
+      '[data-testid="assistant-pet-face"]',
+    )
+
+    expect(faceImage).toHaveStyle({
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+    })
+    expect(faceImage?.parentElement).toHaveStyle({
+      borderRadius: '50%',
+      overflow: 'hidden',
     })
   })
 

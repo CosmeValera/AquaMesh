@@ -1,7 +1,6 @@
 import React, { useLayoutEffect, useMemo, useRef } from 'react'
 import {
   Box,
-  Button,
   IconButton,
   Paper,
   Stack,
@@ -13,6 +12,8 @@ import {
 import { alpha, type Theme } from '@mui/material/styles'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import EditIcon from '@mui/icons-material/Edit'
+import VisibilityIcon from '@mui/icons-material/Visibility'
 import { DashboardLayout, StudyPathContainerState } from '../../state/store'
 import {
   getStudyGuidePageMarkdown,
@@ -307,16 +308,30 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
           flexWrap="wrap"
         >
           {currentPageEditable ? (
-            <Button
-              size="small"
-              variant={isEditingCurrentPage ? 'contained' : 'outlined'}
-              onClick={toggleCurrentPageEditing}
-              sx={{ borderRadius: 2, textTransform: 'none' }}
+            <Tooltip
+              title={
+                isEditingCurrentPage
+                  ? 'Preview current page'
+                  : 'Edit current page'
+              }
             >
-              {isEditingCurrentPage
-                ? 'Preview current page'
-                : 'Edit current page'}
-            </Button>
+              <IconButton
+                size="small"
+                aria-label={
+                  isEditingCurrentPage
+                    ? 'Preview current page'
+                    : 'Edit current page'
+                }
+                onClick={toggleCurrentPageEditing}
+                sx={pageIconButtonSx()}
+              >
+                {isEditingCurrentPage ? (
+                  <VisibilityIcon fontSize="small" />
+                ) : (
+                  <EditIcon fontSize="small" />
+                )}
+              </IconButton>
+            </Tooltip>
           ) : null}
           <Stack direction="row" spacing={0.75} alignItems="center">
             <Tooltip title="Previous page">

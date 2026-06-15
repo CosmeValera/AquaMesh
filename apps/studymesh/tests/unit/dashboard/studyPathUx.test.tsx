@@ -14,6 +14,7 @@ import {
 } from '../../../src/state/store'
 import { useStore } from '../../../src/state/store'
 import { STUDY_GUIDES_STORAGE_KEY } from '../../../src/studyGuides/storage'
+import { createMarkdownStudyGuidePageLayout } from '../../../src/studyGuides/pages'
 
 vi.mock('../../../src/customHooks/useWorkspaceActions', () => ({
   ensureStarterDashboards: vi.fn(),
@@ -33,6 +34,10 @@ vi.mock('../../../src/components/Layout/Layout', () => ({
       <span>{layout?.name}</span>
     </div>
   ),
+}))
+
+vi.mock('../../../src/components/Dasboard/StudyGuidePageEditor', () => ({
+  default: () => <div data-testid="mock-study-guide-page-editor" />,
 }))
 
 const createMemoryStorage = () => {
@@ -221,6 +226,51 @@ describe('Interactive Study Guide UX', () => {
     expect(onStudyPathChange).toHaveBeenCalledWith(
       expect.objectContaining({ selectedIndex: 1 }),
     )
+  })
+
+  it('uses an icon-only edit and preview toggle for editable pages', () => {
+    const onEditingPageKeyChange = vi.fn()
+    const studyPath = createStudyPath()
+    const currentPage = studyPath.dashboards[0]
+    currentPage.deletable = true
+    currentPage.createdBy = 'manual'
+    currentPage.layout = createMarkdownStudyGuidePageLayout({
+      studyPath,
+      pageKey: currentPage.dashboardKey,
+      title: currentPage.name,
+      markdown: 'Lesson notes',
+      pageIndex: 1,
+      pageCount: studyPath.dashboards.length,
+    })
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <StudyPathWorkspaceView
+          studyPath={studyPath}
+          onStudyPathChange={vi.fn()}
+          onEditingPageKeyChange={onEditingPageKeyChange}
+        />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit current page' }))
+    expect(onEditingPageKeyChange).toHaveBeenCalledWith(currentPage.dashboardKey)
+
+    rerender(
+      <MemoryRouter>
+        <StudyPathWorkspaceView
+          studyPath={studyPath}
+          onStudyPathChange={vi.fn()}
+          editingPageKey={currentPage.dashboardKey}
+          onEditingPageKeyChange={onEditingPageKeyChange}
+        />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Preview current page' }),
+    )
+    expect(onEditingPageKeyChange).toHaveBeenLastCalledWith(null)
   })
 
   it('keeps Study Guides dropdown actions focused and opens lessons as standalone tabs', async () => {

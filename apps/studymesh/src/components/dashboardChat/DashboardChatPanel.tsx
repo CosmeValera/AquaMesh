@@ -249,6 +249,7 @@ const DashboardChatPanel = ({
     }
   })
   const [quickCreateSearch, setQuickCreateSearch] = useState('')
+  const [replyScrollBufferActive, setReplyScrollBufferActive] = useState(false)
   const [quickCreateSourceScope, setQuickCreateSourceScope] =
     useState<QuickCreateSourceScope>(
       supportsStudyGuideCreateScope ? 'studyGuide' : 'currentPage',
@@ -280,7 +281,7 @@ const DashboardChatPanel = ({
     'New chat'
 
   const scrollChatToBottom = () => {
-    const scrollToEnd = () => {
+    window.requestAnimationFrame(() => {
       const scrollElement = chatScrollRef.current
       if (scrollElement) {
         scrollElement.scrollTo({
@@ -288,11 +289,6 @@ const DashboardChatPanel = ({
           behavior: 'smooth',
         })
       }
-    }
-
-    window.requestAnimationFrame(() => {
-      scrollToEnd()
-      window.requestAnimationFrame(scrollToEnd)
     })
   }
 
@@ -312,6 +308,7 @@ const DashboardChatPanel = ({
   const replaceActiveChatMessages = (
     nextMessages: DashboardChatMessage[],
     title?: string,
+    options?: { scrollToBottom?: boolean },
   ) => {
     const now = Date.now()
     const currentSessions = chatSessionsRef.current.length
@@ -335,7 +332,9 @@ const DashboardChatPanel = ({
     persistChatSessions(nextSessions)
     messagesRef.current = nextMessages
     onMessagesChange(nextMessages)
-    scrollChatToBottom()
+    if (options?.scrollToBottom) {
+      scrollChatToBottom()
+    }
   }
 
   const startNewChat = () => {
@@ -507,6 +506,7 @@ const DashboardChatPanel = ({
           : 'Could not answer from this dashboard.',
       )
     } finally {
+      setReplyScrollBufferActive(false)
       setActiveStartedAt(null)
     }
   }
@@ -532,9 +532,11 @@ const DashboardChatPanel = ({
     }
     const previousMessages = messagesRef.current
     const nextMessages = [...previousMessages, userMessage, pendingMessage]
+    setReplyScrollBufferActive(true)
     replaceActiveChatMessages(
       nextMessages,
       previousMessages.length === 0 ? titleFromQuestion(trimmed) : undefined,
+      { scrollToBottom: true },
     )
     setDraft('')
     setError('')
@@ -1183,6 +1185,18 @@ const DashboardChatPanel = ({
             ))}
           </Stack>
         )}
+        {replyScrollBufferActive &&
+        messages.some((message) => message.pending) ? (
+          <Box
+            aria-hidden
+            sx={{
+              height: {
+                xs: 'max(220px, calc(100% - 120px))',
+                sm: 'max(260px, calc(100% - 132px))',
+              },
+            }}
+          />
+        ) : null}
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}

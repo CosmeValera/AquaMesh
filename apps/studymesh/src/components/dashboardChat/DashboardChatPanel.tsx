@@ -23,6 +23,8 @@ import {
 import { alpha } from '@mui/material/styles'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendIcon from '@mui/icons-material/Send'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import QuizIcon from '@mui/icons-material/Quiz'
@@ -546,6 +548,22 @@ const DashboardChatPanel = ({
     )
   }
 
+  const copyUserPrompt = (content: string) => {
+    void navigator.clipboard?.writeText(content)
+  }
+
+  const editUserPromptBranch = (message: DashboardChatMessage) => {
+    const messageIndex = messagesRef.current.findIndex(
+      ({ id }) => id === message.id,
+    )
+    const branchMessages =
+      messageIndex >= 0 ? messagesRef.current.slice(0, messageIndex) : []
+    setDraft(message.content)
+    setError('')
+    setReplyScrollBufferActive(false)
+    replaceActiveChatMessages(branchMessages)
+  }
+
   const runQuickCreate = async (action: QuickCreateAction) => {
     if (!onQuickCreatePage || quickCreateActionId) {
       return
@@ -927,7 +945,8 @@ const DashboardChatPanel = ({
         sx={{
           flex: 1,
           minHeight: 0,
-          overflow: 'auto',
+          overflowY: 'auto',
+          overflowX: 'hidden',
           p: isPhone ? 1.25 : 2,
           bgcolor:
             theme.palette.mode === 'dark'
@@ -1010,10 +1029,32 @@ const DashboardChatPanel = ({
             {messages.map((message) => (
               <Box
                 key={message.id}
+                className={
+                  message.role === 'user' ? 'studymesh-user-message' : undefined
+                }
                 sx={{
                   alignSelf:
                     message.role === 'user' ? 'flex-end' : 'flex-start',
                   maxWidth: message.role === 'user' ? '90%' : '96%',
+                  minWidth: 0,
+                  position: 'relative',
+                  '& .studymesh-user-message-actions': {
+                    opacity: 0,
+                    pointerEvents: 'none',
+                    transform: 'translateY(-2px)',
+                    transition: theme.transitions.create(
+                      ['opacity', 'transform'],
+                      {
+                        duration: theme.transitions.duration.shortest,
+                      },
+                    ),
+                  },
+                  '&:hover .studymesh-user-message-actions, &:focus-within .studymesh-user-message-actions':
+                    {
+                      opacity: 1,
+                      pointerEvents: 'auto',
+                      transform: 'translateY(0)',
+                    },
                 }}
               >
                 <Stack direction="row" spacing={0.75} alignItems="flex-end">
@@ -1066,6 +1107,8 @@ const DashboardChatPanel = ({
                           : 'divider',
                       boxShadow: 'none',
                       whiteSpace: 'pre-wrap',
+                      overflowWrap: 'anywhere',
+                      wordBreak: 'break-word',
                     }}
                   >
                     {message.pending ? (
@@ -1123,7 +1166,13 @@ const DashboardChatPanel = ({
                           '& p': { m: 0, mb: 1 },
                           '& p:last-child': { mb: 0 },
                           '& ul, & ol': { pl: 2.5, my: 0.75 },
-                          '& pre': { maxWidth: '100%' },
+                          '& pre': {
+                            maxWidth: '100%',
+                            overflowX: 'hidden',
+                            whiteSpace: 'pre-wrap',
+                            overflowWrap: 'anywhere',
+                          },
+                          '& code': { overflowWrap: 'anywhere' },
                         }}
                       >
                         {renderMarkdown(message.content)}
@@ -1133,6 +1182,57 @@ const DashboardChatPanel = ({
                     )}
                   </Box>
                 </Stack>
+                {message.role === 'user' ? (
+                  <Stack
+                    className="studymesh-user-message-actions"
+                    direction="row"
+                    spacing={0.5}
+                    justifyContent="flex-end"
+                    alignItems="center"
+                    sx={{ height: 34, pt: 0.5, pr: 0.25 }}
+                  >
+                    <Tooltip title="Copy prompt">
+                      <IconButton
+                        size="small"
+                        aria-label="Copy prompt"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          copyUserPrompt(message.content)
+                        }}
+                        sx={{
+                          width: 30,
+                          height: 30,
+                          bgcolor: 'background.paper',
+                          border: 1,
+                          borderColor: 'divider',
+                          color: 'text.secondary',
+                        }}
+                      >
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Edit prompt">
+                      <IconButton
+                        size="small"
+                        aria-label="Edit prompt"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          editUserPromptBranch(message)
+                        }}
+                        sx={{
+                          width: 30,
+                          height: 30,
+                          bgcolor: 'background.paper',
+                          border: 1,
+                          borderColor: 'divider',
+                          color: 'text.secondary',
+                        }}
+                      >
+                        <EditOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                ) : null}
                 {message.sources?.length ? (
                   <Stack
                     direction="row"

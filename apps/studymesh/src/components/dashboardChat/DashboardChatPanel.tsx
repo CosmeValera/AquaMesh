@@ -23,6 +23,8 @@ import {
 import { alpha } from '@mui/material/styles'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendIcon from '@mui/icons-material/Send'
@@ -33,6 +35,8 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SearchIcon from '@mui/icons-material/Search'
 import ArticleIcon from '@mui/icons-material/Article'
+import CheckIcon from '@mui/icons-material/Check'
+import CloseIcon from '@mui/icons-material/Close'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
 import { StateDashboard } from '../../state/store'
@@ -61,12 +65,16 @@ export interface DashboardChatMessage {
   createdAt: number
   sources?: string[]
   pending?: boolean
+  promptBranchId?: string
+  promptBranchIndex?: number
+  promptBranchCount?: number
 }
 
 interface DashboardChatSession {
   id: string
   title: string
   messages: DashboardChatMessage[]
+  branchSnapshots?: Record<string, DashboardChatMessage[][]>
   createdAt: number
   updatedAt: number
 }
@@ -110,6 +118,7 @@ const createEmptyChatSession = (): DashboardChatSession => ({
   id: makeChatSessionId(),
   title: 'New chat',
   messages: [],
+  branchSnapshots: {},
   createdAt: Date.now(),
   updatedAt: Date.now(),
 })
@@ -242,6 +251,8 @@ const DashboardChatPanel = ({
   const [chatMenuAnchor, setChatMenuAnchor] = useState<HTMLElement | null>(null)
   const [chatSessions, setChatSessions] = useState<DashboardChatSession[]>([])
   const [activeChatId, setActiveChatId] = useState('')
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
+  const [editingPromptDraft, setEditingPromptDraft] = useState('')
   const [activePetId, setActivePetId] = useState<AiChatPetId>(() => {
     try {
       const stored = window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY)
@@ -307,16 +318,80 @@ const DashboardChatPanel = ({
     }
   }
 
-  const replaceActiveChatMessages = (
-    nextMessages: DashboardChatMessage[],
-    title?: string,
-    options?: { scrollToBottom?: boolean },
-  ) => {
-    const now = Date.now()
+  const getActiveSession = () => {
     const currentSessions = chatSessionsRef.current.length
       ? chatSessionsRef.current
       : [createEmptyChatSession()]
     const sessionId = activeChatId || currentSessions[0].id
+    return {
+      currentSessions,
+      sessionId,
+      session: currentSessions.find(({ id }) => id === sessionId),
+    }
+  }
+
+  const withPromptBranchMetadata = (
+    tail: DashboardChatMessage[],
+    branchId: string,
+    branchIndex: number,
+    branchCount: number,
+  ): DashboardChatMessage[] =>
+    tail.map((message, index) =>
+      index === 0 && message.role === 'user'
+        ? {
+            ...message,
+            promptBranchId: branchId,
+            promptBranchIndex: branchIndex,
+            promptBranchCount: branchCount,
+          }
+        : message,
+    )
+
+  const syncCurrentBranchSnapshots = (
+    nextMessages: DashboardChatMessage[],
+    branchSnapshots?: Record<string, DashboardChatMessage[][]>,
+  ) => {
+    const nextBranchSnapshots = { ...(branchSnapshots || {}) }
+
+    nextMessages.forEach((message, index) => {
+      if (
+        message.role !== 'user' ||
+        !message.promptBranchId ||
+        message.promptBranchIndex === undefined
+      ) {
+        return
+      }
+
+      const branches = nextBranchSnapshots[message.promptBranchId]
+      if (!branches?.[message.promptBranchIndex]) {
+        return
+      }
+
+      nextBranchSnapshots[message.promptBranchId] = branches.map(
+        (branch, branchIndex) =>
+          branchIndex === message.promptBranchIndex
+            ? nextMessages.slice(index)
+            : branch,
+      )
+    })
+
+    return nextBranchSnapshots
+  }
+
+  const replaceActiveChatMessages = (
+    nextMessages: DashboardChatMessage[],
+    title?: string,
+    options?: {
+      branchSnapshots?: Record<string, DashboardChatMessage[][]>
+      scrollToBottom?: boolean
+    },
+  ) => {
+    const now = Date.now()
+    const { currentSessions, sessionId, session } = getActiveSession()
+    const branchSnapshots = syncCurrentBranchSnapshots(
+      nextMessages,
+      options?.branchSnapshots || session?.branchSnapshots,
+    )
     const nextSessions = currentSessions.map((session) =>
       session.id === sessionId
         ? {
@@ -327,6 +402,7 @@ const DashboardChatPanel = ({
                 ? titleFromQuestion(nextMessages[0].content)
                 : session.title),
             messages: nextMessages,
+            branchSnapshots,
             updatedAt: now,
           }
         : session,
@@ -552,16 +628,129 @@ const DashboardChatPanel = ({
     void navigator.clipboard?.writeText(content)
   }
 
-  const editUserPromptBranch = (message: DashboardChatMessage) => {
+  const startEditingUserPrompt = (message: DashboardChatMessage) => {
+    setEditingPromptId(message.id)
+    setEditingPromptDraft(message.content)
+  }
+
+  const cancelEditingUserPrompt = () => {
+    setEditingPromptId(null)
+    setEditingPromptDraft('')
+  }
+
+  const saveEditedUserPromptBranch = (message: DashboardChatMessage) => {
+    const trimmed = editingPromptDraft.trim()
+    if (!trimmed) {
+      return
+    }
+
     const messageIndex = messagesRef.current.findIndex(
       ({ id }) => id === message.id,
     )
-    const branchMessages =
-      messageIndex >= 0 ? messagesRef.current.slice(0, messageIndex) : []
-    setDraft(message.content)
+    if (messageIndex < 0) {
+      return
+    }
+
+    const { session } = getActiveSession()
+    const branchId = message.promptBranchId || message.id
+    const existingBranches = session?.branchSnapshots?.[branchId]
+    const currentBranchIndex = message.promptBranchIndex ?? 0
+    const currentTail = messagesRef.current.slice(messageIndex)
+    const baseBranches = existingBranches?.length
+      ? existingBranches.map((branch, branchIndex) =>
+          branchIndex === currentBranchIndex ? currentTail : branch,
+        )
+      : [currentTail]
+    const nextBranchIndex = baseBranches.length
+    const nextBranchCount = baseBranches.length + 1
+    const normalizedBranches = baseBranches.map((branch, branchIndex) =>
+      withPromptBranchMetadata(
+        branch,
+        branchId,
+        branchIndex,
+        nextBranchCount,
+      ),
+    )
+    const editedUserMessage: DashboardChatMessage = {
+      id: makeMessageId(),
+      role: 'user',
+      content: trimmed,
+      createdAt: Date.now(),
+      promptBranchId: branchId,
+      promptBranchIndex: nextBranchIndex,
+      promptBranchCount: nextBranchCount,
+    }
+    const pendingMessage: DashboardChatMessage = {
+      id: makeMessageId(),
+      role: 'assistant',
+      content: '',
+      createdAt: Date.now(),
+      pending: true,
+    }
+    const nextTail = [editedUserMessage, pendingMessage]
+    const branchSnapshots = {
+      ...(session?.branchSnapshots || {}),
+      [branchId]: [...normalizedBranches, nextTail],
+    }
+    const prefixMessages = messagesRef.current.slice(0, messageIndex)
+    const nextMessages = [...prefixMessages, ...nextTail]
+    setEditingPromptId(null)
+    setEditingPromptDraft('')
     setError('')
+    setReplyScrollBufferActive(true)
+    replaceActiveChatMessages(nextMessages, undefined, {
+      branchSnapshots,
+      scrollToBottom: true,
+    })
+    queueRef.current = queueRef.current.then(() =>
+      answerQuestion(trimmed, pendingMessage.id, prefixMessages),
+    )
+  }
+
+  const switchUserPromptBranch = (
+    message: DashboardChatMessage,
+    direction: -1 | 1,
+  ) => {
+    if (!message.promptBranchId || message.promptBranchIndex === undefined) {
+      return
+    }
+
+    const messageIndex = messagesRef.current.findIndex(
+      ({ id }) => id === message.id,
+    )
+    if (messageIndex < 0) {
+      return
+    }
+
+    const { session } = getActiveSession()
+    const branches = session?.branchSnapshots?.[message.promptBranchId]
+    if (!branches?.length) {
+      return
+    }
+
+    const nextBranchIndex =
+      (message.promptBranchIndex + direction + branches.length) %
+      branches.length
+    const nextTail = withPromptBranchMetadata(
+      branches[nextBranchIndex],
+      message.promptBranchId,
+      nextBranchIndex,
+      branches.length,
+    )
+    const branchSnapshots = {
+      ...(session?.branchSnapshots || {}),
+      [message.promptBranchId]: branches.map((branch, branchIndex) =>
+        branchIndex === nextBranchIndex ? nextTail : branch,
+      ),
+    }
+    setEditingPromptId(null)
+    setEditingPromptDraft('')
     setReplyScrollBufferActive(false)
-    replaceActiveChatMessages(branchMessages)
+    replaceActiveChatMessages(
+      [...messagesRef.current.slice(0, messageIndex), ...nextTail],
+      undefined,
+      { branchSnapshots },
+    )
   }
 
   const runQuickCreate = async (action: QuickCreateAction) => {
@@ -1036,6 +1225,10 @@ const DashboardChatPanel = ({
                   alignSelf:
                     message.role === 'user' ? 'flex-end' : 'flex-start',
                   maxWidth: message.role === 'user' ? '90%' : '96%',
+                  width:
+                    message.role === 'user' && editingPromptId === message.id
+                      ? 'min(90%, 360px)'
+                      : 'auto',
                   minWidth: 0,
                   position: 'relative',
                   '& .studymesh-user-message-actions': {
@@ -1089,6 +1282,11 @@ const DashboardChatPanel = ({
                   <Box
                     sx={{
                       minWidth: 0,
+                      maxWidth: '100%',
+                      width:
+                        message.role === 'user' && editingPromptId === message.id
+                          ? '100%'
+                          : 'auto',
                       px: 1.5,
                       py: 1.1,
                       borderRadius: 1.5,
@@ -1177,19 +1375,91 @@ const DashboardChatPanel = ({
                       >
                         {renderMarkdown(message.content)}
                       </Box>
+                    ) : editingPromptId === message.id ? (
+                      <Stack spacing={0.75}>
+                        <TextField
+                          value={editingPromptDraft}
+                          onChange={(event) =>
+                            setEditingPromptDraft(event.target.value)
+                          }
+                          autoFocus
+                          multiline
+                          minRows={2}
+                          size="small"
+                          fullWidth
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' && event.metaKey) {
+                              event.preventDefault()
+                              saveEditedUserPromptBranch(message)
+                            }
+                            if (event.key === 'Escape') {
+                              event.preventDefault()
+                              cancelEditingUserPrompt()
+                            }
+                          }}
+                          sx={{
+                            minWidth: 0,
+                            width: '100%',
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 1,
+                              bgcolor: 'background.paper',
+                            },
+                          }}
+                        />
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          justifyContent="flex-end"
+                        >
+                          <Tooltip title="Cancel edit">
+                            <IconButton
+                              size="small"
+                              aria-label="Cancel edit"
+                              onClick={cancelEditingUserPrompt}
+                              sx={{
+                                width: 26,
+                                height: 26,
+                                border: 1,
+                                borderColor: 'divider',
+                                bgcolor: 'background.paper',
+                              }}
+                            >
+                              <CloseIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Save edit">
+                            <IconButton
+                              size="small"
+                              aria-label="Save edit"
+                              disabled={!editingPromptDraft.trim()}
+                              onClick={() => saveEditedUserPromptBranch(message)}
+                              sx={{
+                                width: 26,
+                                height: 26,
+                                border: 1,
+                                borderColor: 'divider',
+                                bgcolor: 'background.paper',
+                                color: 'primary.main',
+                              }}
+                            >
+                              <CheckIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </Stack>
                     ) : (
                       <Typography variant="body2">{message.content}</Typography>
                     )}
                   </Box>
                 </Stack>
-                {message.role === 'user' ? (
+                {message.role === 'user' && editingPromptId !== message.id ? (
                   <Stack
                     className="studymesh-user-message-actions"
                     direction="row"
-                    spacing={0.5}
+                    spacing={0.35}
                     justifyContent="flex-end"
                     alignItems="center"
-                    sx={{ height: 34, pt: 0.5, pr: 0.25 }}
+                    sx={{ height: 26, pt: 0.25, pr: 0.25 }}
                   >
                     <Tooltip title="Copy prompt">
                       <IconButton
@@ -1200,12 +1470,13 @@ const DashboardChatPanel = ({
                           copyUserPrompt(message.content)
                         }}
                         sx={{
-                          width: 30,
-                          height: 30,
+                          width: 24,
+                          height: 24,
                           bgcolor: 'background.paper',
                           border: 1,
                           borderColor: 'divider',
                           color: 'text.secondary',
+                          '& svg': { fontSize: 16 },
                         }}
                       >
                         <ContentCopyIcon fontSize="small" />
@@ -1217,20 +1488,66 @@ const DashboardChatPanel = ({
                         aria-label="Edit prompt"
                         onClick={(event) => {
                           event.stopPropagation()
-                          editUserPromptBranch(message)
+                          startEditingUserPrompt(message)
                         }}
                         sx={{
-                          width: 30,
-                          height: 30,
+                          width: 24,
+                          height: 24,
                           bgcolor: 'background.paper',
                           border: 1,
                           borderColor: 'divider',
                           color: 'text.secondary',
+                          '& svg': { fontSize: 16 },
                         }}
                       >
                         <EditOutlinedIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
+                    {message.promptBranchId &&
+                    (message.promptBranchCount || 0) > 1 ? (
+                      <>
+                        <IconButton
+                          size="small"
+                          aria-label="Previous prompt branch"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            switchUserPromptBranch(message, -1)
+                          }}
+                          sx={{
+                            width: 22,
+                            height: 24,
+                            color: 'text.secondary',
+                            '& svg': { fontSize: 16 },
+                          }}
+                        >
+                          <ChevronLeftIcon fontSize="small" />
+                        </IconButton>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ minWidth: 24, textAlign: 'center' }}
+                        >
+                          {(message.promptBranchIndex ?? 0) + 1}/
+                          {message.promptBranchCount}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          aria-label="Next prompt branch"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            switchUserPromptBranch(message, 1)
+                          }}
+                          sx={{
+                            width: 22,
+                            height: 24,
+                            color: 'text.secondary',
+                            '& svg': { fontSize: 16 },
+                          }}
+                        >
+                          <ChevronRightIcon fontSize="small" />
+                        </IconButton>
+                      </>
+                    ) : null}
                   </Stack>
                 ) : null}
                 {message.sources?.length ? (

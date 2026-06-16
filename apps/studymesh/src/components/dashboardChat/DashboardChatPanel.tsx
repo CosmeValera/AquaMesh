@@ -192,7 +192,7 @@ const AiChatPet = ({
         backgroundSize: 'contain',
         backgroundPosition: 'center bottom',
         backgroundRepeat: 'no-repeat',
-        filter: 'drop-shadow(0 16px 18px rgba(139,92,246,0.14))',
+        filter: 'drop-shadow(0 12px 16px rgba(15,23,42,0.12))',
       }}
     />
   )
@@ -253,6 +253,7 @@ const DashboardChatPanel = ({
     useState<QuickCreateSourceScope>(
       supportsStudyGuideCreateScope ? 'studyGuide' : 'currentPage',
     )
+  const chatScrollRef = useRef<HTMLDivElement | null>(null)
   const messagesRef = useRef(messages)
   const queueRef = useRef(Promise.resolve())
   const chatSessionsRef = useRef<DashboardChatSession[]>([])
@@ -277,6 +278,23 @@ const DashboardChatPanel = ({
   const activeChatTitle =
     chatSessions.find((session) => session.id === activeChatId)?.title ||
     'New chat'
+
+  const scrollChatToBottom = () => {
+    const scrollToEnd = () => {
+      const scrollElement = chatScrollRef.current
+      if (scrollElement) {
+        scrollElement.scrollTo({
+          top: scrollElement.scrollHeight,
+          behavior: 'smooth',
+        })
+      }
+    }
+
+    window.requestAnimationFrame(() => {
+      scrollToEnd()
+      window.requestAnimationFrame(scrollToEnd)
+    })
+  }
 
   const persistChatSessions = (nextSessions: DashboardChatSession[]) => {
     chatSessionsRef.current = nextSessions
@@ -317,6 +335,7 @@ const DashboardChatPanel = ({
     persistChatSessions(nextSessions)
     messagesRef.current = nextMessages
     onMessagesChange(nextMessages)
+    scrollChatToBottom()
   }
 
   const startNewChat = () => {
@@ -587,7 +606,7 @@ const DashboardChatPanel = ({
     >
       <Stack spacing={1}>
         <Box sx={{ px: 0.5 }}>
-          <Typography variant="subtitle2" fontWeight={900}>
+          <Typography variant="subtitle2" fontWeight={600}>
             {supportsStudyGuideCreateScope
               ? quickCreateSourceScope === 'studyGuide'
                 ? 'Create from Study Guide source'
@@ -649,7 +668,7 @@ const DashboardChatPanel = ({
                 <Typography
                   variant="caption"
                   color="text.secondary"
-                  fontWeight={900}
+                  fontWeight={600}
                 >
                   {group}
                 </Typography>
@@ -695,16 +714,16 @@ const DashboardChatPanel = ({
                         flex: '0 0 auto',
                         display: 'grid',
                         placeItems: 'center',
-                        color: active ? 'inherit' : action.accent,
+                        color: active ? 'inherit' : 'text.secondary',
                         bgcolor: active
                           ? 'rgba(255,255,255,0.18)'
-                          : alpha(action.accent, 0.12),
+                          : 'action.hover',
                       }}
                     >
                       {quickCreateIcons[action.id]}
                     </Box>
                     <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="body2" fontWeight={900}>
+                      <Typography variant="body2" fontWeight={600}>
                         {active ? 'Thinking...' : action.label}
                       </Typography>
                       <Typography
@@ -756,7 +775,7 @@ const DashboardChatPanel = ({
         >
           <Box
             component="img"
-            src={getAiChatPetSrc(activePet, 'face')}
+            src={getAiChatPetSrc(activePet, 'full')}
             alt=""
             sx={{
               width: 34,
@@ -766,7 +785,7 @@ const DashboardChatPanel = ({
             }}
           />
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" fontWeight={900} noWrap>
+            <Typography variant="subtitle2" fontWeight={600} noWrap>
               AI Chat
             </Typography>
             <Typography
@@ -807,7 +826,7 @@ const DashboardChatPanel = ({
                 px: 1,
                 borderRadius: 1.25,
                 textTransform: 'none',
-                fontWeight: 800,
+                fontWeight: 600,
               }}
             >
               Chats
@@ -823,9 +842,9 @@ const DashboardChatPanel = ({
                   width: 30,
                   height: 30,
                   border: 1,
-                  borderColor: alpha(theme.palette.primary.main, 0.32),
+                  borderColor: theme.palette.divider,
                   borderRadius: 1.25,
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  bgcolor: 'background.paper',
                   color: 'primary.main',
                   flex: '0 0 auto',
                   transition: theme.transitions.create(
@@ -835,8 +854,8 @@ const DashboardChatPanel = ({
                     },
                   ),
                   '&:hover': {
-                    borderColor: 'primary.main',
-                    bgcolor: alpha(theme.palette.primary.main, 0.18),
+                    borderColor: alpha(theme.palette.primary.main, 0.48),
+                    bgcolor: alpha(theme.palette.primary.main, 0.08),
                   },
                 }}
               >
@@ -871,7 +890,7 @@ const DashboardChatPanel = ({
                 color={session.id === activeChatId ? 'primary' : 'inherit'}
               />
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="body2" fontWeight={800} noWrap>
+                <Typography variant="body2" fontWeight={600} noWrap>
                   {session.title}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" noWrap>
@@ -902,6 +921,7 @@ const DashboardChatPanel = ({
       </Menu>
 
       <Box
+        ref={chatScrollRef}
         sx={{
           flex: 1,
           minHeight: 0,
@@ -922,25 +942,22 @@ const DashboardChatPanel = ({
             <Box
               sx={(theme) => ({
                 position: 'relative',
-                minHeight: 154,
+                minHeight: 118,
                 p: 2,
-                pr: isPhone ? 14 : 17,
+                pr: isPhone ? 10 : 12,
                 border: 1,
                 borderColor: 'divider',
-                borderRadius: 2,
+                borderRadius: 1.5,
                 bgcolor: 'background.paper',
                 overflow: 'hidden',
-                boxShadow:
-                  theme.palette.mode === 'dark'
-                    ? '0 16px 36px rgba(0,0,0,0.28)'
-                    : '0 18px 44px rgba(16,24,40,0.10)',
+                boxShadow: 'none',
               })}
             >
               <Typography
                 variant="h6"
-                fontWeight={900}
+                fontWeight={600}
                 sx={{
-                  fontSize: isPhone ? 18 : undefined,
+                  fontSize: isPhone ? 18 : 20,
                   lineHeight: isPhone ? 1.2 : undefined,
                 }}
               >
@@ -949,9 +966,10 @@ const DashboardChatPanel = ({
               <Box
                 sx={{
                   position: 'absolute',
-                  right: 8,
-                  top: 20,
+                  right: 14,
+                  top: 24,
                   pointerEvents: 'none',
+                  opacity: 0.86,
                 }}
               >
                 <AiChatPet pet={activePet} compact />
@@ -961,25 +979,25 @@ const DashboardChatPanel = ({
               {suggestions.map((suggestion) => (
                 <Button
                   key={suggestion.label}
-                    variant="outlined"
-                    disabled={!hasContext}
-                    onClick={() => sendQuestion(suggestion.label)}
-                    sx={{
-                      minHeight: 38,
-                      borderRadius: 999,
-                      py: 0.5,
-                      px: 1,
-                      bgcolor: 'background.paper',
-                      borderColor: 'divider',
-                      color: 'text.primary',
-                      textTransform: 'none',
-                      fontWeight: 800,
-                      gap: 0.75,
-                    }}
-                  >
-                    <Box sx={{ color: 'primary.main', display: 'flex' }}>
-                      {suggestion.icon}
-                    </Box>
+                  variant="outlined"
+                  disabled={!hasContext}
+                  onClick={() => sendQuestion(suggestion.label)}
+                  sx={{
+                    minHeight: 36,
+                    borderRadius: 1,
+                    py: 0.5,
+                    px: 1.25,
+                    bgcolor: 'background.paper',
+                    borderColor: 'divider',
+                    color: 'text.primary',
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    gap: 0.75,
+                  }}
+                >
+                  <Box sx={{ color: 'text.secondary', display: 'flex' }}>
+                    {suggestion.icon}
+                  </Box>
                   {suggestion.label}
                 </Button>
               ))}
@@ -1030,26 +1048,21 @@ const DashboardChatPanel = ({
                       minWidth: 0,
                       px: 1.5,
                       py: 1.1,
-                      borderRadius:
-                        message.role === 'user'
-                          ? '18px 18px 6px 18px'
-                          : '18px 18px 18px 6px',
+                      borderRadius: 1.5,
                       bgcolor:
                         message.role === 'user'
-                          ? 'primary.main'
+                          ? alpha(theme.palette.primary.main, 0.08)
                           : 'background.paper',
                       color:
                         message.role === 'user'
-                          ? 'primary.contrastText'
+                          ? 'text.primary'
                           : 'text.primary',
-                      border: message.role === 'assistant' ? 1 : 0,
-                      borderColor: 'divider',
-                      boxShadow:
-                        message.role === 'assistant'
-                          ? theme.palette.mode === 'dark'
-                            ? '0 10px 24px rgba(0,0,0,0.22)'
-                            : '0 10px 24px rgba(16,24,40,0.08)'
-                          : 'none',
+                      border: 1,
+                      borderColor:
+                        message.role === 'user'
+                          ? alpha(theme.palette.primary.main, 0.18)
+                          : 'divider',
+                      boxShadow: 'none',
                       whiteSpace: 'pre-wrap',
                     }}
                   >
@@ -1158,7 +1171,7 @@ const DashboardChatPanel = ({
                     sx={{
                       mt: 0.75,
                       ml: isPhone ? 5 : 6,
-                      borderRadius: 2,
+                      borderRadius: 1,
                       textTransform: 'none',
                       bgcolor: 'background.paper',
                     }}
@@ -1209,15 +1222,15 @@ const DashboardChatPanel = ({
                       minHeight: 40,
                       width: 40,
                       flex: '0 0 auto',
-                      borderRadius: 2,
+                      borderRadius: 1,
                       border: 1,
-                      borderColor: 'primary.main',
-                      color: 'primary.main',
+                      borderColor: 'divider',
+                      color: 'text.secondary',
                       bgcolor: 'background.paper',
                       '&:hover': {
-                        borderColor: 'primary.dark',
-                        color: 'primary.dark',
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        borderColor: alpha(theme.palette.primary.main, 0.32),
+                        color: 'primary.main',
+                        bgcolor: alpha(theme.palette.primary.main, 0.05),
                       },
                       '&.Mui-disabled': {
                         borderColor: 'divider',
@@ -1253,13 +1266,13 @@ const DashboardChatPanel = ({
                   transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
                   PaperProps={{
                     sx: {
-                      borderRadius: 2,
+                      borderRadius: 1.5,
                       border: 1,
                       borderColor: 'divider',
                       boxShadow:
                         theme.palette.mode === 'dark'
-                          ? '0 18px 44px rgba(0,0,0,0.44)'
-                          : '0 18px 44px rgba(16,24,40,0.16)',
+                          ? '0 18px 44px rgba(0,0,0,0.36)'
+                          : '0 16px 36px rgba(15,23,42,0.12)',
                     },
                   }}
                 >
@@ -1281,7 +1294,7 @@ const DashboardChatPanel = ({
             size="small"
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: 2.5,
+                borderRadius: 1,
                 bgcolor:
                   theme.palette.mode === 'dark'
                     ? 'rgba(15,23,42,0.72)'
@@ -1304,8 +1317,9 @@ const DashboardChatPanel = ({
             disabled={!hasContext || !draft.trim()}
             aria-label="Send dashboard question"
             sx={{
-              width: 42,
-              height: 42,
+              width: 40,
+              height: 40,
+              borderRadius: 1,
               bgcolor:
                 hasContext && draft.trim()
                   ? 'primary.main'

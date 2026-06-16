@@ -113,6 +113,9 @@ export const createStudyMeshTheme = (
   return createTheme({
     palette: themePalette,
     typography,
+    shape: {
+      borderRadius: 8,
+    },
     components: {
       MuiCssBaseline: {
         styleOverrides: {
@@ -146,6 +149,7 @@ export const createStudyMeshTheme = (
         styleOverrides: {
           root: {
             backgroundImage: 'none',
+            borderRadius: 12,
           },
         },
       },
@@ -160,6 +164,8 @@ export const createStudyMeshTheme = (
             backgroundImage: 'none',
             backgroundColor: themePalette.background.dialog,
             color: themePalette.text.primary,
+            borderRadius: 16,
+            border: `1px solid ${themePalette.divider}`,
           },
         },
       },
@@ -169,6 +175,7 @@ export const createStudyMeshTheme = (
             backgroundImage: 'none',
             backgroundColor: themePalette.background.paper,
             color: themePalette.text.primary,
+            borderColor: themePalette.divider,
           },
         },
       },
@@ -176,6 +183,11 @@ export const createStudyMeshTheme = (
         styleOverrides: {
           paper: {
             backgroundImage: 'none',
+            borderRadius: 10,
+            border: `1px solid ${themePalette.divider}`,
+            boxShadow: isDark
+              ? '0 18px 44px rgba(0,0,0,0.42)'
+              : '0 16px 36px rgba(15,23,42,0.12)',
           },
         },
       },
@@ -184,12 +196,29 @@ export const createStudyMeshTheme = (
           root: {
             borderRadius: 8,
             textTransform: 'none',
+            minHeight: 36,
+            fontWeight: 500,
           },
           containedPrimary: {
             color: themePalette.primary.contrastText,
-            boxShadow: isDark
-              ? `0 10px 24px ${alpha(themePalette.primary.main, 0.22)}`
-              : undefined,
+            boxShadow: 'none',
+            '&:hover': {
+              boxShadow: 'none',
+            },
+          },
+          outlined: {
+            borderColor: themePalette.divider,
+            color: themePalette.text.primary,
+            '&:hover': {
+              borderColor: themePalette.text.secondary,
+              backgroundColor: themePalette.action.hover,
+            },
+          },
+          text: {
+            color: themePalette.text.primary,
+            '&:hover': {
+              backgroundColor: themePalette.action.hover,
+            },
           },
         },
       },
@@ -200,6 +229,7 @@ export const createStudyMeshTheme = (
             backgroundColor: 'transparent',
             border: '1px solid transparent',
             borderColor: 'transparent',
+            borderRadius: 8,
             '&:hover': {
               backgroundColor: themePalette.action.hover,
               borderColor: themePalette.divider,
@@ -239,9 +269,38 @@ export const createStudyMeshTheme = (
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
+            borderRadius: 8,
             backgroundColor: isDark
               ? alpha(themePalette.common.white, 0.03)
               : undefined,
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: themePalette.primary.main,
+              borderWidth: 1,
+            },
+          },
+        },
+      },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            borderRadius: 999,
+            fontWeight: 500,
+          },
+        },
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            minHeight: 36,
+            textTransform: 'none',
+            fontWeight: 500,
+          },
+        },
+      },
+      MuiTabs: {
+        styleOverrides: {
+          root: {
+            minHeight: 36,
           },
         },
       },

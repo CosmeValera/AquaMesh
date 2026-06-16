@@ -41,16 +41,17 @@ const pageIconButtonSx =
       tone === 'error' ? theme.palette.error.main : theme.palette.primary.main
 
     return {
-      width: 34,
-      height: 34,
+      width: 32,
+      height: 32,
       border: 1,
-      borderColor: alpha(color, 0.44),
-      bgcolor: alpha(color, theme.palette.mode === 'dark' ? 0.18 : 0.1),
+      borderColor:
+        tone === 'error' ? alpha(color, 0.36) : theme.palette.divider,
+      bgcolor: 'background.paper',
       color,
       flex: '0 0 auto',
       '&:hover': {
-        borderColor: color,
-        bgcolor: alpha(color, theme.palette.mode === 'dark' ? 0.28 : 0.18),
+        borderColor: tone === 'error' ? color : theme.palette.text.secondary,
+        bgcolor: alpha(color, theme.palette.mode === 'dark' ? 0.14 : 0.08),
       },
       '&.Mui-disabled': {
         borderColor: theme.palette.divider,
@@ -173,7 +174,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
             borderRight: 1,
             borderColor: 'divider',
             bgcolor: 'background.paper',
-            color: 'primary.main',
+            color: 'text.secondary',
             cursor: 'pointer',
             display: 'flex',
             flexDirection: 'column',
@@ -183,10 +184,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
           }}
         >
           <MenuBookOutlinedIcon fontSize="small" />
-          <Typography
-            variant="caption"
-            sx={{ writingMode: 'vertical-rl', fontWeight: 900 }}
-          >
+          <Typography variant="caption" sx={{ writingMode: 'vertical-rl' }}>
             Pages
           </Typography>
         </Box>
@@ -220,7 +218,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
         gap={1}
         sx={{ px: 1.5, py: 1.25, borderBottom: 1, borderColor: 'divider' }}
       >
-        <Typography variant="subtitle2" fontWeight={900}>
+        <Typography variant="subtitle2" fontWeight={600}>
           Pages
         </Typography>
         {!mobile ? (
@@ -272,13 +270,15 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                 }
                 sx={(theme) => ({
                   mx: 0.75,
-                  px: 0.5,
-                  py: 0.75,
-                  borderRadius: 1.5,
+                  px: 0.25,
+                  py: 0.5,
+                  borderRadius: 1,
                   border: 1,
-                  borderColor: active ? 'primary.main' : 'transparent',
+                  borderColor: active
+                    ? alpha(theme.palette.primary.main, 0.24)
+                    : 'transparent',
                   bgcolor: active
-                    ? alpha(theme.palette.primary.main, 0.12)
+                    ? alpha(theme.palette.primary.main, 0.055)
                     : 'transparent',
                   display: 'flex',
                   alignItems: 'center',
@@ -297,19 +297,26 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                   ]),
                   '&::before': {
                     content: '""',
-                    display:
-                      !mobile && insertionIndex === index ? 'block' : 'none',
+                    display: active
+                      ? 'block'
+                      : !mobile && insertionIndex === index
+                      ? 'block'
+                      : 'none',
                     position: 'absolute',
-                    top: -4,
-                    left: 8,
-                    right: 4,
-                    height: 3,
-                    borderRadius: 999,
-                    bgcolor: 'primary.main',
+                    top: active ? 8 : -4,
+                    bottom: active ? 8 : 'auto',
+                    left: active ? 0 : 8,
+                    right: active ? 'auto' : 4,
+                    width: active ? 3 : 'auto',
+                    height: active ? 'auto' : 3,
+                    borderRadius: 1,
+                    bgcolor: alpha(theme.palette.primary.main, 0.82),
                     pointerEvents: 'none',
                   },
                   '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                    bgcolor: active
+                      ? alpha(theme.palette.primary.main, 0.07)
+                      : theme.palette.action.hover,
                   },
                 })}
               >
@@ -323,16 +330,16 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                     justifyContent: 'flex-start',
                     textAlign: 'left',
                     textTransform: 'none',
-                    color: active ? 'primary.main' : 'text.primary',
+                    color: 'text.primary',
                   }}
                 >
                   <Stack direction="row" spacing={1} minWidth={0}>
-                    <Typography variant="caption" fontWeight={900}>
+                    <Typography variant="caption" fontWeight={600}>
                       {String(index + 1).padStart(2, '0')}
                     </Typography>
                     <Typography
                       variant="body2"
-                      fontWeight={active ? 900 : 500}
+                      fontWeight={active ? 600 : 500}
                       sx={{
                         lineHeight: 1.25,
                         display: '-webkit-box',
@@ -412,10 +419,16 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
         <Box sx={{ p: 1.25, borderTop: 1, borderColor: 'divider' }}>
           <Button
             fullWidth
-            variant="contained"
+            variant="outlined"
             startIcon={<AddIcon fontSize="small" />}
             onClick={onAddPage}
-            sx={{ borderRadius: 2, textTransform: 'none' }}
+            sx={{
+              borderRadius: 1,
+              textTransform: 'none',
+              bgcolor: 'background.paper',
+              borderColor: 'divider',
+              color: 'text.primary',
+            }}
           >
             Add Page
           </Button>

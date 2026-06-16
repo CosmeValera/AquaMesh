@@ -312,7 +312,7 @@ export const renderMarkdown = (markdown: string): React.ReactNode[] => {
         <Typography
           key={`heading-${index}`}
           variant={level <= 1 ? 'h5' : level === 2 ? 'h6' : 'subtitle1'}
-          fontWeight={800}
+          fontWeight={600}
           sx={{ mt: blocks.length === 0 ? 0 : 1.5 }}
         >
           {renderMarkdownInline(headingMatch[2])}
@@ -650,7 +650,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
         <Stack spacing={2.5} sx={{ width: 'min(760px, 100%)' }}>
           <Stack direction="row" justifyContent="space-between" gap={2}>
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h5" fontWeight={900}>
+              <Typography variant="h5" fontWeight={600}>
                 {title}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -893,7 +893,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
         <Stack spacing={2.5} sx={{ width: 'min(820px, 100%)' }}>
           <Stack direction="row" justifyContent="space-between" gap={2}>
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h5" fontWeight={900}>
+              <Typography variant="h5" fontWeight={600}>
                 {title}
               </Typography>
               <Typography variant="body2" color="text.secondary">

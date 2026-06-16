@@ -318,8 +318,8 @@ const StudyGuidesPage = () => {
         minHeight: '100dvh',
         background:
           theme.palette.mode === 'dark'
-            ? 'linear-gradient(180deg, #050816 0%, #0f172a 100%)'
-            : 'linear-gradient(180deg, #f8fafc 0%, #eef6f3 100%)',
+            ? 'linear-gradient(180deg, #070b12 0%, #0f172a 100%)'
+            : 'linear-gradient(180deg, #f8fafc 0%, #f4f6f8 100%)',
         color: 'text.primary',
       })}
     >
@@ -342,7 +342,7 @@ const StudyGuidesPage = () => {
           sx={{ mb: 2.5 }}
         >
           <Box>
-            <Typography variant="h4" fontWeight={950}>
+            <Typography variant="h4" fontWeight={650}>
               My Study Guides
             </Typography>
             <Typography color="text.secondary">
@@ -357,7 +357,7 @@ const StudyGuidesPage = () => {
             sx={{
               borderRadius: 2,
               textTransform: 'none',
-              fontWeight: 900,
+              fontWeight: 600,
               px: 2.25,
               boxShadow: 'none',
             }}
@@ -408,12 +408,12 @@ const StudyGuidesPage = () => {
               borderRadius: 2,
               border: 1,
               borderStyle: 'dashed',
-              borderColor: alpha(theme.palette.primary.main, 0.36),
+              borderColor: alpha(theme.palette.primary.main, 0.22),
               bgcolor: alpha(
                 theme.palette.primary.main,
-                theme.palette.mode === 'dark' ? 0.08 : 0.035,
+                theme.palette.mode === 'dark' ? 0.045 : 0.02,
               ),
-              color: 'primary.main',
+              color: 'text.primary',
               cursor: 'pointer',
               font: 'inherit',
               placeItems: 'center',
@@ -426,10 +426,10 @@ const StudyGuidesPage = () => {
               ]),
               '&:hover': {
                 transform: 'translateY(-2px)',
-                borderColor: 'primary.main',
+                borderColor: alpha(theme.palette.primary.main, 0.45),
                 bgcolor: alpha(
                   theme.palette.primary.main,
-                  theme.palette.mode === 'dark' ? 0.15 : 0.08,
+                  theme.palette.mode === 'dark' ? 0.08 : 0.04,
                 ),
                 boxShadow:
                   theme.palette.mode === 'dark'
@@ -450,13 +450,13 @@ const StudyGuidesPage = () => {
                   borderRadius: '50%',
                   display: 'grid',
                   placeItems: 'center',
-                  bgcolor: alpha(theme.palette.primary.main, 0.14),
+                  bgcolor: alpha(theme.palette.primary.main, 0.08),
                   color: 'primary.main',
                 })}
               >
                 <AddIcon sx={{ fontSize: 34 }} />
               </Box>
-              <Typography variant="h6" fontWeight={950} color="text.primary">
+              <Typography variant="h6" fontWeight={650} color="text.primary">
                 New Study Guide
               </Typography>
             </Stack>
@@ -479,7 +479,9 @@ const StudyGuidesPage = () => {
                   p: 2.25,
                   borderRadius: 3,
                   border: 1,
-                  borderColor: guide.error ? 'error.main' : 'primary.main',
+                  borderColor: guide.error
+                    ? 'error.main'
+                    : alpha(theme.palette.primary.main, 0.36),
                   bgcolor: 'background.paper',
                   overflow: 'hidden',
                   boxShadow:
@@ -510,7 +512,7 @@ const StudyGuidesPage = () => {
                   <Box sx={{ flex: 1 }}>
                     <Typography
                       variant="h6"
-                      fontWeight={900}
+                      fontWeight={650}
                       sx={{
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
@@ -599,7 +601,7 @@ const StudyGuidesPage = () => {
                   borderRadius: 2,
                   border: 1,
                   borderColor: guide.pinnedAt
-                    ? alpha(theme.palette.primary.main, 0.5)
+                    ? alpha(theme.palette.primary.main, 0.32)
                     : 'divider',
                   bgcolor: 'background.paper',
                   cursor: 'pointer',
@@ -611,7 +613,7 @@ const StudyGuidesPage = () => {
                   ]),
                   '&:hover': {
                     transform: 'translateY(-2px)',
-                    borderColor: 'primary.main',
+                    borderColor: alpha(theme.palette.primary.main, 0.38),
                     boxShadow:
                       theme.palette.mode === 'dark'
                         ? '0 18px 44px rgba(0,0,0,0.36)'
@@ -650,18 +652,18 @@ const StudyGuidesPage = () => {
                           height: 34,
                           border: 1,
                           borderColor: 'transparent',
-                          bgcolor: alpha(theme.palette.primary.main, 0.06),
+                          bgcolor: 'action.hover',
                           color: 'text.secondary',
                           '&:hover': {
                             borderColor: alpha(
                               theme.palette.primary.main,
-                              0.28,
+                              0.22,
                             ),
                             bgcolor: alpha(
                               theme.palette.primary.main,
-                              theme.palette.mode === 'dark' ? 0.28 : 0.18,
+                              theme.palette.mode === 'dark' ? 0.12 : 0.06,
                             ),
-                            color: 'primary.main',
+                            color: 'text.primary',
                           },
                         })}
                       >
@@ -672,7 +674,7 @@ const StudyGuidesPage = () => {
                   <Box sx={{ flex: 1 }}>
                     <Typography
                       variant="h6"
-                      fontWeight={900}
+                      fontWeight={650}
                       sx={{
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
@@ -717,7 +719,7 @@ const StudyGuidesPage = () => {
                           borderRadius: 999,
                           bgcolor: alpha(accent, 0.12),
                           color: accent,
-                          fontWeight: 900,
+                          fontWeight: 600,
                           fontSize: 12,
                           flex: '0 0 auto',
                         }}
@@ -815,7 +817,7 @@ const StudyGuidesPage = () => {
           },
         }}
       >
-        <DialogTitle sx={{ pb: 1, fontWeight: 900 }}>
+        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>
           New Study Guide
         </DialogTitle>
         <DialogContent>

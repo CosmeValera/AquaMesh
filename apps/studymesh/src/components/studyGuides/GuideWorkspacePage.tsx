@@ -284,9 +284,9 @@ const GuideWorkspacePage = () => {
         height: '100%',
         minHeight: 0,
         overflow: 'hidden',
-        border: 1,
+        border: isMobile ? 1 : 0,
         borderColor: 'divider',
-        borderRadius: isMobile ? 2 : 0,
+        borderRadius: isMobile ? 1.5 : 0,
         bgcolor: 'background.paper',
         position: 'relative',
         flex: 1,
@@ -312,7 +312,7 @@ const GuideWorkspacePage = () => {
         overflow: 'hidden',
         border: 1,
         borderColor: 'divider',
-        borderRadius: 2,
+        borderRadius: 1.5,
         bgcolor: 'background.paper',
         position: 'relative',
         display: 'flex',
@@ -338,9 +338,9 @@ const GuideWorkspacePage = () => {
         height: '100%',
         minHeight: 0,
         overflow: 'hidden',
-        border: 1,
+        border: isMobile ? 1 : 0,
         borderColor: 'divider',
-        borderRadius: isMobile ? 2 : 0,
+        borderRadius: isMobile ? 1.5 : 0,
         bgcolor: 'background.paper',
         position: 'relative',
       }}
@@ -416,7 +416,7 @@ const GuideWorkspacePage = () => {
                 textAlign: 'center',
               }}
             >
-              <Typography variant="h5" fontWeight={900}>
+              <Typography variant="h5" fontWeight={600}>
                 Study Guide not found
               </Typography>
               <Typography color="text.secondary" sx={{ mt: 1, mb: 2 }}>
@@ -476,7 +476,7 @@ const GuideWorkspacePage = () => {
                           key as 'pages' | 'study-guide' | 'ai-chat',
                         )
                       }
-                      sx={{ borderRadius: 999, textTransform: 'none' }}
+              sx={{ borderRadius: 1, textTransform: 'none' }}
                     >
                       {label}
                     </Button>
@@ -520,9 +520,9 @@ const GuideWorkspacePage = () => {
                           height: '100%',
                           border: 1,
                           borderColor: 'divider',
-                          borderRadius: 2,
+                          borderRadius: 0,
                           bgcolor: 'background.paper',
-                          color: 'primary.main',
+                          color: 'text.secondary',
                           cursor: 'pointer',
                           display: 'flex',
                           flexDirection: 'column',
@@ -531,12 +531,16 @@ const GuideWorkspacePage = () => {
                           py: 1,
                         }}
                       >
-                        <IconButton size="small" tabIndex={-1}>
+                        <IconButton
+                          size="small"
+                          tabIndex={-1}
+                          sx={{ color: 'primary.main' }}
+                        >
                           <ChatBubbleOutlineIcon fontSize="small" />
                         </IconButton>
                         <Typography
                           variant="caption"
-                          sx={{ writingMode: 'vertical-rl', fontWeight: 900 }}
+                          sx={{ writingMode: 'vertical-rl', fontWeight: 500 }}
                         >
                           AI Chat
                         </Typography>
@@ -563,7 +567,7 @@ const GuideWorkspacePage = () => {
                           bottom: 0,
                           left: 0,
                           width: 2,
-                          borderRadius: 999,
+                          borderRadius: 1,
                           bgcolor: 'divider',
                         },
                         '&:hover::after': { bgcolor: 'primary.main' },

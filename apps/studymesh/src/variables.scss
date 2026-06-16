@@ -11,49 +11,49 @@ body {
   --secondary-light: #00c49a;
   --secondary-dark: #007c66;
 
-  --grey-50: #f7fafb;
-  --grey-100: #eef3f5;
-  --grey-200: #e1eaed;
-  --grey-300: #cbd9de;
-  --grey-400: #a7b8be;
-  --grey-500: #83949a;
-  --grey-600: #627278;
-  --grey-700: #596569;
-  --grey-800: #3d4548;
-  --grey-900: #001026;
-  --grey-a100: #d3d8d9;
-  --grey-a200: #a4aeb2;
-  --grey-a400: #596569;
-  --grey-a700: #2d3334;
+  --grey-50: #f8fafc;
+  --grey-100: #f1f5f9;
+  --grey-200: #e2e8f0;
+  --grey-300: #cbd5e1;
+  --grey-400: #94a3b8;
+  --grey-500: #64748b;
+  --grey-600: #475569;
+  --grey-700: #334155;
+  --grey-800: #1e293b;
+  --grey-900: #0f172a;
+  --grey-a100: #e2e8f0;
+  --grey-a200: #cbd5e1;
+  --grey-a400: #64748b;
+  --grey-a700: #334155;
 
   /* common aliases */
-  --foreground-primary: #102a2dde;
-  --foreground-contrast-primary: #102a2dde;
-  --foreground-secondary: #173137f2;
-  --foreground-contrast-secondary: #173137f2;
-  --foreground-disabled: #2f474de0;
-  --foreground-contrast-disabled: #2f474de0;
+  --foreground-primary: #111827;
+  --foreground-contrast-primary: #111827;
+  --foreground-secondary: #475569;
+  --foreground-contrast-secondary: #475569;
+  --foreground-disabled: #94a3b8;
+  --foreground-contrast-disabled: #94a3b8;
 
   /* Background colors */
   --background-header: #ffffff;
-  --background-bar-dark: #cbd9de;
-  --background-bar-medium: #e5ecef;
-  --background-medium: #e5ecef;
-  --background-default: #eef3f5;
-  --background-light: #f7fafb;
+  --background-bar-dark: #e2e8f0;
+  --background-bar-medium: #f1f5f9;
+  --background-medium: #f1f5f9;
+  --background-default: #f6f8fa;
+  --background-light: #f8fafc;
   --background-paper: #ffffff;
 
-  --action-active: #00c49a33;
+  --action-active: #111827;
   --action-contrast-active: #ffffff7a;
-  --action-hover: #00c49a1f;
+  --action-hover: #0f172a0a;
   --action-contrast-hover: #ffffff14;
-  --action-selected: #00c49a24;
+  --action-selected: #007c6612;
   --action-contrast-selected: #ffffff29;
   --action-disabled: #00000042;
   --action-contrast-disabled: #ffffff42;
 
-  --other-divider: #102a2d42;
-  --other-outlined-border: #102a2d66;
+  --other-divider: #d7dee8;
+  --other-outlined-border: #cbd5e1;
   --other-backdrop-overlay: #00000080;
   --other-filled-input-background: #00000017;
   --other-standard-input-line: #0000006b;

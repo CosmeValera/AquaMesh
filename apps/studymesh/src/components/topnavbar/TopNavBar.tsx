@@ -10,6 +10,7 @@ import {
   MenuItem,
   Divider,
   Avatar,
+  Badge,
   Dialog,
   DialogActions,
   DialogContent,
@@ -22,7 +23,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import LogoutIcon from '@mui/icons-material/Logout'
@@ -40,6 +41,7 @@ import WidgetsIcon from '@mui/icons-material/Widgets'
 import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications'
 import ExtensionIcon from '@mui/icons-material/Extension'
 import EditIcon from '@mui/icons-material/Edit'
+import SettingsIcon from '@mui/icons-material/Settings'
 
 import AccentColorPicker from '../../theme/AccentColorPicker'
 import DashboardOptionsMenu from '../Dasboard/DashboardOptionsMenu'
@@ -82,6 +84,7 @@ import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceM
 import { deleteStudyMeshProfile, useAuth } from '../../auth/AuthProvider'
 import AiModePill from '../hostedAi/AiModePill'
 import AiModeDialog from '../hostedAi/AiModeDialog'
+import { useSocial } from '../../social'
 
 // Define user data type
 interface UserData {
@@ -110,8 +113,7 @@ const readCurrentUserData = (fallbackUserData: UserData) => {
   }
 }
 
-const isAdminUser = (userData: UserData) =>
-  userData.role === 'ADMIN_ROLE'
+const isAdminUser = (userData: UserData) => userData.role === 'ADMIN_ROLE'
 
 const canOpenStudyPathForCurrentState = (userData: UserData) => {
   return isAdminUser(userData)
@@ -259,11 +261,8 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const isAdmin = isAdminUser(userData)
   const userModeLabel = quickCreateAiProviderLabels[quickCreateAiProvider]
   const auth = useAuth()
-  const {
-    openCreateWidget,
-    openCreateDashboard,
-    createQuickCreateDashboards,
-  } = useWorkspaceActions()
+  const social = useSocial()
+  const { createQuickCreateDashboards } = useWorkspaceActions()
   const {
     addDashboard,
     openDashboards,
@@ -275,6 +274,13 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const currentDashboardTitle =
     currentDashboard?.studyPath?.title || currentDashboard?.name || 'StudyMesh'
   const navigate = useNavigate()
+  const location = useLocation()
+  const openFriends = useCallback(() => {
+    const returnTo = `${location.pathname}${location.search}${location.hash}`
+    navigate('/friends', {
+      state: returnTo.startsWith('/friends') ? undefined : { returnTo },
+    })
+  }, [location.hash, location.pathname, location.search, navigate])
 
   const {
     isPhone,
@@ -440,6 +446,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         loadWidget?: CustomWidget
         initialEditMode?: boolean
       }>
+      if (!customEvent.detail?.loadWidget) {
+        return
+      }
       setWidgetEditorPayload(customEvent.detail || null)
       setWidgetEditorOpen(true)
       dispatchWorkspaceOnboardingEvent({ type: 'widget-editor-opened' })
@@ -670,25 +679,42 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                 }}
               />
               <IconButton
-                onClick={handleUserMenuOpen}
-                aria-label="Open user menu"
+                onClick={openFriends}
+                aria-label="Open Friends and profile"
                 sx={{
                   width: 44,
                   height: 44,
                   color: 'foreground.contrastPrimary',
                 }}
               >
-                <Avatar
-                  src={avatarSrc || undefined}
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    bgcolor: 'primary.main',
-                    fontSize: '0.9rem',
-                  }}
-                >
-                  {userData.id.substring(0, 2).toUpperCase()}
-                </Avatar>
+                <Badge color="error" badgeContent={social.unreadCount}>
+                  <Avatar
+                    src={
+                      social.overview.profile?.avatarPath ||
+                      avatarSrc ||
+                      undefined
+                    }
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      bgcolor: 'primary.main',
+                      fontSize: '0.9rem',
+                    }}
+                  >
+                    {userData.id.substring(0, 2).toUpperCase()}
+                  </Avatar>
+                </Badge>
+              </IconButton>
+              <IconButton
+                onClick={handleUserMenuOpen}
+                aria-label="Open settings menu"
+                sx={{
+                  width: 44,
+                  height: 44,
+                  color: 'foreground.contrastPrimary',
+                }}
+              >
+                <SettingsIcon />
               </IconButton>
             </>
           ) : (
@@ -777,27 +803,33 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                 {isPhone || isTablet ? (
                   <ButtonWithLabel
                     icon={
-                      <Avatar
-                        src={avatarSrc || undefined}
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          bgcolor: 'primary.main',
-                          fontSize: '0.9rem',
-                        }}
-                      >
-                        {userData.id.substring(0, 2).toUpperCase()}
-                      </Avatar>
+                      <Badge color="error" badgeContent={social.unreadCount}>
+                        <Avatar
+                          src={
+                            social.overview.profile?.avatarPath ||
+                            avatarSrc ||
+                            undefined
+                          }
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            bgcolor: 'primary.main',
+                            fontSize: '0.9rem',
+                          }}
+                        >
+                          {userData.id.substring(0, 2).toUpperCase()}
+                        </Avatar>
+                      </Badge>
                     }
-                    label="User"
-                    aria-label="Open user menu"
-                    onClick={handleUserMenuOpen}
+                    label="Friends"
+                    aria-label="Open Friends and profile"
+                    onClick={openFriends}
                     sx={{ minWidth: '45px' }}
                   />
                 ) : (
                   <Button
-                    onClick={handleUserMenuOpen}
-                    aria-label="Open user menu"
+                    onClick={openFriends}
+                    aria-label="Open Friends and profile"
                     sx={{
                       color: 'foreground.contrastPrimary',
                       textTransform: 'none',
@@ -807,18 +839,27 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                     }}
                     endIcon={<KeyboardArrowDownIcon />}
                   >
-                    <Avatar
-                      src={avatarSrc || undefined}
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        bgcolor: 'primary.main',
-                        mr: 1,
-                        fontSize: '0.9rem',
-                      }}
+                    <Badge
+                      color="error"
+                      badgeContent={social.unreadCount}
+                      sx={{ mr: 1 }}
                     >
-                      {userData.id.substring(0, 2).toUpperCase()}
-                    </Avatar>
+                      <Avatar
+                        src={
+                          social.overview.profile?.avatarPath ||
+                          avatarSrc ||
+                          undefined
+                        }
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          bgcolor: 'primary.main',
+                          fontSize: '0.9rem',
+                        }}
+                      >
+                        {userData.id.substring(0, 2).toUpperCase()}
+                      </Avatar>
+                    </Badge>
                     <Box sx={{ textAlign: 'left' }}>
                       <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
                         {userData.name}
@@ -832,6 +873,17 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                     </Box>
                   </Button>
                 )}
+                <IconButton
+                  onClick={handleUserMenuOpen}
+                  aria-label="Open settings menu"
+                  sx={{
+                    color: 'foreground.contrastPrimary',
+                    width: 42,
+                    height: 42,
+                  }}
+                >
+                  <SettingsIcon />
+                </IconButton>
                 <Menu
                   anchorEl={userAnchorEl}
                   open={Boolean(userAnchorEl)}
@@ -905,18 +957,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                     </Box>
                   </Box>
                   <MenuItem
-                    onClick={openUserSettings}
-                    sx={{ color: 'text.primary', marginTop: 1 }}
-                  >
-                    <ListItemIcon>
-                      <PersonIcon
-                        fontSize="small"
-                        sx={{ color: 'text.secondary' }}
-                      />
-                    </ListItemIcon>
-                    User settings
-                  </MenuItem>
-                  <MenuItem
                     onClick={() => {
                       setIsSettingsOpen(true)
                       handleClose()
@@ -935,54 +975,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                       />
                     </ListItemIcon>
                     Settings
-                  </MenuItem>
-                  <Divider sx={{ borderColor: 'divider' }} />
-                  <Box sx={{ px: 2, pt: 0.5 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <ExtensionIcon
-                        fontSize="small"
-                        sx={{ color: 'primary.main', mr: 1 }}
-                      />
-                      <Typography variant="body2" fontWeight="medium">
-                        Advanced
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <MenuItem
-                    onClick={() => {
-                      openCreateDashboard()
-                      handleClose()
-                    }}
-                    disabled={!isAdmin}
-                    data-tutorial-id="create-dashboard-button"
-                    data-onboarding-id="create-dashboard"
-                    sx={{ color: 'text.primary' }}
-                  >
-                    <ListItemIcon>
-                      <AddToPhotosIcon
-                        fontSize="small"
-                        sx={{ color: 'text.secondary' }}
-                      />
-                    </ListItemIcon>
-                    Create Dashboard
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      openCreateWidget()
-                      handleClose()
-                    }}
-                    disabled={!isAdmin}
-                    data-tutorial-id="create-widget-button"
-                    data-onboarding-id="dashboard-widget-create"
-                    sx={{ color: 'text.primary' }}
-                  >
-                    <ListItemIcon>
-                      <WidgetsIcon
-                        fontSize="small"
-                        sx={{ color: 'text.secondary' }}
-                      />
-                    </ListItemIcon>
-                    Create Widget
                   </MenuItem>
                   <Divider sx={{ borderColor: 'divider' }} />
                   <MenuItem
@@ -1067,16 +1059,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
           </Box>
           <Divider sx={{ borderColor: 'divider' }} />
           <MenuItem
-            onClick={openUserSettings}
-            sx={{ color: 'text.primary', marginTop: 1 }}
-          >
-            <ListItemIcon>
-              <PersonIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-            </ListItemIcon>
-            User settings
-          </MenuItem>
-          <Divider sx={{ borderColor: 'divider' }} />
-          <MenuItem
             onClick={() => {
               setIsSettingsOpen(true)
               handleClose()
@@ -1091,47 +1073,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
             </ListItemIcon>
             Settings
           </MenuItem>
-          {creationHost !== 'external' ? (
-            <>
-              <MenuItem
-                onClick={() => {
-                  openCreateDashboard()
-                  handleClose()
-                }}
-                disabled={!isAdmin}
-                data-tutorial-id="create-dashboard-button"
-                data-onboarding-id="create-dashboard"
-                sx={{ color: 'text.primary' }}
-              >
-                <ListItemIcon>
-                  <AddToPhotosIcon
-                    fontSize="small"
-                    sx={{ color: 'text.secondary' }}
-                  />
-                </ListItemIcon>
-                Create Dashboard
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  openCreateWidget()
-                  handleClose()
-                }}
-                disabled={!isAdmin}
-                data-tutorial-id="create-widget-button"
-                data-onboarding-id="dashboard-widget-create"
-                sx={{ color: 'text.primary' }}
-              >
-                <ListItemIcon>
-                  <WidgetsIcon
-                    fontSize="small"
-                    sx={{ color: 'text.secondary' }}
-                  />
-                </ListItemIcon>
-                Create Widget
-              </MenuItem>
-              <Divider sx={{ borderColor: 'divider' }} />
-            </>
-          ) : null}
           <MenuItem onClick={handleLogout} sx={{ color: 'text.primary' }}>
             <ListItemIcon>
               <LogoutIcon fontSize="small" sx={{ color: 'text.secondary' }} />
@@ -1142,87 +1083,109 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       )}
 
       {creationHost !== 'external' ? (
-      <Drawer
-        anchor="bottom"
-        open={isMobileWorkspaceHeader && dashboardSelectorOpen}
-        onClose={() => setDashboardSelectorOpen(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: '20px 20px 0 0',
-            bgcolor: 'background.paper',
-            maxHeight: '72dvh',
-            pb: 'calc(12px + env(safe-area-inset-bottom))',
-          },
-        }}
-      >
-        <Box sx={{ p: 2, pb: 1 }}>
-          <Typography variant="subtitle1" fontWeight={900}>
-            Your dashboards
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Switch the active dashboard or create a new one.
-          </Typography>
-        </Box>
-        <Box sx={{ overflowY: 'auto', px: 1, pb: 1 }}>
-          {openDashboards.map((dashboard, index) => {
-            const dashboardTitle =
-              dashboard.studyPath?.title ||
-              dashboard.name ||
-              'Untitled dashboard'
-            const selected = index === selectedDashboard
-            const canEditDashboard =
-              isAdmin &&
-              (dashboard.kind === 'studyPathContainer'
-                ? Boolean(dashboard.studyPath?.dashboards.length)
-                : true)
+        <Drawer
+          anchor="bottom"
+          open={isMobileWorkspaceHeader && dashboardSelectorOpen}
+          onClose={() => setDashboardSelectorOpen(false)}
+          PaperProps={{
+            sx: {
+              borderRadius: '20px 20px 0 0',
+              bgcolor: 'background.paper',
+              maxHeight: '72dvh',
+              pb: 'calc(12px + env(safe-area-inset-bottom))',
+            },
+          }}
+        >
+          <Box sx={{ p: 2, pb: 1 }}>
+            <Typography variant="subtitle1" fontWeight={900}>
+              Your dashboards
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Switch the active dashboard or create a new one.
+            </Typography>
+          </Box>
+          <Box sx={{ overflowY: 'auto', px: 1, pb: 1 }}>
+            {openDashboards.map((dashboard, index) => {
+              const dashboardTitle =
+                dashboard.studyPath?.title ||
+                dashboard.name ||
+                'Untitled dashboard'
+              const selected = index === selectedDashboard
+              const canEditDashboard =
+                isAdmin &&
+                (dashboard.kind === 'studyPathContainer'
+                  ? Boolean(dashboard.studyPath?.dashboards.length)
+                  : true)
 
-            return (
-              <MenuItem
-                key={dashboard.id}
-                selected={selected}
-                onClick={() => {
-                  setSelectedDashboard(index)
-                  setDashboardSelectorOpen(false)
-                }}
-                sx={{
-                  minHeight: 48,
-                  borderRadius: 2,
-                  mb: 0.5,
-                  alignItems: 'center',
-                  pr: 0.5,
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 34 }}>
-                  {selected ? (
-                    <CheckCircleIcon fontSize="small" color="primary" />
-                  ) : (
-                    <Box sx={{ width: 20 }} />
-                  )}
-                </ListItemIcon>
-                <ListItemText
-                  primary={dashboardTitle}
-                  primaryTypographyProps={{
-                    noWrap: true,
-                    fontWeight: selected ? 800 : 500,
+              return (
+                <MenuItem
+                  key={dashboard.id}
+                  selected={selected}
+                  onClick={() => {
+                    setSelectedDashboard(index)
+                    setDashboardSelectorOpen(false)
                   }}
-                  sx={{ minWidth: 0, mr: 1 }}
-                />
-                {canEditDashboard && (
+                  sx={{
+                    minHeight: 48,
+                    borderRadius: 2,
+                    mb: 0.5,
+                    alignItems: 'center',
+                    pr: 0.5,
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 34 }}>
+                    {selected ? (
+                      <CheckCircleIcon fontSize="small" color="primary" />
+                    ) : (
+                      <Box sx={{ width: 20 }} />
+                    )}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={dashboardTitle}
+                    primaryTypographyProps={{
+                      noWrap: true,
+                      fontWeight: selected ? 800 : 500,
+                    }}
+                    sx={{ minWidth: 0, mr: 1 }}
+                  />
+                  {canEditDashboard && (
+                    <IconButton
+                      component="span"
+                      aria-label={`Edit ${dashboardTitle}`}
+                      size="small"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        window.dispatchEvent(
+                          new CustomEvent(OPEN_DASHBOARD_EDITOR_EVENT, {
+                            detail: {
+                              host: 'workspace-builder',
+                              dashboardId: dashboard.id,
+                            },
+                          }),
+                        )
+                        setDashboardSelectorOpen(false)
+                      }}
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        color: 'text.secondary',
+                        flex: '0 0 auto',
+                        '&:hover': {
+                          color: 'primary.main',
+                          bgcolor: 'action.hover',
+                        },
+                      }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  )}
                   <IconButton
                     component="span"
-                    aria-label={`Edit ${dashboardTitle}`}
+                    aria-label={`Close ${dashboardTitle}`}
                     size="small"
                     onClick={(event) => {
                       event.stopPropagation()
-                      window.dispatchEvent(
-                        new CustomEvent(OPEN_DASHBOARD_EDITOR_EVENT, {
-                          detail: {
-                            host: 'workspace-builder',
-                            dashboardId: dashboard.id,
-                          },
-                        }),
-                      )
-                      setDashboardSelectorOpen(false)
+                      removeDashboard(dashboard.id)
                     }}
                     sx={{
                       width: 36,
@@ -1230,53 +1193,18 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                       color: 'text.secondary',
                       flex: '0 0 auto',
                       '&:hover': {
-                        color: 'primary.main',
+                        color: 'error.main',
                         bgcolor: 'action.hover',
                       },
                     }}
                   >
-                    <EditIcon fontSize="small" />
+                    <CloseIcon fontSize="small" />
                   </IconButton>
-                )}
-                <IconButton
-                  component="span"
-                  aria-label={`Close ${dashboardTitle}`}
-                  size="small"
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    removeDashboard(dashboard.id)
-                  }}
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    color: 'text.secondary',
-                    flex: '0 0 auto',
-                    '&:hover': {
-                      color: 'error.main',
-                      bgcolor: 'action.hover',
-                    },
-                  }}
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </MenuItem>
-            )
-          })}
-          <Divider sx={{ my: 1 }} />
-          <MenuItem
-            onClick={() => {
-              addDashboard()
-              setDashboardSelectorOpen(false)
-            }}
-            sx={{ minHeight: 48, borderRadius: 2 }}
-          >
-            <ListItemIcon sx={{ minWidth: 34 }}>
-              <AddCircleOutlineIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText primary="Create new dashboard" />
-          </MenuItem>
-        </Box>
-      </Drawer>
+                </MenuItem>
+              )
+            })}
+          </Box>
+        </Drawer>
       ) : null}
 
       <Dialog

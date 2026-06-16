@@ -448,8 +448,8 @@ const GuideWorkspacePage = () => {
                   {mobileSection === 'pages'
                     ? pagesPanel
                     : mobileSection === 'study-guide'
-                    ? studyGuidePanel
-                    : chatPanel}
+                      ? studyGuidePanel
+                      : chatPanel}
                 </Box>
                 <Box
                   sx={{

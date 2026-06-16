@@ -241,22 +241,6 @@ export const useWorkspaceActions = () => {
     ],
   )
 
-  const openCreateWidget = useCallback(() => {
-    window.dispatchEvent(
-      new CustomEvent(OPEN_WIDGET_EDITOR_EVENT, {
-        detail: { host: 'studio' },
-      }),
-    )
-  }, [])
-
-  const openCreateDashboard = useCallback(() => {
-    window.dispatchEvent(
-      new CustomEvent(OPEN_DASHBOARD_EDITOR_EVENT, {
-        detail: { host: 'workspace-builder' },
-      }),
-    )
-  }, [])
-
   const openCreateStudyPath = useCallback((options?: { toggle?: boolean }) => {
     window.dispatchEvent(
       new CustomEvent(OPEN_STUDY_PATH_EVENT, { detail: options }),
@@ -437,8 +421,6 @@ export const useWorkspaceActions = () => {
 
   return {
     ensureDashboardAndAddComponent,
-    openCreateWidget,
-    openCreateDashboard,
     openCreateStudyPath,
     openCreateHub,
     createQuickCreateDashboards,

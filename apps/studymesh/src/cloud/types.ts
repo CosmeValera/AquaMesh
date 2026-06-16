@@ -64,6 +64,8 @@ export interface StudyGuideRecord {
   studyPath: StudyPathContainerState
   createdAt: string
   updatedAt: string
+  sharedFromUserId?: string
+  sharedFromGuideId?: string
 }
 
 export interface DashboardMergeResult {

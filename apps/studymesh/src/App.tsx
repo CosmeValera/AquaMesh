@@ -27,6 +27,8 @@ import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
 import StudyGuidesPage from './components/studyGuides/StudyGuidesPage'
 import GuideWorkspacePage from './components/studyGuides/GuideWorkspacePage'
 import HostedAiCheckoutReturn from './components/hostedAi/HostedAiCheckoutReturn'
+import FriendsPage from './components/social/FriendsPage'
+import { SocialProvider } from './social'
 
 import { createStudyMeshTheme } from './theme'
 import { AccentColorProvider } from './theme/AccentColorContext'
@@ -134,6 +136,30 @@ const AppShell = () => {
                     </RequireAuth>
                   }
                 />
+                <Route
+                  path="/friends"
+                  element={
+                    <RequireAuth>
+                      <FriendsPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/friends/chat/:friendId"
+                  element={
+                    <RequireAuth>
+                      <FriendsPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/friends/invite/:inviteToken"
+                  element={
+                    <RequireAuth>
+                      <FriendsPage />
+                    </RequireAuth>
+                  }
+                />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </LayoutProvider>
@@ -148,9 +174,11 @@ const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ThemeModeProvider>
-          <AppShell />
-        </ThemeModeProvider>
+        <SocialProvider>
+          <ThemeModeProvider>
+            <AppShell />
+          </ThemeModeProvider>
+        </SocialProvider>
       </AuthProvider>
     </BrowserRouter>
   )

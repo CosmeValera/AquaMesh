@@ -25,6 +25,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import PushPinIcon from '@mui/icons-material/PushPin'
 import SearchIcon from '@mui/icons-material/Search'
+import ShareIcon from '@mui/icons-material/Share'
 import { nanoid } from 'nanoid'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
@@ -37,6 +38,8 @@ import {
 import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
 import TopNavBar from '../topnavbar/TopNavBar'
+import ShareStudyGuideDialog from '../social/ShareStudyGuideDialog'
+import { useSocial } from '../../social'
 
 interface PendingGuide {
   id: string
@@ -117,6 +120,7 @@ const StudyGuidesPage = () => {
   const navigate = useNavigate()
   const theme = useTheme()
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
+  const { overview } = useSocial()
   const [searchParams, setSearchParams] = useSearchParams()
   const [guides, setGuides] = useState<StudyGuideRecord[]>([])
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
@@ -127,6 +131,7 @@ const StudyGuidesPage = () => {
   const [createGuideName, setCreateGuideName] = useState('')
   const [createGuideDescription, setCreateGuideDescription] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [shareGuide, setShareGuide] = useState<StudyGuideRecord | null>(null)
   const [pendingGuides, setPendingGuides] = useState<PendingGuide[]>([])
   const [now, setNow] = useState(Date.now())
 
@@ -308,6 +313,13 @@ const StudyGuidesPage = () => {
     if (menuGuide) {
       StudyGuideStorage.delete(menuGuide.id)
       loadGuides()
+    }
+    closeMenu()
+  }
+
+  const startShare = () => {
+    if (menuGuide) {
+      setShareGuide(menuGuide)
     }
     closeMenu()
   }
@@ -774,6 +786,12 @@ const StudyGuidesPage = () => {
           <PushPinIcon fontSize="small" sx={{ mr: 1 }} />
           {menuGuide?.pinnedAt ? 'Unpin' : 'Pin to top'}
         </MenuItem>
+        {overview.friends.length ? (
+          <MenuItem onClick={startShare}>
+            <ShareIcon fontSize="small" sx={{ mr: 1 }} />
+            Share with friend
+          </MenuItem>
+        ) : null}
         <MenuItem onClick={deleteGuide} sx={{ color: 'error.main' }}>
           <DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} />
           Delete
@@ -867,6 +885,13 @@ const StudyGuidesPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      {shareGuide ? (
+        <ShareStudyGuideDialog
+          open
+          studyGuideId={shareGuide.id}
+          onClose={() => setShareGuide(null)}
+        />
+      ) : null}
     </Box>
   )
 }

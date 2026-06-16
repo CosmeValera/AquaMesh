@@ -870,6 +870,406 @@ grant execute on function public.hosted_ai_attach_checkout_session(uuid, uuid, t
 grant execute on function public.hosted_ai_mark_credit_purchase_paid(uuid, text, text, integer, integer, text, jsonb) to service_role;
 grant execute on function public.hosted_ai_mark_credit_purchase_terminal(uuid, text, text, jsonb) to service_role;
 
+-- Private friends, messaging, presence, and Study Guide sharing.
+create table if not exists public.social_profiles (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  username text not null,
+  display_name text not null,
+  avatar_path text,
+  last_active_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint social_profiles_username_format_check
+    check (username ~ '^[a-z0-9_]{3,24}$')
+);
+
+create unique index if not exists social_profiles_username_lower_idx
+  on public.social_profiles(lower(username));
+
+create table if not exists public.social_friend_invites (
+  token uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references public.social_profiles(user_id) on delete cascade,
+  created_at timestamptz not null default now(),
+  revoked_at timestamptz
+);
+
+create table if not exists public.social_friendships (
+  id uuid primary key default gen_random_uuid(),
+  requester_id uuid not null references public.social_profiles(user_id) on delete cascade,
+  addressee_id uuid not null references public.social_profiles(user_id) on delete cascade,
+  status text not null default 'pending',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint social_friendships_not_self_check check (requester_id <> addressee_id),
+  constraint social_friendships_status_check check (status in ('pending', 'accepted'))
+);
+
+create unique index if not exists social_friendships_pair_idx
+  on public.social_friendships(
+    least(requester_id, addressee_id),
+    greatest(requester_id, addressee_id)
+  );
+
+create table if not exists public.social_blocks (
+  blocker_id uuid not null references public.social_profiles(user_id) on delete cascade,
+  blocked_id uuid not null references public.social_profiles(user_id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (blocker_id, blocked_id),
+  constraint social_blocks_not_self_check check (blocker_id <> blocked_id)
+);
+
+create table if not exists public.social_direct_messages (
+  id uuid primary key default gen_random_uuid(),
+  sender_id uuid not null references public.social_profiles(user_id) on delete cascade,
+  recipient_id uuid not null references public.social_profiles(user_id) on delete cascade,
+  body text not null,
+  created_at timestamptz not null default now(),
+  read_at timestamptz,
+  constraint social_direct_messages_body_check
+    check (char_length(trim(body)) between 1 and 4000)
+);
+
+alter table public.user_study_guides
+  add column if not exists shared_from_user_id uuid references public.profiles(id) on delete set null,
+  add column if not exists shared_from_guide_id text;
+
+create table if not exists public.social_guide_shares (
+  id uuid primary key default gen_random_uuid(),
+  sender_id uuid not null references public.social_profiles(user_id) on delete cascade,
+  recipient_id uuid not null references public.social_profiles(user_id) on delete cascade,
+  source_guide_id text not null,
+  title text not null,
+  description text,
+  emoji text,
+  guide_snapshot jsonb not null,
+  status text not null default 'pending',
+  created_at timestamptz not null default now(),
+  responded_at timestamptz,
+  constraint social_guide_shares_status_check
+    check (status in ('pending', 'accepted', 'declined'))
+);
+
+create table if not exists public.social_notifications (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references public.social_profiles(user_id) on delete cascade,
+  actor_id uuid references public.social_profiles(user_id) on delete cascade,
+  type text not null,
+  entity_id uuid,
+  created_at timestamptz not null default now(),
+  read_at timestamptz,
+  constraint social_notifications_type_check
+    check (type in ('friend_request', 'friend_accepted', 'guide_shared'))
+);
+
+drop trigger if exists social_profiles_set_updated_at on public.social_profiles;
+create trigger social_profiles_set_updated_at
+before update on public.social_profiles
+for each row execute function public.set_updated_at();
+
+drop trigger if exists social_friendships_set_updated_at on public.social_friendships;
+create trigger social_friendships_set_updated_at
+before update on public.social_friendships
+for each row execute function public.set_updated_at();
+
+create index if not exists social_messages_recipient_created_idx
+  on public.social_direct_messages(recipient_id, created_at desc);
+create index if not exists social_messages_sender_created_idx
+  on public.social_direct_messages(sender_id, created_at desc);
+create index if not exists social_shares_recipient_status_idx
+  on public.social_guide_shares(recipient_id, status, created_at desc);
+create index if not exists social_notifications_owner_created_idx
+  on public.social_notifications(owner_id, created_at desc);
+
+create or replace function public.social_are_friends(p_first uuid, p_second uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.social_friendships
+    where status = 'accepted'
+      and ((requester_id = p_first and addressee_id = p_second)
+        or (requester_id = p_second and addressee_id = p_first))
+  ) and not exists (
+    select 1 from public.social_blocks
+    where (blocker_id = p_first and blocked_id = p_second)
+       or (blocker_id = p_second and blocked_id = p_first)
+  );
+$$;
+
+create or replace function public.social_upsert_profile(
+  p_username text,
+  p_display_name text,
+  p_avatar_path text default null
+)
+returns public.social_profiles
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  result public.social_profiles;
+  normalized_username text := lower(trim(p_username));
+begin
+  if auth.uid() is null then raise exception 'Not authenticated'; end if;
+  if normalized_username !~ '^[a-z0-9_]{3,24}$' then
+    raise exception 'Username must use 3-24 lowercase letters, numbers, or underscores.';
+  end if;
+  if char_length(trim(p_display_name)) not between 1 and 60 then
+    raise exception 'Display name must use 1-60 characters.';
+  end if;
+
+  insert into public.social_profiles(user_id, username, display_name, avatar_path, last_active_at)
+  values (auth.uid(), normalized_username, trim(p_display_name), p_avatar_path, now())
+  on conflict (user_id) do update set
+    username = excluded.username,
+    display_name = excluded.display_name,
+    avatar_path = excluded.avatar_path,
+    last_active_at = now()
+  returning * into result;
+  return result;
+exception when unique_violation then
+  raise exception 'That username is already taken.';
+end;
+$$;
+
+create or replace function public.social_touch_presence()
+returns void language sql security definer set search_path = public as $$
+  update public.social_profiles set last_active_at = now() where user_id = auth.uid();
+$$;
+
+create or replace function public.social_find_exact_username(p_username text)
+returns setof public.social_profiles
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select profile.* from public.social_profiles profile
+  where lower(profile.username) = lower(trim(p_username))
+    and profile.user_id <> auth.uid()
+    and not exists (
+      select 1 from public.social_blocks block
+      where (block.blocker_id = auth.uid() and block.blocked_id = profile.user_id)
+         or (block.blocker_id = profile.user_id and block.blocked_id = auth.uid())
+    )
+  limit 1;
+$$;
+
+create or replace function public.social_create_invite()
+returns uuid language plpgsql security definer set search_path = public as $$
+declare result uuid;
+begin
+  if not exists (select 1 from public.social_profiles where user_id = auth.uid()) then
+    raise exception 'Create your Friends profile first.';
+  end if;
+  update public.social_friend_invites set revoked_at = now()
+  where owner_id = auth.uid() and revoked_at is null;
+  insert into public.social_friend_invites(owner_id) values (auth.uid())
+  returning token into result;
+  return result;
+end;
+$$;
+
+create or replace function public.social_send_friend_request(p_addressee_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare friendship_id uuid;
+begin
+  if p_addressee_id = auth.uid() then raise exception 'You cannot add yourself.'; end if;
+  if not exists (select 1 from public.social_profiles where user_id = auth.uid())
+    or not exists (select 1 from public.social_profiles where user_id = p_addressee_id) then
+    raise exception 'Friends profile not found.';
+  end if;
+  if exists (
+    select 1 from public.social_blocks where
+      (blocker_id = auth.uid() and blocked_id = p_addressee_id)
+      or (blocker_id = p_addressee_id and blocked_id = auth.uid())
+  ) then raise exception 'This friend request is unavailable.'; end if;
+
+  insert into public.social_friendships(requester_id, addressee_id)
+  values (auth.uid(), p_addressee_id)
+  on conflict do nothing
+  returning id into friendship_id;
+
+  if friendship_id is not null then
+    insert into public.social_notifications(owner_id, actor_id, type, entity_id)
+    values (p_addressee_id, auth.uid(), 'friend_request', friendship_id);
+  end if;
+end;
+$$;
+
+create or replace function public.social_accept_invite(p_token uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare target_id uuid;
+begin
+  select owner_id into target_id from public.social_friend_invites
+  where token = p_token and revoked_at is null;
+  if target_id is null then raise exception 'Friend invite is invalid or expired.'; end if;
+  perform public.social_send_friend_request(target_id);
+end;
+$$;
+
+create or replace function public.social_respond_friend_request(p_friendship_id uuid, p_accept boolean)
+returns void language plpgsql security definer set search_path = public as $$
+declare requester uuid;
+begin
+  select requester_id into requester from public.social_friendships
+  where id = p_friendship_id and addressee_id = auth.uid() and status = 'pending';
+  if requester is null then raise exception 'Friend request not found.'; end if;
+  delete from public.social_notifications where owner_id = auth.uid() and entity_id = p_friendship_id;
+  if p_accept then
+    update public.social_friendships set status = 'accepted' where id = p_friendship_id;
+    insert into public.social_notifications(owner_id, actor_id, type, entity_id)
+    values (requester, auth.uid(), 'friend_accepted', p_friendship_id);
+  else
+    delete from public.social_friendships where id = p_friendship_id;
+  end if;
+end;
+$$;
+
+create or replace function public.social_remove_friend(p_user_id uuid)
+returns void language sql security definer set search_path = public as $$
+  delete from public.social_friendships where
+    (requester_id = auth.uid() and addressee_id = p_user_id)
+    or (requester_id = p_user_id and addressee_id = auth.uid());
+$$;
+
+create or replace function public.social_block_user(p_user_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_user_id = auth.uid() then raise exception 'You cannot block yourself.'; end if;
+  insert into public.social_blocks(blocker_id, blocked_id)
+  values (auth.uid(), p_user_id) on conflict do nothing;
+  delete from public.social_friendships where
+    (requester_id = auth.uid() and addressee_id = p_user_id)
+    or (requester_id = p_user_id and addressee_id = auth.uid());
+  delete from public.social_guide_shares where status = 'pending' and
+    ((sender_id = auth.uid() and recipient_id = p_user_id)
+      or (sender_id = p_user_id and recipient_id = auth.uid()));
+end;
+$$;
+
+create or replace function public.social_list_blocked()
+returns setof public.social_profiles language sql stable security definer set search_path = public as $$
+  select profile.* from public.social_profiles profile
+  join public.social_blocks block on block.blocked_id = profile.user_id
+  where block.blocker_id = auth.uid();
+$$;
+
+create or replace function public.social_send_message(p_recipient_id uuid, p_body text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.social_are_friends(auth.uid(), p_recipient_id) then
+    raise exception 'Messages are only available between friends.';
+  end if;
+  insert into public.social_direct_messages(sender_id, recipient_id, body)
+  values (auth.uid(), p_recipient_id, trim(p_body));
+end;
+$$;
+
+create or replace function public.social_list_messages(p_friend_id uuid)
+returns setof public.social_direct_messages language sql stable security definer set search_path = public as $$
+  select message.* from public.social_direct_messages message
+  where public.social_are_friends(auth.uid(), p_friend_id)
+    and ((message.sender_id = auth.uid() and message.recipient_id = p_friend_id)
+      or (message.sender_id = p_friend_id and message.recipient_id = auth.uid()))
+  order by message.created_at asc
+  limit 500;
+$$;
+
+create or replace function public.social_mark_messages_read(p_friend_id uuid)
+returns void language sql security definer set search_path = public as $$
+  update public.social_direct_messages set read_at = now()
+  where recipient_id = auth.uid() and sender_id = p_friend_id and read_at is null;
+$$;
+
+create or replace function public.social_unread_message_count()
+returns bigint language sql stable security definer set search_path = public as $$
+  select count(*) from public.social_direct_messages
+  where recipient_id = auth.uid() and read_at is null;
+$$;
+
+create or replace function public.social_share_study_guide(p_recipient_id uuid, p_source_guide_id text)
+returns void language plpgsql security definer set search_path = public as $$
+declare source public.user_study_guides;
+declare share_id uuid;
+begin
+  if not public.social_are_friends(auth.uid(), p_recipient_id) then
+    raise exception 'Study Guides can only be shared with friends.';
+  end if;
+  select * into source from public.user_study_guides
+  where owner_id = auth.uid() and id = p_source_guide_id;
+  if source.id is null then raise exception 'Study Guide not found in cloud storage.'; end if;
+  insert into public.social_guide_shares(
+    sender_id, recipient_id, source_guide_id, title, description, guide_snapshot
+  ) values (
+    auth.uid(), p_recipient_id, source.id, source.title, source.description,
+    jsonb_build_object(
+      'id', source.id, 'title', source.title, 'folderName', source.folder_name,
+      'description', source.description, 'studyPath', source.study_path,
+      'createdAt', source.created_at, 'updatedAt', source.updated_at
+    )
+  ) returning id into share_id;
+  insert into public.social_notifications(owner_id, actor_id, type, entity_id)
+  values (p_recipient_id, auth.uid(), 'guide_shared', share_id);
+end;
+$$;
+
+create or replace function public.social_respond_guide_share(p_share_id uuid, p_accept boolean)
+returns void language plpgsql security definer set search_path = public as $$
+declare share public.social_guide_shares;
+declare new_id text := gen_random_uuid()::text;
+begin
+  select * into share from public.social_guide_shares
+  where id = p_share_id and recipient_id = auth.uid() and status = 'pending';
+  if share.id is null then raise exception 'Study Guide share not found.'; end if;
+  if p_accept then
+    insert into public.user_study_guides(
+      id, owner_id, title, folder_name, description, study_path,
+      shared_from_user_id, shared_from_guide_id
+    ) values (
+      new_id, auth.uid(), share.title,
+      coalesce(share.guide_snapshot->>'folderName', share.title),
+      share.description,
+      jsonb_set(share.guide_snapshot->'studyPath', '{pathId}', to_jsonb(new_id)),
+      share.sender_id, share.source_guide_id
+    );
+  end if;
+  update public.social_guide_shares set
+    status = case when p_accept then 'accepted' else 'declined' end,
+    responded_at = now()
+  where id = p_share_id;
+  delete from public.social_notifications where owner_id = auth.uid() and entity_id = p_share_id;
+end;
+$$;
+
+create or replace function public.social_mark_notifications_read()
+returns void language sql security definer set search_path = public as $$
+  update public.social_notifications set read_at = now()
+  where owner_id = auth.uid() and read_at is null;
+$$;
+
+revoke all on function public.social_are_friends(uuid, uuid) from public;
+grant execute on function public.social_upsert_profile(text, text, text) to authenticated;
+grant execute on function public.social_touch_presence() to authenticated;
+grant execute on function public.social_find_exact_username(text) to authenticated;
+grant execute on function public.social_create_invite() to authenticated;
+grant execute on function public.social_accept_invite(uuid) to authenticated;
+grant execute on function public.social_send_friend_request(uuid) to authenticated;
+grant execute on function public.social_respond_friend_request(uuid, boolean) to authenticated;
+grant execute on function public.social_remove_friend(uuid) to authenticated;
+grant execute on function public.social_block_user(uuid) to authenticated;
+grant execute on function public.social_list_blocked() to authenticated;
+grant execute on function public.social_send_message(uuid, text) to authenticated;
+grant execute on function public.social_list_messages(uuid) to authenticated;
+grant execute on function public.social_mark_messages_read(uuid) to authenticated;
+grant execute on function public.social_unread_message_count() to authenticated;
+grant execute on function public.social_share_study_guide(uuid, text) to authenticated;
+grant execute on function public.social_respond_guide_share(uuid, boolean) to authenticated;
+grant execute on function public.social_mark_notifications_read() to authenticated;
+
 -- Row level security
 alter table public.profiles enable row level security;
 alter table public.user_dashboards enable row level security;
@@ -880,6 +1280,13 @@ alter table public.user_workspace_state enable row level security;
 alter table public.hosted_ai_accounts enable row level security;
 alter table public.hosted_ai_usage_events enable row level security;
 alter table public.hosted_ai_credit_purchases enable row level security;
+alter table public.social_profiles enable row level security;
+alter table public.social_friend_invites enable row level security;
+alter table public.social_friendships enable row level security;
+alter table public.social_blocks enable row level security;
+alter table public.social_direct_messages enable row level security;
+alter table public.social_guide_shares enable row level security;
+alter table public.social_notifications enable row level security;
 
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own"
@@ -1048,6 +1455,95 @@ create policy "hosted_ai_credit_purchases_select_own"
 on public.hosted_ai_credit_purchases for select
 to authenticated
 using (owner_id = auth.uid());
+
+drop policy if exists "social_profiles_select_related" on public.social_profiles;
+create policy "social_profiles_select_related"
+on public.social_profiles for select to authenticated
+using (
+  user_id = auth.uid()
+  or public.social_are_friends(auth.uid(), user_id)
+  or exists (
+    select 1 from public.social_friendships friendship
+    where (friendship.requester_id = auth.uid() and friendship.addressee_id = user_id)
+       or (friendship.requester_id = user_id and friendship.addressee_id = auth.uid())
+  )
+  or exists (
+    select 1 from public.social_guide_shares share
+    where share.recipient_id = auth.uid() and share.sender_id = user_id
+  )
+  or exists (
+    select 1 from public.social_notifications notification
+    where notification.owner_id = auth.uid() and notification.actor_id = user_id
+  )
+);
+
+drop policy if exists "social_friendships_select_participant" on public.social_friendships;
+create policy "social_friendships_select_participant"
+on public.social_friendships for select to authenticated
+using (requester_id = auth.uid() or addressee_id = auth.uid());
+
+drop policy if exists "social_blocks_select_own" on public.social_blocks;
+create policy "social_blocks_select_own"
+on public.social_blocks for select to authenticated using (blocker_id = auth.uid());
+drop policy if exists "social_blocks_delete_own" on public.social_blocks;
+create policy "social_blocks_delete_own"
+on public.social_blocks for delete to authenticated using (blocker_id = auth.uid());
+
+drop policy if exists "social_messages_select_participant" on public.social_direct_messages;
+create policy "social_messages_select_participant"
+on public.social_direct_messages for select to authenticated
+using (sender_id = auth.uid() or recipient_id = auth.uid());
+
+drop policy if exists "social_shares_select_participant" on public.social_guide_shares;
+create policy "social_shares_select_participant"
+on public.social_guide_shares for select to authenticated
+using (sender_id = auth.uid() or recipient_id = auth.uid());
+
+drop policy if exists "social_notifications_select_own" on public.social_notifications;
+create policy "social_notifications_select_own"
+on public.social_notifications for select to authenticated using (owner_id = auth.uid());
+
+do $$
+begin
+  alter publication supabase_realtime add table
+    public.social_friendships,
+    public.social_direct_messages,
+    public.social_guide_shares,
+    public.social_notifications;
+exception when duplicate_object then null;
+end $$;
+
+insert into storage.buckets(id, name, public)
+values ('social-avatars', 'social-avatars', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "social_avatars_insert_own" on storage.objects;
+create policy "social_avatars_insert_own"
+on storage.objects for insert to authenticated
+with check (
+  bucket_id = 'social-avatars'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "social_avatars_update_own" on storage.objects;
+create policy "social_avatars_update_own"
+on storage.objects for update to authenticated
+using (
+  bucket_id = 'social-avatars'
+  and (storage.foldername(name))[1] = auth.uid()::text
+)
+with check (
+  bucket_id = 'social-avatars'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "social_avatars_delete_own" on storage.objects;
+create policy "social_avatars_delete_own"
+on storage.objects for delete to authenticated
+using (
+  bucket_id = 'social-avatars'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
 
 -- Storage notes for avatar bucket:
 -- 1. Create private bucket named `avatars` in Supabase Storage.

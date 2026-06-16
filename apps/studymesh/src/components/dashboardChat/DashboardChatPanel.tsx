@@ -269,7 +269,6 @@ const DashboardChatPanel = ({
     )
   const chatScrollRef = useRef<HTMLDivElement | null>(null)
   const messagesRef = useRef(messages)
-  const queueRef = useRef(Promise.resolve())
   const chatSessionsRef = useRef<DashboardChatSession[]>([])
   const settings = readQuickCreateAiSettings()
   const isLocalAi = settings.provider === 'local'
@@ -529,10 +528,46 @@ const DashboardChatPanel = ({
     messageId: string,
     updater: (message: DashboardChatMessage) => DashboardChatMessage,
   ) => {
-    const updated = messagesRef.current.map((message) =>
-      message.id === messageId ? updater(message) : message,
+    const { currentSessions, sessionId, session } = getActiveSession()
+    const activeMessageFound = messagesRef.current.some(
+      ({ id }) => id === messageId,
     )
-    replaceActiveChatMessages(updated)
+    const updatedMessages = activeMessageFound
+      ? messagesRef.current.map((message) =>
+          message.id === messageId ? updater(message) : message,
+        )
+      : messagesRef.current
+
+    const nextBranchSnapshots = Object.fromEntries(
+      Object.entries(session?.branchSnapshots || {}).map(
+        ([branchId, branches]) => [
+          branchId,
+          branches.map((branch) =>
+            branch.map((message) =>
+              message.id === messageId ? updater(message) : message,
+            ),
+          ),
+        ],
+      ),
+    )
+
+    if (activeMessageFound) {
+      replaceActiveChatMessages(updatedMessages, undefined, {
+        branchSnapshots: nextBranchSnapshots,
+      })
+      return
+    }
+
+    const nextSessions = currentSessions.map((currentSession) =>
+      currentSession.id === sessionId
+        ? {
+            ...currentSession,
+            branchSnapshots: nextBranchSnapshots,
+            updatedAt: Date.now(),
+          }
+        : currentSession,
+    )
+    persistChatSessions(nextSessions)
   }
 
   const answerQuestion = async (
@@ -619,9 +654,7 @@ const DashboardChatPanel = ({
     setDraft('')
     setError('')
 
-    queueRef.current = queueRef.current.then(() =>
-      answerQuestion(trimmed, pendingMessage.id, previousMessages),
-    )
+    void answerQuestion(trimmed, pendingMessage.id, previousMessages)
   }
 
   const copyUserPrompt = (content: string) => {
@@ -702,9 +735,7 @@ const DashboardChatPanel = ({
       branchSnapshots,
       scrollToBottom: true,
     })
-    queueRef.current = queueRef.current.then(() =>
-      answerQuestion(trimmed, pendingMessage.id, prefixMessages),
-    )
+    void answerQuestion(trimmed, pendingMessage.id, prefixMessages)
   }
 
   const switchUserPromptBranch = (
@@ -1230,6 +1261,10 @@ const DashboardChatPanel = ({
                       ? 'min(90%, 360px)'
                       : 'auto',
                   minWidth: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems:
+                    message.role === 'user' ? 'flex-end' : 'flex-start',
                   position: 'relative',
                   '& .studymesh-user-message-actions': {
                     opacity: 0,
@@ -1558,6 +1593,15 @@ const DashboardChatPanel = ({
                     sx={{
                       mt: 0.75,
                       ml: message.role === 'assistant' ? (isPhone ? 5 : 6) : 0,
+                      width:
+                        message.role === 'assistant'
+                          ? {
+                              xs: 'calc(100% - 40px)',
+                              sm: 'calc(100% - 48px)',
+                            }
+                          : '100%',
+                      maxWidth: '100%',
+                      minWidth: 0,
                     }}
                   >
                     <Typography
@@ -1573,7 +1617,20 @@ const DashboardChatPanel = ({
                         label={source}
                         size="small"
                         variant="outlined"
-                        sx={{ mb: 0.5 }}
+                        sx={{
+                          mb: 0.5,
+                          width: '100%',
+                          maxWidth: '100%',
+                          minWidth: 0,
+                          justifyContent: 'flex-start',
+                          '& .MuiChip-label': {
+                            display: 'block',
+                            minWidth: 0,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          },
+                        }}
                       />
                     ))}
                   </Stack>

@@ -186,8 +186,7 @@ export const DashboardEditorResponsivePanels = ({
               </Stack>
             ) : (
               <Typography variant="body2" color="text.secondary">
-                No saved widgets yet. Create a widget first, then return here to
-                place it on a dashboard.
+                No saved widgets are available.
               </Typography>
             )}
           </Paper>

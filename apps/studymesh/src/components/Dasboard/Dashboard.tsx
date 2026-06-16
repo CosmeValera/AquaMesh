@@ -784,15 +784,6 @@ const Dashboards = () => {
     setDashboardWidgetsAnchorEl(null)
   }
 
-  const handleCreateWidgetFromDashboardEditor = () => {
-    if (!isAdmin) {
-      return
-    }
-
-    handleDashboardWidgetsMenuClose()
-    window.dispatchEvent(new CustomEvent(OPEN_WIDGET_EDITOR_EVENT))
-  }
-
   // Check if user is admin on component mount
   useEffect(() => {
     const readUserRole = () => {
@@ -885,7 +876,7 @@ const Dashboards = () => {
         return
       }
 
-      createDashboardInEditor()
+      return
     }
 
     window.addEventListener(
@@ -2025,18 +2016,6 @@ const Dashboards = () => {
                   My Widgets
                 </Typography>
                 <Divider sx={{ borderColor: 'divider' }} />
-                {isAdmin && (
-                  <MenuItem
-                    onClick={handleCreateWidgetFromDashboardEditor}
-                    sx={{ p: 1.5 }}
-                  >
-                    <ListItemIcon sx={{ color: 'primary.main', minWidth: 36 }}>
-                      <ConstructionIcon fontSize="small" />
-                    </ListItemIcon>
-                    Create Widget
-                  </MenuItem>
-                )}
-                {isAdmin && <Divider sx={{ borderColor: 'divider' }} />}
                 {customWidgetPanels.length > 0 ? (
                   customWidgetPanels.map((topNavBarWidget) => (
                     <Box key={topNavBarWidget.name}>
@@ -2076,8 +2055,7 @@ const Dashboards = () => {
                       variant="caption"
                       sx={{ color: 'text.secondary', lineHeight: 1.4 }}
                     >
-                      No saved widgets yet. Create a widget first, then return
-                      here to place it on a dashboard.
+                      No saved widgets are available.
                     </Typography>
                   </MenuItem>
                 )}

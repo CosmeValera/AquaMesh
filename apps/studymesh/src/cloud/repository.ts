@@ -106,6 +106,8 @@ export interface StudyGuideRow {
   study_path: CloudJson
   created_at: string
   updated_at: string
+  shared_from_user_id?: string | null
+  shared_from_guide_id?: string | null
 }
 
 const profileFromRow = (row: ProfileRow): UserProfile => ({
@@ -145,6 +147,8 @@ export const mapDashboardRowToSavedDashboard = (
   layout: cloneJson(row.layout) as SavedDashboard['layout'],
   createdAt: row.created_at,
   updatedAt: row.updated_at,
+  sharedFromUserId: row.shared_from_user_id || undefined,
+  sharedFromGuideId: row.shared_from_guide_id || undefined,
 })
 
 export const mapSavedDashboardToDashboardRow = (
@@ -297,6 +301,8 @@ const studyGuideToRow = (
   study_path: toCloudJson(studyGuide.studyPath),
   created_at: studyGuide.createdAt,
   updated_at: studyGuide.updatedAt || nowIso(),
+  shared_from_user_id: studyGuide.sharedFromUserId,
+  shared_from_guide_id: studyGuide.sharedFromGuideId,
 })
 
 const collectWidgetIds = (value: unknown, widgetIds: Set<string>): void => {

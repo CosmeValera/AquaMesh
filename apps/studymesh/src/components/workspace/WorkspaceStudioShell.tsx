@@ -663,7 +663,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         initialEditMode?: boolean
       }>
 
-      if (!readIsAdmin()) {
+      if (!readIsAdmin() || !customEvent.detail?.loadWidget) {
         return
       }
 

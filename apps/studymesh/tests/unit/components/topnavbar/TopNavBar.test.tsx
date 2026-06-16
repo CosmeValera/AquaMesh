@@ -6,10 +6,7 @@ import TopNavBar from '../../../../src/components/topnavbar/TopNavBar'
 import * as useTopNavBarWidgetsModule from '../../../../src/customHooks/useTopNavBarWidgets'
 import * as LayoutProviderModule from '../../../../src/components/Layout/LayoutProvider'
 import * as DashboardProviderModule from '../../../../src/components/Dasboard/DashboardProvider'
-import {
-  OPEN_DASHBOARD_EDITOR_EVENT,
-  OPEN_STUDY_PATH_EVENT,
-} from '../../../../src/customHooks/useWorkspaceActions'
+import { OPEN_STUDY_PATH_EVENT } from '../../../../src/customHooks/useWorkspaceActions'
 import { STUDYMESH_ONBOARDING_RESET_EVENT } from '../../../../src/components/onboarding/onboardingEvents'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
@@ -137,7 +134,7 @@ describe('TopNavBar Component', () => {
   const openUserMenu = () => {
     fireEvent.click(
       screen.getByRole('button', {
-        name: /open user menu/i,
+        name: /open settings menu/i,
       }),
     )
   }
@@ -276,12 +273,16 @@ describe('TopNavBar Component', () => {
     ).not.toBeInTheDocument()
 
     const libraryButton = screen.getByTestId('dashboard-options-menu')
-    const userButton = screen.getByRole('button', {
-      name: /open user menu/i,
+    expect(
+      screen.getByRole('button', { name: /open settings menu/i }),
+    ).toBeInTheDocument()
+
+    const friendsButton = screen.getByRole('button', {
+      name: /open friends and profile/i,
     })
 
     expect(
-      libraryButton.compareDocumentPosition(userButton) &
+      libraryButton.compareDocumentPosition(friendsButton) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
   })
@@ -544,7 +545,7 @@ describe('TopNavBar Component', () => {
     expect(screen.getByTestId('logo')).toBeInTheDocument()
   })
 
-  it('opens Create Widget when Create Widget button is clicked', async () => {
+  it('does not expose manual widget or dashboard creation from settings', async () => {
     render(
       <BrowserRouter>
         <TopNavBar />
@@ -552,39 +553,17 @@ describe('TopNavBar Component', () => {
     )
 
     openUserMenu()
-    fireEvent.click(
-      await screen.findByRole('menuitem', { name: /create widget/i }),
-    )
 
-    expect(await screen.findByTestId('widget-editor')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('menuitem', { name: /create widget/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('menuitem', { name: /create dashboard/i }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByTestId('widget-editor')).not.toBeInTheDocument()
   })
 
-  it('dispatches the dashboard builder event when Create Dashboard is clicked', async () => {
-    const dashboardEditorListener = vi.fn()
-    window.addEventListener(
-      OPEN_DASHBOARD_EDITOR_EVENT,
-      dashboardEditorListener,
-    )
-
-    render(
-      <BrowserRouter>
-        <TopNavBar />
-      </BrowserRouter>,
-    )
-
-    openUserMenu()
-    fireEvent.click(
-      await screen.findByRole('menuitem', { name: /create dashboard/i }),
-    )
-
-    expect(dashboardEditorListener).toHaveBeenCalledTimes(1)
-    window.removeEventListener(
-      OPEN_DASHBOARD_EDITOR_EVENT,
-      dashboardEditorListener,
-    )
-  })
-
-  it('disables Advanced for viewers without opening its menu', () => {
+  it('keeps manual creation entries hidden for viewers', () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -611,18 +590,14 @@ describe('TopNavBar Component', () => {
       </BrowserRouter>,
     )
 
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: /open user menu/i,
-      }),
-    )
+    openUserMenu()
 
     expect(
-      screen.getByRole('menuitem', { name: /create dashboard/i }),
-    ).toHaveAttribute('aria-disabled', 'true')
+      screen.queryByRole('menuitem', { name: /create dashboard/i }),
+    ).not.toBeInTheDocument()
     expect(
-      screen.getByRole('menuitem', { name: /create widget/i }),
-    ).toHaveAttribute('aria-disabled', 'true')
+      screen.queryByRole('menuitem', { name: /create widget/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('replays the workspace tutorial from application settings', async () => {
@@ -637,7 +612,7 @@ describe('TopNavBar Component', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: /open user menu/i,
+        name: /open settings menu/i,
       }),
     )
     fireEvent.click(
@@ -664,11 +639,10 @@ describe('TopNavBar Component', () => {
       </BrowserRouter>,
     )
 
-    // Click on the user menu button (avatar)
-    const userButton = screen.getByRole('button', {
-      name: /open user menu/i,
+    const settingsButton = screen.getByRole('button', {
+      name: /open settings menu/i,
     })
-    fireEvent.click(userButton)
+    fireEvent.click(settingsButton)
 
     // Click on logout option in the menu
     await waitFor(() => {

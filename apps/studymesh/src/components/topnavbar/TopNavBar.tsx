@@ -581,7 +581,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         position="static"
         sx={{
           backgroundColor: 'background.header',
-          boxShadow: 2,
+          boxShadow: 'none',
+          borderBottom: 1,
+          borderColor: 'divider',
           height: isMobileWorkspaceHeader ? '56px' : '52px',
         }}
       >
@@ -624,7 +626,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                     alt=""
                     sx={{ width: 30, height: 30, display: 'block' }}
                   />
-                  <Typography variant="subtitle2" fontWeight={900} noWrap>
+                  <Typography variant="subtitle2" fontWeight={600} noWrap>
                     StudyMesh
                   </Typography>
                 </Box>
@@ -643,16 +645,16 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                       px: 1,
                       color: 'foreground.contrastPrimary',
                       textTransform: 'none',
-                      borderRadius: 999,
-                      bgcolor: 'rgba(255,255,255,0.08)',
-                      '&:hover': { bgcolor: 'rgba(255,255,255,0.14)' },
+                      borderRadius: 1,
+                      bgcolor: 'action.hover',
+                      '&:hover': { bgcolor: 'action.selected' },
                       '& .MuiButton-endIcon': { ml: 0.25, mr: 0 },
                     }}
                   >
                     <Typography
                       component="span"
                       variant="subtitle2"
-                      fontWeight={800}
+                      fontWeight={600}
                       noWrap
                       sx={{ minWidth: 0, maxWidth: '100%' }}
                     >
@@ -860,7 +862,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                       borderColor: 'divider',
                     }}
                   >
-                    <Typography variant="subtitle2" fontWeight={800}>
+                    <Typography variant="subtitle2" fontWeight={600}>
                       {userData.name}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -1033,7 +1035,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
               borderColor: 'divider',
             }}
           >
-            <Typography variant="subtitle2" fontWeight={800}>
+            <Typography variant="subtitle2" fontWeight={600}>
               {userData.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -1148,7 +1150,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         onClose={() => setDashboardSelectorOpen(false)}
         PaperProps={{
           sx: {
-            borderRadius: '20px 20px 0 0',
+            borderRadius: '16px 16px 0 0',
             bgcolor: 'background.paper',
             maxHeight: '72dvh',
             pb: 'calc(12px + env(safe-area-inset-bottom))',
@@ -1156,7 +1158,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         }}
       >
         <Box sx={{ p: 2, pb: 1 }}>
-          <Typography variant="subtitle1" fontWeight={900}>
+          <Typography variant="subtitle1" fontWeight={600}>
             Your dashboards
           </Typography>
           <Typography variant="caption" color="text.secondary">
@@ -1295,7 +1297,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   width: 64,
                   height: 64,
                   bgcolor: 'primary.main',
-                  fontWeight: 800,
+                  fontWeight: 600,
                 }}
               >
                 {userData.id.substring(0, 2).toUpperCase()}

@@ -47,16 +47,16 @@ interface StudyGuidePageEditorProps {
 const SAVE_DELAY_MS = 450
 
 const toolbarButtonSx = (active: boolean) => (theme: Theme) => ({
-  width: 34,
-  height: 34,
+  width: 32,
+  height: 32,
   border: 1,
   borderColor: active
-    ? theme.palette.primary.main
+    ? alpha(theme.palette.primary.main, 0.4)
     : alpha(theme.palette.text.primary, 0.22),
   bgcolor: active
     ? alpha(
         theme.palette.primary.main,
-        theme.palette.mode === 'dark' ? 0.28 : 0.14,
+        theme.palette.mode === 'dark' ? 0.2 : 0.09,
       )
     : theme.palette.background.paper,
   color: active ? theme.palette.primary.main : theme.palette.text.secondary,
@@ -328,7 +328,7 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
         sx={{
           border: 1,
           borderColor: 'divider',
-          borderRadius: 2,
+          borderRadius: 1.5,
           overflow: 'hidden',
           bgcolor: 'background.paper',
         }}
@@ -542,10 +542,10 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
               '& .tiptap': {
                 minHeight: { xs: 'calc(100dvh - 300px)', md: 460 },
                 px: { xs: 2, sm: 3 },
-                py: 2.5,
+                py: { xs: 2, sm: 3 },
                 outline: 'none',
                 color: 'text.primary',
-                fontSize: '0.98rem',
+                fontSize: '0.96rem',
                 lineHeight: 1.7,
               },
               '& .tiptap > *:first-of-type': { mt: 0 },
@@ -554,9 +554,9 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                 marginTop: theme.spacing(2),
                 marginBottom: theme.spacing(1),
               },
-              '& .tiptap h1': { fontSize: '1.6rem' },
-              '& .tiptap h2': { fontSize: '1.32rem' },
-              '& .tiptap h3': { fontSize: '1.12rem' },
+              '& .tiptap h1': { fontSize: '1.5rem', fontWeight: 600 },
+              '& .tiptap h2': { fontSize: '1.25rem', fontWeight: 600 },
+              '& .tiptap h3': { fontSize: '1.08rem', fontWeight: 600 },
               '& .tiptap p': { margin: theme.spacing(0.75, 0) },
               '& .tiptap ul, & .tiptap ol': {
                 paddingLeft: theme.spacing(3),
@@ -564,15 +564,25 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
               '& .tiptap code': {
                 borderRadius: 6,
                 padding: '0.1rem 0.35rem',
-                backgroundColor: theme.palette.action.hover,
+                backgroundColor:
+                  theme.palette.mode === 'dark'
+                    ? alpha(theme.palette.common.white, 0.08)
+                    : alpha(theme.palette.grey[900], 0.06),
                 fontFamily: 'JetBrains Mono, Consolas, monospace',
               },
               '& .tiptap pre': {
                 overflowX: 'auto',
                 borderRadius: 8,
-                padding: theme.spacing(1.5),
-                backgroundColor: '#111827',
-                color: '#f9fafb',
+                padding: theme.spacing(1.5, 2),
+                backgroundColor:
+                  theme.palette.mode === 'dark'
+                    ? theme.palette.grey[100]
+                    : theme.palette.grey[900],
+                color:
+                  theme.palette.mode === 'dark'
+                    ? theme.palette.text.primary
+                    : '#F8FAFC',
+                border: `1px solid ${theme.palette.divider}`,
                 fontFamily: 'JetBrains Mono, Consolas, monospace',
               },
               '& .tiptap blockquote': {

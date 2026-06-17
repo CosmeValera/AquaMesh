@@ -23,6 +23,10 @@ import {
 import { alpha } from '@mui/material/styles'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendIcon from '@mui/icons-material/Send'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import QuizIcon from '@mui/icons-material/Quiz'
@@ -31,6 +35,8 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SearchIcon from '@mui/icons-material/Search'
 import ArticleIcon from '@mui/icons-material/Article'
+import CheckIcon from '@mui/icons-material/Check'
+import CloseIcon from '@mui/icons-material/Close'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
 import { StateDashboard } from '../../state/store'
@@ -59,12 +65,16 @@ export interface DashboardChatMessage {
   createdAt: number
   sources?: string[]
   pending?: boolean
+  promptBranchId?: string
+  promptBranchIndex?: number
+  promptBranchCount?: number
 }
 
 interface DashboardChatSession {
   id: string
   title: string
   messages: DashboardChatMessage[]
+  branchSnapshots?: Record<string, DashboardChatMessage[][]>
   createdAt: number
   updatedAt: number
 }
@@ -108,6 +118,7 @@ const createEmptyChatSession = (): DashboardChatSession => ({
   id: makeChatSessionId(),
   title: 'New chat',
   messages: [],
+  branchSnapshots: {},
   createdAt: Date.now(),
   updatedAt: Date.now(),
 })
@@ -192,7 +203,7 @@ const AiChatPet = ({
         backgroundSize: 'contain',
         backgroundPosition: 'center bottom',
         backgroundRepeat: 'no-repeat',
-        filter: 'drop-shadow(0 16px 18px rgba(139,92,246,0.14))',
+        filter: 'drop-shadow(0 12px 16px rgba(15,23,42,0.12))',
       }}
     />
   )
@@ -240,6 +251,8 @@ const DashboardChatPanel = ({
   const [chatMenuAnchor, setChatMenuAnchor] = useState<HTMLElement | null>(null)
   const [chatSessions, setChatSessions] = useState<DashboardChatSession[]>([])
   const [activeChatId, setActiveChatId] = useState('')
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
+  const [editingPromptDraft, setEditingPromptDraft] = useState('')
   const [activePetId, setActivePetId] = useState<AiChatPetId>(() => {
     try {
       const stored = window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY)
@@ -249,12 +262,13 @@ const DashboardChatPanel = ({
     }
   })
   const [quickCreateSearch, setQuickCreateSearch] = useState('')
+  const [replyScrollBufferActive, setReplyScrollBufferActive] = useState(false)
   const [quickCreateSourceScope, setQuickCreateSourceScope] =
     useState<QuickCreateSourceScope>(
       supportsStudyGuideCreateScope ? 'studyGuide' : 'currentPage',
     )
+  const chatScrollRef = useRef<HTMLDivElement | null>(null)
   const messagesRef = useRef(messages)
-  const queueRef = useRef(Promise.resolve())
   const chatSessionsRef = useRef<DashboardChatSession[]>([])
   const settings = readQuickCreateAiSettings()
   const isLocalAi = settings.provider === 'local'
@@ -278,6 +292,18 @@ const DashboardChatPanel = ({
     chatSessions.find((session) => session.id === activeChatId)?.title ||
     'New chat'
 
+  const scrollChatToBottom = () => {
+    window.requestAnimationFrame(() => {
+      const scrollElement = chatScrollRef.current
+      if (scrollElement) {
+        scrollElement.scrollTo({
+          top: scrollElement.scrollHeight,
+          behavior: 'smooth',
+        })
+      }
+    })
+  }
+
   const persistChatSessions = (nextSessions: DashboardChatSession[]) => {
     chatSessionsRef.current = nextSessions
     setChatSessions(nextSessions)
@@ -291,15 +317,80 @@ const DashboardChatPanel = ({
     }
   }
 
-  const replaceActiveChatMessages = (
-    nextMessages: DashboardChatMessage[],
-    title?: string,
-  ) => {
-    const now = Date.now()
+  const getActiveSession = () => {
     const currentSessions = chatSessionsRef.current.length
       ? chatSessionsRef.current
       : [createEmptyChatSession()]
     const sessionId = activeChatId || currentSessions[0].id
+    return {
+      currentSessions,
+      sessionId,
+      session: currentSessions.find(({ id }) => id === sessionId),
+    }
+  }
+
+  const withPromptBranchMetadata = (
+    tail: DashboardChatMessage[],
+    branchId: string,
+    branchIndex: number,
+    branchCount: number,
+  ): DashboardChatMessage[] =>
+    tail.map((message, index) =>
+      index === 0 && message.role === 'user'
+        ? {
+            ...message,
+            promptBranchId: branchId,
+            promptBranchIndex: branchIndex,
+            promptBranchCount: branchCount,
+          }
+        : message,
+    )
+
+  const syncCurrentBranchSnapshots = (
+    nextMessages: DashboardChatMessage[],
+    branchSnapshots?: Record<string, DashboardChatMessage[][]>,
+  ) => {
+    const nextBranchSnapshots = { ...(branchSnapshots || {}) }
+
+    nextMessages.forEach((message, index) => {
+      if (
+        message.role !== 'user' ||
+        !message.promptBranchId ||
+        message.promptBranchIndex === undefined
+      ) {
+        return
+      }
+
+      const branches = nextBranchSnapshots[message.promptBranchId]
+      if (!branches?.[message.promptBranchIndex]) {
+        return
+      }
+
+      nextBranchSnapshots[message.promptBranchId] = branches.map(
+        (branch, branchIndex) =>
+          branchIndex === message.promptBranchIndex
+            ? nextMessages.slice(index)
+            : branch,
+      )
+    })
+
+    return nextBranchSnapshots
+  }
+
+  const replaceActiveChatMessages = (
+    nextMessages: DashboardChatMessage[],
+    title?: string,
+    options?: {
+      branchSnapshots?: Record<string, DashboardChatMessage[][]>
+      scrollToBottom?: boolean
+    },
+  ) => {
+    const now = Date.now()
+    const { currentSessions, sessionId, session } = getActiveSession()
+    const branchSnapshots = syncCurrentBranchSnapshots(
+      nextMessages,
+      options?.branchSnapshots || session?.branchSnapshots,
+    )
     const nextSessions = currentSessions.map((session) =>
       session.id === sessionId
         ? {
@@ -310,6 +401,7 @@ const DashboardChatPanel = ({
                 ? titleFromQuestion(nextMessages[0].content)
                 : session.title),
             messages: nextMessages,
+            branchSnapshots,
             updatedAt: now,
           }
         : session,
@@ -317,6 +409,9 @@ const DashboardChatPanel = ({
     persistChatSessions(nextSessions)
     messagesRef.current = nextMessages
     onMessagesChange(nextMessages)
+    if (options?.scrollToBottom) {
+      scrollChatToBottom()
+    }
   }
 
   const startNewChat = () => {
@@ -433,10 +528,46 @@ const DashboardChatPanel = ({
     messageId: string,
     updater: (message: DashboardChatMessage) => DashboardChatMessage,
   ) => {
-    const updated = messagesRef.current.map((message) =>
-      message.id === messageId ? updater(message) : message,
+    const { currentSessions, sessionId, session } = getActiveSession()
+    const activeMessageFound = messagesRef.current.some(
+      ({ id }) => id === messageId,
     )
-    replaceActiveChatMessages(updated)
+    const updatedMessages = activeMessageFound
+      ? messagesRef.current.map((message) =>
+          message.id === messageId ? updater(message) : message,
+        )
+      : messagesRef.current
+
+    const nextBranchSnapshots = Object.fromEntries(
+      Object.entries(session?.branchSnapshots || {}).map(
+        ([branchId, branches]) => [
+          branchId,
+          branches.map((branch) =>
+            branch.map((message) =>
+              message.id === messageId ? updater(message) : message,
+            ),
+          ),
+        ],
+      ),
+    )
+
+    if (activeMessageFound) {
+      replaceActiveChatMessages(updatedMessages, undefined, {
+        branchSnapshots: nextBranchSnapshots,
+      })
+      return
+    }
+
+    const nextSessions = currentSessions.map((currentSession) =>
+      currentSession.id === sessionId
+        ? {
+            ...currentSession,
+            branchSnapshots: nextBranchSnapshots,
+            updatedAt: Date.now(),
+          }
+        : currentSession,
+    )
+    persistChatSessions(nextSessions)
   }
 
   const answerQuestion = async (
@@ -488,6 +619,7 @@ const DashboardChatPanel = ({
           : 'Could not answer from this dashboard.',
       )
     } finally {
+      setReplyScrollBufferActive(false)
       setActiveStartedAt(null)
     }
   }
@@ -513,15 +645,142 @@ const DashboardChatPanel = ({
     }
     const previousMessages = messagesRef.current
     const nextMessages = [...previousMessages, userMessage, pendingMessage]
+    setReplyScrollBufferActive(true)
     replaceActiveChatMessages(
       nextMessages,
       previousMessages.length === 0 ? titleFromQuestion(trimmed) : undefined,
+      { scrollToBottom: true },
     )
     setDraft('')
     setError('')
 
-    queueRef.current = queueRef.current.then(() =>
-      answerQuestion(trimmed, pendingMessage.id, previousMessages),
+    void answerQuestion(trimmed, pendingMessage.id, previousMessages)
+  }
+
+  const copyUserPrompt = (content: string) => {
+    void navigator.clipboard?.writeText(content)
+  }
+
+  const startEditingUserPrompt = (message: DashboardChatMessage) => {
+    setEditingPromptId(message.id)
+    setEditingPromptDraft(message.content)
+  }
+
+  const cancelEditingUserPrompt = () => {
+    setEditingPromptId(null)
+    setEditingPromptDraft('')
+  }
+
+  const saveEditedUserPromptBranch = (message: DashboardChatMessage) => {
+    const trimmed = editingPromptDraft.trim()
+    if (!trimmed) {
+      return
+    }
+
+    const messageIndex = messagesRef.current.findIndex(
+      ({ id }) => id === message.id,
+    )
+    if (messageIndex < 0) {
+      return
+    }
+
+    const { session } = getActiveSession()
+    const branchId = message.promptBranchId || message.id
+    const existingBranches = session?.branchSnapshots?.[branchId]
+    const currentBranchIndex = message.promptBranchIndex ?? 0
+    const currentTail = messagesRef.current.slice(messageIndex)
+    const baseBranches = existingBranches?.length
+      ? existingBranches.map((branch, branchIndex) =>
+          branchIndex === currentBranchIndex ? currentTail : branch,
+        )
+      : [currentTail]
+    const nextBranchIndex = baseBranches.length
+    const nextBranchCount = baseBranches.length + 1
+    const normalizedBranches = baseBranches.map((branch, branchIndex) =>
+      withPromptBranchMetadata(
+        branch,
+        branchId,
+        branchIndex,
+        nextBranchCount,
+      ),
+    )
+    const editedUserMessage: DashboardChatMessage = {
+      id: makeMessageId(),
+      role: 'user',
+      content: trimmed,
+      createdAt: Date.now(),
+      promptBranchId: branchId,
+      promptBranchIndex: nextBranchIndex,
+      promptBranchCount: nextBranchCount,
+    }
+    const pendingMessage: DashboardChatMessage = {
+      id: makeMessageId(),
+      role: 'assistant',
+      content: '',
+      createdAt: Date.now(),
+      pending: true,
+    }
+    const nextTail = [editedUserMessage, pendingMessage]
+    const branchSnapshots = {
+      ...(session?.branchSnapshots || {}),
+      [branchId]: [...normalizedBranches, nextTail],
+    }
+    const prefixMessages = messagesRef.current.slice(0, messageIndex)
+    const nextMessages = [...prefixMessages, ...nextTail]
+    setEditingPromptId(null)
+    setEditingPromptDraft('')
+    setError('')
+    setReplyScrollBufferActive(true)
+    replaceActiveChatMessages(nextMessages, undefined, {
+      branchSnapshots,
+      scrollToBottom: true,
+    })
+    void answerQuestion(trimmed, pendingMessage.id, prefixMessages)
+  }
+
+  const switchUserPromptBranch = (
+    message: DashboardChatMessage,
+    direction: -1 | 1,
+  ) => {
+    if (!message.promptBranchId || message.promptBranchIndex === undefined) {
+      return
+    }
+
+    const messageIndex = messagesRef.current.findIndex(
+      ({ id }) => id === message.id,
+    )
+    if (messageIndex < 0) {
+      return
+    }
+
+    const { session } = getActiveSession()
+    const branches = session?.branchSnapshots?.[message.promptBranchId]
+    if (!branches?.length) {
+      return
+    }
+
+    const nextBranchIndex =
+      (message.promptBranchIndex + direction + branches.length) %
+      branches.length
+    const nextTail = withPromptBranchMetadata(
+      branches[nextBranchIndex],
+      message.promptBranchId,
+      nextBranchIndex,
+      branches.length,
+    )
+    const branchSnapshots = {
+      ...(session?.branchSnapshots || {}),
+      [message.promptBranchId]: branches.map((branch, branchIndex) =>
+        branchIndex === nextBranchIndex ? nextTail : branch,
+      ),
+    }
+    setEditingPromptId(null)
+    setEditingPromptDraft('')
+    setReplyScrollBufferActive(false)
+    replaceActiveChatMessages(
+      [...messagesRef.current.slice(0, messageIndex), ...nextTail],
+      undefined,
+      { branchSnapshots },
     )
   }
 
@@ -587,7 +846,7 @@ const DashboardChatPanel = ({
     >
       <Stack spacing={1}>
         <Box sx={{ px: 0.5 }}>
-          <Typography variant="subtitle2" fontWeight={900}>
+          <Typography variant="subtitle2" fontWeight={600}>
             {supportsStudyGuideCreateScope
               ? quickCreateSourceScope === 'studyGuide'
                 ? 'Create from Study Guide source'
@@ -649,7 +908,7 @@ const DashboardChatPanel = ({
                 <Typography
                   variant="caption"
                   color="text.secondary"
-                  fontWeight={900}
+                  fontWeight={600}
                 >
                   {group}
                 </Typography>
@@ -695,16 +954,16 @@ const DashboardChatPanel = ({
                         flex: '0 0 auto',
                         display: 'grid',
                         placeItems: 'center',
-                        color: active ? 'inherit' : action.accent,
+                        color: active ? 'inherit' : 'text.secondary',
                         bgcolor: active
                           ? 'rgba(255,255,255,0.18)'
-                          : alpha(action.accent, 0.12),
+                          : 'action.hover',
                       }}
                     >
                       {quickCreateIcons[action.id]}
                     </Box>
                     <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="body2" fontWeight={900}>
+                      <Typography variant="body2" fontWeight={600}>
                         {active ? 'Thinking...' : action.label}
                       </Typography>
                       <Typography
@@ -756,7 +1015,7 @@ const DashboardChatPanel = ({
         >
           <Box
             component="img"
-            src={getAiChatPetSrc(activePet, 'face')}
+            src={getAiChatPetSrc(activePet, 'full')}
             alt=""
             sx={{
               width: 34,
@@ -766,7 +1025,7 @@ const DashboardChatPanel = ({
             }}
           />
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" fontWeight={900} noWrap>
+            <Typography variant="subtitle2" fontWeight={600} noWrap>
               AI Chat
             </Typography>
             <Typography
@@ -807,7 +1066,7 @@ const DashboardChatPanel = ({
                 px: 1,
                 borderRadius: 1.25,
                 textTransform: 'none',
-                fontWeight: 800,
+                fontWeight: 600,
               }}
             >
               Chats
@@ -823,9 +1082,9 @@ const DashboardChatPanel = ({
                   width: 30,
                   height: 30,
                   border: 1,
-                  borderColor: alpha(theme.palette.primary.main, 0.32),
+                  borderColor: theme.palette.divider,
                   borderRadius: 1.25,
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  bgcolor: 'background.paper',
                   color: 'primary.main',
                   flex: '0 0 auto',
                   transition: theme.transitions.create(
@@ -835,8 +1094,8 @@ const DashboardChatPanel = ({
                     },
                   ),
                   '&:hover': {
-                    borderColor: 'primary.main',
-                    bgcolor: alpha(theme.palette.primary.main, 0.18),
+                    borderColor: alpha(theme.palette.primary.main, 0.48),
+                    bgcolor: alpha(theme.palette.primary.main, 0.08),
                   },
                 }}
               >
@@ -871,7 +1130,7 @@ const DashboardChatPanel = ({
                 color={session.id === activeChatId ? 'primary' : 'inherit'}
               />
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="body2" fontWeight={800} noWrap>
+                <Typography variant="body2" fontWeight={600} noWrap>
                   {session.title}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" noWrap>
@@ -902,10 +1161,12 @@ const DashboardChatPanel = ({
       </Menu>
 
       <Box
+        ref={chatScrollRef}
         sx={{
           flex: 1,
           minHeight: 0,
-          overflow: 'auto',
+          overflowY: 'auto',
+          overflowX: 'hidden',
           p: isPhone ? 1.25 : 2,
           bgcolor:
             theme.palette.mode === 'dark'
@@ -922,25 +1183,22 @@ const DashboardChatPanel = ({
             <Box
               sx={(theme) => ({
                 position: 'relative',
-                minHeight: 154,
+                minHeight: 118,
                 p: 2,
-                pr: isPhone ? 14 : 17,
+                pr: isPhone ? 10 : 12,
                 border: 1,
                 borderColor: 'divider',
-                borderRadius: 2,
+                borderRadius: 1.5,
                 bgcolor: 'background.paper',
                 overflow: 'hidden',
-                boxShadow:
-                  theme.palette.mode === 'dark'
-                    ? '0 16px 36px rgba(0,0,0,0.28)'
-                    : '0 18px 44px rgba(16,24,40,0.10)',
+                boxShadow: 'none',
               })}
             >
               <Typography
                 variant="h6"
-                fontWeight={900}
+                fontWeight={600}
                 sx={{
-                  fontSize: isPhone ? 18 : undefined,
+                  fontSize: isPhone ? 18 : 20,
                   lineHeight: isPhone ? 1.2 : undefined,
                 }}
               >
@@ -949,9 +1207,10 @@ const DashboardChatPanel = ({
               <Box
                 sx={{
                   position: 'absolute',
-                  right: 8,
-                  top: 20,
+                  right: 14,
+                  top: 24,
                   pointerEvents: 'none',
+                  opacity: 0.86,
                 }}
               >
                 <AiChatPet pet={activePet} compact />
@@ -961,25 +1220,25 @@ const DashboardChatPanel = ({
               {suggestions.map((suggestion) => (
                 <Button
                   key={suggestion.label}
-                    variant="outlined"
-                    disabled={!hasContext}
-                    onClick={() => sendQuestion(suggestion.label)}
-                    sx={{
-                      minHeight: 38,
-                      borderRadius: 999,
-                      py: 0.5,
-                      px: 1,
-                      bgcolor: 'background.paper',
-                      borderColor: 'divider',
-                      color: 'text.primary',
-                      textTransform: 'none',
-                      fontWeight: 800,
-                      gap: 0.75,
-                    }}
-                  >
-                    <Box sx={{ color: 'primary.main', display: 'flex' }}>
-                      {suggestion.icon}
-                    </Box>
+                  variant="outlined"
+                  disabled={!hasContext}
+                  onClick={() => sendQuestion(suggestion.label)}
+                  sx={{
+                    minHeight: 36,
+                    borderRadius: 1,
+                    py: 0.5,
+                    px: 1.25,
+                    bgcolor: 'background.paper',
+                    borderColor: 'divider',
+                    color: 'text.primary',
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    gap: 0.75,
+                  }}
+                >
+                  <Box sx={{ color: 'text.secondary', display: 'flex' }}>
+                    {suggestion.icon}
+                  </Box>
                   {suggestion.label}
                 </Button>
               ))}
@@ -990,10 +1249,40 @@ const DashboardChatPanel = ({
             {messages.map((message) => (
               <Box
                 key={message.id}
+                className={
+                  message.role === 'user' ? 'studymesh-user-message' : undefined
+                }
                 sx={{
                   alignSelf:
                     message.role === 'user' ? 'flex-end' : 'flex-start',
                   maxWidth: message.role === 'user' ? '90%' : '96%',
+                  width:
+                    message.role === 'user' && editingPromptId === message.id
+                      ? 'min(90%, 360px)'
+                      : 'auto',
+                  minWidth: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems:
+                    message.role === 'user' ? 'flex-end' : 'flex-start',
+                  position: 'relative',
+                  '& .studymesh-user-message-actions': {
+                    opacity: 0,
+                    pointerEvents: 'none',
+                    transform: 'translateY(-2px)',
+                    transition: theme.transitions.create(
+                      ['opacity', 'transform'],
+                      {
+                        duration: theme.transitions.duration.shortest,
+                      },
+                    ),
+                  },
+                  '&:hover .studymesh-user-message-actions, &:focus-within .studymesh-user-message-actions':
+                    {
+                      opacity: 1,
+                      pointerEvents: 'auto',
+                      transform: 'translateY(0)',
+                    },
                 }}
               >
                 <Stack direction="row" spacing={0.75} alignItems="flex-end">
@@ -1028,29 +1317,31 @@ const DashboardChatPanel = ({
                   <Box
                     sx={{
                       minWidth: 0,
+                      maxWidth: '100%',
+                      width:
+                        message.role === 'user' && editingPromptId === message.id
+                          ? '100%'
+                          : 'auto',
                       px: 1.5,
                       py: 1.1,
-                      borderRadius:
-                        message.role === 'user'
-                          ? '18px 18px 6px 18px'
-                          : '18px 18px 18px 6px',
+                      borderRadius: 1.5,
                       bgcolor:
                         message.role === 'user'
-                          ? 'primary.main'
+                          ? alpha(theme.palette.primary.main, 0.08)
                           : 'background.paper',
                       color:
                         message.role === 'user'
-                          ? 'primary.contrastText'
+                          ? 'text.primary'
                           : 'text.primary',
-                      border: message.role === 'assistant' ? 1 : 0,
-                      borderColor: 'divider',
-                      boxShadow:
-                        message.role === 'assistant'
-                          ? theme.palette.mode === 'dark'
-                            ? '0 10px 24px rgba(0,0,0,0.22)'
-                            : '0 10px 24px rgba(16,24,40,0.08)'
-                          : 'none',
+                      border: 1,
+                      borderColor:
+                        message.role === 'user'
+                          ? alpha(theme.palette.primary.main, 0.18)
+                          : 'divider',
+                      boxShadow: 'none',
                       whiteSpace: 'pre-wrap',
+                      overflowWrap: 'anywhere',
+                      wordBreak: 'break-word',
                     }}
                   >
                     {message.pending ? (
@@ -1108,16 +1399,192 @@ const DashboardChatPanel = ({
                           '& p': { m: 0, mb: 1 },
                           '& p:last-child': { mb: 0 },
                           '& ul, & ol': { pl: 2.5, my: 0.75 },
-                          '& pre': { maxWidth: '100%' },
+                          '& pre': {
+                            maxWidth: '100%',
+                            overflowX: 'hidden',
+                            whiteSpace: 'pre-wrap',
+                            overflowWrap: 'anywhere',
+                          },
+                          '& code': { overflowWrap: 'anywhere' },
                         }}
                       >
                         {renderMarkdown(message.content)}
                       </Box>
+                    ) : editingPromptId === message.id ? (
+                      <Stack spacing={0.75}>
+                        <TextField
+                          value={editingPromptDraft}
+                          onChange={(event) =>
+                            setEditingPromptDraft(event.target.value)
+                          }
+                          autoFocus
+                          multiline
+                          minRows={2}
+                          size="small"
+                          fullWidth
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' && event.metaKey) {
+                              event.preventDefault()
+                              saveEditedUserPromptBranch(message)
+                            }
+                            if (event.key === 'Escape') {
+                              event.preventDefault()
+                              cancelEditingUserPrompt()
+                            }
+                          }}
+                          sx={{
+                            minWidth: 0,
+                            width: '100%',
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 1,
+                              bgcolor: 'background.paper',
+                            },
+                          }}
+                        />
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          justifyContent="flex-end"
+                        >
+                          <Tooltip title="Cancel edit">
+                            <IconButton
+                              size="small"
+                              aria-label="Cancel edit"
+                              onClick={cancelEditingUserPrompt}
+                              sx={{
+                                width: 26,
+                                height: 26,
+                                border: 1,
+                                borderColor: 'divider',
+                                bgcolor: 'background.paper',
+                              }}
+                            >
+                              <CloseIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Save edit">
+                            <IconButton
+                              size="small"
+                              aria-label="Save edit"
+                              disabled={!editingPromptDraft.trim()}
+                              onClick={() => saveEditedUserPromptBranch(message)}
+                              sx={{
+                                width: 26,
+                                height: 26,
+                                border: 1,
+                                borderColor: 'divider',
+                                bgcolor: 'background.paper',
+                                color: 'primary.main',
+                              }}
+                            >
+                              <CheckIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </Stack>
                     ) : (
                       <Typography variant="body2">{message.content}</Typography>
                     )}
                   </Box>
                 </Stack>
+                {message.role === 'user' && editingPromptId !== message.id ? (
+                  <Stack
+                    className="studymesh-user-message-actions"
+                    direction="row"
+                    spacing={0.35}
+                    justifyContent="flex-end"
+                    alignItems="center"
+                    sx={{ height: 26, pt: 0.25, pr: 0.25 }}
+                  >
+                    <Tooltip title="Copy prompt">
+                      <IconButton
+                        size="small"
+                        aria-label="Copy prompt"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          copyUserPrompt(message.content)
+                        }}
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          bgcolor: 'background.paper',
+                          border: 1,
+                          borderColor: 'divider',
+                          color: 'text.secondary',
+                          '& svg': { fontSize: 16 },
+                        }}
+                      >
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Edit prompt">
+                      <IconButton
+                        size="small"
+                        aria-label="Edit prompt"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          startEditingUserPrompt(message)
+                        }}
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          bgcolor: 'background.paper',
+                          border: 1,
+                          borderColor: 'divider',
+                          color: 'text.secondary',
+                          '& svg': { fontSize: 16 },
+                        }}
+                      >
+                        <EditOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    {message.promptBranchId &&
+                    (message.promptBranchCount || 0) > 1 ? (
+                      <>
+                        <IconButton
+                          size="small"
+                          aria-label="Previous prompt branch"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            switchUserPromptBranch(message, -1)
+                          }}
+                          sx={{
+                            width: 22,
+                            height: 24,
+                            color: 'text.secondary',
+                            '& svg': { fontSize: 16 },
+                          }}
+                        >
+                          <ChevronLeftIcon fontSize="small" />
+                        </IconButton>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ minWidth: 24, textAlign: 'center' }}
+                        >
+                          {(message.promptBranchIndex ?? 0) + 1}/
+                          {message.promptBranchCount}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          aria-label="Next prompt branch"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            switchUserPromptBranch(message, 1)
+                          }}
+                          sx={{
+                            width: 22,
+                            height: 24,
+                            color: 'text.secondary',
+                            '& svg': { fontSize: 16 },
+                          }}
+                        >
+                          <ChevronRightIcon fontSize="small" />
+                        </IconButton>
+                      </>
+                    ) : null}
+                  </Stack>
+                ) : null}
                 {message.sources?.length ? (
                   <Stack
                     direction="row"
@@ -1126,6 +1593,15 @@ const DashboardChatPanel = ({
                     sx={{
                       mt: 0.75,
                       ml: message.role === 'assistant' ? (isPhone ? 5 : 6) : 0,
+                      width:
+                        message.role === 'assistant'
+                          ? {
+                              xs: 'calc(100% - 40px)',
+                              sm: 'calc(100% - 48px)',
+                            }
+                          : '100%',
+                      maxWidth: '100%',
+                      minWidth: 0,
                     }}
                   >
                     <Typography
@@ -1141,7 +1617,20 @@ const DashboardChatPanel = ({
                         label={source}
                         size="small"
                         variant="outlined"
-                        sx={{ mb: 0.5 }}
+                        sx={{
+                          mb: 0.5,
+                          width: '100%',
+                          maxWidth: '100%',
+                          minWidth: 0,
+                          justifyContent: 'flex-start',
+                          '& .MuiChip-label': {
+                            display: 'block',
+                            minWidth: 0,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          },
+                        }}
                       />
                     ))}
                   </Stack>
@@ -1158,7 +1647,7 @@ const DashboardChatPanel = ({
                     sx={{
                       mt: 0.75,
                       ml: isPhone ? 5 : 6,
-                      borderRadius: 2,
+                      borderRadius: 1,
                       textTransform: 'none',
                       bgcolor: 'background.paper',
                     }}
@@ -1170,6 +1659,18 @@ const DashboardChatPanel = ({
             ))}
           </Stack>
         )}
+        {replyScrollBufferActive &&
+        messages.some((message) => message.pending) ? (
+          <Box
+            aria-hidden
+            sx={{
+              height: {
+                xs: 'max(220px, calc(100% - 120px))',
+                sm: 'max(260px, calc(100% - 132px))',
+              },
+            }}
+          />
+        ) : null}
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}
@@ -1209,15 +1710,15 @@ const DashboardChatPanel = ({
                       minHeight: 40,
                       width: 40,
                       flex: '0 0 auto',
-                      borderRadius: 2,
+                      borderRadius: 1,
                       border: 1,
-                      borderColor: 'primary.main',
-                      color: 'primary.main',
+                      borderColor: 'divider',
+                      color: 'text.secondary',
                       bgcolor: 'background.paper',
                       '&:hover': {
-                        borderColor: 'primary.dark',
-                        color: 'primary.dark',
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        borderColor: alpha(theme.palette.primary.main, 0.32),
+                        color: 'primary.main',
+                        bgcolor: alpha(theme.palette.primary.main, 0.05),
                       },
                       '&.Mui-disabled': {
                         borderColor: 'divider',
@@ -1253,13 +1754,13 @@ const DashboardChatPanel = ({
                   transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
                   PaperProps={{
                     sx: {
-                      borderRadius: 2,
+                      borderRadius: 1.5,
                       border: 1,
                       borderColor: 'divider',
                       boxShadow:
                         theme.palette.mode === 'dark'
-                          ? '0 18px 44px rgba(0,0,0,0.44)'
-                          : '0 18px 44px rgba(16,24,40,0.16)',
+                          ? '0 18px 44px rgba(0,0,0,0.36)'
+                          : '0 16px 36px rgba(15,23,42,0.12)',
                     },
                   }}
                 >
@@ -1281,7 +1782,7 @@ const DashboardChatPanel = ({
             size="small"
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: 2.5,
+                borderRadius: 1,
                 bgcolor:
                   theme.palette.mode === 'dark'
                     ? 'rgba(15,23,42,0.72)'
@@ -1304,8 +1805,9 @@ const DashboardChatPanel = ({
             disabled={!hasContext || !draft.trim()}
             aria-label="Send dashboard question"
             sx={{
-              width: 42,
-              height: 42,
+              width: 40,
+              height: 40,
+              borderRadius: 1,
               bgcolor:
                 hasContext && draft.trim()
                   ? 'primary.main'

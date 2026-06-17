@@ -51,7 +51,7 @@
   border-radius: 8px;
   background-color: var(--background-paper);
   border: 1px solid var(--surface-border, var(--grey-200));
-  box-shadow: 0 10px 28px rgba(16, 42, 45, 0.08);
+  box-shadow: none;
 
   &
     .flexlayout__tabset-selected
@@ -64,8 +64,8 @@
   }
 
   &:has(.flexlayout__tabset-selected) {
-    outline: 2px solid var(--primary-main);
-    outline-offset: 0px;
+    outline: 1px solid var(--primary-main);
+    outline-offset: -1px;
   }
 }
 
@@ -254,21 +254,21 @@
 @media (min-width: 900px) {
   .studymesh-mobile-dashboard-layout {
     align-items: center;
-    padding: 32px 24px 72px;
+    padding: 28px 24px 64px;
   }
 
   .studymesh-mobile-widget-card {
-    max-width: 640px;
+    max-width: 960px;
     border: 1px solid var(--surface-border, #d8e0e4);
-    border-radius: 8px;
+    border-radius: 12px;
     background: var(--surface-card, #fff);
-    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+    box-shadow: none;
   }
 }
 
 .studymesh-mobile-dashboard-empty {
   min-height: 220px;
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--surface-card, #fff);
 }
 

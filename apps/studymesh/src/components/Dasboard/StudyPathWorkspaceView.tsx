@@ -36,18 +36,20 @@ const pageIconButtonSx =
       tone === 'error' ? theme.palette.error.dark : theme.palette.primary.dark
 
     return {
-      width: 34,
-      height: 34,
+      width: 32,
+      height: 32,
       border: 1,
-      borderColor: alpha(paletteColor, 0.44),
-      bgcolor: alpha(paletteColor, theme.palette.mode === 'dark' ? 0.18 : 0.1),
+      borderColor:
+        tone === 'error' ? alpha(paletteColor, 0.36) : theme.palette.divider,
+      bgcolor: 'background.paper',
       color: paletteColor,
       flex: '0 0 auto',
       '&:hover': {
-        borderColor: paletteColor,
+        borderColor:
+          tone === 'error' ? paletteColor : alpha(paletteColor, 0.54),
         bgcolor: alpha(
           paletteColor,
-          theme.palette.mode === 'dark' ? 0.28 : 0.18,
+          theme.palette.mode === 'dark' ? 0.14 : 0.08,
         ),
         color: hoverColor,
       },
@@ -293,7 +295,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
             </>
           ) : null}
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" fontWeight={900} noWrap>
+            <Typography variant="subtitle2" fontWeight={600} noWrap>
               {currentLesson.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">

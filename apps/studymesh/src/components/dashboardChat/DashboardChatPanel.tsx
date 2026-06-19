@@ -3,7 +3,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   Divider,
   Drawer,
   IconButton,
@@ -40,13 +39,17 @@ import CloseIcon from '@mui/icons-material/Close'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
+import ReplayIcon from '@mui/icons-material/Replay'
 import { StateDashboard } from '../../state/store'
 import {
   buildDashboardChatContext,
   formatDashboardChatContext,
   selectDashboardChatChunks,
 } from '../../dashboardChat/contextBuilder'
-import { askDashboardSources } from '../../dashboardChat/askDashboard'
+import {
+  askDashboardSources,
+  type DashboardAnswerSourceRef,
+} from '../../dashboardChat/askDashboard'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
 import {
   quickCreateActionGroups,
@@ -59,12 +62,14 @@ import {
 } from '../../quickCreate/quickCreateActions'
 import { renderMarkdown } from '../WidgetEditor/components/preview/StudyBlockView'
 
+export type { DashboardAnswerSourceRef } from '../../dashboardChat/askDashboard'
+
 export interface DashboardChatMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
   createdAt: number
-  sources?: string[]
+  sourceRefs?: DashboardAnswerSourceRef[]
   pending?: boolean
   promptBranchId?: string
   promptBranchIndex?: number
@@ -87,6 +92,7 @@ interface DashboardChatPanelProps {
   onClose: () => void
   showCloseButton?: boolean
   onAddAssistantMessageToGuide?: (message: DashboardChatMessage) => void
+  onOpenSource?: (source: DashboardAnswerSourceRef) => void
   onQuickCreatePage?: (request: QuickCreateActionRequest) => Promise<void>
   supportsStudyGuideCreateScope?: boolean
 }
@@ -231,6 +237,7 @@ const DashboardChatPanel = ({
   onClose,
   showCloseButton = true,
   onAddAssistantMessageToGuide,
+  onOpenSource,
   onQuickCreatePage,
   supportsStudyGuideCreateScope = false,
 }: DashboardChatPanelProps) => {
@@ -268,6 +275,10 @@ const DashboardChatPanel = ({
     useState<HTMLElement | null>(null)
   const [userMessageMenuMessage, setUserMessageMenuMessage] =
     useState<DashboardChatMessage | null>(null)
+  const [assistantMessageMenuAnchor, setAssistantMessageMenuAnchor] =
+    useState<HTMLElement | null>(null)
+  const [assistantMessageMenuMessage, setAssistantMessageMenuMessage] =
+    useState<DashboardChatMessage | null>(null)
   const [quickCreateSourceScope, setQuickCreateSourceScope] =
     useState<QuickCreateSourceScope>(
       supportsStudyGuideCreateScope ? 'studyGuide' : 'currentPage',
@@ -288,9 +299,6 @@ const DashboardChatPanel = ({
     [dashboard, isLocalAi],
   )
   const hasContext = context.chunks.length > 0
-  const latestAssistantMessageId = [...messages]
-    .reverse()
-    .find((message) => message.role === 'assistant' && !message.pending)?.id
   const activePet =
     aiChatPets.find((pet) => pet.id === activePetId) || aiChatPets[0]
   const activeChatTitle =
@@ -624,7 +632,7 @@ const DashboardChatPanel = ({
       updateMessage(pendingMessageId, (message) => ({
         ...message,
         content: result.answer,
-        sources: result.sources,
+        sourceRefs: result.sourceRefs,
         pending: false,
       }))
     } catch (err) {
@@ -681,9 +689,22 @@ const DashboardChatPanel = ({
     void navigator.clipboard?.writeText(content)
   }
 
+  const copyAssistantAnswer = (content: string) => {
+    void navigator.clipboard?.writeText(content)
+  }
+
+  const openSource = (source: DashboardAnswerSourceRef) => {
+    onOpenSource?.(source)
+  }
+
   const closeUserMessageMenu = () => {
     setUserMessageMenuAnchor(null)
     setUserMessageMenuMessage(null)
+  }
+
+  const closeAssistantMessageMenu = () => {
+    setAssistantMessageMenuAnchor(null)
+    setAssistantMessageMenuMessage(null)
   }
 
   const startEditingUserPrompt = (message: DashboardChatMessage) => {
@@ -722,12 +743,7 @@ const DashboardChatPanel = ({
     const nextBranchIndex = baseBranches.length
     const nextBranchCount = baseBranches.length + 1
     const normalizedBranches = baseBranches.map((branch, branchIndex) =>
-      withPromptBranchMetadata(
-        branch,
-        branchId,
-        branchIndex,
-        nextBranchCount,
-      ),
+      withPromptBranchMetadata(branch, branchId, branchIndex, nextBranchCount),
     )
     const editedUserMessage: DashboardChatMessage = {
       id: makeMessageId(),
@@ -806,6 +822,73 @@ const DashboardChatPanel = ({
       [...messagesRef.current.slice(0, messageIndex), ...nextTail],
       undefined,
       { branchSnapshots },
+    )
+  }
+
+  const retryAssistantAnswer = (message: DashboardChatMessage) => {
+    const messageIndex = messagesRef.current.findIndex(
+      ({ id }) => id === message.id,
+    )
+    if (messageIndex < 0) {
+      return
+    }
+
+    const userMessageIndex = messagesRef.current
+      .slice(0, messageIndex)
+      .map((candidate, index) => ({ candidate, index }))
+      .reverse()
+      .find(({ candidate }) => candidate.role === 'user')?.index
+    if (userMessageIndex === undefined) {
+      return
+    }
+
+    const userMessage = messagesRef.current[userMessageIndex]
+    const { session } = getActiveSession()
+    const branchId = userMessage.promptBranchId || userMessage.id
+    const existingBranches = session?.branchSnapshots?.[branchId]
+    const currentBranchIndex = userMessage.promptBranchIndex ?? 0
+    const currentTail = messagesRef.current.slice(userMessageIndex)
+    const baseBranches = existingBranches?.length
+      ? existingBranches.map((branch, branchIndex) =>
+          branchIndex === currentBranchIndex ? currentTail : branch,
+        )
+      : [currentTail]
+    const nextBranchIndex = baseBranches.length
+    const nextBranchCount = baseBranches.length + 1
+    const normalizedBranches = baseBranches.map((branch, branchIndex) =>
+      withPromptBranchMetadata(branch, branchId, branchIndex, nextBranchCount),
+    )
+    const retryUserMessage: DashboardChatMessage = {
+      ...userMessage,
+      id: makeMessageId(),
+      createdAt: Date.now(),
+      promptBranchId: branchId,
+      promptBranchIndex: nextBranchIndex,
+      promptBranchCount: nextBranchCount,
+    }
+    const pendingMessage: DashboardChatMessage = {
+      id: makeMessageId(),
+      role: 'assistant',
+      content: '',
+      createdAt: Date.now(),
+      pending: true,
+    }
+    const nextTail = [retryUserMessage, pendingMessage]
+    const branchSnapshots = {
+      ...(session?.branchSnapshots || {}),
+      [branchId]: [...normalizedBranches, nextTail],
+    }
+    const prefixMessages = messagesRef.current.slice(0, userMessageIndex)
+    setError('')
+    setReplyScrollBufferActive(true)
+    replaceActiveChatMessages([...prefixMessages, ...nextTail], undefined, {
+      branchSnapshots,
+      scrollToBottom: true,
+    })
+    void answerQuestion(
+      retryUserMessage.content,
+      pendingMessage.id,
+      prefixMessages,
     )
   }
 
@@ -1007,6 +1090,148 @@ const DashboardChatPanel = ({
       </Stack>
     </Box>
   )
+
+  const renderCitation = (message: DashboardChatMessage) => {
+    const sourceRefs = message.sourceRefs || []
+
+    return (citationNumber: number, key: string) => {
+      const source = sourceRefs.find(
+        (candidate) => candidate.citationNumber === citationNumber,
+      )
+      if (!source) {
+        return `[${citationNumber}]`
+      }
+
+      return (
+        <Box
+          key={key}
+          component="button"
+          type="button"
+          aria-label={`Open source ${citationNumber}`}
+          onClick={(event) => {
+            event.stopPropagation()
+            openSource(source)
+          }}
+          sx={{
+            mx: 0.25,
+            minWidth: 22,
+            height: 22,
+            borderRadius: '50%',
+            border: 1,
+            borderColor: alpha(theme.palette.primary.main, 0.35),
+            bgcolor: alpha(theme.palette.primary.main, 0.08),
+            color: 'primary.main',
+            cursor: 'pointer',
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            lineHeight: '20px',
+            p: 0,
+            verticalAlign: 'baseline',
+            '&:hover': {
+              borderColor: 'primary.main',
+              bgcolor: alpha(theme.palette.primary.main, 0.16),
+            },
+          }}
+        >
+          {citationNumber}
+        </Box>
+      )
+    }
+  }
+
+  const renderAssistantActions = (message: DashboardChatMessage) => {
+    const canAddToGuide = Boolean(onAddAssistantMessageToGuide)
+
+    const actions = (
+      <>
+        <Tooltip title="Copy answer">
+          <IconButton
+            size="small"
+            aria-label="Copy answer"
+            onClick={(event) => {
+              event.stopPropagation()
+              copyAssistantAnswer(message.content)
+            }}
+            sx={userActionIconButtonSx}
+          >
+            <ContentCopyIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Retry answer">
+          <IconButton
+            size="small"
+            aria-label="Retry answer"
+            onClick={(event) => {
+              event.stopPropagation()
+              retryAssistantAnswer(message)
+            }}
+            sx={userActionIconButtonSx}
+          >
+            <ReplayIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        {canAddToGuide ? (
+          <Tooltip title="Add to Study Guide">
+            <IconButton
+              size="small"
+              aria-label="Add answer to Study Guide"
+              onClick={(event) => {
+                event.stopPropagation()
+                onAddAssistantMessageToGuide?.(message)
+              }}
+              sx={userActionIconButtonSx}
+            >
+              <AddCircleOutlineIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        ) : null}
+      </>
+    )
+
+    if (isMobile) {
+      return (
+        <Tooltip title="Message actions">
+          <IconButton
+            size="small"
+            aria-label="Assistant message actions"
+            onClick={(event) => {
+              event.stopPropagation()
+              setAssistantMessageMenuAnchor(event.currentTarget)
+              setAssistantMessageMenuMessage(message)
+            }}
+            sx={{
+              ...userActionIconButtonSx,
+              position: 'absolute',
+              top: -10,
+              left: isPhone ? 40 : 48,
+              zIndex: 2,
+            }}
+          >
+            <MoreHorizIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )
+    }
+
+    return (
+      <Stack
+        className="studymesh-assistant-message-actions"
+        direction="row"
+        spacing={0.35}
+        alignItems="center"
+        sx={{
+          position: 'absolute',
+          left: isPhone ? 40 : 48,
+          bottom: -18,
+          zIndex: 2,
+          p: 0.25,
+          borderRadius: 1,
+        }}
+      >
+        {actions}
+      </Stack>
+    )
+  }
 
   return (
     <Box
@@ -1294,7 +1519,18 @@ const DashboardChatPanel = ({
                       },
                     ),
                   },
-                  '&:hover .studymesh-user-message-actions, &:focus-within .studymesh-user-message-actions':
+                  '& .studymesh-assistant-message-actions': {
+                    opacity: 0,
+                    pointerEvents: 'none',
+                    transform: 'translateY(-2px)',
+                    transition: theme.transitions.create(
+                      ['opacity', 'transform'],
+                      {
+                        duration: theme.transitions.duration.shortest,
+                      },
+                    ),
+                  },
+                  '&:hover .studymesh-user-message-actions, &:focus-within .studymesh-user-message-actions, &:hover .studymesh-assistant-message-actions, &:focus-within .studymesh-assistant-message-actions':
                     {
                       opacity: 1,
                       pointerEvents: 'auto',
@@ -1336,7 +1572,8 @@ const DashboardChatPanel = ({
                       minWidth: 0,
                       maxWidth: '100%',
                       width:
-                        message.role === 'user' && editingPromptId === message.id
+                        message.role === 'user' &&
+                        editingPromptId === message.id
                           ? '100%'
                           : 'auto',
                       px: 1.5,
@@ -1425,7 +1662,9 @@ const DashboardChatPanel = ({
                           '& code': { overflowWrap: 'anywhere' },
                         }}
                       >
-                        {renderMarkdown(message.content)}
+                        {renderMarkdown(message.content, {
+                          renderCitation: renderCitation(message),
+                        })}
                       </Box>
                     ) : editingPromptId === message.id ? (
                       <Stack spacing={0.75}>
@@ -1484,7 +1723,9 @@ const DashboardChatPanel = ({
                               size="small"
                               aria-label="Save edit"
                               disabled={!editingPromptDraft.trim()}
-                              onClick={() => saveEditedUserPromptBranch(message)}
+                              onClick={() =>
+                                saveEditedUserPromptBranch(message)
+                              }
                               sx={{
                                 width: 26,
                                 height: 26,
@@ -1620,75 +1861,8 @@ const DashboardChatPanel = ({
                     </Stack>
                   )
                 ) : null}
-                {message.sources?.length ? (
-                  <Stack
-                    direction="row"
-                    spacing={0.5}
-                    flexWrap="wrap"
-                    sx={{
-                      mt: 0.75,
-                      ml: message.role === 'assistant' ? (isPhone ? 5 : 6) : 0,
-                      width:
-                        message.role === 'assistant'
-                          ? {
-                              xs: 'calc(100% - 40px)',
-                              sm: 'calc(100% - 48px)',
-                            }
-                          : '100%',
-                      maxWidth: '100%',
-                      minWidth: 0,
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ mr: 0.5 }}
-                    >
-                      Based on:
-                    </Typography>
-                    {message.sources.map((source) => (
-                      <Chip
-                        key={source}
-                        label={source}
-                        size="small"
-                        variant="outlined"
-                        sx={{
-                          mb: 0.5,
-                          width: '100%',
-                          maxWidth: '100%',
-                          minWidth: 0,
-                          justifyContent: 'flex-start',
-                          '& .MuiChip-label': {
-                            display: 'block',
-                            minWidth: 0,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          },
-                        }}
-                      />
-                    ))}
-                  </Stack>
-                ) : null}
-                {message.role === 'assistant' &&
-                !message.pending &&
-                onAddAssistantMessageToGuide &&
-                message.id === latestAssistantMessageId ? (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<AddCircleOutlineIcon fontSize="small" />}
-                    onClick={() => onAddAssistantMessageToGuide(message)}
-                    sx={{
-                      mt: 0.75,
-                      ml: isPhone ? 5 : 6,
-                      borderRadius: 1,
-                      textTransform: 'none',
-                      bgcolor: 'background.paper',
-                    }}
-                  >
-                    Add to Study Guide
-                  </Button>
+                {message.role === 'assistant' && !message.pending ? (
+                  <>{renderAssistantActions(message)}</>
                 ) : null}
               </Box>
             ))}
@@ -1749,6 +1923,50 @@ const DashboardChatPanel = ({
                         </Typography>
                       </MenuItem>
                     </>
+                  ) : null}
+                </>
+              ) : null}
+            </Menu>
+            <Menu
+              anchorEl={assistantMessageMenuAnchor}
+              open={Boolean(
+                assistantMessageMenuAnchor && assistantMessageMenuMessage,
+              )}
+              onClose={closeAssistantMessageMenu}
+              PaperProps={{ sx: { minWidth: 220 } }}
+            >
+              {assistantMessageMenuMessage ? (
+                <>
+                  <MenuItem
+                    onClick={() => {
+                      copyAssistantAnswer(assistantMessageMenuMessage.content)
+                      closeAssistantMessageMenu()
+                    }}
+                  >
+                    <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
+                    Copy answer
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      retryAssistantAnswer(assistantMessageMenuMessage)
+                      closeAssistantMessageMenu()
+                    }}
+                  >
+                    <ReplayIcon fontSize="small" sx={{ mr: 1 }} />
+                    Retry answer
+                  </MenuItem>
+                  {onAddAssistantMessageToGuide ? (
+                    <MenuItem
+                      onClick={() => {
+                        onAddAssistantMessageToGuide(
+                          assistantMessageMenuMessage,
+                        )
+                        closeAssistantMessageMenu()
+                      }}
+                    >
+                      <AddCircleOutlineIcon fontSize="small" sx={{ mr: 1 }} />
+                      Add to Study Guide
+                    </MenuItem>
                   ) : null}
                 </>
               ) : null}

@@ -117,7 +117,68 @@ describe('askDashboardSources', () => {
     expect(callStrongAiModel).not.toHaveBeenCalled()
     expect(result).toEqual({
       answer: 'Photosynthesis converts light into stored chemical energy.',
-      sources: ['Lesson notes'],
+      sourceRefs: [
+        {
+          citationNumber: 1,
+          chunkId: 'chunk-1',
+          title: 'Lesson notes',
+          type: 'dashboard',
+          textPreview: 'Photosynthesis turns light into chemical energy.',
+          dashboardKey: undefined,
+          dashboardTitle: undefined,
+          dashboardIndex: undefined,
+        },
+      ],
+    })
+  })
+
+  it('asks models to cite numbered dashboard sources', async () => {
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
+      provider: 'hosted',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+    vi.mocked(callHostedAiModel).mockResolvedValue('It stores energy [1].')
+
+    await askDashboardSources({
+      ...baseOptions,
+      contextText:
+        'Dashboard: Biology\n\n---\n\nSource 1: Lesson notes (dashboard)\nPhotosynthesis turns light into chemical energy.',
+    })
+
+    const prompt = vi.mocked(callHostedAiModel).mock.calls[0][0].parts[0].text
+    expect(prompt).toContain('cite it inline with its source number')
+    expect(prompt).toContain('Source 1: Lesson notes')
+  })
+
+  it('uses Study Guide page indexes for source citation numbers', async () => {
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
+      provider: 'hosted',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+    vi.mocked(callHostedAiModel).mockResolvedValue('Use page four [4].')
+
+    const result = await askDashboardSources({
+      ...baseOptions,
+      sourceChunks: [
+        {
+          ...baseOptions.sourceChunks[0],
+          dashboardKey: 'page-4',
+          dashboardTitle: '04 - Feature Comparison',
+          dashboardIndex: 4,
+        },
+      ],
+      contextText:
+        'Dashboard: Biology\n\n---\n\nSource 4: 04 - Feature Comparison (dashboard)\nDetails.',
+    })
+
+    expect(result.sourceRefs[0]).toMatchObject({
+      citationNumber: 4,
+      dashboardKey: 'page-4',
+      dashboardIndex: 4,
     })
   })
 

@@ -22,7 +22,24 @@ vi.mock(
   '../../../../src/components/WidgetEditor/components/preview/StudyBlockView',
   () => ({
     __esModule: true,
-    renderMarkdown: (value: string) => <span>{value}</span>,
+    renderMarkdown: (
+      value: string,
+      options?: {
+        renderCitation?: (
+          citationNumber: number,
+          key: string,
+        ) => React.ReactNode
+      },
+    ) => (
+      <span>
+        {value.split(/(\[\d+\])/).map((part, index) => {
+          const citation = part.match(/^\[(\d+)\]$/)
+          return citation && options?.renderCitation
+            ? options.renderCitation(Number(citation[1]), `${part}-${index}`)
+            : part
+        })}
+      </span>
+    ),
   }),
 )
 
@@ -68,6 +85,9 @@ const renderPanel = (
     onQuickCreatePage?: React.ComponentProps<
       typeof DashboardChatPanel
     >['onQuickCreatePage']
+    onOpenSource?: React.ComponentProps<
+      typeof DashboardChatPanel
+    >['onOpenSource']
     supportsStudyGuideCreateScope?: boolean
     messages?: React.ComponentProps<typeof DashboardChatPanel>['messages']
   } = {},
@@ -79,6 +99,7 @@ const renderPanel = (
       onMessagesChange={vi.fn()}
       onClose={vi.fn()}
       onQuickCreatePage={options.onQuickCreatePage ?? vi.fn()}
+      onOpenSource={options.onOpenSource}
       supportsStudyGuideCreateScope={options.supportsStudyGuideCreateScope}
     />,
   )
@@ -87,8 +108,18 @@ beforeEach(() => {
   HTMLElement.prototype.scrollTo = vi.fn()
   vi.mocked(askDashboardSources).mockReset()
   vi.mocked(askDashboardSources).mockResolvedValue({
-    answer: 'Use the dashboard source notes.',
-    sources: [],
+    answer: 'Use the dashboard source notes [1].',
+    sourceRefs: [
+      {
+        citationNumber: 1,
+        chunkId: 'notes-1',
+        title: 'Photosynthesis notes',
+        type: 'MarkdownBlock',
+        textPreview: 'Plants use light, water, and carbon dioxide.',
+        dashboardKey: 'dashboard-page-1',
+        dashboardTitle: 'Source Notes',
+      },
+    ],
   })
 })
 
@@ -325,6 +356,129 @@ describe('DashboardChatPanel chat management', () => {
       screen.getByRole('button', { name: 'Send dashboard question' }),
     )
 
+    await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
+  })
+
+  it('renders inline citations and hides the old Based on block', () => {
+    const onOpenSource = vi.fn()
+    renderPanel({
+      onOpenSource,
+      messages: [
+        {
+          id: 'assistant-1',
+          role: 'assistant',
+          content: 'Photosynthesis stores energy [1]. Unknown [9].',
+          createdAt: 1,
+          sourceRefs: [
+            {
+              citationNumber: 1,
+              chunkId: 'notes-1',
+              title: 'Photosynthesis notes',
+              type: 'MarkdownBlock',
+              textPreview: 'Plants use light, water, and carbon dioxide.',
+              dashboardKey: 'lesson-1',
+              dashboardTitle: 'Lesson 1',
+            },
+          ],
+        },
+      ],
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open source 1' }))
+
+    expect(onOpenSource).toHaveBeenCalledWith(
+      expect.objectContaining({ citationNumber: 1, dashboardKey: 'lesson-1' }),
+    )
+    expect(screen.queryByText('Based on:')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Open source 9' }),
+    ).not.toBeInTheDocument()
+    expect(document.body).toHaveTextContent('[9]')
+  })
+
+  it('does not render a bottom sources section after answers', () => {
+    renderPanel({
+      messages: [
+        {
+          id: 'assistant-1',
+          role: 'assistant',
+          content: 'Photosynthesis stores energy [1].',
+          createdAt: 1,
+          sourceRefs: [
+            {
+              citationNumber: 1,
+              chunkId: 'notes-1',
+              title: 'Photosynthesis notes',
+              type: 'MarkdownBlock',
+              textPreview: 'Plants use light, water, and carbon dioxide.',
+              dashboardTitle: 'Lesson 1',
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(
+      screen.queryByRole('button', { name: 'Sources (1)' }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText(/MarkdownBlock/)).not.toBeInTheDocument()
+  })
+
+  it('offers assistant copy, retry, and add actions', async () => {
+    const onMessagesChange = vi.fn()
+    const onAddAssistantMessageToGuide = vi.fn()
+    const messages = [
+      {
+        id: 'user-1',
+        role: 'user' as const,
+        content: 'Explain photosynthesis',
+        createdAt: 1,
+      },
+      {
+        id: 'assistant-1',
+        role: 'assistant' as const,
+        content: 'It stores light energy [1].',
+        createdAt: 2,
+      },
+    ]
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === 'studymesh-dashboard-chat-sessions-dashboard-1'
+        ? JSON.stringify([
+            {
+              id: 'chat-1',
+              title: 'Explain photosynthesis',
+              messages,
+              createdAt: 1,
+              updatedAt: 2,
+            },
+          ])
+        : null,
+    )
+    render(
+      <DashboardChatPanel
+        dashboard={dashboardWithContext}
+        messages={messages}
+        onMessagesChange={onMessagesChange}
+        onClose={vi.fn()}
+        onQuickCreatePage={vi.fn()}
+        onAddAssistantMessageToGuide={onAddAssistantMessageToGuide}
+      />,
+    )
+    onMessagesChange.mockClear()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Add answer to Study Guide' }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Retry answer' }))
+
+    expect(onAddAssistantMessageToGuide).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'assistant-1' }),
+    )
+    expect(onMessagesChange).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ role: 'assistant', pending: true }),
+      ]),
+    )
     await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
   })
 

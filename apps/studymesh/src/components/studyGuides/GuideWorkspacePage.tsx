@@ -22,6 +22,7 @@ import {
 import StudyPathWorkspaceView from '../Dasboard/StudyPathWorkspaceView'
 import StudyGuidePagesPanel from '../Dasboard/StudyGuidePagesPanel'
 import DashboardChatPanel, {
+  type DashboardAnswerSourceRef,
   type DashboardChatMessage,
 } from '../dashboardChat/DashboardChatPanel'
 import TopNavBar from '../topnavbar/TopNavBar'
@@ -198,7 +199,41 @@ const GuideWorkspacePage = () => {
   }
 
   const addAssistantMessageToGuide = (message: DashboardChatMessage) => {
-    appendMarkdownPage('AI Chat note', message.content, 'chat')
+    const sourcesMarkdown = message.sourceRefs?.length
+      ? `\n\n## Sources\n${message.sourceRefs
+          .map(
+            (source) =>
+              `${source.citationNumber}. ${
+                source.dashboardTitle || source.title
+              } - ${source.title}`,
+          )
+          .join('\n')}`
+      : ''
+
+    appendMarkdownPage(
+      'AI Chat note',
+      `${message.content}${sourcesMarkdown}`,
+      'chat',
+    )
+  }
+
+  const openChatSource = (source: DashboardAnswerSourceRef) => {
+    if (!record || !source.dashboardKey) {
+      return
+    }
+
+    const pageIndex = record.studyPath.dashboards.findIndex(
+      (dashboard) => dashboard.dashboardKey === source.dashboardKey,
+    )
+    if (pageIndex < 0) {
+      return
+    }
+
+    persistStudyPath({
+      ...record.studyPath,
+      selectedIndex: pageIndex,
+    })
+    setMobileSection('study-guide')
   }
 
   const quickCreatePage = async (input: QuickCreateActionInput) => {
@@ -354,6 +389,7 @@ const GuideWorkspacePage = () => {
         }
         showCloseButton
         onAddAssistantMessageToGuide={addAssistantMessageToGuide}
+        onOpenSource={openChatSource}
         onQuickCreatePage={quickCreatePage}
         supportsStudyGuideCreateScope
       />
@@ -476,7 +512,7 @@ const GuideWorkspacePage = () => {
                           key as 'pages' | 'study-guide' | 'ai-chat',
                         )
                       }
-              sx={{ borderRadius: 1, textTransform: 'none' }}
+                      sx={{ borderRadius: 1, textTransform: 'none' }}
                     >
                       {label}
                     </Button>

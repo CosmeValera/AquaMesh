@@ -19,7 +19,18 @@ interface AskDashboardOptions {
 
 export interface AskDashboardResult {
   answer: string
-  sources: string[]
+  sourceRefs: DashboardAnswerSourceRef[]
+}
+
+export interface DashboardAnswerSourceRef {
+  citationNumber: number
+  chunkId: string
+  title: string
+  type: string
+  textPreview: string
+  dashboardKey?: string
+  dashboardTitle?: string
+  dashboardIndex?: number
 }
 
 const STRONG_MODEL_CHAT_TIMEOUT_MS = 45000
@@ -89,6 +100,8 @@ Rules:
 - Answer using only the provided dashboard sources and study material when possible.
 - If the answer is not supported by the provided context, say that the dashboard sources do not contain enough information.
 - Do not invent facts, citations, links, or source names.
+- When you use a specific source, cite it inline with its source number like [1] or [2].
+- Only cite source numbers shown in the dashboard/source context.
 - Be concise, clear, student-friendly, and practical.
 - Use bullets, examples, and study tips when helpful.
 
@@ -174,6 +187,18 @@ export const askDashboardSources = async (
 
   return {
     answer,
-    sources: options.sourceChunks.slice(0, 4).map((chunk) => chunk.title),
+    sourceRefs: options.sourceChunks.slice(0, 6).map((chunk, index) => ({
+      citationNumber: chunk.dashboardIndex || index + 1,
+      chunkId: chunk.id,
+      title: chunk.title,
+      type: chunk.type,
+      textPreview:
+        chunk.text.length > 240
+          ? `${chunk.text.slice(0, 240).trim()}...`
+          : chunk.text,
+      dashboardKey: chunk.dashboardKey,
+      dashboardTitle: chunk.dashboardTitle,
+      dashboardIndex: chunk.dashboardIndex,
+    })),
   }
 }

@@ -1,5 +1,5 @@
 import React from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -23,15 +23,28 @@ vi.mock('../../../../src/components/hostedAi/HostedAiIntroModal', () => ({
 }))
 
 vi.mock('../../../../src/components/Dasboard/StudyPathWorkspaceView', () => ({
-  default: () => <div data-testid="study-guide-panel" />,
+  default: ({
+    studyPath,
+  }: {
+    studyPath: { selectedIndex: number; dashboards: Array<{ name: string }> }
+  }) => (
+    <div data-testid="study-guide-panel">
+      {studyPath.dashboards[studyPath.selectedIndex]?.name}
+    </div>
+  ),
 }))
 
 vi.mock('../../../../src/components/Dasboard/StudyGuidePagesPanel', () => ({
   default: () => <div data-testid="pages-panel" />,
 }))
 
+const dashboardChatPanelSpy = vi.fn()
+
 vi.mock('../../../../src/components/dashboardChat/DashboardChatPanel', () => ({
-  default: () => <div data-testid="chat-panel" />,
+  default: (props: Record<string, unknown>) => {
+    dashboardChatPanelSpy(props)
+    return <div data-testid="chat-panel" />
+  },
 }))
 
 const storedGuide = {
@@ -54,6 +67,16 @@ const storedGuide = {
         createdBy: 'generator',
         deletable: false,
       },
+      {
+        name: 'Review page',
+        dashboardKey: 'review',
+        dashboardIndex: 2,
+        dashboardCount: 2,
+        folderName: 'Biology',
+        layout: { type: 'row' },
+        createdBy: 'generator',
+        deletable: false,
+      },
     ],
   },
   createdAt: '2026-06-01T00:00:00.000Z',
@@ -66,6 +89,7 @@ describe('GuideWorkspacePage responsive sections', () => {
   })
 
   beforeEach(() => {
+    dashboardChatPanelSpy.mockClear()
     vi.mocked(window.matchMedia).mockImplementation((query) => ({
       matches: query.includes('max-width'),
       media: query,
@@ -105,5 +129,47 @@ describe('GuideWorkspacePage responsive sections', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'AI Chat' }))
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
+  })
+
+  it('opens chat sources on the referenced Study Guide page', async () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <Routes>
+          <Route
+            path="/workspace/:studyGuideId"
+            element={<GuideWorkspacePage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await screen.findByTestId('study-guide-panel')
+    fireEvent.click(screen.getByRole('button', { name: 'AI Chat' }))
+    const latestProps = dashboardChatPanelSpy.mock.calls.at(-1)?.[0] as {
+      onOpenSource: (source: {
+        citationNumber: number
+        title: string
+        type: string
+        textPreview: string
+        chunkId: string
+        dashboardKey: string
+        dashboardTitle: string
+      }) => void
+    }
+
+    act(() => {
+      latestProps.onOpenSource({
+        citationNumber: 1,
+        title: 'Review notes',
+        type: 'MarkdownBlock',
+        textPreview: 'Review source preview.',
+        chunkId: 'chunk-1',
+        dashboardKey: 'review',
+        dashboardTitle: 'Review page',
+      })
+    })
+
+    expect(await screen.findByText('Review page')).toBeInTheDocument()
+    expect(screen.queryByText(/Review source preview/)).not.toBeInTheDocument()
   })
 })

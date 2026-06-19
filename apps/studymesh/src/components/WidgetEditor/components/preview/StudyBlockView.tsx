@@ -160,10 +160,17 @@ const isSafeMarkdownHref = (href: string): boolean => {
   )
 }
 
-const renderMarkdownInline = (value: string): React.ReactNode[] => {
+interface RenderMarkdownOptions {
+  renderCitation?: (citationNumber: number, key: string) => React.ReactNode
+}
+
+const renderMarkdownInline = (
+  value: string,
+  options: RenderMarkdownOptions = {},
+): React.ReactNode[] => {
   const nodes: React.ReactNode[] = []
   const tokenPattern =
-    /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|\*[^*]+\*)/g
+    /(\[\d+\]|\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|\*[^*]+\*)/g
   let cursor = 0
   let match: RegExpExecArray | null
 
@@ -175,8 +182,15 @@ const renderMarkdownInline = (value: string): React.ReactNode[] => {
     const token = match[0]
     const key = `${token}-${match.index}`
     const linkMatch = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
+    const citationMatch = token.match(/^\[(\d+)\]$/)
 
-    if (linkMatch && isSafeMarkdownHref(linkMatch[2])) {
+    if (citationMatch) {
+      nodes.push(
+        options.renderCitation
+          ? options.renderCitation(Number(citationMatch[1]), key)
+          : token,
+      )
+    } else if (linkMatch && isSafeMarkdownHref(linkMatch[2])) {
       nodes.push(
         <Link key={key} href={linkMatch[2]} target="_blank" rel="noreferrer">
           {linkMatch[1]}
@@ -225,7 +239,10 @@ const renderMarkdownInline = (value: string): React.ReactNode[] => {
   return nodes
 }
 
-export const renderMarkdown = (markdown: string): React.ReactNode[] => {
+export const renderMarkdown = (
+  markdown: string,
+  options: RenderMarkdownOptions = {},
+): React.ReactNode[] => {
   const lines = markdown.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n')
   const blocks: React.ReactNode[] = []
   let index = 0
@@ -315,7 +332,7 @@ export const renderMarkdown = (markdown: string): React.ReactNode[] => {
           fontWeight={600}
           sx={{ mt: blocks.length === 0 ? 0 : 1.5 }}
         >
-          {renderMarkdownInline(headingMatch[2])}
+          {renderMarkdownInline(headingMatch[2], options)}
         </Typography>,
       )
       index += 1
@@ -351,7 +368,7 @@ export const renderMarkdown = (markdown: string): React.ReactNode[] => {
                     key={`${header}-${headerIndex}`}
                     sx={{ fontWeight: 700 }}
                   >
-                    {renderMarkdownInline(header)}
+                    {renderMarkdownInline(header, options)}
                   </TableCell>
                 ))}
               </TableRow>
@@ -363,7 +380,7 @@ export const renderMarkdown = (markdown: string): React.ReactNode[] => {
                     <TableCell
                       key={`markdown-table-cell-${rowIndex}-${cellIndex}`}
                     >
-                      {renderMarkdownInline(row[cellIndex] || '')}
+                      {renderMarkdownInline(row[cellIndex] || '', options)}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -427,7 +444,7 @@ export const renderMarkdown = (markdown: string): React.ReactNode[] => {
                   sx={{ p: 0.25, mr: 0.5 }}
                 />
               )}
-              {renderMarkdownInline(item.text)}
+              {renderMarkdownInline(item.text, options)}
             </Typography>
           ))}
         </Box>,
@@ -454,7 +471,7 @@ export const renderMarkdown = (markdown: string): React.ReactNode[] => {
           }}
         >
           <Typography variant="body2">
-            {renderMarkdownInline(quoteLines.join(' '))}
+            {renderMarkdownInline(quoteLines.join(' '), options)}
           </Typography>
         </Box>,
       )
@@ -485,7 +502,7 @@ export const renderMarkdown = (markdown: string): React.ReactNode[] => {
         variant="body2"
         sx={{ lineHeight: 1.7 }}
       >
-        {renderMarkdownInline(paragraphLines.join(' '))}
+        {renderMarkdownInline(paragraphLines.join(' '), options)}
       </Typography>,
     )
   }
@@ -784,8 +801,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
               const resultColor = isCorrect
                 ? 'success.main'
                 : isSelected
-                  ? 'error.main'
-                  : 'divider'
+                ? 'error.main'
+                : 'divider'
 
               return (
                 <Button
@@ -940,8 +957,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
                         const resultBorder = isCorrect
                           ? 'success.main'
                           : isSelected
-                            ? 'error.main'
-                            : 'divider'
+                          ? 'error.main'
+                          : 'divider'
 
                         return {
                           justifyContent: 'flex-start',
@@ -1209,7 +1226,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
     const title = String(props.title || 'Markdown notes')
     const isStudyGuidePage = Boolean(props.studyPathId)
     const markdown = isStudyGuidePage
-      ? stripDuplicateStudyGuideMarkdownTitle(String(props.markdown || ''), title)
+      ? stripDuplicateStudyGuideMarkdownTitle(
+          String(props.markdown || ''),
+          title,
+        )
       : String(props.markdown || '')
 
     return (

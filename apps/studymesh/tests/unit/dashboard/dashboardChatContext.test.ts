@@ -134,6 +134,11 @@ describe('dashboard chat context builder', () => {
     expect(context.chunks).toHaveLength(3)
     expect(context.chunks[0].title).toBe('Lesson 1: Source notes')
     expect(context.chunks[0].text).toContain('subjunctive')
+    expect(context.chunks[0]).toMatchObject({
+      dashboardKey: 'lesson-1',
+      dashboardTitle: 'Lesson 1',
+      dashboardIndex: 1,
+    })
   })
 
   it('can limit local chat context to source notes in the selected study guide dashboard', () => {
@@ -144,5 +149,12 @@ describe('dashboard chat context builder', () => {
 
     expect(context.chunks).toHaveLength(1)
     expect(context.chunks[0].title).toBe('Lesson 1: Source notes')
+  })
+
+  it('keeps selected Study Guide chunks ordered by page number for citations', () => {
+    const context = buildDashboardChatContext(studyPathWorkspace)
+    const chunks = selectDashboardChatChunks(context, 'subjunctive estar')
+
+    expect(chunks.map((chunk) => chunk.dashboardIndex)).toEqual([1, 1, 2])
   })
 })

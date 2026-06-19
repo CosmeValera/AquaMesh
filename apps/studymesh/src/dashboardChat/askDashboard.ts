@@ -23,13 +23,67 @@ export interface AskDashboardResult {
 }
 
 const STRONG_MODEL_CHAT_TIMEOUT_MS = 45000
+const STRONG_CHAT_RECENT_HISTORY_MESSAGES = 4
+
+type ChatMemoryProvider = 'hosted' | 'local' | 'gemini' | 'cerebras' | string
+
+interface ChatMemory {
+  originalGoal?: string
+  recentMessages: Array<{ role: 'user' | 'assistant'; content: string }>
+}
+
+const selectChatMemory = (
+  history: AskDashboardOptions['history'],
+  provider: ChatMemoryProvider,
+): ChatMemory => {
+  if (provider === 'local') {
+    return { recentMessages: [] }
+  }
+
+  const originalUserMessage = history.find((message) => message.role === 'user')
+  const recentMessages = history.slice(-STRONG_CHAT_RECENT_HISTORY_MESSAGES)
+  const recentIncludesOriginal =
+    originalUserMessage &&
+    recentMessages.some((message) => message === originalUserMessage)
+
+  return {
+    originalGoal: recentIncludesOriginal
+      ? undefined
+      : originalUserMessage?.content,
+    recentMessages,
+  }
+}
+
+const formatChatMemory = ({ originalGoal, recentMessages }: ChatMemory) => {
+  const sections: string[] = []
+
+  if (originalGoal) {
+    sections.push(`Original student goal: ${originalGoal}`)
+  }
+
+  if (recentMessages.length > 0) {
+    sections.push(`Recent chat:
+${recentMessages
+  .map(
+    (message) =>
+      `${message.role === 'user' ? 'Student' : 'Assistant'}: ${
+        message.content
+      }`,
+  )
+  .join('\n')}`)
+  }
+
+  return sections.length > 0 ? sections.join('\n\n') : 'None'
+}
 
 const buildPrompt = ({
   dashboardTitle,
   contextText,
   question,
-  history,
-}: AskDashboardOptions) => `You are StudyMesh's dashboard assistant. Help the student understand the current dashboard.
+  memory,
+}: Omit<AskDashboardOptions, 'history'> & {
+  memory: ChatMemory
+}) => `You are StudyMesh's dashboard assistant. Help the student understand the current dashboard.
 
 Rules:
 - Answer using only the provided dashboard sources and study material when possible.
@@ -43,16 +97,8 @@ Dashboard title: ${dashboardTitle}
 Dashboard/source context:
 ${contextText}
 
-Recent chat:
-${history
-  .slice(-6)
-  .map(
-    (message) =>
-      `${message.role === 'user' ? 'Student' : 'Assistant'}: ${
-        message.content
-      }`,
-  )
-  .join('\n')}
+Conversation memory:
+${formatChatMemory(memory)}
 
 Student question: ${question}
 
@@ -91,7 +137,10 @@ export const askDashboardSources = async (
 ): Promise<AskDashboardResult> => {
   const settings = readQuickCreateAiSettings()
   const provider = settings.provider || 'hosted'
-  const prompt = buildPrompt(options)
+  const prompt = buildPrompt({
+    ...options,
+    memory: selectChatMemory(options.history, provider),
+  })
   let answer: string
 
   if (provider === 'hosted') {

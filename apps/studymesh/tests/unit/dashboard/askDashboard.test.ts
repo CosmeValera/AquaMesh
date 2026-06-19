@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { askDashboardSources } from '../../../src/dashboardChat/askDashboard'
 import {
+  callLocalLanguageModel,
   callStrongAiModel,
   readQuickCreateAiSettings,
   resolveQuickCreateAiCredentials,
@@ -17,7 +18,11 @@ vi.mock('../../../src/quickCreate/ai', () => ({
   resolveQuickCreateAiCredentials: vi.fn(),
   STRONG_AI_PROVIDERS: {
     gemini: { label: 'Gemini', modeLabel: 'Own Gemini API token' },
-    cerebras: { label: 'Cerebras', modeLabel: 'Own Cerebras API key' },
+    cerebras: {
+      label: 'Cerebras',
+      modeLabel: 'Own Cerebras API key',
+      defaultModel: 'gpt-oss-120b',
+    },
   },
 }))
 
@@ -42,6 +47,7 @@ const baseOptions = {
 
 describe('askDashboardSources', () => {
   beforeEach(() => {
+    vi.mocked(callLocalLanguageModel).mockReset()
     vi.mocked(callStrongAiModel).mockReset()
     vi.mocked(callHostedAiModel).mockReset()
     vi.mocked(readQuickCreateAiSettings).mockReset()
@@ -113,5 +119,88 @@ describe('askDashboardSources', () => {
       answer: 'Photosynthesis converts light into stored chemical energy.',
       sources: ['Lesson notes'],
     })
+  })
+
+  it('keeps the first user goal and recent messages for strong dashboard chat memory', async () => {
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
+      provider: 'cerebras',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+    vi.mocked(resolveQuickCreateAiCredentials).mockReturnValue({
+      provider: 'cerebras',
+      apiToken: 'cerebras-key',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+      tokenSource: 'settings',
+    })
+    vi.mocked(callStrongAiModel).mockResolvedValue('Use the Calvin cycle.')
+
+    await askDashboardSources({
+      ...baseOptions,
+      history: [
+        { role: 'user', content: 'Help me study photosynthesis for a test.' },
+        { role: 'assistant', content: 'Start with light reactions.' },
+        { role: 'user', content: 'What should I memorize first?' },
+        { role: 'assistant', content: 'Memorize inputs and outputs.' },
+        { role: 'user', content: 'Now compare it to respiration.' },
+        { role: 'assistant', content: 'They move energy differently.' },
+      ],
+    })
+
+    const prompt = vi.mocked(callStrongAiModel).mock.calls[0][0].parts[0].text
+    expect(prompt).toContain(
+      'Original student goal: Help me study photosynthesis for a test.',
+    )
+    expect(prompt).not.toContain('Assistant: Start with light reactions.')
+    expect(prompt).toContain('Student: What should I memorize first?')
+    expect(prompt).toContain('Assistant: They move energy differently.')
+  })
+
+  it('does not duplicate the first user goal when it is already recent', async () => {
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
+      provider: 'hosted',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+    vi.mocked(callHostedAiModel).mockResolvedValue('Plants use chlorophyll.')
+
+    await askDashboardSources({
+      ...baseOptions,
+      history: [
+        { role: 'user', content: 'Explain chlorophyll.' },
+        { role: 'assistant', content: 'It absorbs light.' },
+      ],
+    })
+
+    const prompt = vi.mocked(callHostedAiModel).mock.calls[0][0].parts[0].text
+    expect(prompt).not.toContain('Original student goal:')
+    expect(prompt).toContain('Student: Explain chlorophyll.')
+    expect(prompt).toContain('Assistant: It absorbs light.')
+  })
+
+  it('omits chat history for local dashboard chat', async () => {
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
+      provider: 'local',
+      apiToken: '',
+      model: '',
+      strongProviders: {},
+    })
+    vi.mocked(callLocalLanguageModel).mockResolvedValue('Local answer.')
+
+    await askDashboardSources({
+      ...baseOptions,
+      history: [
+        { role: 'user', content: 'Keep this out of local prompt.' },
+        { role: 'assistant', content: 'Also keep this out.' },
+      ],
+    })
+
+    const prompt = vi.mocked(callLocalLanguageModel).mock.calls[0][0]
+    expect(prompt).toContain('Conversation memory:\nNone')
+    expect(prompt).not.toContain('Keep this out of local prompt.')
+    expect(prompt).not.toContain('Also keep this out.')
   })
 })

@@ -1,15 +1,21 @@
 import React from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import DashboardChatPanel, {
   aiChatPets,
   getAiChatPetSrc,
 } from '../../../../src/components/dashboardChat/DashboardChatPanel'
+import { askDashboardSources } from '../../../../src/dashboardChat/askDashboard'
 import type { StateDashboard } from '../../../../src/state/store'
 
 vi.mock('../../../../src/quickCreate/ai', () => ({
   __esModule: true,
   readQuickCreateAiSettings: () => ({ provider: 'gemini' }),
+}))
+
+vi.mock('../../../../src/dashboardChat/askDashboard', () => ({
+  __esModule: true,
+  askDashboardSources: vi.fn(),
 }))
 
 vi.mock(
@@ -76,6 +82,15 @@ const renderPanel = (
       supportsStudyGuideCreateScope={options.supportsStudyGuideCreateScope}
     />,
   )
+
+beforeEach(() => {
+  HTMLElement.prototype.scrollTo = vi.fn()
+  vi.mocked(askDashboardSources).mockReset()
+  vi.mocked(askDashboardSources).mockResolvedValue({
+    answer: 'Use the dashboard source notes.',
+    sources: [],
+  })
+})
 
 describe('DashboardChatPanel quick create menu', () => {
   it('keeps the empty chat compact and shows its prompt ideas directly', () => {
@@ -276,6 +291,41 @@ describe('DashboardChatPanel chat management', () => {
       bottom: '-18px',
     })
     expect(actionToolbar).not.toHaveStyle({ height: '26px' })
+  })
+
+  it('keeps chat input and create available after more than five replies', async () => {
+    const messages = Array.from({ length: 6 }).flatMap((_, index) => [
+      {
+        id: `user-${index}`,
+        role: 'user' as const,
+        content: `Question ${index}`,
+        createdAt: index * 2,
+      },
+      {
+        id: `assistant-${index}`,
+        role: 'assistant' as const,
+        content: `Answer ${index}`,
+        createdAt: index * 2 + 1,
+      },
+    ])
+    renderPanel({ messages })
+
+    const input = screen.getByPlaceholderText('Ask anything')
+    fireEvent.change(input, {
+      target: { value: 'Can I still ask another question?' },
+    })
+
+    expect(input).toBeEnabled()
+    expect(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    ).toBeEnabled()
+    expect(screen.getByRole('button', { name: /^Create$/i })).toBeEnabled()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
   })
 
   it('only offers delete inside Chats and closes the menu after deleting', async () => {

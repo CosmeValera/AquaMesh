@@ -249,6 +249,35 @@ describe('DashboardChatPanel chat management', () => {
     })
   })
 
+  it('floats user message actions without reserving vertical message space', () => {
+    renderPanel({
+      messages: [
+        {
+          id: 'user-1',
+          role: 'user',
+          content: 'What is recursion?',
+          createdAt: 1,
+        },
+        {
+          id: 'assistant-1',
+          role: 'assistant',
+          content: 'Recursion is a function calling itself.',
+          createdAt: 2,
+        },
+      ],
+    })
+
+    const actionToolbar = screen
+      .getByRole('button', { name: 'Copy prompt' })
+      .closest('.studymesh-user-message-actions')
+
+    expect(actionToolbar).toHaveStyle({
+      position: 'absolute',
+      bottom: '-18px',
+    })
+    expect(actionToolbar).not.toHaveStyle({ height: '26px' })
+  })
+
   it('only offers delete inside Chats and closes the menu after deleting', async () => {
     vi.mocked(localStorage.getItem).mockImplementation((key) =>
       key === 'studymesh-dashboard-chat-sessions-dashboard-1'

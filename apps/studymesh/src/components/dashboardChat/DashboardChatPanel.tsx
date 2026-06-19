@@ -39,6 +39,7 @@ import CheckIcon from '@mui/icons-material/Check'
 import CloseIcon from '@mui/icons-material/Close'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import { StateDashboard } from '../../state/store'
 import {
   buildDashboardChatContext,
@@ -263,6 +264,10 @@ const DashboardChatPanel = ({
   })
   const [quickCreateSearch, setQuickCreateSearch] = useState('')
   const [replyScrollBufferActive, setReplyScrollBufferActive] = useState(false)
+  const [userMessageMenuAnchor, setUserMessageMenuAnchor] =
+    useState<HTMLElement | null>(null)
+  const [userMessageMenuMessage, setUserMessageMenuMessage] =
+    useState<DashboardChatMessage | null>(null)
   const [quickCreateSourceScope, setQuickCreateSourceScope] =
     useState<QuickCreateSourceScope>(
       supportsStudyGuideCreateScope ? 'studyGuide' : 'currentPage',
@@ -291,6 +296,21 @@ const DashboardChatPanel = ({
   const activeChatTitle =
     chatSessions.find((session) => session.id === activeChatId)?.title ||
     'New chat'
+  const userActionIconButtonSx = {
+    width: 24,
+    height: 24,
+    bgcolor: 'background.paper',
+    border: 1,
+    borderColor: 'divider',
+    color: 'text.secondary',
+    boxShadow: `0 8px 20px ${alpha(theme.palette.common.black, 0.12)}`,
+    '& svg': { fontSize: 16 },
+    '&:hover': {
+      bgcolor: alpha(theme.palette.primary.main, 0.08),
+      borderColor: alpha(theme.palette.primary.main, 0.34),
+      color: 'primary.main',
+    },
+  }
 
   const scrollChatToBottom = () => {
     window.requestAnimationFrame(() => {
@@ -659,6 +679,11 @@ const DashboardChatPanel = ({
 
   const copyUserPrompt = (content: string) => {
     void navigator.clipboard?.writeText(content)
+  }
+
+  const closeUserMessageMenu = () => {
+    setUserMessageMenuAnchor(null)
+    setUserMessageMenuMessage(null)
   }
 
   const startEditingUserPrompt = (message: DashboardChatMessage) => {
@@ -1237,7 +1262,7 @@ const DashboardChatPanel = ({
             </Stack>
           </Stack>
         ) : (
-          <Stack spacing={1.5}>
+          <Stack spacing={1}>
             {messages.map((message) => (
               <Box
                 key={message.id}
@@ -1480,102 +1505,120 @@ const DashboardChatPanel = ({
                   </Box>
                 </Stack>
                 {message.role === 'user' && editingPromptId !== message.id ? (
-                  <Stack
-                    className="studymesh-user-message-actions"
-                    direction="row"
-                    spacing={0.35}
-                    justifyContent="flex-end"
-                    alignItems="center"
-                    sx={{ height: 26, pt: 0.25, pr: 0.25 }}
-                  >
-                    <Tooltip title="Copy prompt">
+                  isMobile ? (
+                    <Tooltip title="Message actions">
                       <IconButton
                         size="small"
-                        aria-label="Copy prompt"
+                        aria-label="User message actions"
                         onClick={(event) => {
                           event.stopPropagation()
-                          copyUserPrompt(message.content)
+                          setUserMessageMenuAnchor(event.currentTarget)
+                          setUserMessageMenuMessage(message)
                         }}
                         sx={{
-                          width: 24,
-                          height: 24,
-                          bgcolor: 'background.paper',
-                          border: 1,
-                          borderColor: 'divider',
-                          color: 'text.secondary',
-                          '& svg': { fontSize: 16 },
+                          ...userActionIconButtonSx,
+                          position: 'absolute',
+                          top: -10,
+                          right: -8,
+                          zIndex: 2,
                         }}
                       >
-                        <ContentCopyIcon fontSize="small" />
+                        <MoreHorizIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Edit prompt">
-                      <IconButton
-                        size="small"
-                        aria-label="Edit prompt"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          startEditingUserPrompt(message)
-                        }}
-                        sx={{
-                          width: 24,
-                          height: 24,
-                          bgcolor: 'background.paper',
-                          border: 1,
-                          borderColor: 'divider',
-                          color: 'text.secondary',
-                          '& svg': { fontSize: 16 },
-                        }}
-                      >
-                        <EditOutlinedIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    {message.promptBranchId &&
-                    (message.promptBranchCount || 0) > 1 ? (
-                      <>
+                  ) : (
+                    <Stack
+                      className="studymesh-user-message-actions"
+                      direction="row"
+                      spacing={0.35}
+                      justifyContent="flex-end"
+                      alignItems="center"
+                      sx={{
+                        position: 'absolute',
+                        right: 0,
+                        bottom: -18,
+                        zIndex: 2,
+                        p: 0.25,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Tooltip title="Copy prompt">
                         <IconButton
                           size="small"
-                          aria-label="Previous prompt branch"
+                          aria-label="Copy prompt"
                           onClick={(event) => {
                             event.stopPropagation()
-                            switchUserPromptBranch(message, -1)
+                            copyUserPrompt(message.content)
                           }}
-                          sx={{
-                            width: 22,
-                            height: 24,
-                            color: 'text.secondary',
-                            '& svg': { fontSize: 16 },
-                          }}
+                          sx={userActionIconButtonSx}
                         >
-                          <ChevronLeftIcon fontSize="small" />
+                          <ContentCopyIcon fontSize="small" />
                         </IconButton>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ minWidth: 24, textAlign: 'center' }}
-                        >
-                          {(message.promptBranchIndex ?? 0) + 1}/
-                          {message.promptBranchCount}
-                        </Typography>
+                      </Tooltip>
+                      <Tooltip title="Edit prompt">
                         <IconButton
                           size="small"
-                          aria-label="Next prompt branch"
+                          aria-label="Edit prompt"
                           onClick={(event) => {
                             event.stopPropagation()
-                            switchUserPromptBranch(message, 1)
+                            startEditingUserPrompt(message)
                           }}
-                          sx={{
-                            width: 22,
-                            height: 24,
-                            color: 'text.secondary',
-                            '& svg': { fontSize: 16 },
-                          }}
+                          sx={userActionIconButtonSx}
                         >
-                          <ChevronRightIcon fontSize="small" />
+                          <EditOutlinedIcon fontSize="small" />
                         </IconButton>
-                      </>
-                    ) : null}
-                  </Stack>
+                      </Tooltip>
+                      {message.promptBranchId &&
+                      (message.promptBranchCount || 0) > 1 ? (
+                        <>
+                          <IconButton
+                            size="small"
+                            aria-label="Previous prompt branch"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              switchUserPromptBranch(message, -1)
+                            }}
+                            sx={{
+                              ...userActionIconButtonSx,
+                              width: 22,
+                            }}
+                          >
+                            <ChevronLeftIcon fontSize="small" />
+                          </IconButton>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{
+                              minWidth: 24,
+                              textAlign: 'center',
+                              bgcolor: 'background.paper',
+                              border: 1,
+                              borderColor: 'divider',
+                              borderRadius: 1,
+                              px: 0.5,
+                            }}
+                          >
+                            {(message.promptBranchIndex ?? 0) + 1}/
+                            {message.promptBranchCount}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            aria-label="Next prompt branch"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              switchUserPromptBranch(message, 1)
+                            }}
+                            sx={{
+                              ...userActionIconButtonSx,
+                              width: 22,
+                            }}
+                          >
+                            <ChevronRightIcon fontSize="small" />
+                          </IconButton>
+                        </>
+                      ) : null}
+                    </Stack>
+                  )
                 ) : null}
                 {message.sources?.length ? (
                   <Stack
@@ -1649,6 +1692,67 @@ const DashboardChatPanel = ({
                 ) : null}
               </Box>
             ))}
+            <Menu
+              anchorEl={userMessageMenuAnchor}
+              open={Boolean(userMessageMenuAnchor && userMessageMenuMessage)}
+              onClose={closeUserMessageMenu}
+              PaperProps={{ sx: { minWidth: 220 } }}
+            >
+              {userMessageMenuMessage ? (
+                <>
+                  <MenuItem
+                    onClick={() => {
+                      copyUserPrompt(userMessageMenuMessage.content)
+                      closeUserMessageMenu()
+                    }}
+                  >
+                    <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
+                    Copy prompt
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      startEditingUserPrompt(userMessageMenuMessage)
+                      closeUserMessageMenu()
+                    }}
+                  >
+                    <EditOutlinedIcon fontSize="small" sx={{ mr: 1 }} />
+                    Edit prompt
+                  </MenuItem>
+                  {userMessageMenuMessage.promptBranchId &&
+                  (userMessageMenuMessage.promptBranchCount || 0) > 1 ? (
+                    <>
+                      <Divider />
+                      <MenuItem
+                        onClick={() => {
+                          switchUserPromptBranch(userMessageMenuMessage, -1)
+                          closeUserMessageMenu()
+                        }}
+                      >
+                        <ChevronLeftIcon fontSize="small" sx={{ mr: 1 }} />
+                        Previous branch
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          switchUserPromptBranch(userMessageMenuMessage, 1)
+                          closeUserMessageMenu()
+                        }}
+                      >
+                        <ChevronRightIcon fontSize="small" sx={{ mr: 1 }} />
+                        Next branch
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ ml: 'auto' }}
+                        >
+                          {(userMessageMenuMessage.promptBranchIndex ?? 0) + 1}/
+                          {userMessageMenuMessage.promptBranchCount}
+                        </Typography>
+                      </MenuItem>
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+            </Menu>
           </Stack>
         )}
         {replyScrollBufferActive &&

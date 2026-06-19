@@ -591,8 +591,14 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
           sx={{
             minHeight: isMobileWorkspaceHeader ? '56px' : '52px',
             height: isMobileWorkspaceHeader ? '56px' : '52px',
+            boxSizing: 'border-box',
+            alignItems: 'center',
+            py: 0,
             px: isMobileWorkspaceHeader ? 0.75 : 1.25,
             gap: isMobileWorkspaceHeader ? 0.75 : 0,
+            '& .MuiTypography-root': {
+              lineHeight: 1.15,
+            },
           }}
         >
           {isMobileWorkspaceHeader ? (

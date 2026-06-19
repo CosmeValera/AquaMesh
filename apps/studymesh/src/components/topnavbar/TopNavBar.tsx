@@ -599,6 +599,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
             '& .MuiTypography-root': {
               lineHeight: 1.15,
             },
+            '@media (min-width:600px)': {
+              minHeight: isMobileWorkspaceHeader ? '56px' : '52px',
+              height: isMobileWorkspaceHeader ? '56px' : '52px',
+            },
           }}
         >
           {isMobileWorkspaceHeader ? (

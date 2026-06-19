@@ -22,7 +22,7 @@ const createStudyPath = (): StudyPathContainerState => ({
       deletable: false,
     },
     {
-      name: 'Manual note',
+      name: '02 - Manual note',
       layout: { type: 'row' },
       dashboardKey: 'manual',
       dashboardIndex: 2,
@@ -32,7 +32,7 @@ const createStudyPath = (): StudyPathContainerState => ({
       deletable: true,
     },
     {
-      name: 'Quiz',
+      name: '03 - Quiz',
       layout: { type: 'row' },
       dashboardKey: 'quiz',
       dashboardIndex: 3,
@@ -103,6 +103,7 @@ describe('StudyGuidePagesPanel', () => {
       screen.queryByLabelText('Delete Core lesson'),
     ).not.toBeInTheDocument()
     expect(screen.getByLabelText('Delete Manual note')).toBeInTheDocument()
+    expect(screen.queryByText('03 - Quiz')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /^03 Quiz$/ }))
     expect(onStudyPathChange).toHaveBeenCalledWith(

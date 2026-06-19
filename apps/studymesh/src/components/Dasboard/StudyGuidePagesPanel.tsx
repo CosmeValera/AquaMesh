@@ -26,6 +26,14 @@ type StudyGuidePagesPanelVariant = 'desktop' | 'mobile'
 const PAGES_PANEL_MIN_WIDTH = 220
 const PAGES_PANEL_MAX_WIDTH = 440
 
+const stripLeadingPageNumber = (title: string): string => {
+  const cleanedTitle = title
+    .replace(/^\s*\d{1,3}\s*(?:[-.):]|\u2013|\u2014)\s*/, '')
+    .trim()
+
+  return cleanedTitle || title
+}
+
 interface StudyGuidePagesPanelProps {
   studyPath: StudyPathContainerState
   onStudyPathChange: (studyPath: StudyPathContainerState) => void
@@ -238,6 +246,8 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
         <Stack spacing={0.5}>
           {studyPath.dashboards.map((page, index) => {
             const active = index === selectedIndex
+            const pageOrder = String(index + 1).padStart(2, '0')
+            const pageTitle = stripLeadingPageNumber(page.name)
             return (
               <Box
                 key={page.dashboardKey}
@@ -249,7 +259,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                   !mobile && insertionIndex === index ? 'true' : undefined
                 }
                 draggable={!mobile}
-                aria-label={mobile ? undefined : `Drag ${page.name} to reorder`}
+                aria-label={mobile ? undefined : `Drag ${pageTitle} to reorder`}
                 onDragStart={
                   mobile
                     ? undefined
@@ -270,7 +280,8 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                 }
                 sx={(theme) => ({
                   mx: 0.75,
-                  px: 0.25,
+                  px: 0.5,
+                  pr: mobile ? 0.75 : 1,
                   py: 0.5,
                   borderRadius: 1,
                   border: 1,
@@ -318,6 +329,11 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                       ? alpha(theme.palette.primary.main, 0.07)
                       : theme.palette.action.hover,
                   },
+                  '&:hover .study-guide-page-delete-action, &:focus-within .study-guide-page-delete-action':
+                    {
+                      opacity: 1,
+                      pointerEvents: 'auto',
+                    },
                 })}
               >
                 <Button
@@ -333,9 +349,24 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                     color: 'text.primary',
                   }}
                 >
-                  <Stack direction="row" spacing={1} minWidth={0}>
-                    <Typography variant="caption" fontWeight={600}>
-                      {String(index + 1).padStart(2, '0')}
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="flex-start"
+                    minWidth={0}
+                  >
+                    <Typography
+                      variant="caption"
+                      fontWeight={700}
+                      sx={{
+                        width: 24,
+                        flex: '0 0 24px',
+                        fontVariantNumeric: 'tabular-nums',
+                        color: active ? 'primary.main' : 'text.secondary',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {pageOrder}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -348,7 +379,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                         overflow: 'hidden',
                       }}
                     >
-                      {page.name}
+                      {pageTitle}
                     </Typography>
                   </Stack>
                 </Button>
@@ -356,7 +387,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                   <>
                     <IconButton
                       size="small"
-                      aria-label={`Move ${page.name} up`}
+                      aria-label={`Move ${pageTitle} up`}
                       disabled={index === 0}
                       onClick={() => movePage(index, index - 1)}
                       sx={pageIconButtonSx()}
@@ -365,7 +396,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                     </IconButton>
                     <IconButton
                       size="small"
-                      aria-label={`Move ${page.name} down`}
+                      aria-label={`Move ${pageTitle} down`}
                       disabled={index === studyPath.dashboards.length - 1}
                       onClick={() => movePage(index, index + 1)}
                       sx={pageIconButtonSx()}
@@ -377,14 +408,25 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                 {page.deletable ? (
                   <Tooltip title="Delete page">
                     <IconButton
+                      className="study-guide-page-delete-action"
                       size="small"
-                      aria-label={`Delete ${page.name}`}
+                      aria-label={`Delete ${pageTitle}`}
                       onClick={() =>
                         onStudyPathChange(
                           deleteStudyGuidePage(studyPath, page.dashboardKey),
                         )
                       }
-                      sx={pageIconButtonSx('error')}
+                      sx={(theme) => ({
+                        ...pageIconButtonSx('error')(theme),
+                        mr: mobile ? 0 : 0.25,
+                        opacity: mobile ? 1 : 0,
+                        pointerEvents: mobile ? 'auto' : 'none',
+                        transition: theme.transitions.create([
+                          'background-color',
+                          'border-color',
+                          'opacity',
+                        ]),
+                      })}
                     >
                       <DeleteOutlineIcon fontSize="small" />
                     </IconButton>

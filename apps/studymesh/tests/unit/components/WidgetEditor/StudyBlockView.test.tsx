@@ -238,6 +238,10 @@ describe('StudyBlockView', () => {
       'href',
       'studymesh-page:page-1',
     )
+    expect(screen.getByRole('link', { name: '1' })).toHaveAttribute(
+      'data-link-kind',
+      'study-guide-citation',
+    )
     expect(screen.queryByText(/studymesh-page/)).not.toBeInTheDocument()
   })
 

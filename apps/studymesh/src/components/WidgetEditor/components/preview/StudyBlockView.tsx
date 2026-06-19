@@ -230,11 +230,21 @@ const renderMarkdownInline = (
       })
     } else if (linkMatch && isSafeMarkdownHref(linkMatch[2])) {
       const href = linkMatch[2]
+      const linkLabel = linkMatch[1]
       const studyGuidePageLink = readStudyGuidePageHref(href)
+      const studyGuideCitationLink =
+        Boolean(studyGuidePageLink) && /^\d{1,2}$/.test(linkLabel.trim())
       nodes.push(
         <Link
           key={key}
           href={href}
+          data-link-kind={
+            studyGuideCitationLink
+              ? 'study-guide-citation'
+              : studyGuidePageLink
+                ? 'study-guide-page'
+                : undefined
+          }
           target={studyGuidePageLink ? undefined : '_blank'}
           rel={studyGuidePageLink ? undefined : 'noreferrer'}
           onClick={(event) => {
@@ -242,8 +252,51 @@ const renderMarkdownInline = (
               event.preventDefault()
             }
           }}
+          sx={
+            studyGuideCitationLink
+              ? (theme) => ({
+                  mx: 0.25,
+                  minWidth: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  border: 1,
+                  borderColor: alpha(theme.palette.primary.main, 0.35),
+                  bgcolor: alpha(theme.palette.primary.main, 0.08),
+                  color: 'primary.main',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  lineHeight: '20px',
+                  textDecoration: 'none',
+                  verticalAlign: 'baseline',
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.primary.main, 0.16),
+                    borderColor: alpha(theme.palette.primary.main, 0.55),
+                    textDecoration: 'none',
+                  },
+                })
+              : studyGuidePageLink
+                ? (theme) => ({
+                    px: 0.75,
+                    py: 0.1,
+                    borderRadius: 999,
+                    border: 1,
+                    borderColor: alpha(theme.palette.primary.main, 0.32),
+                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                    color: 'primary.main',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    '&:hover': {
+                      bgcolor: alpha(theme.palette.primary.main, 0.15),
+                      textDecoration: 'none',
+                    },
+                  })
+                : undefined
+          }
         >
-          {linkMatch[1]}
+          {linkLabel}
         </Link>,
       )
     } else if (linkMatch) {

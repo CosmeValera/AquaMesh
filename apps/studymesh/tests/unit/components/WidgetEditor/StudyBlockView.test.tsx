@@ -2,7 +2,10 @@
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
-import StudyBlockView from '../../../../src/components/WidgetEditor/components/preview/StudyBlockView'
+import StudyBlockView, {
+  renderMarkdown,
+} from '../../../../src/components/WidgetEditor/components/preview/StudyBlockView'
+import { OPEN_STUDY_GUIDE_PAGE_LINK_EVENT } from '../../../../src/studyGuides/pageLinks'
 
 describe('StudyBlockView', () => {
   beforeEach(() => {
@@ -195,6 +198,71 @@ describe('StudyBlockView', () => {
     const link = screen.getByRole('link', { name: 'asdf' })
     expect(link).toHaveAttribute('href', 'asd')
     expect(screen.queryByText('[asdf](asd)')).not.toBeInTheDocument()
+  })
+
+  it('opens internal Study Guide page links without leaving the app', () => {
+    const handler = vi.fn()
+    window.addEventListener(OPEN_STUDY_GUIDE_PAGE_LINK_EVENT, handler)
+
+    render(
+      <StudyBlockView
+        type="MarkdownBlock"
+        props={{
+          markdown: '[Page 2](studymesh-page:page-2)',
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('link', { name: 'Page 2' }))
+
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        detail: { dashboardKey: 'page-2' },
+      }),
+    )
+
+    window.removeEventListener(OPEN_STUDY_GUIDE_PAGE_LINK_EVENT, handler)
+  })
+
+  it('renders numbered internal citation links without showing raw URLs', () => {
+    render(
+      <StudyBlockView
+        type="MarkdownBlock"
+        props={{
+          markdown: 'Use this source [1](studymesh-page:page-1).',
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('link', { name: '1' })).toHaveAttribute(
+      'href',
+      'studymesh-page:page-1',
+    )
+    expect(screen.queryByText(/studymesh-page/)).not.toBeInTheDocument()
+  })
+
+  it('renders adjacent citation markers as separate citation controls', () => {
+    render(
+      <div>
+        {renderMarkdown(
+          'Decision checklist (quick guide)\u202f1. Workflow\u202f13. Triggers\u202f1 3. Tools 2[4]. More [5].',
+          {
+            renderCitation: (citationNumber, key) => (
+              <button key={key} type="button">
+                Source {citationNumber}
+              </button>
+            ),
+          },
+        )}
+      </div>,
+    )
+
+    expect(screen.getAllByRole('button', { name: 'Source 1' })).toHaveLength(3)
+    expect(screen.getByRole('button', { name: 'Source 2' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Source 3' })).toHaveLength(2)
+    expect(screen.getByRole('button', { name: 'Source 4' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Source 5' })).toBeInTheDocument()
+    expect(screen.queryByText('2[4]')).not.toBeInTheDocument()
   })
 
   it('hides duplicate Study Guide page titles from Markdown blocks', () => {

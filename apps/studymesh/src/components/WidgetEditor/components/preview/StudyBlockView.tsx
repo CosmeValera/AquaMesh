@@ -17,6 +17,10 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import {
+  OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
+  readStudyGuidePageHref,
+} from '../../../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../../../studyGuides/pages'
 interface StudyBlockViewProps {
   type: string
@@ -155,13 +159,38 @@ const isSafeMarkdownHref = (href: string): boolean => {
     return Boolean(trimmed)
   }
 
-  return ['http', 'https', 'mailto', 'tel'].includes(
-    schemeMatch[1].toLowerCase(),
+  return (
+    ['http', 'https', 'mailto', 'tel'].includes(schemeMatch[1].toLowerCase()) ||
+    trimmed.startsWith('studymesh-page:')
   )
+}
+
+const openStudyGuidePageLink = (href: string): boolean => {
+  const detail = readStudyGuidePageHref(href)
+  if (!detail) {
+    return false
+  }
+
+  window.dispatchEvent(
+    new CustomEvent(OPEN_STUDY_GUIDE_PAGE_LINK_EVENT, { detail }),
+  )
+  return true
 }
 
 interface RenderMarkdownOptions {
   renderCitation?: (citationNumber: number, key: string) => React.ReactNode
+}
+
+const wholeCitationGroupPattern = /^(?:\[\d{1,2}\]|\d{1,2}|\s+)+$/
+
+const citationNumbersFromMatch = (
+  citationMatch: RegExpMatchArray,
+): number[] => {
+  if (citationMatch[1]) {
+    return [Number(citationMatch[1])]
+  }
+
+  return citationMatch[2].split('').map((digit) => Number(digit))
 }
 
 const renderMarkdownInline = (
@@ -170,7 +199,7 @@ const renderMarkdownInline = (
 ): React.ReactNode[] => {
   const nodes: React.ReactNode[] = []
   const tokenPattern =
-    /(\[\d+\]|\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|\*[^*]+\*)/g
+    /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|(?:\[\d{1,2}\]|(?:(?<=[\u00a0\u202f])\d{1,2}(?:\s+\d{1,2})*|\d{1,2}(?=\s*\[\d{1,2}\]))(?=\s*(?:\[\d{1,2}\]|[.,;:!?)]|$)))+|\*[^*]+\*)/g
   let cursor = 0
   let match: RegExpExecArray | null
 
@@ -182,17 +211,38 @@ const renderMarkdownInline = (
     const token = match[0]
     const key = `${token}-${match.index}`
     const linkMatch = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
-    const citationMatch = token.match(/^\[(\d+)\]$/)
+    const citationMatches = [...token.matchAll(/\[(\d{1,2})\]|(\d{1,2})/g)]
 
-    if (citationMatch) {
-      nodes.push(
-        options.renderCitation
-          ? options.renderCitation(Number(citationMatch[1]), key)
-          : token,
-      )
+    if (citationMatches.length > 0 && wholeCitationGroupPattern.test(token)) {
+      citationMatches.forEach((citationMatch, citationIndex) => {
+        citationNumbersFromMatch(citationMatch).forEach(
+          (citationNumber, digitIndex) => {
+            nodes.push(
+              options.renderCitation
+                ? options.renderCitation(
+                    citationNumber,
+                    `${key}-${citationIndex}-${digitIndex}`,
+                  )
+                : `[${citationNumber}]`,
+            )
+          },
+        )
+      })
     } else if (linkMatch && isSafeMarkdownHref(linkMatch[2])) {
+      const href = linkMatch[2]
+      const studyGuidePageLink = readStudyGuidePageHref(href)
       nodes.push(
-        <Link key={key} href={linkMatch[2]} target="_blank" rel="noreferrer">
+        <Link
+          key={key}
+          href={href}
+          target={studyGuidePageLink ? undefined : '_blank'}
+          rel={studyGuidePageLink ? undefined : 'noreferrer'}
+          onClick={(event) => {
+            if (openStudyGuidePageLink(href)) {
+              event.preventDefault()
+            }
+          }}
+        >
           {linkMatch[1]}
         </Link>,
       )
@@ -801,8 +851,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
               const resultColor = isCorrect
                 ? 'success.main'
                 : isSelected
-                ? 'error.main'
-                : 'divider'
+                  ? 'error.main'
+                  : 'divider'
 
               return (
                 <Button
@@ -957,8 +1007,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
                         const resultBorder = isCorrect
                           ? 'success.main'
                           : isSelected
-                          ? 'error.main'
-                          : 'divider'
+                            ? 'error.main'
+                            : 'divider'
 
                         return {
                           justifyContent: 'flex-start',

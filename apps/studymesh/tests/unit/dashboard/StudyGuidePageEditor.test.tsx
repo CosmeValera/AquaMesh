@@ -106,6 +106,7 @@ describe('StudyGuidePageEditor', () => {
     tiptapMock.state.markdown = ''
     tiptapMock.state.options = null
     tiptapMock.state.setContent.mockClear()
+    tiptapMock.editor.chain().setLink.mockClear()
   })
 
   afterEach(() => {
@@ -182,11 +183,7 @@ describe('StudyGuidePageEditor', () => {
 
   it('inserts a table with the selected row and column count', () => {
     render(
-      <StudyGuidePageEditor
-        title="Tables"
-        markdown=""
-        onChange={vi.fn()}
-      />,
+      <StudyGuidePageEditor title="Tables" markdown="" onChange={vi.fn()} />,
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Insert table' }))
@@ -203,6 +200,26 @@ describe('StudyGuidePageEditor', () => {
       rows: 5,
       cols: 4,
       withHeaderRow: true,
+    })
+  })
+
+  it('links selected text to another Study Guide page', () => {
+    render(
+      <StudyGuidePageEditor
+        title="Current page"
+        markdown="See review"
+        onChange={vi.fn()}
+        pageLinks={[{ title: 'Review page', dashboardKey: 'review' }]}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Link Study Guide page' }),
+    )
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Review page' }))
+
+    expect(tiptapMock.editor.chain().setLink).toHaveBeenCalledWith({
+      href: 'studymesh-page:review',
     })
   })
 })

@@ -39,10 +39,31 @@ import {
   StudyGuideStorage,
   createStudyGuideRecord,
 } from '../../studyGuides/storage'
+import {
+  createStudyGuidePageHref,
+  OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
+  type OpenStudyGuidePageLinkDetail,
+} from '../../studyGuides/pageLinks'
 
 export const AI_CHAT_MIN_WIDTH = 310
 const AI_CHAT_MAX_WIDTH = 720
 const AI_CHAT_RAIL_WIDTH = 58
+
+const stripAssistantSourcesFooter = (content: string): string =>
+  content.replace(/\s*\(?Sources:\s*[\s\S]*?\)?\s*$/i, '').trim()
+
+const assistantCitationGroupPattern =
+  /(?:\[\d{1,2}\]|(?:(?<=[\u00a0\u202f])\d{1,2}(?:\s+\d{1,2})*|\d{1,2}(?=\s*\[\d{1,2}\]))(?=\s*(?:\[\d{1,2}\]|[.,;:!?)]|$)))+/g
+
+const assistantCitationNumbersFromMatch = (
+  citationMatch: RegExpMatchArray,
+): number[] => {
+  if (citationMatch[1]) {
+    return [Number(citationMatch[1])]
+  }
+
+  return citationMatch[2].split('').map((digit) => Number(digit))
+}
 
 const normalizeGeneratedPageLayouts = (
   studyPath: StudyPathContainerState,
@@ -198,32 +219,47 @@ const GuideWorkspacePage = () => {
     setEditingPageKey(newPage?.dashboardKey || null)
   }
 
-  const addAssistantMessageToGuide = (message: DashboardChatMessage) => {
-    const sourcesMarkdown = message.sourceRefs?.length
-      ? `\n\n## Sources\n${message.sourceRefs
-          .map(
-            (source) =>
-              `${source.citationNumber}. ${
-                source.dashboardTitle || source.title
-              } - ${source.title}`,
-          )
-          .join('\n')}`
-      : ''
+  const linkAssistantCitations = (message: DashboardChatMessage): string => {
+    const content = stripAssistantSourcesFooter(message.content)
+    if (!message.sourceRefs?.length) {
+      return content
+    }
 
-    appendMarkdownPage(
-      'AI Chat note',
-      `${message.content}${sourcesMarkdown}`,
-      'chat',
-    )
+    return content.replace(assistantCitationGroupPattern, (citationGroup) => {
+      const linkedCitations = [
+        ...citationGroup.matchAll(/\[(\d{1,2})\]|(\d{1,2})/g),
+      ].flatMap((citationMatch) =>
+        assistantCitationNumbersFromMatch(citationMatch).map(
+          (citationNumber) => {
+            const source = message.sourceRefs?.find(
+              (candidate) => candidate.citationNumber === citationNumber,
+            )
+            return source?.dashboardKey
+              ? `[${citationNumber}](${createStudyGuidePageHref(
+                  source.dashboardKey,
+                )})`
+              : `[${citationNumber}]`
+          },
+        ),
+      )
+
+      return linkedCitations.join(' ')
+    })
   }
 
-  const openChatSource = (source: DashboardAnswerSourceRef) => {
-    if (!record || !source.dashboardKey) {
+  const addAssistantMessageToGuide = (message: DashboardChatMessage) => {
+    const contentWithLinks = linkAssistantCitations(message)
+
+    appendMarkdownPage('AI Chat note', contentWithLinks, 'chat')
+  }
+
+  const openStudyGuidePageKey = (dashboardKey: string) => {
+    if (!record) {
       return
     }
 
     const pageIndex = record.studyPath.dashboards.findIndex(
-      (dashboard) => dashboard.dashboardKey === source.dashboardKey,
+      (dashboard) => dashboard.dashboardKey === dashboardKey,
     )
     if (pageIndex < 0) {
       return
@@ -235,6 +271,33 @@ const GuideWorkspacePage = () => {
     })
     setMobileSection('study-guide')
   }
+
+  const openChatSource = (source: DashboardAnswerSourceRef) => {
+    if (source.dashboardKey) {
+      openStudyGuidePageKey(source.dashboardKey)
+    }
+  }
+
+  useEffect(() => {
+    const handleStudyGuidePageLink = (event: Event) => {
+      const detail = (event as CustomEvent<OpenStudyGuidePageLinkDetail>).detail
+      if (detail?.dashboardKey) {
+        openStudyGuidePageKey(detail.dashboardKey)
+      }
+    }
+
+    window.addEventListener(
+      OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
+      handleStudyGuidePageLink,
+    )
+
+    return () => {
+      window.removeEventListener(
+        OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
+        handleStudyGuidePageLink,
+      )
+    }
+  }, [record?.studyPath])
 
   const quickCreatePage = async (input: QuickCreateActionInput) => {
     if (!record) {
@@ -484,8 +547,8 @@ const GuideWorkspacePage = () => {
                   {mobileSection === 'pages'
                     ? pagesPanel
                     : mobileSection === 'study-guide'
-                    ? studyGuidePanel
-                    : chatPanel}
+                      ? studyGuidePanel
+                      : chatPanel}
                 </Box>
                 <Box
                   sx={{

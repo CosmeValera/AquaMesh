@@ -149,6 +149,9 @@ describe('askDashboardSources', () => {
 
     const prompt = vi.mocked(callHostedAiModel).mock.calls[0][0].parts[0].text
     expect(prompt).toContain('cite it inline with its source number')
+    expect(prompt).toContain('separate bracket citations with spaces')
+    expect(prompt).toContain('Never write bare citation numbers')
+    expect(prompt).toContain('Use inline citations only')
     expect(prompt).toContain('Source 1: Lesson notes')
   })
 

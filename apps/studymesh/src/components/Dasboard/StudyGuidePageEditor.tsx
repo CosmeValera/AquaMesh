@@ -6,6 +6,7 @@ import {
   Divider,
   IconButton,
   Menu,
+  MenuItem,
   Stack,
   Tab,
   Tabs,
@@ -23,6 +24,7 @@ import FormatQuoteIcon from '@mui/icons-material/FormatQuote'
 import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule'
 import LinkIcon from '@mui/icons-material/Link'
 import LinkOffIcon from '@mui/icons-material/LinkOff'
+import ArticleIcon from '@mui/icons-material/Article'
 import TableChartIcon from '@mui/icons-material/TableChart'
 import UndoIcon from '@mui/icons-material/Undo'
 import RedoIcon from '@mui/icons-material/Redo'
@@ -35,6 +37,7 @@ import { Placeholder } from '@tiptap/extension-placeholder'
 import { TaskItem, TaskList } from '@tiptap/extension-list'
 import { TableKit } from '@tiptap/extension-table'
 import type { Editor } from '@tiptap/core'
+import { createStudyGuidePageHref } from '../../studyGuides/pageLinks'
 
 type EditorMode = 'rich' | 'source'
 
@@ -42,6 +45,7 @@ interface StudyGuidePageEditorProps {
   title: string
   markdown: string
   onChange: (title: string, markdown: string) => void
+  pageLinks?: Array<{ title: string; dashboardKey: string }>
 }
 
 const SAVE_DELAY_MS = 450
@@ -90,6 +94,7 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
   title,
   markdown,
   onChange,
+  pageLinks = [],
 }) => {
   const [mode, setMode] = useState<EditorMode>('rich')
   const [titleValue, setTitleValue] = useState(title)
@@ -98,6 +103,8 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
   const [tableMenuAnchor, setTableMenuAnchor] = useState<HTMLElement | null>(
     null,
   )
+  const [pageLinkMenuAnchor, setPageLinkMenuAnchor] =
+    useState<HTMLElement | null>(null)
   const [tableRows, setTableRows] = useState(3)
   const [tableColumns, setTableColumns] = useState(3)
   const pendingRef = useRef({
@@ -267,6 +274,20 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
       .run()
   }
 
+  const setStudyGuidePageLink = (dashboardKey: string) => {
+    if (!editor) {
+      return
+    }
+
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange('link')
+      .setLink({ href: createStudyGuidePageHref(dashboardKey) })
+      .run()
+    setPageLinkMenuAnchor(null)
+  }
+
   const insertTable = (rows = tableRows, cols = tableColumns) => {
     editor
       ?.chain()
@@ -314,6 +335,11 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
       </span>
     </Tooltip>
   )
+
+  const activeLinkHref = String(editor?.getAttributes('link').href || '')
+  const studyGuidePageLinkActive = activeLinkHref.startsWith('studymesh-page:')
+  const externalLinkActive =
+    Boolean(editor?.isActive('link')) && !studyGuidePageLinkActive
 
   return (
     <Stack spacing={1.5} sx={{ maxWidth: 980, mx: 'auto' }}>
@@ -458,9 +484,26 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                 <HorizontalRuleIcon fontSize="small" />
               </ToolbarButton>
               <Divider orientation="vertical" flexItem />
+              <Tooltip title="Link Study Guide page">
+                <span>
+                  <IconButton
+                    size="small"
+                    aria-label="Link Study Guide page"
+                    disabled={pageLinks.length === 0}
+                    onClick={(event) =>
+                      setPageLinkMenuAnchor(event.currentTarget)
+                    }
+                    sx={toolbarButtonSx(
+                      studyGuidePageLinkActive || Boolean(pageLinkMenuAnchor),
+                    )}
+                  >
+                    <ArticleIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
               <ToolbarButton
-                label="Add link"
-                active={Boolean(editor?.isActive('link'))}
+                label="Link external page"
+                active={externalLinkActive}
                 onClick={setLink}
               >
                 <LinkIcon fontSize="small" />
@@ -479,6 +522,22 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
               >
                 <LinkOffIcon fontSize="small" />
               </ToolbarButton>
+              <Menu
+                anchorEl={pageLinkMenuAnchor}
+                open={Boolean(pageLinkMenuAnchor)}
+                onClose={() => setPageLinkMenuAnchor(null)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              >
+                {pageLinks.map((pageLink) => (
+                  <MenuItem
+                    key={pageLink.dashboardKey}
+                    onClick={() => setStudyGuidePageLink(pageLink.dashboardKey)}
+                  >
+                    {pageLink.title}
+                  </MenuItem>
+                ))}
+              </Menu>
               <Tooltip title="Insert table">
                 <span>
                   <IconButton
@@ -558,6 +617,26 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
               '& .tiptap h2': { fontSize: '1.25rem', fontWeight: 600 },
               '& .tiptap h3': { fontSize: '1.08rem', fontWeight: 600 },
               '& .tiptap p': { margin: theme.spacing(0.75, 0) },
+              '& .tiptap a': {
+                color: theme.palette.primary.main,
+                textDecorationColor: alpha(theme.palette.primary.main, 0.45),
+                textUnderlineOffset: 3,
+              },
+              '& .tiptap a[href^="studymesh-page:"]': {
+                display: 'inline-flex',
+                alignItems: 'center',
+                minHeight: 22,
+                px: 0.75,
+                borderRadius: 999,
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.38)}`,
+                backgroundColor: alpha(
+                  theme.palette.primary.main,
+                  theme.palette.mode === 'dark' ? 0.2 : 0.09,
+                ),
+                color: theme.palette.primary.main,
+                fontWeight: 700,
+                textDecoration: 'none',
+              },
               '& .tiptap ul, & .tiptap ol': {
                 paddingLeft: theme.spacing(3),
               },

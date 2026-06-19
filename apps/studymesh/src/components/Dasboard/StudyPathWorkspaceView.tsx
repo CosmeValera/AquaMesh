@@ -167,6 +167,16 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   const isEditingCurrentPage =
     currentPageEditable && currentPageKey === editingPageKey
   const currentMarkdown = getStudyGuidePageMarkdown(currentLesson)
+  const editorPageLinks = useMemo(
+    () =>
+      studyPath.dashboards
+        .filter((dashboard) => dashboard.dashboardKey !== currentPageKey)
+        .map((dashboard) => ({
+          title: dashboard.name || 'Untitled page',
+          dashboardKey: dashboard.dashboardKey,
+        })),
+    [currentPageKey, studyPath.dashboards],
+  )
   const studentLayout = useMemo(
     () => sanitizeStudentLayout(currentLesson?.layout),
     [currentLesson?.layout],
@@ -397,6 +407,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               title={currentLesson.name}
               markdown={currentMarkdown}
               onChange={updateCurrentMarkdownPage}
+              pageLinks={editorPageLinks}
             />
           ) : (
             <StudyGuideLinearLayout

@@ -196,8 +196,8 @@ const AiChatPet = ({
     <Box
       aria-hidden
       sx={{
-        width: compact ? { xs: 108, sm: 96 } : { xs: 112, sm: 154 },
-        height: compact ? { xs: 108, sm: 96 } : { xs: 112, sm: 154 },
+        width: compact ? { xs: 108, sm: 96 } : 200,
+        height: compact ? { xs: 108, sm: 96 } : 200,
         flex: '0 0 auto',
         backgroundImage: `url(${getAiChatPetSrc(resolvedPet, 'full')})`,
         backgroundSize: 'contain',
@@ -256,9 +256,9 @@ const DashboardChatPanel = ({
   const [activePetId, setActivePetId] = useState<AiChatPetId>(() => {
     try {
       const stored = window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY)
-      return isAiChatPetId(stored) ? stored : 'axolotl'
+      return isAiChatPetId(stored) ? stored : 'dolphin'
     } catch {
-      return 'axolotl'
+      return 'dolphin'
     }
   })
   const [quickCreateSearch, setQuickCreateSearch] = useState('')
@@ -1015,12 +1015,13 @@ const DashboardChatPanel = ({
         >
           <Box
             component="img"
-            src={getAiChatPetSrc(activePet, 'full')}
+            src={getAiChatPetSrc(activePet, 'face')}
             alt=""
             sx={{
               width: 34,
               height: 34,
-              objectFit: 'contain',
+              objectFit: 'cover',
+              borderRadius: '50%',
               flex: '0 0 auto',
             }}
           />
@@ -1179,44 +1180,33 @@ const DashboardChatPanel = ({
             This dashboard does not have enough source content to chat with yet.
           </Alert>
         ) : messages.length === 0 ? (
-          <Stack spacing={1.25}>
+          <Stack
+            spacing={1.5}
+            alignItems="center"
+            sx={{
+              minHeight: '100%',
+              pt: 0.5,
+              pb: 1,
+            }}
+          >
             <Box
-              sx={(theme) => ({
-                position: 'relative',
-                minHeight: 118,
-                p: 2,
-                pr: isPhone ? 10 : 12,
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1.5,
-                bgcolor: 'background.paper',
-                overflow: 'hidden',
-                boxShadow: 'none',
-              })}
+              sx={{
+                width: '100%',
+                minHeight: 204,
+                display: 'grid',
+                placeItems: 'center',
+                pointerEvents: 'none',
+              }}
             >
-              <Typography
-                variant="h6"
-                fontWeight={600}
-                sx={{
-                  fontSize: isPhone ? 18 : 20,
-                  lineHeight: isPhone ? 1.2 : undefined,
-                }}
-              >
-                What do you want to understand?
-              </Typography>
-              <Box
-                sx={{
-                  position: 'absolute',
-                  right: 14,
-                  top: 24,
-                  pointerEvents: 'none',
-                  opacity: 0.86,
-                }}
-              >
-                <AiChatPet pet={activePet} compact />
-              </Box>
+              <AiChatPet pet={activePet} />
             </Box>
-            <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
+            <Stack
+              spacing={0.75}
+              sx={{
+                width: '100%',
+                maxWidth: 380,
+              }}
+            >
               {suggestions.map((suggestion) => (
                 <Button
                   key={suggestion.label}
@@ -1225,9 +1215,11 @@ const DashboardChatPanel = ({
                   onClick={() => sendQuestion(suggestion.label)}
                   sx={{
                     minHeight: 36,
+                    justifyContent: 'flex-start',
                     borderRadius: 1,
                     py: 0.5,
                     px: 1.25,
+                    width: '100%',
                     bgcolor: 'background.paper',
                     borderColor: 'divider',
                     color: 'text.primary',

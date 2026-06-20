@@ -217,11 +217,10 @@ export const askDashboardSources = async (
 
   const needsExternalSource = detectNeedsExternalSource(answer)
 
-  const answerSourceChunks = options.sourceChunks
-    .map((chunk, index) => ({ chunk, sourceIndex: index }))
-    .filter(
-      ({ chunk, sourceIndex }) => sourceIndex < 6 || chunk.origin === 'web',
-    )
+  const answerSourceChunks = options.sourceChunks.map((chunk, index) => ({
+    chunk,
+    sourceIndex: index,
+  }))
 
   return {
     answer: cleanAnswer(answer),

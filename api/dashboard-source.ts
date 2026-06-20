@@ -78,6 +78,7 @@ const QUERY_STOPWORDS = new Set([
   "into",
   "lesson",
   "or",
+  "similar",
   "source",
   "study",
   "the",

@@ -171,6 +171,11 @@ const SOURCE_REJECTION_PATTERN =
   /\b(?:don't|dont|do not|stop)\s+use\b|\btry another\b|\banother source\b|\bwrong source\b|\bbad source\b|\bnot that source\b/i
 const QUESTION_TERM_STOPWORDS = new Set([
   'about',
+  'apps',
+  'app',
+  'are',
+  'automatization',
+  'automation',
   'and',
   'between',
   'compare',
@@ -182,9 +187,12 @@ const QUESTION_TERM_STOPWORDS = new Set([
   'guide',
   'into',
   'lesson',
+  'key',
+  'ideas',
   'or',
   'source',
   'study',
+  'summarize',
   'the',
   'their',
   'this',
@@ -526,11 +534,23 @@ const DashboardChatPanel = ({
     question: string,
     historyMessages: DashboardChatMessage[],
   ): string => {
-    const recentUserMessages = historyMessages
-      .filter((message) => message.role === 'user')
-      .slice(-3)
-      .map((message) => message.content)
-    return Array.from(new Set([...recentUserMessages, question])).join('\n')
+    const followUp = /\bwhat about\b|\bhow about\b|\bthey\b|\bthose\b|\bthem\b|\bit\b/i.test(
+      question,
+    )
+    if (!followUp) {
+      return question
+    }
+
+    const previousAssistant = [...historyMessages]
+      .reverse()
+      .find((message) => message.role === 'assistant')
+    const priorTerms = previousAssistant
+      ? extractQuestionTerms(previousAssistant.content)
+          .filter((term) => contextTextContains(term))
+          .slice(0, 6)
+      : []
+
+    return Array.from(new Set([...priorTerms, question])).join(' ')
   }
 
   const extractQuestionTerms = (value: string): string[] =>
@@ -552,18 +572,55 @@ const DashboardChatPanel = ({
     const expanded = expandQuestionWithChatContext(question, historyMessages)
     const questionTerms = extractQuestionTerms(question)
     const expandedTerms = extractQuestionTerms(expanded)
-    const contextText = context.chunks
-      .map((chunk) => `${chunk.title} ${chunk.text}`)
-      .join(' ')
-      .toLowerCase()
     const comparisonFollowUp =
       /\bwhat about\b|\bhow about\b|\bvs\b|\bcompare\b|\bdifference\b/i.test(
         question,
       )
 
     return (comparisonFollowUp ? expandedTerms : questionTerms).filter(
-      (term) => !contextText.includes(term) || questionTerms.includes(term),
+      (term) => !isConceptSufficientInDashboard(term, question),
     )
+  }
+
+  const contextTextContains = (term: string): boolean =>
+    context.chunks.some((chunk) =>
+      `${chunk.title} ${chunk.text}`.toLowerCase().includes(term),
+    )
+
+  const isConceptSufficientInDashboard = (
+    concept: string,
+    question: string,
+  ): boolean => {
+    const relevantChunks = context.chunks.filter((chunk) =>
+      `${chunk.title} ${chunk.text}`.toLowerCase().includes(concept),
+    )
+    if (relevantChunks.length === 0) {
+      return false
+    }
+
+    const combined = relevantChunks
+      .map((chunk) => `${chunk.title} ${chunk.text}`)
+      .join(' ')
+      .toLowerCase()
+    const asksComparison =
+      /\bvs\b|\bcompare\b|\bdifference\b|\bsimilar\b|\bcategory\b/i.test(
+        question,
+      )
+    const asksIntegration =
+      /\bintegrat|work with|connect|run\b/i.test(question)
+
+    if (asksIntegration) {
+      return relevantChunks.some((chunk) => chunk.text.length > 120)
+    }
+
+    if (asksComparison) {
+      return (
+        relevantChunks.some((chunk) => chunk.text.length > 220) &&
+        TECHNICAL_EVIDENCE_TERMS.some((term) => combined.includes(term))
+      )
+    }
+
+    return relevantChunks.some((chunk) => chunk.text.length > 160)
   }
 
   const sourceCoversConcept = (
@@ -1065,6 +1122,47 @@ const DashboardChatPanel = ({
     }
   }
 
+  const updateLatestLookupDisplayedSources = (
+    candidateSourceIds: string[],
+    usedSourceIds: string[],
+  ) => {
+    if (candidateSourceIds.length === 0 || usedSourceIds.length === 0) {
+      return
+    }
+
+    const candidateSet = new Set(candidateSourceIds)
+    const filteredSourceIds = Array.from(
+      new Set(usedSourceIds.filter((sourceId) => candidateSet.has(sourceId))),
+    )
+    if (filteredSourceIds.length === 0) {
+      return
+    }
+
+    const lookupMessage = [...messagesRef.current]
+      .reverse()
+      .find(
+        (message) =>
+          message.role === 'assistant' &&
+          message.webLookup?.status === 'found' &&
+          (message.webLookup.sourceIds || []).some((sourceId) =>
+            candidateSet.has(sourceId),
+          ),
+      )
+    if (!lookupMessage) {
+      return
+    }
+
+    updateMessage(lookupMessage.id, (message) => ({
+      ...message,
+      webLookup: {
+        ...message.webLookup,
+        status: 'found',
+        sourceId: filteredSourceIds[0],
+        sourceIds: filteredSourceIds,
+      },
+    }))
+  }
+
   const answerQuestion = async (
     question: string,
     pendingMessageId: string,
@@ -1108,6 +1206,12 @@ const DashboardChatPanel = ({
         externalSourceIds: selectedExternalSourceIds,
         pending: false,
       }))
+      updateLatestLookupDisplayedSources(
+        externalSourceIds,
+        result.sourceRefs
+          .filter((sourceRef) => sourceRef.origin === 'web')
+          .map((sourceRef) => sourceRef.chunkId),
+      )
       if (
         result.needsExternalSource &&
         externalSourceIds.length === 0

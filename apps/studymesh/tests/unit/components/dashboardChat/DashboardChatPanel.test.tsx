@@ -629,6 +629,71 @@ describe('DashboardChatPanel chat management', () => {
     expect(askDashboardSources).toHaveBeenCalledTimes(1)
   })
 
+  it('does not include a previous summarize request in follow-up web lookup', async () => {
+    vi.mocked(askDashboardSources).mockResolvedValueOnce({
+      answer:
+        'The provided sources do not contain enough information about Rundeck or n8n.',
+      sourceRefs: [],
+      needsExternalSource: true,
+    })
+    vi.mocked(fetchDashboardExternalSource).mockResolvedValue([
+      {
+        id: 'web-source-rundeck',
+        url: 'https://docs.example/rundeck',
+        title: 'Rundeck documentation',
+        text: 'Rundeck provides job orchestration, runbooks, RBAC, and scheduling for operations automation.',
+        searchQuery: 'Rundeck documentation',
+        fetchedAt: 1,
+      },
+    ])
+    const initialMessages = [
+      {
+        id: 'user-1',
+        role: 'user' as const,
+        content: 'Summarize the key ideas',
+        createdAt: 1,
+      },
+      {
+        id: 'assistant-1',
+        role: 'assistant' as const,
+        content:
+          'Terraform is declarative infrastructure as code. Ansible uses playbooks for configuration management.',
+        createdAt: 2,
+      },
+    ]
+    const Harness = () => {
+      const [panelMessages, setPanelMessages] = React.useState<
+        React.ComponentProps<typeof DashboardChatPanel>['messages']
+      >(initialMessages)
+
+      return (
+        <DashboardChatPanel
+          dashboard={dashboardWithContext}
+          messages={panelMessages}
+          onMessagesChange={setPanelMessages}
+          onClose={vi.fn()}
+          onQuickCreatePage={vi.fn()}
+        />
+      )
+    }
+
+    render(<Harness />)
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: {
+        value: 'what about rundeck and n8n? are they similar to terraform and ansible?',
+      },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() => expect(fetchDashboardExternalSource).toHaveBeenCalled())
+    const lookupQuestion =
+      vi.mocked(fetchDashboardExternalSource).mock.calls[0][0].question
+    expect(lookupQuestion).toContain('what about rundeck and n8n')
+    expect(lookupQuestion.toLowerCase()).not.toContain('summarize')
+  })
+
   it('shows Add as page only when Study Guide supplies a web-source callback', async () => {
     const onAddExternalSourceToGuide = vi.fn()
     const messages = [

@@ -226,6 +226,40 @@ describe('askDashboardSources', () => {
     })
   })
 
+  it('keeps later Study Guide page citation refs clickable by page index', async () => {
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
+      provider: 'hosted',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+    vi.mocked(callHostedAiModel).mockResolvedValue('Use page five [5].')
+
+    const result = await askDashboardSources({
+      ...baseOptions,
+      sourceChunks: Array.from({ length: 8 }, (_, index) => ({
+        id: `chunk-${index}`,
+        title: `Page ${index + 1}`,
+        text: `Details for page ${index + 1}.`,
+        type: 'dashboard',
+        dashboardKey: `page-${index + 1}`,
+        dashboardTitle: `Page ${index + 1}`,
+        dashboardIndex: index + 1,
+      })),
+      contextText:
+        'Dashboard: Guide\n\n---\n\nSource 5: Page 5 (dashboard)\nDetails.',
+    })
+
+    expect(result.sourceRefs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          citationNumber: 5,
+          dashboardKey: 'page-5',
+        }),
+      ]),
+    )
+  })
+
   it('keeps the first user goal and recent messages for strong dashboard chat memory', async () => {
     vi.mocked(readQuickCreateAiSettings).mockReturnValue({
       provider: 'cerebras',

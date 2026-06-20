@@ -1074,7 +1074,6 @@ const DashboardChatPanel = ({
       messagesRef.current = nextActiveSession.messages
       onMessagesChange(nextActiveSession.messages)
     }
-    setChatMenuAnchor(null)
   }
 
   const selectAiChatPet = (petId: AiChatPetId) => {
@@ -1869,6 +1868,7 @@ const DashboardChatPanel = ({
     (action) => action.id === quickCreateActionId,
   )
   const quickCreateMenuOpen = Boolean(quickCreateMenuAnchor)
+  const chatMenuOpen = Boolean(chatMenuAnchor)
   const showQuickCreateSearch = quickCreateActions.length > 5
   const normalizedQuickCreateSearch = quickCreateSearch.trim().toLowerCase()
   const filteredQuickCreateActions = normalizedQuickCreateSearch
@@ -2374,11 +2374,13 @@ const DashboardChatPanel = ({
               </IconButton>
             </Tooltip>
           )}
-          {chatSessions.length > 1 && (
+          {(chatSessions.length > 1 || chatMenuOpen) && (
             <Button
               size="small"
               onClick={(event) => setChatMenuAnchor(event.currentTarget)}
               endIcon={<ExpandMoreIcon sx={{ fontSize: 16 }} />}
+              aria-haspopup="menu"
+              aria-expanded={chatMenuOpen ? 'true' : undefined}
               sx={{
                 minWidth: 0,
                 px: 1,
@@ -2497,44 +2499,102 @@ const DashboardChatPanel = ({
       </Popover>
       <Menu
         anchorEl={chatMenuAnchor}
-        open={Boolean(chatMenuAnchor)}
+        open={chatMenuOpen}
         onClose={() => setChatMenuAnchor(null)}
-        PaperProps={{ sx: { width: 260, maxWidth: '90vw' } }}
+        PaperProps={{
+          sx: {
+            width: 260,
+            maxWidth: 'calc(100vw - 24px)',
+            maxHeight: 420,
+            mt: 0.75,
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 1.5,
+            boxShadow:
+              theme.palette.mode === 'dark'
+                ? '0 18px 44px rgba(0,0,0,0.38)'
+                : '0 16px 36px rgba(15,23,42,0.16)',
+          },
+        }}
+        MenuListProps={{ sx: { p: 0.75 } }}
       >
         {chatSessions.map((session) => {
+          const selected = session.id === activeChatId
           const replyCount = session.messages.filter(
             (message) => message.role === 'assistant',
           ).length
           return (
             <MenuItem
               key={session.id}
-              selected={session.id === activeChatId}
+              selected={selected}
+              disableRipple
               onClick={() => selectChatSession(session)}
-              sx={{ alignItems: 'flex-start', gap: 1 }}
+              sx={{
+                alignItems: 'center',
+                gap: 1,
+                minHeight: 72,
+                px: 1,
+                py: 0.9,
+                borderRadius: 1.25,
+                transition: 'none',
+                '&.Mui-selected': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                },
+                '&.Mui-selected:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.16),
+                },
+              }}
             >
-              <ChatBubbleOutlineIcon
-                fontSize="small"
-                color={session.id === activeChatId ? 'primary' : 'inherit'}
-              />
-              <Box sx={{ minWidth: 0 }}>
+              <Box
+                sx={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 1,
+                  flex: '0 0 auto',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: selected ? 'primary.main' : 'text.secondary',
+                  bgcolor: selected
+                    ? alpha(theme.palette.primary.main, 0.14)
+                    : alpha(theme.palette.text.primary, 0.06),
+                }}
+              >
+                <ChatBubbleOutlineIcon fontSize="small" />
+              </Box>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="body2" fontWeight={600} noWrap>
                   {session.title}
                 </Typography>
-                <Typography variant="caption" color="text.secondary" noWrap>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  noWrap
+                  sx={{ display: 'block', lineHeight: 1.35 }}
+                >
                   {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
                 </Typography>
               </Box>
               <IconButton
                 size="small"
                 aria-label={`Delete ${session.title}`}
+                disableRipple
                 onClick={(event) => {
                   event.stopPropagation()
                   deleteChatSession(session.id)
                 }}
                 sx={{
-                  ml: 'auto',
-                  color: 'text.secondary',
+                  width: 32,
+                  height: 32,
+                  flex: '0 0 auto',
+                  border: 1,
+                  borderColor: alpha(theme.palette.text.primary, 0.14),
+                  color: theme.palette.mode === 'dark'
+                    ? theme.palette.error.light
+                    : theme.palette.error.dark,
+                  bgcolor: alpha(theme.palette.background.paper, 0.72),
+                  transition: 'none',
                   '&:hover': {
+                    borderColor: alpha(theme.palette.error.main, 0.48),
                     color: 'error.main',
                     bgcolor: alpha(theme.palette.error.main, 0.1),
                   },

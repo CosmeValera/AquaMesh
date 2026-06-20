@@ -975,7 +975,7 @@ describe('DashboardChatPanel chat management', () => {
     )
   })
 
-  it('only offers delete inside Chats and closes the menu after deleting', async () => {
+  it('only offers delete inside Chats and keeps the menu open after deleting', async () => {
     vi.mocked(localStorage.getItem).mockImplementation((key) =>
       key === 'studymesh-dashboard-chat-sessions-dashboard-1'
         ? JSON.stringify([
@@ -1023,8 +1023,10 @@ describe('DashboardChatPanel chat management', () => {
 
     await waitFor(() =>
       expect(
-        screen.queryByLabelText('Delete Second chat'),
+        screen.queryByLabelText('Delete First chat'),
       ).not.toBeInTheDocument(),
     )
+    expect(screen.getByLabelText('Delete Second chat')).toBeInTheDocument()
+    expect(screen.getByText('0 replies')).toBeInTheDocument()
   })
 })

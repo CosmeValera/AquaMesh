@@ -159,6 +159,28 @@ const createEmptyChatSession = (): DashboardChatSession => ({
   updatedAt: Date.now(),
 })
 
+const isEmptyChatSession = (session: DashboardChatSession) =>
+  session.messages.length === 0
+
+const normalizeChatSessions = (
+  sessions: DashboardChatSession[],
+): DashboardChatSession[] => {
+  const existingEmptySession = sessions.find(isEmptyChatSession)
+  const emptySession = existingEmptySession || createEmptyChatSession()
+  const filledSessions = sessions.filter(
+    (session) => !isEmptyChatSession(session),
+  )
+
+  return [
+    {
+      ...emptySession,
+      title: 'New chat',
+      messages: [],
+    },
+    ...filledSessions,
+  ]
+}
+
 const titleFromQuestion = (question: string) => {
   const words = question
     .trim()
@@ -465,12 +487,13 @@ const DashboardChatPanel = ({
   }
 
   const persistChatSessions = (nextSessions: DashboardChatSession[]) => {
-    chatSessionsRef.current = nextSessions
-    setChatSessions(nextSessions)
+    const normalizedSessions = normalizeChatSessions(nextSessions)
+    chatSessionsRef.current = normalizedSessions
+    setChatSessions(normalizedSessions)
     try {
       window.localStorage.setItem(
         getChatSessionStorageKey(dashboard?.id),
-        JSON.stringify(nextSessions),
+        JSON.stringify(normalizedSessions),
       )
     } catch (storageError) {
       console.error('Failed to persist dashboard chat sessions', storageError)
@@ -1082,12 +1105,12 @@ const DashboardChatPanel = ({
   }
 
   const startNewChat = () => {
-    const nextSession = createEmptyChatSession()
-    const nextSessions = [nextSession, ...chatSessionsRef.current]
-    setActiveChatId(nextSession.id)
+    const nextSessions = normalizeChatSessions(chatSessionsRef.current)
+    const emptySession = nextSessions[0]
+    setActiveChatId(emptySession.id)
     persistChatSessions(nextSessions)
-    messagesRef.current = []
-    onMessagesChange([])
+    messagesRef.current = emptySession.messages
+    onMessagesChange(emptySession.messages)
     setChatMenuAnchor(null)
   }
 
@@ -1162,15 +1185,16 @@ const DashboardChatPanel = ({
       console.error('Failed to read dashboard chat sessions', storageError)
     }
 
-    if (nextSessions.length === 0) {
-      nextSessions = [createEmptyChatSession()]
-    }
-
+    nextSessions = normalizeChatSessions(nextSessions)
     chatSessionsRef.current = nextSessions
     setChatSessions(nextSessions)
-    setActiveChatId(nextSessions[0].id)
-    messagesRef.current = nextSessions[0].messages
-    onMessagesChange(nextSessions[0].messages)
+    const activeSession =
+      nextSessions.find((session) => !isEmptyChatSession(session)) ||
+      nextSessions[0]
+    setActiveChatId(activeSession.id)
+    messagesRef.current = activeSession.messages
+    onMessagesChange(activeSession.messages)
+    persistChatSessions(nextSessions)
   }, [dashboard?.id])
 
   useEffect(() => {

@@ -327,6 +327,108 @@ describe('DashboardChatPanel quick create menu', () => {
 })
 
 describe('DashboardChatPanel chat management', () => {
+  const getLastPersistedChatSessions = () => {
+    const calls = vi.mocked(localStorage.setItem).mock.calls
+    const [, value] = calls[calls.length - 1]
+    return JSON.parse(value)
+  }
+
+  const countEmptyChatSessions = (sessions: { messages: unknown[] }[]) =>
+    sessions.filter((session) => session.messages.length === 0).length
+
+  it('keeps one empty chat at the top when loading saved sessions', async () => {
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === 'studymesh-dashboard-chat-sessions-dashboard-1'
+        ? JSON.stringify([
+            {
+              id: 'chat-1',
+              title: 'Existing chat',
+              messages: [
+                {
+                  id: 'message-1',
+                  role: 'user',
+                  content: 'Existing question',
+                  createdAt: 1,
+                },
+              ],
+              createdAt: 1,
+              updatedAt: 1,
+            },
+            {
+              id: 'empty-1',
+              title: 'Old empty',
+              messages: [],
+              createdAt: 2,
+              updatedAt: 2,
+            },
+            {
+              id: 'empty-2',
+              title: 'Another empty',
+              messages: [],
+              createdAt: 3,
+              updatedAt: 3,
+            },
+          ])
+        : null,
+    )
+
+    renderPanel()
+
+    await waitFor(() => expect(localStorage.setItem).toHaveBeenCalled())
+
+    const sessions = getLastPersistedChatSessions()
+    expect(sessions).toHaveLength(2)
+    expect(sessions[0]).toMatchObject({
+      id: 'empty-1',
+      title: 'New chat',
+      messages: [],
+    })
+    expect(sessions[1]).toMatchObject({ id: 'chat-1' })
+  })
+
+  it('selects the existing empty chat instead of creating another new chat', async () => {
+    const Harness = () => {
+      const [panelMessages, setPanelMessages] = React.useState<
+        React.ComponentProps<typeof DashboardChatPanel>['messages']
+      >([])
+
+      return (
+        <DashboardChatPanel
+          dashboard={dashboardWithContext}
+          messages={panelMessages}
+          onMessagesChange={setPanelMessages}
+          onClose={vi.fn()}
+          onQuickCreatePage={vi.fn()}
+        />
+      )
+    }
+
+    render(<Harness />)
+
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: 'What is photosynthesis?' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    expect(
+      await screen.findByText(/Use the dashboard source notes/i),
+    ).toBeInTheDocument()
+
+    let sessions = getLastPersistedChatSessions()
+    expect(countEmptyChatSessions(sessions)).toBe(1)
+    expect(sessions[0].messages).toHaveLength(0)
+    expect(sessions[1].messages).toHaveLength(2)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start new AI chat' }))
+
+    sessions = getLastPersistedChatSessions()
+    expect(countEmptyChatSessions(sessions)).toBe(1)
+    expect(sessions[0].messages).toHaveLength(0)
+    expect(screen.getAllByText('New chat').length).toBeGreaterThan(0)
+  })
+
   it('answers smalltalk without dashboard RAG or web lookup', async () => {
     const Harness = () => {
       const [panelMessages, setPanelMessages] = React.useState<
@@ -1026,7 +1128,7 @@ describe('DashboardChatPanel chat management', () => {
         screen.queryByLabelText('Delete First chat'),
       ).not.toBeInTheDocument(),
     )
-    expect(screen.getByLabelText('Delete Second chat')).toBeInTheDocument()
+    expect(screen.getByLabelText('Delete New chat')).toBeInTheDocument()
     expect(screen.getByText('0 replies')).toBeInTheDocument()
   })
 })

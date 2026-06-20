@@ -239,7 +239,7 @@ const TECHNICAL_EVIDENCE_TERMS = [
   'service',
 ]
 
-type AiChatPetId = 'axolotl' | 'dolphin' | 'parrot'
+type AiChatPetId =  'dolphin' | 'bee' | 'parrot'
 
 interface AiChatPetDefinition {
   id: AiChatPetId
@@ -253,10 +253,10 @@ export const AI_CHAT_PET_CHANGED_EVENT = 'studymesh-ai-chat-pet-changed'
 
 export const aiChatPets: AiChatPetDefinition[] = [
   {
-    id: 'axolotl',
-    label: 'Axolotl',
-    src: '/images/studymesh-ai-pet-axolotl.png',
-    faceSrc: '/images/studymesh-ai-pet-axolotl-face.png',
+    id: 'bee',
+    label: 'Bee',
+    src: '/images/studymesh-ai-pet-bee.png',
+    faceSrc: '/images/studymesh-ai-pet-bee-face.png',
   },
   {
     id: 'dolphin',
@@ -1096,9 +1096,9 @@ const DashboardChatPanel = ({
     const refreshPet = () => {
       try {
         const stored = window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY)
-        setActivePetId(isAiChatPetId(stored) ? stored : 'axolotl')
+        setActivePetId(isAiChatPetId(stored) ? stored : 'dolphin')
       } catch {
-        setActivePetId('axolotl')
+        setActivePetId('dolphin')
       }
     }
 

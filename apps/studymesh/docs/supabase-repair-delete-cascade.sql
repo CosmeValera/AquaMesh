@@ -14,11 +14,15 @@ create table if not exists public.user_study_guides (
   title text not null,
   folder_name text not null default 'Study Guide',
   description text,
+  emoji text,
   study_path jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   primary key (owner_id, id)
 );
+
+alter table public.user_study_guides
+  add column if not exists emoji text;
 
 -- Remove rows for profiles/Auth users that no longer exist. App tables are
 -- profile-owned, and profiles cascade from auth.users.

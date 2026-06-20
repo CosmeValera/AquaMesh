@@ -103,6 +103,7 @@ export interface StudyGuideRow {
   title: string
   folder_name: string
   description?: string | null
+  emoji?: string | null
   study_path: CloudJson
   created_at: string
   updated_at: string
@@ -273,17 +274,22 @@ const workspaceStateToRow = (
   updated_at: workspaceState.updatedAt || nowIso(),
 })
 
-const studyGuideFromRow = (row: StudyGuideRow): StudyGuideRecord => ({
-  id: row.id,
-  title: row.title,
-  folderName: row.folder_name,
-  description: row.description || undefined,
-  studyPath: cloneJson(
+const studyGuideFromRow = (row: StudyGuideRow): StudyGuideRecord => {
+  const studyPath = cloneJson(
     row.study_path,
-  ) as unknown as StudyGuideRecord['studyPath'],
-  createdAt: row.created_at,
-  updatedAt: row.updated_at,
-})
+  ) as unknown as StudyGuideRecord['studyPath']
+
+  return {
+    id: row.id,
+    title: row.title,
+    folderName: row.folder_name,
+    description: row.description || undefined,
+    emoji: row.emoji || studyPath.emoji,
+    studyPath,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
 
 const studyGuideToRow = (
   ownerId: string,
@@ -294,6 +300,7 @@ const studyGuideToRow = (
   title: studyGuide.title,
   folder_name: studyGuide.folderName,
   description: studyGuide.description,
+  emoji: studyGuide.emoji || studyGuide.studyPath.emoji,
   study_path: toCloudJson(studyGuide.studyPath),
   created_at: studyGuide.createdAt,
   updated_at: studyGuide.updatedAt || nowIso(),

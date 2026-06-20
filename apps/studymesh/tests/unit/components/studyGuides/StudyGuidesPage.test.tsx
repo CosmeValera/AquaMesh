@@ -73,17 +73,20 @@ const makeStoredGuide = ({
   description,
   createdAt,
   pinnedAt,
+  emoji,
 }: {
   id: string
   title: string
   description: string
   createdAt: string
   pinnedAt?: string | null
+  emoji?: string
 }) => ({
   id,
   title,
   folderName: title,
   description,
+  emoji,
   studyPath: {
     pathId: id,
     title,
@@ -277,6 +280,7 @@ describe('StudyGuidesPage create flow', () => {
         title: 'Algebra',
         description: 'Linear equations prompt',
         createdAt: '2026-01-01T00:00:00.000Z',
+        emoji: '🔢',
       }),
       makeStoredGuide({
         id: 'm-guide',
@@ -312,6 +316,7 @@ describe('StudyGuidesPage create flow', () => {
     expect(screen.getByText('Pages')).toBeInTheDocument()
     expect(screen.getByText('Prompt')).toBeInTheDocument()
     expect(screen.getByText('Created')).toBeInTheDocument()
+    expect(screen.getByText('🔢')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /most recent/i }))
     fireEvent.click(screen.getByRole('menuitem', { name: /title/i }))

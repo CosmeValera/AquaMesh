@@ -1040,6 +1040,13 @@ const StudyGuidesPage = () => {
                               sx={{ color: 'primary.main' }}
                             />
                           ) : null}
+                          <Typography
+                            component="span"
+                            aria-hidden="true"
+                            sx={{ fontSize: 20, lineHeight: 1 }}
+                          >
+                            {guide.emoji || '\u2728'}
+                          </Typography>
                           <Typography fontWeight={650}>
                             {guide.title}
                           </Typography>

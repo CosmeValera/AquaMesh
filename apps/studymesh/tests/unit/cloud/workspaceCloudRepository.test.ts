@@ -320,10 +320,12 @@ describe('workspace cloud repository', () => {
         title: 'Physics Guide',
         folder_name: 'Physics',
         description: null,
+        emoji: '⚛️',
         study_path: {
           pathId: 'guide-1',
           title: 'Physics Guide',
           folderName: 'Physics',
+          emoji: '⚛️',
           selectedIndex: 0,
           dashboards: [],
         },
@@ -341,14 +343,16 @@ describe('workspace cloud repository', () => {
     }
     const repository = createCloudRepository(supabase as never)
 
-    await repository.upsertStudyGuide('user-1', {
+    const savedGuide = await repository.upsertStudyGuide('user-1', {
       id: 'guide-1',
       title: 'Physics Guide',
       folderName: 'Physics',
+      emoji: '⚛️',
       studyPath: {
         pathId: 'guide-1',
         title: 'Physics Guide',
         folderName: 'Physics',
+        emoji: '⚛️',
         selectedIndex: 0,
         dashboards: [],
       },
@@ -357,6 +361,7 @@ describe('workspace cloud repository', () => {
     })
     await repository.deleteStudyGuide('user-1', 'guide-1')
 
+    expect(savedGuide.emoji).toBe('⚛️')
     expect(supabase.from).toHaveBeenNthCalledWith(1, 'user_study_guides')
     expect(upsertBuilder.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -364,6 +369,7 @@ describe('workspace cloud repository', () => {
         owner_id: 'user-1',
         title: 'Physics Guide',
         folder_name: 'Physics',
+        emoji: '⚛️',
       }),
       { onConflict: 'owner_id,id' },
     )

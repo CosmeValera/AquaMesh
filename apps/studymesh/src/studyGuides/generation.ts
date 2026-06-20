@@ -18,11 +18,15 @@ import {
   normalizeQuickCreateActionInput,
   type QuickCreateActionInput,
 } from '../quickCreate/quickCreateActions'
-import type { StudyPathContainerState, StudyPathDashboardItem } from '../state/store'
+import type {
+  StudyPathContainerState,
+  StudyPathDashboardItem,
+} from '../state/store'
 import {
   appendStudyGuideMarkdownPage,
   appendStudyGuideWidgetPage,
 } from './pages'
+import { getStudyGuideEmoji } from './storage'
 
 type CreatePathPayload = {
   folderName: string
@@ -44,6 +48,7 @@ export const emptyStudyPath = (id: string): StudyPathContainerState => ({
   pathId: id,
   title: 'Study Guide',
   folderName: 'Study Guide',
+  emoji: getStudyGuideEmoji('Study Guide'),
   dashboards: [],
   selectedIndex: 0,
   pinnedDashboardKeys: [],
@@ -53,7 +58,8 @@ export const buildStudyPathFromPayload = (
   id: string,
   payload: CreatePathPayload,
 ): StudyPathContainerState => {
-  const title = payload.folderName || payload.dashboards[0]?.name || 'Study Guide'
+  const title =
+    payload.folderName || payload.dashboards[0]?.name || 'Study Guide'
   const folderName = payload.folderName || title
   const count = payload.dashboards.length
   const dashboards: StudyPathDashboardItem[] = payload.dashboards.map(
@@ -77,6 +83,7 @@ export const buildStudyPathFromPayload = (
     pathId: id,
     title,
     folderName,
+    emoji: getStudyGuideEmoji(title),
     dashboards,
     selectedIndex: 0,
     pinnedDashboardKeys: [],
@@ -87,8 +94,14 @@ const sourceTextForDashboard = (
   dashboard: AiStudyPathDraft['dashboards'][number],
   fallbackPrompt: string,
 ): string => {
-  const markdown = dashboard.objects.find((object) => object.kind === 'markdown')
-  return dashboard.rawNotes || (markdown?.kind === 'markdown' ? markdown.markdown : '') || fallbackPrompt
+  const markdown = dashboard.objects.find(
+    (object) => object.kind === 'markdown',
+  )
+  return (
+    dashboard.rawNotes ||
+    (markdown?.kind === 'markdown' ? markdown.markdown : '') ||
+    fallbackPrompt
+  )
 }
 
 export const generateStudyPathStateFromPrompt = async ({
@@ -176,6 +189,7 @@ export const generateStudyPathStateFromPrompt = async ({
     pathId: id,
     title,
     folderName: title,
+    emoji: draft.emoji || getStudyGuideEmoji(title),
     dashboards,
     selectedIndex: 0,
     pinnedDashboardKeys: [],

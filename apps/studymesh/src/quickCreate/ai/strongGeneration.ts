@@ -147,6 +147,7 @@ export interface AiStudyPathDashboardDraft extends AiQuickCreateDraft {
 export interface AiStudyPathDraft {
   title: string
   folderName: string
+  emoji?: string
   dashboards: AiStudyPathDashboardDraft[]
   warnings: string[]
   blueprint?: AiStudyPathBlueprint
@@ -492,6 +493,7 @@ const studyPathSchema = {
   properties: {
     title: { type: 'STRING' },
     folderName: { type: 'STRING' },
+    emoji: { type: 'STRING' },
     dashboards: {
       type: 'ARRAY',
       items: {
@@ -561,7 +563,7 @@ const studyPathSchema = {
       },
     },
   },
-  required: ['title', 'folderName', 'dashboards'],
+  required: ['title', 'folderName', 'emoji', 'dashboards'],
 }
 
 const studyPathBlueprintLessonSchema = {
@@ -1011,8 +1013,8 @@ const buildFallbackObjectsForDashboardRole = ({
       concepts.length > 0
         ? concepts.map((concept) => `How would you apply ${concept}?`)
         : practiceSource
-        ? ['What is one key idea from the previous Study Guide material?']
-        : []
+          ? ['What is one key idea from the previous Study Guide material?']
+          : []
 
     return prompts.map((question, index) => ({
       ...createFallbackBase(
@@ -1289,30 +1291,30 @@ export const generateQuickCreateWithAi = async ({
     resourceType === 'flashcards'
       ? `Create ${resourceTarget} when possible. For Medium or Long detail, aim for around 40-50 flashcards and never create fewer than 40 if the notes contain enough usable facts.`
       : resourceType === 'quiz'
-      ? `Create ${resourceTarget} when possible. Never create fewer than 40 multiple-choice questions at Medium or Long detail if the notes contain enough usable facts.`
-      : `Create ${practiceProfile.targetTotal} reviewable study items when possible, never fewer than ${practiceProfile.minTotal} if the notes contain usable facts. Keep the total within ${practiceProfile.minTotal}-${practiceProfile.maxTotal} items.`
+        ? `Create ${resourceTarget} when possible. Never create fewer than 40 multiple-choice questions at Medium or Long detail if the notes contain enough usable facts.`
+        : `Create ${practiceProfile.targetTotal} reviewable study items when possible, never fewer than ${practiceProfile.minTotal} if the notes contain usable facts. Keep the total within ${practiceProfile.minTotal}-${practiceProfile.maxTotal} items.`
   const mixInstruction =
     resourceType === 'flashcards'
       ? 'All reviewable items must be flashcards. Do not create quizzes, short-answer practice, summaries, definitions, or support review objects.'
       : resourceType === 'quiz'
-      ? 'All reviewable items must be multiple-choice quiz questions. Do not create short-answer questions, typed-answer questions, quizSingle items, flashcards, summaries, definitions, or support review objects.'
-      : practiceProfile.enforceQuizzes || practiceProfile.enforceFlashcards
-      ? `Use an active-practice mix: ${practiceProfile.targetQuizzes} quizzes, ${practiceProfile.targetFlashcards} flashcards, and about ${practiceProfile.targetSupport} summaries/definitions/review prompts. Quizzes should be 50-60% of the pack and flashcards 20-30%.`
-      : 'Use the selected non-practice targets and still create the requested number of useful reviewable items.'
+        ? 'All reviewable items must be multiple-choice quiz questions. Do not create short-answer questions, typed-answer questions, quizSingle items, flashcards, summaries, definitions, or support review objects.'
+        : practiceProfile.enforceQuizzes || practiceProfile.enforceFlashcards
+          ? `Use an active-practice mix: ${practiceProfile.targetQuizzes} quizzes, ${practiceProfile.targetFlashcards} flashcards, and about ${practiceProfile.targetSupport} summaries/definitions/review prompts. Quizzes should be 50-60% of the pack and flashcards 20-30%.`
+          : 'Use the selected non-practice targets and still create the requested number of useful reviewable items.'
   const resourceInstruction =
     resourceType === 'improvedNotes'
       ? 'Selected resource type: Expand on this. Create one polished expanded note set from the source. Stay close to the provided content and preserve the same learner level, vocabulary difficulty, and topic depth as the original source. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless they are clearly needed to explain the source. Organize the notes into teachable sections such as: source summary, key concepts, examples, common mistakes or misconceptions, and compact takeaways. Use clear explanations, but keep the complexity appropriate to the source. Do not create quiz questions or flashcards. Leave practice.multipleChoice and flashcards empty.'
       : resourceType === 'flashcards'
-      ? 'Selected resource type: Flashcards. Create only active-recall flashcards from the source, with the same reasoning/application quality expected from quizzes. Each front should ask the learner to use, choose, compare, diagnose, predict, explain, or repair a concept, not repeat a source sentence or ask for a pasted definition. Match the source learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Use answer backs that teach briefly, not one-word fragments. Keep sourceSummary brief, leave conceptRecap sections empty, and leave practice.multipleChoice empty.'
-      : resourceType === 'quiz'
-      ? 'Selected resource type: Quiz. Create only multiple-choice quiz questions from the source. Fill practice.multipleChoice only. Never create typed-answer, short-answer, quizSingle, or free-response questions. Match the source learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Prefer scenario, application, contrast, error-fixing, and why/how questions over simple recall. Keep sourceSummary brief, leave conceptRecap sections empty, and leave flashcards empty.'
-      : 'Wrong Selected resource type.'
+        ? 'Selected resource type: Flashcards. Create only active-recall flashcards from the source, with the same reasoning/application quality expected from quizzes. Each front should ask the learner to use, choose, compare, diagnose, predict, explain, or repair a concept, not repeat a source sentence or ask for a pasted definition. Match the source learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Use answer backs that teach briefly, not one-word fragments. Keep sourceSummary brief, leave conceptRecap sections empty, and leave practice.multipleChoice empty.'
+        : resourceType === 'quiz'
+          ? 'Selected resource type: Quiz. Create only multiple-choice quiz questions from the source. Fill practice.multipleChoice only. Never create typed-answer, short-answer, quizSingle, or free-response questions. Match the source learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Prefer scenario, application, contrast, error-fixing, and why/how questions over simple recall. Keep sourceSummary brief, leave conceptRecap sections empty, and leave flashcards empty.'
+          : 'Wrong Selected resource type.'
   const detailInstruction =
     detailLevel === 'short'
       ? 'Detail level: Short. Keep notes concise and generate a small focused set.'
       : detailLevel === 'long'
-      ? 'Detail level: Long. Create deeper explanations or a larger practice set while staying grounded.'
-      : 'Detail level: Medium. Use balanced depth and amount.'
+        ? 'Detail level: Long. Create deeper explanations or a larger practice set while staying grounded.'
+        : 'Detail level: Medium. Use balanced depth and amount.'
   const hardDetailInstruction = resourceType
     ? `The selected detail level is a hard constraint. Target ${geminiDetailTargets[resourceType][detailLevel]}. Match the target length/count exactly or as close as possible. Do not ignore it.`
     : 'The selected detail level is a hard constraint. Match the requested amount as closely as possible. Do not ignore it.'
@@ -1320,8 +1322,8 @@ export const generateQuickCreateWithAi = async ({
     quizQuestionStyle === 'conceptual'
       ? 'Quiz style preference: Conceptual. Prioritize why/how questions, comparisons, cause/effect, inference, and common misconceptions. Include only enough recall to anchor the reasoning.'
       : quizQuestionStyle === 'examLike'
-      ? 'Quiz style preference: Exam-like. Write assessment-style multiple-choice questions that require applying concepts under realistic test conditions, with clear plausible distractors.'
-      : 'Quiz style preference: Mixed. Use a balanced mix of recall and reasoning questions, including conceptual understanding, applied scenarios, comparisons, and common mistakes.'
+        ? 'Quiz style preference: Exam-like. Write assessment-style multiple-choice questions that require applying concepts under realistic test conditions, with clear plausible distractors.'
+        : 'Quiz style preference: Mixed. Use a balanced mix of recall and reasoning questions, including conceptual understanding, applied scenarios, comparisons, and common mistakes.'
   const sourceInstruction = promptMode
     ? 'The raw input is a learning prompt, not notes. Teach the requested topic from scratch. Because the input is not source notes, you may use accurate general knowledge for this topic. First create concise source notes/explanations, then generate practice grounded in those generated explanations. Include explanation/theory objects before exercises.'
     : 'The raw input is source notes. Stay grounded in those notes.'
@@ -2213,6 +2215,7 @@ Return exactly this structure:
 {
   "title": "Path title",
   "folderName": "Folder name for all dashboards",
+  "emoji": "One emoji that represents the Study Guide topic",
   "dashboards": [
     {
       "title": "01 - Content 1",
@@ -2238,6 +2241,7 @@ Return exactly this structure:
 Rules:
 - Return strict valid JSON only: double-quoted property names and strings, comma-separated array/object entries, matching { } and [ ], no trailing commas, no comments, no Markdown fences, no prose before or after the JSON.
 - Choose a concise, topic-specific folderName for the Study Guide, such as "French B1 Subjunctive" or "Calculus Derivatives". Do not use a generic folderName like "Study Guide" unless the topic is truly unknown.
+- Choose exactly one topic-specific emoji for the Study Guide. It must be a single emoji character or emoji sequence, not text, and it should match the user's topic.
 - Create exactly ${dashboardCount} ordered lesson dashboards, grouped mentally into 1-3 modules. Give each dashboard a useful topic-specific title.
 - Treat this as a bounded learning sprint, not a complete course on everything. Include scope in lesson choices: what gets covered now, what waits for later.
 - Do not follow a fixed role template by position. You are responsible for choosing each dashboard's purpose, practiceType, rawNotes, and practice mix from the lesson content itself.
@@ -2288,7 +2292,7 @@ ${prompt}`
 The previous response failed JSON formatting. Retry with a simpler response:
 - Return plain JSON only.
 - Return syntactically valid JSON with all commas and braces in place.
-- Use only the Study Guide fields: title, summary, rawNotes, dashboardPurpose, practiceType, layoutReason, sourceRefs, sourceSummary, conceptRecap, practice, flashcards.
+- Use only the Study Guide fields: title, folderName, emoji, dashboards, summary, rawNotes, dashboardPurpose, practiceType, layoutReason, sourceRefs, sourceSummary, conceptRecap, practice, flashcards.
 - Do not use markdown code fences.
 - Do not include comments, trailing commas, undefined, NaN, or extra text.`
   const createRepairPrompt = (originalJson: string) => `${promptText}
@@ -2602,15 +2606,15 @@ ${prompt}`
         filledVisibleObjects && filledVisibleObjects.objects.length > 0
           ? filledVisibleObjects.objects
           : visibleRoleObjects.length > 0
-          ? visibleRoleObjects
-          : buildFallbackObjectsForDashboardRole({
-              packId,
-              dashboardTitle,
-              dashboardRole,
-              rawNotes: input.rawNotes,
-              sourceSummary: draft.sourceSummary,
-              accumulatedContentNotes,
-            })
+            ? visibleRoleObjects
+            : buildFallbackObjectsForDashboardRole({
+                packId,
+                dashboardTitle,
+                dashboardRole,
+                rawNotes: input.rawNotes,
+                sourceSummary: draft.sourceSummary,
+                accumulatedContentNotes,
+              })
       if (visibleRoleObjects.length === 0 && finalObjects.length > 0) {
         finalEvents.push(
           `Fallback used: created ${dashboardRole} object because role filtering left no visible study objects.`,
@@ -2700,6 +2704,10 @@ ${prompt}`
       typeof record.folderName === 'string' && record.folderName.trim()
         ? record.folderName.trim()
         : folderName,
+    emoji:
+      typeof record.emoji === 'string' && record.emoji.trim()
+        ? record.emoji.trim()
+        : undefined,
     dashboards,
     warnings,
     blueprint,

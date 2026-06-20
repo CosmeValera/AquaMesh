@@ -5,6 +5,7 @@ import type { StudyPathContainerState } from '../state/store'
 
 export const STUDY_GUIDES_CHANGED_EVENT = 'studymesh-study-guides-changed'
 export const STUDY_GUIDES_STORAGE_KEY = 'studymesh_study_guides'
+export const STUDY_GUIDES_PINNED_KEY = 'studymesh.studyGuides.pinned'
 
 const nowIso = () => new Date().toISOString()
 
@@ -36,11 +37,56 @@ const dispatchStudyGuidesChanged = (
 const readStoredStudyGuides = (): StudyGuideRecord[] => {
   try {
     const stored = window.localStorage.getItem(STUDY_GUIDES_STORAGE_KEY)
-    return stored ? JSON.parse(stored) : []
+    const studyGuides: StudyGuideRecord[] = stored ? JSON.parse(stored) : []
+    const pinnedGuides = readPinnedStudyGuides()
+
+    return studyGuides.map((studyGuide) => ({
+      ...studyGuide,
+      pinnedAt: pinnedGuides[studyGuide.id] ?? studyGuide.pinnedAt ?? null,
+    }))
   } catch (error) {
     console.error('Failed to read Study Guides', error)
     return []
   }
+}
+
+const readPinnedStudyGuides = (): Record<string, string> => {
+  try {
+    const stored = window.localStorage.getItem(STUDY_GUIDES_PINNED_KEY)
+    if (!stored) {
+      return {}
+    }
+
+    const parsed = JSON.parse(stored)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {}
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        (entry): entry is [string, string] => typeof entry[1] === 'string',
+      ),
+    )
+  } catch {
+    return {}
+  }
+}
+
+const writePinnedStudyGuides = (pinnedGuides: Record<string, string>) => {
+  window.localStorage.setItem(
+    STUDY_GUIDES_PINNED_KEY,
+    JSON.stringify(pinnedGuides),
+  )
+}
+
+const setStoredPinnedStudyGuide = (id: string, pinnedAt: string | null) => {
+  const pinnedGuides = readPinnedStudyGuides()
+  if (pinnedAt) {
+    pinnedGuides[id] = pinnedAt
+  } else {
+    delete pinnedGuides[id]
+  }
+  writePinnedStudyGuides(pinnedGuides)
 }
 
 const writeStoredStudyGuides = (studyGuides: StudyGuideRecord[]) => {
@@ -63,6 +109,7 @@ export const createStudyGuideRecord = (
     folderName: studyPath.folderName || 'Study Guide',
     emoji:
       options.emoji ||
+      studyPath.emoji ||
       getStudyGuideEmoji(studyPath.title || studyPath.folderName || ''),
     studyPath: {
       ...studyPath,
@@ -114,6 +161,7 @@ export const StudyGuideStorage = {
         studyGuide.createdAt || current[existingIndex]?.createdAt || nowIso(),
       updatedAt: nowIso(),
     }
+    setStoredPinnedStudyGuide(nextGuide.id, nextGuide.pinnedAt ?? null)
     const next =
       existingIndex >= 0
         ? current.map((guide, index) =>
@@ -182,6 +230,7 @@ export const StudyGuideStorage = {
 
   delete(id: string): void {
     const current = readStoredStudyGuides()
+    setStoredPinnedStudyGuide(id, null)
     writeStoredStudyGuides(current.filter((studyGuide) => studyGuide.id !== id))
     dispatchStudyGuidesChanged({ action: 'delete', studyGuideId: id })
   },

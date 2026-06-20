@@ -21,6 +21,7 @@ vi.mock('../../../../src/studyGuides/generation', () => ({
     pathId: id,
     title: 'AI Named Guide',
     folderName: 'AI Named Guide',
+    emoji: '🧠',
     dashboards: [
       {
         id: `${id}-dashboard-1`,
@@ -71,11 +72,13 @@ const makeStoredGuide = ({
   title,
   description,
   createdAt,
+  pinnedAt,
 }: {
   id: string
   title: string
   description: string
   createdAt: string
+  pinnedAt?: string | null
 }) => ({
   id,
   title,
@@ -101,12 +104,30 @@ const makeStoredGuide = ({
   },
   createdAt,
   updatedAt: createdAt,
+  pinnedAt,
 })
 
 describe('StudyGuidesPage create flow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    localStorage.clear()
+    const storage = new Map<string, string>()
+    vi.mocked(window.localStorage.getItem).mockImplementation(
+      (key: string) => storage.get(key) ?? null,
+    )
+    vi.mocked(window.localStorage.setItem).mockImplementation(
+      (key: string, value: string) => {
+        storage.set(key, value)
+      },
+    )
+    vi.mocked(window.localStorage.removeItem).mockImplementation(
+      (key: string) => {
+        storage.delete(key)
+      },
+    )
+    vi.mocked(window.localStorage.clear).mockImplementation(() => {
+      storage.clear()
+    })
+    window.localStorage.clear()
   })
 
   it('does not auto-open the new Study Guide dialog from create=1', async () => {
@@ -160,6 +181,7 @@ describe('StudyGuidesPage create flow', () => {
           title: 'AI Named Guide',
           folderName: 'AI Named Guide',
           description: 'Teach me French subjunctive with practice.',
+          emoji: '🧠',
         }),
       )
     })
@@ -183,6 +205,7 @@ describe('StudyGuidesPage create flow', () => {
         pathId: id,
         title: 'Human Anatomy Basics',
         folderName: 'Human Anatomy Basics',
+        emoji: '🫀',
         dashboards: [
           {
             id: `${id}-dashboard-1`,
@@ -273,7 +296,11 @@ describe('StudyGuidesPage create flow', () => {
       screen.getAllByRole('button', { name: /new study guide/i }),
     ).toHaveLength(2)
     fireEvent.click(screen.getByRole('button', { name: /list view/i }))
-    expect(localStorage.getItem('studymesh.studyGuides.viewMode')).toBe('list')
+    await waitFor(() => {
+      expect(
+        window.localStorage.getItem('studymesh.studyGuides.viewMode'),
+      ).toBe('list')
+    })
     expect(
       screen.getAllByRole('button', { name: /new study guide/i }),
     ).toHaveLength(1)
@@ -288,13 +315,16 @@ describe('StudyGuidesPage create flow', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /most recent/i }))
     fireEvent.click(screen.getByRole('menuitem', { name: /title/i }))
-    expect(localStorage.getItem('studymesh.studyGuides.sortMode')).toBe('title')
+    expect(window.localStorage.getItem('studymesh.studyGuides.sortMode')).toBe(
+      'title',
+    )
 
     const titles = screen
       .getAllByText(/Algebra|Music Theory|Zoology/)
       .map((element) => element.textContent)
     expect(titles).toEqual(['Algebra', 'Music Theory', 'Zoology'])
 
+    fireEvent.click(screen.getByRole('button', { name: /search guides/i }))
     fireEvent.change(screen.getByPlaceholderText(/search guides/i), {
       target: { value: 'linear' },
     })
@@ -302,5 +332,73 @@ describe('StudyGuidesPage create flow', () => {
     expect(screen.queryByText('Zoology')).not.toBeInTheDocument()
 
     getAllSpy.mockRestore()
+  })
+
+  it('pins guides to the top from grid and list views', async () => {
+    StudyGuideStorage.save(
+      makeStoredGuide({
+        id: 'z-guide',
+        title: 'Zoology',
+        description: 'Animal classification prompt',
+        createdAt: '2026-01-03T00:00:00.000Z',
+      }),
+    )
+    StudyGuideStorage.save(
+      makeStoredGuide({
+        id: 'a-guide',
+        title: 'Algebra',
+        description: 'Linear equations prompt',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      }),
+    )
+    StudyGuideStorage.save(
+      makeStoredGuide({
+        id: 'm-guide',
+        title: 'Music Theory',
+        description: 'Intervals prompt',
+        createdAt: '2026-01-02T00:00:00.000Z',
+      }),
+    )
+    renderStudyGuidesPage('/study-guides')
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /open algebra options/i }),
+    )
+    fireEvent.click(
+      await screen.findByRole('menuitem', { name: /pin to top/i }),
+    )
+
+    await waitFor(() => {
+      expect(StudyGuideStorage.getById('a-guide')?.pinnedAt).toBeTruthy()
+    })
+
+    await waitFor(() => {
+      const titles = screen
+        .getAllByText(/Algebra|Music Theory|Zoology/)
+        .map((element) => element.textContent)
+      expect(titles).toEqual(['Algebra', 'Zoology', 'Music Theory'])
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /list view/i }))
+    expect(
+      await screen.findByRole('table', { name: /study guides list/i }),
+    ).toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('button', { name: /open music theory options/i }),
+    )
+    fireEvent.click(
+      await screen.findByRole('menuitem', { name: /pin to top/i }),
+    )
+
+    await waitFor(() => {
+      expect(StudyGuideStorage.getById('m-guide')?.pinnedAt).toBeTruthy()
+    })
+
+    await waitFor(() => {
+      const titles = screen
+        .getAllByText(/Algebra|Music Theory|Zoology/)
+        .map((element) => element.textContent)
+      expect(titles).toEqual(['Music Theory', 'Algebra', 'Zoology'])
+    })
   })
 })

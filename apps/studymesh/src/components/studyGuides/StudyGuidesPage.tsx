@@ -20,8 +20,6 @@ import {
   TableHead,
   TableRow,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -166,17 +164,28 @@ const storeStudyGuideSortMode = (mode: StudyGuideSortMode) => {
 
 const sortGuides = (guides: StudyGuideRecord[], sortMode: StudyGuideSortMode) =>
   [...guides].sort((first, second) => {
+    const firstPinned = first.pinnedAt ? Date.parse(first.pinnedAt) : 0
+    const secondPinned = second.pinnedAt ? Date.parse(second.pinnedAt) : 0
+    if (firstPinned || secondPinned) {
+      if (firstPinned && secondPinned) {
+        if (sortMode === 'title') {
+          return first.title.localeCompare(second.title, undefined, {
+            numeric: true,
+            sensitivity: 'base',
+          })
+        }
+
+        return secondPinned - firstPinned
+      }
+
+      return secondPinned - firstPinned
+    }
+
     if (sortMode === 'title') {
       return first.title.localeCompare(second.title, undefined, {
         numeric: true,
         sensitivity: 'base',
       })
-    }
-
-    const firstPinned = first.pinnedAt ? Date.parse(first.pinnedAt) : 0
-    const secondPinned = second.pinnedAt ? Date.parse(second.pinnedAt) : 0
-    if (firstPinned || secondPinned) {
-      return secondPinned - firstPinned
     }
 
     return Date.parse(second.createdAt) - Date.parse(first.createdAt)
@@ -414,21 +423,34 @@ const StudyGuidesPage = () => {
         <Stack
           direction="row"
           spacing={1.5}
-          alignItems="center"
+          alignItems={{ xs: 'flex-start', md: 'center' }}
           justifyContent="space-between"
-          sx={{ mb: 2.5 }}
+          sx={{ mb: 2.5, flexWrap: { xs: 'wrap', md: 'nowrap' } }}
         >
-          <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="h4" fontWeight={650}>
+          <Box
+            sx={{
+              minWidth: 0,
+              flex: 1,
+              flexBasis: { xs: '100%', md: 'auto' },
+              overflow: 'hidden',
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight={650}
+              sx={{
+                fontSize: { xs: '1.25rem', sm: '1.55rem', md: '2.125rem' },
+              }}
+            >
               My Study Guides
             </Typography>
             <Typography
               color="text.secondary"
               sx={{
-                display: '-webkit-box',
-                WebkitLineClamp: { xs: 1, sm: 2 },
-                WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                fontSize: { xs: '0.82rem', sm: '0.95rem', md: '1rem' },
               }}
             >
               Open a guide or create a new learning workspace.
@@ -437,16 +459,15 @@ const StudyGuidesPage = () => {
 
           <Stack
             direction="row"
-            spacing={0.75}
             alignItems="center"
-            justifyContent="flex-end"
+            justifyContent="flex-start"
             sx={{
               flexShrink: 0,
-              maxWidth: { xs: '66vw', sm: '72vw', md: 'none' },
-              overflowX: { xs: 'auto', md: 'visible' },
-              pb: { xs: 0.25, md: 0 },
-              '&::-webkit-scrollbar': { display: 'none' },
-              scrollbarWidth: 'none',
+              flexWrap: 'wrap',
+              gap: 0.75,
+              width: { xs: '100%', md: 'auto' },
+              maxWidth: { xs: '100%', md: 'none' },
+              ml: { md: 'auto' },
             }}
           >
             {searchExpanded || searchQuery ? (
@@ -503,15 +524,9 @@ const StudyGuidesPage = () => {
                 </IconButton>
               </Tooltip>
             )}
-            <ToggleButtonGroup
-              exclusive
-              size="small"
-              value={viewMode}
-              onChange={(_, nextMode: StudyGuideViewMode | null) => {
-                if (nextMode) {
-                  selectViewMode(nextMode)
-                }
-              }}
+            <Stack
+              direction="row"
+              role="group"
               aria-label="Study Guide view"
               sx={(theme) => ({
                 flexShrink: 0,
@@ -520,40 +535,48 @@ const StudyGuidesPage = () => {
                 border: 1,
                 borderColor: 'divider',
                 overflow: 'hidden',
-                '& .MuiToggleButton-root': {
+                '& button': {
                   width: 42,
                   height: 36,
+                  display: 'grid',
+                  placeItems: 'center',
                   border: 0,
+                  borderRadius: 0,
+                  background: 'transparent',
                   color: 'text.secondary',
-                  '&.Mui-selected': {
+                  cursor: 'pointer',
+                  font: 'inherit',
+                  '&[aria-pressed="true"]': {
                     bgcolor: alpha(theme.palette.primary.main, 0.16),
                     color: 'text.primary',
                   },
-                  '&.Mui-selected:hover': {
+                  '&[aria-pressed="true"]:hover': {
                     bgcolor: alpha(theme.palette.primary.main, 0.2),
                   },
                 },
               })}
             >
-              <ToggleButton
-                value="grid"
+              <Box
+                component="button"
+                type="button"
                 aria-label="Grid view"
+                aria-pressed={viewMode === 'grid'}
+                title="Grid view"
                 onClick={() => selectViewMode('grid')}
               >
-                <Tooltip title="Grid view">
-                  <ViewModuleIcon fontSize="small" />
-                </Tooltip>
-              </ToggleButton>
-              <ToggleButton
-                value="list"
+                <ViewModuleIcon fontSize="small" />
+              </Box>
+              <Box
+                component="button"
+                type="button"
                 aria-label="List view"
+                aria-pressed={viewMode === 'list'}
+                title="List view"
                 onClick={() => selectViewMode('list')}
               >
-                <Tooltip title="List view">
-                  <ViewListIcon fontSize="small" />
-                </Tooltip>
-              </ToggleButton>
-            </ToggleButtonGroup>
+                <ViewListIcon fontSize="small" />
+              </Box>
+            </Stack>
             <Button
               variant="outlined"
               onClick={(event) => setSortAnchor(event.currentTarget)}

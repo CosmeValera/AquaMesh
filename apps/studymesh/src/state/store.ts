@@ -36,6 +36,7 @@ export interface StudyPathContainerState {
   pathId: string
   title: string
   folderName: string
+  emoji?: string
   dashboards: StudyPathDashboardItem[]
   selectedIndex: number
   pinnedDashboardKeys?: string[]

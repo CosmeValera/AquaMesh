@@ -146,6 +146,7 @@ interface LocalStudyPathPlanItem {
 interface LocalStudyPathPlan {
   title: string
   folderName: string
+  emoji?: string
   dashboards: LocalStudyPathPlanItem[]
 }
 
@@ -488,17 +489,17 @@ const repairLocalQuiz = (
   const rawOptions = Array.isArray(input.options)
     ? input.options.map(stringValue).filter(Boolean)
     : typeof input.options === 'string'
-    ? input.options
-        .split(/\r?\n|;|,(?=\s+\S)/)
-        .map(stringValue)
-        .filter(Boolean)
-    : []
+      ? input.options
+          .split(/\r?\n|;|,(?=\s+\S)/)
+          .map(stringValue)
+          .filter(Boolean)
+      : []
   const rawCorrectIndex =
     typeof input.correctIndex === 'number'
       ? input.correctIndex
       : typeof input.correctOptionIndex === 'number'
-      ? input.correctOptionIndex
-      : 0
+        ? input.correctOptionIndex
+        : 0
   const originalAnswer =
     stringValue(input.answer) ||
     (rawCorrectIndex >= 0 && rawCorrectIndex < rawOptions.length
@@ -690,10 +691,7 @@ const localObjectToStudyObject = (
             'The opposite of the source explanation',
           ].filter(Boolean)
         : quiz.options
-    const quizCorrectIndex =
-      quiz.options.length < 3
-        ? 0
-        : quiz.correctIndex
+    const quizCorrectIndex = quiz.options.length < 3 ? 0 : quiz.correctIndex
 
     return {
       ...base,
@@ -1190,10 +1188,7 @@ const objectsFromContract = (
             'The opposite of the source explanation',
           ].filter(Boolean)
         : quiz.options
-    const quizCorrectIndex =
-      quiz.options.length < 3
-        ? 0
-        : quiz.correctIndex
+    const quizCorrectIndex = quiz.options.length < 3 ? 0 : quiz.correctIndex
 
     objects.push({
       ...createBase(packId, 'quiz', index, `Quiz ${index + 1}`),
@@ -1263,8 +1258,8 @@ export const normalizeLocalAiQuickCreateDraft = (
   const rawObjects = Array.isArray(record.objects)
     ? record.objects
     : Array.isArray(record.studyObjects)
-    ? record.studyObjects
-    : []
+      ? record.studyObjects
+      : []
   const looseObjects = rawObjects
     .map((item, index) =>
       item && typeof item === 'object'
@@ -1366,8 +1361,8 @@ const localQuickCreatePrompt = ({
     quizQuestionStyle === 'conceptual'
       ? 'Style preference: Conceptual. Prioritize why/how, comparison, cause/effect, inference, and common-mistake questions.'
       : quizQuestionStyle === 'examLike'
-      ? 'Style preference: Exam-like. Use realistic assessment-style questions with plausible distractors and applied scenarios.'
-      : 'Style preference: Mixed. Balance recall with reasoning, conceptual understanding, applied scenarios, and common mistakes.'
+        ? 'Style preference: Exam-like. Use realistic assessment-style questions with plausible distractors and applied scenarios.'
+        : 'Style preference: Mixed. Balance recall with reasoning, conceptual understanding, applied scenarios, and common mistakes.'
   const resourceRules =
     resourceType === 'improvedNotes'
       ? `Create one "Expand on this" resource. Allowed kind only: markdown.
@@ -1380,32 +1375,32 @@ Rules: one markdown object only. No quizzes. No flashcards. ${localHardRule} ${
           detailLevel === 'short'
             ? 'Keep it concise.'
             : detailLevel === 'long'
-            ? 'Include deeper explanations and examples.'
-            : 'Use balanced detail.'
+              ? 'Include deeper explanations and examples.'
+              : 'Use balanced detail.'
         }`
       : resourceType === 'flashcards'
-      ? `Create ${flashcardCount} flashcards. Allowed kind only: qa.
+        ? `Create ${flashcardCount} flashcards. Allowed kind only: qa.
 Use this shape:
 {"title":"${title.replace(
-          /"/g,
-          '',
-        )}","objects":[{"kind":"qa","question":"...","answer":"..."}]}
+            /"/g,
+            '',
+          )}","objects":[{"kind":"qa","question":"...","answer":"..."}]}
 Rules: qa objects only. No markdown. No quizzes. Each flashcard must test exactly one term, rule, formula step, contrast, exception, or use case. Answers must be self-contained and teach the idea, not one-word fragments. ${localHardRule}`
-      : resourceType === 'quiz'
-      ? `Create ${quizCount} quiz questions. Allowed kind only: quiz.
+        : resourceType === 'quiz'
+          ? `Create ${quizCount} quiz questions. Allowed kind only: quiz.
 Use this shape:
 {"title":"${title.replace(
-          /"/g,
-          '',
-        )}","objects":[{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"}]}
+              /"/g,
+              '',
+            )}","objects":[{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"}]}
 Rules: quiz objects only. Every quiz must be multipleChoice with 3-4 real options. No shortAnswer, typed-answer, quizSingle, free-response, markdown, or flashcards. Options must be real choices, not placeholders. Never use A/B/C, option A, all of the above, duplicate choices, or source-sentence copies. ${localHardRule} ${quizStyleRule} Preferably don't copy source sentences.`
-      : `Create exactly 6 simple study objects from the source.
+          : `Create exactly 6 simple study objects from the source.
 Allowed kinds only: markdown, qa, quiz, list.
 Use this shape:
 {"title":"${title.replace(
-          /"/g,
-          '',
-        )}","objects":[{"kind":"markdown","title":"Explanation","markdown":"2-4 short sentences"},{"kind":"qa","question":"...","answer":"..."},{"kind":"qa","question":"...","answer":"..."},{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"},{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"},{"kind":"list","title":"Key points","items":["...","...","..."]}]}`
+              /"/g,
+              '',
+            )}","objects":[{"kind":"markdown","title":"Explanation","markdown":"2-4 short sentences"},{"kind":"qa","question":"...","answer":"..."},{"kind":"qa","question":"...","answer":"..."},{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"},{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"},{"kind":"list","title":"Key points","items":["...","...","..."]}]}`
 
   return `Return JSON only. No prose. No markdown fences.
 ${resourceRules}
@@ -1430,7 +1425,7 @@ const localStudyPathPlannerPrompt = (
 Plan a Study Guide with exactly ${count} lesson dashboards for "${title}".
 
 Shape:
-{"title":"...","folderName":"...","dashboards":[{"title":"01 - ...","goal":"...","sections":[{"title":"...","goal":"...","focus":"...; ...; ..."},{"title":"...","goal":"...","focus":"...; ...; ..."}],"avoid":"...; ..."}]}
+{"title":"...","folderName":"...","emoji":"...","dashboards":[{"title":"01 - ...","goal":"...","sections":[{"title":"...","goal":"...","focus":"...; ...; ..."},{"title":"...","goal":"...","focus":"...; ...; ..."}],"avoid":"...; ..."}]}
 
 Topic:
 ${compactPrompt}
@@ -1438,6 +1433,7 @@ ${compactPrompt}
 Rules:
 - Return exactly one JSON object.
 - dashboards must contain exactly ${count} dashboards.
+- emoji must be exactly one topic-specific emoji for the Study Guide.
 - Every dashboard title must start with 01 -, 02 -, etc.
 - Each dashboard must have exactly 2 sections.
 - Each section has only title, goal, and focus.
@@ -1508,8 +1504,8 @@ const localStudyPathMarkdownSectionPrompt = (
     attempt === 1
       ? 'Use full structured Markdown with short bullets.'
       : attempt === 2
-      ? 'Use simpler structured Markdown with fewer bullets.'
-      : 'Survival mode: write the shortest usable structured Markdown.'
+        ? 'Use simpler structured Markdown with fewer bullets.'
+        : 'Survival mode: write the shortest usable structured Markdown.'
 
   return `Return Markdown only.
 No JSON. No code fences.
@@ -1893,8 +1889,8 @@ const flatDashboardObjects = (
     typeof record.quizCorrectIndex === 'number'
       ? record.quizCorrectIndex
       : typeof record.correctIndex === 'number'
-      ? record.correctIndex
-      : 0
+        ? record.correctIndex
+        : 0
   const quizAnswer =
     quizCorrectIndex >= 0 && quizCorrectIndex < quizOptions.length
       ? quizOptions[quizCorrectIndex]
@@ -2279,12 +2275,12 @@ const normalizePlannerItem = (
       stringArrayValue(record.avoid).length > 0
         ? stringArrayValue(record.avoid).slice(0, 5)
         : stringValue(record.avoid)
-        ? stringValue(record.avoid)
-            .split(';')
-            .map((item) => item.trim())
-            .filter(Boolean)
-            .slice(0, 5)
-        : fallback.avoid,
+          ? stringValue(record.avoid)
+              .split(';')
+              .map((item) => item.trim())
+              .filter(Boolean)
+              .slice(0, 5)
+          : fallback.avoid,
   }
 }
 
@@ -2338,6 +2334,7 @@ const normalizeLocalStudyPathPlan = (
         options.folderName || options.title,
         options.prompt,
       ),
+      emoji: stringValue(record.emoji).trim() || undefined,
       dashboards,
     },
     warnings,
@@ -2869,8 +2866,8 @@ const createLocalStudyPathPipelineTracker = (
       planner.status === 'complete'
         ? 0
         : useBaseBudget
-        ? planner.baseBudgetMs
-        : remainingForStep(planner)
+          ? planner.baseBudgetMs
+          : remainingForStep(planner)
     const lanes = Array.from({ length: Math.max(1, concurrency) }, () => 0)
 
     Array.from({ length: dashboardCount }, (_value, index) => {
@@ -2888,8 +2885,9 @@ const createLocalStudyPathPipelineTracker = (
         return
       }
 
-      const assignedThread = dashboardSteps.find((step) => step.threadId)
-        ?.threadId
+      const assignedThread = dashboardSteps.find(
+        (step) => step.threadId,
+      )?.threadId
       const laneIndex =
         assignedThread && assignedThread > 0
           ? Math.min(lanes.length - 1, assignedThread - 1)
@@ -3163,8 +3161,8 @@ const collectLocalPracticeItems = (
   const explicitItems: unknown[] = Array.isArray(record[kind])
     ? record[kind]
     : Array.isArray(record[fallbackKey])
-    ? record[fallbackKey]
-    : []
+      ? record[fallbackKey]
+      : []
 
   return localPracticeObjectLooksUsable(record, kind)
     ? [record, ...explicitItems]
@@ -4009,6 +4007,7 @@ export const generateStudyPathWithLocalAi = async (
   return {
     title: plan.title || options.title,
     folderName: plan.folderName,
+    emoji: plan.emoji,
     dashboards,
     warnings: [
       ...warnings,
@@ -4016,4 +4015,3 @@ export const generateStudyPathWithLocalAi = async (
     ],
   }
 }
-

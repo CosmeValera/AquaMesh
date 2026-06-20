@@ -66,10 +66,47 @@ const renderStudyGuidesPage = (initialEntry: string) =>
     </MemoryRouter>,
   )
 
+const makeStoredGuide = ({
+  id,
+  title,
+  description,
+  createdAt,
+}: {
+  id: string
+  title: string
+  description: string
+  createdAt: string
+}) => ({
+  id,
+  title,
+  folderName: title,
+  description,
+  studyPath: {
+    pathId: id,
+    title,
+    folderName: title,
+    dashboards: [
+      {
+        id: `${id}-dashboard-1`,
+        name: '01 - Start',
+        layout: { type: 'row' },
+        dashboardKey: `${id}-1`,
+        dashboardIndex: 1,
+        dashboardCount: 1,
+        folderName: title,
+      },
+    ],
+    selectedIndex: 0,
+    pinnedDashboardKeys: [],
+  },
+  createdAt,
+  updatedAt: createdAt,
+})
+
 describe('StudyGuidesPage create flow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    localStorage.removeItem(STUDY_GUIDES_STORAGE_KEY)
+    localStorage.clear()
   })
 
   it('does not auto-open the new Study Guide dialog from create=1', async () => {
@@ -201,5 +238,69 @@ describe('StudyGuidesPage create flow', () => {
         }),
       )
     })
+    saveSpy.mockRestore()
+  })
+
+  it('offers inline search, list view, and title sorting', async () => {
+    const getAllSpy = vi.spyOn(StudyGuideStorage, 'getAll').mockReturnValue([
+      makeStoredGuide({
+        id: 'z-guide',
+        title: 'Zoology',
+        description: 'Animal classification prompt',
+        createdAt: '2026-01-03T00:00:00.000Z',
+      }),
+      makeStoredGuide({
+        id: 'a-guide',
+        title: 'Algebra',
+        description: 'Linear equations prompt',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      }),
+      makeStoredGuide({
+        id: 'm-guide',
+        title: 'Music Theory',
+        description: 'Intervals prompt',
+        createdAt: '2026-01-02T00:00:00.000Z',
+      }),
+    ])
+    renderStudyGuidesPage('/study-guides')
+
+    expect(
+      screen.queryByPlaceholderText(/search guides/i),
+    ).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /search guides/i }))
+    expect(screen.getByPlaceholderText(/search guides/i)).toBeInTheDocument()
+    expect(
+      screen.getAllByRole('button', { name: /new study guide/i }),
+    ).toHaveLength(2)
+    fireEvent.click(screen.getByRole('button', { name: /list view/i }))
+    expect(localStorage.getItem('studymesh.studyGuides.viewMode')).toBe('list')
+    expect(
+      screen.getAllByRole('button', { name: /new study guide/i }),
+    ).toHaveLength(1)
+
+    expect(
+      screen.getByRole('table', { name: /study guides list/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Title')).toBeInTheDocument()
+    expect(screen.getByText('Pages')).toBeInTheDocument()
+    expect(screen.getByText('Prompt')).toBeInTheDocument()
+    expect(screen.getByText('Created')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /most recent/i }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /title/i }))
+    expect(localStorage.getItem('studymesh.studyGuides.sortMode')).toBe('title')
+
+    const titles = screen
+      .getAllByText(/Algebra|Music Theory|Zoology/)
+      .map((element) => element.textContent)
+    expect(titles).toEqual(['Algebra', 'Music Theory', 'Zoology'])
+
+    fireEvent.change(screen.getByPlaceholderText(/search guides/i), {
+      target: { value: 'linear' },
+    })
+    expect(screen.getByText('Algebra')).toBeInTheDocument()
+    expect(screen.queryByText('Zoology')).not.toBeInTheDocument()
+
+    getAllSpy.mockRestore()
   })
 })

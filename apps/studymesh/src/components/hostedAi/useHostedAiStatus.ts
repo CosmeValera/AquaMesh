@@ -67,7 +67,7 @@ export const useHostedAiStatus = (): UseHostedAiStatusResult => {
     number | null
   >(() => readCachedStudyCredits(ownerId))
   const displayStudyCredits = status?.accountReady
-    ? cachedStudyCredits ?? status.studyCredits
+    ? (cachedStudyCredits ?? status.studyCredits)
     : cachedStudyCredits
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')

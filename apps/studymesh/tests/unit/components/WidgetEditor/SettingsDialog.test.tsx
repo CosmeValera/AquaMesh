@@ -287,6 +287,7 @@ describe('SettingsDialog study library export', () => {
 
     expect(screen.queryByLabelText(/AI provider/i)).not.toBeInTheDocument()
     expect(screen.queryByText(STUDY_CREDITS_LABEL)).not.toBeInTheDocument()
+    expect(screen.queryByText('AI Chat pet')).not.toBeInTheDocument()
   })
 
   it('requires DELETE before deleting the StudyMesh profile', () => {

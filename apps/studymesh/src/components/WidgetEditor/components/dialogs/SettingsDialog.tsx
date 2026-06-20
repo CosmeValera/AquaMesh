@@ -33,12 +33,6 @@ import SearchIcon from '@mui/icons-material/Search'
 import ReplayIcon from '@mui/icons-material/Replay'
 
 import { STUDYMESH_ONBOARDING_RESET_EVENT } from '../../../onboarding/onboardingEvents'
-import {
-  AI_CHAT_PET_CHANGED_EVENT,
-  AI_CHAT_PET_STORAGE_KEY,
-  aiChatPets,
-  isAiChatPetId,
-} from '../../../dashboardChat/DashboardChatPanel'
 import { seedStudyMeshGuideStudyPath } from '../../../../studyGuides/studyMeshGuideSeed'
 import {
   STUDY_GUIDES_CHANGED_EVENT,
@@ -214,14 +208,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   const [selectedExportIndexes, setSelectedExportIndexes] = React.useState<
     Set<number>
   >(new Set())
-  const [selectedAiPetId, setSelectedAiPetId] = React.useState(() => {
-    try {
-      const stored = window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY)
-      return isAiChatPetId(stored) ? stored : 'axolotl'
-    } catch {
-      return 'axolotl'
-    }
-  })
 
   const exportLibraryGroups = React.useMemo<ExportLibraryGroup[]>(() => {
     const groups = new Map<string, ExportLibraryItem[]>()
@@ -242,20 +228,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   }, [exportLibraryItems])
 
   const selectedExportCount = selectedExportIndexes.size
-
-  const handleAiPetChange = (petId: string) => {
-    if (!isAiChatPetId(petId)) {
-      return
-    }
-
-    setSelectedAiPetId(petId)
-    try {
-      window.localStorage.setItem(AI_CHAT_PET_STORAGE_KEY, petId)
-      window.dispatchEvent(new Event(AI_CHAT_PET_CHANGED_EVENT))
-    } catch (storageError) {
-      console.error('Failed to save AI chat pet', storageError)
-    }
-  }
 
   React.useEffect(() => {
     if (!open || !showGlobalSettings) {
@@ -554,68 +526,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
           >
             {showGlobalSettings ? 'Application Options' : 'Editor Options'}
           </Typography>
-
-          {showGlobalSettings && (
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                mb: 2,
-                bgcolor: 'background.default',
-                borderRadius: 2,
-              }}
-            >
-              <Typography fontWeight="medium" color="text.primary">
-                AI Chat pet
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Choose the assistant pet shown in AI Chat.
-              </Typography>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '1fr',
-                    sm: 'repeat(3, minmax(0, 1fr))',
-                  },
-                  gap: 1,
-                  mt: 1.5,
-                }}
-              >
-                {aiChatPets.map((pet) => {
-                  const selected = selectedAiPetId === pet.id
-
-                  return (
-                    <Button
-                      key={pet.id}
-                      variant={selected ? 'contained' : 'outlined'}
-                      onClick={() => handleAiPetChange(pet.id)}
-                      sx={{
-                        minHeight: 84,
-                        justifyContent: 'flex-start',
-                        gap: 1,
-                        borderRadius: 2,
-                        textTransform: 'none',
-                      }}
-                    >
-                      <Box
-                        component="img"
-                        src={pet.src}
-                        alt=""
-                        sx={{
-                          width: 58,
-                          height: 58,
-                          objectFit: 'contain',
-                          flex: '0 0 auto',
-                        }}
-                      />
-                      <Typography fontWeight={700}>{pet.label}</Typography>
-                    </Button>
-                  )
-                })}
-              </Box>
-            </Paper>
-          )}
 
           {showGlobalSettings && (
             <Paper

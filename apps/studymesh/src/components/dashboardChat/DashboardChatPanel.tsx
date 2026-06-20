@@ -348,6 +348,7 @@ const DashboardChatPanel = ({
   const [quickCreateMenuAnchor, setQuickCreateMenuAnchor] =
     useState<HTMLElement | null>(null)
   const [chatMenuAnchor, setChatMenuAnchor] = useState<HTMLElement | null>(null)
+  const [petMenuAnchor, setPetMenuAnchor] = useState<HTMLElement | null>(null)
   const [chatSessions, setChatSessions] = useState<DashboardChatSession[]>([])
   const [activeChatId, setActiveChatId] = useState('')
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
@@ -472,9 +473,7 @@ const DashboardChatPanel = ({
     return nextExternalSources
   }
 
-  const updateActiveChatRejectedSources = (
-    source: DashboardExternalSource,
-  ) => {
+  const updateActiveChatRejectedSources = (source: DashboardExternalSource) => {
     const now = Date.now()
     const { currentSessions, sessionId } = getActiveSession()
     const domain = getSourceDomain(source.url)
@@ -674,10 +673,10 @@ const DashboardChatPanel = ({
       currentSession.id === sessionId
         ? {
             ...currentSession,
-            memoryItems: [memoryItem, ...(currentSession.memoryItems || [])].slice(
-              0,
-              24,
-            ),
+            memoryItems: [
+              memoryItem,
+              ...(currentSession.memoryItems || []),
+            ].slice(0, 24),
             updatedAt: Date.now(),
           }
         : currentSession,
@@ -690,9 +689,10 @@ const DashboardChatPanel = ({
     question: string,
     historyMessages: DashboardChatMessage[],
   ): string => {
-    const followUp = /\bwhat about\b|\bhow about\b|\bthey\b|\bthose\b|\bthem\b|\bit\b/i.test(
-      question,
-    )
+    const followUp =
+      /\bwhat about\b|\bhow about\b|\bthey\b|\bthose\b|\bthem\b|\bit\b/i.test(
+        question,
+      )
     if (!followUp) {
       return question
     }
@@ -715,8 +715,7 @@ const DashboardChatPanel = ({
         (value.match(/[a-z0-9][a-z0-9.+#-]*/gi) || [])
           .map((term) => term.toLowerCase())
           .filter(
-            (term) =>
-              term.length > 1 && !QUESTION_TERM_STOPWORDS.has(term),
+            (term) => term.length > 1 && !QUESTION_TERM_STOPWORDS.has(term),
           ),
       ),
     )
@@ -762,8 +761,7 @@ const DashboardChatPanel = ({
       /\bvs\b|\bcompare\b|\bdifference\b|\bsimilar\b|\bcategory\b/i.test(
         question,
       )
-    const asksIntegration =
-      /\bintegrat|work with|connect|run\b/i.test(question)
+    const asksIntegration = /\bintegrat|work with|connect|run\b/i.test(question)
 
     if (asksIntegration) {
       return relevantChunks.some((chunk) => chunk.text.length > 120)
@@ -821,7 +819,9 @@ const DashboardChatPanel = ({
     const { session } = getActiveSession()
     const sessionExternalSources = session?.externalSources || []
     const rejectedUrls = new Set(session?.rejectedExternalSourceUrls || [])
-    const rejectedDomains = new Set(session?.rejectedExternalSourceDomains || [])
+    const rejectedDomains = new Set(
+      session?.rejectedExternalSourceDomains || [],
+    )
     const availableExternalSources = sessionExternalSources.filter((source) => {
       const normalizedUrl = normalizeSourceUrlForDedupe(source.url)
       const domain = getSourceDomain(source.url)
@@ -897,19 +897,24 @@ const DashboardChatPanel = ({
 
     const sourceMatch = selectStoredExternalSources(question)[0]
     if (sourceMatch && scoreExternalSource(sourceMatch, question) > 0) {
-      return `${sourceMatch.title}: ${sourceMatch.summary || sourceMatch.text.slice(
-        0,
-        700,
-      )}`
+      return `${sourceMatch.title}: ${
+        sourceMatch.summary || sourceMatch.text.slice(0, 700)
+      }`
     }
 
-    if (/\bwhat did you say\b|\bearlier\b|\brepeat\b|\bremind me\b/i.test(question)) {
+    if (
+      /\bwhat did you say\b|\bearlier\b|\brepeat\b|\bremind me\b/i.test(
+        question,
+      )
+    ) {
       const latestMemory = session?.memoryItems?.[0]
       if (latestMemory) {
         return `Earlier, I said: ${latestMemory.finalAssistantAnswer}`
       }
 
-      const latestAnswer = [...historyMessages].reverse().find(isUsefulAssistantAnswer)
+      const latestAnswer = [...historyMessages]
+        .reverse()
+        .find(isUsefulAssistantAnswer)
       if (latestAnswer) {
         return `Earlier, I said: ${latestAnswer.content}`
       }
@@ -1072,6 +1077,17 @@ const DashboardChatPanel = ({
     setChatMenuAnchor(null)
   }
 
+  const selectAiChatPet = (petId: AiChatPetId) => {
+    setActivePetId(petId)
+
+    try {
+      window.localStorage.setItem(AI_CHAT_PET_STORAGE_KEY, petId)
+      window.dispatchEvent(new CustomEvent(AI_CHAT_PET_CHANGED_EVENT))
+    } catch (storageError) {
+      console.error('Failed to save dashboard chat pet', storageError)
+    }
+  }
+
   useEffect(() => {
     messagesRef.current = messages
   }, [messages])
@@ -1206,7 +1222,8 @@ const DashboardChatPanel = ({
   ): DashboardExternalSource => {
     const enrichedSource: DashboardExternalSource = {
       ...source,
-      normalizedUrl: source.normalizedUrl || normalizeSourceUrlForDedupe(source.url),
+      normalizedUrl:
+        source.normalizedUrl || normalizeSourceUrlForDedupe(source.url),
       domain: source.domain || getSourceDomain(source.url),
       summary: source.summary || source.text.slice(0, 500),
       coveredEntities:
@@ -1333,7 +1350,8 @@ const DashboardChatPanel = ({
     } catch (err) {
       updateMessage(gapMessageId, (message) => ({
         ...message,
-        content: 'I could not find a reliable web source for the missing topic.',
+        content:
+          'I could not find a reliable web source for the missing topic.',
         webLookup: {
           status: 'failed',
           error:
@@ -1429,10 +1447,7 @@ const DashboardChatPanel = ({
         externalSourceIds: selectedExternalSourceIds,
         pending: false,
       }))
-      updateLatestLookupDisplayedSources(
-        externalSourceIds,
-        usedWebSourceIds,
-      )
+      updateLatestLookupDisplayedSources(externalSourceIds, usedWebSourceIds)
       if (!result.needsExternalSource) {
         rememberFinalAnswer({
           userQuestion: question,
@@ -1440,10 +1455,7 @@ const DashboardChatPanel = ({
           usedSourceIds: usedWebSourceIds,
         })
       }
-      if (
-        result.needsExternalSource &&
-        externalSourceIds.length === 0
-      ) {
+      if (result.needsExternalSource && externalSourceIds.length === 0) {
         void runExternalSourceLookup(
           question,
           pendingMessageId,
@@ -1587,9 +1599,13 @@ const DashboardChatPanel = ({
       webLookup: { status: 'searching' },
     }
     const previousMessages = messagesRef.current
-    replaceActiveChatMessages([...previousMessages, userMessage, pendingMessage], undefined, {
-      scrollToBottom: true,
-    })
+    replaceActiveChatMessages(
+      [...previousMessages, userMessage, pendingMessage],
+      undefined,
+      {
+        scrollToBottom: true,
+      },
+    )
     setDraft('')
     setError('')
     void runExternalSourceLookup(question, pendingMessage.id, previousMessages)
@@ -2086,9 +2102,7 @@ const DashboardChatPanel = ({
           p: 1,
           border: 1,
           borderColor:
-            message.webLookup.status === 'failed'
-              ? 'error.light'
-              : 'divider',
+            message.webLookup.status === 'failed' ? 'error.light' : 'divider',
           borderRadius: 1,
           bgcolor:
             message.webLookup.status === 'failed'
@@ -2117,11 +2131,7 @@ const DashboardChatPanel = ({
                       component="button"
                       type="button"
                       onClick={() =>
-                        window.open(
-                          source.url,
-                          '_blank',
-                          'noopener,noreferrer',
-                        )
+                        window.open(source.url, '_blank', 'noopener,noreferrer')
                       }
                       aria-label={`Open found source ${source.title}`}
                       sx={{
@@ -2295,38 +2305,57 @@ const DashboardChatPanel = ({
           borderColor: 'divider',
         }}
       >
-        <Stack
-          direction="row"
-          spacing={0.75}
-          alignItems="center"
-          sx={{ minWidth: 0 }}
+        <Button
+          onClick={(event) => setPetMenuAnchor(event.currentTarget)}
+          aria-haspopup="dialog"
+          aria-expanded={Boolean(petMenuAnchor)}
+          aria-label="Choose AI companion"
+          sx={{
+            minWidth: 0,
+            p: 0.5,
+            pr: 0.75,
+            justifyContent: 'flex-start',
+            borderRadius: 1.25,
+            color: 'text.primary',
+            textTransform: 'none',
+            '&:hover': {
+              bgcolor: alpha(theme.palette.primary.main, 0.08),
+            },
+          }}
         >
-          <Box
-            component="img"
-            src={getAiChatPetSrc(activePet, 'face')}
-            alt=""
-            sx={{
-              width: 34,
-              height: 34,
-              objectFit: 'cover',
-              borderRadius: '50%',
-              flex: '0 0 auto',
-            }}
-          />
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" fontWeight={600} noWrap>
-              AI Chat
-            </Typography>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              noWrap
-              sx={{ display: 'block', lineHeight: 1.1 }}
-            >
-              {activeChatTitle}
-            </Typography>
-          </Box>
-        </Stack>
+          <Stack
+            direction="row"
+            spacing={0.75}
+            alignItems="center"
+            sx={{ minWidth: 0 }}
+          >
+            <Box
+              component="img"
+              src={getAiChatPetSrc(activePet, 'face')}
+              alt=""
+              sx={{
+                width: 34,
+                height: 34,
+                objectFit: 'cover',
+                borderRadius: '50%',
+                flex: '0 0 auto',
+              }}
+            />
+            <Box sx={{ minWidth: 0, textAlign: 'left' }}>
+              <Typography variant="subtitle2" fontWeight={600} noWrap>
+                AI Chat
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                noWrap
+                sx={{ display: 'block', lineHeight: 1.1 }}
+              >
+                {activeChatTitle}
+              </Typography>
+            </Box>
+          </Stack>
+        </Button>
         <Stack direction="row" spacing={0.5} alignItems="center">
           {messages.length > 0 && (
             <Tooltip title="New chat">
@@ -2397,6 +2426,75 @@ const DashboardChatPanel = ({
           ) : null}
         </Stack>
       </Box>
+      <Popover
+        open={Boolean(petMenuAnchor)}
+        anchorEl={petMenuAnchor}
+        onClose={() => setPetMenuAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        PaperProps={{
+          sx: {
+            mt: 0.75,
+            p: 1,
+            bgcolor: alpha(theme.palette.background.paper, 0.78),
+            backdropFilter: 'blur(14px)',
+            border: 1,
+            borderColor: alpha(theme.palette.divider, 0.74),
+            borderRadius: 2,
+            boxShadow: `0 18px 42px ${alpha(theme.palette.common.black, 0.2)}`,
+          },
+        }}
+      >
+        <Stack
+          direction="column"
+          spacing={1}
+          role="listbox"
+          aria-label="AI companions"
+        >
+          {aiChatPets.map((pet) => {
+            const selected = pet.id === activePetId
+
+            return (
+              <Tooltip key={pet.id} title={pet.label} placement="right">
+                <IconButton
+                  onClick={() => selectAiChatPet(pet.id)}
+                  aria-label={`Choose ${pet.label}`}
+                  aria-selected={selected}
+                  role="option"
+                  sx={{
+                    width: 54,
+                    height: 54,
+                    p: 0.35,
+                    border: 2,
+                    borderColor: selected
+                      ? theme.palette.primary.main
+                      : alpha(theme.palette.divider, 0.7),
+                    bgcolor: selected
+                      ? alpha(theme.palette.primary.main, 0.12)
+                      : alpha(theme.palette.background.paper, 0.4),
+                    '&:hover': {
+                      borderColor: alpha(theme.palette.primary.main, 0.72),
+                      bgcolor: alpha(theme.palette.primary.main, 0.12),
+                    },
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={getAiChatPetSrc(pet, 'face')}
+                    alt=""
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: '50%',
+                    }}
+                  />
+                </IconButton>
+              </Tooltip>
+            )
+          })}
+        </Stack>
+      </Popover>
       <Menu
         anchorEl={chatMenuAnchor}
         open={Boolean(chatMenuAnchor)}

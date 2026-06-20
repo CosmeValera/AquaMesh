@@ -2,6 +2,8 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import DashboardChatPanel, {
+  AI_CHAT_PET_CHANGED_EVENT,
+  AI_CHAT_PET_STORAGE_KEY,
   aiChatPets,
   getAiChatPetSrc,
 } from '../../../../src/components/dashboardChat/DashboardChatPanel'
@@ -150,6 +152,48 @@ beforeEach(() => {
 })
 
 describe('DashboardChatPanel quick create menu', () => {
+  it('opens a translucent face-only companion picker from the chat header', () => {
+    renderPanel()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Choose AI companion' }))
+
+    expect(
+      screen.getByRole('listbox', { name: 'AI companions' }),
+    ).toBeInTheDocument()
+    for (const pet of aiChatPets) {
+      expect(
+        screen.getByRole('option', { name: `Choose ${pet.label}` }),
+      ).toBeInTheDocument()
+    }
+
+    fireEvent.click(screen.getByRole('option', { name: 'Choose Parrot' }))
+
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      AI_CHAT_PET_STORAGE_KEY,
+      'parrot',
+    )
+    expect(
+      screen.getByRole('listbox', { name: 'AI companions' }),
+    ).toBeInTheDocument()
+  })
+
+  it('refreshes the active companion face when the shared pet event fires', () => {
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === AI_CHAT_PET_STORAGE_KEY ? 'parrot' : null,
+    )
+
+    const { container } = renderPanel()
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent(AI_CHAT_PET_CHANGED_EVENT))
+    })
+
+    expect(container.querySelector('img')).toHaveAttribute(
+      'src',
+      getAiChatPetSrc(aiChatPets[2], 'face'),
+    )
+  })
+
   it('keeps the empty chat compact and shows its prompt ideas directly', () => {
     renderPanel()
 
@@ -309,9 +353,7 @@ describe('DashboardChatPanel chat management', () => {
       screen.getByRole('button', { name: 'Send dashboard question' }),
     )
 
-    expect(
-      await screen.findByText('Hi! Hi!'),
-    ).toBeInTheDocument()
+    expect(await screen.findByText('Hi! Hi!')).toBeInTheDocument()
     expect(askDashboardSources).not.toHaveBeenCalled()
     expect(fetchDashboardExternalSource).not.toHaveBeenCalled()
     expect(screen.queryByText(/searching web/i)).not.toBeInTheDocument()
@@ -371,9 +413,10 @@ describe('DashboardChatPanel chat management', () => {
         : null,
     )
     const Harness = () => {
-      const [panelMessages, setPanelMessages] = React.useState<
-        React.ComponentProps<typeof DashboardChatPanel>['messages']
-      >(messages)
+      const [panelMessages, setPanelMessages] =
+        React.useState<
+          React.ComponentProps<typeof DashboardChatPanel>['messages']
+        >(messages)
 
       return (
         <DashboardChatPanel
@@ -396,7 +439,9 @@ describe('DashboardChatPanel chat management', () => {
     )
 
     expect(
-      await screen.findByText(/Earlier, I said: AWS means Amazon Web Services/i),
+      await screen.findByText(
+        /Earlier, I said: AWS means Amazon Web Services/i,
+      ),
     ).toBeInTheDocument()
     expect(askDashboardSources).not.toHaveBeenCalled()
     expect(fetchDashboardExternalSource).not.toHaveBeenCalled()
@@ -744,7 +789,9 @@ describe('DashboardChatPanel chat management', () => {
       screen.getByRole('button', { name: 'Send dashboard question' }),
     )
 
-    expect(await screen.findByText('Web search is not configured.')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Web search is not configured.'),
+    ).toBeInTheDocument()
     expect(askDashboardSources).toHaveBeenCalledTimes(1)
   })
 
@@ -781,9 +828,10 @@ describe('DashboardChatPanel chat management', () => {
       },
     ]
     const Harness = () => {
-      const [panelMessages, setPanelMessages] = React.useState<
-        React.ComponentProps<typeof DashboardChatPanel>['messages']
-      >(initialMessages)
+      const [panelMessages, setPanelMessages] =
+        React.useState<
+          React.ComponentProps<typeof DashboardChatPanel>['messages']
+        >(initialMessages)
 
       return (
         <DashboardChatPanel
@@ -799,7 +847,8 @@ describe('DashboardChatPanel chat management', () => {
     render(<Harness />)
     fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
       target: {
-        value: 'what about rundeck and n8n? are they similar to terraform and ansible?',
+        value:
+          'what about rundeck and n8n? are they similar to terraform and ansible?',
       },
     })
     fireEvent.click(
@@ -807,8 +856,8 @@ describe('DashboardChatPanel chat management', () => {
     )
 
     await waitFor(() => expect(fetchDashboardExternalSource).toHaveBeenCalled())
-    const lookupQuestion =
-      vi.mocked(fetchDashboardExternalSource).mock.calls[0][0].question
+    const lookupQuestion = vi.mocked(fetchDashboardExternalSource).mock
+      .calls[0][0].question
     expect(lookupQuestion).toContain('what about rundeck and n8n')
     expect(lookupQuestion.toLowerCase()).not.toContain('summarize')
   })

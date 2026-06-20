@@ -6,6 +6,7 @@ import DashboardChatPanel, {
   getAiChatPetSrc,
 } from '../../../../src/components/dashboardChat/DashboardChatPanel'
 import { askDashboardSources } from '../../../../src/dashboardChat/askDashboard'
+import { fetchDashboardExternalSource } from '../../../../src/dashboardChat/externalSources'
 import type { StateDashboard } from '../../../../src/state/store'
 
 vi.mock('../../../../src/quickCreate/ai', () => ({
@@ -16,6 +17,11 @@ vi.mock('../../../../src/quickCreate/ai', () => ({
 vi.mock('../../../../src/dashboardChat/askDashboard', () => ({
   __esModule: true,
   askDashboardSources: vi.fn(),
+}))
+
+vi.mock('../../../../src/dashboardChat/externalSources', () => ({
+  __esModule: true,
+  fetchDashboardExternalSource: vi.fn(),
 }))
 
 vi.mock(
@@ -88,6 +94,9 @@ const renderPanel = (
     onOpenSource?: React.ComponentProps<
       typeof DashboardChatPanel
     >['onOpenSource']
+    onAddExternalSourceToGuide?: React.ComponentProps<
+      typeof DashboardChatPanel
+    >['onAddExternalSourceToGuide']
     supportsStudyGuideCreateScope?: boolean
     messages?: React.ComponentProps<typeof DashboardChatPanel>['messages']
   } = {},
@@ -100,12 +109,16 @@ const renderPanel = (
       onClose={vi.fn()}
       onQuickCreatePage={options.onQuickCreatePage ?? vi.fn()}
       onOpenSource={options.onOpenSource}
+      onAddExternalSourceToGuide={options.onAddExternalSourceToGuide}
       supportsStudyGuideCreateScope={options.supportsStudyGuideCreateScope}
     />,
   )
 
 beforeEach(() => {
   HTMLElement.prototype.scrollTo = vi.fn()
+  vi.mocked(localStorage.getItem).mockReset()
+  vi.mocked(localStorage.getItem).mockReturnValue(null)
+  vi.mocked(localStorage.setItem).mockReset()
   vi.mocked(askDashboardSources).mockReset()
   vi.mocked(askDashboardSources).mockResolvedValue({
     answer: 'Use the dashboard source notes [1].',
@@ -120,7 +133,20 @@ beforeEach(() => {
         dashboardTitle: 'Source Notes',
       },
     ],
+    needsExternalSource: false,
   })
+  vi.mocked(fetchDashboardExternalSource).mockReset()
+  vi.mocked(fetchDashboardExternalSource).mockResolvedValue([
+    {
+      id: 'web-source-1',
+      url: 'https://example.com/ansible',
+      title: 'Ansible guide',
+      text: 'Ansible automates provisioning and configuration management.',
+      searchQuery: 'How does Ansible compare? Biology Dashboard',
+      score: 0.9,
+      fetchedAt: 1,
+    },
+  ])
 })
 
 describe('DashboardChatPanel quick create menu', () => {
@@ -480,6 +506,240 @@ describe('DashboardChatPanel chat management', () => {
       ]),
     )
     await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
+  })
+
+  it('searches web automatically after a source-gap answer and retries with the found source', async () => {
+    const onMessagesChange = vi.fn()
+    vi.mocked(askDashboardSources)
+      .mockResolvedValueOnce({
+        answer:
+          'The dashboard sources do not contain enough information about Ansible.',
+        sourceRefs: [],
+        needsExternalSource: true,
+      })
+      .mockResolvedValueOnce({
+        answer: 'Ansible automates provisioning [2].',
+        sourceRefs: [
+          {
+            citationNumber: 2,
+            chunkId: 'web-source-1',
+            title: 'Ansible guide',
+            type: 'web source',
+            textPreview:
+              'Ansible automates provisioning and configuration management.',
+            origin: 'web',
+            url: 'https://example.com/ansible',
+          },
+        ],
+        needsExternalSource: false,
+      })
+    const Harness = () => {
+      const [panelMessages, setPanelMessages] = React.useState<
+        React.ComponentProps<typeof DashboardChatPanel>['messages']
+      >([])
+
+      return (
+        <DashboardChatPanel
+          dashboard={dashboardWithContext}
+          messages={panelMessages}
+          onMessagesChange={(nextMessages) => {
+            onMessagesChange(nextMessages)
+            setPanelMessages(nextMessages)
+          }}
+          onClose={vi.fn()}
+          onQuickCreatePage={vi.fn()}
+        />
+      )
+    }
+
+    render(<Harness />)
+
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: 'How does Ansible compare?' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() =>
+      expect(fetchDashboardExternalSource).toHaveBeenCalledWith({
+        question: 'How does Ansible compare?',
+        dashboardTitle: 'Biology Dashboard',
+        contextSummary: expect.stringContaining('Photosynthesis notes'),
+      }),
+    )
+    await waitFor(() => expect(askDashboardSources).toHaveBeenCalledTimes(2))
+    expect(
+      vi.mocked(askDashboardSources).mock.calls[1][0].contextText,
+    ).toContain('Ansible automates provisioning')
+    expect(onMessagesChange).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ role: 'assistant', pending: true }),
+      ]),
+    )
+    expect(screen.queryByText('Add web source')).not.toBeInTheDocument()
+    expect(await screen.findByText('Found source')).toBeInTheDocument()
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(null)
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Open found source Ansible guide' }),
+    )
+    expect(openSpy).toHaveBeenCalledWith(
+      'https://example.com/ansible',
+      '_blank',
+      'noopener,noreferrer',
+    )
+  })
+
+  it('shows a non-blocking error card when automatic web lookup fails', async () => {
+    vi.mocked(askDashboardSources).mockResolvedValueOnce({
+      answer:
+        'The dashboard sources do not contain enough information about Ansible.',
+      sourceRefs: [],
+      needsExternalSource: true,
+    })
+    vi.mocked(fetchDashboardExternalSource).mockRejectedValueOnce(
+      new Error('Web search is not configured.'),
+    )
+    const Harness = () => {
+      const [panelMessages, setPanelMessages] = React.useState<
+        React.ComponentProps<typeof DashboardChatPanel>['messages']
+      >([])
+
+      return (
+        <DashboardChatPanel
+          dashboard={dashboardWithContext}
+          messages={panelMessages}
+          onMessagesChange={setPanelMessages}
+          onClose={vi.fn()}
+          onQuickCreatePage={vi.fn()}
+        />
+      )
+    }
+
+    render(<Harness />)
+
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: 'How does Ansible compare?' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    expect(await screen.findByText('Web search is not configured.')).toBeInTheDocument()
+    expect(askDashboardSources).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows Add as page only when Study Guide supplies a web-source callback', async () => {
+    const onAddExternalSourceToGuide = vi.fn()
+    const messages = [
+      {
+        id: 'assistant-1',
+        role: 'assistant' as const,
+        content: 'The dashboard sources do not contain enough information.',
+        webLookup: { status: 'found' as const, sourceId: 'web-source-1' },
+        createdAt: 1,
+      },
+    ]
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === 'studymesh-dashboard-chat-sessions-dashboard-1'
+        ? JSON.stringify([
+            {
+              id: 'chat-1',
+              title: 'Ansible',
+              messages,
+              externalSources: [
+                {
+                  id: 'web-source-1',
+                  url: 'https://example.com/ansible',
+                  title: 'Ansible guide',
+                  text: 'Ansible automates provisioning and configuration management.',
+                  searchQuery: 'Ansible',
+                  fetchedAt: 1,
+                },
+              ],
+              createdAt: 1,
+              updatedAt: 1,
+            },
+          ])
+        : null,
+    )
+
+    renderPanel({ messages, onAddExternalSourceToGuide })
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Add as page' }))
+
+    expect(onAddExternalSourceToGuide).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'web-source-1' }),
+    )
+  })
+
+  it('rejects the previous found source and searches again when asked for another source', async () => {
+    const messages = [
+      {
+        id: 'user-1',
+        role: 'user' as const,
+        content: 'How does Ansible compare?',
+        createdAt: 1,
+      },
+      {
+        id: 'assistant-1',
+        role: 'assistant' as const,
+        content: 'Found source',
+        webLookup: { status: 'found' as const, sourceId: 'web-source-bad' },
+        createdAt: 2,
+      },
+    ]
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === 'studymesh-dashboard-chat-sessions-dashboard-1'
+        ? JSON.stringify([
+            {
+              id: 'chat-1',
+              title: 'How does Ansible compare?',
+              messages,
+              externalSources: [
+                {
+                  id: 'web-source-bad',
+                  url: 'https://bad.example/ansible-alternatives',
+                  title: 'Alternatives page',
+                  text: 'Thin Ansible alternatives content.',
+                  searchQuery: 'Ansible',
+                  fetchedAt: 1,
+                },
+              ],
+              createdAt: 1,
+              updatedAt: 2,
+            },
+          ])
+        : null,
+    )
+    vi.mocked(fetchDashboardExternalSource).mockResolvedValueOnce([
+      {
+        id: 'web-source-good',
+        url: 'https://docs.example/ansible',
+        title: 'Ansible documentation',
+        text: 'Ansible automates configuration management with playbooks.',
+        searchQuery: 'Ansible official documentation',
+        fetchedAt: 3,
+      },
+    ])
+    renderPanel({ messages })
+
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: "don't use that source, try another source" },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() =>
+      expect(fetchDashboardExternalSource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          question: expect.stringContaining('How does Ansible compare?'),
+          rejectedDomains: ['bad.example'],
+          rejectedUrls: ['https://bad.example/ansible-alternatives'],
+        }),
+      ),
+    )
   })
 
   it('only offers delete inside Chats and closes the menu after deleting', async () => {

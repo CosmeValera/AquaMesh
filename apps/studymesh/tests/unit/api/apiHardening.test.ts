@@ -8,6 +8,7 @@ import hostedAiHandler, {
   DEFAULT_CEREBRAS_MODEL,
   getHostedCerebrasModel,
 } from '../../../../../api/hosted-ai'
+import dashboardSourceHandler from '../../../../../api/dashboard-source'
 
 const makeResponse = () => {
   const headers = new Map<string, string>()
@@ -133,6 +134,264 @@ describe('API payment and hosted AI hardening', () => {
     expect(response.body).toMatchObject({
       ok: false,
       error: { code: 'invalid_request' },
+    })
+  })
+
+  it('rejects bad Origin in dashboard source route', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('STUDYMESH_APP_URL', 'https://app.studymesh.test')
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://evil.example',
+        },
+        body: {
+          question: 'What is Ansible?',
+          dashboardTitle: 'Infrastructure',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(403)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: { code: 'invalid_request' },
+    })
+  })
+
+  it('requires Tavily configuration for dashboard source search', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', '')
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'What is Ansible?',
+          dashboardTitle: 'Infrastructure',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(500)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: { code: 'server_error' },
+    })
+  })
+
+  it('rejects invalid dashboard source search requests', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: { question: '' },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(400)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: { code: 'invalid_request' },
+    })
+  })
+
+  it('requires auth for dashboard source search in production', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('STUDYMESH_APP_URL', 'https://app.studymesh.test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {
+          origin: 'https://app.studymesh.test',
+        },
+        body: {
+          question: 'What is Ansible?',
+          dashboardTitle: 'Infrastructure',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(401)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: { code: 'not_authenticated' },
+    })
+  })
+
+  it('maps Tavily dashboard source search results into web source text', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            results: [
+              {
+                title: 'Ansible docs',
+                url: 'https://docs.example/ansible',
+                raw_content:
+                  'Ansible automates provisioning and configuration management for repeatable infrastructure work with playbooks and inventories.',
+                score: 0.84,
+                favicon: 'https://docs.example/favicon.ico',
+              },
+            ],
+          }),
+        ),
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'What is Ansible?',
+          dashboardTitle: 'Infrastructure',
+          contextSummary: 'Provisioning notes',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.tavily.com/search',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"include_raw_content":"text"'),
+      }),
+    )
+    expect(fetchMock.mock.calls[0][1]?.body).not.toContain(
+      'Provisioning notes',
+    )
+    expect(response.body).toMatchObject({
+      ok: true,
+      source: {
+        title: 'Ansible docs',
+        url: 'https://docs.example/ansible',
+        text: expect.stringContaining('Ansible automates provisioning'),
+        searchQuery: expect.stringContaining('What is Ansible?'),
+        score: 0.84,
+        favicon: 'https://docs.example/favicon.ico',
+      },
+    })
+  })
+
+  it('prioritizes missing question terms over already-covered context topics', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            results: [
+              {
+                title: 'n8n vs Rundeck: Which Automation Tool Wins?',
+                url: 'https://example.test/n8n-rundeck',
+                raw_content:
+                  'n8n and Rundeck are compared here. Ansible is only briefly mentioned as something Rundeck can run.',
+                score: 0.95,
+              },
+              {
+                title: 'Ansible and Terraform compared with automation tools',
+                url: 'https://example.test/ansible-terraform',
+                raw_content:
+                  'Ansible focuses on configuration management and task automation, while Terraform focuses on declarative infrastructure provisioning. Both can be orchestrated by other automation platforms.',
+                score: 0.75,
+              },
+            ],
+          }),
+        ),
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'difference between n8n and rundeck vs ansible or terraform',
+          dashboardTitle: 'Automation tools',
+          contextSummary:
+            'n8n is a visual workflow automation tool. Rundeck is an operations job runner.',
+        },
+      },
+      res,
+    )
+
+    expect(String(fetchMock.mock.calls[0][1]?.body).toLowerCase()).toContain(
+      'ansible official documentation',
+    )
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      source: {
+        title: 'Ansible and Terraform compared with automation tools',
+        url: 'https://example.test/ansible-terraform',
+      },
+    })
+  })
+
+  it('returns usable error when Tavily finds no readable source', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(
+            JSON.stringify({
+              results: [{ title: 'Thin result', url: 'https://example.test' }],
+            }),
+          ),
+        }),
+      ),
+    )
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'What is Ansible?',
+          dashboardTitle: 'Infrastructure',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(415)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: { code: 'unsupported_content' },
     })
   })
 

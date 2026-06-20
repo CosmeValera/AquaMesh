@@ -25,6 +25,7 @@ import DashboardChatPanel, {
   type DashboardAnswerSourceRef,
   type DashboardChatMessage,
 } from '../dashboardChat/DashboardChatPanel'
+import type { DashboardExternalSource } from '../../dashboardChat/externalSources'
 import TopNavBar from '../topnavbar/TopNavBar'
 import Main from '../Main'
 import HostedAiIntroModal from '../hostedAi/HostedAiIntroModal'
@@ -253,6 +254,22 @@ const GuideWorkspacePage = () => {
     appendMarkdownPage('AI Chat note', contentWithLinks, 'chat')
   }
 
+  const addExternalSourceToGuide = (source: DashboardExternalSource) => {
+    const excerpt =
+      source.text.length > 4000
+        ? `${source.text.slice(0, 4000).trim()}...`
+        : source.text
+    const markdown = `# ${source.title}
+
+Source: [${source.url}](${source.url})
+
+Search query: ${source.searchQuery}
+
+${excerpt}`
+
+    appendMarkdownPage(source.title || 'Web source', markdown, 'chat')
+  }
+
   const openStudyGuidePageKey = (dashboardKey: string) => {
     if (!record) {
       return
@@ -452,6 +469,7 @@ const GuideWorkspacePage = () => {
         }
         showCloseButton
         onAddAssistantMessageToGuide={addAssistantMessageToGuide}
+        onAddExternalSourceToGuide={addExternalSourceToGuide}
         onOpenSource={openChatSource}
         onQuickCreatePage={quickCreatePage}
         supportsStudyGuideCreateScope

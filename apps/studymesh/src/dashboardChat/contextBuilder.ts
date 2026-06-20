@@ -6,6 +6,8 @@ export interface DashboardSourceChunk {
   title: string
   type: string
   text: string
+  origin?: 'dashboard' | 'web'
+  url?: string
   dashboardKey?: string
   dashboardTitle?: string
   dashboardIndex?: number
@@ -353,13 +355,13 @@ export const buildDashboardChatContext = (
           ? [selectedDashboard]
           : []
         : selectedDashboard
-        ? [
-            selectedDashboard,
-            ...dashboards.filter(
-              (item) => item.dashboardKey !== selectedDashboard.dashboardKey,
-            ),
-          ]
-        : dashboards
+          ? [
+              selectedDashboard,
+              ...dashboards.filter(
+                (item) => item.dashboardKey !== selectedDashboard.dashboardKey,
+              ),
+            ]
+          : dashboards
 
     orderedDashboards.forEach((studyDashboard, index) => {
       const beforeCount = chunks.length

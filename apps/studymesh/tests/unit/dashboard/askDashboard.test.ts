@@ -124,12 +124,53 @@ describe('askDashboardSources', () => {
           title: 'Lesson notes',
           type: 'dashboard',
           textPreview: 'Photosynthesis turns light into chemical energy.',
+          origin: undefined,
+          url: undefined,
           dashboardKey: undefined,
           dashboardTitle: undefined,
           dashboardIndex: undefined,
         },
       ],
+      needsExternalSource: false,
     })
+  })
+
+  it('marks source gaps and strips the machine marker from visible answers', async () => {
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
+      provider: 'hosted',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+    vi.mocked(callHostedAiModel).mockResolvedValue(
+      'SOURCE_GAP: The dashboard sources do not contain enough information about Ansible.',
+    )
+
+    const result = await askDashboardSources(baseOptions)
+
+    const prompt = vi.mocked(callHostedAiModel).mock.calls[0][0].parts[0].text
+    expect(prompt).toContain('start your answer with "SOURCE_GAP:"')
+    expect(result).toMatchObject({
+      answer:
+        'The dashboard sources do not contain enough information about Ansible.',
+      needsExternalSource: true,
+    })
+  })
+
+  it('marks source gaps from legacy insufficient-context wording', async () => {
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
+      provider: 'hosted',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+    vi.mocked(callHostedAiModel).mockResolvedValue(
+      'The dashboard sources do not contain enough information.',
+    )
+
+    const result = await askDashboardSources(baseOptions)
+
+    expect(result.needsExternalSource).toBe(true)
   })
 
   it('asks models to cite numbered dashboard sources', async () => {

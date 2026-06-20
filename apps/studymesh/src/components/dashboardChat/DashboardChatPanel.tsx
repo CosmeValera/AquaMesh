@@ -43,6 +43,7 @@ import ReplayIcon from '@mui/icons-material/Replay'
 import { StateDashboard } from '../../state/store'
 import {
   buildDashboardChatContext,
+  type DashboardSourceChunk,
   formatDashboardChatContext,
   selectDashboardChatChunks,
 } from '../../dashboardChat/contextBuilder'
@@ -50,6 +51,10 @@ import {
   askDashboardSources,
   type DashboardAnswerSourceRef,
 } from '../../dashboardChat/askDashboard'
+import {
+  fetchDashboardExternalSource,
+  type DashboardExternalSource,
+} from '../../dashboardChat/externalSources'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
 import {
   quickCreateActionGroups,
@@ -70,6 +75,14 @@ export interface DashboardChatMessage {
   content: string
   createdAt: number
   sourceRefs?: DashboardAnswerSourceRef[]
+  needsExternalSource?: boolean
+  webLookup?: {
+    status: 'searching' | 'found' | 'failed'
+    sourceId?: string
+    sourceIds?: string[]
+    error?: string
+  }
+  externalSourceIds?: string[]
   pending?: boolean
   promptBranchId?: string
   promptBranchIndex?: number
@@ -80,6 +93,9 @@ interface DashboardChatSession {
   id: string
   title: string
   messages: DashboardChatMessage[]
+  externalSources?: DashboardExternalSource[]
+  rejectedExternalSourceUrls?: string[]
+  rejectedExternalSourceDomains?: string[]
   branchSnapshots?: Record<string, DashboardChatMessage[][]>
   createdAt: number
   updatedAt: number
@@ -92,6 +108,7 @@ interface DashboardChatPanelProps {
   onClose: () => void
   showCloseButton?: boolean
   onAddAssistantMessageToGuide?: (message: DashboardChatMessage) => void
+  onAddExternalSourceToGuide?: (source: DashboardExternalSource) => void
   onOpenSource?: (source: DashboardAnswerSourceRef) => void
   onQuickCreatePage?: (request: QuickCreateActionRequest) => Promise<void>
   supportsStudyGuideCreateScope?: boolean
@@ -125,6 +142,7 @@ const createEmptyChatSession = (): DashboardChatSession => ({
   id: makeChatSessionId(),
   title: 'New chat',
   messages: [],
+  externalSources: [],
   branchSnapshots: {},
   createdAt: Date.now(),
   updatedAt: Date.now(),
@@ -148,6 +166,53 @@ const quickCreateIcons: Record<QuickCreateActionId, React.ReactNode> = {
   flashcards: <StyleIcon fontSize="small" />,
   improvedNotes: <AutoStoriesIcon fontSize="small" />,
 }
+
+const SOURCE_REJECTION_PATTERN =
+  /\b(?:don't|dont|do not|stop)\s+use\b|\btry another\b|\banother source\b|\bwrong source\b|\bbad source\b|\bnot that source\b/i
+const QUESTION_TERM_STOPWORDS = new Set([
+  'about',
+  'and',
+  'between',
+  'compare',
+  'comparison',
+  'difference',
+  'different',
+  'does',
+  'from',
+  'guide',
+  'into',
+  'lesson',
+  'or',
+  'source',
+  'study',
+  'the',
+  'their',
+  'this',
+  'tool',
+  'tools',
+  'use',
+  'versus',
+  'vs',
+  'what',
+  'with',
+])
+const TECHNICAL_EVIDENCE_TERMS = [
+  'automation',
+  'workflow',
+  'integration',
+  'configuration',
+  'orchestration',
+  'infrastructure',
+  'provision',
+  'state',
+  'runbook',
+  'job',
+  'schedule',
+  'api',
+  'deploy',
+  'manage',
+  'service',
+]
 
 type AiChatPetId = 'axolotl' | 'dolphin' | 'parrot'
 
@@ -237,6 +302,7 @@ const DashboardChatPanel = ({
   onClose,
   showCloseButton = true,
   onAddAssistantMessageToGuide,
+  onAddExternalSourceToGuide,
   onOpenSource,
   onQuickCreatePage,
   supportsStudyGuideCreateScope = false,
@@ -354,6 +420,237 @@ const DashboardChatPanel = ({
       currentSessions,
       sessionId,
       session: currentSessions.find(({ id }) => id === sessionId),
+    }
+  }
+
+  const updateActiveChatExternalSources = (
+    updater: (
+      externalSources: DashboardExternalSource[],
+    ) => DashboardExternalSource[],
+  ): DashboardExternalSource[] => {
+    const now = Date.now()
+    const { currentSessions, sessionId } = getActiveSession()
+    let nextExternalSources: DashboardExternalSource[] = []
+    const nextSessions = currentSessions.map((session) => {
+      if (session.id !== sessionId) {
+        return session
+      }
+
+      nextExternalSources = updater(session.externalSources || [])
+      return {
+        ...session,
+        externalSources: nextExternalSources,
+        updatedAt: now,
+      }
+    })
+    persistChatSessions(nextSessions)
+    return nextExternalSources
+  }
+
+  const updateActiveChatRejectedSources = (
+    source: DashboardExternalSource,
+  ) => {
+    const now = Date.now()
+    const { currentSessions, sessionId } = getActiveSession()
+    const domain = getSourceDomain(source.url)
+    const normalizedUrl = normalizeSourceUrlForDedupe(source.url)
+    const nextSessions = currentSessions.map((session) =>
+      session.id === sessionId
+        ? {
+            ...session,
+            rejectedExternalSourceUrls: Array.from(
+              new Set([
+                ...(session.rejectedExternalSourceUrls || []),
+                normalizedUrl,
+              ]),
+            ),
+            rejectedExternalSourceDomains: domain
+              ? Array.from(
+                  new Set([
+                    ...(session.rejectedExternalSourceDomains || []),
+                    domain,
+                  ]),
+                )
+              : session.rejectedExternalSourceDomains || [],
+            externalSources: (session.externalSources || []).filter(
+              (candidate) =>
+                normalizeSourceUrlForDedupe(candidate.url) !== normalizedUrl,
+            ),
+            updatedAt: now,
+          }
+        : session,
+    )
+    persistChatSessions(nextSessions)
+  }
+
+  const externalSourceToChunk = (
+    source: DashboardExternalSource,
+  ): DashboardSourceChunk => ({
+    id: source.id,
+    title: source.title,
+    type: 'web source',
+    text: source.text,
+    origin: 'web',
+    url: source.url,
+  })
+
+  const normalizeSourceUrlForDedupe = (value: string): string => {
+    try {
+      const url = new URL(value)
+      url.hash = ''
+      return url.toString().toLowerCase()
+    } catch {
+      return value.trim().toLowerCase()
+    }
+  }
+
+  const getSourceDomain = (value: string): string => {
+    try {
+      return new URL(value).hostname.replace(/^www\./, '').toLowerCase()
+    } catch {
+      return ''
+    }
+  }
+
+  const getRejectedSourceFilters = () => {
+    const { session } = getActiveSession()
+    const rejectedUrls = session?.rejectedExternalSourceUrls || []
+    const rejectedDomains = session?.rejectedExternalSourceDomains || []
+    return {
+      ...(rejectedUrls.length ? { rejectedUrls } : {}),
+      ...(rejectedDomains.length ? { rejectedDomains } : {}),
+    }
+  }
+
+  const expandQuestionWithChatContext = (
+    question: string,
+    historyMessages: DashboardChatMessage[],
+  ): string => {
+    const recentUserMessages = historyMessages
+      .filter((message) => message.role === 'user')
+      .slice(-3)
+      .map((message) => message.content)
+    return Array.from(new Set([...recentUserMessages, question])).join('\n')
+  }
+
+  const extractQuestionTerms = (value: string): string[] =>
+    Array.from(
+      new Set(
+        (value.match(/[a-z0-9][a-z0-9.+#-]*/gi) || [])
+          .map((term) => term.toLowerCase())
+          .filter(
+            (term) =>
+              term.length > 1 && !QUESTION_TERM_STOPWORDS.has(term),
+          ),
+      ),
+    )
+
+  const requiredConceptsForQuestion = (
+    question: string,
+    historyMessages: DashboardChatMessage[] = [],
+  ): string[] => {
+    const expanded = expandQuestionWithChatContext(question, historyMessages)
+    const questionTerms = extractQuestionTerms(question)
+    const expandedTerms = extractQuestionTerms(expanded)
+    const contextText = context.chunks
+      .map((chunk) => `${chunk.title} ${chunk.text}`)
+      .join(' ')
+      .toLowerCase()
+    const comparisonFollowUp =
+      /\bwhat about\b|\bhow about\b|\bvs\b|\bcompare\b|\bdifference\b/i.test(
+        question,
+      )
+
+    return (comparisonFollowUp ? expandedTerms : questionTerms).filter(
+      (term) => !contextText.includes(term) || questionTerms.includes(term),
+    )
+  }
+
+  const sourceCoversConcept = (
+    source: Pick<DashboardExternalSource, 'title' | 'text'>,
+    concept: string,
+  ): boolean => {
+    const haystack = `${source.title} ${source.text}`.toLowerCase()
+    return (
+      haystack.includes(concept) &&
+      TECHNICAL_EVIDENCE_TERMS.some((term) => haystack.includes(term))
+    )
+  }
+
+  const coveredConceptsFromSources = (
+    sources: Array<Pick<DashboardExternalSource, 'title' | 'text'>>,
+    requiredConcepts: string[],
+  ): string[] =>
+    requiredConcepts.filter((concept) =>
+      sources.some((source) => sourceCoversConcept(source, concept)),
+    )
+
+  const scoreExternalSource = (
+    source: DashboardExternalSource,
+    question: string,
+  ): number => {
+    const terms = question
+      .toLowerCase()
+      .split(/[^a-z0-9]+/i)
+      .filter((term) => term.length > 2)
+    const haystack = `${source.title} ${source.text}`.toLowerCase()
+
+    return terms.reduce(
+      (score, term) => score + (haystack.includes(term) ? 1 : 0),
+      0,
+    )
+  }
+
+  const selectStoredExternalSources = (
+    question: string,
+    externalSourceIds: string[] = [],
+  ): DashboardExternalSource[] => {
+    const { session } = getActiveSession()
+    const sessionExternalSources = session?.externalSources || []
+    const rejectedUrls = new Set(session?.rejectedExternalSourceUrls || [])
+    const rejectedDomains = new Set(session?.rejectedExternalSourceDomains || [])
+    const availableExternalSources = sessionExternalSources.filter((source) => {
+      const normalizedUrl = normalizeSourceUrlForDedupe(source.url)
+      const domain = getSourceDomain(source.url)
+      return !rejectedUrls.has(normalizedUrl) && !rejectedDomains.has(domain)
+    })
+
+    if (externalSourceIds.length > 0) {
+      return availableExternalSources.filter((source) =>
+        externalSourceIds.includes(source.id),
+      )
+    }
+
+    return availableExternalSources
+      .map((source) => ({
+        source,
+        score: scoreExternalSource(source, question),
+      }))
+      .filter(({ score }) => score > 0)
+      .sort((left, right) => right.score - left.score)
+      .slice(0, 3)
+      .map(({ source }) => source)
+  }
+
+  const selectAnswerSourceChunks = (
+    question: string,
+    externalSourceIds: string[] = [],
+  ): {
+    sourceChunks: DashboardSourceChunk[]
+    selectedExternalSourceIds: string[]
+  } => {
+    const dashboardChunks = selectDashboardChatChunks(context, question)
+    const selectedExternalSources = selectStoredExternalSources(
+      question,
+      externalSourceIds,
+    )
+    const externalChunks = selectedExternalSources.map(externalSourceToChunk)
+
+    return {
+      sourceChunks: [...dashboardChunks, ...externalChunks],
+      selectedExternalSourceIds: selectedExternalSources.map(
+        (source) => source.id,
+      ),
     }
   }
 
@@ -598,25 +895,199 @@ const DashboardChatPanel = ({
     persistChatSessions(nextSessions)
   }
 
+  const findExternalSourceById = (
+    sourceId: string,
+  ): DashboardExternalSource | undefined => {
+    const { session } = getActiveSession()
+    return (session?.externalSources || []).find(
+      (source) => source.id === sourceId,
+    )
+  }
+
+  const upsertExternalSource = (
+    source: DashboardExternalSource,
+  ): DashboardExternalSource => {
+    let savedSource = source
+    updateActiveChatExternalSources((externalSources) => {
+      const normalizedUrl = normalizeSourceUrlForDedupe(source.url)
+      const existingSource = externalSources.find(
+        (candidate) =>
+          normalizeSourceUrlForDedupe(candidate.url) === normalizedUrl,
+      )
+
+      if (existingSource) {
+        savedSource = existingSource
+        return externalSources
+      }
+
+      return [source, ...externalSources]
+    })
+
+    return savedSource
+  }
+
+  const upsertExternalSources = (
+    sources: DashboardExternalSource[],
+  ): DashboardExternalSource[] => sources.map(upsertExternalSource)
+
+  const buildExternalLookupContextSummary = (): string =>
+    context.chunks
+      .slice(0, 4)
+      .map((chunk) => `${chunk.title}: ${chunk.text}`)
+      .join('\n')
+      .slice(0, 1200)
+
+  const appendWebRetryAnswer = (
+    question: string,
+    historyMessages: DashboardChatMessage[],
+    sourceIds: string[],
+  ) => {
+    const pendingMessage: DashboardChatMessage = {
+      id: makeMessageId(),
+      role: 'assistant',
+      content: '',
+      createdAt: Date.now(),
+      pending: true,
+      externalSourceIds: sourceIds,
+    }
+
+    replaceActiveChatMessages(
+      [...messagesRef.current, pendingMessage],
+      undefined,
+      {
+        scrollToBottom: true,
+      },
+    )
+    void answerQuestion(question, pendingMessage.id, historyMessages, sourceIds)
+  }
+
+  const runExternalSourceLookup = async (
+    question: string,
+    gapMessageId: string,
+    historyMessages: DashboardChatMessage[],
+  ) => {
+    updateMessage(gapMessageId, (message) => ({
+      ...message,
+      content: 'The Study Guide does not contain enough info, searching web...',
+      webLookup: { status: 'searching' },
+    }))
+
+    try {
+      const lookupQuestion = expandQuestionWithChatContext(
+        question,
+        historyMessages,
+      )
+      const requiredConcepts = requiredConceptsForQuestion(
+        question,
+        historyMessages,
+      )
+      const dashboardCoveredConcepts = coveredConceptsFromSources(
+        context.chunks,
+        requiredConcepts,
+      )
+      const missingConcepts = requiredConcepts.filter(
+        (concept) => !dashboardCoveredConcepts.includes(concept),
+      )
+      const sources = upsertExternalSources(
+        await fetchDashboardExternalSource({
+          question: lookupQuestion,
+          dashboardTitle: context.dashboardTitle,
+          contextSummary: buildExternalLookupContextSummary(),
+          ...getRejectedSourceFilters(),
+        }),
+      )
+      const coveredByInitialSources = coveredConceptsFromSources(
+        sources,
+        missingConcepts,
+      )
+      const uncoveredConcepts = missingConcepts.filter(
+        (concept) => !coveredByInitialSources.includes(concept),
+      )
+      const supplementalSources = (
+        await Promise.all(
+          uncoveredConcepts.slice(0, 3).map(async (concept) => {
+            try {
+              return await fetchDashboardExternalSource({
+                question: `${concept} official documentation ${lookupQuestion}`,
+                dashboardTitle: context.dashboardTitle,
+                contextSummary: concept,
+                ...getRejectedSourceFilters(),
+              })
+            } catch {
+              return []
+            }
+          }),
+        )
+      ).flat()
+      const allSources = upsertExternalSources([
+        ...sources,
+        ...supplementalSources,
+      ])
+      const usableSourceIds =
+        missingConcepts.length > 0
+          ? Array.from(
+              new Set(
+                allSources
+                  .filter((source) =>
+                    missingConcepts.some((concept) =>
+                      sourceCoversConcept(source, concept),
+                    ),
+                  )
+                  .map((source) => source.id),
+              ),
+            )
+          : allSources.map((source) => source.id)
+      const sourceIds = usableSourceIds.length
+        ? usableSourceIds
+        : Array.from(new Set(allSources.map((source) => source.id)))
+
+      updateMessage(gapMessageId, (message) => ({
+        ...message,
+        webLookup: {
+          status: 'found',
+          sourceId: sourceIds[0],
+          sourceIds,
+        },
+      }))
+      appendWebRetryAnswer(question, historyMessages, sourceIds)
+    } catch (err) {
+      updateMessage(gapMessageId, (message) => ({
+        ...message,
+        content: 'I could not find a reliable web source for the missing topic.',
+        webLookup: {
+          status: 'failed',
+          error:
+            err instanceof Error
+              ? err.message
+              : 'Could not find a useful web source.',
+        },
+      }))
+    }
+  }
+
   const answerQuestion = async (
     question: string,
     pendingMessageId: string,
     historyMessages: DashboardChatMessage[],
+    externalSourceIds: string[] = [],
   ) => {
     setActiveStartedAt(Date.now())
+    const { sourceChunks, selectedExternalSourceIds } =
+      selectAnswerSourceChunks(question, externalSourceIds)
 
-    if (!hasContext) {
+    if (!hasContext && selectedExternalSourceIds.length === 0) {
       updateMessage(pendingMessageId, (message) => ({
         ...message,
         content:
-          'This dashboard does not have enough source content to answer from yet. Add source notes or generated study material, then ask again.',
+          'This dashboard does not have enough source content to answer from yet.',
+        needsExternalSource: true,
+        webLookup: { status: 'searching' },
         pending: false,
       }))
       setActiveStartedAt(null)
+      void runExternalSourceLookup(question, pendingMessageId, historyMessages)
       return
     }
-
-    const sourceChunks = selectDashboardChatChunks(context, question)
 
     try {
       const result = await askDashboardSources({
@@ -633,8 +1104,20 @@ const DashboardChatPanel = ({
         ...message,
         content: result.answer,
         sourceRefs: result.sourceRefs,
+        needsExternalSource: result.needsExternalSource,
+        externalSourceIds: selectedExternalSourceIds,
         pending: false,
       }))
+      if (
+        result.needsExternalSource &&
+        externalSourceIds.length === 0
+      ) {
+        void runExternalSourceLookup(
+          question,
+          pendingMessageId,
+          historyMessages,
+        )
+      }
     } catch (err) {
       updateMessage(pendingMessageId, (message) => ({
         ...message,
@@ -655,6 +1138,10 @@ const DashboardChatPanel = ({
   const sendQuestion = (question: string) => {
     const trimmed = question.trim()
     if (!trimmed) {
+      return
+    }
+
+    if (handleSourceRejection(trimmed)) {
       return
     }
 
@@ -685,6 +1172,63 @@ const DashboardChatPanel = ({
     void answerQuestion(trimmed, pendingMessage.id, previousMessages)
   }
 
+  const findLastFoundExternalSource = (): {
+    source?: DashboardExternalSource
+    question?: string
+  } => {
+    const messages = messagesRef.current
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      const message = messages[index]
+      const sourceId = message.webLookup?.sourceId
+      if (message.role === 'assistant' && sourceId) {
+        const previousUser = messages
+          .slice(0, index)
+          .reverse()
+          .find((candidate) => candidate.role === 'user')
+        return {
+          source: findExternalSourceById(sourceId),
+          question: previousUser?.content,
+        }
+      }
+    }
+    return {}
+  }
+
+  const handleSourceRejection = (content: string): boolean => {
+    if (!SOURCE_REJECTION_PATTERN.test(content)) {
+      return false
+    }
+
+    const { source, question } = findLastFoundExternalSource()
+    if (!source || !question) {
+      return false
+    }
+
+    updateActiveChatRejectedSources(source)
+    const userMessage: DashboardChatMessage = {
+      id: makeMessageId(),
+      role: 'user',
+      content,
+      createdAt: Date.now(),
+    }
+    const pendingMessage: DashboardChatMessage = {
+      id: makeMessageId(),
+      role: 'assistant',
+      content: 'Trying another source...',
+      createdAt: Date.now(),
+      pending: false,
+      webLookup: { status: 'searching' },
+    }
+    const previousMessages = messagesRef.current
+    replaceActiveChatMessages([...previousMessages, userMessage, pendingMessage], undefined, {
+      scrollToBottom: true,
+    })
+    setDraft('')
+    setError('')
+    void runExternalSourceLookup(question, pendingMessage.id, previousMessages)
+    return true
+  }
+
   const copyUserPrompt = (content: string) => {
     void navigator.clipboard?.writeText(content)
   }
@@ -695,6 +1239,9 @@ const DashboardChatPanel = ({
 
   const openSource = (source: DashboardAnswerSourceRef) => {
     onOpenSource?.(source)
+    if (source.url && !onOpenSource) {
+      window.open(source.url, '_blank', 'noopener,noreferrer')
+    }
   }
 
   const closeUserMessageMenu = () => {
@@ -825,7 +1372,10 @@ const DashboardChatPanel = ({
     )
   }
 
-  const retryAssistantAnswer = (message: DashboardChatMessage) => {
+  const retryAssistantAnswer = (
+    message: DashboardChatMessage,
+    externalSourceIds: string[] = message.externalSourceIds || [],
+  ) => {
     const messageIndex = messagesRef.current.findIndex(
       ({ id }) => id === message.id,
     )
@@ -862,6 +1412,7 @@ const DashboardChatPanel = ({
       ...userMessage,
       id: makeMessageId(),
       createdAt: Date.now(),
+      externalSourceIds,
       promptBranchId: branchId,
       promptBranchIndex: nextBranchIndex,
       promptBranchCount: nextBranchCount,
@@ -889,6 +1440,7 @@ const DashboardChatPanel = ({
       retryUserMessage.content,
       pendingMessage.id,
       prefixMessages,
+      externalSourceIds,
     )
   }
 
@@ -1137,6 +1689,125 @@ const DashboardChatPanel = ({
         </Box>
       )
     }
+  }
+
+  const renderWebLookupStatus = (message: DashboardChatMessage) => {
+    if (!message.webLookup) {
+      return null
+    }
+
+    const sources = (
+      message.webLookup.sourceIds ||
+      (message.webLookup.sourceId ? [message.webLookup.sourceId] : [])
+    )
+      .map(findExternalSourceById)
+      .filter((source): source is DashboardExternalSource => Boolean(source))
+
+    const sourceDomain = (source: DashboardExternalSource) => {
+      try {
+        return new URL(source.url).hostname.replace(/^www\./, '')
+      } catch {
+        return source.url
+      }
+    }
+
+    return (
+      <Box
+        sx={{
+          mt: 1,
+          ml: isPhone ? 5 : 6,
+          p: 1,
+          border: 1,
+          borderColor:
+            message.webLookup.status === 'failed'
+              ? 'error.light'
+              : 'divider',
+          borderRadius: 1,
+          bgcolor:
+            message.webLookup.status === 'failed'
+              ? alpha(theme.palette.error.main, 0.06)
+              : 'background.paper',
+        }}
+      >
+        {message.webLookup.status === 'searching' ? (
+          <Typography variant="caption" color="text.secondary">
+            Searching web...
+          </Typography>
+        ) : message.webLookup.status === 'failed' ? (
+          <Typography variant="caption" color="error.main">
+            {message.webLookup.error || 'Web search failed.'}
+          </Typography>
+        ) : sources.length > 0 ? (
+          <Stack spacing={0.75}>
+            <Box>
+              <Typography variant="caption" fontWeight={700}>
+                {sources.length === 1 ? 'Found source' : 'Found sources'}
+              </Typography>
+              <Stack spacing={0.5} sx={{ mt: 0.25 }}>
+                {sources.map((source) => (
+                  <Box key={source.id}>
+                    <Box
+                      component="button"
+                      type="button"
+                      onClick={() =>
+                        window.open(
+                          source.url,
+                          '_blank',
+                          'noopener,noreferrer',
+                        )
+                      }
+                      aria-label={`Open found source ${source.title}`}
+                      sx={{
+                        display: 'block',
+                        width: '100%',
+                        border: 0,
+                        p: 0,
+                        bgcolor: 'transparent',
+                        color: 'primary.main',
+                        cursor: 'pointer',
+                        font: 'inherit',
+                        fontWeight: 600,
+                        textAlign: 'left',
+                        overflowWrap: 'anywhere',
+                        '&:hover': {
+                          textDecoration: 'underline',
+                        },
+                      }}
+                    >
+                      {source.title}
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      {sourceDomain(source)}
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+            {onAddExternalSourceToGuide ? (
+              <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                {sources.map((source) => (
+                  <Button
+                    key={source.id}
+                    size="small"
+                    variant="outlined"
+                    startIcon={<AddCircleOutlineIcon fontSize="small" />}
+                    onClick={() => onAddExternalSourceToGuide(source)}
+                    sx={{
+                      alignSelf: 'flex-start',
+                      minHeight: 30,
+                      borderRadius: 1,
+                      textTransform: 'none',
+                    }}
+                  >
+                    Add as page
+                  </Button>
+                ))}
+              </Stack>
+            ) : null}
+          </Stack>
+        ) : null}
+      </Box>
+    )
   }
 
   const renderAssistantActions = (message: DashboardChatMessage) => {
@@ -1862,7 +2533,10 @@ const DashboardChatPanel = ({
                   )
                 ) : null}
                 {message.role === 'assistant' && !message.pending ? (
-                  <>{renderAssistantActions(message)}</>
+                  <>
+                    {renderAssistantActions(message)}
+                    {renderWebLookupStatus(message)}
+                  </>
                 ) : null}
               </Box>
             ))}

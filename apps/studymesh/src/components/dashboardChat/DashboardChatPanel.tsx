@@ -363,6 +363,9 @@ const DashboardChatPanel = ({
   })
   const [quickCreateSearch, setQuickCreateSearch] = useState('')
   const [replyScrollBufferActive, setReplyScrollBufferActive] = useState(false)
+  const [chatComposerHeight, setChatComposerHeight] = useState(108)
+  const [chatComposerResized, setChatComposerResized] = useState(false)
+  const [draftHasMultipleLines, setDraftHasMultipleLines] = useState(false)
   const [userMessageMenuAnchor, setUserMessageMenuAnchor] =
     useState<HTMLElement | null>(null)
   const [userMessageMenuMessage, setUserMessageMenuMessage] =
@@ -375,7 +378,13 @@ const DashboardChatPanel = ({
     useState<QuickCreateSourceScope>(
       supportsStudyGuideCreateScope ? 'studyGuide' : 'currentPage',
     )
+  const panelRef = useRef<HTMLDivElement | null>(null)
   const chatScrollRef = useRef<HTMLDivElement | null>(null)
+  const draftInputRef = useRef<HTMLTextAreaElement | null>(null)
+  const composerDragRef = useRef<{
+    startY: number
+    startHeight: number
+  } | null>(null)
   const messagesRef = useRef(messages)
   const chatSessionsRef = useRef<DashboardChatSession[]>([])
   const settings = readQuickCreateAiSettings()
@@ -410,6 +419,37 @@ const DashboardChatPanel = ({
       borderColor: alpha(theme.palette.primary.main, 0.34),
       color: 'primary.main',
     },
+  }
+
+  const measureDraftLines = () => {
+    const input = draftInputRef.current
+    const hasText = draft.length > 0
+    if (!input) {
+      setDraftHasMultipleLines(hasText && draft.includes('\n'))
+      return
+    }
+
+    const computedStyle = window.getComputedStyle(input)
+    const lineHeight = Number.parseFloat(computedStyle.lineHeight) || 20
+    const hasMultipleLines =
+      hasText &&
+      (draft.includes('\n') || input.scrollHeight > lineHeight * 1.65)
+    setDraftHasMultipleLines(hasMultipleLines)
+  }
+
+  const startComposerResize = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!draftHasMultipleLines) {
+      return
+    }
+
+    event.preventDefault()
+    composerDragRef.current = {
+      startY: event.clientY,
+      startHeight: chatComposerHeight,
+    }
+    setChatComposerResized(true)
+    document.body.style.cursor = 'row-resize'
+    document.body.style.userSelect = 'none'
   }
 
   const scrollChatToBottom = () => {
@@ -1160,6 +1200,48 @@ const DashboardChatPanel = ({
 
     return () => window.clearInterval(interval)
   }, [quickCreateStartedAt])
+
+  useEffect(() => {
+    measureDraftLines()
+    if (draft.length === 0) {
+      setChatComposerResized(false)
+      setChatComposerHeight(108)
+    }
+  }, [draft])
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      const dragState = composerDragRef.current
+      if (!dragState) {
+        return
+      }
+
+      const panelHeight = panelRef.current?.clientHeight || 0
+      const maxHeight = Math.max(160, Math.floor(panelHeight * 0.48))
+      const nextHeight = dragState.startHeight + dragState.startY - event.clientY
+      setChatComposerHeight(Math.min(Math.max(nextHeight, 108), maxHeight))
+    }
+
+    const handlePointerUp = () => {
+      if (!composerDragRef.current) {
+        return
+      }
+
+      composerDragRef.current = null
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [])
 
   const updateMessage = (
     messageId: string,
@@ -2283,6 +2365,7 @@ const DashboardChatPanel = ({
 
   return (
     <Box
+      ref={panelRef}
       sx={{
         height: '100%',
         minHeight: 0,
@@ -3191,8 +3274,52 @@ const DashboardChatPanel = ({
         )}
       </Box>
 
-      <Box sx={{ borderTop: 1, borderColor: 'divider' }} />
-      <Box sx={{ p: 1.5, bgcolor: 'background.paper' }}>
+      <Box
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="Resize AI Chat input"
+        onPointerDown={startComposerResize}
+        sx={{
+          height: draftHasMultipleLines ? 10 : '1px',
+          flex: '0 0 auto',
+          mt: draftHasMultipleLines ? -0.5 : 0,
+          borderTop: 1,
+          borderColor: draftHasMultipleLines
+            ? alpha(theme.palette.primary.main, 0.28)
+            : 'divider',
+          cursor: draftHasMultipleLines ? 'row-resize' : 'default',
+          bgcolor: 'background.paper',
+          position: 'relative',
+          '&::after': draftHasMultipleLines
+            ? {
+                content: '""',
+                position: 'absolute',
+                left: '50%',
+                top: 3,
+                width: 46,
+                height: 3,
+                borderRadius: 999,
+                transform: 'translateX(-50%)',
+                bgcolor: alpha(theme.palette.primary.main, 0.34),
+              }
+            : undefined,
+        }}
+      />
+      <Box
+        sx={{
+          p: 1.5,
+          bgcolor: 'background.paper',
+          flex: '0 0 auto',
+          height:
+            draftHasMultipleLines && chatComposerResized
+              ? chatComposerHeight
+              : 'auto',
+          minHeight:
+            draftHasMultipleLines && chatComposerResized ? 108 : undefined,
+          maxHeight:
+            draftHasMultipleLines && chatComposerResized ? '48%' : undefined,
+        }}
+      >
         {onQuickCreatePage && activeQuickCreateAction ? (
           <Typography
             variant="caption"
@@ -3204,46 +3331,136 @@ const DashboardChatPanel = ({
             {formatSeconds(quickCreateEstimateSeconds)}
           </Typography>
         ) : null}
-        <Stack direction="row" spacing={1} alignItems="flex-end">
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="stretch"
+          sx={{
+            height:
+              draftHasMultipleLines && chatComposerResized ? '100%' : 'auto',
+          }}
+        >
+          <TextField
+            inputRef={draftInputRef}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder={
+              hasContext ? 'Ask anything' : 'Add study material before chatting'
+            }
+            disabled={!hasContext}
+            fullWidth
+            multiline
+            minRows={1}
+            maxRows={draftHasMultipleLines && chatComposerResized ? undefined : 4}
+            size="small"
+            InputProps={{
+              endAdornment: onQuickCreatePage ? (
+                <InputAdornment
+                  position="end"
+                  sx={{
+                    position: 'absolute',
+                    right: 6,
+                    bottom: 5,
+                    m: 0,
+                    height: 'auto',
+                    pointerEvents: 'auto',
+                  }}
+                >
+                  <Tooltip title="Create">
+                    <span>
+                      <IconButton
+                        size="small"
+                        aria-label="Create"
+                        disabled={!hasContext || Boolean(quickCreateActionId)}
+                        onClick={(event) =>
+                          setQuickCreateMenuAnchor(event.currentTarget)
+                        }
+                        aria-haspopup="menu"
+                        aria-expanded={
+                          quickCreateMenuOpen ? 'true' : undefined
+                        }
+                        sx={{
+                          height: 32,
+                          minHeight: 32,
+                          width: 32,
+                          borderRadius: 1,
+                          border: 1,
+                          borderColor: alpha(theme.palette.divider, 0.82),
+                          color: 'text.secondary',
+                          bgcolor: alpha(theme.palette.background.paper, 0.94),
+                          opacity: 0.68,
+                          boxShadow: `0 8px 22px ${alpha(
+                            theme.palette.common.black,
+                            0.14,
+                          )}`,
+                          '&:hover': {
+                            borderColor: alpha(
+                              theme.palette.primary.main,
+                              0.42,
+                            ),
+                            color: 'primary.main',
+                            bgcolor: alpha(theme.palette.primary.main, 0.08),
+                            opacity: 1,
+                          },
+                          '&.Mui-disabled': {
+                            borderColor: 'divider',
+                            color: 'text.disabled',
+                            bgcolor: 'action.disabledBackground',
+                            opacity: 0.54,
+                            boxShadow: 'none',
+                          },
+                        }}
+                      >
+                        <AddCircleOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </InputAdornment>
+              ) : undefined,
+            }}
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              '& .MuiOutlinedInput-root': {
+                height:
+                  draftHasMultipleLines && chatComposerResized
+                    ? '100%'
+                    : undefined,
+                alignItems: 'flex-start',
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: 1,
+                bgcolor:
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(15,23,42,0.72)'
+                    : 'rgba(248,250,252,0.92)',
+              },
+              '& .MuiInputBase-inputMultiline': {
+                height:
+                  draftHasMultipleLines && chatComposerResized
+                    ? '100% !important'
+                    : undefined,
+                maxHeight: draftHasMultipleLines
+                  ? '100% !important'
+                  : undefined,
+                boxSizing: 'border-box',
+                overflowY: draftHasMultipleLines
+                  ? 'auto !important'
+                  : undefined,
+              },
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                if (!hasContext) {
+                  return
+                }
+                sendQuestion(draft)
+              }
+            }}
+          />
           {onQuickCreatePage ? (
             <>
-              <Tooltip title="Create">
-                <span>
-                  <IconButton
-                    size="small"
-                    aria-label="Create"
-                    disabled={!hasContext || Boolean(quickCreateActionId)}
-                    onClick={(event) =>
-                      setQuickCreateMenuAnchor(event.currentTarget)
-                    }
-                    aria-haspopup="menu"
-                    aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
-                    sx={{
-                      height: 40,
-                      minHeight: 40,
-                      width: 40,
-                      flex: '0 0 auto',
-                      borderRadius: 1,
-                      border: 1,
-                      borderColor: 'divider',
-                      color: 'text.secondary',
-                      bgcolor: 'background.paper',
-                      '&:hover': {
-                        borderColor: alpha(theme.palette.primary.main, 0.32),
-                        color: 'primary.main',
-                        bgcolor: alpha(theme.palette.primary.main, 0.05),
-                      },
-                      '&.Mui-disabled': {
-                        borderColor: 'divider',
-                        color: 'text.disabled',
-                        bgcolor: 'action.disabledBackground',
-                      },
-                    }}
-                  >
-                    <AddCircleOutlineIcon fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
               {isMobile ? (
                 <Drawer
                   anchor="bottom"
@@ -3263,8 +3480,8 @@ const DashboardChatPanel = ({
                   open={quickCreateMenuOpen}
                   anchorEl={quickCreateMenuAnchor}
                   onClose={() => setQuickCreateMenuAnchor(null)}
-                  anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-                  transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                   PaperProps={{
                     sx: {
                       borderRadius: 1.5,
@@ -3282,36 +3499,6 @@ const DashboardChatPanel = ({
               )}
             </>
           ) : null}
-          <TextField
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder={
-              hasContext ? 'Ask anything' : 'Add study material before chatting'
-            }
-            disabled={!hasContext}
-            fullWidth
-            multiline
-            maxRows={4}
-            size="small"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 1,
-                bgcolor:
-                  theme.palette.mode === 'dark'
-                    ? 'rgba(15,23,42,0.72)'
-                    : 'rgba(248,250,252,0.92)',
-              },
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault()
-                if (!hasContext) {
-                  return
-                }
-                sendQuestion(draft)
-              }
-            }}
-          />
           <IconButton
             color="primary"
             onClick={() => sendQuestion(draft)}

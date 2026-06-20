@@ -3,6 +3,7 @@ import React from 'react'
 import {
   getHostedAiStatus,
   HOSTED_AI_USAGE_CHANGED_EVENT,
+  HOSTED_AI_VISUAL_REFUND_EVENT,
   HOSTED_AI_VISUAL_SPEND_EVENT,
   HostedAiStatus,
   markHostedAiIntroSeen,
@@ -128,13 +129,38 @@ export const useHostedAiStatus = (): UseHostedAiStatusResult => {
       })
     }
 
+    const applyVisualRefund = (event: Event): void => {
+      const credits = (event as CustomEvent<{ credits?: unknown }>).detail
+        ?.credits
+      if (typeof credits !== 'number' || credits <= 0) {
+        return
+      }
+
+      setCachedStudyCredits((current) => {
+        if (current === null) {
+          return current
+        }
+
+        const next = current + credits
+        if (ownerId) {
+          writeCachedStudyCredits(ownerId, next)
+        }
+        return next
+      })
+    }
+
     window.addEventListener(HOSTED_AI_USAGE_CHANGED_EVENT, refresh)
     window.addEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, applyVisualSpend)
+    window.addEventListener(HOSTED_AI_VISUAL_REFUND_EVENT, applyVisualRefund)
     window.addEventListener('storage', syncCachedStudyCredits)
 
     return () => {
       window.removeEventListener(HOSTED_AI_USAGE_CHANGED_EVENT, refresh)
       window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, applyVisualSpend)
+      window.removeEventListener(
+        HOSTED_AI_VISUAL_REFUND_EVENT,
+        applyVisualRefund,
+      )
       window.removeEventListener('storage', syncCachedStudyCredits)
     }
   }, [ownerId, refresh])

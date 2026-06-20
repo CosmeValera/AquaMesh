@@ -3,6 +3,7 @@ import type { StrongAiCallOptions } from './strongProviders'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   HOSTED_AI_USAGE_CHANGED_EVENT,
+  HOSTED_AI_VISUAL_REFUND_EVENT,
   HOSTED_AI_VISUAL_SPEND_EVENT,
   getHostedAiCreditCost,
 } from './hostedCredits'
@@ -124,6 +125,16 @@ const dispatchHostedAiVisualSpend = (surface: HostedAiSurface): void => {
   }
 }
 
+const dispatchHostedAiVisualRefund = (surface: HostedAiSurface): void => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent(HOSTED_AI_VISUAL_REFUND_EVENT, {
+        detail: { credits: getHostedAiCreditCost(surface) },
+      }),
+    )
+  }
+}
+
 const assertHostedAiCreditsAvailable = async (
   surface: HostedAiSurface,
 ): Promise<void> => {
@@ -203,6 +214,9 @@ const callHostedAiModelUnchecked = async ({
     }
 
     return text
+  } catch (error) {
+    dispatchHostedAiVisualRefund(surface)
+    throw error
   } finally {
     dispatchHostedAiUsageChanged()
   }

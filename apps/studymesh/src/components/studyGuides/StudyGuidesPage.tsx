@@ -24,9 +24,10 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import EditIcon from '@mui/icons-material/Edit'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import PushPinIcon from '@mui/icons-material/PushPin'
+import ReplayIcon from '@mui/icons-material/Replay'
 import SearchIcon from '@mui/icons-material/Search'
 import { nanoid } from 'nanoid'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import type { StudyGuideRecord } from '../../cloud/types'
 import {
@@ -117,17 +118,18 @@ const StudyGuidesPage = () => {
   const navigate = useNavigate()
   const theme = useTheme()
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
-  const [searchParams, setSearchParams] = useSearchParams()
   const [guides, setGuides] = useState<StudyGuideRecord[]>([])
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
   const [menuGuide, setMenuGuide] = useState<StudyGuideRecord | null>(null)
   const [renameGuide, setRenameGuide] = useState<StudyGuideRecord | null>(null)
   const [renameTitle, setRenameTitle] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
-  const [createGuideName, setCreateGuideName] = useState('')
-  const [createGuideDescription, setCreateGuideDescription] = useState('')
+  const [createGuidePrompt, setCreateGuidePrompt] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [pendingGuides, setPendingGuides] = useState<PendingGuide[]>([])
+  const [newlyCreatedGuideIds, setNewlyCreatedGuideIds] = useState<Set<string>>(
+    () => new Set(),
+  )
   const [now, setNow] = useState(Date.now())
 
   const loadGuides = () => setGuides(StudyGuideStorage.getAll())
@@ -142,17 +144,6 @@ const StudyGuidesPage = () => {
       window.removeEventListener('storage', loadGuides)
     }
   }, [])
-
-  useEffect(() => {
-    if (searchParams.get('create') !== '1') {
-      return
-    }
-
-    setCreateOpen(true)
-    const nextParams = new URLSearchParams(searchParams)
-    nextParams.delete('create')
-    setSearchParams(nextParams, { replace: true })
-  }, [searchParams, setSearchParams])
 
   useEffect(() => {
     if (!pendingGuides.some((guide) => !guide.error)) {
@@ -183,44 +174,33 @@ const StudyGuidesPage = () => {
     setCreateOpen(true)
   }
 
-  const submitCreateGuide = async () => {
-    const guideName = createGuideName.trim()
-    const description = createGuideDescription.trim()
-    if (!guideName) {
-      return
-    }
-    const prompt = description
-      ? `Create a Study Guide named "${guideName}". Focus: ${description}`
-      : `Create a Study Guide named "${guideName}".`
-
-    const id = nanoid()
+  const runCreateGuide = async (prompt: string, id = nanoid()) => {
     const pendingGuide: PendingGuide = {
       id,
       prompt,
       createdAt: new Date().toISOString(),
       estimateSeconds: getGenerationEstimateSeconds(),
     }
-    setPendingGuides((current) => [pendingGuide, ...current])
+    setPendingGuides((current) => {
+      const existingIndex = current.findIndex((guide) => guide.id === id)
+      if (existingIndex < 0) {
+        return [pendingGuide, ...current]
+      }
+
+      return current.map((guide) => (guide.id === id ? pendingGuide : guide))
+    })
     setCreateOpen(false)
-    setCreateGuideName('')
-    setCreateGuideDescription('')
+    setCreateGuidePrompt('')
 
     try {
       const studyPath = await generateStudyPathStateFromPrompt({ id, prompt })
       StudyGuideStorage.save({
-        ...createStudyGuideRecord(
-          {
-            ...studyPath,
-            title: guideName,
-            folderName: guideName,
-          },
-          { id },
-        ),
-        description,
+        ...createStudyGuideRecord(studyPath, { id }),
+        description: prompt,
       })
       setPendingGuides((current) => current.filter((guide) => guide.id !== id))
+      setNewlyCreatedGuideIds((current) => new Set(current).add(id))
       loadGuides()
-      navigate(`/workspace/${id}`)
     } catch (error) {
       setPendingGuides((current) =>
         current.map((guide) =>
@@ -236,6 +216,15 @@ const StudyGuidesPage = () => {
         ),
       )
     }
+  }
+
+  const submitCreateGuide = async () => {
+    const prompt = createGuidePrompt.trim()
+    if (!prompt) {
+      return
+    }
+
+    await runCreateGuide(prompt)
   }
 
   const openMenu = (
@@ -525,18 +514,35 @@ const StudyGuidesPage = () => {
                     </Typography>
                   </Box>
                   {guide.error ? (
-                    <Typography
-                      variant="body2"
-                      color="error.main"
-                      sx={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {guide.error}
-                    </Typography>
+                    <Stack spacing={1.25}>
+                      <Typography
+                        variant="body2"
+                        color="error.main"
+                        sx={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {guide.error}
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<ReplayIcon />}
+                        onClick={() =>
+                          void runCreateGuide(guide.prompt, guide.id)
+                        }
+                        sx={{
+                          alignSelf: 'flex-start',
+                          borderRadius: 2,
+                          textTransform: 'none',
+                        }}
+                      >
+                        Retry
+                      </Button>
+                    </Stack>
                   ) : (
                     <Box>
                       <Box
@@ -569,18 +575,6 @@ const StudyGuidesPage = () => {
           })}
           {filteredGuides.map((guide) => {
             const pageCount = guide.studyPath.dashboards.length
-            const pageKeys = guide.studyPath.dashboards
-              .map((dashboard) => dashboard.dashboardKey)
-              .filter(Boolean)
-            const visitedPageCount = new Set(
-              (guide.visitedPageKeys || []).filter((pageKey) =>
-                pageKeys.includes(pageKey),
-              ),
-            ).size
-            const percentRead =
-              pageCount > 0
-                ? Math.round((visitedPageCount / pageCount) * 100)
-                : 0
             const accent =
               guide.emoji === '🧬'
                 ? '#0b84a5'
@@ -589,10 +583,14 @@ const StudyGuidesPage = () => {
                   : guide.emoji === '🎨'
                     ? '#b86b2d'
                     : '#0b6f4f'
+            const isNewlyCreated = newlyCreatedGuideIds.has(guide.id)
             return (
               <Paper
                 key={guide.id}
                 elevation={0}
+                data-testid={
+                  isNewlyCreated ? 'newly-created-study-guide-card' : undefined
+                }
                 onClick={() => navigate(`/workspace/${guide.id}`)}
                 sx={(theme) => ({
                   position: 'relative',
@@ -600,12 +598,23 @@ const StudyGuidesPage = () => {
                   p: 2.4,
                   borderRadius: 2,
                   border: 1,
-                  borderColor: guide.pinnedAt
-                    ? alpha(theme.palette.primary.main, 0.32)
-                    : 'divider',
+                  borderColor: isNewlyCreated
+                    ? theme.palette.warning.main
+                    : guide.pinnedAt
+                      ? alpha(theme.palette.primary.main, 0.32)
+                      : 'divider',
                   bgcolor: 'background.paper',
                   cursor: 'pointer',
                   overflow: 'hidden',
+                  boxShadow: isNewlyCreated
+                    ? `0 0 0 3px ${alpha(
+                        theme.palette.warning.main,
+                        theme.palette.mode === 'dark' ? 0.22 : 0.18,
+                      )}, 0 18px 44px ${alpha(
+                        theme.palette.warning.main,
+                        theme.palette.mode === 'dark' ? 0.18 : 0.14,
+                      )}`
+                    : undefined,
                   transition: theme.transitions.create([
                     'transform',
                     'box-shadow',
@@ -613,9 +622,18 @@ const StudyGuidesPage = () => {
                   ]),
                   '&:hover': {
                     transform: 'translateY(-2px)',
-                    borderColor: alpha(theme.palette.primary.main, 0.38),
-                    boxShadow:
-                      theme.palette.mode === 'dark'
+                    borderColor: isNewlyCreated
+                      ? theme.palette.warning.main
+                      : alpha(theme.palette.primary.main, 0.38),
+                    boxShadow: isNewlyCreated
+                      ? `0 0 0 3px ${alpha(
+                          theme.palette.warning.main,
+                          theme.palette.mode === 'dark' ? 0.24 : 0.2,
+                        )}, 0 20px 48px ${alpha(
+                          theme.palette.warning.main,
+                          theme.palette.mode === 'dark' ? 0.2 : 0.16,
+                        )}`
+                      : theme.palette.mode === 'dark'
                         ? '0 18px 44px rgba(0,0,0,0.36)'
                         : '0 20px 46px rgba(15,23,42,0.11)',
                   },
@@ -701,50 +719,10 @@ const StudyGuidesPage = () => {
                         'Open this learning workspace.'}
                     </Typography>
                   </Box>
-                  <Box>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      gap={1}
-                    >
-                      <Typography variant="body2" color="text.secondary">
-                        {formatGuideDate(guide.createdAt)} &middot; {pageCount}{' '}
-                        {pageCount === 1 ? 'page' : 'pages'}
-                      </Typography>
-                      <Box
-                        sx={{
-                          px: 0.8,
-                          py: 0.25,
-                          borderRadius: 999,
-                          bgcolor: alpha(accent, 0.12),
-                          color: accent,
-                          fontWeight: 600,
-                          fontSize: 12,
-                          flex: '0 0 auto',
-                        }}
-                      >
-                        {percentRead}% read
-                      </Box>
-                    </Stack>
-                    <Box
-                      sx={{
-                        mt: 1.25,
-                        height: 4,
-                        borderRadius: 999,
-                        bgcolor: 'divider',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: `${percentRead}%`,
-                          height: '100%',
-                          bgcolor: accent,
-                        }}
-                      />
-                    </Box>
-                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    {formatGuideDate(guide.createdAt)} &middot; {pageCount}{' '}
+                    {pageCount === 1 ? 'page' : 'pages'}
+                  </Typography>
                 </Stack>
               </Paper>
             )
@@ -824,18 +802,14 @@ const StudyGuidesPage = () => {
           <TextField
             autoFocus
             fullWidth
-            label="Guide name"
-            value={createGuideName}
-            onChange={(event) => setCreateGuideName(event.target.value)}
-            placeholder="e.g. French Grammar Basics"
-            sx={{ mt: 1, mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Description"
-            value={createGuideDescription}
-            onChange={(event) => setCreateGuideDescription(event.target.value)}
-            placeholder="What will you be studying?"
+            label="Study Guide prompt"
+            value={createGuidePrompt}
+            onChange={(event) => setCreateGuidePrompt(event.target.value)}
+            placeholder="What should StudyMesh teach?"
+            multiline
+            minRows={4}
+            required
+            sx={{ mt: 1 }}
           />
           <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap' }}>
             {quickPromptOptions.map((option) => (
@@ -844,8 +818,7 @@ const StudyGuidesPage = () => {
                 size="small"
                 variant="outlined"
                 onClick={() => {
-                  setCreateGuideName(option.label)
-                  setCreateGuideDescription(option.prompt)
+                  setCreateGuidePrompt(option.prompt)
                 }}
                 sx={{
                   borderRadius: 2,
@@ -863,7 +836,7 @@ const StudyGuidesPage = () => {
           <Button
             variant="contained"
             onClick={() => void submitCreateGuide()}
-            disabled={!createGuideName.trim()}
+            disabled={!createGuidePrompt.trim()}
           >
             Create Guide
           </Button>

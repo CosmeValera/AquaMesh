@@ -10,6 +10,7 @@ vi.mock('../../../../src/quickCreate/ai', () => ({
   getHostedAiStatus: hostedAiMocks.getHostedAiStatus,
   markHostedAiIntroSeen: hostedAiMocks.markHostedAiIntroSeen,
   HOSTED_AI_USAGE_CHANGED_EVENT: 'studymesh-hosted-ai-usage-changed',
+  HOSTED_AI_VISUAL_REFUND_EVENT: 'studymesh-hosted-ai-visual-refund',
   HOSTED_AI_VISUAL_SPEND_EVENT: 'studymesh-hosted-ai-visual-spend',
 }))
 
@@ -103,6 +104,40 @@ describe('useHostedAiStatus', () => {
     expect(localStorage.setItem).toHaveBeenCalledWith(
       'studymesh-hosted-ai-credits-v1',
       JSON.stringify({ ownerId: 'user-1', studyCredits: 6 }),
+    )
+  })
+
+  it('returns visual credits after a failed hosted generation', async () => {
+    hostedAiMocks.getHostedAiStatus.mockResolvedValue(makeStatus(8))
+
+    const { result } = renderHook(() => useHostedAiStatus())
+
+    await waitFor(() => {
+      expect(result.current.status?.studyCredits).toBe(8)
+    })
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent('studymesh-hosted-ai-visual-spend', {
+          detail: { credits: 2 },
+        }),
+      )
+    })
+    expect(result.current.displayStudyCredits).toBe(6)
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent('studymesh-hosted-ai-visual-refund', {
+          detail: { credits: 2 },
+        }),
+      )
+    })
+
+    expect(result.current.displayStudyCredits).toBe(8)
+    expect(result.current.status?.studyCredits).toBe(8)
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'studymesh-hosted-ai-credits-v1',
+      JSON.stringify({ ownerId: 'user-1', studyCredits: 8 }),
     )
   })
 })

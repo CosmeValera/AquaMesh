@@ -17,6 +17,7 @@ import {
 } from '../../../src/quickCreate/ai/hostedClient'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
+  HOSTED_AI_VISUAL_REFUND_EVENT,
   HOSTED_AI_VISUAL_SPEND_EVENT,
 } from '../../../src/quickCreate/ai/hostedCredits'
 
@@ -176,5 +177,48 @@ describe('hosted AI client credit failures', () => {
     await expect(pending).resolves.toBe('Answer')
 
     window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, listener)
+  })
+
+  it('returns the visual credit cost when hosted generation fails', async () => {
+    const spendListener = vi.fn()
+    const refundListener = vi.fn()
+    window.addEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, spendListener)
+    window.addEventListener(HOSTED_AI_VISUAL_REFUND_EVENT, refundListener)
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(gatewayResponse(statusPayload(8)))
+        .mockResolvedValueOnce(
+          gatewayResponse(
+            {
+              ok: false,
+              error: {
+                code: 'provider_error',
+                message: 'Model failed.',
+              },
+            },
+            false,
+            502,
+          ),
+        ),
+    )
+
+    await expect(
+      callHostedAiModel({
+        surface: 'study-guide',
+        parts: [{ text: 'Create guide' }],
+      }),
+    ).rejects.toThrow('Model failed.')
+
+    expect(spendListener).toHaveBeenCalledWith(
+      expect.objectContaining({ detail: { credits: 2 } }),
+    )
+    expect(refundListener).toHaveBeenCalledWith(
+      expect.objectContaining({ detail: { credits: 2 } }),
+    )
+
+    window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, spendListener)
+    window.removeEventListener(HOSTED_AI_VISUAL_REFUND_EVENT, refundListener)
   })
 })

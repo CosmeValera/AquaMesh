@@ -3340,6 +3340,46 @@ const DashboardChatPanel = ({
               draftHasMultipleLines && chatComposerResized ? '100%' : 'auto',
           }}
         >
+          {onQuickCreatePage ? (
+            <Tooltip title="Create">
+              <span>
+                <IconButton
+                  size="small"
+                  aria-label="Create"
+                  disabled={!hasContext || Boolean(quickCreateActionId)}
+                  onClick={(event) =>
+                    setQuickCreateMenuAnchor(event.currentTarget)
+                  }
+                  aria-haspopup="menu"
+                  aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
+                  sx={{
+                    height: 40,
+                    minHeight: 40,
+                    width: 40,
+                    alignSelf: 'flex-end',
+                    flex: '0 0 auto',
+                    borderRadius: 1,
+                    border: 1,
+                    borderColor: 'divider',
+                    color: 'text.secondary',
+                    bgcolor: 'background.paper',
+                    '&:hover': {
+                      borderColor: alpha(theme.palette.primary.main, 0.32),
+                      color: 'primary.main',
+                      bgcolor: alpha(theme.palette.primary.main, 0.05),
+                    },
+                    '&.Mui-disabled': {
+                      borderColor: 'divider',
+                      color: 'text.disabled',
+                      bgcolor: 'action.disabledBackground',
+                    },
+                  }}
+                >
+                  <AddCircleOutlineIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          ) : null}
           <TextField
             inputRef={draftInputRef}
             value={draft}
@@ -3353,71 +3393,6 @@ const DashboardChatPanel = ({
             minRows={1}
             maxRows={draftHasMultipleLines && chatComposerResized ? undefined : 4}
             size="small"
-            InputProps={{
-              endAdornment: onQuickCreatePage ? (
-                <InputAdornment
-                  position="end"
-                  sx={{
-                    position: 'absolute',
-                    right: 6,
-                    bottom: 5,
-                    m: 0,
-                    height: 'auto',
-                    pointerEvents: 'auto',
-                  }}
-                >
-                  <Tooltip title="Create">
-                    <span>
-                      <IconButton
-                        size="small"
-                        aria-label="Create"
-                        disabled={!hasContext || Boolean(quickCreateActionId)}
-                        onClick={(event) =>
-                          setQuickCreateMenuAnchor(event.currentTarget)
-                        }
-                        aria-haspopup="menu"
-                        aria-expanded={
-                          quickCreateMenuOpen ? 'true' : undefined
-                        }
-                        sx={{
-                          height: 32,
-                          minHeight: 32,
-                          width: 32,
-                          borderRadius: 1,
-                          border: 1,
-                          borderColor: alpha(theme.palette.divider, 0.82),
-                          color: 'text.secondary',
-                          bgcolor: alpha(theme.palette.background.paper, 0.94),
-                          opacity: 0.68,
-                          boxShadow: `0 8px 22px ${alpha(
-                            theme.palette.common.black,
-                            0.14,
-                          )}`,
-                          '&:hover': {
-                            borderColor: alpha(
-                              theme.palette.primary.main,
-                              0.42,
-                            ),
-                            color: 'primary.main',
-                            bgcolor: alpha(theme.palette.primary.main, 0.08),
-                            opacity: 1,
-                          },
-                          '&.Mui-disabled': {
-                            borderColor: 'divider',
-                            color: 'text.disabled',
-                            bgcolor: 'action.disabledBackground',
-                            opacity: 0.54,
-                            boxShadow: 'none',
-                          },
-                        }}
-                      >
-                        <AddCircleOutlineIcon fontSize="small" />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                </InputAdornment>
-              ) : undefined,
-            }}
             sx={{
               flex: 1,
               minWidth: 0,

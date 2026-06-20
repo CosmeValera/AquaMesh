@@ -994,11 +994,30 @@ const StudyGuidesPage = () => {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 700 }}>Title</TableCell>
-                  <TableCell sx={{ fontWeight: 700, width: 96 }}>
+                  <TableCell
+                    sx={{
+                      display: { xs: 'none', md: 'table-cell' },
+                      fontWeight: 700,
+                      width: 96,
+                    }}
+                  >
                     Pages
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Prompt</TableCell>
-                  <TableCell sx={{ fontWeight: 700, width: 140 }}>
+                  <TableCell
+                    sx={{
+                      display: { xs: 'none', md: 'table-cell' },
+                      fontWeight: 700,
+                    }}
+                  >
+                    Prompt
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      display: { xs: 'none', md: 'table-cell' },
+                      fontWeight: 700,
+                      width: 140,
+                    }}
+                  >
                     Created
                   </TableCell>
                   <TableCell sx={{ width: 56 }} />
@@ -1056,11 +1075,14 @@ const StudyGuidesPage = () => {
                           </Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell>
+                      <TableCell
+                        sx={{ display: { xs: 'none', md: 'table-cell' } }}
+                      >
                         {pageCount} {pageCount === 1 ? 'page' : 'pages'}
                       </TableCell>
                       <TableCell
                         sx={{
+                          display: { xs: 'none', md: 'table-cell' },
                           maxWidth: 360,
                           color: 'text.secondary',
                           overflow: 'hidden',
@@ -1072,7 +1094,11 @@ const StudyGuidesPage = () => {
                           guide.studyPath.dashboards[0]?.name ||
                           'Open this learning workspace.'}
                       </TableCell>
-                      <TableCell>{formatGuideDate(guide.createdAt)}</TableCell>
+                      <TableCell
+                        sx={{ display: { xs: 'none', md: 'table-cell' } }}
+                      >
+                        {formatGuideDate(guide.createdAt)}
+                      </TableCell>
                       <TableCell align="right">
                         <IconButton
                           aria-label={`Open ${guide.title} options`}

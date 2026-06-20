@@ -422,10 +422,14 @@ const StudyGuidesPage = () => {
       >
         <Stack
           direction="row"
-          spacing={1.5}
           alignItems={{ xs: 'flex-start', md: 'center' }}
           justifyContent="space-between"
-          sx={{ mb: 2.5, flexWrap: { xs: 'wrap', md: 'nowrap' } }}
+          sx={{
+            mb: 2.5,
+            columnGap: 1.5,
+            rowGap: { xs: 1, md: 0 },
+            flexWrap: { xs: 'wrap', md: 'nowrap' },
+          }}
         >
           <Box
             sx={{

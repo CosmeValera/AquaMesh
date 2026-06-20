@@ -89,11 +89,21 @@ export interface DashboardChatMessage {
   promptBranchCount?: number
 }
 
+interface ChatMemoryItem {
+  userQuestion: string
+  finalAssistantAnswer: string
+  coveredEntities: string[]
+  usedSourceIds: string[]
+  sourceSummaries: string[]
+  createdAt: string
+}
+
 interface DashboardChatSession {
   id: string
   title: string
   messages: DashboardChatMessage[]
   externalSources?: DashboardExternalSource[]
+  memoryItems?: ChatMemoryItem[]
   rejectedExternalSourceUrls?: string[]
   rejectedExternalSourceDomains?: string[]
   branchSnapshots?: Record<string, DashboardChatMessage[][]>
@@ -143,6 +153,7 @@ const createEmptyChatSession = (): DashboardChatSession => ({
   title: 'New chat',
   messages: [],
   externalSources: [],
+  memoryItems: [],
   branchSnapshots: {},
   createdAt: Date.now(),
   updatedAt: Date.now(),
@@ -169,6 +180,12 @@ const quickCreateIcons: Record<QuickCreateActionId, React.ReactNode> = {
 
 const SOURCE_REJECTION_PATTERN =
   /\b(?:don't|dont|do not|stop)\s+use\b|\btry another\b|\banother source\b|\bwrong source\b|\bbad source\b|\bnot that source\b/i
+const SMALLTALK_PATTERN =
+  /^(?:hi|hello|hey|thanks?|thank you|thx|ty|ok|okay|cool|nice|great|what can you do\??)$/i
+const SMALLTALK_HINT_PATTERN =
+  /^(?:say\s+hi\b.*|how\s+(?:are|r)?\s*you\b|how you\b|tank\s+yuo)$/i
+const RECALL_PATTERN =
+  /\bagain\b|\brepeat\b|\bearlier\b|\bwhat did you say\b|\bwhat was\b|\bremind me\b/i
 const QUESTION_TERM_STOPWORDS = new Set([
   'about',
   'apps',
@@ -530,6 +547,145 @@ const DashboardChatPanel = ({
     }
   }
 
+  const classifyQuestionIntent = (
+    question: string,
+  ):
+    | 'conversational_smalltalk'
+    | 'recall_previous_chat'
+    | 'study_guide_question'
+    | 'external_info_needed' => {
+    const normalized = question
+      .trim()
+      .toLowerCase()
+      .replace(/[!?.,]+$/g, '')
+      .replace(/\s+/g, ' ')
+    if (
+      normalized.length <= 60 &&
+      (SMALLTALK_PATTERN.test(normalized) ||
+        SMALLTALK_HINT_PATTERN.test(normalized))
+    ) {
+      return 'conversational_smalltalk'
+    }
+
+    if (RECALL_PATTERN.test(normalized)) {
+      return 'recall_previous_chat'
+    }
+
+    return hasContext ? 'study_guide_question' : 'external_info_needed'
+  }
+
+  const isUsefulAssistantAnswer = (message: DashboardChatMessage): boolean =>
+    message.role === 'assistant' &&
+    !message.pending &&
+    message.content.trim().length > 0 &&
+    message.webLookup?.status !== 'searching' &&
+    message.webLookup?.status !== 'failed' &&
+    !/^The Study Guide does not contain enough info/i.test(message.content) &&
+    !/^I could not find a reliable web source/i.test(message.content) &&
+    !/^The provided .*do not contain/i.test(message.content)
+
+  const answerSmalltalk = (question: string): string => {
+    if (/^(?:cool|nice|great|ok|okay)$/i.test(question.trim())) {
+      return 'Got it. What would you like to look at next?'
+    }
+
+    if (/what can you do/i.test(question)) {
+      return 'I can explain this Study Guide, summarize pages, compare concepts, make practice questions, and help connect the material to reliable web sources when the guide is missing something.'
+    }
+
+    if (/thank|thx|ty|tank\s+yuo/i.test(question)) {
+      return 'You are welcome.'
+    }
+
+    if (/how\s+(?:are|r)?\s*you|how you/i.test(question)) {
+      return 'All good. What can I help you with?'
+    }
+
+    if (/say\s+hi.*twice/i.test(question)) {
+      return 'Hi! Hi!'
+    }
+
+    return 'Hi! How can I help you with this Study Guide?'
+  }
+
+  const summarizeExternalSource = (source: DashboardExternalSource): string =>
+    `${source.title}: ${source.summary || source.text.slice(0, 360)}`
+
+  const extractCoveredEntities = (value: string): string[] =>
+    extractQuestionTerms(value)
+      .filter((term) => term.length > 2)
+      .slice(0, 12)
+
+  const updateExternalSourcesUsedInAnswer = (sourceIds: string[]) => {
+    if (sourceIds.length === 0) {
+      return
+    }
+
+    const sourceIdSet = new Set(sourceIds)
+    updateActiveChatExternalSources((externalSources) =>
+      externalSources.map((source) =>
+        sourceIdSet.has(source.id)
+          ? {
+              ...source,
+              normalizedUrl:
+                source.normalizedUrl || normalizeSourceUrlForDedupe(source.url),
+              domain: source.domain || getSourceDomain(source.url),
+              summary: source.summary || source.text.slice(0, 500),
+              coveredEntities:
+                source.coveredEntities ||
+                extractCoveredEntities(`${source.title} ${source.text}`),
+              usedInAnswer: true,
+            }
+          : source,
+      ),
+    )
+  }
+
+  const rememberFinalAnswer = ({
+    userQuestion,
+    finalAssistantAnswer,
+    usedSourceIds,
+  }: {
+    userQuestion: string
+    finalAssistantAnswer: string
+    usedSourceIds: string[]
+  }) => {
+    if (!finalAssistantAnswer.trim()) {
+      return
+    }
+
+    const { currentSessions, sessionId, session } = getActiveSession()
+    const sources = session?.externalSources || []
+    const sourceSummaries = usedSourceIds
+      .map((sourceId) => sources.find((source) => source.id === sourceId))
+      .filter((source): source is DashboardExternalSource => Boolean(source))
+      .map(summarizeExternalSource)
+    const memoryItem: ChatMemoryItem = {
+      userQuestion,
+      finalAssistantAnswer,
+      coveredEntities: extractCoveredEntities(
+        `${userQuestion} ${finalAssistantAnswer} ${sourceSummaries.join(' ')}`,
+      ),
+      usedSourceIds,
+      sourceSummaries,
+      createdAt: new Date().toISOString(),
+    }
+    const nextSessions = currentSessions.map((currentSession) =>
+      currentSession.id === sessionId
+        ? {
+            ...currentSession,
+            memoryItems: [memoryItem, ...(currentSession.memoryItems || [])].slice(
+              0,
+              24,
+            ),
+            updatedAt: Date.now(),
+          }
+        : currentSession,
+    )
+    persistChatSessions(nextSessions)
+    updateExternalSourcesUsedInAnswer(usedSourceIds)
+  }
+
   const expandQuestionWithChatContext = (
     question: string,
     historyMessages: DashboardChatMessage[],
@@ -688,6 +844,90 @@ const DashboardChatPanel = ({
       .slice(0, 3)
       .map(({ source }) => source)
   }
+
+  const scoreTextForQuestion = (text: string, question: string): number => {
+    const terms = extractQuestionTerms(question)
+    const haystack = text.toLowerCase()
+    return terms.reduce(
+      (score, term) => score + (haystack.includes(term) ? 1 : 0),
+      0,
+    )
+  }
+
+  const findRecallAnswer = (
+    question: string,
+    historyMessages: DashboardChatMessage[],
+  ): string | null => {
+    const { session } = getActiveSession()
+    const terms = extractQuestionTerms(question)
+    if (terms.length === 0) {
+      return null
+    }
+
+    const memoryMatch = (session?.memoryItems || [])
+      .map((item) => ({
+        item,
+        score: scoreTextForQuestion(
+          `${item.userQuestion} ${item.finalAssistantAnswer} ${item.coveredEntities.join(
+            ' ',
+          )} ${item.sourceSummaries.join(' ')}`,
+          question,
+        ),
+      }))
+      .filter(({ score }) => score > 0)
+      .sort((left, right) => right.score - left.score)[0]
+
+    if (memoryMatch) {
+      return `Earlier, I said: ${memoryMatch.item.finalAssistantAnswer}`
+    }
+
+    const answerMatch = [...historyMessages]
+      .reverse()
+      .filter(isUsefulAssistantAnswer)
+      .map((message) => ({
+        message,
+        score: scoreTextForQuestion(message.content, question),
+      }))
+      .filter(({ score }) => score > 0)
+      .sort((left, right) => right.score - left.score)[0]
+
+    if (answerMatch) {
+      return `Earlier, I said: ${answerMatch.message.content}`
+    }
+
+    const sourceMatch = selectStoredExternalSources(question)[0]
+    if (sourceMatch && scoreExternalSource(sourceMatch, question) > 0) {
+      return `${sourceMatch.title}: ${sourceMatch.summary || sourceMatch.text.slice(
+        0,
+        700,
+      )}`
+    }
+
+    if (/\bwhat did you say\b|\bearlier\b|\brepeat\b|\bremind me\b/i.test(question)) {
+      const latestMemory = session?.memoryItems?.[0]
+      if (latestMemory) {
+        return `Earlier, I said: ${latestMemory.finalAssistantAnswer}`
+      }
+
+      const latestAnswer = [...historyMessages].reverse().find(isUsefulAssistantAnswer)
+      if (latestAnswer) {
+        return `Earlier, I said: ${latestAnswer.content}`
+      }
+    }
+
+    return null
+  }
+
+  const usefulHistoryForPrompt = (
+    historyMessages: DashboardChatMessage[],
+  ): Array<{ role: 'user' | 'assistant'; content: string }> =>
+    historyMessages
+      .filter(
+        (message) =>
+          message.role === 'user' || isUsefulAssistantAnswer(message),
+      )
+      .slice(-8)
+      .map(({ role, content }) => ({ role, content }))
 
   const selectAnswerSourceChunks = (
     question: string,
@@ -964,9 +1204,19 @@ const DashboardChatPanel = ({
   const upsertExternalSource = (
     source: DashboardExternalSource,
   ): DashboardExternalSource => {
-    let savedSource = source
+    const enrichedSource: DashboardExternalSource = {
+      ...source,
+      normalizedUrl: source.normalizedUrl || normalizeSourceUrlForDedupe(source.url),
+      domain: source.domain || getSourceDomain(source.url),
+      summary: source.summary || source.text.slice(0, 500),
+      coveredEntities:
+        source.coveredEntities ||
+        extractCoveredEntities(`${source.title} ${source.text}`),
+      usedInAnswer: source.usedInAnswer || false,
+    }
+    let savedSource = enrichedSource
     updateActiveChatExternalSources((externalSources) => {
-      const normalizedUrl = normalizeSourceUrlForDedupe(source.url)
+      const normalizedUrl = normalizeSourceUrlForDedupe(enrichedSource.url)
       const existingSource = externalSources.find(
         (candidate) =>
           normalizeSourceUrlForDedupe(candidate.url) === normalizedUrl,
@@ -977,7 +1227,7 @@ const DashboardChatPanel = ({
         return externalSources
       }
 
-      return [source, ...externalSources]
+      return [enrichedSource, ...externalSources]
     })
 
     return savedSource
@@ -1165,12 +1415,12 @@ const DashboardChatPanel = ({
         dashboardTitle: context.dashboardTitle,
         contextText: formatDashboardChatContext(context, sourceChunks),
         question,
-        history: historyMessages.map(({ role, content }) => ({
-          role,
-          content,
-        })),
+        history: usefulHistoryForPrompt(historyMessages),
         sourceChunks,
       })
+      const usedWebSourceIds = result.sourceRefs
+        .filter((sourceRef) => sourceRef.origin === 'web')
+        .map((sourceRef) => sourceRef.chunkId)
       updateMessage(pendingMessageId, (message) => ({
         ...message,
         content: result.answer,
@@ -1181,10 +1431,15 @@ const DashboardChatPanel = ({
       }))
       updateLatestLookupDisplayedSources(
         externalSourceIds,
-        result.sourceRefs
-          .filter((sourceRef) => sourceRef.origin === 'web')
-          .map((sourceRef) => sourceRef.chunkId),
+        usedWebSourceIds,
       )
+      if (!result.needsExternalSource) {
+        rememberFinalAnswer({
+          userQuestion: question,
+          finalAssistantAnswer: result.answer,
+          usedSourceIds: usedWebSourceIds,
+        })
+      }
       if (
         result.needsExternalSource &&
         externalSourceIds.length === 0
@@ -1245,6 +1500,41 @@ const DashboardChatPanel = ({
     )
     setDraft('')
     setError('')
+
+    const intent = classifyQuestionIntent(trimmed)
+    if (intent === 'conversational_smalltalk') {
+      const answer = answerSmalltalk(trimmed)
+      updateMessage(pendingMessage.id, (message) => ({
+        ...message,
+        content: answer,
+        pending: false,
+      }))
+      rememberFinalAnswer({
+        userQuestion: trimmed,
+        finalAssistantAnswer: answer,
+        usedSourceIds: [],
+      })
+      setReplyScrollBufferActive(false)
+      return
+    }
+
+    if (intent === 'recall_previous_chat') {
+      const recalledAnswer = findRecallAnswer(trimmed, previousMessages)
+      if (recalledAnswer) {
+        updateMessage(pendingMessage.id, (message) => ({
+          ...message,
+          content: recalledAnswer,
+          pending: false,
+        }))
+        rememberFinalAnswer({
+          userQuestion: trimmed,
+          finalAssistantAnswer: recalledAnswer,
+          usedSourceIds: [],
+        })
+        setReplyScrollBufferActive(false)
+        return
+      }
+    }
 
     void answerQuestion(trimmed, pendingMessage.id, previousMessages)
   }

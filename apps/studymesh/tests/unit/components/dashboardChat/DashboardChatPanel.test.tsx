@@ -283,6 +283,125 @@ describe('DashboardChatPanel quick create menu', () => {
 })
 
 describe('DashboardChatPanel chat management', () => {
+  it('answers smalltalk without dashboard RAG or web lookup', async () => {
+    const Harness = () => {
+      const [panelMessages, setPanelMessages] = React.useState<
+        React.ComponentProps<typeof DashboardChatPanel>['messages']
+      >([])
+
+      return (
+        <DashboardChatPanel
+          dashboard={dashboardWithContext}
+          messages={panelMessages}
+          onMessagesChange={setPanelMessages}
+          onClose={vi.fn()}
+          onQuickCreatePage={vi.fn()}
+        />
+      )
+    }
+
+    render(<Harness />)
+
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: 'say hi twice' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    expect(
+      await screen.findByText('Hi! Hi!'),
+    ).toBeInTheDocument()
+    expect(askDashboardSources).not.toHaveBeenCalled()
+    expect(fetchDashboardExternalSource).not.toHaveBeenCalled()
+    expect(screen.queryByText(/searching web/i)).not.toBeInTheDocument()
+  })
+
+  it('answers recall from previous final web answer without Tavily', async () => {
+    const messages = [
+      {
+        id: 'user-1',
+        role: 'user' as const,
+        content: 'what are RKE2, AWS, and Terraform',
+        createdAt: 1,
+      },
+      {
+        id: 'assistant-1',
+        role: 'assistant' as const,
+        content:
+          'AWS means Amazon Web Services. Terraform is declarative infrastructure as code.',
+        externalSourceIds: ['web-source-aws'],
+        createdAt: 2,
+      },
+    ]
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === 'studymesh-dashboard-chat-sessions-dashboard-1'
+        ? JSON.stringify([
+            {
+              id: 'chat-1',
+              title: 'Cloud tools',
+              messages,
+              externalSources: [
+                {
+                  id: 'web-source-aws',
+                  url: 'https://docs.example/aws',
+                  title: 'AWS docs',
+                  text: 'AWS means Amazon Web Services, a cloud platform for compute, storage, networking, and managed services.',
+                  searchQuery: 'AWS Terraform',
+                  usedInAnswer: true,
+                  coveredEntities: ['aws', 'terraform'],
+                  fetchedAt: 1,
+                },
+              ],
+              memoryItems: [
+                {
+                  userQuestion: 'what are RKE2, AWS, and Terraform',
+                  finalAssistantAnswer:
+                    'AWS means Amazon Web Services. Terraform is declarative infrastructure as code.',
+                  coveredEntities: ['aws', 'terraform', 'rke2'],
+                  usedSourceIds: ['web-source-aws'],
+                  sourceSummaries: ['AWS docs: AWS means Amazon Web Services.'],
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                },
+              ],
+              createdAt: 1,
+              updatedAt: 2,
+            },
+          ])
+        : null,
+    )
+    const Harness = () => {
+      const [panelMessages, setPanelMessages] = React.useState<
+        React.ComponentProps<typeof DashboardChatPanel>['messages']
+      >(messages)
+
+      return (
+        <DashboardChatPanel
+          dashboard={dashboardWithContext}
+          messages={panelMessages}
+          onMessagesChange={setPanelMessages}
+          onClose={vi.fn()}
+          onQuickCreatePage={vi.fn()}
+        />
+      )
+    }
+
+    render(<Harness />)
+
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: 'what is aws again?' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    expect(
+      await screen.findByText(/Earlier, I said: AWS means Amazon Web Services/i),
+    ).toBeInTheDocument()
+    expect(askDashboardSources).not.toHaveBeenCalled()
+    expect(fetchDashboardExternalSource).not.toHaveBeenCalled()
+  })
+
   it('uses each pet face image in chat and full image in the empty-chat hero', () => {
     aiChatPets.forEach((pet) => {
       expect(getAiChatPetSrc(pet, 'full')).toBe(

@@ -157,6 +157,28 @@ describe('askDashboardSources', () => {
     })
   })
 
+  it('tells the model to answer smalltalk directly and does not escalate it to web lookup', async () => {
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
+      provider: 'hosted',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+    vi.mocked(callHostedAiModel).mockResolvedValue(
+      'The dashboard sources do not contain enough information.',
+    )
+
+    const result = await askDashboardSources({
+      ...baseOptions,
+      question: 'how you',
+    })
+
+    const prompt = vi.mocked(callHostedAiModel).mock.calls[0][0].parts[0].text
+    expect(prompt).toContain('conversational smalltalk')
+    expect(prompt).toContain('Do not use "SOURCE_GAP:"')
+    expect(result.needsExternalSource).toBe(false)
+  })
+
   it('marks source gaps from legacy insufficient-context wording', async () => {
     vi.mocked(readQuickCreateAiSettings).mockReturnValue({
       provider: 'hosted',

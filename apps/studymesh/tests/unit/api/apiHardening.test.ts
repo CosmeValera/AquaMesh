@@ -316,7 +316,7 @@ describe('API payment and hosted AI hardening', () => {
         title: 'Ansible docs',
         url: 'https://docs.example/ansible',
         text: expect.stringContaining('Ansible automates provisioning'),
-        searchQuery: expect.stringContaining('What is Ansible?'),
+        searchQuery: expect.stringContaining('What is Ansible official overview'),
         score: 0.84,
         favicon: 'https://docs.example/favicon.ico',
       },
@@ -406,6 +406,79 @@ describe('API payment and hosted AI hardening', () => {
       source: {
         title: 'Ansible and Terraform compared with automation tools',
         url: 'https://example.test/ansible-terraform',
+      },
+    })
+  })
+
+  it('keeps simple definition lookups focused on the requested entity', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    const fetchMock = vi.fn((url: string) => {
+      if (String(url).includes('/extract')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(
+            JSON.stringify({
+              results: [
+                {
+                  title: 'What is AWS?',
+                  url: 'https://aws.amazon.com/what-is-aws/',
+                  raw_content:
+                    'Amazon Web Services is a cloud computing platform with compute, storage, database, networking, analytics, machine learning, and other cloud services.',
+                },
+              ],
+            }),
+          ),
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            results: [
+              {
+                title: 'What is AWS?',
+                url: 'https://aws.amazon.com/what-is-aws/',
+                content:
+                  'Amazon Web Services cloud platform overview and services.',
+                score: 0.9,
+              },
+            ],
+          }),
+        ),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'what is aws',
+          dashboardTitle: 'Kubernetes basics',
+          contextSummary:
+            'Pods, deployments, services, ingress, and Kubernetes cluster components.',
+        },
+      },
+      res,
+    )
+
+    const searchBody = JSON.parse(String(fetchMock.mock.calls[0][1]?.body))
+    expect(String(searchBody.query).toLowerCase()).toContain('what is aws')
+    expect(String(searchBody.query).toLowerCase()).not.toContain('kubernetes')
+    expect(String(searchBody.query).toLowerCase()).not.toContain('comparison')
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      source: {
+        title: 'What is AWS?',
+        url: 'https://aws.amazon.com/what-is-aws/',
+        text: expect.stringContaining('Amazon Web Services'),
       },
     })
   })

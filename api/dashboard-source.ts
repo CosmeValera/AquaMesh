@@ -254,7 +254,30 @@ const selectMissingTerms = ({
 const formatTerm = (term: string): string =>
   term.length <= 4 ? term : `${term[0].toUpperCase()}${term.slice(1)}`;
 
+const getDefinitionFocusTerms = (question: string): string[] | null => {
+  const normalized = question.toLowerCase().replace(/\s+/g, " ").trim();
+  const match = normalized.match(
+    /^(?:what\s+(?:is|are)|define|explain)\s+(.+?)(?:\?|$)/i,
+  );
+  if (!match) {
+    return null;
+  }
+
+  const focusTerms = extractQuestionTerms(match[1]);
+  return focusTerms.length > 0 ? focusTerms.slice(0, 3) : null;
+};
+
 const buildFallbackSearchQuery = (request: DashboardSourceRequest): string => {
+  const definitionFocusTerms = getDefinitionFocusTerms(request.question);
+  if (definitionFocusTerms) {
+    const query = `What is ${definitionFocusTerms
+      .map(formatTerm)
+      .join(" ")} official overview`;
+    return query.length > MAX_QUERY_CHARS
+      ? query.slice(0, MAX_QUERY_CHARS).trim()
+      : query;
+  }
+
   const missingTerms = selectMissingTerms(request).map(formatTerm);
   const query = [
     missingTerms.length > 0 ? `${missingTerms.join(" ")} comparison` : "",

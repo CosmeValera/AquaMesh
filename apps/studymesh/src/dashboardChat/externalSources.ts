@@ -5,7 +5,12 @@ export interface DashboardExternalSource {
   url: string
   title: string
   text: string
+  normalizedUrl?: string
+  domain?: string
+  summary?: string
+  coveredEntities?: string[]
   searchQuery: string
+  usedInAnswer?: boolean
   score?: number
   favicon?: string
   fetchedAt: number

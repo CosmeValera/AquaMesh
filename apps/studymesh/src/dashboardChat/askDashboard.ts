@@ -39,6 +39,8 @@ export interface DashboardAnswerSourceRef {
 const STRONG_MODEL_CHAT_TIMEOUT_MS = 45000
 const STRONG_CHAT_RECENT_HISTORY_MESSAGES = 4
 const SOURCE_GAP_MARKER = 'SOURCE_GAP:'
+const CONVERSATIONAL_QUESTION_PATTERN =
+  /\b(?:hi|hello|hey|thanks?|thank you|thx|ty|ok|okay|cool|nice|great)\b|\bhow\s+(?:are|r)?\s*you\b|\bhow you\b|\bsay\s+hi\b/i
 
 type ChatMemoryProvider = 'hosted' | 'local' | 'gemini' | 'cerebras' | string
 
@@ -103,6 +105,7 @@ const buildPrompt = ({
 Rules:
 - Answer using only the provided dashboard, study, and web source context.
 - Web sources in the context are allowed sources. Use them when dashboard-only material lacks the answer.
+- If the student message is conversational smalltalk, a greeting, thanks, a casual acknowledgement, or a minor typo of those, answer briefly and naturally. Do not use "${SOURCE_GAP_MARKER}", do not cite sources, and do not search for dashboard/web evidence for smalltalk.
 - If the answer is not supported by any provided context, start your answer with "${SOURCE_GAP_MARKER}" and say that the provided sources do not contain enough information.
 - Do not invent facts, citations, links, or source names.
 - When you use a specific source, cite it inline with its source number like [1] or [2].
@@ -139,7 +142,25 @@ const cleanAnswer = (answer: string): AskDashboardResult['answer'] => {
     .trim()
 }
 
-const detectNeedsExternalSource = (answer: string): boolean => {
+const isConversationalQuestion = (question: string): boolean => {
+  const normalized = question
+    .trim()
+    .toLowerCase()
+    .replace(/[!?.,]+$/g, '')
+    .replace(/\s+/g, ' ')
+
+  return (
+    normalized.length <= 48 &&
+    (CONVERSATIONAL_QUESTION_PATTERN.test(normalized) ||
+      /^tank\s+yuo$/.test(normalized))
+  )
+}
+
+const detectNeedsExternalSource = (answer: string, question: string): boolean => {
+  if (isConversationalQuestion(question)) {
+    return false
+  }
+
   if (new RegExp(`^\\s*${SOURCE_GAP_MARKER}`, 'i').test(answer)) {
     return true
   }
@@ -215,7 +236,7 @@ export const askDashboardSources = async (
     throw new Error('Choose a supported AI mode before asking the dashboard.')
   }
 
-  const needsExternalSource = detectNeedsExternalSource(answer)
+  const needsExternalSource = detectNeedsExternalSource(answer, options.question)
 
   const answerSourceChunks = options.sourceChunks.map((chunk, index) => ({
     chunk,

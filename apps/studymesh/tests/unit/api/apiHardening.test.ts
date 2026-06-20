@@ -238,8 +238,27 @@ describe('API payment and hosted AI hardening', () => {
   it('maps Tavily dashboard source search results into web source text', async () => {
     vi.stubEnv('NODE_ENV', 'test')
     vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
-    const fetchMock = vi.fn(() =>
-      Promise.resolve({
+    const fetchMock = vi.fn((url: string) => {
+      if (String(url).includes('/extract')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(
+            JSON.stringify({
+              results: [
+                {
+                  title: 'Ansible docs',
+                  url: 'https://docs.example/ansible',
+                  raw_content:
+                    'Ansible automates provisioning and configuration management for repeatable infrastructure work with playbooks and inventories.',
+                },
+              ],
+            }),
+          ),
+        })
+      }
+
+      return Promise.resolve({
         ok: true,
         status: 200,
         text: vi.fn().mockResolvedValue(
@@ -248,16 +267,15 @@ describe('API payment and hosted AI hardening', () => {
               {
                 title: 'Ansible docs',
                 url: 'https://docs.example/ansible',
-                raw_content:
-                  'Ansible automates provisioning and configuration management for repeatable infrastructure work with playbooks and inventories.',
+                content: 'Official docs for Ansible automation playbooks.',
                 score: 0.84,
                 favicon: 'https://docs.example/favicon.ico',
               },
             ],
           }),
         ),
-      }),
-    )
+      })
+    })
     vi.stubGlobal('fetch', fetchMock)
     const { response, res } = makeResponse()
 
@@ -279,7 +297,14 @@ describe('API payment and hosted AI hardening', () => {
       'https://api.tavily.com/search',
       expect.objectContaining({
         method: 'POST',
-        body: expect.stringContaining('"include_raw_content":"text"'),
+        body: expect.stringContaining('"include_raw_content":false'),
+      }),
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.tavily.com/extract',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"extract_depth":"basic"'),
       }),
     )
     expect(fetchMock.mock.calls[0][1]?.body).not.toContain(
@@ -301,8 +326,27 @@ describe('API payment and hosted AI hardening', () => {
   it('prioritizes missing question terms over already-covered context topics', async () => {
     vi.stubEnv('NODE_ENV', 'test')
     vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
-    const fetchMock = vi.fn(() =>
-      Promise.resolve({
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      if (String(url).includes('/extract')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(
+            JSON.stringify({
+              results: [
+                {
+                  title: 'Ansible and Terraform compared with automation tools',
+                  url: 'https://example.test/ansible-terraform',
+                  raw_content:
+                    'Ansible focuses on configuration management and task automation, while Terraform focuses on declarative infrastructure provisioning. Both can be orchestrated by other automation platforms.',
+                },
+              ],
+            }),
+          ),
+        })
+      }
+
+      return Promise.resolve({
         ok: true,
         status: 200,
         text: vi.fn().mockResolvedValue(
@@ -311,22 +355,22 @@ describe('API payment and hosted AI hardening', () => {
               {
                 title: 'n8n vs Rundeck: Which Automation Tool Wins?',
                 url: 'https://example.test/n8n-rundeck',
-                raw_content:
+                content:
                   'n8n and Rundeck are compared here. Ansible is only briefly mentioned as something Rundeck can run.',
                 score: 0.95,
               },
               {
                 title: 'Ansible and Terraform compared with automation tools',
                 url: 'https://example.test/ansible-terraform',
-                raw_content:
+                content:
                   'Ansible focuses on configuration management and task automation, while Terraform focuses on declarative infrastructure provisioning. Both can be orchestrated by other automation platforms.',
                 score: 0.75,
               },
             ],
           }),
         ),
-      }),
-    )
+      })
+    })
     vi.stubGlobal('fetch', fetchMock)
     const { response, res } = makeResponse()
 
@@ -344,9 +388,18 @@ describe('API payment and hosted AI hardening', () => {
       res,
     )
 
-    expect(String(fetchMock.mock.calls[0][1]?.body).toLowerCase()).toContain(
-      'ansible official documentation',
-    )
+    const searchBody = JSON.parse(String(fetchMock.mock.calls[0][1]?.body))
+    expect(searchBody).toMatchObject({
+      search_depth: 'basic',
+      include_raw_content: false,
+      include_answer: false,
+      include_favicon: true,
+    })
+    expect(String(searchBody.query).toLowerCase()).toContain('ansible')
+    expect(String(searchBody.query).toLowerCase()).toContain('terraform')
+    const extractBody = JSON.parse(String(fetchMock.mock.calls[1][1]?.body))
+    expect(extractBody.urls).toContain('https://example.test/ansible-terraform')
+    expect(extractBody.urls.length).toBeLessThanOrEqual(3)
     expect(response.statusCode).toBe(200)
     expect(response.body).toMatchObject({
       ok: true,
@@ -381,7 +434,7 @@ describe('API payment and hosted AI hardening', () => {
         method: 'POST',
         headers: {},
         body: {
-          question: 'What is Ansible?',
+          question: 'What is Pulumi?',
           dashboardTitle: 'Infrastructure',
         },
       },

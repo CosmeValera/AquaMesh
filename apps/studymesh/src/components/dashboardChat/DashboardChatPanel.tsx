@@ -1053,38 +1053,11 @@ const DashboardChatPanel = ({
           ...getRejectedSourceFilters(),
         }),
       )
-      const coveredByInitialSources = coveredConceptsFromSources(
-        sources,
-        missingConcepts,
-      )
-      const uncoveredConcepts = missingConcepts.filter(
-        (concept) => !coveredByInitialSources.includes(concept),
-      )
-      const supplementalSources = (
-        await Promise.all(
-          uncoveredConcepts.slice(0, 3).map(async (concept) => {
-            try {
-              return await fetchDashboardExternalSource({
-                question: `${concept} official documentation ${lookupQuestion}`,
-                dashboardTitle: context.dashboardTitle,
-                contextSummary: concept,
-                ...getRejectedSourceFilters(),
-              })
-            } catch {
-              return []
-            }
-          }),
-        )
-      ).flat()
-      const allSources = upsertExternalSources([
-        ...sources,
-        ...supplementalSources,
-      ])
       const usableSourceIds =
         missingConcepts.length > 0
           ? Array.from(
               new Set(
-                allSources
+                sources
                   .filter((source) =>
                     missingConcepts.some((concept) =>
                       sourceCoversConcept(source, concept),
@@ -1093,10 +1066,10 @@ const DashboardChatPanel = ({
                   .map((source) => source.id),
               ),
             )
-          : allSources.map((source) => source.id)
+          : sources.map((source) => source.id)
       const sourceIds = usableSourceIds.length
         ? usableSourceIds
-        : Array.from(new Set(allSources.map((source) => source.id)))
+        : Array.from(new Set(sources.map((source) => source.id)))
 
       updateMessage(gapMessageId, (message) => ({
         ...message,

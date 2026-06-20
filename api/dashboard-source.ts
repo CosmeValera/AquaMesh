@@ -55,12 +55,13 @@ interface DashboardSourceRequest {
 }
 
 const TAVILY_SEARCH_ENDPOINT = "https://api.tavily.com/search";
+const TAVILY_EXTRACT_ENDPOINT = "https://api.tavily.com/extract";
 const SEARCH_TIMEOUT_MS = 30_000;
 const MAX_QUERY_CHARS = 280;
 const MAX_TEXT_CHARS = 60_000;
 const MIN_SOURCE_TEXT_CHARS = 80;
-const MAX_SEARCH_QUERIES = 6;
-const MAX_RETURNED_SOURCES = 6;
+const SEARCH_CANDIDATE_COUNT = 12;
+const MAX_EXTRACT_URLS = 3;
 const OFFICIAL_DOMAIN_HINTS = ["docs", "developer", "learn", "help", "support"];
 const LOW_QUALITY_TITLE_PATTERNS =
   /alternative|alternatives|market share|reviews?|pricing|competitors?|software comparison|top \d+/i;
@@ -92,6 +93,24 @@ const QUERY_STOPWORDS = new Set([
   "what",
   "with",
 ]);
+
+interface TavilyCandidate {
+  url: string;
+  title: string;
+  snippet: string;
+  searchQuery: string;
+  score?: number;
+  favicon?: string;
+}
+
+interface ExtractedSourceText {
+  text: string;
+  title?: string;
+  fetchedAt: number;
+}
+
+const searchCandidateCache = new Map<string, TavilyCandidate[]>();
+const extractedUrlCache = new Map<string, ExtractedSourceText>();
 
 const getEnv = (name: string): string => process.env[name]?.trim() || "";
 
@@ -252,37 +271,6 @@ const buildFallbackSearchQuery = (request: DashboardSourceRequest): string => {
     : query;
 };
 
-const buildSearchQueries = (request: DashboardSourceRequest): string[] => {
-  const missingTerms = selectMissingTerms(request);
-  const questionTerms = extractQuestionTerms(request.question);
-  const focusTerms = missingTerms.length > 0 ? missingTerms : questionTerms;
-  const queries: string[] = [];
-
-  focusTerms.forEach((term) => {
-    queries.push(`${formatTerm(term)} official documentation`);
-    queries.push(`${formatTerm(term)} docs`);
-  });
-
-  if (focusTerms.length > 1) {
-    for (let index = 0; index < focusTerms.length - 1; index += 1) {
-      for (let nextIndex = index + 1; nextIndex < focusTerms.length; nextIndex += 1) {
-        queries.push(
-          `${formatTerm(focusTerms[index])} ${formatTerm(
-            focusTerms[nextIndex],
-          )} integration official docs`,
-        );
-      }
-    }
-    queries.push(`${focusTerms.map(formatTerm).join(" ")} comparison official docs`);
-  }
-
-  queries.push(buildFallbackSearchQuery(request));
-
-  return Array.from(new Set(queries))
-    .filter(Boolean)
-    .slice(0, MAX_SEARCH_QUERIES);
-};
-
 const firstString = (...values: unknown[]): string => {
   for (const value of values) {
     const text = normalizeText(value);
@@ -329,7 +317,7 @@ const domainLooksOfficialForTerm = (domain: string, term: string): boolean => {
 };
 
 const isRejectedSource = (
-  source: Pick<DashboardSource, "url">,
+  source: Pick<DashboardSource | TavilyCandidate, "url">,
   request: DashboardSourceRequest,
 ): boolean => {
   const normalizedUrl = normalizeUrl(source.url);
@@ -347,15 +335,19 @@ const isRejectedSource = (
   );
 };
 
-const qualityScoreSource = (
-  source: DashboardSource,
+const qualityScoreCandidate = (
+  source: TavilyCandidate,
   missingTerms: string[],
 ): number => {
   const domain = getDomain(source.url);
   const title = source.title.toLowerCase();
-  const haystack = `${source.title} ${source.text}`.toLowerCase();
+  const haystack = `${source.title} ${source.snippet}`.toLowerCase();
   const coverageScore = missingTerms.reduce(
-    (score, term) => score + (haystack.includes(term) ? 10 : 0),
+    (score, term) => score + (haystack.includes(term) ? 20 : 0),
+    0,
+  );
+  const titleScore = missingTerms.reduce(
+    (score, term) => score + (title.includes(term) ? 15 : 0),
     0,
   );
   const officialScore = missingTerms.some((term) =>
@@ -370,68 +362,49 @@ const qualityScoreSource = (
     : 0;
   const seoPenalty = LOW_QUALITY_TITLE_PATTERNS.test(title) ? -80 : 0;
 
-  return coverageScore + officialScore + docsScore + seoPenalty + (source.score || 0);
+  return (
+    coverageScore +
+    titleScore +
+    officialScore +
+    docsScore +
+    seoPenalty +
+    (source.score || 0)
+  );
 };
 
-const parseTavilySources = (
+const parseTavilyCandidates = (
   payload: unknown,
   searchQuery: string,
-  missingTerms: string[] = [],
   request: DashboardSourceRequest,
-): DashboardSource[] => {
+): TavilyCandidate[] => {
   if (!isObject(payload) || !Array.isArray(payload.results)) {
     throw new Error("fetch_failed");
   }
 
-  const readableResults = payload.results.filter(isObject);
-  const titleFocusedResults = missingTerms.length
-    ? readableResults.filter((result) => {
-        const title = firstString(result.title).toLowerCase();
-        return missingTerms.some((term) => title.includes(term));
-      })
-    : [];
+  const sources: TavilyCandidate[] = [];
 
-  const sources: DashboardSource[] = [];
-
-  for (const result of titleFocusedResults.length
-    ? titleFocusedResults
-    : readableResults) {
+  for (const result of payload.results.filter(isObject)) {
     if (!isObject(result)) {
       continue;
     }
 
     const url = firstString(result.url);
     const title = firstString(result.title, url);
-    const text = firstString(result.raw_content, result.content).slice(
-      0,
-      MAX_TEXT_CHARS,
-    );
+    const snippet = firstString(result.content, result.snippet, result.description);
 
-    const haystack = `${title} ${text}`.toLowerCase();
-    const matchesMissingTerms =
-      missingTerms.length === 0 ||
-      missingTerms.some((term) => haystack.includes(term));
-
-    if (
-      !url ||
-      !title ||
-      text.length < MIN_SOURCE_TEXT_CHARS ||
-      !matchesMissingTerms
-    ) {
+    if (!url || !title) {
       continue;
     }
 
     const source = {
-      id: `web-source-${randomUUID()}`,
       url,
       title,
-      text,
+      snippet,
       searchQuery,
       ...(typeof result.score === "number" ? { score: result.score } : {}),
       ...(normalizeText(result.favicon)
         ? { favicon: normalizeText(result.favicon) }
         : {}),
-      fetchedAt: Date.now(),
     };
 
     if (!isRejectedSource(source, request)) {
@@ -442,6 +415,141 @@ const parseTavilySources = (
   return sources;
 };
 
+const searchCacheKey = (
+  searchQuery: string,
+  request: DashboardSourceRequest,
+): string => {
+  const rejectedDomains = (request.rejectedDomains || [])
+    .map((domain) => domain.toLowerCase().replace(/^www\./, ""))
+    .sort()
+    .join(",");
+
+  return `${searchQuery.toLowerCase()}|blocked:${rejectedDomains}`;
+};
+
+const readSearchCandidates = async (
+  request: DashboardSourceRequest,
+  apiKey: string,
+  signal: AbortSignal,
+): Promise<{ searchQuery: string; candidates: TavilyCandidate[] }> => {
+  const searchQuery = buildFallbackSearchQuery(request);
+  const cacheKey = searchCacheKey(searchQuery, request);
+  const cached = searchCandidateCache.get(cacheKey);
+  if (cached) {
+    return { searchQuery, candidates: cached };
+  }
+
+  const rejectedDomains = (request.rejectedDomains || [])
+    .map((item) => item.toLowerCase().replace(/^www\./, ""))
+    .filter(Boolean);
+  const response = await fetch(TAVILY_SEARCH_ENDPOINT, {
+    method: "POST",
+    signal,
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      query: searchQuery,
+      search_depth: "basic",
+      max_results: SEARCH_CANDIDATE_COUNT,
+      include_raw_content: false,
+      include_answer: false,
+      include_favicon: true,
+      ...(rejectedDomains.length ? { exclude_domains: rejectedDomains } : {}),
+    }),
+  });
+  const payload = await readResponseJson(response);
+
+  if (!response.ok) {
+    throw new Error("fetch_failed");
+  }
+
+  const candidates = parseTavilyCandidates(payload, searchQuery, request);
+  searchCandidateCache.set(cacheKey, candidates);
+
+  return { searchQuery, candidates };
+};
+
+const parseExtractedTextByUrl = (
+  payload: unknown,
+): Map<string, ExtractedSourceText> => {
+  if (!isObject(payload) || !Array.isArray(payload.results)) {
+    throw new Error("fetch_failed");
+  }
+
+  const extracted = new Map<string, ExtractedSourceText>();
+  for (const result of payload.results.filter(isObject)) {
+    const url = firstString(result.url);
+    const text = firstString(result.raw_content, result.content, result.text).slice(
+      0,
+      MAX_TEXT_CHARS,
+    );
+
+    if (!url || text.length < MIN_SOURCE_TEXT_CHARS) {
+      continue;
+    }
+
+    extracted.set(normalizeUrl(url), {
+      text,
+      title: firstString(result.title),
+      fetchedAt: Date.now(),
+    });
+  }
+
+  return extracted;
+};
+
+const extractSelectedCandidates = async (
+  candidates: TavilyCandidate[],
+  apiKey: string,
+  signal: AbortSignal,
+): Promise<Map<string, ExtractedSourceText>> => {
+  const extracted = new Map<string, ExtractedSourceText>();
+  const urlsToExtract: string[] = [];
+
+  candidates.forEach((candidate) => {
+    const normalizedUrl = normalizeUrl(candidate.url);
+    const cached = extractedUrlCache.get(normalizedUrl);
+    if (cached) {
+      extracted.set(normalizedUrl, cached);
+      return;
+    }
+
+    urlsToExtract.push(candidate.url);
+  });
+
+  if (urlsToExtract.length === 0) {
+    return extracted;
+  }
+
+  const response = await fetch(TAVILY_EXTRACT_ENDPOINT, {
+    method: "POST",
+    signal,
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      urls: urlsToExtract.slice(0, MAX_EXTRACT_URLS),
+      extract_depth: "basic",
+    }),
+  });
+  const payload = await readResponseJson(response);
+
+  if (!response.ok) {
+    throw new Error("fetch_failed");
+  }
+
+  const extractedFromResponse = parseExtractedTextByUrl(payload);
+  extractedFromResponse.forEach((value, normalizedUrl) => {
+    extractedUrlCache.set(normalizedUrl, value);
+    extracted.set(normalizedUrl, value);
+  });
+
+  return extracted;
+};
+
 const searchDashboardSource = async (
   request: DashboardSourceRequest,
 ): Promise<DashboardSource[]> => {
@@ -450,64 +558,66 @@ const searchDashboardSource = async (
     throw new Error("missing_tavily_key");
   }
 
-  const searchQueries = buildSearchQueries(request);
   const missingTerms = selectMissingTerms(request);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), SEARCH_TIMEOUT_MS);
 
   try {
-    const searchResults = await Promise.allSettled(
-      searchQueries.map(async (searchQuery) => {
-      const response = await fetch(TAVILY_SEARCH_ENDPOINT, {
-        method: "POST",
-        signal: controller.signal,
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          query: searchQuery,
-          search_depth: "basic",
-          max_results: 5,
-          include_raw_content: "text",
-          include_answer: false,
-        }),
-      });
-      const payload = await readResponseJson(response);
-
-      if (!response.ok) {
-        return [];
-      }
-
-        return parseTavilySources(payload, searchQuery, missingTerms, request);
-      }),
+    const { candidates } = await readSearchCandidates(
+      request,
+      apiKey,
+      controller.signal,
     );
-
-    if (
-      controller.signal.aborted &&
-      searchResults.every((result) => result.status === "rejected")
-    ) {
-      throw new DOMException("Search timed out.", "AbortError");
-    }
-
-    const candidates = searchResults.flatMap((result) =>
-      result.status === "fulfilled" ? result.value : [],
-    );
-    const deduped = Array.from(
-      new Map(candidates.map((source) => [normalizeUrl(source.url), source])).values(),
+    const selectedCandidates = Array.from(
+      new Map(
+        candidates
+          .filter((candidate) => !isRejectedSource(candidate, request))
+          .map((candidate) => [normalizeUrl(candidate.url), candidate]),
+      ).values(),
     )
       .sort(
         (left, right) =>
-          qualityScoreSource(right, missingTerms) -
-          qualityScoreSource(left, missingTerms),
+          qualityScoreCandidate(right, missingTerms) -
+          qualityScoreCandidate(left, missingTerms),
       )
-      .slice(0, MAX_RETURNED_SOURCES);
+      .slice(0, MAX_EXTRACT_URLS);
 
-    if (deduped.length === 0) {
+    if (selectedCandidates.length === 0) {
       throw new Error("unsupported_content");
     }
 
-    return deduped;
+    const extractedByUrl = await extractSelectedCandidates(
+      selectedCandidates,
+      apiKey,
+      controller.signal,
+    );
+    const sources = selectedCandidates
+      .map((candidate): DashboardSource | null => {
+        const extracted = extractedByUrl.get(normalizeUrl(candidate.url));
+        if (!extracted) {
+          return null;
+        }
+
+        return {
+          id: `web-source-${randomUUID()}`,
+          url: candidate.url,
+          title: extracted.title || candidate.title,
+          text: extracted.text,
+          searchQuery: candidate.searchQuery,
+          ...(typeof candidate.score === "number"
+            ? { score: candidate.score }
+            : {}),
+          ...(candidate.favicon ? { favicon: candidate.favicon } : {}),
+          fetchedAt: extracted.fetchedAt,
+        };
+      })
+      .filter((source): source is DashboardSource => source !== null);
+
+    if (sources.length === 0) {
+      throw new Error("unsupported_content");
+    }
+
+    return sources;
   } finally {
     clearTimeout(timeout);
   }

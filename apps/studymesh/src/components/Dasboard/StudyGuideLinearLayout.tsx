@@ -88,46 +88,77 @@ const StudyGuideLinearLayout = ({ layout }: { layout?: DashboardLayout }) => {
 
   return (
     <div className="studymesh-mobile-dashboard-layout">
-      {cardGroups.map((group) => (
-        <section key={group.id} className="studymesh-mobile-widget-card">
-          {group.components.map((component, index) => (
-            <Box
-              key={component.id}
-              sx={{
-                mb: index === group.components.length - 1 ? 0 : 2,
-              }}
-            >
-              {component.type === 'Label' ? (
-                <Typography
-                  variant={
-                    (component.props.variant as
-                      | 'h1'
-                      | 'h2'
-                      | 'h3'
-                      | 'h4'
-                      | 'h5'
-                      | 'h6'
-                      | 'subtitle1'
-                      | 'subtitle2'
-                      | 'body1'
-                      | 'body2') || 'body1'
-                  }
-                  fontWeight={component.props.fontWeight as number}
-                  gutterBottom={Boolean(component.props.gutterBottom)}
-                >
-                  {String(component.props.text || '')}
-                </Typography>
-              ) : isStudyBlockType(component.type) ? (
-                <StudyBlockView
-                  type={component.type}
-                  props={component.props}
-                  unframed={component.type === 'MarkdownBlock'}
-                />
-              ) : null}
-            </Box>
-          ))}
-        </section>
-      ))}
+      {cardGroups.map((group) => {
+        const isPageContentCard =
+          group.components[0]?.type === 'Label' &&
+          group.components.some((component) => component.type === 'MarkdownBlock')
+
+        return (
+          <section
+            key={group.id}
+            className={
+              isPageContentCard
+                ? 'studymesh-mobile-widget-card studymesh-study-page-card'
+                : 'studymesh-mobile-widget-card'
+            }
+          >
+            {group.components.map((component, index) => {
+              const isLast = index === group.components.length - 1
+
+              if (component.type === 'Label') {
+                const title = (
+                  <Typography
+                    variant={
+                      (component.props.variant as
+                        | 'h1'
+                        | 'h2'
+                        | 'h3'
+                        | 'h4'
+                        | 'h5'
+                        | 'h6'
+                        | 'subtitle1'
+                        | 'subtitle2'
+                        | 'body1'
+                        | 'body2') || 'body1'
+                    }
+                    fontWeight={component.props.fontWeight as number}
+                    gutterBottom={false}
+                  >
+                    {String(component.props.text || '')}
+                  </Typography>
+                )
+
+                return (
+                  <Box key={component.id} sx={{ mb: isLast ? 0 : 2 }}>
+                    {isPageContentCard ? (
+                      <>
+                        <Box className="studymesh-study-page-title-row">
+                          {title}
+                        </Box>
+                        <Box className="studymesh-study-page-accent-rule" />
+                      </>
+                    ) : (
+                      title
+                    )}
+                  </Box>
+                )
+              }
+
+              return (
+                <Box key={component.id} sx={{ mb: isLast ? 0 : 2 }}>
+                  {isStudyBlockType(component.type) ? (
+                    <StudyBlockView
+                      type={component.type}
+                      props={component.props}
+                      unframed={component.type === 'MarkdownBlock'}
+                    />
+                  ) : null}
+                </Box>
+              )
+            })}
+          </section>
+        )
+      })}
     </div>
   )
 }

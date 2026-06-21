@@ -252,6 +252,21 @@
   padding: 16px;
 }
 
+.studymesh-study-page-title-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 16px;
+}
+
+.studymesh-study-page-accent-rule {
+  width: 72px;
+  height: 3px;
+  margin-top: 18px;
+  border-radius: 999px;
+  background: var(--primary-main, #007c66);
+}
+
 @media (min-width: 900px) {
   .studymesh-mobile-dashboard-layout {
     align-items: center;

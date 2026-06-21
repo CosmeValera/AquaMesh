@@ -4,18 +4,35 @@ import {
   Box,
   ButtonBase,
   Chip,
+  Divider,
   Paper,
   Stack,
   Typography,
 } from '@mui/material'
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import StarIcon from '@mui/icons-material/Star'
 
 import {
   HOSTED_AI_CREDIT_PACKS,
+  HostedAiCreditPack,
   HostedAiCreditPackId,
   redirectToHostedAiCreditCheckout,
 } from '../../quickCreate/ai'
 import StudyCreditIcon from './StudyCreditIcon'
+
+const packBadgeLabel = (pack: HostedAiCreditPack): string => {
+  if (pack.id === 'starter') {
+    return 'Starter'
+  }
+
+  if (pack.id === 'popular') {
+    return 'Popular'
+  }
+
+  return 'Best value'
+}
+
+const packValueLabel = (pack: HostedAiCreditPack): string =>
+  `${Math.round(pack.credits / (pack.priceCents / 100))} credits / EUR`
 
 const HostedAiPricingCards: React.FC = () => {
   const [buyingPackId, setBuyingPackId] =
@@ -39,9 +56,9 @@ const HostedAiPricingCards: React.FC = () => {
   }
 
   return (
-    <Stack spacing={1.5} sx={{ mt: 2 }}>
+    <Stack spacing={1.5} sx={{ mt: 2.5 }}>
       <Box>
-        <Typography variant="h6" fontWeight={900}>
+        <Typography variant="h6" fontWeight={950}>
           Choose a credit pack
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -59,143 +76,128 @@ const HostedAiPricingCards: React.FC = () => {
         }}
       >
         {HOSTED_AI_CREDIT_PACKS.map((pack) => {
-          const highlighted = pack.badge !== undefined && pack.id !== 'starter'
-          const isPremium = pack.id === 'value'
+          const highlighted = pack.id !== 'starter'
           const buying = buyingPackId === pack.id
 
           return (
-            <Box
+            <Paper
               key={pack.id}
+              component={ButtonBase}
+              variant="outlined"
+              type="button"
+              onClick={() => void handleBuyCredits(pack.id)}
+              disabled={buyingPackId !== null}
+              aria-label={`Buy ${pack.credits} credits for ${pack.label}${
+                pack.badge ? ` - ${pack.badge}` : ''
+              }`}
               sx={{
                 position: 'relative',
-                borderRadius: 3,
-                ...(isPremium && {
-                  p: '2px',
-                  background:
-                    'linear-gradient(115deg, #7c3aed, #22d3ee, #f59e0b, #ec4899, #7c3aed)',
-                  backgroundSize: '300% 300%',
-                  animation: 'premiumBorderFlow 5s ease infinite',
-                  boxShadow:
-                    '0 12px 30px rgba(124, 58, 237, 0.22), 0 0 24px rgba(34, 211, 238, 0.16)',
-                  '@keyframes premiumBorderFlow': {
-                    '0%': { backgroundPosition: '0% 50%' },
-                    '50%': { backgroundPosition: '100% 50%' },
-                    '100%': { backgroundPosition: '0% 50%' },
-                  },
-                }),
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                textAlign: 'left',
+                font: 'inherit',
+                width: '100%',
+                minHeight: 198,
+                p: 2,
+                borderRadius: 2.5,
+                borderWidth: highlighted ? 2 : 1,
+                borderColor: highlighted ? '#008575' : 'divider',
+                bgcolor: 'background.paper',
+                boxShadow: highlighted ? '0 10px 24px rgba(0,137,123,0.10)' : 0,
+                transition:
+                  'transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 16px 34px rgba(0,137,123,0.16)',
+                  borderColor: '#008575',
+                },
+                '&.Mui-disabled': {
+                  color: 'text.primary',
+                  opacity: buying ? 0.8 : 0.56,
+                },
               }}
             >
-              <Paper
-                component={ButtonBase}
-                variant="outlined"
-                type="button"
-                onClick={() => void handleBuyCredits(pack.id)}
-                disabled={buyingPackId !== null}
-                aria-label={`Buy ${pack.credits} credits for ${pack.label}${
-                  pack.badge ? ` - ${pack.badge}` : ''
-                }`}
-                sx={{
-                  position: 'relative',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'stretch',
-                  textAlign: 'left',
-                  font: 'inherit',
-                  width: '100%',
-                  minHeight: 190,
-                  p: 2,
-                  borderRadius: isPremium ? 'calc(12px - 2px)' : 3,
-                  borderWidth: highlighted && !isPremium ? 2 : 1,
-                  borderColor: isPremium
-                    ? 'transparent'
-                    : highlighted
-                    ? 'primary.main'
-                    : 'divider',
-                  bgcolor: 'background.paper',
-                  backgroundImage: isPremium
-                    ? 'radial-gradient(circle at 85% 10%, rgba(34,211,238,0.20), transparent 42%), radial-gradient(circle at 8% 88%, rgba(124,58,237,0.20), transparent 48%)'
-                    : 'none',
-                  boxShadow: highlighted && !isPremium ? 4 : 0,
-                  transition:
-                    'transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease',
-                  '&:hover': {
-                    transform: 'translateY(-3px)',
-                    boxShadow: isPremium ? 8 : highlighted ? 6 : 3,
-                    borderColor: isPremium ? 'transparent' : 'primary.main',
-                  },
-                  '&.Mui-disabled': {
-                    color: 'text.primary',
-                    opacity: buying ? 0.8 : 0.56,
-                  },
-                }}
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                gap={1}
+                sx={{ mb: 1.25 }}
               >
-                {pack.badge && (
-                  <Box
-                    sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}
-                  >
-                    <Chip
-                      icon={<AutoAwesomeIcon />}
-                      label={pack.badge}
-                      size="small"
-                      sx={{
-                        fontWeight: 900,
-                        whiteSpace: 'nowrap',
-                        ...(isPremium && {
-                          color: '#fff',
-                          background:
-                            'linear-gradient(115deg, #7c3aed, #22d3ee, #f59e0b, #ec4899, #7c3aed)',
-                          backgroundSize: '300% 300%',
-                          animation: 'premiumBorderFlow 5s ease infinite',
-                          boxShadow:
-                            '0 4px 12px rgba(124,58,237,0.28), 0 0 12px rgba(34,211,238,0.16)',
-                          '& .MuiChip-icon': {
-                            color: '#fff',
-                          },
-                        }),
-                        ...(!isPremium && {
-                          color: 'primary.contrastText',
-                          bgcolor: 'primary.main',
-                        }),
-                      }}
-                    />
-                  </Box>
-                )}
+                <Chip
+                  label={packBadgeLabel(pack)}
+                  size="small"
+                  sx={{
+                    height: 26,
+                    fontWeight: 950,
+                    color: '#fff',
+                    bgcolor: '#008575',
+                    '& .MuiChip-label': { px: 1.2 },
+                  }}
+                />
+                {pack.badge ? (
+                  <Stack direction="row" spacing={0.65} alignItems="center">
+                    <StarIcon sx={{ fontSize: 17, color: '#008575' }} />
+                    <Typography
+                      variant="body2"
+                      fontWeight={900}
+                      sx={{ color: '#008575' }}
+                    >
+                      {pack.badge}
+                    </Typography>
+                  </Stack>
+                ) : null}
+              </Stack>
+
+              <Stack direction="row" spacing={0.85} alignItems="center">
+                <Typography variant="h4" fontWeight={950} lineHeight={1.05}>
+                  {pack.credits}
+                </Typography>
+                <StudyCreditIcon size={27} />
                 <Typography
-                  variant="overline"
-                  color="text.secondary"
-                  fontWeight={800}
+                  variant="subtitle2"
+                  fontWeight={950}
+                  sx={{ color: '#008575' }}
                 >
                   Study Credits
                 </Typography>
-                <Stack direction="row" spacing={0.8} alignItems="center">
-                  <Typography variant="h4" fontWeight={950} lineHeight={1.1}>
-                    {pack.credits}
-                  </Typography>
-                  <StudyCreditIcon size={28} />
-                </Stack>
-                <Box sx={{ flexGrow: 1 }} />
-                <Typography variant="h5" fontWeight={900} sx={{ mt: 2 }}>
+              </Stack>
+
+              <Divider sx={{ my: 1.4 }} />
+
+              <Stack
+                direction="row"
+                alignItems="baseline"
+                justifyContent="space-between"
+                gap={1}
+              >
+                <Typography variant="h5" fontWeight={950}>
                   {pack.label}
                 </Typography>
-                <Box
-                  sx={{
-                    mt: 1.25,
-                    py: 0.75,
-                    px: 1.5,
-                    borderRadius: 1.5,
-                    textAlign: 'center',
-                    fontWeight: 900,
-                    color: 'primary.main',
-                    bgcolor: 'transparent',
-                    border: 1,
-                    borderColor: 'primary.main',
-                  }}
-                >
-                  {buying ? 'Opening checkout...' : 'Buy pack'}
-                </Box>
-              </Paper>
-            </Box>
+                <Typography variant="body2" color="text.secondary">
+                  {packValueLabel(pack)}
+                </Typography>
+              </Stack>
+
+              <Box
+                sx={{
+                  mt: 2,
+                  py: 0.9,
+                  px: 1.5,
+                  borderRadius: 1.5,
+                  textAlign: 'center',
+                  fontWeight: 950,
+                  color: '#008575',
+                  bgcolor: 'transparent',
+                  border: '1px solid',
+                  borderColor: '#008575',
+                }}
+              >
+                {buying ? 'Opening checkout...' : `Buy ${pack.credits} credits`}
+              </Box>
+            </Paper>
           )
         })}
       </Box>

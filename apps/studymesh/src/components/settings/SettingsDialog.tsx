@@ -1,5 +1,6 @@
 import React from 'react'
 import {
+  Avatar,
   Box,
   Button,
   Dialog,
@@ -7,21 +8,33 @@ import {
   DialogContent,
   DialogTitle,
   Paper,
+  Stack,
   TextField,
   Typography,
 } from '@mui/material'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
-import ReplayIcon from '@mui/icons-material/Replay'
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 
-import { STUDYMESH_ONBOARDING_RESET_EVENT } from '../onboarding/onboardingEvents'
 import { seedStudyMeshGuideStudyPath } from '../../studyGuides/studyMeshGuideSeed'
 import { STUDY_GUIDES_CHANGED_EVENT } from '../../studyGuides/storage'
+
+interface ProfileSettingsProps {
+  userId: string
+  userName: string
+  avatarSrc: string
+  avatarStatus: string
+  onUserNameChange: (name: string) => void
+  onAvatarUpload: (event: React.ChangeEvent<HTMLInputElement>) => void
+  onRemoveAvatar: () => void
+  onSaveProfile: () => void
+}
 
 interface SettingsDialogProps extends Record<string, unknown> {
   open: boolean
   onClose: () => void
   title?: string
+  profileSettings?: ProfileSettingsProps
   onDeleteStudyMeshProfile?: () => Promise<void>
 }
 
@@ -29,6 +42,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   open,
   onClose,
   title = 'Application Settings',
+  profileSettings,
   onDeleteStudyMeshProfile,
 }) => {
   const [status, setStatus] = React.useState('')
@@ -51,11 +65,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     seedStudyMeshGuideStudyPath({ force: true })
     window.dispatchEvent(new CustomEvent(STUDY_GUIDES_CHANGED_EVENT))
     setStatus('Welcome guide added.')
-  }
-
-  const handleReplayNotices = () => {
-    window.dispatchEvent(new CustomEvent(STUDYMESH_ONBOARDING_RESET_EVENT))
-    setStatus('Workspace notices reset.')
   }
 
   const handleDeleteStudyMeshProfile = async () => {
@@ -82,6 +91,79 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers>
         <Box sx={{ display: 'grid', gap: 2 }}>
+          {profileSettings ? (
+            <Paper
+              elevation={0}
+              sx={{ p: 2, border: 1, borderColor: 'divider' }}
+            >
+              <Typography fontWeight={700} sx={{ mb: 1.5 }}>
+                Profile
+              </Typography>
+              <Stack spacing={2}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Avatar
+                    src={profileSettings.avatarSrc || undefined}
+                    sx={{
+                      width: 64,
+                      height: 64,
+                      bgcolor: 'primary.main',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {profileSettings.userId.substring(0, 2).toUpperCase()}
+                  </Avatar>
+                  <Stack spacing={1} direction="row" useFlexGap flexWrap="wrap">
+                    <Button
+                      component="label"
+                      variant="outlined"
+                      size="small"
+                      startIcon={<PhotoCameraIcon />}
+                    >
+                      Upload image
+                      <input
+                        hidden
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={profileSettings.onAvatarUpload}
+                      />
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<DeleteOutlineIcon />}
+                      onClick={profileSettings.onRemoveAvatar}
+                      disabled={!profileSettings.avatarSrc}
+                    >
+                      Remove
+                    </Button>
+                  </Stack>
+                </Stack>
+                {profileSettings.avatarStatus ? (
+                  <Typography variant="caption" color="text.secondary">
+                    {profileSettings.avatarStatus}
+                  </Typography>
+                ) : null}
+                <TextField
+                  label="User name"
+                  value={profileSettings.userName}
+                  onChange={(event) =>
+                    profileSettings.onUserNameChange(event.target.value)
+                  }
+                  fullWidth
+                />
+                <Box>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={profileSettings.onSaveProfile}
+                  >
+                    Save profile
+                  </Button>
+                </Box>
+              </Stack>
+            </Paper>
+          ) : null}
+
           <Paper
             elevation={0}
             sx={{ p: 2, border: 1, borderColor: 'divider' }}
@@ -105,24 +187,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             </Box>
           </Paper>
 
-          <Paper
-            elevation={0}
-            sx={{ p: 2, border: 1, borderColor: 'divider' }}
-          >
-            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
-              <ReplayIcon color="primary" />
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography fontWeight={700}>Workspace Notices</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                  Reset lightweight in-app notices.
-                </Typography>
-                <Button variant="outlined" size="small" onClick={handleReplayNotices}>
-                  Reset notices
-                </Button>
-              </Box>
-            </Box>
-          </Paper>
-
           {onDeleteStudyMeshProfile ? (
             <Paper
               elevation={0}
@@ -132,17 +196,26 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 borderColor: 'error.light',
               }}
             >
+              <Typography
+                variant="overline"
+                color="error"
+                fontWeight={800}
+                sx={{ display: 'block', mb: 1 }}
+              >
+                Danger Zone
+              </Typography>
               <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
                 <DeleteOutlineIcon color="error" />
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography fontWeight={700}>Delete StudyMesh Profile</Typography>
+                  <Typography fontWeight={700}>
+                    Delete StudyMesh Account Data
+                  </Typography>
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{ mb: 1.5 }}
                   >
-                    Delete the current StudyMesh profile row and its cloud study
-                    data, then sign out.
+                    Permanently delete your StudyMesh account.
                   </Typography>
                   <TextField
                     label="Type DELETE to confirm"
@@ -166,7 +239,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   >
                     {isDeletingProfile
                       ? 'Deleting profile...'
-                      : 'Delete StudyMesh profile'}
+                      : 'Delete StudyMesh account'}
                   </Button>
                   {profileDeleteStatus ? (
                     <Typography

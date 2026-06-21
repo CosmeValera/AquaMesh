@@ -10,33 +10,21 @@ import {
   MenuItem,
   Divider,
   Avatar,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Drawer,
   IconButton,
   ListItemIcon,
   ListItemText,
   Snackbar,
-  Stack,
-  TextField,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import LogoutIcon from '@mui/icons-material/Logout'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
-import Brightness6Icon from '@mui/icons-material/Brightness6'
 import CloseIcon from '@mui/icons-material/Close'
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts'
-import PersonIcon from '@mui/icons-material/Person'
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications'
 
-import AccentColorPicker from '../../theme/AccentColorPicker'
 import DashboardOptionsMenu from '../Dasboard/DashboardOptionsMenu'
 import { useDashboards } from '../Dasboard/DashboardProvider'
 import {
@@ -44,7 +32,7 @@ import {
   useWorkspaceActions,
 } from '../../customHooks/useWorkspaceActions'
 import { WORKSPACE_DASHBOARD_TABS_SLOT_ID } from '../workspace/workspaceEvents'
-import ThemeModeToggle from '../shared/ThemeModeToggle'
+import AppearanceDialog from '../settings/AppearanceDialog'
 import SettingsDialog from '../settings/SettingsDialog'
 import CreateStudyGuideModal from '../studyGuides/CreateStudyGuideModal'
 import {
@@ -185,7 +173,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   // State for different dropdown menus
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
+  const [isAppearanceOpen, setIsAppearanceOpen] = useState(false)
   const [isAiModeOpen, setIsAiModeOpen] = useState(false)
   const [aiModeNotice, setAiModeNotice] = useState('')
   const [userSettingsName, setUserSettingsName] = useState('')
@@ -406,10 +394,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
     navigate('/login', { replace: true })
   }
 
-  const openUserSettings = () => {
+  const openSettings = () => {
     setUserSettingsName(userData.name)
     setUserSettingsAvatarStatus('')
-    setIsUserSettingsOpen(true)
+    setIsSettingsOpen(true)
     handleClose()
   }
 
@@ -424,7 +412,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
     window.dispatchEvent(
       new CustomEvent(USER_ROLE_CHANGED_EVENT, { detail: nextUser }),
     )
-    setIsUserSettingsOpen(false)
+    setUserSettingsAvatarStatus('Profile saved.')
   }
 
   const handleUserAvatarUpload = async (
@@ -778,60 +766,23 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                       {userModeLabel}
                     </Typography>
                   </Box>
-                  <Box sx={{ px: 2, py: 1.5 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <Brightness6Icon
-                        fontSize="small"
-                        sx={{ color: 'primary.main', mr: 1 }}
-                      />
-                      <Typography variant="body2" fontWeight="medium">
-                        Light / dark mode
-                      </Typography>
-                    </Box>
-                    <ThemeModeToggle compact />
-                  </Box>
-                  <Divider sx={{ borderColor: 'divider' }} />
-                  <Box sx={{ px: 2, py: 1.5 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <ColorLensIcon
-                        fontSize="small"
-                        sx={{ color: 'primary.main', mr: 1 }}
-                      />
-                      <Typography variant="body2" fontWeight="medium">
-                        Accent color
-                      </Typography>
-                    </Box>
-                    <AccentColorPicker dense />
-                  </Box>
-                  <Divider sx={{ borderColor: 'divider' }} />
-                  <Box sx={{ px: 2, pt: 0.5 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <SettingsApplicationsIcon
-                        fontSize="small"
-                        sx={{ color: 'primary.main', mr: 1 }}
-                      />
-                      <Typography variant="body2" fontWeight="medium">
-                        Settings
-                      </Typography>
-                    </Box>
-                  </Box>
                   <MenuItem
-                    onClick={openUserSettings}
+                    onClick={() => {
+                      setIsAppearanceOpen(true)
+                      handleClose()
+                    }}
                     sx={{ color: 'text.primary', marginTop: 1 }}
                   >
                     <ListItemIcon>
-                      <PersonIcon
+                      <ColorLensIcon
                         fontSize="small"
                         sx={{ color: 'text.secondary' }}
                       />
                     </ListItemIcon>
-                    User settings
+                    Appearance
                   </MenuItem>
                   <MenuItem
-                    onClick={() => {
-                      setIsSettingsOpen(true)
-                      handleClose()
-                    }}
+                    onClick={openSettings}
                     sx={{
                       marginTop: 1,
                       paddingTop: 0.5,
@@ -903,47 +854,20 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
               {userModeLabel}
             </Typography>
           </Box>
-          <Box sx={{ px: 2, py: 1.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <Brightness6Icon
-                fontSize="small"
-                sx={{ color: 'primary.main', mr: 1 }}
-              />
-              <Typography variant="body2" fontWeight="medium">
-                Light / dark mode
-              </Typography>
-            </Box>
-            <ThemeModeToggle compact />
-          </Box>
-          <Divider sx={{ borderColor: 'divider' }} />
-          <Box sx={{ px: 2, py: 1.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <ColorLensIcon
-                fontSize="small"
-                sx={{ color: 'primary.main', mr: 1 }}
-              />
-              <Typography variant="body2" fontWeight="medium">
-                Accent color
-              </Typography>
-            </Box>
-            <AccentColorPicker dense />
-          </Box>
-          <Divider sx={{ borderColor: 'divider' }} />
           <MenuItem
-            onClick={openUserSettings}
+            onClick={() => {
+              setIsAppearanceOpen(true)
+              handleClose()
+            }}
             sx={{ color: 'text.primary', marginTop: 1 }}
           >
             <ListItemIcon>
-              <PersonIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+              <ColorLensIcon fontSize="small" sx={{ color: 'text.secondary' }} />
             </ListItemIcon>
-            User settings
+            Appearance
           </MenuItem>
-          <Divider sx={{ borderColor: 'divider' }} />
           <MenuItem
-            onClick={() => {
-              setIsSettingsOpen(true)
-              handleClose()
-            }}
+            onClick={openSettings}
             sx={{ color: 'text.primary' }}
           >
             <ListItemIcon>
@@ -1051,73 +975,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       </Drawer>
       ) : null}
 
-      <Dialog
-        open={isUserSettingsOpen}
-        onClose={() => setIsUserSettingsOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>User settings</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2} sx={{ pt: 1 }}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Avatar
-                src={avatarSrc || undefined}
-                sx={{
-                  width: 64,
-                  height: 64,
-                  bgcolor: 'primary.main',
-                  fontWeight: 600,
-                }}
-              >
-                {userData.id.substring(0, 2).toUpperCase()}
-              </Avatar>
-              <Stack spacing={1} direction="row" useFlexGap flexWrap="wrap">
-                <Button
-                  component="label"
-                  variant="outlined"
-                  size="small"
-                  startIcon={<PhotoCameraIcon />}
-                >
-                  Upload image
-                  <input
-                    hidden
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    onChange={handleUserAvatarUpload}
-                  />
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<DeleteOutlineIcon />}
-                  onClick={handleRemoveUserAvatar}
-                  disabled={!avatarSrc}
-                >
-                  Remove
-                </Button>
-              </Stack>
-            </Stack>
-            {userSettingsAvatarStatus && (
-              <Typography variant="caption" color="text.secondary">
-                {userSettingsAvatarStatus}
-              </Typography>
-            )}
-            <TextField
-              label="User name"
-              value={userSettingsName}
-              onChange={(event) => setUserSettingsName(event.target.value)}
-              fullWidth
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsUserSettingsOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={saveUserSettings}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <AppearanceDialog
+        open={isAppearanceOpen}
+        onClose={() => setIsAppearanceOpen(false)}
+      />
       <AiModeDialog
         open={isAiModeOpen}
         notice={aiModeNotice}
@@ -1130,6 +991,16 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         title="Application Settings"
+        profileSettings={{
+          userId: userData.id,
+          userName: userSettingsName,
+          avatarSrc,
+          avatarStatus: userSettingsAvatarStatus,
+          onUserNameChange: setUserSettingsName,
+          onAvatarUpload: handleUserAvatarUpload,
+          onRemoveAvatar: handleRemoveUserAvatar,
+          onSaveProfile: saveUserSettings,
+        }}
         onDeleteStudyMeshProfile={handleDeleteStudyMeshProfile}
       />
       {creationHost === 'navbar' && (

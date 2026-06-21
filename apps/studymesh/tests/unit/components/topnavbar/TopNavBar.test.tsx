@@ -6,7 +6,6 @@ import TopNavBar from '../../../../src/components/topnavbar/TopNavBar'
 import * as LayoutProviderModule from '../../../../src/components/Layout/LayoutProvider'
 import * as DashboardProviderModule from '../../../../src/components/Dasboard/DashboardProvider'
 import { OPEN_STUDY_PATH_EVENT } from '../../../../src/customHooks/useWorkspaceActions'
-import { STUDYMESH_ONBOARDING_RESET_EVENT } from '../../../../src/components/onboarding/onboardingEvents'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   QUICK_CREATE_AI_SETTINGS_KEY,
@@ -77,6 +76,7 @@ vi.mock('react-router-dom', async () => {
 })
 
 vi.mock('../../../../src/auth/AuthProvider', () => ({
+  deleteStudyMeshProfile: vi.fn(() => Promise.resolve()),
   useAuth: () => ({
     user: { id: 'auth-user', email: 'admin@example.com' },
     session: { access_token: 'test-access-token' },
@@ -489,31 +489,99 @@ describe('TopNavBar Component', () => {
     expect(screen.getByTestId('logo')).toBeInTheDocument()
   })
 
-  it('resets workspace notices from application settings', async () => {
-    const resetListener = vi.fn()
-    window.addEventListener(STUDYMESH_ONBOARDING_RESET_EVENT, resetListener)
-
+  it('keeps appearance controls behind the Appearance option', async () => {
     render(
       <BrowserRouter>
         <TopNavBar />
       </BrowserRouter>,
     )
 
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: /open user menu/i,
-      }),
+    openUserMenu()
+
+    expect(
+      await screen.findByRole('menuitem', { name: /^appearance$/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('menuitem', { name: /^settings$/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('menuitem', { name: /^logout$/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('menuitem', { name: /user settings/i }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText(/light \/ dark mode/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/accent color/i)).not.toBeInTheDocument()
+    expect(screen.queryByTestId('theme-mode-toggle')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('accent-color-picker')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('menuitem', { name: /^appearance$/i }))
+
+    expect(
+      await screen.findByRole('dialog', { name: /^appearance$/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/light \/ dark mode/i)).toBeInTheDocument()
+    expect(screen.getByText(/accent color/i)).toBeInTheDocument()
+    expect(screen.getByTestId('theme-mode-toggle')).toBeInTheDocument()
+    expect(screen.getByTestId('accent-color-picker')).toBeInTheDocument()
+  })
+
+  it('opens profile controls from application settings', async () => {
+    render(
+      <BrowserRouter>
+        <TopNavBar />
+      </BrowserRouter>,
     )
+
+    openUserMenu()
     fireEvent.click(
       await screen.findByRole('menuitem', { name: /^settings$/i }),
     )
-    fireEvent.click(
-      await screen.findByRole('button', { name: /reset notices/i }),
+
+    expect(
+      await screen.findByRole('dialog', { name: /application settings/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Profile')).toBeInTheDocument()
+    expect(screen.getByLabelText(/user name/i)).toHaveValue('Admin User')
+    expect(
+      screen.getByRole('button', { name: /save profile/i }),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/workspace notices/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /reset notices/i }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText(/danger zone/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/permanently delete your studymesh account/i),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/profile row/i)).not.toBeInTheDocument()
+  })
+
+  it('saves profile name from application settings', async () => {
+    render(
+      <BrowserRouter>
+        <TopNavBar />
+      </BrowserRouter>,
     )
 
-    expect(resetListener).toHaveBeenCalledTimes(1)
+    openUserMenu()
+    fireEvent.click(
+      await screen.findByRole('menuitem', { name: /^settings$/i }),
+    )
+    fireEvent.change(await screen.findByLabelText(/user name/i), {
+      target: { value: 'Cosme Valera' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /save profile/i }))
 
-    window.removeEventListener(STUDYMESH_ONBOARDING_RESET_EVENT, resetListener)
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'userData',
+      JSON.stringify({
+        id: 'admin',
+        name: 'Cosme Valera',
+        role: 'ADMIN_ROLE',
+      }),
+    )
+    expect(screen.getByText('Profile saved.')).toBeInTheDocument()
   })
 
   it('navigates to the landing page when logout is clicked', async () => {

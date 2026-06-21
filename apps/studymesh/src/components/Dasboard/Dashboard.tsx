@@ -292,6 +292,7 @@ const Dashboards = () => {
               }
               onMessagesChange={setMessagesForDashboard}
               onClose={() => setDashboardChatOpen(false)}
+              showCloseButton={!isMobileDashboardView}
               supportsStudyGuideCreateScope={isStudyGuideDashboard(
                 currentDashboard,
               )}

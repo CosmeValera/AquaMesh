@@ -467,7 +467,7 @@ ${excerpt}`
         onClose={() =>
           isMobile ? setMobileSection('study-guide') : setAiChatOpen(false)
         }
-        showCloseButton
+        showCloseButton={!isMobile}
         onAddAssistantMessageToGuide={addAssistantMessageToGuide}
         onAddExternalSourceToGuide={addExternalSourceToGuide}
         onOpenSource={openChatSource}

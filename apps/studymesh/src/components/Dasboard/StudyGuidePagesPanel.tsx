@@ -224,7 +224,13 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
         alignItems="center"
         justifyContent="space-between"
         gap={1}
-        sx={{ px: 1.5, py: 1.25, borderBottom: 1, borderColor: 'divider' }}
+        sx={{
+          pl: 2.25,
+          pr: 1.5,
+          py: 1.25,
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
       >
         <Typography variant="subtitle2" fontWeight={600}>
           Pages
@@ -279,8 +285,8 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                       }
                 }
                 sx={(theme) => ({
-                  mx: 0.75,
-                  px: 0.5,
+                  mx: 0,
+                  pl: 2.25,
                   pr: mobile ? 0.75 : 1,
                   py: 0.5,
                   borderRadius: 1,
@@ -316,7 +322,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                     position: 'absolute',
                     top: active ? 8 : -4,
                     bottom: active ? 8 : 'auto',
-                    left: active ? 0 : 8,
+                    left: active ? theme.spacing(2.25) : 8,
                     right: active ? 'auto' : 4,
                     width: active ? 3 : 'auto',
                     height: active ? 'auto' : 3,
@@ -341,7 +347,8 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                   sx={{
                     minWidth: 0,
                     flex: 1,
-                    px: 0.5,
+                    px: 0,
+                    pl: active ? 1.5 : 0,
                     py: 0.25,
                     justifyContent: 'flex-start',
                     textAlign: 'left',

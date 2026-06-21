@@ -44,13 +44,6 @@ import HostedAiSettingsPanel from './HostedAiSettingsPanel'
 const LOCAL_AI_ESTIMATE_COPY =
   'Local AI runs on your device and can be slow. Performance depends on your hardware but it may take around 10 mins for each prompt.'
 
-const aiProviderLabels: Record<QuickCreateAiProvider, string> = {
-  local: 'Google Local AI',
-  gemini: 'Own Gemini API token',
-  cerebras: 'Own Cerebras API key',
-  hosted: 'Hosted AI',
-}
-
 interface AiModeDialogProps {
   open: boolean
   onClose: () => void
@@ -103,41 +96,53 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
     setShowAiKey(false)
   }, [open])
 
-  const updateSelectedStrongCredential = (
-    changes: Partial<{ apiToken: string; model: string }>,
+  const persistAiSettings = (
+    provider: QuickCreateAiProvider,
+    credentials: StrongAiProviderCredentials,
   ) => {
-    setStrongCredentials((current) => ({
-      ...current,
-      [selectedStrongProvider]: {
-        apiToken: selectedStrongCredential.apiToken,
-        model: selectedStrongCredential.model,
-        ...changes,
-      },
-    }))
-  }
-
-  const handleSaveAiSettings = () => {
-    const credential = isStrongAiProvider(aiProvider)
+    const credential = isStrongAiProvider(provider)
       ? getQuickCreateAiCredentialForProvider(
           {
-            provider: aiProvider,
+            provider,
             apiToken: '',
             model: '',
-            strongProviders: strongCredentials,
+            strongProviders: credentials,
           },
-          aiProvider,
+          provider,
         )
       : { apiToken: '', model: DEFAULT_QUICK_CREATE_AI_MODEL }
 
     saveQuickCreateAiSettings({
-      provider: aiProvider,
+      provider,
       apiToken: credential.apiToken,
       model: credential.model,
-      strongProviders: strongCredentials,
+      strongProviders: credentials,
     })
-    dispatchWorkspaceOnboardingNotice(
-      `AI mode changed to ${aiProviderLabels[aiProvider]}.`,
-    )
+  }
+
+  const handleAiProviderChange = (nextProvider: QuickCreateAiProvider) => {
+    setAiProvider(nextProvider)
+    setLocalAiStatus('')
+    setLocalAiProgress(null)
+    persistAiSettings(nextProvider, strongCredentials)
+  }
+
+  const updateSelectedStrongCredential = (
+    changes: Partial<{ apiToken: string; model: string }>,
+  ) => {
+    setStrongCredentials((current) => {
+      const nextCredentials = {
+        ...current,
+        [selectedStrongProvider]: {
+          apiToken: selectedStrongCredential.apiToken,
+          model: selectedStrongCredential.model,
+          ...changes,
+        },
+      }
+
+      persistAiSettings(aiProvider, nextCredentials)
+      return nextCredentials
+    })
   }
 
   const handleClearAiToken = () => {
@@ -251,7 +256,9 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
               label="AI provider"
               value={aiProvider}
               onChange={(event) =>
-                setAiProvider(event.target.value as QuickCreateAiProvider)
+                handleAiProviderChange(
+                  event.target.value as QuickCreateAiProvider,
+                )
               }
               fullWidth
               size="small"
@@ -393,8 +400,8 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
                     selectedStrongCredential.apiToken.trim()
                       ? 'Session key active'
                       : hasEnvToken
-                        ? '.env key available'
-                        : 'No key configured'
+                      ? '.env key available'
+                      : 'No key configured'
                   }
                   color={
                     selectedStrongCredential.apiToken.trim() || hasEnvToken
@@ -412,21 +419,6 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
               </Stack>
             </Box>
           )}
-
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Chip
-              size="small"
-              label={`Mode: ${aiProviderLabels[aiProvider]}`}
-            />
-            <Box sx={{ flexGrow: 1 }} />
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleSaveAiSettings}
-            >
-              Save AI mode
-            </Button>
-          </Stack>
 
           {aiProvider === 'hosted' && (
             <>

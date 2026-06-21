@@ -15,6 +15,7 @@ import {
   HostedAiCreditPackId,
   redirectToHostedAiCreditCheckout,
 } from '../../quickCreate/ai'
+import StudyCreditIcon from './StudyCreditIcon'
 
 const HostedAiPricingCards: React.FC = () => {
   const [buyingPackId, setBuyingPackId] =
@@ -109,8 +110,8 @@ const HostedAiPricingCards: React.FC = () => {
                   borderColor: isPremium
                     ? 'transparent'
                     : highlighted
-                      ? 'primary.main'
-                      : 'divider',
+                    ? 'primary.main'
+                    : 'divider',
                   bgcolor: 'background.paper',
                   backgroundImage: isPremium
                     ? 'radial-gradient(circle at 85% 10%, rgba(34,211,238,0.20), transparent 42%), radial-gradient(circle at 8% 88%, rgba(124,58,237,0.20), transparent 48%)'
@@ -130,7 +131,9 @@ const HostedAiPricingCards: React.FC = () => {
                 }}
               >
                 {pack.badge && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                  <Box
+                    sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}
+                  >
                     <Chip
                       icon={<AutoAwesomeIcon />}
                       label={pack.badge}
@@ -165,12 +168,12 @@ const HostedAiPricingCards: React.FC = () => {
                 >
                   Study Credits
                 </Typography>
-                <Typography variant="h4" fontWeight={950} lineHeight={1.1}>
-                  {pack.credits}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  credits
-                </Typography>
+                <Stack direction="row" spacing={0.8} alignItems="center">
+                  <Typography variant="h4" fontWeight={950} lineHeight={1.1}>
+                    {pack.credits}
+                  </Typography>
+                  <StudyCreditIcon size={28} />
+                </Stack>
                 <Box sx={{ flexGrow: 1 }} />
                 <Typography variant="h5" fontWeight={900} sx={{ mt: 2 }}>
                   {pack.label}

@@ -1,11 +1,24 @@
 import React from 'react'
 import { Alert, Box, Chip, Stack, Typography } from '@mui/material'
-import TollIcon from '@mui/icons-material/Toll'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 
 import { STUDY_CREDITS_LABEL } from '../../quickCreate/ai'
 import HostedAiPricingCards from './HostedAiPricingCards'
+import StudyCreditIcon from './StudyCreditIcon'
 import { useHostedAiStatus } from './useHostedAiStatus'
+
+const CreditLabel = ({
+  children,
+  iconSize = 16,
+}: {
+  children: React.ReactNode
+  iconSize?: number
+}) => (
+  <Stack direction="row" spacing={0.65} alignItems="center" component="span">
+    <Box component="span">{children}</Box>
+    <StudyCreditIcon size={iconSize} />
+  </Stack>
+)
 
 const HostedAiSettingsPanel: React.FC = () => {
   const { status, loading, error } = useHostedAiStatus()
@@ -51,15 +64,21 @@ const HostedAiSettingsPanel: React.FC = () => {
           </Typography>
         </Box>
         <Chip
-          icon={status.studyCredits === 0 ? <ErrorOutlineIcon /> : <TollIcon />}
+          icon={status.studyCredits === 0 ? <ErrorOutlineIcon /> : undefined}
           color={
             status.studyCredits === 0
               ? 'error'
               : status.available
-                ? 'primary'
-                : 'default'
+              ? 'primary'
+              : 'default'
           }
-          label={`${status.studyCredits} credits`}
+          label={
+            status.studyCredits === 0 ? (
+              `${status.studyCredits} credits`
+            ) : (
+              <CreditLabel iconSize={18}>{status.studyCredits}</CreditLabel>
+            )
+          }
           sx={{
             fontWeight: 900,
             ...(status.studyCredits === 0 && {
@@ -77,16 +96,29 @@ const HostedAiSettingsPanel: React.FC = () => {
       >
         <Chip
           size="small"
-          label={`Study Guide: ${status.costs['study-guide']}`}
+          label={
+            <CreditLabel>
+              Study Guide: {status.costs['study-guide']}
+            </CreditLabel>
+          }
         />
         <Chip
           size="small"
-          label={`Quick Create: ${status.costs['quick-create']}`}
+          label={
+            <CreditLabel>
+              Quick Create: {status.costs['quick-create']}
+            </CreditLabel>
+          }
         />
-        <Chip size="small" label={`Chat: ${status.costs.chat}`} />
         <Chip
           size="small"
-          label={`Daily refill to ${status.dailyFreeCredits}`}
+          label={<CreditLabel>Chat: {status.costs.chat}</CreditLabel>}
+        />
+        <Chip
+          size="small"
+          label={
+            <CreditLabel>Daily refill to {status.dailyFreeCredits}</CreditLabel>
+          }
         />
       </Stack>
       {status.message && (

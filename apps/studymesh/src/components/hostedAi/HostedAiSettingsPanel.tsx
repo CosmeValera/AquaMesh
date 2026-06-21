@@ -149,29 +149,78 @@ const HostedAiSettingsPanel: React.FC = () => {
         </Box>
         <Box
           sx={{
-            display: { xs: 'none', sm: 'grid' },
-            placeItems: 'center',
-            width: 132,
-            height: 82,
-            borderRadius: '50%',
-            bgcolor: 'rgba(0,137,123,0.08)',
-            transform: 'rotate(-2deg)',
+            position: 'relative',
+            display: { xs: 'none', sm: 'block' },
+            width: 160,
+            height: 96,
+            flex: '0 0 auto',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              left: 16,
+              right: 12,
+              bottom: 7,
+              height: 34,
+              borderRadius: '999px',
+              background:
+                'radial-gradient(ellipse at center, rgba(0,137,123,0.18), rgba(0,137,123,0.04) 68%, transparent 72%)',
+              filter: 'blur(1px)',
+            },
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              top: 8,
+              right: 6,
+              width: 40,
+              height: 40,
+              background:
+                'radial-gradient(circle at 50% 50%, rgba(0,137,123,0.22) 0 8%, transparent 9% 100%)',
+              clipPath:
+                'polygon(50% 0, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0 50%, 39% 35%)',
+              opacity: 0.9,
+            },
           }}
         >
           <Box
             sx={{
+              position: 'absolute',
+              left: 38,
+              top: 14,
               display: 'grid',
               placeItems: 'center',
-              width: 72,
-              height: 52,
-              borderRadius: 2,
-              bgcolor: 'rgba(255,255,255,0.62)',
-              boxShadow: '0 18px 34px rgba(0,137,123,0.16)',
-              transform: 'rotate(31deg)',
+              width: 82,
+              height: 66,
+              borderRadius: 3,
+              bgcolor: 'rgba(255,255,255,0.78)',
+              border: '1px solid rgba(0,137,123,0.14)',
+              boxShadow:
+                '0 18px 34px rgba(0,137,123,0.18), inset 0 1px 0 rgba(255,255,255,0.95)',
+              transform: 'rotate(28deg)',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                inset: 7,
+                borderRadius: 2,
+                border: '1px solid rgba(0,137,123,0.10)',
+              },
             }}
           >
-            <StudyCreditIcon size={34} />
+            <Box sx={{ transform: 'rotate(-28deg)' }}>
+              <StudyCreditIcon size={36} />
+            </Box>
           </Box>
+          <Box
+            sx={{
+              position: 'absolute',
+              left: 18,
+              top: 38,
+              width: 15,
+              height: 15,
+              bgcolor: 'rgba(0,137,123,0.28)',
+              clipPath:
+                'polygon(50% 0, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0 50%, 39% 35%)',
+            }}
+          />
         </Box>
       </Box>
 

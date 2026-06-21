@@ -79,7 +79,7 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
     title: '01 - StudyMesh Basics',
     widgetTitle: 'Key Concepts',
     markdown:
-      '## What is StudyMesh?\nStudyMesh is a student knowledge wiki. It helps you turn prompts, notes, files, pictures, references, and learning material into Study Guides, dashboards, widgets, exercises, and reusable workspace views.\n\n## Key concepts\n### Dashboard\nA dashboard is a workspace page for studying or organizing a topic. It can contain notes, practice, references, tools, and custom layouts.\n\n### Widget\nA widget is a reusable piece inside a dashboard. Examples include notes, quizzes, flashcards, checklists, tables, charts, and embedded tools.\n\n### Block\nA block is a smaller unit inside a widget. Examples include one markdown section, one quiz question, one flashcard, one checklist item, or one input.\n\n### Workspace\nThe workspace is the main StudyMesh area where you create, open, edit, and reuse Study Guides, dashboards, widgets, and AI chat.\n\n---\n## Changing AI mode\nClick the AI mode pill in the top bar to choose Hosted AI, Google Local AI, Own Gemini API token, or Own Cerebras API key.\n\n---\n## What to do Next?\n This is a **Study Guide**, which is a special type of **Dashboard** designed for step-by-step learning. Click the right arrow in the floating element to go to the next lesson to learn the basics features of StudyMesh.',
+      '## What is StudyMesh?\nStudyMesh is a student knowledge wiki. It helps you turn a learning goal and the current workspace context into Study Guides, pages, markdown notes, flashcards, quizzes, and exercises.\n\n## Key concepts\n### Study Guide\nA Study Guide is a step-by-step learning workspace for a topic. It can contain lessons, practice, references, and AI-assisted notes.\n\n### Page\nA page is one focused part of a Study Guide. Pages can hold markdown, explanations, quizzes, flashcards, and practice material.\n\n### Markdown notes\nMarkdown notes are editable text pages for explanations, summaries, examples, and references.\n\n### Workspace\nThe workspace is the main StudyMesh area where you create, open, edit, and reuse Study Guides, pages, Quick Create results, and AI chat.\n\n---\n## Changing AI mode\nClick the AI mode pill in the top bar to choose Hosted AI, Google Local AI, Own Gemini API token, or Own Cerebras API key.\n\n---\n## What to do next?\nThis is a Study Guide designed for step-by-step learning. Use the page controls to move through the guide and add your own pages.',
   },
   {
     id: 'studymesh-guide-practice',
@@ -92,8 +92,8 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
       'Create flashcards to practice with the Study Guide.',
       'Open Pomodoro, Canva, or another useful tool from Misc.',
       'Add your profile picture and display name.',
-      'Publish one dashboard on the internet.',
-      'Create your own custom dashboard.',
+      'Add your own markdown page.',
+      'Use AI chat while studying a page.',
     ],
   },
   {

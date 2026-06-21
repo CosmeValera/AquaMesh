@@ -45,7 +45,7 @@ import ColorLensIcon from '@mui/icons-material/ColorLens'
 import ComponentPreview from './components/preview/ComponentPreview'
 import StudyBlockView, {
   isStudyBlockType,
-} from './components/preview/StudyBlockView'
+} from '../study/StudyBlockView'
 
 interface ComponentData {
   id: string

@@ -105,7 +105,7 @@ const SignupPage = () => {
   return (
     <AuthPageFrame
       title="Create account"
-      subtitle="Save dashboards, widgets, and study progress to your cloud workspace."
+      subtitle="Save Study Guides, pages, and study progress to your cloud workspace."
       footer={
         <Typography variant="body2" color="text.secondary" align="center">
           Already have an account?{' '}

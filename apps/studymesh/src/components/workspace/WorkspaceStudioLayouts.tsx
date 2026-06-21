@@ -10,7 +10,6 @@ interface WorkspaceMobileLayoutProps {
   studioContent: React.ReactNode
   mobileCreationStatusTray: React.ReactNode
   mobileSectionTabs: React.ReactNode
-  widgetBuilderDialog: React.ReactNode
   isStudioOpen: boolean
   mobileSection: 'creation' | 'dashboard' | 'ai-chat'
   visibleCreationMarkerCount: number
@@ -22,7 +21,6 @@ export const WorkspaceMobileLayout = ({
   studioContent,
   mobileCreationStatusTray,
   mobileSectionTabs,
-  widgetBuilderDialog,
   isStudioOpen,
   mobileSection,
   visibleCreationMarkerCount,
@@ -135,7 +133,6 @@ export const WorkspaceMobileLayout = ({
     </Box>
     {mobileCreationStatusTray}
     {mobileSectionTabs}
-    {widgetBuilderDialog}
   </Box>
 )
 
@@ -143,7 +140,6 @@ interface WorkspaceDesktopLayoutProps {
   children: React.ReactNode
   studioContent: React.ReactNode
   creationStatusMarkers: React.ReactNode
-  widgetBuilderDialog: React.ReactNode
   isStudioOpen: boolean
   studioWidth: number
   toggleCreatePanel: () => void
@@ -156,7 +152,6 @@ export const WorkspaceDesktopLayout = ({
   children,
   studioContent,
   creationStatusMarkers,
-  widgetBuilderDialog,
   isStudioOpen,
   studioWidth,
   toggleCreatePanel,
@@ -432,6 +427,5 @@ export const WorkspaceDesktopLayout = ({
       </Box>
     </Box>
     {creationStatusMarkers}
-    {widgetBuilderDialog}
   </Box>
 )

@@ -20,8 +20,8 @@ import { alpha } from '@mui/material/styles'
 import {
   OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
   readStudyGuidePageHref,
-} from '../../../../studyGuides/pageLinks'
-import { stripDuplicateStudyGuideMarkdownTitle } from '../../../../studyGuides/pages'
+} from '../../studyGuides/pageLinks'
+import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>

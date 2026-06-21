@@ -27,7 +27,7 @@ vi.mock('../../../../src/dashboardChat/externalSources', () => ({
 }))
 
 vi.mock(
-  '../../../../src/components/WidgetEditor/components/preview/StudyBlockView',
+  '../../../../src/components/study/StudyBlockView',
   () => ({
     __esModule: true,
     renderMarkdown: (

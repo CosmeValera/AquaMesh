@@ -16,7 +16,7 @@ export const dialogStyles = {
     borderColor: 'divider',
   },
 
-  // Dialog title with gradient background (matching TutorialModal)
+  // Dialog title with gradient background used by app modals.
   title: {
     bgcolor: 'background.paper',
     color: 'text.primary',

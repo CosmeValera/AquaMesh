@@ -65,7 +65,7 @@ import {
   type QuickCreateActionRequest,
   type QuickCreateSourceScope,
 } from '../../quickCreate/quickCreateActions'
-import { renderMarkdown } from '../WidgetEditor/components/preview/StudyBlockView'
+import { renderMarkdown } from '../study/StudyBlockView'
 
 export type { DashboardAnswerSourceRef } from '../../dashboardChat/askDashboard'
 

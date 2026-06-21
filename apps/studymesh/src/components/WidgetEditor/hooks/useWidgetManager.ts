@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import WidgetStorage, { CustomWidget } from '../WidgetStorage'
-import { OPEN_WIDGET_EDITOR_EVENT } from '../../../customHooks/useWorkspaceActions'
 
 // Custom hook for widget management
 export const useWidgetManager = () => {
@@ -62,9 +61,6 @@ export const useWidgetManager = () => {
       closeWidgetManagement()
     }
 
-    window.dispatchEvent(new CustomEvent(OPEN_WIDGET_EDITOR_EVENT))
-
-    // Return a promise that resolves after the widget editor is opened
     return new Promise<void>((resolve) => {
       setTimeout(() => {
         resolve()
@@ -92,14 +88,7 @@ export const useWidgetManager = () => {
         }),
       )
     } else {
-      window.dispatchEvent(
-        new CustomEvent(OPEN_WIDGET_EDITOR_EVENT, {
-          detail: {
-            loadWidget: widget,
-            initialEditMode: viewMode !== 'preview',
-          },
-        }),
-      )
+      return
     }
   }
 

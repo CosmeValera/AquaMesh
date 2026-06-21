@@ -33,27 +33,19 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts'
 import PersonIcon from '@mui/icons-material/Person'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import AddToPhotosIcon from '@mui/icons-material/AddToPhotos'
-import WidgetsIcon from '@mui/icons-material/Widgets'
 import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications'
-import ExtensionIcon from '@mui/icons-material/Extension'
-import EditIcon from '@mui/icons-material/Edit'
 
 import AccentColorPicker from '../../theme/AccentColorPicker'
 import DashboardOptionsMenu from '../Dasboard/DashboardOptionsMenu'
 import { useDashboards } from '../Dasboard/DashboardProvider'
 import {
-  OPEN_DASHBOARD_EDITOR_EVENT,
   OPEN_STUDY_PATH_EVENT,
-  OPEN_WIDGET_EDITOR_EVENT,
   useWorkspaceActions,
 } from '../../customHooks/useWorkspaceActions'
+import { WORKSPACE_DASHBOARD_TABS_SLOT_ID } from '../workspace/workspaceEvents'
 import ThemeModeToggle from '../shared/ThemeModeToggle'
-import { CustomWidget } from '../WidgetEditor/WidgetStorage'
-import SettingsDialog from '../WidgetEditor/components/dialogs/SettingsDialog'
-import { dispatchWorkspaceOnboardingEvent } from '../onboarding/onboardingEvents'
+import SettingsDialog from '../settings/SettingsDialog'
 import CreateStudyGuideModal from '../studyGuides/CreateStudyGuideModal'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
@@ -76,8 +68,6 @@ import {
   WorkspaceCreationTask,
   WorkspaceCreationTaskState,
 } from '../../workspaceCreationStatus'
-import { WORKSPACE_DASHBOARD_TABS_SLOT_ID } from '../workspace/workspaceEvents'
-import WidgetEditorDialog from '../workspace/WidgetEditorDialog'
 import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceMode'
 import { deleteStudyMeshProfile, useAuth } from '../../auth/AuthProvider'
 import AiModePill from '../hostedAi/AiModePill'
@@ -191,24 +181,6 @@ const ButtonWithLabel: React.FC<ButtonWithLabelProps> = ({
   )
 }
 
-const useStoredBoolean = (key: string, defaultValue: boolean) => {
-  const [value, setValue] = useState<boolean>(() => {
-    try {
-      const savedValue = localStorage.getItem(key)
-      return savedValue ? JSON.parse(savedValue) : defaultValue
-    } catch (error) {
-      console.error(`Failed to parse ${key} from localStorage`, error)
-      return defaultValue
-    }
-  })
-
-  useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(value))
-  }, [key, value])
-
-  return [value, setValue] as const
-}
-
 const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   // State for different dropdown menus
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null)
@@ -228,44 +200,13 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
     useState<QuickCreateAiProvider>(
       () => readQuickCreateAiSettings().provider || 'hosted',
     )
-  const [widgetEditorOpen, setWidgetEditorOpen] = useState(false)
-  const [widgetEditorPayload, setWidgetEditorPayload] = useState<{
-    loadWidget?: CustomWidget
-    initialEditMode?: boolean
-  } | null>(null)
-  const [showTooltips, setShowTooltips] = useStoredBoolean(
-    'widget-editor-show-tooltips',
-    false,
-  )
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useStoredBoolean(
-    'widget-editor-delete-component-confirmation',
-    true,
-  )
-  const [showDeleteWidgetConfirmation, setShowDeleteWidgetConfirmation] =
-    useStoredBoolean('widget-editor-delete-widget-confirmation', true)
-  const [showComponentPaletteHelp, setShowComponentPaletteHelp] =
-    useStoredBoolean('widget-editor-show-palette-help', false)
-  const [showDeleteDashboardConfirmation, setShowDeleteDashboardConfirmation] =
-    useStoredBoolean('widget-editor-delete-dashboard-confirmation', true)
-  const [showAdvancedInToolbar, setShowAdvancedInToolbar] = useStoredBoolean(
-    'widget-editor-show-advanced-in-toolbar',
-    false,
-  )
-  const [showDeleteTemplateConfirmation, setShowDeleteTemplateConfirmation] =
-    useStoredBoolean('widget-editor-delete-template-confirmation', true)
   const [userData, setUserData] = useState<UserData>(adminUser)
   const [avatarSrc, setAvatarSrc] = useState(() => readUserAvatar(adminUser.id))
   const [dashboardSelectorOpen, setDashboardSelectorOpen] = useState(false)
-  const isAdmin = isAdminUser(userData)
   const userModeLabel = quickCreateAiProviderLabels[quickCreateAiProvider]
   const auth = useAuth()
+  const { createQuickCreateDashboards } = useWorkspaceActions()
   const {
-    openCreateWidget,
-    openCreateDashboard,
-    createQuickCreateDashboards,
-  } = useWorkspaceActions()
-  const {
-    addDashboard,
     openDashboards,
     removeDashboard,
     selectedDashboard,
@@ -412,48 +353,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       )
     }
   }, [])
-
-  useEffect(() => {
-    if (creationHost === 'external') {
-      return
-    }
-
-    const handleOpenWidgetEditor = (event: Event) => {
-      let parsedUserData = userData
-
-      try {
-        const storedUserData = localStorage.getItem('userData')
-        parsedUserData = storedUserData
-          ? (JSON.parse(storedUserData) as UserData)
-          : userData
-      } catch (error) {
-        console.error('Failed to parse user data from localStorage', error)
-      }
-
-      const canEdit = parsedUserData.role === 'ADMIN_ROLE'
-
-      if (!canEdit) {
-        return
-      }
-
-      const customEvent = event as CustomEvent<{
-        loadWidget?: CustomWidget
-        initialEditMode?: boolean
-      }>
-      setWidgetEditorPayload(customEvent.detail || null)
-      setWidgetEditorOpen(true)
-      dispatchWorkspaceOnboardingEvent({ type: 'widget-editor-opened' })
-    }
-
-    window.addEventListener(OPEN_WIDGET_EDITOR_EVENT, handleOpenWidgetEditor)
-
-    return () => {
-      window.removeEventListener(
-        OPEN_WIDGET_EDITOR_EVENT,
-        handleOpenWidgetEditor,
-      )
-    }
-  }, [creationHost, userData])
 
   useEffect(() => {
     if (creationHost === 'external') {
@@ -949,54 +848,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                     Settings
                   </MenuItem>
                   <Divider sx={{ borderColor: 'divider' }} />
-                  <Box sx={{ px: 2, pt: 0.5 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <ExtensionIcon
-                        fontSize="small"
-                        sx={{ color: 'primary.main', mr: 1 }}
-                      />
-                      <Typography variant="body2" fontWeight="medium">
-                        Advanced
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <MenuItem
-                    onClick={() => {
-                      openCreateDashboard()
-                      handleClose()
-                    }}
-                    disabled={!isAdmin}
-                    data-tutorial-id="create-dashboard-button"
-                    data-onboarding-id="create-dashboard"
-                    sx={{ color: 'text.primary' }}
-                  >
-                    <ListItemIcon>
-                      <AddToPhotosIcon
-                        fontSize="small"
-                        sx={{ color: 'text.secondary' }}
-                      />
-                    </ListItemIcon>
-                    Create Dashboard
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      openCreateWidget()
-                      handleClose()
-                    }}
-                    disabled={!isAdmin}
-                    data-tutorial-id="create-widget-button"
-                    data-onboarding-id="dashboard-widget-create"
-                    sx={{ color: 'text.primary' }}
-                  >
-                    <ListItemIcon>
-                      <WidgetsIcon
-                        fontSize="small"
-                        sx={{ color: 'text.secondary' }}
-                      />
-                    </ListItemIcon>
-                    Create Widget
-                  </MenuItem>
-                  <Divider sx={{ borderColor: 'divider' }} />
                   <MenuItem
                     onClick={handleLogout}
                     sx={{ color: 'text.primary' }}
@@ -1103,47 +954,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
             </ListItemIcon>
             Settings
           </MenuItem>
-          {creationHost !== 'external' ? (
-            <>
-              <MenuItem
-                onClick={() => {
-                  openCreateDashboard()
-                  handleClose()
-                }}
-                disabled={!isAdmin}
-                data-tutorial-id="create-dashboard-button"
-                data-onboarding-id="create-dashboard"
-                sx={{ color: 'text.primary' }}
-              >
-                <ListItemIcon>
-                  <AddToPhotosIcon
-                    fontSize="small"
-                    sx={{ color: 'text.secondary' }}
-                  />
-                </ListItemIcon>
-                Create Dashboard
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  openCreateWidget()
-                  handleClose()
-                }}
-                disabled={!isAdmin}
-                data-tutorial-id="create-widget-button"
-                data-onboarding-id="dashboard-widget-create"
-                sx={{ color: 'text.primary' }}
-              >
-                <ListItemIcon>
-                  <WidgetsIcon
-                    fontSize="small"
-                    sx={{ color: 'text.secondary' }}
-                  />
-                </ListItemIcon>
-                Create Widget
-              </MenuItem>
-              <Divider sx={{ borderColor: 'divider' }} />
-            </>
-          ) : null}
           <MenuItem onClick={handleLogout} sx={{ color: 'text.primary' }}>
             <ListItemIcon>
               <LogoutIcon fontSize="small" sx={{ color: 'text.secondary' }} />
@@ -1182,12 +992,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
               dashboard.name ||
               'Untitled dashboard'
             const selected = index === selectedDashboard
-            const canEditDashboard =
-              isAdmin &&
-              (dashboard.kind === 'studyPathContainer'
-                ? Boolean(dashboard.studyPath?.dashboards.length)
-                : true)
-
             return (
               <MenuItem
                 key={dashboard.id}
@@ -1219,37 +1023,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   }}
                   sx={{ minWidth: 0, mr: 1 }}
                 />
-                {canEditDashboard && (
-                  <IconButton
-                    component="span"
-                    aria-label={`Edit ${dashboardTitle}`}
-                    size="small"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      window.dispatchEvent(
-                        new CustomEvent(OPEN_DASHBOARD_EDITOR_EVENT, {
-                          detail: {
-                            host: 'workspace-builder',
-                            dashboardId: dashboard.id,
-                          },
-                        }),
-                      )
-                      setDashboardSelectorOpen(false)
-                    }}
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      color: 'text.secondary',
-                      flex: '0 0 auto',
-                      '&:hover': {
-                        color: 'primary.main',
-                        bgcolor: 'action.hover',
-                      },
-                    }}
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                )}
                 <IconButton
                   component="span"
                   aria-label={`Close ${dashboardTitle}`}
@@ -1274,19 +1047,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
               </MenuItem>
             )
           })}
-          <Divider sx={{ my: 1 }} />
-          <MenuItem
-            onClick={() => {
-              addDashboard()
-              setDashboardSelectorOpen(false)
-            }}
-            sx={{ minHeight: 48, borderRadius: 2 }}
-          >
-            <ListItemIcon sx={{ minWidth: 34 }}>
-              <AddCircleOutlineIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText primary="Create new dashboard" />
-          </MenuItem>
         </Box>
       </Drawer>
       ) : null}
@@ -1370,25 +1130,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         title="Application Settings"
-        scope="global"
-        showTooltips={showTooltips}
-        onShowTooltipsChange={setShowTooltips}
-        showDeleteConfirmation={showDeleteConfirmation}
-        onShowDeleteConfirmationChange={setShowDeleteConfirmation}
-        showComponentPaletteHelp={showComponentPaletteHelp}
-        onShowComponentPaletteHelpChange={setShowComponentPaletteHelp}
-        showDeleteWidgetConfirmation={showDeleteWidgetConfirmation}
-        onShowDeleteWidgetConfirmationChange={setShowDeleteWidgetConfirmation}
-        showDeleteDashboardConfirmation={showDeleteDashboardConfirmation}
-        onShowDeleteDashboardConfirmationChange={
-          setShowDeleteDashboardConfirmation
-        }
-        showAdvancedInToolbar={showAdvancedInToolbar}
-        onShowAdvancedInToolbarChange={setShowAdvancedInToolbar}
-        showDeleteTemplateConfirmation={showDeleteTemplateConfirmation}
-        onShowDeleteTemplateConfirmationChange={
-          setShowDeleteTemplateConfirmation
-        }
         onDeleteStudyMeshProfile={handleDeleteStudyMeshProfile}
       />
       {creationHost === 'navbar' && (
@@ -1398,16 +1139,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
             onClose={() => setStudyPathOpen(false)}
             onCreatePath={createQuickCreateDashboards}
             onStatusChange={reportStudyPathStatus}
-          />
-          <WidgetEditorDialog
-            open={widgetEditorOpen}
-            payload={widgetEditorPayload}
-            onClose={() => {
-              setWidgetEditorOpen(false)
-              dispatchWorkspaceOnboardingEvent({
-                type: 'widget-editor-closed',
-              })
-            }}
           />
         </>
       )}

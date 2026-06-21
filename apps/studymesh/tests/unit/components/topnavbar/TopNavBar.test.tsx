@@ -3,13 +3,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import TopNavBar from '../../../../src/components/topnavbar/TopNavBar'
-import * as useTopNavBarWidgetsModule from '../../../../src/customHooks/useTopNavBarWidgets'
 import * as LayoutProviderModule from '../../../../src/components/Layout/LayoutProvider'
 import * as DashboardProviderModule from '../../../../src/components/Dasboard/DashboardProvider'
-import {
-  OPEN_DASHBOARD_EDITOR_EVENT,
-  OPEN_STUDY_PATH_EVENT,
-} from '../../../../src/customHooks/useWorkspaceActions'
+import { OPEN_STUDY_PATH_EVENT } from '../../../../src/customHooks/useWorkspaceActions'
 import { STUDYMESH_ONBOARDING_RESET_EVENT } from '../../../../src/components/onboarding/onboardingEvents'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
@@ -28,12 +24,6 @@ const hostedAiStatus = vi.hoisted(() => ({
     'quick-create': 1,
     chat: 1,
   },
-}))
-
-// Mock custom hooks and providers
-vi.mock('../../../../src/customHooks/useTopNavBarWidgets', () => ({
-  __esModule: true,
-  default: vi.fn(),
 }))
 
 vi.mock('../../../../src/components/Layout/LayoutProvider', () => ({
@@ -56,11 +46,6 @@ vi.mock('../../../../src/components/Dasboard/DashboardOptionsMenu', () => ({
   ),
 }))
 
-vi.mock('../../../../src/components/WidgetEditor/WidgetEditor', () => ({
-  __esModule: true,
-  default: () => <div data-testid="widget-editor">Widget Editor</div>,
-}))
-
 vi.mock('../../../../src/components/studyGuides/CreateStudyGuideModal', () => ({
   __esModule: true,
   default: ({ open }: { open: boolean }) =>
@@ -81,23 +66,6 @@ vi.mock('../../../../src/theme/AccentColorPicker', () => ({
 vi.mock('../../../../public/logo.svg', () => ({
   ReactComponent: () => <svg data-testid="logo">Logo</svg>,
 }))
-
-// Mock useWidgetManager hook
-vi.mock(
-  '../../../../src/components/WidgetEditor/hooks/useWidgetManager',
-  () => ({
-    __esModule: true,
-    default: () => ({
-      widgets: [],
-      isWidgetManagementOpen: false,
-      openWidgetManagement: vi.fn(),
-      closeWidgetManagement: vi.fn(),
-      previewWidget: vi.fn(),
-      editWidget: vi.fn(),
-      deleteWidget: vi.fn(),
-    }),
-  }),
-)
 
 // Mock useNavigate
 vi.mock('react-router-dom', async () => {
@@ -166,29 +134,6 @@ describe('TopNavBar Component', () => {
       }
 
       return null
-    })
-
-    // Setup useTopNavBarWidgets mock
-    vi.mocked(useTopNavBarWidgetsModule.default).mockReturnValue({
-      topNavBarWidgets: [
-        {
-          name: 'Standard Widgets',
-          items: [
-            { name: 'Chart Widget', component: 'ChartWidget' },
-            { name: 'Data Table', component: 'DataTable' },
-          ],
-        },
-        {
-          name: 'Custom Widgets',
-          items: [
-            {
-              name: 'My Custom Widget',
-              component: 'CustomWidget',
-              customProps: { widgetId: '123' },
-            },
-          ],
-        },
-      ],
     })
 
     // Setup useLayout mock
@@ -544,88 +489,7 @@ describe('TopNavBar Component', () => {
     expect(screen.getByTestId('logo')).toBeInTheDocument()
   })
 
-  it('opens Create Widget when Create Widget button is clicked', async () => {
-    render(
-      <BrowserRouter>
-        <TopNavBar />
-      </BrowserRouter>,
-    )
-
-    openUserMenu()
-    fireEvent.click(
-      await screen.findByRole('menuitem', { name: /create widget/i }),
-    )
-
-    expect(await screen.findByTestId('widget-editor')).toBeInTheDocument()
-  })
-
-  it('dispatches the dashboard builder event when Create Dashboard is clicked', async () => {
-    const dashboardEditorListener = vi.fn()
-    window.addEventListener(
-      OPEN_DASHBOARD_EDITOR_EVENT,
-      dashboardEditorListener,
-    )
-
-    render(
-      <BrowserRouter>
-        <TopNavBar />
-      </BrowserRouter>,
-    )
-
-    openUserMenu()
-    fireEvent.click(
-      await screen.findByRole('menuitem', { name: /create dashboard/i }),
-    )
-
-    expect(dashboardEditorListener).toHaveBeenCalledTimes(1)
-    window.removeEventListener(
-      OPEN_DASHBOARD_EDITOR_EVENT,
-      dashboardEditorListener,
-    )
-  })
-
-  it('disables Advanced for viewers without opening its menu', () => {
-    localStorage.getItem.mockImplementation((key: string) => {
-      if (key === 'userData') {
-        return JSON.stringify({
-          id: 'viewer',
-          name: 'Viewer User',
-          role: 'VIEWER_ROLE',
-        })
-      }
-
-      if (key === QUICK_CREATE_AI_SETTINGS_KEY) {
-        return JSON.stringify({
-          provider: 'gemini',
-          apiToken: 'test-token',
-          model: 'gemini-test',
-        })
-      }
-
-      return null
-    })
-
-    render(
-      <BrowserRouter>
-        <TopNavBar />
-      </BrowserRouter>,
-    )
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: /open user menu/i,
-      }),
-    )
-
-    expect(
-      screen.getByRole('menuitem', { name: /create dashboard/i }),
-    ).toHaveAttribute('aria-disabled', 'true')
-    expect(
-      screen.getByRole('menuitem', { name: /create widget/i }),
-    ).toHaveAttribute('aria-disabled', 'true')
-  })
-
-  it('replays the workspace tutorial from application settings', async () => {
+  it('resets workspace notices from application settings', async () => {
     const resetListener = vi.fn()
     window.addEventListener(STUDYMESH_ONBOARDING_RESET_EVENT, resetListener)
 
@@ -643,15 +507,10 @@ describe('TopNavBar Component', () => {
     fireEvent.click(
       await screen.findByRole('menuitem', { name: /^settings$/i }),
     )
-    fireEvent.click(await screen.findByRole('button', { name: /^replay$/i }))
-
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      'studymesh-workspace-onboarding-v1',
-      JSON.stringify({
-        status: 'active',
-        stepId: 'create-dashboard',
-      }),
+    fireEvent.click(
+      await screen.findByRole('button', { name: /reset notices/i }),
     )
+
     expect(resetListener).toHaveBeenCalledTimes(1)
 
     window.removeEventListener(STUDYMESH_ONBOARDING_RESET_EVENT, resetListener)

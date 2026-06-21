@@ -25,9 +25,7 @@ import LoopIcon from '@mui/icons-material/Loop'
 
 import {
   OPEN_CREATE_HUB_EVENT,
-  OPEN_DASHBOARD_EDITOR_EVENT,
   OPEN_STUDY_PATH_EVENT,
-  OPEN_WIDGET_EDITOR_EVENT,
   useWorkspaceActions,
 } from '../../customHooks/useWorkspaceActions'
 import { dispatchWorkspaceOnboardingEvent } from '../onboarding/onboardingEvents'
@@ -44,7 +42,6 @@ import {
   StudyMaterialResourceType,
   QuickCreateAiProvider,
 } from '../../quickCreate/ai'
-import { CustomWidget } from '../WidgetEditor/WidgetStorage'
 import { useDashboards } from '../Dasboard/DashboardProvider'
 import { createStudyPathContainerState } from '../Dasboard/studyPathContainer'
 import {
@@ -86,11 +83,8 @@ import {
 import { createQuickCreateOrchestratorWidgets } from '../../quickCreate'
 import { augmentQuickCreatePracticeObjects } from '../../quickCreate/practice'
 import { StudyObject } from '../../quickCreate/types'
-import WidgetEditorDialog from './WidgetEditorDialog'
 import { useResponsiveWorkspaceMode } from './useResponsiveWorkspaceMode'
-import StudyBlockView, {
-  isStudyBlockType,
-} from '../WidgetEditor/components/preview/StudyBlockView'
+import StudyBlockView, { isStudyBlockType } from '../study/StudyBlockView'
 
 const quickCreateIcons: Record<StudyMaterialResourceType, React.ReactNode> = {
   quiz: <QuizIcon fontSize="small" />,
@@ -521,10 +515,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const [autoAcknowledgingDraftIds, setAutoAcknowledgingDraftIds] = useState<
     Set<string>
   >(() => new Set())
-  const [fullScreenWidgetPayload, setFullScreenWidgetPayload] = useState<{
-    loadWidget?: CustomWidget
-    initialEditMode?: boolean
-  } | null>(null)
   const { createQuickCreateDashboards } = useWorkspaceActions()
   const {
     addDashboards,
@@ -569,10 +559,8 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     const isAdmin = readIsAdmin()
 
     return {
-      canCreateDashboard: isAdmin,
       canCreateQuickCreate: isAdmin,
       canCreateStudyPath: isAdmin,
-      canCreateWidget: isAdmin,
     }
   }, [aiProvider])
   const hasGeneratingQueueJobs = generationDrafts.some(
@@ -656,24 +644,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    const handleOpenWidgetEditor = (event: Event) => {
-      const customEvent = event as CustomEvent<{
-        host?: string
-        loadWidget?: CustomWidget
-        initialEditMode?: boolean
-      }>
-
-      if (!readIsAdmin()) {
-        return
-      }
-
-      setFullScreenWidgetPayload({
-        loadWidget: customEvent.detail?.loadWidget,
-        initialEditMode: customEvent.detail?.initialEditMode,
-      })
-      setIsStudioOpen(false)
-      dispatchWorkspaceOnboardingEvent({ type: 'widget-editor-opened' })
-    }
     const handleOpenStudyPath = () => {
       if (permissions.canCreateStudyPath) {
         setActiveMaterialDraftId(null)
@@ -685,11 +655,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         }
       }
     }
-    const handleOpenDashboard = () => {
-      if (readIsAdmin()) {
-        setIsStudioOpen(false)
-      }
-    }
     const handleCloseCreateStudio = () => {
       setIsStudioOpen(false)
       if (isMobile && mobileSection === 'creation') {
@@ -698,26 +663,15 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         )
       }
       openingMobileAiChatRef.current = false
-      dispatchWorkspaceOnboardingEvent({ type: 'widget-editor-closed' })
     }
 
     window.addEventListener(OPEN_CREATE_HUB_EVENT, handleOpenCreateHub)
-    window.addEventListener(OPEN_WIDGET_EDITOR_EVENT, handleOpenWidgetEditor)
     window.addEventListener(OPEN_STUDY_PATH_EVENT, handleOpenStudyPath)
-    window.addEventListener(OPEN_DASHBOARD_EDITOR_EVENT, handleOpenDashboard)
     window.addEventListener(CLOSE_CREATE_STUDIO_EVENT, handleCloseCreateStudio)
 
     return () => {
       window.removeEventListener(OPEN_CREATE_HUB_EVENT, handleOpenCreateHub)
-      window.removeEventListener(
-        OPEN_WIDGET_EDITOR_EVENT,
-        handleOpenWidgetEditor,
-      )
       window.removeEventListener(OPEN_STUDY_PATH_EVENT, handleOpenStudyPath)
-      window.removeEventListener(
-        OPEN_DASHBOARD_EDITOR_EVENT,
-        handleOpenDashboard,
-      )
       window.removeEventListener(
         CLOSE_CREATE_STUDIO_EVENT,
         handleCloseCreateStudio,
@@ -742,7 +696,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     if (isMobile) {
       setMobileSection('dashboard')
     }
-    dispatchWorkspaceOnboardingEvent({ type: 'widget-editor-closed' })
   }
 
   const reportCreationStatus = useCallback(
@@ -1269,12 +1222,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         [draft.id]: (current[draft.id] || 0) + 1,
       }))
     }
-  }
-
-  const closeFullScreenWidgetEditor = () => {
-    setFullScreenWidgetPayload(null)
-    resetOrCloseStudio()
-    dispatchWorkspaceOnboardingEvent({ type: 'widget-editor-closed' })
   }
 
   const currentDashboard = openDashboards[selectedDashboard]
@@ -2841,14 +2788,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     </Box>
   )
 
-  const widgetBuilderDialog = (
-    <WidgetEditorDialog
-      open={Boolean(fullScreenWidgetPayload)}
-      payload={fullScreenWidgetPayload}
-      onClose={closeFullScreenWidgetEditor}
-      onSaveComplete={closeFullScreenWidgetEditor}
-    />
-  )
   const sessionKeyDialog = sessionKeyRequest ? (
     <StrongAiSessionKeyDialog
       open
@@ -2880,7 +2819,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
           studioContent={studioContent}
           mobileCreationStatusTray={mobileCreationStatusTray}
           mobileSectionTabs={mobileSectionTabs}
-          widgetBuilderDialog={widgetBuilderDialog}
           isStudioOpen={isStudioOpen}
           mobileSection={mobileSection}
           visibleCreationMarkerCount={hasQueueMarker ? 1 : 0}
@@ -2898,7 +2836,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       <WorkspaceDesktopLayout
         studioContent={studioContent}
         creationStatusMarkers={creationStatusMarkers}
-        widgetBuilderDialog={widgetBuilderDialog}
         isStudioOpen={isStudioOpen}
         studioWidth={studioWidth}
         toggleCreatePanel={toggleCreatePanel}

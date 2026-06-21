@@ -1773,7 +1773,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
     id: 'template-knowledge-tutorial',
     name: 'StudyMesh Tutorial Template',
     description:
-      'A visual dashboard that explains dashboards, widgets, blocks, and the normal StudyMesh workflow.',
+      'A visual guide that explains Study Guides, pages, notes, exercises, and the normal StudyMesh workflow.',
     category: 'Knowledge Workspace',
     components: [
       {

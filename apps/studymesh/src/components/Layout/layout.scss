@@ -249,6 +249,7 @@
   width: 100%;
   min-width: 0;
   overflow: visible;
+  padding: 16px;
 }
 
 @media (min-width: 900px) {
@@ -263,6 +264,7 @@
     border-radius: 12px;
     background: var(--surface-card, #fff);
     box-shadow: none;
+    padding: 24px;
   }
 }
 

@@ -21,7 +21,7 @@ import GridBoxEditor from '../editors/GridBoxEditor'
 import FieldSetEditor from '../editors/FieldSetEditor'
 import KnowledgeBlockEditor from '../editors/KnowledgeBlockEditor'
 import StudyBlockEditor from '../editors/StudyBlockEditor'
-import { isStudyBlockType } from '../preview/StudyBlockView'
+import { isStudyBlockType } from '../../../study/StudyBlockView'
 
 const normalizeQuizBlockProps = (
   props: Record<string, unknown>,

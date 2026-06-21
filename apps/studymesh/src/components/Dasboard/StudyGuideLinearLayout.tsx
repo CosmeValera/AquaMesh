@@ -118,7 +118,11 @@ const StudyGuideLinearLayout = ({ layout }: { layout?: DashboardLayout }) => {
                   {String(component.props.text || '')}
                 </Typography>
               ) : isStudyBlockType(component.type) ? (
-                <StudyBlockView type={component.type} props={component.props} />
+                <StudyBlockView
+                  type={component.type}
+                  props={component.props}
+                  unframed={component.type === 'MarkdownBlock'}
+                />
               ) : null}
             </Box>
           ))}

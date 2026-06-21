@@ -25,6 +25,7 @@ import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
+  unframed?: boolean
 }
 
 const STUDY_BLOCK_TYPES = [
@@ -613,7 +614,11 @@ export const renderMarkdown = (
   return blocks
 }
 
-const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
+const StudyBlockView: React.FC<StudyBlockViewProps> = ({
+  type,
+  props,
+  unframed = false,
+}) => {
   const [flipped, setFlipped] = useState(false)
   const [selfGrade, setSelfGrade] = useState<'known' | 'missed' | ''>('')
   const [revealed, setRevealed] = useState(false)
@@ -1335,16 +1340,24 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({ type, props }) => {
         )
       : String(props.markdown || '')
 
+    const content = (
+      <Stack spacing={1.5}>
+        {title && !isStudyGuidePage && (
+          <Typography variant="subtitle1" fontWeight={700}>
+            {title}
+          </Typography>
+        )}
+        <Stack spacing={1.25}>{renderMarkdown(markdown)}</Stack>
+      </Stack>
+    )
+
+    if (unframed) {
+      return content
+    }
+
     return (
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Stack spacing={1.5}>
-          {title && !isStudyGuidePage && (
-            <Typography variant="subtitle1" fontWeight={700}>
-              {title}
-            </Typography>
-          )}
-          <Stack spacing={1.25}>{renderMarkdown(markdown)}</Stack>
-        </Stack>
+        {content}
       </Paper>
     )
   }

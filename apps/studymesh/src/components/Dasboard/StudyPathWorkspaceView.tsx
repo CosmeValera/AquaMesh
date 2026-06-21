@@ -284,11 +284,17 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 1,
-          flexWrap: 'wrap',
+          flexWrap: 'nowrap',
           bgcolor: 'background.paper',
         }}
       >
-        <Stack direction="row" spacing={1.5} alignItems="center" minWidth={0}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          alignItems="center"
+          minWidth={0}
+          sx={{ flex: '1 1 auto' }}
+        >
           {showPageRail ? (
             <>
               <Typography
@@ -304,8 +310,17 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               </Typography>
             </>
           ) : null}
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" fontWeight={600} noWrap>
+          <Box sx={{ minWidth: 0, flex: '1 1 auto' }}>
+            <Typography
+              variant="subtitle2"
+              fontWeight={600}
+              sx={{
+                display: '-webkit-box',
+                overflow: 'hidden',
+                WebkitBoxOrient: 'vertical',
+                WebkitLineClamp: { xs: 2, md: 1 },
+              }}
+            >
               {currentLesson.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -317,7 +332,8 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
           direction="row"
           spacing={0.75}
           alignItems="center"
-          flexWrap="wrap"
+          flexWrap="nowrap"
+          sx={{ flex: '0 0 auto' }}
         >
           {currentPageEditable ? (
             <Tooltip

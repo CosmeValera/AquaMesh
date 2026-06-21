@@ -311,7 +311,27 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                     'background-color',
                     'border-color',
                     'opacity',
+                    'transform',
                   ]),
+                  animation: active
+                    ? 'studymesh-page-row-selected 180ms ease-out'
+                    : 'none',
+                  '@keyframes studymesh-page-row-selected': {
+                    '0%': {
+                      transform: 'translateX(-4px)',
+                      boxShadow: `0 0 0 0 ${alpha(
+                        theme.palette.primary.main,
+                        0.18,
+                      )}`,
+                    },
+                    '100%': {
+                      transform: 'translateX(0)',
+                      boxShadow: `0 0 0 6px ${alpha(
+                        theme.palette.primary.main,
+                        0,
+                      )}`,
+                    },
+                  },
                   '&::before': {
                     content: '""',
                     display: active
@@ -354,6 +374,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                     textAlign: 'left',
                     textTransform: 'none',
                     color: 'text.primary',
+                    transition: 'padding-left 160ms ease-out',
                   }}
                 >
                   <Stack

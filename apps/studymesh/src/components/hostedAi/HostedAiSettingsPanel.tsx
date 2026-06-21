@@ -123,10 +123,20 @@ const HostedAiSettingsPanel: React.FC = () => {
           py: { xs: 2, sm: 2.5 },
           borderRadius: 2,
           border: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'rgba(236,253,245,0.58)',
-          backgroundImage:
-            'linear-gradient(110deg, rgba(255,255,255,0.86), rgba(204,251,241,0.35))',
+          borderColor: (theme) =>
+            theme.palette.mode === 'dark' ? 'rgba(45,212,191,0.24)' : 'divider',
+          bgcolor: (theme) =>
+            theme.palette.mode === 'dark'
+              ? 'rgba(15,23,42,0.94)'
+              : 'rgba(236,253,245,0.58)',
+          backgroundImage: (theme) =>
+            theme.palette.mode === 'dark'
+              ? 'linear-gradient(110deg, rgba(15,23,42,0.96), rgba(13,148,136,0.22))'
+              : 'linear-gradient(110deg, rgba(255,255,255,0.86), rgba(204,251,241,0.35))',
+          boxShadow: (theme) =>
+            theme.palette.mode === 'dark'
+              ? 'inset 0 1px 0 rgba(255,255,255,0.05), 0 14px 34px rgba(0,0,0,0.24)'
+              : 'none',
         }}
       >
         <Box sx={{ position: 'relative', zIndex: 1 }}>
@@ -162,8 +172,10 @@ const HostedAiSettingsPanel: React.FC = () => {
               bottom: 7,
               height: 34,
               borderRadius: '999px',
-              background:
-                'radial-gradient(ellipse at center, rgba(0,137,123,0.18), rgba(0,137,123,0.04) 68%, transparent 72%)',
+              background: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'radial-gradient(ellipse at center, rgba(45,212,191,0.28), rgba(20,184,166,0.10) 68%, transparent 72%)'
+                  : 'radial-gradient(ellipse at center, rgba(0,137,123,0.18), rgba(0,137,123,0.04) 68%, transparent 72%)',
               filter: 'blur(1px)',
             },
             '&::after': {
@@ -173,8 +185,10 @@ const HostedAiSettingsPanel: React.FC = () => {
               right: 6,
               width: 40,
               height: 40,
-              background:
-                'radial-gradient(circle at 50% 50%, rgba(0,137,123,0.22) 0 8%, transparent 9% 100%)',
+              background: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'radial-gradient(circle at 50% 50%, rgba(94,234,212,0.5) 0 8%, transparent 9% 100%)'
+                  : 'radial-gradient(circle at 50% 50%, rgba(0,137,123,0.22) 0 8%, transparent 9% 100%)',
               clipPath:
                 'polygon(50% 0, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0 50%, 39% 35%)',
               opacity: 0.9,
@@ -191,17 +205,28 @@ const HostedAiSettingsPanel: React.FC = () => {
               width: 82,
               height: 66,
               borderRadius: 3,
-              bgcolor: 'rgba(255,255,255,0.78)',
-              border: '1px solid rgba(0,137,123,0.14)',
-              boxShadow:
-                '0 18px 34px rgba(0,137,123,0.18), inset 0 1px 0 rgba(255,255,255,0.95)',
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'rgba(30,41,59,0.92)'
+                  : 'rgba(255,255,255,0.78)',
+              border: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? '1px solid rgba(94,234,212,0.22)'
+                  : '1px solid rgba(0,137,123,0.14)',
+              boxShadow: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? '0 18px 34px rgba(0,0,0,0.34), 0 0 28px rgba(45,212,191,0.18), inset 0 1px 0 rgba(255,255,255,0.08)'
+                  : '0 18px 34px rgba(0,137,123,0.18), inset 0 1px 0 rgba(255,255,255,0.95)',
               transform: 'rotate(28deg)',
               '&::before': {
                 content: '""',
                 position: 'absolute',
                 inset: 7,
                 borderRadius: 2,
-                border: '1px solid rgba(0,137,123,0.10)',
+                border: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? '1px solid rgba(94,234,212,0.16)'
+                    : '1px solid rgba(0,137,123,0.10)',
               },
             }}
           >
@@ -216,7 +241,10 @@ const HostedAiSettingsPanel: React.FC = () => {
               top: 38,
               width: 15,
               height: 15,
-              bgcolor: 'rgba(0,137,123,0.28)',
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'rgba(94,234,212,0.44)'
+                  : 'rgba(0,137,123,0.28)',
               clipPath:
                 'polygon(50% 0, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0 50%, 39% 35%)',
             }}
@@ -263,8 +291,18 @@ const HostedAiSettingsPanel: React.FC = () => {
           p: 1.25,
           borderRadius: 2,
           border: '1px solid',
-          borderColor: 'rgba(14,165,233,0.22)',
-          bgcolor: 'rgba(224,242,254,0.52)',
+          borderColor: (theme) =>
+            theme.palette.mode === 'dark'
+              ? 'rgba(45,212,191,0.24)'
+              : 'rgba(14,165,233,0.22)',
+          bgcolor: (theme) =>
+            theme.palette.mode === 'dark'
+              ? 'rgba(20,184,166,0.12)'
+              : 'rgba(224,242,254,0.52)',
+          boxShadow: (theme) =>
+            theme.palette.mode === 'dark'
+              ? 'inset 0 1px 0 rgba(255,255,255,0.04)'
+              : 'none',
         }}
       >
         <Box
@@ -275,8 +313,12 @@ const HostedAiSettingsPanel: React.FC = () => {
             borderRadius: 2,
             display: 'grid',
             placeItems: 'center',
-            color: '#008575',
-            bgcolor: 'rgba(16,185,129,0.12)',
+            color: (theme) =>
+              theme.palette.mode === 'dark' ? '#5eead4' : '#008575',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? 'rgba(20,184,166,0.20)'
+                : 'rgba(16,185,129,0.12)',
           }}
         >
           <EventAvailableOutlinedIcon fontSize="small" />

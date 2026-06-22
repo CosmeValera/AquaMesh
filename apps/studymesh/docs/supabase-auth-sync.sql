@@ -322,7 +322,7 @@ begin
 
   insert into public.hosted_ai_account_history (owner_id)
   values (new.id)
-  on conflict (owner_id) do update
+  on conflict on constraint hosted_ai_account_history_pkey do update
     set first_profile_created_at = public.hosted_ai_account_history.first_profile_created_at;
 
   return new;
@@ -354,7 +354,7 @@ begin
     last_profile_deleted_at
   )
   values (auth.uid(), now())
-  on conflict (owner_id) do update
+  on conflict on constraint hosted_ai_account_history_pkey do update
     set last_profile_deleted_at = now();
 
   delete from public.profiles
@@ -416,7 +416,7 @@ begin
 
   insert into public.hosted_ai_account_history (owner_id)
   values (p_owner_id)
-  on conflict (owner_id) do update
+  on conflict on constraint hosted_ai_account_history_pkey do update
     set first_profile_created_at = public.hosted_ai_account_history.first_profile_created_at;
 
   update public.hosted_ai_accounts account

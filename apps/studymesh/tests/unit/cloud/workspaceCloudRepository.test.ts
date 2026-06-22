@@ -211,6 +211,9 @@ describe('workspace cloud repository', () => {
       'create or replace function public.delete_own_profile()',
     )
     expect(sql).toContain('insert into public.hosted_ai_account_history')
+    expect(sql).toContain(
+      'on conflict on constraint hosted_ai_account_history_pkey do update',
+    )
     expect(sql).toContain('set last_profile_deleted_at = now()')
     expect(sql).toContain('delete from public.profiles where id = auth.uid()')
     expect(sql).toContain('get diagnostics deleted_count = row_count')
@@ -236,6 +239,10 @@ describe('workspace cloud repository', () => {
     expect(sql).toContain(
       'insert into public.profiles (id) values (p_owner_id) on conflict (id) do nothing',
     )
+    expect(sql).toContain(
+      'on conflict on constraint hosted_ai_account_history_pkey do update',
+    )
+    expect(sql).not.toContain('on conflict (owner_id) do update')
     expect(sql).toContain(
       'when exists ( select 1 from public.hosted_ai_account_history history where history.owner_id = new.id and history.last_profile_deleted_at is not null ) then 0 else 20',
     )

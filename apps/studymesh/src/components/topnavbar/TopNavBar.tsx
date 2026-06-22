@@ -88,8 +88,7 @@ const readCurrentUserData = (fallbackUserData: UserData) => {
   }
 }
 
-const isAdminUser = (userData: UserData) =>
-  userData.role === 'ADMIN_ROLE'
+const isAdminUser = (userData: UserData) => userData.role === 'ADMIN_ROLE'
 
 const canOpenStudyPathForCurrentState = (userData: UserData) => {
   return isAdminUser(userData)
@@ -862,14 +861,14 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
             sx={{ color: 'text.primary', marginTop: 1 }}
           >
             <ListItemIcon>
-              <ColorLensIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+              <ColorLensIcon
+                fontSize="small"
+                sx={{ color: 'text.secondary' }}
+              />
             </ListItemIcon>
             Appearance
           </MenuItem>
-          <MenuItem
-            onClick={openSettings}
-            sx={{ color: 'text.primary' }}
-          >
+          <MenuItem onClick={openSettings} sx={{ color: 'text.primary' }}>
             <ListItemIcon>
               <ManageAccountsIcon
                 fontSize="small"
@@ -888,91 +887,91 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       )}
 
       {creationHost !== 'external' ? (
-      <Drawer
-        anchor="bottom"
-        open={isMobileWorkspaceHeader && dashboardSelectorOpen}
-        onClose={() => setDashboardSelectorOpen(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: '16px 16px 0 0',
-            bgcolor: 'background.paper',
-            maxHeight: '72dvh',
-            pb: 'calc(12px + env(safe-area-inset-bottom))',
-          },
-        }}
-      >
-        <Box sx={{ p: 2, pb: 1 }}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            Your dashboards
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Switch the active dashboard or create a new one.
-          </Typography>
-        </Box>
-        <Box sx={{ overflowY: 'auto', px: 1, pb: 1 }}>
-          {openDashboards.map((dashboard, index) => {
-            const dashboardTitle =
-              dashboard.studyPath?.title ||
-              dashboard.name ||
-              'Untitled dashboard'
-            const selected = index === selectedDashboard
-            return (
-              <MenuItem
-                key={dashboard.id}
-                selected={selected}
-                onClick={() => {
-                  setSelectedDashboard(index)
-                  setDashboardSelectorOpen(false)
-                }}
-                sx={{
-                  minHeight: 48,
-                  borderRadius: 2,
-                  mb: 0.5,
-                  alignItems: 'center',
-                  pr: 0.5,
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 34 }}>
-                  {selected ? (
-                    <CheckCircleIcon fontSize="small" color="primary" />
-                  ) : (
-                    <Box sx={{ width: 20 }} />
-                  )}
-                </ListItemIcon>
-                <ListItemText
-                  primary={dashboardTitle}
-                  primaryTypographyProps={{
-                    noWrap: true,
-                    fontWeight: selected ? 800 : 500,
-                  }}
-                  sx={{ minWidth: 0, mr: 1 }}
-                />
-                <IconButton
-                  component="span"
-                  aria-label={`Close ${dashboardTitle}`}
-                  size="small"
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    removeDashboard(dashboard.id)
+        <Drawer
+          anchor="bottom"
+          open={isMobileWorkspaceHeader && dashboardSelectorOpen}
+          onClose={() => setDashboardSelectorOpen(false)}
+          PaperProps={{
+            sx: {
+              borderRadius: '16px 16px 0 0',
+              bgcolor: 'background.paper',
+              maxHeight: '72dvh',
+              pb: 'calc(12px + env(safe-area-inset-bottom))',
+            },
+          }}
+        >
+          <Box sx={{ p: 2, pb: 1 }}>
+            <Typography variant="subtitle1" fontWeight={600}>
+              Your dashboards
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Switch the active dashboard or create a new one.
+            </Typography>
+          </Box>
+          <Box sx={{ overflowY: 'auto', px: 1, pb: 1 }}>
+            {openDashboards.map((dashboard, index) => {
+              const dashboardTitle =
+                dashboard.studyPath?.title ||
+                dashboard.name ||
+                'Untitled dashboard'
+              const selected = index === selectedDashboard
+              return (
+                <MenuItem
+                  key={dashboard.id}
+                  selected={selected}
+                  onClick={() => {
+                    setSelectedDashboard(index)
+                    setDashboardSelectorOpen(false)
                   }}
                   sx={{
-                    width: 36,
-                    height: 36,
-                    color: 'text.secondary',
-                    flex: '0 0 auto',
-                    '&:hover': {
-                      color: 'error.main',
-                      bgcolor: 'action.hover',
-                    },
+                    minHeight: 48,
+                    borderRadius: 2,
+                    mb: 0.5,
+                    alignItems: 'center',
+                    pr: 0.5,
                   }}
                 >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </MenuItem>
-            )
-          })}
-        </Box>
-      </Drawer>
+                  <ListItemIcon sx={{ minWidth: 34 }}>
+                    {selected ? (
+                      <CheckCircleIcon fontSize="small" color="primary" />
+                    ) : (
+                      <Box sx={{ width: 20 }} />
+                    )}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={dashboardTitle}
+                    primaryTypographyProps={{
+                      noWrap: true,
+                      fontWeight: selected ? 800 : 500,
+                    }}
+                    sx={{ minWidth: 0, mr: 1 }}
+                  />
+                  <IconButton
+                    component="span"
+                    aria-label={`Close ${dashboardTitle}`}
+                    size="small"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      removeDashboard(dashboard.id)
+                    }}
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      color: 'text.secondary',
+                      flex: '0 0 auto',
+                      '&:hover': {
+                        color: 'error.main',
+                        bgcolor: 'action.hover',
+                      },
+                    }}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </MenuItem>
+              )
+            })}
+          </Box>
+        </Drawer>
       ) : null}
 
       <AppearanceDialog

@@ -6,6 +6,7 @@ import TopNavBar from '../../../../src/components/topnavbar/TopNavBar'
 import * as LayoutProviderModule from '../../../../src/components/Layout/LayoutProvider'
 import * as DashboardProviderModule from '../../../../src/components/Dasboard/DashboardProvider'
 import { OPEN_STUDY_PATH_EVENT } from '../../../../src/customHooks/useWorkspaceActions'
+import { deleteStudyMeshProfile } from '../../../../src/auth/AuthProvider'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   QUICK_CREATE_AI_SETTINGS_KEY,
@@ -582,6 +583,44 @@ describe('TopNavBar Component', () => {
       }),
     )
     expect(screen.getByText('Profile saved.')).toBeInTheDocument()
+  })
+
+  it('requires a second confirmation before deleting StudyMesh account data', async () => {
+    render(
+      <BrowserRouter>
+        <TopNavBar />
+      </BrowserRouter>,
+    )
+
+    openUserMenu()
+    fireEvent.click(
+      await screen.findByRole('menuitem', { name: /^settings$/i }),
+    )
+    fireEvent.change(await screen.findByLabelText(/type delete to confirm/i), {
+      target: { value: 'DELETE' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: /delete studymesh account/i }),
+    )
+
+    expect(
+      await screen.findByRole('dialog', {
+        name: /delete studymesh account data/i,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/synced study guides/i),
+    ).toBeInTheDocument()
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /i understand, delete my account data/i,
+      }),
+    )
+
+    await waitFor(() =>
+      expect(deleteStudyMeshProfile).toHaveBeenCalledWith('auth-user'),
+    )
   })
 
   it('navigates to the landing page when logout is clicked', async () => {

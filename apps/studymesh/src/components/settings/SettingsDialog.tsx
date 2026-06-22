@@ -50,6 +50,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     React.useState('')
   const [profileDeleteStatus, setProfileDeleteStatus] = React.useState('')
   const [isDeletingProfile, setIsDeletingProfile] = React.useState(false)
+  const [isProfileDeleteConfirmOpen, setIsProfileDeleteConfirmOpen] =
+    React.useState(false)
 
   React.useEffect(() => {
     if (!open) {
@@ -59,6 +61,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     setStatus('')
     setProfileDeleteConfirmation('')
     setProfileDeleteStatus('')
+    setIsProfileDeleteConfirmOpen(false)
   }, [open])
 
   const handleAddStudyMeshGuide = () => {
@@ -72,11 +75,20 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       return
     }
 
+    setIsProfileDeleteConfirmOpen(true)
+  }
+
+  const confirmDeleteStudyMeshProfile = async () => {
+    if (!onDeleteStudyMeshProfile || profileDeleteConfirmation !== 'DELETE') {
+      return
+    }
+
     setIsDeletingProfile(true)
     setProfileDeleteStatus('')
     try {
       await onDeleteStudyMeshProfile()
     } catch (error) {
+      setIsProfileDeleteConfirmOpen(false)
       setProfileDeleteStatus(
         error instanceof Error
           ? error.message
@@ -87,185 +99,244 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent dividers>
-        <Box sx={{ display: 'grid', gap: 2 }}>
-          {profileSettings ? (
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ display: 'grid', gap: 2 }}>
+            {profileSettings ? (
+              <Paper
+                elevation={0}
+                sx={{ p: 2, border: 1, borderColor: 'divider' }}
+              >
+                <Typography fontWeight={700} sx={{ mb: 1.5 }}>
+                  Profile
+                </Typography>
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar
+                      src={profileSettings.avatarSrc || undefined}
+                      sx={{
+                        width: 64,
+                        height: 64,
+                        bgcolor: 'primary.main',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {profileSettings.userId.substring(0, 2).toUpperCase()}
+                    </Avatar>
+                    <Stack
+                      spacing={1}
+                      direction="row"
+                      useFlexGap
+                      flexWrap="wrap"
+                    >
+                      <Button
+                        component="label"
+                        variant="outlined"
+                        size="small"
+                        startIcon={<PhotoCameraIcon />}
+                      >
+                        Upload image
+                        <input
+                          hidden
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          onChange={profileSettings.onAvatarUpload}
+                        />
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<DeleteOutlineIcon />}
+                        onClick={profileSettings.onRemoveAvatar}
+                        disabled={!profileSettings.avatarSrc}
+                      >
+                        Remove
+                      </Button>
+                    </Stack>
+                  </Stack>
+                  {profileSettings.avatarStatus ? (
+                    <Typography variant="caption" color="text.secondary">
+                      {profileSettings.avatarStatus}
+                    </Typography>
+                  ) : null}
+                  <TextField
+                    label="User name"
+                    value={profileSettings.userName}
+                    onChange={(event) =>
+                      profileSettings.onUserNameChange(event.target.value)
+                    }
+                    fullWidth
+                  />
+                  <Box>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={profileSettings.onSaveProfile}
+                    >
+                      Save profile
+                    </Button>
+                  </Box>
+                </Stack>
+              </Paper>
+            ) : null}
+
             <Paper
               elevation={0}
               sx={{ p: 2, border: 1, borderColor: 'divider' }}
             >
-              <Typography fontWeight={700} sx={{ mb: 1.5 }}>
-                Profile
-              </Typography>
-              <Stack spacing={2}>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Avatar
-                    src={profileSettings.avatarSrc || undefined}
-                    sx={{
-                      width: 64,
-                      height: 64,
-                      bgcolor: 'primary.main',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {profileSettings.userId.substring(0, 2).toUpperCase()}
-                  </Avatar>
-                  <Stack spacing={1} direction="row" useFlexGap flexWrap="wrap">
-                    <Button
-                      component="label"
-                      variant="outlined"
-                      size="small"
-                      startIcon={<PhotoCameraIcon />}
-                    >
-                      Upload image
-                      <input
-                        hidden
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp"
-                        onChange={profileSettings.onAvatarUpload}
-                      />
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<DeleteOutlineIcon />}
-                      onClick={profileSettings.onRemoveAvatar}
-                      disabled={!profileSettings.avatarSrc}
-                    >
-                      Remove
-                    </Button>
-                  </Stack>
-                </Stack>
-                {profileSettings.avatarStatus ? (
-                  <Typography variant="caption" color="text.secondary">
-                    {profileSettings.avatarStatus}
-                  </Typography>
-                ) : null}
-                <TextField
-                  label="User name"
-                  value={profileSettings.userName}
-                  onChange={(event) =>
-                    profileSettings.onUserNameChange(event.target.value)
-                  }
-                  fullWidth
-                />
-                <Box>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={profileSettings.onSaveProfile}
-                  >
-                    Save profile
-                  </Button>
-                </Box>
-              </Stack>
-            </Paper>
-          ) : null}
-
-          <Paper
-            elevation={0}
-            sx={{ p: 2, border: 1, borderColor: 'divider' }}
-          >
-            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
-              <MenuBookOutlinedIcon color="primary" />
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography fontWeight={700}>Welcome Guide</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                  Restore the built-in StudyMesh guide in the Study Guides
-                  library.
-                </Typography>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={handleAddStudyMeshGuide}
-                >
-                  Add welcome guide
-                </Button>
-              </Box>
-            </Box>
-          </Paper>
-
-          {onDeleteStudyMeshProfile ? (
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                border: 1,
-                borderColor: 'error.light',
-              }}
-            >
-              <Typography
-                variant="overline"
-                color="error"
-                fontWeight={800}
-                sx={{ display: 'block', mb: 1 }}
-              >
-                Danger Zone
-              </Typography>
               <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
-                <DeleteOutlineIcon color="error" />
+                <MenuBookOutlinedIcon color="primary" />
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography fontWeight={700}>
-                    Delete StudyMesh Account Data
-                  </Typography>
+                  <Typography fontWeight={700}>Welcome Guide</Typography>
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{ mb: 1.5 }}
                   >
-                    Permanently delete your StudyMesh account.
+                    Restore the built-in StudyMesh guide in the Study Guides
+                    library.
                   </Typography>
-                  <TextField
-                    label="Type DELETE to confirm"
-                    value={profileDeleteConfirmation}
-                    onChange={(event) =>
-                      setProfileDeleteConfirmation(event.target.value)
-                    }
-                    size="small"
-                    fullWidth
-                    sx={{ mb: 1.5 }}
-                  />
                   <Button
                     variant="outlined"
-                    color="error"
                     size="small"
-                    onClick={handleDeleteStudyMeshProfile}
-                    disabled={
-                      isDeletingProfile ||
-                      profileDeleteConfirmation !== 'DELETE'
-                    }
+                    onClick={handleAddStudyMeshGuide}
                   >
-                    {isDeletingProfile
-                      ? 'Deleting profile...'
-                      : 'Delete StudyMesh account'}
+                    Add welcome guide
                   </Button>
-                  {profileDeleteStatus ? (
-                    <Typography
-                      variant="caption"
-                      color="error"
-                      sx={{ display: 'block', mt: 1 }}
-                    >
-                      {profileDeleteStatus}
-                    </Typography>
-                  ) : null}
                 </Box>
               </Box>
             </Paper>
-          ) : null}
 
-          {status ? (
-            <Typography variant="body2" color="text.secondary">
-              {status}
-            </Typography>
-          ) : null}
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-      </DialogActions>
-    </Dialog>
+            {onDeleteStudyMeshProfile ? (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  border: 1,
+                  borderColor: 'error.light',
+                }}
+              >
+                <Typography
+                  variant="overline"
+                  color="error"
+                  fontWeight={800}
+                  sx={{ display: 'block', mb: 1 }}
+                >
+                  Danger Zone
+                </Typography>
+                <Box
+                  sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}
+                >
+                  <DeleteOutlineIcon color="error" />
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography fontWeight={700}>
+                      Delete StudyMesh Account Data
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 1.5 }}
+                    >
+                      Permanently delete your StudyMesh account.
+                    </Typography>
+                    <TextField
+                      label="Type DELETE to confirm"
+                      value={profileDeleteConfirmation}
+                      onChange={(event) =>
+                        setProfileDeleteConfirmation(event.target.value)
+                      }
+                      size="small"
+                      fullWidth
+                      sx={{ mb: 1.5 }}
+                    />
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      onClick={handleDeleteStudyMeshProfile}
+                      disabled={
+                        isDeletingProfile ||
+                        profileDeleteConfirmation !== 'DELETE'
+                      }
+                    >
+                      {isDeletingProfile
+                        ? 'Deleting profile...'
+                        : 'Delete StudyMesh account'}
+                    </Button>
+                    {profileDeleteStatus ? (
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ display: 'block', mt: 1 }}
+                      >
+                        {profileDeleteStatus}
+                      </Typography>
+                    ) : null}
+                  </Box>
+                </Box>
+              </Paper>
+            ) : null}
+
+            {status ? (
+              <Typography variant="body2" color="text.secondary">
+                {status}
+              </Typography>
+            ) : null}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={isProfileDeleteConfirmOpen}
+        onClose={() => {
+          if (!isDeletingProfile) {
+            setIsProfileDeleteConfirmOpen(false)
+          }
+        }}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            border: 1,
+            borderColor: 'error.main',
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: 'error.main', fontWeight: 800 }}>
+          Delete StudyMesh Account Data?
+        </DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" color="text.secondary">
+            This permanently deletes your StudyMesh account data, including
+            synced study guides and profile details. You
+            will be signed out when deletion finishes.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setIsProfileDeleteConfirmOpen(false)}
+            disabled={isDeletingProfile}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={confirmDeleteStudyMeshProfile}
+            disabled={isDeletingProfile}
+          >
+            {isDeletingProfile
+              ? 'Deleting...'
+              : 'I understand, delete my account data'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }
 

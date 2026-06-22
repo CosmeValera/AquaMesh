@@ -121,6 +121,17 @@ create table if not exists public.hosted_ai_accounts (
 alter table public.hosted_ai_accounts
   alter column study_credit_balance set default 20;
 
+-- Auth-user-backed history. This survives StudyMesh profile deletion so
+-- recreating the profile cannot mint another first-login credit grant. It still
+-- cascades if the underlying Supabase Auth user is removed.
+create table if not exists public.hosted_ai_account_history (
+  owner_id uuid primary key references auth.users(id) on delete cascade,
+  first_profile_created_at timestamptz not null default now(),
+  last_profile_deleted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Audit trail for hosted AI gateway usage. The browser may read its own
 -- events, but writes are reserved for the Vercel gateway through service role
 -- RPCs so users cannot mint or spend credits directly from the client.
@@ -209,6 +220,11 @@ create trigger hosted_ai_accounts_set_updated_at
 before update on public.hosted_ai_accounts
 for each row execute function public.set_updated_at();
 
+drop trigger if exists hosted_ai_account_history_set_updated_at on public.hosted_ai_account_history;
+create trigger hosted_ai_account_history_set_updated_at
+before update on public.hosted_ai_account_history
+for each row execute function public.set_updated_at();
+
 drop trigger if exists hosted_ai_usage_events_set_updated_at on public.hosted_ai_usage_events;
 create trigger hosted_ai_usage_events_set_updated_at
 before update on public.hosted_ai_usage_events
@@ -253,6 +269,9 @@ create index if not exists user_workspace_state_updated_idx
 create index if not exists hosted_ai_accounts_updated_idx
   on public.hosted_ai_accounts(updated_at desc);
 
+create index if not exists hosted_ai_account_history_deleted_idx
+  on public.hosted_ai_account_history(last_profile_deleted_at);
+
 create index if not exists hosted_ai_usage_events_owner_created_idx
   on public.hosted_ai_usage_events(owner_id, created_at desc);
 
@@ -285,9 +304,26 @@ begin
         display_name = coalesce(public.profiles.display_name, excluded.display_name),
         avatar_path = coalesce(public.profiles.avatar_path, excluded.avatar_path);
 
-  insert into public.hosted_ai_accounts (owner_id)
-  values (new.id)
+  insert into public.hosted_ai_accounts (owner_id, study_credit_balance)
+  values (
+    new.id,
+    case
+      when exists (
+        select 1
+        from public.hosted_ai_account_history history
+        where history.owner_id = new.id
+          and history.last_profile_deleted_at is not null
+      )
+      then 0
+      else 20
+    end
+  )
   on conflict on constraint hosted_ai_accounts_pkey do nothing;
+
+  insert into public.hosted_ai_account_history (owner_id)
+  values (new.id)
+  on conflict (owner_id) do update
+    set first_profile_created_at = public.hosted_ai_account_history.first_profile_created_at;
 
   return new;
 end;
@@ -312,6 +348,14 @@ begin
   if auth.uid() is null then
     raise exception 'Not authenticated';
   end if;
+
+  insert into public.hosted_ai_account_history (
+    owner_id,
+    last_profile_deleted_at
+  )
+  values (auth.uid(), now())
+  on conflict (owner_id) do update
+    set last_profile_deleted_at = now();
 
   delete from public.profiles
   where id = auth.uid();
@@ -350,9 +394,30 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.hosted_ai_accounts (owner_id)
+  insert into public.profiles (id)
   values (p_owner_id)
+  on conflict (id) do nothing;
+
+  insert into public.hosted_ai_accounts (owner_id, study_credit_balance)
+  values (
+    p_owner_id,
+    case
+      when exists (
+        select 1
+        from public.hosted_ai_account_history history
+        where history.owner_id = p_owner_id
+          and history.last_profile_deleted_at is not null
+      )
+      then 0
+      else 20
+    end
+  )
   on conflict on constraint hosted_ai_accounts_pkey do nothing;
+
+  insert into public.hosted_ai_account_history (owner_id)
+  values (p_owner_id)
+  on conflict (owner_id) do update
+    set first_profile_created_at = public.hosted_ai_account_history.first_profile_created_at;
 
   update public.hosted_ai_accounts account
   set study_credit_balance = greatest(account.study_credit_balance, 5),
@@ -644,8 +709,11 @@ begin
     raise exception 'expected amount must be positive';
   end if;
 
-  insert into public.hosted_ai_accounts (owner_id)
-  values (p_owner_id)
+  perform 1
+  from public.hosted_ai_get_or_create_account(p_owner_id);
+
+  insert into public.hosted_ai_accounts (owner_id, study_credit_balance)
+  values (p_owner_id, 0)
   on conflict on constraint hosted_ai_accounts_pkey do nothing;
 
   insert into public.hosted_ai_credit_purchases (
@@ -777,8 +845,11 @@ begin
     raise exception 'credit purchase is not payable';
   end if;
 
-  insert into public.hosted_ai_accounts (owner_id)
-  values (purchase.owner_id)
+  perform 1
+  from public.hosted_ai_get_or_create_account(purchase.owner_id);
+
+  insert into public.hosted_ai_accounts (owner_id, study_credit_balance)
+  values (purchase.owner_id, 0)
   on conflict on constraint hosted_ai_accounts_pkey do nothing;
 
   update public.hosted_ai_accounts account
@@ -882,6 +953,7 @@ alter table public.user_widgets enable row level security;
 alter table public.user_widget_versions enable row level security;
 alter table public.user_workspace_state enable row level security;
 alter table public.hosted_ai_accounts enable row level security;
+alter table public.hosted_ai_account_history enable row level security;
 alter table public.hosted_ai_usage_events enable row level security;
 alter table public.hosted_ai_credit_purchases enable row level security;
 

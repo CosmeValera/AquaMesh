@@ -31,6 +31,7 @@ The SQL creates:
 - `user_widgets`: per-user custom widget JSON.
 - `user_widget_versions`: per-user widget snapshots.
 - `user_workspace_state`: selected/open dashboards, study progress, and workspace settings.
+- `hosted_ai_account_history`: auth-user-backed hosted credit history that survives StudyMesh profile deletion, so recreated profiles do not receive another first-login Study Credits grant.
 - Owner indexes for sync reads.
 - `on delete cascade` constraints from `auth.users` to `profiles`, and from `profiles` to app-owned rows, so deleting an auth user removes that user's profile, dashboards, widgets, widget versions, and workspace state.
 - `on delete cascade` from `user_widgets` to `user_widget_versions`, so deleting a widget removes its version history.
@@ -82,6 +83,7 @@ Recommended migration flow:
 - Deleting a dashboard should hard-delete only the dashboard row. It must not delete referenced widgets, because widgets can be reused by multiple dashboards.
 - Deleting a widget should hard-delete the widget row and its related `user_widget_versions` rows.
 - Deleting the signed-in StudyMesh profile row should be allowed from the app and should cascade-delete that profile's StudyMesh rows.
+- Recreating a StudyMesh profile for the same Supabase Auth user should start hosted Study Credits at 0 if that profile was deleted before. First-time Auth users still get the normal initial Study Credits grant.
 - Deleting an auth user should cascade-delete all StudyMesh rows owned by that user.
 - Conflict default: last-write-wins by `updated_at`, except migration duplicates newer cloud conflicts as described above.
 - User logout should clear in-memory workspace state. Local cache may remain, but should not hydrate into another account without session/user match.

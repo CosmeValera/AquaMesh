@@ -557,6 +557,73 @@ describe('API payment and hosted AI hardening', () => {
     expect(getHostedCerebrasModel()).toBe('server-model')
   })
 
+  it('returns Supabase RPC details for hosted AI database failures', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+    vi.stubEnv('HOSTED_CEREBRAS_API_KEY', 'hosted-cerebras-key')
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        const target = String(url)
+
+        if (target.includes('/auth/v1/user')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            text: vi.fn().mockResolvedValue(JSON.stringify({ id: 'user-1' })),
+          })
+        }
+
+        if (
+          target.includes('/rest/v1/rpc/hosted_ai_get_or_create_account')
+        ) {
+          return Promise.resolve({
+            ok: false,
+            status: 500,
+            text: vi
+              .fn()
+              .mockResolvedValue(
+                JSON.stringify({ message: 'relation profiles does not exist' }),
+              ),
+          })
+        }
+
+        return Promise.resolve({
+          ok: false,
+          status: 500,
+          text: vi.fn().mockResolvedValue(JSON.stringify({})),
+        })
+      }),
+    )
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer user-token',
+        },
+        body: {
+          action: 'status',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(500)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: {
+        code: 'server_error',
+        message:
+          'Hosted AI database error: relation profiles does not exist',
+      },
+    })
+  })
+
   it('ignores caller supplied hosted AI request ids for usage accounting', async () => {
     vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
     vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')

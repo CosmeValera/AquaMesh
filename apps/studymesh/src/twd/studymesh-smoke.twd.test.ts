@@ -243,7 +243,12 @@ describe('StudyMesh TWD profile cleanup smoke', () => {
     )
     await user.click(
       await screenDomGlobal.findByRole('button', {
-        name: /^delete studymesh profile$/i,
+        name: /^delete studymesh account$/i,
+      }),
+    )
+    await user.click(
+      await screenDomGlobal.findByRole('button', {
+        name: /i understand, delete my account data/i,
       }),
     )
 

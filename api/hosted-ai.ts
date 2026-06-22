@@ -561,6 +561,16 @@ const mapFailure = (
       };
     }
 
+    if (error.name === "rpc_error") {
+      return {
+        statusCode: 500,
+        response: errorResponse(
+          "server_error",
+          `Hosted AI database error: ${message}`,
+        ),
+      };
+    }
+
     if (/insufficient|credit|quota/i.test(message)) {
       return {
         statusCode: 402,

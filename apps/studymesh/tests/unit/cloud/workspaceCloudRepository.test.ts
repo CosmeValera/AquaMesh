@@ -210,10 +210,37 @@ describe('workspace cloud repository', () => {
     expect(sql).toContain(
       'create or replace function public.delete_own_profile()',
     )
+    expect(sql).toContain('insert into public.hosted_ai_account_history')
+    expect(sql).toContain('set last_profile_deleted_at = now()')
     expect(sql).toContain('delete from public.profiles where id = auth.uid()')
     expect(sql).toContain('get diagnostics deleted_count = row_count')
     expect(sql).toContain(
       'grant execute on function public.delete_own_profile() to authenticated',
+    )
+  })
+
+  it('keeps recreated StudyMesh profiles from receiving another initial hosted credit grant', () => {
+    const sqlPath = resolve(process.cwd(), 'docs/supabase-auth-sync.sql')
+    const sql = readFileSync(sqlPath, 'utf8').replace(/\s+/g, ' ')
+
+    expect(sql).toContain(
+      'create table if not exists public.hosted_ai_account_history',
+    )
+    expect(sql).toContain(
+      'owner_id uuid primary key references auth.users(id) on delete cascade',
+    )
+    expect(sql).toContain('last_profile_deleted_at timestamptz')
+    expect(sql).toContain(
+      'when exists ( select 1 from public.hosted_ai_account_history history where history.owner_id = p_owner_id and history.last_profile_deleted_at is not null ) then 0 else 20',
+    )
+    expect(sql).toContain(
+      'insert into public.profiles (id) values (p_owner_id) on conflict (id) do nothing',
+    )
+    expect(sql).toContain(
+      'when exists ( select 1 from public.hosted_ai_account_history history where history.owner_id = new.id and history.last_profile_deleted_at is not null ) then 0 else 20',
+    )
+    expect(sql).toContain(
+      'update public.hosted_ai_accounts account set study_credit_balance = greatest(account.study_credit_balance, 5)',
     )
   })
 
@@ -415,6 +442,9 @@ describe('workspace cloud repository', () => {
     )
     expect(sql).toContain(
       'owner_id uuid primary key references public.profiles(id) on delete cascade',
+    )
+    expect(sql).toContain(
+      'create table if not exists public.hosted_ai_account_history',
     )
     expect(sql).toContain(
       'references public.user_widgets(owner_id, id) on delete cascade',

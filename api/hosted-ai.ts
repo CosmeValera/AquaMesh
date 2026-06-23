@@ -9,6 +9,10 @@ import type {
   HostedAiStatus,
   HostedAiSurface,
 } from "../apps/studymesh/src/quickCreate/ai/hostedCredits";
+import {
+  buildStudyGuideTldrPrompt,
+  sanitizeStudyGuideTldr,
+} from "../apps/studymesh/src/studyGuides/tldr";
 
 loadLocalApiEnv();
 
@@ -333,12 +337,13 @@ const finishHostedUsage = async (
   status: "succeeded" | "failed",
   errorCode?: string,
   errorMessage?: string,
+  providerCallCount = 1,
 ): Promise<HostedAiStatus | undefined> => {
   const payload = await callSupabaseRpc<unknown>("hosted_ai_finish_usage", {
     p_owner_id: userId,
     p_request_id: requestId,
     p_status: status,
-    p_provider_call_count: 1,
+    p_provider_call_count: providerCallCount,
     p_error_code: errorCode || null,
     p_error_message: errorMessage || null,
     p_metadata: {},
@@ -595,6 +600,7 @@ const mapFailure = (
 const handleGenerate = async (
   userId: string,
   request: HostedAiGatewayRequest,
+  includeTldr = false,
 ): Promise<HostedAiGatewayResponse> => {
   const invalid = validateGenerateRequest(request);
 
@@ -609,12 +615,42 @@ const handleGenerate = async (
 
   try {
     const text = await callCerebras(usageRequest, model);
-    const status =
-      (await finishHostedUsage(userId, requestId, "succeeded").catch(
-        () => undefined,
-      )) || started.status;
+    const tldr = includeTldr
+      ? sanitizeStudyGuideTldr(
+          await callCerebras(
+            {
+              ...usageRequest,
+              responseSchema: undefined,
+              parts: [
+                {
+                  text: buildStudyGuideTldrPrompt({
+                    title: "Study Guide",
+                    source: text,
+                  }),
+                },
+              ],
+            },
+            model,
+          ),
+        )
+      : undefined;
+    if (includeTldr && !tldr) {
+      const error = new Error("Hosted AI returned no Study Guide TLDR.");
+      error.name = "provider_error";
+      throw error;
+    }
 
-    return { ok: true, text, status };
+    const status =
+      (await finishHostedUsage(
+        userId,
+        requestId,
+        "succeeded",
+        undefined,
+        undefined,
+        includeTldr ? 2 : 1,
+      ).catch(() => undefined)) || started.status;
+
+    return { ok: true, text, tldr, status };
   } catch (error) {
     const mapped = mapFailure(error);
 
@@ -624,6 +660,7 @@ const handleGenerate = async (
       "failed",
       mapped.response.error?.code,
       mapped.response.error?.message,
+      includeTldr ? 2 : 1,
     ).catch(() => undefined);
 
     throw error;
@@ -694,6 +731,12 @@ export default async function handler(
 
     if (request.action === "generate") {
       const response = await handleGenerate(user.id, request);
+      json(res, 200, response);
+      return;
+    }
+
+    if (request.action === "generateWithTldr") {
+      const response = await handleGenerate(user.id, request, true);
       json(res, 200, response);
       return;
     }

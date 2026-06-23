@@ -18,6 +18,7 @@ export type LocalAiPromptType =
   | 'practice'
   | 'flashcards'
   | 'quizzes'
+  | 'tldr'
   | 'unknown'
 
 export interface LocalAiManagedSession {
@@ -39,7 +40,10 @@ export interface LocalAiManagedSession {
 }
 
 export interface LocalAiPromptSession<TPrompt> {
-  prompt: (prompt: TPrompt, options?: { signal?: AbortSignal }) => Promise<string>
+  prompt: (
+    prompt: TPrompt,
+    options?: { signal?: AbortSignal },
+  ) => Promise<string>
   destroy?: () => void
 }
 
@@ -111,8 +115,8 @@ const updateSession = (
   const updated = {
     ...current,
     ...updates,
-    durationMs: (updates.completedAt || updates.destroyedAt || now()) -
-      current.createdAt,
+    durationMs:
+      (updates.completedAt || updates.destroyedAt || now()) - current.createdAt,
   }
   sessions.set(id, updated)
   notifySubscribers()

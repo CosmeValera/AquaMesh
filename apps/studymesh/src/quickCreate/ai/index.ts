@@ -37,7 +37,11 @@ export {
   generateQuickCreateWithAi as generateQuickCreateWithGemini,
   generateStudyPathWithAi as generateStudyPathWithGemini,
 } from './strongGeneration'
-export { generateQuickCreateWithAi, generateStudyPathWithAi } from './provider'
+export {
+  generateQuickCreateWithAi,
+  generateStudyGuideTldrWithAi,
+  generateStudyPathWithAi,
+} from './provider'
 export {
   assertRoleObjectsAreClean,
   filterStudyObjectsForDashboardRole,
@@ -89,6 +93,7 @@ export type {
 export {
   callHostedAiModel,
   createHostedAiTransport,
+  createHostedStudyGuideTransportWithTldr,
   getHostedAiStatus,
   markHostedAiIntroSeen,
 } from './hostedClient'

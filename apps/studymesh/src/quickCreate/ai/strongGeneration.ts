@@ -148,6 +148,7 @@ export interface AiStudyPathDraft {
   title: string
   folderName: string
   emoji?: string
+  tldr?: string
   dashboards: AiStudyPathDashboardDraft[]
   warnings: string[]
   blueprint?: AiStudyPathBlueprint

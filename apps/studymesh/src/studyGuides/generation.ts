@@ -27,6 +27,7 @@ import {
   appendStudyGuideWidgetPage,
 } from './pages'
 import { getStudyGuideEmoji } from './storage'
+import { applyStudyGuideTldrToWidgets } from './tldr'
 
 type CreatePathPayload = {
   folderName: string
@@ -166,11 +167,18 @@ export const generateStudyPathStateFromPrompt = async ({
           },
         },
       )
+      const widgetsWithTldr = applyStudyGuideTldrToWidgets(
+        widgets,
+        draft.tldr,
+        index === 0,
+      )
 
       return {
         id: `${id}-dashboard-${index + 1}`,
         name: dashboardName,
-        layout: createQuickCreateDashboardLayout(widgets, { mode: 'smart' }),
+        layout: createQuickCreateDashboardLayout(widgetsWithTldr, {
+          mode: 'smart',
+        }),
         dashboardKey,
         dashboardIndex: index + 1,
         dashboardCount: count,

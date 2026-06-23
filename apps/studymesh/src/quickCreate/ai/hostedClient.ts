@@ -251,3 +251,44 @@ export const createHostedAiTransport = ({
     })
   }
 }
+
+export const createHostedStudyGuideTransportWithTldr = ({
+  onTldr,
+}: {
+  onTldr: (tldr: string) => void
+}): HostedAiTransport => {
+  return async ({
+    model,
+    parts,
+    responseSchema,
+    timeoutMs,
+  }: StrongAiCallOptions) => {
+    const surface: HostedAiSurface = 'study-guide'
+    await assertHostedAiCreditsAvailable(surface)
+    dispatchHostedAiVisualSpend(surface)
+
+    try {
+      const payload = await callHostedAiGateway({
+        action: 'generateWithTldr',
+        surface,
+        model,
+        parts,
+        responseSchema,
+        timeoutMs,
+      })
+      const text = payload.text?.trim()
+
+      if (!text) {
+        throw new Error('Hosted AI returned no text.')
+      }
+
+      onTldr(payload.tldr || '')
+      return text
+    } catch (error) {
+      dispatchHostedAiVisualRefund(surface)
+      throw error
+    } finally {
+      dispatchHostedAiUsageChanged()
+    }
+  }
+}

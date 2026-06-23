@@ -307,16 +307,16 @@ describe('API payment and hosted AI hardening', () => {
         body: expect.stringContaining('"extract_depth":"basic"'),
       }),
     )
-    expect(fetchMock.mock.calls[0][1]?.body).not.toContain(
-      'Provisioning notes',
-    )
+    expect(fetchMock.mock.calls[0][1]?.body).not.toContain('Provisioning notes')
     expect(response.body).toMatchObject({
       ok: true,
       source: {
         title: 'Ansible docs',
         url: 'https://docs.example/ansible',
         text: expect.stringContaining('Ansible automates provisioning'),
-        searchQuery: expect.stringContaining('What is Ansible official overview'),
+        searchQuery: expect.stringContaining(
+          'What is Ansible official overview',
+        ),
         score: 0.84,
         favicon: 'https://docs.example/favicon.ico',
       },
@@ -379,7 +379,8 @@ describe('API payment and hosted AI hardening', () => {
         method: 'POST',
         headers: {},
         body: {
-          question: 'difference between n8n and rundeck vs ansible or terraform',
+          question:
+            'difference between n8n and rundeck vs ansible or terraform',
           dashboardTitle: 'Automation tools',
           contextSummary:
             'n8n is a visual workflow automation tool. Rundeck is an operations job runner.',
@@ -576,9 +577,7 @@ describe('API payment and hosted AI hardening', () => {
           })
         }
 
-        if (
-          target.includes('/rest/v1/rpc/hosted_ai_get_or_create_account')
-        ) {
+        if (target.includes('/rest/v1/rpc/hosted_ai_get_or_create_account')) {
           return Promise.resolve({
             ok: false,
             status: 500,
@@ -618,8 +617,7 @@ describe('API payment and hosted AI hardening', () => {
       ok: false,
       error: {
         code: 'server_error',
-        message:
-          'Hosted AI database error: relation profiles does not exist',
+        message: 'Hosted AI database error: relation profiles does not exist',
       },
     })
   })
@@ -707,5 +705,102 @@ describe('API payment and hosted AI hardening', () => {
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_request_id).toEqual(rpcBodies[1].p_request_id)
     expect(rpcBodies[0].p_request_id).not.toBe('client-reused-id')
+  })
+
+  it('bundles hosted Study Guide TLDR into one usage charge with two provider calls', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+    vi.stubEnv('HOSTED_CEREBRAS_API_KEY', 'hosted-cerebras-key')
+
+    const rpcBodies: Record<string, unknown>[] = []
+    const providerBodies: Record<string, unknown>[] = []
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    })
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve(jsonResponse({ id: 'user-1' }))
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            status: {
+              studyCredits: 8,
+              introSeen: true,
+            },
+          }),
+        )
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_finish_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            status: {
+              studyCredits: 6,
+              introSeen: true,
+            },
+          }),
+        )
+      }
+
+      if (target.includes('api.cerebras.ai')) {
+        providerBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            choices: [
+              {
+                message: {
+                  content:
+                    providerBodies.length === 1
+                      ? '{"title":"Guide","dashboards":[]}'
+                      : 'TLDR: Full guide in one short paragraph.',
+                },
+              },
+            ],
+          }),
+        )
+      }
+
+      return Promise.resolve(
+        jsonResponse({ message: 'unexpected url' }, false, 500),
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer user-token',
+        },
+        body: {
+          action: 'generateWithTldr',
+          surface: 'study-guide',
+          parts: [{ text: 'Create study guide' }],
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      text: '{"title":"Guide","dashboards":[]}',
+      tldr: 'Full guide in one short paragraph.',
+    })
+    expect(providerBodies).toHaveLength(2)
+    expect(rpcBodies).toHaveLength(2)
+    expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 2 })
+    expect(rpcBodies[1].p_provider_call_count).toBe(2)
   })
 })

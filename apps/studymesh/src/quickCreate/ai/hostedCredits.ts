@@ -79,7 +79,7 @@ export interface HostedAiGatewayPart {
 }
 
 export interface HostedAiGatewayRequest {
-  action: 'status' | 'markIntroSeen' | 'generate'
+  action: 'status' | 'markIntroSeen' | 'generate' | 'generateWithTldr'
   surface?: HostedAiSurface
   model?: string
   parts?: HostedAiGatewayPart[]
@@ -90,6 +90,7 @@ export interface HostedAiGatewayRequest {
 export interface HostedAiGatewayResponse {
   ok: boolean
   text?: string
+  tldr?: string
   status?: HostedAiStatus
   error?: {
     code:

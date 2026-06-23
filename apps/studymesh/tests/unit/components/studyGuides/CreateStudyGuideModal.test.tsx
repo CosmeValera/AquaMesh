@@ -280,9 +280,12 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
 
     expect(onCreatePath).toHaveBeenCalledTimes(1)
     const payload = onCreatePath.mock.calls[0][0]
+    const firstDashboardWidgets = JSON.stringify(payload.dashboards[0].widgets)
     const lessonFourWidgets = JSON.stringify(payload.dashboards[3].widgets)
     const lessonFiveWidgets = JSON.stringify(payload.dashboards[4].widgets)
 
+    expect(firstDashboardWidgets).toContain('studyGuideTldr')
+    expect(lessonFourWidgets).not.toContain('studyGuideTldr')
     expect(lessonFourWidgets).toContain('QuizCarouselBlock')
     expect(lessonFiveWidgets).toContain('QuizCarouselBlock')
     expect(lessonFourWidgets).not.toContain('FlashcardCarouselBlock')

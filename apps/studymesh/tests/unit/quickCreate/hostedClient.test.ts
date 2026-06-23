@@ -14,6 +14,7 @@ vi.mock('../../../src/auth/supabaseClient', () => ({
 import {
   callHostedAiModel,
   createHostedAiTransport,
+  createHostedStudyGuideTransportWithTldr,
 } from '../../../src/quickCreate/ai/hostedClient'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
@@ -220,5 +221,50 @@ describe('hosted AI client credit failures', () => {
 
     window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, spendListener)
     window.removeEventListener(HOSTED_AI_VISUAL_REFUND_EVENT, refundListener)
+  })
+
+  it('bundles hosted Study Guide TLDR generation under one visual charge', async () => {
+    const spendListener = vi.fn()
+    window.addEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, spendListener)
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(gatewayResponse(statusPayload(8)))
+        .mockResolvedValueOnce(
+          gatewayResponse({
+            ok: true,
+            text: '{"title":"Guide","dashboards":[]}',
+            tldr: 'Full-guide TLDR.',
+          }),
+        ),
+    )
+
+    const onTldr = vi.fn()
+    const transport = createHostedStudyGuideTransportWithTldr({ onTldr })
+
+    await expect(
+      transport({
+        provider: 'cerebras',
+        apiToken: '',
+        model: 'gpt-oss-120b',
+        parts: [{ text: 'Create guide' }],
+        timeoutMs: 60000,
+      }),
+    ).resolves.toBe('{"title":"Guide","dashboards":[]}')
+
+    expect(onTldr).toHaveBeenCalledWith('Full-guide TLDR.')
+    expect(spendListener).toHaveBeenCalledWith(
+      expect.objectContaining({ detail: { credits: 2 } }),
+    )
+    const requestBodies = vi
+      .mocked(fetch)
+      .mock.calls.map(([, init]) => JSON.parse(String(init?.body)))
+    expect(requestBodies[1]).toMatchObject({
+      action: 'generateWithTldr',
+      surface: 'study-guide',
+    })
+
+    window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, spendListener)
   })
 })

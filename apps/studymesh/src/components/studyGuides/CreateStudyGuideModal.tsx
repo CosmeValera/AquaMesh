@@ -44,6 +44,7 @@ import {
   QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
   QuickCreateAiProvider,
 } from '../../quickCreate/ai'
+import { applyStudyGuideTldrToWidgets } from '../../studyGuides/tldr'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
 import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
 
@@ -99,7 +100,9 @@ interface GeminiTimedProgress {
   percent: number
 }
 
-const getProviderPathProgressLabel = (provider: QuickCreateAiProvider): string =>
+const getProviderPathProgressLabel = (
+  provider: QuickCreateAiProvider,
+): string =>
   provider === 'local'
     ? 'Generating dashboards with Google Local AI...'
     : isStrongAiProvider(provider)
@@ -798,11 +801,8 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
     return {
       folderName: effectiveFolder,
       openInWorkspace: openGeneratedInWorkspace ?? openInWorkspace,
-      dashboards: pathDraft.dashboards.map((dashboard, index) => ({
-        name: dashboard.title || `${pathDraft.title} ${index + 1}`,
-        folderName: effectiveFolder,
-        layoutMode: 'smart',
-        widgets: createQuickCreateOrchestratorWidgets(
+      dashboards: pathDraft.dashboards.map((dashboard, index) => {
+        const widgets = createQuickCreateOrchestratorWidgets(
           {
             id: makePackId(dashboard.title || pathDraft.title, index),
             title: dashboard.title || `${pathDraft.title} ${index + 1}`,
@@ -837,8 +837,19 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
               sourceRefs: dashboard.sourceRefs,
             },
           },
-        ),
-      })),
+        )
+
+        return {
+          name: dashboard.title || `${pathDraft.title} ${index + 1}`,
+          folderName: effectiveFolder,
+          layoutMode: 'smart',
+          widgets: applyStudyGuideTldrToWidgets(
+            widgets,
+            pathDraft.tldr,
+            index === 0,
+          ),
+        }
+      }),
     }
   }
 

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import { Box, Typography } from '@mui/material'
 
 import type { DashboardLayout } from '../../state/store'
+import { STUDY_GUIDE_TLDR_PROP } from '../../studyGuides/tldr'
 import StudyBlockView, { isStudyBlockType } from '../study/StudyBlockView'
 import '../Layout/layout.scss'
 
@@ -91,7 +92,15 @@ const StudyGuideLinearLayout = ({ layout }: { layout?: DashboardLayout }) => {
       {cardGroups.map((group) => {
         const isPageContentCard =
           group.components[0]?.type === 'Label' &&
-          group.components.some((component) => component.type === 'MarkdownBlock')
+          group.components.some(
+            (component) => component.type === 'MarkdownBlock',
+          )
+        const hasTldr = group.components.some(
+          (component) =>
+            component.type === 'MarkdownBlock' &&
+            typeof component.props[STUDY_GUIDE_TLDR_PROP] === 'string' &&
+            String(component.props[STUDY_GUIDE_TLDR_PROP]).trim(),
+        )
 
         return (
           <section
@@ -135,7 +144,9 @@ const StudyGuideLinearLayout = ({ layout }: { layout?: DashboardLayout }) => {
                         <Box className="studymesh-study-page-title-row">
                           {title}
                         </Box>
-                        <Box className="studymesh-study-page-accent-rule" />
+                        {!hasTldr ? (
+                          <Box className="studymesh-study-page-accent-rule" />
+                        ) : null}
                       </>
                     ) : (
                       title

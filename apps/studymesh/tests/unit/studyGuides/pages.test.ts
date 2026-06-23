@@ -8,6 +8,11 @@ import {
   reorderStudyGuidePage,
   stripDuplicateStudyGuideMarkdownTitle,
 } from '../../../src/studyGuides/pages'
+import {
+  applyStudyGuideTldrToWidgets,
+  sanitizeStudyGuideTldr,
+  STUDY_GUIDE_TLDR_PROP,
+} from '../../../src/studyGuides/tldr'
 import type {
   StudyPathContainerState,
   StudyPathDashboardItem,
@@ -103,6 +108,53 @@ describe('appendStudyGuideMarkdownPage', () => {
         'Cell Biology',
       ),
     ).toBe('Cells have membranes.')
+  })
+})
+
+describe('Study Guide TLDR helpers', () => {
+  it('clamps TLDR text to fewer than 100 words and removes labels', () => {
+    const text = `## TLDR\nTL;DR: ${Array.from(
+      { length: 120 },
+      (_value, index) => `word${index}`,
+    ).join(' ')}`
+
+    const tldr = sanitizeStudyGuideTldr(text)
+
+    expect(tldr.split(/\s+/)).toHaveLength(100)
+    expect(tldr).not.toMatch(/TL;?DR|##/)
+  })
+
+  it('assigns one TLDR only to the first page Markdown block', () => {
+    const widgets = [
+      {
+        components: [
+          { id: 'title', type: 'Label', props: { text: 'Lesson' } },
+          { id: 'notes', type: 'MarkdownBlock', props: { markdown: 'Body' } },
+          {
+            id: 'extra',
+            type: 'MarkdownBlock',
+            props: { markdown: 'More', studyGuideTldr: 'old' },
+          },
+        ],
+      },
+    ]
+
+    const firstPage = applyStudyGuideTldrToWidgets(widgets, 'Guide TLDR.', true)
+    const secondPage = applyStudyGuideTldrToWidgets(
+      firstPage,
+      'Guide TLDR.',
+      false,
+    )
+
+    expect(firstPage[0].components[1].props[STUDY_GUIDE_TLDR_PROP]).toBe(
+      'Guide TLDR.',
+    )
+    expect(
+      firstPage[0].components[2].props[STUDY_GUIDE_TLDR_PROP],
+    ).toBeUndefined()
+    expect(
+      secondPage[0].components[1].props[STUDY_GUIDE_TLDR_PROP],
+    ).toBeUndefined()
   })
 })
 

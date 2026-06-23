@@ -267,6 +267,21 @@
   background: var(--primary-main, #007c66);
 }
 
+.studymesh-study-guide-tldr {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.studymesh-study-guide-tldr-accent {
+  width: 56px;
+  height: 3px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: var(--primary-main, #007c66);
+}
+
 @media (min-width: 900px) {
   .studymesh-mobile-dashboard-layout {
     align-items: center;

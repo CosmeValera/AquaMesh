@@ -20,6 +20,21 @@ vi.mock('../../../src/quickCreate/ai/hostedClient', () => ({
         surface,
         ...options,
       }),
+  createHostedStudyGuideTransportWithTldr:
+    ({ onTldr }: { onTldr: (tldr: string) => void }) =>
+    async (options: {
+      model: string
+      parts: Array<{ text?: string }>
+      responseSchema?: Record<string, unknown>
+      timeoutMs: number
+    }) => {
+      const text = await hostedAiClientMock.callHostedAiModel({
+        surface: 'study-guide',
+        ...options,
+      })
+      onTldr('A short guide-wide TLDR.')
+      return text
+    },
   getHostedAiStatus: hostedAiClientMock.getHostedAiStatus,
   markHostedAiIntroSeen: hostedAiClientMock.markHostedAiIntroSeen,
 }))
@@ -2897,8 +2912,8 @@ describe('Gemini quick create client', () => {
           index === 1
             ? 'orientationMap'
             : index === 3
-            ? 'practiceCheckpoint'
-            : 'workedExampleLab',
+              ? 'practiceCheckpoint'
+              : 'workedExampleLab',
         sectionPlan: ['Topic map', 'Worked loop', 'Try it'],
         mustTeach: [`Loop idea ${index}`],
         workedExample: `Loop worked example ${index}.`,
@@ -2931,8 +2946,8 @@ describe('Gemini quick create client', () => {
                           index === 1
                             ? 'orientationMap'
                             : index === 3
-                            ? 'practiceCheckpoint'
-                            : 'workedExampleLab',
+                              ? 'practiceCheckpoint'
+                              : 'workedExampleLab',
                         supportArtifacts:
                           index === 1
                             ? {

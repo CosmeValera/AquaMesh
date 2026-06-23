@@ -247,8 +247,8 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ pt: 2 }}>
+      <DialogContent sx={{ overflowX: 'hidden', overflowY: 'auto' }}>
+        <Stack spacing={2} sx={{ pt: 2, minWidth: 0, maxWidth: '100%' }}>
           {notice && <Alert severity="warning">{notice}</Alert>}
           <Box>
             <TextField

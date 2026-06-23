@@ -36,4 +36,17 @@ describe('AiModeDialog contrast controls', () => {
       expect(document.querySelector('.MuiSelect-icon')).toBeInTheDocument()
     },
   )
+
+  it('keeps modal content from showing a horizontal scrollbar', () => {
+    renderDialog('light')
+
+    const dialog = screen.getByRole('dialog', { name: /ai mode/i })
+    const content = dialog.querySelector('.MuiDialogContent-root')
+
+    expect(content).toBeInTheDocument()
+    expect(window.getComputedStyle(content as Element).overflowX).toBe(
+      'hidden',
+    )
+    expect(window.getComputedStyle(content as Element).overflowY).toBe('auto')
+  })
 })

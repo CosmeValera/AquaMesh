@@ -113,15 +113,15 @@ describe('appendStudyGuideMarkdownPage', () => {
 })
 
 describe('Study Guide TLDR helpers', () => {
-  it('clamps TLDR text to fewer than 100 words and removes labels', () => {
+  it('clamps TLDR text to 120 words and removes labels', () => {
     const text = `## TLDR\nTL;DR: ${Array.from(
-      { length: 120 },
+      { length: 140 },
       (_value, index) => `word${index}`,
     ).join(' ')}`
 
     const tldr = sanitizeStudyGuideTldr(text)
 
-    expect(tldr.split(/\s+/)).toHaveLength(100)
+    expect(tldr.split(/\s+/)).toHaveLength(120)
     expect(tldr).not.toMatch(/TL;?DR|##/)
   })
 
@@ -165,11 +165,28 @@ describe('Study Guide TLDR helpers', () => {
       userKnownTopics: ['Backend', 'Databases'],
     })
 
-    expect(prompt).toContain('Start with the simplest mental model')
-    expect(prompt).toContain('User known topics: Backend, Databases')
-    expect(prompt).toContain('Use exactly 1 analogy')
-    expect(prompt).toContain('Include where the analogy breaks')
-    expect(prompt).toContain('Do not say "this guide explains..."')
+    expect(prompt).toContain('Start with the simplest useful mental model')
+    expect(prompt).toContain(
+      'User known topics, strongest first: Backend, Databases',
+    )
+    expect(prompt).toContain('Use 1 or 2 relevant known topics')
+    expect(prompt).toContain('where the analogy or comparison breaks')
+    expect(prompt).toContain('This guide teaches')
+    expect(prompt).toContain('This page explains')
+    expect(prompt).toContain('You will learn')
+    expect(prompt).toContain('Target 80-120 words')
+  })
+
+  it('asks for an everyday analogy when no known topics exist', () => {
+    const prompt = buildStudyGuideTldrPrompt({
+      title: 'Data lakes',
+      source: 'Data lake lesson notes.',
+      userKnownTopics: [],
+    })
+
+    expect(prompt).toContain('No user known topics were provided')
+    expect(prompt).toContain('Use one simple everyday analogy')
+    expect(prompt).toContain('where the analogy breaks')
   })
 })
 

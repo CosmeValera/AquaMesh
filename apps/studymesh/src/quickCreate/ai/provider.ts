@@ -45,15 +45,15 @@ const studyPathDraftToTldrSource = (
   prompt: string,
 ): string =>
   [
-    `Study Guide: ${draft.folderName || draft.title}`,
-    `Original prompt: ${prompt}`,
+    `Learner request: ${prompt}`,
+    `Guide topic: ${draft.folderName || draft.title}`,
     ...draft.dashboards.map((dashboard, index) =>
       [
-        `Page ${index + 1}: ${dashboard.title}`,
-        dashboard.summary ? `Preview: ${dashboard.summary}` : '',
+        `Section ${index + 1} concept: ${dashboard.title}`,
         dashboard.rawNotes || '',
+        dashboard.summary ? `Concept summary: ${dashboard.summary}` : '',
         dashboard.sourceSummary?.bullets?.length
-          ? `Source summary: ${dashboard.sourceSummary.bullets.join('; ')}`
+          ? `Important ideas: ${dashboard.sourceSummary.bullets.join('; ')}`
           : '',
       ]
         .filter(Boolean)

@@ -1,5 +1,4 @@
-export const PROFILE_CONTEXT_CHANGED_EVENT =
-  'studymesh-profile-context-changed'
+export const PROFILE_CONTEXT_CHANGED_EVENT = 'studymesh-profile-context-changed'
 export const PROFILE_CONTEXT_STORAGE_KEY = 'studymesh-profile-context-v1'
 
 export type UserKnowledgeRoleId =
@@ -25,6 +24,8 @@ export interface ProfileContext {
 
 export const PROFILE_CONTEXT_RECOMMENDED_MIN_TOPICS = 3
 export const PROFILE_CONTEXT_RECOMMENDED_MAX_TOPICS = 5
+export const USER_KNOWN_TOPICS_MAX_FOR_AI = 8
+export const USER_KNOWN_TOPIC_MAX_CHARS = 40
 
 export const userKnowledgeRoles: Array<{
   id: UserKnowledgeRoleId
@@ -144,8 +145,13 @@ const broadKnowledgeByRole: Record<UserKnowledgeRoleId, string[]> = {
   ],
 }
 
-const normalizeTopic = (value: unknown): string =>
-  typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : ''
+const normalizeTopic = (value: unknown, maxChars = Infinity): string => {
+  if (typeof value !== 'string') {
+    return ''
+  }
+
+  return value.replace(/\s+/g, ' ').trim().slice(0, maxChars).trim()
+}
 
 export const getBroadKnowledgeOptions = (
   role: UserKnowledgeRoleId | null,
@@ -163,16 +169,29 @@ export const getBroadKnowledgeGroups = (
 export const parseSpecificKnowledgeInput = (value: string): string[] =>
   value
     .split(/[,;\n]/)
-    .map(normalizeTopic)
+    .map((topic) => normalizeTopic(topic))
     .filter(Boolean)
 
-export const sanitizeUserKnownTopics = (topics: unknown): string[] => {
+export const sanitizeUserKnownTopics = (
+  topics: unknown,
+  {
+    maxTopics = Infinity,
+    maxChars = USER_KNOWN_TOPIC_MAX_CHARS,
+  }: {
+    maxTopics?: number
+    maxChars?: number
+  } = {},
+): string[] => {
   const rawTopics = Array.isArray(topics) ? topics : []
   const seen = new Set<string>()
   const normalized: string[] = []
 
   rawTopics.forEach((topic) => {
-    const next = normalizeTopic(topic)
+    if (normalized.length >= maxTopics) {
+      return
+    }
+
+    const next = normalizeTopic(topic, maxChars)
     const key = next.toLowerCase()
     if (!next || seen.has(key)) {
       return
@@ -223,7 +242,9 @@ export const normalizeProfileContext = (
   }
 }
 
-const dispatchProfileContextChanged = (profileContext: ProfileContext | null) => {
+const dispatchProfileContextChanged = (
+  profileContext: ProfileContext | null,
+) => {
   if (typeof window === 'undefined') {
     return
   }
@@ -291,7 +312,12 @@ export const writeProfileContextFromCloud = (value: unknown): void => {
 export const getUserKnownTopics = (
   profileContext = readProfileContext(),
 ): string[] =>
-  sanitizeUserKnownTopics([
-    ...(profileContext?.broadKnowledge || []),
-    ...(profileContext?.specificKnowledge || []),
-  ])
+  sanitizeUserKnownTopics(
+    [
+      ...(profileContext?.specificKnowledge || []),
+      ...(profileContext?.broadKnowledge || []),
+    ],
+    {
+      maxTopics: USER_KNOWN_TOPICS_MAX_FOR_AI,
+    },
+  )

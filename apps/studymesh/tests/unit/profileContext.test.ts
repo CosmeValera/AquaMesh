@@ -30,7 +30,7 @@ describe('profile context', () => {
     })
   })
 
-  it('sanitizes and dedupes user known topics without hard capping', () => {
+  it('sanitizes, truncates, dedupes, and optionally caps user known topics', () => {
     expect(
       sanitizeUserKnownTopics([
         ' Backend ',
@@ -44,6 +44,13 @@ describe('profile context', () => {
         'Extra',
       ]),
     ).toEqual(['Backend', 'Databases', 'DevOps', 'APIs', 'Testing', 'Extra'])
+
+    expect(
+      sanitizeUserKnownTopics(
+        ['Long topic name that should be clipped after forty chars', 'Second'],
+        { maxTopics: 1 },
+      ),
+    ).toEqual(['Long topic name that should be clipped a'])
   })
 
   it('parses free text topics from commas, semicolons, and lines', () => {
@@ -97,5 +104,36 @@ describe('profile context', () => {
       broadKnowledge: ['Investing', 'Markets'],
       specificKnowledge: ['Options'],
     })
+  })
+
+  it('returns AI topics specific-first and capped', () => {
+    expect(
+      getUserKnownTopics({
+        version: 1,
+        roles: ['software_it'],
+        broadKnowledge: [
+          'Backend',
+          'Databases',
+          'Cloud',
+          'APIs',
+          'Testing',
+          'DevOps',
+          'Security',
+          'Frontend',
+        ],
+        specificKnowledge: ['MinIO', 'S3', 'Databases'],
+        confidence: 'self_reported',
+        updatedAt: '2026-06-23T00:00:00.000Z',
+      }),
+    ).toEqual([
+      'MinIO',
+      'S3',
+      'Databases',
+      'Backend',
+      'Cloud',
+      'APIs',
+      'Testing',
+      'DevOps',
+    ])
   })
 })

@@ -803,7 +803,7 @@ describe('API payment and hosted AI hardening', () => {
     })
     expect(providerBodies).toHaveLength(2)
     expect(JSON.stringify(providerBodies[1])).toContain(
-      'User known topics: Backend, Databases',
+      'User known topics, strongest first: Backend, Databases',
     )
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 2 })

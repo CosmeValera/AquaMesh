@@ -397,12 +397,12 @@ describe('TopNavBar Component', () => {
     expect(screen.getByText(/chat.*1/i)).toBeInTheDocument()
     expect(
       screen.getByRole('button', {
-        name: /buy 250 credits for 5 eur.*most popular/i,
+        name: /buy 250 credits for 5 eur/i,
       }),
     ).toBeEnabled()
     expect(
       screen.getByRole('button', {
-        name: /buy 600 credits for 10 eur.*best value/i,
+        name: /buy 600 credits for 10 eur/i,
       }),
     ).toBeEnabled()
     expect(

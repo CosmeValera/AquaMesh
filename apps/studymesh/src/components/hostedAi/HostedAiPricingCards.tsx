@@ -9,7 +9,6 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import StarIcon from '@mui/icons-material/Star'
 
 import {
   HOSTED_AI_CREDIT_PACKS,
@@ -107,9 +106,7 @@ const HostedAiPricingCards: React.FC = () => {
                 type="button"
                 onClick={() => void handleBuyCredits(pack.id)}
                 disabled={buyingPackId !== null}
-                aria-label={`Buy ${pack.credits} credits for ${pack.label}${
-                  pack.badge ? ` - ${pack.badge}` : ''
-                }`}
+                aria-label={`Buy ${pack.credits} credits for ${pack.label}`}
                 sx={{
                   position: 'relative',
                   overflow: 'hidden',
@@ -174,23 +171,6 @@ const HostedAiPricingCards: React.FC = () => {
                       '& .MuiChip-label': { px: 1.2 },
                     }}
                   />
-                  {pack.badge ? (
-                    <Stack direction="row" spacing={0.65} alignItems="center">
-                      <StarIcon
-                        sx={{
-                          fontSize: 17,
-                          color: isPremium ? '#ec4899' : '#008575',
-                        }}
-                      />
-                      <Typography
-                        variant="body2"
-                        fontWeight={900}
-                        sx={{ color: isPremium ? '#ec4899' : '#008575' }}
-                      >
-                        {pack.badge}
-                      </Typography>
-                    </Stack>
-                  ) : null}
                 </Stack>
 
                 <Stack direction="row" spacing={0.85} alignItems="center">

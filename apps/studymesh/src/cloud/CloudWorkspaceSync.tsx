@@ -18,13 +18,23 @@ import { useStore } from '../state/store'
 import { clearStudyMeshGuideSeedMarker } from '../studyGuides/studyMeshGuideSeed'
 import { STUDY_GUIDES_CHANGED_EVENT } from '../studyGuides/storage'
 import {
+  PROFILE_CONTEXT_CHANGED_EVENT,
+  readProfileContext,
+  writeProfileContextFromCloud,
+} from '../profileContext'
+import {
   readLocalWorkspaceSnapshot,
   readWorkspaceCacheOwner,
   writeLocalWorkspaceSnapshot,
   writeWorkspaceCacheOwner,
 } from './cache'
 import { createCloudRepository } from './repository'
-import type { CloudWorkspaceBundle, UserProfile, WorkspaceState } from './types'
+import type {
+  CloudJson,
+  CloudWorkspaceBundle,
+  UserProfile,
+  WorkspaceState,
+} from './types'
 
 export const CLOUD_SYNC_STATUS_EVENT = 'studymesh-cloud-sync-status'
 
@@ -120,6 +130,10 @@ const applyCloudBundleToLocalCache = (bundle: CloudWorkspaceBundle): void => {
       : null,
   })
 
+  if (bundle.workspaceState?.settings?.profileContext) {
+    writeProfileContextFromCloud(bundle.workspaceState.settings.profileContext)
+  }
+
   window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
   window.dispatchEvent(new CustomEvent('dashboardStorageUpdated'))
   document.dispatchEvent(new CustomEvent(WIDGET_STORAGE_UPDATED))
@@ -137,10 +151,16 @@ const buildWorkspaceBundleFromLocalCache = (
   > = {},
 ): Omit<CloudWorkspaceBundle, 'profile'> & { profile: UserProfile } => {
   const snapshot = readLocalWorkspaceSnapshot()
+  const profileContext = readProfileContext()
   const workspaceState: WorkspaceState = {
     ownerId,
     selectedDashboard: snapshot.workspaceState?.selectedDashboard || 0,
     openDashboards: snapshot.workspaceState?.openDashboards || [],
+    settings: profileContext
+      ? {
+          profileContext: profileContext as unknown as CloudJson,
+        }
+      : {},
     updatedAt: new Date().toISOString(),
   }
 
@@ -457,6 +477,7 @@ const CloudWorkspaceSync = () => {
       STUDY_GUIDES_CHANGED_EVENT,
       handleStudyGuidesUpdated,
     )
+    window.addEventListener(PROFILE_CONTEXT_CHANGED_EVENT, scheduleSync)
 
     return () => {
       if (syncTimeoutRef.current !== null) {
@@ -476,6 +497,7 @@ const CloudWorkspaceSync = () => {
         STUDY_GUIDES_CHANGED_EVENT,
         handleStudyGuidesUpdated,
       )
+      window.removeEventListener(PROFILE_CONTEXT_CHANGED_EVENT, scheduleSync)
     }
   }, [hasHydrated, repository, user])
 

@@ -33,17 +33,29 @@ export const sanitizeStudyGuideTldr = (value: string): string => {
 export const buildStudyGuideTldrPrompt = ({
   title,
   source,
+  userKnownTopics = [],
 }: {
   title: string
   source: string
-}): string => `Write one TLDR for the full Study Guide "${title}".
+  userKnownTopics?: string[]
+}): string => `Write a TL;DR for the entire guide "${title}".
 
 Rules:
-- Return only the TLDR paragraph.
-- Use fewer than ${STUDY_GUIDE_TLDR_MAX_WORDS} words.
+- Return only the TL;DR paragraph.
+- Do not say "this guide explains..."
+- Explain the concept directly.
+- Maximum ${STUDY_GUIDE_TLDR_MAX_WORDS} words.
+- Start with the simplest mental model.
+${
+  userKnownTopics.length
+    ? `- User known topics: ${userKnownTopics.join(', ')}.
+- Use exactly 1 analogy from the user known topics.
+- Include where the analogy breaks.`
+    : '- Do not force an analogy when no user known topics are provided.'
+}
 - Summarize the whole Study Guide, not just the first page.
 - Do not use Markdown headings, bullets, labels, citations, or JSON.
-- Keep it useful for a student deciding what this guide teaches.
+- No academic wording unless necessary.
 
 Study Guide content:
 ${source.slice(0, 60000)}`

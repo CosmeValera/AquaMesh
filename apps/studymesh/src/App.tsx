@@ -27,6 +27,7 @@ import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
 import StudyGuidesPage from './components/studyGuides/StudyGuidesPage'
 import GuideWorkspacePage from './components/studyGuides/GuideWorkspacePage'
 import HostedAiCheckoutReturn from './components/hostedAi/HostedAiCheckoutReturn'
+import KnowledgeContextOnboarding from './components/profile/KnowledgeContextOnboarding'
 
 import { createStudyMeshTheme } from './theme'
 import { AccentColorProvider } from './theme/AccentColorContext'
@@ -93,6 +94,7 @@ const AppShell = () => {
           <LocalAiDebugPanel />
           <CloudWorkspaceSync />
           <HostedAiCheckoutReturn />
+          <KnowledgeContextOnboarding />
           <DashboardProvider>
             <LayoutProvider>
               <Routes>

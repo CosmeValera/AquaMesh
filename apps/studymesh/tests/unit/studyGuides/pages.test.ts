@@ -10,6 +10,7 @@ import {
 } from '../../../src/studyGuides/pages'
 import {
   applyStudyGuideTldrToWidgets,
+  buildStudyGuideTldrPrompt,
   sanitizeStudyGuideTldr,
   STUDY_GUIDE_TLDR_PROP,
 } from '../../../src/studyGuides/tldr'
@@ -155,6 +156,20 @@ describe('Study Guide TLDR helpers', () => {
     expect(
       secondPage[0].components[1].props[STUDY_GUIDE_TLDR_PROP],
     ).toBeUndefined()
+  })
+
+  it('includes user known topics and analogy-break rules in TLDR prompt', () => {
+    const prompt = buildStudyGuideTldrPrompt({
+      title: 'Data lakes',
+      source: 'Data lake lesson notes.',
+      userKnownTopics: ['Backend', 'Databases'],
+    })
+
+    expect(prompt).toContain('Start with the simplest mental model')
+    expect(prompt).toContain('User known topics: Backend, Databases')
+    expect(prompt).toContain('Use exactly 1 analogy')
+    expect(prompt).toContain('Include where the analogy breaks')
+    expect(prompt).toContain('Do not say "this guide explains..."')
   })
 })
 

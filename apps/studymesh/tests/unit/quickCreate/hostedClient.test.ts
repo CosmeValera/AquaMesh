@@ -241,7 +241,10 @@ describe('hosted AI client credit failures', () => {
     )
 
     const onTldr = vi.fn()
-    const transport = createHostedStudyGuideTransportWithTldr({ onTldr })
+    const transport = createHostedStudyGuideTransportWithTldr({
+      userKnownTopics: ['Backend', 'Databases'],
+      onTldr,
+    })
 
     await expect(
       transport({
@@ -263,6 +266,9 @@ describe('hosted AI client credit failures', () => {
     expect(requestBodies[1]).toMatchObject({
       action: 'generateWithTldr',
       surface: 'study-guide',
+      tldrOptions: {
+        userKnownTopics: ['Backend', 'Databases'],
+      },
     })
 
     window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, spendListener)

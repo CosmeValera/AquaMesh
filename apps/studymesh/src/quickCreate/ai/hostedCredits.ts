@@ -85,6 +85,9 @@ export interface HostedAiGatewayRequest {
   parts?: HostedAiGatewayPart[]
   responseSchema?: Record<string, unknown>
   timeoutMs?: number
+  tldrOptions?: {
+    userKnownTopics?: string[]
+  }
 }
 
 export interface HostedAiGatewayResponse {

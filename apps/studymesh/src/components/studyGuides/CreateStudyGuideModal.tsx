@@ -47,6 +47,7 @@ import {
 import { applyStudyGuideTldrToWidgets } from '../../studyGuides/tldr'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
 import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
+import { getUserKnownTopics } from '../../profileContext'
 
 interface CreateStudyGuideModalProps {
   open: boolean
@@ -653,6 +654,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
         folderName: '',
         prompt: effectivePrompt,
         signal: generationController.signal,
+        userKnownTopics: getUserKnownTopics(),
         onProgress: (event) => {
           if (generationController.signal.aborted) {
             return

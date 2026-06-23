@@ -32,6 +32,7 @@ import {
   buildStudyGuideTldrPrompt,
   sanitizeStudyGuideTldr,
 } from '../../studyGuides/tldr'
+import { sanitizeUserKnownTopics } from '../../profileContext'
 
 type ProviderOptions = {
   provider?: QuickCreateAiProvider
@@ -70,6 +71,7 @@ export const generateStudyGuideTldrWithAi = async ({
   prompt,
   draft,
   signal,
+  userKnownTopics,
 }: {
   provider: QuickCreateAiProvider
   apiToken: string
@@ -78,10 +80,12 @@ export const generateStudyGuideTldrWithAi = async ({
   prompt: string
   draft: AiStudyPathDraft
   signal?: AbortSignal
+  userKnownTopics?: string[]
 }): Promise<string> => {
   const tldrPrompt = buildStudyGuideTldrPrompt({
     title,
     source: studyPathDraftToTldrSource(draft, prompt),
+    userKnownTopics: sanitizeUserKnownTopics(userKnownTopics),
   })
   let text = ''
 
@@ -203,6 +207,7 @@ export const generateStudyPathWithAi = async (
         prompt: options.prompt,
         draft,
         signal: options.signal,
+        userKnownTopics: options.userKnownTopics,
       }),
     }
   }
@@ -217,6 +222,7 @@ export const generateStudyPathWithAi = async (
       // Hosted billing is per gateway call, so one guide must use one call.
       singleRequest: true,
       strongTransport: createHostedStudyGuideTransportWithTldr({
+        userKnownTopics: options.userKnownTopics,
         onTldr: (tldr) => {
           hostedTldr = tldr
         },
@@ -264,6 +270,7 @@ export const generateStudyPathWithAi = async (
       prompt: options.prompt,
       draft,
       signal: options.signal,
+      userKnownTopics: options.userKnownTopics,
     }),
   }
 }

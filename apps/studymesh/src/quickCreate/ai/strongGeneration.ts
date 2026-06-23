@@ -202,6 +202,7 @@ export interface GenerateStudyPathWithAiOptions {
   title: string
   prompt: string
   folderName: string
+  userKnownTopics?: string[]
 }
 
 const STUDY_PATH_FALLBACK_DASHBOARD_COUNT = 5

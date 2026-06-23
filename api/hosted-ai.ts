@@ -13,6 +13,7 @@ import {
   buildStudyGuideTldrPrompt,
   sanitizeStudyGuideTldr,
 } from "../apps/studymesh/src/studyGuides/tldr";
+import { sanitizeUserKnownTopics } from "../apps/studymesh/src/profileContext";
 
 loadLocalApiEnv();
 
@@ -626,6 +627,9 @@ const handleGenerate = async (
                   text: buildStudyGuideTldrPrompt({
                     title: "Study Guide",
                     source: text,
+                    userKnownTopics: sanitizeUserKnownTopics(
+                      request.tldrOptions?.userKnownTopics,
+                    ),
                   }),
                 },
               ],

@@ -253,8 +253,10 @@ export const createHostedAiTransport = ({
 }
 
 export const createHostedStudyGuideTransportWithTldr = ({
+  userKnownTopics,
   onTldr,
 }: {
+  userKnownTopics?: string[]
   onTldr: (tldr: string) => void
 }): HostedAiTransport => {
   return async ({
@@ -275,6 +277,9 @@ export const createHostedStudyGuideTransportWithTldr = ({
         parts,
         responseSchema,
         timeoutMs,
+        ...(userKnownTopics?.length
+          ? { tldrOptions: { userKnownTopics } }
+          : {}),
       })
       const text = payload.text?.trim()
 

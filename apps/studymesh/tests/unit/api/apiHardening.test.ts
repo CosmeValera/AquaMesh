@@ -787,6 +787,9 @@ describe('API payment and hosted AI hardening', () => {
           action: 'generateWithTldr',
           surface: 'study-guide',
           parts: [{ text: 'Create study guide' }],
+          tldrOptions: {
+            userKnownTopics: ['Backend', 'Databases'],
+          },
         },
       },
       res,
@@ -799,6 +802,9 @@ describe('API payment and hosted AI hardening', () => {
       tldr: 'Full guide in one short paragraph.',
     })
     expect(providerBodies).toHaveLength(2)
+    expect(JSON.stringify(providerBodies[1])).toContain(
+      'User known topics: Backend, Databases',
+    )
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 2 })
     expect(rpcBodies[1].p_provider_call_count).toBe(2)

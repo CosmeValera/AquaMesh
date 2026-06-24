@@ -1,3 +1,5 @@
+import type { StudyGuideQuickStart } from '../../state/store'
+
 export const STUDY_CREDITS_LABEL = 'Study Credits'
 export const STUDY_CREDITS_SYMBOL = 'SC'
 
@@ -79,13 +81,13 @@ export interface HostedAiGatewayPart {
 }
 
 export interface HostedAiGatewayRequest {
-  action: 'status' | 'markIntroSeen' | 'generate' | 'generateWithTldr'
+  action: 'status' | 'markIntroSeen' | 'generate' | 'generateWithQuickStart'
   surface?: HostedAiSurface
   model?: string
   parts?: HostedAiGatewayPart[]
   responseSchema?: Record<string, unknown>
   timeoutMs?: number
-  tldrOptions?: {
+  quickStartOptions?: {
     userKnownTopics?: string[]
   }
 }
@@ -93,7 +95,7 @@ export interface HostedAiGatewayRequest {
 export interface HostedAiGatewayResponse {
   ok: boolean
   text?: string
-  tldr?: string
+  quickStart?: StudyGuideQuickStart
   status?: HostedAiStatus
   error?: {
     code:

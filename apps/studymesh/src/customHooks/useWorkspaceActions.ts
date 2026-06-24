@@ -12,6 +12,7 @@ import {
   createQuickCreateDashboardLayout,
   QuickCreateDashboardLayoutMode,
 } from '../quickCreate'
+import type { StudyGuideQuickStart } from '../state/store'
 import { ComponentData } from '../components/WidgetEditor/types/types'
 import {
   STUDYMESH_GUIDE_STUDY_PATH_ID,
@@ -100,10 +101,7 @@ const saveQuickCreateDashboard = (
 }
 
 export const useWorkspaceActions = () => {
-  const {
-    addDashboards,
-    addStudyPathContainer,
-  } = useDashboards()
+  const { addDashboards, addStudyPathContainer } = useDashboards()
 
   const openCreateStudyPath = useCallback((options?: { toggle?: boolean }) => {
     window.dispatchEvent(
@@ -125,9 +123,11 @@ export const useWorkspaceActions = () => {
       dashboards,
       folderName = 'Quick Creates',
       openInWorkspace = true,
+      quickStart,
     }: {
       folderName?: string
       openInWorkspace?: boolean
+      quickStart?: StudyGuideQuickStart
       dashboards: Array<{
         name: string
         widgets: Array<{
@@ -166,7 +166,8 @@ export const useWorkspaceActions = () => {
             Math.random() * 1000000,
           )}`,
           name: dashboard.name,
-          folder: (dashboard.folderName || folderName).trim() || 'Quick Creates',
+          folder:
+            (dashboard.folderName || folderName).trim() || 'Quick Creates',
           folderColor: '#007C66',
           layout,
           description: 'Generated from student notes.',
@@ -176,7 +177,13 @@ export const useWorkspaceActions = () => {
           updatedAt: now,
         }
       })
-      const studyPath = createStudyPathContainerState(generatedDashboards)
+      const parsedStudyPath = createStudyPathContainerState(generatedDashboards)
+      const studyPath = parsedStudyPath
+        ? {
+            ...parsedStudyPath,
+            quickStart,
+          }
+        : null
       const savedDashboards = studyPath
         ? generatedDashboards
         : generatedDashboards.map((dashboard) =>

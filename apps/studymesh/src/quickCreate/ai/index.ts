@@ -39,7 +39,7 @@ export {
 } from './strongGeneration'
 export {
   generateQuickCreateWithAi,
-  generateStudyGuideTldrWithAi,
+  generateStudyGuideQuickStartWithAi,
   generateStudyPathWithAi,
 } from './provider'
 export {
@@ -93,7 +93,7 @@ export type {
 export {
   callHostedAiModel,
   createHostedAiTransport,
-  createHostedStudyGuideTransportWithTldr,
+  createHostedStudyGuideTransportWithQuickStart,
   getHostedAiStatus,
   markHostedAiIntroSeen,
 } from './hostedClient'

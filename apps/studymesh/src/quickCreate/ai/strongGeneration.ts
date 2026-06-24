@@ -26,6 +26,7 @@ import {
   DEFAULT_STRONG_AI_PROVIDER,
 } from './strongProviders'
 import type { StrongAiCallOptions, StrongAiProviderId } from './strongProviders'
+import type { StudyGuideQuickStart } from '../../state/store'
 
 interface GeminiPart {
   text?: string
@@ -148,7 +149,7 @@ export interface AiStudyPathDraft {
   title: string
   folderName: string
   emoji?: string
-  tldr?: string
+  quickStart?: StudyGuideQuickStart
   dashboards: AiStudyPathDashboardDraft[]
   warnings: string[]
   blueprint?: AiStudyPathBlueprint

@@ -20,8 +20,15 @@ vi.mock('../../../src/quickCreate/ai/hostedClient', () => ({
         surface,
         ...options,
       }),
-  createHostedStudyGuideTransportWithTldr:
-    ({ onTldr }: { onTldr: (tldr: string) => void }) =>
+  createHostedStudyGuideTransportWithQuickStart:
+    ({
+      onQuickStart,
+    }: {
+      onQuickStart: (quickStart: {
+        keyIdea: string
+        quickSummary: string
+      }) => void
+    }) =>
     async (options: {
       model: string
       parts: Array<{ text?: string }>
@@ -32,7 +39,10 @@ vi.mock('../../../src/quickCreate/ai/hostedClient', () => ({
         surface: 'study-guide',
         ...options,
       })
-      onTldr('A short guide-wide TLDR.')
+      onQuickStart({
+        keyIdea: 'A short guide-wide key idea.',
+        quickSummary: 'A short guide-wide quick summary.',
+      })
       return text
     },
   getHostedAiStatus: hostedAiClientMock.getHostedAiStatus,

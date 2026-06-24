@@ -85,35 +85,52 @@ const makeDashboard = (index: number, dashboardCount: number) => {
 const mockGeminiDashboards = (dashboardCount: number) => {
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        candidates: [
-          {
-            content: {
-              parts: [
-                {
-                  text: JSON.stringify({
-                    title: 'French Subjunctive Path',
-                    folderName: 'French Subjunctive Path',
-                    dashboards: Array.from(
-                      { length: dashboardCount },
-                      (_value, index) =>
-                        makeDashboard(index + 1, dashboardCount),
-                    ),
-                  }),
-                },
-              ],
+    vi.fn((_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body || '{}'))
+      const promptText = JSON.stringify(body)
+      const text = promptText.includes('Create one Quick Start object')
+        ? JSON.stringify({
+            keyIdea: 'French subjunctive marks uncertainty or subjectivity.',
+            quickSummary:
+              'The subjunctive changes verb forms when a sentence expresses doubt, desire, emotion, or necessity.\n\nIt connects a trigger phrase to a dependent clause, but not every sentence with que needs it.',
+          })
+        : promptText.includes('Choose whether any known topic')
+          ? JSON.stringify({
+              shouldUseKnownTopic: false,
+              knownTopicsForQuickStart: [],
+              knownTopicRelevanceReason: 'No direct bridge was selected.',
+              targetTopicType: 'general',
+              comparisonStyle: 'neutral_explanation',
+            })
+          : JSON.stringify({
+              title: 'French Subjunctive Path',
+              folderName: 'French Subjunctive Path',
+              dashboards: Array.from(
+                { length: dashboardCount },
+                (_value, index) => makeDashboard(index + 1, dashboardCount),
+              ),
+            })
+
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          candidates: [
+            {
+              content: {
+                parts: [{ text }],
+              },
             },
-          },
-        ],
-      }),
+          ],
+        }),
+      })
     }),
   )
 }
 
 const generatePath = async () => {
-  render(<CreateStudyGuideModal open onClose={vi.fn()} onCreatePath={vi.fn()} />)
+  render(
+    <CreateStudyGuideModal open onClose={vi.fn()} onCreatePath={vi.fn()} />,
+  )
 
   fireEvent.change(
     screen.getByRole('textbox', { name: /what should StudyMesh teach/i }),
@@ -141,7 +158,9 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
   })
 
   it('uses a prompt-only Study Guide input without legacy source controls', () => {
-    render(<CreateStudyGuideModal open onClose={vi.fn()} onCreatePath={vi.fn()} />)
+    render(
+      <CreateStudyGuideModal open onClose={vi.fn()} onCreatePath={vi.fn()} />,
+    )
 
     expect(
       screen.queryByRole('button', { name: /current dashboard/i }),
@@ -280,12 +299,12 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
 
     expect(onCreatePath).toHaveBeenCalledTimes(1)
     const payload = onCreatePath.mock.calls[0][0]
-    const firstDashboardWidgets = JSON.stringify(payload.dashboards[0].widgets)
     const lessonFourWidgets = JSON.stringify(payload.dashboards[3].widgets)
     const lessonFiveWidgets = JSON.stringify(payload.dashboards[4].widgets)
 
-    expect(firstDashboardWidgets).toContain('studyGuideTldr')
-    expect(lessonFourWidgets).not.toContain('studyGuideTldr')
+    expect(payload.quickStart).toMatchObject({
+      keyIdea: 'French subjunctive marks uncertainty or subjectivity.',
+    })
     expect(lessonFourWidgets).toContain('QuizCarouselBlock')
     expect(lessonFiveWidgets).toContain('QuizCarouselBlock')
     expect(lessonFourWidgets).not.toContain('FlashcardCarouselBlock')
@@ -557,7 +576,11 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
           quizzes: [
             {
               question: 'What is useful for German A2 practice?',
-              options: ['reusable phrases', 'advanced poetry', 'chemical symbols'],
+              options: [
+                'reusable phrases',
+                'advanced poetry',
+                'chemical symbols',
+              ],
               correctIndex: 0,
             },
           ],
@@ -577,16 +600,28 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
         )
       }
       if (input.includes('## Tickets')) {
-        return sectionMarkdown('Tickets', 'German A2 travel uses ticket requests')
+        return sectionMarkdown(
+          'Tickets',
+          'German A2 travel uses ticket requests',
+        )
       }
       if (input.includes('## Directions')) {
-        return sectionMarkdown('Directions', 'Direction phrases help find stations')
+        return sectionMarkdown(
+          'Directions',
+          'Direction phrases help find stations',
+        )
       }
       if (input.includes('## Requests')) {
-        return sectionMarkdown('Requests', 'German A2 speaking uses polite requests')
+        return sectionMarkdown(
+          'Requests',
+          'German A2 speaking uses polite requests',
+        )
       }
       if (input.includes('## Corrections')) {
-        return sectionMarkdown('Corrections', 'Correction drills improve speaking')
+        return sectionMarkdown(
+          'Corrections',
+          'Correction drills improve speaking',
+        )
       }
       return sectionMarkdown('Fallback', 'German A2 fallback lesson notes')
     })

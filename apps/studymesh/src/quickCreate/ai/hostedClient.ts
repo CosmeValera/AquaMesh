@@ -252,12 +252,14 @@ export const createHostedAiTransport = ({
   }
 }
 
-export const createHostedStudyGuideTransportWithTldr = ({
+export const createHostedStudyGuideTransportWithQuickStart = ({
   userKnownTopics,
-  onTldr,
+  onQuickStart,
 }: {
   userKnownTopics?: string[]
-  onTldr: (tldr: string) => void
+  onQuickStart: (
+    quickStart: NonNullable<HostedAiGatewayResponse['quickStart']>,
+  ) => void
 }): HostedAiTransport => {
   return async ({
     model,
@@ -271,14 +273,14 @@ export const createHostedStudyGuideTransportWithTldr = ({
 
     try {
       const payload = await callHostedAiGateway({
-        action: 'generateWithTldr',
+        action: 'generateWithQuickStart',
         surface,
         model,
         parts,
         responseSchema,
         timeoutMs,
         ...(userKnownTopics?.length
-          ? { tldrOptions: { userKnownTopics } }
+          ? { quickStartOptions: { userKnownTopics } }
           : {}),
       })
       const text = payload.text?.trim()
@@ -287,7 +289,11 @@ export const createHostedStudyGuideTransportWithTldr = ({
         throw new Error('Hosted AI returned no text.')
       }
 
-      onTldr(payload.tldr || '')
+      if (!payload.quickStart) {
+        throw new Error('Hosted AI returned no Quick Start.')
+      }
+
+      onQuickStart(payload.quickStart)
       return text
     } catch (error) {
       dispatchHostedAiVisualRefund(surface)

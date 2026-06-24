@@ -1,5 +1,11 @@
 import React from 'react'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -217,15 +223,81 @@ describe('Interactive Study Guide UX', () => {
     expect(
       screen.queryByRole('button', { name: 'Edit Pages' }),
     ).not.toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: 'Previous page' }),
-    ).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Next page' })).toBeEnabled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
     expect(onStudyPathChange).toHaveBeenCalledWith(
       expect.objectContaining({ selectedIndex: 1 }),
     )
+  })
+
+  it('renders Quick Start as a collapsible card separate from page content', () => {
+    const studyPath = {
+      ...createStudyPath(),
+      quickStart: {
+        keyIdea: 'A data lake is raw shared storage plus tools for later use.',
+        quickSummary:
+          'First paragraph gives the learner a fast model.\n\nSecond paragraph adds a caveat without listing pages.',
+      },
+    }
+    const firstPage = studyPath.dashboards[0]
+    firstPage.layout = createMarkdownStudyGuidePageLayout({
+      studyPath,
+      pageKey: firstPage.dashboardKey,
+      title: firstPage.name,
+      markdown: 'Main page body starts here.',
+      pageIndex: 1,
+      pageCount: studyPath.dashboards.length,
+    })
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <StudyPathWorkspaceView
+          studyPath={studyPath}
+          onStudyPathChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+
+    const quickStartCard = screen.getByTestId('study-guide-quick-start-card')
+    expect(within(quickStartCard).getByText('Quick Start')).toBeInTheDocument()
+    expect(within(quickStartCard).getByText('Key idea')).toBeInTheDocument()
+    expect(
+      within(quickStartCard).getByText(
+        'A data lake is raw shared storage plus tools for later use.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Main page body starts here.')).toBeInTheDocument()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Collapse Quick Start' }),
+    )
+    expect(
+      screen.queryByText(
+        'A data lake is raw shared storage plus tools for later use.',
+      ),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand Quick Start' }))
+    expect(
+      screen.getByText(
+        'A data lake is raw shared storage plus tools for later use.',
+      ),
+    ).toBeInTheDocument()
+
+    rerender(
+      <MemoryRouter>
+        <StudyPathWorkspaceView
+          studyPath={{ ...studyPath, selectedIndex: 1 }}
+          onStudyPathChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.queryByTestId('study-guide-quick-start-card'),
+    ).not.toBeInTheDocument()
   })
 
   it('uses an icon-only edit and preview toggle for editable pages', () => {
@@ -254,7 +326,9 @@ describe('Interactive Study Guide UX', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit current page' }))
-    expect(onEditingPageKeyChange).toHaveBeenCalledWith(currentPage.dashboardKey)
+    expect(onEditingPageKeyChange).toHaveBeenCalledWith(
+      currentPage.dashboardKey,
+    )
 
     rerender(
       <MemoryRouter>

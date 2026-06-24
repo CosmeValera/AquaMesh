@@ -20,22 +20,22 @@ import {
   isStrongAiProvider,
   STRONG_AI_PROVIDERS,
 } from './strongProviders'
-import {
-  callLocalLanguageModel,
-  LocalAiProgressEvent,
-} from './localLanguageModel'
+import { LocalAiProgressEvent } from './localLanguageModel'
 import {
   createHostedAiTransport,
-  createHostedStudyGuideTransportWithTldr,
+  createHostedStudyGuideTransportWithQuickStart,
 } from './hostedClient'
 import {
-  buildStudyGuideTldrRelevancePrompt,
-  buildStudyGuideTldrPrompt,
-  parseStudyGuideTldrRelevanceDecision,
-  sanitizeStudyGuideTldr,
-  STUDY_GUIDE_TLDR_RELEVANCE_SCHEMA,
-} from '../../studyGuides/tldr'
-import type { StudyGuideTldrRelevanceDecision } from '../../studyGuides/tldr'
+  buildStudyGuideQuickStartPrompt,
+  buildStudyGuideQuickStartRelevancePrompt,
+  parseStudyGuideQuickStart,
+  parseStudyGuideQuickStartRelevanceDecision,
+  sanitizeStudyGuideQuickStart,
+  STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
+  STUDY_GUIDE_QUICK_START_SCHEMA,
+} from '../../studyGuides/quickStart'
+import type { StudyGuideQuickStartRelevanceDecision } from '../../studyGuides/quickStart'
+import type { StudyGuideQuickStart } from '../../state/store'
 import { sanitizeUserKnownTopics } from '../../profileContext'
 
 type ProviderOptions = {
@@ -44,7 +44,7 @@ type ProviderOptions = {
   signal?: AbortSignal
 }
 
-const studyPathDraftToTldrSource = (
+const studyPathDraftToQuickStartSource = (
   draft: AiStudyPathDraft,
   prompt: string,
 ): string =>
@@ -67,14 +67,13 @@ const studyPathDraftToTldrSource = (
     .filter(Boolean)
     .join('\n\n---\n\n')
 
-export const generateStudyGuideTldrWithAi = async ({
+export const generateStudyGuideQuickStartWithAi = async ({
   provider,
   apiToken,
   model,
   title,
   prompt,
   draft,
-  signal,
   userKnownTopics,
 }: {
   provider: QuickCreateAiProvider
@@ -85,78 +84,72 @@ export const generateStudyGuideTldrWithAi = async ({
   draft: AiStudyPathDraft
   signal?: AbortSignal
   userKnownTopics?: string[]
-}): Promise<string> => {
-  const source = studyPathDraftToTldrSource(draft, prompt)
-  const safeKnownTopics = sanitizeUserKnownTopics(userKnownTopics)
-  let relevanceDecision: StudyGuideTldrRelevanceDecision | undefined
-  let text = ''
-
+}): Promise<StudyGuideQuickStart> => {
   if (provider === 'local') {
-    text = await callLocalLanguageModel(
-      buildStudyGuideTldrPrompt({
-        title,
-        source,
-      }),
-      {
-        timeoutMs: 60 * 1000,
-        promptType: 'tldr',
-        progressLabel: 'Creating Study Guide TLDR',
-        signal,
-      },
+    throw new Error('Local AI does not generate Study Guide Quick Start.')
+  }
+
+  const source = studyPathDraftToQuickStartSource(draft, prompt)
+  const safeKnownTopics = sanitizeUserKnownTopics(userKnownTopics)
+  let relevanceDecision: StudyGuideQuickStartRelevanceDecision | undefined
+
+  if (provider === 'hosted') {
+    throw new Error(
+      'Hosted Study Guide Quick Start must use bundled generation.',
     )
-  } else {
-    if (provider === 'hosted') {
-      throw new Error('Hosted Study Guide TLDR must use bundled generation.')
-    }
+  }
 
-    if (!isStrongAiProvider(provider)) {
-      throw new Error(`Unknown AI provider: ${provider}`)
-    }
+  if (!isStrongAiProvider(provider)) {
+    throw new Error(`Unknown AI provider: ${provider}`)
+  }
 
-    if (safeKnownTopics.length) {
-      const relevanceText = await callStrongAiModel({
-        provider,
-        apiToken,
-        model,
-        parts: [
-          {
-            text: buildStudyGuideTldrRelevancePrompt({
-              title,
-              prompt,
-              source,
-              userKnownTopics: safeKnownTopics,
-            }),
-          },
-        ],
-        responseSchema: STUDY_GUIDE_TLDR_RELEVANCE_SCHEMA,
-        timeoutMs: 60 * 1000,
-      })
-      relevanceDecision = parseStudyGuideTldrRelevanceDecision(
-        relevanceText,
-        safeKnownTopics,
-      )
-    }
-
-    const tldrPrompt = buildStudyGuideTldrPrompt({
-      title,
-      source,
-      relevanceDecision,
-    })
-    text = await callStrongAiModel({
+  if (safeKnownTopics.length) {
+    const relevanceText = await callStrongAiModel({
       provider,
       apiToken,
       model,
-      parts: [{ text: tldrPrompt }],
+      parts: [
+        {
+          text: buildStudyGuideQuickStartRelevancePrompt({
+            title,
+            prompt,
+            source,
+            userKnownTopics: safeKnownTopics,
+          }),
+        },
+      ],
+      responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
       timeoutMs: 60 * 1000,
     })
+    relevanceDecision = parseStudyGuideQuickStartRelevanceDecision(
+      relevanceText,
+      safeKnownTopics,
+    )
   }
 
-  const tldr = sanitizeStudyGuideTldr(text)
-  if (!tldr) {
-    throw new Error('AI did not return a Study Guide TLDR.')
+  const text = await callStrongAiModel({
+    provider,
+    apiToken,
+    model,
+    parts: [
+      {
+        text: buildStudyGuideQuickStartPrompt({
+          title,
+          source,
+          relevanceDecision,
+        }),
+      },
+    ],
+    responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
+    timeoutMs: 60 * 1000,
+  })
+
+  const quickStart = parseStudyGuideQuickStart(text)
+  if (!quickStart) {
+    throw new Error('AI did not return a Study Guide Quick Start.')
   }
 
-  return tldr
+  return quickStart
 }
 
 const resolveProvider = (
@@ -230,27 +223,14 @@ export const generateStudyPathWithAi = async (
   const provider = resolveProvider(options.provider, options.apiToken)
 
   if (provider === 'local') {
-    const draft = await generateStudyPathWithLocalAi(options, {
+    return generateStudyPathWithLocalAi(options, {
       onProgress: options.onProgress,
       signal: options.signal,
     })
-    return {
-      ...draft,
-      tldr: await generateStudyGuideTldrWithAi({
-        provider,
-        apiToken: '',
-        model: '',
-        title: draft.folderName || draft.title || options.title,
-        prompt: options.prompt,
-        draft,
-        signal: options.signal,
-        userKnownTopics: options.userKnownTopics,
-      }),
-    }
   }
 
   if (provider === 'hosted') {
-    let hostedTldr = ''
+    let hostedQuickStart: StudyGuideQuickStart | null = null
     const draft = await generateStudyPathWithGemini({
       ...options,
       apiToken: '',
@@ -258,19 +238,19 @@ export const generateStudyPathWithAi = async (
       strongProvider: 'cerebras',
       // Hosted billing is per gateway call, so one guide must use one call.
       singleRequest: true,
-      strongTransport: createHostedStudyGuideTransportWithTldr({
+      strongTransport: createHostedStudyGuideTransportWithQuickStart({
         userKnownTopics: options.userKnownTopics,
-        onTldr: (tldr) => {
-          hostedTldr = tldr
+        onQuickStart: (quickStart) => {
+          hostedQuickStart = quickStart
         },
       }),
     })
-    const tldr = sanitizeStudyGuideTldr(hostedTldr)
-    if (!tldr) {
-      throw new Error('Hosted AI did not return a Study Guide TLDR.')
+    const quickStart = sanitizeStudyGuideQuickStart(hostedQuickStart)
+    if (!quickStart) {
+      throw new Error('Hosted AI did not return a Study Guide Quick Start.')
     }
 
-    return { ...draft, tldr }
+    return { ...draft, quickStart }
   }
 
   if (!isStrongAiProvider(provider)) {
@@ -299,7 +279,7 @@ export const generateStudyPathWithAi = async (
   })
   return {
     ...draft,
-    tldr: await generateStudyGuideTldrWithAi({
+    quickStart: await generateStudyGuideQuickStartWithAi({
       provider,
       apiToken: credentials.apiToken,
       model: credentials.model,

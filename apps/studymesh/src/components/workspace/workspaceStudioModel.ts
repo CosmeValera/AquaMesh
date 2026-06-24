@@ -3,7 +3,7 @@ import type {
   StudyMaterialResourceType,
 } from '../../quickCreate/ai'
 import type { ComponentData } from '../WidgetEditor/types/types'
-import type { DashboardLayout } from '../../state/store'
+import type { DashboardLayout, StudyGuideQuickStart } from '../../state/store'
 export {
   quickCreateAccents,
   quickCreateFolders,
@@ -51,6 +51,7 @@ export interface GenerationDraft {
     layout: DashboardLayout
     folder?: string
   }>
+  quickStart?: StudyGuideQuickStart
 }
 
 export interface GeneratedMaterial {
@@ -143,4 +144,3 @@ export const createGenerationDraft = (
   inputSummary: flow === 'study-path' ? 'Learning prompt' : 'Current dashboard',
   ...options,
 })
-

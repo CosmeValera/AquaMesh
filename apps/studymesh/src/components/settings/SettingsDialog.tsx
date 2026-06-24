@@ -214,7 +214,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 Explanation Context
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                StudyMesh uses this for TLDR analogies in new Study Guides.
+                StudyMesh uses this to choose useful Quick Start comparisons in
+                new Study Guides.
               </Typography>
               <Typography variant="body2" sx={{ mb: 1 }}>
                 Role: {roleLabel}
@@ -386,8 +387,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         <DialogContent dividers>
           <Typography variant="body2" color="text.secondary">
             This permanently deletes your StudyMesh account data, including
-            synced study guides and profile details. You
-            will be signed out when deletion finishes.
+            synced study guides and profile details. You will be signed out when
+            deletion finishes.
           </Typography>
         </DialogContent>
         <DialogActions>

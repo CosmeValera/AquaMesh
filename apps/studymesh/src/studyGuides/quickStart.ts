@@ -1,66 +1,74 @@
-import type { ComponentData } from '../components/WidgetEditor/types/types'
+import type { StudyGuideQuickStart } from '../state/store'
 import { sanitizeUserKnownTopics } from '../profileContext'
 
-export const STUDY_GUIDE_TLDR_MAX_WORDS = 120
-export const STUDY_GUIDE_TLDR_PROP = 'studyGuideTldr'
+export const STUDY_GUIDE_KEY_IDEA_MAX_WORDS = 35
+export const STUDY_GUIDE_QUICK_SUMMARY_MAX_WORDS = 120
 
 const markdownFencePattern = /^```(?:\w+)?\s*|\s*```$/g
-
-const tldrTargetTopicTypes = [
+const quickStartTargetTopicTypes = [
   'technical',
   'human_management',
   'general',
 ] as const
-const tldrComparisonStyles = [
+const quickStartComparisonStyles = [
   'direct_comparison',
   'neutral_explanation',
 ] as const
 
-export type StudyGuideTldrTargetTopicType =
-  (typeof tldrTargetTopicTypes)[number]
+export type StudyGuideQuickStartTargetTopicType =
+  (typeof quickStartTargetTopicTypes)[number]
 
-export type StudyGuideTldrComparisonStyle =
-  (typeof tldrComparisonStyles)[number]
+export type StudyGuideQuickStartComparisonStyle =
+  (typeof quickStartComparisonStyles)[number]
 
-export interface StudyGuideTldrRelevanceDecision {
+export interface StudyGuideQuickStartRelevanceDecision {
   shouldUseKnownTopic: boolean
-  knownTopicsForTldr: string[]
+  knownTopicsForQuickStart: string[]
   knownTopicRelevanceReason: string
-  targetTopicType: StudyGuideTldrTargetTopicType
-  comparisonStyle: StudyGuideTldrComparisonStyle
+  targetTopicType: StudyGuideQuickStartTargetTopicType
+  comparisonStyle: StudyGuideQuickStartComparisonStyle
 }
 
-export const STUDY_GUIDE_TLDR_RELEVANCE_SCHEMA = {
+export const STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA = {
   type: 'OBJECT',
   properties: {
     shouldUseKnownTopic: { type: 'BOOLEAN' },
-    knownTopicsForTldr: {
+    knownTopicsForQuickStart: {
       type: 'ARRAY',
       items: { type: 'STRING' },
     },
     knownTopicRelevanceReason: { type: 'STRING' },
     targetTopicType: {
       type: 'STRING',
-      enum: [...tldrTargetTopicTypes],
+      enum: [...quickStartTargetTopicTypes],
     },
     comparisonStyle: {
       type: 'STRING',
-      enum: [...tldrComparisonStyles],
+      enum: [...quickStartComparisonStyles],
     },
   },
   required: [
     'shouldUseKnownTopic',
-    'knownTopicsForTldr',
+    'knownTopicsForQuickStart',
     'knownTopicRelevanceReason',
     'targetTopicType',
     'comparisonStyle',
   ],
 }
 
-export const createNeutralStudyGuideTldrRelevanceDecision =
-  (): StudyGuideTldrRelevanceDecision => ({
+export const STUDY_GUIDE_QUICK_START_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    keyIdea: { type: 'STRING' },
+    quickSummary: { type: 'STRING' },
+  },
+  required: ['keyIdea', 'quickSummary'],
+}
+
+export const createNeutralStudyGuideQuickStartRelevanceDecision =
+  (): StudyGuideQuickStartRelevanceDecision => ({
     shouldUseKnownTopic: false,
-    knownTopicsForTldr: [],
+    knownTopicsForQuickStart: [],
     knownTopicRelevanceReason:
       'No provided known topic was selected as a clear cognitive bridge.',
     targetTopicType: 'general',
@@ -82,30 +90,62 @@ const parseJsonObject = (text: string): unknown => {
       return JSON.parse(text.slice(firstObject, lastObject + 1))
     }
 
-    throw new Error('Study Guide TLDR relevance decision was not JSON.')
+    throw new Error('Study Guide Quick Start response was not JSON.')
   }
 }
 
 const stringValue = (value: unknown): string =>
   typeof value === 'string' ? value.trim() : ''
 
+const stripTextLabels = (value: string): string =>
+  value
+    .replace(markdownFencePattern, '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .map((line) =>
+      line
+        .trim()
+        .replace(/^#{1,6}\s+/, '')
+        .replace(/^[-*]\s+/, '')
+        .replace(
+          /^(?:TL;?DR|Quick\s*Start|Key\s*Idea|Quick\s*Summary)\s*[:.-]?\s*/i,
+          '',
+        ),
+    )
+    .join('\n')
+    .trim()
+
+const clampWords = (value: string, maxWords: number): string =>
+  value.split(/\s+/).filter(Boolean).slice(0, maxWords).join(' ')
+
+const normalizeParagraphs = (value: string): string[] =>
+  stripTextLabels(value)
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+
 const isTargetTopicType = (
   value: unknown,
-): value is StudyGuideTldrTargetTopicType =>
+): value is StudyGuideQuickStartTargetTopicType =>
   typeof value === 'string' &&
-  tldrTargetTopicTypes.includes(value as StudyGuideTldrTargetTopicType)
+  quickStartTargetTopicTypes.includes(
+    value as StudyGuideQuickStartTargetTopicType,
+  )
 
 const isComparisonStyle = (
   value: unknown,
-): value is StudyGuideTldrComparisonStyle =>
+): value is StudyGuideQuickStartComparisonStyle =>
   typeof value === 'string' &&
-  tldrComparisonStyles.includes(value as StudyGuideTldrComparisonStyle)
+  quickStartComparisonStyles.includes(
+    value as StudyGuideQuickStartComparisonStyle,
+  )
 
-export const parseStudyGuideTldrRelevanceDecision = (
+export const parseStudyGuideQuickStartRelevanceDecision = (
   text: string,
   userKnownTopics: string[] = [],
-): StudyGuideTldrRelevanceDecision => {
-  const neutral = createNeutralStudyGuideTldrRelevanceDecision()
+): StudyGuideQuickStartRelevanceDecision => {
+  const neutral = createNeutralStudyGuideQuickStartRelevanceDecision()
   const safeTopics = sanitizeUserKnownTopics(userKnownTopics)
   if (!safeTopics.length) {
     return neutral
@@ -126,8 +166,8 @@ export const parseStudyGuideTldrRelevanceDecision = (
   const safeTopicByLower = new Map(
     safeTopics.map((topic) => [topic.toLowerCase(), topic]),
   )
-  const selectedTopics = Array.isArray(record.knownTopicsForTldr)
-    ? record.knownTopicsForTldr
+  const selectedTopics = Array.isArray(record.knownTopicsForQuickStart)
+    ? record.knownTopicsForQuickStart
         .map((topic) => safeTopicByLower.get(stringValue(topic).toLowerCase()))
         .filter((topic): topic is string => Boolean(topic))
         .filter((topic, index, topics) => topics.indexOf(topic) === index)
@@ -150,7 +190,7 @@ export const parseStudyGuideTldrRelevanceDecision = (
 
   return {
     shouldUseKnownTopic,
-    knownTopicsForTldr: selectedTopics,
+    knownTopicsForQuickStart: selectedTopics,
     knownTopicRelevanceReason:
       stringValue(record.knownTopicRelevanceReason).slice(0, 240) ||
       'Selected known topic is a direct cognitive bridge.',
@@ -163,77 +203,117 @@ export const parseStudyGuideTldrRelevanceDecision = (
   }
 }
 
-export const sanitizeStudyGuideTldr = (value: string): string => {
-  const normalized = value
-    .replace(markdownFencePattern, '')
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .split('\n')
-    .map((line) =>
-      line
-        .trim()
-        .replace(/^#{1,6}\s+/, '')
-        .replace(/^[-*]\s+/, '')
-        .replace(/^TL;?DR\s*[:.-]?\s*/i, ''),
-    )
-    .filter(Boolean)
-    .join(' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+export const sanitizeStudyGuideQuickStart = (
+  value: Partial<StudyGuideQuickStart> | null | undefined,
+): StudyGuideQuickStart | null => {
+  const keyIdea = clampWords(
+    stripTextLabels(String(value?.keyIdea || ''))
+      .replace(/\s+/g, ' ')
+      .trim(),
+    STUDY_GUIDE_KEY_IDEA_MAX_WORDS,
+  )
+  const summaryWords = normalizeParagraphs(
+    String(value?.quickSummary || ''),
+  ).flatMap((paragraph) => paragraph.split(/\s+/).filter(Boolean))
+  const clampedSummaryWords = summaryWords.slice(
+    0,
+    STUDY_GUIDE_QUICK_SUMMARY_MAX_WORDS,
+  )
+  const quickSummary = normalizeParagraphs(String(value?.quickSummary || ''))
+    .reduce<{ paragraphs: string[]; remainingWords: number }>(
+      (state, paragraph) => {
+        if (state.remainingWords <= 0) {
+          return state
+        }
 
-  return normalized
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, STUDY_GUIDE_TLDR_MAX_WORDS)
-    .join(' ')
+        const words = paragraph.split(/\s+/).filter(Boolean)
+        const usedWords = words.slice(0, state.remainingWords)
+        return {
+          paragraphs: [...state.paragraphs, usedWords.join(' ')],
+          remainingWords: state.remainingWords - usedWords.length,
+        }
+      },
+      { paragraphs: [], remainingWords: clampedSummaryWords.length },
+    )
+    .paragraphs.filter(Boolean)
+    .join('\n\n')
+
+  if (!keyIdea || !quickSummary) {
+    return null
+  }
+
+  return { keyIdea, quickSummary }
 }
 
-export const buildStudyGuideTldrPrompt = ({
+export const parseStudyGuideQuickStart = (
+  text: string,
+): StudyGuideQuickStart | null => {
+  let parsed: unknown
+  try {
+    parsed = parseJsonObject(text)
+  } catch {
+    return null
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return null
+  }
+
+  return sanitizeStudyGuideQuickStart(parsed as Partial<StudyGuideQuickStart>)
+}
+
+export const buildStudyGuideQuickStartPrompt = ({
   title,
   source,
   relevanceDecision,
 }: {
   title: string
   source: string
-  relevanceDecision?: StudyGuideTldrRelevanceDecision
+  relevanceDecision?: StudyGuideQuickStartRelevanceDecision
 }): string => {
   const decision =
-    relevanceDecision || createNeutralStudyGuideTldrRelevanceDecision()
-  const selectedTopics = sanitizeUserKnownTopics(decision.knownTopicsForTldr, {
-    maxTopics: 2,
-  })
+    relevanceDecision || createNeutralStudyGuideQuickStartRelevanceDecision()
+  const selectedTopics = sanitizeUserKnownTopics(
+    decision.knownTopicsForQuickStart,
+    {
+      maxTopics: 2,
+    },
+  )
   const shouldUseKnownTopic =
     decision.shouldUseKnownTopic && selectedTopics.length > 0
 
-  return `Write one global TL;DR for the full Study Guide "${title}".
+  return `Create one Quick Start object for the full Study Guide "${title}".
+
+Return strict JSON only:
+{
+  "keyIdea": "one sentence, maximum ${STUDY_GUIDE_KEY_IDEA_MAX_WORDS} words",
+  "quickSummary": "2-3 short paragraphs, 80-120 words total"
+}
 
 Rules:
-- Return only the TL;DR paragraph.
-- Target 80-120 words. Maximum ${STUDY_GUIDE_TLDR_MAX_WORDS} words.
-- Start with the simplest useful mental model for the learner.
+- keyIdea: one direct mental model of the topic. No Markdown. No label.
+- quickSummary: 2-3 short paragraphs separated by blank lines.
 - Explain the concept itself directly. Do not summarize the guide structure, sections, or page order.
 - Do not write "This guide teaches...", "This guide explains...", "This page explains...", "You will learn...", or similar framing.
-- Introduce at most 2-3 new terms. Prefer plain words for everything else.
+- Introduce at most 2-3 new technical terms. Prefer plain words for everything else.
 - Avoid cute, random, or decorative analogies when a direct explanation or direct comparison is clearer.
 ${
   shouldUseKnownTopic
-    ? `- Use only this selected known topic bridge: ${selectedTopics.join(', ')}.
+    ? `- Use only this selected known topic bridge if it improves clarity: ${selectedTopics.join(', ')}.
 - Why this bridge helps: ${decision.knownTopicRelevanceReason}
 - Prefer a direct comparison over a metaphor.
-- Include one brief caveat about where the comparison breaks.`
+- Include one brief caveat about where the comparison breaks in quickSummary.`
     : `- No known topic was selected as clearly useful. Do not force a personalized analogy.
-- Use a neutral simple explanation and include one brief caveat, boundary, or common misconception.`
+- Use a neutral beginner-friendly explanation and include one brief caveat, boundary, or common misconception in quickSummary.`
 }
 - Target topic type: ${decision.targetTopicType}.
 - If this is a human or management topic, do not compare people to infrastructure, tools, machines, or deployment systems.
-- Do not use Markdown headings, bullets, labels, citations, or JSON.
-- No academic wording unless necessary.
 
 Final Study Guide content:
 ${source.slice(0, 60000)}`
 }
 
-export const buildStudyGuideTldrRelevancePrompt = ({
+export const buildStudyGuideQuickStartRelevancePrompt = ({
   title,
   prompt,
   source,
@@ -246,27 +326,27 @@ export const buildStudyGuideTldrRelevancePrompt = ({
 }): string => {
   const safeTopics = sanitizeUserKnownTopics(userKnownTopics)
 
-  return `Choose whether any known topic should be used to explain the Study Guide topic in its TL;DR.
+  return `Choose whether any known topic should be used to explain the Study Guide topic in its Quick Start.
 
 Return strict JSON only with this shape:
 {
   "shouldUseKnownTopic": boolean,
-  "knownTopicsForTldr": string[],
+  "knownTopicsForQuickStart": string[],
   "knownTopicRelevanceReason": string,
   "targetTopicType": "technical" | "human_management" | "general",
   "comparisonStyle": "direct_comparison" | "neutral_explanation"
 }
 
 Decision rules:
-- Goal: reduce learner cognitive effort, not personalize every TL;DR.
+- Goal: reduce learner cognitive effort, not personalize every Quick Start.
 - Choose only from provided known topics. Never invent a known topic.
 - Use at most 1 known topic. Use 2 only when both are clearly relevant and same-domain.
 - Prefer same-domain direct comparisons over creative metaphors.
 - Technical target + directly related technical known topic: select the best direct comparison.
 - Technical target + unrelated technical known topic: ignore it.
 - Human or management target: avoid infrastructure/tool analogies unless explicitly requested.
-- If no topic clearly helps, set shouldUseKnownTopic false and knownTopicsForTldr [].
-- Do not write the TL;DR.
+- If no topic clearly helps, set shouldUseKnownTopic false and knownTopicsForQuickStart [].
+- Do not write the Quick Start.
 
 Examples:
 - Target "Vue", known ["React"]: select React.
@@ -281,57 +361,4 @@ Known topics, strongest first: ${safeTopics.length ? safeTopics.join(', ') : 'no
 
 Study Guide content excerpt:
 ${source.slice(0, 12000)}`
-}
-
-const clearStudyGuideTldr = (props: Record<string, unknown>) => {
-  const nextProps = { ...props }
-  delete nextProps[STUDY_GUIDE_TLDR_PROP]
-  return nextProps
-}
-
-export const applyStudyGuideTldrToWidgets = <
-  TWidget extends { components: ComponentData[] },
->(
-  widgets: TWidget[],
-  tldr: string | undefined,
-  isFirstPage: boolean,
-): TWidget[] => {
-  const safeTldr = sanitizeStudyGuideTldr(tldr || '')
-  let assigned = false
-
-  return widgets.map((widget) => ({
-    ...widget,
-    components: widget.components.map((component) => {
-      const shouldAssign =
-        isFirstPage &&
-        Boolean(safeTldr) &&
-        !assigned &&
-        component.type === 'MarkdownBlock'
-
-      if (shouldAssign) {
-        assigned = true
-        return {
-          ...component,
-          props: {
-            ...component.props,
-            [STUDY_GUIDE_TLDR_PROP]: safeTldr,
-          },
-        }
-      }
-
-      if (
-        Object.prototype.hasOwnProperty.call(
-          component.props,
-          STUDY_GUIDE_TLDR_PROP,
-        )
-      ) {
-        return {
-          ...component,
-          props: clearStudyGuideTldr(component.props),
-        }
-      }
-
-      return component
-    }),
-  }))
 }

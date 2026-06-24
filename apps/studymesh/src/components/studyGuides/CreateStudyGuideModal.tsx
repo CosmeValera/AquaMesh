@@ -44,10 +44,10 @@ import {
   QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
   QuickCreateAiProvider,
 } from '../../quickCreate/ai'
-import { applyStudyGuideTldrToWidgets } from '../../studyGuides/tldr'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
 import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
 import { getUserKnownTopics } from '../../profileContext'
+import type { StudyGuideQuickStart } from '../../state/store'
 
 interface CreateStudyGuideModalProps {
   open: boolean
@@ -55,6 +55,7 @@ interface CreateStudyGuideModalProps {
   onCreatePath: (payload: {
     folderName: string
     openInWorkspace?: boolean
+    quickStart?: StudyGuideQuickStart
     dashboards: Array<{
       name: string
       widgets: ReturnType<typeof createQuickCreateOrchestratorWidgets>
@@ -802,6 +803,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
 
     return {
       folderName: effectiveFolder,
+      quickStart: pathDraft.quickStart,
       openInWorkspace: openGeneratedInWorkspace ?? openInWorkspace,
       dashboards: pathDraft.dashboards.map((dashboard, index) => {
         const widgets = createQuickCreateOrchestratorWidgets(
@@ -845,11 +847,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
           name: dashboard.title || `${pathDraft.title} ${index + 1}`,
           folderName: effectiveFolder,
           layoutMode: 'smart',
-          widgets: applyStudyGuideTldrToWidgets(
-            widgets,
-            pathDraft.tldr,
-            index === 0,
-          ),
+          widgets,
         }
       }),
     }

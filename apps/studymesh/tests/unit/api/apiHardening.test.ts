@@ -707,7 +707,7 @@ describe('API payment and hosted AI hardening', () => {
     expect(rpcBodies[0].p_request_id).not.toBe('client-reused-id')
   })
 
-  it('bundles hosted Study Guide TLDR into one usage charge with two provider calls', async () => {
+  it('bundles hosted Study Guide Quick Start into one usage charge', async () => {
     vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
     vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
     vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
@@ -764,13 +764,18 @@ describe('API payment and hosted AI hardening', () => {
                       : providerBodies.length === 2
                         ? JSON.stringify({
                             shouldUseKnownTopic: true,
-                            knownTopicsForTldr: ['Backend'],
+                            knownTopicsForQuickStart: ['Backend'],
                             knownTopicRelevanceReason:
                               'Backend is the useful bridge.',
                             targetTopicType: 'technical',
                             comparisonStyle: 'direct_comparison',
                           })
-                        : 'TLDR: Full guide in one short paragraph.',
+                        : JSON.stringify({
+                            keyIdea:
+                              'Backend gives a useful short mental model.',
+                            quickSummary:
+                              'First short paragraph.\n\nSecond short paragraph with one caveat.',
+                          }),
                 },
               },
             ],
@@ -793,10 +798,10 @@ describe('API payment and hosted AI hardening', () => {
           authorization: 'Bearer user-token',
         },
         body: {
-          action: 'generateWithTldr',
+          action: 'generateWithQuickStart',
           surface: 'study-guide',
           parts: [{ text: 'Create study guide' }],
-          tldrOptions: {
+          quickStartOptions: {
             userKnownTopics: ['Backend', 'Databases'],
           },
         },
@@ -808,17 +813,21 @@ describe('API payment and hosted AI hardening', () => {
     expect(response.body).toMatchObject({
       ok: true,
       text: '{"title":"Guide","dashboards":[]}',
-      tldr: 'Full guide in one short paragraph.',
+      quickStart: {
+        keyIdea: 'Backend gives a useful short mental model.',
+        quickSummary:
+          'First short paragraph.\n\nSecond short paragraph with one caveat.',
+      },
     })
     expect(providerBodies).toHaveLength(3)
     expect(JSON.stringify(providerBodies[1])).toContain(
       'Known topics, strongest first: Backend, Databases',
     )
     expect(JSON.stringify(providerBodies[2])).toContain(
-      'Use only this selected known topic bridge: Backend',
+      'Use only this selected known topic bridge if it improves clarity: Backend',
     )
     expect(JSON.stringify(providerBodies[2])).not.toContain(
-      'Use only this selected known topic bridge: Backend, Databases',
+      'Use only this selected known topic bridge if it improves clarity: Backend, Databases',
     )
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 2 })

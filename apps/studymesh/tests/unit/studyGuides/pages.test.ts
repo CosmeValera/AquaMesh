@@ -9,13 +9,12 @@ import {
   stripDuplicateStudyGuideMarkdownTitle,
 } from '../../../src/studyGuides/pages'
 import {
-  applyStudyGuideTldrToWidgets,
-  buildStudyGuideTldrRelevancePrompt,
-  buildStudyGuideTldrPrompt,
-  parseStudyGuideTldrRelevanceDecision,
-  sanitizeStudyGuideTldr,
-  STUDY_GUIDE_TLDR_PROP,
-} from '../../../src/studyGuides/tldr'
+  buildStudyGuideQuickStartPrompt,
+  buildStudyGuideQuickStartRelevancePrompt,
+  parseStudyGuideQuickStart,
+  parseStudyGuideQuickStartRelevanceDecision,
+  sanitizeStudyGuideQuickStart,
+} from '../../../src/studyGuides/quickStart'
 import type {
   StudyPathContainerState,
   StudyPathDashboardItem,
@@ -114,59 +113,46 @@ describe('appendStudyGuideMarkdownPage', () => {
   })
 })
 
-describe('Study Guide TLDR helpers', () => {
-  it('clamps TLDR text to 120 words and removes labels', () => {
-    const text = `## TLDR\nTL;DR: ${Array.from(
-      { length: 140 },
-      (_value, index) => `word${index}`,
-    ).join(' ')}`
+describe('Study Guide Quick Start helpers', () => {
+  it('sanitizes key idea and preserves quick summary paragraphs', () => {
+    const quickStart = sanitizeStudyGuideQuickStart({
+      keyIdea: `Key idea: ${Array.from(
+        { length: 45 },
+        (_value, index) => `word${index}`,
+      ).join(' ')}`,
+      quickSummary:
+        'Quick summary: First paragraph explains the core model.\n\nSecond paragraph keeps a caveat about where the comparison breaks.',
+    })
 
-    const tldr = sanitizeStudyGuideTldr(text)
-
-    expect(tldr.split(/\s+/)).toHaveLength(120)
-    expect(tldr).not.toMatch(/TL;?DR|##/)
+    expect(quickStart?.keyIdea.split(/\s+/)).toHaveLength(35)
+    expect(quickStart?.keyIdea).not.toMatch(/Key idea/i)
+    expect(quickStart?.quickSummary.split('\n\n')).toHaveLength(2)
   })
 
-  it('assigns one TLDR only to the first page Markdown block', () => {
-    const widgets = [
-      {
-        components: [
-          { id: 'title', type: 'Label', props: { text: 'Lesson' } },
-          { id: 'notes', type: 'MarkdownBlock', props: { markdown: 'Body' } },
-          {
-            id: 'extra',
-            type: 'MarkdownBlock',
-            props: { markdown: 'More', studyGuideTldr: 'old' },
-          },
-        ],
-      },
-    ]
-
-    const firstPage = applyStudyGuideTldrToWidgets(widgets, 'Guide TLDR.', true)
-    const secondPage = applyStudyGuideTldrToWidgets(
-      firstPage,
-      'Guide TLDR.',
-      false,
+  it('parses generated Quick Start JSON', () => {
+    const quickStart = parseStudyGuideQuickStart(
+      JSON.stringify({
+        keyIdea:
+          'A data lake is raw object storage plus tools that organize and analyze files later.',
+        quickSummary:
+          'Data lakes keep source data in flexible storage before teams decide every final structure.\n\nThey differ from warehouses because cleanup and modeling can happen later, but metadata still matters.',
+      }),
     )
 
-    expect(firstPage[0].components[1].props[STUDY_GUIDE_TLDR_PROP]).toBe(
-      'Guide TLDR.',
-    )
-    expect(
-      firstPage[0].components[2].props[STUDY_GUIDE_TLDR_PROP],
-    ).toBeUndefined()
-    expect(
-      secondPage[0].components[1].props[STUDY_GUIDE_TLDR_PROP],
-    ).toBeUndefined()
+    expect(quickStart).toMatchObject({
+      keyIdea:
+        'A data lake is raw object storage plus tools that organize and analyze files later.',
+    })
+    expect(quickStart?.quickSummary).toContain('\n\n')
   })
 
-  it('includes selected known topic and clarity rules in TLDR prompt', () => {
-    const prompt = buildStudyGuideTldrPrompt({
+  it('includes selected known topic and clarity rules in Quick Start prompt', () => {
+    const prompt = buildStudyGuideQuickStartPrompt({
       title: 'Data lakes',
       source: 'Data lake lesson notes.',
       relevanceDecision: {
         shouldUseKnownTopic: true,
-        knownTopicsForTldr: ['MinIO'],
+        knownTopicsForQuickStart: ['MinIO'],
         knownTopicRelevanceReason:
           'MinIO gives a direct object-storage bridge for data lake storage.',
         targetTopicType: 'technical',
@@ -174,31 +160,33 @@ describe('Study Guide TLDR helpers', () => {
       },
     })
 
-    expect(prompt).toContain('Start with the simplest useful mental model')
-    expect(prompt).toContain('Use only this selected known topic bridge: MinIO')
+    expect(prompt).toContain('"keyIdea"')
+    expect(prompt).toContain('"quickSummary"')
+    expect(prompt).toContain('Use only this selected known topic bridge')
+    expect(prompt).toContain('MinIO')
     expect(prompt).toContain('where the comparison breaks')
-    expect(prompt).toContain('Introduce at most 2-3 new terms')
+    expect(prompt).toContain('Introduce at most 2-3 new technical terms')
     expect(prompt).not.toContain('Backend')
     expect(prompt).not.toContain('Databases')
     expect(prompt).toContain('This guide teaches')
     expect(prompt).toContain('This page explains')
     expect(prompt).toContain('You will learn')
-    expect(prompt).toContain('Target 80-120 words')
+    expect(prompt).toContain('80-120 words total')
   })
 
-  it('asks for a neutral explanation when no known topic is selected', () => {
-    const prompt = buildStudyGuideTldrPrompt({
+  it('asks for a neutral Quick Start when no known topic is selected', () => {
+    const prompt = buildStudyGuideQuickStartPrompt({
       title: 'Data lakes',
       source: 'Data lake lesson notes.',
     })
 
     expect(prompt).toContain('No known topic was selected as clearly useful')
     expect(prompt).toContain('Do not force a personalized analogy')
-    expect(prompt).toContain('neutral simple explanation')
+    expect(prompt).toContain('neutral beginner-friendly explanation')
   })
 
   it('builds a strong-model relevance prompt with direct-comparison examples', () => {
-    const prompt = buildStudyGuideTldrRelevancePrompt({
+    const prompt = buildStudyGuideQuickStartRelevancePrompt({
       title: 'GraphQL',
       prompt: 'graphql',
       source: 'GraphQL lets clients request fields from a schema.',
@@ -225,10 +213,10 @@ describe('Study Guide TLDR helpers', () => {
   ])(
     'parses relevance decision for %s without inventing topics',
     (_title, knownTopics, selectedTopics) => {
-      const decision = parseStudyGuideTldrRelevanceDecision(
+      const decision = parseStudyGuideQuickStartRelevanceDecision(
         JSON.stringify({
           shouldUseKnownTopic: true,
-          knownTopicsForTldr: selectedTopics,
+          knownTopicsForQuickStart: selectedTopics,
           knownTopicRelevanceReason: 'Direct same-domain bridge.',
           targetTopicType: 'technical',
           comparisonStyle: 'direct_comparison',
@@ -237,15 +225,15 @@ describe('Study Guide TLDR helpers', () => {
       )
 
       expect(decision.shouldUseKnownTopic).toBe(true)
-      expect(decision.knownTopicsForTldr).toEqual(selectedTopics)
+      expect(decision.knownTopicsForQuickStart).toEqual(selectedTopics)
     },
   )
 
   it('rejects invented or unsafe known-topic relevance selections', () => {
-    const decision = parseStudyGuideTldrRelevanceDecision(
+    const decision = parseStudyGuideQuickStartRelevanceDecision(
       JSON.stringify({
         shouldUseKnownTopic: true,
-        knownTopicsForTldr: ['Docker'],
+        knownTopicsForQuickStart: ['Docker'],
         knownTopicRelevanceReason:
           'Tool analogy would be forced for managing junior reports.',
         targetTopicType: 'human_management',
@@ -255,7 +243,7 @@ describe('Study Guide TLDR helpers', () => {
     )
 
     expect(decision.shouldUseKnownTopic).toBe(false)
-    expect(decision.knownTopicsForTldr).toEqual([])
+    expect(decision.knownTopicsForQuickStart).toEqual([])
     expect(decision.targetTopicType).toBe('human_management')
   })
 })

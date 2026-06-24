@@ -14,7 +14,7 @@ vi.mock('../../../src/auth/supabaseClient', () => ({
 import {
   callHostedAiModel,
   createHostedAiTransport,
-  createHostedStudyGuideTransportWithTldr,
+  createHostedStudyGuideTransportWithQuickStart,
 } from '../../../src/quickCreate/ai/hostedClient'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
@@ -223,7 +223,7 @@ describe('hosted AI client credit failures', () => {
     window.removeEventListener(HOSTED_AI_VISUAL_REFUND_EVENT, refundListener)
   })
 
-  it('bundles hosted Study Guide TLDR generation under one visual charge', async () => {
+  it('bundles hosted Study Guide Quick Start generation under one visual charge', async () => {
     const spendListener = vi.fn()
     window.addEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, spendListener)
     vi.stubGlobal(
@@ -235,15 +235,18 @@ describe('hosted AI client credit failures', () => {
           gatewayResponse({
             ok: true,
             text: '{"title":"Guide","dashboards":[]}',
-            tldr: 'Full-guide TLDR.',
+            quickStart: {
+              keyIdea: 'Backend helps explain the guide topic quickly.',
+              quickSummary: 'First short paragraph.\n\nSecond short paragraph.',
+            },
           }),
         ),
     )
 
-    const onTldr = vi.fn()
-    const transport = createHostedStudyGuideTransportWithTldr({
+    const onQuickStart = vi.fn()
+    const transport = createHostedStudyGuideTransportWithQuickStart({
       userKnownTopics: ['Backend', 'Databases'],
-      onTldr,
+      onQuickStart,
     })
 
     await expect(
@@ -256,7 +259,10 @@ describe('hosted AI client credit failures', () => {
       }),
     ).resolves.toBe('{"title":"Guide","dashboards":[]}')
 
-    expect(onTldr).toHaveBeenCalledWith('Full-guide TLDR.')
+    expect(onQuickStart).toHaveBeenCalledWith({
+      keyIdea: 'Backend helps explain the guide topic quickly.',
+      quickSummary: 'First short paragraph.\n\nSecond short paragraph.',
+    })
     expect(spendListener).toHaveBeenCalledWith(
       expect.objectContaining({ detail: { credits: 2 } }),
     )
@@ -264,9 +270,9 @@ describe('hosted AI client credit failures', () => {
       .mocked(fetch)
       .mock.calls.map(([, init]) => JSON.parse(String(init?.body)))
     expect(requestBodies[1]).toMatchObject({
-      action: 'generateWithTldr',
+      action: 'generateWithQuickStart',
       surface: 'study-guide',
-      tldrOptions: {
+      quickStartOptions: {
         userKnownTopics: ['Backend', 'Databases'],
       },
     })

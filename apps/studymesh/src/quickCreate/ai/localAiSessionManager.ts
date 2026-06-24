@@ -18,7 +18,6 @@ export type LocalAiPromptType =
   | 'practice'
   | 'flashcards'
   | 'quizzes'
-  | 'tldr'
   | 'unknown'
 
 export interface LocalAiManagedSession {

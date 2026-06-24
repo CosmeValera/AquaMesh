@@ -22,7 +22,6 @@ import {
   readStudyGuidePageHref,
 } from '../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
-import { STUDY_GUIDE_TLDR_PROP } from '../../studyGuides/tldr'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -1334,9 +1333,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   if (type === 'MarkdownBlock') {
     const title = String(props.title || 'Markdown notes')
     const isStudyGuidePage = Boolean(props.studyPathId)
-    const tldr = isStudyGuidePage
-      ? String(props[STUDY_GUIDE_TLDR_PROP] || '').trim()
-      : ''
     const markdown = isStudyGuidePage
       ? stripDuplicateStudyGuideMarkdownTitle(
           String(props.markdown || ''),
@@ -1351,22 +1347,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             {title}
           </Typography>
         )}
-        {tldr ? (
-          <Box className="studymesh-study-guide-tldr">
-            <Typography
-              variant="overline"
-              color="primary"
-              fontWeight={800}
-              sx={{ letterSpacing: 0 }}
-            >
-              TLDR
-            </Typography>
-            <Typography variant="body1" sx={{ lineHeight: 1.65 }}>
-              {tldr}
-            </Typography>
-            <Box className="studymesh-study-guide-tldr-accent" />
-          </Box>
-        ) : null}
         <Stack spacing={1.25}>{renderMarkdown(markdown)}</Stack>
       </Stack>
     )

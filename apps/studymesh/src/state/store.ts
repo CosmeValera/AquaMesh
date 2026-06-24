@@ -32,11 +32,17 @@ export interface StudyPathDashboardItem {
   deletable?: boolean
 }
 
+export interface StudyGuideQuickStart {
+  keyIdea: string
+  quickSummary: string
+}
+
 export interface StudyPathContainerState {
   pathId: string
   title: string
   folderName: string
   emoji?: string
+  quickStart?: StudyGuideQuickStart
   dashboards: StudyPathDashboardItem[]
   selectedIndex: number
   pinnedDashboardKeys?: string[]

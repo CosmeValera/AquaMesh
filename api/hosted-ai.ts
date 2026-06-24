@@ -10,12 +10,13 @@ import type {
   HostedAiSurface,
 } from "../apps/studymesh/src/quickCreate/ai/hostedCredits";
 import {
-  buildStudyGuideTldrRelevancePrompt,
-  buildStudyGuideTldrPrompt,
-  parseStudyGuideTldrRelevanceDecision,
-  sanitizeStudyGuideTldr,
-  STUDY_GUIDE_TLDR_RELEVANCE_SCHEMA,
-} from "../apps/studymesh/src/studyGuides/tldr";
+  buildStudyGuideQuickStartPrompt,
+  buildStudyGuideQuickStartRelevancePrompt,
+  parseStudyGuideQuickStart,
+  parseStudyGuideQuickStartRelevanceDecision,
+  STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
+  STUDY_GUIDE_QUICK_START_SCHEMA,
+} from "../apps/studymesh/src/studyGuides/quickStart";
 import { sanitizeUserKnownTopics } from "../apps/studymesh/src/profileContext";
 
 loadLocalApiEnv();
@@ -610,7 +611,7 @@ const mapFailure = (
 const handleGenerate = async (
   userId: string,
   request: HostedAiGatewayRequest,
-  includeTldr = false,
+  includeQuickStart = false,
 ): Promise<HostedAiGatewayResponse> => {
   const invalid = validateGenerateRequest(request);
 
@@ -626,21 +627,21 @@ const handleGenerate = async (
 
   try {
     const text = await callCerebras(usageRequest, model);
-    let tldr: string | undefined;
+    let quickStart: HostedAiGatewayResponse["quickStart"] | undefined;
 
-    if (includeTldr) {
+    if (includeQuickStart) {
       const safeKnownTopics = sanitizeUserKnownTopics(
-        request.tldrOptions?.userKnownTopics,
+        request.quickStartOptions?.userKnownTopics,
       );
       const relevanceDecision = safeKnownTopics.length
-        ? parseStudyGuideTldrRelevanceDecision(
+        ? parseStudyGuideQuickStartRelevanceDecision(
             await callCerebras(
               {
                 ...usageRequest,
-                responseSchema: STUDY_GUIDE_TLDR_RELEVANCE_SCHEMA,
+                responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
                 parts: [
                   {
-                    text: buildStudyGuideTldrRelevancePrompt({
+                    text: buildStudyGuideQuickStartRelevancePrompt({
                       title: "Study Guide",
                       prompt: getHostedRequestText(request),
                       source: text,
@@ -657,14 +658,14 @@ const handleGenerate = async (
           )
         : undefined;
 
-      tldr = sanitizeStudyGuideTldr(
+      quickStart = parseStudyGuideQuickStart(
         await callCerebras(
           {
             ...usageRequest,
-            responseSchema: undefined,
+            responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
             parts: [
               {
-                text: buildStudyGuideTldrPrompt({
+                text: buildStudyGuideQuickStartPrompt({
                   title: "Study Guide",
                   source: text,
                   relevanceDecision,
@@ -678,8 +679,8 @@ const handleGenerate = async (
         }),
       );
     }
-    if (includeTldr && !tldr) {
-      const error = new Error("Hosted AI returned no Study Guide TLDR.");
+    if (includeQuickStart && !quickStart) {
+      const error = new Error("Hosted AI returned no Study Guide Quick Start.");
       error.name = "provider_error";
       throw error;
     }
@@ -694,7 +695,7 @@ const handleGenerate = async (
         providerCallCount,
       ).catch(() => undefined)) || started.status;
 
-    return { ok: true, text, tldr, status };
+    return { ok: true, text, quickStart, status };
   } catch (error) {
     const mapped = mapFailure(error);
 
@@ -779,7 +780,7 @@ export default async function handler(
       return;
     }
 
-    if (request.action === "generateWithTldr") {
+    if (request.action === "generateWithQuickStart") {
       const response = await handleGenerate(user.id, request, true);
       json(res, 200, response);
       return;

@@ -20,6 +20,7 @@ import {
 } from '../quickCreate/quickCreateActions'
 import { getUserKnownTopics } from '../profileContext'
 import type {
+  StudyGuideQuickStart,
   StudyPathContainerState,
   StudyPathDashboardItem,
 } from '../state/store'
@@ -28,10 +29,10 @@ import {
   appendStudyGuideWidgetPage,
 } from './pages'
 import { getStudyGuideEmoji } from './storage'
-import { applyStudyGuideTldrToWidgets } from './tldr'
 
 type CreatePathPayload = {
   folderName: string
+  quickStart?: StudyGuideQuickStart
   dashboards: Array<{
     name: string
     widgets: ReturnType<typeof createQuickCreateOrchestratorWidgets>
@@ -86,6 +87,7 @@ export const buildStudyPathFromPayload = (
     title,
     folderName,
     emoji: getStudyGuideEmoji(title),
+    quickStart: payload.quickStart,
     dashboards,
     selectedIndex: 0,
     pinnedDashboardKeys: [],
@@ -169,16 +171,10 @@ export const generateStudyPathStateFromPrompt = async ({
           },
         },
       )
-      const widgetsWithTldr = applyStudyGuideTldrToWidgets(
-        widgets,
-        draft.tldr,
-        index === 0,
-      )
-
       return {
         id: `${id}-dashboard-${index + 1}`,
         name: dashboardName,
-        layout: createQuickCreateDashboardLayout(widgetsWithTldr, {
+        layout: createQuickCreateDashboardLayout(widgets, {
           mode: 'smart',
         }),
         dashboardKey,
@@ -200,6 +196,7 @@ export const generateStudyPathStateFromPrompt = async ({
     title,
     folderName: title,
     emoji: draft.emoji || getStudyGuideEmoji(title),
+    quickStart: draft.quickStart,
     dashboards,
     selectedIndex: 0,
     pinnedDashboardKeys: [],

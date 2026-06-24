@@ -1,4 +1,10 @@
-import React, { useLayoutEffect, useMemo, useRef } from 'react'
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   Box,
   IconButton,
@@ -12,9 +18,15 @@ import {
 import { alpha, type Theme } from '@mui/material/styles'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import EditIcon from '@mui/icons-material/Edit'
 import VisibilityIcon from '@mui/icons-material/Visibility'
-import { DashboardLayout, StudyPathContainerState } from '../../state/store'
+import {
+  DashboardLayout,
+  StudyGuideQuickStart,
+  StudyPathContainerState,
+} from '../../state/store'
 import {
   getStudyGuidePageMarkdown,
   isEditableMarkdownStudyGuidePage,
@@ -70,6 +82,120 @@ interface StudyPathWorkspaceViewProps {
   onEditingPageKeyChange?: (pageKey: string | null) => void
   onAddPage?: () => void
 }
+
+const quickSummaryParagraphs = (value: string): string[] =>
+  value
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+
+const StudyGuideQuickStartCard = ({
+  quickStart,
+  expanded,
+  onToggle,
+}: {
+  quickStart: StudyGuideQuickStart
+  expanded: boolean
+  onToggle: () => void
+}) => (
+  <Box
+    sx={{
+      px: { xs: 1, md: 3 },
+      pt: { xs: 1, md: 3 },
+      display: 'flex',
+      justifyContent: 'center',
+    }}
+  >
+    <Paper
+      variant="outlined"
+      data-testid="study-guide-quick-start-card"
+      sx={{
+        width: '100%',
+        maxWidth: 960,
+        borderRadius: 2,
+        p: { xs: 2, md: 2.5 },
+        bgcolor: 'background.paper',
+      }}
+    >
+      <Stack spacing={expanded ? 2 : 0}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          gap={2}
+        >
+          <Box minWidth={0}>
+            <Typography variant="subtitle1" fontWeight={800}>
+              Quick Start
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Key idea before reading
+            </Typography>
+          </Box>
+          <Tooltip
+            title={expanded ? 'Collapse Quick Start' : 'Expand Quick Start'}
+          >
+            <IconButton
+              size="small"
+              aria-label={
+                expanded ? 'Collapse Quick Start' : 'Expand Quick Start'
+              }
+              onClick={onToggle}
+              sx={pageIconButtonSx()}
+            >
+              {expanded ? (
+                <ExpandLessIcon fontSize="small" />
+              ) : (
+                <ExpandMoreIcon fontSize="small" />
+              )}
+            </IconButton>
+          </Tooltip>
+        </Stack>
+        {expanded ? (
+          <Stack spacing={1.75}>
+            <Box>
+              <Typography
+                variant="overline"
+                color="primary"
+                fontWeight={800}
+                sx={{ letterSpacing: 0 }}
+              >
+                Key idea
+              </Typography>
+              <Typography variant="body1" sx={{ lineHeight: 1.65 }}>
+                {quickStart.keyIdea}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography
+                variant="overline"
+                color="primary"
+                fontWeight={800}
+                sx={{ letterSpacing: 0 }}
+              >
+                Quick summary
+              </Typography>
+              <Stack spacing={1}>
+                {quickSummaryParagraphs(quickStart.quickSummary).map(
+                  (paragraph, index) => (
+                    <Typography
+                      key={`${paragraph.slice(0, 24)}-${index}`}
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ lineHeight: 1.7 }}
+                    >
+                      {paragraph}
+                    </Typography>
+                  ),
+                )}
+              </Stack>
+            </Box>
+          </Stack>
+        ) : null}
+      </Stack>
+    </Paper>
+  </Box>
+)
 
 const sanitizeStudentWidgetName = (name?: string): string | undefined => {
   if (!name) {
@@ -157,6 +283,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   const navigate = useNavigate()
   const showPageRail = useMediaQuery(theme.breakpoints.up('lg'))
   const rootRef = useRef<HTMLDivElement | null>(null)
+  const [quickStartExpanded, setQuickStartExpanded] = useState(true)
   const selectedIndex = Math.min(
     Math.max(studyPath.selectedIndex || 0, 0),
     Math.max(studyPath.dashboards.length - 1, 0),
@@ -164,6 +291,9 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   const currentLesson = studyPath.dashboards[selectedIndex]
   const currentPageKey = currentLesson?.dashboardKey || null
   const currentPageEditable = isEditableMarkdownStudyGuidePage(currentLesson)
+  const showQuickStart =
+    selectedIndex === 0 &&
+    Boolean(studyPath.quickStart?.keyIdea && studyPath.quickStart.quickSummary)
   const isEditingCurrentPage =
     currentPageEditable && currentPageKey === editingPageKey
   const currentMarkdown = getStudyGuidePageMarkdown(currentLesson)
@@ -181,6 +311,10 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
     () => sanitizeStudentLayout(currentLesson?.layout),
     [currentLesson?.layout],
   )
+
+  useEffect(() => {
+    setQuickStartExpanded(true)
+  }, [studyPath.pathId])
 
   useLayoutEffect(() => {
     if (!mobileView) {
@@ -426,10 +560,19 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               pageLinks={editorPageLinks}
             />
           ) : (
-            <StudyGuideLinearLayout
-              key={currentLesson.dashboardKey}
-              layout={studentLayout}
-            />
+            <>
+              {showQuickStart && studyPath.quickStart ? (
+                <StudyGuideQuickStartCard
+                  quickStart={studyPath.quickStart}
+                  expanded={quickStartExpanded}
+                  onToggle={() => setQuickStartExpanded((current) => !current)}
+                />
+              ) : null}
+              <StudyGuideLinearLayout
+                key={currentLesson.dashboardKey}
+                layout={studentLayout}
+              />
+            </>
           )}
         </Box>
       </Box>

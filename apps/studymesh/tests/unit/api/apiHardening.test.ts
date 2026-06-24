@@ -761,7 +761,16 @@ describe('API payment and hosted AI hardening', () => {
                   content:
                     providerBodies.length === 1
                       ? '{"title":"Guide","dashboards":[]}'
-                      : 'TLDR: Full guide in one short paragraph.',
+                      : providerBodies.length === 2
+                        ? JSON.stringify({
+                            shouldUseKnownTopic: true,
+                            knownTopicsForTldr: ['Backend'],
+                            knownTopicRelevanceReason:
+                              'Backend is the useful bridge.',
+                            targetTopicType: 'technical',
+                            comparisonStyle: 'direct_comparison',
+                          })
+                        : 'TLDR: Full guide in one short paragraph.',
                 },
               },
             ],
@@ -801,12 +810,18 @@ describe('API payment and hosted AI hardening', () => {
       text: '{"title":"Guide","dashboards":[]}',
       tldr: 'Full guide in one short paragraph.',
     })
-    expect(providerBodies).toHaveLength(2)
+    expect(providerBodies).toHaveLength(3)
     expect(JSON.stringify(providerBodies[1])).toContain(
-      'User known topics, strongest first: Backend, Databases',
+      'Known topics, strongest first: Backend, Databases',
+    )
+    expect(JSON.stringify(providerBodies[2])).toContain(
+      'Use only this selected known topic bridge: Backend',
+    )
+    expect(JSON.stringify(providerBodies[2])).not.toContain(
+      'Use only this selected known topic bridge: Backend, Databases',
     )
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 2 })
-    expect(rpcBodies[1].p_provider_call_count).toBe(2)
+    expect(rpcBodies[1].p_provider_call_count).toBe(3)
   })
 })

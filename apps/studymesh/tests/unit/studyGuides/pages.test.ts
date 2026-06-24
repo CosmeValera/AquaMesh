@@ -10,7 +10,9 @@ import {
 } from '../../../src/studyGuides/pages'
 import {
   applyStudyGuideTldrToWidgets,
+  buildStudyGuideTldrRelevancePrompt,
   buildStudyGuideTldrPrompt,
+  parseStudyGuideTldrRelevanceDecision,
   sanitizeStudyGuideTldr,
   STUDY_GUIDE_TLDR_PROP,
 } from '../../../src/studyGuides/tldr'
@@ -158,35 +160,103 @@ describe('Study Guide TLDR helpers', () => {
     ).toBeUndefined()
   })
 
-  it('includes user known topics and analogy-break rules in TLDR prompt', () => {
+  it('includes selected known topic and clarity rules in TLDR prompt', () => {
     const prompt = buildStudyGuideTldrPrompt({
       title: 'Data lakes',
       source: 'Data lake lesson notes.',
-      userKnownTopics: ['Backend', 'Databases'],
+      relevanceDecision: {
+        shouldUseKnownTopic: true,
+        knownTopicsForTldr: ['MinIO'],
+        knownTopicRelevanceReason:
+          'MinIO gives a direct object-storage bridge for data lake storage.',
+        targetTopicType: 'technical',
+        comparisonStyle: 'direct_comparison',
+      },
     })
 
     expect(prompt).toContain('Start with the simplest useful mental model')
-    expect(prompt).toContain(
-      'User known topics, strongest first: Backend, Databases',
-    )
-    expect(prompt).toContain('Use 1 or 2 relevant known topics')
-    expect(prompt).toContain('where the analogy or comparison breaks')
+    expect(prompt).toContain('Use only this selected known topic bridge: MinIO')
+    expect(prompt).toContain('where the comparison breaks')
+    expect(prompt).toContain('Introduce at most 2-3 new terms')
+    expect(prompt).not.toContain('Backend')
+    expect(prompt).not.toContain('Databases')
     expect(prompt).toContain('This guide teaches')
     expect(prompt).toContain('This page explains')
     expect(prompt).toContain('You will learn')
     expect(prompt).toContain('Target 80-120 words')
   })
 
-  it('asks for an everyday analogy when no known topics exist', () => {
+  it('asks for a neutral explanation when no known topic is selected', () => {
     const prompt = buildStudyGuideTldrPrompt({
       title: 'Data lakes',
       source: 'Data lake lesson notes.',
-      userKnownTopics: [],
     })
 
-    expect(prompt).toContain('No user known topics were provided')
-    expect(prompt).toContain('Use one simple everyday analogy')
-    expect(prompt).toContain('where the analogy breaks')
+    expect(prompt).toContain('No known topic was selected as clearly useful')
+    expect(prompt).toContain('Do not force a personalized analogy')
+    expect(prompt).toContain('neutral simple explanation')
+  })
+
+  it('builds a strong-model relevance prompt with direct-comparison examples', () => {
+    const prompt = buildStudyGuideTldrRelevancePrompt({
+      title: 'GraphQL',
+      prompt: 'graphql',
+      source: 'GraphQL lets clients request fields from a schema.',
+      userKnownTopics: ['REST API', 'Docker'],
+    })
+
+    expect(prompt).toContain('Goal: reduce learner cognitive effort')
+    expect(prompt).toContain('Prefer same-domain direct comparisons')
+    expect(prompt).toContain(
+      'Target "GraphQL", known ["REST API", "Docker"]: select REST API only',
+    )
+    expect(prompt).toContain(
+      'Target "Managing very junior reports", known ["Docker"]: select none',
+    )
+    expect(prompt).toContain('Target "Data lakes", known ["MinIO"]')
+  })
+
+  it.each([
+    ['Vue', ['React'], ['React']],
+    ['Zustand', ['Redux'], ['Redux']],
+    ['Kubernetes', ['Docker'], ['Docker']],
+    ['GraphQL', ['REST API', 'Docker'], ['REST API']],
+    ['Data lakes', ['MinIO'], ['MinIO']],
+  ])(
+    'parses relevance decision for %s without inventing topics',
+    (_title, knownTopics, selectedTopics) => {
+      const decision = parseStudyGuideTldrRelevanceDecision(
+        JSON.stringify({
+          shouldUseKnownTopic: true,
+          knownTopicsForTldr: selectedTopics,
+          knownTopicRelevanceReason: 'Direct same-domain bridge.',
+          targetTopicType: 'technical',
+          comparisonStyle: 'direct_comparison',
+        }),
+        knownTopics,
+      )
+
+      expect(decision.shouldUseKnownTopic).toBe(true)
+      expect(decision.knownTopicsForTldr).toEqual(selectedTopics)
+    },
+  )
+
+  it('rejects invented or unsafe known-topic relevance selections', () => {
+    const decision = parseStudyGuideTldrRelevanceDecision(
+      JSON.stringify({
+        shouldUseKnownTopic: true,
+        knownTopicsForTldr: ['Docker'],
+        knownTopicRelevanceReason:
+          'Tool analogy would be forced for managing junior reports.',
+        targetTopicType: 'human_management',
+        comparisonStyle: 'direct_comparison',
+      }),
+      ['parenting toddlers'],
+    )
+
+    expect(decision.shouldUseKnownTopic).toBe(false)
+    expect(decision.knownTopicsForTldr).toEqual([])
+    expect(decision.targetTopicType).toBe('human_management')
   })
 })
 

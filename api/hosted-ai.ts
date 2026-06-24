@@ -10,8 +10,11 @@ import type {
   HostedAiSurface,
 } from "../apps/studymesh/src/quickCreate/ai/hostedCredits";
 import {
+  buildStudyGuideTldrRelevancePrompt,
   buildStudyGuideTldrPrompt,
+  parseStudyGuideTldrRelevanceDecision,
   sanitizeStudyGuideTldr,
+  STUDY_GUIDE_TLDR_RELEVANCE_SCHEMA,
 } from "../apps/studymesh/src/studyGuides/tldr";
 import { sanitizeUserKnownTopics } from "../apps/studymesh/src/profileContext";
 
@@ -46,6 +49,12 @@ interface HostedAiUsageStart {
 type HostedAiUsageRequest = HostedAiGatewayRequest & {
   requestId: string;
 };
+
+const getHostedRequestText = (request: HostedAiGatewayRequest): string =>
+  (request.parts || [])
+    .map((part) => (typeof part.text === "string" ? part.text : ""))
+    .filter(Boolean)
+    .join("\n\n");
 
 interface CerebrasChatCompletion {
   choices?: Array<{
@@ -613,31 +622,62 @@ const handleGenerate = async (
   const requestId = randomUUID();
   const usageRequest = { ...request, requestId };
   const started = await startHostedUsage(userId, usageRequest, model);
+  let providerCallCount = 1;
 
   try {
     const text = await callCerebras(usageRequest, model);
-    const tldr = includeTldr
-      ? sanitizeStudyGuideTldr(
-          await callCerebras(
-            {
-              ...usageRequest,
-              responseSchema: undefined,
-              parts: [
-                {
-                  text: buildStudyGuideTldrPrompt({
-                    title: "Study Guide",
-                    source: text,
-                    userKnownTopics: sanitizeUserKnownTopics(
-                      request.tldrOptions?.userKnownTopics,
-                    ),
-                  }),
-                },
-              ],
-            },
-            model,
-          ),
-        )
-      : undefined;
+    let tldr: string | undefined;
+
+    if (includeTldr) {
+      const safeKnownTopics = sanitizeUserKnownTopics(
+        request.tldrOptions?.userKnownTopics,
+      );
+      const relevanceDecision = safeKnownTopics.length
+        ? parseStudyGuideTldrRelevanceDecision(
+            await callCerebras(
+              {
+                ...usageRequest,
+                responseSchema: STUDY_GUIDE_TLDR_RELEVANCE_SCHEMA,
+                parts: [
+                  {
+                    text: buildStudyGuideTldrRelevancePrompt({
+                      title: "Study Guide",
+                      prompt: getHostedRequestText(request),
+                      source: text,
+                      userKnownTopics: safeKnownTopics,
+                    }),
+                  },
+                ],
+              },
+              model,
+            ).finally(() => {
+              providerCallCount += 1;
+            }),
+            safeKnownTopics,
+          )
+        : undefined;
+
+      tldr = sanitizeStudyGuideTldr(
+        await callCerebras(
+          {
+            ...usageRequest,
+            responseSchema: undefined,
+            parts: [
+              {
+                text: buildStudyGuideTldrPrompt({
+                  title: "Study Guide",
+                  source: text,
+                  relevanceDecision,
+                }),
+              },
+            ],
+          },
+          model,
+        ).finally(() => {
+          providerCallCount += 1;
+        }),
+      );
+    }
     if (includeTldr && !tldr) {
       const error = new Error("Hosted AI returned no Study Guide TLDR.");
       error.name = "provider_error";
@@ -651,7 +691,7 @@ const handleGenerate = async (
         "succeeded",
         undefined,
         undefined,
-        includeTldr ? 2 : 1,
+        providerCallCount,
       ).catch(() => undefined)) || started.status;
 
     return { ok: true, text, tldr, status };
@@ -664,7 +704,7 @@ const handleGenerate = async (
       "failed",
       mapped.response.error?.code,
       mapped.response.error?.message,
-      includeTldr ? 2 : 1,
+      providerCallCount,
     ).catch(() => undefined);
 
     throw error;

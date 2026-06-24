@@ -29,9 +29,13 @@ import {
   createHostedStudyGuideTransportWithTldr,
 } from './hostedClient'
 import {
+  buildStudyGuideTldrRelevancePrompt,
   buildStudyGuideTldrPrompt,
+  parseStudyGuideTldrRelevanceDecision,
   sanitizeStudyGuideTldr,
+  STUDY_GUIDE_TLDR_RELEVANCE_SCHEMA,
 } from '../../studyGuides/tldr'
+import type { StudyGuideTldrRelevanceDecision } from '../../studyGuides/tldr'
 import { sanitizeUserKnownTopics } from '../../profileContext'
 
 type ProviderOptions = {
@@ -82,20 +86,24 @@ export const generateStudyGuideTldrWithAi = async ({
   signal?: AbortSignal
   userKnownTopics?: string[]
 }): Promise<string> => {
-  const tldrPrompt = buildStudyGuideTldrPrompt({
-    title,
-    source: studyPathDraftToTldrSource(draft, prompt),
-    userKnownTopics: sanitizeUserKnownTopics(userKnownTopics),
-  })
+  const source = studyPathDraftToTldrSource(draft, prompt)
+  const safeKnownTopics = sanitizeUserKnownTopics(userKnownTopics)
+  let relevanceDecision: StudyGuideTldrRelevanceDecision | undefined
   let text = ''
 
   if (provider === 'local') {
-    text = await callLocalLanguageModel(tldrPrompt, {
-      timeoutMs: 60 * 1000,
-      promptType: 'tldr',
-      progressLabel: 'Creating Study Guide TLDR',
-      signal,
-    })
+    text = await callLocalLanguageModel(
+      buildStudyGuideTldrPrompt({
+        title,
+        source,
+      }),
+      {
+        timeoutMs: 60 * 1000,
+        promptType: 'tldr',
+        progressLabel: 'Creating Study Guide TLDR',
+        signal,
+      },
+    )
   } else {
     if (provider === 'hosted') {
       throw new Error('Hosted Study Guide TLDR must use bundled generation.')
@@ -105,6 +113,35 @@ export const generateStudyGuideTldrWithAi = async ({
       throw new Error(`Unknown AI provider: ${provider}`)
     }
 
+    if (safeKnownTopics.length) {
+      const relevanceText = await callStrongAiModel({
+        provider,
+        apiToken,
+        model,
+        parts: [
+          {
+            text: buildStudyGuideTldrRelevancePrompt({
+              title,
+              prompt,
+              source,
+              userKnownTopics: safeKnownTopics,
+            }),
+          },
+        ],
+        responseSchema: STUDY_GUIDE_TLDR_RELEVANCE_SCHEMA,
+        timeoutMs: 60 * 1000,
+      })
+      relevanceDecision = parseStudyGuideTldrRelevanceDecision(
+        relevanceText,
+        safeKnownTopics,
+      )
+    }
+
+    const tldrPrompt = buildStudyGuideTldrPrompt({
+      title,
+      source,
+      relevanceDecision,
+    })
     text = await callStrongAiModel({
       provider,
       apiToken,

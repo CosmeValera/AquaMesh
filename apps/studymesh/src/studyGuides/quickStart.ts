@@ -10,23 +10,30 @@ const quickStartTargetTopicTypes = [
   'human_management',
   'general',
 ] as const
-const quickStartComparisonStyles = [
+const quickStartBridgeStrengths = ['none', 'weak', 'strong'] as const
+const quickStartBridgeStrategies = [
   'direct_comparison',
-  'neutral_explanation',
+  'analogy_skeleton',
+  'light_reference',
+  'none',
 ] as const
 
 export type StudyGuideQuickStartTargetTopicType =
   (typeof quickStartTargetTopicTypes)[number]
 
-export type StudyGuideQuickStartComparisonStyle =
-  (typeof quickStartComparisonStyles)[number]
+export type StudyGuideQuickStartBridgeStrength =
+  (typeof quickStartBridgeStrengths)[number]
+
+export type StudyGuideQuickStartBridgeStrategy =
+  (typeof quickStartBridgeStrategies)[number]
 
 export interface StudyGuideQuickStartRelevanceDecision {
   shouldUseKnownTopic: boolean
   knownTopicsForQuickStart: string[]
   knownTopicRelevanceReason: string
   targetTopicType: StudyGuideQuickStartTargetTopicType
-  comparisonStyle: StudyGuideQuickStartComparisonStyle
+  bridgeStrength: StudyGuideQuickStartBridgeStrength
+  bridgeStrategy: StudyGuideQuickStartBridgeStrategy
 }
 
 export const STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA = {
@@ -42,9 +49,13 @@ export const STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA = {
       type: 'STRING',
       enum: [...quickStartTargetTopicTypes],
     },
-    comparisonStyle: {
+    bridgeStrength: {
       type: 'STRING',
-      enum: [...quickStartComparisonStyles],
+      enum: [...quickStartBridgeStrengths],
+    },
+    bridgeStrategy: {
+      type: 'STRING',
+      enum: [...quickStartBridgeStrategies],
     },
   },
   required: [
@@ -52,7 +63,8 @@ export const STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA = {
     'knownTopicsForQuickStart',
     'knownTopicRelevanceReason',
     'targetTopicType',
-    'comparisonStyle',
+    'bridgeStrength',
+    'bridgeStrategy',
   ],
 }
 
@@ -72,7 +84,8 @@ export const createNeutralStudyGuideQuickStartRelevanceDecision =
     knownTopicRelevanceReason:
       'No provided known topic was selected as a clear cognitive bridge.',
     targetTopicType: 'general',
-    comparisonStyle: 'neutral_explanation',
+    bridgeStrength: 'none',
+    bridgeStrategy: 'none',
   })
 
 const parseJsonObject = (text: string): unknown => {
@@ -109,7 +122,7 @@ const stripTextLabels = (value: string): string =>
         .replace(/^#{1,6}\s+/, '')
         .replace(/^[-*]\s+/, '')
         .replace(
-          /^(?:TL;?DR|Quick\s*Start|Key\s*Idea|Quick\s*Summary)\s*[:.-]?\s*/i,
+          /^(?:Quick\s*Start|Key\s*Idea|Quick\s*Summary)\s*[:.-]?\s*/i,
           '',
         ),
     )
@@ -133,12 +146,20 @@ const isTargetTopicType = (
     value as StudyGuideQuickStartTargetTopicType,
   )
 
-const isComparisonStyle = (
+const isBridgeStrength = (
   value: unknown,
-): value is StudyGuideQuickStartComparisonStyle =>
+): value is StudyGuideQuickStartBridgeStrength =>
   typeof value === 'string' &&
-  quickStartComparisonStyles.includes(
-    value as StudyGuideQuickStartComparisonStyle,
+  quickStartBridgeStrengths.includes(
+    value as StudyGuideQuickStartBridgeStrength,
+  )
+
+const isBridgeStrategy = (
+  value: unknown,
+): value is StudyGuideQuickStartBridgeStrategy =>
+  typeof value === 'string' &&
+  quickStartBridgeStrategies.includes(
+    value as StudyGuideQuickStartBridgeStrategy,
   )
 
 export const parseStudyGuideQuickStartRelevanceDecision = (
@@ -173,8 +194,17 @@ export const parseStudyGuideQuickStartRelevanceDecision = (
         .filter((topic, index, topics) => topics.indexOf(topic) === index)
         .slice(0, 2)
     : []
+  const bridgeStrength = isBridgeStrength(record.bridgeStrength)
+    ? record.bridgeStrength
+    : neutral.bridgeStrength
+  const bridgeStrategy = isBridgeStrategy(record.bridgeStrategy)
+    ? record.bridgeStrategy
+    : neutral.bridgeStrategy
   const shouldUseKnownTopic =
-    record.shouldUseKnownTopic === true && selectedTopics.length > 0
+    record.shouldUseKnownTopic === true &&
+    selectedTopics.length > 0 &&
+    bridgeStrength !== 'none' &&
+    bridgeStrategy !== 'none'
 
   if (!shouldUseKnownTopic) {
     return {
@@ -197,9 +227,11 @@ export const parseStudyGuideQuickStartRelevanceDecision = (
     targetTopicType: isTargetTopicType(record.targetTopicType)
       ? record.targetTopicType
       : neutral.targetTopicType,
-    comparisonStyle: isComparisonStyle(record.comparisonStyle)
-      ? record.comparisonStyle
-      : 'direct_comparison',
+    bridgeStrength,
+    bridgeStrategy:
+      bridgeStrength === 'weak' && bridgeStrategy !== 'light_reference'
+        ? 'light_reference'
+        : bridgeStrategy,
   }
 }
 
@@ -286,12 +318,15 @@ export const buildStudyGuideQuickStartPrompt = ({
 
 Return strict JSON only:
 {
-  "keyIdea": "one sentence, maximum ${STUDY_GUIDE_KEY_IDEA_MAX_WORDS} words",
+  "keyIdea": "one sentence, maximum 35 words, ideally 25-35 words",
   "quickSummary": "2-3 short paragraphs, 80-120 words total"
 }
 
 Rules:
 - keyIdea: one direct mental model of the topic. No Markdown. No label.
+- keyIdea must explain the category or mental box the topic belongs to, not internal architecture.
+- keyIdea introduces at most 1 technical term, avoids listing components, and avoids implementation details unless they are the essence of the concept.
+- Prefer "what is this like or for?" over "how does it work internally?".
 - quickSummary: 2-3 short paragraphs separated by blank lines.
 - Explain the concept itself directly. Do not summarize the guide structure, sections, or page order.
 - Do not write "This guide teaches...", "This guide explains...", "This page explains...", "You will learn...", or similar framing.
@@ -301,13 +336,26 @@ ${
   shouldUseKnownTopic
     ? `- Use only this selected known topic bridge if it improves clarity: ${selectedTopics.join(', ')}.
 - Why this bridge helps: ${decision.knownTopicRelevanceReason}
-- Prefer a direct comparison over a metaphor.
+- Bridge strength: ${decision.bridgeStrength}.
+- Bridge strategy: ${decision.bridgeStrategy}.
+- If bridge strength is strong, the selected known topic must lead the Quick Start. Do not save it for a final caveat.
+- If bridge strategy is analogy_skeleton, start from the known topic, sustain the mapping through the explanation, then briefly say where the analogy breaks.
+- If bridge strategy is direct_comparison, compare the new concept directly with the selected known topic.
+- If bridge strategy is light_reference, use a normal explanation and mention the known topic at most once.
 - Include one brief caveat about where the comparison breaks in quickSummary.`
     : `- No known topic was selected as clearly useful. Do not force a personalized analogy.
 - Use a neutral beginner-friendly explanation and include one brief caveat, boundary, or common misconception in quickSummary.`
 }
 - Target topic type: ${decision.targetTopicType}.
 - If this is a human or management topic, do not compare people to infrastructure, tools, machines, or deployment systems.
+- Good keyIdea examples:
+  - Vue + React: "Vue is a React-like frontend framework where templates and reactive data stay automatically synced."
+  - GraphQL + REST API: "GraphQL is an API style where the client asks for exactly the fields it needs instead of using many fixed REST endpoints."
+  - Data lakes + MinIO/S3: "A data lake is like MinIO/S3 used as central raw-data storage, plus catalogs and processing tools to analyze those files later."
+  - Kubernetes + Docker: "Kubernetes manages Docker-style containers across many machines so they can scale, restart, and stay reachable automatically."
+- Bad keyIdea examples:
+  - Do not start Vue with proxies, dependency tracking, or internals.
+  - Do not start Kubernetes with control planes, Pods, or scheduling internals.
 
 Final Study Guide content:
 ${source.slice(0, 60000)}`
@@ -334,7 +382,8 @@ Return strict JSON only with this shape:
   "knownTopicsForQuickStart": string[],
   "knownTopicRelevanceReason": string,
   "targetTopicType": "technical" | "human_management" | "general",
-  "comparisonStyle": "direct_comparison" | "neutral_explanation"
+  "bridgeStrength": "none" | "weak" | "strong",
+  "bridgeStrategy": "direct_comparison" | "analogy_skeleton" | "light_reference" | "none"
 }
 
 Decision rules:
@@ -342,18 +391,25 @@ Decision rules:
 - Choose only from provided known topics. Never invent a known topic.
 - Use at most 1 known topic. Use 2 only when both are clearly relevant and same-domain.
 - Prefer same-domain direct comparisons over creative metaphors.
+- A strong bridge means the Quick Start should be built through the selected known topic, not mention it as a footnote.
+- A weak bridge means the topic may be mentioned lightly once, but the Quick Start should mostly be neutral.
+- No useful bridge means ignore userKnownTopics completely.
 - Technical target + directly related technical known topic: select the best direct comparison.
 - Technical target + unrelated technical known topic: ignore it.
+- Use direct_comparison for Vue/React, Zustand/Redux, GraphQL/REST, Kubernetes/Docker, and data lake/MinIO/S3.
+- Use analogy_skeleton when the known topic maps structurally to the new concept, such as eye optics/photography/camera.
+- Use light_reference only for weak but genuinely helpful bridges.
 - Human or management target: avoid infrastructure/tool analogies unless explicitly requested.
-- If no topic clearly helps, set shouldUseKnownTopic false and knownTopicsForQuickStart [].
+- If no topic clearly helps, set shouldUseKnownTopic false, knownTopicsForQuickStart [], bridgeStrength "none", and bridgeStrategy "none".
 - Do not write the Quick Start.
 
 Examples:
-- Target "Vue", known ["React"]: select React.
-- Target "Zustand", known ["Redux"]: select Redux.
-- Target "GraphQL", known ["REST API", "Docker"]: select REST API only.
-- Target "Managing very junior reports", known ["Docker"]: select none.
-- Target "Data lakes", known ["MinIO"]: select MinIO only if object storage helps explain it.
+- Target "Vue", known ["React"]: select React; bridgeStrength "strong"; bridgeStrategy "direct_comparison".
+- Target "Zustand", known ["Redux"]: select Redux; bridgeStrength "strong"; bridgeStrategy "direct_comparison".
+- Target "GraphQL", known ["REST API", "Docker"]: select REST API only; bridgeStrength "strong"; bridgeStrategy "direct_comparison".
+- Target "How does the eye focus light?", known ["photography"]: select photography; bridgeStrength "strong"; bridgeStrategy "analogy_skeleton".
+- Target "Managing very junior reports", known ["Docker"]: select none; bridgeStrength "none"; bridgeStrategy "none".
+- Target "Data lakes", known ["MinIO"]: select MinIO only if object storage helps explain it; bridgeStrength "strong"; bridgeStrategy "direct_comparison".
 
 Study Guide title: ${title}
 Learner prompt: ${prompt || title}

@@ -100,7 +100,8 @@ const mockGeminiDashboards = (dashboardCount: number) => {
               knownTopicsForQuickStart: [],
               knownTopicRelevanceReason: 'No direct bridge was selected.',
               targetTopicType: 'general',
-              comparisonStyle: 'neutral_explanation',
+              bridgeStrength: 'none',
+              bridgeStrategy: 'none',
             })
           : JSON.stringify({
               title: 'French Subjunctive Path',

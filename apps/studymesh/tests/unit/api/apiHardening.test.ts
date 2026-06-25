@@ -768,7 +768,8 @@ describe('API payment and hosted AI hardening', () => {
                             knownTopicRelevanceReason:
                               'Backend is the useful bridge.',
                             targetTopicType: 'technical',
-                            comparisonStyle: 'direct_comparison',
+                            bridgeStrength: 'strong',
+                            bridgeStrategy: 'direct_comparison',
                           })
                         : JSON.stringify({
                             keyIdea:

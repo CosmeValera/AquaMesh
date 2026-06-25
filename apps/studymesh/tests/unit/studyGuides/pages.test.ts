@@ -156,7 +156,8 @@ describe('Study Guide Quick Start helpers', () => {
         knownTopicRelevanceReason:
           'MinIO gives a direct object-storage bridge for data lake storage.',
         targetTopicType: 'technical',
-        comparisonStyle: 'direct_comparison',
+        bridgeStrength: 'strong',
+        bridgeStrategy: 'direct_comparison',
       },
     })
 
@@ -164,8 +165,13 @@ describe('Study Guide Quick Start helpers', () => {
     expect(prompt).toContain('"quickSummary"')
     expect(prompt).toContain('Use only this selected known topic bridge')
     expect(prompt).toContain('MinIO')
+    expect(prompt).toContain('Bridge strength: strong')
+    expect(prompt).toContain('Bridge strategy: direct_comparison')
+    expect(prompt).toContain('the selected known topic must lead')
     expect(prompt).toContain('where the comparison breaks')
+    expect(prompt).toContain('keyIdea introduces at most 1 technical term')
     expect(prompt).toContain('Introduce at most 2-3 new technical terms')
+    expect(prompt).toContain('Do not start Vue with proxies')
     expect(prompt).not.toContain('Backend')
     expect(prompt).not.toContain('Databases')
     expect(prompt).toContain('This guide teaches')
@@ -196,38 +202,91 @@ describe('Study Guide Quick Start helpers', () => {
     expect(prompt).toContain('Goal: reduce learner cognitive effort')
     expect(prompt).toContain('Prefer same-domain direct comparisons')
     expect(prompt).toContain(
-      'Target "GraphQL", known ["REST API", "Docker"]: select REST API only',
+      'Target "GraphQL", known ["REST API", "Docker"]: select REST API only; bridgeStrength "strong"; bridgeStrategy "direct_comparison"',
     )
     expect(prompt).toContain(
-      'Target "Managing very junior reports", known ["Docker"]: select none',
+      'Target "How does the eye focus light?", known ["photography"]: select photography; bridgeStrength "strong"; bridgeStrategy "analogy_skeleton"',
+    )
+    expect(prompt).toContain(
+      'Target "Managing very junior reports", known ["Docker"]: select none; bridgeStrength "none"; bridgeStrategy "none"',
     )
     expect(prompt).toContain('Target "Data lakes", known ["MinIO"]')
   })
 
   it.each([
-    ['Vue', ['React'], ['React']],
-    ['Zustand', ['Redux'], ['Redux']],
-    ['Kubernetes', ['Docker'], ['Docker']],
-    ['GraphQL', ['REST API', 'Docker'], ['REST API']],
-    ['Data lakes', ['MinIO'], ['MinIO']],
+    ['Vue', ['React'], ['React'], 'direct_comparison'],
+    ['Zustand', ['Redux'], ['Redux'], 'direct_comparison'],
+    ['Kubernetes', ['Docker'], ['Docker'], 'direct_comparison'],
+    ['GraphQL', ['REST API', 'Docker'], ['REST API'], 'direct_comparison'],
+    ['Data lakes', ['MinIO'], ['MinIO'], 'direct_comparison'],
+    [
+      'How does the eye focus light?',
+      ['photography'],
+      ['photography'],
+      'analogy_skeleton',
+    ],
   ])(
-    'parses relevance decision for %s without inventing topics',
-    (_title, knownTopics, selectedTopics) => {
+    'parses strong relevance decision for %s without inventing topics',
+    (_title, knownTopics, selectedTopics, bridgeStrategy) => {
       const decision = parseStudyGuideQuickStartRelevanceDecision(
         JSON.stringify({
           shouldUseKnownTopic: true,
           knownTopicsForQuickStart: selectedTopics,
           knownTopicRelevanceReason: 'Direct same-domain bridge.',
           targetTopicType: 'technical',
-          comparisonStyle: 'direct_comparison',
+          bridgeStrength: 'strong',
+          bridgeStrategy,
         }),
         knownTopics,
       )
 
       expect(decision.shouldUseKnownTopic).toBe(true)
       expect(decision.knownTopicsForQuickStart).toEqual(selectedTopics)
+      expect(decision.bridgeStrength).toBe('strong')
+      expect(decision.bridgeStrategy).toBe(bridgeStrategy)
     },
   )
+
+  it('normalizes weak bridge decisions to light references', () => {
+    const decision = parseStudyGuideQuickStartRelevanceDecision(
+      JSON.stringify({
+        shouldUseKnownTopic: true,
+        knownTopicsForQuickStart: ['Databases'],
+        knownTopicRelevanceReason:
+          'Databases are only a light contrast for data lakes.',
+        targetTopicType: 'technical',
+        bridgeStrength: 'weak',
+        bridgeStrategy: 'direct_comparison',
+      }),
+      ['Databases'],
+    )
+
+    expect(decision.shouldUseKnownTopic).toBe(true)
+    expect(decision.bridgeStrength).toBe('weak')
+    expect(decision.bridgeStrategy).toBe('light_reference')
+  })
+
+  it('builds an analogy-skeleton Quick Start prompt for strong structural bridges', () => {
+    const prompt = buildStudyGuideQuickStartPrompt({
+      title: 'How does the eye focus light?',
+      source:
+        'The cornea bends light first, the crystalline lens changes shape, the pupil controls light entry, and the retina receives the image.',
+      relevanceDecision: {
+        shouldUseKnownTopic: true,
+        knownTopicsForQuickStart: ['photography'],
+        knownTopicRelevanceReason:
+          'Camera optics map clearly to eye optics and refractive errors.',
+        targetTopicType: 'general',
+        bridgeStrength: 'strong',
+        bridgeStrategy: 'analogy_skeleton',
+      },
+    })
+
+    expect(prompt).toContain('Bridge strategy: analogy_skeleton')
+    expect(prompt).toContain('start from the known topic')
+    expect(prompt).toContain('sustain the mapping through the explanation')
+    expect(prompt).toContain('then briefly say where the analogy breaks')
+  })
 
   it('rejects invented or unsafe known-topic relevance selections', () => {
     const decision = parseStudyGuideQuickStartRelevanceDecision(
@@ -237,7 +296,8 @@ describe('Study Guide Quick Start helpers', () => {
         knownTopicRelevanceReason:
           'Tool analogy would be forced for managing junior reports.',
         targetTopicType: 'human_management',
-        comparisonStyle: 'direct_comparison',
+        bridgeStrength: 'strong',
+        bridgeStrategy: 'direct_comparison',
       }),
       ['parenting toddlers'],
     )
@@ -245,6 +305,8 @@ describe('Study Guide Quick Start helpers', () => {
     expect(decision.shouldUseKnownTopic).toBe(false)
     expect(decision.knownTopicsForQuickStart).toEqual([])
     expect(decision.targetTopicType).toBe('human_management')
+    expect(decision.bridgeStrength).toBe('none')
+    expect(decision.bridgeStrategy).toBe('none')
   })
 })
 

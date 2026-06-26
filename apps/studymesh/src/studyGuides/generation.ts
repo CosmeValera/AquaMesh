@@ -10,6 +10,7 @@ import {
   isStrongAiProvider,
   readQuickCreateAiSettings,
   resolveQuickCreateAiCredentials,
+  type QuickCreateAiProvider,
   type AiQuickCreateDraft,
   type AiStudyPathDraft,
   type StudyMaterialResourceType,
@@ -112,13 +113,15 @@ export const generateStudyPathStateFromPrompt = async ({
   id,
   prompt,
   signal,
+  provider: providerOverride,
 }: {
   id: string
   prompt: string
   signal?: AbortSignal
+  provider?: QuickCreateAiProvider
 }): Promise<StudyPathContainerState> => {
   const settings = readQuickCreateAiSettings()
-  const provider = settings.provider || 'hosted'
+  const provider = providerOverride || settings.provider || 'hosted'
   const credentials = isStrongAiProvider(provider)
     ? resolveQuickCreateAiCredentials(provider)
     : resolveQuickCreateAiCredentials()

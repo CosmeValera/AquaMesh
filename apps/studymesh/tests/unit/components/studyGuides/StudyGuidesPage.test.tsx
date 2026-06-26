@@ -10,6 +10,10 @@ import {
   StudyGuideStorage,
 } from '../../../../src/studyGuides/storage'
 import { generateStudyPathStateFromPrompt } from '../../../../src/studyGuides/generation'
+import {
+  STUDY_GUIDE_CREATION_QUEUE_KEY,
+  StudyGuideCreationQueueStorage,
+} from '../../../../src/studyGuides/creationQueue'
 
 vi.mock('../../../../src/components/topnavbar/TopNavBar', () => ({
   __esModule: true,
@@ -110,6 +114,40 @@ const makeStoredGuide = ({
   pinnedAt,
 })
 
+const makeGeneratedStudyPath = (id: string, title: string) => ({
+  pathId: id,
+  title,
+  folderName: title,
+  emoji: '✨',
+  dashboards: [
+    {
+      id: `${id}-dashboard-1`,
+      name: '01 - Start',
+      layout: { type: 'row' },
+      dashboardKey: `${id}-1`,
+      dashboardIndex: 1,
+      dashboardCount: 1,
+      folderName: title,
+      createdBy: 'generator',
+      deletable: false,
+    },
+  ],
+  selectedIndex: 0,
+  pinnedDashboardKeys: [],
+})
+
+const createGuideFromPrompt = async (prompt: string) => {
+  fireEvent.click(
+    screen.getAllByRole('button', { name: /new study guide/i })[0],
+  )
+  const promptInput = await screen.findByLabelText(/study guide prompt/i)
+  fireEvent.change(promptInput, { target: { value: prompt } })
+  fireEvent.click(screen.getByRole('button', { name: /create guide/i }))
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+}
+
 describe('StudyGuidesPage create flow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -172,10 +210,13 @@ describe('StudyGuidesPage create flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /create guide/i }))
 
     await waitFor(() => {
-      expect(generateStudyPathStateFromPrompt).toHaveBeenCalledWith({
-        id: expect.any(String),
-        prompt: 'Teach me French subjunctive with practice.',
-      })
+      expect(generateStudyPathStateFromPrompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: expect.any(String),
+          prompt: 'Teach me French subjunctive with practice.',
+          provider: 'hosted',
+        }),
+      )
     })
 
     await waitFor(() => {
@@ -251,10 +292,13 @@ describe('StudyGuidesPage create flow', () => {
     await waitFor(() => {
       expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(2)
     })
-    expect(generateStudyPathStateFromPrompt).toHaveBeenLastCalledWith({
-      id: expect.any(String),
-      prompt: 'Teach me the basics of human anatomy for an exam.',
-    })
+    expect(generateStudyPathStateFromPrompt).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        id: expect.any(String),
+        prompt: 'Teach me the basics of human anatomy for an exam.',
+        provider: 'hosted',
+      }),
+    )
     await waitFor(() => {
       expect(saveSpy).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -265,6 +309,152 @@ describe('StudyGuidesPage create flow', () => {
       )
     })
     saveSpy.mockRestore()
+  })
+
+  it('runs several hosted Study Guides in parallel', async () => {
+    const resolvers: Array<(title: string) => void> = []
+    vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
+      ({ id }) =>
+        new Promise((resolve) => {
+          resolvers.push((title) => resolve(makeGeneratedStudyPath(id, title)))
+        }),
+    )
+    const saveSpy = vi.spyOn(StudyGuideStorage, 'save')
+    renderStudyGuidesPage('/study-guides')
+
+    await createGuideFromPrompt('First guide prompt')
+    await createGuideFromPrompt('Second guide prompt')
+    await createGuideFromPrompt('Third guide prompt')
+
+    await waitFor(() => {
+      expect(screen.getByText('First guide prompt')).toBeInTheDocument()
+      expect(screen.getByText('Second guide prompt')).toBeInTheDocument()
+      expect(screen.getByText('Third guide prompt')).toBeInTheDocument()
+    })
+    await waitFor(() => {
+      expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(3)
+    })
+
+    resolvers[0]('First Generated Guide')
+    resolvers[1]('Second Generated Guide')
+    resolvers[2]('Third Generated Guide')
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(3)
+    })
+    expect(saveSpy.mock.calls.map(([guide]) => guide.title)).toEqual([
+      'First Generated Guide',
+      'Second Generated Guide',
+      'Third Generated Guide',
+    ])
+    expect(StudyGuideCreationQueueStorage.getAll()).toEqual([])
+    saveSpy.mockRestore()
+  })
+
+  it('resumes a queued Study Guide from local queue storage', async () => {
+    StudyGuideCreationQueueStorage.upsert({
+      id: 'queued-guide',
+      prompt: 'Stored queue prompt',
+      provider: 'hosted',
+      status: 'queued',
+      estimateSeconds: 20,
+      startedAt: null,
+      finishedAt: null,
+      errorMessage: null,
+      resultStudyGuideId: null,
+    })
+    vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
+      async ({ id }) => makeGeneratedStudyPath(id, 'Stored Generated Guide'),
+    )
+    const saveSpy = vi.spyOn(StudyGuideStorage, 'save')
+
+    renderStudyGuidesPage('/study-guides')
+
+    await waitFor(() => {
+      expect(generateStudyPathStateFromPrompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'queued-guide',
+          prompt: 'Stored queue prompt',
+          provider: 'hosted',
+        }),
+      )
+    })
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Stored Generated Guide' }),
+      )
+    })
+    expect(StudyGuideCreationQueueStorage.getAll()).toEqual([])
+    saveSpy.mockRestore()
+  })
+
+  it('auto-retries running jobs after a refresh', async () => {
+    const resolvers: Array<(title: string) => void> = []
+    vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
+      ({ id }) =>
+        new Promise((resolve) => {
+          resolvers.push((title) => resolve(makeGeneratedStudyPath(id, title)))
+        }),
+    )
+    const firstRender = renderStudyGuidesPage('/study-guides')
+
+    await createGuideFromPrompt('Refresh-sensitive prompt')
+    await screen.findByText('Creating')
+    expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(1)
+
+    firstRender.unmount()
+    renderStudyGuidesPage('/study-guides')
+
+    expect(await screen.findByText('Creating')).toBeInTheDocument()
+    expect(screen.getByText('Refresh-sensitive prompt')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(2)
+    })
+    resolvers[1]('Retried Guide')
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId('newly-created-study-guide-card'),
+      ).toHaveTextContent('Retried Guide')
+    })
+  })
+
+  it('auto-requeues retryable fetch failures without showing a failed card', async () => {
+    vi.mocked(generateStudyPathStateFromPrompt)
+      .mockRejectedValueOnce(new Error('Failed to fetch'))
+      .mockImplementationOnce(async ({ id }) =>
+        makeGeneratedStudyPath(id, 'Retried Fetch Guide'),
+      )
+    const saveSpy = vi.spyOn(StudyGuideStorage, 'save')
+    renderStudyGuidesPage('/study-guides')
+
+    await createGuideFromPrompt('Transient network prompt')
+
+    await waitFor(() => {
+      expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(2)
+    })
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Retried Fetch Guide' }),
+      )
+    })
+    expect(screen.queryByText('Failed')).not.toBeInTheDocument()
+    saveSpy.mockRestore()
+  })
+
+  it('keeps non-retryable provider failures failed for manual retry', async () => {
+    vi.mocked(generateStudyPathStateFromPrompt).mockRejectedValueOnce(
+      new Error('Cerebras hosted AI request failed.'),
+    )
+    renderStudyGuidesPage('/study-guides')
+
+    await createGuideFromPrompt('Provider failure prompt')
+
+    expect(await screen.findByText('Failed')).toBeInTheDocument()
+    expect(
+      screen.getByText('Cerebras hosted AI request failed.'),
+    ).toBeInTheDocument()
+    expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(1)
   })
 
   it('offers inline search, list view, and title sorting', async () => {

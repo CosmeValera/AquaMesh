@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Box,
   Button,
@@ -48,15 +48,20 @@ import {
 } from '../../studyGuides/storage'
 import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
+import {
+  STUDY_GUIDE_CREATION_QUEUE_CHANGED_EVENT,
+  StudyGuideCreationQueueStorage,
+  isRetryableStudyGuideCreationError,
+  type StudyGuideCreationJob,
+  type StudyGuideCreationProvider,
+  type StudyGuideCreationStatus,
+} from '../../studyGuides/creationQueue'
 import TopNavBar from '../topnavbar/TopNavBar'
 
-interface PendingGuide {
-  id: string
-  prompt: string
-  createdAt: string
-  estimateSeconds: number
-  error?: string
-}
+type PendingGuide = StudyGuideCreationJob
+
+const MAX_HOSTED_BROWSER_CONCURRENCY = 3
+const MAX_LOCAL_BROWSER_CONCURRENCY = 1
 
 const quickPromptOptions = [
   {
@@ -88,6 +93,50 @@ const getGenerationEstimateSeconds = (): number => {
 
   return 60
 }
+
+const getActiveAiProvider = () =>
+  readQuickCreateAiSettings().provider || 'hosted'
+
+const isVisiblePendingStatus = (status: StudyGuideCreationStatus): boolean =>
+  status === 'queued' ||
+  status === 'running' ||
+  status === 'interrupted' ||
+  status === 'failed'
+
+const sortPendingGuidesForDisplay = (guides: PendingGuide[]) =>
+  [...guides].sort(
+    (first, second) =>
+      Date.parse(second.createdAt || '') - Date.parse(first.createdAt || ''),
+  )
+
+const getPendingStatusLabel = (status: StudyGuideCreationStatus): string => {
+  if (status === 'queued') {
+    return 'Queued'
+  }
+
+  if (status === 'running') {
+    return 'Creating'
+  }
+
+  if (status === 'interrupted') {
+    return 'Interrupted'
+  }
+
+  if (status === 'failed') {
+    return 'Failed'
+  }
+
+  return 'Creating'
+}
+
+const getPendingErrorMessage = (guide: PendingGuide): string =>
+  guide.errorMessage ||
+  (guide.status === 'interrupted'
+    ? 'Creation was interrupted by a refresh. Retry when ready.'
+    : 'Could not create this Study Guide.')
+
+const isLocalProvider = (provider: StudyGuideCreationProvider): boolean =>
+  provider === 'local'
 
 const formatDuration = (seconds: number): string => {
   const safeSeconds = Math.max(0, Math.floor(seconds))
@@ -214,22 +263,60 @@ const StudyGuidesPage = () => {
     () => new Set(),
   )
   const [now, setNow] = useState(Date.now())
+  const activeJobsRef = useRef<
+    Map<
+      string,
+      {
+        controller: AbortController
+        provider: StudyGuideCreationProvider
+      }
+    >
+  >(new Map())
+  const isMountedRef = useRef(true)
 
-  const loadGuides = () => setGuides(StudyGuideStorage.getAll())
+  const loadGuides = () => {
+    if (isMountedRef.current) {
+      setGuides(StudyGuideStorage.getAll())
+    }
+  }
+  const loadPendingGuides = () => {
+    const visibleJobs = StudyGuideCreationQueueStorage.getAll().filter((job) =>
+      isVisiblePendingStatus(job.status),
+    )
+    if (isMountedRef.current) {
+      setPendingGuides(sortPendingGuidesForDisplay(visibleJobs))
+    }
+  }
 
   useEffect(() => {
+    isMountedRef.current = true
     loadGuides()
+    StudyGuideCreationQueueStorage.requeueRetryableJobs()
+    loadPendingGuides()
     window.addEventListener(STUDY_GUIDES_CHANGED_EVENT, loadGuides)
+    window.addEventListener(
+      STUDY_GUIDE_CREATION_QUEUE_CHANGED_EVENT,
+      loadPendingGuides,
+    )
     window.addEventListener('storage', loadGuides)
+    window.addEventListener('storage', loadPendingGuides)
 
     return () => {
+      isMountedRef.current = false
+      activeJobsRef.current.forEach((job) => job.controller.abort())
+      activeJobsRef.current.clear()
       window.removeEventListener(STUDY_GUIDES_CHANGED_EVENT, loadGuides)
+      window.removeEventListener(
+        STUDY_GUIDE_CREATION_QUEUE_CHANGED_EVENT,
+        loadPendingGuides,
+      )
       window.removeEventListener('storage', loadGuides)
+      window.removeEventListener('storage', loadPendingGuides)
     }
   }, [])
 
   useEffect(() => {
-    if (!pendingGuides.some((guide) => !guide.error)) {
+    if (!pendingGuides.some((guide) => guide.status === 'running')) {
       return undefined
     }
 
@@ -271,48 +358,140 @@ const StudyGuidesPage = () => {
     setSortAnchor(null)
   }
 
-  const runCreateGuide = async (prompt: string, id = nanoid()) => {
-    const pendingGuide: PendingGuide = {
+  const enqueueCreateGuide = (prompt: string, id = nanoid()) => {
+    const pendingGuide = StudyGuideCreationQueueStorage.upsert({
       id,
       prompt,
-      createdAt: new Date().toISOString(),
+      provider: getActiveAiProvider(),
+      status: 'queued',
       estimateSeconds: getGenerationEstimateSeconds(),
-    }
-    setPendingGuides((current) => {
-      const existingIndex = current.findIndex((guide) => guide.id === id)
-      if (existingIndex < 0) {
-        return [pendingGuide, ...current]
-      }
-
-      return current.map((guide) => (guide.id === id ? pendingGuide : guide))
+      startedAt: null,
+      finishedAt: null,
+      errorMessage: null,
+      resultStudyGuideId: null,
     })
+    setPendingGuides((current) =>
+      sortPendingGuidesForDisplay([
+        pendingGuide,
+        ...current.filter((guide) => guide.id !== id),
+      ]),
+    )
     setCreateOpen(false)
     setCreateGuidePrompt('')
+  }
 
+  const runQueuedGuide = async (job: PendingGuide) => {
+    if (activeJobsRef.current.has(job.id)) {
+      return
+    }
+
+    const generationController = new AbortController()
+    const startedAt = new Date().toISOString()
+    activeJobsRef.current.set(job.id, {
+      controller: generationController,
+      provider: job.provider,
+    })
+    StudyGuideCreationQueueStorage.update(job.id, {
+      status: 'running',
+      startedAt,
+      finishedAt: null,
+      errorMessage: null,
+    })
     try {
-      const studyPath = await generateStudyPathStateFromPrompt({ id, prompt })
-      StudyGuideStorage.save({
-        ...createStudyGuideRecord(studyPath, { id }),
-        description: prompt,
+      const studyPath = await generateStudyPathStateFromPrompt({
+        id: job.id,
+        prompt: job.prompt,
+        provider: job.provider,
+        signal: generationController.signal,
       })
-      setPendingGuides((current) => current.filter((guide) => guide.id !== id))
-      setNewlyCreatedGuideIds((current) => new Set(current).add(id))
+      if (generationController.signal.aborted) {
+        return
+      }
+
+      StudyGuideStorage.save({
+        ...createStudyGuideRecord(studyPath, { id: job.id }),
+        description: job.prompt,
+      })
+      StudyGuideCreationQueueStorage.remove(job.id)
+      setNewlyCreatedGuideIds((current) => new Set(current).add(job.id))
       loadGuides()
     } catch (error) {
-      setPendingGuides((current) =>
-        current.map((guide) =>
-          guide.id === id
-            ? {
-                ...guide,
-                error:
-                  error instanceof Error
-                    ? error.message
-                    : 'Could not create this Study Guide.',
-              }
-            : guide,
-        ),
-      )
+      if (generationController.signal.aborted) {
+        return
+      }
+
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Could not create this Study Guide.'
+      const nextStatus = isRetryableStudyGuideCreationError(errorMessage)
+        ? 'queued'
+        : 'failed'
+      StudyGuideCreationQueueStorage.update(job.id, {
+        status: nextStatus,
+        startedAt: nextStatus === 'queued' ? null : startedAt,
+        finishedAt: nextStatus === 'failed' ? new Date().toISOString() : null,
+        errorMessage: nextStatus === 'failed' ? errorMessage : null,
+      })
+    } finally {
+      activeJobsRef.current.delete(job.id)
+      loadPendingGuides()
     }
+  }
+
+  useEffect(() => {
+    const activeJobs = Array.from(activeJobsRef.current.values())
+    let availableLocalSlots =
+      MAX_LOCAL_BROWSER_CONCURRENCY -
+      activeJobs.filter((job) => isLocalProvider(job.provider)).length
+    let availableRemoteSlots =
+      MAX_HOSTED_BROWSER_CONCURRENCY -
+      activeJobs.filter((job) => !isLocalProvider(job.provider)).length
+
+    const queuedJobs = [...pendingGuides]
+      .filter((guide) => guide.status === 'queued')
+      .sort(
+        (first, second) =>
+          Date.parse(first.createdAt || '') -
+          Date.parse(second.createdAt || ''),
+      )
+    queuedJobs.forEach((job) => {
+      if (activeJobsRef.current.has(job.id)) {
+        return
+      }
+
+      if (isLocalProvider(job.provider)) {
+        if (availableLocalSlots <= 0) {
+          return
+        }
+        availableLocalSlots -= 1
+        void runQueuedGuide(job)
+        return
+      }
+
+      if (availableRemoteSlots <= 0) {
+        return
+      }
+      availableRemoteSlots -= 1
+      void runQueuedGuide(job)
+    })
+  }, [pendingGuides])
+
+  const retryPendingGuide = (guide: PendingGuide) => {
+    StudyGuideCreationQueueStorage.update(guide.id, {
+      status: 'queued',
+      startedAt: null,
+      finishedAt: null,
+      errorMessage: null,
+    })
+    loadPendingGuides()
+  }
+
+  const deletePendingGuide = (guide: PendingGuide) => {
+    activeJobsRef.current.get(guide.id)?.controller.abort()
+
+    StudyGuideCreationQueueStorage.remove(guide.id)
+    loadPendingGuides()
   }
 
   const submitCreateGuide = async () => {
@@ -321,7 +500,7 @@ const StudyGuidesPage = () => {
       return
     }
 
-    await runCreateGuide(prompt)
+    enqueueCreateGuide(prompt)
   }
 
   const openMenu = (
@@ -719,8 +898,13 @@ const StudyGuidesPage = () => {
           {pendingGuides.map((guide) => {
             const elapsedSeconds = Math.max(
               0,
-              Math.floor((now - Date.parse(guide.createdAt)) / 1000),
+              Math.floor(
+                (now - Date.parse(guide.startedAt || guide.createdAt)) / 1000,
+              ),
             )
+            const isProblem =
+              guide.status === 'failed' || guide.status === 'interrupted'
+            const isRunning = guide.status === 'running'
             return (
               <Paper
                 key={guide.id}
@@ -730,7 +914,7 @@ const StudyGuidesPage = () => {
                   p: 2.25,
                   borderRadius: 3,
                   border: 1,
-                  borderColor: guide.error
+                  borderColor: isProblem
                     ? 'error.main'
                     : alpha(theme.palette.primary.main, 0.36),
                   bgcolor: 'background.paper',
@@ -750,14 +934,24 @@ const StudyGuidesPage = () => {
                         borderRadius: 2,
                         display: 'grid',
                         placeItems: 'center',
-                        bgcolor: guide.error ? 'error.light' : 'action.hover',
-                        color: guide.error ? 'error.contrastText' : 'inherit',
+                        bgcolor: isProblem ? 'error.light' : 'action.hover',
+                        color: isProblem ? 'error.contrastText' : 'inherit',
                       }}
                     >
-                      {guide.error ? '!' : <CircularProgress size={22} />}
+                      {isProblem ? (
+                        '!'
+                      ) : isRunning ? (
+                        <CircularProgress size={22} />
+                      ) : (
+                        <CircularProgress
+                          size={22}
+                          variant="determinate"
+                          value={0}
+                        />
+                      )}
                     </Box>
                     <Typography variant="caption" color="text.secondary">
-                      {guide.error ? 'Failed' : 'Creating'}
+                      {getPendingStatusLabel(guide.status)}
                     </Typography>
                   </Stack>
                   <Box sx={{ flex: 1 }}>
@@ -775,7 +969,7 @@ const StudyGuidesPage = () => {
                       {guide.prompt}
                     </Typography>
                   </Box>
-                  {guide.error ? (
+                  {isProblem ? (
                     <Stack spacing={1.25}>
                       <Typography
                         variant="body2"
@@ -787,31 +981,69 @@ const StudyGuidesPage = () => {
                           overflow: 'hidden',
                         }}
                       >
-                        {guide.error}
+                        {getPendingErrorMessage(guide)}
+                      </Typography>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        sx={{ width: '100%' }}
+                      >
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<ReplayIcon />}
+                          onClick={() => retryPendingGuide(guide)}
+                          sx={{
+                            borderRadius: 2,
+                            textTransform: 'none',
+                          }}
+                        >
+                          Retry
+                        </Button>
+                        <Button
+                          variant="text"
+                          color="error"
+                          size="small"
+                          startIcon={<DeleteOutlineIcon />}
+                          onClick={() => deletePendingGuide(guide)}
+                          sx={{
+                            borderRadius: 2,
+                            textTransform: 'none',
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </Stack>
+                    </Stack>
+                  ) : (
+                    <Stack spacing={1}>
+                      <Typography variant="body2" color="text.secondary">
+                        {isRunning
+                          ? `Elapsed ${formatDuration(
+                              elapsedSeconds,
+                            )} · Estimate ${formatDuration(
+                              guide.estimateSeconds,
+                            )}`
+                          : `Waiting · Estimate ${formatDuration(
+                              guide.estimateSeconds,
+                            )}`}
                       </Typography>
                       <Button
-                        variant="outlined"
+                        variant="text"
+                        color="error"
                         size="small"
-                        startIcon={<ReplayIcon />}
-                        onClick={() =>
-                          void runCreateGuide(guide.prompt, guide.id)
-                        }
+                        startIcon={<DeleteOutlineIcon />}
+                        onClick={() => deletePendingGuide(guide)}
                         sx={{
                           alignSelf: 'flex-start',
                           borderRadius: 2,
                           textTransform: 'none',
                         }}
                       >
-                        Retry
+                        {isRunning ? 'Cancel' : 'Delete'}
                       </Button>
                     </Stack>
-                  ) : (
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Elapsed {formatDuration(elapsedSeconds)} · Estimate{' '}
-                        {formatDuration(guide.estimateSeconds)}
-                      </Typography>
-                    </Box>
                   )}
                 </Stack>
               </Paper>

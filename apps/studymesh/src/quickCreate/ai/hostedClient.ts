@@ -3,7 +3,6 @@ import type { StrongAiCallOptions } from './strongProviders'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   HOSTED_AI_USAGE_CHANGED_EVENT,
-  HOSTED_AI_VISUAL_REFUND_EVENT,
   HOSTED_AI_VISUAL_SPEND_EVENT,
   getHostedAiCreditCost,
 } from './hostedCredits'
@@ -78,7 +77,7 @@ const formatHostedAiError = (
     dispatchInsufficientCredits()
     return new Error(
       message ||
-        'Not enough Study Credits. Wait for the daily refill, switch provider, or bring your own key.',
+        'Not enough Study Credits. Buy a credit pack, switch provider, or bring your own key.',
     )
   }
 
@@ -119,16 +118,6 @@ const dispatchHostedAiVisualSpend = (surface: HostedAiSurface): void => {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(
       new CustomEvent(HOSTED_AI_VISUAL_SPEND_EVENT, {
-        detail: { credits: getHostedAiCreditCost(surface) },
-      }),
-    )
-  }
-}
-
-const dispatchHostedAiVisualRefund = (surface: HostedAiSurface): void => {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(
-      new CustomEvent(HOSTED_AI_VISUAL_REFUND_EVENT, {
         detail: { credits: getHostedAiCreditCost(surface) },
       }),
     )
@@ -214,9 +203,6 @@ const callHostedAiModelUnchecked = async ({
     }
 
     return text
-  } catch (error) {
-    dispatchHostedAiVisualRefund(surface)
-    throw error
   } finally {
     dispatchHostedAiUsageChanged()
   }
@@ -295,9 +281,6 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
 
       onQuickStart(payload.quickStart)
       return text
-    } catch (error) {
-      dispatchHostedAiVisualRefund(surface)
-      throw error
     } finally {
       dispatchHostedAiUsageChanged()
     }

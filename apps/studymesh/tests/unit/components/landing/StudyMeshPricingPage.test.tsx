@@ -54,7 +54,7 @@ describe('StudyMeshPricingPage', () => {
       screen.getByText(/new accounts start with 20 SC/i),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/daily refill brings your balance back up to 5 SC/i),
+      screen.getByText(/only increase through completed credit purchases/i),
     ).toBeInTheDocument()
     expect(
       screen.getByText(

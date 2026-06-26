@@ -109,8 +109,9 @@ const HostedAiIntroModal: React.FC = () => {
             <Chip label={`Chat: ${status.costs.chat}`} />
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-            You get {status.initialFreeCredits} credits on first login. Free
-            balance refills to {status.dailyFreeCredits} credits each day.
+            You get {status.initialFreeCredits} credits on first login. After
+            that, Study Credits only increase when a credit purchase is
+            completed.
           </Typography>
         </Box>
       </DialogContent>

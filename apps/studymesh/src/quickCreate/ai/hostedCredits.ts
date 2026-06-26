@@ -5,7 +5,6 @@ export const STUDY_CREDITS_SYMBOL = 'SC'
 
 export const HOSTED_AI_USAGE_CHANGED_EVENT = 'studymesh-hosted-ai-usage-changed'
 export const HOSTED_AI_VISUAL_SPEND_EVENT = 'studymesh-hosted-ai-visual-spend'
-export const HOSTED_AI_VISUAL_REFUND_EVENT = 'studymesh-hosted-ai-visual-refund'
 export const HOSTED_AI_INSUFFICIENT_CREDITS_EVENT =
   'studymesh-hosted-ai-insufficient-credits'
 
@@ -18,7 +17,6 @@ export const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
 }
 
 export const HOSTED_AI_INITIAL_FREE_CREDITS = 20
-export const HOSTED_AI_DAILY_FREE_CREDITS = 5
 export const HOSTED_AI_REFILL_CURRENCY = 'eur'
 export type HostedAiCreditPackId = 'starter' | 'popular' | 'value'
 
@@ -65,8 +63,6 @@ export interface HostedAiStatus {
   accountReady: boolean
   introSeen: boolean
   studyCredits: number
-  nextDailyRefillAt?: string
-  dailyFreeCredits: number
   initialFreeCredits: number
   costs: Record<HostedAiSurface, number>
   message?: string

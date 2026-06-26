@@ -325,12 +325,12 @@ const HostedAiSettingsPanel: React.FC = () => {
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="subtitle2" fontWeight={950}>
-            Free daily refill
+            Credit balance
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            If your balance is below {status.dailyFreeCredits}, it refills to{' '}
-            {status.dailyFreeCredits} the next day. If you have{' '}
-            {status.dailyFreeCredits} or more, your balance stays the same.
+            Study Credits only increase when a credit purchase is completed.
+            Creating, retrying, refreshing, or failed hosted generations never
+            add credits back.
           </Typography>
         </Box>
       </Box>

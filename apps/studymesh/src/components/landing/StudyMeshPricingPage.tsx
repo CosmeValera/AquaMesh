@@ -20,7 +20,6 @@ import MemoryIcon from '@mui/icons-material/Memory'
 
 import {
   HOSTED_AI_CREDIT_PACKS,
-  HOSTED_AI_DAILY_FREE_CREDITS,
   HOSTED_AI_INITIAL_FREE_CREDITS,
   STUDY_CREDITS_LABEL,
   STUDY_CREDITS_SYMBOL,
@@ -182,10 +181,16 @@ const StudyMeshPricingPage = () => {
               },
             }}
           >
-            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+            <Box
+              component="span"
+              sx={{ display: { xs: 'none', sm: 'inline' } }}
+            >
               Create a Study Guide
             </Box>
-            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+            <Box
+              component="span"
+              sx={{ display: { xs: 'inline', sm: 'none' } }}
+            >
               Create
             </Box>
           </Button>
@@ -382,8 +387,8 @@ const StudyMeshPricingPage = () => {
                   color="text.secondary"
                   sx={{ maxWidth: 680 }}
                 >
-                  {STUDY_CREDITS_LABEL} ({STUDY_CREDITS_SYMBOL}) pay for
-                  hosted generation when you do not want to manage an API key.
+                  {STUDY_CREDITS_LABEL} ({STUDY_CREDITS_SYMBOL}) pay for hosted
+                  generation when you do not want to manage an API key.
                 </Typography>
               </Stack>
 
@@ -508,13 +513,12 @@ const StudyMeshPricingPage = () => {
               >
                 <Typography variant="body2" color="text.secondary">
                   New accounts start with {HOSTED_AI_INITIAL_FREE_CREDITS}{' '}
-                  {STUDY_CREDITS_SYMBOL}. Free daily refill brings your balance
-                  back up to {HOSTED_AI_DAILY_FREE_CREDITS}{' '}
-                  {STUDY_CREDITS_SYMBOL}. Study Guides cost{' '}
-                  {getHostedAiCreditCost('study-guide')}{' '}
-                  {STUDY_CREDITS_SYMBOL}; Quick Create and chat cost{' '}
-                  {getHostedAiCreditCost('quick-create')}{' '}
-                  {STUDY_CREDITS_SYMBOL}.
+                  {STUDY_CREDITS_SYMBOL}. After that, Study Credits only
+                  increase through completed credit purchases. Study Guides cost{' '}
+                  {getHostedAiCreditCost('study-guide')} {STUDY_CREDITS_SYMBOL};
+                  Quick Create and chat cost{' '}
+                  {getHostedAiCreditCost('quick-create')} {STUDY_CREDITS_SYMBOL}
+                  .
                 </Typography>
               </Paper>
             </Box>

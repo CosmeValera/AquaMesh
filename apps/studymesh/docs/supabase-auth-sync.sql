@@ -419,18 +419,12 @@ begin
   on conflict on constraint hosted_ai_account_history_pkey do update
     set first_profile_created_at = public.hosted_ai_account_history.first_profile_created_at;
 
-  update public.hosted_ai_accounts account
-  set study_credit_balance = greatest(account.study_credit_balance, 5),
-      last_daily_refill_date = current_date
-  where account.owner_id = p_owner_id
-    and account.last_daily_refill_date < current_date;
-
   return query
   select account.owner_id,
          account.study_credit_balance,
          account.intro_seen,
          account.last_daily_refill_date,
-         (account.last_daily_refill_date + 1)::timestamptz
+         null::timestamptz
   from public.hosted_ai_accounts account
   where account.owner_id = p_owner_id;
 end;
@@ -461,7 +455,7 @@ begin
          account.study_credit_balance,
          account.intro_seen,
          account.last_daily_refill_date,
-         (account.last_daily_refill_date + 1)::timestamptz
+         null::timestamptz
   from public.hosted_ai_accounts account
   where account.owner_id = p_owner_id;
 end;
@@ -617,7 +611,6 @@ set search_path = public
 as $$
 declare
   event_row public.hosted_ai_usage_events%rowtype;
-  refund_amount integer := 0;
   current_balance integer;
 begin
   if p_status not in ('succeeded', 'failed') then
@@ -652,26 +645,15 @@ begin
     return next;
   end if;
 
-  if event_row.status = 'reserved' and p_status = 'failed' then
-    refund_amount := event_row.credits_charged - event_row.credits_refunded;
-  end if;
-
-  if refund_amount > 0 then
-    update public.hosted_ai_accounts account
-    set study_credit_balance = account.study_credit_balance + refund_amount
-    where account.owner_id = p_owner_id
-    returning account.study_credit_balance into current_balance;
-  else
-    select account.study_credit_balance
-    into current_balance
-    from public.hosted_ai_accounts account
-    where account.owner_id = p_owner_id;
-  end if;
+  select account.study_credit_balance
+  into current_balance
+  from public.hosted_ai_accounts account
+  where account.owner_id = p_owner_id;
 
   update public.hosted_ai_usage_events event
   set status = p_status,
       provider_call_count = greatest(coalesce(p_provider_call_count, 0), 0),
-      credits_refunded = event.credits_refunded + refund_amount,
+      credits_refunded = event.credits_refunded,
       error_code = p_error_code,
       error_message = p_error_message,
       metadata = event.metadata || coalesce(p_metadata, '{}'::jsonb),

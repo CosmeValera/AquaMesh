@@ -246,8 +246,27 @@ describe('workspace cloud repository', () => {
     expect(sql).toContain(
       'when exists ( select 1 from public.hosted_ai_account_history history where history.owner_id = new.id and history.last_profile_deleted_at is not null ) then 0 else 20',
     )
-    expect(sql).toContain(
+    expect(sql).not.toContain(
       'update public.hosted_ai_accounts account set study_credit_balance = greatest(account.study_credit_balance, 5)',
+    )
+  })
+
+  it('keeps Study Credits from increasing outside completed purchases', () => {
+    const sqlPath = resolve(process.cwd(), 'docs/supabase-auth-sync.sql')
+    const sql = readFileSync(sqlPath, 'utf8').replace(/\s+/g, ' ')
+
+    expect(sql).toContain(
+      'create or replace function public.hosted_ai_finish_usage',
+    )
+    expect(sql).not.toContain(
+      'study_credit_balance = account.study_credit_balance + refund_amount',
+    )
+    expect(sql).not.toContain(
+      'study_credit_balance = greatest(account.study_credit_balance, 5)',
+    )
+    expect(sql).toContain('credits_refunded = event.credits_refunded')
+    expect(sql).toContain(
+      'set study_credit_balance = account.study_credit_balance + purchase.expected_credits',
     )
   })
 

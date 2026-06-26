@@ -78,7 +78,6 @@ const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
 };
 
 const HOSTED_AI_INITIAL_FREE_CREDITS = 20;
-const HOSTED_AI_DAILY_FREE_CREDITS = 5;
 export const DEFAULT_CEREBRAS_MODEL = "gpt-oss-120b";
 const MAX_TEXT_CHARS = 120_000;
 const CEREBRAS_CHAT_COMPLETIONS_URL =
@@ -246,7 +245,6 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
       accountReady: true,
       introSeen: false,
       studyCredits: 0,
-      dailyFreeCredits: HOSTED_AI_DAILY_FREE_CREDITS,
       initialFreeCredits: HOSTED_AI_INITIAL_FREE_CREDITS,
       costs: HOSTED_AI_CREDIT_COSTS,
     };
@@ -279,16 +277,6 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
           ? statusSource.intro_seen
           : false,
     studyCredits,
-    nextDailyRefillAt:
-      typeof statusSource.nextDailyRefillAt === "string"
-        ? statusSource.nextDailyRefillAt
-        : typeof statusSource.next_daily_refill_at === "string"
-          ? statusSource.next_daily_refill_at
-          : undefined,
-    dailyFreeCredits:
-      typeof statusSource.dailyFreeCredits === "number"
-        ? statusSource.dailyFreeCredits
-        : HOSTED_AI_DAILY_FREE_CREDITS,
     initialFreeCredits:
       typeof statusSource.initialFreeCredits === "number"
         ? statusSource.initialFreeCredits

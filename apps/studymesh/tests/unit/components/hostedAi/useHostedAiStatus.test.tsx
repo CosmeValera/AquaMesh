@@ -10,7 +10,6 @@ vi.mock('../../../../src/quickCreate/ai', () => ({
   getHostedAiStatus: hostedAiMocks.getHostedAiStatus,
   markHostedAiIntroSeen: hostedAiMocks.markHostedAiIntroSeen,
   HOSTED_AI_USAGE_CHANGED_EVENT: 'studymesh-hosted-ai-usage-changed',
-  HOSTED_AI_VISUAL_REFUND_EVENT: 'studymesh-hosted-ai-visual-refund',
   HOSTED_AI_VISUAL_SPEND_EVENT: 'studymesh-hosted-ai-visual-spend',
 }))
 
@@ -27,7 +26,6 @@ const makeStatus = (studyCredits: number) => ({
   accountReady: true,
   introSeen: true,
   studyCredits,
-  dailyFreeCredits: 5,
   initialFreeCredits: 20,
   costs: {
     'study-guide': 2,
@@ -107,7 +105,7 @@ describe('useHostedAiStatus', () => {
     )
   })
 
-  it('returns visual credits after a failed hosted generation', async () => {
+  it('does not increase visual credits from refund events', async () => {
     hostedAiMocks.getHostedAiStatus.mockResolvedValue(makeStatus(8))
 
     const { result } = renderHook(() => useHostedAiStatus())
@@ -133,11 +131,11 @@ describe('useHostedAiStatus', () => {
       )
     })
 
-    expect(result.current.displayStudyCredits).toBe(8)
+    expect(result.current.displayStudyCredits).toBe(6)
     expect(result.current.status?.studyCredits).toBe(8)
     expect(localStorage.setItem).toHaveBeenCalledWith(
       'studymesh-hosted-ai-credits-v1',
-      JSON.stringify({ ownerId: 'user-1', studyCredits: 8 }),
+      JSON.stringify({ ownerId: 'user-1', studyCredits: 6 }),
     )
   })
 })

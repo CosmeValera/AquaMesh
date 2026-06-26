@@ -18,7 +18,6 @@ import {
 } from '../../../src/quickCreate/ai/hostedClient'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
-  HOSTED_AI_VISUAL_REFUND_EVENT,
   HOSTED_AI_VISUAL_SPEND_EVENT,
 } from '../../../src/quickCreate/ai/hostedCredits'
 
@@ -29,7 +28,6 @@ const statusPayload = (studyCredits: number) => ({
     accountReady: true,
     introSeen: true,
     studyCredits,
-    dailyFreeCredits: 5,
     initialFreeCredits: 20,
     costs: {
       'study-guide': 2,
@@ -180,11 +178,9 @@ describe('hosted AI client credit failures', () => {
     window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, listener)
   })
 
-  it('returns the visual credit cost when hosted generation fails', async () => {
+  it('keeps the visual credit spend when hosted generation fails', async () => {
     const spendListener = vi.fn()
-    const refundListener = vi.fn()
     window.addEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, spendListener)
-    window.addEventListener(HOSTED_AI_VISUAL_REFUND_EVENT, refundListener)
     vi.stubGlobal(
       'fetch',
       vi
@@ -215,12 +211,8 @@ describe('hosted AI client credit failures', () => {
     expect(spendListener).toHaveBeenCalledWith(
       expect.objectContaining({ detail: { credits: 2 } }),
     )
-    expect(refundListener).toHaveBeenCalledWith(
-      expect.objectContaining({ detail: { credits: 2 } }),
-    )
 
     window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, spendListener)
-    window.removeEventListener(HOSTED_AI_VISUAL_REFUND_EVENT, refundListener)
   })
 
   it('bundles hosted Study Guide Quick Start generation under one visual charge', async () => {

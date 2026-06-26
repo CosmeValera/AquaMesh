@@ -17,7 +17,6 @@ const hostedAiStatus = vi.hoisted(() => ({
   accountReady: true,
   introSeen: true,
   studyCredits: 8,
-  dailyFreeCredits: 5,
   initialFreeCredits: 20,
   costs: {
     'study-guide': 2,
@@ -332,7 +331,6 @@ describe('TopNavBar Component', () => {
             accountReady: true,
             introSeen: true,
             studyCredits: 8,
-            dailyFreeCredits: 5,
             initialFreeCredits: 20,
             costs: {
               'study-guide': 2,
@@ -608,9 +606,7 @@ describe('TopNavBar Component', () => {
         name: /delete studymesh account data/i,
       }),
     ).toBeInTheDocument()
-    expect(
-      screen.getByText(/synced study guides/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/synced study guides/i)).toBeInTheDocument()
 
     fireEvent.click(
       screen.getByRole('button', {

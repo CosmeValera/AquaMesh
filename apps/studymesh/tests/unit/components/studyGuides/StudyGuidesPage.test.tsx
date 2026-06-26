@@ -11,6 +11,7 @@ import {
 } from '../../../../src/studyGuides/storage'
 import { generateStudyPathStateFromPrompt } from '../../../../src/studyGuides/generation'
 import {
+  HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
   STUDY_GUIDE_CREATION_QUEUE_KEY,
   StudyGuideCreationQueueStorage,
 } from '../../../../src/studyGuides/creationQueue'
@@ -287,7 +288,7 @@ describe('StudyGuidesPage create flow', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
-    fireEvent.click(screen.getByText('Retry'))
+    fireEvent.click(screen.getByRole('button', { name: /retry/i }))
 
     await waitFor(() => {
       expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(2)
@@ -440,6 +441,26 @@ describe('StudyGuidesPage create flow', () => {
     })
     expect(screen.queryByText('Failed')).not.toBeInTheDocument()
     saveSpy.mockRestore()
+  })
+
+  it('stops hosted auto retry after one retryable failure recovery', async () => {
+    vi.mocked(generateStudyPathStateFromPrompt)
+      .mockRejectedValueOnce(new Error('Failed to fetch'))
+      .mockRejectedValueOnce(new Error('Failed to fetch'))
+    renderStudyGuidesPage('/study-guides')
+
+    await createGuideFromPrompt('Repeated network prompt')
+
+    await waitFor(() => {
+      expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(2)
+    })
+    expect(await screen.findByText('Failed')).toBeInTheDocument()
+    expect(
+      screen.getByText(HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /retry \(2 sc\)/i }),
+    ).toBeInTheDocument()
   })
 
   it('keeps non-retryable provider failures failed for manual retry', async () => {

@@ -18,12 +18,16 @@ export interface StudyGuideCreationJob {
   createdAt: string
   updatedAt: string
   estimateSeconds: number
+  autoRetryCount: number
   startedAt?: string | null
   finishedAt?: string | null
   errorMessage?: string | null
   resultStudyGuideId?: string | null
 }
 
+export const HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT = 1
+export const HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE =
+  'Creation was interrupted again. Retry will spend 2 Study Credits.'
 export const isRetryableStudyGuideCreationError = (
   message?: string | null,
 ): boolean =>
@@ -53,6 +57,15 @@ const isCreationProvider = (
   value === 'local' ||
   value === 'gemini' ||
   value === 'cerebras'
+
+const normalizeAutoRetryCount = (value: unknown): number =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : 0
+
+const shouldAutoRetryJob = (job: StudyGuideCreationJob): boolean =>
+  job.provider !== 'hosted' ||
+  job.autoRetryCount < HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT
 
 const dispatchQueueChanged = () => {
   if (typeof window === 'undefined') {
@@ -95,6 +108,7 @@ const normalizeJob = (value: unknown): StudyGuideCreationJob | null => {
       Number.isFinite(source.estimateSeconds)
         ? source.estimateSeconds
         : 60,
+    autoRetryCount: normalizeAutoRetryCount(source.autoRetryCount),
     startedAt: typeof source.startedAt === 'string' ? source.startedAt : null,
     finishedAt:
       typeof source.finishedAt === 'string' ? source.finishedAt : null,
@@ -146,8 +160,16 @@ export const StudyGuideCreationQueueStorage = {
   },
 
   upsert(
-    job: Omit<StudyGuideCreationJob, 'createdAt' | 'updatedAt'> &
-      Partial<Pick<StudyGuideCreationJob, 'createdAt' | 'updatedAt'>>,
+    job: Omit<
+      StudyGuideCreationJob,
+      'createdAt' | 'updatedAt' | 'autoRetryCount'
+    > &
+      Partial<
+        Pick<
+          StudyGuideCreationJob,
+          'createdAt' | 'updatedAt' | 'autoRetryCount'
+        >
+      >,
   ): StudyGuideCreationJob {
     const current = readQueue()
     const existing = current.find((item) => item.id === job.id)
@@ -155,6 +177,7 @@ export const StudyGuideCreationQueueStorage = {
       ...job,
       createdAt: job.createdAt || existing?.createdAt || nowIso(),
       updatedAt: job.updatedAt || nowIso(),
+      autoRetryCount: job.autoRetryCount ?? existing?.autoRetryCount ?? 0,
       startedAt: job.startedAt ?? existing?.startedAt ?? null,
       finishedAt: job.finishedAt ?? existing?.finishedAt ?? null,
       errorMessage: job.errorMessage ?? null,
@@ -208,10 +231,24 @@ export const StudyGuideCreationQueueStorage = {
       }
 
       changed = true
+      if (!shouldAutoRetryJob(job)) {
+        return {
+          ...job,
+          status: 'failed' as const,
+          updatedAt: nowIso(),
+          finishedAt: nowIso(),
+          errorMessage: HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
+        }
+      }
+
       return {
         ...job,
         status: 'queued' as const,
         updatedAt: nowIso(),
+        autoRetryCount:
+          job.provider === 'hosted'
+            ? job.autoRetryCount + 1
+            : job.autoRetryCount,
         startedAt: null,
         finishedAt: null,
         errorMessage: null,

@@ -49,6 +49,8 @@ import {
 import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
 import {
+  HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT,
+  HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
   STUDY_GUIDE_CREATION_QUEUE_CHANGED_EVENT,
   StudyGuideCreationQueueStorage,
   isRetryableStudyGuideCreationError,
@@ -137,6 +139,13 @@ const getPendingErrorMessage = (guide: PendingGuide): string =>
 
 const isLocalProvider = (provider: StudyGuideCreationProvider): boolean =>
   provider === 'local'
+
+const canAutoRetryPendingGuide = (guide: PendingGuide): boolean =>
+  guide.provider !== 'hosted' ||
+  guide.autoRetryCount < HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT
+
+const getRetryButtonLabel = (guide: PendingGuide): string =>
+  guide.provider === 'hosted' ? 'Retry (2 SC)' : 'Retry'
 
 const formatDuration = (seconds: number): string => {
   const safeSeconds = Math.max(0, Math.floor(seconds))
@@ -365,6 +374,7 @@ const StudyGuidesPage = () => {
       provider: getActiveAiProvider(),
       status: 'queued',
       estimateSeconds: getGenerationEstimateSeconds(),
+      autoRetryCount: 0,
       startedAt: null,
       finishedAt: null,
       errorMessage: null,
@@ -424,14 +434,26 @@ const StudyGuidesPage = () => {
         error instanceof Error
           ? error.message
           : 'Could not create this Study Guide.'
-      const nextStatus = isRetryableStudyGuideCreationError(errorMessage)
-        ? 'queued'
-        : 'failed'
+      const canAutoRetry =
+        isRetryableStudyGuideCreationError(errorMessage) &&
+        canAutoRetryPendingGuide(job)
+      const nextStatus = canAutoRetry ? 'queued' : 'failed'
       StudyGuideCreationQueueStorage.update(job.id, {
         status: nextStatus,
         startedAt: nextStatus === 'queued' ? null : startedAt,
         finishedAt: nextStatus === 'failed' ? new Date().toISOString() : null,
-        errorMessage: nextStatus === 'failed' ? errorMessage : null,
+        autoRetryCount:
+          canAutoRetry && job.provider === 'hosted'
+            ? job.autoRetryCount + 1
+            : job.autoRetryCount,
+        errorMessage:
+          nextStatus === 'failed' &&
+          isRetryableStudyGuideCreationError(errorMessage) &&
+          job.provider === 'hosted'
+            ? HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE
+            : nextStatus === 'failed'
+              ? errorMessage
+              : null,
       })
     } finally {
       activeJobsRef.current.delete(job.id)
@@ -482,6 +504,7 @@ const StudyGuidesPage = () => {
       status: 'queued',
       startedAt: null,
       finishedAt: null,
+      autoRetryCount: 0,
       errorMessage: null,
     })
     loadPendingGuides()
@@ -999,7 +1022,7 @@ const StudyGuidesPage = () => {
                             textTransform: 'none',
                           }}
                         >
-                          Retry
+                          {getRetryButtonLabel(guide)}
                         </Button>
                         <Button
                           variant="text"

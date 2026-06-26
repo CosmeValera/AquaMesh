@@ -834,4 +834,76 @@ describe('API payment and hosted AI hardening', () => {
     expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 2 })
     expect(rpcBodies[1].p_provider_call_count).toBe(3)
   })
+
+  it('maps hosted Study Guide risky retry guard to rate limit before provider call', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+    vi.stubEnv('HOSTED_CEREBRAS_API_KEY', 'hosted-cerebras-key')
+
+    const fetchMock = vi.fn((url: string) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(JSON.stringify({ id: 'user-1' })),
+        })
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+        return Promise.resolve({
+          ok: false,
+          status: 400,
+          text: vi.fn().mockResolvedValue(
+            JSON.stringify({
+              message:
+                'Hosted Study Guide retry limit reached. Try again later.',
+            }),
+          ),
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(JSON.stringify({})),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer user-token',
+        },
+        body: {
+          action: 'generateWithQuickStart',
+          surface: 'study-guide',
+          parts: [{ text: 'Create study guide' }],
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(429)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: {
+        code: 'rate_limited',
+        message: 'Hosted Study Guide retry limit reached. Try again later.',
+      },
+    })
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).includes('cerebras.ai')),
+    ).toBe(false)
+    expect(
+      fetchMock.mock.calls.some(([url]) =>
+        String(url).includes('/rest/v1/rpc/hosted_ai_finish_usage'),
+      ),
+    ).toBe(false)
+  })
 })

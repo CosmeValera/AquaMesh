@@ -224,7 +224,11 @@ const callSupabaseRpc = async <T>(
   if (!response.ok) {
     const message = getSupabaseErrorMessage(payload);
     const error = new Error(message);
-    error.name = response.status === 429 ? "rate_limited" : "rpc_error";
+    error.name =
+      response.status === 429 ||
+      /retry limit|rate limit|too many/i.test(message)
+        ? "rate_limited"
+        : "rpc_error";
     throw error;
   }
 

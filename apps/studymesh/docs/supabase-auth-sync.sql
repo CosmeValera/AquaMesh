@@ -491,6 +491,7 @@ as $$
 declare
   credit_cost integer;
   current_balance integer;
+  recent_risky_attempt_count integer := 0;
 begin
   if p_request_id is null or btrim(p_request_id) = '' then
     raise exception 'request_id is required';
@@ -519,6 +520,20 @@ begin
 
   if found then
     return;
+  end if;
+
+  if p_surface = 'study-guide' then
+    select count(*)::integer
+    into recent_risky_attempt_count
+    from public.hosted_ai_usage_events event
+    where event.owner_id = p_owner_id
+      and event.surface = 'study-guide'
+      and event.status in ('reserved', 'failed')
+      and event.created_at >= now() - interval '10 minutes';
+
+    if recent_risky_attempt_count >= 6 then
+      raise exception 'Hosted Study Guide retry limit reached. Try again later.';
+    end if;
   end if;
 
   select account.study_credit_balance

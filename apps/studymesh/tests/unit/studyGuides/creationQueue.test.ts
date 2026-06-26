@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
   STUDY_GUIDE_CREATION_QUEUE_KEY,
   StudyGuideCreationQueueStorage,
 } from '../../../src/studyGuides/creationQueue'
@@ -49,6 +50,7 @@ describe('StudyGuideCreationQueueStorage', () => {
         prompt: 'Valid prompt',
         provider: 'hosted',
         status: 'queued',
+        autoRetryCount: 0,
       },
     ])
   })
@@ -92,7 +94,30 @@ describe('StudyGuideCreationQueueStorage', () => {
         {
           id: 'running-job',
           status: 'queued',
+          autoRetryCount: 1,
           errorMessage: null,
+        },
+      ],
+    )
+  })
+
+  it('stops hosted auto retry after one recovery attempt', () => {
+    StudyGuideCreationQueueStorage.upsert({
+      id: 'running-job',
+      prompt: 'Study chemistry',
+      provider: 'hosted',
+      status: 'running',
+      estimateSeconds: 20,
+      autoRetryCount: 1,
+    })
+
+    expect(StudyGuideCreationQueueStorage.requeueRetryableJobs()).toMatchObject(
+      [
+        {
+          id: 'running-job',
+          status: 'failed',
+          autoRetryCount: 1,
+          errorMessage: HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
         },
       ],
     )
@@ -119,6 +144,7 @@ describe('StudyGuideCreationQueueStorage', () => {
     const jobs = StudyGuideCreationQueueStorage.requeueRetryableJobs()
     expect(jobs.find((job) => job.id === 'network-job')).toMatchObject({
       status: 'queued',
+      autoRetryCount: 1,
       errorMessage: null,
     })
     expect(jobs.find((job) => job.id === 'provider-job')).toMatchObject({

@@ -1020,23 +1020,6 @@ const ContextComparisonSection = () => {
             />
           </Box>
 
-          <Stack direction="row" spacing={1.45} aria-label="Context carousel page">
-            {contextTopics.map((topic, index) => (
-              <Box
-                key={topic.id}
-                aria-hidden="true"
-                sx={{
-                  width: index === activeIndex ? 15 : 11,
-                  height: 11,
-                  borderRadius: 999,
-                  bgcolor:
-                    index === activeIndex ? activeTopic.color : '#D9DEEB',
-                  transition: 'all 160ms ease',
-                }}
-              />
-            ))}
-          </Stack>
-
           <Box
             sx={{
               width: { xs: '100%', md: '76%' },

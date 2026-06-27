@@ -62,12 +62,20 @@ describe('StudyMeshLanding', () => {
       screen.getByText(/studymesh adapts the answer/i),
     ).toBeInTheDocument()
     expect(
+      screen.getByText(/choose what you already know - watch the same question change/i),
+    ).toBeInTheDocument()
+    expect(
       screen.getByRole('button', { name: /photography/i }),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: /gaming/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /tech/i })).toBeInTheDocument()
-    expect(screen.getByText(/think of a living camera/i)).toBeInTheDocument()
-    expect(screen.getByText(/the same question becomes clearer/i))
+    expect(screen.getAllByText(/what is a trade-off/i).length).toBeGreaterThan(0)
+    expect(
+      screen.getByText(/improving one thing usually means giving up something else/i),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/think of exposure settings/i)).toBeInTheDocument()
+    expect(screen.getByText(/with photography context/i)).toBeInTheDocument()
+    expect(screen.getByText(/one question/i))
       .toBeInTheDocument()
 
     expect(getComputedStyle(screen.getByTestId('studymesh-landing')).color).toBe(
@@ -78,17 +86,8 @@ describe('StudyMeshLanding', () => {
   it('switches knowledge context examples from the landing carousel', () => {
     renderLanding()
 
-    fireEvent.click(screen.getByRole('button', { name: /show without context/i }))
-
-    expect(
-      screen.getByText(/the human eye works by taking in light/i),
-    ).toBeInTheDocument()
-
-    fireEvent.click(
-      screen.getByRole('button', { name: /show photography context/i }),
-    )
-
-    expect(screen.getByText(/think of a living camera/i)).toBeInTheDocument()
+    expect(screen.getByText(/think of exposure settings/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/what is a trade-off/i).length).toBeGreaterThan(0)
 
     fireEvent.click(
       screen.getByRole('button', { name: /show next knowledge context/i }),
@@ -98,7 +97,10 @@ describe('StudyMeshLanding', () => {
       'aria-pressed',
       'true',
     )
-    expect(screen.getByText(/think of a game economy/i)).toBeInTheDocument()
+    expect(screen.getByText(/think of a character build/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/improving one thing usually means giving up something else/i),
+    ).toBeInTheDocument()
   })
 
   it('keeps the study guide CTA target unchanged', () => {

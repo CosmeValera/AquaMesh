@@ -16,7 +16,6 @@ import MusicNoteOutlinedIcon from '@mui/icons-material/MusicNoteOutlined'
 import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import CheckIcon from '@mui/icons-material/Check'
@@ -97,26 +96,26 @@ const featureItems = [
 type ContextTopic = {
   id: string
   label: string
-  question: string
   contextLabel: string
   contextAnswer: string
-  noContextAnswer: string
   icon: React.ReactNode
   color: string
   tone: string
   visualSrc: string
 }
 
+const contextQuestion = 'What is a trade-off?'
+
+const noContextTradeoffAnswer =
+  'A trade-off is when improving one thing usually means giving up something else.'
+
 const contextTopics: ContextTopic[] = [
   {
     id: 'photography',
     label: 'Photography',
-    question: 'How does the human eye work?',
     contextLabel: 'Photography',
     contextAnswer:
-      'Think of a living camera: the pupil controls exposure, the cornea and lens focus, the retina captures light, and the brain processes the image.',
-    noContextAnswer:
-      'The eye takes in light, focuses it onto the retina, and sends signals to the brain so you can see.',
+      'Think of exposure settings: a wider aperture gives more light and blurrier backgrounds, but less of the scene stays sharp.',
     icon: <CameraAltOutlinedIcon />,
     color: '#008A78',
     tone: brand.mintSoft,
@@ -125,12 +124,9 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'gaming',
     label: 'Gaming',
-    question: 'What is inflation?',
     contextLabel: 'Gaming',
     contextAnswer:
-      'Think of a game economy: if everyone gets more coins but shop prices rise too, each coin buys less.',
-    noContextAnswer:
-      'Inflation means prices rise across the economy, so the same amount of money buys fewer goods and services over time.',
+      'Think of a character build: more damage may mean less defense, less speed, or fewer healing options.',
     icon: <SportsEsportsOutlinedIcon />,
     color: '#356BF6',
     tone: '#EAF0FF',
@@ -139,12 +135,9 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'fitness',
     label: 'Fitness',
-    question: 'What is compound interest?',
     contextLabel: 'Fitness',
     contextAnswer:
-      'Think of progressive overload: small gains keep building on previous gains, so progress can become much larger over time.',
-    noContextAnswer:
-      'Compound interest means your earnings are added back to the original amount, so future earnings grow from a larger base.',
+      'Think of training volume: doing more sets can build more muscle, but it also increases fatigue and recovery needs.',
     icon: <FitnessCenterOutlinedIcon />,
     color: '#7A4BC2',
     tone: '#F1ECFF',
@@ -153,12 +146,9 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'cooking',
     label: 'Cooking',
-    question: 'What is a chemical reaction?',
     contextLabel: 'Cooking',
     contextAnswer:
-      'Think of browning onions: heat does not just warm them, it changes their molecules, creating new color, smell, and flavor.',
-    noContextAnswer:
-      'A chemical reaction happens when substances rearrange their atoms and form new substances with different properties.',
+      'Think of heat: higher heat can brown food faster, but it also makes it easier to burn the outside before the inside cooks.',
     icon: <RestaurantOutlinedIcon />,
     color: '#E05AD8',
     tone: '#FFF0FC',
@@ -167,12 +157,9 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'books',
     label: 'Books',
-    question: 'What is a leading indicator?',
     contextLabel: 'Books',
     contextAnswer:
-      'Think of foreshadowing in a story: an early clue that hints at what is likely to happen later.',
-    noContextAnswer:
-      'A leading indicator is a signal that changes before a larger trend or event becomes obvious.',
+      'Think of pacing: adding more detail can make a world richer, but it can also slow the story down.',
     icon: <MenuBookOutlinedIcon />,
     color: '#E68000',
     tone: '#FFF4E2',
@@ -181,12 +168,9 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'investing',
     label: 'Investing',
-    question: 'What is exponential growth?',
     contextLabel: 'Investing',
     contextAnswer:
-      'Think of compounding returns: growth gets added to the base, so the next round grows from a larger amount than before.',
-    noContextAnswer:
-      'Exponential growth happens when something increases by a percentage of its current size, making the increases larger over time.',
+      'Think of risk and return: chasing higher potential gains usually means accepting more uncertainty.',
     icon: <TrendingUpOutlinedIcon />,
     color: '#7B45C8',
     tone: '#F2ECFF',
@@ -195,12 +179,9 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'law',
     label: 'Law',
-    question: 'What is a design pattern?',
     contextLabel: 'Law',
     contextAnswer:
-      'Think of legal precedent: a proven answer to a recurring situation that people reuse when a similar case appears.',
-    noContextAnswer:
-      'A design pattern is a reusable solution to a common problem, especially in software or system design.',
+      'Think of rights and safety: stronger enforcement may improve security, but it can also limit personal freedom.',
     icon: <AccountBalanceOutlinedIcon />,
     color: '#CC202A',
     tone: '#FFF0F1',
@@ -209,12 +190,9 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'physics',
     label: 'Physics',
-    question: 'Why are habits hard to change?',
     contextLabel: 'Physics',
     contextAnswer:
-      'Think of inertia: once a routine is moving in one direction, it keeps going unless a stronger force changes its path.',
-    noContextAnswer:
-      'Habits are hard to change because repeated actions become automatic patterns that your brain prefers to reuse.',
+      'Think of energy and precision: pushing a system harder can increase output, but it may also create more heat, waste, or instability.',
     icon: <ScienceOutlinedIcon />,
     color: '#D82E2E',
     tone: '#FFF0F0',
@@ -223,12 +201,9 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'music',
     label: 'Music',
-    question: 'What is pacing in a story?',
     contextLabel: 'Music',
     contextAnswer:
-      'Think of tempo in a song: fast sections create energy, pauses create tension, and the overall rhythm shapes how the story feels.',
-    noContextAnswer:
-      'Pacing is how quickly or slowly a story moves through events, details, and pauses.',
+      'Think of song arrangement: adding more layers can make the track richer, but too many can make it feel crowded.',
     icon: <MusicNoteOutlinedIcon />,
     color: '#A8790B',
     tone: '#FFF7E1',
@@ -237,12 +212,9 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'tech',
     label: 'Tech',
-    question: 'What is an enzyme?',
     contextLabel: 'Tech',
     contextAnswer:
-      'Think of a reusable helper function: it makes a specific process run faster without being used up by the process.',
-    noContextAnswer:
-      'An enzyme is a molecule that speeds up a chemical reaction without being consumed.',
+      'Think of software design: optimizing for speed can make code harder to read, test, or maintain.',
     icon: <CodeOutlinedIcon />,
     color: '#154397',
     tone: '#EAF1FF',
@@ -863,18 +835,13 @@ const HeroTimeline = () => {
 
 const ContextComparisonSection = () => {
   const [activeIndex, setActiveIndex] = useState(0)
-  const [showContext, setShowContext] = useState(true)
   const activeTopic = contextTopics[activeIndex]
   const previousTopic =
     contextTopics[(activeIndex - 1 + contextTopics.length) % contextTopics.length]
   const nextTopic = contextTopics[(activeIndex + 1) % contextTopics.length]
-  const visibleAnswer = showContext
-    ? activeTopic.contextAnswer
-    : activeTopic.noContextAnswer
 
   const selectTopic = (index: number) => {
     setActiveIndex(index)
-    setShowContext(true)
   }
 
   const moveTopic = (direction: -1 | 1) => {
@@ -938,7 +905,7 @@ const ContextComparisonSection = () => {
                 letterSpacing: 0,
               }}
             >
-              Same question. More personal explanation.
+              Same question. Adapted answer.
             </Typography>
             <Typography
               sx={{
@@ -948,7 +915,7 @@ const ContextComparisonSection = () => {
                 lineHeight: 1.58,
               }}
             >
-              StudyMesh adapts the answer to knowledge you already have.
+              Choose what you already know, watch the explanation change.
             </Typography>
           </Stack>
 
@@ -1050,9 +1017,6 @@ const ContextComparisonSection = () => {
             <PreviewContextCard topic={nextTopic} side="right" />
             <FeaturedContextCard
               topic={activeTopic}
-              answer={visibleAnswer}
-              showContext={showContext}
-              onToggleContext={() => setShowContext((value) => !value)}
             />
           </Box>
 
@@ -1103,11 +1067,10 @@ const ContextComparisonSection = () => {
               </Box>
               <Box>
                 <Typography sx={{ color: brand.ink, fontWeight: 800, fontSize: '1.08rem' }}>
-                  The same question becomes clearer with the right context.
+                  One question. Infinite ways to understand.
                 </Typography>
                 <Typography sx={{ color: '#64719B', lineHeight: 1.55 }}>
-                  When StudyMesh knows what you already understand, it can explain
-                  new ideas in a simpler, more intuitive way.
+                  Pick a context above to see an explanation tailored to your world.
                 </Typography>
               </Box>
             </Stack>
@@ -1120,21 +1083,15 @@ const ContextComparisonSection = () => {
 
 const FeaturedContextCard = ({
   topic,
-  answer,
-  showContext,
-  onToggleContext,
 }: {
   topic: ContextTopic
-  answer: string
-  showContext: boolean
-  onToggleContext: () => void
 }) => (
   <Box
     sx={{
       position: 'relative',
       zIndex: 2,
-      width: { xs: '100%', md: '68%' },
-      maxWidth: 760,
+      width: { xs: '100%', md: '74%' },
+      maxWidth: 860,
       p: { xs: 2.2, md: 3.2 },
       borderRadius: 2,
       border: `1px solid ${alpha(brand.line, 0.95)}`,
@@ -1146,12 +1103,12 @@ const FeaturedContextCard = ({
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: '1fr', md: '1.45fr 0.95fr' },
+        gridTemplateColumns: { xs: '1fr', md: '1.55fr 0.9fr' },
         gap: { xs: 2.2, md: 3 },
         alignItems: 'center',
       }}
     >
-      <Stack spacing={2}>
+      <Stack spacing={2.2}>
         <Stack direction="row" spacing={1.2} alignItems="center">
           <ContextIcon topic={topic} size={52} />
           <Box
@@ -1164,51 +1121,101 @@ const FeaturedContextCard = ({
               fontWeight: 800,
             }}
           >
-            {showContext ? topic.contextLabel : 'No context'}
+            Because you know {topic.contextLabel}
           </Box>
         </Stack>
+        <Box
+          sx={{
+            display: 'inline-flex',
+            alignSelf: 'flex-start',
+            px: 1.45,
+            py: 0.65,
+            borderRadius: 1,
+            color: brand.blueDark,
+            bgcolor: alpha(brand.sky, 0.08),
+            border: `1px solid ${alpha(brand.sky, 0.16)}`,
+            fontWeight: 800,
+            fontSize: '0.94rem',
+          }}
+        >
+          Same question: {contextQuestion}
+        </Box>
         <Typography
           variant="h3"
           sx={{
             color: brand.ink,
             fontWeight: 800,
-            fontSize: { xs: '1.45rem', md: '1.95rem' },
+            fontSize: { xs: '1.45rem', md: '1.85rem' },
             lineHeight: 1.16,
             letterSpacing: 0,
           }}
         >
-          {topic.question}
+          One idea, explained through what you already understand.
         </Typography>
-        <Typography sx={{ color: brand.ink, fontSize: '1.04rem', lineHeight: 1.72 }}>
-          {answer}
-        </Typography>
-        <Button
-          variant="outlined"
-          onClick={onToggleContext}
-          startIcon={<SwapHorizIcon />}
+        <Box
           sx={{
-            alignSelf: 'flex-start',
-            px: 2.1,
-            py: 0.9,
-            borderRadius: 1,
-            color: brand.ink,
-            borderColor: alpha(brand.blue, 0.18),
-            bgcolor: '#FFFFFF',
-            fontWeight: 800,
-            textTransform: 'none',
-            '&:hover': {
-              borderColor: alpha(topic.color, 0.44),
-              bgcolor: alpha(topic.color, 0.07),
-            },
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+            gap: 1.3,
           }}
         >
-          {showContext ? 'Show without context' : `Show ${topic.contextLabel} context`}
-        </Button>
+          <ContextAnswerPanel
+            label="Without context"
+            answer={noContextTradeoffAnswer}
+          />
+          <ContextAnswerPanel
+            label={`With ${topic.contextLabel} context`}
+            answer={topic.contextAnswer}
+            topic={topic}
+          />
+        </Box>
       </Stack>
       <ContextVisual topic={topic} />
     </Box>
   </Box>
 )
+
+const ContextAnswerPanel = ({
+  label,
+  answer,
+  topic,
+}: {
+  label: string
+  answer: string
+  topic?: ContextTopic
+}) => {
+  const accent = topic?.color ?? brand.faint
+
+  return (
+    <Box
+      sx={{
+        p: { xs: 1.45, md: 1.6 },
+        minHeight: { xs: 'auto', sm: 172 },
+        borderRadius: 1.4,
+        border: `1px solid ${alpha(accent, topic ? 0.38 : 0.28)}`,
+        bgcolor: topic ? alpha(accent, 0.065) : '#FFFFFF',
+        boxShadow: topic ? `0 16px 38px ${alpha(accent, 0.1)}` : 'none',
+      }}
+    >
+      <Typography
+        sx={{
+          color: topic ? topic.color : '#64719B',
+          fontWeight: 900,
+          fontSize: '0.78rem',
+          lineHeight: 1,
+          textTransform: 'uppercase',
+          letterSpacing: 0,
+          mb: 1,
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography sx={{ color: brand.ink, fontSize: '0.98rem', lineHeight: 1.62 }}>
+        {answer}
+      </Typography>
+    </Box>
+  )
+}
 
 const PreviewContextCard = ({
   topic,
@@ -1259,7 +1266,7 @@ const PreviewContextCard = ({
         </Typography>
       </Stack>
       <Typography sx={{ color: brand.ink, fontWeight: 800, fontSize: '1.05rem' }}>
-        {topic.question}
+        {contextQuestion}
       </Typography>
       <Typography sx={{ color: '#59668A', lineHeight: 1.62 }}>
         {topic.contextAnswer}

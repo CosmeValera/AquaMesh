@@ -47,16 +47,58 @@ describe('StudyMeshLanding', () => {
         /studymesh builds adaptive study guides by connecting new concepts/i,
       ),
     ).toBeInTheDocument()
-    expect(screen.getByText(/20 sec/i)).toBeInTheDocument()
-    expect(screen.getByText(/key idea/i)).toBeInTheDocument()
-    expect(screen.getByText(/60 sec/i)).toBeInTheDocument()
-    expect(screen.getByText(/idea summary/i)).toBeInTheDocument()
-    expect(screen.getByText(/5 pages/i)).toBeInTheDocument()
-    expect(screen.getByText(/full guide/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/20 sec/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/key idea/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/60 sec/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/idea summary/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/5 pages/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/full guide/i).length).toBeGreaterThan(0)
+    expect(
+      screen.getByRole('heading', {
+        name: /same question\. more personal explanation\./i,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/studymesh adapts the same answer/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /photography/i }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /gaming/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /tech/i })).toBeInTheDocument()
+    expect(screen.getByText(/think of a living camera/i)).toBeInTheDocument()
+    expect(screen.getByText(/the same question becomes clearer/i))
+      .toBeInTheDocument()
 
     expect(getComputedStyle(screen.getByTestId('studymesh-landing')).color).toBe(
       'rgb(7, 17, 39)',
     )
+  })
+
+  it('switches knowledge context examples from the landing carousel', () => {
+    renderLanding()
+
+    fireEvent.click(screen.getByRole('button', { name: /show without context/i }))
+
+    expect(
+      screen.getByText(/the human eye works by taking in light/i),
+    ).toBeInTheDocument()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /show photography context/i }),
+    )
+
+    expect(screen.getByText(/think of a living camera/i)).toBeInTheDocument()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /show next knowledge context/i }),
+    )
+
+    expect(screen.getByRole('button', { name: /gaming/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByText(/think of a game economy/i)).toBeInTheDocument()
   })
 
   it('keeps the study guide CTA target unchanged', () => {

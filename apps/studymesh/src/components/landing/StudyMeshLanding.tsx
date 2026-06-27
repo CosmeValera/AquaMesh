@@ -1,10 +1,22 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Box, Button, Container, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import BoltIcon from '@mui/icons-material/Bolt'
+import CameraAltOutlinedIcon from '@mui/icons-material/CameraAltOutlined'
+import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined'
+import FitnessCenterOutlinedIcon from '@mui/icons-material/FitnessCenterOutlined'
+import RestaurantOutlinedIcon from '@mui/icons-material/RestaurantOutlined'
+import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined'
+import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlined'
+import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined'
+import MusicNoteOutlinedIcon from '@mui/icons-material/MusicNoteOutlined'
+import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import CheckIcon from '@mui/icons-material/Check'
@@ -79,6 +91,151 @@ const featureItems = [
   {
     title: 'Keeps context',
     body: 'StudyMesh connects new concepts to the ideas already active in your workspace.',
+  },
+]
+
+type ContextTopic = {
+  id: string
+  label: string
+  question: string
+  contextLabel: string
+  contextAnswer: string
+  noContextAnswer: string
+  icon: React.ReactNode
+  color: string
+  tone: string
+}
+
+const contextTopics: ContextTopic[] = [
+  {
+    id: 'photography',
+    label: 'Photography',
+    question: 'How does the human eye work?',
+    contextLabel: 'Photography',
+    contextAnswer:
+      'Think of a living camera: the pupil controls exposure, the lens focuses, the retina captures light, and the brain processes the image.',
+    noContextAnswer:
+      'The human eye works by taking in light, focusing it onto the retina, and sending signals to the brain, which turns them into vision.',
+    icon: <CameraAltOutlinedIcon />,
+    color: '#008A78',
+    tone: brand.mintSoft,
+  },
+  {
+    id: 'gaming',
+    label: 'Gaming',
+    question: 'What is inflation?',
+    contextLabel: 'Gaming',
+    contextAnswer:
+      'Think of a game economy: if everyone gets more coins but shop prices rise too, each coin buys less.',
+    noContextAnswer:
+      'Inflation means prices rise across the economy, so the same amount of money buys fewer goods and services over time.',
+    icon: <SportsEsportsOutlinedIcon />,
+    color: '#356BF6',
+    tone: '#EAF0FF',
+  },
+  {
+    id: 'fitness',
+    label: 'Fitness',
+    question: 'What is muscle memory?',
+    contextLabel: 'Fitness',
+    contextAnswer:
+      'Like repeating a lift until the movement feels smoother, your nervous system learns the pattern and recalls it faster next time.',
+    noContextAnswer:
+      'Muscle memory is the way repeated practice helps your brain and nervous system perform a movement more easily later.',
+    icon: <FitnessCenterOutlinedIcon />,
+    color: '#7A4BC2',
+    tone: '#F1ECFF',
+  },
+  {
+    id: 'cooking',
+    label: 'Cooking',
+    question: 'What is a chemical reaction?',
+    contextLabel: 'Cooking',
+    contextAnswer:
+      'It is like browning onions: heat changes the ingredients into new compounds with different color, smell, and flavor.',
+    noContextAnswer:
+      'A chemical reaction happens when substances rearrange their atoms and form new substances with different properties.',
+    icon: <RestaurantOutlinedIcon />,
+    color: '#E05AD8',
+    tone: '#FFF0FC',
+  },
+  {
+    id: 'books',
+    label: 'Books',
+    question: 'What is foreshadowing?',
+    contextLabel: 'Books',
+    contextAnswer:
+      'It is a clue planted early in a story so a later event feels earned instead of random.',
+    noContextAnswer:
+      'Foreshadowing is a storytelling technique where hints suggest what may happen later.',
+    icon: <MenuBookOutlinedIcon />,
+    color: '#E68000',
+    tone: '#FFF4E2',
+  },
+  {
+    id: 'investing',
+    label: 'Investing',
+    question: 'What is compound growth?',
+    contextLabel: 'Investing',
+    contextAnswer:
+      'It works like reinvesting gains: each new gain can also start earning, so progress can accelerate over time.',
+    noContextAnswer:
+      'Compound growth happens when growth is added back to the starting amount, making later growth build on earlier growth.',
+    icon: <TrendingUpOutlinedIcon />,
+    color: '#7B45C8',
+    tone: '#F2ECFF',
+  },
+  {
+    id: 'law',
+    label: 'Law',
+    question: 'What is precedent?',
+    contextLabel: 'Law',
+    contextAnswer:
+      'It is like a previous ruling becoming a guide: future decisions use it as a reference when the facts are similar.',
+    noContextAnswer:
+      'A precedent is an earlier decision or example that influences how similar cases or choices are handled later.',
+    icon: <AccountBalanceOutlinedIcon />,
+    color: '#CC202A',
+    tone: '#FFF0F1',
+  },
+  {
+    id: 'physics',
+    label: 'Physics',
+    question: 'What is an atom?',
+    contextLabel: 'Physics',
+    contextAnswer:
+      'Think of matter as built from tiny units: atoms are the small structures whose parts determine how materials behave.',
+    noContextAnswer:
+      'An atom is a tiny unit of matter made from a nucleus and surrounding electrons.',
+    icon: <ScienceOutlinedIcon />,
+    color: '#D82E2E',
+    tone: '#FFF0F0',
+  },
+  {
+    id: 'music',
+    label: 'Music',
+    question: 'What is rhythm?',
+    contextLabel: 'Music',
+    contextAnswer:
+      'Rhythm is the timing pattern that makes notes feel organized, like the beat that tells a song how to move.',
+    noContextAnswer:
+      'Rhythm is the pattern of sounds and silences over time.',
+    icon: <MusicNoteOutlinedIcon />,
+    color: '#A8790B',
+    tone: '#FFF7E1',
+  },
+  {
+    id: 'tech',
+    label: 'Tech',
+    question: 'What is an API?',
+    contextLabel: 'Tech',
+    contextAnswer:
+      'Think of it as a contract between apps: one system sends a request, the other returns data or performs an action through a defined interface.',
+    noContextAnswer:
+      'An API is a way for software systems to communicate through defined requests and responses.',
+    icon: <CodeOutlinedIcon />,
+    color: '#154397',
+    tone: '#EAF1FF',
   },
 ]
 
@@ -258,7 +415,7 @@ const StudyMeshLanding = () => {
             minHeight: { xs: 'auto', lg: 'calc(100dvh - 88px)' },
             pt: { xs: 6.5, sm: 6.5, md: 9.5 },
             pb: { xs: 7, md: 8 },
-            overflow: 'hidden',
+            overflow: 'visible',
           }}
         >
           <DecorativeHeroLayer />
@@ -434,6 +591,8 @@ const StudyMeshLanding = () => {
           </Container>
         </Box>
 
+        <ContextComparisonSection />
+
         <Box
           id="features"
           sx={{
@@ -580,7 +739,10 @@ const HeroTimeline = () => {
       }}
     >
       {timelineItems.map((item, index) => (
-        <Box key={`timeline-${index}`} sx={{ position: 'relative' }}>
+        <Box
+          key={`timeline-${index}`}
+          sx={{ position: 'relative' }}
+        >
           {index < timelineItems.length - 1 && (
             <Box
               aria-hidden="true"
@@ -608,6 +770,7 @@ const HeroTimeline = () => {
           )}
           <Stack spacing={1.25} alignItems="center">
             <Box
+              tabIndex={0}
               sx={{
                 width: 70,
                 height: 70,
@@ -635,6 +798,10 @@ const HeroTimeline = () => {
                 '&:hover svg': {
                   filter: `drop-shadow(0 0 8px ${alpha(item.color, 0.48)})`,
                 },
+                '&:focus-visible': {
+                  outline: `3px solid ${alpha(item.color, 0.34)}`,
+                  outlineOffset: 4,
+                },
               }}
             >
               {item.icon}
@@ -659,6 +826,545 @@ const HeroTimeline = () => {
     </Box>
   )
 }
+
+const ContextComparisonSection = () => {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [showContext, setShowContext] = useState(true)
+  const activeTopic = contextTopics[activeIndex]
+  const previousTopic =
+    contextTopics[(activeIndex - 1 + contextTopics.length) % contextTopics.length]
+  const nextTopic = contextTopics[(activeIndex + 1) % contextTopics.length]
+  const visibleAnswer = showContext
+    ? activeTopic.contextAnswer
+    : activeTopic.noContextAnswer
+
+  const selectTopic = (index: number) => {
+    setActiveIndex(index)
+    setShowContext(true)
+  }
+
+  const moveTopic = (direction: -1 | 1) => {
+    const nextIndex =
+      (activeIndex + direction + contextTopics.length) % contextTopics.length
+    selectTopic(nextIndex)
+  }
+
+  return (
+    <Box
+      sx={{
+        position: 'relative',
+        py: { xs: 5.5, md: 8 },
+        bgcolor: '#FFFFFF',
+        borderTop: `1px solid ${alpha(brand.line, 0.62)}`,
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          background: `radial-gradient(circle at 18% 14%, ${alpha(
+            brand.sky,
+            0.13,
+          )}, transparent 27%), radial-gradient(circle at 82% 22%, ${alpha(
+            brand.mint,
+            0.13,
+          )}, transparent 28%), radial-gradient(circle at 50% 78%, ${alpha(
+            brand.blue,
+            0.08,
+          )}, transparent 36%)`,
+          pointerEvents: 'none',
+        },
+      }}
+    >
+      <Container maxWidth="lg" sx={{ position: 'relative' }}>
+        <Stack spacing={3.2} alignItems="center" textAlign="center">
+          <Stack spacing={1.15} alignItems="center">
+            <Box
+              sx={{
+                px: 2,
+                py: 0.65,
+                borderRadius: 999,
+                color: '#008A78',
+                bgcolor: alpha(brand.mint, 0.13),
+                fontWeight: 800,
+                fontSize: '0.82rem',
+                lineHeight: 1,
+                letterSpacing: 0,
+              }}
+            >
+              KNOWLEDGE CONTEXT
+            </Box>
+            <Typography
+              variant="h2"
+              sx={{
+                maxWidth: 880,
+                color: brand.ink,
+                fontWeight: 800,
+                fontSize: { xs: '2rem', md: '3.05rem' },
+                lineHeight: 1.08,
+                letterSpacing: 0,
+              }}
+            >
+              Same question. More personal explanation.
+            </Typography>
+            <Typography
+              sx={{
+                maxWidth: 760,
+                color: '#64719B',
+                fontSize: { xs: '1rem', md: '1.18rem' },
+                lineHeight: 1.58,
+              }}
+            >
+              StudyMesh adapts the same answer to knowledge you already have.
+            </Typography>
+          </Stack>
+
+          <Box
+            aria-label="Knowledge context topics"
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'repeat(10, minmax(104px, 1fr))',
+                lg: 'repeat(10, minmax(0, 1fr))',
+              },
+              gap: { xs: 1.35, md: 1.7 },
+              width: '100%',
+              overflowX: { xs: 'auto', lg: 'visible' },
+              pb: { xs: 0.5, lg: 0 },
+              px: { xs: 0.25, md: 0 },
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': { display: 'none' },
+            }}
+          >
+            {contextTopics.map((topic, index) => {
+              const selected = index === activeIndex
+
+              return (
+                <Button
+                  key={topic.id}
+                  aria-pressed={selected}
+                  onClick={() => selectTopic(index)}
+                  sx={{
+                    minWidth: 0,
+                    height: { xs: 102, md: 118 },
+                    p: 1.15,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
+                    color: selected ? topic.color : brand.ink,
+                    bgcolor: selected ? alpha(topic.color, 0.08) : '#FFFFFF',
+                    border: `1px solid ${
+                      selected ? alpha(topic.color, 0.72) : alpha(brand.line, 0.82)
+                    }`,
+                    borderRadius: 2,
+                    boxShadow: selected
+                      ? `0 18px 44px ${alpha(topic.color, 0.16)}`
+                      : `0 12px 38px ${alpha(brand.blueDark, 0.05)}`,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    transition:
+                      'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
+                    '&:hover': {
+                      bgcolor: selected ? alpha(topic.color, 0.11) : '#FFFFFF',
+                      borderColor: alpha(topic.color, 0.42),
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 18px 46px ${alpha(topic.color, 0.14)}`,
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      display: 'grid',
+                      placeItems: 'center',
+                      color: topic.color,
+                      bgcolor: topic.tone,
+                      boxShadow: `0 10px 28px ${alpha(topic.color, 0.13)}`,
+                      '& svg': { fontSize: 25 },
+                    }}
+                  >
+                    {topic.icon}
+                  </Box>
+                  <Box component="span">{topic.label}</Box>
+                </Button>
+              )
+            })}
+          </Box>
+
+          <Box
+            sx={{
+              position: 'relative',
+              width: '100%',
+              minHeight: { xs: 390, md: 430 },
+              display: 'grid',
+              placeItems: 'center',
+              mt: 0.6,
+            }}
+          >
+            <CarouselArrow
+              label="Show previous knowledge context"
+              side="left"
+              onClick={() => moveTopic(-1)}
+            />
+            <CarouselArrow
+              label="Show next knowledge context"
+              side="right"
+              onClick={() => moveTopic(1)}
+            />
+            <PreviewContextCard topic={previousTopic} side="left" />
+            <PreviewContextCard topic={nextTopic} side="right" />
+            <FeaturedContextCard
+              topic={activeTopic}
+              answer={visibleAnswer}
+              showContext={showContext}
+              onToggleContext={() => setShowContext((value) => !value)}
+            />
+          </Box>
+
+          <Stack direction="row" spacing={1.45} aria-label="Context carousel page">
+            {contextTopics.slice(0, 5).map((topic, index) => (
+              <Box
+                key={topic.id}
+                aria-hidden="true"
+                sx={{
+                  width: index === activeIndex ? 15 : 11,
+                  height: 11,
+                  borderRadius: 999,
+                  bgcolor:
+                    index === activeIndex ? activeTopic.color : '#D9DEEB',
+                  transition: 'all 160ms ease',
+                }}
+              />
+            ))}
+          </Stack>
+
+          <Box
+            sx={{
+              width: { xs: '100%', md: '76%' },
+              p: { xs: 2, md: 2.4 },
+              borderRadius: 2,
+              border: `1px solid ${alpha(brand.mint, 0.42)}`,
+              bgcolor: alpha('#F5FFFC', 0.76),
+              boxShadow: `0 24px 70px ${alpha(brand.blueDark, 0.08)}`,
+              textAlign: 'left',
+            }}
+          >
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+              <Box
+                sx={{
+                  width: 62,
+                  height: 62,
+                  flex: '0 0 auto',
+                  borderRadius: '50%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: brand.blue,
+                  bgcolor: '#FFFFFF',
+                  boxShadow: `0 16px 42px ${alpha(brand.blueDark, 0.12)}`,
+                  '& svg': { fontSize: 30 },
+                }}
+              >
+                <AutoAwesomeIcon />
+              </Box>
+              <Box>
+                <Typography sx={{ color: brand.ink, fontWeight: 800, fontSize: '1.08rem' }}>
+                  The same question becomes clearer with the right context.
+                </Typography>
+                <Typography sx={{ color: '#64719B', lineHeight: 1.55 }}>
+                  When StudyMesh knows what you already understand, it can explain
+                  new ideas in a simpler, more intuitive way.
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
+
+const FeaturedContextCard = ({
+  topic,
+  answer,
+  showContext,
+  onToggleContext,
+}: {
+  topic: ContextTopic
+  answer: string
+  showContext: boolean
+  onToggleContext: () => void
+}) => (
+  <Box
+    sx={{
+      position: 'relative',
+      zIndex: 2,
+      width: { xs: '100%', md: '68%' },
+      maxWidth: 760,
+      p: { xs: 2.2, md: 3.2 },
+      borderRadius: 2,
+      border: `1px solid ${alpha(brand.line, 0.95)}`,
+      bgcolor: alpha('#FFFFFF', 0.94),
+      boxShadow: `0 28px 80px ${alpha(brand.blueDark, 0.14)}`,
+      textAlign: 'left',
+    }}
+  >
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', md: '1.45fr 0.95fr' },
+        gap: { xs: 2.2, md: 3 },
+        alignItems: 'center',
+      }}
+    >
+      <Stack spacing={2}>
+        <Stack direction="row" spacing={1.2} alignItems="center">
+          <ContextIcon topic={topic} size={52} />
+          <Box
+            sx={{
+              px: 1.35,
+              py: 0.55,
+              borderRadius: 999,
+              color: topic.color,
+              bgcolor: alpha(topic.color, 0.12),
+              fontWeight: 800,
+            }}
+          >
+            {showContext ? topic.contextLabel : 'No context'}
+          </Box>
+        </Stack>
+        <Typography
+          variant="h3"
+          sx={{
+            color: brand.ink,
+            fontWeight: 800,
+            fontSize: { xs: '1.45rem', md: '1.95rem' },
+            lineHeight: 1.16,
+            letterSpacing: 0,
+          }}
+        >
+          {topic.question}
+        </Typography>
+        <Typography sx={{ color: brand.ink, fontSize: '1.04rem', lineHeight: 1.72 }}>
+          {answer}
+        </Typography>
+        <Button
+          variant="outlined"
+          onClick={onToggleContext}
+          startIcon={<SwapHorizIcon />}
+          sx={{
+            alignSelf: 'flex-start',
+            px: 2.1,
+            py: 0.9,
+            borderRadius: 1,
+            color: brand.ink,
+            borderColor: alpha(brand.blue, 0.18),
+            bgcolor: '#FFFFFF',
+            fontWeight: 800,
+            textTransform: 'none',
+            '&:hover': {
+              borderColor: alpha(topic.color, 0.44),
+              bgcolor: alpha(topic.color, 0.07),
+            },
+          }}
+        >
+          {showContext ? 'Show without context' : `Show ${topic.contextLabel} context`}
+        </Button>
+      </Stack>
+      <ContextVisual topic={topic} />
+    </Box>
+  </Box>
+)
+
+const PreviewContextCard = ({
+  topic,
+  side,
+}: {
+  topic: ContextTopic
+  side: 'left' | 'right'
+}) => (
+  <Box
+    aria-hidden="true"
+    sx={{
+      display: { xs: 'none', md: 'block' },
+      position: 'absolute',
+      top: '50%',
+      [side]: 24,
+      width: '31%',
+      minHeight: 255,
+      p: 2.4,
+      borderRadius: 2,
+      border: `1px solid ${alpha(brand.line, 0.74)}`,
+      bgcolor: alpha('#FFFFFF', 0.74),
+      boxShadow: `0 22px 62px ${alpha(brand.blueDark, 0.08)}`,
+      transform: `translateY(-50%) scale(0.93)`,
+      opacity: 0.82,
+      textAlign: 'left',
+      overflow: 'hidden',
+    }}
+  >
+    <Stack spacing={1.4}>
+      <Stack direction="row" spacing={1} alignItems="center">
+        <ContextIcon topic={topic} size={42} />
+        <Typography sx={{ color: brand.ink, fontWeight: 800 }}>
+          {topic.label}
+        </Typography>
+      </Stack>
+      <Typography sx={{ color: brand.ink, fontWeight: 800, fontSize: '1.05rem' }}>
+        {topic.question}
+      </Typography>
+      <Typography sx={{ color: '#59668A', lineHeight: 1.62 }}>
+        {topic.contextAnswer}
+      </Typography>
+    </Stack>
+  </Box>
+)
+
+const CarouselArrow = ({
+  side,
+  label,
+  onClick,
+}: {
+  side: 'left' | 'right'
+  label: string
+  onClick: () => void
+}) => (
+  <Button
+    aria-label={label}
+    onClick={onClick}
+    sx={{
+      position: 'absolute',
+      zIndex: 3,
+      top: '50%',
+      [side]: { xs: side === 'left' ? 4 : 'auto', md: 0 },
+      right: { xs: side === 'right' ? 4 : 'auto', md: side === 'right' ? 0 : 'auto' },
+      minWidth: 0,
+      width: { xs: 44, md: 54 },
+      height: { xs: 44, md: 54 },
+      p: 0,
+      borderRadius: '50%',
+      color: brand.ink,
+      bgcolor: '#FFFFFF',
+      border: `1px solid ${alpha(brand.line, 0.9)}`,
+      boxShadow: `0 14px 34px ${alpha(brand.blueDark, 0.12)}`,
+      transform: 'translateY(-50%)',
+      '&:hover': {
+        bgcolor: brand.skySoft,
+        borderColor: alpha(brand.blue, 0.3),
+      },
+    }}
+  >
+    {side === 'left' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+  </Button>
+)
+
+const ContextIcon = ({
+  topic,
+  size,
+}: {
+  topic: ContextTopic
+  size: number
+}) => (
+  <Box
+    sx={{
+      width: size,
+      height: size,
+      flex: '0 0 auto',
+      borderRadius: '50%',
+      display: 'grid',
+      placeItems: 'center',
+      color: topic.color,
+      bgcolor: topic.tone,
+      boxShadow: `0 12px 30px ${alpha(topic.color, 0.14)}`,
+      '& svg': { fontSize: Math.round(size * 0.54) },
+    }}
+  >
+    {topic.icon}
+  </Box>
+)
+
+const ContextVisual = ({ topic }: { topic: ContextTopic }) => (
+  <Box
+    aria-hidden="true"
+    sx={{
+      minHeight: { xs: 180, md: 226 },
+      borderRadius: 2,
+      position: 'relative',
+      overflow: 'hidden',
+      bgcolor: '#DDE5EE',
+      background:
+        topic.id === 'photography'
+          ? 'linear-gradient(135deg, #E8EEF4 0%, #A7B1BE 42%, #F7FAFC 100%)'
+          : `radial-gradient(circle at 52% 44%, ${alpha(
+              topic.color,
+              0.22,
+            )}, transparent 28%), linear-gradient(135deg, #F8FBFF, ${topic.tone})`,
+      boxShadow: `inset 0 0 0 1px ${alpha('#FFFFFF', 0.72)}`,
+      display: 'grid',
+      placeItems: 'center',
+    }}
+  >
+    {topic.id === 'photography' ? (
+      <>
+        <Box
+          sx={{
+            position: 'absolute',
+            width: '72%',
+            height: '48%',
+            left: '14%',
+            top: '34%',
+            borderRadius: '16px 16px 24px 24px',
+            bgcolor: '#121723',
+            boxShadow: `0 28px 48px ${alpha('#050B16', 0.3)}`,
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            width: '44%',
+            aspectRatio: '1',
+            borderRadius: '50%',
+            left: '28%',
+            top: '24%',
+            background:
+              'radial-gradient(circle at 50% 50%, #071127 0 22%, #0E554F 23% 32%, #D7821F 33% 37%, #121723 38% 57%, #2D3441 58% 72%, #080D17 73% 100%)',
+            boxShadow: `0 0 0 10px ${alpha('#FFFFFF', 0.1)}, 0 18px 36px ${alpha(
+              '#000000',
+              0.32,
+            )}`,
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            width: '34%',
+            height: '16%',
+            left: '19%',
+            top: '26%',
+            borderRadius: '12px 12px 4px 4px',
+            bgcolor: '#252B36',
+          }}
+        />
+      </>
+    ) : (
+      <Box
+        sx={{
+          width: 96,
+          height: 96,
+          borderRadius: '50%',
+          display: 'grid',
+          placeItems: 'center',
+          color: topic.color,
+          bgcolor: alpha('#FFFFFF', 0.78),
+          boxShadow: `0 20px 52px ${alpha(topic.color, 0.18)}`,
+          '& svg': { fontSize: 52 },
+        }}
+      >
+        {topic.icon}
+      </Box>
+    )}
+  </Box>
+)
 
 const DecorativeHeroLayer = () => (
   <Box aria-hidden="true">

@@ -74,6 +74,25 @@ describe('StudyMeshLanding', () => {
     expect(screen.getByText(/with photography context/i)).toBeInTheDocument()
     expect(screen.getByText(/one question/i))
       .toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        name: /your guide doesn't stop at page 5/i,
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/guide grew from 5 to 6\+ pages/i)).toBeInTheDocument()
+    expect(screen.getByText(/docker overview/i)).toBeInTheDocument()
+    expect(screen.getByText(/images and layers/i)).toBeInTheDocument()
+    expect(screen.getByText(/container lifecycle/i)).toBeInTheDocument()
+    expect(screen.getByText(/writing dockerfiles/i)).toBeInTheDocument()
+    expect(screen.getByText(/docker compose basics/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/review pack/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/^new$/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/can you add more practice exercises on this topic/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/done! i added/i),
+    ).toBeInTheDocument()
 
     expect(getComputedStyle(screen.getByTestId('studymesh-landing')).color).toBe(
       'rgb(7, 17, 39)',

@@ -19,6 +19,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import CheckIcon from '@mui/icons-material/Check'
+import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
 
 const brand = {
   canvas: '#FBFDFE',
@@ -79,19 +80,19 @@ const timelineItems = [
   },
 ]
 
-const featureItems = [
-  {
-    title: 'Goal to guide',
-    body: 'Start with what you want to learn and get a guided path instead of a blank workspace.',
-  },
-  {
-    title: 'Practice on demand',
-    body: 'Ask for quizzes, flashcards, examples, or clearer notes from the guide you are studying.',
-  },
-  {
-    title: 'Keeps context',
-    body: 'StudyMesh connects new concepts to the ideas already active in your workspace.',
-  },
+const growingGuideBenefits = [
+  'Starts with 5 organized pages',
+  'Ask AI Chat for more',
+  'New pages are added automatically',
+]
+
+const growingGuidePages = [
+  '01 Docker Overview',
+  '02 Images and Layers',
+  '03 Container Lifecycle',
+  '04 Writing Dockerfiles',
+  '05 Docker Compose Basics',
+  '06 Review Pack',
 ]
 
 type ContextTopic = {
@@ -600,93 +601,7 @@ const StudyMeshLanding = () => {
 
         <ContextComparisonSection />
 
-        <Box
-          id="features"
-          sx={{
-            scrollMarginTop: 104,
-            borderTop: `1px solid ${alpha(brand.line, 0.7)}`,
-            bgcolor: '#FFFFFF',
-            py: { xs: 5, md: 7 },
-          }}
-        >
-          <Container maxWidth="lg">
-            <Stack spacing={3.2} alignItems="center" textAlign="center">
-              <Stack spacing={1} alignItems="center">
-                <Typography
-                  variant="overline"
-                  sx={{
-                    color: brand.blue,
-                    fontWeight: 700,
-                    letterSpacing: '0.14em',
-                  }}
-                >
-                  Features
-                </Typography>
-                <Typography
-                  variant="h2"
-                  sx={{
-                    maxWidth: 760,
-                    color: brand.ink,
-                    fontWeight: 700,
-                    fontSize: { xs: '2rem', md: '3.2rem' },
-                    lineHeight: 1.08,
-                    letterSpacing: 0,
-                  }}
-                >
-                  One prompt becomes a study path you can keep improving.
-                </Typography>
-              </Stack>
-
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-                  gap: 2,
-                  width: '100%',
-                }}
-              >
-                {featureItems.map((item) => (
-                  <Box
-                    key={item.title}
-                    sx={{
-                      minHeight: 174,
-                      p: 2.6,
-                      border: `1px solid ${brand.line}`,
-                      borderRadius: 2,
-                      bgcolor: brand.canvas,
-                      textAlign: 'left',
-                    }}
-                  >
-                    <Stack spacing={1}>
-                      <Box
-                        sx={{
-                          width: 38,
-                          height: 38,
-                          borderRadius: '50%',
-                          display: 'grid',
-                          placeItems: 'center',
-                          color: brand.blue,
-                          bgcolor: brand.skySoft,
-                        }}
-                      >
-                        <AutoAwesomeIcon fontSize="small" />
-                      </Box>
-                      <Typography
-                        variant="h6"
-                        sx={{ color: brand.ink, fontWeight: 700 }}
-                      >
-                        {item.title}
-                      </Typography>
-                      <Typography sx={{ color: brand.muted, lineHeight: 1.55 }}>
-                        {item.body}
-                      </Typography>
-                    </Stack>
-                  </Box>
-                ))}
-              </Box>
-            </Stack>
-          </Container>
-        </Box>
+        <GrowingGuidesSection />
 
         <Box sx={{ bgcolor: brand.canvas, py: { xs: 5, md: 7 } }}>
           <Container maxWidth="md">
@@ -700,7 +615,7 @@ const StudyMeshLanding = () => {
                   lineHeight: 1.08,
                 }}
               >
-                Ready to build your next Study Guide?
+                Ready to build your Study Guide?
               </Typography>
               <Typography sx={{ color: brand.muted, fontSize: '1.08rem' }}>
                 Start with a topic. Let StudyMesh create the guide. Keep
@@ -833,6 +748,547 @@ const HeroTimeline = () => {
     </Box>
   )
 }
+
+const GrowingGuidesSection = () => (
+  <Box
+    id="features"
+    sx={{
+      position: 'relative',
+      scrollMarginTop: 104,
+      borderTop: `1px solid ${alpha(brand.line, 0.7)}`,
+      bgcolor: '#FFFFFF',
+      py: { xs: 6, md: 9 },
+      overflow: 'hidden',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        inset: 0,
+        background: `radial-gradient(circle at 16% 18%, ${alpha(
+          brand.sky,
+          0.12,
+        )}, transparent 28%), radial-gradient(circle at 88% 18%, ${alpha(
+          brand.mint,
+          0.16,
+        )}, transparent 30%), radial-gradient(circle at 58% 92%, ${alpha(
+          brand.blue,
+          0.07,
+        )}, transparent 36%)`,
+        pointerEvents: 'none',
+      },
+    }}
+  >
+    <Container maxWidth="lg" sx={{ position: 'relative' }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', lg: '0.74fr 1.26fr' },
+          gap: { xs: 4, md: 4.8 },
+          alignItems: 'center',
+        }}
+      >
+        <Stack spacing={2.4} alignItems="flex-start">
+          <Box
+            sx={{
+              px: 2,
+              py: 0.65,
+              borderRadius: 999,
+              color: '#008A78',
+              bgcolor: alpha(brand.mint, 0.13),
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              lineHeight: 1,
+              letterSpacing: 0,
+            }}
+          >
+            <Stack direction="row" spacing={0.8} alignItems="center">
+              <SpaOutlinedIcon sx={{ fontSize: 16 }} />
+              <Box component="span">GROWING GUIDES</Box>
+            </Stack>
+          </Box>
+          <Stack spacing={1.35}>
+            <Typography
+              variant="h2"
+              sx={{
+                maxWidth: 540,
+                color: brand.ink,
+                fontWeight: 800,
+                fontSize: { xs: '2.2rem', md: '2.85rem' },
+                lineHeight: 1.06,
+                letterSpacing: 0,
+                textWrap: 'balance',
+            }}
+          >
+              Your guide doesn't stop at page{' '}
+              <Box
+                component="span"
+                sx={{
+                  background: `linear-gradient(90deg, ${brand.sky}, ${brand.mint})`,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                5.
+              </Box>
+            </Typography>
+            <Typography
+              sx={{
+                maxWidth: 540,
+                color: '#64719B',
+                fontSize: { xs: '1rem', md: '1.14rem' },
+                lineHeight: 1.62,
+              }}
+            >
+              Every guide starts with 5 focused pages. Ask for more depth,
+              examples, practice, or flashcards, and StudyMesh adds new pages
+              instantly.
+            </Typography>
+          </Stack>
+
+          <Stack spacing={1.1} sx={{ width: '100%', maxWidth: 420 }}>
+            {growingGuideBenefits.map((benefit) => (
+              <Stack
+                key={benefit}
+                direction="row"
+                spacing={1.2}
+                alignItems="center"
+                sx={{
+                  p: 1.25,
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(brand.line, 0.82)}`,
+                  bgcolor: alpha('#FFFFFF', 0.82),
+                  boxShadow: `0 12px 34px ${alpha(brand.blueDark, 0.05)}`,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 30,
+                    height: 30,
+                    flex: '0 0 auto',
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: '#008A78',
+                    bgcolor: alpha(brand.mint, 0.14),
+                  }}
+                >
+                  <CheckIcon sx={{ fontSize: 18 }} />
+                </Box>
+                <Typography sx={{ color: brand.ink, fontWeight: 800 }}>
+                  {benefit}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+        </Stack>
+
+        <GrowingGuidesMockup />
+      </Box>
+    </Container>
+  </Box>
+)
+
+const GrowingGuidesMockup = () => (
+  <Box
+    aria-label="Growing study guide product preview"
+    sx={{
+      position: 'relative',
+      minHeight: { xs: 640, md: 620 },
+      overflow: 'visible',
+    }}
+  >
+    <Box
+      sx={{
+        position: 'absolute',
+        top: { xs: 0, md: 8 },
+        left: { xs: '50%', md: '45%' },
+        transform: 'translateX(-50%)',
+        px: 1.6,
+        py: 0.62,
+        borderRadius: 999,
+        color: brand.blueDark,
+        bgcolor: alpha(brand.sky, 0.1),
+        border: `1px solid ${alpha(brand.sky, 0.24)}`,
+        fontWeight: 900,
+        fontSize: '0.82rem',
+        lineHeight: 1,
+        boxShadow: `0 12px 30px ${alpha(brand.blueDark, 0.08)}`,
+      }}
+    >
+      Guide grew from 5 to 6+ pages
+    </Box>
+
+    <GrowingGuideLayerStack />
+    <GrowingGuideCreationArrow />
+    <GrowingGuideConversation />
+    <GrowingGuideSparkle left="3%" top="68%" />
+    <GrowingGuideSparkle left="93%" top="40%" />
+    <GrowingGuideSparkle left="87%" top="58%" size={24} />
+  </Box>
+)
+
+const GrowingGuideLayerStack = () => (
+  <Box
+    sx={{
+      position: 'absolute',
+      top: { xs: 72, md: 64 },
+      right: { xs: 6, md: -66 },
+      left: { xs: 6, md: 'auto' },
+      width: { xs: 'auto', md: 640 },
+      height: { xs: 390, md: 470 },
+    }}
+  >
+    <Box
+      aria-hidden="true"
+      sx={{
+        display: { xs: 'none', md: 'block' },
+        position: 'absolute',
+        left: 28,
+        right: 76,
+        bottom: 34,
+        height: 92,
+        borderRadius: '32px 32px 28px 28px',
+        bgcolor: alpha(brand.sky, 0.055),
+        boxShadow: `0 30px 70px ${alpha(brand.blue, 0.09)}`,
+        transform: 'skewX(-13deg) rotate(3deg)',
+      }}
+    />
+    {growingGuidePages.map((page, index) => (
+      <GrowingGuideLayerCard
+        key={page}
+        page={page}
+        index={index}
+        isNewPage={index === growingGuidePages.length - 1}
+      />
+    ))}
+  </Box>
+)
+
+const GrowingGuideLayerCard = ({
+  page,
+  index,
+  isNewPage,
+}: {
+  page: string
+  index: number
+  isNewPage: boolean
+}) => (
+  <Box
+    sx={{
+      position: 'absolute',
+      top: { xs: isNewPage ? 0 : 220 + (index - 1) * -40, md: 'auto' },
+      bottom: { xs: 'auto', md: 70 },
+      left: {
+        xs: isNewPage ? 0 : 14 + index * 4,
+        md: 8 + index * 28,
+      },
+      right: { xs: isNewPage ? 0 : 14 - index * 2, md: 'auto' },
+      width: {
+        xs: isNewPage ? '100%' : `calc(100% - ${24 + index * 3}px)`,
+        md: 520,
+      },
+      minHeight: {
+        xs: isNewPage ? 126 : 52,
+        md: isNewPage ? 392 : 82 + index * 50,
+      },
+      height: {
+        xs: 'auto',
+        md: isNewPage ? 392 : 82 + index * 50,
+      },
+      zIndex: 30 - index,
+      p: isNewPage ? { xs: 1.25, md: 1.45 } : { xs: 1.05, md: 1.15 },
+      borderRadius: isNewPage ? 2 : 1.6,
+      border: `1px solid ${
+        isNewPage ? alpha(brand.mint, 0.5) : alpha(brand.line, 0.78)
+      }`,
+      bgcolor: isNewPage ? alpha('#F5FFFC', 0.96) : alpha('#FFFFFF', 0.94),
+      boxShadow: isNewPage
+        ? `22px 22px 0 ${alpha(brand.mint, 0.08)}, 0 28px 68px ${alpha(
+            brand.mint,
+            0.17,
+          )}`
+        : `18px 18px 0 ${alpha(brand.blue, 0.026 + index * 0.006)}, 0 18px 52px ${alpha(
+            brand.blueDark,
+            0.055,
+          )}`,
+      transform: {
+        xs: 'none',
+        md: `rotate(${isNewPage ? 1.2 : 1.65 - index * 0.44}deg)`,
+      },
+    }}
+  >
+    <Stack
+      direction="row"
+      spacing={1.1}
+      alignItems="center"
+      sx={{
+        position: 'relative',
+        zIndex: 1,
+      }}
+    >
+      <Box
+        sx={{
+          width: isNewPage ? 42 : 34,
+          height: isNewPage ? 42 : 34,
+          flex: '0 0 auto',
+          borderRadius: 1.2,
+          display: 'grid',
+          placeItems: 'center',
+          color: isNewPage ? '#008A78' : brand.blue,
+          bgcolor: isNewPage ? alpha(brand.mint, 0.13) : alpha(brand.sky, 0.08),
+          fontWeight: 900,
+        }}
+      >
+        {page.slice(0, 2)}
+      </Box>
+      <Typography
+        sx={{
+          flex: 1,
+          minWidth: 0,
+          color: isNewPage ? '#008A78' : brand.ink,
+          fontWeight: 900,
+          fontSize: isNewPage
+            ? { xs: '1.02rem', md: '1.12rem' }
+            : { xs: '0.82rem', md: '0.95rem' },
+          lineHeight: 1.25,
+        }}
+      >
+        {page.slice(3)}
+      </Typography>
+      {isNewPage ? (
+        <Box
+          sx={{
+            px: 1,
+            py: 0.52,
+            borderRadius: 999,
+            color: '#FFFFFF',
+            bgcolor: '#0BB894',
+            fontWeight: 900,
+            fontSize: '0.78rem',
+            boxShadow: `0 12px 28px ${alpha(brand.mint, 0.28)}`,
+          }}
+        >
+          New
+        </Box>
+      ) : (
+        <Box
+          aria-hidden="true"
+          sx={{
+            display: { xs: 'none', md: 'grid' },
+            width: 28,
+            height: 28,
+            borderRadius: 1,
+            placeItems: 'center',
+            color: alpha(brand.blue, 0.72),
+            bgcolor: alpha(brand.sky, 0.06),
+            '& svg': { fontSize: 17 },
+          }}
+        >
+          {index === 3 ? <CodeOutlinedIcon /> : <DescriptionOutlinedIcon />}
+        </Box>
+      )}
+    </Stack>
+    {isNewPage && (
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: { xs: 0.7, md: 0.9 },
+          mt: 1.25,
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
+        {['Quizzes', 'Flashcards', 'Practice'].map((item, itemIndex) => (
+          <Box
+            key={item}
+            sx={{
+              minHeight: 46,
+              p: 0.9,
+              borderRadius: 1.2,
+              border: `1px solid ${alpha(brand.line, 0.72)}`,
+              bgcolor: alpha('#FFFFFF', 0.86),
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.75,
+              color: brand.ink,
+              fontWeight: 850,
+              fontSize: { xs: '0.72rem', md: '0.78rem' },
+            }}
+          >
+            <Box
+              sx={{
+                width: 22,
+                height: 22,
+                borderRadius: 0.8,
+                display: 'grid',
+                placeItems: 'center',
+                color: itemIndex === 0 ? brand.blue : '#008A78',
+                bgcolor: itemIndex === 0 ? brand.skySoft : alpha(brand.mint, 0.1),
+                fontWeight: 900,
+              }}
+            >
+              {itemIndex === 0 ? '?' : itemIndex + 1}
+            </Box>
+            {item}
+          </Box>
+        ))}
+      </Box>
+    )}
+  </Box>
+)
+
+const GrowingGuideConversation = () => (
+  <Box
+    sx={{
+      position: 'absolute',
+      right: { xs: 0, md: 4 },
+      bottom: { xs: 0, md: 0 },
+      width: { xs: '100%', md: 390 },
+      zIndex: 12,
+    }}
+  >
+    <Box
+      sx={{
+        ml: { xs: 0, md: 5 },
+        p: { xs: 1.35, md: 1.55 },
+        borderRadius: 2,
+        border: `1px solid ${alpha(brand.line, 0.86)}`,
+        bgcolor: alpha('#FFFFFF', 0.92),
+        boxShadow: `0 18px 48px ${alpha(brand.blueDark, 0.12)}`,
+      }}
+    >
+      <Stack direction="row" spacing={1.2} alignItems="center">
+        <Typography
+          sx={{
+            color: brand.blueDark,
+            flex: 1,
+            fontWeight: 800,
+            fontSize: { xs: '0.84rem', md: '0.9rem' },
+            lineHeight: 1.45,
+          }}
+        >
+          Can you add more practice exercises on this topic?
+        </Typography>
+        <Box
+          sx={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            color: brand.blue,
+            bgcolor: alpha(brand.sky, 0.12),
+            fontWeight: 900,
+          }}
+        >
+          U
+        </Box>
+      </Stack>
+    </Box>
+    <Box
+      sx={{
+        width: { xs: '92%', md: '86%' },
+        mt: 1,
+        p: { xs: 1.35, md: 1.55 },
+        borderRadius: 2,
+        border: `1px solid ${alpha(brand.line, 0.86)}`,
+        bgcolor: '#FFFFFF',
+        boxShadow: `0 18px 48px ${alpha(brand.blueDark, 0.12)}`,
+      }}
+    >
+      <Stack direction="row" spacing={1.1} alignItems="flex-start">
+        <Box
+          sx={{
+            width: 32,
+            height: 32,
+            flex: '0 0 auto',
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            color: brand.blue,
+            bgcolor: brand.skySoft,
+          }}
+        >
+          <AutoAwesomeIcon sx={{ fontSize: 17 }} />
+        </Box>
+        <Typography
+          sx={{
+            color: brand.ink,
+            fontWeight: 850,
+            fontSize: { xs: '0.84rem', md: '0.9rem' },
+            lineHeight: 1.48,
+          }}
+        >
+          Done! I added <Box component="span" sx={{ color: '#008A78' }}>06 Review Pack</Box>{' '}
+          with quizzes, flashcards, and practice.
+        </Typography>
+      </Stack>
+    </Box>
+  </Box>
+)
+
+const GrowingGuideCreationArrow = () => (
+  <Box
+    component="svg"
+    aria-hidden="true"
+    viewBox="0 0 220 300"
+    sx={{
+      display: { xs: 'none', md: 'block' },
+      position: 'absolute',
+      right: 8,
+      top: 170,
+      width: 220,
+      height: 300,
+      zIndex: 10,
+      overflow: 'visible',
+    }}
+  >
+    <defs>
+      <marker
+        id="growingGuideArrow"
+        markerHeight="10"
+        markerWidth="10"
+        orient="auto"
+        refX="8"
+        refY="5"
+      >
+        <path d="M0,0 L10,5 L0,10 Z" fill={alpha(brand.mint, 0.82)} />
+      </marker>
+    </defs>
+    <path
+      d="M42 276 C36 198 68 102 168 36"
+      fill="none"
+      markerEnd="url(#growingGuideArrow)"
+      stroke={alpha(brand.mint, 0.54)}
+      strokeLinecap="round"
+      strokeWidth="3"
+    />
+  </Box>
+)
+
+const GrowingGuideSparkle = ({
+  left,
+  top,
+  size = 20,
+}: {
+  left: string
+  top: string
+  size?: number
+}) => (
+  <AutoAwesomeIcon
+    aria-hidden="true"
+    sx={{
+      display: { xs: 'none', md: 'block' },
+      position: 'absolute',
+      left,
+      top,
+      fontSize: size,
+      color: alpha(size > 20 ? brand.blue : brand.mint, 0.35),
+    }}
+  />
+)
 
 const ContextComparisonSection = () => {
   const [activeIndex, setActiveIndex] = useState(0)

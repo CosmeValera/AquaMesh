@@ -1237,8 +1237,22 @@ const PreviewContextCard = ({
       overflow: 'hidden',
     }}
   >
-    <Stack spacing={1.4}>
-      <Stack direction="row" spacing={1} alignItems="center">
+    <Stack
+      spacing={1.4}
+      sx={{
+        alignItems: 'flex-start',
+        textAlign: 'left',
+      }}
+    >
+      <Stack
+        direction="row"
+        spacing={1}
+        alignItems="center"
+        sx={{
+          alignSelf: side === 'right' ? 'flex-end' : 'flex-start',
+          flexDirection: side === 'right' ? 'row-reverse' : 'row',
+        }}
+      >
         <ContextIcon topic={topic} size={42} />
         <Typography sx={{ color: brand.ink, fontWeight: 800 }}>
           {topic.label}

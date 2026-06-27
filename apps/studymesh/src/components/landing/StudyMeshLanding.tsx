@@ -104,6 +104,7 @@ type ContextTopic = {
   icon: React.ReactNode
   color: string
   tone: string
+  visualSrc: string
 }
 
 const contextTopics: ContextTopic[] = [
@@ -119,6 +120,7 @@ const contextTopics: ContextTopic[] = [
     icon: <CameraAltOutlinedIcon />,
     color: '#008A78',
     tone: brand.mintSoft,
+    visualSrc: '/images/landing/context-photography.jpg',
   },
   {
     id: 'gaming',
@@ -132,6 +134,7 @@ const contextTopics: ContextTopic[] = [
     icon: <SportsEsportsOutlinedIcon />,
     color: '#356BF6',
     tone: '#EAF0FF',
+    visualSrc: '/images/landing/context-gaming.jpg',
   },
   {
     id: 'fitness',
@@ -145,6 +148,7 @@ const contextTopics: ContextTopic[] = [
     icon: <FitnessCenterOutlinedIcon />,
     color: '#7A4BC2',
     tone: '#F1ECFF',
+    visualSrc: '/images/landing/context-fitness.jpg',
   },
   {
     id: 'cooking',
@@ -158,6 +162,7 @@ const contextTopics: ContextTopic[] = [
     icon: <RestaurantOutlinedIcon />,
     color: '#E05AD8',
     tone: '#FFF0FC',
+    visualSrc: '/images/landing/context-cooking.jpg',
   },
   {
     id: 'books',
@@ -171,6 +176,7 @@ const contextTopics: ContextTopic[] = [
     icon: <MenuBookOutlinedIcon />,
     color: '#E68000',
     tone: '#FFF4E2',
+    visualSrc: '/images/landing/context-books.jpg',
   },
   {
     id: 'investing',
@@ -184,6 +190,7 @@ const contextTopics: ContextTopic[] = [
     icon: <TrendingUpOutlinedIcon />,
     color: '#7B45C8',
     tone: '#F2ECFF',
+    visualSrc: '/images/landing/context-investing.jpg',
   },
   {
     id: 'law',
@@ -197,6 +204,7 @@ const contextTopics: ContextTopic[] = [
     icon: <AccountBalanceOutlinedIcon />,
     color: '#CC202A',
     tone: '#FFF0F1',
+    visualSrc: '/images/landing/context-law.jpg',
   },
   {
     id: 'physics',
@@ -210,6 +218,7 @@ const contextTopics: ContextTopic[] = [
     icon: <ScienceOutlinedIcon />,
     color: '#D82E2E',
     tone: '#FFF0F0',
+    visualSrc: '/images/landing/context-physics.jpg',
   },
   {
     id: 'music',
@@ -223,6 +232,7 @@ const contextTopics: ContextTopic[] = [
     icon: <MusicNoteOutlinedIcon />,
     color: '#A8790B',
     tone: '#FFF7E1',
+    visualSrc: '/images/landing/context-music.jpg',
   },
   {
     id: 'tech',
@@ -236,8 +246,28 @@ const contextTopics: ContextTopic[] = [
     icon: <CodeOutlinedIcon />,
     color: '#154397',
     tone: '#EAF1FF',
+    visualSrc: '/images/landing/context-tech.jpg',
   },
 ]
+
+const preloadedContextImages: HTMLImageElement[] = []
+
+const preloadContextImages = () => {
+  if (preloadedContextImages.length > 0 || typeof Image === 'undefined') {
+    return
+  }
+
+  contextTopics.forEach((topic) => {
+    const image = new Image()
+    image.decoding = 'async'
+    image.src = topic.visualSrc
+    preloadedContextImages.push(image)
+
+    if (typeof image.decode === 'function') {
+      void image.decode().catch(() => undefined)
+    }
+  })
+}
 
 const StudyMeshLanding = () => {
   const location = useLocation()
@@ -246,6 +276,10 @@ const StudyMeshLanding = () => {
   const openCreateStudyGuide = () => {
     navigate('/study-guides?create=1')
   }
+
+  useEffect(() => {
+    preloadContextImages()
+  }, [])
 
   useEffect(() => {
     if (!location.hash) {
@@ -914,7 +948,7 @@ const ContextComparisonSection = () => {
                 lineHeight: 1.58,
               }}
             >
-              StudyMesh adapts the same answer to knowledge you already have.
+              StudyMesh adapts the answer to knowledge you already have.
             </Typography>
           </Stack>
 
@@ -1023,7 +1057,7 @@ const ContextComparisonSection = () => {
           </Box>
 
           <Stack direction="row" spacing={1.45} aria-label="Context carousel page">
-            {contextTopics.slice(0, 5).map((topic, index) => (
+            {contextTopics.map((topic, index) => (
               <Box
                 key={topic.id}
                 aria-hidden="true"
@@ -1285,85 +1319,22 @@ const ContextIcon = ({
 
 const ContextVisual = ({ topic }: { topic: ContextTopic }) => (
   <Box
-    aria-hidden="true"
+    component="img"
+    src={topic.visualSrc}
+    alt=""
+    loading="eager"
+    decoding="sync"
     sx={{
       minHeight: { xs: 180, md: 226 },
+      width: '100%',
+      height: { xs: 210, md: 252 },
       borderRadius: 2,
-      position: 'relative',
-      overflow: 'hidden',
-      bgcolor: '#DDE5EE',
-      background:
-        topic.id === 'photography'
-          ? 'linear-gradient(135deg, #E8EEF4 0%, #A7B1BE 42%, #F7FAFC 100%)'
-          : `radial-gradient(circle at 52% 44%, ${alpha(
-              topic.color,
-              0.22,
-            )}, transparent 28%), linear-gradient(135deg, #F8FBFF, ${topic.tone})`,
-      boxShadow: `inset 0 0 0 1px ${alpha('#FFFFFF', 0.72)}`,
-      display: 'grid',
-      placeItems: 'center',
+      display: 'block',
+      objectFit: 'contain',
+      bgcolor: '#FFFFFF',
+      boxShadow: `0 22px 52px ${alpha(topic.color, 0.12)}`,
     }}
-  >
-    {topic.id === 'photography' ? (
-      <>
-        <Box
-          sx={{
-            position: 'absolute',
-            width: '72%',
-            height: '48%',
-            left: '14%',
-            top: '34%',
-            borderRadius: '16px 16px 24px 24px',
-            bgcolor: '#121723',
-            boxShadow: `0 28px 48px ${alpha('#050B16', 0.3)}`,
-          }}
-        />
-        <Box
-          sx={{
-            position: 'absolute',
-            width: '44%',
-            aspectRatio: '1',
-            borderRadius: '50%',
-            left: '28%',
-            top: '24%',
-            background:
-              'radial-gradient(circle at 50% 50%, #071127 0 22%, #0E554F 23% 32%, #D7821F 33% 37%, #121723 38% 57%, #2D3441 58% 72%, #080D17 73% 100%)',
-            boxShadow: `0 0 0 10px ${alpha('#FFFFFF', 0.1)}, 0 18px 36px ${alpha(
-              '#000000',
-              0.32,
-            )}`,
-          }}
-        />
-        <Box
-          sx={{
-            position: 'absolute',
-            width: '34%',
-            height: '16%',
-            left: '19%',
-            top: '26%',
-            borderRadius: '12px 12px 4px 4px',
-            bgcolor: '#252B36',
-          }}
-        />
-      </>
-    ) : (
-      <Box
-        sx={{
-          width: 96,
-          height: 96,
-          borderRadius: '50%',
-          display: 'grid',
-          placeItems: 'center',
-          color: topic.color,
-          bgcolor: alpha('#FFFFFF', 0.78),
-          boxShadow: `0 20px 52px ${alpha(topic.color, 0.18)}`,
-          '& svg': { fontSize: 52 },
-        }}
-      >
-        {topic.icon}
-      </Box>
-    )}
-  </Box>
+  />
 )
 
 const DecorativeHeroLayer = () => (

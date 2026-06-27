@@ -59,7 +59,7 @@ describe('StudyMeshLanding', () => {
       }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/studymesh adapts the same answer/i),
+      screen.getByText(/studymesh adapts the answer/i),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: /photography/i }),

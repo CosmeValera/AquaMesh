@@ -757,7 +757,7 @@ const GrowingGuidesSection = () => (
       scrollMarginTop: 104,
       borderTop: `1px solid ${alpha(brand.line, 0.7)}`,
       bgcolor: '#FFFFFF',
-      pt: { xs: 11, md: 9 },
+      pt: { xs: 11, lg: 14 },
       pb: { xs: 6, md: 9 },
       overflow: 'hidden',
       '&::before': {
@@ -781,6 +781,15 @@ const GrowingGuidesSection = () => (
     <Container maxWidth="lg" sx={{ position: 'relative' }}>
       <Box
         sx={{
+          display: { xs: 'none', lg: 'flex' },
+          justifyContent: 'center',
+          mb: 4.2,
+        }}
+      >
+        <GrowingGuidesLabel />
+      </Box>
+      <Box
+        sx={{
           display: 'grid',
           gridTemplateColumns: { xs: '1fr', lg: '0.74fr 1.26fr' },
           gap: { xs: 4, md: 4.8, lg: 2.6 },
@@ -788,23 +797,8 @@ const GrowingGuidesSection = () => (
         }}
       >
         <Stack spacing={2.4} alignItems="flex-start">
-          <Box
-            sx={{
-              px: 2,
-              py: 0.65,
-              borderRadius: 999,
-              color: '#008A78',
-              bgcolor: alpha(brand.mint, 0.13),
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              lineHeight: 1,
-              letterSpacing: 0,
-            }}
-          >
-            <Stack direction="row" spacing={0.8} alignItems="center">
-              <SpaOutlinedIcon sx={{ fontSize: 16 }} />
-              <Box component="span">GROWING GUIDES</Box>
-            </Stack>
+          <Box sx={{ display: { xs: 'block', lg: 'none' } }}>
+            <GrowingGuidesLabel />
           </Box>
           <Stack spacing={1.35}>
             <Typography
@@ -890,12 +884,34 @@ const GrowingGuidesSection = () => (
   </Box>
 )
 
+const GrowingGuidesLabel = () => (
+  <Box
+    sx={{
+      display: 'inline-flex',
+      px: 2,
+      py: 0.65,
+      borderRadius: 999,
+      color: '#008A78',
+      bgcolor: alpha(brand.mint, 0.13),
+      fontWeight: 800,
+      fontSize: '0.82rem',
+      lineHeight: 1,
+      letterSpacing: 0,
+    }}
+  >
+    <Stack direction="row" spacing={0.8} alignItems="center">
+      <SpaOutlinedIcon sx={{ fontSize: 16 }} />
+      <Box component="span">GROWING GUIDES</Box>
+    </Stack>
+  </Box>
+)
+
 const GrowingGuidesMockup = () => (
   <Box
     aria-label="Growing study guide product preview"
     sx={{
       position: 'relative',
-      minHeight: { xs: 700, md: 660 },
+      minHeight: { xs: 700, lg: 660 },
       overflow: 'visible',
     }}
   >
@@ -912,17 +928,17 @@ const GrowingGuideLayerStack = () => (
   <Box
     sx={{
       position: 'absolute',
-      top: { xs: 204, md: 188 },
-      right: { xs: 6, md: 0, lg: 8 },
-      left: { xs: 6, md: 'auto' },
-      width: { xs: 'auto', md: 640 },
-      height: { xs: 390, md: 470 },
+      top: { xs: 204, lg: 188 },
+      right: { xs: 6, lg: 8 },
+      left: { xs: 6, lg: 'auto' },
+      width: { xs: 'auto', lg: 640 },
+      height: { xs: 390, lg: 470 },
     }}
   >
     <Box
       aria-hidden="true"
       sx={{
-        display: { xs: 'none', md: 'block' },
+        display: { xs: 'none', lg: 'block' },
         position: 'absolute',
         left: 28,
         right: 76,
@@ -957,27 +973,27 @@ const GrowingGuideLayerCard = ({
   <Box
     sx={{
       position: 'absolute',
-      top: { xs: isNewPage ? 0 : 220 + (index - 1) * -40, md: 'auto' },
-      bottom: { xs: 'auto', md: 70 },
+      top: { xs: isNewPage ? 0 : 220 + (index - 1) * -40, lg: 'auto' },
+      bottom: { xs: 'auto', lg: 70 },
       left: {
         xs: isNewPage ? 0 : 14 + index * 4,
-        md: 8 + index * 28,
+        lg: 8 + index * 28,
       },
-      right: { xs: isNewPage ? 0 : 14 - index * 2, md: 'auto' },
+      right: { xs: isNewPage ? 0 : 14 - index * 2, lg: 'auto' },
       width: {
         xs: isNewPage ? '100%' : `calc(100% - ${24 + index * 3}px)`,
-        md: 520,
+        lg: 520,
       },
       minHeight: {
         xs: isNewPage ? 126 : 52,
-        md: isNewPage ? 392 : 82 + index * 50,
+        lg: isNewPage ? 392 : 82 + index * 50,
       },
       height: {
         xs: 'auto',
-        md: isNewPage ? 392 : 82 + index * 50,
+        lg: isNewPage ? 392 : 82 + index * 50,
       },
       zIndex: 30 - index,
-      p: isNewPage ? { xs: 1.25, md: 1.45 } : { xs: 1.05, md: 1.15 },
+      p: isNewPage ? { xs: 1.25, lg: 1.45 } : { xs: 1.05, lg: 1.15 },
       borderRadius: isNewPage ? 2 : 1.6,
       border: `1px solid ${
         isNewPage ? alpha(brand.mint, 0.5) : alpha(brand.line, 0.78)
@@ -994,7 +1010,7 @@ const GrowingGuideLayerCard = ({
           )}`,
       transform: {
         xs: 'none',
-        md: `rotate(${isNewPage ? 1.2 : 1.65 - index * 0.44}deg)`,
+        lg: `rotate(${isNewPage ? 1.2 : 1.65 - index * 0.44}deg)`,
       },
     }}
   >
@@ -1029,8 +1045,8 @@ const GrowingGuideLayerCard = ({
           color: isNewPage ? '#008A78' : brand.ink,
           fontWeight: 900,
           fontSize: isNewPage
-            ? { xs: '1.02rem', md: '1.12rem' }
-            : { xs: '0.82rem', md: '0.95rem' },
+            ? { xs: '1.02rem', lg: '1.12rem' }
+            : { xs: '0.82rem', lg: '0.95rem' },
           lineHeight: 1.25,
         }}
       >
@@ -1055,7 +1071,7 @@ const GrowingGuideLayerCard = ({
         <Box
           aria-hidden="true"
           sx={{
-            display: { xs: 'none', md: 'grid' },
+            display: { xs: 'none', lg: 'grid' },
             width: 28,
             height: 28,
             borderRadius: 1,
@@ -1074,7 +1090,7 @@ const GrowingGuideLayerCard = ({
         sx={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: { xs: 0.7, md: 0.9 },
+          gap: { xs: 0.7, lg: 0.9 },
           mt: 1.25,
           position: 'relative',
           zIndex: 1,
@@ -1094,7 +1110,7 @@ const GrowingGuideLayerCard = ({
               gap: 0.75,
               color: brand.ink,
               fontWeight: 850,
-              fontSize: { xs: '0.72rem', md: '0.78rem' },
+              fontSize: { xs: '0.72rem', lg: '0.78rem' },
             }}
           >
             <Box
@@ -1123,16 +1139,16 @@ const GrowingGuideConversation = () => (
   <Box
     sx={{
       position: 'absolute',
-      right: { xs: 0, md: 4 },
-      top: { xs: 0, md: 18 },
-      width: { xs: '100%', md: 390 },
+      right: { xs: 0, lg: 4 },
+      top: { xs: 0, lg: 18 },
+      width: { xs: '100%', lg: 390 },
       zIndex: 42,
     }}
   >
     <Box
       sx={{
-        ml: { xs: 0, md: 5 },
-        p: { xs: 1.35, md: 1.55 },
+        ml: { xs: 0, lg: 5 },
+        p: { xs: 1.35, lg: 1.55 },
         borderRadius: 2,
         border: `1px solid ${alpha(brand.line, 0.86)}`,
         bgcolor: alpha('#FFFFFF', 0.92),
@@ -1145,7 +1161,7 @@ const GrowingGuideConversation = () => (
             color: brand.blueDark,
             flex: 1,
             fontWeight: 800,
-            fontSize: { xs: '0.84rem', md: '0.9rem' },
+            fontSize: { xs: '0.84rem', lg: '0.9rem' },
             lineHeight: 1.45,
           }}
         >
@@ -1169,9 +1185,9 @@ const GrowingGuideConversation = () => (
     </Box>
     <Box
       sx={{
-        width: { xs: '92%', md: '86%' },
+        width: { xs: '92%', lg: '86%' },
         mt: 1,
-        p: { xs: 1.35, md: 1.55 },
+        p: { xs: 1.35, lg: 1.55 },
         borderRadius: 2,
         border: `1px solid ${alpha(brand.line, 0.86)}`,
         bgcolor: '#FFFFFF',
@@ -1197,7 +1213,7 @@ const GrowingGuideConversation = () => (
           sx={{
             color: brand.ink,
             fontWeight: 850,
-            fontSize: { xs: '0.84rem', md: '0.9rem' },
+            fontSize: { xs: '0.84rem', lg: '0.9rem' },
             lineHeight: 1.48,
           }}
         >
@@ -1215,7 +1231,7 @@ const GrowingGuideCreationArrow = () => (
     aria-hidden="true"
     viewBox="0 0 260 180"
     sx={{
-      display: { xs: 'none', md: 'block' },
+      display: { xs: 'none', lg: 'block' },
       position: 'absolute',
       right: -12,
       top: 128,
@@ -1260,7 +1276,7 @@ const GrowingGuideSparkle = ({
   <AutoAwesomeIcon
     aria-hidden="true"
     sx={{
-      display: { xs: 'none', md: 'block' },
+      display: { xs: 'none', lg: 'block' },
       position: 'absolute',
       left,
       top,

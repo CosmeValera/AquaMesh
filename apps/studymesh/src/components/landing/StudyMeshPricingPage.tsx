@@ -96,13 +96,6 @@ const StudyMeshPricingPage = () => {
           >
             <Stack spacing={1} alignItems="center" textAlign="center" mb={3}>
               <Typography
-                variant="overline"
-                fontWeight={900}
-                sx={{ color: pricingBrand.blue }}
-              >
-                Pricing
-              </Typography>
-              <Typography
                 variant="h4"
                 component="h1"
                 fontWeight={900}
@@ -120,7 +113,6 @@ const StudyMeshPricingPage = () => {
                     borderRadius: 999,
                     bgcolor: pricingBrand.mint,
                     boxShadow: `0 2px 0 ${alpha(pricingBrand.blueDark, 0.1)}`,
-                    zIndex: 0,
                   },
                 }}
               >
@@ -128,7 +120,7 @@ const StudyMeshPricingPage = () => {
               </Typography>
               <Typography
                 variant="body1"
-                sx={{ maxWidth: 720, color: pricingBrand.muted }}
+                sx={{ maxWidth: 720, color: pricingBrand.muted, pt: 2 }}
               >
                 No credit card required to start. Use StudyMesh for free with
                 your own API key or local AI. Hosted AI is optional when you

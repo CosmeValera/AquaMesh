@@ -55,7 +55,7 @@ describe('StudyMeshLanding', () => {
     expect(screen.getAllByText(/full guide/i).length).toBeGreaterThan(0)
     expect(
       screen.getByRole('heading', {
-        name: /same question\. more personal explanation\./i,
+        name: /same question\. adapted answer\./i,
       }),
     ).toBeInTheDocument()
     expect(

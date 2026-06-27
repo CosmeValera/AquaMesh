@@ -38,7 +38,8 @@ const brand = {
 }
 
 const navItems = [
-  ['Features', '#features'],
+  ['Knowledge context', '#knowledge-context'],
+  ['Growing guides', '#features'],
   ['Pricing', '/pricing'],
 ]
 
@@ -357,7 +358,7 @@ const StudyMeshLanding = () => {
                 sx={{
                   display: {
                     xs: label === 'Pricing' ? 'inline-flex' : 'none',
-                    sm: 'inline-flex',
+                    md: 'inline-flex',
                   },
                   minWidth: 'auto',
                   px: 0,
@@ -852,11 +853,13 @@ const ContextComparisonSection = () => {
 
   return (
     <Box
+      id="knowledge-context"
       sx={{
         position: 'relative',
         py: { xs: 5.5, md: 8 },
         bgcolor: '#FFFFFF',
         borderTop: `1px solid ${alpha(brand.line, 0.62)}`,
+        scrollMarginTop: 104,
         overflow: 'hidden',
         '&::before': {
           content: '""',

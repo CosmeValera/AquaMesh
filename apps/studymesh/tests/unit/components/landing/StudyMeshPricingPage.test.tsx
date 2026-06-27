@@ -9,9 +9,9 @@ import { MemoryRouter } from 'react-router-dom'
 import StudyMeshPricingPage from '../../../../src/components/landing/StudyMeshPricingPage'
 import { createStudyMeshTheme } from '../../../../src/theme'
 
-const renderPricingPage = () => {
-  const theme = createStudyMeshTheme('light')
-
+const renderPricingPage = (
+  theme = createStudyMeshTheme('light'),
+) => {
   return render(
     <MemoryRouter>
       <ThemeProvider theme={theme}>
@@ -72,5 +72,21 @@ describe('StudyMeshPricingPage', () => {
     expect(screen.queryByText(/monthly billing/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/higher hourly limits/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/one-time 2/i)).not.toBeInTheDocument()
+  })
+
+  it('keeps fixed pricing colors under dark mode and custom accent', () => {
+    renderPricingPage(createStudyMeshTheme('dark', 'rose'))
+
+    const page = screen.getByTestId('studymesh-pricing')
+    expect(window.getComputedStyle(page).backgroundColor).toBe(
+      'rgb(251, 253, 254)',
+    )
+    expect(window.getComputedStyle(page).color).toBe('rgb(7, 17, 39)')
+
+    const startFree = screen.getByRole('link', { name: /start free/i })
+    expect(['rgb(17, 80, 216)', 'rgb(13, 63, 174)']).toContain(
+      window.getComputedStyle(startFree).backgroundColor,
+    )
+    expect(window.getComputedStyle(startFree).color).toBe('rgb(255, 255, 255)')
   })
 })

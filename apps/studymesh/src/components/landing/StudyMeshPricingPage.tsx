@@ -7,7 +7,6 @@ import {
   Paper,
   Stack,
   Typography,
-  useTheme,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
@@ -25,6 +24,24 @@ import {
   STUDY_CREDITS_SYMBOL,
   getHostedAiCreditCost,
 } from '../../quickCreate/ai'
+
+const pricingBrand = {
+  canvas: '#FBFDFE',
+  header: 'rgba(255, 255, 255, 0.86)',
+  surface: '#FFFFFF',
+  subtleSurface: '#F6FAFE',
+  ink: '#071127',
+  muted: '#5B6680',
+  softText: '#64719B',
+  line: '#D9E5F3',
+  blue: '#1150D8',
+  blueDark: '#0D3FAE',
+  sky: '#12A7E8',
+  skySoft: '#E4F4FF',
+  mint: '#11C9A3',
+  mintDark: '#008A78',
+  mintSoft: '#DDF9EF',
+}
 
 const formatCreditPackPrice = (label: string) => label.replace(' EUR', '€')
 
@@ -46,14 +63,14 @@ const freeOptions = [
 ]
 
 const navItems = [
-  ['Features', '/#growing-guide'],
+  ['Knowledge context', '/#knowledge-context'],
+  ['Growing guides', '/#growing-guide'],
   ['Pricing', '/pricing'],
 ]
 
 const StudyMeshPricingPage = () => {
   const navigate = useNavigate()
-  const theme = useTheme()
-  const pageColor = theme.palette.background.default
+  const pageColor = pricingBrand.canvas
 
   const openCreateStudyGuide = () => {
     navigate('/study-guides?create=1')
@@ -61,18 +78,20 @@ const StudyMeshPricingPage = () => {
 
   return (
     <Box
+      data-testid="studymesh-pricing"
       sx={{
         minHeight: '100dvh',
         bgcolor: pageColor,
-        color: 'text.primary',
+        color: pricingBrand.ink,
+        fontFamily: '"Readex Pro", "Inter", "Segoe UI", Arial, sans-serif',
       }}
     >
       <Box
         component="header"
         sx={{
           borderBottom: '1px solid',
-          borderColor: alpha(theme.palette.divider, 0.56),
-          bgcolor: alpha(pageColor, 0.86),
+          borderColor: alpha(pricingBrand.line, 0.56),
+          bgcolor: pricingBrand.header,
           backdropFilter: 'blur(18px)',
           position: 'sticky',
           top: 0,
@@ -97,7 +116,7 @@ const StudyMeshPricingPage = () => {
               justifySelf: 'start',
               minWidth: 'auto',
               p: 0,
-              color: 'text.primary',
+              color: pricingBrand.ink,
               textTransform: 'none',
               '&:hover': { bgcolor: 'transparent' },
             }}
@@ -116,7 +135,10 @@ const StudyMeshPricingPage = () => {
               <Typography
                 variant="h6"
                 fontWeight={900}
-                sx={{ display: { xs: 'none', sm: 'block' } }}
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  color: pricingBrand.ink,
+                }}
               >
                 StudyMesh
               </Typography>
@@ -142,13 +164,13 @@ const StudyMeshPricingPage = () => {
                   },
                   minWidth: 'auto',
                   px: 0,
-                  color: alpha(theme.palette.text.primary, 0.78),
+                  color: alpha(pricingBrand.ink, 0.78),
                   textTransform: 'none',
                   fontWeight: 800,
                   fontSize: '0.98rem',
                   '&:hover': {
                     bgcolor: 'transparent',
-                    color: 'primary.main',
+                    color: pricingBrand.blue,
                   },
                 }}
               >
@@ -166,15 +188,15 @@ const StudyMeshPricingPage = () => {
               minWidth: { xs: 88, sm: 'auto' },
               px: { xs: 1.75, sm: 3 },
               py: { xs: 0.85, sm: 1.05 },
-              color: 'primary.dark',
-              borderColor: alpha(theme.palette.primary.main, 0.32),
-              bgcolor: alpha(theme.palette.background.paper, 0.72),
-              boxShadow: `0 10px 24px ${alpha(theme.palette.common.black, 0.08)}`,
+              color: pricingBrand.blueDark,
+              borderColor: alpha(pricingBrand.blue, 0.32),
+              bgcolor: alpha(pricingBrand.surface, 0.72),
+              boxShadow: `0 10px 24px ${alpha('#000000', 0.08)}`,
               textTransform: 'none',
               fontWeight: 900,
               '&:hover': {
-                borderColor: alpha(theme.palette.primary.main, 0.5),
-                bgcolor: alpha(theme.palette.primary.main, 0.08),
+                borderColor: alpha(pricingBrand.blue, 0.5),
+                bgcolor: alpha(pricingBrand.blue, 0.08),
               },
               '& .MuiButton-endIcon': {
                 display: { xs: 'none', sm: 'inherit' },
@@ -205,44 +227,36 @@ const StudyMeshPricingPage = () => {
               p: { xs: 2.5, md: 4 },
               borderRadius: 3,
               border: '1px solid',
-              borderColor: alpha(theme.palette.primary.main, 0.22),
-              bgcolor:
-                theme.palette.mode === 'dark'
-                  ? alpha(theme.palette.primary.dark, 0.24)
-                  : alpha(theme.palette.primary.light, 0.1),
-              background:
-                theme.palette.mode === 'dark'
-                  ? `radial-gradient(circle at top right, ${alpha(
-                      theme.palette.primary.main,
-                      0.24,
-                    )}, transparent 34%), ${alpha(
-                      theme.palette.background.paper,
-                      0.74,
-                    )}`
-                  : `radial-gradient(circle at top right, ${alpha(
-                      theme.palette.primary.light,
-                      0.38,
-                    )}, transparent 34%), linear-gradient(135deg, ${alpha(
-                      theme.palette.primary.light,
-                      0.14,
-                    )}, ${alpha(theme.palette.success.light, 0.14)})`,
+              borderColor: alpha(pricingBrand.blue, 0.22),
+              bgcolor: alpha(pricingBrand.skySoft, 0.42),
+              background: `radial-gradient(circle at top right, ${alpha(
+                pricingBrand.sky,
+                0.2,
+              )}, transparent 34%), linear-gradient(135deg, ${alpha(
+                pricingBrand.skySoft,
+                0.72,
+              )}, ${alpha(pricingBrand.mintSoft, 0.62)})`,
             }}
           >
             <Stack spacing={1} alignItems="center" textAlign="center" mb={3}>
               <Typography
                 variant="overline"
                 fontWeight={900}
-                color="primary.main"
+                sx={{ color: pricingBrand.blue }}
               >
                 Pricing
               </Typography>
-              <Typography variant="h4" component="h1" fontWeight={900}>
+              <Typography
+                variant="h4"
+                component="h1"
+                fontWeight={900}
+                sx={{ color: pricingBrand.ink }}
+              >
                 Free without a subscription.
               </Typography>
               <Typography
                 variant="body1"
-                color="text.secondary"
-                sx={{ maxWidth: 720 }}
+                sx={{ maxWidth: 720, color: pricingBrand.muted }}
               >
                 No credit card required to start. Use StudyMesh for free with
                 your own API key or local AI. Hosted AI is optional when you
@@ -256,24 +270,30 @@ const StudyMeshPricingPage = () => {
                 p: { xs: 2.5, md: 3.5 },
                 borderRadius: 2,
                 border: '1px solid',
-                borderColor: alpha(theme.palette.success.main, 0.36),
-                bgcolor: alpha(theme.palette.background.paper, 0.9),
-                boxShadow: `0 20px 54px ${alpha(
-                  theme.palette.success.main,
-                  0.12,
-                )}`,
+                borderColor: alpha(pricingBrand.mint, 0.36),
+                bgcolor: alpha(pricingBrand.surface, 0.9),
+                boxShadow: `0 20px 54px ${alpha(pricingBrand.mint, 0.12)}`,
               }}
             >
               <Grid container spacing={3} alignItems="stretch">
                 <Grid item xs={12} md={4}>
                   <Stack spacing={1.5} height="100%">
-                    <Typography variant="overline" fontWeight={900}>
+                    <Typography
+                      variant="overline"
+                      fontWeight={900}
+                      sx={{ color: pricingBrand.mintDark }}
+                    >
                       Free product
                     </Typography>
-                    <Typography variant="h2" fontWeight={950} lineHeight={1}>
+                    <Typography
+                      variant="h2"
+                      fontWeight={950}
+                      lineHeight={1}
+                      sx={{ color: pricingBrand.ink }}
+                    >
                       0€
                     </Typography>
-                    <Typography color="text.secondary">
+                    <Typography sx={{ color: pricingBrand.muted }}>
                       Create Study Guides, Quick Create results, and chat with
                       your study workspace without a StudyMesh subscription.
                     </Typography>
@@ -283,8 +303,21 @@ const StudyMeshPricingPage = () => {
                       sx={{
                         mt: 'auto',
                         borderRadius: 999,
+                        bgcolor: pricingBrand.blue,
+                        color: pricingBrand.surface,
                         textTransform: 'none',
                         fontWeight: 900,
+                        boxShadow: `0 14px 28px ${alpha(
+                          pricingBrand.blue,
+                          0.22,
+                        )}`,
+                        '&:hover': {
+                          bgcolor: pricingBrand.blueDark,
+                          boxShadow: `0 16px 32px ${alpha(
+                            pricingBrand.blue,
+                            0.28,
+                          )}`,
+                        },
                       }}
                     >
                       Start free
@@ -301,11 +334,8 @@ const StudyMeshPricingPage = () => {
                             p: 2,
                             borderRadius: 2,
                             border: '1px solid',
-                            borderColor: alpha(theme.palette.divider, 0.72),
-                            bgcolor: alpha(
-                              theme.palette.background.default,
-                              0.42,
-                            ),
+                            borderColor: alpha(pricingBrand.line, 0.72),
+                            bgcolor: alpha(pricingBrand.subtleSurface, 0.72),
                           }}
                         >
                           <Stack spacing={1.25} height="100%">
@@ -321,26 +351,30 @@ const StudyMeshPricingPage = () => {
                                   borderRadius: '50%',
                                   display: 'grid',
                                   placeItems: 'center',
-                                  color: 'success.main',
-                                  bgcolor: alpha(
-                                    theme.palette.success.main,
-                                    0.12,
-                                  ),
+                                  color: pricingBrand.mintDark,
+                                  bgcolor: alpha(pricingBrand.mint, 0.12),
                                 }}
                               >
                                 {option.icon}
                               </Box>
                               <Typography
                                 variant="caption"
-                                color="text.secondary"
+                                sx={{ color: pricingBrand.softText }}
                               >
                                 {option.label}
                               </Typography>
                             </Stack>
-                            <Typography variant="h6" fontWeight={900}>
+                            <Typography
+                              variant="h6"
+                              fontWeight={900}
+                              sx={{ color: pricingBrand.ink }}
+                            >
                               {option.title}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography
+                              variant="body2"
+                              sx={{ color: pricingBrand.muted }}
+                            >
                               {option.body}
                             </Typography>
                             <Stack spacing={0.75} sx={{ mt: 'auto' }}>
@@ -353,9 +387,12 @@ const StudyMeshPricingPage = () => {
                                 >
                                   <CheckCircleIcon
                                     fontSize="small"
-                                    color="success"
+                                    sx={{ color: pricingBrand.mintDark }}
                                   />
-                                  <Typography variant="body2">
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ color: pricingBrand.ink }}
+                                  >
                                     {feature}
                                   </Typography>
                                 </Stack>
@@ -375,17 +412,21 @@ const StudyMeshPricingPage = () => {
                 <Typography
                   variant="overline"
                   fontWeight={900}
-                  color="primary.main"
+                  sx={{ color: pricingBrand.blue }}
                 >
                   Optional Hosted AI
                 </Typography>
-                <Typography variant="h5" component="h2" fontWeight={900}>
+                <Typography
+                  variant="h5"
+                  component="h2"
+                  fontWeight={900}
+                  sx={{ color: pricingBrand.ink }}
+                >
                   Buy Study Credits for setup-free AI.
                 </Typography>
                 <Typography
                   variant="body2"
-                  color="text.secondary"
-                  sx={{ maxWidth: 680 }}
+                  sx={{ maxWidth: 680, color: pricingBrand.muted }}
                 >
                   {STUDY_CREDITS_LABEL} ({STUDY_CREDITS_SYMBOL}) pay for hosted
                   generation when you do not want to manage an API key.
@@ -406,11 +447,11 @@ const StudyMeshPricingPage = () => {
                           borderRadius: 2,
                           border: '1px solid',
                           borderColor: highlighted
-                            ? alpha(theme.palette.primary.main, 0.62)
-                            : alpha(theme.palette.divider, 0.9),
+                            ? alpha(pricingBrand.blue, 0.62)
+                            : alpha(pricingBrand.line, 0.9),
                           bgcolor: highlighted
-                            ? alpha(theme.palette.primary.main, 0.08)
-                            : alpha(theme.palette.background.paper, 0.78),
+                            ? alpha(pricingBrand.blue, 0.08)
+                            : alpha(pricingBrand.surface, 0.78),
                         }}
                       >
                         <Stack spacing={1.35} height="100%">
@@ -427,11 +468,11 @@ const StudyMeshPricingPage = () => {
                                 display: 'grid',
                                 placeItems: 'center',
                                 color: highlighted
-                                  ? 'primary.contrastText'
-                                  : 'primary.main',
+                                  ? pricingBrand.surface
+                                  : pricingBrand.blue,
                                 bgcolor: highlighted
-                                  ? 'primary.main'
-                                  : alpha(theme.palette.primary.main, 0.1),
+                                  ? pricingBrand.blue
+                                  : alpha(pricingBrand.blue, 0.1),
                               }}
                             >
                               {highlighted ? (
@@ -442,20 +483,31 @@ const StudyMeshPricingPage = () => {
                             </Box>
                             <Typography
                               variant="caption"
-                              color="text.secondary"
+                              sx={{ color: pricingBrand.softText }}
                             >
                               {pack.badge ?? 'Credit pack'}
                             </Typography>
                           </Stack>
                           <Box>
-                            <Typography variant="h6" fontWeight={900}>
+                            <Typography
+                              variant="h6"
+                              fontWeight={900}
+                              sx={{ color: pricingBrand.ink }}
+                            >
                               {pack.credits} {STUDY_CREDITS_SYMBOL}
                             </Typography>
-                            <Typography variant="h4" fontWeight={950}>
+                            <Typography
+                              variant="h4"
+                              fontWeight={950}
+                              sx={{ color: pricingBrand.ink }}
+                            >
                               {formatCreditPackPrice(pack.label)}
                             </Typography>
                           </Box>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography
+                            variant="body2"
+                            sx={{ color: pricingBrand.muted }}
+                          >
                             One-time credit purchase. Credits stay in your
                             StudyMesh account.
                           </Typography>
@@ -473,9 +525,16 @@ const StudyMeshPricingPage = () => {
                               >
                                 <CheckCircleIcon
                                   fontSize="small"
-                                  color={highlighted ? 'primary' : 'success'}
+                                  sx={{
+                                    color: highlighted
+                                      ? pricingBrand.blue
+                                      : pricingBrand.mintDark,
+                                  }}
                                 />
-                                <Typography variant="body2">
+                                <Typography
+                                  variant="body2"
+                                  sx={{ color: pricingBrand.ink }}
+                                >
                                   {feature}
                                 </Typography>
                               </Stack>
@@ -487,8 +546,35 @@ const StudyMeshPricingPage = () => {
                             sx={{
                               mt: 1,
                               borderRadius: 999,
+                              borderColor: highlighted
+                                ? pricingBrand.blue
+                                : alpha(pricingBrand.blue, 0.36),
+                              bgcolor: highlighted
+                                ? pricingBrand.blue
+                                : alpha(pricingBrand.surface, 0.76),
+                              color: highlighted
+                                ? pricingBrand.surface
+                                : pricingBrand.blueDark,
                               textTransform: 'none',
                               fontWeight: 900,
+                              boxShadow: highlighted
+                                ? `0 14px 28px ${alpha(
+                                    pricingBrand.blue,
+                                    0.18,
+                                  )}`
+                                : 'none',
+                              '&:hover': {
+                                borderColor: pricingBrand.blue,
+                                bgcolor: highlighted
+                                  ? pricingBrand.blueDark
+                                  : alpha(pricingBrand.blue, 0.08),
+                                boxShadow: highlighted
+                                  ? `0 16px 32px ${alpha(
+                                      pricingBrand.blue,
+                                      0.24,
+                                    )}`
+                                  : 'none',
+                              },
                             }}
                           >
                             Sign up
@@ -507,11 +593,11 @@ const StudyMeshPricingPage = () => {
                   p: 1.5,
                   borderRadius: 2,
                   border: '1px solid',
-                  borderColor: alpha(theme.palette.divider, 0.8),
-                  bgcolor: alpha(theme.palette.background.paper, 0.66),
+                  borderColor: alpha(pricingBrand.line, 0.8),
+                  bgcolor: alpha(pricingBrand.surface, 0.66),
                 }}
               >
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: pricingBrand.muted }}>
                   New accounts start with {HOSTED_AI_INITIAL_FREE_CREDITS}{' '}
                   {STUDY_CREDITS_SYMBOL}. After that, Study Credits only
                   increase through completed credit purchases. Study Guides cost{' '}

@@ -793,13 +793,14 @@ const GrowingGuidesSection = () => (
           display: 'grid',
           gridTemplateColumns: { xs: '1fr', lg: '0.74fr 1.26fr' },
           gap: { xs: 4, md: 4.8, lg: 2.6 },
-          alignItems: 'center',
+          alignItems: { xs: 'stretch', lg: 'start' },
         }}
       >
         <Stack
           spacing={2.4}
           alignItems={{ xs: 'center', lg: 'flex-start' }}
           textAlign={{ xs: 'center', lg: 'left' }}
+          sx={{ pt: { lg: 2.25 } }}
         >
           <Box sx={{ display: { xs: 'block', lg: 'none' } }}>
             <GrowingGuidesLabel />

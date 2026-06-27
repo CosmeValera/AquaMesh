@@ -72,6 +72,15 @@ describe('StudyMeshPricingPage', () => {
     expect(screen.queryByText(/monthly billing/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/higher hourly limits/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/one-time 2/i)).not.toBeInTheDocument()
+
+    expect(screen.getByRole('link', { name: /knowledge context/i })).toHaveAttribute(
+      'href',
+      '/#knowledge-context',
+    )
+    expect(screen.getByRole('link', { name: /growing guides/i })).toHaveAttribute(
+      'href',
+      '/#growing-guide',
+    )
   })
 
   it('keeps fixed pricing colors under dark mode and custom accent', () => {

@@ -30,7 +30,7 @@ describe('KnowledgeContextDialog', () => {
     )
 
     expect(screen.getByText(/what best describes you/i)).toBeInTheDocument()
-    expect(screen.getByText("It's recommended to start with 3-5.")).toBeInTheDocument()
+    expect(screen.getByText('Recommended: 3-5.')).toBeInTheDocument()
     expect(screen.queryByText(/knowledge areas/i)).not.toBeInTheDocument()
     expect(
       screen.queryByLabelText(/anything else you know well/i),
@@ -123,6 +123,55 @@ describe('KnowledgeContextDialog', () => {
       roles: ['finance'],
       broadKnowledge: ['Backend'],
       specificKnowledge: ['MinIO'],
+    })
+  })
+
+  it('sorts knowledge context chips without changing saved selection order', () => {
+    render(
+      <KnowledgeContextDialog
+        open
+        surface="settings"
+        initialContext={null}
+        onClose={vi.fn()}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText(/add something else you know/i), {
+      target: { value: 'Zulu, Alpha' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
+
+    const visibleTopics = () =>
+      screen.getAllByText(/^(Alpha|Zulu)$/).map((item) => item.textContent)
+
+    expect(visibleTopics()).toEqual(['Zulu', 'Alpha'])
+
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', { name: /sort knowledge context/i }),
+    )
+    fireEvent.click(screen.getByRole('option', { name: 'Newer' }))
+    expect(visibleTopics()).toEqual(['Alpha', 'Zulu'])
+
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', { name: /sort knowledge context/i }),
+    )
+    fireEvent.click(screen.getByRole('option', { name: 'Older' }))
+    expect(visibleTopics()).toEqual(['Zulu', 'Alpha'])
+
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', { name: /sort knowledge context/i }),
+    )
+    fireEvent.click(screen.getByRole('option', { name: 'A-Z' }))
+    expect(visibleTopics()).toEqual(['Alpha', 'Zulu'])
+
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', { name: /sort knowledge context/i }),
+    )
+    fireEvent.click(screen.getByRole('option', { name: 'Z-A' }))
+    expect(visibleTopics()).toEqual(['Zulu', 'Alpha'])
+
+    expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
+      specificKnowledge: ['Zulu', 'Alpha'],
     })
   })
 })

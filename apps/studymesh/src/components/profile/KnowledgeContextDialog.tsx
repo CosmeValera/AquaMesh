@@ -7,6 +7,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
+  Select,
   Stack,
   TextField,
   Typography,
@@ -39,8 +41,10 @@ interface KnowledgeContextDraft {
   specificKnowledge: string[]
 }
 
+type KnowledgeContextSortMode = 'older' | 'newer' | 'az' | 'za'
+
 const getRecommendationText = (surface: KnowledgeContextSurface): string =>
-  surface === 'onboarding' ? "It's recommended to start with 3-5." : 'Recommended: 5 or more.'
+  surface === 'onboarding' ? 'Recommended: 3-5.' : 'Recommended: 5 or more.'
 
 const selectedChipSx = (selected: boolean) =>
   selected
@@ -89,6 +93,23 @@ const getSelectedKnowledgeCount = (draft: {
   broadKnowledge: string[]
   specificKnowledge: string[]
 }): number => getSelectedKnowledge(draft).length
+
+const sortSelectedKnowledge = (
+  topics: string[],
+  sortMode: KnowledgeContextSortMode,
+): string[] => {
+  if (sortMode === 'older') {
+    return topics
+  }
+
+  if (sortMode === 'newer') {
+    return [...topics].reverse()
+  }
+
+  return [...topics].sort((left, right) =>
+    sortMode === 'az' ? left.localeCompare(right) : right.localeCompare(left),
+  )
+}
 
 const KnowledgeRolePicker: React.FC<{
   roles: UserKnowledgeRoleId[]
@@ -184,6 +205,8 @@ const KnowledgeContextForm: React.FC<{
   const [broadKnowledge, setBroadKnowledge] = React.useState<string[]>([])
   const [specificKnowledge, setSpecificKnowledge] = React.useState<string[]>([])
   const [specificKnowledgeInput, setSpecificKnowledgeInput] = React.useState('')
+  const [sortMode, setSortMode] =
+    React.useState<KnowledgeContextSortMode>('older')
 
   React.useEffect(() => {
     const nextBroadKnowledge = initialContext?.broadKnowledge || []
@@ -205,6 +228,10 @@ const KnowledgeContextForm: React.FC<{
     broadKnowledge,
     specificKnowledge,
   })
+  const sortedSelectedKnowledge = sortSelectedKnowledge(
+    selectedKnowledge,
+    sortMode,
+  )
   const selectedCount = selectedKnowledge.length
   const showBroadKnowledge =
     surface === 'settings' || roles.length > 0 || selectedCount > 0
@@ -334,11 +361,39 @@ const KnowledgeContextForm: React.FC<{
 
           {selectedCount ? (
             <Box>
-              <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
-                Knowledge context
-              </Typography>
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                gap={1.5}
+                sx={{ mb: 1 }}
+              >
+                <Typography variant="subtitle2" fontWeight={750}>
+                  Knowledge context
+                </Typography>
+                <Select
+                  value={sortMode}
+                  onChange={(event) =>
+                    setSortMode(event.target.value as KnowledgeContextSortMode)
+                  }
+                  size="small"
+                  inputProps={{ 'aria-label': 'Sort knowledge context' }}
+                  sx={{
+                    minWidth: 132,
+                    '& .MuiSelect-select': {
+                      py: 0.5,
+                      fontSize: '0.8125rem',
+                    },
+                  }}
+                >
+                  <MenuItem value="older">Older</MenuItem>
+                  <MenuItem value="newer">Newer</MenuItem>
+                  <MenuItem value="az">A-Z</MenuItem>
+                  <MenuItem value="za">Z-A</MenuItem>
+                </Select>
+              </Stack>
               <Stack direction="row" gap={1} flexWrap="wrap">
-                {selectedKnowledge.map((topic) => (
+                {sortedSelectedKnowledge.map((topic) => (
                   <Chip
                     key={topic}
                     label={topic}

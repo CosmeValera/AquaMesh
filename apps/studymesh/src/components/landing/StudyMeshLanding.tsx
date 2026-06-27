@@ -923,77 +923,88 @@ const ContextComparisonSection = () => {
           </Stack>
 
           <Box
-            aria-label="Knowledge context topics"
             sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: 'repeat(10, minmax(104px, 1fr))',
-                lg: 'repeat(10, minmax(0, 1fr))',
-              },
-              gap: { xs: 1.35, md: 1.7 },
               width: '100%',
-              overflowX: { xs: 'auto', lg: 'visible' },
-              pb: { xs: 0.5, lg: 0 },
-              px: { xs: 0.25, md: 0 },
-              scrollbarWidth: 'none',
-              '&::-webkit-scrollbar': { display: 'none' },
+              maxWidth: 850,
+              mx: 'auto',
+              overflow: 'visible',
             }}
           >
-            {contextTopics.map((topic, index) => {
-              const selected = index === activeIndex
+            <Box
+              aria-label="Knowledge context topics"
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'repeat(10, minmax(104px, 1fr))',
+                },
+                gap: { xs: 1.35, md: 1.7 },
+                width: { xs: 'calc(100% + 48px)', md: 'calc(100% + 80px)' },
+                mx: { xs: -3, md: -5 },
+                overflowX: 'auto',
+                pt: 3,
+                pb: 6.5,
+                mb: -4.3,
+                px: { xs: 3, md: 5 },
+                scrollbarWidth: 'none',
+                '&::-webkit-scrollbar': { display: 'none' },
+              }}
+            >
+              {contextTopics.map((topic, index) => {
+                const selected = index === activeIndex
 
-              return (
-                <Button
-                  key={topic.id}
-                  aria-pressed={selected}
-                  onClick={() => selectTopic(index)}
-                  sx={{
-                    minWidth: 0,
-                    height: { xs: 102, md: 118 },
-                    p: 1.15,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 1,
-                    color: selected ? topic.color : brand.ink,
-                    bgcolor: selected ? alpha(topic.color, 0.08) : '#FFFFFF',
-                    border: `1px solid ${
-                      selected ? alpha(topic.color, 0.72) : alpha(brand.line, 0.82)
-                    }`,
-                    borderRadius: 2,
-                    boxShadow: selected
-                      ? `0 18px 44px ${alpha(topic.color, 0.16)}`
-                      : `0 12px 38px ${alpha(brand.blueDark, 0.05)}`,
-                    textTransform: 'none',
-                    fontWeight: 800,
-                    transition:
-                      'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
-                    '&:hover': {
-                      bgcolor: selected ? alpha(topic.color, 0.11) : '#FFFFFF',
-                      borderColor: alpha(topic.color, 0.42),
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 18px 46px ${alpha(topic.color, 0.14)}`,
-                    },
-                  }}
-                >
-                  <Box
+                return (
+                  <Button
+                    key={topic.id}
+                    aria-pressed={selected}
+                    onClick={() => selectTopic(index)}
                     sx={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: '50%',
-                      display: 'grid',
-                      placeItems: 'center',
-                      color: topic.color,
-                      bgcolor: topic.tone,
-                      boxShadow: `0 10px 28px ${alpha(topic.color, 0.13)}`,
-                      '& svg': { fontSize: 25 },
+                      minWidth: 0,
+                      height: { xs: 102, md: 118 },
+                      p: 1.15,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 1,
+                      color: selected ? topic.color : brand.ink,
+                      bgcolor: selected ? alpha(topic.color, 0.08) : '#FFFFFF',
+                      border: `1px solid ${
+                        selected ? alpha(topic.color, 0.72) : alpha(brand.line, 0.82)
+                      }`,
+                      borderRadius: 2,
+                      boxShadow: selected
+                        ? `0 18px 44px ${alpha(topic.color, 0.16)}`
+                        : `0 12px 38px ${alpha(brand.blueDark, 0.05)}`,
+                      textTransform: 'none',
+                      fontWeight: 800,
+                      transition:
+                        'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
+                      '&:hover': {
+                        bgcolor: selected ? alpha(topic.color, 0.11) : '#FFFFFF',
+                        borderColor: alpha(topic.color, 0.42),
+                        transform: 'translateY(-2px)',
+                        boxShadow: `0 18px 46px ${alpha(topic.color, 0.14)}`,
+                      },
                     }}
                   >
-                    {topic.icon}
-                  </Box>
-                  <Box component="span">{topic.label}</Box>
-                </Button>
-              )
-            })}
+                    <Box
+                      sx={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: '50%',
+                        display: 'grid',
+                        placeItems: 'center',
+                        color: topic.color,
+                        bgcolor: topic.tone,
+                        boxShadow: `0 10px 28px ${alpha(topic.color, 0.13)}`,
+                        '& svg': { fontSize: 25 },
+                      }}
+                    >
+                      {topic.icon}
+                    </Box>
+                    <Box component="span">{topic.label}</Box>
+                  </Button>
+                )
+              })}
+            </Box>
           </Box>
 
           <Box

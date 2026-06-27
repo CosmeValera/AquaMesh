@@ -59,10 +59,7 @@ describe('StudyMeshLanding', () => {
       }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/studymesh adapts the answer/i),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(/choose what you already know - watch the same question change/i),
+      screen.getByText(/choose what you already know, watch the explanation change/i),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: /photography/i }),

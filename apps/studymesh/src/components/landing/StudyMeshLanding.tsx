@@ -114,9 +114,9 @@ const contextTopics: ContextTopic[] = [
     question: 'How does the human eye work?',
     contextLabel: 'Photography',
     contextAnswer:
-      'Think of a living camera: the pupil controls exposure, the lens focuses, the retina captures light, and the brain processes the image.',
+      'Think of a living camera: the pupil controls exposure, the cornea and lens focus, the retina captures light, and the brain processes the image.',
     noContextAnswer:
-      'The human eye works by taking in light, focusing it onto the retina, and sending signals to the brain, which turns them into vision.',
+      'The eye takes in light, focuses it onto the retina, and sends signals to the brain so you can see.',
     icon: <CameraAltOutlinedIcon />,
     color: '#008A78',
     tone: brand.mintSoft,
@@ -139,12 +139,12 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'fitness',
     label: 'Fitness',
-    question: 'What is muscle memory?',
+    question: 'What is compound interest?',
     contextLabel: 'Fitness',
     contextAnswer:
-      'Like repeating a lift until the movement feels smoother, your nervous system learns the pattern and recalls it faster next time.',
+      'Think of progressive overload: small gains keep building on previous gains, so progress can become much larger over time.',
     noContextAnswer:
-      'Muscle memory is the way repeated practice helps your brain and nervous system perform a movement more easily later.',
+      'Compound interest means your earnings are added back to the original amount, so future earnings grow from a larger base.',
     icon: <FitnessCenterOutlinedIcon />,
     color: '#7A4BC2',
     tone: '#F1ECFF',
@@ -156,7 +156,7 @@ const contextTopics: ContextTopic[] = [
     question: 'What is a chemical reaction?',
     contextLabel: 'Cooking',
     contextAnswer:
-      'It is like browning onions: heat changes the ingredients into new compounds with different color, smell, and flavor.',
+      'Think of browning onions: heat does not just warm them, it changes their molecules, creating new color, smell, and flavor.',
     noContextAnswer:
       'A chemical reaction happens when substances rearrange their atoms and form new substances with different properties.',
     icon: <RestaurantOutlinedIcon />,
@@ -167,12 +167,12 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'books',
     label: 'Books',
-    question: 'What is foreshadowing?',
+    question: 'What is a leading indicator?',
     contextLabel: 'Books',
     contextAnswer:
-      'It is a clue planted early in a story so a later event feels earned instead of random.',
+      'Think of foreshadowing in a story: an early clue that hints at what is likely to happen later.',
     noContextAnswer:
-      'Foreshadowing is a storytelling technique where hints suggest what may happen later.',
+      'A leading indicator is a signal that changes before a larger trend or event becomes obvious.',
     icon: <MenuBookOutlinedIcon />,
     color: '#E68000',
     tone: '#FFF4E2',
@@ -181,12 +181,12 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'investing',
     label: 'Investing',
-    question: 'What is compound growth?',
+    question: 'What is exponential growth?',
     contextLabel: 'Investing',
     contextAnswer:
-      'It works like reinvesting gains: each new gain can also start earning, so progress can accelerate over time.',
+      'Think of compounding returns: growth gets added to the base, so the next round grows from a larger amount than before.',
     noContextAnswer:
-      'Compound growth happens when growth is added back to the starting amount, making later growth build on earlier growth.',
+      'Exponential growth happens when something increases by a percentage of its current size, making the increases larger over time.',
     icon: <TrendingUpOutlinedIcon />,
     color: '#7B45C8',
     tone: '#F2ECFF',
@@ -195,12 +195,12 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'law',
     label: 'Law',
-    question: 'What is precedent?',
+    question: 'What is a design pattern?',
     contextLabel: 'Law',
     contextAnswer:
-      'It is like a previous ruling becoming a guide: future decisions use it as a reference when the facts are similar.',
+      'Think of legal precedent: a proven answer to a recurring situation that people reuse when a similar case appears.',
     noContextAnswer:
-      'A precedent is an earlier decision or example that influences how similar cases or choices are handled later.',
+      'A design pattern is a reusable solution to a common problem, especially in software or system design.',
     icon: <AccountBalanceOutlinedIcon />,
     color: '#CC202A',
     tone: '#FFF0F1',
@@ -209,12 +209,12 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'physics',
     label: 'Physics',
-    question: 'What is an atom?',
+    question: 'Why are habits hard to change?',
     contextLabel: 'Physics',
     contextAnswer:
-      'Think of matter as built from tiny units: atoms are the small structures whose parts determine how materials behave.',
+      'Think of inertia: once a routine is moving in one direction, it keeps going unless a stronger force changes its path.',
     noContextAnswer:
-      'An atom is a tiny unit of matter made from a nucleus and surrounding electrons.',
+      'Habits are hard to change because repeated actions become automatic patterns that your brain prefers to reuse.',
     icon: <ScienceOutlinedIcon />,
     color: '#D82E2E',
     tone: '#FFF0F0',
@@ -223,12 +223,12 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'music',
     label: 'Music',
-    question: 'What is rhythm?',
+    question: 'What is pacing in a story?',
     contextLabel: 'Music',
     contextAnswer:
-      'Rhythm is the timing pattern that makes notes feel organized, like the beat that tells a song how to move.',
+      'Think of tempo in a song: fast sections create energy, pauses create tension, and the overall rhythm shapes how the story feels.',
     noContextAnswer:
-      'Rhythm is the pattern of sounds and silences over time.',
+      'Pacing is how quickly or slowly a story moves through events, details, and pauses.',
     icon: <MusicNoteOutlinedIcon />,
     color: '#A8790B',
     tone: '#FFF7E1',
@@ -237,12 +237,12 @@ const contextTopics: ContextTopic[] = [
   {
     id: 'tech',
     label: 'Tech',
-    question: 'What is an API?',
+    question: 'What is an enzyme?',
     contextLabel: 'Tech',
     contextAnswer:
-      'Think of it as a contract between apps: one system sends a request, the other returns data or performs an action through a defined interface.',
+      'Think of a reusable helper function: it makes a specific process run faster without being used up by the process.',
     noContextAnswer:
-      'An API is a way for software systems to communicate through defined requests and responses.',
+      'An enzyme is a molecule that speeds up a chemical reaction without being consumed.',
     icon: <CodeOutlinedIcon />,
     color: '#154397',
     tone: '#EAF1FF',

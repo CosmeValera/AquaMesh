@@ -938,13 +938,10 @@ const ContextComparisonSection = () => {
                   xs: 'repeat(10, minmax(104px, 1fr))',
                 },
                 gap: { xs: 1.35, md: 1.7 },
-                width: { xs: 'calc(100% + 48px)', md: 'calc(100% + 80px)' },
-                mx: { xs: -3, md: -5 },
+                width: '100%',
                 overflowX: 'auto',
-                pt: 3,
-                pb: 6.5,
-                mb: -4.3,
-                px: { xs: 3, md: 5 },
+                py: 0.8,
+                px: 0,
                 scrollbarWidth: 'none',
                 '&::-webkit-scrollbar': { display: 'none' },
               }}
@@ -967,12 +964,15 @@ const ContextComparisonSection = () => {
                       color: selected ? topic.color : brand.ink,
                       bgcolor: selected ? alpha(topic.color, 0.08) : '#FFFFFF',
                       border: `1px solid ${
-                        selected ? alpha(topic.color, 0.72) : alpha(brand.line, 0.82)
+                        selected ? alpha(topic.color, 0.82) : alpha(brand.line, 0.82)
                       }`,
                       borderRadius: 2,
                       boxShadow: selected
-                        ? `0 18px 44px ${alpha(topic.color, 0.16)}`
-                        : `0 12px 38px ${alpha(brand.blueDark, 0.05)}`,
+                        ? `inset 0 0 0 2px ${alpha(
+                            topic.color,
+                            0.08,
+                          )}, inset 0 0 36px ${alpha(topic.color, 0.14)}`
+                        : 'none',
                       textTransform: 'none',
                       fontWeight: 800,
                       transition:
@@ -981,7 +981,12 @@ const ContextComparisonSection = () => {
                         bgcolor: selected ? alpha(topic.color, 0.11) : '#FFFFFF',
                         borderColor: alpha(topic.color, 0.42),
                         transform: 'translateY(-2px)',
-                        boxShadow: `0 18px 46px ${alpha(topic.color, 0.14)}`,
+                        boxShadow: selected
+                          ? `inset 0 0 0 2px ${alpha(
+                              topic.color,
+                              0.1,
+                            )}, inset 0 0 42px ${alpha(topic.color, 0.18)}`
+                          : `inset 0 0 28px ${alpha(topic.color, 0.08)}`,
                       },
                     }}
                   >

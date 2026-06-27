@@ -15,12 +15,12 @@ import CloudQueueIcon from '@mui/icons-material/CloudQueue'
 import KeyIcon from '@mui/icons-material/Key'
 import MemoryIcon from '@mui/icons-material/Memory'
 
+import StudyCreditIcon from '../hostedAi/StudyCreditIcon'
 import LandingTopNav from './LandingTopNav'
 import {
   HOSTED_AI_CREDIT_PACKS,
   HOSTED_AI_INITIAL_FREE_CREDITS,
   STUDY_CREDITS_LABEL,
-  STUDY_CREDITS_SYMBOL,
   getHostedAiCreditCost,
 } from '../../quickCreate/ai'
 
@@ -42,6 +42,40 @@ const pricingBrand = {
 }
 
 const formatCreditPackPrice = (label: string) => label.replace(' EUR', '€')
+const pricingCreditIconFilter =
+  'drop-shadow(0 0 1px rgba(0,95,88,0.95)) drop-shadow(0 0 2px rgba(0,95,88,0.28))'
+
+const CreditAmount = ({
+  amount,
+  size = 'body2',
+  iconSize = 18,
+}: {
+  amount: number
+  size?: 'body2' | 'h6'
+  iconSize?: number
+}) => (
+  <Box
+    component="span"
+    aria-label={`${amount} Study Credits`}
+    sx={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 0.45,
+      verticalAlign: 'text-bottom',
+      color: pricingBrand.ink,
+      fontWeight: 900,
+    }}
+  >
+    <Typography
+      component="span"
+      variant={size}
+      sx={{ color: 'inherit', fontWeight: 'inherit', lineHeight: 1 }}
+    >
+      {amount}
+    </Typography>
+    <StudyCreditIcon size={iconSize} filter={pricingCreditIconFilter} />
+  </Box>
+)
 
 const freeOptions = [
   {
@@ -292,8 +326,8 @@ const StudyMeshPricingPage = () => {
                   variant="body2"
                   sx={{ maxWidth: 680, color: pricingBrand.muted }}
                 >
-                  {STUDY_CREDITS_LABEL} ({STUDY_CREDITS_SYMBOL}) pay for hosted
-                  generation when you do not want to manage an API key.
+                  {STUDY_CREDITS_LABEL} pay for hosted generation when you do
+                  not want to manage an API key.
                 </Typography>
               </Stack>
 
@@ -353,13 +387,11 @@ const StudyMeshPricingPage = () => {
                             </Typography>
                           </Stack>
                           <Box>
-                            <Typography
-                              variant="h6"
-                              fontWeight={900}
-                              sx={{ color: pricingBrand.ink }}
-                            >
-                              {pack.credits} {STUDY_CREDITS_SYMBOL}
-                            </Typography>
+                            <CreditAmount
+                              amount={pack.credits}
+                              size="h6"
+                              iconSize={24}
+                            />
                             <Typography
                               variant="h4"
                               fontWeight={950}
@@ -462,12 +494,13 @@ const StudyMeshPricingPage = () => {
                 }}
               >
                 <Typography variant="body2" sx={{ color: pricingBrand.muted }}>
-                  New accounts start with {HOSTED_AI_INITIAL_FREE_CREDITS}{' '}
-                  {STUDY_CREDITS_SYMBOL}. After that, Study Credits only
-                  increase through completed credit purchases. Study Guides cost{' '}
-                  {getHostedAiCreditCost('study-guide')} {STUDY_CREDITS_SYMBOL};
+                  New accounts start with{' '}
+                  <CreditAmount amount={HOSTED_AI_INITIAL_FREE_CREDITS} />.
+                  After that, Study Credits only increase through completed
+                  credit purchases. Study Guides cost{' '}
+                  <CreditAmount amount={getHostedAiCreditCost('study-guide')} />;
                   Quick Create and chat cost{' '}
-                  {getHostedAiCreditCost('quick-create')} {STUDY_CREDITS_SYMBOL}
+                  <CreditAmount amount={getHostedAiCreditCost('quick-create')} />
                   .
                 </Typography>
               </Paper>

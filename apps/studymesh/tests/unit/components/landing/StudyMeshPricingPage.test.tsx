@@ -42,25 +42,24 @@ describe('StudyMeshPricingPage', () => {
     expect(screen.queryByText(/strong ai quality/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/good privacy path/i)).not.toBeInTheDocument()
 
-    expect(screen.getByText(/Study Credits \(SC\)/i)).toBeInTheDocument()
-    expect(screen.getByText('80 SC')).toBeInTheDocument()
+    expect(screen.getByText(/Study Credits pay for hosted generation/i)).toBeInTheDocument()
+    expect(screen.getByLabelText('80 Study Credits')).toBeInTheDocument()
     expect(screen.getByText('2€')).toBeInTheDocument()
-    expect(screen.getByText('250 SC')).toBeInTheDocument()
+    expect(screen.getByLabelText('250 Study Credits')).toBeInTheDocument()
     expect(screen.getByText('5€')).toBeInTheDocument()
-    expect(screen.getByText('600 SC')).toBeInTheDocument()
+    expect(screen.getByLabelText('600 Study Credits')).toBeInTheDocument()
     expect(screen.getByText('10€')).toBeInTheDocument()
 
-    expect(
-      screen.getByText(/new accounts start with 20 SC/i),
-    ).toBeInTheDocument()
+    expect(screen.getByLabelText('20 Study Credits')).toBeInTheDocument()
+    expect(screen.getByLabelText('2 Study Credits')).toBeInTheDocument()
+    expect(screen.getByLabelText('1 Study Credits')).toBeInTheDocument()
     expect(
       screen.getByText(/only increase through completed credit purchases/i),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(
-        /study guides cost 2 SC; quick create and chat cost 1 SC/i,
-      ),
+      screen.getByText(/study guides cost/i),
     ).toBeInTheDocument()
+    expect(screen.queryByText(/\bSC\b/)).not.toBeInTheDocument()
 
     const signupButtons = screen.getAllByRole('link', { name: /^sign up$/i })
     expect(signupButtons).toHaveLength(3)

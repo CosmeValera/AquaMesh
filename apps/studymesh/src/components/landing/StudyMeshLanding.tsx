@@ -7,7 +7,6 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import BoltIcon from '@mui/icons-material/Bolt'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined'
 import CheckIcon from '@mui/icons-material/Check'
 
 const brand = {
@@ -589,8 +588,8 @@ const HeroTimeline = () => {
                 display: { xs: 'none', sm: 'block' },
                 position: 'absolute',
                 top: 35,
-                left: '62%',
-                width: '72%',
+                left: '74%',
+                width: '54%',
                 height: 0,
                 borderTop: `2px dashed ${alpha(brand.faint, 0.64)}`,
                 '&::before, &::after': {
@@ -619,7 +618,23 @@ const HeroTimeline = () => {
                 color: item.color,
                 border: `1px solid ${alpha(item.color, 0.12)}`,
                 boxShadow: `0 10px 28px ${alpha(item.color, 0.12)}`,
-                '& svg': { fontSize: 33 },
+                transition:
+                  'transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease',
+                '& svg': {
+                  fontSize: 33,
+                  transition: 'filter 180ms ease',
+                },
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  borderColor: alpha(item.color, 0.28),
+                  boxShadow: `0 0 0 8px ${alpha(item.color, 0.09)}, 0 18px 40px ${alpha(
+                    item.color,
+                    0.26,
+                  )}`,
+                },
+                '&:hover svg': {
+                  filter: `drop-shadow(0 0 8px ${alpha(item.color, 0.48)})`,
+                },
               }}
             >
               {item.icon}
@@ -672,37 +687,7 @@ const DecorativeHeroLayer = () => (
         filter: 'blur(0.2px)',
       }}
     />
-    <Box
-      sx={{
-        display: { xs: 'none', sm: 'grid' },
-        position: 'absolute',
-        left: { sm: '4%', lg: '8.5%' },
-        top: { sm: '17%', lg: '18%' },
-        width: { sm: 58, lg: 82 },
-        height: { sm: 58, lg: 82 },
-        placeItems: 'center',
-        color: alpha(brand.blue, 0.23),
-        '&::before, &::after': {
-          content: '""',
-          position: 'absolute',
-          width: { sm: 74, lg: 104 },
-          height: { sm: 27, lg: 38 },
-          border: `2px solid ${alpha(brand.blue, 0.22)}`,
-          borderRadius: '50%',
-        },
-        '&::before': { transform: 'rotate(27deg)' },
-        '&::after': { transform: 'rotate(-27deg)' },
-      }}
-    >
-      <Box
-        sx={{
-          width: 13,
-          height: 13,
-          borderRadius: '50%',
-          border: `2px solid ${alpha(brand.blue, 0.28)}`,
-        }}
-      />
-    </Box>
+    <DecorativeAtom />
     <Box
       sx={{
         display: { xs: 'none', lg: 'block' },
@@ -730,17 +715,7 @@ const DecorativeHeroLayer = () => (
         ))}
       </Stack>
     </Box>
-    <LightbulbOutlinedIcon
-      sx={{
-        display: { xs: 'none', lg: 'block' },
-        position: 'absolute',
-        right: { sm: '8%', lg: '10.5%' },
-        top: { sm: '54%', lg: '52%' },
-        fontSize: { sm: 56, lg: 78 },
-        color: alpha(brand.blue, 0.2),
-        filter: `drop-shadow(0 8px 14px ${alpha(brand.blue, 0.08)})`,
-      }}
-    />
+    <DecorativeLightbulb />
     <AutoAwesomeIcon
       sx={{
         display: { xs: 'none', md: 'block' },
@@ -761,6 +736,96 @@ const DecorativeHeroLayer = () => (
         color: alpha(brand.mint, 0.42),
       }}
     />
+  </Box>
+)
+
+const DecorativeAtom = () => (
+  <Box
+    component="svg"
+    viewBox="0 0 132 112"
+    aria-hidden="true"
+    sx={{
+      display: { xs: 'none', sm: 'block' },
+      position: 'absolute',
+      left: { sm: '4%', lg: '8.5%' },
+      top: { sm: '17%', lg: '18%' },
+      width: { sm: 76, lg: 116 },
+      height: { sm: 64, lg: 98 },
+      overflow: 'visible',
+      filter: `drop-shadow(0 12px 20px ${alpha(brand.blue, 0.1)})`,
+    }}
+  >
+    <defs>
+      <linearGradient id="decorativeAtomStroke" x1="0" x2="1" y1="0" y2="1">
+        <stop offset="0%" stopColor="#7CA6FF" />
+        <stop offset="100%" stopColor="#B8CCFF" />
+      </linearGradient>
+    </defs>
+    <g
+      fill="none"
+      stroke="url(#decorativeAtomStroke)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2.2"
+      opacity="0.58"
+    >
+      <ellipse cx="66" cy="56" rx="58" ry="18" />
+      <ellipse cx="66" cy="56" rx="58" ry="18" transform="rotate(58 66 56)" />
+      <ellipse cx="66" cy="56" rx="58" ry="18" transform="rotate(-58 66 56)" />
+    </g>
+    <circle
+      cx="66"
+      cy="56"
+      r="7"
+      fill="#FFFFFF"
+      stroke="#91B3FF"
+      strokeWidth="2"
+      opacity="0.72"
+    />
+    <circle cx="103" cy="41" r="3.2" fill="#91B3FF" opacity="0.72" />
+    <circle cx="41" cy="24" r="3" fill="#91B3FF" opacity="0.58" />
+    <circle cx="78" cy="91" r="3.4" fill="#91B3FF" opacity="0.62" />
+  </Box>
+)
+
+const DecorativeLightbulb = () => (
+  <Box
+    component="svg"
+    viewBox="0 0 96 112"
+    aria-hidden="true"
+    sx={{
+      display: { xs: 'none', lg: 'block' },
+      position: 'absolute',
+      right: { sm: '8%', lg: '10.5%' },
+      top: { sm: '54%', lg: '52%' },
+      width: { sm: 58, lg: 82 },
+      height: { sm: 68, lg: 96 },
+      overflow: 'visible',
+      filter: `drop-shadow(0 14px 24px ${alpha(brand.blue, 0.1)})`,
+    }}
+  >
+    <g
+      fill="none"
+      stroke="#9DB7F6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="4.6"
+      opacity="0.58"
+    >
+      <path d="M48 10c-18 0-32 14-32 32 0 11 5 19 13 26 5 5 7 9 7 17h24c0-8 2-12 7-17 8-7 13-15 13-26 0-18-14-32-32-32Z" />
+      <path d="M37 87h22" />
+      <path d="M39 100h18" />
+      <path d="M37 48c5 4 9 6 11 18 2-12 6-14 11-18" />
+      <path d="M35 44c4 0 6 2 6 5s-2 5-5 5" opacity="0.5" />
+      <path d="M61 44c-4 0-6 2-6 5s2 5 5 5" opacity="0.5" />
+    </g>
+    <g stroke="#9DB7F6" strokeLinecap="round" strokeWidth="2.4" opacity="0.44">
+      <path d="M48 0v8" />
+      <path d="M16 14l6 6" />
+      <path d="M80 14l-6 6" />
+      <path d="M0 44h8" />
+      <path d="M88 44h8" />
+    </g>
   </Box>
 )
 

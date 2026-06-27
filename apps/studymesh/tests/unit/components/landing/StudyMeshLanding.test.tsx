@@ -79,7 +79,6 @@ describe('StudyMeshLanding', () => {
         name: /your guide doesn't stop at page 5/i,
       }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/guide grew from 5 to 6\+ pages/i)).toBeInTheDocument()
     expect(screen.getByText(/docker overview/i)).toBeInTheDocument()
     expect(screen.getByText(/images and layers/i)).toBeInTheDocument()
     expect(screen.getByText(/container lifecycle/i)).toBeInTheDocument()

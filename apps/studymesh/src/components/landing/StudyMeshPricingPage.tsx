@@ -46,7 +46,7 @@ const freeOptions = [
 ]
 
 const navItems = [
-  ['Features', '/#features'],
+  ['Features', '/#growing-guide'],
   ['Pricing', '/pricing'],
 ]
 

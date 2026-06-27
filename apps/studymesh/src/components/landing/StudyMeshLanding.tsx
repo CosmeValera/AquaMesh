@@ -40,7 +40,7 @@ const brand = {
 
 const navItems = [
   ['Knowledge context', '#knowledge-context'],
-  ['Growing guides', '#features'],
+  ['Growing guides', '#growing-guide'],
   ['Pricing', '/pricing'],
 ]
 
@@ -283,7 +283,7 @@ const StudyMeshLanding = () => {
         sx={{
           position: 'sticky',
           top: 0,
-          zIndex: 10,
+          zIndex: 1200,
           borderBottom: `1px solid ${alpha(brand.line, 0.32)}`,
           bgcolor: brand.header,
           backdropFilter: 'blur(16px)',
@@ -549,7 +549,7 @@ const StudyMeshLanding = () => {
                     Create a Study Guide
                   </Button>
                   <Button
-                    href="#features"
+                    href="#growing-guide"
                     variant="text"
                     endIcon={<ArrowForwardIcon />}
                     sx={{
@@ -751,13 +751,14 @@ const HeroTimeline = () => {
 
 const GrowingGuidesSection = () => (
   <Box
-    id="features"
+    id="growing-guide"
     sx={{
       position: 'relative',
       scrollMarginTop: 104,
       borderTop: `1px solid ${alpha(brand.line, 0.7)}`,
       bgcolor: '#FFFFFF',
-      py: { xs: 6, md: 9 },
+      pt: { xs: 11, md: 9 },
+      pb: { xs: 6, md: 9 },
       overflow: 'hidden',
       '&::before': {
         content: '""',
@@ -894,34 +895,13 @@ const GrowingGuidesMockup = () => (
     aria-label="Growing study guide product preview"
     sx={{
       position: 'relative',
-      minHeight: { xs: 640, md: 620 },
+      minHeight: { xs: 700, md: 660 },
       overflow: 'visible',
     }}
   >
-    <Box
-      sx={{
-        position: 'absolute',
-        top: { xs: 0, md: 8 },
-        left: { xs: '50%', md: '45%' },
-        transform: 'translateX(-50%)',
-        px: 1.6,
-        py: 0.62,
-        borderRadius: 999,
-        color: brand.blueDark,
-        bgcolor: alpha(brand.sky, 0.1),
-        border: `1px solid ${alpha(brand.sky, 0.24)}`,
-        fontWeight: 900,
-        fontSize: '0.82rem',
-        lineHeight: 1,
-        boxShadow: `0 12px 30px ${alpha(brand.blueDark, 0.08)}`,
-      }}
-    >
-      Guide grew from 5 to 6+ pages
-    </Box>
-
+    <GrowingGuideConversation />
     <GrowingGuideLayerStack />
     <GrowingGuideCreationArrow />
-    <GrowingGuideConversation />
     <GrowingGuideSparkle left="3%" top="68%" />
     <GrowingGuideSparkle left="93%" top="40%" />
     <GrowingGuideSparkle left="87%" top="58%" size={24} />
@@ -932,7 +912,7 @@ const GrowingGuideLayerStack = () => (
   <Box
     sx={{
       position: 'absolute',
-      top: { xs: 72, md: 64 },
+      top: { xs: 204, md: 188 },
       right: { xs: 6, md: -66 },
       left: { xs: 6, md: 'auto' },
       width: { xs: 'auto', md: 640 },
@@ -1144,9 +1124,9 @@ const GrowingGuideConversation = () => (
     sx={{
       position: 'absolute',
       right: { xs: 0, md: 4 },
-      bottom: { xs: 0, md: 0 },
+      top: { xs: 0, md: 18 },
       width: { xs: '100%', md: 390 },
-      zIndex: 12,
+      zIndex: 42,
     }}
   >
     <Box
@@ -1237,11 +1217,11 @@ const GrowingGuideCreationArrow = () => (
     sx={{
       display: { xs: 'none', md: 'block' },
       position: 'absolute',
-      right: 8,
-      top: 170,
+      right: 214,
+      top: 132,
       width: 220,
-      height: 300,
-      zIndex: 10,
+      height: 260,
+      zIndex: 41,
       overflow: 'visible',
     }}
   >
@@ -1258,7 +1238,7 @@ const GrowingGuideCreationArrow = () => (
       </marker>
     </defs>
     <path
-      d="M42 276 C36 198 68 102 168 36"
+      d="M178 22 C112 52 92 96 84 148"
       fill="none"
       markerEnd="url(#growingGuideArrow)"
       stroke={alpha(brand.mint, 0.54)}

@@ -796,7 +796,11 @@ const GrowingGuidesSection = () => (
           alignItems: 'center',
         }}
       >
-        <Stack spacing={2.4} alignItems="flex-start">
+        <Stack
+          spacing={2.4}
+          alignItems={{ xs: 'center', lg: 'flex-start' }}
+          textAlign={{ xs: 'center', lg: 'left' }}
+        >
           <Box sx={{ display: { xs: 'block', lg: 'none' } }}>
             <GrowingGuidesLabel />
           </Box>
@@ -841,7 +845,10 @@ const GrowingGuidesSection = () => (
             </Typography>
           </Stack>
 
-          <Stack spacing={1.1} sx={{ width: '100%', maxWidth: 420 }}>
+          <Stack
+            spacing={1.1}
+            sx={{ width: '100%', maxWidth: { xs: 420, lg: 420 } }}
+          >
             {growingGuideBenefits.map((benefit) => (
               <Stack
                 key={benefit}
@@ -850,6 +857,7 @@ const GrowingGuidesSection = () => (
                 alignItems="center"
                 sx={{
                   p: 1.25,
+                  justifyContent: { xs: 'center', lg: 'flex-start' },
                   borderRadius: 2,
                   border: `1px solid ${alpha(brand.line, 0.82)}`,
                   bgcolor: alpha('#FFFFFF', 0.82),

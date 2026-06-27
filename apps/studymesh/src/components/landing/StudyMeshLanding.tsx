@@ -783,7 +783,7 @@ const GrowingGuidesSection = () => (
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: '1fr', lg: '0.74fr 1.26fr' },
-          gap: { xs: 4, md: 4.8 },
+          gap: { xs: 4, md: 4.8, lg: 2.6 },
           alignItems: 'center',
         }}
       >
@@ -913,7 +913,7 @@ const GrowingGuideLayerStack = () => (
     sx={{
       position: 'absolute',
       top: { xs: 204, md: 188 },
-      right: { xs: 6, md: -66 },
+      right: { xs: 6, md: 0, lg: 8 },
       left: { xs: 6, md: 'auto' },
       width: { xs: 'auto', md: 640 },
       height: { xs: 390, md: 470 },

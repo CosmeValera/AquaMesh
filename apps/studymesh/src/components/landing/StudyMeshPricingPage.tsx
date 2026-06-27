@@ -106,7 +106,23 @@ const StudyMeshPricingPage = () => {
                 variant="h4"
                 component="h1"
                 fontWeight={900}
-                sx={{ color: pricingBrand.ink }}
+                sx={{
+                  position: 'relative',
+                  display: 'inline-block',
+                  color: pricingBrand.ink,
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 2,
+                    right: 2,
+                    bottom: -4,
+                    height: { xs: 3, sm: 4 },
+                    borderRadius: 999,
+                    bgcolor: pricingBrand.mint,
+                    boxShadow: `0 2px 0 ${alpha(pricingBrand.blueDark, 0.1)}`,
+                    zIndex: 0,
+                  },
+                }}
               >
                 Free without a subscription.
               </Typography>

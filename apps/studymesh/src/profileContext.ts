@@ -18,7 +18,6 @@ export interface ProfileContext {
   broadKnowledge: string[]
   specificKnowledge: string[]
   confidence: 'self_reported'
-  skippedAt?: string
   updatedAt: string
 }
 
@@ -166,6 +165,9 @@ export const getBroadKnowledgeGroups = (
     topics: broadKnowledgeByRole[role],
   }))
 
+export const getUserKnowledgeRoleLabel = (role: UserKnowledgeRoleId): string =>
+  userKnowledgeRoles.find((item) => item.id === role)?.label || role
+
 export const parseSpecificKnowledgeInput = (value: string): string[] =>
   value
     .split(/[,;\n]/)
@@ -222,10 +224,6 @@ export const normalizeProfileContext = (
   )
   const broadKnowledge = sanitizeUserKnownTopics(record.broadKnowledge)
   const specificKnowledge = sanitizeUserKnownTopics(record.specificKnowledge)
-  const skippedAt =
-    typeof record.skippedAt === 'string' && record.skippedAt.trim()
-      ? record.skippedAt.trim()
-      : undefined
   const updatedAt =
     typeof record.updatedAt === 'string' && record.updatedAt.trim()
       ? record.updatedAt.trim()
@@ -237,7 +235,6 @@ export const normalizeProfileContext = (
     broadKnowledge,
     specificKnowledge,
     confidence: 'self_reported',
-    skippedAt,
     updatedAt,
   }
 }
@@ -286,19 +283,6 @@ export const saveProfileContext = (
   return next
 }
 
-export const skipProfileContext = (): ProfileContext =>
-  saveProfileContext({
-    roles: [],
-    broadKnowledge: [],
-    specificKnowledge: [],
-    skippedAt: new Date().toISOString(),
-  })
-
-export const clearProfileContext = (): void => {
-  window.localStorage.removeItem(PROFILE_CONTEXT_STORAGE_KEY)
-  dispatchProfileContextChanged(null)
-}
-
 export const writeProfileContextFromCloud = (value: unknown): void => {
   const next = normalizeProfileContext(value)
   if (!next) {
@@ -321,3 +305,11 @@ export const getUserKnownTopics = (
       maxTopics: USER_KNOWN_TOPICS_MAX_FOR_AI,
     },
   )
+
+export const getAllUserKnownTopics = (
+  profileContext = readProfileContext(),
+): string[] =>
+  sanitizeUserKnownTopics([
+    ...(profileContext?.specificKnowledge || []),
+    ...(profileContext?.broadKnowledge || []),
+  ])

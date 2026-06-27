@@ -30,10 +30,12 @@ describe('KnowledgeContextDialog', () => {
     )
 
     expect(screen.getByText(/what best describes you/i)).toBeInTheDocument()
+    expect(screen.getByText("It's recommended to start with 3-5.")).toBeInTheDocument()
     expect(screen.queryByText(/knowledge areas/i)).not.toBeInTheDocument()
     expect(
       screen.queryByLabelText(/anything else you know well/i),
     ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /accept/i })).toBeDisabled()
 
     fireEvent.click(screen.getByText('Software / IT'))
     expect(screen.getByText(/knowledge areas/i)).toBeInTheDocument()
@@ -41,8 +43,20 @@ describe('KnowledgeContextDialog', () => {
     expect(
       screen.queryByLabelText(/anything else you know well/i),
     ).not.toBeInTheDocument()
+    expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
+      roles: ['software_it'],
+      broadKnowledge: [],
+      specificKnowledge: [],
+    })
+
     fireEvent.click(screen.getByText('Backend'))
-    fireEvent.click(screen.getByRole('button', { name: /save context/i }))
+    expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
+      roles: ['software_it'],
+      broadKnowledge: ['Backend'],
+      specificKnowledge: [],
+    })
+    expect(screen.getByRole('button', { name: /accept/i })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: /accept/i }))
 
     const saved = JSON.parse(storage['studymesh-profile-context-v1'])
     expect(saved).toMatchObject({
@@ -67,6 +81,8 @@ describe('KnowledgeContextDialog', () => {
     expect(
       screen.getByLabelText(/add something else you know/i),
     ).toBeInTheDocument()
+    expect(screen.queryByText(/3-5|you can skip/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/recommended: 5 or more/i)).toBeInTheDocument()
   })
 
   it('supports multiple roles and Add/Enter knowledge context chips', () => {
@@ -82,19 +98,31 @@ describe('KnowledgeContextDialog', () => {
     fireEvent.click(screen.getByText('Software / IT'))
     fireEvent.click(screen.getByText('Finance'))
 
-    expect(screen.getByText('Software / IT |')).toBeInTheDocument()
-    expect(screen.getByText('Finance |')).toBeInTheDocument()
+    expect(screen.getAllByText('Software / IT')).toHaveLength(2)
+    expect(screen.getAllByText('Finance')).toHaveLength(2)
+    expect(screen.queryByText('Software / IT |')).not.toBeInTheDocument()
     expect(screen.getByText('Backend')).toBeInTheDocument()
     expect(screen.getByText('Investing')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('Backend'))
+    fireEvent.click(screen.getByRole('button', { name: 'Software / IT' }))
+    expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
+      roles: ['finance'],
+      broadKnowledge: ['Backend'],
+      specificKnowledge: [],
+    })
     fireEvent.change(screen.getByLabelText(/add something else you know/i), {
       target: { value: 'MinIO' },
     })
     fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
 
     expect(screen.getByText('Knowledge context')).toBeInTheDocument()
-    expect(screen.getAllByText('Backend')).toHaveLength(2)
+    expect(screen.getByText('Backend')).toBeInTheDocument()
     expect(screen.getByText('MinIO')).toBeInTheDocument()
+    expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
+      roles: ['finance'],
+      broadKnowledge: ['Backend'],
+      specificKnowledge: ['MinIO'],
+    })
   })
 })

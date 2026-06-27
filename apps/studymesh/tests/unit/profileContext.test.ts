@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  getAllUserKnownTopics,
   getUserKnownTopics,
   normalizeProfileContext,
   parseSpecificKnowledgeInput,
@@ -9,7 +10,6 @@ import {
   readProfileContext,
   sanitizeUserKnownTopics,
   saveProfileContext,
-  skipProfileContext,
 } from '../../src/profileContext'
 
 describe('profile context', () => {
@@ -83,14 +83,6 @@ describe('profile context', () => {
     window.removeEventListener(PROFILE_CONTEXT_CHANGED_EVENT, listener)
   })
 
-  it('keeps skipped onboarding as a valid profile context', () => {
-    const skipped = skipProfileContext()
-
-    expect(skipped.skippedAt).toBeTruthy()
-    expect(readProfileContext()?.skippedAt).toBe(skipped.skippedAt)
-    expect(getUserKnownTopics(skipped)).toEqual([])
-  })
-
   it('normalizes cloud-shaped profile context', () => {
     expect(
       normalizeProfileContext({
@@ -107,25 +99,25 @@ describe('profile context', () => {
   })
 
   it('returns AI topics specific-first and capped', () => {
-    expect(
-      getUserKnownTopics({
-        version: 1,
-        roles: ['software_it'],
-        broadKnowledge: [
-          'Backend',
-          'Databases',
-          'Cloud',
-          'APIs',
-          'Testing',
-          'DevOps',
-          'Security',
-          'Frontend',
-        ],
-        specificKnowledge: ['MinIO', 'S3', 'Databases'],
-        confidence: 'self_reported',
-        updatedAt: '2026-06-23T00:00:00.000Z',
-      }),
-    ).toEqual([
+    const context = {
+      version: 1 as const,
+      roles: ['software_it' as const],
+      broadKnowledge: [
+        'Backend',
+        'Databases',
+        'Cloud',
+        'APIs',
+        'Testing',
+        'DevOps',
+        'Security',
+        'Frontend',
+      ],
+      specificKnowledge: ['MinIO', 'S3', 'Databases'],
+      confidence: 'self_reported' as const,
+      updatedAt: '2026-06-23T00:00:00.000Z',
+    }
+
+    expect(getUserKnownTopics(context)).toEqual([
       'MinIO',
       'S3',
       'Databases',
@@ -134,6 +126,18 @@ describe('profile context', () => {
       'APIs',
       'Testing',
       'DevOps',
+    ])
+    expect(getAllUserKnownTopics(context)).toEqual([
+      'MinIO',
+      'S3',
+      'Databases',
+      'Backend',
+      'Cloud',
+      'APIs',
+      'Testing',
+      'DevOps',
+      'Security',
+      'Frontend',
     ])
   })
 })

@@ -3,14 +3,15 @@ import { useLocation } from 'react-router-dom'
 
 import { useAuth } from '../../auth/AuthProvider'
 import { CLOUD_SYNC_STATUS_EVENT } from '../../cloud/CloudWorkspaceSync'
-import { readProfileContext } from '../../profileContext'
-import KnowledgeContextDialog from './KnowledgeContextDialog'
+import { getAllUserKnownTopics, readProfileContext } from '../../profileContext'
+import { KnowledgeContextOnboardingDialog } from './KnowledgeContextDialog'
 
 const KnowledgeContextOnboarding = () => {
   const { user, loading } = useAuth()
   const location = useLocation()
   const [open, setOpen] = React.useState(false)
   const [cloudReady, setCloudReady] = React.useState(false)
+  const dismissedForWindowRef = React.useRef(false)
 
   React.useEffect(() => {
     const handleCloudStatus = (event: Event) => {
@@ -44,17 +45,22 @@ const KnowledgeContextOnboarding = () => {
     }
 
     const profileContext = readProfileContext()
-    if (!profileContext) {
+    if (
+      !dismissedForWindowRef.current &&
+      getAllUserKnownTopics(profileContext).length === 0
+    ) {
       setOpen(true)
     }
   }, [cloudReady, loading, location.pathname, user])
 
   return (
-    <KnowledgeContextDialog
+    <KnowledgeContextOnboardingDialog
       open={open}
       initialContext={readProfileContext()}
-      surface="onboarding"
-      onClose={() => setOpen(false)}
+      onClose={() => {
+        dismissedForWindowRef.current = true
+        setOpen(false)
+      }}
     />
   )
 }

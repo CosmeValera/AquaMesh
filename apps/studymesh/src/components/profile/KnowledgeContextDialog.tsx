@@ -11,25 +11,353 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
+import type { Theme } from '@mui/material/styles'
 
 import {
-  getBroadKnowledgeOptions,
   getBroadKnowledgeGroups,
+  getBroadKnowledgeOptions,
   parseSpecificKnowledgeInput,
-  PROFILE_CONTEXT_RECOMMENDED_MAX_TOPICS,
-  PROFILE_CONTEXT_RECOMMENDED_MIN_TOPICS,
   ProfileContext,
   saveProfileContext,
-  skipProfileContext,
   UserKnowledgeRoleId,
   userKnowledgeRoles,
 } from '../../profileContext'
 
+type KnowledgeContextSurface = 'onboarding' | 'settings'
+
 interface KnowledgeContextDialogProps {
   open: boolean
   initialContext?: ProfileContext | null
-  surface?: 'onboarding' | 'settings'
+  surface?: KnowledgeContextSurface
   onClose: () => void
+}
+
+interface KnowledgeContextDraft {
+  roles: UserKnowledgeRoleId[]
+  broadKnowledge: string[]
+  specificKnowledge: string[]
+}
+
+const getRecommendationText = (surface: KnowledgeContextSurface): string =>
+  surface === 'onboarding' ? "It's recommended to start with 3-5." : 'Recommended: 5 or more.'
+
+const selectedChipSx = (selected: boolean) =>
+  selected
+    ? (theme: Theme) => ({
+        borderColor: theme.palette.primary.main,
+        bgcolor: theme.palette.primary.main,
+        color: theme.palette.primary.contrastText,
+        '&:hover': {
+          bgcolor: theme.palette.primary.dark,
+        },
+        '& .MuiChip-deleteIcon': {
+          color: alpha(theme.palette.primary.contrastText, 0.75),
+          '&:hover': {
+            color: theme.palette.primary.contrastText,
+          },
+        },
+      })
+    : undefined
+
+const toTopicKey = (topic: string): string => topic.toLowerCase()
+
+const mergeUniqueTopics = (topics: string[]): string[] => {
+  const seen = new Set<string>()
+  const next: string[] = []
+
+  topics.forEach((topic) => {
+    const key = toTopicKey(topic)
+    if (!topic || seen.has(key)) {
+      return
+    }
+
+    seen.add(key)
+    next.push(topic)
+  })
+
+  return next
+}
+
+const getSelectedKnowledge = (draft: {
+  broadKnowledge: string[]
+  specificKnowledge: string[]
+}): string[] =>
+  mergeUniqueTopics([...draft.broadKnowledge, ...draft.specificKnowledge])
+
+const getSelectedKnowledgeCount = (draft: {
+  broadKnowledge: string[]
+  specificKnowledge: string[]
+}): number => getSelectedKnowledge(draft).length
+
+const KnowledgeRolePicker: React.FC<{
+  roles: UserKnowledgeRoleId[]
+  onToggleRole: (role: UserKnowledgeRoleId) => void
+}> = ({ roles, onToggleRole }) => (
+  <Box>
+    <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
+      What best describes you?
+    </Typography>
+    <Stack direction="row" gap={1} flexWrap="wrap">
+      {userKnowledgeRoles.map((item) => {
+        const selected = roles.includes(item.id)
+        return (
+          <Chip
+            key={item.id}
+            label={item.label}
+            clickable
+            color={selected ? 'primary' : 'default'}
+            variant={selected ? 'filled' : 'outlined'}
+            onClick={() => onToggleRole(item.id)}
+          />
+        )
+      })}
+    </Stack>
+  </Box>
+)
+
+const KnowledgeAreaGroups: React.FC<{
+  roles: UserKnowledgeRoleId[]
+  broadKnowledge: string[]
+  onToggleBroadKnowledge: (topic: string) => void
+}> = ({ roles, broadKnowledge, onToggleBroadKnowledge }) => {
+  const groups = roles.length
+    ? getBroadKnowledgeGroups(roles)
+    : [
+        {
+          role: 'general_curious' as const,
+          label: 'General curious learner',
+          topics: getBroadKnowledgeOptions('general_curious'),
+        },
+      ]
+
+  return (
+    <Box>
+      <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
+        Knowledge areas
+      </Typography>
+      <Stack spacing={1.75}>
+        {groups.map((group) => (
+          <Box key={group.role}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontWeight={800}
+              sx={{
+                display: 'block',
+                mb: 0.75,
+                textTransform: 'uppercase',
+                letterSpacing: 0,
+              }}
+            >
+              {group.label}
+            </Typography>
+            <Stack direction="row" gap={1} flexWrap="wrap">
+              {group.topics.map((topic) => {
+                const selected = broadKnowledge.includes(topic)
+                return (
+                  <Chip
+                    key={`${group.role}-${topic}`}
+                    label={topic}
+                    clickable
+                    color={selected ? 'primary' : 'default'}
+                    variant={selected ? 'filled' : 'outlined'}
+                    sx={selectedChipSx(selected)}
+                    onClick={() => onToggleBroadKnowledge(topic)}
+                  />
+                )
+              })}
+            </Stack>
+          </Box>
+        ))}
+      </Stack>
+    </Box>
+  )
+}
+
+const KnowledgeContextForm: React.FC<{
+  surface: KnowledgeContextSurface
+  initialContext?: ProfileContext | null
+  onSelectedCountChange: (count: number) => void
+}> = ({ surface, initialContext, onSelectedCountChange }) => {
+  const [roles, setRoles] = React.useState<UserKnowledgeRoleId[]>([])
+  const [broadKnowledge, setBroadKnowledge] = React.useState<string[]>([])
+  const [specificKnowledge, setSpecificKnowledge] = React.useState<string[]>([])
+  const [specificKnowledgeInput, setSpecificKnowledgeInput] = React.useState('')
+
+  React.useEffect(() => {
+    const nextBroadKnowledge = initialContext?.broadKnowledge || []
+    const nextSpecificKnowledge = initialContext?.specificKnowledge || []
+
+    setRoles(initialContext?.roles || [])
+    setBroadKnowledge(nextBroadKnowledge)
+    setSpecificKnowledge(nextSpecificKnowledge)
+    setSpecificKnowledgeInput('')
+    onSelectedCountChange(
+      getSelectedKnowledgeCount({
+        broadKnowledge: nextBroadKnowledge,
+        specificKnowledge: nextSpecificKnowledge,
+      }),
+    )
+  }, [initialContext, onSelectedCountChange])
+
+  const selectedKnowledge = getSelectedKnowledge({
+    broadKnowledge,
+    specificKnowledge,
+  })
+  const selectedCount = selectedKnowledge.length
+  const showBroadKnowledge =
+    surface === 'settings' || roles.length > 0 || selectedCount > 0
+  const showSpecificKnowledge = surface === 'settings'
+  const recommendationText = getRecommendationText(surface)
+
+  const persist = React.useCallback(
+    (draft: KnowledgeContextDraft) => {
+      saveProfileContext({
+        roles: draft.roles,
+        broadKnowledge: draft.broadKnowledge,
+        specificKnowledge:
+          surface === 'settings' ? draft.specificKnowledge : [],
+      })
+    },
+    [surface],
+  )
+
+  const updateDraft = React.useCallback(
+    (createNext: (current: KnowledgeContextDraft) => KnowledgeContextDraft) => {
+      const current = { roles, broadKnowledge, specificKnowledge }
+      const next = createNext(current)
+
+      setRoles(next.roles)
+      setBroadKnowledge(next.broadKnowledge)
+      setSpecificKnowledge(next.specificKnowledge)
+      onSelectedCountChange(getSelectedKnowledgeCount(next))
+      persist(next)
+    },
+    [broadKnowledge, onSelectedCountChange, persist, roles, specificKnowledge],
+  )
+
+  const toggleBroadKnowledge = (topic: string) => {
+    updateDraft((current) => ({
+      ...current,
+      broadKnowledge: current.broadKnowledge.includes(topic)
+        ? current.broadKnowledge.filter((item) => item !== topic)
+        : [...current.broadKnowledge, topic],
+    }))
+  }
+
+  const toggleRole = (role: UserKnowledgeRoleId) => {
+    updateDraft((current) => {
+      const nextRoles = current.roles.includes(role)
+        ? current.roles.filter((item) => item !== role)
+        : [...current.roles, role]
+
+      return {
+        ...current,
+        roles: nextRoles,
+      }
+    })
+  }
+
+  const removeKnowledge = (topic: string) => {
+    updateDraft((current) => ({
+      ...current,
+      broadKnowledge: current.broadKnowledge.filter((item) => item !== topic),
+      specificKnowledge: current.specificKnowledge.filter(
+        (item) => item !== topic,
+      ),
+    }))
+  }
+
+  const addSpecificKnowledge = () => {
+    const topics = parseSpecificKnowledgeInput(specificKnowledgeInput)
+    if (!topics.length) {
+      return
+    }
+
+    updateDraft((current) => ({
+      ...current,
+      specificKnowledge: mergeUniqueTopics([
+        ...current.specificKnowledge,
+        ...topics,
+      ]),
+    }))
+    setSpecificKnowledgeInput('')
+  }
+
+  return (
+    <Stack spacing={2.25}>
+      <Box>
+        <Typography fontWeight={750} sx={{ mb: 0.75 }}>
+          Help StudyMesh explain things using concepts you already know.
+        </Typography>
+        {surface === 'onboarding' && selectedCount === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            {recommendationText}
+          </Typography>
+        ) : null}
+      </Box>
+
+      <KnowledgeRolePicker roles={roles} onToggleRole={toggleRole} />
+
+      {showBroadKnowledge ? (
+        <>
+          <KnowledgeAreaGroups
+            roles={roles}
+            broadKnowledge={broadKnowledge}
+            onToggleBroadKnowledge={toggleBroadKnowledge}
+          />
+
+          {showSpecificKnowledge ? (
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+              <TextField
+                label="Add something else you know"
+                value={specificKnowledgeInput}
+                onChange={(event) =>
+                  setSpecificKnowledgeInput(event.target.value)
+                }
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    addSpecificKnowledge()
+                  }
+                }}
+                placeholder="MinIO"
+                fullWidth
+                size="small"
+              />
+              <Button variant="outlined" onClick={addSpecificKnowledge}>
+                Add
+              </Button>
+            </Stack>
+          ) : null}
+
+          {selectedCount ? (
+            <Box>
+              <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
+                Knowledge context
+              </Typography>
+              <Stack direction="row" gap={1} flexWrap="wrap">
+                {selectedKnowledge.map((topic) => (
+                  <Chip
+                    key={topic}
+                    label={topic}
+                    color="primary"
+                    sx={selectedChipSx(true)}
+                    onDelete={() => removeKnowledge(topic)}
+                  />
+                ))}
+              </Stack>
+            </Box>
+          ) : null}
+
+          <Typography variant="caption" color="text.secondary">
+            {selectedCount} selected. {recommendationText}
+          </Typography>
+        </>
+      ) : null}
+    </Stack>
+  )
 }
 
 const KnowledgeContextDialog: React.FC<KnowledgeContextDialogProps> = ({
@@ -38,226 +366,42 @@ const KnowledgeContextDialog: React.FC<KnowledgeContextDialogProps> = ({
   surface = 'settings',
   onClose,
 }) => {
-  const [roles, setRoles] = React.useState<UserKnowledgeRoleId[]>([])
-  const [broadKnowledge, setBroadKnowledge] = React.useState<string[]>([])
-  const [specificKnowledge, setSpecificKnowledge] = React.useState<string[]>([])
-  const [specificKnowledgeInput, setSpecificKnowledgeInput] = React.useState('')
-
-  React.useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    setRoles(initialContext?.roles || [])
-    setBroadKnowledge(initialContext?.broadKnowledge || [])
-    setSpecificKnowledge(initialContext?.specificKnowledge || [])
-    setSpecificKnowledgeInput('')
-  }, [initialContext, open])
-
-  const selectedCount = broadKnowledge.length + specificKnowledge.length
-  const broadGroups = getBroadKnowledgeGroups(roles)
-  const broadOptions = getBroadKnowledgeOptions(roles[0] || null)
-  const showBroadKnowledge = surface === 'settings' || roles.length > 0
-  const showSpecificKnowledge = surface === 'settings'
-
-  const toggleBroadKnowledge = (topic: string) => {
-    setBroadKnowledge((current) => {
-      if (current.includes(topic)) {
-        return current.filter((item) => item !== topic)
-      }
-
-      return [...current, topic]
-    })
-  }
-
-  const toggleRole = (role: UserKnowledgeRoleId) => {
-    setRoles((current) =>
-      current.includes(role)
-        ? current.filter((item) => item !== role)
-        : [...current, role],
-    )
-  }
-
-  const removeKnowledge = (topic: string) => {
-    setBroadKnowledge((current) => current.filter((item) => item !== topic))
-    setSpecificKnowledge((current) => current.filter((item) => item !== topic))
-  }
-
-  const addSpecificKnowledge = () => {
-    const [topic] = parseSpecificKnowledgeInput(specificKnowledgeInput)
-    if (!topic) {
-      return
-    }
-
-    setSpecificKnowledge((current) =>
-      current.some((item) => item.toLowerCase() === topic.toLowerCase())
-        ? current
-        : [...current, topic],
-    )
-    setSpecificKnowledgeInput('')
-  }
-
-  const handleSave = () => {
-    saveProfileContext({
-      roles,
-      broadKnowledge: showBroadKnowledge ? broadKnowledge : [],
-      specificKnowledge: showSpecificKnowledge ? specificKnowledge : [],
-    })
-    onClose()
-  }
-
-  const handleSkip = () => {
-    skipProfileContext()
-    onClose()
-  }
+  const [selectedCount, setSelectedCount] = React.useState(0)
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Personal explanation context</DialogTitle>
       <DialogContent dividers>
-        <Stack spacing={2.25}>
-          <Box>
-            <Typography fontWeight={750} sx={{ mb: 0.75 }}>
-              Help StudyMesh explain things using concepts you already know.
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              It is recommended to choose 3-5. You can skip.
-            </Typography>
-          </Box>
-
-          <Box>
-            <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
-              What best describes you?
-            </Typography>
-            <Stack direction="row" gap={1} flexWrap="wrap">
-              {userKnowledgeRoles.map((item) => (
-                <Chip
-                  key={item.id}
-                  label={item.label}
-                  clickable
-                  color={roles.includes(item.id) ? 'primary' : 'default'}
-                  variant={roles.includes(item.id) ? 'filled' : 'outlined'}
-                  onClick={() => toggleRole(item.id)}
-                />
-              ))}
-            </Stack>
-          </Box>
-
-          {showBroadKnowledge ? (
-            <>
-              <Box>
-                <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
-                  Knowledge areas
-                </Typography>
-                <Stack spacing={1.25}>
-                  {(broadGroups.length
-                    ? broadGroups
-                    : [{ role: 'general_curious' as const, label: '', topics: broadOptions }]
-                  ).map((group) => (
-                    <Stack
-                      key={group.role}
-                      direction="row"
-                      gap={1}
-                      flexWrap="wrap"
-                      alignItems="center"
-                    >
-                      {group.label ? (
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          fontWeight={750}
-                        >
-                          {group.label} |
-                        </Typography>
-                      ) : null}
-                      {group.topics.map((topic) => (
-                        <Chip
-                          key={`${group.role}-${topic}`}
-                          label={topic}
-                          clickable
-                          variant="outlined"
-                          onClick={() => toggleBroadKnowledge(topic)}
-                        />
-                      ))}
-                    </Stack>
-                  ))}
-                </Stack>
-              </Box>
-
-              {showSpecificKnowledge ? (
-                <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                  <TextField
-                    label="Add something else you know"
-                    value={specificKnowledgeInput}
-                    onChange={(event) =>
-                      setSpecificKnowledgeInput(event.target.value)
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        event.preventDefault()
-                        addSpecificKnowledge()
-                      }
-                    }}
-                    placeholder="MinIO"
-                    fullWidth
-                    size="small"
-                  />
-                  <Button variant="outlined" onClick={addSpecificKnowledge}>
-                    Add
-                  </Button>
-                </Stack>
-              ) : (
-                <Typography variant="caption" color="text.secondary">
-                  {selectedCount} selected. Recommended:{' '}
-                  {PROFILE_CONTEXT_RECOMMENDED_MIN_TOPICS}-
-                  {PROFILE_CONTEXT_RECOMMENDED_MAX_TOPICS}.
-                </Typography>
-              )}
-
-              {selectedCount ? (
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    fontWeight={750}
-                    sx={{ mb: 1 }}
-                  >
-                    Knowledge context
-                  </Typography>
-                  <Stack direction="row" gap={1} flexWrap="wrap">
-                    {[...broadKnowledge, ...specificKnowledge].map((topic) => (
-                      <Chip
-                        key={topic}
-                        label={topic}
-                        color="primary"
-                        onDelete={() => removeKnowledge(topic)}
-                      />
-                    ))}
-                  </Stack>
-                  {showSpecificKnowledge ? (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: 'block', mt: 1 }}
-                    >
-                      {selectedCount} selected. Recommended:{' '}
-                      {PROFILE_CONTEXT_RECOMMENDED_MIN_TOPICS}-
-                      {PROFILE_CONTEXT_RECOMMENDED_MAX_TOPICS}.
-                    </Typography>
-                  ) : null}
-                </Box>
-              ) : null}
-            </>
-          ) : null}
-        </Stack>
+        <KnowledgeContextForm
+          surface={surface}
+          initialContext={initialContext}
+          onSelectedCountChange={setSelectedCount}
+        />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleSkip}>Skip</Button>
-        <Button variant="contained" onClick={handleSave}>
-          Save context
+        {surface === 'onboarding' ? (
+          <Button onClick={onClose}>Skip</Button>
+        ) : (
+          <Button onClick={onClose}>Close</Button>
+        )}
+        <Button
+          variant="contained"
+          onClick={onClose}
+          disabled={selectedCount === 0}
+        >
+          Accept
         </Button>
       </DialogActions>
     </Dialog>
   )
 }
+
+export const KnowledgeContextOnboardingDialog: React.FC<
+  Omit<KnowledgeContextDialogProps, 'surface'>
+> = (props) => <KnowledgeContextDialog {...props} surface="onboarding" />
+
+export const KnowledgeContextSettingsDialog: React.FC<
+  Omit<KnowledgeContextDialogProps, 'surface'>
+> = (props) => <KnowledgeContextDialog {...props} surface="settings" />
 
 export default KnowledgeContextDialog

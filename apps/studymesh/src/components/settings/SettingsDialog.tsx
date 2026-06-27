@@ -3,6 +3,7 @@ import {
   Avatar,
   Box,
   Button,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -16,12 +17,12 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 
-import KnowledgeContextDialog from '../profile/KnowledgeContextDialog'
 import {
-  clearProfileContext,
-  getUserKnownTopics,
+  getAllUserKnownTopics,
+  getUserKnowledgeRoleLabel,
   readProfileContext,
 } from '../../profileContext'
+import { KnowledgeContextSettingsDialog } from '../profile/KnowledgeContextDialog'
 import { seedStudyMeshGuideStudyPath } from '../../studyGuides/studyMeshGuideSeed'
 import { STUDY_GUIDES_CHANGED_EVENT } from '../../studyGuides/storage'
 
@@ -82,15 +83,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   }
 
   const profileContext = readProfileContext()
-  const knownTopics = getUserKnownTopics(profileContext)
+  const knownTopics = getAllUserKnownTopics(profileContext)
   const roleLabel = profileContext?.roles?.length
     ? profileContext.roles
-        .map((role) =>
-          role
-            .split('_')
-            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-            .join(' / '),
-        )
+        .map((role) => getUserKnowledgeRoleLabel(role))
         .join(', ')
     : 'Not set'
 
@@ -220,11 +216,27 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               <Typography variant="body2" sx={{ mb: 1 }}>
                 Role: {roleLabel}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {knownTopics.length
-                  ? knownTopics.join(', ')
-                  : 'No known topics saved.'}
-              </Typography>
+              {knownTopics.length ? (
+                <Stack
+                  direction="row"
+                  gap={1}
+                  flexWrap="wrap"
+                  useFlexGap
+                  sx={{ mb: 2 }}
+                >
+                  {knownTopics.map((topic) => (
+                    <Chip key={topic} label={topic} size="small" />
+                  ))}
+                </Stack>
+              ) : (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
+                  No known topics saved.
+                </Typography>
+              )}
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <Button
                   variant="outlined"
@@ -232,16 +244,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   onClick={() => setIsKnowledgeContextOpen(true)}
                 >
                   Edit context
-                </Button>
-                <Button
-                  variant="text"
-                  size="small"
-                  onClick={() => {
-                    clearProfileContext()
-                    setKnowledgeContextVersion((value) => value + 1)
-                  }}
-                >
-                  Reset
                 </Button>
               </Stack>
             </Paper>
@@ -355,7 +357,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         </DialogActions>
       </Dialog>
 
-      <KnowledgeContextDialog
+      <KnowledgeContextSettingsDialog
         key={knowledgeContextVersion}
         open={isKnowledgeContextOpen}
         initialContext={profileContext}

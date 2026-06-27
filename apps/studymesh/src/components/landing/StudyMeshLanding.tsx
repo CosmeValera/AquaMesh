@@ -1213,14 +1213,14 @@ const GrowingGuideCreationArrow = () => (
   <Box
     component="svg"
     aria-hidden="true"
-    viewBox="0 0 220 300"
+    viewBox="0 0 260 180"
     sx={{
       display: { xs: 'none', md: 'block' },
       position: 'absolute',
-      right: 214,
-      top: 132,
-      width: 220,
-      height: 260,
+      right: -12,
+      top: 128,
+      width: 260,
+      height: 180,
       zIndex: 41,
       overflow: 'visible',
     }}
@@ -1238,7 +1238,7 @@ const GrowingGuideCreationArrow = () => (
       </marker>
     </defs>
     <path
-      d="M178 22 C112 52 92 96 84 148"
+      d="M84 28 C132 10 184 12 226 58"
       fill="none"
       markerEnd="url(#growingGuideArrow)"
       stroke={alpha(brand.mint, 0.54)}

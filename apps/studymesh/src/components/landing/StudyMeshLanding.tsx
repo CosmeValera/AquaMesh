@@ -300,6 +300,9 @@ const StudyMeshLanding = () => {
                     component="span"
                     sx={{
                       display: 'block',
+                      overflow: 'visible',
+                      pb: '0.16em',
+                      mb: '-0.16em',
                       background: `linear-gradient(90deg, ${brand.mint} 8%, ${brand.sky} 88%)`,
                       backgroundClip: 'text',
                       WebkitBackgroundClip: 'text',

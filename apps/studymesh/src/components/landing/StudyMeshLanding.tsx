@@ -1140,18 +1140,6 @@ const FeaturedContextCard = ({
         >
           Same question: {contextQuestion}
         </Box>
-        <Typography
-          variant="h3"
-          sx={{
-            color: brand.ink,
-            fontWeight: 800,
-            fontSize: { xs: '1.45rem', md: '1.85rem' },
-            lineHeight: 1.16,
-            letterSpacing: 0,
-          }}
-        >
-          One idea, explained through what you already understand.
-        </Typography>
         <Box
           sx={{
             display: 'grid',

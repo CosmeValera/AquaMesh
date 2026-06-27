@@ -1931,9 +1931,9 @@ const DecorativeAtom = () => (
       strokeWidth="2"
       opacity="0.72"
     />
-    <circle cx="103" cy="41" r="3.2" fill="#91B3FF" opacity="0.72" />
-    <circle cx="41" cy="24" r="3" fill="#91B3FF" opacity="0.58" />
-    <circle cx="78" cy="91" r="3.4" fill="#91B3FF" opacity="0.62" />
+    <circle cx="33" cy="26" r="3.2" fill="#91B3FF" opacity="0.58" />
+    <circle cx="56" cy="96" r="3.2" fill="#91B3FF" opacity="0.72" />
+    <circle cx="112" cy="45" r="3.2" fill="#91B3FF" opacity="0.62" />
   </Box>
 )
 

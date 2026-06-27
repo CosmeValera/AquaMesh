@@ -14,8 +14,6 @@ import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlin
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined'
 import MusicNoteOutlinedIcon from '@mui/icons-material/MusicNoteOutlined'
 import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined'
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import CheckIcon from '@mui/icons-material/Check'
@@ -1158,18 +1156,9 @@ const GrowingGuideSparkle = ({
 const ContextComparisonSection = () => {
   const [activeIndex, setActiveIndex] = useState(0)
   const activeTopic = contextTopics[activeIndex]
-  const previousTopic =
-    contextTopics[(activeIndex - 1 + contextTopics.length) % contextTopics.length]
-  const nextTopic = contextTopics[(activeIndex + 1) % contextTopics.length]
 
   const selectTopic = (index: number) => {
     setActiveIndex(index)
-  }
-
-  const moveTopic = (direction: -1 | 1) => {
-    const nextIndex =
-      (activeIndex + direction + contextTopics.length) % contextTopics.length
-    selectTopic(nextIndex)
   }
 
   return (
@@ -1335,68 +1324,15 @@ const ContextComparisonSection = () => {
 
           <Box
             sx={{
-              position: 'relative',
               width: '100%',
-              minHeight: { xs: 390, md: 430 },
               display: 'grid',
               placeItems: 'center',
               mt: 0.6,
             }}
           >
-            <CarouselArrow
-              label="Show previous knowledge context"
-              side="left"
-              onClick={() => moveTopic(-1)}
-            />
-            <CarouselArrow
-              label="Show next knowledge context"
-              side="right"
-              onClick={() => moveTopic(1)}
-            />
-            <PreviewContextCard topic={previousTopic} side="left" />
-            <PreviewContextCard topic={nextTopic} side="right" />
             <FeaturedContextCard
               topic={activeTopic}
             />
-          </Box>
-
-          <Box
-            sx={{
-              width: { xs: '100%', md: '76%' },
-              p: { xs: 2, md: 2.4 },
-              borderRadius: 2,
-              border: `1px solid ${alpha(brand.mint, 0.42)}`,
-              bgcolor: alpha('#F5FFFC', 0.76),
-              boxShadow: `0 24px 70px ${alpha(brand.blueDark, 0.08)}`,
-              textAlign: 'left',
-            }}
-          >
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-              <Box
-                sx={{
-                  width: 62,
-                  height: 62,
-                  flex: '0 0 auto',
-                  borderRadius: '50%',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: brand.blue,
-                  bgcolor: '#FFFFFF',
-                  boxShadow: `0 16px 42px ${alpha(brand.blueDark, 0.12)}`,
-                  '& svg': { fontSize: 30 },
-                }}
-              >
-                <AutoAwesomeIcon />
-              </Box>
-              <Box>
-                <Typography sx={{ color: brand.ink, fontWeight: 800, fontSize: '1.08rem' }}>
-                  One question. Infinite ways to understand.
-                </Typography>
-                <Typography sx={{ color: '#64719B', lineHeight: 1.55 }}>
-                  Pick a context above to see an explanation tailored to your world.
-                </Typography>
-              </Box>
-            </Stack>
           </Box>
         </Stack>
       </Container>
@@ -1527,102 +1463,6 @@ const ContextAnswerPanel = ({
     </Box>
   )
 }
-
-const PreviewContextCard = ({
-  topic,
-  side,
-}: {
-  topic: ContextTopic
-  side: 'left' | 'right'
-}) => (
-  <Box
-    aria-hidden="true"
-    sx={{
-      display: { xs: 'none', md: 'block' },
-      position: 'absolute',
-      top: '50%',
-      [side]: 24,
-      width: '31%',
-      minHeight: 255,
-      p: 2.4,
-      borderRadius: 2,
-      border: `1px solid ${alpha(brand.line, 0.74)}`,
-      bgcolor: alpha('#FFFFFF', 0.74),
-      boxShadow: `0 22px 62px ${alpha(brand.blueDark, 0.08)}`,
-      transform: `translateY(-50%) scale(0.93)`,
-      opacity: 0.82,
-      textAlign: 'left',
-      overflow: 'hidden',
-    }}
-  >
-    <Stack
-      spacing={1.4}
-      sx={{
-        alignItems: 'flex-start',
-        textAlign: 'left',
-      }}
-    >
-      <Stack
-        direction="row"
-        spacing={1}
-        alignItems="center"
-        sx={{
-          alignSelf: side === 'right' ? 'flex-end' : 'flex-start',
-          flexDirection: side === 'right' ? 'row-reverse' : 'row',
-        }}
-      >
-        <ContextIcon topic={topic} size={42} />
-        <Typography sx={{ color: brand.ink, fontWeight: 800 }}>
-          {topic.label}
-        </Typography>
-      </Stack>
-      <Typography sx={{ color: brand.ink, fontWeight: 800, fontSize: '1.05rem' }}>
-        {contextQuestion}
-      </Typography>
-      <Typography sx={{ color: '#59668A', lineHeight: 1.62 }}>
-        {topic.contextAnswer}
-      </Typography>
-    </Stack>
-  </Box>
-)
-
-const CarouselArrow = ({
-  side,
-  label,
-  onClick,
-}: {
-  side: 'left' | 'right'
-  label: string
-  onClick: () => void
-}) => (
-  <Button
-    aria-label={label}
-    onClick={onClick}
-    sx={{
-      position: 'absolute',
-      zIndex: 3,
-      top: '50%',
-      [side]: { xs: side === 'left' ? 4 : 'auto', md: 0 },
-      right: { xs: side === 'right' ? 4 : 'auto', md: side === 'right' ? 0 : 'auto' },
-      minWidth: 0,
-      width: { xs: 44, md: 54 },
-      height: { xs: 44, md: 54 },
-      p: 0,
-      borderRadius: '50%',
-      color: brand.ink,
-      bgcolor: '#FFFFFF',
-      border: `1px solid ${alpha(brand.line, 0.9)}`,
-      boxShadow: `0 14px 34px ${alpha(brand.blueDark, 0.12)}`,
-      transform: 'translateY(-50%)',
-      '&:hover': {
-        bgcolor: brand.skySoft,
-        borderColor: alpha(brand.blue, 0.3),
-      },
-    }}
-  >
-    {side === 'left' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-  </Button>
-)
 
 const ContextIcon = ({
   topic,

@@ -5,27 +5,30 @@ test.beforeEach(async ({ page }) => {
 })
 
 test.describe('Landing tutorial page', () => {
-  test('should show the onboarding workflow', async ({ page }) => {
+  test('should show the StudyMesh landing hero', async ({ page }) => {
     await expect(
-      page.getByRole('heading', { name: 'AquaMesh' }).first(),
+      page.getByRole('heading', {
+        name: /study guides that grow with you/i,
+      }),
     ).toBeVisible()
     await expect(
-      page.getByText('Create reusable workspace widgets without code.'),
+      page.getByText(
+        /StudyMesh builds adaptive study guides by connecting new concepts/i,
+      ),
     ).toBeVisible()
-    await expect(
-      page.getByText('Build one widget, then reuse it'),
-    ).toBeVisible()
-    await expect(page.getByText('Use AquaMesh for real work')).toBeVisible()
-
-    await expect(page.getByText('What should I do first?')).toBeVisible()
+    await expect(page.getByText(/20 sec/)).toBeVisible()
+    await expect(page.getByText(/60 sec/)).toBeVisible()
+    await expect(page.getByText(/5 pages/)).toBeVisible()
   })
 
-  test('should open the workspace from the landing CTA', async ({ page }) => {
-    await page.getByRole('button', { name: 'Enter workspace' }).first().click()
+  test('should send guests to login from the landing CTA', async ({ page }) => {
+    await page
+      .getByRole('button', { name: /Create a Study Guide/i })
+      .first()
+      .click()
 
-    await page.waitForURL('http://localhost:3000/workspace')
-    await expect(page.getByText('Building Blocks')).toBeVisible({
-      timeout: 5000,
-    })
+    await page.waitForURL(
+      'http://localhost:3000/login?redirect=%2Fstudy-guides%3Fcreate%3D1',
+    )
   })
 })

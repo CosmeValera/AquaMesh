@@ -1,151 +1,91 @@
-import React, { useEffect, useState } from 'react'
-import {
-  Box,
-  Button,
-  Container,
-  Grid,
-  Paper,
-  Stack,
-  Typography,
-  useTheme,
-} from '@mui/material'
+import React, { useEffect } from 'react'
+import { Box, Button, Container, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useLocation, useNavigate } from 'react-router-dom'
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
-import KeyIcon from '@mui/icons-material/Key'
-import MemoryIcon from '@mui/icons-material/Memory'
-import PsychologyIcon from '@mui/icons-material/Psychology'
-import QuizIcon from '@mui/icons-material/Quiz'
-import RouteIcon from '@mui/icons-material/Route'
-import StyleIcon from '@mui/icons-material/Style'
-import TrendingUpIcon from '@mui/icons-material/TrendingUp'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import BoltIcon from '@mui/icons-material/Bolt'
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
+import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined'
+import CheckIcon from '@mui/icons-material/Check'
 
-const guideExamples = [
-  {
-    label: 'Exam',
-    prompt: "Teach me photosynthesis for tomorrow's test.",
-    title: 'Photosynthesis Study Guide',
-    lessons: [
-      ['01', 'Big picture', 'Light, water, CO2, glucose'],
-      ['02', 'Light reactions', 'diagram walkthrough'],
-      ['03', 'Calvin cycle', 'worked examples'],
-      ['04', 'Test review', 'practice + weak spots'],
-    ],
-    chat: [
-      ['AI Chat', 'You missed Calvin cycle inputs twice. Want a quick drill?'],
-      ['Practice', 'Create 5 questions on my weak spots.'],
-      ['Guide update', 'Added a review page before final practice.'],
-    ],
-  },
-  {
-    label: 'Language',
-    prompt: 'Teach me Spanish past tenses from scratch.',
-    title: 'Spanish Past Tenses',
-    lessons: [
-      ['01', 'Preterite', 'finished actions'],
-      ['02', 'Imperfect', 'habits and background'],
-      ['03', 'Contrast', 'which tense fits?'],
-      ['04', 'Speaking drill', 'adaptive prompts'],
-    ],
-    chat: [
-      ['AI Chat', 'You are mixing preterite triggers with imperfect context.'],
-      ['Flashcards', 'Make cards for tense triggers.'],
-      ['Guide update', 'Added a mistake-fixing practice page.'],
-    ],
-  },
-  {
-    label: 'Skill',
-    prompt: 'Help me understand derivatives and limits.',
-    title: 'Calculus Foundations',
-    lessons: [
-      ['01', 'Limits', 'intuition before rules'],
-      ['02', 'Derivative meaning', 'slope and rate of change'],
-      ['03', 'Rules', 'worked problems'],
-      ['04', 'Weak spots', 'targeted practice'],
-    ],
-    chat: [
-      ['AI Chat', 'Chain rule needs more practice before mixed problems.'],
-      ['Explain', 'Explain chain rule simpler.'],
-      ['Guide update', 'Added a slower example section.'],
-    ],
-  },
-]
-
-const adaptiveSignals = [
-  {
-    title: 'Strengthen weak spots',
-    body: 'StudyMesh can turn mistakes and confusion into focused practice instead of more generic review.',
-    icon: <TrendingUpIcon />,
-  },
-  {
-    title: 'Grow the guide as you learn',
-    body: 'Ask for clearer notes, extra examples, quizzes, flashcards, or review pages and keep building the path.',
-    icon: <AutoAwesomeIcon />,
-  },
-  {
-    title: 'Keep AI beside the lesson',
-    body: 'Chat stays grounded in the Study Guide, so follow-up help fits the page you are studying.',
-    icon: <ChatBubbleOutlineIcon />,
-  },
-]
-
-const studyActions = [
-  ['Ask for a simpler explanation', <PsychologyIcon fontSize="small" />],
-  ['Create a quiz from this lesson', <QuizIcon fontSize="small" />],
-  ['Turn this into flashcards', <StyleIcon fontSize="small" />],
-  ['Add targeted review practice', <TrendingUpIcon fontSize="small" />],
-]
-
-const aiModes = [
-  {
-    title: 'Hosted AI',
-    body: 'Start quickly with Study Credits and no setup.',
-    icon: <AutoAwesomeIcon />,
-  },
-  {
-    title: 'Own API key',
-    body: 'Use Gemini or Cerebras when you want direct provider control.',
-    icon: <KeyIcon />,
-  },
-  {
-    title: 'Local AI',
-    body: 'Use browser-local AI where available for private, free generation.',
-    icon: <MemoryIcon />,
-  },
-]
-
-const quickAnswers = [
-  {
-    question: 'What is StudyMesh for?',
-    answer:
-      'StudyMesh helps students create AI study guides for any learning goal, then keep studying with interactive practice and AI support.',
-  },
-  {
-    question: 'Where do quizzes and flashcards fit?',
-    answer:
-      'They are part of the Study Guide learning loop. Ask AI chat for practice, flashcards, clearer notes, or review pages while studying.',
-  },
-  {
-    question: 'What does adapt with you mean?',
-    answer:
-      'Study Guides grow as you learn, reinforce weak spots, and keep the next practice tied to what you need.',
-  },
-]
+const brand = {
+  canvas: '#FBFDFE',
+  header: 'rgba(255, 255, 255, 0.82)',
+  ink: '#071127',
+  muted: '#5B6680',
+  faint: '#AAB5C9',
+  line: '#D9E5F3',
+  blue: '#1150D8',
+  blueDark: '#0D3FAE',
+  sky: '#12A7E8',
+  mint: '#11C9A3',
+  aqua: '#80E1D6',
+  lavender: '#EEF0FF',
+  mintSoft: '#DDF9EF',
+  skySoft: '#E4F4FF',
+}
 
 const navItems = [
   ['Features', '#features'],
   ['Pricing', '/pricing'],
 ]
 
+const timelineItems = [
+  {
+    label: (
+      <>
+        20 sec {'\u00b7'} Key idea
+      </>
+    ),
+    body: 'The essence, in a glance.',
+    icon: <BoltIcon />,
+    tone: brand.mintSoft,
+    color: '#008A78',
+  },
+  {
+    label: (
+      <>
+        60 sec {'\u00b7'} Idea summary
+      </>
+    ),
+    body: 'The details, made simple.',
+    icon: <DescriptionOutlinedIcon />,
+    tone: brand.skySoft,
+    color: brand.blue,
+  },
+  {
+    label: (
+      <>
+        5 pages {'\u00b7'} Full guide
+      </>
+    ),
+    body: "Go deep when you're ready.",
+    icon: <MenuBookOutlinedIcon />,
+    tone: brand.lavender,
+    color: '#3444C8',
+  },
+]
+
+const featureItems = [
+  {
+    title: 'Goal to guide',
+    body: 'Start with what you want to learn and get a guided path instead of a blank workspace.',
+  },
+  {
+    title: 'Practice on demand',
+    body: 'Ask for quizzes, flashcards, examples, or clearer notes from the guide you are studying.',
+  },
+  {
+    title: 'Keeps context',
+    body: 'StudyMesh connects new concepts to the ideas already active in your workspace.',
+  },
+]
+
 const StudyMeshLanding = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const theme = useTheme()
-  const [activeExample, setActiveExample] = useState(0)
-  const currentExample = guideExamples[activeExample]
-  const landingCanvasColor = theme.palette.background.default
 
   const openCreateStudyGuide = () => {
     navigate('/study-guides?create=1')
@@ -165,34 +105,37 @@ const StudyMeshLanding = () => {
 
   return (
     <Box
+      data-testid="studymesh-landing"
       sx={{
         minHeight: '100dvh',
-        bgcolor: landingCanvasColor,
-        color: 'text.primary',
+        bgcolor: brand.canvas,
+        color: brand.ink,
         overflowX: 'clip',
+        fontFamily: '"Readex Pro", "Inter", "Segoe UI", Arial, sans-serif',
       }}
     >
       <Box
         component="header"
         sx={{
-          borderBottom: '1px solid',
-          borderColor: alpha(theme.palette.divider, 0.56),
-          bgcolor: alpha(landingCanvasColor, 0.86),
-          backdropFilter: 'blur(18px)',
           position: 'sticky',
           top: 0,
           zIndex: 10,
+          borderBottom: `1px solid ${alpha(brand.line, 0.32)}`,
+          bgcolor: brand.header,
+          backdropFilter: 'blur(16px)',
         }}
       >
         <Container
-          maxWidth="lg"
+          maxWidth={false}
           sx={{
-            height: { xs: 64, sm: 72 },
+            width: 'min(100%, 1512px)',
+            height: { xs: 72, md: 88 },
             display: 'grid',
             gridTemplateColumns: { xs: 'auto 1fr auto', md: '1fr auto 1fr' },
             alignItems: 'center',
-            justifyContent: { xs: 'space-between', md: 'stretch' },
             columnGap: { xs: 1.25, sm: 2 },
+            px: { xs: 2.25, sm: 4, lg: 5.5 },
+            mx: 'auto',
           }}
         >
           <Button
@@ -202,38 +145,47 @@ const StudyMeshLanding = () => {
               justifySelf: 'start',
               minWidth: 'auto',
               p: 0,
-              color: 'text.primary',
+              color: brand.ink,
               textTransform: 'none',
               '&:hover': { bgcolor: 'transparent' },
+              '&:focus-visible': {
+                outline: `3px solid ${alpha(brand.sky, 0.28)}`,
+                outlineOffset: 6,
+              },
             }}
           >
-            <Stack direction="row" spacing={1.5} alignItems="center">
+            <Stack direction="row" spacing={1.35} alignItems="center">
               <Box
                 component="img"
                 src="/logo.png"
                 alt="StudyMesh logo"
                 sx={{
-                  width: { xs: 32, sm: 36 },
-                  height: { xs: 32, sm: 36 },
+                  width: { xs: 36, sm: 43 },
+                  height: { xs: 36, sm: 43 },
                   display: 'block',
                 }}
               />
               <Typography
-                variant="h6"
-                fontWeight={900}
-                sx={{ display: { xs: 'none', sm: 'block' } }}
+                component="span"
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  color: brand.ink,
+                  fontWeight: 700,
+                  fontSize: { sm: '1.35rem', md: '1.45rem' },
+                  letterSpacing: 0,
+                }}
               >
                 StudyMesh
               </Typography>
             </Stack>
           </Button>
+
           <Stack
             component="nav"
             direction="row"
-            spacing={{ xs: 1.5, md: 4 }}
+            spacing={{ xs: 2, md: 4.6 }}
             alignItems="center"
             justifyContent="center"
-            sx={{ display: 'flex' }}
           >
             {navItems.map(([label, href]) => (
               <Button
@@ -243,17 +195,17 @@ const StudyMeshLanding = () => {
                 sx={{
                   display: {
                     xs: label === 'Pricing' ? 'inline-flex' : 'none',
-                    md: 'inline-flex',
+                    sm: 'inline-flex',
                   },
                   minWidth: 'auto',
                   px: 0,
-                  color: alpha(theme.palette.text.primary, 0.78),
+                  color: brand.ink,
                   textTransform: 'none',
-                  fontWeight: 800,
-                  fontSize: '0.98rem',
+                  fontWeight: 700,
+                  fontSize: '1rem',
                   '&:hover': {
                     bgcolor: 'transparent',
-                    color: 'primary.main',
+                    color: brand.blue,
                   },
                 }}
               >
@@ -261,27 +213,31 @@ const StudyMeshLanding = () => {
               </Button>
             ))}
           </Stack>
+
           <Button
             variant="outlined"
             endIcon={<ArrowForwardIcon />}
             onClick={openCreateStudyGuide}
             sx={{
               justifySelf: 'end',
+              minHeight: { xs: 44, sm: 52 },
+              minWidth: { xs: 92, sm: 'auto' },
+              px: { xs: 1.8, sm: 3.2 },
               borderRadius: 999,
-              minWidth: { xs: 88, sm: 'auto' },
-              px: { xs: 1.75, sm: 3 },
-              py: { xs: 0.85, sm: 1.05 },
-              color: 'primary.dark',
-              borderColor: alpha(theme.palette.primary.main, 0.32),
-              bgcolor: alpha(theme.palette.background.paper, 0.72),
-              boxShadow: `0 10px 24px ${alpha(theme.palette.common.black, 0.08)}`,
+              borderColor: alpha(brand.blue, 0.42),
+              bgcolor: alpha('#FFFFFF', 0.82),
+              color: brand.blueDark,
+              boxShadow: `0 14px 34px ${alpha(brand.blue, 0.1)}`,
               textTransform: 'none',
-              fontWeight: 900,
+              fontWeight: 700,
+              fontSize: { xs: '0.95rem', sm: '1rem' },
               '&:hover': {
-                borderColor: alpha(theme.palette.primary.main, 0.5),
-                bgcolor: alpha(theme.palette.primary.main, 0.08),
+                borderColor: brand.blue,
+                bgcolor: '#FFFFFF',
+                boxShadow: `0 16px 36px ${alpha(brand.blue, 0.16)}`,
               },
               '& .MuiButton-endIcon': {
+                ml: 1.15,
                 display: { xs: 'none', sm: 'inherit' },
               },
             }}
@@ -296,110 +252,107 @@ const StudyMeshLanding = () => {
         </Container>
       </Box>
 
-      <Box component="main" sx={{ bgcolor: landingCanvasColor }}>
+      <Box component="main">
         <Box
           sx={{
             position: 'relative',
-            minHeight: {
-              xs: 'calc(100dvh - 64px)',
-              sm: 'calc(100dvh - 72px)',
-            },
-            display: 'flex',
-            alignItems: 'center',
-            py: { xs: 6, md: 9 },
+            minHeight: { xs: 'auto', lg: 'calc(100dvh - 88px)' },
+            pt: { xs: 6.5, sm: 6.5, md: 9.5 },
+            pb: { xs: 7, md: 8 },
             overflow: 'hidden',
-            bgcolor: landingCanvasColor,
           }}
         >
-          <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
+          <DecorativeHeroLayer />
+
+          <Container
+            maxWidth={false}
+            sx={{
+              position: 'relative',
+              zIndex: 1,
+              width: 'min(100%, 1512px)',
+              px: { xs: 2.25, sm: 4, lg: 5.5 },
+            }}
+          >
             <Stack
-              spacing={{ xs: 3, md: 4 }}
+              spacing={{ xs: 2.4, md: 3.1 }}
               alignItems="center"
               textAlign="center"
-              sx={{ mx: 'auto', maxWidth: 1360 }}
+              sx={{ mx: 'auto' }}
             >
-              <Typography
-                variant="h1"
-                sx={{
-                  maxWidth: { xs: 960, md: 1120 },
-                  fontFamily:
-                    '"Readex Pro", "Inter", "Segoe UI", Arial, sans-serif',
-                  fontWeight: 500,
-                  fontSize: {
-                    xs: '3rem',
-                    sm: '4.4rem',
-                    md: '5.2rem',
-                  },
-                  lineHeight: { xs: 1.1, md: 1 },
-                  letterSpacing: 0,
-                  pb: '0.08em',
-                  color: 'text.primary',
-                  textWrap: 'balance',
-                  '@keyframes studyMeshHeroGradientShift': {
-                    '0%': { backgroundPosition: '0% center' },
-                    '50%': { backgroundPosition: '95% center' },
-                    '100%': { backgroundPosition: '0% center' },
-                  },
-                }}
-              >
-                <Box
-                  component="span"
+              <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                <Typography
+                  variant="h1"
                   sx={{
-                    display: { xs: 'inline', md: 'block' },
-                    overflow: 'visible',
-                    background:
-                      'linear-gradient(90deg, rgb(33, 150, 243), rgb(0, 196, 154), rgb(33, 150, 243))',
-                    backgroundSize: '190% auto',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    color: 'transparent',
-                    WebkitTextFillColor: 'transparent',
-                    lineHeight: { xs: 1.12, md: 1.06 },
-                    pb: { xs: '0.06em', md: '0.12em' },
-                    mb: { xs: 0, md: '-0.04em' },
-                    animation:
-                      'studyMeshHeroGradientShift 4s ease infinite',
-                  }}
-                >
-                  Study guides
-                </Box>
-                <Box
-                  component="span"
-                  sx={{
-                    display: { xs: 'inline', md: 'block' },
-                    color: 'text.primary',
-                    lineHeight: { xs: 1.1, md: 1.02 },
-                    WebkitTextFillColor: 'currentColor',
+                    maxWidth: 1060,
+                    color: brand.ink,
+                    fontWeight: 700,
+                    fontSize: {
+                      xs: '3.45rem',
+                      sm: '4.55rem',
+                      md: '6.6rem',
+                    },
+                    lineHeight: { xs: 1.04, md: 0.98 },
+                    letterSpacing: 0,
+                    textWrap: 'balance',
                   }}
                 >
                   <Box
                     component="span"
-                    sx={{ display: { xs: 'inline', md: 'none' } }}
+                    sx={{
+                      display: 'block',
+                      background: `linear-gradient(90deg, ${brand.mint} 8%, ${brand.sky} 88%)`,
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      color: 'transparent',
+                      WebkitTextFillColor: 'transparent',
+                    }}
                   >
-                    {' '}
+                    Study guides
                   </Box>
-                  that grow with you.
-                </Box>
-              </Typography>
+                  <Box component="span" sx={{ display: 'block' }}>
+                    that grow with you.
+                  </Box>
+                </Typography>
+                <Box
+                  aria-hidden="true"
+                  sx={{
+                    position: 'absolute',
+                    left: { xs: '4%', md: '10%' },
+                    right: { xs: '4%', md: '8%' },
+                    bottom: { xs: -8, sm: -8, md: -7 },
+                    height: { xs: 7, sm: 9, md: 12 },
+                    borderRadius: 999,
+                    background: `linear-gradient(90deg, ${alpha(
+                      brand.mint,
+                      0.82,
+                    )}, ${alpha(brand.sky, 0.78)})`,
+                    transform: 'rotate(-1deg)',
+                    zIndex: -1,
+                    boxShadow: `0 2px 0 ${alpha(brand.blue, 0.1)}`,
+                  }}
+                />
+              </Box>
+
               <Typography
                 variant="h5"
                 component="p"
                 sx={{
-                  maxWidth: 880,
-                  color: alpha(theme.palette.text.primary, 0.8),
-                  fontFamily:
-                    '"Readex Pro", "Inter", "Segoe UI", Arial, sans-serif',
-                  lineHeight: 1.55,
-                  fontWeight: 300,
-                  fontSize: { xs: '1.1rem', md: '1.42rem' },
+                  maxWidth: 760,
+                  color: brand.muted,
+                  lineHeight: 1.48,
+                  fontWeight: 400,
+                  fontSize: { xs: '1.18rem', md: '1.42rem' },
+                  letterSpacing: 0,
                 }}
               >
-                Build interactive study guides with AI, then keep learning as they adapt with you.
+                StudyMesh builds adaptive study guides by connecting new
+                concepts to the ideas you already understand.
               </Typography>
-              <Stack spacing={2.75} alignItems="center">
+
+              <Stack spacing={2.3} alignItems="center" sx={{ pt: 1 }}>
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
-                  spacing={{ xs: 1, sm: 1.5 }}
+                  spacing={{ xs: 1.25, sm: 2 }}
                   alignItems="center"
                   justifyContent="center"
                 >
@@ -409,15 +362,21 @@ const StudyMeshLanding = () => {
                     endIcon={<ArrowForwardIcon />}
                     onClick={openCreateStudyGuide}
                     sx={{
-                      minHeight: 58,
-                      px: 5,
+                      minHeight: 70,
+                      minWidth: { xs: 276, sm: 386 },
+                      px: { xs: 3.2, sm: 5.5 },
                       borderRadius: 999,
+                      bgcolor: brand.blue,
+                      color: '#FFFFFF',
+                      boxShadow: `0 20px 42px ${alpha(brand.blue, 0.28)}`,
                       textTransform: 'none',
-                      fontWeight: 950,
-                      fontSize: '1.05rem',
-                      bgcolor: 'primary.dark',
-                      boxShadow: `0 18px 36px ${alpha(theme.palette.primary.dark, 0.2)}`,
-                      '&:hover': { bgcolor: 'primary.main' },
+                      fontWeight: 700,
+                      fontSize: { xs: '1.07rem', sm: '1.15rem' },
+                      '&:hover': {
+                        bgcolor: brand.blueDark,
+                        boxShadow: `0 22px 46px ${alpha(brand.blue, 0.34)}`,
+                      },
+                      '& .MuiButton-endIcon': { ml: 1.1 },
                     }}
                   >
                     Create a Study Guide
@@ -427,608 +386,379 @@ const StudyMeshLanding = () => {
                     variant="text"
                     endIcon={<ArrowForwardIcon />}
                     sx={{
-                      minHeight: 48,
-                      px: 1,
-                      color: alpha(theme.palette.text.primary, 0.78),
+                      minHeight: 50,
+                      px: { xs: 1, sm: 1.5 },
+                      color: brand.blueDark,
                       textTransform: 'none',
-                      fontWeight: 850,
+                      fontWeight: 700,
+                      fontSize: '1.02rem',
+                      position: 'relative',
                       '&:hover': {
                         bgcolor: 'transparent',
-                        color: 'primary.main',
+                        color: brand.blue,
+                      },
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        left: 12,
+                        right: 28,
+                        bottom: 5,
+                        height: 3,
+                        borderRadius: 999,
+                        bgcolor: alpha(brand.mint, 0.55),
+                        transform: 'rotate(-2deg)',
                       },
                     }}
                   >
                     See how it works
                   </Button>
                 </Stack>
+
                 <Typography
                   variant="overline"
                   sx={{
-                    color: alpha(theme.palette.text.primary, 0.58),
-                    fontWeight: 500,
-                    letterSpacing: '0.22em',
+                    color: '#7E8AA1',
+                    fontWeight: 400,
+                    letterSpacing: '0.28em',
+                    fontSize: { xs: '0.68rem', sm: '0.78rem' },
                   }}
                 >
-                  Free to start · No credit card required
+                  Free to start {'\u00b7'} No credit card required
                 </Typography>
               </Stack>
+
+              <HeroTimeline />
             </Stack>
           </Container>
         </Box>
 
-        <Container maxWidth="lg">
-          <Box
-            id="features"
-            sx={{
-              pt: { xs: 4, md: 6 },
-              pb: { xs: 5, md: 7 },
-              scrollMarginTop: 88,
-            }}
-          >
-            <Grid container spacing={2.5} alignItems="center">
-              <Grid item xs={12} md={4}>
-                <Stack spacing={1}>
-                  <Typography
-                    variant="overline"
-                    fontWeight={950}
-                    color="primary.main"
-                  >
-                    See it grow
-                  </Typography>
-                  <Typography variant="h4" component="h2" fontWeight={950}>
-                    From goal to guide to practice
-                  </Typography>
-                  <Typography color="text.secondary">
-                    A Study Guide starts as a path, then grows with targeted
-                    practice, review pages, and AI help while you learn.
-                  </Typography>
-                </Stack>
-              </Grid>
-              <Grid item xs={12} md={8}>
-                <Stack spacing={1.25}>
-                  <ProductPreview
-                    example={currentExample}
-                    themeMode={theme.palette.mode}
-                  />
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    justifyContent={{ xs: 'center', md: 'flex-end' }}
-                    flexWrap="wrap"
-                    useFlexGap
-                  >
-                    {guideExamples.map((example, index) => (
-                      <Button
-                        key={example.label}
-                        size="small"
-                        variant={
-                          activeExample === index ? 'contained' : 'outlined'
-                        }
-                        onClick={() => setActiveExample(index)}
-                        sx={{ borderRadius: 999, textTransform: 'none' }}
-                      >
-                        {example.label}
-                      </Button>
-                    ))}
-                  </Stack>
-                </Stack>
-              </Grid>
-            </Grid>
-          </Box>
+        <Box
+          id="features"
+          sx={{
+            scrollMarginTop: 104,
+            borderTop: `1px solid ${alpha(brand.line, 0.7)}`,
+            bgcolor: '#FFFFFF',
+            py: { xs: 5, md: 7 },
+          }}
+        >
+          <Container maxWidth="lg">
+            <Stack spacing={3.2} alignItems="center" textAlign="center">
+              <Stack spacing={1} alignItems="center">
+                <Typography
+                  variant="overline"
+                  sx={{
+                    color: brand.blue,
+                    fontWeight: 700,
+                    letterSpacing: '0.14em',
+                  }}
+                >
+                  Features
+                </Typography>
+                <Typography
+                  variant="h2"
+                  sx={{
+                    maxWidth: 760,
+                    color: brand.ink,
+                    fontWeight: 700,
+                    fontSize: { xs: '2rem', md: '3.2rem' },
+                    lineHeight: 1.08,
+                    letterSpacing: 0,
+                  }}
+                >
+                  One prompt becomes a study path you can keep improving.
+                </Typography>
+              </Stack>
 
-          <Box
-            id="how-it-works"
-            sx={{ py: { xs: 5, md: 8 }, scrollMarginTop: 88 }}
-          >
-            <Stack spacing={1} textAlign="center" alignItems="center" mb={3}>
-              <Typography
-                variant="overline"
-                fontWeight={950}
-                color="primary.main"
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+                  gap: 2,
+                  width: '100%',
+                }}
               >
-                How StudyMesh Works
-              </Typography>
-              <Typography variant="h3" component="h2" fontWeight={950}>
-                One prompt becomes a learning loop
-              </Typography>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ maxWidth: 760 }}
-              >
-                Start with what you want to learn. StudyMesh turns it into a
-                guided path that keeps adapting while you study.
-              </Typography>
-            </Stack>
-
-            <Grid container spacing={2.5}>
-              {[
-                [
-                  '01',
-                  'Start with a goal',
-                  'Tell StudyMesh the subject, exam, skill, or confusion you want to work through.',
-                ],
-                [
-                  '02',
-                  'Study an interactive guide',
-                  'Move through lessons, examples, checkpoints, quizzes, flashcards, and review pages.',
-                ],
-                [
-                  '03',
-                  'Adapt the next step',
-                  'Ask for stronger practice, easier explanations, or targeted review when the guide needs to change.',
-                ],
-              ].map(([number, title, body]) => (
-                <Grid item xs={12} md={4} key={number}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      height: '100%',
-                      p: 2.5,
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: alpha(theme.palette.primary.main, 0.18),
-                      bgcolor: 'background.paper',
-                    }}
-                  >
-                    <Stack spacing={1.25}>
-                      <Box
-                        sx={{
-                          width: 42,
-                          height: 42,
-                          borderRadius: 1.5,
-                          display: 'grid',
-                          placeItems: 'center',
-                          bgcolor: alpha(theme.palette.primary.main, 0.1),
-                          color: 'primary.main',
-                          fontWeight: 950,
-                        }}
-                      >
-                        {number}
-                      </Box>
-                      <Typography variant="h5" fontWeight={950}>
-                        {title}
-                      </Typography>
-                      <Typography color="text.secondary">{body}</Typography>
-                    </Stack>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-
-          <Box
-            id="pricing"
-            sx={{ py: { xs: 5, md: 8 }, scrollMarginTop: 88 }}
-          >
-            <Grid container spacing={4} alignItems="center">
-              <Grid item xs={12} md={5}>
-                <Stack spacing={1.5}>
-                  <Typography
-                    variant="overline"
-                    fontWeight={950}
-                    color="primary.main"
-                  >
-                    Adaptive Study
-                  </Typography>
-                  <Typography variant="h3" component="h2" fontWeight={950}>
-                    Keep learning as the guide adapts with you
-                  </Typography>
-                  <Typography
-                    color="text.secondary"
-                    sx={{ fontSize: '1.05rem' }}
-                  >
-                    Weak spots become practice, questions become new
-                    explanations, and the Study Guide keeps growing around what
-                    you need next.
-                  </Typography>
-                </Stack>
-              </Grid>
-              <Grid item xs={12} md={7}>
-                <Grid container spacing={2}>
-                  {adaptiveSignals.map((item) => (
-                    <Grid item xs={12} sm={4} key={item.title}>
-                      <Paper
-                        elevation={0}
-                        sx={{
-                          height: '100%',
-                          p: 2.25,
-                          borderRadius: 2,
-                          border: '1px solid',
-                          borderColor: alpha(theme.palette.success.main, 0.22),
-                          bgcolor: alpha(theme.palette.success.main, 0.06),
-                        }}
-                      >
-                        <Stack spacing={1.25}>
-                          <Box
-                            sx={{
-                              width: 38,
-                              height: 38,
-                              borderRadius: 1.25,
-                              display: 'grid',
-                              placeItems: 'center',
-                              color: '#007C66',
-                              bgcolor: alpha('#00A878', 0.12),
-                            }}
-                          >
-                            {item.icon}
-                          </Box>
-                          <Typography fontWeight={950}>{item.title}</Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {item.body}
-                          </Typography>
-                        </Stack>
-                      </Paper>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Grid>
-            </Grid>
-          </Box>
-
-          <Box sx={{ py: { xs: 5, md: 8 } }}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: { xs: 2.5, md: 4 },
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: alpha(theme.palette.primary.main, 0.2),
-                bgcolor:
-                  theme.palette.mode === 'dark'
-                    ? alpha(theme.palette.background.paper, 0.72)
-                    : '#F7FBFA',
-              }}
-            >
-              <Grid container spacing={3} alignItems="center">
-                <Grid item xs={12} md={5}>
-                  <Stack spacing={1.25}>
-                    <Typography
-                      variant="overline"
-                      fontWeight={950}
-                      color="primary.main"
-                    >
-                      AI Chat
-                    </Typography>
-                    <Typography variant="h3" component="h2" fontWeight={950}>
-                      Practice lives inside the Study Guide
-                    </Typography>
-                    <Typography color="text.secondary">
-                      Quizzes, flashcards, clearer notes, and review practice
-                      are part of the adaptive learning flow inside the guide.
-                    </Typography>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} md={7}>
+                {featureItems.map((item) => (
                   <Box
+                    key={item.title}
                     sx={{
-                      display: 'grid',
-                      gridTemplateColumns: {
-                        xs: '1fr',
-                        sm: 'repeat(2, minmax(0, 1fr))',
-                      },
-                      gap: 1.25,
-                    }}
-                  >
-                    {studyActions.map(([label, icon]) => (
-                      <Paper
-                        key={label as string}
-                        elevation={0}
-                        sx={{
-                          p: 1.5,
-                          borderRadius: 2,
-                          border: '1px solid',
-                          borderColor: alpha(theme.palette.primary.main, 0.16),
-                          bgcolor: 'background.paper',
-                        }}
-                      >
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Box
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: 1,
-                              display: 'grid',
-                              placeItems: 'center',
-                              bgcolor: alpha(theme.palette.primary.main, 0.1),
-                              color: 'primary.main',
-                            }}
-                          >
-                            {icon}
-                          </Box>
-                          <Typography fontWeight={900}>
-                            {label as string}
-                          </Typography>
-                        </Stack>
-                      </Paper>
-                    ))}
-                  </Box>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Box>
-
-          <Box sx={{ py: { xs: 5, md: 8 } }}>
-            <Stack spacing={1} textAlign="center" alignItems="center" mb={3}>
-              <Typography
-                variant="overline"
-                fontWeight={950}
-                color="primary.main"
-              >
-                AI Options
-              </Typography>
-              <Typography variant="h3" component="h2" fontWeight={950}>
-                Choose the AI setup that fits you
-              </Typography>
-              <Typography
-                color="text.secondary"
-                sx={{ maxWidth: 720, fontSize: '1.05rem' }}
-              >
-                Start fast, bring your own key, or use local AI when available.
-                The Study Guide flow stays the same.
-              </Typography>
-            </Stack>
-            <Grid container spacing={2}>
-              {aiModes.map((mode) => (
-                <Grid item xs={12} md={4} key={mode.title}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      height: '100%',
-                      p: 2.5,
+                      minHeight: 174,
+                      p: 2.6,
+                      border: `1px solid ${brand.line}`,
                       borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      bgcolor: 'background.paper',
+                      bgcolor: brand.canvas,
+                      textAlign: 'left',
                     }}
                   >
-                    <Stack spacing={1.25}>
+                    <Stack spacing={1}>
                       <Box
                         sx={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 1.25,
+                          width: 38,
+                          height: 38,
+                          borderRadius: '50%',
                           display: 'grid',
                           placeItems: 'center',
-                          bgcolor: alpha(theme.palette.primary.main, 0.1),
-                          color: 'primary.main',
+                          color: brand.blue,
+                          bgcolor: brand.skySoft,
                         }}
                       >
-                        {mode.icon}
+                        <AutoAwesomeIcon fontSize="small" />
                       </Box>
-                      <Typography variant="h6" fontWeight={950}>
-                        {mode.title}
+                      <Typography
+                        variant="h6"
+                        sx={{ color: brand.ink, fontWeight: 700 }}
+                      >
+                        {item.title}
                       </Typography>
-                      <Typography color="text.secondary">
-                        {mode.body}
+                      <Typography sx={{ color: brand.muted, lineHeight: 1.55 }}>
+                        {item.body}
                       </Typography>
                     </Stack>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Stack>
+          </Container>
+        </Box>
 
-          <Box sx={{ py: { xs: 5, md: 8 } }}>
-            <Typography variant="h3" component="h2" fontWeight={950} mb={3}>
-              Quick answers
-            </Typography>
-            <Grid container spacing={2}>
-              {quickAnswers.map((item) => (
-                <Grid item xs={12} md={4} key={item.question}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      height: '100%',
-                      p: 2.5,
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      bgcolor: 'background.paper',
-                    }}
-                  >
-                    <Typography variant="h6" fontWeight={950} mb={1}>
-                      {item.question}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {item.answer}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-
-          <Paper
-            elevation={0}
-            sx={{
-              mb: 8,
-              p: { xs: 3, sm: 4 },
-              borderRadius: 2,
-              bgcolor: 'primary.dark',
-              color: 'primary.contrastText',
-              textAlign: 'center',
-            }}
-          >
-            <Typography variant="h3" component="h2" fontWeight={950} mb={1}>
-              Ready to build your next Study Guide?
-            </Typography>
-            <Typography
-              sx={{
-                color: alpha(theme.palette.primary.contrastText, 0.82),
-                mb: 3,
-                maxWidth: 720,
-                mx: 'auto',
-              }}
-            >
-              Start with a topic. Let StudyMesh create the guide. Keep learning
-              as it adapts with you.
-            </Typography>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={openCreateStudyGuide}
-              sx={{
-                borderRadius: 1,
-                textTransform: 'none',
-                bgcolor: 'primary.main',
-                color: 'primary.contrastText',
-                fontWeight: 950,
-                '&:hover': { bgcolor: 'primary.light' },
-              }}
-            >
-              Create a Study Guide
-            </Button>
-          </Paper>
-        </Container>
+        <Box sx={{ bgcolor: brand.canvas, py: { xs: 5, md: 7 } }}>
+          <Container maxWidth="md">
+            <Stack spacing={2.4} alignItems="center" textAlign="center">
+              <Typography
+                variant="h2"
+                sx={{
+                  color: brand.ink,
+                  fontWeight: 700,
+                  fontSize: { xs: '2rem', md: '3.1rem' },
+                  lineHeight: 1.08,
+                }}
+              >
+                Ready to build your next Study Guide?
+              </Typography>
+              <Typography sx={{ color: brand.muted, fontSize: '1.08rem' }}>
+                Start with a topic. Let StudyMesh create the guide. Keep
+                learning as it adapts with you.
+              </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                endIcon={<ArrowForwardIcon />}
+                onClick={openCreateStudyGuide}
+                sx={{
+                  minHeight: 54,
+                  px: 4,
+                  borderRadius: 999,
+                  bgcolor: brand.blue,
+                  color: '#FFFFFF',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  '&:hover': { bgcolor: brand.blueDark },
+                }}
+              >
+                Create a Study Guide
+              </Button>
+            </Stack>
+          </Container>
+        </Box>
       </Box>
     </Box>
   )
 }
 
-interface ProductPreviewProps {
-  example: (typeof guideExamples)[number]
-  muted?: boolean
-  themeMode: 'light' | 'dark'
-}
-
-const ProductPreview = ({
-  example,
-  muted = false,
-  themeMode,
-}: ProductPreviewProps) => {
-  const borderColor =
-    themeMode === 'dark' ? 'rgba(148,163,184,0.24)' : '#DCE7F1'
-  const paperColor = themeMode === 'dark' ? 'rgba(15,23,42,0.94)' : '#FFFFFF'
-
+const HeroTimeline = () => {
   return (
-    <Paper
-      elevation={0}
+    <Box
+      aria-label="Study guide creation timeline"
       sx={{
-        p: { xs: 1.25, sm: 1.5 },
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor,
-        bgcolor: paperColor,
-        boxShadow: muted
-          ? 'none'
-          : themeMode === 'dark'
-            ? '0 28px 70px rgba(0,0,0,0.38)'
-            : '0 28px 70px rgba(30,64,175,0.16)',
+        width: 'min(100%, 980px)',
+        pt: { xs: 2.3, md: 3.2 },
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+        gap: { xs: 2.2, md: 3.2 },
+        alignItems: 'start',
       }}
     >
-      <Stack spacing={1.25}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <RouteIcon color="primary" />
-          <Box sx={{ minWidth: 0 }}>
-            <Typography fontWeight={950} noWrap>
-              {example.title}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              Prompt: {example.prompt}
-            </Typography>
-          </Box>
-        </Stack>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: '1fr 0.88fr' },
-            gap: 1,
-          }}
-        >
-          <Stack spacing={0.75}>
-            {example.lessons.map(([number, title, detail]) => (
-              <Box
-                key={number}
+      {timelineItems.map((item, index) => (
+        <Box key={`timeline-${index}`} sx={{ position: 'relative' }}>
+          {index < timelineItems.length - 1 && (
+            <Box
+              aria-hidden="true"
+              sx={{
+                display: { xs: 'none', sm: 'block' },
+                position: 'absolute',
+                top: 35,
+                left: '62%',
+                width: '72%',
+                height: 0,
+                borderTop: `2px dashed ${alpha(brand.faint, 0.64)}`,
+                '&::before, &::after': {
+                  content: '""',
+                  position: 'absolute',
+                  top: -5,
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  bgcolor: alpha(brand.faint, 0.8),
+                },
+                '&::before': { left: -5 },
+                '&::after': { right: -5 },
+              }}
+            />
+          )}
+          <Stack spacing={1.25} alignItems="center">
+            <Box
+              sx={{
+                width: 70,
+                height: 70,
+                borderRadius: '50%',
+                display: 'grid',
+                placeItems: 'center',
+                bgcolor: item.tone,
+                color: item.color,
+                border: `1px solid ${alpha(item.color, 0.12)}`,
+                boxShadow: `0 10px 28px ${alpha(item.color, 0.12)}`,
+                '& svg': { fontSize: 33 },
+              }}
+            >
+              {item.icon}
+            </Box>
+            <Stack spacing={0.45} alignItems="center">
+              <Typography
                 sx={{
-                  p: 1,
-                  borderRadius: 1.5,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06),
+                  color: brand.ink,
+                  fontWeight: 700,
+                  fontSize: '1rem',
                 }}
               >
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Box
-                    sx={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 1,
-                      display: 'grid',
-                      placeItems: 'center',
-                      bgcolor: (theme) =>
-                        alpha(theme.palette.primary.main, 0.12),
-                      color: 'primary.main',
-                      fontSize: '0.78rem',
-                      fontWeight: 950,
-                      flex: '0 0 auto',
-                    }}
-                  >
-                    {number}
-                  </Box>
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography fontWeight={950} noWrap>
-                      {title}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      noWrap
-                      sx={{ display: 'block' }}
-                    >
-                      {detail}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Box>
-            ))}
-          </Stack>
-          <Stack
-            spacing={0.75}
-            sx={{
-              p: 1,
-              borderRadius: 2,
-              bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
-              border: '1px solid',
-              borderColor: (theme) => alpha(theme.palette.success.main, 0.18),
-            }}
-          >
-            <Stack direction="row" spacing={0.75} alignItems="center">
-              <ChatBubbleOutlineIcon sx={{ color: '#007C66' }} />
-              <Typography fontWeight={950}>Adaptive AI Chat</Typography>
+                {item.label}
+              </Typography>
+              <Typography sx={{ color: brand.muted, fontSize: '0.92rem' }}>
+                {item.body}
+              </Typography>
             </Stack>
-            {example.chat.map(([label, text], index) => (
-              <Box
-                key={`${label}-${text}`}
-                sx={{
-                  p: 1,
-                  borderRadius: 1.25,
-                  bgcolor:
-                    index === 1 ? alpha('#00A878', 0.14) : 'background.paper',
-                  border: '1px solid',
-                  borderColor: alpha('#00A878', index === 1 ? 0.28 : 0.16),
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  color={index === 1 ? '#007C66' : 'text.secondary'}
-                  fontWeight={950}
-                >
-                  {label}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  fontWeight={index === 1 ? 900 : 700}
-                >
-                  {text}
-                </Typography>
-              </Box>
-            ))}
           </Stack>
         </Box>
-      </Stack>
-    </Paper>
+      ))}
+    </Box>
   )
 }
+
+const DecorativeHeroLayer = () => (
+  <Box aria-hidden="true">
+    <Box
+      sx={{
+        position: 'absolute',
+        inset: 0,
+        background:
+          'radial-gradient(circle at 50% 44%, rgba(17, 201, 163, 0.12), transparent 29%), radial-gradient(circle at 62% 36%, rgba(18, 167, 232, 0.14), transparent 24%)',
+      }}
+    />
+    <Box
+      sx={{
+        display: { xs: 'none', md: 'block' },
+        position: 'absolute',
+        left: -42,
+        bottom: 96,
+        width: 124,
+        height: 330,
+        opacity: 0.5,
+        backgroundImage:
+          'linear-gradient(#BFD4E9 1px, transparent 1px), linear-gradient(90deg, #BFD4E9 1px, transparent 1px)',
+        backgroundSize: '28px 28px',
+        transform: 'rotate(-7deg)',
+        borderRadius: 2,
+        filter: 'blur(0.2px)',
+      }}
+    />
+    <Box
+      sx={{
+        display: { xs: 'none', sm: 'grid' },
+        position: 'absolute',
+        left: { sm: '4%', lg: '8.5%' },
+        top: { sm: '17%', lg: '18%' },
+        width: { sm: 58, lg: 82 },
+        height: { sm: 58, lg: 82 },
+        placeItems: 'center',
+        color: alpha(brand.blue, 0.23),
+        '&::before, &::after': {
+          content: '""',
+          position: 'absolute',
+          width: { sm: 74, lg: 104 },
+          height: { sm: 27, lg: 38 },
+          border: `2px solid ${alpha(brand.blue, 0.22)}`,
+          borderRadius: '50%',
+        },
+        '&::before': { transform: 'rotate(27deg)' },
+        '&::after': { transform: 'rotate(-27deg)' },
+      }}
+    >
+      <Box
+        sx={{
+          width: 13,
+          height: 13,
+          borderRadius: '50%',
+          border: `2px solid ${alpha(brand.blue, 0.28)}`,
+        }}
+      />
+    </Box>
+    <Box
+      sx={{
+        display: { xs: 'none', lg: 'block' },
+        position: 'absolute',
+        right: { sm: '4%', lg: '8%' },
+        top: { sm: '15%', lg: '16%' },
+        width: { sm: 104, lg: 136 },
+        height: { sm: 104, lg: 136 },
+        border: `1.5px solid ${alpha(brand.mint, 0.35)}`,
+        borderRadius: 1,
+        transform: 'rotate(10deg)',
+        color: alpha('#469B93', 0.45),
+        p: 2,
+        fontSize: { sm: '0.78rem', lg: '1.04rem' },
+        lineHeight: 1.85,
+        boxShadow: `0 18px 36px ${alpha(brand.mint, 0.1)}`,
+      }}
+    >
+      <Stack spacing={0.3}>
+        {['Focus', 'Plan', 'Progress'].map((item) => (
+          <Stack key={item} direction="row" spacing={0.9} alignItems="center">
+            <CheckIcon sx={{ fontSize: 18 }} />
+            <Box component="span">{item}</Box>
+          </Stack>
+        ))}
+      </Stack>
+    </Box>
+    <LightbulbOutlinedIcon
+      sx={{
+        display: { xs: 'none', lg: 'block' },
+        position: 'absolute',
+        right: { sm: '8%', lg: '10.5%' },
+        top: { sm: '54%', lg: '52%' },
+        fontSize: { sm: 56, lg: 78 },
+        color: alpha(brand.blue, 0.2),
+        filter: `drop-shadow(0 8px 14px ${alpha(brand.blue, 0.08)})`,
+      }}
+    />
+    <AutoAwesomeIcon
+      sx={{
+        display: { xs: 'none', md: 'block' },
+        position: 'absolute',
+        left: '11%',
+        top: '45%',
+        fontSize: 26,
+        color: alpha(brand.mint, 0.45),
+      }}
+    />
+    <AutoAwesomeIcon
+      sx={{
+        display: { xs: 'none', md: 'block' },
+        position: 'absolute',
+        right: '16%',
+        top: '65%',
+        fontSize: 23,
+        color: alpha(brand.mint, 0.42),
+      }}
+    />
+  </Box>
+)
 
 export default StudyMeshLanding

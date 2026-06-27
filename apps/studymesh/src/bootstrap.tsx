@@ -6,6 +6,8 @@ import reportWebVitals from './reportWebVitals'
 import '@fontsource/readex-pro/300.css'
 import '@fontsource/readex-pro/400.css'
 import '@fontsource/readex-pro/500.css'
+import '@fontsource/readex-pro/600.css'
+import '@fontsource/readex-pro/700.css'
 import '@fontsource/jetbrains-mono/400.css'
 import '@fontsource/jetbrains-mono/500.css'
 

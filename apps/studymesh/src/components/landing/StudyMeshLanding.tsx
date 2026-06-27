@@ -21,6 +21,8 @@ import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import CheckIcon from '@mui/icons-material/Check'
 import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
 
+import LandingTopNav from './LandingTopNav'
+
 const brand = {
   canvas: '#FBFDFE',
   header: 'rgba(255, 255, 255, 0.82)',
@@ -37,12 +39,6 @@ const brand = {
   mintSoft: '#DDF9EF',
   skySoft: '#E4F4FF',
 }
-
-const navItems = [
-  ['Knowledge context', '#knowledge-context'],
-  ['Growing guides', '#growing-guide'],
-  ['Pricing', '/pricing'],
-]
 
 const timelineItems = [
   {
@@ -278,143 +274,7 @@ const StudyMeshLanding = () => {
         fontFamily: '"Readex Pro", "Inter", "Segoe UI", Arial, sans-serif',
       }}
     >
-      <Box
-        component="header"
-        sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 1200,
-          borderBottom: `1px solid ${alpha(brand.line, 0.32)}`,
-          bgcolor: brand.header,
-          backdropFilter: 'blur(16px)',
-        }}
-      >
-        <Container
-          maxWidth={false}
-          sx={{
-            width: 'min(100%, 1512px)',
-            height: { xs: 72, md: 88 },
-            display: 'grid',
-            gridTemplateColumns: { xs: 'auto 1fr auto', md: '1fr auto 1fr' },
-            alignItems: 'center',
-            columnGap: { xs: 1.25, sm: 2 },
-            px: { xs: 2.25, sm: 4, lg: 5.5 },
-            mx: 'auto',
-          }}
-        >
-          <Button
-            variant="text"
-            onClick={() => navigate('/')}
-            sx={{
-              justifySelf: 'start',
-              minWidth: 'auto',
-              p: 0,
-              color: brand.ink,
-              textTransform: 'none',
-              '&:hover': { bgcolor: 'transparent' },
-              '&:focus-visible': {
-                outline: `3px solid ${alpha(brand.sky, 0.28)}`,
-                outlineOffset: 6,
-              },
-            }}
-          >
-            <Stack direction="row" spacing={1.35} alignItems="center">
-              <Box
-                component="img"
-                src="/logo.png"
-                alt="StudyMesh logo"
-                sx={{
-                  width: { xs: 36, sm: 43 },
-                  height: { xs: 36, sm: 43 },
-                  display: 'block',
-                }}
-              />
-              <Typography
-                component="span"
-                sx={{
-                  display: { xs: 'none', sm: 'block' },
-                  color: brand.ink,
-                  fontWeight: 700,
-                  fontSize: { sm: '1.35rem', md: '1.45rem' },
-                  letterSpacing: 0,
-                }}
-              >
-                StudyMesh
-              </Typography>
-            </Stack>
-          </Button>
-
-          <Stack
-            component="nav"
-            direction="row"
-            spacing={{ xs: 2, md: 4.6 }}
-            alignItems="center"
-            justifyContent="center"
-          >
-            {navItems.map(([label, href]) => (
-              <Button
-                key={label}
-                href={href}
-                variant="text"
-                sx={{
-                  display: {
-                    xs: label === 'Pricing' ? 'inline-flex' : 'none',
-                    md: 'inline-flex',
-                  },
-                  minWidth: 'auto',
-                  px: 0,
-                  color: brand.ink,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  fontSize: '1rem',
-                  '&:hover': {
-                    bgcolor: 'transparent',
-                    color: brand.blue,
-                  },
-                }}
-              >
-                {label}
-              </Button>
-            ))}
-          </Stack>
-
-          <Button
-            variant="outlined"
-            endIcon={<ArrowForwardIcon />}
-            onClick={openCreateStudyGuide}
-            sx={{
-              justifySelf: 'end',
-              minHeight: { xs: 44, sm: 52 },
-              minWidth: { xs: 92, sm: 'auto' },
-              px: { xs: 1.8, sm: 3.2 },
-              borderRadius: 999,
-              borderColor: alpha(brand.blue, 0.42),
-              bgcolor: alpha('#FFFFFF', 0.82),
-              color: brand.blueDark,
-              boxShadow: `0 14px 34px ${alpha(brand.blue, 0.1)}`,
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: { xs: '0.95rem', sm: '1rem' },
-              '&:hover': {
-                borderColor: brand.blue,
-                bgcolor: '#FFFFFF',
-                boxShadow: `0 16px 36px ${alpha(brand.blue, 0.16)}`,
-              },
-              '& .MuiButton-endIcon': {
-                ml: 1.15,
-                display: { xs: 'none', sm: 'inherit' },
-              },
-            }}
-          >
-            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-              Create a Study Guide
-            </Box>
-            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-              Create
-            </Box>
-          </Button>
-        </Container>
-      </Box>
+      <LandingTopNav />
 
       <Box component="main">
         <Box
@@ -841,7 +701,7 @@ const GrowingGuidesSection = () => (
               }}
             >
               Every guide starts with 5 focused pages. Ask for more depth,
-              examples, practice, or flashcards, and StudyMesh adds new pages
+              examples, practice, or flashcards, and StudyMesh adds new content
               instantly.
             </Typography>
           </Stack>

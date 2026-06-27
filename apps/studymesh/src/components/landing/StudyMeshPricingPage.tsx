@@ -9,14 +9,13 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { useNavigate } from 'react-router-dom'
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CloudQueueIcon from '@mui/icons-material/CloudQueue'
 import KeyIcon from '@mui/icons-material/Key'
 import MemoryIcon from '@mui/icons-material/Memory'
 
+import LandingTopNav from './LandingTopNav'
 import {
   HOSTED_AI_CREDIT_PACKS,
   HOSTED_AI_INITIAL_FREE_CREDITS,
@@ -27,7 +26,6 @@ import {
 
 const pricingBrand = {
   canvas: '#FBFDFE',
-  header: 'rgba(255, 255, 255, 0.86)',
   surface: '#FFFFFF',
   subtleSurface: '#F6FAFE',
   ink: '#071127',
@@ -62,19 +60,8 @@ const freeOptions = [
   },
 ]
 
-const navItems = [
-  ['Knowledge context', '/#knowledge-context'],
-  ['Growing guides', '/#growing-guide'],
-  ['Pricing', '/pricing'],
-]
-
 const StudyMeshPricingPage = () => {
-  const navigate = useNavigate()
   const pageColor = pricingBrand.canvas
-
-  const openCreateStudyGuide = () => {
-    navigate('/study-guides?create=1')
-  }
 
   return (
     <Box
@@ -86,138 +73,7 @@ const StudyMeshPricingPage = () => {
         fontFamily: '"Readex Pro", "Inter", "Segoe UI", Arial, sans-serif',
       }}
     >
-      <Box
-        component="header"
-        sx={{
-          borderBottom: '1px solid',
-          borderColor: alpha(pricingBrand.line, 0.56),
-          bgcolor: pricingBrand.header,
-          backdropFilter: 'blur(18px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        <Container
-          maxWidth="lg"
-          sx={{
-            height: { xs: 64, sm: 72 },
-            display: 'grid',
-            gridTemplateColumns: { xs: 'auto 1fr auto', md: '1fr auto 1fr' },
-            alignItems: 'center',
-            justifyContent: { xs: 'space-between', md: 'stretch' },
-            columnGap: { xs: 1.25, sm: 2 },
-          }}
-        >
-          <Button
-            variant="text"
-            onClick={() => navigate('/')}
-            sx={{
-              justifySelf: 'start',
-              minWidth: 'auto',
-              p: 0,
-              color: pricingBrand.ink,
-              textTransform: 'none',
-              '&:hover': { bgcolor: 'transparent' },
-            }}
-          >
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Box
-                component="img"
-                src="/logo.png"
-                alt="StudyMesh logo"
-                sx={{
-                  width: { xs: 32, sm: 36 },
-                  height: { xs: 32, sm: 36 },
-                  display: 'block',
-                }}
-              />
-              <Typography
-                variant="h6"
-                fontWeight={900}
-                sx={{
-                  display: { xs: 'none', sm: 'block' },
-                  color: pricingBrand.ink,
-                }}
-              >
-                StudyMesh
-              </Typography>
-            </Stack>
-          </Button>
-          <Stack
-            component="nav"
-            direction="row"
-            spacing={{ xs: 1.5, md: 4 }}
-            alignItems="center"
-            justifyContent="center"
-            sx={{ display: 'flex' }}
-          >
-            {navItems.map(([label, href]) => (
-              <Button
-                key={label}
-                href={href}
-                variant="text"
-                sx={{
-                  display: {
-                    xs: label === 'Pricing' ? 'inline-flex' : 'none',
-                    md: 'inline-flex',
-                  },
-                  minWidth: 'auto',
-                  px: 0,
-                  color: alpha(pricingBrand.ink, 0.78),
-                  textTransform: 'none',
-                  fontWeight: 800,
-                  fontSize: '0.98rem',
-                  '&:hover': {
-                    bgcolor: 'transparent',
-                    color: pricingBrand.blue,
-                  },
-                }}
-              >
-                {label}
-              </Button>
-            ))}
-          </Stack>
-          <Button
-            variant="outlined"
-            endIcon={<ArrowForwardIcon />}
-            onClick={openCreateStudyGuide}
-            sx={{
-              justifySelf: 'end',
-              borderRadius: 999,
-              minWidth: { xs: 88, sm: 'auto' },
-              px: { xs: 1.75, sm: 3 },
-              py: { xs: 0.85, sm: 1.05 },
-              color: pricingBrand.blueDark,
-              borderColor: alpha(pricingBrand.blue, 0.32),
-              bgcolor: alpha(pricingBrand.surface, 0.72),
-              boxShadow: `0 10px 24px ${alpha('#000000', 0.08)}`,
-              textTransform: 'none',
-              fontWeight: 900,
-              '&:hover': {
-                borderColor: alpha(pricingBrand.blue, 0.5),
-                bgcolor: alpha(pricingBrand.blue, 0.08),
-              },
-              '& .MuiButton-endIcon': {
-                display: { xs: 'none', sm: 'inherit' },
-              },
-            }}
-          >
-            <Box
-              component="span"
-              sx={{ display: { xs: 'none', sm: 'inline' } }}
-            >
-              Create a Study Guide
-            </Box>
-            <Box
-              component="span"
-              sx={{ display: { xs: 'inline', sm: 'none' } }}
-            >
-              Create
-            </Box>
-          </Button>
-        </Container>
-      </Box>
+      <LandingTopNav sectionHrefPrefix="/" />
 
       <Container maxWidth="lg" component="main">
         <Box sx={{ py: { xs: 6, md: 10 } }}>

@@ -96,19 +96,6 @@ const normalizeMultipleChoiceOptions = (
     normalized.unshift(answer)
   }
 
-  const fallbackOptions = [
-    'Not enough information',
-    'None of the above',
-    'All of the above',
-    'Review the notes',
-  ]
-
-  fallbackOptions.forEach((option) => {
-    if (normalized.length < 4 && !normalized.includes(option)) {
-      normalized.push(option)
-    }
-  })
-
   const fourOptions = normalized.slice(0, 4)
   const correctIndex = Math.max(
     0,
@@ -218,6 +205,8 @@ const objectToComponents = (
             correctIndex: quiz.correctIndex,
             answer: quiz.answer,
             explanation: object.explanation,
+            hint: object.hint || '',
+            optionFeedback: object.optionFeedback || [],
             shuffleOptions: false,
             ...studyPathProps,
           },

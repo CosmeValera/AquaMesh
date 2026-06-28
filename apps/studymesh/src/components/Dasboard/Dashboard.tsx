@@ -1,13 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  Box,
-  Button,
-  Paper,
-  Stack,
-  Tab,
-  Tabs,
-  Typography,
-} from '@mui/material'
+import { Box, Button, Paper, Stack, Tab, Tabs, Typography } from '@mui/material'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 
 import type { StateDashboard, StudyPathContainerState } from '../../state/store'
@@ -35,7 +27,8 @@ const isStudyGuideDashboard = (
   dashboard?.kind === 'studyPathContainer' && Boolean(dashboard.studyPath)
 
 const Dashboards = () => {
-  const { isPhoneOrTablet: isMobileDashboardView } = useResponsiveWorkspaceMode()
+  const { isPhoneOrTablet: isMobileDashboardView } =
+    useResponsiveWorkspaceMode()
   const {
     openDashboards,
     selectedDashboard,
@@ -48,6 +41,10 @@ const Dashboards = () => {
   const [dashboardChatMessages, setDashboardChatMessages] = useState<
     Record<string, DashboardChatMessage[]>
   >({})
+  const [queuedChatQuestion, setQueuedChatQuestion] = useState<{
+    id: string
+    content: string
+  } | null>(null)
   const [editingPageKeys, setEditingPageKeys] = useState<
     Record<string, string | null>
   >({})
@@ -129,6 +126,14 @@ const Dashboards = () => {
       ...current,
       [currentDashboardId]: messages,
     }))
+  }
+
+  const askDashboardChat = (content: string) => {
+    setDashboardChatOpen(true)
+    setQueuedChatQuestion({
+      id: `quiz-explain-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      content,
+    })
   }
 
   const closeDashboard = (dashboardId: string) => {
@@ -217,6 +222,7 @@ const Dashboards = () => {
               onAddPage={() =>
                 addPage(currentDashboard.id, currentDashboard.studyPath)
               }
+              onAskAi={askDashboardChat}
             />
           ) : (
             <Box
@@ -296,6 +302,12 @@ const Dashboards = () => {
               supportsStudyGuideCreateScope={isStudyGuideDashboard(
                 currentDashboard,
               )}
+              queuedQuestion={queuedChatQuestion}
+              onQueuedQuestionConsumed={(id) =>
+                setQueuedChatQuestion((current) =>
+                  current?.id === id ? null : current,
+                )
+              }
             />
           </Box>
         ) : null}

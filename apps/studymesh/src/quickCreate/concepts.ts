@@ -42,6 +42,8 @@ const blockedConcepts = new Set([
 
 const genericPromptPattern =
   /what does .+ help you understand or do|core idea behind|which statement best explains|what do the notes say|which statement matches the notes|according to the notes/i
+const lazyQuizOptionPattern =
+  /\b(?:not supported|opposite of|guess from the title|all of the above|none of the above|not enough information)\b/i
 
 const normalizeSpaces = (value: string): string =>
   value.replace(/\s+/g, ' ').trim()
@@ -309,7 +311,10 @@ export const normalizeLearningConcepts = (
         commonMistake,
         contrast,
         example: asString(input.example),
-        correctAnswer: firstNonEmpty(asString(input.correctAnswer), explanation),
+        correctAnswer: firstNonEmpty(
+          asString(input.correctAnswer),
+          explanation,
+        ),
         expectedLearning: firstNonEmpty(
           asString(input.expectedLearning),
           explanation,
@@ -332,8 +337,8 @@ const subjunctiveName = (sentence: string): string =>
   /\bsubjonctif\b/i.test(sentence)
     ? 'subjonctif'
     : /\bsubjunctive\b/i.test(sentence)
-    ? 'subjunctive'
-    : 'target rule'
+      ? 'subjunctive'
+      : 'target rule'
 
 const createConceptFromSentence = (
   sentence: string,
@@ -353,10 +358,16 @@ const createConceptFromSentence = (
       sentence,
     )
   ) {
-    return createConcept(`${target} common mistake`, 'common_mistake', sentence, sourceLine, {
-      commonMistake: sentence,
-      correctAnswer: sentence,
-    })
+    return createConcept(
+      `${target} common mistake`,
+      'common_mistake',
+      sentence,
+      sourceLine,
+      {
+        commonMistake: sentence,
+        correctAnswer: sentence,
+      },
+    )
   }
 
   const trigger = sentence.match(
@@ -382,17 +393,33 @@ const createConceptFromSentence = (
       sentence,
     )
   ) {
-    return createConcept(`${target} formation rule`, 'formation', sentence, sourceLine, {
-      formationRule: sentence,
-      correctAnswer: sentence,
-    })
+    return createConcept(
+      `${target} formation rule`,
+      'formation',
+      sentence,
+      sourceLine,
+      {
+        formationRule: sentence,
+        correctAnswer: sentence,
+      },
+    )
   }
 
-  if (/\b(?:exception|except|sauf|irregular|irregulier|irrégulier)\b/i.test(sentence)) {
-    return createConcept(`${target} exception`, 'exception', sentence, sourceLine, {
-      definition: sentence,
-      correctAnswer: sentence,
-    })
+  if (
+    /\b(?:exception|except|sauf|irregular|irregulier|irrégulier)\b/i.test(
+      sentence,
+    )
+  ) {
+    return createConcept(
+      `${target} exception`,
+      'exception',
+      sentence,
+      sourceLine,
+      {
+        definition: sentence,
+        correctAnswer: sentence,
+      },
+    )
   }
 
   const definitionMatch = sentence.match(
@@ -442,10 +469,7 @@ export const extractLearningConcepts = (
 }
 
 export const conceptExplanation = (concept: LearningConcept): string =>
-  [
-    concept.explanation,
-    concept.example ? `Example: ${concept.example}` : '',
-  ]
+  [concept.explanation, concept.example ? `Example: ${concept.example}` : '']
     .map(normalizeSpaces)
     .filter(Boolean)
     .join(' ')
@@ -496,7 +520,8 @@ export const isLowQualityStudyObject = (
     return (
       genericPromptPattern.test(object.question) ||
       object.answer.trim().length < 2 ||
-      normalizeConceptKey(object.question) === normalizeConceptKey(object.answer)
+      normalizeConceptKey(object.question) ===
+        normalizeConceptKey(object.answer)
     )
   }
 
@@ -504,6 +529,7 @@ export const isLowQualityStudyObject = (
     return (
       genericPromptPattern.test(object.question) ||
       words(object.question).length < 4 ||
+      object.options.some((option) => lazyQuizOptionPattern.test(option)) ||
       (object.answer || object.explanation).trim().length < 1
     )
   }
@@ -545,6 +571,7 @@ const createQuestionStem = (concept: LearningConcept): string => {
 export const createApplicationQuestion = (
   concept: LearningConcept,
   _index: number,
+  concepts: LearningConcept[] = [],
 ): Pick<
   StudyQuizObject,
   | 'quizMode'
@@ -553,19 +580,42 @@ export const createApplicationQuestion = (
   | 'correctIndex'
   | 'answer'
   | 'explanation'
-> => {
+  | 'hint'
+  | 'optionFeedback'
+> | null => {
   const answer = concept.correctAnswer || conceptExplanation(concept)
-  const distractors = (concept.distractors || []).filter(
-    (option) => normalizeConceptKey(option) !== normalizeConceptKey(answer),
+  const distractors = [
+    ...(concept.distractors || []),
+    ...concepts
+      .filter(
+        (candidate) =>
+          normalizeConceptKey(candidate.concept) !==
+          normalizeConceptKey(concept.concept),
+      )
+      .map(
+        (candidate) => candidate.correctAnswer || conceptExplanation(candidate),
+      ),
+  ].filter(
+    (option) =>
+      option &&
+      normalizeConceptKey(option) !== normalizeConceptKey(answer) &&
+      words(option).length >= 2,
   )
-  const options =
-    distractors.length > 0
-      ? [answer, ...distractors].slice(0, 4)
-      : [
-          answer,
-          'Not supported by the lesson explanation',
-          'The opposite of the lesson explanation',
-        ]
+  const seen = new Set<string>()
+  const options = [answer, ...distractors]
+    .filter((option) => {
+      const key = normalizeConceptKey(option)
+      if (!key || seen.has(key)) {
+        return false
+      }
+      seen.add(key)
+      return true
+    })
+    .slice(0, 4)
+
+  if (options.length < 3) {
+    return null
+  }
 
   return {
     quizMode: 'multipleChoice',
@@ -574,6 +624,14 @@ export const createApplicationQuestion = (
     correctIndex: 0,
     answer,
     explanation: conceptExplanation(concept),
+    hint: concept.expectedLearning || conceptExplanation(concept),
+    optionFeedback: options.map((option) => ({
+      option,
+      explanation:
+        normalizeConceptKey(option) === normalizeConceptKey(answer)
+          ? conceptExplanation(concept)
+          : 'This describes a different nearby concept from the same material.',
+    })),
   }
 }
 

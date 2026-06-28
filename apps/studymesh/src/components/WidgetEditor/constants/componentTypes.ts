@@ -140,6 +140,8 @@ export const COMPONENT_TYPES: ComponentType[] = [
       correctIndex: 0,
       answer: 'Option A',
       explanation: 'Explain why the answer is correct.',
+      hint: '',
+      optionFeedback: [],
       shuffleOptions: false,
     },
     category: 'Study Blocks',

@@ -6,7 +6,6 @@ import {
   StudyPathPracticeType,
   StudyPathSourceRef,
 } from '../types'
-import { conceptSummaryItem, extractLearningConcepts } from '../concepts'
 import {
   augmentQuickCreatePracticeObjects,
   createQuickCreatePracticeProfile,
@@ -76,9 +75,9 @@ const geminiDetailTargets: Record<
     long: '40-50 flashcards',
   },
   quiz: {
-    short: '20-30 multiple-choice questions',
-    medium: '40-50 multiple-choice questions',
-    long: '50-65 multiple-choice questions',
+    short: '6-10 multiple-choice questions',
+    medium: '10-16 multiple-choice questions',
+    long: '16-24 multiple-choice questions',
   },
 }
 
@@ -446,12 +445,26 @@ const dashboardContractProperties = {
             options: textArraySchema,
             correctOptionIndex: { type: 'NUMBER' },
             explanation: { type: 'STRING' },
+            hint: { type: 'STRING' },
+            optionFeedback: {
+              type: 'ARRAY',
+              items: {
+                type: 'OBJECT',
+                properties: {
+                  option: { type: 'STRING' },
+                  explanation: { type: 'STRING' },
+                },
+                required: ['option', 'explanation'],
+              },
+            },
           },
           required: [
             'question',
             'options',
             'correctOptionIndex',
             'explanation',
+            'hint',
+            'optionFeedback',
           ],
         },
       },
@@ -897,6 +910,25 @@ const normalizePracticeType = (
     : fallback
 }
 
+const defaultStudyPathPracticeType = (
+  contentMode?: StudyPathContentMode,
+  dashboardPurpose?: StudyPathDashboardPurpose,
+): StudyPathPracticeType =>
+  contentMode === 'orientationMap' || dashboardPurpose === 'overview'
+    ? 'none'
+    : 'quiz'
+
+const normalizeStudyPathPracticeType = (
+  value: unknown,
+  contentMode?: StudyPathContentMode,
+  dashboardPurpose?: StudyPathDashboardPurpose,
+): StudyPathPracticeType => {
+  const fallback = defaultStudyPathPracticeType(contentMode, dashboardPurpose)
+  const normalized = normalizePracticeType(value, fallback)
+
+  return normalized === 'none' && fallback !== 'none' ? fallback : normalized
+}
+
 const normalizeSourceRefs = (
   value: unknown,
 ): StudyPathSourceRef[] | undefined => {
@@ -956,9 +988,14 @@ const normalDashboardNeedsRepair = (
   dashboardRole: StudyPathDashboardRole,
 ): boolean =>
   dashboardRole === 'normal' &&
-  getConceptRecapSectionCount(input) === 0 &&
   getPracticeQuestionCount(input) === 0 &&
-  getFlashcardCount(input) === 0
+  getFlashcardCount(input) === 0 &&
+  (getConceptRecapSectionCount(input) === 0 ||
+    normalizeStudyPathPracticeType(
+      input.practiceType,
+      normalizeContentMode(input.contentMode),
+      normalizeDashboardPurpose(input.dashboardPurpose),
+    ) !== 'none')
 
 const textFromRawNotes = (rawNotes: unknown): string =>
   typeof rawNotes === 'string' ? rawNotes.replace(/\s+/g, ' ').trim() : ''
@@ -1005,39 +1042,7 @@ const buildFallbackObjectsForDashboardRole = ({
       .slice(0, 700)
 
   if (dashboardRole === 'exercises') {
-    const practiceSource =
-      accumulatedContentNotes.join('\n\n').replace(/\s+/g, ' ').trim() ||
-      noteText ||
-      bullets.join(' ')
-    const concepts = extractLearningConcepts(practiceSource, dashboardTitle)
-      .map(conceptSummaryItem)
-      .slice(0, 2)
-    const prompts =
-      concepts.length > 0
-        ? concepts.map((concept) => `How would you apply ${concept}?`)
-        : practiceSource
-          ? ['What is one key idea from the previous Study Guide material?']
-          : []
-
-    return prompts.map((question, index) => ({
-      ...createFallbackBase(
-        packId,
-        `exercise-${index + 1}`,
-        `Practice ${index + 1}`,
-      ),
-      kind: 'quiz' as const,
-      quizMode: 'multipleChoice' as const,
-      question,
-      options: [
-        'Use the Study Guide notes to answer this idea accurately.',
-        'Ignore the Study Guide notes and guess from the title only.',
-        'Choose the opposite of the lesson explanation.',
-      ],
-      correctIndex: 0,
-      answer: 'Use the Study Guide notes to answer this idea accurately.',
-      explanation:
-        'Generated as a minimal fallback from the Study Guide source.',
-    }))
+    return []
   }
 
   if (!fallbackText) {
@@ -1230,7 +1235,7 @@ const parseGeminiJson = (text: string): unknown => {
 
 const isGeminiOutputFormatError = (error: unknown): boolean =>
   error instanceof Error &&
-  /wrong output format|invalid json|output format|response format|malformed/i.test(
+  /wrong output format|invalid json|output format|response format|malformed|json|unexpected|unterminated|expected .*(?:,|\])/i.test(
     error.message,
   )
 
@@ -1294,7 +1299,7 @@ export const generateQuickCreateWithAi = async ({
     resourceType === 'flashcards'
       ? `Create ${resourceTarget} when possible. For Medium or Long detail, aim for around 40-50 flashcards and never create fewer than 40 if the notes contain enough usable facts.`
       : resourceType === 'quiz'
-        ? `Create ${resourceTarget} when possible. Never create fewer than 40 multiple-choice questions at Medium or Long detail if the notes contain enough usable facts.`
+        ? `Create ${resourceTarget} when possible. Because each question includes hint and per-option feedback, keep the quiz compact and valid JSON is more important than maximum count.`
         : `Create ${practiceProfile.targetTotal} reviewable study items when possible, never fewer than ${practiceProfile.minTotal} if the notes contain usable facts. Keep the total within ${practiceProfile.minTotal}-${practiceProfile.maxTotal} items.`
   const mixInstruction =
     resourceType === 'flashcards'
@@ -1351,7 +1356,16 @@ Return exactly one JSON object with this shape:
   },
   "practice": {
     "multipleChoice": [
-      { "question": "...", "options": ["...", "...", "..."], "correctOptionIndex": 0, "explanation": "..." }
+      {
+        "question": "...",
+        "options": ["...", "...", "..."],
+        "correctOptionIndex": 0,
+        "explanation": "...",
+        "hint": "...",
+        "optionFeedback": [
+          { "option": "...", "explanation": "why this option is correct or incorrect" }
+        ]
+      }
     ]
   },
   "flashcards": [
@@ -1381,6 +1395,7 @@ Rules:
 - Never use placeholder options like A, B, C, option A, choice B, "all of the above", or near-duplicate options.
 - Avoid "According to the text..." style questions unless strictly necessary.
 - Every quiz explanation must teach why the correct answer is correct.
+- Every quiz must include one concise hint and optionFeedback for every option. The correct option feedback says why it is right. Each wrong option feedback says why it is tempting but wrong.
 - Quizzes must test application, usage, contrast, formation, exceptions, or common mistakes with a concrete expected answer. Do not ask "Which statement best explains X?", "Which statement matches the notes?", "What does X help you understand or do?", "What is the core idea behind X?", or questions about what the notes say.
 - For language-learning Quick Creates, generate grammar/application questions from accepted concepts only: complete a form, choose the trigger expression, choose indicative vs subjunctive, or fix a common mistake.
 - ${
@@ -1393,7 +1408,7 @@ Rules:
 - In AI Tutor mode, teach the topic through sourceSummary and conceptRecap before practice.
 - Generate exercises even from short notes. A single wiki paragraph should still produce multiple grounded quizzes and flashcards.
 - Prefer useful learning material from the selected target types, but never output widget kinds.
-- For multiple-choice questions, include 3-4 meaningful options and correctOptionIndex. Vary the correct answer position across questions; do not always put the correct answer first.
+- For multiple-choice questions, include 3-4 meaningful options, correctOptionIndex, hint, and optionFeedback. Vary the correct answer position across questions; do not always put the correct answer first.
 - Generated quiz practice must be multiple-choice only.
 - ${
     promptMode
@@ -1427,6 +1442,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
 - Return plain JSON only.
 - Return syntactically valid JSON with all commas and braces in place.
 - Use only the strict Quick Create fields: sourceSummary, conceptRecap, practice, flashcards.
+- If selected resource type is Quiz, return no more than 8 valid multiple-choice questions.
 - Do not use markdown code fences.
 - Do not include comments, trailing commas, undefined, NaN, or extra text.`,
         },
@@ -1448,7 +1464,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
       strongTransport,
     )
   } catch (error) {
-    if (!promptMode || !isGeminiOutputFormatError(error)) {
+    if (!isGeminiOutputFormatError(error)) {
       throw error
     }
 
@@ -1460,7 +1476,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
   try {
     parsed = parseGeminiJson(text)
   } catch (error) {
-    if (!promptMode) {
+    if (!isGeminiOutputFormatError(error)) {
       throw error
     }
 
@@ -1609,6 +1625,8 @@ const normalizeBlueprintLesson = (
   const record =
     value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
   const fallbackTitle = `Lesson ${index + 1}`
+  const contentMode = normalizeContentMode(record.contentMode)
+  const dashboardPurpose = normalizeDashboardPurpose(record.dashboardPurpose)
 
   return {
     title: stringFromUnknown(record.title) || fallbackTitle,
@@ -1623,9 +1641,13 @@ const normalizeBlueprintLesson = (
     learningOutcome:
       stringFromUnknown(record.learningOutcome) ||
       `Explain and apply the main idea from ${fallbackTitle}.`,
-    dashboardPurpose: stringFromUnknown(record.dashboardPurpose) || 'lesson',
-    practiceType: stringFromUnknown(record.practiceType) || 'none',
-    contentMode: normalizeContentMode(record.contentMode),
+    dashboardPurpose,
+    practiceType: normalizeStudyPathPracticeType(
+      record.practiceType,
+      contentMode,
+      dashboardPurpose,
+    ),
+    contentMode,
     sectionPlan: stringArrayFromUnknown(record.sectionPlan),
     mustTeach: stringArrayFromUnknown(record.mustTeach),
     workedExample: stringFromUnknown(record.workedExample),
@@ -1738,7 +1760,7 @@ Planning requirements:
 - Avoid vague lesson titles such as "Introduction", "Practice", or "Review" unless they include topic-specific words.
 - Include 1-3 modules. lessonIndexes are zero-based indexes into lessons.
 - For each lesson, include contentMode, sectionPlan, mustTeach, workedExample, misconceptionChecks, and retrievalPractice.
-- For normal teaching lessons, practice and flashcards should usually be empty unless the lesson is a checkpoint, review, remediation, or applied practice step. When practice is useful, plan multiple-choice retrieval questions.
+- For normal teaching lessons, plan 2-4 multiple-choice retrieval questions by default. Use practiceType "none" only for a pure orientation/map page where quiz practice would be premature. Checkpoints, reviews, remediation, and applied-practice lessons should plan 4-8 questions.
 - Do not write full dashboard notes yet.
 Title fallback: ${title}
 Folder fallback: ${folderName}
@@ -1801,7 +1823,16 @@ Required dashboard fields:
   "rawNotes": "Complete readable Markdown lesson",
   "sourceSummary": { "title": "...", "bullets": ["..."] },
   "conceptRecap": { "title": "...", "sections": [{ "title": "...", "bullets": ["..."], "example": "..." }] },
-  "practice": { "multipleChoice": [{ "question": "...", "options": ["...", "...", "..."], "correctOptionIndex": 0, "explanation": "..." }] },
+  "practice": {
+    "multipleChoice": [{
+      "question": "...",
+      "options": ["...", "...", "..."],
+      "correctOptionIndex": 0,
+      "explanation": "...",
+      "hint": "...",
+      "optionFeedback": [{ "option": "...", "explanation": "why this option is correct or incorrect" }]
+    }]
+  },
   "flashcards": [{ "front": "...", "back": "..." }]
 }
 
@@ -1819,13 +1850,14 @@ Quality rules:
   - synthesisReview: big picture, connections, mixed challenge, next learning path.
 - Use NotebookLM-style material only where useful inside rawNotes. Do not claim the dashboard contains a separate glossary, contrast table, answer key, rubric, drag-and-drop board, or tabs unless that content is actually present in rawNotes.
 - Avoid filler, generic questions, copied headings as questions, and obvious answer choices.
-- Visible dashboard rule: one Markdown lesson widget by default. Sometimes StudyMesh may add one visible QuizCarouselBlock on the right when you set practiceType to "quiz" or "mixed" and provide useful practice.multipleChoice questions.
-- Decide whether the dashboard deserves a QuizCarouselBlock. Use practiceType "none" when the lesson is best studied as one clear lesson. Use "quiz" or "mixed" only when active practice materially improves the dashboard.
+- Visible dashboard rule: one Markdown lesson widget plus a QuizCarouselBlock when practiceType is "quiz" or "mixed" and practice.multipleChoice is filled.
+- Most normal lesson dashboards should set practiceType to "quiz" or "mixed" and include useful active recall. Use practiceType "none" only when the dashboard is pure orientation or practice would be premature.
 - QuizCarouselBlock can only contain multiple-choice questions. Never output typed-answer, single-input, quizSingle, or free-response quiz data.
 - Do not end rawNotes with quiz-like sections such as "Retrieval Practice", "Quick Recall", or a list of scored questions. Promote that material into practice.multipleChoice instead. Tiny reflective prompts are allowed only when they are not a scored question set.
-- When adding practice.multipleChoice, create an adaptive number of questions: about one per important concept, plus at most one synthesis question when useful. Normal lessons should usually have 2-5 questions; checkpoint/review/synthesis dashboards may have 4-8.
+- Add practice.multipleChoice for most lessons: about one per important concept, plus at most one synthesis question when useful. Normal lessons should usually have 2-5 questions; checkpoint/review/synthesis dashboards may have 4-8.
 - After dashboard 2, you may include 0-2 light spiral-review questions from previous dashboards, but only when they naturally connect to the current lesson.
 - Practice questions must be answerable from rawNotes but should require recall, application, comparison, error diagnosis, prediction, explanation, or transfer. Do not copy lesson sentences as questions.
+- Every quiz must include one concise hint and optionFeedback for every option. The correct option feedback says why it is right. Each wrong option feedback says why it is tempting but wrong.
 - Do not add visible flashcards by default. Flashcards are on-demand support, not a second dashboard widget.
 - Use simple dashboard layout. Reduce cognitive load: clear hierarchy, signal key ideas, keep examples near rules.
 - Keep prompt-only Study Guides useful without sources. Add accurate general teaching content, but do not invent fake citations or source claims.
@@ -2171,9 +2203,13 @@ const generateStudyPathJsonWithPipeline = async ({
         dashboard.dashboardPurpose,
         normalizeDashboardPurpose(lesson.dashboardPurpose),
       ),
-      practiceType: normalizePracticeType(
+      practiceType: normalizeStudyPathPracticeType(
         dashboard.practiceType,
-        normalizePracticeType(lesson.practiceType),
+        normalizeContentMode(dashboard.contentMode, lesson.contentMode),
+        normalizeDashboardPurpose(
+          dashboard.dashboardPurpose,
+          normalizeDashboardPurpose(lesson.dashboardPurpose),
+        ),
       ),
       supportArtifacts: normalizeSupportArtifacts(dashboard.supportArtifacts),
     })
@@ -2224,7 +2260,7 @@ Return exactly this structure:
       "title": "01 - Content 1",
       "summary": "One sentence preview",
       "dashboardPurpose": "lesson",
-      "practiceType": "none",
+      "practiceType": "quiz",
       "layoutReason": "Short reason for the selected learning layout",
       "contentMode": "conceptLesson",
       "sourceRefs": [{ "label": "optional source/chunk label" }],
@@ -2235,7 +2271,16 @@ Return exactly this structure:
       "rawNotes": "Complete lesson notes for this dashboard",
       "sourceSummary": { "title": "Source summary", "bullets": ["..."] },
       "conceptRecap": { "title": "Concept recap", "sections": [{ "title": "Specific concept", "bullets": ["..."], "example": "..." }] },
-      "practice": { "multipleChoice": [{ "question": "...", "options": ["...", "...", "..."], "correctOptionIndex": 0, "explanation": "..." }] },
+      "practice": {
+        "multipleChoice": [{
+          "question": "...",
+          "options": ["...", "...", "..."],
+          "correctOptionIndex": 0,
+          "explanation": "...",
+          "hint": "...",
+          "optionFeedback": [{ "option": "...", "explanation": "why this option is correct or incorrect" }]
+        }]
+      },
       "flashcards": [{ "front": "...", "back": "..." }]
     }
   ]
@@ -2252,13 +2297,14 @@ Rules:
 - Every dashboard must have one primary educational purpose: overview, lesson, practice, review, finalReview, or projectLab.
 - SourceSummary, conceptRecap, practice, and flashcards are support material. The visible lesson comes mainly from rawNotes, so rawNotes must carry the actual lesson.
 - Do not make dashboards feel like random widget collections. Use the simplest layout that supports the learning goal.
-- Visible dashboard rule: one Markdown lesson widget by default. Sometimes StudyMesh may add one visible QuizCarouselBlock on the right when you set practiceType to "quiz" or "mixed" and provide useful practice.multipleChoice questions.
-- You decide whether each dashboard deserves that QuizCarouselBlock. For most reading/theory dashboards, set practiceType to "none". Use "quiz" or "mixed" only when active recall materially improves the dashboard, such as concept-heavy lessons, checkpoints, review, remediation, or applied practice.
+- Visible dashboard rule: one Markdown lesson widget plus a QuizCarouselBlock when practiceType is "quiz" or "mixed" and practice.multipleChoice is filled.
+- Most normal lesson dashboards should set practiceType to "quiz" or "mixed" and include useful active recall. Use practiceType "none" only when the dashboard is pure orientation or practice would be premature.
 - QuizCarouselBlock can only contain multiple-choice questions. Never output typed-answer, single-input, quizSingle, or free-response quiz data.
 - Do not end rawNotes with quiz-like sections such as "Retrieval Practice", "Quick Recall", or a list of scored questions. Promote that material into practice.multipleChoice instead. Tiny reflective prompts are allowed only when they are not a scored question set.
-- When adding practice.multipleChoice, create an adaptive number of questions: about one per important concept, plus at most one synthesis question when useful. Normal lessons should usually have 2-5 questions; checkpoint/review/synthesis dashboards may have 4-8.
+- Add practice.multipleChoice for most lessons: about one per important concept, plus at most one synthesis question when useful. Normal lessons should usually have 2-5 questions; checkpoint/review/synthesis dashboards may have 4-8.
 - After dashboard 2, you may include 0-2 light spiral-review questions from previous dashboards, but only when they naturally connect to the current lesson.
 - Practice questions must be answerable from rawNotes but should require recall, application, comparison, error diagnosis, prediction, explanation, or transfer. Do not copy lesson sentences as questions.
+- Every quiz must include one concise hint and optionFeedback for every option. The correct option feedback says why it is right. Each wrong option feedback says why it is tempting but wrong.
 - Do not add visible flashcards by default. Flashcards are on-demand support, not a second dashboard widget.
 - Each dashboard must be useful by itself as teaching content, not as a container for many practice widgets.
 - Usually return ${
@@ -2266,7 +2312,7 @@ Rules:
   } dashboards, but choose 3-7 dashboards when the topic is clearly narrower or broader.
 - rawNotes must be real lesson notes for that dashboard, not a one-line summary. Write 250-600 words with explanations, examples, key points, and common mistakes when relevant.
 - Format rawNotes as readable Markdown, not one long paragraph. Use short topic-specific sections chosen from that dashboard's teaching purpose. Do not reuse the same heading scaffold across dashboards.
-- sourceSummary and conceptRecap should match the selected layout. For normal teaching lessons, practice and flashcards should usually be empty. For checkpoint/review/remediation lessons, include one focused practice set if useful.
+- sourceSummary and conceptRecap should match the selected layout. For normal teaching lessons, include a focused multiple-choice practice set unless this page is pure orientation. Flashcards should usually be empty.
 - conceptRecap is used internally to structure the lesson.
 - Do not output "objects", "kind", "quizMode", internal block names, widget names, or any StudyMesh renderer fields. StudyMesh decides widget types.
 - Use concrete rule labels in conceptRecap sections, such as "Subjunctive trigger: il faut que", not headings or sentence fragments.
@@ -2278,7 +2324,7 @@ Rules:
 - Every dashboard needs a short "summary" sentence so workspace previews can show it.
 - Do not wrap JSON in markdown. Do not add commentary outside JSON.
 - Do not create PDFs/images/resources unless the user explicitly asks for heavy media.
-- For multiple-choice questions, include 3-4 meaningful options, correctOptionIndex, and explanation.
+- For multiple-choice questions, include 3-4 meaningful options, correctOptionIndex, explanation, hint, and optionFeedback.
 - Do not claim the dashboard contains separate tabs, an interactive drag-and-drop board, support artifacts, answer key widgets, or rubric widgets. If you want an answer key or rubric, include it as plain rawNotes text.
 - Keep content concise, beginner-friendly, and appropriate for the requested topic.
 - Aim for about ${practiceProfile.minTotal}-${
@@ -2296,6 +2342,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
 - Return plain JSON only.
 - Return syntactically valid JSON with all commas and braces in place.
 - Use only the Study Guide fields: title, folderName, emoji, dashboards, summary, rawNotes, dashboardPurpose, practiceType, layoutReason, sourceRefs, sourceSummary, conceptRecap, practice, flashcards.
+- For normal lesson dashboards, keep practiceType quiz or mixed and include 2-5 multiple-choice questions.
 - Do not use markdown code fences.
 - Do not include comments, trailing commas, undefined, NaN, or extra text.`
   const createRepairPrompt = (originalJson: string) => `${promptText}
@@ -2305,7 +2352,7 @@ Repair the JSON instead of simplifying it:
 - Preserve the exact dashboard count, order, titles, summaries, and rawNotes.
 - Every dashboard is a normal Study Guide dashboard.
 - Fill missing conceptRecap/practice from that dashboard's rawNotes when practiceType calls for active recall.
-- For practiceType none, practice and flashcards may stay empty if rawNotes contains a complete learning explanation.
+- If practiceType is none on a normal teaching lesson, change it to quiz and add grounded practice. Keep none only for pure orientation/overview pages.
 - For practiceType quiz or mixed, include enough practice.multipleChoice questions to justify one visible QuizCarouselBlock: usually 2-5 for normal lessons and 4-8 for checkpoint/review/synthesis dashboards.
 - Do not create flashcards unless they are clearly useful for on-demand follow-up; they are not rendered as the visible second widget.
 - Return plain JSON only.
@@ -2518,7 +2565,12 @@ ${prompt}`
         .replace(/[^a-z0-9]+/g, '-')
       const dashboardRole: StudyPathDashboardRole = 'normal'
       const dashboardPurpose = normalizeDashboardPurpose(input.dashboardPurpose)
-      const practiceType = normalizePracticeType(input.practiceType)
+      const contentMode = normalizeContentMode(input.contentMode)
+      const practiceType = normalizeStudyPathPracticeType(
+        input.practiceType,
+        contentMode,
+        dashboardPurpose,
+      )
       const layoutReason = stringFromUnknown(input.layoutReason)
       const sourceRefs = normalizeSourceRefs(input.sourceRefs)
       const rawDashboardInput = {
@@ -2536,7 +2588,6 @@ ${prompt}`
         rawAiResponse: text,
         dashboardRole,
       })
-      const contentMode = normalizeContentMode(input.contentMode)
       const supportArtifacts = normalizeSupportArtifacts(input.supportArtifacts)
       const supportObjects = createSupportArtifactObjects(
         packId,

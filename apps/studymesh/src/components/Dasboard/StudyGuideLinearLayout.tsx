@@ -47,7 +47,13 @@ const collectStudyGuideComponentNodes = (
   )
 }
 
-const StudyGuideLinearLayout = ({ layout }: { layout?: DashboardLayout }) => {
+const StudyGuideLinearLayout = ({
+  layout,
+  onAskAi,
+}: {
+  layout?: DashboardLayout
+  onAskAi?: (question: string) => void
+}) => {
   const components = useMemo(
     () => collectStudyGuideComponentNodes(layout),
     [layout],
@@ -152,6 +158,7 @@ const StudyGuideLinearLayout = ({ layout }: { layout?: DashboardLayout }) => {
                       type={component.type}
                       props={component.props}
                       unframed={component.type === 'MarkdownBlock'}
+                      onAskAi={onAskAi}
                     />
                   ) : null}
                 </Box>

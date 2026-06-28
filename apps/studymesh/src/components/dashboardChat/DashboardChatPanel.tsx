@@ -20,6 +20,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import type { SxProps, Theme } from '@mui/material/styles'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
@@ -122,6 +123,8 @@ interface DashboardChatPanelProps {
   onOpenSource?: (source: DashboardAnswerSourceRef) => void
   onQuickCreatePage?: (request: QuickCreateActionRequest) => Promise<void>
   supportsStudyGuideCreateScope?: boolean
+  queuedQuestion?: { id: string; content: string } | null
+  onQueuedQuestionConsumed?: (id: string) => void
 }
 
 const suggestions = [
@@ -261,7 +264,7 @@ const TECHNICAL_EVIDENCE_TERMS = [
   'service',
 ]
 
-type AiChatPetId =  'dolphin' | 'bee' | 'parrot'
+type AiChatPetId = 'dolphin' | 'bee' | 'parrot'
 
 interface AiChatPetDefinition {
   id: AiChatPetId
@@ -353,6 +356,8 @@ const DashboardChatPanel = ({
   onOpenSource,
   onQuickCreatePage,
   supportsStudyGuideCreateScope = false,
+  queuedQuestion,
+  onQueuedQuestionConsumed,
 }: DashboardChatPanelProps) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -1242,7 +1247,8 @@ const DashboardChatPanel = ({
 
       const panelHeight = panelRef.current?.clientHeight || 0
       const maxHeight = Math.max(160, Math.floor(panelHeight * 0.48))
-      const nextHeight = dragState.startHeight + dragState.startY - event.clientY
+      const nextHeight =
+        dragState.startHeight + dragState.startY - event.clientY
       setChatComposerHeight(Math.min(Math.max(nextHeight, 108), maxHeight))
     }
 
@@ -1655,6 +1661,20 @@ const DashboardChatPanel = ({
 
     void answerQuestion(trimmed, pendingMessage.id, previousMessages)
   }
+
+  const lastQueuedQuestionIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (
+      !queuedQuestion ||
+      lastQueuedQuestionIdRef.current === queuedQuestion.id
+    ) {
+      return
+    }
+
+    lastQueuedQuestionIdRef.current = queuedQuestion.id
+    sendQuestion(queuedQuestion.content)
+    onQueuedQuestionConsumed?.(queuedQuestion.id)
+  }, [queuedQuestion])
 
   const findLastFoundExternalSource = (): {
     source?: DashboardExternalSource
@@ -2387,6 +2407,35 @@ const DashboardChatPanel = ({
     )
   }
 
+  const composerInputSx = useMemo<SxProps<Theme>>(
+    () => ({
+      flex: 1,
+      minWidth: 0,
+      '& .MuiOutlinedInput-root': {
+        height:
+          draftHasMultipleLines && chatComposerResized ? '100%' : undefined,
+        alignItems: 'flex-start',
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 1,
+        bgcolor:
+          theme.palette.mode === 'dark'
+            ? 'rgba(15,23,42,0.72)'
+            : 'rgba(248,250,252,0.92)',
+      },
+      '& .MuiInputBase-inputMultiline': {
+        height:
+          draftHasMultipleLines && chatComposerResized
+            ? '100% !important'
+            : undefined,
+        maxHeight: draftHasMultipleLines ? '100% !important' : undefined,
+        boxSizing: 'border-box',
+        overflowY: draftHasMultipleLines ? 'auto !important' : undefined,
+      },
+    }),
+    [chatComposerResized, draftHasMultipleLines, theme.palette.mode],
+  )
+
   return (
     <Box
       ref={panelRef}
@@ -2695,9 +2744,10 @@ const DashboardChatPanel = ({
                   flex: '0 0 auto',
                   border: 1,
                   borderColor: alpha(theme.palette.text.primary, 0.14),
-                  color: theme.palette.mode === 'dark'
-                    ? theme.palette.error.light
-                    : theme.palette.error.dark,
+                  color:
+                    theme.palette.mode === 'dark'
+                      ? theme.palette.error.light
+                      : theme.palette.error.dark,
                   bgcolor: alpha(theme.palette.background.paper, 0.72),
                   transition: 'none',
                   '&:hover': {
@@ -3415,39 +3465,11 @@ const DashboardChatPanel = ({
             fullWidth
             multiline
             minRows={1}
-            maxRows={draftHasMultipleLines && chatComposerResized ? undefined : 4}
+            maxRows={
+              draftHasMultipleLines && chatComposerResized ? undefined : 4
+            }
             size="small"
-            sx={{
-              flex: 1,
-              minWidth: 0,
-              '& .MuiOutlinedInput-root': {
-                height:
-                  draftHasMultipleLines && chatComposerResized
-                    ? '100%'
-                    : undefined,
-                alignItems: 'flex-start',
-                position: 'relative',
-                overflow: 'hidden',
-                borderRadius: 1,
-                bgcolor:
-                  theme.palette.mode === 'dark'
-                    ? 'rgba(15,23,42,0.72)'
-                    : 'rgba(248,250,252,0.92)',
-              },
-              '& .MuiInputBase-inputMultiline': {
-                height:
-                  draftHasMultipleLines && chatComposerResized
-                    ? '100% !important'
-                    : undefined,
-                maxHeight: draftHasMultipleLines
-                  ? '100% !important'
-                  : undefined,
-                boxSizing: 'border-box',
-                overflowY: draftHasMultipleLines
-                  ? 'auto !important'
-                  : undefined,
-              },
-            }}
+            sx={composerInputSx}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault()

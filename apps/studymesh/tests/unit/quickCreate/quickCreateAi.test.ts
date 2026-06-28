@@ -3373,7 +3373,7 @@ describe('Gemini quick create client', () => {
     )
     expect(fetchMock.mock.calls[0][1].body).toContain('Detail level: Long')
     expect(fetchMock.mock.calls[0][1].body).toContain(
-      '50-65 multiple-choice questions',
+      '16-24 multiple-choice questions',
     )
     expect(fetchMock.mock.calls[0][1].body).not.toContain(
       `Leave practice.${'shortAnswer'} empty`,

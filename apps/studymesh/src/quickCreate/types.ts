@@ -77,6 +77,11 @@ export interface StudyQuizObject extends StudyObjectBase {
   correctIndex: number
   answer: string
   explanation: string
+  hint?: string
+  optionFeedback?: Array<{
+    option: string
+    explanation: string
+  }>
 }
 
 export interface StudyRevealObject extends StudyObjectBase {

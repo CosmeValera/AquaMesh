@@ -17,6 +17,8 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import {
   OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
   readStudyGuidePageHref,
@@ -26,6 +28,12 @@ interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
   unframed?: boolean
+  onAskAi?: (question: string) => void
+}
+
+interface QuizFeedbackItem {
+  option: string
+  explanation: string
 }
 
 const STUDY_BLOCK_TYPES = [
@@ -69,6 +77,50 @@ const toFocusedItems = (value: unknown): Array<Record<string, unknown>> =>
           Boolean(item) && typeof item === 'object',
       )
     : []
+
+const normalizeFeedbackKey = (value: string): string =>
+  normalizeAnswer(value).replace(/\s+/g, ' ')
+
+const toOptionFeedback = (value: unknown): QuizFeedbackItem[] =>
+  Array.isArray(value)
+    ? value
+        .map((item): QuizFeedbackItem | null => {
+          if (!item || typeof item !== 'object') {
+            return null
+          }
+
+          const record = item as Record<string, unknown>
+          const option = String(record.option || '').trim()
+          const explanation = String(record.explanation || '').trim()
+
+          return option && explanation ? { option, explanation } : null
+        })
+        .filter((item): item is QuizFeedbackItem => Boolean(item))
+    : []
+
+const feedbackForOption = (
+  feedback: QuizFeedbackItem[],
+  option: string,
+): string =>
+  feedback.find(
+    (item) =>
+      normalizeFeedbackKey(item.option) === normalizeFeedbackKey(option),
+  )?.explanation || ''
+
+const buildQuizExplainPrompt = ({
+  question,
+  selectedAnswer,
+  correctAnswer,
+  wasCorrect,
+}: {
+  question: string
+  selectedAnswer: string
+  correctAnswer: string
+  wasCorrect: boolean
+}): string =>
+  wasCorrect
+    ? `I am taking a quiz on this material and was given this question: '${question}'\n\nI chose this as the answer: '${selectedAnswer}'\n\nThat answer was correct. Help me understand why this answer was correct.`
+    : `I am taking a quiz on this material and was given this question: '${question}'\n\nI chose this as the answer: '${selectedAnswer}'\n\nThat answer was incorrect. The correct answer is '${correctAnswer}'\n\nHelp me understand why my answer was incorrect.`
 
 const readStoredMode = (key: string): string => {
   try {
@@ -618,6 +670,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   type,
   props,
   unframed = false,
+  onAskAi,
 }) => {
   const [flipped, setFlipped] = useState(false)
   const [selfGrade, setSelfGrade] = useState<'known' | 'missed' | ''>('')
@@ -632,6 +685,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     Record<number, 'known' | 'missed'>
   >({})
   const [shortAnswer, setShortAnswer] = useState('')
+  const [quizHintOpen, setQuizHintOpen] = useState(false)
   const [checkedSteps, setCheckedSteps] = useState<Record<number, boolean>>({})
   const [definitionStudy, setDefinitionStudy] = useState(false)
   const [reviewStatus, setReviewStatus] = useState(
@@ -894,6 +948,12 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       Math.min(3, Number(props.correctIndex || 0)),
     )
     const explanation = String(props.explanation || '')
+    const hint = String(props.hint || '')
+    const optionFeedback = toOptionFeedback(props.optionFeedback)
+    const selectedAnswer =
+      selectedIndex !== null ? options[selectedIndex] || '' : ''
+    const correctAnswer = options[correctIndex] || String(props.answer || '')
+    const wasCorrect = selectedIndex === correctIndex
 
     return (
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
@@ -912,45 +972,100 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   ? 'error.main'
                   : 'divider'
 
-              return (
-                <Button
-                  key={`${option}-${index}`}
-                  variant="outlined"
-                  color="primary"
-                  onClick={() => setSelectedIndex(index)}
-                  sx={(theme) => {
-                    const stateMain = isCorrect
-                      ? theme.palette.success.main
-                      : theme.palette.error.main
+              const feedback = feedbackForOption(optionFeedback, option)
 
-                    return {
-                      justifyContent: 'flex-start',
-                      color: 'text.primary',
-                      borderColor: showResult ? resultColor : 'divider',
-                      bgcolor:
-                        showResult && (isCorrect || isSelected)
-                          ? alpha(stateMain, 0.12)
-                          : 'transparent',
-                      '&:hover': {
-                        borderColor: showResult ? resultColor : 'primary.main',
+              return (
+                <Box key={`${option}-${index}`}>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={() => setSelectedIndex(index)}
+                    sx={(theme) => {
+                      const stateMain = isCorrect
+                        ? theme.palette.success.main
+                        : theme.palette.error.main
+
+                      return {
+                        justifyContent: 'flex-start',
+                        color: 'text.primary',
+                        borderColor: showResult ? resultColor : 'divider',
                         bgcolor:
                           showResult && (isCorrect || isSelected)
-                            ? alpha(stateMain, 0.18)
-                            : 'action.hover',
-                      },
-                    }
-                  }}
-                >
-                  {option}
-                </Button>
+                            ? alpha(stateMain, 0.12)
+                            : 'transparent',
+                        '&:hover': {
+                          borderColor: showResult
+                            ? resultColor
+                            : 'primary.main',
+                          bgcolor:
+                            showResult && (isCorrect || isSelected)
+                              ? alpha(stateMain, 0.18)
+                              : 'action.hover',
+                        },
+                      }
+                    }}
+                  >
+                    {option}
+                  </Button>
+                  {showResult && feedback ? (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ px: 1, pt: 0.75 }}
+                    >
+                      {feedback}
+                    </Typography>
+                  ) : null}
+                </Box>
               )
             })}
           </Stack>
+          {selectedIndex === null && hint ? (
+            <Box>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<HelpOutlineIcon fontSize="small" />}
+                onClick={() => setQuizHintOpen((current) => !current)}
+              >
+                Hint
+              </Button>
+              {quizHintOpen ? (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
+                  {hint}
+                </Typography>
+              ) : null}
+            </Box>
+          ) : null}
           {selectedIndex !== null && explanation && (
             <Typography variant="body2" color="text.secondary">
               {explanation}
             </Typography>
           )}
+          {selectedIndex !== null && onAskAi ? (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
+              onClick={() =>
+                onAskAi(
+                  buildQuizExplainPrompt({
+                    question,
+                    selectedAnswer,
+                    correctAnswer,
+                    wasCorrect,
+                  }),
+                )
+              }
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Explain
+            </Button>
+          ) : null}
         </Stack>
       </Paper>
     )
@@ -975,6 +1090,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           correctIndex,
           answer,
           explanation: String(item.explanation || ''),
+          hint: String(item.hint || ''),
+          optionFeedback: toOptionFeedback(item.optionFeedback),
           quizMode: 'multipleChoice' as const,
         }
       })
@@ -984,16 +1101,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       Math.max(0, questions.length - 1),
     )
     const question = questions[safeIndex]
-    const selected = focusedQuizAnswers[safeIndex]
-    const hasMultipleChoiceAnswer = selected !== undefined
-    const hasAnswered = hasMultipleChoiceAnswer
-    const answered = questions.reduce((total, _item, index) => {
-      return focusedQuizAnswers[index] !== undefined ? total + 1 : total
-    }, 0)
-    const correct = questions.reduce((total, item, index) => {
-      return focusedQuizAnswers[index] === item.correctIndex ? total + 1 : total
-    }, 0)
-    const wrong = answered - correct
 
     if (!question) {
       return (
@@ -1004,6 +1111,22 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
         </Paper>
       )
     }
+
+    const selected = focusedQuizAnswers[safeIndex]
+    const hasMultipleChoiceAnswer = selected !== undefined
+    const hasAnswered = hasMultipleChoiceAnswer
+    const selectedAnswer =
+      selected !== undefined ? question.options[selected] || '' : ''
+    const correctAnswer =
+      question.options[question.correctIndex] || question.answer
+    const wasCorrect = selected === question.correctIndex
+    const answered = questions.reduce((total, _item, index) => {
+      return focusedQuizAnswers[index] !== undefined ? total + 1 : total
+    }, 0)
+    const correct = questions.reduce((total, item, index) => {
+      return focusedQuizAnswers[index] === item.correctIndex ? total + 1 : total
+    }, 0)
+    const wrong = answered - correct
 
     return (
       <Box
@@ -1048,59 +1171,115 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   const isCorrect = index === question.correctIndex
                   const isSelected = selected === index
 
-                  return (
-                    <Button
-                      key={`${option}-${index}`}
-                      variant="outlined"
-                      onClick={() =>
-                        setFocusedQuizAnswers((current) => ({
-                          ...current,
-                          [safeIndex]: index,
-                        }))
-                      }
-                      sx={(theme) => {
-                        const stateMain = isCorrect
-                          ? theme.palette.success.main
-                          : theme.palette.error.main
-                        const resultBorder = isCorrect
-                          ? 'success.main'
-                          : isSelected
-                            ? 'error.main'
-                            : 'divider'
+                  const feedback = feedbackForOption(
+                    question.optionFeedback,
+                    option,
+                  )
 
-                        return {
-                          justifyContent: 'flex-start',
-                          textAlign: 'left',
-                          minHeight: 52,
-                          whiteSpace: 'normal',
-                          color: 'text.primary',
-                          borderColor: hasAnswered ? resultBorder : 'divider',
-                          bgcolor:
-                            hasAnswered && (isCorrect || isSelected)
-                              ? alpha(stateMain, 0.12)
-                              : 'transparent',
-                          '&:hover': {
-                            borderColor: hasAnswered
-                              ? resultBorder
-                              : 'primary.main',
+                  return (
+                    <Box key={`${option}-${index}`}>
+                      <Button
+                        variant="outlined"
+                        onClick={() =>
+                          setFocusedQuizAnswers((current) => ({
+                            ...current,
+                            [safeIndex]: index,
+                          }))
+                        }
+                        sx={(theme) => {
+                          const stateMain = isCorrect
+                            ? theme.palette.success.main
+                            : theme.palette.error.main
+                          const resultBorder = isCorrect
+                            ? 'success.main'
+                            : isSelected
+                              ? 'error.main'
+                              : 'divider'
+
+                          return {
+                            justifyContent: 'flex-start',
+                            textAlign: 'left',
+                            minHeight: 52,
+                            whiteSpace: 'normal',
+                            color: 'text.primary',
+                            borderColor: hasAnswered ? resultBorder : 'divider',
                             bgcolor:
                               hasAnswered && (isCorrect || isSelected)
-                                ? alpha(stateMain, 0.18)
-                                : 'action.hover',
-                          },
-                        }
-                      }}
-                    >
-                      {option}
-                    </Button>
+                                ? alpha(stateMain, 0.12)
+                                : 'transparent',
+                            '&:hover': {
+                              borderColor: hasAnswered
+                                ? resultBorder
+                                : 'primary.main',
+                              bgcolor:
+                                hasAnswered && (isCorrect || isSelected)
+                                  ? alpha(stateMain, 0.18)
+                                  : 'action.hover',
+                            },
+                          }
+                        }}
+                      >
+                        {option}
+                      </Button>
+                      {hasAnswered && feedback ? (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ px: 1, pt: 0.75 }}
+                        >
+                          {feedback}
+                        </Typography>
+                      ) : null}
+                    </Box>
                   )
                 })}
               </Stack>
+              {!hasAnswered && question.hint ? (
+                <Box>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<HelpOutlineIcon fontSize="small" />}
+                    onClick={() => setQuizHintOpen((current) => !current)}
+                  >
+                    Hint
+                  </Button>
+                  {quizHintOpen ? (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 1 }}
+                    >
+                      {question.hint}
+                    </Typography>
+                  ) : null}
+                </Box>
+              ) : null}
               {hasAnswered && (
                 <Typography variant="body2" color="text.secondary">
                   {question.explanation || `Correct answer: ${question.answer}`}
                 </Typography>
               )}
+              {hasAnswered && onAskAi ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
+                  onClick={() =>
+                    onAskAi(
+                      buildQuizExplainPrompt({
+                        question: question.question,
+                        selectedAnswer,
+                        correctAnswer,
+                        wasCorrect,
+                      }),
+                    )
+                  }
+                  sx={{ alignSelf: 'flex-start' }}
+                >
+                  Explain
+                </Button>
+              ) : null}
             </Stack>
           </Paper>
           <Stack direction="row" spacing={1.25} justifyContent="center">

@@ -81,6 +81,7 @@ interface StudyPathWorkspaceViewProps {
   editingPageKey?: string | null
   onEditingPageKeyChange?: (pageKey: string | null) => void
   onAddPage?: () => void
+  onAskAi?: (question: string) => void
 }
 
 const quickSummaryParagraphs = (value: string): string[] =>
@@ -278,6 +279,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   editingPageKey = null,
   onEditingPageKeyChange,
   onAddPage,
+  onAskAi,
 }) => {
   const theme = useTheme()
   const navigate = useNavigate()
@@ -571,6 +573,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               <StudyGuideLinearLayout
                 key={currentLesson.dashboardKey}
                 layout={studentLayout}
+                onAskAi={onAskAi}
               />
             </>
           )}

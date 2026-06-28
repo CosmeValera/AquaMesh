@@ -32,6 +32,12 @@ const sentenceFragments = (value: string): string[] =>
 const genericQuestionPattern =
   /what does .+ help you understand|core idea behind|which statement best explains|what do the notes say|according to the notes|which statement matches/i
 
+const bannedQuizOptionPattern =
+  /^(?:[a-d]|option\s+[a-d]|choice\s+[a-d]|all of the above|none of the above)$/i
+
+const lazyQuizOptionPattern =
+  /\b(?:not supported|opposite of|guess from the title|review the notes|not enough information)\b/i
+
 const isCopiedFromSource = (question: string, rawNotes = ''): boolean => {
   const key = normalizeKey(question)
   if (!key || !rawNotes.trim()) {
@@ -81,6 +87,18 @@ const multipleChoiceSchema = z.object({
   options: z.array(stringValue),
   correctOptionIndex: z.number().int(),
   explanation: stringValue,
+  hint: z
+    .string()
+    .transform((value) => normalizeSpaces(value))
+    .default(''),
+  optionFeedback: z
+    .array(
+      z.object({
+        option: stringValue,
+        explanation: stringValue,
+      }),
+    )
+    .default([]),
 })
 
 const flashcardSchema = z.object({
@@ -242,11 +260,10 @@ export const applyStudyMaterialResourceTypeToDraft = (
       (object) => object.kind === 'qa' || object.kind === 'reveal',
     )
   } else {
-    objects = draft.objects
-      .filter(
-        (object): object is Extract<StudyObject, { kind: 'quiz' }> =>
-          object.kind === 'quiz' && object.quizMode === 'multipleChoice',
-      )
+    objects = draft.objects.filter(
+      (object): object is Extract<StudyObject, { kind: 'quiz' }> =>
+        object.kind === 'quiz' && object.quizMode === 'multipleChoice',
+    )
   }
 
   const hasFilteredContent =
@@ -339,7 +356,31 @@ const normalizeMultipleChoice = (
     return null
   }
 
-  return { ...item, options, correctOptionIndex }
+  if (
+    options.some(
+      (option) =>
+        bannedQuizOptionPattern.test(option) ||
+        lazyQuizOptionPattern.test(option),
+    )
+  ) {
+    events.push(`Dropped multipleChoice ${index + 1}: placeholder options.`)
+    return null
+  }
+
+  const feedbackByOption = new Map(
+    item.optionFeedback.map((feedback) => [
+      normalizeKey(feedback.option),
+      feedback.explanation,
+    ]),
+  )
+  const optionFeedback = options
+    .map((option) => ({
+      option,
+      explanation: feedbackByOption.get(normalizeKey(option)) || '',
+    }))
+    .filter((feedback) => feedback.explanation)
+
+  return { ...item, options, correctOptionIndex, optionFeedback }
 }
 
 const normalizeStrictContract = (
@@ -544,6 +585,8 @@ export const mapStrictContractToStudyObjects = (
       correctIndex: item.correctOptionIndex,
       answer: item.options[item.correctOptionIndex],
       explanation: item.explanation,
+      hint: item.hint,
+      optionFeedback: item.optionFeedback,
     }))
   const flashcardObjects: StudyObject[] = contract.flashcards.map(
     (item, index) => ({
@@ -554,11 +597,7 @@ export const mapStrictContractToStudyObjects = (
     }),
   )
 
-  return [
-    ...recapObjects,
-    ...multipleChoiceObjects,
-    ...flashcardObjects,
-  ]
+  return [...recapObjects, ...multipleChoiceObjects, ...flashcardObjects]
 }
 
 export const normalizeAiQuickCreateDraft = (

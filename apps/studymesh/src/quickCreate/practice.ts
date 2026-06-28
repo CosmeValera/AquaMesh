@@ -355,10 +355,20 @@ const createQuiz = (
   packId: string,
   index: number,
   fact: string,
-  _facts: string[],
+  facts: string[],
   title: string,
-): StudyObject => {
+): StudyObject | null => {
   const concept = extractConcept(fact, title)
+  const distractors = facts
+    .filter(
+      (candidate) =>
+        normalizeForCompare(candidate) !== normalizeForCompare(fact),
+    )
+    .slice(0, 3)
+
+  if (distractors.length < 2) {
+    return null
+  }
 
   return {
     id: `${packId}-practice-quiz-${index + 1}`,
@@ -371,14 +381,18 @@ const createQuiz = (
       concept === 'this lesson point'
         ? 'How would you apply this lesson point in a new example?'
         : `How would you apply ${concept} in a new example?`,
-    options: [
-      fact,
-      'Ignore the lesson and guess from the title only.',
-      'Use the opposite of the lesson explanation.',
-    ],
+    options: [fact, ...distractors],
     correctIndex: 0,
     answer: fact,
     explanation: fact,
+    hint: 'Choose the option that best matches the lesson point.',
+    optionFeedback: [fact, ...distractors].map((option) => ({
+      option,
+      explanation:
+        normalizeForCompare(option) === normalizeForCompare(fact)
+          ? fact
+          : 'This is a different fact from the same material.',
+    })),
   }
 }
 
@@ -386,8 +400,12 @@ const createConceptQuiz = (
   packId: string,
   index: number,
   concept: LearningConcept,
-): StudyObject => {
-  const question = createApplicationQuestion(concept, index)
+  concepts: LearningConcept[],
+): StudyObject | null => {
+  const question = createApplicationQuestion(concept, index, concepts)
+  if (!question) {
+    return null
+  }
 
   return {
     id: `${packId}-practice-quiz-${index + 1}`,
@@ -638,6 +656,19 @@ const pushUnique = (objects: StudyObject[], object: StudyObject): void => {
   }
 }
 
+const pushOptionalUnique = (
+  objects: StudyObject[],
+  object: StudyObject | null,
+): boolean => {
+  if (object) {
+    const length = objects.length
+    pushUnique(objects, object)
+    return objects.length > length
+  }
+
+  return false
+}
+
 const pushNextQuiz = ({
   objects,
   concepts,
@@ -654,11 +685,16 @@ const pushNextQuiz = ({
   nextFact: () => string
   facts: string[]
   title: string
-}): void => {
-  pushUnique(
+}): boolean => {
+  return pushOptionalUnique(
     objects,
     concepts.length > 0
-      ? createConceptQuiz(packId, countKind(objects, 'quiz'), nextConcept())
+      ? createConceptQuiz(
+          packId,
+          countKind(objects, 'quiz'),
+          nextConcept(),
+          concepts,
+        )
       : createQuiz(
           packId,
           countKind(objects, 'quiz'),
@@ -748,15 +784,19 @@ export const augmentQuickCreatePracticeObjects = (
       countReviewable(objects) < profile.maxTotal &&
       countVisiblePractice(objects) < visiblePracticeTarget
     ) {
-      pushNextQuiz({
-        objects,
-        concepts,
-        packId,
-        nextConcept,
-        nextFact,
-        facts,
-        title: options.title,
-      })
+      if (
+        !pushNextQuiz({
+          objects,
+          concepts,
+          packId,
+          nextConcept,
+          nextFact,
+          facts,
+          title: options.title,
+        })
+      ) {
+        break
+      }
     }
   }
 
@@ -786,15 +826,19 @@ export const augmentQuickCreatePracticeObjects = (
       profile.enforceQuizzes &&
       countKind(objects, 'quiz') < profile.minQuizzes
     ) {
-      pushNextQuiz({
-        objects,
-        concepts,
-        packId,
-        nextConcept,
-        nextFact,
-        facts,
-        title: options.title,
-      })
+      if (
+        !pushNextQuiz({
+          objects,
+          concepts,
+          packId,
+          nextConcept,
+          nextFact,
+          facts,
+          title: options.title,
+        })
+      ) {
+        break
+      }
       continue
     }
 
@@ -855,15 +899,19 @@ export const augmentQuickCreatePracticeObjects = (
         (!profile.enforceFlashcards || quizCount <= flashcardCount)
 
       if (shouldAddQuiz) {
-        pushNextQuiz({
-          objects,
-          concepts,
-          packId,
-          nextConcept,
-          nextFact,
-          facts,
-          title: options.title,
-        })
+        if (
+          !pushNextQuiz({
+            objects,
+            concepts,
+            packId,
+            nextConcept,
+            nextFact,
+            facts,
+            title: options.title,
+          })
+        ) {
+          break
+        }
         continue
       }
 

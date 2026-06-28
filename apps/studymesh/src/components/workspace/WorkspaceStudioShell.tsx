@@ -180,19 +180,9 @@ const getReviewableObjects = (
 
   const quizFiltered =
     resourceType === 'quiz'
-      ? filtered.map((object) =>
-          object.kind === 'quiz' && object.quizMode === 'shortAnswer'
-            ? {
-                ...object,
-                quizMode: 'multipleChoice' as const,
-                options: [
-                  object.answer,
-                  'Not supported by the source notes',
-                  'The opposite of the source explanation',
-                ].filter(Boolean),
-                correctIndex: 0,
-              }
-            : object,
+      ? filtered.filter(
+          (object) =>
+            object.kind !== 'quiz' || object.quizMode === 'multipleChoice',
         )
       : filtered
 

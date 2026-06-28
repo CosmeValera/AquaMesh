@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Box,
   Button,
@@ -36,6 +36,12 @@ interface StudyBlockViewProps {
 interface QuizFeedbackItem {
   option: string
   explanation: string
+}
+
+interface StoredFocusedQuizSession {
+  questionIndex: number
+  answers: Record<number, number>
+  resultsOpen: boolean
 }
 
 const STUDY_BLOCK_TYPES = [
@@ -158,6 +164,110 @@ const writeStoredMode = (key: string, value: string): void => {
     } else {
       window.localStorage.removeItem(key)
     }
+  } catch {
+    // Local storage is a convenience only. Ignore private-mode failures.
+  }
+}
+
+const defaultFocusedQuizSession = (): StoredFocusedQuizSession => ({
+  questionIndex: 0,
+  answers: {},
+  resultsOpen: false,
+})
+
+const createFocusedQuizStorageKey = (
+  type: string,
+  props: Record<string, unknown>,
+): string => {
+  if (type !== 'QuizCarouselBlock' && type !== 'FocusedQuizSessionBlock') {
+    return ''
+  }
+
+  try {
+    return `studymesh-focused-quiz-session-${hashValue(
+      JSON.stringify({
+        type,
+        title: props.title || '',
+        items: props.items || [],
+      }),
+    )}`
+  } catch {
+    return `studymesh-focused-quiz-session-${hashValue(
+      `${type}:${String(props.title || '')}`,
+    )}`
+  }
+}
+
+const readStoredFocusedQuizSession = (
+  key: string,
+): StoredFocusedQuizSession => {
+  if (!key) {
+    return defaultFocusedQuizSession()
+  }
+
+  try {
+    const stored = window.localStorage.getItem(key)
+    if (!stored) {
+      return defaultFocusedQuizSession()
+    }
+
+    const parsed = JSON.parse(stored) as Partial<StoredFocusedQuizSession>
+    const rawAnswers =
+      parsed.answers && typeof parsed.answers === 'object'
+        ? parsed.answers
+        : {}
+    const answers = Object.fromEntries(
+      Object.entries(rawAnswers)
+        .map(([questionIndex, answerIndex]) => [
+          Number(questionIndex),
+          Number(answerIndex),
+        ])
+        .filter(
+          ([questionIndex, answerIndex]) =>
+            Number.isInteger(questionIndex) &&
+            questionIndex >= 0 &&
+            Number.isInteger(answerIndex) &&
+            answerIndex >= 0,
+        ),
+    )
+
+    const questionIndex = Number(parsed.questionIndex)
+
+    return {
+      questionIndex:
+        Number.isInteger(questionIndex) && questionIndex >= 0
+          ? questionIndex
+          : 0,
+      answers,
+      resultsOpen: parsed.resultsOpen === true,
+    }
+  } catch {
+    return defaultFocusedQuizSession()
+  }
+}
+
+const writeStoredFocusedQuizSession = (
+  key: string,
+  session: StoredFocusedQuizSession,
+): void => {
+  if (!key) {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(key, JSON.stringify(session))
+  } catch {
+    // Local storage is a convenience only. Ignore private-mode failures.
+  }
+}
+
+const removeStoredFocusedQuizSession = (key: string): void => {
+  if (!key) {
+    return
+  }
+
+  try {
+    window.localStorage.removeItem(key)
   } catch {
     // Local storage is a convenience only. Ignore private-mode failures.
   }
@@ -693,16 +803,29 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   unframed = false,
   onAskAi,
 }) => {
+  const focusedQuizStorageKey = useMemo(
+    () => createFocusedQuizStorageKey(type, props),
+    [props, type],
+  )
+  const initialFocusedQuizSession = useMemo(
+    () => readStoredFocusedQuizSession(focusedQuizStorageKey),
+    [focusedQuizStorageKey],
+  )
+  const focusedQuizStorageKeyRef = useRef(focusedQuizStorageKey)
   const [flipped, setFlipped] = useState(false)
   const [selfGrade, setSelfGrade] = useState<'known' | 'missed' | ''>('')
   const [revealed, setRevealed] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [focusedCardIndex, setFocusedCardIndex] = useState(0)
-  const [focusedQuestionIndex, setFocusedQuestionIndex] = useState(0)
+  const [focusedQuestionIndex, setFocusedQuestionIndex] = useState(
+    initialFocusedQuizSession.questionIndex,
+  )
   const [focusedQuizAnswers, setFocusedQuizAnswers] = useState<
     Record<number, number>
-  >({})
-  const [quizResultsOpen, setQuizResultsOpen] = useState(false)
+  >(initialFocusedQuizSession.answers)
+  const [quizResultsOpen, setQuizResultsOpen] = useState(
+    initialFocusedQuizSession.resultsOpen,
+  )
   const [focusedFlashcardGrades, setFocusedFlashcardGrades] = useState<
     Record<number, 'known' | 'missed'>
   >({})
@@ -717,6 +840,32 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   useEffect(() => {
     setQuizHintOpen(false)
   }, [focusedQuestionIndex, selectedIndex, type])
+
+  useEffect(() => {
+    if (focusedQuizStorageKeyRef.current === focusedQuizStorageKey) {
+      return
+    }
+
+    const storedSession = readStoredFocusedQuizSession(focusedQuizStorageKey)
+    focusedQuizStorageKeyRef.current = focusedQuizStorageKey
+    setFocusedQuestionIndex(storedSession.questionIndex)
+    setFocusedQuizAnswers(storedSession.answers)
+    setQuizResultsOpen(storedSession.resultsOpen)
+    setQuizHintOpen(false)
+  }, [focusedQuizStorageKey])
+
+  useEffect(() => {
+    writeStoredFocusedQuizSession(focusedQuizStorageKey, {
+      questionIndex: focusedQuestionIndex,
+      answers: focusedQuizAnswers,
+      resultsOpen: quizResultsOpen,
+    })
+  }, [
+    focusedQuestionIndex,
+    focusedQuizAnswers,
+    focusedQuizStorageKey,
+    quizResultsOpen,
+  ])
 
   const askAi = (content: string) => {
     if (onAskAi) {
@@ -1183,6 +1332,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       { label: 'Wrong', value: wrong, color: 'error.main' },
       { label: 'Skipped', value: skipped, color: 'text.primary' },
     ]
+    const persistQuizSession = (session: StoredFocusedQuizSession) => {
+      writeStoredFocusedQuizSession(focusedQuizStorageKey, session)
+    }
 
     if (quizResultsOpen) {
       return (
@@ -1270,7 +1422,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               <Button
                 variant="outlined"
                 onClick={() => {
-                  setFocusedQuestionIndex(questions.length - 1)
+                  const lastQuestionIndex = questions.length - 1
+                  persistQuizSession({
+                    questionIndex: lastQuestionIndex,
+                    answers: focusedQuizAnswers,
+                    resultsOpen: false,
+                  })
+                  setFocusedQuestionIndex(lastQuestionIndex)
                   setQuizResultsOpen(false)
                 }}
               >
@@ -1279,6 +1437,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               <Button
                 variant="contained"
                 onClick={() => {
+                  removeStoredFocusedQuizSession(focusedQuizStorageKey)
+                  persistQuizSession(defaultFocusedQuizSession())
                   setFocusedQuizAnswers({})
                   setFocusedQuestionIndex(0)
                   setQuizHintOpen(false)
@@ -1349,10 +1509,16 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                             return
                           }
 
-                          setFocusedQuizAnswers((current) => ({
-                            ...current,
+                          const nextAnswers = {
+                            ...focusedQuizAnswers,
                             [safeIndex]: index,
-                          }))
+                          }
+                          persistQuizSession({
+                            questionIndex: safeIndex,
+                            answers: nextAnswers,
+                            resultsOpen: false,
+                          })
+                          setFocusedQuizAnswers(nextAnswers)
                         }}
                         sx={(theme) => {
                           const stateMain = isCorrect
@@ -1463,9 +1629,15 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               <Button
                 variant="outlined"
                 disabled={safeIndex === 0}
-                onClick={() =>
-                  setFocusedQuestionIndex((current) => Math.max(0, current - 1))
-                }
+                onClick={() => {
+                  const previousIndex = Math.max(0, safeIndex - 1)
+                  persistQuizSession({
+                    questionIndex: previousIndex,
+                    answers: focusedQuizAnswers,
+                    resultsOpen: false,
+                  })
+                  setFocusedQuestionIndex(previousIndex)
+                }}
               >
                 Previous
               </Button>
@@ -1473,13 +1645,22 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 variant="contained"
                 onClick={() => {
                   if (safeIndex >= questions.length - 1) {
+                    persistQuizSession({
+                      questionIndex: safeIndex,
+                      answers: focusedQuizAnswers,
+                      resultsOpen: true,
+                    })
                     setQuizResultsOpen(true)
                     return
                   }
 
-                  setFocusedQuestionIndex((current) =>
-                    Math.min(questions.length - 1, current + 1),
-                  )
+                  const nextIndex = Math.min(questions.length - 1, safeIndex + 1)
+                  persistQuizSession({
+                    questionIndex: nextIndex,
+                    answers: focusedQuizAnswers,
+                    resultsOpen: false,
+                  })
+                  setFocusedQuestionIndex(nextIndex)
                 }}
               >
                 {safeIndex >= questions.length - 1 ? 'Done' : 'Next'}

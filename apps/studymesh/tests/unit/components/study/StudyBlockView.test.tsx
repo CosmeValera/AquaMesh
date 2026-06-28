@@ -1,8 +1,25 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import StudyBlockView from '../../../../src/components/study/StudyBlockView'
 
 describe('StudyBlockView quiz feedback', () => {
+  beforeEach(() => {
+    const storage = new Map<string, string>()
+    vi.mocked(window.localStorage.getItem).mockImplementation((key) =>
+      storage.get(key) ?? null,
+    )
+    vi.mocked(window.localStorage.setItem).mockImplementation((key, value) => {
+      storage.set(key, value)
+    })
+    vi.mocked(window.localStorage.removeItem).mockImplementation((key) => {
+      storage.delete(key)
+    })
+    vi.mocked(window.localStorage.clear).mockImplementation(() => {
+      storage.clear()
+    })
+    window.localStorage.clear()
+  })
+
   it('shows hints before answering and option feedback after answering', () => {
     render(
       <StudyBlockView
@@ -141,5 +158,43 @@ describe('StudyBlockView quiz feedback', () => {
       screen.queryByText('You did it! Quiz complete.'),
     ).not.toBeInTheDocument()
     expect(screen.getByText('Answered 0/2')).toBeInTheDocument()
+  })
+
+  it('restores focused quiz progress after the quiz page remounts', () => {
+    const props = {
+      title: 'Travel vocabulary',
+      items: [
+        {
+          question: 'Which term best describes a long trip with many stages?',
+          options: ['Une traversee', 'Un periple', 'Une escapade'],
+          correctIndex: 1,
+          answer: 'Un periple',
+          explanation: 'Un periple means a long multi-stage journey.',
+        },
+        {
+          question: 'Which term describes a stop during air travel?',
+          options: ['Une escale', 'Une ascension', 'Une escapade'],
+          correctIndex: 0,
+          answer: 'Une escale',
+          explanation: 'Une escale is a stopover.',
+        },
+      ],
+    }
+
+    const firstRender = render(
+      <StudyBlockView type="QuizCarouselBlock" props={props} />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Un periple' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    firstRender.unmount()
+
+    render(<StudyBlockView type="QuizCarouselBlock" props={props} />)
+
+    expect(
+      screen.getByText('Which term describes a stop during air travel?'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Answered 1/2')).toBeInTheDocument()
+    expect(screen.getByText('Correct 1')).toBeInTheDocument()
   })
 })

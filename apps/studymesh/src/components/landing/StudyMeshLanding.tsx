@@ -97,11 +97,11 @@ const growingGuideBenefits = [
 ]
 
 const growingGuidePages = [
-  '01 Docker Overview',
-  '02 Images and Layers',
-  '03 Container Lifecycle',
-  '04 Writing Dockerfiles',
-  '05 Docker Compose Basics',
+  '01 The Water Cycle',
+  '02 Evaporation',
+  '03 Condensation',
+  '04 Cloud Growth',
+  '05 Precipitation',
   '06 Review Pack',
 ]
 
@@ -708,7 +708,7 @@ const GrowingGuidesSection = () => (
               }}
             >
               Every guide starts with 5 focused pages. Ask for more depth,
-              examples, practice, or flashcards, and StudyMesh adds new content
+              examples or exercices, and StudyMesh adds new content
               instantly.
             </Typography>
           </Stack>
@@ -957,7 +957,7 @@ const GrowingGuideLayerCard = ({
             '& svg': { fontSize: 17 },
           }}
         >
-          {index === 3 ? <CodeOutlinedIcon /> : <DescriptionOutlinedIcon />}
+          <DescriptionOutlinedIcon />
         </Box>
       )}
     </Stack>
@@ -996,12 +996,12 @@ const GrowingGuideLayerCard = ({
                 borderRadius: 0.8,
                 display: 'grid',
                 placeItems: 'center',
-                color: itemIndex === 0 ? brand.blue : '#008A78',
-                bgcolor: itemIndex === 0 ? brand.skySoft : alpha(brand.mint, 0.1),
+                color: '#008A78',
+                bgcolor: alpha(brand.mint, 0.1),
                 fontWeight: 900,
               }}
             >
-              {itemIndex === 0 ? '?' : itemIndex + 1}
+              { itemIndex + 1}
             </Box>
             {item}
           </Box>

@@ -1596,7 +1596,7 @@ const ContextVisual = ({ topic }: { topic: ContextTopic }) => (
       width: '100%',
       height: { xs: 210, md: 252 },
       borderRadius: 2,
-      display: 'block',
+      display: { xs: 'none', sm: 'block' },
       objectFit: 'contain',
       bgcolor: '#FFFFFF',
       boxShadow: `0 22px 52px ${alpha(topic.color, 0.12)}`,

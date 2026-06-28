@@ -25,6 +25,7 @@ import {
 } from '../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
 import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
+import StudyCreditIcon from '../hostedAi/StudyCreditIcon'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -127,6 +128,20 @@ const buildQuizExplainPrompt = ({
   wasCorrect
     ? `I am taking a quiz on this material and was given this question: '${question}'\n\nI chose this as the answer: '${selectedAnswer}'\n\nThat answer was correct. Help me understand why this answer was correct.`
     : `I am taking a quiz on this material and was given this question: '${question}'\n\nI chose this as the answer: '${selectedAnswer}'\n\nThat answer was incorrect. The correct answer is '${correctAnswer}'\n\nHelp me understand why my answer was incorrect.`
+
+const explainButtonLabel = (
+  <Stack
+    component="span"
+    direction="row"
+    spacing={0.5}
+    alignItems="center"
+    sx={{ display: 'inline-flex' }}
+  >
+    <span>Explain (1</span>
+    <StudyCreditIcon size={14} />
+    <span>)</span>
+  </Stack>
+)
 
 const readStoredMode = (key: string): string => {
   try {
@@ -1092,7 +1107,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               }
               sx={{ alignSelf: 'flex-start' }}
             >
-              Explain
+              {explainButtonLabel}
             </Button>
           ) : null}
         </Stack>
@@ -1159,6 +1174,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     const skipped = questions.length - answered
     const scorePercent =
       questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0
+    const correctDegrees =
+      questions.length > 0 ? (correct / questions.length) * 360 : 0
+    const wrongDegrees =
+      questions.length > 0 ? (wrong / questions.length) * 360 : 0
     const resultRows = [
       { label: 'Right', value: correct, color: 'success.main' },
       { label: 'Wrong', value: wrong, color: 'error.main' },
@@ -1204,7 +1223,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     borderRadius: '50%',
                     display: 'grid',
                     placeItems: 'center',
-                    background: `conic-gradient(${theme.palette.success.main} ${scorePercent * 3.6}deg, ${theme.palette.action.selected} 0deg)`,
+                    background: `conic-gradient(${theme.palette.success.main} 0deg ${correctDegrees}deg, ${theme.palette.error.main} ${correctDegrees}deg ${correctDegrees + wrongDegrees}deg, ${theme.palette.action.selected} ${correctDegrees + wrongDegrees}deg 360deg)`,
                     position: 'relative',
                     '&::before': {
                       content: '""',
@@ -1436,7 +1455,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     )
                   }
                 >
-                  Explain
+                  {explainButtonLabel}
                 </Button>
               ) : null}
             </Box>

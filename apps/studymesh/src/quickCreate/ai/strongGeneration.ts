@@ -76,7 +76,7 @@ const geminiDetailTargets: Record<
   },
   quiz: {
     short: '6-10 multiple-choice questions',
-    medium: '10-16 multiple-choice questions',
+    medium: '30-40 multiple-choice questions',
     long: '30-40 multiple-choice questions',
   },
 }
@@ -1307,7 +1307,7 @@ export const generateQuickCreateWithAi = async ({
     resourceType === 'flashcards'
       ? `Create ${resourceTarget} when possible. For Medium or Long detail, aim for around 40-50 flashcards and never create fewer than 40 if the notes contain enough usable facts.`
       : resourceType === 'quiz'
-        ? `Create ${resourceTarget} when possible. Because each question includes hint and per-option feedback, keep the quiz compact and valid JSON is more important than maximum count.`
+        ? `Create ${resourceTarget} when possible. For Medium or Long detail, aim for 30-40 multiple-choice questions and do not stop at 10-12 when the notes contain enough usable facts. Keep JSON valid while still matching the target count.`
         : `Create ${practiceProfile.targetTotal} reviewable study items when possible, never fewer than ${practiceProfile.minTotal} if the notes contain usable facts. Keep the total within ${practiceProfile.minTotal}-${practiceProfile.maxTotal} items.`
   const mixInstruction =
     resourceType === 'flashcards'

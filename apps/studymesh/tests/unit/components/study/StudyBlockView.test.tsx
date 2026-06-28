@@ -91,7 +91,7 @@ describe('StudyBlockView quiz feedback', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Une traversee' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Explain' }))
+    fireEvent.click(screen.getByRole('button', { name: /Explain/ }))
 
     expect(onAskAi).toHaveBeenCalledWith(
       "I am taking a quiz on this material and was given this question: 'Which term best describes a long journey that includes many different tourist stops or stages along the way?'\n\nI chose this as the answer: 'Une traversee'\n\nThat answer was incorrect. The correct answer is 'Un periple'\n\nHelp me understand why my answer was incorrect.",

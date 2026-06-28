@@ -708,7 +708,7 @@ const GrowingGuidesSection = () => (
               }}
             >
               Every guide starts with 5 focused pages. Ask for more depth,
-              examples or exercices, and StudyMesh adds new content
+              examples or exercises, and StudyMesh adds new content
               instantly.
             </Typography>
           </Stack>

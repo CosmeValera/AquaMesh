@@ -15,7 +15,7 @@ const navBrand = {
 }
 
 const navItems = [
-  ['Knowledge context', '#knowledge-context'],
+  ['Knowledge bridge', '#knowledge-context'],
   ['Growing guides', '#growing-guide'],
   ['Pricing', '/pricing'],
 ]

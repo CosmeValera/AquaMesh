@@ -1412,7 +1412,7 @@ const ContextComparisonSection = () => {
                 letterSpacing: 0,
               }}
             >
-              KNOWLEDGE CONTEXT
+              KNOWLEDGE BRIDGE
             </Box>
             <Typography
               variant="h2"

@@ -72,7 +72,7 @@ describe('StudyMeshPricingPage', () => {
     expect(screen.queryByText(/higher hourly limits/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/one-time 2/i)).not.toBeInTheDocument()
 
-    expect(screen.getByRole('link', { name: /knowledge context/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /knowledge bridge/i })).toHaveAttribute(
       'href',
       '/#knowledge-context',
     )

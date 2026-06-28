@@ -19,7 +19,7 @@ import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import CheckIcon from '@mui/icons-material/Check'
 import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
 
-import LandingTopNav from './LandingTopNav'
+import LandingTopNav, { scrollToLandingSection } from './LandingTopNav'
 
 const brand = {
   canvas: '#FBFDFE',
@@ -271,9 +271,7 @@ const StudyMeshLanding = () => {
     }
 
     window.requestAnimationFrame(() => {
-      document
-        .getElementById(location.hash.slice(1))
-        ?.scrollIntoView({ block: 'start' })
+      scrollToLandingSection(location.hash, 'auto')
     })
   }, [location.hash])
 
@@ -635,17 +633,19 @@ const HeroTimeline = () => {
 
 const GrowingGuidesSection = () => (
   <Box
-    id="growing-guide"
     sx={{
       position: 'relative',
-      scrollMarginTop: 104,
       bgcolor: 'transparent',
       pt: { xs: 11, lg: 14 },
       pb: { xs: 2, md: 3.5 },
       overflow: 'hidden',
     }}
   >
-    <Container maxWidth="lg" sx={{ position: 'relative' }}>
+    <Container
+      id="growing-guide"
+      maxWidth="lg"
+      sx={{ position: 'relative', scrollMarginTop: { xs: 88, md: 104 } }}
+    >
       <Box
         sx={{
           display: { xs: 'none', lg: 'flex' },
@@ -1263,16 +1263,18 @@ const ContextComparisonSection = () => {
 
   return (
     <Box
-      id="knowledge-context"
       sx={{
         position: 'relative',
         py: { xs: 5.5, md: 8 },
         bgcolor: 'transparent',
-        scrollMarginTop: 104,
         overflow: 'hidden',
       }}
     >
-      <Container maxWidth="lg" sx={{ position: 'relative' }}>
+      <Container
+        id="knowledge-context"
+        maxWidth="lg"
+        sx={{ position: 'relative', scrollMarginTop: { xs: 88, md: 104 } }}
+      >
         <Stack spacing={3.2} alignItems="center" textAlign="center">
           <Stack spacing={1.15} alignItems="center">
             <Box

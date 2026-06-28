@@ -20,6 +20,28 @@ const navItems = [
   ['Pricing', '/pricing'],
 ]
 
+export const scrollToLandingSection = (
+  hash: string,
+  behavior: ScrollBehavior = 'smooth',
+) => {
+  if (!hash.startsWith('#')) {
+    return false
+  }
+
+  const target = document.getElementById(hash.slice(1))
+  if (!target) {
+    return false
+  }
+
+  const headerHeight =
+    document.querySelector('header')?.getBoundingClientRect().height ?? 88
+  const top =
+    target.getBoundingClientRect().top + window.scrollY - headerHeight - 16
+
+  window.scrollTo({ behavior, top: Math.max(0, top) })
+  return true
+}
+
 type LandingTopNavProps = {
   sectionHrefPrefix?: '' | '/'
 }
@@ -33,6 +55,20 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
 
   const openCreateStudyGuide = () => {
     navigate('/study-guides?create=1')
+  }
+
+  const handleNavClick = (
+    event: React.MouseEvent<HTMLElement>,
+    href: string,
+  ) => {
+    if (sectionHrefPrefix !== '' || !href.startsWith('#')) {
+      return
+    }
+
+    event.preventDefault()
+    if (scrollToLandingSection(href)) {
+      window.history.pushState(null, '', href)
+    }
   }
 
   return (
@@ -113,6 +149,7 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
             <Button
               key={label}
               href={getNavHref(href)}
+              onClick={(event) => handleNavClick(event, href)}
               variant="text"
               sx={{
                 display: {

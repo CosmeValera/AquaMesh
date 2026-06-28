@@ -1425,20 +1425,20 @@ const ContextComparisonSection = () => {
             />
           </Box>
 
-          <KnowledgeContextQuote />
+          <KnowledgeContextEvidence />
         </Stack>
       </Container>
     </Box>
   )
 }
 
-const KnowledgeContextQuote = () => (
+const KnowledgeContextEvidence = () => (
   <Box
     component="a"
-    href="https://books.google.com/books/about/Educational_Psychology.html?id=HINpAAAAMAAJ"
+    href="https://www.uni-trier.de/fileadmin/fb1/prof/PSY/PAE/Team/Schneider/SimonsmeierEtAl2021.pdf"
     target="_blank"
     rel="noreferrer"
-    aria-label="Read Ausubel's Educational Psychology: A Cognitive View"
+    aria-label="Read Domain-specific prior knowledge and learning: A meta-analysis"
     sx={{
       position: 'relative',
       zIndex: 2,
@@ -1466,42 +1466,46 @@ const KnowledgeContextQuote = () => (
       },
     }}
   >
-    <Typography
+    <Box
       sx={{
-        color: brand.blueDark,
-        fontWeight: 900,
-        fontSize: '0.74rem',
-        letterSpacing: 0,
-        lineHeight: 1,
-        mb: 1.7,
-        textTransform: 'uppercase',
+        maxWidth: 780,
       }}
     >
-      The science
-    </Typography>
-    <Typography
-      component="blockquote"
-      sx={{
-        m: 0,
-        color: brand.ink,
-        fontFamily: 'Georgia, "Times New Roman", serif',
-        fontSize: { xs: '1.08rem', md: '1.28rem' },
-        fontStyle: 'italic',
-        lineHeight: 1.58,
-      }}
-    >
-      "The most important factor in learning is what the learner already knows."
-    </Typography>
-    <Typography
-      sx={{
-        mt: 1.9,
-        color: '#7C89AD',
-        fontSize: '0.9rem',
-        lineHeight: 1.45,
-      }}
-    >
-      - David Ausubel, Educational Psychologist, 1968
-    </Typography>
+      <Typography
+        sx={{
+          color: brand.blueDark,
+          fontWeight: 900,
+          fontSize: '0.74rem',
+          letterSpacing: 0,
+          lineHeight: 1,
+          mb: 1,
+          textTransform: 'uppercase',
+        }}
+      >
+        The science
+      </Typography>
+      <Typography
+        sx={{
+          m: 0,
+          color: brand.ink,
+          fontSize: { xs: '1.02rem', md: '1.12rem' },
+          fontWeight: 500,
+          lineHeight: 1.5,
+        }}
+      >
+        A meta-analysis in Educational Psychology shows prior knowledge predicts later performance.
+      </Typography>
+      <Typography
+        sx={{
+          mt: 1.05,
+          color: '#7C89AD',
+          fontSize: '0.86rem',
+          lineHeight: 1.45,
+        }}
+      >
+        Bianca A. Simonsmeier, Maja Flaig, Anne Deiglmayr, Lennart Schalk & Michael Schneider, 2021
+      </Typography>
+    </Box>
   </Box>
 )
 

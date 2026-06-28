@@ -38,6 +38,22 @@ const brand = {
   skySoft: '#E4F4FF',
 }
 
+const landingSurfaceBackground = [
+  `radial-gradient(circle at 50% 11%, ${alpha(
+    brand.sky,
+    0.075,
+  )}, transparent 24%)`,
+  `radial-gradient(circle at 82% 43%, ${alpha(
+    brand.blue,
+    0.045,
+  )}, transparent 18%)`,
+  `radial-gradient(circle at 18% 70%, ${alpha(
+    brand.mint,
+    0.035,
+  )}, transparent 20%)`,
+  'linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 100%)',
+].join(', ')
+
 const timelineItems = [
   {
     label: (
@@ -266,7 +282,7 @@ const StudyMeshLanding = () => {
       data-testid="studymesh-landing"
       sx={{
         minHeight: '100dvh',
-        bgcolor: brand.canvas,
+        bgcolor: '#FFFFFF',
         color: brand.ink,
         overflowX: 'clip',
         fontFamily: '"Readex Pro", "Inter", "Segoe UI", Arial, sans-serif',
@@ -274,7 +290,12 @@ const StudyMeshLanding = () => {
     >
       <LandingTopNav />
 
-      <Box component="main">
+      <Box
+        component="main"
+        sx={{
+          background: landingSurfaceBackground,
+        }}
+      >
         <Box
           sx={{
             position: 'relative',
@@ -461,7 +482,7 @@ const StudyMeshLanding = () => {
 
         <GrowingGuidesSection />
 
-        <Box sx={{ bgcolor: brand.canvas, py: { xs: 5, md: 7 } }}>
+        <Box sx={{ bgcolor: 'transparent', py: { xs: 5, md: 7 } }}>
           <Container maxWidth="md">
             <Stack spacing={2.4} alignItems="center" textAlign="center">
               <Typography
@@ -612,27 +633,10 @@ const GrowingGuidesSection = () => (
     sx={{
       position: 'relative',
       scrollMarginTop: 104,
-      borderTop: `1px solid ${alpha(brand.line, 0.7)}`,
-      bgcolor: '#FFFFFF',
+      bgcolor: 'transparent',
       pt: { xs: 11, lg: 14 },
       pb: { xs: 6, md: 9 },
       overflow: 'hidden',
-      '&::before': {
-        content: '""',
-        position: 'absolute',
-        inset: 0,
-        background: `radial-gradient(circle at 16% 18%, ${alpha(
-          brand.sky,
-          0.12,
-        )}, transparent 28%), radial-gradient(circle at 88% 18%, ${alpha(
-          brand.mint,
-          0.16,
-        )}, transparent 30%), radial-gradient(circle at 58% 92%, ${alpha(
-          brand.blue,
-          0.07,
-        )}, transparent 36%)`,
-        pointerEvents: 'none',
-      },
     }}
   >
     <Container maxWidth="lg" sx={{ position: 'relative' }}>
@@ -1257,26 +1261,9 @@ const ContextComparisonSection = () => {
       sx={{
         position: 'relative',
         py: { xs: 5.5, md: 8 },
-        bgcolor: '#FFFFFF',
-        borderTop: `1px solid ${alpha(brand.line, 0.62)}`,
+        bgcolor: 'transparent',
         scrollMarginTop: 104,
         overflow: 'hidden',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          inset: 0,
-          background: `radial-gradient(circle at 18% 14%, ${alpha(
-            brand.sky,
-            0.13,
-          )}, transparent 27%), radial-gradient(circle at 82% 22%, ${alpha(
-            brand.mint,
-            0.13,
-          )}, transparent 28%), radial-gradient(circle at 50% 78%, ${alpha(
-            brand.blue,
-            0.08,
-          )}, transparent 36%)`,
-          pointerEvents: 'none',
-        },
       }}
     >
       <Container maxWidth="lg" sx={{ position: 'relative' }}>
@@ -1682,14 +1669,6 @@ const ContextVisual = ({ topic }: { topic: ContextTopic }) => (
 
 const DecorativeHeroLayer = () => (
   <Box aria-hidden="true">
-    <Box
-      sx={{
-        position: 'absolute',
-        inset: 0,
-        background:
-          'radial-gradient(circle at 50% 44%, rgba(17, 201, 163, 0.12), transparent 29%), radial-gradient(circle at 62% 36%, rgba(18, 167, 232, 0.14), transparent 24%)',
-      }}
-    />
     <Box
       sx={{
         display: { xs: 'none', md: 'block' },

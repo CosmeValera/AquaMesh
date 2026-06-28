@@ -407,7 +407,7 @@ const StudyMeshLanding = () => {
                     Create a Study Guide
                   </Button>
                   <Button
-                    href="#growing-guide"
+                    href="#knowledge-context"
                     variant="text"
                     endIcon={<ArrowForwardIcon />}
                     sx={{

@@ -15,10 +15,14 @@ describe('accent color tokens', () => {
     document.documentElement.removeAttribute('style')
   })
 
-  it('falls back to the StudyMesh accent for unknown stored values', () => {
+  it('uses blue for first-time users without a stored accent', () => {
+    expect(readStoredAccentColorId()).toBe('blue')
+  })
+
+  it('falls back to the blue accent for unknown stored values', () => {
     localStorage.setItem(ACCENT_COLOR_STORAGE_KEY, 'missing')
 
-    expect(readStoredAccentColorId()).toBe('studymesh')
+    expect(readStoredAccentColorId()).toBe('blue')
     expect(getAccentColorById('missing')).toEqual(accentColorOptions[0])
   })
 

@@ -23,16 +23,6 @@ const LEGACY_ACCENT_COLOR_STORAGE_KEY = 'aquamesh-accent-color'
 
 export const accentColorOptions: AccentColorOption[] = [
   {
-    id: 'studymesh',
-    name: 'Study green',
-    main: '#007C66',
-    light: '#00C49A',
-    dark: '#005A49',
-    contrastText: '#FFFFFF',
-    soft: '#E2F7F2',
-    surface: '#F0FBF8',
-  },
-  {
     id: 'blue',
     name: 'Ocean blue',
     main: '#1976D2',
@@ -41,6 +31,16 @@ export const accentColorOptions: AccentColorOption[] = [
     contrastText: '#FFFFFF',
     soft: '#E3F2FD',
     surface: '#F1F8FF',
+  },
+  {
+    id: 'studymesh',
+    name: 'Study green',
+    main: '#007C66',
+    light: '#00C49A',
+    dark: '#005A49',
+    contrastText: '#FFFFFF',
+    soft: '#E2F7F2',
+    surface: '#F0FBF8',
   },
   {
     id: 'purple',
@@ -84,7 +84,7 @@ export const accentColorOptions: AccentColorOption[] = [
   },
 ]
 
-export const defaultAccentColorId: AccentColorId = 'studymesh'
+export const defaultAccentColorId: AccentColorId = 'blue'
 
 export const getAccentColorById = (id?: string | null): AccentColorOption => {
   return (

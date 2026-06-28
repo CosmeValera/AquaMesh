@@ -1,6 +1,6 @@
 /// <reference types="@testing-library/jest-dom" />
 import React from 'react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { CssBaseline } from '@mui/material'
 import { ThemeProvider } from '@mui/material/styles'
@@ -34,6 +34,10 @@ const renderLanding = () => {
 }
 
 describe('StudyMeshLanding', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('renders the rebranded fixed-light hero and timeline', () => {
     renderLanding()
 
@@ -116,6 +120,40 @@ describe('StudyMeshLanding', () => {
     expect(
       screen.getByText(/improving one thing usually means giving up something else/i),
     ).toBeInTheDocument()
+  })
+
+  it('auto-scrolls the knowledge context topic row near either edge', () => {
+    renderLanding()
+
+    const topicsRow = screen.getByLabelText(/knowledge context topics/i)
+    const scrollBy = vi.fn()
+
+    Object.defineProperties(topicsRow, {
+      clientWidth: { configurable: true, value: 600 },
+      scrollLeft: { configurable: true, value: 240, writable: true },
+      scrollWidth: { configurable: true, value: 1200 },
+    })
+    Object.assign(topicsRow, { scrollBy })
+    vi.spyOn(topicsRow, 'getBoundingClientRect').mockReturnValue({
+      bottom: 120,
+      height: 120,
+      left: 100,
+      right: 700,
+      toJSON: () => ({}),
+      top: 0,
+      width: 600,
+      x: 100,
+      y: 0,
+    })
+    vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(1)
+
+    fireEvent.pointerMove(topicsRow, { clientX: 690 })
+
+    expect(scrollBy).toHaveBeenLastCalledWith({ behavior: 'auto', left: 6 })
+
+    fireEvent.pointerMove(topicsRow, { clientX: 110 })
+
+    expect(scrollBy).toHaveBeenLastCalledWith({ behavior: 'auto', left: -6 })
   })
 
   it('keeps the study guide CTA target unchanged', () => {

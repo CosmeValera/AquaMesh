@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Box, Button, Container, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -1155,7 +1155,98 @@ const GrowingGuideSparkle = ({
 
 const ContextComparisonSection = () => {
   const [activeIndex, setActiveIndex] = useState(0)
+  const topicsRowRef = useRef<HTMLDivElement | null>(null)
+  const edgeScrollFrameRef = useRef<number | null>(null)
+  const edgeScrollDirectionRef = useRef(0)
   const activeTopic = contextTopics[activeIndex]
+
+  const stopEdgeScroll = useCallback(() => {
+    if (edgeScrollFrameRef.current !== null) {
+      window.cancelAnimationFrame(edgeScrollFrameRef.current)
+      edgeScrollFrameRef.current = null
+    }
+
+    edgeScrollDirectionRef.current = 0
+  }, [])
+
+  const scrollTopicRowByEdge = useCallback(
+    (direction: -1 | 1) => {
+      const row = topicsRowRef.current
+
+      if (!row) {
+        stopEdgeScroll()
+        return
+      }
+
+      const maxScrollLeft = row.scrollWidth - row.clientWidth
+      const canScrollRight = direction > 0 && row.scrollLeft < maxScrollLeft
+      const canScrollLeft = direction < 0 && row.scrollLeft > 0
+
+      if (!canScrollRight && !canScrollLeft) {
+        stopEdgeScroll()
+        return
+      }
+
+      row.scrollBy({ left: direction * 6, behavior: 'auto' })
+    },
+    [stopEdgeScroll],
+  )
+
+  const startEdgeScroll = useCallback(
+    (direction: -1 | 1) => {
+      if (
+        edgeScrollFrameRef.current !== null &&
+        edgeScrollDirectionRef.current === direction
+      ) {
+        return
+      }
+
+      stopEdgeScroll()
+      edgeScrollDirectionRef.current = direction
+
+      const tick = () => {
+        scrollTopicRowByEdge(direction)
+
+        if (edgeScrollDirectionRef.current === direction) {
+          edgeScrollFrameRef.current = window.requestAnimationFrame(tick)
+        }
+      }
+
+      tick()
+    },
+    [scrollTopicRowByEdge, stopEdgeScroll],
+  )
+
+  const handleTopicRowPointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const row = topicsRowRef.current
+
+      if (!row || row.scrollWidth <= row.clientWidth) {
+        stopEdgeScroll()
+        return
+      }
+
+      const rect = row.getBoundingClientRect()
+      const edgeSize = Math.min(92, rect.width * 0.22)
+      const nearLeftEdge = event.clientX - rect.left <= edgeSize
+      const nearRightEdge = rect.right - event.clientX <= edgeSize
+
+      if (nearRightEdge) {
+        startEdgeScroll(1)
+        return
+      }
+
+      if (nearLeftEdge) {
+        startEdgeScroll(-1)
+        return
+      }
+
+      stopEdgeScroll()
+    },
+    [startEdgeScroll, stopEdgeScroll],
+  )
+
+  useEffect(() => stopEdgeScroll, [stopEdgeScroll])
 
   const selectTopic = (index: number) => {
     setActiveIndex(index)
@@ -1241,7 +1332,12 @@ const ContextComparisonSection = () => {
             }}
           >
             <Box
+              ref={topicsRowRef}
               aria-label="Knowledge context topics"
+              onPointerCancel={stopEdgeScroll}
+              onPointerLeave={stopEdgeScroll}
+              onPointerMove={handleTopicRowPointerMove}
+              onPointerUp={stopEdgeScroll}
               sx={{
                 display: 'grid',
                 gridTemplateColumns: {

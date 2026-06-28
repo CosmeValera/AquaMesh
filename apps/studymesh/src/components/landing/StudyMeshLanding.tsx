@@ -476,7 +476,7 @@ const StudyMeshLanding = () => {
                 Ready to build your Study Guide?
               </Typography>
               <Typography sx={{ color: brand.muted, fontSize: '1.08rem' }}>
-                Start with a topic. Let StudyMesh create a guide tailored for you and see it grow.
+                Start with a topic. Let StudyMesh create a guide tailored for you and see it grow!
               </Typography>
               <Button
                 variant="contained"

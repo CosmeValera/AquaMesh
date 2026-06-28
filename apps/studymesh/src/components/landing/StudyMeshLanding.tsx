@@ -1493,7 +1493,7 @@ const KnowledgeContextEvidence = () => (
           lineHeight: 1.5,
         }}
       >
-        A meta-analysis in Educational Psychologist found prior knowledge predicts later performance.
+        A meta-analysis in Educational Psychologist found that prior knowledge shapes how learners understand new information.
       </Typography>
       <Typography
         sx={{

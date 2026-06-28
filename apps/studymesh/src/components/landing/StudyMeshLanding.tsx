@@ -1435,10 +1435,10 @@ const ContextComparisonSection = () => {
 const KnowledgeContextQuote = () => (
   <Box
     component="a"
-    href="https://link.springer.com/article/10.1007/s12144-023-04440-4"
+    href="https://books.google.com/books/about/Educational_Psychology.html?id=HINpAAAAMAAJ"
     target="_blank"
     rel="noreferrer"
-    aria-label="Read about Ausubel's meaningful learning theory"
+    aria-label="Read Ausubel's Educational Psychology: A Cognitive View"
     sx={{
       position: 'relative',
       zIndex: 2,
@@ -1447,7 +1447,6 @@ const KnowledgeContextQuote = () => (
       p: { xs: 2.2, md: 3.1 },
       borderRadius: 2,
       border: `1px solid ${alpha(brand.line, 0.95)}`,
-      borderLeft: `5px solid ${brand.blueDark}`,
       bgcolor: alpha('#FFFFFF', 0.96),
       boxShadow: `0 24px 64px ${alpha(brand.blueDark, 0.1)}`,
       color: 'inherit',

@@ -22,14 +22,22 @@ describe('StudyBlockView quiz feedback', () => {
                 {
                   option: 'Une traversee',
                   explanation:
-                    'This means crossing an expanse, not a multi-stage trip.',
+                    'Incorrect - this means crossing an expanse, not a multi-stage trip.',
                 },
                 {
                   option: 'Un periple',
                   explanation:
-                    'This is the term for a long journey with stages.',
+                    'Correct - this is the term for a long journey with stages.',
                 },
               ],
+            },
+            {
+              question: 'Which term describes a stop during air travel?',
+              options: ['Une escale', 'Une ascension', 'Une escapade'],
+              correctIndex: 0,
+              answer: 'Une escale',
+              explanation: 'Une escale is a stopover.',
+              hint: 'Think of a stop before the final destination.',
             },
           ],
         }}
@@ -41,15 +49,21 @@ describe('StudyBlockView quiz feedback', () => {
       screen.getByText('Think about a journey with several stops.'),
     ).toBeInTheDocument()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(
+      screen.queryByText('Think about a journey with several stops.'),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }))
     fireEvent.click(screen.getByRole('button', { name: 'Une traversee' }))
 
     expect(
       screen.getByText(
-        'This means crossing an expanse, not a multi-stage trip.',
+        'this means crossing an expanse, not a multi-stage trip.',
       ),
     ).toBeInTheDocument()
     expect(
-      screen.getByText('This is the term for a long journey with stages.'),
+      screen.getByText('this is the term for a long journey with stages.'),
     ).toBeInTheDocument()
   })
 

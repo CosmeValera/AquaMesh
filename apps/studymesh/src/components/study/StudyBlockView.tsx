@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Button,
@@ -106,6 +106,11 @@ const feedbackForOption = (
     (item) =>
       normalizeFeedbackKey(item.option) === normalizeFeedbackKey(option),
   )?.explanation || ''
+
+const stripFeedbackVerdict = (value: string): string =>
+  value
+    .replace(/^\s*(?:correct|incorrect|right|wrong)\s*(?:[-–—:]\s*)?/i, '')
+    .trim()
 
 const buildQuizExplainPrompt = ({
   question,
@@ -691,6 +696,11 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   const [reviewStatus, setReviewStatus] = useState(
     String(props.status || 'needsReview'),
   )
+
+  useEffect(() => {
+    setQuizHintOpen(false)
+  }, [focusedQuestionIndex, selectedIndex, type])
+
   const noteStorageKey = `studymesh-study-note-mode-${hashValue(
     `${String(props.title || '')}:${String(props.text || '')}`,
   )}`
@@ -972,7 +982,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   ? 'error.main'
                   : 'divider'
 
-              const feedback = feedbackForOption(optionFeedback, option)
+              const feedback = stripFeedbackVerdict(
+                feedbackForOption(optionFeedback, option),
+              )
 
               return (
                 <Box key={`${option}-${index}`}>
@@ -1171,9 +1183,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   const isCorrect = index === question.correctIndex
                   const isSelected = selected === index
 
-                  const feedback = feedbackForOption(
-                    question.optionFeedback,
-                    option,
+                  const feedback = stripFeedbackVerdict(
+                    feedbackForOption(question.optionFeedback, option),
                   )
 
                   return (
@@ -1234,32 +1245,42 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   )
                 })}
               </Stack>
-              {!hasAnswered && question.hint ? (
-                <Box>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<HelpOutlineIcon fontSize="small" />}
-                    onClick={() => setQuizHintOpen((current) => !current)}
-                  >
-                    Hint
-                  </Button>
-                  {quizHintOpen ? (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 1 }}
-                    >
-                      {question.hint}
-                    </Typography>
-                  ) : null}
-                </Box>
-              ) : null}
               {hasAnswered && (
                 <Typography variant="body2" color="text.secondary">
                   {question.explanation || `Correct answer: ${question.answer}`}
                 </Typography>
               )}
+            </Stack>
+          </Paper>
+          {!hasAnswered && question.hint && quizHintOpen ? (
+            <Paper
+              variant="outlined"
+              sx={{ px: 2, py: 1.25, borderRadius: 1.5 }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                {question.hint}
+              </Typography>
+            </Paper>
+          ) : null}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '1fr auto 1fr' },
+              gap: 1.25,
+              alignItems: 'center',
+            }}
+          >
+            <Box sx={{ justifySelf: { xs: 'center', sm: 'start' } }}>
+              {!hasAnswered && question.hint ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<HelpOutlineIcon fontSize="small" />}
+                  onClick={() => setQuizHintOpen((current) => !current)}
+                >
+                  Hint
+                </Button>
+              ) : null}
               {hasAnswered && onAskAi ? (
                 <Button
                   size="small"
@@ -1275,35 +1296,35 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                       }),
                     )
                   }
-                  sx={{ alignSelf: 'flex-start' }}
                 >
                   Explain
                 </Button>
               ) : null}
+            </Box>
+            <Stack direction="row" spacing={1.25} justifyContent="center">
+              <Button
+                variant="outlined"
+                disabled={safeIndex === 0}
+                onClick={() =>
+                  setFocusedQuestionIndex((current) => Math.max(0, current - 1))
+                }
+              >
+                Previous
+              </Button>
+              <Button
+                variant="contained"
+                disabled={safeIndex >= questions.length - 1}
+                onClick={() =>
+                  setFocusedQuestionIndex((current) =>
+                    Math.min(questions.length - 1, current + 1),
+                  )
+                }
+              >
+                Next
+              </Button>
             </Stack>
-          </Paper>
-          <Stack direction="row" spacing={1.25} justifyContent="center">
-            <Button
-              variant="outlined"
-              disabled={safeIndex === 0}
-              onClick={() =>
-                setFocusedQuestionIndex((current) => Math.max(0, current - 1))
-              }
-            >
-              Previous
-            </Button>
-            <Button
-              variant="contained"
-              disabled={safeIndex >= questions.length - 1}
-              onClick={() =>
-                setFocusedQuestionIndex((current) =>
-                  Math.min(questions.length - 1, current + 1),
-                )
-              }
-            >
-              Next
-            </Button>
-          </Stack>
+            <Box />
+          </Box>
         </Stack>
       </Box>
     )

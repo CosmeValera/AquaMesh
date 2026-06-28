@@ -77,7 +77,7 @@ const geminiDetailTargets: Record<
   quiz: {
     short: '6-10 multiple-choice questions',
     medium: '10-16 multiple-choice questions',
-    long: '16-24 multiple-choice questions',
+    long: '30-40 multiple-choice questions',
   },
 }
 

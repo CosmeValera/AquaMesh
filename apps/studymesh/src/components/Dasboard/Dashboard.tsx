@@ -8,6 +8,7 @@ import { StudyGuideStorage } from '../../studyGuides/storage'
 import { STUDYMESH_GUIDE_STUDY_PATH_ID } from '../../studyGuides/studyMeshGuideSeed'
 import { ensureStarterDashboards } from '../../customHooks/useWorkspaceActions'
 import {
+  ASK_DASHBOARD_CHAT_EVENT,
   CLOSE_DASHBOARD_CHAT_EVENT,
   OPEN_DASHBOARD_CHAT_EVENT,
 } from '../workspace/workspaceEvents'
@@ -51,19 +52,6 @@ const Dashboards = () => {
 
   const currentDashboard = openDashboards[selectedDashboard]
   const currentDashboardId = currentDashboard?.id
-
-  useEffect(() => {
-    const openDashboardChat = () => setDashboardChatOpen(true)
-    const closeDashboardChat = () => setDashboardChatOpen(false)
-
-    window.addEventListener(OPEN_DASHBOARD_CHAT_EVENT, openDashboardChat)
-    window.addEventListener(CLOSE_DASHBOARD_CHAT_EVENT, closeDashboardChat)
-
-    return () => {
-      window.removeEventListener(OPEN_DASHBOARD_CHAT_EVENT, openDashboardChat)
-      window.removeEventListener(CLOSE_DASHBOARD_CHAT_EVENT, closeDashboardChat)
-    }
-  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -135,6 +123,37 @@ const Dashboards = () => {
       content,
     })
   }
+
+  useEffect(() => {
+    const openDashboardChat = () => setDashboardChatOpen(true)
+    const closeDashboardChat = () => setDashboardChatOpen(false)
+    const askDashboardChatFromEvent = (event: Event) => {
+      const detail = (event as CustomEvent<{ content?: unknown }>).detail
+      if (typeof detail?.content !== 'string' || !detail.content.trim()) {
+        setDashboardChatOpen(true)
+        return
+      }
+
+      if (dashboardChatOpen) {
+        return
+      }
+
+      askDashboardChat(detail.content)
+    }
+
+    window.addEventListener(OPEN_DASHBOARD_CHAT_EVENT, openDashboardChat)
+    window.addEventListener(CLOSE_DASHBOARD_CHAT_EVENT, closeDashboardChat)
+    window.addEventListener(ASK_DASHBOARD_CHAT_EVENT, askDashboardChatFromEvent)
+
+    return () => {
+      window.removeEventListener(OPEN_DASHBOARD_CHAT_EVENT, openDashboardChat)
+      window.removeEventListener(CLOSE_DASHBOARD_CHAT_EVENT, closeDashboardChat)
+      window.removeEventListener(
+        ASK_DASHBOARD_CHAT_EVENT,
+        askDashboardChatFromEvent,
+      )
+    }
+  }, [dashboardChatOpen])
 
   const closeDashboard = (dashboardId: string) => {
     removeDashboard(dashboardId)

@@ -67,6 +67,7 @@ import {
   type QuickCreateSourceScope,
 } from '../../quickCreate/quickCreateActions'
 import { renderMarkdown } from '../study/StudyBlockView'
+import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 
 export type { DashboardAnswerSourceRef } from '../../dashboardChat/askDashboard'
 
@@ -1661,6 +1662,23 @@ const DashboardChatPanel = ({
 
     void answerQuestion(trimmed, pendingMessage.id, previousMessages)
   }
+
+  useEffect(() => {
+    const askFromEvent = (event: Event) => {
+      const detail = (event as CustomEvent<{ content?: unknown }>).detail
+      if (typeof detail?.content !== 'string' || !detail.content.trim()) {
+        return
+      }
+
+      sendQuestion(detail.content)
+    }
+
+    window.addEventListener(ASK_DASHBOARD_CHAT_EVENT, askFromEvent)
+
+    return () => {
+      window.removeEventListener(ASK_DASHBOARD_CHAT_EVENT, askFromEvent)
+    }
+  }, [])
 
   const lastQueuedQuestionIdRef = useRef<string | null>(null)
   useEffect(() => {

@@ -24,6 +24,7 @@ import {
   readStudyGuidePageHref,
 } from '../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
+import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -686,6 +687,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   const [focusedQuizAnswers, setFocusedQuizAnswers] = useState<
     Record<number, number>
   >({})
+  const [quizResultsOpen, setQuizResultsOpen] = useState(false)
   const [focusedFlashcardGrades, setFocusedFlashcardGrades] = useState<
     Record<number, 'known' | 'missed'>
   >({})
@@ -700,6 +702,21 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   useEffect(() => {
     setQuizHintOpen(false)
   }, [focusedQuestionIndex, selectedIndex, type])
+
+  const askAi = (content: string) => {
+    if (onAskAi) {
+      onAskAi(content)
+      return
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent(ASK_DASHBOARD_CHAT_EVENT, {
+          detail: { content },
+        }),
+      )
+    }
+  }
 
   const noteStorageKey = `studymesh-study-note-mode-${hashValue(
     `${String(props.title || '')}:${String(props.text || '')}`,
@@ -1058,13 +1075,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               {explanation}
             </Typography>
           )}
-          {selectedIndex !== null && onAskAi ? (
+          {selectedIndex !== null ? (
             <Button
               size="small"
               variant="outlined"
               startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
               onClick={() =>
-                onAskAi(
+                askAi(
                   buildQuizExplainPrompt({
                     question,
                     selectedAnswer,
@@ -1139,6 +1156,123 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       return focusedQuizAnswers[index] === item.correctIndex ? total + 1 : total
     }, 0)
     const wrong = answered - correct
+    const skipped = questions.length - answered
+    const scorePercent =
+      questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0
+    const resultRows = [
+      { label: 'Right', value: correct, color: 'success.main' },
+      { label: 'Wrong', value: wrong, color: 'error.main' },
+      { label: 'Skipped', value: skipped, color: 'text.primary' },
+    ]
+
+    if (quizResultsOpen) {
+      return (
+        <Box
+          sx={{
+            minHeight: {
+              xs: 'calc(100dvh - 180px)',
+              md: 'calc(100vh - 190px)',
+            },
+            display: 'grid',
+            placeItems: 'center',
+            px: { xs: 1, md: 3 },
+            py: { xs: 2, md: 4 },
+          }}
+        >
+          <Stack spacing={2.5} sx={{ width: 'min(820px, 100%)' }}>
+            <Typography variant="h4" fontWeight={700}>
+              You did it! Quiz complete.
+            </Typography>
+            <Paper
+              variant="outlined"
+              sx={{
+                p: { xs: 2.5, sm: 4 },
+                borderRadius: 2,
+                bgcolor: 'background.paper',
+              }}
+            >
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={{ xs: 3, sm: 6 }}
+                alignItems="center"
+                justifyContent="space-around"
+              >
+                <Box
+                  sx={(theme) => ({
+                    width: 184,
+                    height: 184,
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    background: `conic-gradient(${theme.palette.success.main} ${scorePercent * 3.6}deg, ${theme.palette.action.selected} 0deg)`,
+                    position: 'relative',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      inset: 18,
+                      borderRadius: '50%',
+                      bgcolor: 'background.paper',
+                    },
+                  })}
+                >
+                  <Box sx={{ position: 'relative', textAlign: 'center' }}>
+                    <Typography variant="h4" fontWeight={800}>
+                      {correct}/{questions.length}
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      color="text.secondary"
+                      fontWeight={700}
+                    >
+                      {scorePercent}%
+                    </Typography>
+                  </Box>
+                </Box>
+                <Stack spacing={1.25} sx={{ minWidth: 180 }}>
+                  {resultRows.map(({ label, value, color }) => (
+                    <Stack
+                      key={label}
+                      direction="row"
+                      justifyContent="space-between"
+                      spacing={4}
+                    >
+                      <Typography variant="h6" color="text.secondary">
+                        {label}
+                      </Typography>
+                      <Typography variant="h6" color={color} fontWeight={800}>
+                        {value}
+                      </Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              </Stack>
+            </Paper>
+            <Stack direction="row" spacing={1.25} justifyContent="center">
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setFocusedQuestionIndex(questions.length - 1)
+                  setQuizResultsOpen(false)
+                }}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setFocusedQuizAnswers({})
+                  setFocusedQuestionIndex(0)
+                  setQuizHintOpen(false)
+                  setQuizResultsOpen(false)
+                }}
+              >
+                Retake quiz
+              </Button>
+            </Stack>
+          </Stack>
+        </Box>
+      )
+    }
 
     return (
       <Box
@@ -1191,12 +1325,16 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     <Box key={`${option}-${index}`}>
                       <Button
                         variant="outlined"
-                        onClick={() =>
+                        onClick={() => {
+                          if (hasAnswered) {
+                            return
+                          }
+
                           setFocusedQuizAnswers((current) => ({
                             ...current,
                             [safeIndex]: index,
                           }))
-                        }
+                        }}
                         sx={(theme) => {
                           const stateMain = isCorrect
                             ? theme.palette.success.main
@@ -1214,6 +1352,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                             whiteSpace: 'normal',
                             color: 'text.primary',
                             borderColor: hasAnswered ? resultBorder : 'divider',
+                            cursor: hasAnswered ? 'default' : 'pointer',
                             bgcolor:
                               hasAnswered && (isCorrect || isSelected)
                                 ? alpha(stateMain, 0.12)
@@ -1281,13 +1420,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   Hint
                 </Button>
               ) : null}
-              {hasAnswered && onAskAi ? (
+              {hasAnswered ? (
                 <Button
                   size="small"
                   variant="outlined"
                   startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
                   onClick={() =>
-                    onAskAi(
+                    askAi(
                       buildQuizExplainPrompt({
                         question: question.question,
                         selectedAnswer,
@@ -1313,14 +1452,18 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               </Button>
               <Button
                 variant="contained"
-                disabled={safeIndex >= questions.length - 1}
-                onClick={() =>
+                onClick={() => {
+                  if (safeIndex >= questions.length - 1) {
+                    setQuizResultsOpen(true)
+                    return
+                  }
+
                   setFocusedQuestionIndex((current) =>
                     Math.min(questions.length - 1, current + 1),
                   )
-                }
+                }}
               >
-                Next
+                {safeIndex >= questions.length - 1 ? 'Done' : 'Next'}
               </Button>
             </Stack>
             <Box />

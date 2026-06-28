@@ -97,4 +97,49 @@ describe('StudyBlockView quiz feedback', () => {
       "I am taking a quiz on this material and was given this question: 'Which term best describes a long journey that includes many different tourist stops or stages along the way?'\n\nI chose this as the answer: 'Une traversee'\n\nThat answer was incorrect. The correct answer is 'Un periple'\n\nHelp me understand why my answer was incorrect.",
     )
   })
+
+  it('locks answered questions and shows completion results with retake', () => {
+    render(
+      <StudyBlockView
+        type="QuizCarouselBlock"
+        props={{
+          title: 'Travel vocabulary',
+          items: [
+            {
+              question:
+                'Which term best describes a long trip with many stages?',
+              options: ['Une traversee', 'Un periple', 'Une escapade'],
+              correctIndex: 1,
+              answer: 'Un periple',
+              explanation: 'Un periple means a long multi-stage journey.',
+            },
+            {
+              question: 'Which term describes a stop during air travel?',
+              options: ['Une escale', 'Une ascension', 'Une escapade'],
+              correctIndex: 0,
+              answer: 'Une escale',
+              explanation: 'Une escale is a stopover.',
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Une traversee' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Un periple' }))
+    expect(screen.getByText('Correct 0')).toBeInTheDocument()
+    expect(screen.getByText('Wrong 1')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(screen.getByText('You did it! Quiz complete.')).toBeInTheDocument()
+    expect(screen.getByText('Skipped')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retake quiz' }))
+    expect(
+      screen.queryByText('You did it! Quiz complete.'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('Answered 0/2')).toBeInTheDocument()
+  })
 })

@@ -28,7 +28,6 @@ import {
   OPEN_STUDY_PATH_EVENT,
   useWorkspaceActions,
 } from '../../customHooks/useWorkspaceActions'
-import { dispatchWorkspaceOnboardingEvent } from '../onboarding/onboardingEvents'
 import CreateStudyGuideModal from '../studyGuides/CreateStudyGuideModal'
 import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
 import {
@@ -54,6 +53,7 @@ import {
   WorkspaceCreationTaskState,
 } from '../../workspaceCreationStatus'
 import {
+  ASK_DASHBOARD_CHAT_EVENT,
   CLOSE_CREATE_STUDIO_EVENT,
   CLOSE_DASHBOARD_CHAT_EVENT,
   OPEN_DASHBOARD_CHAT_EVENT,
@@ -672,13 +672,6 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     permissions.canCreateQuickCreate,
     permissions.canCreateStudyPath,
   ])
-
-  const resetOrCloseStudio = () => {
-    setIsStudioOpen(false)
-    if (isMobile) {
-      setMobileSection('dashboard')
-    }
-  }
 
   const closeStudio = () => {
     setIsStudioOpen(false)
@@ -1619,6 +1612,18 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       openInWorkspace: true,
     })
   }
+  const askAiFromCreationPreview = (content: string) => {
+    if (isMobile) {
+      setIsStudioOpen(false)
+      setMobileSection('ai-chat')
+    }
+
+    window.dispatchEvent(
+      new CustomEvent(ASK_DASHBOARD_CHAT_EVENT, {
+        detail: { content },
+      }),
+    )
+  }
   const deleteActiveMaterial = () => {
     if (!activeMaterialDraft) {
       return
@@ -1765,6 +1770,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   key={`${widget.name}-${component.id}`}
                   type={component.type}
                   props={component.props || {}}
+                  onAskAi={askAiFromCreationPreview}
                 />
               )),
           )}

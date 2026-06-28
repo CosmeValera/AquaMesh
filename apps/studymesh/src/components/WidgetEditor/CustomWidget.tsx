@@ -43,9 +43,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
 import ComponentPreview from './components/preview/ComponentPreview'
-import StudyBlockView, {
-  isStudyBlockType,
-} from '../study/StudyBlockView'
+import StudyBlockView, { isStudyBlockType } from '../study/StudyBlockView'
 
 interface ComponentData {
   id: string
@@ -64,6 +62,7 @@ interface CustomWidgetProps {
     components?: ComponentData[]
   }
   showWidgetName?: boolean
+  onAskAi?: (question: string) => void
 }
 
 // Icon mapping - must match ButtonEditor
@@ -90,6 +89,7 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({
   customProps,
   name,
   showWidgetName = false,
+  onAskAi,
 }) => {
   const [widgetComponents, setWidgetComponents] = useState<ComponentData[]>([])
   const [widgetName, setWidgetName] = useState<string>('')
@@ -337,7 +337,11 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({
     if (isStudyBlockType(component.type)) {
       return (
         <Box key={component.id} sx={{ mb: 2 }}>
-          <StudyBlockView type={component.type} props={component.props} />
+          <StudyBlockView
+            type={component.type}
+            props={component.props}
+            onAskAi={onAskAi}
+          />
         </Box>
       )
     }

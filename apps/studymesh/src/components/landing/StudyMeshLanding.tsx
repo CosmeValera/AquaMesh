@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import { Box, Button, Container, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -253,9 +259,83 @@ const preloadContextImages = () => {
   })
 }
 
+const countInlineLines = (element: HTMLElement) => {
+  const lineTops = new Set<number>()
+
+  Array.from(element.getClientRects()).forEach((rect) => {
+    if (rect.width <= 0 || rect.height <= 0) {
+      return
+    }
+
+    lineTops.add(Math.round(rect.top))
+  })
+
+  return lineTops.size
+}
+
+const useHeroHeadlineWrapMode = () => {
+  const phraseRef = useRef<HTMLSpanElement | null>(null)
+  const [phraseWraps, setPhraseWraps] = useState(false)
+
+  useLayoutEffect(() => {
+    const phrase = phraseRef.current
+
+    if (!phrase || typeof window === 'undefined') {
+      return
+    }
+
+    let frameId: number | null = null
+    let disposed = false
+
+    const measure = () => {
+      frameId = null
+      if (disposed) {
+        return
+      }
+
+      const wraps = countInlineLines(phrase) > 1
+      setPhraseWraps((current) => (current === wraps ? current : wraps))
+    }
+
+    const measureOnce = () => {
+      if (disposed || frameId !== null) {
+        return
+      }
+
+      if (typeof window.requestAnimationFrame === 'function') {
+        frameId = window.requestAnimationFrame(measure)
+        return
+      }
+
+      measure()
+    }
+
+    const fonts = 'fonts' in document ? document.fonts : null
+    if (fonts) {
+      void fonts.ready.then(measureOnce)
+    } else {
+      measureOnce()
+    }
+
+    return () => {
+      disposed = true
+
+      if (
+        frameId !== null &&
+        typeof window.cancelAnimationFrame === 'function'
+      ) {
+        window.cancelAnimationFrame(frameId)
+      }
+    }
+  }, [])
+
+  return { phraseRef, phraseWraps }
+}
+
 const StudyMeshLanding = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const { phraseRef, phraseWraps } = useHeroHeadlineWrapMode()
 
   const openCreateStudyGuide = () => {
     navigate('/study-guides?create=1')
@@ -320,7 +400,11 @@ const StudyMeshLanding = () => {
               textAlign="center"
               sx={{ mx: 'auto' }}
             >
-              <Box sx={{ position: 'relative', display: 'inline-block' }}>
+              <Box
+                data-testid="hero-headline-underline-host"
+                data-underline-mode={phraseWraps ? 'wrapped' : 'full'}
+                sx={{ position: 'relative', display: 'inline-block' }}
+              >
                 <Typography
                   variant="h1"
                   sx={{
@@ -354,12 +438,50 @@ const StudyMeshLanding = () => {
                     Study guides
                   </Box>
                   <Box component="span" sx={{ display: 'block' }}>
-                    that grow with you.
+                    <Box
+                      ref={phraseRef}
+                      component="span"
+                      data-testid="hero-headline-wrap-probe"
+                      sx={{ display: 'inline' }}
+                    >
+                      that grow{' '}
+                      <Box
+                        component="span"
+                        data-testid="hero-headline-with-you"
+                        sx={{
+                          position: 'relative',
+                          display: 'inline-block',
+                          whiteSpace: 'nowrap',
+                          zIndex: 0,
+                          '&::after': {
+                            content: '""',
+                            display: phraseWraps ? 'block' : 'none',
+                            position: 'absolute',
+                            left: '-0.05em',
+                            right: '-0.02em',
+                            bottom: { xs: '-0.04em', md: '-0.03em' },
+                            height: { xs: 7, sm: 9, md: 12 },
+                            borderRadius: 999,
+                            background: `linear-gradient(90deg, ${alpha(
+                              brand.mint,
+                              0.82,
+                            )}, ${alpha(brand.sky, 0.78)})`,
+                            transform: 'rotate(-1deg)',
+                            zIndex: -1,
+                            boxShadow: `0 2px 0 ${alpha(brand.blue, 0.1)}`,
+                          },
+                        }}
+                      >
+                        with you.
+                      </Box>
+                    </Box>
                   </Box>
                 </Typography>
                 <Box
                   aria-hidden="true"
+                  data-testid="hero-full-underline"
                   sx={{
+                    display: phraseWraps ? 'none' : 'block',
                     position: 'absolute',
                     left: { xs: '4%', md: '10%' },
                     right: { xs: '4%', md: '8%' },

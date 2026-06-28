@@ -1,7 +1,7 @@
 /// <reference types="@testing-library/jest-dom" />
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { CssBaseline } from '@mui/material'
 import { ThemeProvider } from '@mui/material/styles'
 import { MemoryRouter, useLocation } from 'react-router-dom'
@@ -30,6 +30,37 @@ const renderLanding = () => {
         <LocationProbe />
       </ThemeProvider>
     </MemoryRouter>,
+  )
+}
+
+const makeRect = (top: number): DOMRect => ({
+  bottom: top + 48,
+  height: 48,
+  left: 0,
+  right: 100,
+  toJSON: () => ({}),
+  top,
+  width: 100,
+  x: 0,
+  y: top,
+})
+
+const makeRectList = (...rects: DOMRect[]): DOMRectList =>
+  Object.assign([...rects], {
+    item: (index: number) => rects[index] ?? null,
+  }) as unknown as DOMRectList
+
+const mockHeroWrapProbeLines = (lineTops: number[]) => {
+  vi.spyOn(HTMLElement.prototype, 'getClientRects').mockImplementation(
+    function getClientRects() {
+      if (
+        this.getAttribute('data-testid') === 'hero-headline-wrap-probe'
+      ) {
+        return makeRectList(...lineTops.map(makeRect))
+      }
+
+      return makeRectList(makeRect(0))
+    },
   )
 }
 
@@ -167,6 +198,33 @@ describe('StudyMeshLanding', () => {
     fireEvent.pointerMove(topicsRow, { clientX: 110 })
 
     expect(scrollBy).toHaveBeenLastCalledWith({ behavior: 'auto', left: -6 })
+  })
+
+  it('keeps the full hero underline when the second headline phrase fits on one line', async () => {
+    mockHeroWrapProbeLines([100])
+    renderLanding()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('hero-headline-underline-host')).toHaveAttribute(
+        'data-underline-mode',
+        'full',
+      )
+    })
+  })
+
+  it('moves the hero underline to with you when the second headline phrase wraps', async () => {
+    mockHeroWrapProbeLines([100, 158])
+    renderLanding()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('hero-headline-underline-host')).toHaveAttribute(
+        'data-underline-mode',
+        'wrapped',
+      )
+    })
+    expect(screen.getByTestId('hero-headline-with-you')).toHaveTextContent(
+      'with you.',
+    )
   })
 
   it('keeps the study guide CTA target unchanged', () => {

@@ -1429,11 +1429,87 @@ const ContextComparisonSection = () => {
               topic={activeTopic}
             />
           </Box>
+
+          <KnowledgeContextQuote />
         </Stack>
       </Container>
     </Box>
   )
 }
+
+const KnowledgeContextQuote = () => (
+  <Box
+    component="a"
+    href="https://link.springer.com/article/10.1007/s12144-023-04440-4"
+    target="_blank"
+    rel="noreferrer"
+    aria-label="Read about Ausubel's meaningful learning theory"
+    sx={{
+      position: 'relative',
+      zIndex: 2,
+      width: { xs: '100%', md: '74%' },
+      maxWidth: 860,
+      p: { xs: 2.2, md: 3.1 },
+      borderRadius: 2,
+      border: `1px solid ${alpha(brand.line, 0.95)}`,
+      borderLeft: `5px solid ${brand.blueDark}`,
+      bgcolor: alpha('#FFFFFF', 0.96),
+      boxShadow: `0 24px 64px ${alpha(brand.blueDark, 0.1)}`,
+      color: 'inherit',
+      display: 'block',
+      overflow: 'hidden',
+      textAlign: 'left',
+      textDecoration: 'none',
+      transition: 'border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease',
+      '&:hover': {
+        borderColor: alpha(brand.blueDark, 0.28),
+        boxShadow: `0 28px 72px ${alpha(brand.blueDark, 0.15)}`,
+        transform: 'translateY(-1px)',
+      },
+      '&:focus-visible': {
+        outline: `3px solid ${alpha(brand.sky, 0.35)}`,
+        outlineOffset: 3,
+      },
+    }}
+  >
+    <Typography
+      sx={{
+        color: brand.blueDark,
+        fontWeight: 900,
+        fontSize: '0.74rem',
+        letterSpacing: 0,
+        lineHeight: 1,
+        mb: 1.7,
+        textTransform: 'uppercase',
+      }}
+    >
+      The science
+    </Typography>
+    <Typography
+      component="blockquote"
+      sx={{
+        m: 0,
+        color: brand.ink,
+        fontFamily: 'Georgia, "Times New Roman", serif',
+        fontSize: { xs: '1.08rem', md: '1.28rem' },
+        fontStyle: 'italic',
+        lineHeight: 1.58,
+      }}
+    >
+      "The most important factor in learning is what the learner already knows."
+    </Typography>
+    <Typography
+      sx={{
+        mt: 1.9,
+        color: '#7C89AD',
+        fontSize: '0.9rem',
+        lineHeight: 1.45,
+      }}
+    >
+      - David Ausubel, Educational Psychologist, 1968
+    </Typography>
+  </Box>
+)
 
 const FeaturedContextCard = ({
   topic,

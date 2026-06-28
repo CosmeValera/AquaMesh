@@ -76,6 +76,19 @@ describe('StudyMeshLanding', () => {
     ).toBeInTheDocument()
     expect(screen.getByText(/think of exposure settings/i)).toBeInTheDocument()
     expect(screen.getByText(/with photography context/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', {
+        name: /read about ausubel's meaningful learning theory/i,
+      }),
+    ).toHaveAttribute(
+      'href',
+      'https://www.structural-learning.com/post/ausubels-meaningful-learning-theory-teachers-guide',
+    )
+    expect(
+      screen.getByText(
+        /The most important factor in learning is what the learner already knows/i,
+      ),
+    ).toBeInTheDocument()
     expect(screen.getByText(/one question/i))
       .toBeInTheDocument()
     expect(

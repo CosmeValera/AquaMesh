@@ -482,7 +482,13 @@ const StudyMeshLanding = () => {
 
         <GrowingGuidesSection />
 
-        <Box sx={{ bgcolor: 'transparent', py: { xs: 5, md: 7 } }}>
+        <Box
+          sx={{
+            bgcolor: 'transparent',
+            pt: { xs: 2.5, md: 3.5 },
+            pb: { xs: 5, md: 7 },
+          }}
+        >
           <Container maxWidth="md">
             <Stack spacing={2.4} alignItems="center" textAlign="center">
               <Typography
@@ -635,7 +641,7 @@ const GrowingGuidesSection = () => (
       scrollMarginTop: 104,
       bgcolor: 'transparent',
       pt: { xs: 11, lg: 14 },
-      pb: { xs: 6, md: 9 },
+      pb: { xs: 2, md: 3.5 },
       overflow: 'hidden',
     }}
   >
@@ -781,7 +787,7 @@ const GrowingGuidesMockup = () => (
     aria-label="Growing study guide product preview"
     sx={{
       position: 'relative',
-      minHeight: { xs: 700, lg: 660 },
+      minHeight: { xs: 610, lg: 630 },
       overflow: 'visible',
     }}
   >

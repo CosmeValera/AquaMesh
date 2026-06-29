@@ -270,6 +270,41 @@ describe('StudyBlockView quiz feedback', () => {
     expect(screen.getByText('An isolated state environment.')).toBeInTheDocument()
   })
 
+  it('grades consecutive flashcards when the same grade button is clicked rapidly', () => {
+    render(
+      <StudyBlockView
+        type="FlashcardCarouselBlock"
+        props={{
+          title: 'Terraform flashcards',
+          items: [
+            {
+              question: 'Provider',
+              answer: 'A plugin that talks to a platform API.',
+            },
+            {
+              question: 'State',
+              answer: 'A record of managed infrastructure.',
+            },
+            {
+              question: 'Workspace',
+              answer: 'An isolated state environment.',
+            },
+          ],
+        }}
+      />,
+    )
+
+    const correctButton = screen.getByRole('button', {
+      name: 'Correct answer',
+    })
+    fireEvent.click(correctButton)
+    fireEvent.click(correctButton)
+
+    expect(screen.getByText('Workspace')).toBeInTheDocument()
+    expect(screen.getByText('Answered 2/3')).toBeInTheDocument()
+    expect(screen.getByText('Known 2')).toBeInTheDocument()
+  })
+
   it('shows flashcard completion results with retake', async () => {
     render(
       <StudyBlockView

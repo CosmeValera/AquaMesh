@@ -1277,7 +1277,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     )
     const cardEntry = activeCardEntries[safeIndex]
     const card = cardEntry?.card
-    const currentGradeKey = cardEntry?.originalIndex ?? safeIndex
+    flashcardRuntimeRef.current = {
+      cardIndex: safeIndex,
+      grades: focusedFlashcardGrades,
+    }
     const answered = activeCardEntries.reduce(
       (total, entry) =>
         focusedFlashcardGrades[entry.originalIndex] ? total + 1 : total,
@@ -1326,8 +1329,33 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
         flashcardAdvanceTimerRef.current = null
       }
     }
+    const clearFlashcardFeedbackAnimations = () => {
+      flashcardFeedbackTimerRefs.current.forEach((timer) =>
+        window.clearTimeout(timer),
+      )
+      flashcardFeedbackTimerRefs.current = []
+      setFlashcardFeedbacks([])
+    }
+    const addFlashcardFeedbackAnimation = (grade: 'known' | 'missed') => {
+      const id = flashcardFeedbackIdRef.current + 1
+      flashcardFeedbackIdRef.current = id
+      setFlashcardFeedbacks((current) => [...current, { id, grade }])
+      const timer = window.setTimeout(() => {
+        flashcardFeedbackTimerRefs.current =
+          flashcardFeedbackTimerRefs.current.filter((item) => item !== timer)
+        setFlashcardFeedbacks((current) =>
+          current.filter((feedback) => feedback.id !== id),
+        )
+      }, 850)
+      flashcardFeedbackTimerRefs.current.push(timer)
+    }
     const moveToFlashcardIndex = (nextIndex: number) => {
       clearFlashcardAdvanceTimer()
+      clearFlashcardFeedbackAnimations()
+      flashcardRuntimeRef.current = {
+        cardIndex: nextIndex,
+        grades: focusedFlashcardGrades,
+      }
       persistFlashcardSession({
         cardIndex: nextIndex,
         grades: focusedFlashcardGrades,
@@ -1337,54 +1365,48 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       })
       setFocusedCardIndex(nextIndex)
       setFlipped(false)
-      setFlashcardFeedback(null)
-    }
-    const advanceAfterFlashcardGrade = (
-      nextGrades: Record<number, 'known' | 'missed'>,
-    ) => {
-      clearFlashcardAdvanceTimer()
-      flashcardAdvanceTimerRef.current = window.setTimeout(() => {
-        flashcardAdvanceTimerRef.current = null
-        if (safeIndex >= activeCardEntries.length - 1) {
-          persistFlashcardSession({
-            cardIndex: safeIndex,
-            grades: nextGrades,
-            flipped,
-            resultsOpen: true,
-            reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
-          })
-          setFlashcardResultsOpen(true)
-          setFlashcardFeedback(null)
-          return
-        }
-
-        persistFlashcardSession({
-          cardIndex: safeIndex + 1,
-          grades: nextGrades,
-          flipped: false,
-          resultsOpen: false,
-          reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
-        })
-        setFocusedCardIndex(safeIndex + 1)
-        setFlipped(false)
-        setFlashcardFeedback(null)
-      }, 850)
     }
     const gradeCard = (grade: 'known' | 'missed') => {
+      clearFlashcardAdvanceTimer()
+      const runtimeIndex = Math.min(
+        flashcardRuntimeRef.current.cardIndex,
+        Math.max(0, activeCardEntries.length - 1),
+      )
+      const runtimeEntry = activeCardEntries[runtimeIndex]
+
+      if (!runtimeEntry) {
+        return
+      }
+
       const nextGrades = {
-        ...focusedFlashcardGrades,
-        [currentGradeKey]: grade,
+        ...flashcardRuntimeRef.current.grades,
+        [runtimeEntry.originalIndex]: grade,
+      }
+      const isLastCard = runtimeIndex >= activeCardEntries.length - 1
+      const nextIndex = isLastCard
+        ? runtimeIndex
+        : Math.min(activeCardEntries.length - 1, runtimeIndex + 1)
+      flashcardRuntimeRef.current = {
+        cardIndex: nextIndex,
+        grades: nextGrades,
       }
       persistFlashcardSession({
-        cardIndex: safeIndex,
+        cardIndex: nextIndex,
         grades: nextGrades,
-        flipped,
-        resultsOpen: false,
+        flipped: false,
+        resultsOpen: isLastCard,
         reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
       })
       setFocusedFlashcardGrades(nextGrades)
-      setFlashcardFeedback(grade)
-      advanceAfterFlashcardGrade(nextGrades)
+      setFlipped(false)
+      addFlashcardFeedbackAnimation(grade)
+
+      if (isLastCard) {
+        setFlashcardResultsOpen(true)
+        return
+      }
+
+      setFocusedCardIndex(nextIndex)
     }
 
     if (!card) {
@@ -1798,15 +1820,16 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 </Box>
               </Box>
             </Paper>
-            {flashcardFeedback ? (
+            {flashcardFeedbacks.map((feedback, index) => (
               <Paper
+                key={feedback.id}
                 elevation={0}
                 sx={(theme) => {
-                  const isKnown = flashcardFeedback === 'known'
+                  const isKnown = feedback.grade === 'known'
                   return {
                     position: 'absolute',
                     inset: 0,
-                    zIndex: 2,
+                    zIndex: 2 + index,
                     borderRadius: 5,
                     display: 'grid',
                     placeItems: 'center',
@@ -1819,17 +1842,18 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                       : alpha(theme.palette.error.main, 0.32),
                     color: isKnown ? 'success.main' : 'error.main',
                     animation: 'flashcardGradeAway 850ms ease-in forwards',
+                    animationDelay: `${Math.min(index * 35, 140)}ms`,
                     pointerEvents: 'none',
                   }
                 }}
               >
                 <Typography variant="h3" fontWeight={800} textAlign="center">
-                  {flashcardFeedback === 'known'
+                  {feedback.grade === 'known'
                     ? 'Got it'
                     : "You'll get it next time"}
                 </Typography>
               </Paper>
-            ) : null}
+            ))}
           </Box>
           <Stack
             direction="row"

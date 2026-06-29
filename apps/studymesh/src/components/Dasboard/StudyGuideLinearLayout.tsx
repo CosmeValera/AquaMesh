@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Box, Typography } from '@mui/material'
+import { Box, Typography, useMediaQuery, useTheme } from '@mui/material'
 
 import type { DashboardLayout } from '../../state/store'
 import StudyBlockView, { isStudyBlockType } from '../study/StudyBlockView'
@@ -14,6 +14,32 @@ interface StudyGuideComponentNode {
 interface StudyGuideCardGroup {
   id: string
   components: StudyGuideComponentNode[]
+}
+
+type StudyGuideLabelVariant =
+  | 'h1'
+  | 'h2'
+  | 'h3'
+  | 'h4'
+  | 'h5'
+  | 'h6'
+  | 'subtitle1'
+  | 'subtitle2'
+  | 'body1'
+  | 'body2'
+
+const toMobileStudyGuideVariant = (
+  variant: StudyGuideLabelVariant,
+): StudyGuideLabelVariant => {
+  if (variant === 'h1' || variant === 'h2') {
+    return 'h5'
+  }
+
+  if (variant === 'h3' || variant === 'h4') {
+    return 'h6'
+  }
+
+  return variant
 }
 
 const collectStudyGuideComponentNodes = (
@@ -54,6 +80,8 @@ const StudyGuideLinearLayout = ({
   layout?: DashboardLayout
   onAskAi?: (question: string) => void
 }) => {
+  const theme = useTheme()
+  const compactView = useMediaQuery(theme.breakpoints.down('lg'))
   const components = useMemo(
     () => collectStudyGuideComponentNodes(layout),
     [layout],
@@ -113,23 +141,21 @@ const StudyGuideLinearLayout = ({
               const isLast = index === group.components.length - 1
 
               if (component.type === 'Label') {
+                const labelVariant =
+                  (component.props.variant as StudyGuideLabelVariant) ||
+                  'body1'
+                const renderedVariant = compactView
+                  ? toMobileStudyGuideVariant(labelVariant)
+                  : labelVariant
                 const title = (
                   <Typography
-                    variant={
-                      (component.props.variant as
-                        | 'h1'
-                        | 'h2'
-                        | 'h3'
-                        | 'h4'
-                        | 'h5'
-                        | 'h6'
-                        | 'subtitle1'
-                        | 'subtitle2'
-                        | 'body1'
-                        | 'body2') || 'body1'
-                    }
+                    variant={renderedVariant}
                     fontWeight={component.props.fontWeight as number}
                     gutterBottom={false}
+                    sx={{
+                      overflowWrap: 'anywhere',
+                      lineHeight: compactView ? 1.18 : undefined,
+                    }}
                   >
                     {String(component.props.text || '')}
                   </Typography>

@@ -237,19 +237,61 @@
 
 .studymesh-mobile-dashboard-layout {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 0;
-  overflow: visible;
+  gap: 12px;
+  padding: 12px 12px 24px;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .studymesh-mobile-widget-card {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
-  overflow: visible;
+  box-sizing: border-box;
+  overflow: hidden;
   padding: 0;
+}
+
+.studymesh-mobile-widget-card *,
+.studymesh-mobile-widget-card *::before,
+.studymesh-mobile-widget-card *::after {
+  box-sizing: border-box;
+}
+
+.studymesh-mobile-widget-card .MuiStack-root,
+.studymesh-mobile-widget-card .MuiBox-root,
+.studymesh-mobile-widget-card .MuiPaper-root {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.studymesh-mobile-widget-card .MuiTableContainer-root {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.studymesh-mobile-widget-card .MuiTable-root {
+  width: max-content;
+  min-width: 100%;
+}
+
+.studymesh-mobile-widget-card .MuiTableCell-root {
+  min-width: 96px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.studymesh-mobile-widget-card pre,
+.studymesh-mobile-widget-card code {
+  max-width: 100%;
 }
 
 .studymesh-study-page-title-row {
@@ -257,6 +299,7 @@
   grid-template-columns: 1fr auto;
   align-items: end;
   gap: 16px;
+  min-width: 0;
 }
 
 .studymesh-study-page-accent-rule {
@@ -271,6 +314,7 @@
   .studymesh-mobile-dashboard-layout {
     align-items: center;
     padding: 28px 24px 64px;
+    gap: 16px;
   }
 
   .studymesh-mobile-widget-card {

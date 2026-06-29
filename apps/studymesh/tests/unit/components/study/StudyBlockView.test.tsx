@@ -310,4 +310,65 @@ describe('StudyBlockView quiz feedback', () => {
     expect(screen.getByText('Answered 0/2')).toBeInTheDocument()
     expect(screen.getByText('Provider')).toBeInTheDocument()
   })
+
+  it('offers same cards when practicing a reduced flashcard stack', () => {
+    render(
+      <StudyBlockView
+        type="FlashcardCarouselBlock"
+        props={{
+          title: 'Terraform flashcards',
+          items: [
+            {
+              question: 'Provider',
+              answer: 'A plugin that talks to a platform API.',
+            },
+            {
+              question: 'State',
+              answer: 'A record of managed infrastructure.',
+            },
+            {
+              question: 'Workspace',
+              answer: 'An isolated state environment.',
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Provider'))
+    fireEvent.click(screen.getByRole('button', { name: 'Known' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByText('State'))
+    fireEvent.click(screen.getByRole('button', { name: 'Missed' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByText('Workspace'))
+    fireEvent.click(screen.getByRole('button', { name: 'Known' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Practice again' }))
+    expect(screen.queryByRole('menuitem', { name: 'Same cards' })).toBeNull()
+    fireEvent.click(
+      screen.getByRole('menuitem', { name: 'Only cards that you missed' }),
+    )
+
+    expect(screen.getByText('1 / 1')).toBeInTheDocument()
+    expect(screen.getByText('State')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('State'))
+    fireEvent.click(screen.getByRole('button', { name: 'Missed' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Practice again' }))
+    expect(screen.getByRole('menuitem', { name: 'All cards' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('menuitem', { name: 'Same cards' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('menuitem', { name: 'Only cards that you missed' }),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Same cards' }))
+
+    expect(screen.getByText('1 / 1')).toBeInTheDocument()
+    expect(screen.getByText('Answered 0/1')).toBeInTheDocument()
+    expect(screen.getByText('State')).toBeInTheDocument()
+  })
 })

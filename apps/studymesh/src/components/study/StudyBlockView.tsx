@@ -1237,6 +1237,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               Boolean(entry),
           )
       : allCardEntries
+    const hasCustomFlashcardStack = Boolean(
+      focusedFlashcardReviewCardIndexes &&
+        activeCardEntries.length !== allCardEntries.length,
+    )
     const safeIndex = Math.min(
       focusedCardIndex,
       Math.max(0, activeCardEntries.length - 1),
@@ -1444,6 +1448,31 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 >
                   All cards
                 </MenuItem>
+                {hasCustomFlashcardStack ? (
+                  <MenuItem
+                    onClick={() => {
+                      const sameCardIndexes = activeCardEntries.map(
+                        (entry) => entry.originalIndex,
+                      )
+                      const nextSession: StoredFocusedFlashcardSession = {
+                        cardIndex: 0,
+                        grades: {},
+                        flipped: false,
+                        resultsOpen: false,
+                        reviewCardIndexes: sameCardIndexes,
+                      }
+                      persistFlashcardSession(nextSession)
+                      setFocusedFlashcardGrades({})
+                      setFocusedCardIndex(0)
+                      setFocusedFlashcardReviewCardIndexes(sameCardIndexes)
+                      setFlipped(false)
+                      setFlashcardResultsOpen(false)
+                      setFlashcardPracticeAnchorEl(null)
+                    }}
+                  >
+                    Same cards
+                  </MenuItem>
+                ) : null}
                 <MenuItem
                   disabled={missed === 0}
                   onClick={() => {

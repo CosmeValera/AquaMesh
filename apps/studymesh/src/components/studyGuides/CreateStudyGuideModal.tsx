@@ -49,6 +49,7 @@ import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
 import { getUserKnownTopics } from '../../profileContext'
 import type { StudyGuideQuickStart } from '../../state/store'
 import { resolveContentLanguage } from '../../language/contentLanguage'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 
 interface CreateStudyGuideModalProps {
   open: boolean
@@ -92,9 +93,6 @@ const LOCAL_AI_ESTIMATE_COPY =
   'Local AI runs on your device and can be slow. For faster, richer Study Guides, use a Gemini or Cerebras API key.'
 const GEMINI_STUDY_PATH_ESTIMATE_MS = 60 * 1000
 const CEREBRAS_STUDY_PATH_ESTIMATE_MS = 10 * 1000
-const DEFAULT_STUDY_PATH_PROMPT =
-  'Study basic human anatomy focusing on organs and systems (cardiovascular, respiratory, digestive)'
-
 interface GeminiTimedProgress {
   startedAt: number
   elapsedMs: number
@@ -109,15 +107,15 @@ const getProviderPathProgressLabel = (
   provider === 'local'
     ? 'Generating dashboards with Google Local AI...'
     : isStrongAiProvider(provider)
-      ? `Generating ordered dashboards with ${providerLabels[provider]}...`
-      : 'Generating ordered dashboards with Hosted AI...'
+    ? `Generating ordered dashboards with ${providerLabels[provider]}...`
+    : 'Generating ordered dashboards with Hosted AI...'
 
 const getProviderPathDescription = (provider: QuickCreateAiProvider): string =>
   provider === 'local'
     ? 'Local AI is running on your device. StudyMesh plans the path first, then generates each lesson dashboard with its own estimated timer.'
     : isStrongAiProvider(provider)
-      ? `StudyMesh is sending the request to ${providerLabels[provider]} and converting the response into dashboards.`
-      : 'Hosted AI uses Study Credits and the app-hosted Cerebras model.'
+    ? `StudyMesh is sending the request to ${providerLabels[provider]} and converting the response into dashboards.`
+    : 'Hosted AI uses Study Credits and the app-hosted Cerebras model.'
 
 const formatPipelineRemaining = (remainingMs: number): string => {
   const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000))
@@ -187,10 +185,10 @@ const statusColor = (status: LocalPipelineStep['status']) =>
   status === 'failed'
     ? 'error'
     : status === 'complete'
-      ? 'success'
-      : status === 'running'
-        ? 'primary'
-        : 'default'
+    ? 'success'
+    : status === 'running'
+    ? 'primary'
+    : 'default'
 
 const aggregatePipelineSteps = (
   steps: LocalPipelineStep[],
@@ -214,10 +212,10 @@ const aggregatePipelineSteps = (
       )
         ? 'failed'
         : groupSteps.some((step) => step.status === 'running')
-          ? 'running'
-          : completeCount === groupSteps.length
-            ? 'complete'
-            : 'pending'
+        ? 'running'
+        : completeCount === groupSteps.length
+        ? 'complete'
+        : 'pending'
       const percent = Math.round(
         groupSteps.reduce((total, step) => total + step.percent, 0) /
           groupSteps.length,
@@ -445,10 +443,10 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
   onDraftMetaChange,
   initialPrompt,
 }) => {
+  const { t } = useInterfaceText()
+  const defaultStudyPathPrompt = t('studyGuides.defaultPrompt')
   const [step, setStep] = useState<'prompt' | 'review'>('prompt')
-  const [prompt, setPrompt] = useState(
-    initialPrompt || DEFAULT_STUDY_PATH_PROMPT,
-  )
+  const [prompt, setPrompt] = useState(initialPrompt || defaultStudyPathPrompt)
   const [aiProvider, setAiProvider] = useState<QuickCreateAiProvider>('hosted')
   const [draft, setDraft] = useState<AiStudyPathDraft | null>(null)
   const [reviewFolderName, setReviewFolderName] = useState('')
@@ -575,7 +573,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
 
   const reset = () => {
     setStep('prompt')
-    setPrompt(initialPrompt || DEFAULT_STUDY_PATH_PROMPT)
+    setPrompt(initialPrompt || defaultStudyPathPrompt)
     setDraft(null)
     setReviewFolderName('')
     setOpenInWorkspace(true)
@@ -957,13 +955,13 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
               >
                 <Stack spacing={2}>
                   <TextField
-                    label="Study Guide prompt"
+                    label={t('studyGuides.promptField')}
                     inputProps={{
-                      'aria-label': 'What should StudyMesh teach?',
+                      'aria-label': t('studyGuides.promptPlaceholder'),
                     }}
                     value={prompt}
                     onChange={(event) => setPrompt(event.target.value)}
-                    placeholder="Example: Help me learn React hooks as a beginner/someone with JS experience..."
+                    placeholder={t('studyGuides.promptExample')}
                     multiline
                     minRows={presentation === 'embedded' ? 5 : 6}
                     required
@@ -1115,8 +1113,8 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                                           lane.active?.status === 'failed'
                                             ? 'error'
                                             : lane.active?.status === 'complete'
-                                              ? 'success'
-                                              : 'primary'
+                                            ? 'success'
+                                            : 'primary'
                                         }
                                       />
                                       {lane.steps.length > 0 ? (

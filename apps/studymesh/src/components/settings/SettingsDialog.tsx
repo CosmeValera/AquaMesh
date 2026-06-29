@@ -8,6 +8,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
   Paper,
   Stack,
   TextField,
@@ -25,6 +26,13 @@ import {
 import { KnowledgeContextSettingsDialog } from '../profile/KnowledgeContextDialog'
 import { seedStudyMeshGuideStudyPath } from '../../studyGuides/studyMeshGuideSeed'
 import { STUDY_GUIDES_CHANGED_EVENT } from '../../studyGuides/storage'
+import {
+  readContentLanguageSettings,
+  saveContentLanguageSettings,
+  type ContentLanguageSettings,
+  type InterfaceLanguageCode,
+} from '../../language/contentLanguage'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 
 interface ProfileSettingsProps {
   userId: string
@@ -48,11 +56,14 @@ interface SettingsDialogProps extends Record<string, unknown> {
 const SettingsDialog: React.FC<SettingsDialogProps> = ({
   open,
   onClose,
-  title = 'Application Settings',
+  title,
   profileSettings,
   onDeleteStudyMeshProfile,
 }) => {
+  const { t } = useInterfaceText()
   const [status, setStatus] = React.useState('')
+  const [languageSettings, setLanguageSettings] =
+    React.useState<ContentLanguageSettings>(() => readContentLanguageSettings())
   const [profileDeleteConfirmation, setProfileDeleteConfirmation] =
     React.useState('')
   const [profileDeleteStatus, setProfileDeleteStatus] = React.useState('')
@@ -74,12 +85,18 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     setProfileDeleteStatus('')
     setIsProfileDeleteConfirmOpen(false)
     setIsKnowledgeContextOpen(false)
+    setLanguageSettings(readContentLanguageSettings())
   }, [open])
+
+  const persistLanguageSettings = (nextSettings: ContentLanguageSettings) => {
+    setLanguageSettings(nextSettings)
+    saveContentLanguageSettings(nextSettings)
+  }
 
   const handleAddStudyMeshGuide = () => {
     seedStudyMeshGuideStudyPath({ force: true })
     window.dispatchEvent(new CustomEvent(STUDY_GUIDES_CHANGED_EVENT))
-    setStatus('Welcome guide added.')
+    setStatus(t('settings.welcomeGuideAdded'))
   }
 
   const profileContext = readProfileContext()
@@ -88,7 +105,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     ? profileContext.roles
         .map((role) => getUserKnowledgeRoleLabel(role))
         .join(', ')
-    : 'Not set'
+    : t('settings.notSet')
 
   const handleDeleteStudyMeshProfile = async () => {
     if (!onDeleteStudyMeshProfile || profileDeleteConfirmation !== 'DELETE') {
@@ -112,7 +129,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       setProfileDeleteStatus(
         error instanceof Error
           ? error.message
-          : 'Could not delete the StudyMesh profile.',
+          : t('settings.deleteProfileFailed'),
       )
       setIsDeletingProfile(false)
     }
@@ -121,7 +138,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{title}</DialogTitle>
+        <DialogTitle>{title || t('settings.title')}</DialogTitle>
         <DialogContent dividers>
           <Box sx={{ display: 'grid', gap: 2 }}>
             {profileSettings ? (
@@ -130,7 +147,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 sx={{ p: 2, border: 1, borderColor: 'divider' }}
               >
                 <Typography fontWeight={700} sx={{ mb: 1.5 }}>
-                  Profile
+                  {t('settings.profile')}
                 </Typography>
                 <Stack spacing={2}>
                   <Stack direction="row" spacing={2} alignItems="center">
@@ -157,7 +174,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                         size="small"
                         startIcon={<PhotoCameraIcon />}
                       >
-                        Upload image
+                        {t('settings.uploadImage')}
                         <input
                           hidden
                           type="file"
@@ -172,7 +189,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                         onClick={profileSettings.onRemoveAvatar}
                         disabled={!profileSettings.avatarSrc}
                       >
-                        Remove
+                        {t('settings.remove')}
                       </Button>
                     </Stack>
                   </Stack>
@@ -182,7 +199,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     </Typography>
                   ) : null}
                   <TextField
-                    label="User name"
+                    label={t('settings.userName')}
                     value={profileSettings.userName}
                     onChange={(event) =>
                       profileSettings.onUserNameChange(event.target.value)
@@ -195,7 +212,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       size="small"
                       onClick={profileSettings.onSaveProfile}
                     >
-                      Save profile
+                      {t('settings.saveProfile')}
                     </Button>
                   </Box>
                 </Stack>
@@ -207,14 +224,13 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               sx={{ p: 2, border: 1, borderColor: 'divider' }}
             >
               <Typography fontWeight={700} sx={{ mb: 1 }}>
-                Explanation Context
+                {t('settings.explanationContext')}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                StudyMesh uses this to choose useful Quick Start comparisons in
-                new Study Guides.
+                {t('settings.explanationContextHelp')}
               </Typography>
               <Typography variant="body2" sx={{ mb: 1 }}>
-                Role: {roleLabel}
+                {t('settings.role')}: {roleLabel}
               </Typography>
               {knownTopics.length ? (
                 <Stack
@@ -234,7 +250,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   color="text.secondary"
                   sx={{ mb: 2 }}
                 >
-                  No known topics saved.
+                  {t('settings.noKnownTopics')}
                 </Typography>
               )}
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -243,8 +259,36 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   size="small"
                   onClick={() => setIsKnowledgeContextOpen(true)}
                 >
-                  Edit context
+                  {t('settings.editContext')}
                 </Button>
+              </Stack>
+            </Paper>
+
+            <Paper
+              elevation={0}
+              sx={{ p: 2, border: 1, borderColor: 'divider' }}
+            >
+              <Typography fontWeight={700} sx={{ mb: 1.5 }}>
+                {t('settings.language')}
+              </Typography>
+              <Stack spacing={2}>
+                <TextField
+                  select
+                  label={t('settings.interfaceLanguage')}
+                  value={languageSettings.interfaceLanguage}
+                  onChange={(event) =>
+                    persistLanguageSettings({
+                      ...languageSettings,
+                      interfaceLanguage: event.target
+                        .value as InterfaceLanguageCode,
+                    })
+                  }
+                  fullWidth
+                  size="small"
+                >
+                  <MenuItem value="en">English</MenuItem>
+                  <MenuItem value="es">Español</MenuItem>
+                </TextField>
               </Stack>
             </Paper>
 
@@ -255,21 +299,22 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
                 <MenuBookOutlinedIcon color="primary" />
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography fontWeight={700}>Welcome Guide</Typography>
+                  <Typography fontWeight={700}>
+                    {t('settings.welcomeGuide')}
+                  </Typography>
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{ mb: 1.5 }}
                   >
-                    Restore the built-in StudyMesh guide in the Study Guides
-                    library.
+                    {t('settings.welcomeGuideHelp')}
                   </Typography>
                   <Button
                     variant="outlined"
                     size="small"
                     onClick={handleAddStudyMeshGuide}
                   >
-                    Add welcome guide
+                    {t('settings.addWelcomeGuide')}
                   </Button>
                 </Box>
               </Box>
@@ -290,7 +335,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   fontWeight={800}
                   sx={{ display: 'block', mb: 1 }}
                 >
-                  Danger Zone
+                  {t('settings.dangerZone')}
                 </Typography>
                 <Box
                   sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}
@@ -298,17 +343,17 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   <DeleteOutlineIcon color="error" />
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography fontWeight={700}>
-                      Delete StudyMesh Account Data
+                      {t('settings.deleteAccountData')}
                     </Typography>
                     <Typography
                       variant="body2"
                       color="text.secondary"
                       sx={{ mb: 1.5 }}
                     >
-                      Permanently delete your StudyMesh account.
+                      {t('settings.deleteAccountHelp')}
                     </Typography>
                     <TextField
-                      label="Type DELETE to confirm"
+                      label={t('settings.typeDelete')}
                       value={profileDeleteConfirmation}
                       onChange={(event) =>
                         setProfileDeleteConfirmation(event.target.value)
@@ -328,8 +373,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       }
                     >
                       {isDeletingProfile
-                        ? 'Deleting profile...'
-                        : 'Delete StudyMesh account'}
+                        ? t('settings.deletingProfile')
+                        : t('settings.deleteAccount')}
                     </Button>
                     {profileDeleteStatus ? (
                       <Typography
@@ -353,7 +398,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Close</Button>
+          <Button onClick={onClose}>{t('settings.close')}</Button>
         </DialogActions>
       </Dialog>
 
@@ -384,13 +429,11 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         }}
       >
         <DialogTitle sx={{ color: 'error.main', fontWeight: 800 }}>
-          Delete StudyMesh Account Data?
+          {t('settings.deleteConfirmTitle')}
         </DialogTitle>
         <DialogContent dividers>
           <Typography variant="body2" color="text.secondary">
-            This permanently deletes your StudyMesh account data, including
-            synced study guides and profile details. You will be signed out when
-            deletion finishes.
+            {t('settings.deleteConfirmBody')}
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -398,7 +441,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             onClick={() => setIsProfileDeleteConfirmOpen(false)}
             disabled={isDeletingProfile}
           >
-            Cancel
+            {t('settings.cancel')}
           </Button>
           <Button
             variant="contained"
@@ -407,8 +450,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             disabled={isDeletingProfile}
           >
             {isDeletingProfile
-              ? 'Deleting...'
-              : 'I understand, delete my account data'}
+              ? t('settings.deletingProfile')
+              : t('settings.deleteConfirmAction')}
           </Button>
         </DialogActions>
       </Dialog>

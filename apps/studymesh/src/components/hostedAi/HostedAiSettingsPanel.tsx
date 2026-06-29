@@ -5,22 +5,21 @@ import BoltOutlinedIcon from '@mui/icons-material/BoltOutlined'
 import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
 import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined'
 
-import { STUDY_CREDITS_LABEL } from '../../quickCreate/ai'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 import HostedAiPricingCards from './HostedAiPricingCards'
 import StudyCreditIcon from './StudyCreditIcon'
 import { useHostedAiStatus } from './useHostedAiStatus'
-
-const creditUnit = (count: number): string =>
-  count === 1 ? 'credit' : 'credits'
 
 const CostCard = ({
   icon,
   title,
   credits,
+  creditLabel,
 }: {
   icon: React.ReactNode
   title: string
   credits: number
+  creditLabel: string
 }) => (
   <Box
     sx={{
@@ -65,7 +64,7 @@ const CostCard = ({
           border: 0,
         }}
       >
-        {title}: {credits} {creditUnit(credits)}
+        {title}: {credits} {creditLabel}
       </Box>
       <Typography variant="subtitle2" fontWeight={900} color="text.primary">
         {title}
@@ -75,19 +74,24 @@ const CostCard = ({
         fontWeight={850}
         sx={{ color: '#008575', lineHeight: 1.25 }}
       >
-        {credits} {creditUnit(credits)}
+        {credits} {creditLabel}
       </Typography>
     </Box>
   </Box>
 )
 
 const HostedAiSettingsPanel: React.FC = () => {
-  const { status, loading, error } = useHostedAiStatus()
+  const { t } = useInterfaceText()
+  const { status, loading } = useHostedAiStatus()
+  const creditUnit = React.useCallback(
+    (count: number) => (count === 1 ? t('ai.credit') : t('ai.credits')),
+    [t],
+  )
 
   if (!status && loading) {
     return (
       <Alert severity="info" sx={{ mb: 1.5 }}>
-        Loading {STUDY_CREDITS_LABEL}...
+        {t('ai.loadingStudyCredits')}
       </Alert>
     )
   }
@@ -95,7 +99,7 @@ const HostedAiSettingsPanel: React.FC = () => {
   if (!status) {
     return (
       <Alert severity="warning" sx={{ mb: 1.5 }}>
-        {error || `${STUDY_CREDITS_LABEL} unavailable.`}
+        {t('ai.studyCreditsUnavailable')}
       </Alert>
     )
   }
@@ -145,7 +149,7 @@ const HostedAiSettingsPanel: React.FC = () => {
             fontWeight={950}
             sx={{ color: '#008575', letterSpacing: 1.1 }}
           >
-            Your balance
+            {t('ai.yourBalance')}
           </Typography>
           <Stack direction="row" spacing={1.15} alignItems="center">
             <Typography variant="h3" fontWeight={950} lineHeight={1}>
@@ -153,7 +157,7 @@ const HostedAiSettingsPanel: React.FC = () => {
             </Typography>
             <StudyCreditIcon size={34} />
             <Typography variant="subtitle1" fontWeight={900}>
-              {STUDY_CREDITS_LABEL}
+              {t('ai.credits')}
             </Typography>
           </Stack>
         </Box>
@@ -253,7 +257,7 @@ const HostedAiSettingsPanel: React.FC = () => {
       </Box>
 
       <Typography variant="subtitle1" fontWeight={950} sx={{ mt: 2.25, mb: 1 }}>
-        What actions cost
+        {t('ai.whatActionsCost')}
       </Typography>
       <Box
         sx={{
@@ -267,18 +271,21 @@ const HostedAiSettingsPanel: React.FC = () => {
       >
         <CostCard
           icon={<AutoStoriesOutlinedIcon />}
-          title="Study Guide"
+          title={t('ai.studyGuide')}
           credits={status.costs['study-guide']}
+          creditLabel={creditUnit(status.costs['study-guide'])}
         />
         <CostCard
           icon={<BoltOutlinedIcon />}
-          title="Quick Create"
+          title={t('ai.quickCreate')}
           credits={status.costs['quick-create']}
+          creditLabel={creditUnit(status.costs['quick-create'])}
         />
         <CostCard
           icon={<ChatBubbleOutlineOutlinedIcon />}
-          title="AI Chat message"
+          title={t('ai.chatMessage')}
           credits={status.costs.chat}
+          creditLabel={creditUnit(status.costs.chat)}
         />
       </Box>
 
@@ -325,12 +332,10 @@ const HostedAiSettingsPanel: React.FC = () => {
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="subtitle2" fontWeight={950}>
-            Credit balance
+            {t('ai.creditBalance')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Study Credits only increase when a credit purchase is completed.
-            Creating, retrying, refreshing, or failed hosted generations never
-            add credits back.
+            {t('ai.creditBalanceHelp')}
           </Typography>
         </Box>
       </Box>

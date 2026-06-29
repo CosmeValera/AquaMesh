@@ -20,6 +20,7 @@ import {
   deleteStudyGuidePage,
   reorderStudyGuidePage,
 } from '../../studyGuides/pages'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 
 type StudyGuidePagesPanelVariant = 'desktop' | 'mobile'
 
@@ -77,6 +78,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
   onPageSelected,
   variant,
 }) => {
+  const { t } = useInterfaceText()
   const [open, setOpen] = useState(true)
   const [panelWidth, setPanelWidth] = useState(248)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
@@ -168,11 +170,11 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
 
   if (!mobile && !open) {
     return (
-      <Tooltip title="Open Pages">
+      <Tooltip title={t('workspace.openPages')}>
         <Box
           component="button"
           type="button"
-          aria-label="Open Pages panel"
+          aria-label={t('workspace.openPagesPanel')}
           onClick={() => setOpen(true)}
           sx={{
             width: 58,
@@ -193,7 +195,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
         >
           <MenuBookOutlinedIcon fontSize="small" />
           <Typography variant="caption" sx={{ writingMode: 'vertical-rl' }}>
-            Pages
+            {t('workspace.pages')}
           </Typography>
         </Box>
       </Tooltip>
@@ -233,13 +235,13 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
         }}
       >
         <Typography variant="subtitle2" fontWeight={600}>
-          Pages
+          {t('workspace.pages')}
         </Typography>
         {!mobile ? (
-          <Tooltip title="Close Pages">
+          <Tooltip title={t('workspace.closePages')}>
             <IconButton
               size="small"
-              aria-label="Close Pages panel"
+              aria-label={t('workspace.closePagesPanel')}
               onClick={() => setOpen(false)}
               sx={pageIconButtonSx()}
             >
@@ -265,7 +267,11 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                   !mobile && insertionIndex === index ? 'true' : undefined
                 }
                 draggable={!mobile}
-                aria-label={mobile ? undefined : `Drag ${pageTitle} to reorder`}
+                aria-label={
+                  mobile
+                    ? undefined
+                    : `${t('workspace.dragPageToReorder')}: ${pageTitle}`
+                }
                 onDragStart={
                   mobile
                     ? undefined
@@ -305,8 +311,8 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                   cursor: mobile
                     ? 'default'
                     : draggedIndex === index
-                    ? 'grabbing'
-                    : 'grab',
+                      ? 'grabbing'
+                      : 'grab',
                   transition: theme.transitions.create([
                     'background-color',
                     'border-color',
@@ -337,8 +343,8 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                     display: active
                       ? 'block'
                       : !mobile && insertionIndex === index
-                      ? 'block'
-                      : 'none',
+                        ? 'block'
+                        : 'none',
                     position: 'absolute',
                     top: active ? 8 : -4,
                     bottom: active ? 8 : 'auto',
@@ -415,7 +421,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                   <>
                     <IconButton
                       size="small"
-                      aria-label={`Move ${pageTitle} up`}
+                      aria-label={`${t('workspace.movePageUp')}: ${pageTitle}`}
                       disabled={index === 0}
                       onClick={() => movePage(index, index - 1)}
                       sx={pageIconButtonSx()}
@@ -424,7 +430,9 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                     </IconButton>
                     <IconButton
                       size="small"
-                      aria-label={`Move ${pageTitle} down`}
+                      aria-label={`${t(
+                        'workspace.movePageDown',
+                      )}: ${pageTitle}`}
                       disabled={index === studyPath.dashboards.length - 1}
                       onClick={() => movePage(index, index + 1)}
                       sx={pageIconButtonSx()}
@@ -434,11 +442,11 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                   </>
                 ) : null}
                 {page.deletable ? (
-                  <Tooltip title="Delete page">
+                  <Tooltip title={t('workspace.deletePage')}>
                     <IconButton
                       className="study-guide-page-delete-action"
                       size="small"
-                      aria-label={`Delete ${pageTitle}`}
+                      aria-label={`${t('workspace.deletePage')}: ${pageTitle}`}
                       onClick={() =>
                         onStudyPathChange(
                           deleteStudyGuidePage(studyPath, page.dashboardKey),
@@ -500,14 +508,14 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
               color: 'text.primary',
             }}
           >
-            Add Page
+            {t('workspace.addPage')}
           </Button>
         </Box>
       ) : null}
       {!mobile ? (
         <Box
           role="separator"
-          aria-label="Resize Pages panel"
+          aria-label={t('workspace.resizePagesPanel')}
           onMouseDown={startPanelResize}
           sx={{
             position: 'absolute',

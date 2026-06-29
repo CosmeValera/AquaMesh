@@ -46,12 +46,13 @@ describe('content language resolver', () => {
 
   it('uses settings when short prompts are ambiguous', () => {
     saveContentLanguageSettings({
+      interfaceLanguage: 'es',
       defaultContentLanguage: 'fr',
       autoDetectAiLanguage: true,
     })
 
     expect(resolveContentLanguage({ text: 'OK' })).toEqual({
-      language: 'fr',
+      language: 'es',
       source: 'settings',
     })
   })
@@ -105,25 +106,44 @@ describe('content language resolver', () => {
     })
   })
 
-  it('persists default language and auto-detection preference', () => {
+  it('falls back to settings when ELD cannot separate short close languages', () => {
     saveContentLanguageSettings({
+      interfaceLanguage: 'es',
+      defaultContentLanguage: 'es',
+      autoDetectAiLanguage: true,
+    })
+
+    expect(
+      resolveContentLanguage({
+        text: 'aprender algo de ingles',
+      }),
+    ).toEqual({
+      language: 'es',
+      source: 'settings',
+    })
+  })
+
+  it('derives default AI language from interface language and always auto-detects', () => {
+    saveContentLanguageSettings({
+      interfaceLanguage: 'es',
       defaultContentLanguage: 'de',
       autoDetectAiLanguage: false,
     })
 
-    expect(window.localStorage.getItem(CONTENT_LANGUAGE_SETTINGS_KEY)).toContain(
-      '"defaultContentLanguage":"de"',
-    )
+    expect(
+      window.localStorage.getItem(CONTENT_LANGUAGE_SETTINGS_KEY),
+    ).toContain('"defaultContentLanguage":"es"')
     expect(readContentLanguageSettings()).toEqual({
-      defaultContentLanguage: 'de',
-      autoDetectAiLanguage: false,
+      interfaceLanguage: 'es',
+      defaultContentLanguage: 'es',
+      autoDetectAiLanguage: true,
     })
     expect(
       resolveContentLanguage({
-        text: 'Crea una guia de estudio sobre derivadas y limites.',
+        text: 'OK',
       }),
     ).toEqual({
-      language: 'de',
+      language: 'es',
       source: 'settings',
     })
   })

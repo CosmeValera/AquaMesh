@@ -9,13 +9,11 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
-  FormControlLabel,
   IconButton,
   InputAdornment,
   LinearProgress,
   MenuItem,
   Stack,
-  Switch,
   TextField,
   Tooltip,
   Typography,
@@ -41,17 +39,8 @@ import {
   QuickCreateAiProvider,
   testLocalLanguageModel,
 } from '../../quickCreate/ai'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 import HostedAiSettingsPanel from './HostedAiSettingsPanel'
-import {
-  CONTENT_LANGUAGE_OPTIONS,
-  readContentLanguageSettings,
-  saveContentLanguageSettings,
-  type ContentLanguageSettings,
-  type StudyMeshLanguageCode,
-} from '../../language/contentLanguage'
-
-const LOCAL_AI_ESTIMATE_COPY =
-  'Local AI runs on your device and can be slow. Performance depends on your hardware but it may take around 10 mins for each prompt.'
 
 interface AiModeDialogProps {
   open: boolean
@@ -64,6 +53,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
   onClose,
   notice,
 }) => {
+  const { t } = useInterfaceText()
   const [aiProvider, setAiProvider] =
     React.useState<QuickCreateAiProvider>('hosted')
   const [strongCredentials, setStrongCredentials] =
@@ -74,8 +64,6 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
   )
   const [isTestingLocalAi, setIsTestingLocalAi] = React.useState(false)
   const [showAiKey, setShowAiKey] = React.useState(false)
-  const [languageSettings, setLanguageSettings] =
-    React.useState<ContentLanguageSettings>(() => readContentLanguageSettings())
 
   const selectedStrongProvider: StrongAiProviderId = isStrongAiProvider(
     aiProvider,
@@ -105,13 +93,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
     setLocalAiStatus('')
     setLocalAiProgress(null)
     setShowAiKey(false)
-    setLanguageSettings(readContentLanguageSettings())
   }, [open])
-
-  const persistLanguageSettings = (nextSettings: ContentLanguageSettings) => {
-    setLanguageSettings(nextSettings)
-    saveContentLanguageSettings(nextSettings)
-  }
 
   const persistAiSettings = (
     provider: QuickCreateAiProvider,
@@ -203,7 +185,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
 
   const handleTestLocalAi = async () => {
     setIsTestingLocalAi(true)
-    setLocalAiStatus('Checking Google Local AI...')
+    setLocalAiStatus(t('ai.checkingLocal'))
     setLocalAiProgress(null)
 
     try {
@@ -213,24 +195,22 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
       })
 
       if (!result.supported) {
-        setLocalAiStatus(
-          'Google Local AI is not supported in this browser. Use Google Chrome with the built-in AI model enabled.',
-        )
+        setLocalAiStatus(t('ai.localUnsupported'))
       } else if (result.availability === 'unavailable') {
-        setLocalAiStatus(
-          'Google Local AI is unavailable. The browser may need Chrome, model access, or a downloaded local model.',
-        )
+        setLocalAiStatus(t('ai.localUnavailable'))
       } else {
         const promptResult = result.result?.trim()
         setLocalAiStatus(
           promptResult
-            ? `Google Local AI ${result.availability}: ${promptResult}`
-            : `Google Local AI ${result.availability}: No prompt result returned.`,
+            ? `${t('ai.localGoogle')} ${result.availability}: ${promptResult}`
+            : `${t('ai.localGoogle')} ${result.availability}: ${t(
+                'ai.noPromptResult',
+              )}`,
         )
       }
     } catch (error) {
       setLocalAiStatus(
-        error instanceof Error ? error.message : 'Google Local AI test failed.',
+        error instanceof Error ? error.message : t('ai.localTestFailed'),
       )
     } finally {
       setIsTestingLocalAi(false)
@@ -244,15 +224,15 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
           <AutoAwesomeIcon color="primary" />
           <Stack spacing={0.25}>
             <Typography component="span" variant="h6" fontWeight={900}>
-              AI Mode
+              {t('ai.mode')}
             </Typography>
             <Typography component="span" variant="body2" color="text.secondary">
-              Choose how StudyMesh generates study materials.
+              {t('ai.modeHelp')}
             </Typography>
           </Stack>
         </Stack>
         <IconButton
-          aria-label="Close AI mode"
+          aria-label={t('ai.closeMode')}
           onClick={onClose}
           sx={{
             ...dialogStyles.closeButton,
@@ -270,7 +250,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
           <Box>
             <TextField
               select
-              label="AI provider"
+              label={t('ai.provider')}
               value={aiProvider}
               onChange={(event) =>
                 handleAiProviderChange(
@@ -279,58 +259,19 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
               }
               fullWidth
               size="small"
-              helperText="Used by Quick Create, Create Study Guide, and dashboard chat."
+              helperText={t('ai.providerHelp')}
             >
-              <MenuItem value="hosted">Hosted AI</MenuItem>
-              <MenuItem value="local">Google Local AI</MenuItem>
-              <MenuItem value="gemini">Own Gemini API token</MenuItem>
-              <MenuItem value="cerebras">Own Cerebras API key</MenuItem>
+              <MenuItem value="hosted">{t('ai.hosted')}</MenuItem>
+              <MenuItem value="local">{t('ai.localGoogle')}</MenuItem>
+              <MenuItem value="gemini">{t('ai.ownGemini')}</MenuItem>
+              <MenuItem value="cerebras">{t('ai.ownCerebras')}</MenuItem>
             </TextField>
-          </Box>
-
-          <Box>
-            <TextField
-              select
-              label="Default answer language"
-              value={languageSettings.defaultContentLanguage}
-              onChange={(event) =>
-                persistLanguageSettings({
-                  ...languageSettings,
-                  defaultContentLanguage: event.target
-                    .value as StudyMeshLanguageCode,
-                })
-              }
-              fullWidth
-              size="small"
-              helperText="Used when StudyMesh cannot confidently detect the prompt or chat language."
-              sx={{ mb: 1 }}
-            >
-              {CONTENT_LANGUAGE_OPTIONS.map((option) => (
-                <MenuItem key={option.code} value={option.code}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={languageSettings.autoDetectAiLanguage}
-                  onChange={(event) =>
-                    persistLanguageSettings({
-                      ...languageSettings,
-                      autoDetectAiLanguage: event.target.checked,
-                    })
-                  }
-                />
-              }
-              label="Match prompt/chat language automatically"
-            />
           </Box>
 
           {aiProvider === 'local' && (
             <Box>
               <Alert severity="info" sx={{ mb: 1.5 }}>
-                {LOCAL_AI_ESTIMATE_COPY}
+                {t('ai.localEstimate')}
               </Alert>
               <Button
                 variant="outlined"
@@ -338,9 +279,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
                 onClick={handleTestLocalAi}
                 disabled={isTestingLocalAi}
               >
-                {isTestingLocalAi
-                  ? 'Testing local AI...'
-                  : 'Check Google Local AI'}
+                {isTestingLocalAi ? t('ai.testingLocal') : t('ai.checkLocal')}
               </Button>
               {localAiProgress !== null && (
                 <LinearProgress
@@ -485,7 +424,7 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('settings.close')}</Button>
       </DialogActions>
     </Dialog>
   )

@@ -59,6 +59,7 @@ import {
   type StudyGuideCreationStatus,
 } from '../../studyGuides/creationQueue'
 import TopNavBar from '../topnavbar/TopNavBar'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 
 type PendingGuide = StudyGuideCreationJob
 
@@ -67,20 +68,18 @@ const MAX_LOCAL_BROWSER_CONCURRENCY = 1
 
 const quickPromptOptions = [
   {
-    label: 'Human anatomy',
-    prompt: 'Teach me the basics of human anatomy for an exam.',
+    labelKey: 'studyGuides.quickPromptHumanAnatomy',
+    promptKey: 'studyGuides.quickPromptHumanAnatomyPrompt',
   },
   {
-    label: 'Spanish subjunctive',
-    prompt:
-      'Create a Study Guide for Spanish subjunctive with examples and practice.',
+    labelKey: 'studyGuides.quickPromptLanguageSubjunctive',
+    promptKey: 'studyGuides.quickPromptLanguageSubjunctivePrompt',
   },
   {
-    label: 'Photosynthesis',
-    prompt:
-      'Explain photosynthesis from beginner level to exam-ready understanding.',
+    labelKey: 'studyGuides.quickPromptPhotosynthesis',
+    promptKey: 'studyGuides.quickPromptPhotosynthesisPrompt',
   },
-]
+] as const
 
 const getGenerationEstimateSeconds = (): number => {
   const provider = readQuickCreateAiSettings().provider || 'hosted'
@@ -111,31 +110,37 @@ const sortPendingGuidesForDisplay = (guides: PendingGuide[]) =>
       Date.parse(second.createdAt || '') - Date.parse(first.createdAt || ''),
   )
 
-const getPendingStatusLabel = (status: StudyGuideCreationStatus): string => {
+const getPendingStatusLabel = (
+  status: StudyGuideCreationStatus,
+  t: ReturnType<typeof useInterfaceText>['t'],
+): string => {
   if (status === 'queued') {
-    return 'Queued'
+    return t('studyGuides.queued')
   }
 
   if (status === 'running') {
-    return 'Creating'
+    return t('studyGuides.creating')
   }
 
   if (status === 'interrupted') {
-    return 'Interrupted'
+    return t('studyGuides.interrupted')
   }
 
   if (status === 'failed') {
-    return 'Failed'
+    return t('studyGuides.failed')
   }
 
-  return 'Creating'
+  return t('studyGuides.creating')
 }
 
-const getPendingErrorMessage = (guide: PendingGuide): string =>
+const getPendingErrorMessage = (
+  guide: PendingGuide,
+  t: ReturnType<typeof useInterfaceText>['t'],
+): string =>
   guide.errorMessage ||
   (guide.status === 'interrupted'
-    ? 'Creation was interrupted by a refresh. Retry when ready.'
-    : 'Could not create this Study Guide.')
+    ? t('studyGuides.interruptedMessage')
+    : t('studyGuides.failedMessage'))
 
 const isLocalProvider = (provider: StudyGuideCreationProvider): boolean =>
   provider === 'local'
@@ -144,8 +149,13 @@ const canAutoRetryPendingGuide = (guide: PendingGuide): boolean =>
   guide.provider !== 'hosted' ||
   guide.autoRetryCount < HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT
 
-const getRetryButtonLabel = (guide: PendingGuide): string =>
-  guide.provider === 'hosted' ? 'Retry (2 SC)' : 'Retry'
+const getRetryButtonLabel = (
+  guide: PendingGuide,
+  t: ReturnType<typeof useInterfaceText>['t'],
+): string =>
+  guide.provider === 'hosted'
+    ? t('studyGuides.retryCredits')
+    : t('studyGuides.retry')
 
 const formatDuration = (seconds: number): string => {
   const safeSeconds = Math.max(0, Math.floor(seconds))
@@ -159,13 +169,17 @@ const formatDuration = (seconds: number): string => {
   return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`
 }
 
-const formatGuideDate = (value: string) => {
+const formatGuideDate = (
+  value: string,
+  t: ReturnType<typeof useInterfaceText>['t'],
+  language = 'en',
+) => {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
-    return 'Unknown date'
+    return t('studyGuides.unknownDate')
   }
 
-  return new Intl.DateTimeFormat('en-GB', {
+  return new Intl.DateTimeFormat(language === 'es' ? 'es-ES' : 'en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -250,6 +264,7 @@ const sortGuides = (guides: StudyGuideRecord[], sortMode: StudyGuideSortMode) =>
   })
 
 const StudyGuidesPage = () => {
+  const { t, language } = useInterfaceText()
   const navigate = useNavigate()
   const theme = useTheme()
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
@@ -431,9 +446,7 @@ const StudyGuidesPage = () => {
       }
 
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Could not create this Study Guide.'
+        error instanceof Error ? error.message : t('studyGuides.failedMessage')
       const canAutoRetry =
         isRetryableStudyGuideCreationError(errorMessage) &&
         canAutoRetryPendingGuide(job)
@@ -452,8 +465,8 @@ const StudyGuidesPage = () => {
           job.provider === 'hosted'
             ? HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE
             : nextStatus === 'failed'
-              ? errorMessage
-              : null,
+            ? errorMessage
+            : null,
       })
     } finally {
       activeJobsRef.current.delete(job.id)
@@ -648,7 +661,7 @@ const StudyGuidesPage = () => {
                 fontSize: { xs: '1.25rem', sm: '1.55rem', md: '2.125rem' },
               }}
             >
-              My Study Guides
+              {t('studyGuides.title')}
             </Typography>
             <Typography
               color="text.secondary"
@@ -659,7 +672,7 @@ const StudyGuidesPage = () => {
                 fontSize: { xs: '0.82rem', sm: '0.95rem', md: '1rem' },
               }}
             >
-              Open a guide or create a new learning workspace.
+              {t('studyGuides.subtitle')}
             </Typography>
           </Box>
 
@@ -686,7 +699,7 @@ const StudyGuidesPage = () => {
                     setSearchExpanded(false)
                   }
                 }}
-                placeholder="Search guides..."
+                placeholder={t('studyGuides.search')}
                 size="small"
                 sx={{
                   width: { xs: 168, sm: 220, md: 260 },
@@ -705,9 +718,9 @@ const StudyGuidesPage = () => {
                 }}
               />
             ) : (
-              <Tooltip title="Search guides">
+              <Tooltip title={t('studyGuides.search')}>
                 <IconButton
-                  aria-label="Search guides"
+                  aria-label={t('studyGuides.search')}
                   onClick={() => setSearchExpanded(true)}
                   sx={(theme) => ({
                     width: 38,
@@ -733,7 +746,7 @@ const StudyGuidesPage = () => {
             <Stack
               direction="row"
               role="group"
-              aria-label="Study Guide view"
+              aria-label={t('studyGuides.listView')}
               sx={(theme) => ({
                 flexShrink: 0,
                 bgcolor: 'background.paper',
@@ -765,9 +778,9 @@ const StudyGuidesPage = () => {
               <Box
                 component="button"
                 type="button"
-                aria-label="Grid view"
+                aria-label={t('studyGuides.gridView')}
                 aria-pressed={viewMode === 'grid'}
-                title="Grid view"
+                title={t('studyGuides.gridView')}
                 onClick={() => selectViewMode('grid')}
               >
                 <ViewModuleIcon fontSize="small" />
@@ -775,9 +788,9 @@ const StudyGuidesPage = () => {
               <Box
                 component="button"
                 type="button"
-                aria-label="List view"
+                aria-label={t('studyGuides.listView')}
                 aria-pressed={viewMode === 'list'}
-                title="List view"
+                title={t('studyGuides.listView')}
                 onClick={() => selectViewMode('list')}
               >
                 <ViewListIcon fontSize="small" />
@@ -799,7 +812,9 @@ const StudyGuidesPage = () => {
                 justifyContent: 'space-between',
               }}
             >
-              {sortMode === 'recent' ? 'Most recent' : 'Title'}
+              {sortMode === 'recent'
+                ? t('studyGuides.sortRecent')
+                : t('studyGuides.sortTitle')}
             </Button>
             <Button
               variant="contained"
@@ -814,7 +829,7 @@ const StudyGuidesPage = () => {
                 boxShadow: 'none',
               }}
             >
-              New Study Guide
+              {t('studyGuides.newTitle')}
             </Button>
           </Stack>
         </Stack>
@@ -829,13 +844,13 @@ const StudyGuidesPage = () => {
             selected={sortMode === 'recent'}
             onClick={() => selectSortMode('recent')}
           >
-            Most recent
+            {t('studyGuides.sortRecent')}
           </MenuItem>
           <MenuItem
             selected={sortMode === 'title'}
             onClick={() => selectSortMode('title')}
           >
-            Title
+            {t('studyGuides.sortTitle')}
           </MenuItem>
         </Menu>
 
@@ -854,7 +869,7 @@ const StudyGuidesPage = () => {
             <Paper
               component="button"
               type="button"
-              aria-label="New Study Guide"
+              aria-label={t('studyGuides.newTitle')}
               onClick={openCreateGuide}
               elevation={0}
               sx={(theme) => ({
@@ -893,7 +908,10 @@ const StudyGuidesPage = () => {
                       : '0 20px 46px rgba(15,23,42,0.11)',
                 },
                 '&:focus-visible': {
-                  outline: `3px solid ${alpha(theme.palette.primary.main, 0.45)}`,
+                  outline: `3px solid ${alpha(
+                    theme.palette.primary.main,
+                    0.45,
+                  )}`,
                   outlineOffset: 3,
                 },
               })}
@@ -913,7 +931,7 @@ const StudyGuidesPage = () => {
                   <AddIcon sx={{ fontSize: 34 }} />
                 </Box>
                 <Typography variant="h6" fontWeight={650} color="text.primary">
-                  New Study Guide
+                  {t('studyGuides.newTitle')}
                 </Typography>
               </Stack>
             </Paper>
@@ -974,7 +992,7 @@ const StudyGuidesPage = () => {
                       )}
                     </Box>
                     <Typography variant="caption" color="text.secondary">
-                      {getPendingStatusLabel(guide.status)}
+                      {getPendingStatusLabel(guide.status, t)}
                     </Typography>
                   </Stack>
                   <Box sx={{ flex: 1 }}>
@@ -1004,7 +1022,7 @@ const StudyGuidesPage = () => {
                           overflow: 'hidden',
                         }}
                       >
-                        {getPendingErrorMessage(guide)}
+                        {getPendingErrorMessage(guide, t)}
                       </Typography>
                       <Stack
                         direction="row"
@@ -1022,7 +1040,7 @@ const StudyGuidesPage = () => {
                             textTransform: 'none',
                           }}
                         >
-                          {getRetryButtonLabel(guide)}
+                          {getRetryButtonLabel(guide, t)}
                         </Button>
                         <Button
                           variant="text"
@@ -1035,7 +1053,7 @@ const StudyGuidesPage = () => {
                             textTransform: 'none',
                           }}
                         >
-                          Delete
+                          {t('studyGuides.delete')}
                         </Button>
                       </Stack>
                     </Stack>
@@ -1043,14 +1061,14 @@ const StudyGuidesPage = () => {
                     <Stack spacing={1}>
                       <Typography variant="body2" color="text.secondary">
                         {isRunning
-                          ? `Elapsed ${formatDuration(
+                          ? `${t('studyGuides.elapsed')} ${formatDuration(
                               elapsedSeconds,
-                            )} · Estimate ${formatDuration(
+                            )} · ${t('studyGuides.estimate')} ${formatDuration(
                               guide.estimateSeconds,
                             )}`
-                          : `Waiting · Estimate ${formatDuration(
-                              guide.estimateSeconds,
-                            )}`}
+                          : `${t('studyGuides.waiting')} · ${t(
+                              'studyGuides.estimate',
+                            )} ${formatDuration(guide.estimateSeconds)}`}
                       </Typography>
                       <Button
                         variant="text"
@@ -1064,7 +1082,9 @@ const StudyGuidesPage = () => {
                           textTransform: 'none',
                         }}
                       >
-                        {isRunning ? 'Cancel' : 'Delete'}
+                        {isRunning
+                          ? t('studyGuides.cancel')
+                          : t('studyGuides.delete')}
                       </Button>
                     </Stack>
                   )}
@@ -1079,10 +1099,10 @@ const StudyGuidesPage = () => {
                   guide.emoji === '🧬'
                     ? '#0b84a5'
                     : guide.emoji === '📚'
-                      ? '#5b3f92'
-                      : guide.emoji === '🎨'
-                        ? '#b86b2d'
-                        : '#0b6f4f'
+                    ? '#5b3f92'
+                    : guide.emoji === '🎨'
+                    ? '#b86b2d'
+                    : '#0b6f4f'
                 const isNewlyCreated = newlyCreatedGuideIds.has(guide.id)
                 return (
                   <Paper
@@ -1103,8 +1123,8 @@ const StudyGuidesPage = () => {
                       borderColor: isNewlyCreated
                         ? theme.palette.warning.main
                         : guide.pinnedAt
-                          ? alpha(theme.palette.primary.main, 0.32)
-                          : 'divider',
+                        ? alpha(theme.palette.primary.main, 0.32)
+                        : 'divider',
                       bgcolor: 'background.paper',
                       cursor: 'pointer',
                       overflow: 'hidden',
@@ -1136,8 +1156,8 @@ const StudyGuidesPage = () => {
                               theme.palette.mode === 'dark' ? 0.2 : 0.16,
                             )}`
                           : theme.palette.mode === 'dark'
-                            ? '0 18px 44px rgba(0,0,0,0.36)'
-                            : '0 20px 46px rgba(15,23,42,0.11)',
+                          ? '0 18px 44px rgba(0,0,0,0.36)'
+                          : '0 20px 46px rgba(15,23,42,0.11)',
                       },
                     })}
                   >
@@ -1165,7 +1185,9 @@ const StudyGuidesPage = () => {
                             />
                           ) : null}
                           <IconButton
-                            aria-label={`Open ${guide.title} options`}
+                            aria-label={`${t('studyGuides.openOptions')}: ${
+                              guide.title
+                            }`}
                             onClick={(event) => openMenu(event, guide)}
                             sx={(theme) => ({
                               width: 34,
@@ -1218,12 +1240,15 @@ const StudyGuidesPage = () => {
                         >
                           {guide.description ||
                             guide.studyPath.dashboards[0]?.name ||
-                            'Open this learning workspace.'}
+                            t('studyGuides.openWorkspace')}
                         </Typography>
                       </Box>
                       <Typography variant="body2" color="text.secondary">
-                        {formatGuideDate(guide.createdAt)} &middot; {pageCount}{' '}
-                        {pageCount === 1 ? 'page' : 'pages'}
+                        {formatGuideDate(guide.createdAt, t, language)} &middot;{' '}
+                        {pageCount}{' '}
+                        {pageCount === 1
+                          ? t('studyGuides.page')
+                          : t('studyGuides.pages')}
                       </Typography>
                     </Stack>
                   </Paper>
@@ -1245,10 +1270,12 @@ const StudyGuidesPage = () => {
               overflowX: 'auto',
             }}
           >
-            <Table size="small" aria-label="Study Guides list">
+            <Table size="small" aria-label={t('studyGuides.listView')}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>Title</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    {t('studyGuides.sortTitle')}
+                  </TableCell>
                   <TableCell
                     sx={{
                       display: { xs: 'none', md: 'table-cell' },
@@ -1256,7 +1283,7 @@ const StudyGuidesPage = () => {
                       width: 96,
                     }}
                   >
-                    Pages
+                    {t('studyGuides.pages')}
                   </TableCell>
                   <TableCell
                     sx={{
@@ -1264,7 +1291,7 @@ const StudyGuidesPage = () => {
                       fontWeight: 700,
                     }}
                   >
-                    Prompt
+                    {t('studyGuides.prompt')}
                   </TableCell>
                   <TableCell
                     sx={{
@@ -1273,7 +1300,7 @@ const StudyGuidesPage = () => {
                       width: 140,
                     }}
                   >
-                    Created
+                    {t('studyGuides.created')}
                   </TableCell>
                   <TableCell sx={{ width: 56 }} />
                 </TableRow>
@@ -1333,7 +1360,10 @@ const StudyGuidesPage = () => {
                       <TableCell
                         sx={{ display: { xs: 'none', md: 'table-cell' } }}
                       >
-                        {pageCount} {pageCount === 1 ? 'page' : 'pages'}
+                        {pageCount}{' '}
+                        {pageCount === 1
+                          ? t('studyGuides.page')
+                          : t('studyGuides.pages')}
                       </TableCell>
                       <TableCell
                         sx={{
@@ -1347,16 +1377,18 @@ const StudyGuidesPage = () => {
                       >
                         {guide.description ||
                           guide.studyPath.dashboards[0]?.name ||
-                          'Open this learning workspace.'}
+                          t('studyGuides.openWorkspace')}
                       </TableCell>
                       <TableCell
                         sx={{ display: { xs: 'none', md: 'table-cell' } }}
                       >
-                        {formatGuideDate(guide.createdAt)}
+                        {formatGuideDate(guide.createdAt, t, language)}
                       </TableCell>
                       <TableCell align="right">
                         <IconButton
-                          aria-label={`Open ${guide.title} options`}
+                          aria-label={`${t('studyGuides.openOptions')}: ${
+                            guide.title
+                          }`}
                           onClick={(event) => openMenu(event, guide)}
                           sx={(theme) => ({
                             width: 34,
@@ -1404,42 +1436,44 @@ const StudyGuidesPage = () => {
       >
         <MenuItem onClick={startRename}>
           <EditIcon fontSize="small" sx={{ mr: 1 }} />
-          Rename
+          {t('studyGuides.rename')}
         </MenuItem>
         <MenuItem onClick={duplicateGuide}>
           <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
-          Duplicate
+          {t('studyGuides.duplicate')}
         </MenuItem>
         <MenuItem onClick={togglePinned}>
           <PushPinIcon fontSize="small" sx={{ mr: 1 }} />
-          {menuGuide?.pinnedAt ? 'Unpin' : 'Pin to top'}
+          {menuGuide?.pinnedAt ? t('studyGuides.unpin') : t('studyGuides.pin')}
         </MenuItem>
         <MenuItem onClick={deleteGuide} sx={{ color: 'error.main' }}>
           <DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} />
-          Delete
+          {t('studyGuides.delete')}
         </MenuItem>
       </Menu>
 
       <Dialog open={Boolean(renameGuide)} onClose={() => setRenameGuide(null)}>
-        <DialogTitle>Edit title</DialogTitle>
+        <DialogTitle>{t('studyGuides.editTitle')}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             fullWidth
-            label="Study Guide title"
+            label={t('studyGuides.titleField')}
             value={renameTitle}
             onChange={(event) => setRenameTitle(event.target.value)}
             sx={{ mt: 1, minWidth: { xs: 260, sm: 420 } }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRenameGuide(null)}>Cancel</Button>
+          <Button onClick={() => setRenameGuide(null)}>
+            {t('studyGuides.cancel')}
+          </Button>
           <Button
             variant="contained"
             onClick={saveRename}
             disabled={!renameTitle.trim()}
           >
-            Save
+            {t('studyGuides.save')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1456,16 +1490,30 @@ const StudyGuidesPage = () => {
         }}
       >
         <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>
-          New Study Guide
+          {t('studyGuides.newTitle')}
         </DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             fullWidth
-            label="Study Guide prompt"
+            label={t('studyGuides.promptField')}
             value={createGuidePrompt}
             onChange={(event) => setCreateGuidePrompt(event.target.value)}
-            placeholder="What should StudyMesh teach?"
+            onKeyDown={(event) => {
+              if (
+                event.key !== 'Enter' ||
+                event.shiftKey ||
+                event.nativeEvent.isComposing
+              ) {
+                return
+              }
+
+              event.preventDefault()
+              if (createGuidePrompt.trim()) {
+                void submitCreateGuide()
+              }
+            }}
+            placeholder={t('studyGuides.promptPlaceholder')}
             multiline
             minRows={4}
             required
@@ -1474,11 +1522,11 @@ const StudyGuidesPage = () => {
           <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap' }}>
             {quickPromptOptions.map((option) => (
               <Button
-                key={option.label}
+                key={option.labelKey}
                 size="small"
                 variant="outlined"
                 onClick={() => {
-                  setCreateGuidePrompt(option.prompt)
+                  setCreateGuidePrompt(t(option.promptKey))
                 }}
                 sx={{
                   borderRadius: 2,
@@ -1486,19 +1534,21 @@ const StudyGuidesPage = () => {
                   mb: 1,
                 }}
               >
-                {option.label}
+                {t(option.labelKey)}
               </Button>
             ))}
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
+          <Button onClick={() => setCreateOpen(false)}>
+            {t('studyGuides.cancel')}
+          </Button>
           <Button
             variant="contained"
             onClick={() => void submitCreateGuide()}
             disabled={!createGuidePrompt.trim()}
           >
-            Create Guide
+            {t('studyGuides.createGuide')}
           </Button>
         </DialogActions>
       </Dialog>

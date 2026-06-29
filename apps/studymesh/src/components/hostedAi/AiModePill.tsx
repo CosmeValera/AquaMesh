@@ -3,10 +3,8 @@ import { Box, Tooltip, Typography } from '@mui/material'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 
-import {
-  STUDY_CREDITS_LABEL,
-  QuickCreateAiProvider,
-} from '../../quickCreate/ai'
+import { QuickCreateAiProvider } from '../../quickCreate/ai'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 import { useHostedAiStatus } from './useHostedAiStatus'
 import StudyCreditIcon from './StudyCreditIcon'
 
@@ -28,6 +26,7 @@ const AiModePill: React.FC<AiModePillProps> = ({
   provider,
   onClick,
 }) => {
+  const { t } = useInterfaceText()
   const { status, displayStudyCredits, error } = useHostedAiStatus()
   const count = displayStudyCredits
   const hostedValue = count === null ? '--' : count
@@ -35,8 +34,8 @@ const AiModePill: React.FC<AiModePillProps> = ({
   const hasNoCredits = isHosted && count === 0
   const tooltip = isHosted
     ? error && !status && count === null
-      ? `${STUDY_CREDITS_LABEL} unavailable`
-      : `${STUDY_CREDITS_LABEL}: ${hostedValue}`
+      ? t('ai.studyCreditsUnavailable')
+      : `${t('ai.studyCredits')}: ${hostedValue}`
     : aiModeShortLabels[provider]
 
   return (

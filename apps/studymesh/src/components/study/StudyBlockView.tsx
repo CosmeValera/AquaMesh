@@ -34,6 +34,7 @@ import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
 import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 import StudyCreditIcon from '../hostedAi/StudyCreditIcon'
 import type { DashboardLayout } from '../../state/store'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -163,20 +164,6 @@ const buildFlashcardExplainPrompt = ({
 }): string =>
   `I am studying this material with a flashcard.\n\nThe flashcard prompt is: '${front}'\n\nThe answer is: '${back}'\n\nHelp me understand this answer and why it matches the prompt.`
 
-const explainButtonLabel = (
-  <Stack
-    component="span"
-    direction="row"
-    spacing={0.5}
-    alignItems="center"
-    sx={{ display: 'inline-flex' }}
-  >
-    <span>Explain (1</span>
-    <StudyCreditIcon size={14} />
-    <span>)</span>
-  </Stack>
-)
-
 const readStoredMode = (key: string): string => {
   try {
     return window.localStorage.getItem(key) || ''
@@ -274,9 +261,7 @@ const readStoredFocusedQuizSession = (
 
     const parsed = JSON.parse(stored) as Partial<StoredFocusedQuizSession>
     const rawAnswers =
-      parsed.answers && typeof parsed.answers === 'object'
-        ? parsed.answers
-        : {}
+      parsed.answers && typeof parsed.answers === 'object' ? parsed.answers : {}
     const answers = Object.fromEntries(
       Object.entries(rawAnswers)
         .map(([questionIndex, answerIndex]) => [
@@ -325,12 +310,10 @@ const readStoredFocusedFlashcardSession = (
       parsed.grades && typeof parsed.grades === 'object' ? parsed.grades : {}
     const grades = Object.fromEntries(
       Object.entries(rawGrades)
-        .map(
-          ([cardIndex, grade]): [number, unknown] => [
-            Number(cardIndex),
-            grade,
-          ],
-        )
+        .map(([cardIndex, grade]): [number, unknown] => [
+          Number(cardIndex),
+          grade,
+        ])
         .filter(
           ([cardIndex, grade]) =>
             Number.isInteger(cardIndex) &&
@@ -346,8 +329,7 @@ const readStoredFocusedFlashcardSession = (
       : undefined
 
     return {
-      cardIndex:
-        Number.isInteger(cardIndex) && cardIndex >= 0 ? cardIndex : 0,
+      cardIndex: Number.isInteger(cardIndex) && cardIndex >= 0 ? cardIndex : 0,
       grades,
       flipped: parsed.flipped === true,
       resultsOpen: parsed.resultsOpen === true,
@@ -979,6 +961,20 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   unframed = false,
   onAskAi,
 }) => {
+  const { t } = useInterfaceText()
+  const explainButtonLabel = (
+    <Stack
+      component="span"
+      direction="row"
+      spacing={0.5}
+      alignItems="center"
+      sx={{ display: 'inline-flex' }}
+    >
+      <span>{t('practice.explain')} (1</span>
+      <StudyCreditIcon size={14} />
+      <span>)</span>
+    </Stack>
+  )
   const focusedQuizStorageKey = useMemo(
     () => createFocusedQuizStorageKey(type, props),
     [props, type],
@@ -1016,10 +1012,12 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   const [focusedFlashcardGrades, setFocusedFlashcardGrades] = useState<
     Record<number, 'known' | 'missed'>
   >(initialFocusedFlashcardSession.grades)
-  const [focusedFlashcardReviewCardIndexes, setFocusedFlashcardReviewCardIndexes] =
-    useState<number[] | null>(
-      initialFocusedFlashcardSession.reviewCardIndexes || null,
-    )
+  const [
+    focusedFlashcardReviewCardIndexes,
+    setFocusedFlashcardReviewCardIndexes,
+  ] = useState<number[] | null>(
+    initialFocusedFlashcardSession.reviewCardIndexes || null,
+  )
   const [flashcardResultsOpen, setFlashcardResultsOpen] = useState(
     initialFocusedFlashcardSession.resultsOpen,
   )
@@ -1153,8 +1151,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   const rows = useMemo(() => toRows(props.rows), [props.rows])
 
   if (type === 'FlashcardBlock') {
-    const front = String(props.front || 'Question')
-    const back = String(props.back || 'Answer')
+    const front = String(props.front || t('practice.question'))
+    const back = String(props.back || t('practice.answer'))
     const hint = String(props.hint || '')
     const tag = String(props.tag || '')
     const registerFlashcardGrade = (grade: 'known' | 'missed') => {
@@ -1172,14 +1170,14 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             <Chip label={tag} size="small" sx={{ alignSelf: 'flex-start' }} />
           )}
           <Typography variant="caption" color="text.secondary">
-            {flipped ? 'Answer' : 'Prompt'}
+            {flipped ? t('practice.answer') : t('practice.prompt')}
           </Typography>
           <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
             {flipped ? back : front}
           </Typography>
           {!flipped && hint && (
             <Typography variant="body2" color="text.secondary">
-              Hint: {hint}
+              {t('practice.hint')}: {hint}
             </Typography>
           )}
           {flipped && Boolean(props.selfGrade) && (
@@ -1202,7 +1200,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   },
                 })}
               >
-                I knew it
+                {t('practice.iKnewIt')}
               </Button>
               <Button
                 size="small"
@@ -1218,7 +1216,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   },
                 })}
               >
-                I didn&apos;t know it
+                {t('practice.didntKnowIt')}
               </Button>
             </Stack>
           )}
@@ -1263,8 +1261,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           .filter(
             (
               entry,
-            ): entry is { card: (typeof cards)[number]; originalIndex: number } =>
-              Boolean(entry),
+            ): entry is {
+              card: (typeof cards)[number]
+              originalIndex: number
+            } => Boolean(entry),
           )
       : allCardEntries
     const hasCustomFlashcardStack = Boolean(
@@ -1314,9 +1314,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
         ? (missed / activeCardEntries.length) * 360
         : 0
     const flashcardResultRows = [
-      { label: 'Known', value: known, color: 'success.main' },
-      { label: 'Missed', value: missed, color: 'error.main' },
-      { label: 'Skipped', value: skipped, color: 'text.primary' },
+      { label: t('practice.known'), value: known, color: 'success.main' },
+      { label: t('practice.missed'), value: missed, color: 'error.main' },
+      { label: t('practice.skipped'), value: skipped, color: 'text.primary' },
     ]
     const persistFlashcardSession = (
       session: StoredFocusedFlashcardSession,
@@ -1413,7 +1413,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       return (
         <Paper variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
           <Typography variant="subtitle1" fontWeight={700}>
-            No flashcards available.
+            {t('practice.noFlashcards')}
           </Typography>
         </Paper>
       )
@@ -1435,7 +1435,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
         >
           <Stack spacing={2.5} sx={{ width: 'min(820px, 100%)' }}>
             <Typography variant="h4" fontWeight={700}>
-              Flashcards complete.
+              {t('practice.flashcardsComplete')}
             </Typography>
             <Paper
               variant="outlined"
@@ -1519,7 +1519,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   setFlashcardResultsOpen(false)
                 }}
               >
-                Previous
+                {t('practice.previous')}
               </Button>
               <Button
                 variant="contained"
@@ -1528,7 +1528,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   setFlashcardPracticeAnchorEl(event.currentTarget)
                 }}
               >
-                Practice again
+                {t('practice.practiceAgain')}
               </Button>
               <Menu
                 anchorEl={flashcardPracticeAnchorEl}
@@ -1550,7 +1550,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     setFlashcardPracticeAnchorEl(null)
                   }}
                 >
-                  All cards
+                  {t('practice.allCards')}
                 </MenuItem>
                 {hasCustomFlashcardStack ? (
                   <MenuItem
@@ -1574,7 +1574,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                       setFlashcardPracticeAnchorEl(null)
                     }}
                   >
-                    Same cards
+                    {t('practice.sameCards')}
                   </MenuItem>
                 ) : null}
                 <MenuItem
@@ -1603,7 +1603,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     setFlashcardPracticeAnchorEl(null)
                   }}
                 >
-                  Only cards that you missed
+                  {t('practice.onlyMissedCards')}
                 </MenuItem>
               </Menu>
             </Stack>
@@ -1690,9 +1690,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               </Typography>
             </Box>
             <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="end">
-              <Chip label={`Answered ${answered}/${activeCardEntries.length}`} />
-              <Chip color="success" label={`Known ${known}`} />
-              <Chip color="error" label={`Missed ${missed}`} />
+              <Chip
+                label={`${t('practice.answered')} ${answered}/${
+                  activeCardEntries.length
+                }`}
+              />
+              <Chip color="success" label={`${t('practice.known')} ${known}`} />
+              <Chip color="error" label={`${t('practice.missed')} ${missed}`} />
               {card.tag && <Chip label={card.tag} />}
             </Stack>
           </Stack>
@@ -1793,7 +1797,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     color="text.secondary"
                     sx={{ textAlign: 'center' }}
                   >
-                    See answer
+                    {t('practice.seeAnswer')}
                   </Typography>
                 </Box>
                 <Box
@@ -1892,8 +1896,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               >
                 <Typography variant="h3" fontWeight={800} textAlign="center">
                   {feedback.grade === 'known'
-                    ? 'Got it'
-                    : "You'll get it next time"}
+                    ? t('practice.gotIt')
+                    : t('practice.nextTime')}
                 </Typography>
               </Paper>
             ))}
@@ -1910,7 +1914,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             }}
           >
             <Button
-              aria-label="Previous card"
+              aria-label={t('practice.previous')}
               variant="outlined"
               disabled={safeIndex === 0}
               onClick={() => moveToFlashcardIndex(Math.max(0, safeIndex - 1))}
@@ -1931,7 +1935,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               <ArrowBackIcon />
             </Button>
             <Button
-              aria-label="Wrong answer"
+              aria-label={t('practice.wrongAnswer')}
               variant="outlined"
               onClick={() => gradeCard('missed')}
               sx={(theme) => ({
@@ -1953,7 +1957,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               {missed}
             </Button>
             <Button
-              aria-label="Correct answer"
+              aria-label={t('practice.correctAnswer')}
               variant="outlined"
               onClick={() => gradeCard('known')}
               sx={(theme) => ({
@@ -1975,7 +1979,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               <CheckIcon />
             </Button>
             <Button
-              aria-label="Next card"
+              aria-label={t('practice.next')}
               variant="outlined"
               onClick={() => {
                 if (safeIndex >= activeCardEntries.length - 1) {
@@ -2018,7 +2022,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   }
 
   if (type === 'QuizBlock') {
-    const question = String(props.question || 'Question')
+    const question = String(props.question || t('practice.question'))
     const correctIndex = Math.max(
       0,
       Math.min(3, Number(props.correctIndex || 0)),
@@ -2055,13 +2059,15 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 showResult && isCorrect
                   ? {
                       icon: <CheckIcon fontSize="small" />,
-                      label: isSelected ? "That's right" : 'Right answer',
+                      label: isSelected
+                        ? t('practice.thatsRight')
+                        : t('practice.rightAnswer'),
                       color: 'success.main',
                     }
                   : showResult && isSelected
                     ? {
                         icon: <CloseIcon fontSize="small" />,
-                        label: 'Not quite',
+                        label: t('practice.notQuite'),
                         color: 'error.main',
                       }
                     : null
@@ -2156,7 +2162,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 startIcon={<HelpOutlineIcon fontSize="small" />}
                 onClick={() => setQuizHintOpen((current) => !current)}
               >
-                Hint
+                {t('practice.hint')}
               </Button>
               {quizHintOpen ? (
                 <Typography
@@ -2234,7 +2240,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       return (
         <Paper variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
           <Typography variant="subtitle1" fontWeight={700}>
-            No quiz questions available.
+            {t('practice.noQuizQuestions')}
           </Typography>
         </Paper>
       )
@@ -2263,9 +2269,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     const wrongDegrees =
       questions.length > 0 ? (wrong / questions.length) * 360 : 0
     const resultRows = [
-      { label: 'Right', value: correct, color: 'success.main' },
-      { label: 'Wrong', value: wrong, color: 'error.main' },
-      { label: 'Skipped', value: skipped, color: 'text.primary' },
+      { label: t('practice.right'), value: correct, color: 'success.main' },
+      { label: t('practice.wrong'), value: wrong, color: 'error.main' },
+      { label: t('practice.skipped'), value: skipped, color: 'text.primary' },
     ]
     const persistQuizSession = (session: StoredFocusedQuizSession) => {
       writeStoredFocusedQuizSession(focusedQuizStorageKey, session)
@@ -2287,7 +2293,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
         >
           <Stack spacing={2.5} sx={{ width: 'min(820px, 100%)' }}>
             <Typography variant="h4" fontWeight={700}>
-              You did it! Quiz complete.
+              {t('practice.quizComplete')}
             </Typography>
             <Paper
               variant="outlined"
@@ -2367,7 +2373,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   setQuizResultsOpen(false)
                 }}
               >
-                Previous
+                {t('practice.previous')}
               </Button>
               <Button
                 variant="contained"
@@ -2380,7 +2386,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   setQuizResultsOpen(false)
                 }}
               >
-                Retake quiz
+                {t('practice.retakeQuiz')}
               </Button>
             </Stack>
           </Stack>
@@ -2427,9 +2433,16 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               </Typography>
             </Box>
             <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="end">
-              <Chip label={`Answered ${answered}/${questions.length}`} />
-              <Chip color="success" label={`Correct ${correct}`} />
-              <Chip color="error" label={`Wrong ${wrong}`} />
+              <Chip
+                label={`${t('practice.answered')} ${answered}/${
+                  questions.length
+                }`}
+              />
+              <Chip
+                color="success"
+                label={`${t('practice.correct')} ${correct}`}
+              />
+              <Chip color="error" label={`${t('practice.wrong')} ${wrong}`} />
             </Stack>
           </Stack>
           <Paper
@@ -2462,13 +2475,15 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     hasAnswered && isCorrect
                       ? {
                           icon: <CheckIcon fontSize="small" />,
-                          label: isSelected ? "That's right" : 'Right answer',
+                          label: isSelected
+                            ? t('practice.thatsRight')
+                            : t('practice.rightAnswer'),
                           color: 'success.main',
                         }
                       : hasAnswered && isSelected
                         ? {
                             icon: <CloseIcon fontSize="small" />,
-                            label: 'Not quite',
+                            label: t('practice.notQuite'),
                             color: 'error.main',
                           }
                         : null
@@ -2585,7 +2600,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               </Stack>
               {hasAnswered && (
                 <Typography variant="body2" color="text.secondary">
-                  {question.explanation || `Correct answer: ${question.answer}`}
+                  {question.explanation ||
+                    `${t('practice.correctAnswer')}: ${question.answer}`}
                 </Typography>
               )}
             </Stack>
@@ -2616,7 +2632,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   startIcon={<HelpOutlineIcon fontSize="small" />}
                   onClick={() => setQuizHintOpen((current) => !current)}
                 >
-                  Hint
+                  {t('practice.hint')}
                 </Button>
               ) : null}
               {hasAnswered ? (
@@ -2653,7 +2669,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   setFocusedQuestionIndex(previousIndex)
                 }}
               >
-                Previous
+                {t('practice.previous')}
               </Button>
               <Button
                 variant="contained"
@@ -2668,7 +2684,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     return
                   }
 
-                  const nextIndex = Math.min(questions.length - 1, safeIndex + 1)
+                  const nextIndex = Math.min(
+                    questions.length - 1,
+                    safeIndex + 1,
+                  )
                   persistQuizSession({
                     questionIndex: nextIndex,
                     answers: focusedQuizAnswers,
@@ -2677,7 +2696,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   setFocusedQuestionIndex(nextIndex)
                 }}
               >
-                {safeIndex >= questions.length - 1 ? 'Done' : 'Next'}
+                {safeIndex >= questions.length - 1
+                  ? t('practice.done')
+                  : t('practice.next')}
               </Button>
             </Stack>
             <Box />
@@ -2688,7 +2709,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   }
 
   if (type === 'QuizzSingle') {
-    const question = String(props.question || 'Question')
+    const question = String(props.question || t('practice.question'))
     const answer = String(props.answer || '')
     const explanation = String(props.explanation || '')
     const submittedShortAnswer = Boolean(shortAnswer.trim())
@@ -2704,7 +2725,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           </Typography>
           <Stack spacing={1}>
             <TextField
-              label="Answer"
+              label={t('practice.answer')}
               value={shortAnswer}
               onChange={(event) => setShortAnswer(event.target.value)}
               size="small"
@@ -2715,7 +2736,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 variant="body2"
                 color={shortAnswerCorrect ? 'success.main' : 'error.main'}
               >
-                {shortAnswerCorrect ? 'Correct' : `Expected: ${answer}`}
+                {shortAnswerCorrect
+                  ? t('practice.correct')
+                  : `${t('practice.expected')}: ${answer}`}
               </Typography>
             )}
           </Stack>
@@ -2734,7 +2757,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Stack spacing={1.5}>
           <Typography variant="subtitle1" fontWeight={700}>
-            {String(props.prompt || 'Prompt')}
+            {String(props.prompt || t('practice.prompt'))}
           </Typography>
           {revealed ? (
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
@@ -2742,7 +2765,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             </Typography>
           ) : (
             <Button variant="outlined" onClick={() => setRevealed(true)}>
-              {String(props.revealLabel || 'Show answer')}
+              {String(props.revealLabel || t('practice.showAnswer'))}
             </Button>
           )}
         </Stack>
@@ -2788,7 +2811,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               </Button>
             </Stack>
             <Typography variant="caption" color="text.secondary">
-              {flipped ? 'Answer' : 'Prompt'}
+              {flipped ? t('practice.answer') : t('practice.prompt')}
             </Typography>
             <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
               {flipped ? back : front}

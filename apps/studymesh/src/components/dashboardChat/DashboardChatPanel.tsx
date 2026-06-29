@@ -60,14 +60,15 @@ import { readQuickCreateAiSettings } from '../../quickCreate/ai'
 import {
   quickCreateActionGroups,
   quickCreateActions,
-  quickCreateLabels,
   type QuickCreateAction,
+  type QuickCreateActionGroup,
   type QuickCreateActionId,
   type QuickCreateActionRequest,
   type QuickCreateSourceScope,
 } from '../../quickCreate/quickCreateActions'
 import { renderMarkdown } from '../study/StudyBlockView'
 import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 
 export type { DashboardAnswerSourceRef } from '../../dashboardChat/askDashboard'
 
@@ -130,18 +131,18 @@ interface DashboardChatPanelProps {
 
 const suggestions = [
   {
-    label: 'Summarize the key ideas',
+    labelKey: 'chat.summarizeKeyIdeas',
     icon: <ArticleIcon fontSize="small" />,
   },
   {
-    label: "Explain this like I'm new",
+    labelKey: 'chat.explainLikeNew',
     icon: <LightbulbIcon fontSize="small" />,
   },
   {
-    label: 'Generate exam-style questions',
+    labelKey: 'chat.generateExamQuestions',
     icon: <HelpOutlineIcon fontSize="small" />,
   },
-]
+] as const
 
 const makeMessageId = () =>
   `dashboard-chat-${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -202,6 +203,37 @@ const quickCreateIcons: Record<QuickCreateActionId, React.ReactNode> = {
   quiz: <QuizIcon fontSize="small" />,
   flashcards: <StyleIcon fontSize="small" />,
   improvedNotes: <AutoStoriesIcon fontSize="small" />,
+}
+
+const getQuickCreateGroupLabelKey = (group: QuickCreateActionGroup) => {
+  switch (group) {
+    case 'Practice':
+      return 'chat.quickCreateGroupPractice'
+    case 'Notes':
+      return 'chat.quickCreateGroupNotes'
+  }
+}
+
+const getQuickCreateActionLabelKey = (actionId: QuickCreateActionId) => {
+  switch (actionId) {
+    case 'quiz':
+      return 'chat.quickCreateQuiz'
+    case 'flashcards':
+      return 'chat.quickCreateFlashcards'
+    case 'improvedNotes':
+      return 'chat.quickCreateExpand'
+  }
+}
+
+const getQuickCreateActionDescriptionKey = (actionId: QuickCreateActionId) => {
+  switch (actionId) {
+    case 'quiz':
+      return 'chat.quickCreateQuizDescription'
+    case 'flashcards':
+      return 'chat.quickCreateFlashcardsDescription'
+    case 'improvedNotes':
+      return 'chat.quickCreateExpandDescription'
+  }
 }
 
 const SOURCE_REJECTION_PATTERN =
@@ -360,6 +392,7 @@ const DashboardChatPanel = ({
   queuedQuestion,
   onQueuedQuestionConsumed,
 }: DashboardChatPanelProps) => {
+  const { t } = useInterfaceText()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
@@ -433,6 +466,9 @@ const DashboardChatPanel = ({
   const activeChatTitle =
     chatSessions.find((session) => session.id === activeChatId)?.title ||
     'New chat'
+  const displayChatTitle = (title: string) =>
+    title === 'New chat' ? t('chat.newChat') : title
+  const displayedActiveChatTitle = displayChatTitle(activeChatTitle)
   const userActionIconButtonSx = {
     width: 24,
     height: 24,
@@ -937,9 +973,11 @@ const DashboardChatPanel = ({
       .map((item) => ({
         item,
         score: scoreTextForQuestion(
-          `${item.userQuestion} ${item.finalAssistantAnswer} ${item.coveredEntities.join(
+          `${item.userQuestion} ${
+            item.finalAssistantAnswer
+          } ${item.coveredEntities.join(' ')} ${item.sourceSummaries.join(
             ' ',
-          )} ${item.sourceSummaries.join(' ')}`,
+          )}`,
           question,
         ),
       }))
@@ -2019,7 +2057,15 @@ const DashboardChatPanel = ({
   const normalizedQuickCreateSearch = quickCreateSearch.trim().toLowerCase()
   const filteredQuickCreateActions = normalizedQuickCreateSearch
     ? quickCreateActions.filter((action) =>
-        [action.label, action.shortLabel, action.description, action.group]
+        [
+          action.label,
+          action.shortLabel,
+          action.description,
+          action.group,
+          t(getQuickCreateActionLabelKey(action.id)),
+          t(getQuickCreateActionDescriptionKey(action.id)),
+          t(getQuickCreateGroupLabelKey(action.group)),
+        ]
           .join(' ')
           .toLowerCase()
           .includes(normalizedQuickCreateSearch),
@@ -2038,16 +2084,16 @@ const DashboardChatPanel = ({
           <Typography variant="subtitle2" fontWeight={600}>
             {supportsStudyGuideCreateScope
               ? quickCreateSourceScope === 'studyGuide'
-                ? 'Create from Study Guide source'
-                : 'Create from current page'
-              : 'Create from this page'}
+                ? t('chat.createFromStudyGuideSource')
+                : t('chat.createFromCurrentPage')
+              : t('chat.createFromThisPage')}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             {supportsStudyGuideCreateScope
               ? quickCreateSourceScope === 'studyGuide'
-                ? 'Uses lesson, manual, and chat-note pages. Excludes previous Quick Create results.'
-                : 'Uses only the page currently open in the Study Guide.'
-              : 'Generate study material from current dashboard context.'}
+                ? t('chat.usesStudyGuideSource')
+                : t('chat.usesCurrentPageOnly')
+              : t('chat.generateFromCurrentDashboard')}
           </Typography>
         </Box>
         {supportsStudyGuideCreateScope ? (
@@ -2061,17 +2107,21 @@ const DashboardChatPanel = ({
                 setQuickCreateSourceScope(value)
               }
             }}
-            aria-label="Quick Create source scope"
+            aria-label={t('chat.quickCreateSourceScope')}
           >
-            <ToggleButton value="studyGuide">Study Guide source</ToggleButton>
-            <ToggleButton value="currentPage">Current page</ToggleButton>
+            <ToggleButton value="studyGuide">
+              {t('chat.studyGuideSource')}
+            </ToggleButton>
+            <ToggleButton value="currentPage">
+              {t('chat.currentPageSource')}
+            </ToggleButton>
           </ToggleButtonGroup>
         ) : null}
         {showQuickCreateSearch ? (
           <TextField
             value={quickCreateSearch}
             onChange={(event) => setQuickCreateSearch(event.target.value)}
-            placeholder="Find creation action"
+            placeholder={t('chat.findCreationAction')}
             size="small"
             fullWidth
             InputProps={{
@@ -2099,7 +2149,7 @@ const DashboardChatPanel = ({
                   color="text.secondary"
                   fontWeight={600}
                 >
-                  {group}
+                  {t(getQuickCreateGroupLabelKey(group))}
                 </Typography>
               </Divider>
               {actions.map((action) => {
@@ -2108,7 +2158,7 @@ const DashboardChatPanel = ({
                   <Button
                     key={action.id}
                     fullWidth
-                    aria-label={action.label}
+                    aria-label={t(getQuickCreateActionLabelKey(action.id))}
                     variant={active ? 'contained' : 'text'}
                     disabled={!hasContext || Boolean(quickCreateActionId)}
                     onClick={() => void runQuickCreate(action)}
@@ -2153,13 +2203,15 @@ const DashboardChatPanel = ({
                     </Box>
                     <Box sx={{ minWidth: 0 }}>
                       <Typography variant="body2" fontWeight={600}>
-                        {active ? 'Thinking...' : action.label}
+                        {active
+                          ? t('chat.thinking')
+                          : t(getQuickCreateActionLabelKey(action.id))}
                       </Typography>
                       <Typography
                         variant="caption"
                         color={active ? 'inherit' : 'text.secondary'}
                       >
-                        {action.description}
+                        {t(getQuickCreateActionDescriptionKey(action.id))}
                       </Typography>
                     </Box>
                   </Button>
@@ -2338,10 +2390,10 @@ const DashboardChatPanel = ({
 
     const actions = (
       <>
-        <Tooltip title="Copy answer">
+        <Tooltip title={t('chat.copyAnswer')}>
           <IconButton
             size="small"
-            aria-label="Copy answer"
+            aria-label={t('chat.copyAnswer')}
             onClick={(event) => {
               event.stopPropagation()
               copyAssistantAnswer(message.content)
@@ -2351,10 +2403,10 @@ const DashboardChatPanel = ({
             <ContentCopyIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Retry answer">
+        <Tooltip title={t('chat.retryAnswer')}>
           <IconButton
             size="small"
-            aria-label="Retry answer"
+            aria-label={t('chat.retryAnswer')}
             onClick={(event) => {
               event.stopPropagation()
               retryAssistantAnswer(message)
@@ -2365,10 +2417,10 @@ const DashboardChatPanel = ({
           </IconButton>
         </Tooltip>
         {canAddToGuide ? (
-          <Tooltip title="Add to Study Guide">
+          <Tooltip title={t('chat.addToStudyGuide')}>
             <IconButton
               size="small"
-              aria-label="Add answer to Study Guide"
+              aria-label={t('chat.addAnswerToStudyGuide')}
               onClick={(event) => {
                 event.stopPropagation()
                 onAddAssistantMessageToGuide?.(message)
@@ -2384,10 +2436,10 @@ const DashboardChatPanel = ({
 
     if (isMobile) {
       return (
-        <Tooltip title="Message actions">
+        <Tooltip title={t('chat.messageActions')}>
           <IconButton
             size="small"
-            aria-label="Assistant message actions"
+            aria-label={t('chat.assistantMessageActions')}
             onClick={(event) => {
               event.stopPropagation()
               setAssistantMessageMenuAnchor(event.currentTarget)
@@ -2519,7 +2571,7 @@ const DashboardChatPanel = ({
             />
             <Box sx={{ minWidth: 0, textAlign: 'left' }}>
               <Typography variant="subtitle2" fontWeight={600} noWrap>
-                AI Chat
+                {t('workspace.aiChat')}
               </Typography>
               <Typography
                 variant="caption"
@@ -2527,18 +2579,18 @@ const DashboardChatPanel = ({
                 noWrap
                 sx={{ display: 'block', lineHeight: 1.1 }}
               >
-                {activeChatTitle}
+                {displayedActiveChatTitle}
               </Typography>
             </Box>
           </Stack>
         </Button>
         <Stack direction="row" spacing={0.5} alignItems="center">
           {messages.length > 0 && (
-            <Tooltip title="New chat">
+            <Tooltip title={t('chat.newChat')}>
               <IconButton
                 size="small"
                 onClick={startNewChat}
-                aria-label="Start new AI chat"
+                aria-label={t('chat.newChat')}
                 sx={{
                   color: 'primary.main',
                   '&:hover': {
@@ -2565,15 +2617,15 @@ const DashboardChatPanel = ({
                 fontWeight: 600,
               }}
             >
-              Chats
+              {t('chat.chats')}
             </Button>
           )}
           {showCloseButton ? (
-            <Tooltip title="Close">
+            <Tooltip title={t('settings.close')}>
               <IconButton
                 size="small"
                 onClick={onClose}
-                aria-label="Close AI Chat"
+                aria-label={t('chat.closeAiChat')}
                 sx={{
                   width: 30,
                   height: 30,
@@ -2739,7 +2791,7 @@ const DashboardChatPanel = ({
               </Box>
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="body2" fontWeight={600} noWrap>
-                  {session.title}
+                  {displayChatTitle(session.title)}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -2747,12 +2799,15 @@ const DashboardChatPanel = ({
                   noWrap
                   sx={{ display: 'block', lineHeight: 1.35 }}
                 >
-                  {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+                  {replyCount}{' '}
+                  {replyCount === 1 ? t('chat.reply') : t('chat.replies')}
                 </Typography>
               </Box>
               <IconButton
                 size="small"
-                aria-label={`Delete ${session.title}`}
+                aria-label={`${t('chat.deleteChat')}: ${displayChatTitle(
+                  session.title,
+                )}`}
                 disableRipple
                 onClick={(event) => {
                   event.stopPropagation()
@@ -2799,9 +2854,7 @@ const DashboardChatPanel = ({
         }}
       >
         {!hasContext ? (
-          <Alert severity="info">
-            This dashboard does not have enough source content to chat with yet.
-          </Alert>
+          <Alert severity="info">{t('chat.noSourceContent')}</Alert>
         ) : messages.length === 0 ? (
           <Stack
             spacing={1.5}
@@ -2832,10 +2885,10 @@ const DashboardChatPanel = ({
             >
               {suggestions.map((suggestion) => (
                 <Button
-                  key={suggestion.label}
+                  key={suggestion.labelKey}
                   variant="outlined"
                   disabled={!hasContext}
-                  onClick={() => sendQuestion(suggestion.label)}
+                  onClick={() => sendQuestion(t(suggestion.labelKey))}
                   sx={{
                     minHeight: 36,
                     justifyContent: 'flex-start',
@@ -2854,7 +2907,7 @@ const DashboardChatPanel = ({
                   <Box sx={{ color: 'text.secondary', display: 'flex' }}>
                     {suggestion.icon}
                   </Box>
-                  {suggestion.label}
+                  {t(suggestion.labelKey)}
                 </Button>
               ))}
             </Stack>
@@ -3011,13 +3064,15 @@ const DashboardChatPanel = ({
                                 role === 'assistant' && pending,
                             )
                             ? isLocalAi
-                              ? `Local AI is replying… ${formatSeconds(
+                              ? `${t('chat.localAiReplying')}… ${formatSeconds(
                                   elapsedSeconds,
-                                )} elapsed. Estimate: about 1:30.`
-                              : `Replying… ${formatSeconds(
+                                )} ${t('chat.elapsedLower')}. ${t(
+                                  'chat.estimateAbout',
+                                )} 1:30.`
+                              : `${t('chat.replying')}… ${formatSeconds(
                                   elapsedSeconds,
-                                )} elapsed.`
-                            : 'Queued — I’ll answer this after the previous question.'}
+                                )} ${t('chat.elapsedLower')}.`
+                            : t('chat.queuedReply')}
                         </Typography>
                       </Stack>
                     ) : message.role === 'assistant' ? (
@@ -3075,10 +3130,10 @@ const DashboardChatPanel = ({
                           spacing={0.5}
                           justifyContent="flex-end"
                         >
-                          <Tooltip title="Cancel edit">
+                          <Tooltip title={t('chat.cancelEdit')}>
                             <IconButton
                               size="small"
-                              aria-label="Cancel edit"
+                              aria-label={t('chat.cancelEdit')}
                               onClick={cancelEditingUserPrompt}
                               sx={{
                                 width: 26,
@@ -3091,10 +3146,10 @@ const DashboardChatPanel = ({
                               <CloseIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Save edit">
+                          <Tooltip title={t('chat.saveEdit')}>
                             <IconButton
                               size="small"
-                              aria-label="Save edit"
+                              aria-label={t('chat.saveEdit')}
                               disabled={!editingPromptDraft.trim()}
                               onClick={() =>
                                 saveEditedUserPromptBranch(message)
@@ -3120,7 +3175,7 @@ const DashboardChatPanel = ({
                 </Stack>
                 {message.role === 'user' && editingPromptId !== message.id ? (
                   isMobile ? (
-                    <Tooltip title="Message actions">
+                    <Tooltip title={t('chat.messageActions')}>
                       <IconButton
                         size="small"
                         aria-label="User message actions"
@@ -3156,10 +3211,10 @@ const DashboardChatPanel = ({
                         borderRadius: 1,
                       }}
                     >
-                      <Tooltip title="Copy prompt">
+                      <Tooltip title={t('chat.copyPrompt')}>
                         <IconButton
                           size="small"
-                          aria-label="Copy prompt"
+                          aria-label={t('chat.copyPrompt')}
                           onClick={(event) => {
                             event.stopPropagation()
                             copyUserPrompt(message.content)
@@ -3169,10 +3224,10 @@ const DashboardChatPanel = ({
                           <ContentCopyIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Edit prompt">
+                      <Tooltip title={t('chat.editPrompt')}>
                         <IconButton
                           size="small"
-                          aria-label="Edit prompt"
+                          aria-label={t('chat.editPrompt')}
                           onClick={(event) => {
                             event.stopPropagation()
                             startEditingUserPrompt(message)
@@ -3257,7 +3312,7 @@ const DashboardChatPanel = ({
                     }}
                   >
                     <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
-                    Copy prompt
+                    {t('chat.copyPrompt')}
                   </MenuItem>
                   <MenuItem
                     onClick={() => {
@@ -3266,7 +3321,7 @@ const DashboardChatPanel = ({
                     }}
                   >
                     <EditOutlinedIcon fontSize="small" sx={{ mr: 1 }} />
-                    Edit prompt
+                    {t('chat.editPrompt')}
                   </MenuItem>
                   {userMessageMenuMessage.promptBranchId &&
                   (userMessageMenuMessage.promptBranchCount || 0) > 1 ? (
@@ -3279,7 +3334,7 @@ const DashboardChatPanel = ({
                         }}
                       >
                         <ChevronLeftIcon fontSize="small" sx={{ mr: 1 }} />
-                        Previous branch
+                        {t('chat.previousBranch')}
                       </MenuItem>
                       <MenuItem
                         onClick={() => {
@@ -3288,7 +3343,7 @@ const DashboardChatPanel = ({
                         }}
                       >
                         <ChevronRightIcon fontSize="small" sx={{ mr: 1 }} />
-                        Next branch
+                        {t('chat.nextBranch')}
                         <Typography
                           variant="caption"
                           color="text.secondary"
@@ -3320,7 +3375,7 @@ const DashboardChatPanel = ({
                     }}
                   >
                     <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
-                    Copy answer
+                    {t('chat.copyAnswer')}
                   </MenuItem>
                   <MenuItem
                     onClick={() => {
@@ -3329,7 +3384,7 @@ const DashboardChatPanel = ({
                     }}
                   >
                     <ReplayIcon fontSize="small" sx={{ mr: 1 }} />
-                    Retry answer
+                    {t('chat.retryAnswer')}
                   </MenuItem>
                   {onAddAssistantMessageToGuide ? (
                     <MenuItem
@@ -3341,7 +3396,7 @@ const DashboardChatPanel = ({
                       }}
                     >
                       <AddCircleOutlineIcon fontSize="small" sx={{ mr: 1 }} />
-                      Add to Study Guide
+                      {t('chat.addToStudyGuide')}
                     </MenuItem>
                   ) : null}
                 </>
@@ -3371,7 +3426,7 @@ const DashboardChatPanel = ({
       <Box
         role="separator"
         aria-orientation="horizontal"
-        aria-label="Resize AI Chat input"
+        aria-label={t('chat.resizeInput')}
         onPointerDown={startComposerResize}
         sx={{
           height: draftHasMultipleLines ? 10 : '1px',
@@ -3420,9 +3475,10 @@ const DashboardChatPanel = ({
             color="text.secondary"
             sx={{ display: 'block', mb: 0.75 }}
           >
-            Creating {quickCreateLabels[activeQuickCreateAction.resourceType]} -
-            Elapsed {formatSeconds(quickCreateElapsedSeconds)} - Estimate{' '}
-            {formatSeconds(quickCreateEstimateSeconds)}
+            {t('chat.creating')}{' '}
+            {t(getQuickCreateActionLabelKey(activeQuickCreateAction.id))} -{' '}
+            {t('chat.elapsed')} {formatSeconds(quickCreateElapsedSeconds)} -{' '}
+            {t('chat.estimate')} {formatSeconds(quickCreateEstimateSeconds)}
           </Typography>
         ) : null}
         <Stack
@@ -3435,11 +3491,11 @@ const DashboardChatPanel = ({
           }}
         >
           {onQuickCreatePage ? (
-            <Tooltip title="Create">
+            <Tooltip title={t('chat.create')}>
               <span>
                 <IconButton
                   size="small"
-                  aria-label="Create"
+                  aria-label={t('chat.create')}
                   disabled={!hasContext || Boolean(quickCreateActionId)}
                   onClick={(event) =>
                     setQuickCreateMenuAnchor(event.currentTarget)
@@ -3479,7 +3535,7 @@ const DashboardChatPanel = ({
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             placeholder={
-              hasContext ? 'Ask anything' : 'Add study material before chatting'
+              hasContext ? t('chat.askAnything') : t('chat.addStudyMaterial')
             }
             disabled={!hasContext}
             fullWidth

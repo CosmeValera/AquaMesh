@@ -16,6 +16,7 @@ import {
   HostedAiCreditPackId,
   redirectToHostedAiCreditCheckout,
 } from '../../quickCreate/ai'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 import StudyCreditIcon from './StudyCreditIcon'
 
 const packBadgeLabel = (pack: HostedAiCreditPack): string => {
@@ -30,10 +31,14 @@ const packBadgeLabel = (pack: HostedAiCreditPack): string => {
   return 'Best value'
 }
 
-const packValueLabel = (pack: HostedAiCreditPack): string =>
-  `${Math.round(pack.credits / (pack.priceCents / 100))} credits / EUR`
+const packValueLabel = (
+  pack: HostedAiCreditPack,
+  creditLabel: string,
+): string =>
+  `${Math.round(pack.credits / (pack.priceCents / 100))} ${creditLabel} / EUR`
 
 const HostedAiPricingCards: React.FC = () => {
+  const { t } = useInterfaceText()
   const [buyingPackId, setBuyingPackId] =
     React.useState<HostedAiCreditPackId | null>(null)
   const [error, setError] = React.useState('')
@@ -58,10 +63,10 @@ const HostedAiPricingCards: React.FC = () => {
     <Stack spacing={1.5} sx={{ mt: 2.5 }}>
       <Box>
         <Typography variant="h6" fontWeight={950}>
-          Choose a credit pack
+          {t('ai.chooseCreditPack')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          One-time purchases. Credits stay in your StudyMesh account.
+          {t('ai.creditPackHelp')}
         </Typography>
       </Box>
       <Box
@@ -106,7 +111,7 @@ const HostedAiPricingCards: React.FC = () => {
                 type="button"
                 onClick={() => void handleBuyCredits(pack.id)}
                 disabled={buyingPackId !== null}
-                aria-label={`Buy ${pack.credits} credits for ${pack.label}`}
+                aria-label={`${t('ai.buyCreditsFor')} ${pack.label}`}
                 sx={{
                   position: 'relative',
                   overflow: 'hidden',
@@ -192,7 +197,7 @@ const HostedAiPricingCards: React.FC = () => {
                     {pack.label}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {packValueLabel(pack)}
+                    {packValueLabel(pack, t('ai.credits'))}
                   </Typography>
                 </Stack>
 
@@ -211,8 +216,8 @@ const HostedAiPricingCards: React.FC = () => {
                   }}
                 >
                   {buying
-                    ? 'Opening checkout...'
-                    : `Buy ${pack.credits} credits`}
+                    ? t('ai.openingCheckout')
+                    : `${t('ai.buyCredits')} (${pack.credits})`}
                 </Box>
               </Paper>
             </Box>

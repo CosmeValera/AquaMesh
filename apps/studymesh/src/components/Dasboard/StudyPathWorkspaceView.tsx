@@ -36,6 +36,7 @@ import StudyGuideLinearLayout from './StudyGuideLinearLayout'
 import StudyGuidePageEditor from './StudyGuidePageEditor'
 import { useNavigate } from 'react-router-dom'
 import StudyGuidePagesPanel from './StudyGuidePagesPanel'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 
 type PageIconTone = 'primary' | 'error'
 
@@ -94,10 +95,12 @@ const StudyGuideQuickStartCard = ({
   quickStart,
   expanded,
   onToggle,
+  t,
 }: {
   quickStart: StudyGuideQuickStart
   expanded: boolean
   onToggle: () => void
+  t: ReturnType<typeof useInterfaceText>['t']
 }) => (
   <Box
     sx={{
@@ -127,19 +130,25 @@ const StudyGuideQuickStartCard = ({
         >
           <Box minWidth={0}>
             <Typography variant="subtitle1" fontWeight={800}>
-              Quick Start
+              {t('workspace.quickStart')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Key idea before reading
+              {t('workspace.keyIdeaBeforeReading')}
             </Typography>
           </Box>
           <Tooltip
-            title={expanded ? 'Collapse Quick Start' : 'Expand Quick Start'}
+            title={
+              expanded
+                ? t('workspace.collapseQuickStart')
+                : t('workspace.expandQuickStart')
+            }
           >
             <IconButton
               size="small"
               aria-label={
-                expanded ? 'Collapse Quick Start' : 'Expand Quick Start'
+                expanded
+                  ? t('workspace.collapseQuickStart')
+                  : t('workspace.expandQuickStart')
               }
               onClick={onToggle}
               sx={pageIconButtonSx()}
@@ -161,7 +170,7 @@ const StudyGuideQuickStartCard = ({
                 fontWeight={800}
                 sx={{ letterSpacing: 0 }}
               >
-                Key idea
+                {t('workspace.keyIdea')}
               </Typography>
               <Typography variant="body1" sx={{ lineHeight: 1.65 }}>
                 {quickStart.keyIdea}
@@ -174,7 +183,7 @@ const StudyGuideQuickStartCard = ({
                 fontWeight={800}
                 sx={{ letterSpacing: 0 }}
               >
-                Quick summary
+                {t('workspace.quickSummary')}
               </Typography>
               <Stack spacing={1}>
                 {quickSummaryParagraphs(quickStart.quickSummary).map(
@@ -281,6 +290,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   onAddPage,
   onAskAi,
 }) => {
+  const { t } = useInterfaceText()
   const theme = useTheme()
   const navigate = useNavigate()
   const showPageRail = useMediaQuery(theme.breakpoints.up('lg'))
@@ -439,7 +449,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                 onClick={() => navigate('/study-guides')}
                 sx={{ cursor: 'pointer' }}
               >
-                My Guides
+                {t('workspace.myGuides')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 /
@@ -460,7 +470,8 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               {currentLesson.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Page {selectedIndex + 1}/{studyPath.dashboards.length}
+              {t('workspace.pageLabel')} {selectedIndex + 1}/
+              {studyPath.dashboards.length}
             </Typography>
           </Box>
         </Stack>
@@ -498,11 +509,11 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
             </Tooltip>
           ) : null}
           <Stack direction="row" spacing={0.75} alignItems="center">
-            <Tooltip title="Previous page">
+            <Tooltip title={t('workspace.previousPage')}>
               <span>
                 <IconButton
                   size="small"
-                  aria-label="Previous page"
+                  aria-label={t('workspace.previousPage')}
                   disabled={!canGoPrevious}
                   onClick={() => selectLesson(selectedIndex - 1)}
                   sx={pageIconButtonSx()}
@@ -511,11 +522,11 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                 </IconButton>
               </span>
             </Tooltip>
-            <Tooltip title="Next page">
+            <Tooltip title={t('workspace.nextPage')}>
               <span>
                 <IconButton
                   size="small"
-                  aria-label="Next page"
+                  aria-label={t('workspace.nextPage')}
                   disabled={!canGoNext}
                   onClick={() => selectLesson(selectedIndex + 1)}
                   sx={pageIconButtonSx()}
@@ -568,6 +579,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                   quickStart={studyPath.quickStart}
                   expanded={quickStartExpanded}
                   onToggle={() => setQuickStartExpanded((current) => !current)}
+                  t={t}
                 />
               ) : null}
               <StudyGuideLinearLayout

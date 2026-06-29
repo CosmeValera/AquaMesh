@@ -45,6 +45,7 @@ import {
   OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
   type OpenStudyGuidePageLinkDetail,
 } from '../../studyGuides/pageLinks'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 
 export const AI_CHAT_MIN_WIDTH = 310
 const AI_CHAT_MAX_WIDTH = 720
@@ -98,6 +99,7 @@ const normalizeGeneratedPageLayouts = (
 }
 
 const GuideWorkspacePage = () => {
+  const { t } = useInterfaceText()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'))
   const { studyGuideId = '' } = useParams()
@@ -210,7 +212,7 @@ const GuideWorkspacePage = () => {
     }
 
     const nextStudyPath = appendStudyGuideMarkdownPage(record.studyPath, {
-      title: 'Untitled page',
+      title: t('workspace.untitledPage'),
       markdown: '',
       source: 'manual',
     })
@@ -251,7 +253,7 @@ const GuideWorkspacePage = () => {
   const addAssistantMessageToGuide = (message: DashboardChatMessage) => {
     const contentWithLinks = linkAssistantCitations(message)
 
-    appendMarkdownPage('AI Chat note', contentWithLinks, 'chat')
+    appendMarkdownPage(t('workspace.aiChatNote'), contentWithLinks, 'chat')
   }
 
   const addExternalSourceToGuide = (source: DashboardExternalSource) => {
@@ -267,7 +269,11 @@ Search query: ${source.searchQuery}
 
 ${excerpt}`
 
-    appendMarkdownPage(source.title || 'Web source', markdown, 'chat')
+    appendMarkdownPage(
+      source.title || t('workspace.webSource'),
+      markdown,
+      'chat',
+    )
   }
 
   const openStudyGuidePageKey = (dashboardKey: string) => {
@@ -336,7 +342,7 @@ ${excerpt}`
       : studyGuideSourceText ||
         currentPageText ||
         record.studyPath.title ||
-        'Study Guide'
+        t('workspace.studyGuide')
     const sourceTitle = useCurrentPage
       ? currentPage?.name || record.title
       : record.studyPath.title || record.title
@@ -356,7 +362,9 @@ ${excerpt}`
       }
     } catch (error) {
       setQuickCreateError(
-        error instanceof Error ? error.message : 'Could not create this page.',
+        error instanceof Error
+          ? error.message
+          : t('workspace.couldNotCreatePage'),
       )
     }
   }
@@ -534,16 +542,16 @@ ${excerpt}`
               }}
             >
               <Typography variant="h5" fontWeight={600}>
-                Study Guide not found
+                {t('workspace.notFoundTitle')}
               </Typography>
               <Typography color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-                This guide does not exist on this device.
+                {t('workspace.notFoundBody')}
               </Typography>
               <Button
                 variant="contained"
                 onClick={() => navigate('/study-guides')}
               >
-                Back to My Study Guides
+                {t('workspace.backToGuides')}
               </Button>
             </Paper>
           </Box>
@@ -580,9 +588,9 @@ ${excerpt}`
                   }}
                 >
                   {[
-                    ['pages', 'Pages'],
-                    ['study-guide', 'Study Guide'],
-                    ['ai-chat', 'AI Chat'],
+                    ['pages', t('workspace.pages')],
+                    ['study-guide', t('workspace.studyGuide')],
+                    ['ai-chat', t('workspace.aiChat')],
                   ].map(([key, label]) => (
                     <Button
                       key={key}
@@ -626,11 +634,11 @@ ${excerpt}`
                   {aiChatOpen ? (
                     chatPanel
                   ) : (
-                    <Tooltip title="Open AI Chat">
+                    <Tooltip title={t('topnav.openAiChat')}>
                       <Box
                         component="button"
                         type="button"
-                        aria-label="Open AI Chat panel"
+                        aria-label={t('workspace.openAiChatPanel')}
                         onClick={() => setAiChatOpen(true)}
                         sx={{
                           width: '100%',
@@ -659,7 +667,7 @@ ${excerpt}`
                           variant="caption"
                           sx={{ writingMode: 'vertical-rl', fontWeight: 500 }}
                         >
-                          AI Chat
+                          {t('workspace.aiChat')}
                         </Typography>
                       </Box>
                     </Tooltip>
@@ -667,7 +675,7 @@ ${excerpt}`
                   {aiChatOpen ? (
                     <Box
                       role="separator"
-                      aria-label="Resize AI Chat panel"
+                      aria-label={t('workspace.resizeAiChat')}
                       onMouseDown={startAiChatResize}
                       sx={{
                         position: 'absolute',

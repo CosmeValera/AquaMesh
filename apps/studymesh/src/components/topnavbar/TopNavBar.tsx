@@ -60,6 +60,7 @@ import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceM
 import { deleteStudyMeshProfile, useAuth } from '../../auth/AuthProvider'
 import AiModePill from '../hostedAi/AiModePill'
 import AiModeDialog from '../hostedAi/AiModeDialog'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 
 // Define user data type
 interface UserData {
@@ -92,13 +93,6 @@ const isAdminUser = (userData: UserData) => userData.role === 'ADMIN_ROLE'
 
 const canOpenStudyPathForCurrentState = (userData: UserData) => {
   return isAdminUser(userData)
-}
-
-const quickCreateAiProviderLabels: Record<QuickCreateAiProvider, string> = {
-  local: 'Google Local AI',
-  gemini: 'Own Gemini API token',
-  cerebras: 'Own Cerebras API key',
-  hosted: 'Hosted AI',
 }
 
 const initialCreationTaskStatuses: Record<
@@ -169,6 +163,7 @@ const ButtonWithLabel: React.FC<ButtonWithLabelProps> = ({
 }
 
 const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
+  const { t } = useInterfaceText()
   // State for different dropdown menus
   const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -190,7 +185,19 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const [userData, setUserData] = useState<UserData>(adminUser)
   const [avatarSrc, setAvatarSrc] = useState(() => readUserAvatar(adminUser.id))
   const [dashboardSelectorOpen, setDashboardSelectorOpen] = useState(false)
-  const userModeLabel = quickCreateAiProviderLabels[quickCreateAiProvider]
+  const userModeLabel = React.useMemo(() => {
+    switch (quickCreateAiProvider) {
+      case 'local':
+        return t('ai.localGoogle')
+      case 'gemini':
+        return t('ai.ownGemini')
+      case 'cerebras':
+        return t('ai.ownCerebras')
+      case 'hosted':
+      default:
+        return t('ai.hosted')
+    }
+  }, [quickCreateAiProvider, t])
   const auth = useAuth()
   const { createQuickCreateDashboards } = useWorkspaceActions()
   const {
@@ -385,7 +392,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
 
   const handleDeleteStudyMeshProfile = async () => {
     if (!auth.user) {
-      throw new Error('No signed-in StudyMesh profile is available.')
+      throw new Error(t('settings.noSignedInProfile'))
     }
 
     await deleteStudyMeshProfile(auth.user.id)
@@ -411,7 +418,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
     window.dispatchEvent(
       new CustomEvent(USER_ROLE_CHANGED_EVENT, { detail: nextUser }),
     )
-    setUserSettingsAvatarStatus('Profile saved.')
+    setUserSettingsAvatarStatus(t('settings.profileSaved'))
   }
 
   const handleUserAvatarUpload = async (
@@ -425,21 +432,21 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
     }
 
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setUserSettingsAvatarStatus('Use a PNG, JPG, or WebP image.')
+      setUserSettingsAvatarStatus(t('settings.avatarFileType'))
       return
     }
 
     try {
-      setUserSettingsAvatarStatus('Preparing profile picture...')
+      setUserSettingsAvatarStatus(t('settings.avatarPreparing'))
       const avatarDataUrl = await createSquareAvatarDataUrl(file)
       saveUserAvatar(userData.id, avatarDataUrl)
       setAvatarSrc(avatarDataUrl)
-      setUserSettingsAvatarStatus('Profile picture updated.')
+      setUserSettingsAvatarStatus(t('settings.avatarUpdated'))
     } catch (error) {
       setUserSettingsAvatarStatus(
         error instanceof Error
           ? error.message
-          : 'Could not update profile picture.',
+          : t('settings.avatarUpdateFailed'),
       )
     }
   }
@@ -447,7 +454,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const handleRemoveUserAvatar = () => {
     removeUserAvatar(userData.id)
     setAvatarSrc('')
-    setUserSettingsAvatarStatus('Profile picture removed.')
+    setUserSettingsAvatarStatus(t('settings.avatarRemoved'))
   }
 
   const reportStudyPathStatus = useCallback(
@@ -554,7 +561,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                       noWrap
                       sx={{ minWidth: 0, maxWidth: '100%' }}
                     >
-                      {currentDashboardTitle || 'Select dashboard'}
+                      {currentDashboardTitle || t('topnav.selectDashboard')}
                     </Typography>
                   </Button>
                 </>
@@ -687,7 +694,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                         {userData.id.substring(0, 2).toUpperCase()}
                       </Avatar>
                     }
-                    label="User"
+                    label={t('topnav.user')}
                     aria-label="Open user menu"
                     onClick={handleUserMenuOpen}
                     sx={{ minWidth: '45px' }}
@@ -778,7 +785,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                         sx={{ color: 'text.secondary' }}
                       />
                     </ListItemIcon>
-                    Appearance
+                    {t('topnav.appearance')}
                   </MenuItem>
                   <MenuItem
                     onClick={openSettings}
@@ -795,7 +802,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                         sx={{ color: 'text.secondary' }}
                       />
                     </ListItemIcon>
-                    Settings
+                    {t('topnav.settings')}
                   </MenuItem>
                   <Divider sx={{ borderColor: 'divider' }} />
                   <MenuItem
@@ -808,7 +815,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                         sx={{ color: 'text.secondary' }}
                       />
                     </ListItemIcon>
-                    Logout
+                    {t('topnav.logout')}
                   </MenuItem>
                 </Menu>
               </Box>
@@ -866,7 +873,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                 sx={{ color: 'text.secondary' }}
               />
             </ListItemIcon>
-            Appearance
+            {t('topnav.appearance')}
           </MenuItem>
           <MenuItem onClick={openSettings} sx={{ color: 'text.primary' }}>
             <ListItemIcon>
@@ -875,13 +882,13 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                 sx={{ color: 'text.secondary' }}
               />
             </ListItemIcon>
-            Settings
+            {t('topnav.settings')}
           </MenuItem>
           <MenuItem onClick={handleLogout} sx={{ color: 'text.primary' }}>
             <ListItemIcon>
               <LogoutIcon fontSize="small" sx={{ color: 'text.secondary' }} />
             </ListItemIcon>
-            Logout
+            {t('topnav.logout')}
           </MenuItem>
         </Menu>
       )}
@@ -902,10 +909,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         >
           <Box sx={{ p: 2, pb: 1 }}>
             <Typography variant="subtitle1" fontWeight={600}>
-              Your dashboards
+              {t('topnav.yourDashboards')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Switch the active dashboard or create a new one.
+              {t('topnav.yourDashboardsHelp')}
             </Typography>
           </Box>
           <Box sx={{ overflowY: 'auto', px: 1, pb: 1 }}>
@@ -989,7 +996,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       <SettingsDialog
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        title="Application Settings"
+        title={t('settings.title')}
         profileSettings={{
           userId: userData.id,
           userName: userSettingsName,

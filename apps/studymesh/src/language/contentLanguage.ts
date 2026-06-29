@@ -1,3 +1,5 @@
+// eld does not export the smaller browser bundles through package exports/types.
+// @ts-expect-error Internal ELD entry has no published declaration file.
 import { eld } from '../../../../node_modules/eld/src/entries/static.extrasmall.js'
 
 export type StudyMeshLanguageCode =
@@ -23,6 +25,8 @@ export type ContentLanguageSource =
   | 'settings'
   | 'fallback'
 
+export type InterfaceLanguageCode = 'en' | 'es'
+
 export interface ContentLanguageOption {
   code: StudyMeshLanguageCode
   label: string
@@ -30,6 +34,7 @@ export interface ContentLanguageOption {
 }
 
 export interface ContentLanguageSettings {
+  interfaceLanguage: InterfaceLanguageCode
   defaultContentLanguage: StudyMeshLanguageCode
   autoDetectAiLanguage: boolean
 }
@@ -39,12 +44,15 @@ export interface ResolvedContentLanguage {
   source: ContentLanguageSource
 }
 
-export const CONTENT_LANGUAGE_SETTINGS_KEY =
-  'studymesh-language-settings-v1'
+export const CONTENT_LANGUAGE_SETTINGS_KEY = 'studymesh-language-settings-v1'
 export const CONTENT_LANGUAGE_SETTINGS_CHANGED_EVENT =
   'studymesh-language-settings-changed'
 
 export const DEFAULT_CONTENT_LANGUAGE: StudyMeshLanguageCode = 'en'
+export const DEFAULT_INTERFACE_LANGUAGE: InterfaceLanguageCode = 'en'
+const ELD_MIN_SCORE_DELTA = 0.03
+const ELD_SHORT_TEXT_MIN_SCORE_DELTA = 0.05
+const ELD_SHORT_TEXT_MAX_WORDS = 4
 
 export const CONTENT_LANGUAGE_OPTIONS: ContentLanguageOption[] = [
   { code: 'en', label: 'English', localAiSupported: true },
@@ -113,15 +121,24 @@ const promptLanguageMarkers: Array<{
     code: 'es',
     patterns: [
       [/\b(?:yo|me|mi|mis|que|qué|como|cómo|por\s+que|por\s+qué)\b/g, 2],
-      [/\b(?:quiero|ayudame|ayúdame|aprender|estudiar|entender|explicame|explícame|crea|crear)\b/g, 3],
-      [/\b(?:un|una|el|la|los|las|de|del|sobre|para|realmente|poquito|guia|guía|tecnologia|tecnología)\b/g, 1],
+      [
+        /\b(?:quiero|ayudame|ayúdame|aprender|estudiar|entender|explicame|explícame|crea|crear)\b/g,
+        3,
+      ],
+      [
+        /\b(?:un|una|el|la|los|las|de|del|sobre|para|realmente|poquito|guia|guía|tecnologia|tecnología)\b/g,
+        1,
+      ],
     ],
   },
   {
     code: 'fr',
     patterns: [
       [/\b(?:je|j|me|mon|ma|mes|que|quoi|comment|pourquoi)\b/g, 2],
-      [/\b(?:veux|voudrais|aide|apprendre|etudier|étudier|comprendre|explique|cree|crée)\b/g, 3],
+      [
+        /\b(?:veux|voudrais|aide|apprendre|etudier|étudier|comprendre|explique|cree|crée)\b/g,
+        3,
+      ],
       [/\b(?:un|une|le|la|les|des|du|de|sur|pour|vraiment|peu)\b/g, 1],
     ],
   },
@@ -129,7 +146,10 @@ const promptLanguageMarkers: Array<{
     code: 'de',
     patterns: [
       [/\b(?:ich|mir|mein|meine|was|wie|warum)\b/g, 2],
-      [/\b(?:will|mochte|möchte|lernen|studieren|verstehen|erklare|erkläre|erstelle)\b/g, 3],
+      [
+        /\b(?:will|mochte|möchte|lernen|studieren|verstehen|erklare|erkläre|erstelle)\b/g,
+        3,
+      ],
       [/\b(?:ein|eine|der|die|das|uber|über|fur|für)\b/g, 1],
     ],
   },
@@ -137,7 +157,10 @@ const promptLanguageMarkers: Array<{
     code: 'it',
     patterns: [
       [/\b(?:io|mi|mio|mia|che|cosa|come|perche|perché)\b/g, 2],
-      [/\b(?:voglio|aiutami|imparare|studiare|capire|spiegami|crea|creare)\b/g, 3],
+      [
+        /\b(?:voglio|aiutami|imparare|studiare|capire|spiegami|crea|creare)\b/g,
+        3,
+      ],
       [/\b(?:un|una|il|lo|la|gli|le|di|su|per)\b/g, 1],
     ],
   },
@@ -145,7 +168,10 @@ const promptLanguageMarkers: Array<{
     code: 'pt',
     patterns: [
       [/\b(?:eu|me|meu|minha|que|o\s+que|como|por\s+que|porque)\b/g, 2],
-      [/\b(?:quero|ajude|aprender|estudar|entender|explica|explique|cria|criar)\b/g, 3],
+      [
+        /\b(?:quero|ajude|aprender|estudar|entender|explica|explique|cria|criar)\b/g,
+        3,
+      ],
       [/\b(?:um|uma|o|a|os|as|de|do|da|sobre|para)\b/g, 1],
     ],
   },
@@ -172,13 +198,19 @@ const normalizeLanguageCode = (
     : null
 }
 
+const normalizeInterfaceLanguageCode = (
+  value: unknown,
+): InterfaceLanguageCode | null => {
+  const normalized = normalizeLanguageCode(value)
+  return normalized === 'en' || normalized === 'es' ? normalized : null
+}
+
 export const isStudyMeshLanguageCode = (
   value: unknown,
 ): value is StudyMeshLanguageCode => Boolean(normalizeLanguageCode(value))
 
-export const getContentLanguageLabel = (
-  code: StudyMeshLanguageCode,
-): string => optionByCode.get(code)?.label || 'English'
+export const getContentLanguageLabel = (code: StudyMeshLanguageCode): string =>
+  optionByCode.get(code)?.label || 'English'
 
 export const getContentLanguagePromptName = (
   code: StudyMeshLanguageCode,
@@ -186,7 +218,8 @@ export const getContentLanguagePromptName = (
 
 export const isLocalAiContentLanguageSupported = (
   code: StudyMeshLanguageCode,
-): code is 'en' | 'es' | 'ja' => Boolean(optionByCode.get(code)?.localAiSupported)
+): code is 'en' | 'es' | 'ja' =>
+  Boolean(optionByCode.get(code)?.localAiSupported)
 
 export const getBrowserDefaultContentLanguage = (): StudyMeshLanguageCode => {
   if (typeof navigator === 'undefined') {
@@ -200,9 +233,29 @@ export const getBrowserDefaultContentLanguage = (): StudyMeshLanguageCode => {
   )
 }
 
+export const getBrowserDefaultInterfaceLanguage = (): InterfaceLanguageCode => {
+  if (typeof navigator === 'undefined') {
+    return DEFAULT_INTERFACE_LANGUAGE
+  }
+
+  return (
+    normalizeInterfaceLanguageCode(navigator.language) ||
+    normalizeInterfaceLanguageCode(navigator.languages?.[0]) ||
+    DEFAULT_INTERFACE_LANGUAGE
+  )
+}
+
+const defaultContentLanguageFromInterface = (
+  interfaceLanguage: InterfaceLanguageCode,
+): StudyMeshLanguageCode => interfaceLanguage
+
 export const readContentLanguageSettings = (): ContentLanguageSettings => {
+  const fallbackInterfaceLanguage = getBrowserDefaultInterfaceLanguage()
   const fallback: ContentLanguageSettings = {
-    defaultContentLanguage: getBrowserDefaultContentLanguage(),
+    interfaceLanguage: fallbackInterfaceLanguage,
+    defaultContentLanguage: defaultContentLanguageFromInterface(
+      fallbackInterfaceLanguage,
+    ),
     autoDetectAiLanguage: true,
   }
 
@@ -213,11 +266,14 @@ export const readContentLanguageSettings = (): ContentLanguageSettings => {
     }
 
     const parsed = JSON.parse(stored) as Partial<ContentLanguageSettings>
+    const interfaceLanguage =
+      normalizeInterfaceLanguageCode(parsed.interfaceLanguage) ||
+      fallback.interfaceLanguage
     return {
+      interfaceLanguage,
       defaultContentLanguage:
-        normalizeLanguageCode(parsed.defaultContentLanguage) ||
-        fallback.defaultContentLanguage,
-      autoDetectAiLanguage: parsed.autoDetectAiLanguage !== false,
+        defaultContentLanguageFromInterface(interfaceLanguage),
+      autoDetectAiLanguage: true,
     }
   } catch {
     return fallback
@@ -228,10 +284,14 @@ export const saveContentLanguageSettings = (
   settings: ContentLanguageSettings,
 ): void => {
   const normalized: ContentLanguageSettings = {
-    defaultContentLanguage:
-      normalizeLanguageCode(settings.defaultContentLanguage) ||
-      DEFAULT_CONTENT_LANGUAGE,
-    autoDetectAiLanguage: settings.autoDetectAiLanguage !== false,
+    interfaceLanguage:
+      normalizeInterfaceLanguageCode(settings.interfaceLanguage) ||
+      DEFAULT_INTERFACE_LANGUAGE,
+    defaultContentLanguage: defaultContentLanguageFromInterface(
+      normalizeInterfaceLanguageCode(settings.interfaceLanguage) ||
+        DEFAULT_INTERFACE_LANGUAGE,
+    ),
+    autoDetectAiLanguage: true,
   }
 
   window.localStorage.setItem(
@@ -277,8 +337,14 @@ const hasEnoughNaturalLanguage = (text: string): boolean => {
   const compact = text.replace(/\s+/g, ' ').trim()
   const words = compact.match(/[\p{L}]{2,}/gu) || []
   const codeLikeChars = compact.match(/[{}[\]<>/=|\\;]/g)?.length || 0
-  return words.length >= 4 && codeLikeChars / Math.max(compact.length, 1) < 0.08
+  return words.length >= 2 && codeLikeChars / Math.max(compact.length, 1) < 0.08
 }
+
+const countNaturalLanguageWords = (text: string): number =>
+  text
+    .replace(/\s+/g, ' ')
+    .trim()
+    .match(/[\p{L}]{2,}/gu)?.length || 0
 
 export const detectExplicitContentLanguage = (
   text: string,
@@ -339,8 +405,21 @@ export const detectContentLanguage = (
 
   const result = eld.detect(text)
   const detected = normalizeLanguageCode(result.language)
+  const rankedScores = Object.entries(
+    result.getScores() as Record<string, number>,
+  ).sort((left, right) => right[1] - left[1])
+  const bestScore = rankedScores[0]?.[1] || 0
+  const secondScore = rankedScores[1]?.[1] || 0
+  const requiredDelta =
+    countNaturalLanguageWords(text) <= ELD_SHORT_TEXT_MAX_WORDS
+      ? ELD_SHORT_TEXT_MIN_SCORE_DELTA
+      : ELD_MIN_SCORE_DELTA
 
-  if (!detected || !result.isReliable()) {
+  if (
+    !detected ||
+    !result.isReliable() ||
+    bestScore - secondScore < requiredDelta
+  ) {
     return null
   }
 
@@ -382,7 +461,9 @@ export const resolveContentLanguage = ({
 export const createAiOutputLanguageInstruction = (
   code: StudyMeshLanguageCode | undefined,
 ): string => {
-  const language = getContentLanguagePromptName(code || DEFAULT_CONTENT_LANGUAGE)
+  const language = getContentLanguagePromptName(
+    code || DEFAULT_CONTENT_LANGUAGE,
+  )
   return [
     `Output language: ${language}.`,
     'Write every user-visible JSON string in that language, including title, folderName, summary, rawNotes, quickStart, lesson notes, questions, answers, hints, explanations, flashcards, and chat responses.',

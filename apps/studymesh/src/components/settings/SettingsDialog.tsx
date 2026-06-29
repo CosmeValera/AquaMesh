@@ -28,7 +28,6 @@ import { seedStudyMeshGuideStudyPath } from '../../studyGuides/studyMeshGuideSee
 import { STUDY_GUIDES_CHANGED_EVENT } from '../../studyGuides/storage'
 import {
   readContentLanguageSettings,
-  saveContentLanguageSettings,
   type ContentLanguageSettings,
   type InterfaceLanguageCode,
 } from '../../language/contentLanguage'
@@ -60,7 +59,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   profileSettings,
   onDeleteStudyMeshProfile,
 }) => {
-  const { t } = useInterfaceText()
+  const { t, setLanguage } = useInterfaceText()
   const [status, setStatus] = React.useState('')
   const [languageSettings, setLanguageSettings] =
     React.useState<ContentLanguageSettings>(() => readContentLanguageSettings())
@@ -90,7 +89,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
   const persistLanguageSettings = (nextSettings: ContentLanguageSettings) => {
     setLanguageSettings(nextSettings)
-    saveContentLanguageSettings(nextSettings)
+    setLanguage(nextSettings.interfaceLanguage)
   }
 
   const handleAddStudyMeshGuide = () => {
@@ -288,6 +287,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 >
                   <MenuItem value="en">English</MenuItem>
                   <MenuItem value="es">Español</MenuItem>
+                  <MenuItem value="fr">Français</MenuItem>
+                  <MenuItem value="de">Deutsch</MenuItem>
                 </TextField>
               </Stack>
             </Paper>

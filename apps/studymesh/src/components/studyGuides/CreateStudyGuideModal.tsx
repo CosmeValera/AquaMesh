@@ -82,15 +82,6 @@ interface CreateStudyGuideModalProps {
   initialPrompt?: string
 }
 
-const providerLabels: Record<QuickCreateAiProvider, string> = {
-  local: 'Google Local AI',
-  gemini: 'Own Gemini API token',
-  cerebras: 'Own Cerebras API key',
-  hosted: 'Hosted AI',
-}
-
-const LOCAL_AI_ESTIMATE_COPY =
-  'Local AI runs on your device and can be slow. For faster, richer Study Guides, use a Gemini or Cerebras API key.'
 const GEMINI_STUDY_PATH_ESTIMATE_MS = 60 * 1000
 const CEREBRAS_STUDY_PATH_ESTIMATE_MS = 10 * 1000
 interface GeminiTimedProgress {
@@ -100,22 +91,6 @@ interface GeminiTimedProgress {
   estimatedRemainingMs: number
   percent: number
 }
-
-const getProviderPathProgressLabel = (
-  provider: QuickCreateAiProvider,
-): string =>
-  provider === 'local'
-    ? 'Generating dashboards with Google Local AI...'
-    : isStrongAiProvider(provider)
-    ? `Generating ordered dashboards with ${providerLabels[provider]}...`
-    : 'Generating ordered dashboards with Hosted AI...'
-
-const getProviderPathDescription = (provider: QuickCreateAiProvider): string =>
-  provider === 'local'
-    ? 'Local AI is running on your device. StudyMesh plans the path first, then generates each lesson dashboard with its own estimated timer.'
-    : isStrongAiProvider(provider)
-    ? `StudyMesh is sending the request to ${providerLabels[provider]} and converting the response into dashboards.`
-    : 'Hosted AI uses Study Credits and the app-hosted Cerebras model.'
 
 const formatPipelineRemaining = (remainingMs: number): string => {
   const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000))
@@ -445,6 +420,37 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
 }) => {
   const { t } = useInterfaceText()
   const defaultStudyPathPrompt = t('studyGuides.defaultPrompt')
+  const providerLabel = (provider: QuickCreateAiProvider): string => {
+    switch (provider) {
+      case 'local':
+        return t('ai.localGoogle')
+      case 'gemini':
+        return t('ai.ownGemini')
+      case 'cerebras':
+        return t('ai.ownCerebras')
+      case 'hosted':
+      default:
+        return t('ai.hosted')
+    }
+  }
+  const providerPathProgressLabel = (
+    provider: QuickCreateAiProvider,
+  ): string =>
+    provider === 'local'
+      ? t('studyGuides.generatingWithLocalAi')
+      : isStrongAiProvider(provider)
+      ? `${t('studyGuides.generatingWithProvider')} ${providerLabel(
+          provider,
+        )}...`
+      : t('studyGuides.generatingWithHosted')
+  const providerPathDescription = (provider: QuickCreateAiProvider): string =>
+    provider === 'local'
+      ? t('studyGuides.localProviderDescription')
+      : isStrongAiProvider(provider)
+      ? `${t('studyGuides.strongProviderDescriptionPrefix')} ${providerLabel(
+          provider,
+        )} ${t('studyGuides.strongProviderDescriptionSuffix')}`
+      : t('studyGuides.hostedProviderDescription')
   const [step, setStep] = useState<'prompt' | 'review'>('prompt')
   const [prompt, setPrompt] = useState(initialPrompt || defaultStudyPathPrompt)
   const [aiProvider, setAiProvider] = useState<QuickCreateAiProvider>('hosted')
@@ -474,19 +480,19 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
 
   React.useEffect(() => {
     onDraftMetaChange?.({
-      title: prompt.trim() || 'Study Guide',
-      inputSummary: prompt.trim() || 'Learning prompt',
+      title: prompt.trim() || t('workspace.studyGuide'),
+      inputSummary: prompt.trim() || t('studyGuides.promptField'),
     })
-  }, [onDraftMetaChange, prompt])
+  }, [onDraftMetaChange, prompt, t])
 
   React.useEffect(() => {
     if (isGenerating) {
-      onStatusChange?.('running', 'Create Study Guide is working')
+      onStatusChange?.('running', t('studyGuides.createWorking'))
       return
     }
 
     if (step === 'review' && draft) {
-      onStatusChange?.('complete', 'Create Study Guide is ready to review')
+      onStatusChange?.('complete', t('studyGuides.createReady'))
       return
     }
 
@@ -515,6 +521,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
     isGenerating,
     onStatusChange,
     step,
+    t,
   ])
 
   const cancelActiveGeneration = () => {
@@ -592,7 +599,9 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
 
   const cancelSessionKeyRequest = () => {
     const missingKeyProvider = sessionKeyRequest?.provider || aiProvider
-    const message = `${providerLabels[missingKeyProvider]} needs an API key before StudyMesh can create a Study Guide.`
+    const message = `${providerLabel(missingKeyProvider)} ${t(
+      'studyGuides.needsApiKey',
+    )}`
     setSessionKeyRequest(null)
     setError(message)
     if (autoCreateOnGenerate) {
@@ -609,7 +618,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
     const effectivePrompt = basePrompt
 
     if (!basePrompt) {
-      setError('Describe what you want StudyMesh to teach.')
+      setError(t('studyGuides.promptPlaceholder'))
       return
     }
 
@@ -686,7 +695,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
         assertRoleObjectsAreClean(
           objects,
           dashboard.dashboardRole,
-          dashboard.title || 'Study Guide dashboard',
+          dashboard.title || t('studyGuides.dashboardFallbackTitle'),
         )
 
         return {
@@ -726,9 +735,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
           : null,
       )
       setError(
-        err instanceof Error
-          ? err.message
-          : 'Could not generate this Study Guide.',
+        err instanceof Error ? err.message : t('studyGuides.generateFailed'),
       )
     } finally {
       if (activeGenerationRef.current === generationController) {
@@ -901,17 +908,17 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
             </Box>
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="h6" fontWeight={900} noWrap>
-                Create Study Guide
+                {t('studyGuides.create')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Build an ordered lesson path from a learning goal.
+                {t('studyGuides.createSubtitle')}
               </Typography>
             </Box>
           </Stack>
           {onCollapse && (
-            <Tooltip title="Collapse panel">
+            <Tooltip title={t('studyGuides.collapsePanel')}>
               <IconButton
-                aria-label="Collapse Create Study Guide panel"
+                aria-label={t('studyGuides.collapseCreatePanel')}
                 onClick={onCollapse}
                 size="small"
                 sx={{
@@ -970,12 +977,13 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                 </Stack>
               </Paper>
               {aiProvider === 'local' && (
-                <Alert severity="info">{LOCAL_AI_ESTIMATE_COPY}</Alert>
+                <Alert severity="info">
+                  {t('studyGuides.localAiEstimate')}
+                </Alert>
               )}
               {aiProvider === 'hosted' && (
                 <Alert severity="info">
-                  Hosted AI uses Study Credits. Creating a Study Guide costs 2
-                  credits.
+                  {t('studyGuides.hostedCreditsNotice')}
                 </Alert>
               )}
               {isGenerating && !autoCreateOnGenerate && (
@@ -988,12 +996,12 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                       <AutoAwesomeIcon color="primary" fontSize="small" />
                       <Typography variant="subtitle2" fontWeight={800}>
                         {localAiProgress?.label ||
-                          getProviderPathProgressLabel(aiProvider)}
+                          providerPathProgressLabel(aiProvider)}
                       </Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
-                      {providerLabels[aiProvider]}:{' '}
-                      {getProviderPathDescription(aiProvider)}
+                      {providerLabel(aiProvider)}:{' '}
+                      {providerPathDescription(aiProvider)}
                     </Typography>
                     {aiProvider === 'local' && localAiProgress ? (
                       (() => {
@@ -1088,15 +1096,19 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                                           variant="caption"
                                           fontWeight={800}
                                         >
-                                          Thread {lane.threadId}
+                                          {t('studyGuides.thread')}{' '}
+                                          {lane.threadId}
                                         </Typography>
                                         <Typography
                                           variant="caption"
                                           color="text.secondary"
                                         >
-                                          {lane.completedCount} done
+                                          {lane.completedCount}{' '}
+                                          {t('studyGuides.doneLower')}
                                           {lane.failedCount > 0
-                                            ? `, ${lane.failedCount} failed`
+                                            ? `, ${lane.failedCount} ${t(
+                                                'studyGuides.failedLower',
+                                              )}`
                                             : ''}
                                         </Typography>
                                       </Stack>
@@ -1104,7 +1116,8 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                                         variant="caption"
                                         color="text.secondary"
                                       >
-                                        {lane.active?.label || 'Waiting'}
+                                        {lane.active?.label ||
+                                          t('studyGuides.waiting')}
                                       </Typography>
                                       <LinearProgress
                                         variant="determinate"
@@ -1154,7 +1167,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                       <Stack spacing={1}>
                         <Stack direction="row" justifyContent="space-between">
                           <Typography variant="caption" color="text.secondary">
-                            Elapsed{' '}
+                            {t('studyGuides.elapsed')}{' '}
                             {formatGeminiDuration(geminiProgress.elapsedMs)}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
@@ -1170,13 +1183,13 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                           spacing={{ xs: 0.25, sm: 1.5 }}
                         >
                           <Typography variant="caption" color="text.secondary">
-                            Estimated total{' '}
+                            {t('studyGuides.estimatedTotal')}{' '}
                             {formatGeminiDuration(
                               geminiProgress.estimatedTotalMs,
                             )}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            Remaining{' '}
+                            {t('studyGuides.remaining')}{' '}
                             {formatGeminiDuration(
                               geminiProgress.estimatedRemainingMs,
                             )}
@@ -1202,18 +1215,20 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                 >
                   <Stack spacing={1}>
                     <Typography variant="subtitle2" fontWeight={900}>
-                      Study Guide generation running
+                      {t('studyGuides.generationRunning')}
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                      <Button onClick={cancelGeneration}>Cancel</Button>
+                      <Button onClick={cancelGeneration}>
+                        {t('studyGuides.cancel')}
+                      </Button>
                       <Button onClick={onContinueCreating}>
-                        Continue Creating
+                        {t('studyGuides.continueCreating')}
                       </Button>
                       <Button
                         variant="contained"
                         onClick={onContinueInBackground}
                       >
-                        Continue in Background
+                        {t('studyGuides.continueInBackground')}
                       </Button>
                     </Stack>
                   </Stack>
@@ -1231,7 +1246,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                   }}
                 >
                   <Typography component="summary" variant="subtitle2">
-                    Local AI failure debug
+                    {t('studyGuides.localAiFailureDebug')}
                   </Typography>
                   <Stack spacing={1.5} sx={{ mt: 1.5 }}>
                     {localAiFailureDebugSections(localAiFailureDebug)
@@ -1277,7 +1292,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
           ) : (
             <>
               <TextField
-                label="Folder name"
+                label={t('studyGuides.folderName')}
                 value={reviewFolderName}
                 onChange={(event) => setReviewFolderName(event.target.value)}
                 fullWidth
@@ -1291,7 +1306,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                     }
                   />
                 }
-                label="Open as a Study Guide tutorial after creating it"
+                label={t('studyGuides.openAsTutorial')}
               />
               <Stack spacing={1.5}>
                 {draft?.dashboards.map((dashboard, index) => (
@@ -1309,12 +1324,14 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                         alignItems="center"
                       >
                         <Chip
-                          label={`Dashboard ${index + 1}`}
+                          label={`${t('studyGuides.dashboard')} ${index + 1}`}
                           color="primary"
                           size="small"
                         />
                         <Chip
-                          label={`${dashboard.objects.length} study items`}
+                          label={`${dashboard.objects.length} ${t(
+                            'studyGuides.studyItems',
+                          )}`}
                           size="small"
                         />
                         {dashboard.dashboardPurpose ? (
@@ -1354,7 +1371,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                   }}
                 >
                   <Typography component="summary" variant="subtitle2">
-                    AI generation debug
+                    {t('studyGuides.aiGenerationDebug')}
                   </Typography>
                   <Stack spacing={1.5} sx={{ mt: 1.5 }}>
                     {[
@@ -1425,9 +1442,11 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ p: 2, flexShrink: 0 }}>
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleClose}>{t('studyGuides.cancel')}</Button>
         {step === 'review' && (
-          <Button onClick={() => setStep('prompt')}>Back</Button>
+          <Button onClick={() => setStep('prompt')}>
+            {t('studyGuides.back')}
+          </Button>
         )}
         {step === 'prompt' ? (
           <Button
@@ -1435,11 +1454,13 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
             onClick={() => void generatePath()}
             disabled={isGenerating || !prompt.trim()}
           >
-            {isGenerating ? 'Generating...' : 'Generate Study Guide'}
+            {isGenerating
+              ? t('studyGuides.generating')
+              : t('studyGuides.generateStudyGuide')}
           </Button>
         ) : (
           <Button variant="contained" onClick={createPath}>
-            Create {draft?.dashboards.length || 0} dashboards
+            {t('studyGuides.createDashboards')} {draft?.dashboards.length || 0}
           </Button>
         )}
       </DialogActions>

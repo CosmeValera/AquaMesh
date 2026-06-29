@@ -35,6 +35,7 @@ import {
 } from './studyPathContainer'
 import { dispatchWorkspaceOnboardingEvent } from '../onboarding/onboardingEvents'
 import { StudyGuideStorage } from '../../studyGuides/storage'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 
 const USER_ROLE_CHANGED_EVENT = 'studymesh-user-role-changed'
 const MAX_MENU_ITEMS_PER_FOLDER = 15
@@ -124,6 +125,7 @@ interface DashboardOptionsMenuProps {
 const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
   compactMobile = false,
 }) => {
+  const { t } = useInterfaceText()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [customDashboards, setCustomDashboards] = useState<SavedDashboard[]>([])
   const [studyGuides, setStudyGuides] = useState<
@@ -251,8 +253,9 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
     )
   }
 
-  const quickCreateDashboards =
-    visibleCustomDashboards.filter(isQuickCreateDashboard)
+  const quickCreateDashboards = visibleCustomDashboards.filter(
+    isQuickCreateDashboard,
+  )
   const rawQuickCreateFolders = Object.entries(
     quickCreateDashboards.reduce<Record<string, SavedDashboard[]>>(
       (folders, dashboard) => {
@@ -295,8 +298,8 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
         (folderName === 'Mathematics'
           ? '#1976D2'
           : folderName === 'Tutorial'
-            ? DEFAULT_FOLDER_COLOR
-            : undefined),
+          ? DEFAULT_FOLDER_COLOR
+          : undefined),
     )
 
   // Handle opening and closing dropdown
@@ -570,7 +573,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
                   whiteSpace: 'nowrap',
                 }}
               >
-                Study Guides
+                {t('studyGuides.title')}
               </Box>
             </Typography>
             {studyPathGroups.map((group) => {

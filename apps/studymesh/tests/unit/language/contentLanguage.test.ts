@@ -148,6 +148,40 @@ describe('content language resolver', () => {
     })
   })
 
+  it('supports French and German interface languages as AI language defaults', () => {
+    saveContentLanguageSettings({
+      interfaceLanguage: 'fr',
+      defaultContentLanguage: 'en',
+      autoDetectAiLanguage: false,
+    })
+
+    expect(readContentLanguageSettings()).toEqual({
+      interfaceLanguage: 'fr',
+      defaultContentLanguage: 'fr',
+      autoDetectAiLanguage: true,
+    })
+    expect(resolveContentLanguage({ text: 'OK' })).toEqual({
+      language: 'fr',
+      source: 'settings',
+    })
+
+    saveContentLanguageSettings({
+      interfaceLanguage: 'de',
+      defaultContentLanguage: 'en',
+      autoDetectAiLanguage: false,
+    })
+
+    expect(readContentLanguageSettings()).toEqual({
+      interfaceLanguage: 'de',
+      defaultContentLanguage: 'de',
+      autoDetectAiLanguage: true,
+    })
+    expect(resolveContentLanguage({ text: 'OK' })).toEqual({
+      language: 'de',
+      source: 'settings',
+    })
+  })
+
   it('adds target language instructions to Study Guide Quick Start TLDR prompts', () => {
     const quickStartPrompt = buildStudyGuideQuickStartPrompt({
       title: 'Derivadas',

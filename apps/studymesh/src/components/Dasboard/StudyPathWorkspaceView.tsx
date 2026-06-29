@@ -393,9 +393,9 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   if (!currentLesson) {
     return (
       <Paper sx={{ p: 3, m: 2 }}>
-        <Typography variant="h6">Study Guide is empty</Typography>
+        <Typography variant="h6">{t('workspace.emptyStudyGuide')}</Typography>
         <Typography color="text.secondary">
-          This container does not have lessons attached yet.
+          {t('workspace.emptyStudyGuideBody')}
         </Typography>
       </Paper>
     )

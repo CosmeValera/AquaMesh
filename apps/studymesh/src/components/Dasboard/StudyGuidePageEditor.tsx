@@ -38,6 +38,7 @@ import { TaskItem, TaskList } from '@tiptap/extension-list'
 import { TableKit } from '@tiptap/extension-table'
 import type { Editor } from '@tiptap/core'
 import { createStudyGuidePageHref } from '../../studyGuides/pageLinks'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 
 type EditorMode = 'rich' | 'source'
 
@@ -96,6 +97,7 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
   onChange,
   pageLinks = [],
 }) => {
+  const { t } = useInterfaceText()
   const [mode, setMode] = useState<EditorMode>('rich')
   const [titleValue, setTitleValue] = useState(title)
   const [sourceValue, setSourceValue] = useState(normalizeMarkdown(markdown))
@@ -115,6 +117,7 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
     title,
     markdown: normalizeMarkdown(markdown),
   })
+  const editorPlaceholderRef = useRef(t('pageEditor.startWritingNotes'))
   const saveTimerRef = useRef<number | null>(null)
   const sourceValueRef = useRef(sourceValue)
 
@@ -173,7 +176,7 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
       }),
       Placeholder.configure({
         placeholder: ({ editor }) =>
-          editor.isEmpty ? 'Start writing notes...' : '',
+          editor.isEmpty ? editorPlaceholderRef.current : '',
       }),
       Markdown.configure({
         indentation: { style: 'space', size: 2 },
@@ -183,7 +186,7 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
     contentType: 'markdown',
     editorProps: {
       attributes: {
-        'aria-label': 'Page body',
+        'aria-label': t('pageEditor.pageBody'),
       },
     },
     onUpdate: ({ editor: activeEditor }) => {
@@ -201,6 +204,10 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
   useEffect(() => {
     sourceValueRef.current = sourceValue
   }, [sourceValue])
+
+  useEffect(() => {
+    editorPlaceholderRef.current = t('pageEditor.startWritingNotes')
+  }, [t])
 
   useEffect(() => {
     return () => {
@@ -236,7 +243,7 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
         setSourceError(
           error instanceof Error
             ? error.message
-            : 'Could not parse Markdown source.',
+            : t('pageEditor.couldNotParseMarkdown'),
         )
         return
       }
@@ -255,7 +262,10 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
     }
 
     const previousUrl = editor.getAttributes('link').href as string | undefined
-    const nextUrl = window.prompt('Link URL', previousUrl || 'https://')
+    const nextUrl = window.prompt(
+      t('pageEditor.linkUrl'),
+      previousUrl || 'https://',
+    )
     if (nextUrl === null) {
       return
     }
@@ -344,7 +354,8 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
   return (
     <Stack spacing={1.5} sx={{ maxWidth: 980, mx: 'auto' }}>
       <TextField
-        label="Page title"
+        label={t('pageEditor.pageTitle')}
+        placeholder={t('pageEditor.pageTitle')}
         value={titleValue}
         onChange={(event) => updateTitle(event.target.value)}
         onBlur={flushSave}
@@ -379,14 +390,14 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
             <Tab
               icon={<TitleIcon fontSize="small" />}
               iconPosition="start"
-              label="Rich text"
+              label={t('pageEditor.richText')}
               value="rich"
               sx={{ minHeight: 34, py: 0.5 }}
             />
             <Tab
               icon={<DataObjectIcon fontSize="small" />}
               iconPosition="start"
-              label="Source"
+              label={t('pageEditor.source')}
               value="source"
               sx={{ minHeight: 34, py: 0.5 }}
             />
@@ -394,14 +405,14 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
           {mode === 'rich' ? (
             <Stack direction="row" gap={0.5} flexWrap="wrap">
               <ToolbarButton
-                label="Undo"
+                label={t('pageEditor.undo')}
                 disabled={!editor?.can().undo()}
                 onClick={() => editor?.chain().focus().undo().run()}
               >
                 <UndoIcon fontSize="small" />
               </ToolbarButton>
               <ToolbarButton
-                label="Redo"
+                label={t('pageEditor.redo')}
                 disabled={!editor?.can().redo()}
                 onClick={() => editor?.chain().focus().redo().run()}
               >
@@ -424,21 +435,21 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                 </Button>
               ))}
               <ToolbarButton
-                label="Bold"
+                label={t('pageEditor.bold')}
                 active={Boolean(editor?.isActive('bold'))}
                 onClick={() => editor?.chain().focus().toggleBold().run()}
               >
                 <FormatBoldIcon fontSize="small" />
               </ToolbarButton>
               <ToolbarButton
-                label="Italic"
+                label={t('pageEditor.italic')}
                 active={Boolean(editor?.isActive('italic'))}
                 onClick={() => editor?.chain().focus().toggleItalic().run()}
               >
                 <FormatItalicIcon fontSize="small" />
               </ToolbarButton>
               <ToolbarButton
-                label="Inline code"
+                label={t('pageEditor.inlineCode')}
                 active={Boolean(editor?.isActive('code'))}
                 onClick={() => editor?.chain().focus().toggleCode().run()}
               >
@@ -446,14 +457,14 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
               </ToolbarButton>
               <Divider orientation="vertical" flexItem />
               <ToolbarButton
-                label="Bullet list"
+                label={t('pageEditor.bulletList')}
                 active={Boolean(editor?.isActive('bulletList'))}
                 onClick={() => editor?.chain().focus().toggleBulletList().run()}
               >
                 <FormatListBulletedIcon fontSize="small" />
               </ToolbarButton>
               <ToolbarButton
-                label="Numbered list"
+                label={t('pageEditor.numberedList')}
                 active={Boolean(editor?.isActive('orderedList'))}
                 onClick={() =>
                   editor?.chain().focus().toggleOrderedList().run()
@@ -462,21 +473,21 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                 <FormatListNumberedIcon fontSize="small" />
               </ToolbarButton>
               <ToolbarButton
-                label="Checklist"
+                label={t('pageEditor.checklist')}
                 active={Boolean(editor?.isActive('taskList'))}
                 onClick={() => editor?.chain().focus().toggleTaskList().run()}
               >
                 <ChecklistIcon fontSize="small" />
               </ToolbarButton>
               <ToolbarButton
-                label="Quote"
+                label={t('pageEditor.quote')}
                 active={Boolean(editor?.isActive('blockquote'))}
                 onClick={() => editor?.chain().focus().toggleBlockquote().run()}
               >
                 <FormatQuoteIcon fontSize="small" />
               </ToolbarButton>
               <ToolbarButton
-                label="Divider"
+                label={t('pageEditor.divider')}
                 onClick={() =>
                   editor?.chain().focus().setHorizontalRule().run()
                 }
@@ -484,11 +495,11 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                 <HorizontalRuleIcon fontSize="small" />
               </ToolbarButton>
               <Divider orientation="vertical" flexItem />
-              <Tooltip title="Link Study Guide page">
+              <Tooltip title={t('pageEditor.linkStudyGuidePage')}>
                 <span>
                   <IconButton
                     size="small"
-                    aria-label="Link Study Guide page"
+                    aria-label={t('pageEditor.linkStudyGuidePage')}
                     disabled={pageLinks.length === 0}
                     onClick={(event) =>
                       setPageLinkMenuAnchor(event.currentTarget)
@@ -502,14 +513,14 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                 </span>
               </Tooltip>
               <ToolbarButton
-                label="Link external page"
+                label={t('pageEditor.linkExternalPage')}
                 active={externalLinkActive}
                 onClick={setLink}
               >
                 <LinkIcon fontSize="small" />
               </ToolbarButton>
               <ToolbarButton
-                label="Remove link"
+                label={t('pageEditor.removeLink')}
                 disabled={!editor?.isActive('link')}
                 onClick={() =>
                   editor
@@ -538,11 +549,11 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                   </MenuItem>
                 ))}
               </Menu>
-              <Tooltip title="Insert table">
+              <Tooltip title={t('pageEditor.insertTable')}>
                 <span>
                   <IconButton
                     size="small"
-                    aria-label="Insert table"
+                    aria-label={t('pageEditor.insertTable')}
                     onClick={(event) => setTableMenuAnchor(event.currentTarget)}
                     sx={toolbarButtonSx(Boolean(tableMenuAnchor))}
                   >
@@ -560,7 +571,7 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                 <Stack spacing={1.25} sx={{ width: 220, p: 1.5 }}>
                   <Stack direction="row" spacing={1}>
                     <TextField
-                      label="Rows"
+                      label={t('pageEditor.rows')}
                       type="number"
                       value={tableRows}
                       size="small"
@@ -568,7 +579,7 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                       onChange={(event) => updateTableRows(event.target.value)}
                     />
                     <TextField
-                      label="Columns"
+                      label={t('pageEditor.columns')}
                       type="number"
                       value={tableColumns}
                       size="small"
@@ -583,7 +594,7 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
                     size="small"
                     onClick={() => insertTable()}
                   >
-                    Insert table
+                    {t('pageEditor.insertTable')}
                   </Button>
                 </Stack>
               </Menu>
@@ -703,7 +714,7 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
         ) : (
           <Box sx={{ p: 2 }}>
             <TextField
-              label="Markdown source"
+              label={t('pageEditor.markdownSource')}
               value={sourceValue}
               onChange={(event) => updateSource(event.target.value)}
               onBlur={flushSave}

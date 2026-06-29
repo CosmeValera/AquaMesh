@@ -25,7 +25,7 @@ export type ContentLanguageSource =
   | 'settings'
   | 'fallback'
 
-export type InterfaceLanguageCode = 'en' | 'es'
+export type InterfaceLanguageCode = 'en' | 'es' | 'fr' | 'de'
 
 export interface ContentLanguageOption {
   code: StudyMeshLanguageCode
@@ -202,7 +202,12 @@ const normalizeInterfaceLanguageCode = (
   value: unknown,
 ): InterfaceLanguageCode | null => {
   const normalized = normalizeLanguageCode(value)
-  return normalized === 'en' || normalized === 'es' ? normalized : null
+  return normalized === 'en' ||
+    normalized === 'es' ||
+    normalized === 'fr' ||
+    normalized === 'de'
+    ? normalized
+    : null
 }
 
 export const isStudyMeshLanguageCode = (

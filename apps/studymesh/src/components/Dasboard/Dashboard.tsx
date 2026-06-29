@@ -18,6 +18,7 @@ import DashboardChatPanel, {
 } from '../dashboardChat/DashboardChatPanel'
 import { useDashboards } from './DashboardProvider'
 import StudyPathWorkspaceView from './StudyPathWorkspaceView'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 import './tabs.scss'
 
 const DEFAULT_STUDY_PATH_OPENED_KEY = 'studymesh-default-study-path-opened-v1'
@@ -28,6 +29,7 @@ const isStudyGuideDashboard = (
   dashboard?.kind === 'studyPathContainer' && Boolean(dashboard.studyPath)
 
 const Dashboards = () => {
+  const { t } = useInterfaceText()
   const { isPhoneOrTablet: isMobileDashboardView } =
     useResponsiveWorkspaceMode()
   const {
@@ -267,11 +269,10 @@ const Dashboards = () => {
                   <MenuBookOutlinedIcon color="primary" fontSize="large" />
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      Open a Study Guide
+                      {t('workspace.openStudyGuideTitle')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Use Creation or Dashboards to open a guide, create a page,
-                      or start from Quick Create.
+                      {t('workspace.openStudyGuideBody')}
                     </Typography>
                   </Box>
                   <Button
@@ -286,7 +287,7 @@ const Dashboards = () => {
                       }
                     }}
                   >
-                    Open Welcome Guide
+                    {t('workspace.openWelcomeGuide')}
                   </Button>
                 </Stack>
               </Paper>

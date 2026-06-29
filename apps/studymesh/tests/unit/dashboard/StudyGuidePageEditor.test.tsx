@@ -4,6 +4,11 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import StudyGuidePageEditor from '../../../src/components/Dasboard/StudyGuidePageEditor'
+import {
+  CONTENT_LANGUAGE_SETTINGS_KEY,
+  type InterfaceLanguageCode,
+} from '../../../src/language/contentLanguage'
+import { InterfaceLanguageProvider } from '../../../src/language/interfaceLanguage'
 
 const tiptapMock = vi.hoisted(() => {
   const state = {
@@ -39,6 +44,9 @@ const tiptapMock = vi.hoisted(() => {
   }
 
   const editor = {
+    get isEmpty() {
+      return !state.markdown
+    },
     commands: {
       setContent: state.setContent,
     },
@@ -61,18 +69,30 @@ vi.mock('@tiptap/react', () => ({
     tiptapMock.state.markdown = options.content
     return tiptapMock.editor
   }),
-  EditorContent: ({ editor }: { editor: unknown }) => (
-    <div
-      role="textbox"
-      aria-label="Page body"
-      contentEditable
-      suppressContentEditableWarning
-      onInput={(event) => {
-        tiptapMock.state.markdown = event.currentTarget.textContent || ''
-        tiptapMock.state.options?.onUpdate?.({ editor })
-      }}
-    />
-  ),
+  EditorContent: ({ editor }: { editor: unknown }) => {
+    const attributes = tiptapMock.state.options?.editorProps?.attributes || {}
+
+    return (
+      <div
+        role="textbox"
+        aria-label={attributes['aria-label'] || 'Page body'}
+        data-placeholder={
+          tiptapMock.state.options?.extensions
+            ?.find(
+              (extension: { name?: string }) =>
+                extension.name === 'Placeholder',
+            )
+            ?.placeholder?.({ editor: tiptapMock.editor }) || undefined
+        }
+        contentEditable
+        suppressContentEditableWarning
+        onInput={(event) => {
+          tiptapMock.state.markdown = event.currentTarget.textContent || ''
+          tiptapMock.state.options?.onUpdate?.({ editor })
+        }}
+      />
+    )
+  },
 }))
 
 vi.mock('@tiptap/starter-kit', () => ({
@@ -88,7 +108,9 @@ vi.mock('@tiptap/extension-link', () => ({
 }))
 
 vi.mock('@tiptap/extension-placeholder', () => ({
-  Placeholder: { configure: vi.fn(() => ({ name: 'Placeholder' })) },
+  Placeholder: {
+    configure: vi.fn((options) => ({ name: 'Placeholder', ...options })),
+  },
 }))
 
 vi.mock('@tiptap/extension-list', () => ({
@@ -101,7 +123,18 @@ vi.mock('@tiptap/extension-table', () => ({
 }))
 
 describe('StudyGuidePageEditor', () => {
+  let storage: Record<string, string>
+
   beforeEach(() => {
+    storage = {}
+    vi.mocked(localStorage.getItem).mockImplementation(
+      (key: string) => storage[key] ?? null,
+    )
+    vi.mocked(localStorage.setItem).mockImplementation(
+      (key: string, value: string) => {
+        storage[key] = value
+      },
+    )
     vi.useFakeTimers()
     tiptapMock.state.markdown = ''
     tiptapMock.state.options = null
@@ -112,6 +145,20 @@ describe('StudyGuidePageEditor', () => {
   afterEach(() => {
     vi.useRealTimers()
   })
+
+  const renderEditor = (language: InterfaceLanguageCode = 'en') => {
+    storage[CONTENT_LANGUAGE_SETTINGS_KEY] = JSON.stringify({
+      interfaceLanguage: language,
+      defaultContentLanguage: language,
+      autoDetectAiLanguage: true,
+    })
+
+    return render(
+      <InterfaceLanguageProvider>
+        <StudyGuidePageEditor title="" markdown="" onChange={vi.fn()} />
+      </InterfaceLanguageProvider>,
+    )
+  }
 
   it('autosaves rich text edits as Markdown', () => {
     const onChange = vi.fn()
@@ -221,5 +268,19 @@ describe('StudyGuidePageEditor', () => {
     expect(tiptapMock.editor.chain().setLink).toHaveBeenCalledWith({
       href: 'studymesh-page:review',
     })
+  })
+
+  it('localizes page editor labels and placeholders', () => {
+    renderEditor('fr')
+
+    expect(screen.getByLabelText('Titre de la page')).toBeInTheDocument()
+    expect(
+      screen.getByRole('textbox', { name: 'Corps de la page' }),
+    ).toHaveAttribute('data-placeholder', 'Commencez à écrire des notes...')
+    expect(
+      screen.getByRole('tab', { name: /texte enrichi/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /source/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Gras' })).toBeInTheDocument()
   })
 })

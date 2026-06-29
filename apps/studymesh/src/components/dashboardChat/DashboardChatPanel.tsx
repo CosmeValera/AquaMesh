@@ -690,26 +690,26 @@ const DashboardChatPanel = ({
 
   const answerSmalltalk = (question: string): string => {
     if (/^(?:cool|nice|great|ok|okay)$/i.test(question.trim())) {
-      return 'Got it. What would you like to look at next?'
+      return t('chat.smalltalkGotIt')
     }
 
     if (/what can you do/i.test(question)) {
-      return 'I can explain this Study Guide, summarize pages, compare concepts, make practice questions, and help connect the material to reliable web sources when the guide is missing something.'
+      return t('chat.smalltalkCapabilities')
     }
 
     if (/thank|thx|ty|tank\s+yuo/i.test(question)) {
-      return 'You are welcome.'
+      return t('chat.smalltalkThanks')
     }
 
     if (/how\s+(?:are|r)?\s*you|how you/i.test(question)) {
-      return 'All good. What can I help you with?'
+      return t('chat.smalltalkAllGood')
     }
 
     if (/say\s+hi.*twice/i.test(question)) {
-      return 'Hi! Hi!'
+      return t('chat.smalltalkHiTwice')
     }
 
-    return 'Hi! How can I help you with this Study Guide?'
+    return t('chat.smalltalkDefault')
   }
 
   const summarizeExternalSource = (source: DashboardExternalSource): string =>
@@ -1442,7 +1442,7 @@ const DashboardChatPanel = ({
   ) => {
     updateMessage(gapMessageId, (message) => ({
       ...message,
-      content: 'The Study Guide does not contain enough info, searching web...',
+      content: t('chat.searchingWeb'),
       webLookup: { status: 'searching' },
     }))
 

@@ -226,4 +226,88 @@ describe('StudyBlockView quiz feedback', () => {
     expect(screen.getByText('Answered 1/2')).toBeInTheDocument()
     expect(screen.getByText('Correct 1')).toBeInTheDocument()
   })
+
+  it('restores focused flashcard progress after the flashcard page remounts', () => {
+    const props = {
+      title: 'Terraform flashcards',
+      items: [
+        {
+          question: 'Provider',
+          answer: 'A plugin that talks to a platform API.',
+        },
+        {
+          question: 'State',
+          answer: 'A record of managed infrastructure.',
+        },
+        {
+          question: 'Workspace',
+          answer: 'An isolated state environment.',
+        },
+      ],
+    }
+
+    const firstRender = render(
+      <StudyBlockView type="FlashcardCarouselBlock" props={props} />,
+    )
+
+    fireEvent.click(screen.getByText('Provider'))
+    fireEvent.click(screen.getByRole('button', { name: 'Known' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByText('State'))
+    fireEvent.click(screen.getByRole('button', { name: 'Missed' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByText('Workspace'))
+    firstRender.unmount()
+
+    render(<StudyBlockView type="FlashcardCarouselBlock" props={props} />)
+
+    expect(screen.getByText('3 / 3')).toBeInTheDocument()
+    expect(screen.getByText('Answered 2/3')).toBeInTheDocument()
+    expect(screen.getByText('Known 1')).toBeInTheDocument()
+    expect(screen.getByText('Missed 1')).toBeInTheDocument()
+    expect(screen.getByText('An isolated state environment.')).toBeInTheDocument()
+  })
+
+  it('shows flashcard completion results with retake', () => {
+    render(
+      <StudyBlockView
+        type="FlashcardCarouselBlock"
+        props={{
+          title: 'Terraform flashcards',
+          items: [
+            {
+              question: 'Provider',
+              answer: 'A plugin that talks to a platform API.',
+            },
+            {
+              question: 'State',
+              answer: 'A record of managed infrastructure.',
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Provider'))
+    fireEvent.click(screen.getByRole('button', { name: 'Known' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByText('State'))
+    fireEvent.click(screen.getByRole('button', { name: 'Missed' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(screen.getByText('Flashcards complete.')).toBeInTheDocument()
+    expect(screen.getByText('Known')).toBeInTheDocument()
+    expect(screen.getByText('Missed')).toBeInTheDocument()
+    expect(screen.getByText('Skipped')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Practice again' }))
+    expect(
+      screen.getByRole('menuitem', { name: 'Only cards that you missed' }),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('menuitem', { name: 'All cards' }))
+    expect(screen.queryByText('Flashcards complete.')).not.toBeInTheDocument()
+    expect(screen.getByText('1 / 2')).toBeInTheDocument()
+    expect(screen.getByText('Answered 0/2')).toBeInTheDocument()
+    expect(screen.getByText('Provider')).toBeInTheDocument()
+  })
 })

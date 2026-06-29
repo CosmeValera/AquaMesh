@@ -21,6 +21,7 @@ import {
 import { useStore } from '../../../src/state/store'
 import { STUDY_GUIDES_STORAGE_KEY } from '../../../src/studyGuides/storage'
 import { createMarkdownStudyGuidePageLayout } from '../../../src/studyGuides/pages'
+import { createFocusedFlashcardStorageKey } from '../../../src/components/study/StudyBlockView'
 
 vi.mock('../../../src/customHooks/useWorkspaceActions', () => ({
   ensureStarterDashboards: vi.fn(),
@@ -65,34 +66,51 @@ const createMemoryStorage = () => {
   return store
 }
 
-const createLessonLayout = (index: number): DashboardLayout => ({
-  type: 'row',
-  name: `Lesson ${index}`,
-  children: [
-    {
-      type: 'tabset',
-      children: [
-        {
-          type: 'tab',
-          name: `Lesson ${index}`,
-          component: 'CustomWidget',
-          config: {
-            customProps: {
-              studyPathId: 'german-b1-grammar',
-              studyPathTitle: 'German B1 Grammar',
-              studyPathDashboardKey: `german-b1-grammar-${index}`,
-              studyPathDashboardName: `Lesson ${index}`,
-              studyPathDashboardIndex: index,
-              studyPathDashboardCount: 5,
-              studyPathFolderName: 'German B1 Grammar',
-              components: [],
+const lessonTwoFlashcardBlock = {
+  type: 'FlashcardCarouselBlock',
+  props: {
+    title: 'Lesson 2 flashcards',
+    items: [
+      {
+        question: 'Provider',
+        answer: 'A plugin that talks to a platform API.',
+      },
+    ],
+  },
+}
+
+const createLessonLayout = (index: number): DashboardLayout => {
+  const components = index === 2 ? [lessonTwoFlashcardBlock] : []
+
+  return {
+    type: 'row',
+    name: `Lesson ${index}`,
+    children: [
+      {
+        type: 'tabset',
+        children: [
+          {
+            type: 'tab',
+            name: `Lesson ${index}`,
+            component: 'CustomWidget',
+            config: {
+              customProps: {
+                studyPathId: 'german-b1-grammar',
+                studyPathTitle: 'German B1 Grammar',
+                studyPathDashboardKey: `german-b1-grammar-${index}`,
+                studyPathDashboardName: `Lesson ${index}`,
+                studyPathDashboardIndex: index,
+                studyPathDashboardCount: 5,
+                studyPathFolderName: 'German B1 Grammar',
+                components,
+              },
             },
           },
-        },
-      ],
-    },
-  ],
-})
+        ],
+      },
+    ],
+  }
+}
 
 const createStudyPath = (): StudyPathContainerState => ({
   pathId: 'german-b1-grammar',
@@ -240,6 +258,19 @@ describe('Interactive Study Guide UX', () => {
         })),
       ),
     )
+    const flashcardStorageKey = createFocusedFlashcardStorageKey(
+      lessonTwoFlashcardBlock.type,
+      lessonTwoFlashcardBlock.props,
+    )
+    storage.set(
+      flashcardStorageKey,
+      JSON.stringify({
+        cardIndex: 0,
+        grades: { 0: 'known' },
+        flipped: true,
+        resultsOpen: false,
+      }),
+    )
 
     renderWithDashboardProvider(<StateProbe />)
 
@@ -249,6 +280,7 @@ describe('Interactive Study Guide UX', () => {
     const savedDashboards = JSON.parse(storage.get('customDashboards') || '[]')
     expect(savedDashboards.map((dashboard: { id: string }) => dashboard.id))
       .toEqual(['lesson-1', 'lesson-3', 'lesson-4', 'lesson-5'])
+    expect(storage.has(flashcardStorageKey)).toBe(false)
   })
 
   it('keeps reading navigation in the Study Guide without the Edit Pages canvas', () => {

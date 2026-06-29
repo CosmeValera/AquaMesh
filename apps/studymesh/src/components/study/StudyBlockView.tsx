@@ -5,6 +5,8 @@ import {
   Checkbox,
   Chip,
   Link,
+  Menu,
+  MenuItem,
   Paper,
   Stack,
   Table,
@@ -18,6 +20,7 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import {
   OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
@@ -43,6 +46,14 @@ interface StoredFocusedQuizSession {
   questionIndex: number
   answers: Record<number, number>
   resultsOpen: boolean
+}
+
+interface StoredFocusedFlashcardSession {
+  cardIndex: number
+  grades: Record<number, 'known' | 'missed'>
+  flipped: boolean
+  resultsOpen: boolean
+  reviewCardIndexes?: number[]
 }
 
 const STUDY_BLOCK_TYPES = [
@@ -188,6 +199,13 @@ const defaultFocusedQuizSession = (): StoredFocusedQuizSession => ({
   resultsOpen: false,
 })
 
+const defaultFocusedFlashcardSession = (): StoredFocusedFlashcardSession => ({
+  cardIndex: 0,
+  grades: {},
+  flipped: false,
+  resultsOpen: false,
+})
+
 export const createFocusedQuizStorageKey = (
   type: string,
   props: Record<string, unknown>,
@@ -206,6 +224,32 @@ export const createFocusedQuizStorageKey = (
     )}`
   } catch {
     return `studymesh-focused-quiz-session-${hashValue(
+      `${type}:${String(props.title || '')}`,
+    )}`
+  }
+}
+
+export const createFocusedFlashcardStorageKey = (
+  type: string,
+  props: Record<string, unknown>,
+): string => {
+  if (
+    type !== 'FlashcardCarouselBlock' &&
+    type !== 'FocusedFlashcardSessionBlock'
+  ) {
+    return ''
+  }
+
+  try {
+    return `studymesh-focused-flashcard-session-${hashValue(
+      JSON.stringify({
+        type,
+        title: props.title || '',
+        items: props.items || [],
+      }),
+    )}`
+  } catch {
+    return `studymesh-focused-flashcard-session-${hashValue(
       `${type}:${String(props.title || '')}`,
     )}`
   }
@@ -259,9 +303,75 @@ const readStoredFocusedQuizSession = (
   }
 }
 
+const readStoredFocusedFlashcardSession = (
+  key: string,
+): StoredFocusedFlashcardSession => {
+  if (!key) {
+    return defaultFocusedFlashcardSession()
+  }
+
+  try {
+    const stored = window.localStorage.getItem(key)
+    if (!stored) {
+      return defaultFocusedFlashcardSession()
+    }
+
+    const parsed = JSON.parse(stored) as Partial<StoredFocusedFlashcardSession>
+    const rawGrades =
+      parsed.grades && typeof parsed.grades === 'object' ? parsed.grades : {}
+    const grades = Object.fromEntries(
+      Object.entries(rawGrades)
+        .map(
+          ([cardIndex, grade]): [number, unknown] => [
+            Number(cardIndex),
+            grade,
+          ],
+        )
+        .filter(
+          ([cardIndex, grade]) =>
+            Number.isInteger(cardIndex) &&
+            cardIndex >= 0 &&
+            (grade === 'known' || grade === 'missed'),
+        ),
+    ) as Record<number, 'known' | 'missed'>
+    const cardIndex = Number(parsed.cardIndex)
+    const reviewCardIndexes = Array.isArray(parsed.reviewCardIndexes)
+      ? parsed.reviewCardIndexes
+          .map((index) => Number(index))
+          .filter((index) => Number.isInteger(index) && index >= 0)
+      : undefined
+
+    return {
+      cardIndex:
+        Number.isInteger(cardIndex) && cardIndex >= 0 ? cardIndex : 0,
+      grades,
+      flipped: parsed.flipped === true,
+      resultsOpen: parsed.resultsOpen === true,
+      reviewCardIndexes,
+    }
+  } catch {
+    return defaultFocusedFlashcardSession()
+  }
+}
+
 const writeStoredFocusedQuizSession = (
   key: string,
   session: StoredFocusedQuizSession,
+): void => {
+  if (!key) {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(key, JSON.stringify(session))
+  } catch {
+    // Local storage is a convenience only. Ignore private-mode failures.
+  }
+}
+
+const writeStoredFocusedFlashcardSession = (
+  key: string,
+  session: StoredFocusedFlashcardSession,
 ): void => {
   if (!key) {
     return
@@ -286,7 +396,19 @@ export const removeStoredFocusedQuizSession = (key: string): void => {
   }
 }
 
-const clearFocusedQuizSessionFromComponent = (component: unknown): void => {
+export const removeStoredFocusedFlashcardSession = (key: string): void => {
+  if (!key) {
+    return
+  }
+
+  try {
+    window.localStorage.removeItem(key)
+  } catch {
+    // Local storage is a convenience only. Ignore private-mode failures.
+  }
+}
+
+const clearFocusedStudySessionFromComponent = (component: unknown): void => {
   if (!component || typeof component !== 'object') {
     return
   }
@@ -299,6 +421,9 @@ const clearFocusedQuizSessionFromComponent = (component: unknown): void => {
       : {}
 
   removeStoredFocusedQuizSession(createFocusedQuizStorageKey(type, props))
+  removeStoredFocusedFlashcardSession(
+    createFocusedFlashcardStorageKey(type, props),
+  )
 }
 
 export const clearStoredFocusedQuizSessionsFromLayout = (
@@ -310,10 +435,10 @@ export const clearStoredFocusedQuizSessionsFromLayout = (
 
   const customProps = layout.config?.customProps
   if (customProps) {
-    clearFocusedQuizSessionFromComponent(customProps)
+    clearFocusedStudySessionFromComponent(customProps)
 
     if (Array.isArray(customProps.components)) {
-      customProps.components.forEach(clearFocusedQuizSessionFromComponent)
+      customProps.components.forEach(clearFocusedStudySessionFromComponent)
     }
   }
 
@@ -859,11 +984,22 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     [focusedQuizStorageKey],
   )
   const focusedQuizStorageKeyRef = useRef(focusedQuizStorageKey)
-  const [flipped, setFlipped] = useState(false)
+  const focusedFlashcardStorageKey = useMemo(
+    () => createFocusedFlashcardStorageKey(type, props),
+    [props, type],
+  )
+  const initialFocusedFlashcardSession = useMemo(
+    () => readStoredFocusedFlashcardSession(focusedFlashcardStorageKey),
+    [focusedFlashcardStorageKey],
+  )
+  const focusedFlashcardStorageKeyRef = useRef(focusedFlashcardStorageKey)
+  const [flipped, setFlipped] = useState(initialFocusedFlashcardSession.flipped)
   const [selfGrade, setSelfGrade] = useState<'known' | 'missed' | ''>('')
   const [revealed, setRevealed] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const [focusedCardIndex, setFocusedCardIndex] = useState(0)
+  const [focusedCardIndex, setFocusedCardIndex] = useState(
+    initialFocusedFlashcardSession.cardIndex,
+  )
   const [focusedQuestionIndex, setFocusedQuestionIndex] = useState(
     initialFocusedQuizSession.questionIndex,
   )
@@ -875,7 +1011,16 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   )
   const [focusedFlashcardGrades, setFocusedFlashcardGrades] = useState<
     Record<number, 'known' | 'missed'>
-  >({})
+  >(initialFocusedFlashcardSession.grades)
+  const [focusedFlashcardReviewCardIndexes, setFocusedFlashcardReviewCardIndexes] =
+    useState<number[] | null>(
+      initialFocusedFlashcardSession.reviewCardIndexes || null,
+    )
+  const [flashcardResultsOpen, setFlashcardResultsOpen] = useState(
+    initialFocusedFlashcardSession.resultsOpen,
+  )
+  const [flashcardPracticeAnchorEl, setFlashcardPracticeAnchorEl] =
+    useState<null | HTMLElement>(null)
   const [shortAnswer, setShortAnswer] = useState('')
   const [quizHintOpen, setQuizHintOpen] = useState(false)
   const [checkedSteps, setCheckedSteps] = useState<Record<number, boolean>>({})
@@ -912,6 +1057,42 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     focusedQuizAnswers,
     focusedQuizStorageKey,
     quizResultsOpen,
+  ])
+
+  useEffect(() => {
+    if (focusedFlashcardStorageKeyRef.current === focusedFlashcardStorageKey) {
+      return
+    }
+
+    const storedSession = readStoredFocusedFlashcardSession(
+      focusedFlashcardStorageKey,
+    )
+    focusedFlashcardStorageKeyRef.current = focusedFlashcardStorageKey
+    setFocusedCardIndex(storedSession.cardIndex)
+    setFocusedFlashcardGrades(storedSession.grades)
+    setFocusedFlashcardReviewCardIndexes(
+      storedSession.reviewCardIndexes || null,
+    )
+    setFlipped(storedSession.flipped)
+    setFlashcardResultsOpen(storedSession.resultsOpen)
+    setFlashcardPracticeAnchorEl(null)
+  }, [focusedFlashcardStorageKey])
+
+  useEffect(() => {
+    writeStoredFocusedFlashcardSession(focusedFlashcardStorageKey, {
+      cardIndex: focusedCardIndex,
+      grades: focusedFlashcardGrades,
+      flipped,
+      resultsOpen: flashcardResultsOpen,
+      reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
+    })
+  }, [
+    flashcardResultsOpen,
+    flipped,
+    focusedCardIndex,
+    focusedFlashcardGrades,
+    focusedFlashcardReviewCardIndexes,
+    focusedFlashcardStorageKey,
   ])
 
   const askAi = (content: string) => {
@@ -1042,20 +1223,82 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
         tag: String(item.title || ''),
       }))
       .filter((item) => item.front && item.back)
-    const safeIndex = Math.min(focusedCardIndex, Math.max(0, cards.length - 1))
-    const card = cards[safeIndex]
-    const answered = Object.keys(focusedFlashcardGrades).length
-    const known = Object.values(focusedFlashcardGrades).filter(
-      (grade) => grade === 'known',
-    ).length
-    const missed = Object.values(focusedFlashcardGrades).filter(
-      (grade) => grade === 'missed',
-    ).length
+    const allCardEntries = cards.map((card, originalIndex) => ({
+      card,
+      originalIndex,
+    }))
+    const activeCardEntries = focusedFlashcardReviewCardIndexes
+      ? focusedFlashcardReviewCardIndexes
+          .map((originalIndex) => allCardEntries[originalIndex])
+          .filter(
+            (
+              entry,
+            ): entry is { card: (typeof cards)[number]; originalIndex: number } =>
+              Boolean(entry),
+          )
+      : allCardEntries
+    const safeIndex = Math.min(
+      focusedCardIndex,
+      Math.max(0, activeCardEntries.length - 1),
+    )
+    const cardEntry = activeCardEntries[safeIndex]
+    const card = cardEntry?.card
+    const currentGradeKey = cardEntry?.originalIndex ?? safeIndex
+    const answered = activeCardEntries.reduce(
+      (total, entry) =>
+        focusedFlashcardGrades[entry.originalIndex] ? total + 1 : total,
+      0,
+    )
+    const known = activeCardEntries.reduce(
+      (total, entry) =>
+        focusedFlashcardGrades[entry.originalIndex] === 'known'
+          ? total + 1
+          : total,
+      0,
+    )
+    const missed = activeCardEntries.reduce(
+      (total, entry) =>
+        focusedFlashcardGrades[entry.originalIndex] === 'missed'
+          ? total + 1
+          : total,
+      0,
+    )
+    const skipped = activeCardEntries.length - answered
+    const flashcardScorePercent =
+      activeCardEntries.length > 0
+        ? Math.round((known / activeCardEntries.length) * 100)
+        : 0
+    const knownDegrees =
+      activeCardEntries.length > 0
+        ? (known / activeCardEntries.length) * 360
+        : 0
+    const missedDegrees =
+      activeCardEntries.length > 0
+        ? (missed / activeCardEntries.length) * 360
+        : 0
+    const flashcardResultRows = [
+      { label: 'Known', value: known, color: 'success.main' },
+      { label: 'Missed', value: missed, color: 'error.main' },
+      { label: 'Skipped', value: skipped, color: 'text.primary' },
+    ]
+    const persistFlashcardSession = (
+      session: StoredFocusedFlashcardSession,
+    ) => {
+      writeStoredFocusedFlashcardSession(focusedFlashcardStorageKey, session)
+    }
     const gradeCard = (grade: 'known' | 'missed') => {
-      setFocusedFlashcardGrades((current) => ({
-        ...current,
-        [safeIndex]: grade,
-      }))
+      const nextGrades = {
+        ...focusedFlashcardGrades,
+        [currentGradeKey]: grade,
+      }
+      persistFlashcardSession({
+        cardIndex: safeIndex,
+        grades: nextGrades,
+        flipped,
+        resultsOpen: false,
+        reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
+      })
+      setFocusedFlashcardGrades(nextGrades)
     }
 
     if (!card) {
@@ -1065,6 +1308,174 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             No flashcards available.
           </Typography>
         </Paper>
+      )
+    }
+
+    if (flashcardResultsOpen) {
+      return (
+        <Box
+          sx={{
+            minHeight: {
+              xs: 'calc(100dvh - 180px)',
+              md: 'calc(100vh - 190px)',
+            },
+            display: 'grid',
+            placeItems: 'center',
+            px: { xs: 1, md: 3 },
+            py: { xs: 2, md: 4 },
+          }}
+        >
+          <Stack spacing={2.5} sx={{ width: 'min(820px, 100%)' }}>
+            <Typography variant="h4" fontWeight={700}>
+              Flashcards complete.
+            </Typography>
+            <Paper
+              variant="outlined"
+              sx={{
+                p: { xs: 2.5, sm: 4 },
+                borderRadius: 2,
+                bgcolor: 'background.paper',
+              }}
+            >
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={{ xs: 3, sm: 6 }}
+                alignItems="center"
+                justifyContent="space-around"
+              >
+                <Box
+                  sx={(theme) => ({
+                    width: 184,
+                    height: 184,
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    background: `conic-gradient(${theme.palette.success.main} 0deg ${knownDegrees}deg, ${theme.palette.error.main} ${knownDegrees}deg ${knownDegrees + missedDegrees}deg, ${theme.palette.action.selected} ${knownDegrees + missedDegrees}deg 360deg)`,
+                    position: 'relative',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      inset: 18,
+                      borderRadius: '50%',
+                      bgcolor: 'background.paper',
+                    },
+                  })}
+                >
+                  <Box sx={{ position: 'relative', textAlign: 'center' }}>
+                    <Typography variant="h4" fontWeight={800}>
+                      {known}/{activeCardEntries.length}
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      color="text.secondary"
+                      fontWeight={700}
+                    >
+                      {flashcardScorePercent}%
+                    </Typography>
+                  </Box>
+                </Box>
+                <Stack spacing={1.25} sx={{ minWidth: 180 }}>
+                  {flashcardResultRows.map(({ label, value, color }) => (
+                    <Stack
+                      key={label}
+                      direction="row"
+                      justifyContent="space-between"
+                      spacing={4}
+                    >
+                      <Typography variant="h6" color="text.secondary">
+                        {label}
+                      </Typography>
+                      <Typography variant="h6" color={color} fontWeight={800}>
+                        {value}
+                      </Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              </Stack>
+            </Paper>
+            <Stack direction="row" spacing={1.25} justifyContent="center">
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  const lastCardIndex = activeCardEntries.length - 1
+                  persistFlashcardSession({
+                    cardIndex: lastCardIndex,
+                    grades: focusedFlashcardGrades,
+                    flipped: false,
+                    resultsOpen: false,
+                    reviewCardIndexes:
+                      focusedFlashcardReviewCardIndexes || undefined,
+                  })
+                  setFocusedCardIndex(lastCardIndex)
+                  setFlipped(false)
+                  setFlashcardResultsOpen(false)
+                }}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="contained"
+                endIcon={<KeyboardArrowDownIcon fontSize="small" />}
+                onClick={(event) => {
+                  setFlashcardPracticeAnchorEl(event.currentTarget)
+                }}
+              >
+                Practice again
+              </Button>
+              <Menu
+                anchorEl={flashcardPracticeAnchorEl}
+                open={Boolean(flashcardPracticeAnchorEl)}
+                onClose={() => setFlashcardPracticeAnchorEl(null)}
+              >
+                <MenuItem
+                  onClick={() => {
+                    const nextSession = defaultFocusedFlashcardSession()
+                    removeStoredFocusedFlashcardSession(
+                      focusedFlashcardStorageKey,
+                    )
+                    persistFlashcardSession(nextSession)
+                    setFocusedFlashcardGrades({})
+                    setFocusedCardIndex(0)
+                    setFocusedFlashcardReviewCardIndexes(null)
+                    setFlipped(false)
+                    setFlashcardResultsOpen(false)
+                    setFlashcardPracticeAnchorEl(null)
+                  }}
+                >
+                  All cards
+                </MenuItem>
+                <MenuItem
+                  disabled={missed === 0}
+                  onClick={() => {
+                    const missedCardIndexes = activeCardEntries
+                      .filter(
+                        (entry) =>
+                          focusedFlashcardGrades[entry.originalIndex] ===
+                          'missed',
+                      )
+                      .map((entry) => entry.originalIndex)
+                    const nextSession: StoredFocusedFlashcardSession = {
+                      cardIndex: 0,
+                      grades: {},
+                      flipped: false,
+                      resultsOpen: false,
+                      reviewCardIndexes: missedCardIndexes,
+                    }
+                    persistFlashcardSession(nextSession)
+                    setFocusedFlashcardGrades({})
+                    setFocusedCardIndex(0)
+                    setFocusedFlashcardReviewCardIndexes(missedCardIndexes)
+                    setFlipped(false)
+                    setFlashcardResultsOpen(false)
+                    setFlashcardPracticeAnchorEl(null)
+                  }}
+                >
+                  Only cards that you missed
+                </MenuItem>
+              </Menu>
+            </Stack>
+          </Stack>
+        </Box>
       )
     }
 
@@ -1085,11 +1496,11 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 {title}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {safeIndex + 1} / {cards.length}
+                {safeIndex + 1} / {activeCardEntries.length}
               </Typography>
             </Box>
             <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="end">
-              <Chip label={`Answered ${answered}/${cards.length}`} />
+              <Chip label={`Answered ${answered}/${activeCardEntries.length}`} />
               <Chip color="success" label={`Known ${known}`} />
               <Chip color="error" label={`Missed ${missed}`} />
               {card.tag && <Chip label={card.tag} />}
@@ -1097,10 +1508,20 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           </Stack>
           <Paper
             variant="outlined"
-            onClick={() => setFlipped((current) => !current)}
+            onClick={() => {
+              const nextFlipped = !flipped
+              persistFlashcardSession({
+                cardIndex: safeIndex,
+                grades: focusedFlashcardGrades,
+                flipped: nextFlipped,
+                resultsOpen: false,
+                reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
+              })
+              setFlipped(nextFlipped)
+            }}
             sx={{
-              minHeight: { xs: 300, sm: 360 },
-              p: { xs: 3, sm: 5 },
+              minHeight: { xs: 220, sm: 250 },
+              p: { xs: 2.25, sm: 3 },
               borderRadius: 2,
               display: 'grid',
               placeItems: 'center',
@@ -1127,7 +1548,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           <Stack direction="row" spacing={1.25} justifyContent="center">
             <Button
               variant={
-                focusedFlashcardGrades[safeIndex] === 'known'
+                focusedFlashcardGrades[currentGradeKey] === 'known'
                   ? 'contained'
                   : 'outlined'
               }
@@ -1136,7 +1557,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               sx={(theme) => ({
                 '&:hover': {
                   bgcolor:
-                    focusedFlashcardGrades[safeIndex] === 'known'
+                    focusedFlashcardGrades[currentGradeKey] === 'known'
                       ? 'success.dark'
                       : alpha(theme.palette.success.main, 0.18),
                 },
@@ -1146,7 +1567,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             </Button>
             <Button
               variant={
-                focusedFlashcardGrades[safeIndex] === 'missed'
+                focusedFlashcardGrades[currentGradeKey] === 'missed'
                   ? 'contained'
                   : 'outlined'
               }
@@ -1155,7 +1576,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               sx={(theme) => ({
                 '&:hover': {
                   bgcolor:
-                    focusedFlashcardGrades[safeIndex] === 'missed'
+                    focusedFlashcardGrades[currentGradeKey] === 'missed'
                       ? 'error.dark'
                       : alpha(theme.palette.error.main, 0.18),
                 },
@@ -1185,7 +1606,15 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               variant="outlined"
               disabled={safeIndex === 0}
               onClick={() => {
-                setFocusedCardIndex((current) => Math.max(0, current - 1))
+                const previousIndex = Math.max(0, safeIndex - 1)
+                persistFlashcardSession({
+                  cardIndex: previousIndex,
+                  grades: focusedFlashcardGrades,
+                  flipped: false,
+                  resultsOpen: false,
+                  reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
+                })
+                setFocusedCardIndex(previousIndex)
                 setFlipped(false)
               }}
             >
@@ -1193,15 +1622,36 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             </Button>
             <Button
               variant="contained"
-              disabled={safeIndex >= cards.length - 1}
               onClick={() => {
-                setFocusedCardIndex((current) =>
-                  Math.min(cards.length - 1, current + 1),
+                if (safeIndex >= activeCardEntries.length - 1) {
+                  persistFlashcardSession({
+                    cardIndex: safeIndex,
+                    grades: focusedFlashcardGrades,
+                    flipped,
+                    resultsOpen: true,
+                    reviewCardIndexes:
+                      focusedFlashcardReviewCardIndexes || undefined,
+                  })
+                  setFlashcardResultsOpen(true)
+                  return
+                }
+
+                const nextIndex = Math.min(
+                  activeCardEntries.length - 1,
+                  safeIndex + 1,
                 )
+                persistFlashcardSession({
+                  cardIndex: nextIndex,
+                  grades: focusedFlashcardGrades,
+                  flipped: false,
+                  resultsOpen: false,
+                  reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
+                })
+                setFocusedCardIndex(nextIndex)
                 setFlipped(false)
               }}
             >
-              Next
+              {safeIndex >= activeCardEntries.length - 1 ? 'Done' : 'Next'}
             </Button>
           </Stack>
         </Stack>

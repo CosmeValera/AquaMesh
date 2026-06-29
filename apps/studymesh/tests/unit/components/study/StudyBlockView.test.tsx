@@ -73,13 +73,13 @@ describe('StudyBlockView quiz feedback', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Previous' }))
     expect(
-      screen.getByRole('button', { name: 'A. Une traversee' }),
+      screen.getByRole('button', { name: /A\. Une traversee/ }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'B. Un periple' }),
+      screen.getByRole('button', { name: /B\. Un periple/ }),
     ).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'A. Une traversee' }))
+    fireEvent.click(screen.getByRole('button', { name: /A\. Une traversee/ }))
 
     expect(
       screen.getByText(
@@ -114,7 +114,7 @@ describe('StudyBlockView quiz feedback', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'A. Une traversee' }))
+    fireEvent.click(screen.getByRole('button', { name: /A\. Une traversee/ }))
     fireEvent.click(screen.getByRole('button', { name: /Explain/ }))
 
     expect(onAskAi).toHaveBeenCalledWith(
@@ -171,8 +171,8 @@ describe('StudyBlockView quiz feedback', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'A. Une traversee' }))
-    fireEvent.click(screen.getByRole('button', { name: 'B. Un periple' }))
+    fireEvent.click(screen.getByRole('button', { name: /A\. Une traversee/ }))
+    fireEvent.click(screen.getByRole('button', { name: /B\. Un periple/ }))
     expect(screen.getByText('Correct 0')).toBeInTheDocument()
     expect(screen.getByText('Wrong 1')).toBeInTheDocument()
 
@@ -214,7 +214,7 @@ describe('StudyBlockView quiz feedback', () => {
       <StudyBlockView type="QuizCarouselBlock" props={props} />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'B. Un periple' }))
+    fireEvent.click(screen.getByRole('button', { name: /B\. Un periple/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     firstRender.unmount()
 

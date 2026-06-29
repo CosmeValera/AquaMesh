@@ -1023,9 +1023,19 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   const [flashcardResultsOpen, setFlashcardResultsOpen] = useState(
     initialFocusedFlashcardSession.resultsOpen,
   )
-  const [flashcardFeedback, setFlashcardFeedback] = useState<
-    'known' | 'missed' | null
-  >(null)
+  const [flashcardFeedbacks, setFlashcardFeedbacks] = useState<
+    Array<{ id: number; grade: 'known' | 'missed' }>
+  >([])
+  const flashcardFeedbackIdRef = useRef(0)
+  const flashcardFeedbackTimerRefs = useRef<number[]>([])
+  const flashcardRuntimeRef = useRef<{
+    cardIndex: number
+    grades: Record<number, 'known' | 'missed'>
+  }>({
+    cardIndex: initialFocusedFlashcardSession.cardIndex,
+    grades: initialFocusedFlashcardSession.grades,
+  })
+  const flashcardAdvanceTimerRef = useRef<number | null>(null)
   const [flashcardPracticeAnchorEl, setFlashcardPracticeAnchorEl] =
     useState<null | HTMLElement>(null)
   const [shortAnswer, setShortAnswer] = useState('')
@@ -1039,6 +1049,19 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   useEffect(() => {
     setQuizHintOpen(false)
   }, [focusedQuestionIndex, selectedIndex, type])
+
+  useEffect(() => {
+    return () => {
+      if (flashcardAdvanceTimerRef.current !== null) {
+        window.clearTimeout(flashcardAdvanceTimerRef.current)
+        flashcardAdvanceTimerRef.current = null
+      }
+      flashcardFeedbackTimerRefs.current.forEach((timer) =>
+        window.clearTimeout(timer),
+      )
+      flashcardFeedbackTimerRefs.current = []
+    }
+  }, [])
 
   useEffect(() => {
     if (focusedQuizStorageKeyRef.current === focusedQuizStorageKey) {
@@ -1297,7 +1320,14 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     ) => {
       writeStoredFocusedFlashcardSession(focusedFlashcardStorageKey, session)
     }
+    const clearFlashcardAdvanceTimer = () => {
+      if (flashcardAdvanceTimerRef.current !== null) {
+        window.clearTimeout(flashcardAdvanceTimerRef.current)
+        flashcardAdvanceTimerRef.current = null
+      }
+    }
     const moveToFlashcardIndex = (nextIndex: number) => {
+      clearFlashcardAdvanceTimer()
       persistFlashcardSession({
         cardIndex: nextIndex,
         grades: focusedFlashcardGrades,
@@ -1312,7 +1342,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     const advanceAfterFlashcardGrade = (
       nextGrades: Record<number, 'known' | 'missed'>,
     ) => {
-      window.setTimeout(() => {
+      clearFlashcardAdvanceTimer()
+      flashcardAdvanceTimerRef.current = window.setTimeout(() => {
+        flashcardAdvanceTimerRef.current = null
         if (safeIndex >= activeCardEntries.length - 1) {
           persistFlashcardSession({
             cardIndex: safeIndex,
@@ -1339,10 +1371,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       }, 850)
     }
     const gradeCard = (grade: 'known' | 'missed') => {
-      if (flashcardFeedback) {
-        return
-      }
-
       const nextGrades = {
         ...focusedFlashcardGrades,
         [currentGradeKey]: grade,
@@ -1565,16 +1593,29 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     return (
       <Box
         sx={(theme) => ({
+          '--flashcard-face-bg':
+            theme.palette.mode === 'dark'
+              ? alpha(theme.palette.common.white, 0.06)
+              : alpha(theme.palette.common.white, 0.74),
           minHeight: { xs: 'calc(100dvh - 156px)', md: 'calc(100vh - 170px)' },
           display: 'grid',
           alignContent: 'center',
           px: { xs: 1, md: 2 },
           py: { xs: 1.5, md: 2 },
           overflow: 'hidden',
-          background: `radial-gradient(circle at 50% 65%, ${alpha(
-            theme.palette.success.main,
-            0.2,
-          )} 0%, ${alpha(theme.palette.primary.main, 0.1)} 32%, transparent 62%)`,
+          background:
+            theme.palette.mode === 'dark'
+              ? `radial-gradient(circle at 50% 65%, ${alpha(
+                  theme.palette.success.main,
+                  0.2,
+                )} 0%, ${alpha(theme.palette.primary.main, 0.1)} 32%, transparent 62%)`
+              : `radial-gradient(circle at 50% 68%, ${alpha(
+                  theme.palette.success.main,
+                  0.28,
+                )} 0%, ${alpha(theme.palette.primary.main, 0.16)} 34%, ${alpha(
+                  theme.palette.success.light,
+                  0.08,
+                )} 54%, transparent 76%)`,
           '@keyframes flashcardGradeAway': {
             '0%': {
               opacity: 0,
@@ -1621,10 +1662,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             <Paper
               variant="outlined"
               onClick={() => {
-                if (flashcardFeedback) {
-                  return
-                }
-
                 const nextFlipped = !flipped
                 persistFlashcardSession({
                   cardIndex: safeIndex,
@@ -1638,20 +1675,17 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               }}
               sx={(theme) => ({
                 minHeight: { xs: 220, sm: 270 },
-                p: { xs: 2.5, sm: 3.5 },
+                p: 0,
                 borderRadius: 5,
-                display: 'grid',
-                cursor: flashcardFeedback ? 'default' : 'pointer',
+                display: 'block',
+                cursor: 'pointer',
                 textAlign: 'left',
-                bgcolor:
-                  theme.palette.mode === 'dark'
-                    ? alpha(theme.palette.common.white, 0.06)
-                    : alpha(theme.palette.common.black, 0.03),
+                bgcolor: 'transparent',
                 borderColor: alpha(theme.palette.text.primary, 0.22),
                 transition:
-                  'transform 500ms ease, background-color 180ms ease, border-color 180ms ease',
-                transformStyle: 'preserve-3d',
-                transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                  'background-color 180ms ease, border-color 180ms ease',
+                perspective: '1200px',
+                overflow: 'hidden',
                 '&:hover': {
                   borderColor: alpha(theme.palette.primary.main, 0.45),
                 },
@@ -1659,39 +1693,90 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             >
               <Box
                 sx={{
-                  transform: flipped ? 'rotateY(180deg)' : 'none',
-                  display: 'grid',
-                  gridTemplateRows: 'auto 1fr auto',
-                  minHeight: '100%',
-                  gap: 2,
+                  position: 'relative',
+                  minHeight: { xs: 220, sm: 270 },
+                  transformStyle: 'preserve-3d',
+                  transition: 'transform 500ms ease',
+                  transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
                 }}
               >
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  fontWeight={700}
-                >
-                  {safeIndex + 1}/{activeCardEntries.length}
-                </Typography>
                 <Box
+                  aria-hidden={flipped}
                   sx={{
-                    alignSelf: 'center',
-                    minWidth: 0,
+                    position: 'absolute',
+                    inset: 0,
+                    p: { xs: 2.5, sm: 3.5 },
                     display: 'grid',
+                    gridTemplateRows: 'auto 1fr auto',
                     gap: 2,
+                    minWidth: 0,
+                    bgcolor: 'var(--flashcard-face-bg)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
                   }}
                 >
                   <Typography
-                    variant={flipped ? 'h4' : 'h5'}
+                    variant="body2"
+                    color="text.secondary"
+                    fontWeight={700}
+                  >
+                    {safeIndex + 1}/{activeCardEntries.length}
+                  </Typography>
+                  <Typography
+                    variant="h5"
                     sx={{
+                      alignSelf: 'center',
                       whiteSpace: 'pre-wrap',
                       lineHeight: 1.25,
-                      fontWeight: flipped ? 500 : 650,
+                      fontWeight: 650,
                     }}
                   >
-                    {flipped ? card.back : card.front}
+                    {card.front}
                   </Typography>
-                  {flipped ? (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ textAlign: 'center' }}
+                  >
+                    See answer
+                  </Typography>
+                </Box>
+                <Box
+                  aria-hidden={!flipped}
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    p: { xs: 2.5, sm: 3.5 },
+                    display: 'grid',
+                    gridTemplateRows: 'auto 1fr auto',
+                    gap: 2,
+                    minWidth: 0,
+                    bgcolor: 'var(--flashcard-face-bg)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    transform: 'rotateY(180deg)',
+                    pointerEvents: flipped ? 'auto' : 'none',
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    fontWeight={700}
+                  >
+                    {safeIndex + 1}/{activeCardEntries.length}
+                  </Typography>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      alignSelf: 'center',
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: 1.25,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {card.back}
+                  </Typography>
+                  <Box>
                     <Button
                       size="small"
                       variant="outlined"
@@ -1709,19 +1794,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     >
                       {explainButtonLabel}
                     </Button>
-                  ) : null}
+                  </Box>
                 </Box>
-                {!flipped ? (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ textAlign: 'center' }}
-                  >
-                    See answer
-                  </Typography>
-                ) : (
-                  <Box />
-                )}
               </Box>
             </Paper>
             {flashcardFeedback ? (
@@ -1767,7 +1841,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             <Button
               aria-label="Previous card"
               variant="outlined"
-              disabled={safeIndex === 0 || Boolean(flashcardFeedback)}
+              disabled={safeIndex === 0}
               onClick={() => moveToFlashcardIndex(Math.max(0, safeIndex - 1))}
               sx={(theme) => ({
                 minWidth: { xs: 56, sm: 64 },
@@ -1787,7 +1861,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             <Button
               aria-label="Wrong answer"
               variant="outlined"
-              disabled={Boolean(flashcardFeedback)}
               onClick={() => gradeCard('missed')}
               sx={(theme) => ({
                 minWidth: { xs: 86, sm: 102 },
@@ -1810,7 +1883,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             <Button
               aria-label="Correct answer"
               variant="outlined"
-              disabled={Boolean(flashcardFeedback)}
               onClick={() => gradeCard('known')}
               sx={(theme) => ({
                 minWidth: { xs: 86, sm: 102 },
@@ -1833,7 +1905,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             <Button
               aria-label="Next card"
               variant="outlined"
-              disabled={Boolean(flashcardFeedback)}
               onClick={() => {
                 if (safeIndex >= activeCardEntries.length - 1) {
                   persistFlashcardSession({
@@ -1907,6 +1978,20 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               const feedback = stripFeedbackVerdict(
                 feedbackForOption(optionFeedback, option),
               )
+              const verdict =
+                showResult && isCorrect
+                  ? {
+                      icon: <CheckIcon fontSize="small" />,
+                      label: isSelected ? "That's right" : 'Right answer',
+                      color: 'success.main',
+                    }
+                  : showResult && isSelected
+                    ? {
+                        icon: <CloseIcon fontSize="small" />,
+                        label: 'Not quite',
+                        color: 'error.main',
+                      }
+                    : null
 
               return (
                 <Box key={`${option}-${index}`} sx={{ width: '100%' }}>
@@ -1926,6 +2011,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                         whiteSpace: 'normal',
                         color: 'text.primary',
                         borderColor: showResult ? resultColor : 'divider',
+                        alignItems: 'stretch',
+                        py: 1.25,
                         bgcolor:
                           showResult && (isCorrect || isSelected)
                             ? alpha(stateMain, 0.12)
@@ -1942,17 +2029,48 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                       }
                     }}
                   >
-                    {quizOptionLabel(index, option)}
-                  </Button>
-                  {showResult && feedback ? (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ px: 1, pt: 0.75 }}
+                    <Stack
+                      component="span"
+                      spacing={0.85}
+                      sx={{ width: '100%', alignItems: 'stretch' }}
                     >
-                      {feedback}
-                    </Typography>
-                  ) : null}
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        fontWeight={700}
+                      >
+                        {quizOptionLabel(index, option)}
+                      </Typography>
+                      {verdict ? (
+                        <Stack
+                          component="span"
+                          direction="row"
+                          spacing={0.75}
+                          alignItems="center"
+                          sx={{ color: verdict.color, fontWeight: 800 }}
+                        >
+                          {verdict.icon}
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            fontWeight={800}
+                          >
+                            {verdict.label}
+                          </Typography>
+                        </Stack>
+                      ) : null}
+                      {showResult && feedback ? (
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ lineHeight: 1.55 }}
+                        >
+                          {feedback}
+                        </Typography>
+                      ) : null}
+                    </Stack>
+                  </Button>
                 </Box>
               )
             })}
@@ -2199,13 +2317,27 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
 
     return (
       <Box
-        sx={{
+        sx={(theme) => ({
           minHeight: { xs: 'calc(100dvh - 180px)', md: 'calc(100vh - 190px)' },
           display: 'grid',
           placeItems: 'center',
           px: { xs: 1, md: 3 },
           py: { xs: 2, md: 4 },
-        }}
+          overflow: 'hidden',
+          background:
+            theme.palette.mode === 'dark'
+              ? `radial-gradient(circle at 50% 60%, ${alpha(
+                  theme.palette.success.main,
+                  0.16,
+                )} 0%, ${alpha(theme.palette.primary.main, 0.09)} 34%, transparent 68%)`
+              : `radial-gradient(circle at 50% 62%, ${alpha(
+                  theme.palette.success.main,
+                  0.18,
+                )} 0%, ${alpha(theme.palette.primary.main, 0.11)} 38%, ${alpha(
+                  theme.palette.success.light,
+                  0.07,
+                )} 58%, transparent 78%)`,
+        })}
       >
         <Stack spacing={2.5} sx={{ width: 'min(820px, 100%)' }}>
           <Stack direction="row" justifyContent="space-between" gap={2}>
@@ -2243,6 +2375,20 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   const feedback = stripFeedbackVerdict(
                     feedbackForOption(question.optionFeedback, option),
                   )
+                  const verdict =
+                    hasAnswered && isCorrect
+                      ? {
+                          icon: <CheckIcon fontSize="small" />,
+                          label: isSelected ? "That's right" : 'Right answer',
+                          color: 'success.main',
+                        }
+                      : hasAnswered && isSelected
+                        ? {
+                            icon: <CloseIcon fontSize="small" />,
+                            label: 'Not quite',
+                            color: 'error.main',
+                          }
+                        : null
 
                   return (
                     <Box key={`${option}-${index}`} sx={{ width: '100%' }}>
@@ -2282,6 +2428,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                             whiteSpace: 'normal',
                             color: 'text.primary',
                             borderColor: hasAnswered ? resultBorder : 'divider',
+                            alignItems: 'stretch',
+                            py: 1.25,
                             cursor: hasAnswered ? 'default' : 'pointer',
                             bgcolor:
                               hasAnswered && (isCorrect || isSelected)
@@ -2299,17 +2447,48 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                           }
                         }}
                       >
-                        {quizOptionLabel(index, option)}
-                      </Button>
-                      {hasAnswered && feedback ? (
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ px: 1, pt: 0.75 }}
+                        <Stack
+                          component="span"
+                          spacing={0.85}
+                          sx={{ width: '100%', alignItems: 'stretch' }}
                         >
-                          {feedback}
-                        </Typography>
-                      ) : null}
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            fontWeight={700}
+                          >
+                            {quizOptionLabel(index, option)}
+                          </Typography>
+                          {verdict ? (
+                            <Stack
+                              component="span"
+                              direction="row"
+                              spacing={0.75}
+                              alignItems="center"
+                              sx={{ color: verdict.color, fontWeight: 800 }}
+                            >
+                              {verdict.icon}
+                              <Typography
+                                component="span"
+                                variant="body2"
+                                fontWeight={800}
+                              >
+                                {verdict.label}
+                              </Typography>
+                            </Stack>
+                          ) : null}
+                          {hasAnswered && feedback ? (
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ lineHeight: 1.55 }}
+                            >
+                              {feedback}
+                            </Typography>
+                          ) : null}
+                        </Stack>
+                      </Button>
                     </Box>
                   )
                 })}

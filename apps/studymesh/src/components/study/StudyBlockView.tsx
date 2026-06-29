@@ -1622,22 +1622,34 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           minHeight: { xs: 'calc(100dvh - 156px)', md: 'calc(100vh - 170px)' },
           display: 'grid',
           alignContent: 'center',
-          px: { xs: 1, md: 2 },
-          py: { xs: 1.5, md: 2 },
+          px: { xs: 2, sm: 2 },
+          py: { xs: 0.75, sm: 2 },
           overflow: 'hidden',
           background:
             theme.palette.mode === 'dark'
-              ? `radial-gradient(circle at 50% 65%, ${alpha(
-                  theme.palette.success.main,
-                  0.2,
-                )} 0%, ${alpha(theme.palette.primary.main, 0.1)} 32%, transparent 62%)`
-              : `radial-gradient(circle at 50% 68%, ${alpha(
-                  theme.palette.success.main,
-                  0.28,
-                )} 0%, ${alpha(theme.palette.primary.main, 0.16)} 34%, ${alpha(
-                  theme.palette.success.light,
-                  0.08,
-                )} 54%, transparent 76%)`,
+              ? {
+                  xs: `radial-gradient(ellipse 120% 88% at 50% 68%, ${alpha(
+                    theme.palette.success.main,
+                    0.11,
+                  )} 0%, ${alpha(theme.palette.primary.main, 0.06)} 42%, transparent 78%)`,
+                  sm: `radial-gradient(circle at 50% 65%, ${alpha(
+                    theme.palette.success.main,
+                    0.2,
+                  )} 0%, ${alpha(theme.palette.primary.main, 0.1)} 32%, transparent 62%)`,
+                }
+              : {
+                  xs: `radial-gradient(ellipse 120% 88% at 50% 68%, ${alpha(
+                    theme.palette.success.main,
+                    0.16,
+                  )} 0%, ${alpha(theme.palette.primary.main, 0.08)} 42%, transparent 78%)`,
+                  sm: `radial-gradient(circle at 50% 68%, ${alpha(
+                    theme.palette.success.main,
+                    0.28,
+                  )} 0%, ${alpha(theme.palette.primary.main, 0.16)} 34%, ${alpha(
+                    theme.palette.success.light,
+                    0.08,
+                  )} 54%, transparent 76%)`,
+                },
           '@keyframes flashcardGradeAway': {
             '0%': {
               opacity: 0,
@@ -1655,9 +1667,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
         })}
       >
         <Stack
-          spacing={2}
+          spacing={{ xs: 1.5, sm: 2 }}
           alignItems="center"
-          sx={{ width: 'min(760px, 100%)', mx: 'auto' }}
+          sx={{
+            width: { xs: '100%', sm: 'min(760px, 100%)' },
+            mx: 'auto',
+            minWidth: 0,
+          }}
         >
           <Stack
             direction="row"
@@ -1680,7 +1696,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               {card.tag && <Chip label={card.tag} />}
             </Stack>
           </Stack>
-          <Box sx={{ position: 'relative', width: '100%' }}>
+          <Box
+            sx={{
+              position: 'relative',
+              width: '100%',
+              mx: 'auto',
+            }}
+          >
             <Paper
               variant="outlined"
               onClick={() => {
@@ -1696,9 +1718,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 setFlipped(nextFlipped)
               }}
               sx={(theme) => ({
-                minHeight: { xs: 220, sm: 270 },
+                minHeight: { xs: 330, sm: 340, md: 330 },
                 p: 0,
-                borderRadius: 5,
+                borderRadius: { xs: 4, sm: 5 },
                 display: 'block',
                 cursor: 'pointer',
                 textAlign: 'left',
@@ -1715,7 +1737,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               <Box
                 sx={{
                   position: 'relative',
-                  minHeight: { xs: 220, sm: 270 },
+                  minHeight: { xs: 330, sm: 340, md: 330 },
+                  borderRadius: 'inherit',
                   transformStyle: 'preserve-3d',
                   transition: 'transform 500ms ease',
                   transformOrigin: 'center center',
@@ -1729,15 +1752,18 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   sx={(theme) => ({
                     position: 'absolute',
                     inset: 0,
-                    p: { xs: 2.5, sm: 3.5 },
+                    p: { xs: 2.25, sm: 3.5 },
                     display: 'grid',
                     gridTemplateRows: 'auto 1fr auto',
-                    gap: 2,
+                    gap: { xs: 1.25, sm: 2 },
                     minWidth: 0,
                     bgcolor: 'var(--flashcard-face-bg)',
                     border: 1,
-                    borderColor: alpha(theme.palette.text.primary, 0.22),
-                    borderRadius: 5,
+                    borderColor: {
+                      xs: alpha(theme.palette.text.primary, 0.12),
+                      sm: alpha(theme.palette.text.primary, 0.22),
+                    },
+                    borderRadius: 'inherit',
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
                     transition: 'border-color 180ms ease',
@@ -1755,7 +1781,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     sx={{
                       alignSelf: 'center',
                       whiteSpace: 'pre-wrap',
-                      lineHeight: 1.25,
+                      fontSize: { xs: '1.03rem', sm: '1.5rem' },
+                      lineHeight: { xs: 1.22, sm: 1.25 },
                       fontWeight: 650,
                     }}
                   >
@@ -1775,15 +1802,18 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   sx={(theme) => ({
                     position: 'absolute',
                     inset: 0,
-                    p: { xs: 2.5, sm: 3.5 },
+                    p: { xs: 2.25, sm: 3.5 },
                     display: 'grid',
                     gridTemplateRows: 'auto 1fr auto',
-                    gap: 2,
+                    gap: { xs: 1.25, sm: 2 },
                     minWidth: 0,
                     bgcolor: 'var(--flashcard-face-bg)',
                     border: 1,
-                    borderColor: alpha(theme.palette.text.primary, 0.22),
-                    borderRadius: 5,
+                    borderColor: {
+                      xs: alpha(theme.palette.text.primary, 0.12),
+                      sm: alpha(theme.palette.text.primary, 0.22),
+                    },
+                    borderRadius: 'inherit',
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
                     transform: 'rotateY(180deg)',
@@ -1803,8 +1833,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     sx={{
                       alignSelf: 'center',
                       whiteSpace: 'pre-wrap',
-                      lineHeight: 1.25,
+                      fontSize: { xs: '1.03rem', sm: '2.125rem' },
+                      lineHeight: { xs: 1.22, sm: 1.25 },
                       fontWeight: 500,
+                      overflowWrap: 'anywhere',
                     }}
                   >
                     {card.back}
@@ -1868,10 +1900,14 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           </Box>
           <Stack
             direction="row"
-            spacing={{ xs: 1, sm: 2 }}
-            justifyContent="center"
+            spacing={{ xs: 0.5, sm: 2 }}
+            justifyContent={{ xs: 'space-between', sm: 'center' }}
             alignItems="center"
-            sx={{ width: '100%' }}
+            sx={{
+              width: '100%',
+              minWidth: 0,
+              '& .MuiButton-root': { flexShrink: 0 },
+            }}
           >
             <Button
               aria-label="Previous card"
@@ -1879,8 +1915,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               disabled={safeIndex === 0}
               onClick={() => moveToFlashcardIndex(Math.max(0, safeIndex - 1))}
               sx={(theme) => ({
-                minWidth: { xs: 56, sm: 64 },
-                height: { xs: 56, sm: 64 },
+                minWidth: { xs: 42, sm: 64 },
+                width: { xs: 42, sm: 'auto' },
+                height: { xs: 42, sm: 64 },
                 borderRadius: 999,
                 color: 'primary.main',
                 bgcolor: alpha(theme.palette.background.paper, 0.42),
@@ -1898,8 +1935,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               variant="outlined"
               onClick={() => gradeCard('missed')}
               sx={(theme) => ({
-                minWidth: { xs: 86, sm: 102 },
-                height: { xs: 56, sm: 64 },
+                minWidth: { xs: 68, sm: 102 },
+                height: { xs: 42, sm: 64 },
                 borderRadius: 999,
                 gap: 0.75,
                 color: 'error.main',
@@ -1920,8 +1957,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               variant="outlined"
               onClick={() => gradeCard('known')}
               sx={(theme) => ({
-                minWidth: { xs: 86, sm: 102 },
-                height: { xs: 56, sm: 64 },
+                minWidth: { xs: 68, sm: 102 },
+                height: { xs: 42, sm: 64 },
                 borderRadius: 999,
                 gap: 0.75,
                 color: 'success.main',
@@ -1959,8 +1996,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 )
               }}
               sx={(theme) => ({
-                minWidth: { xs: 56, sm: 64 },
-                height: { xs: 56, sm: 64 },
+                minWidth: { xs: 42, sm: 64 },
+                width: { xs: 42, sm: 'auto' },
+                height: { xs: 42, sm: 64 },
                 borderRadius: 999,
                 color: 'primary.main',
                 bgcolor: alpha(theme.palette.background.paper, 0.42),
@@ -2377,7 +2415,11 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
         <Stack spacing={2.5} sx={{ width: 'min(820px, 100%)' }}>
           <Stack direction="row" justifyContent="space-between" gap={2}>
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h5" fontWeight={600}>
+              <Typography
+                variant="h5"
+                fontWeight={600}
+                sx={{ fontSize: { xs: '1.35rem', sm: '1.5rem' } }}
+              >
                 {title}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -2393,13 +2435,19 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           <Paper
             variant="outlined"
             sx={{
-              p: { xs: 2.25, sm: 4 },
+              p: { xs: 2, sm: 4 },
               borderRadius: 2,
               bgcolor: 'background.paper',
             }}
           >
             <Stack spacing={2.25}>
-              <Typography variant="h5" sx={{ lineHeight: 1.35 }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontSize: { xs: '1.35rem', sm: '1.5rem' },
+                  lineHeight: { xs: 1.28, sm: 1.35 },
+                }}
+              >
                 {question.question}
               </Typography>
               <Stack spacing={1.25}>
@@ -2491,6 +2539,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                             component="span"
                             variant="body2"
                             fontWeight={700}
+                            sx={{ fontSize: { xs: '0.86rem', sm: '0.875rem' } }}
                           >
                             {quizOptionLabel(index, option)}
                           </Typography>
@@ -2507,6 +2556,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                                 component="span"
                                 variant="body2"
                                 fontWeight={800}
+                                sx={{
+                                  fontSize: { xs: '0.86rem', sm: '0.875rem' },
+                                }}
                               >
                                 {verdict.label}
                               </Typography>
@@ -2517,7 +2569,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                               component="span"
                               variant="body2"
                               color="text.secondary"
-                              sx={{ lineHeight: 1.55 }}
+                              sx={{
+                                fontSize: { xs: '0.82rem', sm: '0.875rem' },
+                                lineHeight: 1.5,
+                              }}
                             >
                               {feedback}
                             </Typography>

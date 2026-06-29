@@ -19,7 +19,11 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import CheckIcon from '@mui/icons-material/Check'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
+import CloseIcon from '@mui/icons-material/Close'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import {
@@ -1019,6 +1023,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   const [flashcardResultsOpen, setFlashcardResultsOpen] = useState(
     initialFocusedFlashcardSession.resultsOpen,
   )
+  const [flashcardFeedback, setFlashcardFeedback] = useState<
+    'known' | 'missed' | null
+  >(null)
   const [flashcardPracticeAnchorEl, setFlashcardPracticeAnchorEl] =
     useState<null | HTMLElement>(null)
   const [shortAnswer, setShortAnswer] = useState('')
@@ -1290,7 +1297,52 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     ) => {
       writeStoredFocusedFlashcardSession(focusedFlashcardStorageKey, session)
     }
+    const moveToFlashcardIndex = (nextIndex: number) => {
+      persistFlashcardSession({
+        cardIndex: nextIndex,
+        grades: focusedFlashcardGrades,
+        flipped: false,
+        resultsOpen: false,
+        reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
+      })
+      setFocusedCardIndex(nextIndex)
+      setFlipped(false)
+      setFlashcardFeedback(null)
+    }
+    const advanceAfterFlashcardGrade = (
+      nextGrades: Record<number, 'known' | 'missed'>,
+    ) => {
+      window.setTimeout(() => {
+        if (safeIndex >= activeCardEntries.length - 1) {
+          persistFlashcardSession({
+            cardIndex: safeIndex,
+            grades: nextGrades,
+            flipped,
+            resultsOpen: true,
+            reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
+          })
+          setFlashcardResultsOpen(true)
+          setFlashcardFeedback(null)
+          return
+        }
+
+        persistFlashcardSession({
+          cardIndex: safeIndex + 1,
+          grades: nextGrades,
+          flipped: false,
+          resultsOpen: false,
+          reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
+        })
+        setFocusedCardIndex(safeIndex + 1)
+        setFlipped(false)
+        setFlashcardFeedback(null)
+      }, 850)
+    }
     const gradeCard = (grade: 'known' | 'missed') => {
+      if (flashcardFeedback) {
+        return
+      }
+
       const nextGrades = {
         ...focusedFlashcardGrades,
         [currentGradeKey]: grade,
@@ -1303,6 +1355,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
         reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
       })
       setFocusedFlashcardGrades(nextGrades)
+      setFlashcardFeedback(grade)
+      advanceAfterFlashcardGrade(nextGrades)
     }
 
     if (!card) {
@@ -1510,16 +1564,44 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
 
     return (
       <Box
-        sx={{
-          minHeight: { xs: 'calc(100dvh - 180px)', md: 'calc(100vh - 190px)' },
+        sx={(theme) => ({
+          minHeight: { xs: 'calc(100dvh - 156px)', md: 'calc(100vh - 170px)' },
           display: 'grid',
-          placeItems: 'center',
-          px: { xs: 1, md: 3 },
-          py: { xs: 2, md: 4 },
-        }}
+          alignContent: 'center',
+          px: { xs: 1, md: 2 },
+          py: { xs: 1.5, md: 2 },
+          overflow: 'hidden',
+          background: `radial-gradient(circle at 50% 65%, ${alpha(
+            theme.palette.success.main,
+            0.2,
+          )} 0%, ${alpha(theme.palette.primary.main, 0.1)} 32%, transparent 62%)`,
+          '@keyframes flashcardGradeAway': {
+            '0%': {
+              opacity: 0,
+              transform: 'translateY(0) rotate(0deg) scale(0.98)',
+            },
+            '18%': {
+              opacity: 1,
+              transform: 'translateY(-10px) rotate(-3deg) scale(1.02)',
+            },
+            '100%': {
+              opacity: 0,
+              transform: 'translateY(180px) rotate(-9deg) scale(0.96)',
+            },
+          },
+        })}
       >
-        <Stack spacing={2.5} sx={{ width: 'min(760px, 100%)' }}>
-          <Stack direction="row" justifyContent="space-between" gap={2}>
+        <Stack
+          spacing={2}
+          alignItems="center"
+          sx={{ width: 'min(760px, 100%)', mx: 'auto' }}
+        >
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            gap={2}
+            sx={{ display: 'none' }}
+          >
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="h5" fontWeight={600}>
                 {title}
@@ -1535,122 +1617,223 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               {card.tag && <Chip label={card.tag} />}
             </Stack>
           </Stack>
-          <Paper
-            variant="outlined"
-            onClick={() => {
-              const nextFlipped = !flipped
-              persistFlashcardSession({
-                cardIndex: safeIndex,
-                grades: focusedFlashcardGrades,
-                flipped: nextFlipped,
-                resultsOpen: false,
-                reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
-              })
-              setFlipped(nextFlipped)
-            }}
-            sx={{
-              minHeight: { xs: 220, sm: 250 },
-              p: { xs: 2.25, sm: 3 },
-              borderRadius: 2,
-              display: 'grid',
-              placeItems: 'center',
-              cursor: 'pointer',
-              textAlign: 'center',
-              bgcolor: 'background.paper',
-            }}
-          >
-            <Stack spacing={2} alignItems="center">
-              <Typography variant="overline" color="text.secondary">
-                {flipped ? 'Answer' : 'Prompt'}
-              </Typography>
-              <Typography
-                variant="h5"
-                sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.35 }}
-              >
-                {flipped ? card.back : card.front}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Click card to flip
-              </Typography>
-            </Stack>
-          </Paper>
-          <Stack direction="row" spacing={1.25} justifyContent="center">
-            <Button
-              variant={
-                focusedFlashcardGrades[currentGradeKey] === 'known'
-                  ? 'contained'
-                  : 'outlined'
-              }
-              color="success"
-              onClick={() => gradeCard('known')}
+          <Box sx={{ position: 'relative', width: '100%' }}>
+            <Paper
+              variant="outlined"
+              onClick={() => {
+                if (flashcardFeedback) {
+                  return
+                }
+
+                const nextFlipped = !flipped
+                persistFlashcardSession({
+                  cardIndex: safeIndex,
+                  grades: focusedFlashcardGrades,
+                  flipped: nextFlipped,
+                  resultsOpen: false,
+                  reviewCardIndexes:
+                    focusedFlashcardReviewCardIndexes || undefined,
+                })
+                setFlipped(nextFlipped)
+              }}
               sx={(theme) => ({
+                minHeight: { xs: 220, sm: 270 },
+                p: { xs: 2.5, sm: 3.5 },
+                borderRadius: 5,
+                display: 'grid',
+                cursor: flashcardFeedback ? 'default' : 'pointer',
+                textAlign: 'left',
+                bgcolor:
+                  theme.palette.mode === 'dark'
+                    ? alpha(theme.palette.common.white, 0.06)
+                    : alpha(theme.palette.common.black, 0.03),
+                borderColor: alpha(theme.palette.text.primary, 0.22),
+                transition:
+                  'transform 500ms ease, background-color 180ms ease, border-color 180ms ease',
+                transformStyle: 'preserve-3d',
+                transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
                 '&:hover': {
-                  bgcolor:
-                    focusedFlashcardGrades[currentGradeKey] === 'known'
-                      ? 'success.dark'
-                      : alpha(theme.palette.success.main, 0.18),
+                  borderColor: alpha(theme.palette.primary.main, 0.45),
                 },
               })}
             >
-              Known
+              <Box
+                sx={{
+                  transform: flipped ? 'rotateY(180deg)' : 'none',
+                  display: 'grid',
+                  gridTemplateRows: 'auto 1fr auto',
+                  minHeight: '100%',
+                  gap: 2,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  fontWeight={700}
+                >
+                  {safeIndex + 1}/{activeCardEntries.length}
+                </Typography>
+                <Box
+                  sx={{
+                    alignSelf: 'center',
+                    minWidth: 0,
+                    display: 'grid',
+                    gap: 2,
+                  }}
+                >
+                  <Typography
+                    variant={flipped ? 'h4' : 'h5'}
+                    sx={{
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: 1.25,
+                      fontWeight: flipped ? 500 : 650,
+                    }}
+                  >
+                    {flipped ? card.back : card.front}
+                  </Typography>
+                  {flipped ? (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        askAi(
+                          buildFlashcardExplainPrompt({
+                            front: card.front,
+                            back: card.back,
+                          }),
+                        )
+                      }}
+                      sx={{ justifySelf: 'start' }}
+                    >
+                      {explainButtonLabel}
+                    </Button>
+                  ) : null}
+                </Box>
+                {!flipped ? (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ textAlign: 'center' }}
+                  >
+                    See answer
+                  </Typography>
+                ) : (
+                  <Box />
+                )}
+              </Box>
+            </Paper>
+            {flashcardFeedback ? (
+              <Paper
+                elevation={0}
+                sx={(theme) => {
+                  const isKnown = flashcardFeedback === 'known'
+                  return {
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 2,
+                    borderRadius: 5,
+                    display: 'grid',
+                    placeItems: 'center',
+                    bgcolor: isKnown
+                      ? alpha(theme.palette.success.light, 0.35)
+                      : alpha(theme.palette.error.light, 0.26),
+                    border: 1,
+                    borderColor: isKnown
+                      ? alpha(theme.palette.success.main, 0.32)
+                      : alpha(theme.palette.error.main, 0.32),
+                    color: isKnown ? 'success.main' : 'error.main',
+                    animation: 'flashcardGradeAway 850ms ease-in forwards',
+                    pointerEvents: 'none',
+                  }
+                }}
+              >
+                <Typography variant="h3" fontWeight={800} textAlign="center">
+                  {flashcardFeedback === 'known'
+                    ? 'Got it'
+                    : "You'll get it next time"}
+                </Typography>
+              </Paper>
+            ) : null}
+          </Box>
+          <Stack
+            direction="row"
+            spacing={{ xs: 1, sm: 2 }}
+            justifyContent="center"
+            alignItems="center"
+            sx={{ width: '100%' }}
+          >
+            <Button
+              aria-label="Previous card"
+              variant="outlined"
+              disabled={safeIndex === 0 || Boolean(flashcardFeedback)}
+              onClick={() => moveToFlashcardIndex(Math.max(0, safeIndex - 1))}
+              sx={(theme) => ({
+                minWidth: { xs: 56, sm: 64 },
+                height: { xs: 56, sm: 64 },
+                borderRadius: 999,
+                color: 'primary.main',
+                bgcolor: alpha(theme.palette.background.paper, 0.42),
+                borderColor: alpha(theme.palette.text.primary, 0.18),
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.12),
+                  borderColor: alpha(theme.palette.primary.main, 0.44),
+                },
+              })}
+            >
+              <ArrowBackIcon />
             </Button>
             <Button
-              variant={
-                focusedFlashcardGrades[currentGradeKey] === 'missed'
-                  ? 'contained'
-                  : 'outlined'
-              }
-              color="error"
+              aria-label="Wrong answer"
+              variant="outlined"
+              disabled={Boolean(flashcardFeedback)}
               onClick={() => gradeCard('missed')}
               sx={(theme) => ({
+                minWidth: { xs: 86, sm: 102 },
+                height: { xs: 56, sm: 64 },
+                borderRadius: 999,
+                gap: 0.75,
+                color: 'error.main',
+                bgcolor: alpha(theme.palette.background.paper, 0.42),
+                borderColor: alpha(theme.palette.text.primary, 0.2),
+                fontWeight: 800,
                 '&:hover': {
-                  bgcolor:
-                    focusedFlashcardGrades[currentGradeKey] === 'missed'
-                      ? 'error.dark'
-                      : alpha(theme.palette.error.main, 0.18),
+                  bgcolor: alpha(theme.palette.error.main, 0.12),
+                  borderColor: alpha(theme.palette.error.main, 0.44),
                 },
               })}
             >
-              Missed
+              <CloseIcon />
+              {missed}
             </Button>
-            {flipped ? (
-              <Button
-                variant="outlined"
-                startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
-                onClick={() =>
-                  askAi(
-                    buildFlashcardExplainPrompt({
-                      front: card.front,
-                      back: card.back,
-                    }),
-                  )
-                }
-              >
-                {explainButtonLabel}
-              </Button>
-            ) : null}
-          </Stack>
-          <Stack direction="row" spacing={1.25} justifyContent="center">
             <Button
+              aria-label="Correct answer"
               variant="outlined"
-              disabled={safeIndex === 0}
-              onClick={() => {
-                const previousIndex = Math.max(0, safeIndex - 1)
-                persistFlashcardSession({
-                  cardIndex: previousIndex,
-                  grades: focusedFlashcardGrades,
-                  flipped: false,
-                  resultsOpen: false,
-                  reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
-                })
-                setFocusedCardIndex(previousIndex)
-                setFlipped(false)
-              }}
+              disabled={Boolean(flashcardFeedback)}
+              onClick={() => gradeCard('known')}
+              sx={(theme) => ({
+                minWidth: { xs: 86, sm: 102 },
+                height: { xs: 56, sm: 64 },
+                borderRadius: 999,
+                gap: 0.75,
+                color: 'success.main',
+                bgcolor: alpha(theme.palette.background.paper, 0.42),
+                borderColor: alpha(theme.palette.text.primary, 0.2),
+                fontWeight: 800,
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.success.main, 0.12),
+                  borderColor: alpha(theme.palette.success.main, 0.44),
+                },
+              })}
             >
-              Previous
+              {known}
+              <CheckIcon />
             </Button>
             <Button
-              variant="contained"
+              aria-label="Next card"
+              variant="outlined"
+              disabled={Boolean(flashcardFeedback)}
               onClick={() => {
                 if (safeIndex >= activeCardEntries.length - 1) {
                   persistFlashcardSession({
@@ -1665,22 +1848,24 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   return
                 }
 
-                const nextIndex = Math.min(
-                  activeCardEntries.length - 1,
-                  safeIndex + 1,
+                moveToFlashcardIndex(
+                  Math.min(activeCardEntries.length - 1, safeIndex + 1),
                 )
-                persistFlashcardSession({
-                  cardIndex: nextIndex,
-                  grades: focusedFlashcardGrades,
-                  flipped: false,
-                  resultsOpen: false,
-                  reviewCardIndexes: focusedFlashcardReviewCardIndexes || undefined,
-                })
-                setFocusedCardIndex(nextIndex)
-                setFlipped(false)
               }}
+              sx={(theme) => ({
+                minWidth: { xs: 56, sm: 64 },
+                height: { xs: 56, sm: 64 },
+                borderRadius: 999,
+                color: 'primary.main',
+                bgcolor: alpha(theme.palette.background.paper, 0.42),
+                borderColor: alpha(theme.palette.text.primary, 0.18),
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.12),
+                  borderColor: alpha(theme.palette.primary.main, 0.44),
+                },
+              })}
             >
-              {safeIndex >= activeCardEntries.length - 1 ? 'Done' : 'Next'}
+              <ArrowForwardIcon />
             </Button>
           </Stack>
         </Stack>

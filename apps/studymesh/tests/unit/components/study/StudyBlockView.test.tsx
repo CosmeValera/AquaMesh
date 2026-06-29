@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import StudyBlockView from '../../../../src/components/study/StudyBlockView'
 
@@ -227,7 +227,7 @@ describe('StudyBlockView quiz feedback', () => {
     expect(screen.getByText('Correct 1')).toBeInTheDocument()
   })
 
-  it('restores focused flashcard progress after the flashcard page remounts', () => {
+  it('restores focused flashcard progress after the flashcard page remounts', async () => {
     const props = {
       title: 'Terraform flashcards',
       items: [
@@ -251,11 +251,13 @@ describe('StudyBlockView quiz feedback', () => {
     )
 
     fireEvent.click(screen.getByText('Provider'))
-    fireEvent.click(screen.getByRole('button', { name: 'Known' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Correct answer' }))
+    await waitFor(() => expect(screen.getByText('State')).toBeInTheDocument())
     fireEvent.click(screen.getByText('State'))
-    fireEvent.click(screen.getByRole('button', { name: 'Missed' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Wrong answer' }))
+    await waitFor(() =>
+      expect(screen.getByText('Workspace')).toBeInTheDocument(),
+    )
     fireEvent.click(screen.getByText('Workspace'))
     firstRender.unmount()
 
@@ -268,7 +270,7 @@ describe('StudyBlockView quiz feedback', () => {
     expect(screen.getByText('An isolated state environment.')).toBeInTheDocument()
   })
 
-  it('shows flashcard completion results with retake', () => {
+  it('shows flashcard completion results with retake', async () => {
     render(
       <StudyBlockView
         type="FlashcardCarouselBlock"
@@ -289,13 +291,14 @@ describe('StudyBlockView quiz feedback', () => {
     )
 
     fireEvent.click(screen.getByText('Provider'))
-    fireEvent.click(screen.getByRole('button', { name: 'Known' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Correct answer' }))
+    await waitFor(() => expect(screen.getByText('State')).toBeInTheDocument())
     fireEvent.click(screen.getByText('State'))
-    fireEvent.click(screen.getByRole('button', { name: 'Missed' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Wrong answer' }))
 
-    expect(screen.getByText('Flashcards complete.')).toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.getByText('Flashcards complete.')).toBeInTheDocument(),
+    )
     expect(screen.getByText('Known')).toBeInTheDocument()
     expect(screen.getByText('Missed')).toBeInTheDocument()
     expect(screen.getByText('Skipped')).toBeInTheDocument()
@@ -311,7 +314,7 @@ describe('StudyBlockView quiz feedback', () => {
     expect(screen.getByText('Provider')).toBeInTheDocument()
   })
 
-  it('offers same cards when practicing a reduced flashcard stack', () => {
+  it('offers same cards when practicing a reduced flashcard stack', async () => {
     render(
       <StudyBlockView
         type="FlashcardCarouselBlock"
@@ -336,15 +339,19 @@ describe('StudyBlockView quiz feedback', () => {
     )
 
     fireEvent.click(screen.getByText('Provider'))
-    fireEvent.click(screen.getByRole('button', { name: 'Known' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Correct answer' }))
+    await waitFor(() => expect(screen.getByText('State')).toBeInTheDocument())
     fireEvent.click(screen.getByText('State'))
-    fireEvent.click(screen.getByRole('button', { name: 'Missed' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Wrong answer' }))
+    await waitFor(() =>
+      expect(screen.getByText('Workspace')).toBeInTheDocument(),
+    )
     fireEvent.click(screen.getByText('Workspace'))
-    fireEvent.click(screen.getByRole('button', { name: 'Known' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Correct answer' }))
 
+    await waitFor(() =>
+      expect(screen.getByText('Flashcards complete.')).toBeInTheDocument(),
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Practice again' }))
     expect(screen.queryByRole('menuitem', { name: 'Same cards' })).toBeNull()
     fireEvent.click(
@@ -354,9 +361,11 @@ describe('StudyBlockView quiz feedback', () => {
     expect(screen.getByText('1 / 1')).toBeInTheDocument()
     expect(screen.getByText('State')).toBeInTheDocument()
     fireEvent.click(screen.getByText('State'))
-    fireEvent.click(screen.getByRole('button', { name: 'Missed' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Wrong answer' }))
 
+    await waitFor(() =>
+      expect(screen.getByText('Flashcards complete.')).toBeInTheDocument(),
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Practice again' }))
     expect(screen.getByRole('menuitem', { name: 'All cards' })).toBeInTheDocument()
     expect(

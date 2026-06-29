@@ -13,6 +13,8 @@ import {
 } from '../../state/store'
 
 import { Model } from 'flexlayout-react'
+import { DashboardStorage } from './dashboardStorage'
+import { clearStoredFocusedQuizSessionsFromLayout } from '../study/StudyBlockView'
 
 interface DashboardProviderProps {
   children: React.ReactNode
@@ -288,6 +290,18 @@ const DashboardProvider: React.FC<DashboardProviderProps> = (props) => {
       }
 
       const nextStudyPath = updater(dashboard.studyPath)
+      const nextPageIds = new Set(
+        nextStudyPath.dashboards
+          .map((page) => page.id)
+          .filter((pageId): pageId is string => Boolean(pageId)),
+      )
+      dashboard.studyPath.dashboards.forEach((page) => {
+        if (page.id && !nextPageIds.has(page.id)) {
+          clearStoredFocusedQuizSessionsFromLayout(page.layout)
+          DashboardStorage.delete(page.id)
+        }
+      })
+
       return {
         ...dashboard,
         name: nextStudyPath.title || dashboard.name,

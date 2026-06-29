@@ -159,6 +159,24 @@ const StateProbe = () => {
       >
         go-lesson-4
       </button>
+      <button
+        onClick={() => {
+          const studyPathDashboard = openDashboards.find(
+            (dashboard) => dashboard.kind === 'studyPathContainer',
+          )
+          if (studyPathDashboard?.studyPath) {
+            updateStudyPathContainer(studyPathDashboard.id, (studyPath) => ({
+              ...studyPath,
+              dashboards: studyPath.dashboards.filter(
+                (dashboard) => dashboard.id !== 'lesson-2',
+              ),
+              selectedIndex: 0,
+            }))
+          }
+        }}
+      >
+        delete-lesson-2
+      </button>
       <output data-testid="dashboard-count">{openDashboards.length}</output>
       <output data-testid="selected-kind">
         {selected?.kind || 'dashboard'}
@@ -206,6 +224,31 @@ describe('Interactive Study Guide UX', () => {
 
     expect(screen.getByTestId('dashboard-count')).toHaveTextContent('2')
     expect(screen.getByTestId('selected-lesson')).toHaveTextContent('3')
+  })
+
+  it('deletes removed Study Guide pages from saved dashboard storage', () => {
+    const storage = createMemoryStorage()
+    storage.set(
+      'customDashboards',
+      JSON.stringify(
+        createStudyPath().dashboards.map((page) => ({
+          id: page.id,
+          name: page.name,
+          layout: page.layout,
+          createdAt: '2026-06-01T00:00:00.000Z',
+          updatedAt: '2026-06-01T00:00:00.000Z',
+        })),
+      ),
+    )
+
+    renderWithDashboardProvider(<StateProbe />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'open-study-path' }))
+    fireEvent.click(screen.getByRole('button', { name: 'delete-lesson-2' }))
+
+    const savedDashboards = JSON.parse(storage.get('customDashboards') || '[]')
+    expect(savedDashboards.map((dashboard: { id: string }) => dashboard.id))
+      .toEqual(['lesson-1', 'lesson-3', 'lesson-4', 'lesson-5'])
   })
 
   it('keeps reading navigation in the Study Guide without the Edit Pages canvas', () => {

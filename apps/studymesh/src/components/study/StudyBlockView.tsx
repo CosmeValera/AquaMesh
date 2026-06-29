@@ -26,6 +26,7 @@ import {
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
 import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 import StudyCreditIcon from '../hostedAi/StudyCreditIcon'
+import type { DashboardLayout } from '../../state/store'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -89,6 +90,9 @@ const toFocusedItems = (value: unknown): Array<Record<string, unknown>> =>
 const normalizeFeedbackKey = (value: string): string =>
   normalizeAnswer(value).replace(/\s+/g, ' ')
 
+const quizOptionLabel = (index: number, option: string): string =>
+  `${String.fromCharCode(65 + index)}. ${option}`
+
 const toOptionFeedback = (value: unknown): QuizFeedbackItem[] =>
   Array.isArray(value)
     ? value
@@ -135,6 +139,15 @@ const buildQuizExplainPrompt = ({
     ? `I am taking a quiz on this material and was given this question: '${question}'\n\nI chose this as the answer: '${selectedAnswer}'\n\nThat answer was correct. Help me understand why this answer was correct.`
     : `I am taking a quiz on this material and was given this question: '${question}'\n\nI chose this as the answer: '${selectedAnswer}'\n\nThat answer was incorrect. The correct answer is '${correctAnswer}'\n\nHelp me understand why my answer was incorrect.`
 
+const buildFlashcardExplainPrompt = ({
+  front,
+  back,
+}: {
+  front: string
+  back: string
+}): string =>
+  `I am studying this material with a flashcard.\n\nThe flashcard prompt is: '${front}'\n\nThe answer is: '${back}'\n\nHelp me understand this answer and why it matches the prompt.`
+
 const explainButtonLabel = (
   <Stack
     component="span"
@@ -175,7 +188,7 @@ const defaultFocusedQuizSession = (): StoredFocusedQuizSession => ({
   resultsOpen: false,
 })
 
-const createFocusedQuizStorageKey = (
+export const createFocusedQuizStorageKey = (
   type: string,
   props: Record<string, unknown>,
 ): string => {
@@ -261,7 +274,7 @@ const writeStoredFocusedQuizSession = (
   }
 }
 
-const removeStoredFocusedQuizSession = (key: string): void => {
+export const removeStoredFocusedQuizSession = (key: string): void => {
   if (!key) {
     return
   }
@@ -271,6 +284,40 @@ const removeStoredFocusedQuizSession = (key: string): void => {
   } catch {
     // Local storage is a convenience only. Ignore private-mode failures.
   }
+}
+
+const clearFocusedQuizSessionFromComponent = (component: unknown): void => {
+  if (!component || typeof component !== 'object') {
+    return
+  }
+
+  const record = component as Record<string, unknown>
+  const type = String(record.type || '')
+  const props =
+    record.props && typeof record.props === 'object'
+      ? (record.props as Record<string, unknown>)
+      : {}
+
+  removeStoredFocusedQuizSession(createFocusedQuizStorageKey(type, props))
+}
+
+export const clearStoredFocusedQuizSessionsFromLayout = (
+  layout?: DashboardLayout,
+): void => {
+  if (!layout) {
+    return
+  }
+
+  const customProps = layout.config?.customProps
+  if (customProps) {
+    clearFocusedQuizSessionFromComponent(customProps)
+
+    if (Array.isArray(customProps.components)) {
+      customProps.components.forEach(clearFocusedQuizSessionFromComponent)
+    }
+  }
+
+  layout.children?.forEach(clearStoredFocusedQuizSessionsFromLayout)
 }
 
 const createFlashcardParts = (
@@ -964,6 +1011,20 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               </Button>
             </Stack>
           )}
+          {flipped ? (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
+              onClick={(event) => {
+                event.stopPropagation()
+                askAi(buildFlashcardExplainPrompt({ front, back }))
+              }}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              {explainButtonLabel}
+            </Button>
+          ) : null}
         </Stack>
       </Paper>
     )
@@ -1102,6 +1163,22 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             >
               Missed
             </Button>
+            {flipped ? (
+              <Button
+                variant="outlined"
+                startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
+                onClick={() =>
+                  askAi(
+                    buildFlashcardExplainPrompt({
+                      front: card.front,
+                      back: card.back,
+                    }),
+                  )
+                }
+              >
+                {explainButtonLabel}
+              </Button>
+            ) : null}
           </Stack>
           <Stack direction="row" spacing={1.25} justifyContent="center">
             <Button
@@ -1168,7 +1245,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               )
 
               return (
-                <Box key={`${option}-${index}`}>
+                <Box key={`${option}-${index}`} sx={{ width: '100%' }}>
                   <Button
                     variant="outlined"
                     color="primary"
@@ -1179,7 +1256,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                         : theme.palette.error.main
 
                       return {
+                        width: '100%',
                         justifyContent: 'flex-start',
+                        textAlign: 'left',
+                        whiteSpace: 'normal',
                         color: 'text.primary',
                         borderColor: showResult ? resultColor : 'divider',
                         bgcolor:
@@ -1198,7 +1278,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                       }
                     }}
                   >
-                    {option}
+                    {quizOptionLabel(index, option)}
                   </Button>
                   {showResult && feedback ? (
                     <Typography
@@ -1501,7 +1581,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   )
 
                   return (
-                    <Box key={`${option}-${index}`}>
+                    <Box key={`${option}-${index}`} sx={{ width: '100%' }}>
                       <Button
                         variant="outlined"
                         onClick={() => {
@@ -1531,6 +1611,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                               : 'divider'
 
                           return {
+                            width: '100%',
                             justifyContent: 'flex-start',
                             textAlign: 'left',
                             minHeight: 52,
@@ -1554,7 +1635,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                           }
                         }}
                       >
-                        {option}
+                        {quizOptionLabel(index, option)}
                       </Button>
                       {hasAnswered && feedback ? (
                         <Typography

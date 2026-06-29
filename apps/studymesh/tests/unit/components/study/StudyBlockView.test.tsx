@@ -72,7 +72,14 @@ describe('StudyBlockView quiz feedback', () => {
     ).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Previous' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Une traversee' }))
+    expect(
+      screen.getByRole('button', { name: 'A. Une traversee' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'B. Un periple' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'A. Une traversee' }))
 
     expect(
       screen.getByText(
@@ -107,11 +114,33 @@ describe('StudyBlockView quiz feedback', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Une traversee' }))
+    fireEvent.click(screen.getByRole('button', { name: 'A. Une traversee' }))
     fireEvent.click(screen.getByRole('button', { name: /Explain/ }))
 
     expect(onAskAi).toHaveBeenCalledWith(
       "I am taking a quiz on this material and was given this question: 'Which term best describes a long journey that includes many different tourist stops or stages along the way?'\n\nI chose this as the answer: 'Une traversee'\n\nThat answer was incorrect. The correct answer is 'Un periple'\n\nHelp me understand why my answer was incorrect.",
+    )
+  })
+
+  it('sends turned flashcards to AI chat with the expected prompt', () => {
+    const onAskAi = vi.fn()
+
+    render(
+      <StudyBlockView
+        type="FlashcardBlock"
+        onAskAi={onAskAi}
+        props={{
+          front: 'Terraform provider',
+          back: 'A plugin that lets Terraform talk to a specific platform API.',
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Terraform provider'))
+    fireEvent.click(screen.getByRole('button', { name: /Explain/ }))
+
+    expect(onAskAi).toHaveBeenCalledWith(
+      "I am studying this material with a flashcard.\n\nThe flashcard prompt is: 'Terraform provider'\n\nThe answer is: 'A plugin that lets Terraform talk to a specific platform API.'\n\nHelp me understand this answer and why it matches the prompt.",
     )
   })
 
@@ -142,8 +171,8 @@ describe('StudyBlockView quiz feedback', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Une traversee' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Un periple' }))
+    fireEvent.click(screen.getByRole('button', { name: 'A. Une traversee' }))
+    fireEvent.click(screen.getByRole('button', { name: 'B. Un periple' }))
     expect(screen.getByText('Correct 0')).toBeInTheDocument()
     expect(screen.getByText('Wrong 1')).toBeInTheDocument()
 
@@ -185,7 +214,7 @@ describe('StudyBlockView quiz feedback', () => {
       <StudyBlockView type="QuizCarouselBlock" props={props} />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Un periple' }))
+    fireEvent.click(screen.getByRole('button', { name: 'B. Un periple' }))
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     firstRender.unmount()
 

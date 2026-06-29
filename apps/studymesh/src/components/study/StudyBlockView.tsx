@@ -1703,12 +1703,11 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 cursor: 'pointer',
                 textAlign: 'left',
                 bgcolor: 'transparent',
-                borderColor: alpha(theme.palette.text.primary, 0.22),
+                borderColor: 'transparent',
                 transition:
                   'background-color 180ms ease, border-color 180ms ease',
-                perspective: '1200px',
                 overflow: 'hidden',
-                '&:hover': {
+                '&:hover .flashcard-face': {
                   borderColor: alpha(theme.palette.primary.main, 0.45),
                 },
               })}
@@ -1719,12 +1718,15 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   minHeight: { xs: 220, sm: 270 },
                   transformStyle: 'preserve-3d',
                   transition: 'transform 500ms ease',
+                  transformOrigin: 'center center',
+                  willChange: 'transform',
                   transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
                 }}
               >
                 <Box
+                  className="flashcard-face"
                   aria-hidden={flipped}
-                  sx={{
+                  sx={(theme) => ({
                     position: 'absolute',
                     inset: 0,
                     p: { xs: 2.5, sm: 3.5 },
@@ -1733,9 +1735,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     gap: 2,
                     minWidth: 0,
                     bgcolor: 'var(--flashcard-face-bg)',
+                    border: 1,
+                    borderColor: alpha(theme.palette.text.primary, 0.22),
+                    borderRadius: 5,
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
-                  }}
+                    transition: 'border-color 180ms ease',
+                  })}
                 >
                   <Typography
                     variant="body2"
@@ -1764,8 +1770,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   </Typography>
                 </Box>
                 <Box
+                  className="flashcard-face"
                   aria-hidden={!flipped}
-                  sx={{
+                  sx={(theme) => ({
                     position: 'absolute',
                     inset: 0,
                     p: { xs: 2.5, sm: 3.5 },
@@ -1774,11 +1781,15 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     gap: 2,
                     minWidth: 0,
                     bgcolor: 'var(--flashcard-face-bg)',
+                    border: 1,
+                    borderColor: alpha(theme.palette.text.primary, 0.22),
+                    borderRadius: 5,
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
                     transform: 'rotateY(180deg)',
                     pointerEvents: flipped ? 'auto' : 'none',
-                  }}
+                    transition: 'border-color 180ms ease',
+                  })}
                 >
                   <Typography
                     variant="body2"

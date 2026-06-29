@@ -1,6 +1,10 @@
 import { CustomWidget } from '../components/WidgetEditor/WidgetStorage'
 import { ComponentData } from '../components/WidgetEditor/types/types'
 import { DashboardLayout } from '../state/store'
+import type {
+  ContentLanguageSource,
+  StudyMeshLanguageCode,
+} from '../language/contentLanguage'
 
 export type QuickCreateSourceFormat =
   | 'paste'
@@ -208,6 +212,8 @@ export interface StudyPathDashboardContext {
   practiceType?: StudyPathPracticeType
   layoutReason?: string
   sourceRefs?: StudyPathSourceRef[]
+  contentLanguage?: StudyMeshLanguageCode
+  contentLanguageSource?: ContentLanguageSource
 }
 
 export type QuickCreateDashboardLayoutMode = 'smart' | 'tabs' | 'orchestrator'

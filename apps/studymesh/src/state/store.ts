@@ -5,6 +5,10 @@ import type {
   StudyPathPracticeType,
   StudyPathSourceRef,
 } from '../quickCreate/types'
+import type {
+  ContentLanguageSource,
+  StudyMeshLanguageCode,
+} from '../language/contentLanguage'
 
 export interface StateDashboard {
   id: string
@@ -12,6 +16,8 @@ export interface StateDashboard {
   layout?: DashboardLayout
   studymesh?: string
   aquamesh?: string
+  contentLanguage?: StudyMeshLanguageCode
+  contentLanguageSource?: ContentLanguageSource
   kind?: 'dashboard' | 'studyPathContainer'
   studyPath?: StudyPathContainerState
 }
@@ -28,6 +34,8 @@ export interface StudyPathDashboardItem {
   practiceType?: StudyPathPracticeType
   layoutReason?: string
   sourceRefs?: StudyPathSourceRef[]
+  contentLanguage?: StudyMeshLanguageCode
+  contentLanguageSource?: ContentLanguageSource
   createdBy?: 'generator' | 'chat' | 'quickCreate' | 'manual'
   deletable?: boolean
 }
@@ -42,6 +50,8 @@ export interface StudyPathContainerState {
   title: string
   folderName: string
   emoji?: string
+  contentLanguage?: StudyMeshLanguageCode
+  contentLanguageSource?: ContentLanguageSource
   quickStart?: StudyGuideQuickStart
   dashboards: StudyPathDashboardItem[]
   selectedIndex: number

@@ -21,6 +21,10 @@ import {
   GenerateQuickCreateWithAiOptions,
   GenerateStudyPathWithAiOptions,
 } from './strongGeneration'
+import {
+  createAiOutputLanguageInstruction,
+  isLocalAiContentLanguageSupported,
+} from '../../language/contentLanguage'
 
 type LocalObjectKind =
   | 'markdown'
@@ -34,6 +38,20 @@ interface LocalGenerationOptions {
   onProgress?: (event: LocalAiProgressEvent) => void
   dashboardConcurrency?: 1 | 2 | 3 | 5
   signal?: AbortSignal
+}
+
+const getLocalAiOutputLanguage = (
+  options: Pick<GenerateQuickCreateWithAiOptions, 'outputLanguage'>,
+): 'en' | 'es' | 'ja' => {
+  const language = options.outputLanguage || 'en'
+  if (isLocalAiContentLanguageSupported(language)) {
+    return language
+  }
+
+  throw new LocalAiGenerationError(
+    'unsupported',
+    'Google Local AI only supports English, Spanish, and Japanese output in StudyMesh. Choose one of those languages, or switch to Hosted AI or your own provider key.',
+  )
 }
 
 export type LocalAiGenerationFailureCode =
@@ -1349,8 +1367,10 @@ const localQuickCreatePrompt = ({
   detailLevel = 'medium',
   quizQuestionStyle = 'mixed',
   promptMode = false,
+  outputLanguage,
 }: GenerateQuickCreateWithAiOptions): string => {
   const compactNotes = rawNotes.replace(/\s+/g, ' ').trim().slice(0, 1800)
+  const languageInstruction = createAiOutputLanguageInstruction(outputLanguage)
   const flashcardCount =
     detailLevel === 'short' ? '3-4' : detailLevel === 'long' ? '12-18' : '6-9'
   const quizCount =
@@ -1405,6 +1425,7 @@ Use this shape:
   return `Return JSON only. No prose. No markdown fences.
 ${resourceRules}
 Quality rules:
+- ${languageInstruction}
 - Extract real concepts first. Ignore headings like Goal, Example, Practice, Overview, Active, Target rule, Formation rule.
 - No vague questions. No "What do the notes say?", "Which statement matches the notes?", or copied source sentences.
 - Use concrete prompts grounded in the material. Prefer conceptual understanding, applied scenarios, comparison, cause/effect, inference, and common-mistake question styles where possible.
@@ -1419,6 +1440,9 @@ const localStudyPathPlannerPrompt = (
 ): string => {
   const { title, prompt } = options
   const compactPrompt = prompt.replace(/\s+/g, ' ').trim().slice(0, 800)
+  const languageInstruction = createAiOutputLanguageInstruction(
+    options.outputLanguage,
+  )
 
   return `Return JSON only. Start with { and end with }.
 
@@ -1431,6 +1455,7 @@ Topic:
 ${compactPrompt}
 
 Rules:
+- ${languageInstruction}
 - Return exactly one JSON object.
 - dashboards must contain exactly ${count} dashboards.
 - emoji must be exactly one topic-specific emoji for the Study Guide.
@@ -1517,6 +1542,7 @@ Target length: around ${wordTarget}.
 ${attemptRule}
 
 Rules:
+- ${createAiOutputLanguageInstruction(options.outputLanguage)}
 - Return Markdown only.
 - No JSON.
 - No code fences.
@@ -1525,8 +1551,6 @@ Rules:
 - Do not add a generic intro.
 - Do not add a conclusion.
 - Prefer bullets, short sections, and small lists.
-- Write only in the user's request language.
-- Use the target language only for examples, vocabulary, and short phrases.
 - Keep grammar explanations simple and safe.
 - Do not teach beginner introductions if the requested level is B1/B2 or higher.
 
@@ -1577,6 +1601,7 @@ Rules: JSON only. No notes field. No prose outside JSON. Ask for ${
   attempt === 1 ? '2 flashcards' : '1 flashcard'
 }; smaller valid output is better than broken JSON.
 Practice must be answerable from the notes. Do not merge multiple flashcards into one object; each flashcard must have exactly one question and one answer.
+${createAiOutputLanguageInstruction(options.outputLanguage)}
 ${localStudyPathPracticePromptBase(options, outline, item, notes)}`
 
 const localStudyPathQuizzesPrompt = (
@@ -1596,6 +1621,7 @@ Rules: JSON only. No notes field. No prose outside JSON. Ask for ${
 }; smaller valid output is better than broken JSON.
 Practice must be answerable from the notes.
 Quiz options must be real answer choices, not A/B/C placeholders. Avoid duplicate options. correctIndex must point to the right option.
+${createAiOutputLanguageInstruction(options.outputLanguage)}
 ${localStudyPathPracticePromptBase(options, outline, item, notes)}`
 
 export const generateQuickCreateWithLocalAi = async (
@@ -1603,6 +1629,7 @@ export const generateQuickCreateWithLocalAi = async (
   localOptions: LocalGenerationOptions = {},
 ): Promise<AiQuickCreateDraft> => {
   const prompt = localQuickCreatePrompt(options)
+  const outputLanguage = getLocalAiOutputLanguage(options)
   let lastError: unknown
 
   for (
@@ -1612,6 +1639,7 @@ export const generateQuickCreateWithLocalAi = async (
   ) {
     try {
       const text = await callLocalLanguageModel(prompt, {
+        outputLanguage,
         timeoutMs: LOCAL_STUDY_PACK_TIMEOUT_MS,
         onProgress: localOptions.onProgress,
         progressLabel:
@@ -2478,6 +2506,7 @@ const createLocalStudyPathPlan = async (
 
     try {
       const text = await callLocalLanguageModel(promptText, {
+        outputLanguage: getLocalAiOutputLanguage(options),
         timeoutMs: LOCAL_STUDY_PATH_PLANNER_TIMEOUT_MS,
         onProgress: localOptions.onProgress,
         progressLabel: `Planning path, attempt ${attempt}/${LOCAL_STUDY_PATH_DASHBOARD_MAX_ATTEMPTS}...`,
@@ -3426,6 +3455,7 @@ const generateLocalStudyPathMarkdownSection = async (
 
     try {
       const text = await callLocalLanguageModel(promptText, {
+        outputLanguage: getLocalAiOutputLanguage(options),
         timeoutMs: LOCAL_STUDY_PATH_NOTES_TIMEOUT_MS,
         onProgress: localOptions.onProgress,
         progressLabel: `Generating Markdown part ${
@@ -3594,6 +3624,7 @@ const generateLocalStudyPathPractice = async (
 
       try {
         const text = await callLocalLanguageModel(promptText, {
+          outputLanguage: getLocalAiOutputLanguage(options),
           timeoutMs: LOCAL_STUDY_PATH_PRACTICE_TIMEOUT_MS,
           onProgress: localOptions.onProgress,
           progressLabel: `Generating ${kind} for dashboard ${
@@ -3938,6 +3969,7 @@ export const generateStudyPathWithLocalAi = async (
   options: GenerateStudyPathWithAiOptions,
   localOptions: LocalGenerationOptions = {},
 ): Promise<AiStudyPathDraft> => {
+  getLocalAiOutputLanguage(options)
   const expectedCount = LOCAL_STUDY_PATH_DASHBOARD_COUNT
   const concurrency = normalizeLocalStudyPathConcurrency(
     localOptions.dashboardConcurrency,
@@ -4008,6 +4040,7 @@ export const generateStudyPathWithLocalAi = async (
     title: plan.title || options.title,
     folderName: plan.folderName,
     emoji: plan.emoji,
+    contentLanguage: options.outputLanguage,
     dashboards,
     warnings: [
       ...warnings,

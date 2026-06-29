@@ -1,4 +1,8 @@
 import type { StudyGuideQuickStart } from '../state/store'
+import {
+  createAiOutputLanguageInstruction,
+  type StudyMeshLanguageCode,
+} from '../language/contentLanguage'
 import { sanitizeUserKnownTopics } from '../profileContext'
 
 export const STUDY_GUIDE_KEY_IDEA_MAX_WORDS = 35
@@ -298,10 +302,12 @@ export const buildStudyGuideQuickStartPrompt = ({
   title,
   source,
   relevanceDecision,
+  outputLanguage,
 }: {
   title: string
   source: string
   relevanceDecision?: StudyGuideQuickStartRelevanceDecision
+  outputLanguage?: StudyMeshLanguageCode
 }): string => {
   const decision =
     relevanceDecision || createNeutralStudyGuideQuickStartRelevanceDecision()
@@ -323,6 +329,7 @@ Return strict JSON only:
 }
 
 Rules:
+- ${createAiOutputLanguageInstruction(outputLanguage)}
 - keyIdea: one direct mental model of the topic. No Markdown. No label.
 - keyIdea must explain the category or mental box the topic belongs to, not internal architecture.
 - keyIdea introduces at most 1 technical term, avoids listing components, and avoids implementation details unless they are the essence of the concept.
@@ -366,11 +373,13 @@ export const buildStudyGuideQuickStartRelevancePrompt = ({
   prompt,
   source,
   userKnownTopics = [],
+  outputLanguage,
 }: {
   title: string
   prompt: string
   source: string
   userKnownTopics?: string[]
+  outputLanguage?: StudyMeshLanguageCode
 }): string => {
   const safeTopics = sanitizeUserKnownTopics(userKnownTopics)
 
@@ -387,6 +396,7 @@ Return strict JSON only with this shape:
 }
 
 Decision rules:
+- ${createAiOutputLanguageInstruction(outputLanguage)}
 - Goal: reduce learner cognitive effort, not personalize every Quick Start.
 - Choose only from provided known topics. Never invent a known topic.
 - Use at most 1 known topic. Use 2 only when both are clearly relevant and same-domain.

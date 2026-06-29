@@ -1,3 +1,5 @@
+import type { StudyMeshLanguageCode } from '../../language/contentLanguage'
+
 export type StrongAiProviderId = 'gemini' | 'cerebras'
 
 export interface StrongAiProviderConfig {
@@ -15,6 +17,7 @@ export interface StrongAiCallOptions {
   provider: StrongAiProviderId
   apiToken: string
   model: string
+  outputLanguage?: StudyMeshLanguageCode
   parts: Array<{
     text?: string
     inline_data?: {

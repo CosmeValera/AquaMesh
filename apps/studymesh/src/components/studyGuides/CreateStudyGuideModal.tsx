@@ -48,6 +48,7 @@ import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
 import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
 import { getUserKnownTopics } from '../../profileContext'
 import type { StudyGuideQuickStart } from '../../state/store'
+import { resolveContentLanguage } from '../../language/contentLanguage'
 
 interface CreateStudyGuideModalProps {
   open: boolean
@@ -451,6 +452,8 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
   const [aiProvider, setAiProvider] = useState<QuickCreateAiProvider>('hosted')
   const [draft, setDraft] = useState<AiStudyPathDraft | null>(null)
   const [reviewFolderName, setReviewFolderName] = useState('')
+  const [resolvedContentLanguage, setResolvedContentLanguage] =
+    useState<ReturnType<typeof resolveContentLanguage> | null>(null)
   const [openInWorkspace, setOpenInWorkspace] = useState(true)
   const [isGenerating, setIsGenerating] = useState(false)
   const [localAiProgress, setLocalAiProgress] =
@@ -642,6 +645,8 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
     )
     setLocalAiFailureDebug(null)
     setError('')
+    const resolvedLanguage = resolveContentLanguage({ text: effectivePrompt })
+    setResolvedContentLanguage(resolvedLanguage)
     if (autoCreateOnGenerate) {
       onCollapse?.()
     }
@@ -654,6 +659,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
         title: 'Study Guide',
         folderName: '',
         prompt: effectivePrompt,
+        outputLanguage: resolvedLanguage.language,
         signal: generationController.signal,
         userKnownTopics: getUserKnownTopics(),
         onProgress: (event) => {
@@ -791,6 +797,13 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
       'Study Guide'
     const studyPathId = makeStudyPathId(pathDraft.title || effectiveFolder)
     const dashboardCount = pathDraft.dashboards.length
+    const fallbackLanguage = resolveContentLanguage({ text: prompt })
+    const pathLanguage =
+      pathDraft.contentLanguage ||
+      resolvedContentLanguage?.language ||
+      fallbackLanguage.language
+    const pathLanguageSource =
+      resolvedContentLanguage?.source || fallbackLanguage.source
     const firstMarkdown = (dashboard: AiStudyPathDraft['dashboards'][number]) =>
       dashboard.objects.find((object) => object.kind === 'markdown')
     const sourceTextForDashboard = (
@@ -839,6 +852,8 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
               practiceType: dashboard.practiceType,
               layoutReason: dashboard.layoutReason,
               sourceRefs: dashboard.sourceRefs,
+              contentLanguage: pathLanguage,
+              contentLanguageSource: pathLanguageSource,
             },
           },
         )

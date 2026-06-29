@@ -9,11 +9,13 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  FormControlLabel,
   IconButton,
   InputAdornment,
   LinearProgress,
   MenuItem,
   Stack,
+  Switch,
   TextField,
   Tooltip,
   Typography,
@@ -40,6 +42,13 @@ import {
   testLocalLanguageModel,
 } from '../../quickCreate/ai'
 import HostedAiSettingsPanel from './HostedAiSettingsPanel'
+import {
+  CONTENT_LANGUAGE_OPTIONS,
+  readContentLanguageSettings,
+  saveContentLanguageSettings,
+  type ContentLanguageSettings,
+  type StudyMeshLanguageCode,
+} from '../../language/contentLanguage'
 
 const LOCAL_AI_ESTIMATE_COPY =
   'Local AI runs on your device and can be slow. Performance depends on your hardware but it may take around 10 mins for each prompt.'
@@ -65,6 +74,8 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
   )
   const [isTestingLocalAi, setIsTestingLocalAi] = React.useState(false)
   const [showAiKey, setShowAiKey] = React.useState(false)
+  const [languageSettings, setLanguageSettings] =
+    React.useState<ContentLanguageSettings>(() => readContentLanguageSettings())
 
   const selectedStrongProvider: StrongAiProviderId = isStrongAiProvider(
     aiProvider,
@@ -94,7 +105,13 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
     setLocalAiStatus('')
     setLocalAiProgress(null)
     setShowAiKey(false)
+    setLanguageSettings(readContentLanguageSettings())
   }, [open])
+
+  const persistLanguageSettings = (nextSettings: ContentLanguageSettings) => {
+    setLanguageSettings(nextSettings)
+    saveContentLanguageSettings(nextSettings)
+  }
 
   const persistAiSettings = (
     provider: QuickCreateAiProvider,
@@ -269,6 +286,45 @@ const AiModeDialog: React.FC<AiModeDialogProps> = ({
               <MenuItem value="gemini">Own Gemini API token</MenuItem>
               <MenuItem value="cerebras">Own Cerebras API key</MenuItem>
             </TextField>
+          </Box>
+
+          <Box>
+            <TextField
+              select
+              label="Default answer language"
+              value={languageSettings.defaultContentLanguage}
+              onChange={(event) =>
+                persistLanguageSettings({
+                  ...languageSettings,
+                  defaultContentLanguage: event.target
+                    .value as StudyMeshLanguageCode,
+                })
+              }
+              fullWidth
+              size="small"
+              helperText="Used when StudyMesh cannot confidently detect the prompt or chat language."
+              sx={{ mb: 1 }}
+            >
+              {CONTENT_LANGUAGE_OPTIONS.map((option) => (
+                <MenuItem key={option.code} value={option.code}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={languageSettings.autoDetectAiLanguage}
+                  onChange={(event) =>
+                    persistLanguageSettings({
+                      ...languageSettings,
+                      autoDetectAiLanguage: event.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Match prompt/chat language automatically"
+            />
           </Box>
 
           {aiProvider === 'local' && (

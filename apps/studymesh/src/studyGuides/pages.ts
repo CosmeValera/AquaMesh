@@ -372,6 +372,8 @@ export const appendStudyGuideMarkdownPage = (
     dashboardCount: pageCount,
     folderName: studyPath.folderName,
     dashboardPurpose: 'lesson',
+    contentLanguage: studyPath.contentLanguage,
+    contentLanguageSource: studyPath.contentLanguageSource,
     createdBy: source,
     deletable: true,
   }
@@ -409,6 +411,8 @@ export const appendStudyGuideWidgetPage = (
     dashboardCount: pageCount,
     folderName: studyPath.folderName,
     dashboardPurpose: source === 'quickCreate' ? 'practice' : 'lesson',
+    contentLanguage: studyPath.contentLanguage,
+    contentLanguageSource: studyPath.contentLanguageSource,
     createdBy: source,
     deletable: true,
   }

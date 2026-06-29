@@ -25,6 +25,7 @@ import type {
   StudyPathContainerState,
   StudyPathDashboardItem,
 } from '../state/store'
+import { resolveContentLanguage } from '../language/contentLanguage'
 import {
   appendStudyGuideMarkdownPage,
   appendStudyGuideWidgetPage,
@@ -122,6 +123,7 @@ export const generateStudyPathStateFromPrompt = async ({
 }): Promise<StudyPathContainerState> => {
   const settings = readQuickCreateAiSettings()
   const provider = providerOverride || settings.provider || 'hosted'
+  const resolvedLanguage = resolveContentLanguage({ text: prompt })
   const credentials = isStrongAiProvider(provider)
     ? resolveQuickCreateAiCredentials(provider)
     : resolveQuickCreateAiCredentials()
@@ -132,6 +134,7 @@ export const generateStudyPathStateFromPrompt = async ({
     title: 'Study Guide',
     folderName: '',
     prompt,
+    outputLanguage: resolvedLanguage.language,
     signal,
     userKnownTopics: getUserKnownTopics(),
   })
@@ -171,6 +174,8 @@ export const generateStudyPathStateFromPrompt = async ({
             practiceType: dashboard.practiceType,
             layoutReason: dashboard.layoutReason,
             sourceRefs: dashboard.sourceRefs,
+            contentLanguage: resolvedLanguage.language,
+            contentLanguageSource: resolvedLanguage.source,
           },
         },
       )
@@ -188,6 +193,8 @@ export const generateStudyPathStateFromPrompt = async ({
         practiceType: dashboard.practiceType,
         layoutReason: dashboard.layoutReason,
         sourceRefs: dashboard.sourceRefs,
+        contentLanguage: resolvedLanguage.language,
+        contentLanguageSource: resolvedLanguage.source,
         createdBy: 'generator',
         deletable: false,
       }
@@ -199,6 +206,8 @@ export const generateStudyPathStateFromPrompt = async ({
     title,
     folderName: title,
     emoji: draft.emoji || getStudyGuideEmoji(title),
+    contentLanguage: resolvedLanguage.language,
+    contentLanguageSource: resolvedLanguage.source,
     quickStart: draft.quickStart,
     dashboards,
     selectedIndex: 0,
@@ -278,6 +287,10 @@ export const appendAiQuickCreatePage = async ({
   const { resourceType } = normalizeQuickCreateActionInput(resourceTypeInput)
   const settings = readQuickCreateAiSettings()
   const provider = settings.provider || 'hosted'
+  const resolvedLanguage = resolveContentLanguage({
+    text: sourceText,
+    inheritedLanguage: studyPath.contentLanguage,
+  })
   const credentials = isStrongAiProvider(provider)
     ? resolveQuickCreateAiCredentials(provider)
     : resolveQuickCreateAiCredentials()
@@ -303,6 +316,7 @@ export const appendAiQuickCreatePage = async ({
     resourceType,
     detailLevel: 'medium',
     quizQuestionStyle: 'mixed',
+    outputLanguage: resolvedLanguage.language,
     signal,
   })
 

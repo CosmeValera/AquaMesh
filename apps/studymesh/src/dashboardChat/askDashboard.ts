@@ -8,6 +8,12 @@ import {
 } from '../quickCreate/ai'
 import { callHostedAiModel } from '../quickCreate/ai/hostedClient'
 import { DashboardSourceChunk } from './contextBuilder'
+import {
+  createAiOutputLanguageInstruction,
+  isLocalAiContentLanguageSupported,
+  resolveContentLanguage,
+  type StudyMeshLanguageCode,
+} from '../language/contentLanguage'
 
 interface AskDashboardOptions {
   dashboardTitle: string
@@ -15,6 +21,7 @@ interface AskDashboardOptions {
   question: string
   history: Array<{ role: 'user' | 'assistant'; content: string }>
   sourceChunks: DashboardSourceChunk[]
+  contentLanguage?: StudyMeshLanguageCode
 }
 
 export interface AskDashboardResult {
@@ -98,11 +105,14 @@ const buildPrompt = ({
   contextText,
   question,
   memory,
+  outputLanguage,
 }: Omit<AskDashboardOptions, 'history'> & {
   memory: ChatMemory
+  outputLanguage: StudyMeshLanguageCode
 }) => `You are StudyMesh's dashboard assistant. Help the student understand the current dashboard.
 
 Rules:
+- ${createAiOutputLanguageInstruction(outputLanguage)}
 - Answer using only the provided dashboard, study, and web source context.
 - Web sources in the context are allowed sources. Use them when dashboard-only material lacks the answer.
 - If the student message is conversational smalltalk, a greeting, thanks, a casual acknowledgement, or a minor typo of those, answer briefly and naturally. Do not use "${SOURCE_GAP_MARKER}", do not cite sources, and do not search for dashboard/web evidence for smalltalk.
@@ -201,9 +211,14 @@ export const askDashboardSources = async (
 ): Promise<AskDashboardResult> => {
   const settings = readQuickCreateAiSettings()
   const provider = settings.provider || 'hosted'
+  const resolvedLanguage = resolveContentLanguage({
+    text: options.question,
+    inheritedLanguage: options.contentLanguage,
+  })
   const prompt = buildPrompt({
     ...options,
     memory: selectChatMemory(options.history, provider),
+    outputLanguage: resolvedLanguage.language,
   })
   let answer: string
 
@@ -211,11 +226,18 @@ export const askDashboardSources = async (
     answer = await callHostedAiModel({
       surface: 'chat',
       model: STRONG_AI_PROVIDERS.cerebras.defaultModel,
+      outputLanguage: resolvedLanguage.language,
       parts: [{ text: prompt }],
       timeoutMs: STRONG_MODEL_CHAT_TIMEOUT_MS,
     })
   } else if (provider === 'local') {
+    if (!isLocalAiContentLanguageSupported(resolvedLanguage.language)) {
+      throw new Error(
+        'Google Local AI only supports English, Spanish, and Japanese output in StudyMesh. Choose one of those languages, or switch to Hosted AI or your own provider key.',
+      )
+    }
     answer = await callLocalLanguageModel(prompt, {
+      outputLanguage: resolvedLanguage.language,
       promptType: 'notes',
       stepLabel: 'Ask dashboard sources',
     })

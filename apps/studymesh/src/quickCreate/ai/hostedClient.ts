@@ -18,6 +18,7 @@ export type HostedAiModelOptions = Pick<
   'model' | 'parts' | 'responseSchema' | 'timeoutMs'
 > & {
   surface: HostedAiSurface
+  outputLanguage?: StrongAiCallOptions['outputLanguage']
 }
 
 export type HostedAiTransport = (
@@ -181,6 +182,7 @@ export const markHostedAiIntroSeen = async (): Promise<HostedAiStatus> => {
 const callHostedAiModelUnchecked = async ({
   surface,
   model,
+  outputLanguage,
   parts,
   responseSchema,
   timeoutMs,
@@ -192,6 +194,7 @@ const callHostedAiModelUnchecked = async ({
       action: 'generate',
       surface,
       model,
+      outputLanguage,
       parts,
       responseSchema,
       timeoutMs,
@@ -222,6 +225,7 @@ export const createHostedAiTransport = ({
 }): HostedAiTransport => {
   return async ({
     model,
+    outputLanguage,
     parts,
     responseSchema,
     timeoutMs,
@@ -231,6 +235,7 @@ export const createHostedAiTransport = ({
     return callHostedAiModelUnchecked({
       surface,
       model,
+      outputLanguage,
       parts,
       responseSchema,
       timeoutMs,
@@ -240,9 +245,11 @@ export const createHostedAiTransport = ({
 
 export const createHostedStudyGuideTransportWithQuickStart = ({
   userKnownTopics,
+  outputLanguage,
   onQuickStart,
 }: {
   userKnownTopics?: string[]
+  outputLanguage?: StrongAiCallOptions['outputLanguage']
   onQuickStart: (
     quickStart: NonNullable<HostedAiGatewayResponse['quickStart']>,
   ) => void
@@ -262,6 +269,7 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
         action: 'generateWithQuickStart',
         surface,
         model,
+        outputLanguage,
         parts,
         responseSchema,
         timeoutMs,

@@ -37,6 +37,7 @@ import {
 import type { StudyGuideQuickStartRelevanceDecision } from '../../studyGuides/quickStart'
 import type { StudyGuideQuickStart } from '../../state/store'
 import { sanitizeUserKnownTopics } from '../../profileContext'
+import type { StudyMeshLanguageCode } from '../../language/contentLanguage'
 
 type ProviderOptions = {
   provider?: QuickCreateAiProvider
@@ -75,6 +76,7 @@ export const generateStudyGuideQuickStartWithAi = async ({
   prompt,
   draft,
   userKnownTopics,
+  outputLanguage,
 }: {
   provider: QuickCreateAiProvider
   apiToken: string
@@ -84,6 +86,7 @@ export const generateStudyGuideQuickStartWithAi = async ({
   draft: AiStudyPathDraft
   signal?: AbortSignal
   userKnownTopics?: string[]
+  outputLanguage?: StudyMeshLanguageCode
 }): Promise<StudyGuideQuickStart> => {
   if (provider === 'local') {
     throw new Error('Local AI does not generate Study Guide Quick Start.')
@@ -115,6 +118,7 @@ export const generateStudyGuideQuickStartWithAi = async ({
             prompt,
             source,
             userKnownTopics: safeKnownTopics,
+            outputLanguage,
           }),
         },
       ],
@@ -137,6 +141,7 @@ export const generateStudyGuideQuickStartWithAi = async ({
           title,
           source,
           relevanceDecision,
+          outputLanguage,
         }),
       },
     ],
@@ -240,6 +245,7 @@ export const generateStudyPathWithAi = async (
       singleRequest: true,
       strongTransport: createHostedStudyGuideTransportWithQuickStart({
         userKnownTopics: options.userKnownTopics,
+        outputLanguage: options.outputLanguage,
         onQuickStart: (quickStart) => {
           hostedQuickStart = quickStart
         },
@@ -288,6 +294,7 @@ export const generateStudyPathWithAi = async (
       draft,
       signal: options.signal,
       userKnownTopics: options.userKnownTopics,
+      outputLanguage: options.outputLanguage,
     }),
   }
 }

@@ -135,6 +135,34 @@ describe('askDashboardSources', () => {
     })
   })
 
+  it('routes hosted dashboard chat in the detected question language', async () => {
+    vi.mocked(readQuickCreateAiSettings).mockReturnValue({
+      provider: 'hosted',
+      apiToken: '',
+      model: 'gpt-oss-120b',
+      strongProviders: {},
+    })
+    vi.mocked(callHostedAiModel).mockResolvedValue(
+      'La fotosintesis convierte la luz en energia quimica.',
+    )
+
+    await askDashboardSources({
+      ...baseOptions,
+      question: 'Puedes explicarme que es la fotosintesis y por que importa?',
+    })
+
+    expect(callHostedAiModel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outputLanguage: 'es',
+        parts: [
+          expect.objectContaining({
+            text: expect.stringContaining('Output language: Spanish'),
+          }),
+        ],
+      }),
+    )
+  })
+
   it('marks source gaps and strips the machine marker from visible answers', async () => {
     vi.mocked(readQuickCreateAiSettings).mockReturnValue({
       provider: 'hosted',

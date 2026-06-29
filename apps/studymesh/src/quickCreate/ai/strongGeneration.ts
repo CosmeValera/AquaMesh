@@ -26,6 +26,10 @@ import {
 } from './strongProviders'
 import type { StrongAiCallOptions, StrongAiProviderId } from './strongProviders'
 import type { StudyGuideQuickStart } from '../../state/store'
+import {
+  createAiOutputLanguageInstruction,
+  type StudyMeshLanguageCode,
+} from '../../language/contentLanguage'
 
 interface GeminiPart {
   text?: string
@@ -88,6 +92,7 @@ export interface GenerateQuickCreateWithAiOptions {
   model: string
   strongProvider?: StrongAiProviderId
   strongTransport?: StrongAiModelTransport
+  outputLanguage?: StudyMeshLanguageCode
   title: string
   rawNotes: string
   packId: string
@@ -148,6 +153,7 @@ export interface AiStudyPathDraft {
   title: string
   folderName: string
   emoji?: string
+  contentLanguage?: StudyMeshLanguageCode
   quickStart?: StudyGuideQuickStart
   dashboards: AiStudyPathDashboardDraft[]
   warnings: string[]
@@ -199,6 +205,7 @@ export interface GenerateStudyPathWithAiOptions {
   strongProvider?: StrongAiProviderId
   strongTransport?: StrongAiModelTransport
   singleRequest?: boolean
+  outputLanguage?: StudyMeshLanguageCode
   title: string
   prompt: string
   folderName: string
@@ -1291,6 +1298,7 @@ export const generateQuickCreateWithAi = async ({
   promptMode = false,
   studyPathMode = false,
   strongTransport,
+  outputLanguage,
 }: GenerateQuickCreateWithAiOptions): Promise<AiQuickCreateDraft> => {
   const effectiveTargets = getEffectiveGenerationTargets(generationTargets)
   const practiceProfile = createQuickCreatePracticeProfile(
@@ -1346,6 +1354,7 @@ export const generateQuickCreateWithAi = async ({
   const pathInstruction = studyPathMode
     ? 'Organize the material as a Study Guide progression. Use titles/tags that clearly fit: Introduction, Theory, Examples, Practice, Final Review.'
     : 'Organize the material as a single Quick Create.'
+  const languageInstruction = createAiOutputLanguageInstruction(outputLanguage)
 
   const promptText = `Create a quick create JSON object ${
     promptMode ? 'from this learning prompt' : 'from these raw notes'
@@ -1385,6 +1394,7 @@ Do not wrap the JSON in markdown fences. Do not add commentary outside JSON.
 
 Rules:
 - Return strict valid JSON only: double-quoted property names and strings, comma-separated array/object entries, matching { } and [ ], no trailing commas, no comments, no Markdown fences, no prose before or after the JSON.
+- ${languageInstruction}
 - Do not output "objects", "kind", "quizMode", internal block names, widget names, or any StudyMesh renderer fields. StudyMesh decides widget types.
 - Fill only sourceSummary, conceptRecap, practice.multipleChoice, and flashcards.
 - practice only supports multiple-choice questions. Never output typed-answer, single-input, quizSingle, or free-response quiz fields.
@@ -1740,12 +1750,14 @@ const createStudyPathBlueprintPrompt = ({
   prompt,
   dashboardCount,
   autoDashboardCount,
+  outputLanguage,
 }: {
   title: string
   folderName: string
   prompt: string
   dashboardCount: number
   autoDashboardCount: boolean
+  outputLanguage?: StudyMeshLanguageCode
 }): string => `Plan a high-quality StudyMesh Study Guide before writing dashboards.
 
 Return strict JSON only. ${
@@ -1755,6 +1767,7 @@ Return strict JSON only. ${
 }
 
 Planning requirements:
+- ${createAiOutputLanguageInstruction(outputLanguage)}
 - The default promise is zero-to-map: bring someone from zero to knowing what the topic is about, why it matters, what parts exist, and how to start using it.
 - Do not pretend to take the learner from beginner to expert. Treat this as a bounded learning sprint, not a full course.
 - Infer likely learner level, goal, prerequisites, and useful scope from the user request.
@@ -1783,6 +1796,7 @@ const createStudyPathDashboardPrompt = ({
   lesson,
   lessonIndex,
   blueprint,
+  outputLanguage,
 }: {
   title: string
   prompt: string
@@ -1790,6 +1804,7 @@ const createStudyPathDashboardPrompt = ({
   lesson: AiStudyPathBlueprintLesson
   lessonIndex: number
   blueprint: AiStudyPathBlueprint
+  outputLanguage?: StudyMeshLanguageCode
 }): string => `Create one StudyMesh Study Guide dashboard as strict JSON.
 
 Return exactly one dashboard object. No Markdown fences. No extra prose.
@@ -1845,6 +1860,7 @@ Required dashboard fields:
 }
 
 Quality rules:
+- ${createAiOutputLanguageInstruction(outputLanguage)}
 - rawNotes must be 350-800 words of real teaching, formatted as Markdown with short topic-specific sections.
 - Never reuse a generic section scaffold across dashboards. Avoid generic headings like "Goal", "Content", "Common Mistakes/Misconceptions", and "Quick Recall".
 - Use the lesson contentMode:
@@ -2039,6 +2055,7 @@ const generateStudyPathJsonWithPipeline = async ({
   folderName,
   dashboardCount,
   autoDashboardCount,
+  outputLanguage,
 }: {
   apiToken: string
   model: string
@@ -2049,6 +2066,7 @@ const generateStudyPathJsonWithPipeline = async ({
   folderName: string
   dashboardCount: number
   autoDashboardCount: boolean
+  outputLanguage?: StudyMeshLanguageCode
 }): Promise<{
   text: string
   parsed: unknown
@@ -2066,6 +2084,7 @@ const generateStudyPathJsonWithPipeline = async ({
           prompt,
           dashboardCount,
           autoDashboardCount,
+          outputLanguage,
         }),
       },
     ],
@@ -2111,6 +2130,7 @@ const generateStudyPathJsonWithPipeline = async ({
             lesson,
             lessonIndex: index,
             blueprint,
+            outputLanguage,
           }),
         },
       ],
@@ -2245,6 +2265,7 @@ export const generateStudyPathWithAi = async ({
   strongProvider = DEFAULT_STRONG_AI_PROVIDER,
   strongTransport,
   singleRequest = false,
+  outputLanguage,
   title,
   prompt,
   folderName,
@@ -2256,6 +2277,7 @@ export const generateStudyPathWithAi = async ({
     'summaries',
     'definitions',
   ])
+  const languageInstruction = createAiOutputLanguageInstruction(outputLanguage)
   const promptText = `Create a Study Guide JSON object. A Study Guide is NOT one dashboard. It is a folder containing multiple ordered dashboards/quick creates.
 
 Return exactly this structure:
@@ -2296,6 +2318,7 @@ Return exactly this structure:
 
 Rules:
 - Return strict valid JSON only: double-quoted property names and strings, comma-separated array/object entries, matching { } and [ ], no trailing commas, no comments, no Markdown fences, no prose before or after the JSON.
+- ${languageInstruction}
 - Choose a concise, topic-specific folderName for the Study Guide, such as "French B1 Subjunctive" or "Calculus Derivatives". Do not use a generic folderName like "Study Guide" unless the topic is truly unknown.
 - Choose exactly one topic-specific emoji for the Study Guide. It must be a single emoji character or emoji sequence, not text, and it should match the user's topic.
 - Create exactly ${dashboardCount} ordered lesson dashboards, grouped mentally into 1-3 modules. Give each dashboard a useful topic-specific title.
@@ -2392,6 +2415,7 @@ ${originalJson}`
         folderName: folderName || 'Study Guide',
         dashboardCount,
         autoDashboardCount: true,
+        outputLanguage,
         strongTransport,
       })
       text = pipelineResult.text
@@ -2792,6 +2816,7 @@ ${prompt}`
       typeof record.emoji === 'string' && record.emoji.trim()
         ? record.emoji.trim()
         : undefined,
+    contentLanguage: outputLanguage,
     dashboards,
     warnings,
     blueprint,

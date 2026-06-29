@@ -1547,6 +1547,8 @@ const DashboardChatPanel = ({
         question,
         history: usefulHistoryForPrompt(historyMessages),
         sourceChunks,
+        contentLanguage:
+          dashboard?.contentLanguage || dashboard?.studyPath?.contentLanguage,
       })
       const usedWebSourceIds = result.sourceRefs
         .filter((sourceRef) => sourceRef.origin === 'web')

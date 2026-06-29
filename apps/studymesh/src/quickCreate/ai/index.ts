@@ -126,3 +126,21 @@ export type {
   HostedAiStatus,
   HostedAiSurface,
 } from './hostedCredits'
+export {
+  CONTENT_LANGUAGE_OPTIONS,
+  CONTENT_LANGUAGE_SETTINGS_CHANGED_EVENT,
+  CONTENT_LANGUAGE_SETTINGS_KEY,
+  createAiOutputLanguageInstruction,
+  detectContentLanguage,
+  getContentLanguageLabel,
+  isLocalAiContentLanguageSupported,
+  readContentLanguageSettings,
+  resolveContentLanguage,
+  saveContentLanguageSettings,
+} from '../../language/contentLanguage'
+export type {
+  ContentLanguageSettings,
+  ContentLanguageSource,
+  ResolvedContentLanguage,
+  StudyMeshLanguageCode,
+} from '../../language/contentLanguage'

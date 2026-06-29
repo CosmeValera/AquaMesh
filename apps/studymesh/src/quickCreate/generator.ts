@@ -38,6 +38,8 @@ const createStudyPathProps = (
         studyPathPracticeType: studyPath.practiceType,
         studyPathLayoutReason: studyPath.layoutReason,
         studyPathSourceRefs: studyPath.sourceRefs,
+        studyPathContentLanguage: studyPath.contentLanguage,
+        studyPathContentLanguageSource: studyPath.contentLanguageSource,
         ...(itemId ? { studyPathItemId: itemId } : {}),
       }
     : {}

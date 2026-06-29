@@ -8,6 +8,10 @@ import type {
   StudyPathPracticeType,
   StudyPathSourceRef,
 } from '../../quickCreate/types'
+import type {
+  ContentLanguageSource,
+  StudyMeshLanguageCode,
+} from '../../language/contentLanguage'
 
 interface SavedDashboardLike {
   id?: string
@@ -30,6 +34,8 @@ interface StudyPathMeta {
   practiceType?: StudyPathPracticeType
   layoutReason?: string
   sourceRefs?: StudyPathSourceRef[]
+  contentLanguage?: StudyMeshLanguageCode
+  contentLanguageSource?: ContentLanguageSource
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -72,6 +78,14 @@ const readMetaFromCustomProps = (
     sourceRefs: Array.isArray(customProps.studyPathSourceRefs)
       ? (customProps.studyPathSourceRefs as StudyPathSourceRef[])
       : undefined,
+    contentLanguage:
+      typeof customProps.studyPathContentLanguage === 'string'
+        ? (customProps.studyPathContentLanguage as StudyMeshLanguageCode)
+        : undefined,
+    contentLanguageSource:
+      typeof customProps.studyPathContentLanguageSource === 'string'
+        ? (customProps.studyPathContentLanguageSource as ContentLanguageSource)
+        : undefined,
   }
 }
 
@@ -184,11 +198,15 @@ export const createStudyPathContainerState = (
       practiceType: meta.practiceType,
       layoutReason: meta.layoutReason,
       sourceRefs: meta.sourceRefs,
+      contentLanguage: meta.contentLanguage,
+      contentLanguageSource: meta.contentLanguageSource,
     }))
 
   return {
     pathId,
     title: studyPathDashboards[0].meta.studyPathTitle,
+    contentLanguage: studyPathDashboards[0].meta.contentLanguage,
+    contentLanguageSource: studyPathDashboards[0].meta.contentLanguageSource,
     folderName:
       studyPathDashboards[0].meta.folderName ||
       studyPathDashboards[0].dashboard.folder ||

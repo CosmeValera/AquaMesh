@@ -52,6 +52,7 @@ import {
   WorkspaceCreationTask,
   WorkspaceCreationTaskState,
 } from '../../workspaceCreationStatus'
+import { resolveContentLanguage } from '../../language/contentLanguage'
 import {
   ASK_DASHBOARD_CHAT_EVENT,
   CLOSE_CREATE_STUDIO_EVENT,
@@ -1283,6 +1284,12 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     const effectiveDetailLevel = retryOptions.detailLevel || quickDetailLevel
     const effectiveDifficulty = retryOptions.difficulty || quickDifficulty
     const effectiveProvider = retryOptions.provider || aiProvider
+    const resolvedLanguage = resolveContentLanguage({
+      text: sourceText,
+      inheritedLanguage:
+        currentDashboard?.contentLanguage ||
+        currentDashboard?.studyPath?.contentLanguage,
+    })
     const credentials = isStrongAiProvider(effectiveProvider)
       ? resolveQuickCreateAiCredentials(effectiveProvider)
       : resolveQuickCreateAiCredentials()
@@ -1405,6 +1412,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 : 'mixed',
             promptMode: false,
             studyPathMode: false,
+            outputLanguage: resolvedLanguage.language,
             signal: generationController.signal,
           })
 

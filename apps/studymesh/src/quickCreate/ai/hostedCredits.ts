@@ -1,4 +1,5 @@
 import type { StudyGuideQuickStart } from '../../state/store'
+import type { StudyMeshLanguageCode } from '../../language/contentLanguage'
 
 export const STUDY_CREDITS_LABEL = 'Study Credits'
 export const STUDY_CREDITS_SYMBOL = 'SC'
@@ -80,6 +81,7 @@ export interface HostedAiGatewayRequest {
   action: 'status' | 'markIntroSeen' | 'generate' | 'generateWithQuickStart'
   surface?: HostedAiSurface
   model?: string
+  outputLanguage?: StudyMeshLanguageCode
   parts?: HostedAiGatewayPart[]
   responseSchema?: Record<string, unknown>
   timeoutMs?: number

@@ -299,7 +299,7 @@ describe('GuideWorkspacePage responsive sections', () => {
         guidePageDraft: {
           title: 'Useful web source',
           markdown:
-            '# Useful web source\n\nSource: [example.com](https://example.com/dinosaurs)\n\n## Why this source matters\nThis page explains the useful dinosaur detail.',
+            '# Useful web source\n\nSource: [example.com](https://example.com/dinosaurs)\n\n## Dinosaur detail\nThis page explains the useful dinosaur detail.',
           generatedAt: 1,
         },
         searchQuery: 'student typo query',
@@ -313,7 +313,7 @@ describe('GuideWorkspacePage responsive sections', () => {
     expect(screen.queryByTestId('chat-panel')).not.toBeInTheDocument()
     expect(localStorage.setItem).toHaveBeenCalledWith(
       STUDY_GUIDES_STORAGE_KEY,
-      expect.stringContaining('Why this source matters'),
+      expect.stringContaining('Dinosaur detail'),
     )
     expect(localStorage.setItem).not.toHaveBeenCalledWith(
       STUDY_GUIDES_STORAGE_KEY,

@@ -827,13 +827,18 @@ const DashboardChatPanel = ({
     question: string,
     historyMessages: DashboardChatMessage[],
   ): string => {
+    const sourceSupportFollowUp = SOURCE_SUPPORT_FOLLOWUP_PATTERN.test(question)
     const latestUserQuestion = [...historyMessages]
       .reverse()
-      .find((message) => message.role === 'user')?.content
+      .find(
+        (message) =>
+          message.role === 'user' &&
+          (!sourceSupportFollowUp ||
+            !SOURCE_SUPPORT_FOLLOWUP_PATTERN.test(message.content)),
+      )?.content
     const previousAssistant = [...historyMessages]
       .reverse()
       .find((message) => message.role === 'assistant')
-    const sourceSupportFollowUp = SOURCE_SUPPORT_FOLLOWUP_PATTERN.test(question)
 
     if (sourceSupportFollowUp && previousAssistant) {
       const answerTerms = extractQuestionTerms(previousAssistant.content).slice(
@@ -1575,6 +1580,16 @@ const DashboardChatPanel = ({
     gapMessageId: string,
     historyMessages: DashboardChatMessage[],
   ) => {
+    const gapMessageIndex = messagesRef.current.findIndex(
+      (message) => message.id === gapMessageId,
+    )
+    const liveHistoryMessages =
+      gapMessageIndex > 0
+        ? messagesRef.current.slice(0, gapMessageIndex)
+        : messagesRef.current
+    const lookupHistoryMessages =
+      historyMessages.length > 0 ? historyMessages : liveHistoryMessages
+
     updateMessage(gapMessageId, (message) => ({
       ...message,
       content: t('chat.searchingWeb'),
@@ -1584,11 +1599,11 @@ const DashboardChatPanel = ({
     try {
       const lookupQuestion = expandQuestionWithChatContext(
         question,
-        historyMessages,
+        lookupHistoryMessages,
       )
       const requiredConcepts = requiredConceptsForQuestion(
         question,
-        historyMessages,
+        lookupHistoryMessages,
       )
       const dashboardCoveredConcepts = coveredConceptsFromSources(
         context.chunks,
@@ -1631,7 +1646,7 @@ const DashboardChatPanel = ({
           sourceIds,
         },
       }))
-      appendWebRetryAnswer(question, historyMessages, sourceIds)
+      appendWebRetryAnswer(question, lookupHistoryMessages, sourceIds)
     } catch (err) {
       updateMessage(gapMessageId, (message) => ({
         ...message,
@@ -1696,6 +1711,15 @@ const DashboardChatPanel = ({
     externalSourceIds: string[] = [],
   ) => {
     setActiveStartedAt(Date.now())
+    const pendingMessageIndex = messagesRef.current.findIndex(
+      (message) => message.id === pendingMessageId,
+    )
+    const liveHistoryMessages =
+      pendingMessageIndex > 0
+        ? messagesRef.current.slice(0, pendingMessageIndex)
+        : messagesRef.current
+    const effectiveHistoryMessages =
+      historyMessages.length > 0 ? historyMessages : liveHistoryMessages
     const { sourceChunks, selectedExternalSourceIds } =
       selectAnswerSourceChunks(question, externalSourceIds)
 
@@ -1709,7 +1733,11 @@ const DashboardChatPanel = ({
         pending: false,
       }))
       setActiveStartedAt(null)
-      void runExternalSourceLookup(question, pendingMessageId, historyMessages)
+      void runExternalSourceLookup(
+        question,
+        pendingMessageId,
+        effectiveHistoryMessages,
+      )
       return
     }
 
@@ -1718,7 +1746,7 @@ const DashboardChatPanel = ({
         dashboardTitle: context.dashboardTitle,
         contextText: formatDashboardChatContext(context, sourceChunks),
         question,
-        history: usefulHistoryForPrompt(historyMessages),
+        history: usefulHistoryForPrompt(effectiveHistoryMessages),
         sourceChunks,
         contentLanguage:
           dashboard?.contentLanguage || dashboard?.studyPath?.contentLanguage,
@@ -1747,7 +1775,7 @@ const DashboardChatPanel = ({
         void runExternalSourceLookup(
           question,
           pendingMessageId,
-          historyMessages,
+          effectiveHistoryMessages,
         )
       }
     } catch (err) {

@@ -55,6 +55,10 @@ describe('source page drafts', () => {
     const prompt = vi.mocked(callStrongAiModel).mock.calls[0][0].parts[0].text
     expect(prompt).not.toContain('![')
     expect(prompt).not.toContain('Advertisement')
+    expect(prompt).toContain('Avoid generic repeated headings')
+    expect(prompt).not.toContain(
+      '"## Why this source matters", "## Key points", and "## Useful details"',
+    )
   })
 
   it('uses the chat question language instead of the source page language', async () => {

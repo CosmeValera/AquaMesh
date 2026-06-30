@@ -161,8 +161,11 @@ Rules:
 - Return strict JSON only: { "title": "...", "markdown": "..." }.
 - markdown must start with a short source-specific page title as "# ...", then "Source: [${sourceDomain(
     source.url,
-  )}](${source.url})", then useful sections:
-  "## Why this source matters", "## Key points", and "## Useful details".
+  )}](${source.url})".
+- After the Source line, choose 2-4 short section headings that fit this exact source and question.
+- Avoid generic repeated headings like "Why this source matters", "Key points", or "Useful details" unless they are truly the best fit.
+- Make this page feel different from other source pages: emphasize the source's distinctive evidence, comparison angle, limitation, or practical takeaway.
+- If the source only covers part of the user's comparison, say that naturally in the relevant section instead of using a repeated "missing piece" template.
 - Keep it compact: 120-220 words.
 
 Study Guide: ${dashboardTitle}

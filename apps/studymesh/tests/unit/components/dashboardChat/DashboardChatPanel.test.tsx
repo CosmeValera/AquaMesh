@@ -1007,24 +1007,21 @@ describe('DashboardChatPanel chat management', () => {
         createdAt: 2,
       },
     ]
-    const Harness = () => {
-      const [panelMessages, setPanelMessages] =
-        React.useState<
-          React.ComponentProps<typeof DashboardChatPanel>['messages']
-        >(initialMessages)
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === 'studymesh-dashboard-chat-sessions-dashboard-1'
+        ? JSON.stringify([
+            {
+              id: 'chat-1',
+              title: 'Vue and React',
+              messages: initialMessages,
+              createdAt: 1,
+              updatedAt: 2,
+            },
+          ])
+        : null,
+    )
 
-      return (
-        <DashboardChatPanel
-          dashboard={dashboardWithContext}
-          messages={panelMessages}
-          onMessagesChange={setPanelMessages}
-          onClose={vi.fn()}
-          onQuickCreatePage={vi.fn()}
-        />
-      )
-    }
-
-    render(<Harness />)
+    renderPanel()
     fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
       target: {
         value:
@@ -1090,24 +1087,21 @@ describe('DashboardChatPanel chat management', () => {
         createdAt: 2,
       },
     ]
-    const Harness = () => {
-      const [panelMessages, setPanelMessages] =
-        React.useState<
-          React.ComponentProps<typeof DashboardChatPanel>['messages']
-        >(initialMessages)
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === 'studymesh-dashboard-chat-sessions-dashboard-1'
+        ? JSON.stringify([
+            {
+              id: 'chat-1',
+              title: 'Vue and React',
+              messages: initialMessages,
+              createdAt: 1,
+              updatedAt: 2,
+            },
+          ])
+        : null,
+    )
 
-      return (
-        <DashboardChatPanel
-          dashboard={dashboardWithContext}
-          messages={panelMessages}
-          onMessagesChange={setPanelMessages}
-          onClose={vi.fn()}
-          onQuickCreatePage={vi.fn()}
-        />
-      )
-    }
-
-    render(<Harness />)
+    renderPanel()
     fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
       target: { value: 'what is your source to say that ?' },
     })

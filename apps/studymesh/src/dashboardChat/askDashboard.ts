@@ -123,6 +123,7 @@ Rules:
 - Never write bare citation numbers like 3, compressed citations like 3[4] or [3][4], or combined numbers like [34].
 - Put sentence punctuation after the citations, like [3] [4].
 - Only cite source numbers shown in the dashboard/source context.
+- Never output JSON, code blocks, objects, arrays, "sources" fields, or structured metadata. The answer must be normal readable prose/Markdown only.
 - Do not add a final Sources, References, or Based on section. Use inline citations only.
 - Be concise, clear, student-friendly, and practical.
 - Use bullets, examples, and study tips when helpful.
@@ -146,8 +147,24 @@ const sourceGapPatterns = [
   /\bprovided context\b.*\b(?:does not|doesn't|not enough|insufficient|lack)/i,
 ]
 
+const stripLeakedSourcesJson = (answer: string): string => {
+  const withoutFencedJson = answer.replace(
+    /```(?:json)?\s*\{[\s\S]*?"sources"\s*:\s*\[[\s\S]*?}\s*```/gi,
+    '',
+  )
+  const trimmed = withoutFencedJson.trim()
+
+  if (/^\{\s*"sources"\s*:\s*\[[\s\S]*]\s*}\s*$/i.test(trimmed)) {
+    return ''
+  }
+
+  return withoutFencedJson
+    .replace(/(?:^|\n)\s*\{\s*"sources"\s*:\s*\[[\s\S]*?]\s*}\s*$/i, '')
+    .trim()
+}
+
 const cleanAnswer = (answer: string): AskDashboardResult['answer'] => {
-  return answer
+  return stripLeakedSourcesJson(answer)
     .replace(new RegExp(`^\\s*${SOURCE_GAP_MARKER}\\s*`, 'i'), '')
     .trim()
 }

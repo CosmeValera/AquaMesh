@@ -25,11 +25,16 @@ vi.mock('../../../../src/components/hostedAi/HostedAiIntroModal', () => ({
 vi.mock('../../../../src/components/Dasboard/StudyPathWorkspaceView', () => ({
   default: ({
     studyPath,
+    onAskAi,
   }: {
     studyPath: { selectedIndex: number; dashboards: Array<{ name: string }> }
+    onAskAi?: (content: string) => void
   }) => (
     <div data-testid="study-guide-panel">
       {studyPath.dashboards[studyPath.selectedIndex]?.name}
+      <button type="button" onClick={() => onAskAi?.('Explain quiz miss')}>
+        Ask AI from study block
+      </button>
     </div>
   ),
 }))
@@ -130,6 +135,32 @@ describe('GuideWorkspacePage responsive sections', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'AI Chat' }))
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
+  })
+
+  it('opens mobile AI Chat and queues Study Block explain prompts', async () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <Routes>
+          <Route
+            path="/workspace/:studyGuideId"
+            element={<GuideWorkspacePage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await screen.findByTestId('study-guide-panel')
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Ask AI from study block' }),
+    )
+
+    expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
+    const latestProps = dashboardChatPanelSpy.mock.calls.at(-1)?.[0] as {
+      queuedQuestion?: { id: string; content: string } | null
+    }
+
+    expect(latestProps.queuedQuestion?.id).toMatch(/^study-block-explain-/)
+    expect(latestProps.queuedQuestion?.content).toBe('Explain quiz miss')
   })
 
   it('opens chat sources on the referenced Study Guide page', async () => {

@@ -110,6 +110,10 @@ const GuideWorkspacePage = () => {
   const [messages, setMessages] = useState<DashboardChatMessage[]>([])
   const [editingPageKey, setEditingPageKey] = useState<string | null>(null)
   const [quickCreateError, setQuickCreateError] = useState('')
+  const [queuedChatQuestion, setQueuedChatQuestion] = useState<{
+    id: string
+    content: string
+  } | null>(null)
   const [aiChatOpen, setAiChatOpen] = useState(true)
   const [aiChatWidth, setAiChatWidth] = useState(AI_CHAT_MIN_WIDTH)
   const [mobileSection, setMobileSection] = useState<
@@ -301,6 +305,22 @@ ${excerpt}`
     }
   }
 
+  const askAiFromStudyBlock = (content: string) => {
+    const trimmed = content.trim()
+    if (!trimmed) {
+      return
+    }
+
+    setAiChatOpen(true)
+    setMobileSection('ai-chat')
+    setQueuedChatQuestion({
+      id: `study-block-explain-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2)}`,
+      content: trimmed,
+    })
+  }
+
   useEffect(() => {
     const handleStudyGuidePageLink = (event: Event) => {
       const detail = (event as CustomEvent<OpenStudyGuidePageLinkDetail>).detail
@@ -422,6 +442,7 @@ ${excerpt}`
         editingPageKey={editingPageKey}
         onEditingPageKeyChange={setEditingPageKey}
         onAddPage={addManualPage}
+        onAskAi={askAiFromStudyBlock}
       />
     </Paper>
   ) : null
@@ -481,6 +502,12 @@ ${excerpt}`
         onOpenSource={openChatSource}
         onQuickCreatePage={quickCreatePage}
         supportsStudyGuideCreateScope
+        queuedQuestion={queuedChatQuestion}
+        onQueuedQuestionConsumed={(id) =>
+          setQueuedChatQuestion((current) =>
+            current?.id === id ? null : current,
+          )
+        }
       />
       {quickCreateError ? (
         <Alert

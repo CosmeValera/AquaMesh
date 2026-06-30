@@ -1837,7 +1837,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     sx={{
                       alignSelf: 'center',
                       whiteSpace: 'pre-wrap',
-                      fontSize: { xs: '1.03rem', sm: '2.125rem' },
+                      fontSize: { xs: '1.03rem', sm: '1.5rem' },
                       lineHeight: { xs: 1.22, sm: 1.25 },
                       fontWeight: 500,
                       overflowWrap: 'anywhere',

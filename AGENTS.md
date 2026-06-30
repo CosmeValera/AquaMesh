@@ -15,7 +15,7 @@ Default LeanCTX workflow:
 - Use `ctx_tree` only on scoped directories such as `apps/studymesh` or `apps/studymesh/src`, with shallow depth. Avoid repository-root `ctx_tree` scans unless explicitly needed because they can time out on this monorepo.
 - Prefer cache hits and focused LeanCTX reads over repeated full-file reads. Avoid `ctx_compare` or broad compression previews on large files unless explicitly investigating token usage because they can print huge diffs.
 
-Keep shell execution under RTK: always prefix shell commands with `rtk`. Do not enable LeanCTX shell hooks unless explicitly requested.
+Use LeanCTX for repo context tools (`ctx_compose`, `ctx_glob`, `ctx_search`, `ctx_read`, `ctx_tree`). Do not use LeanCTX `ctx_shell` for commands in this repo because it may block `rtk`; run shell commands through the normal shell tool with the required `rtk` prefix. Do not enable LeanCTX shell hooks unless explicitly requested.
 
 If LeanCTX is unavailable, fall back to normal `rg`, file reads, and `rtk`-wrapped shell commands.
 

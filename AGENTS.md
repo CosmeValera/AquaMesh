@@ -4,6 +4,21 @@
 
 Always prefix shell commands with `rtk`. For PowerShell built-ins or syntax that are not standalone executables, run them through PowerShell under the wrapper, for example `rtk powershell -NoProfile -Command "Get-ChildItem -Force"`.
 
+## LeanCTX Context Cache
+
+Use LeanCTX MCP tools when available for cached repo exploration, repeated file reads, broad search, tree views, and context retrieval in this large repository. For normal StudyMesh app work, scope LeanCTX calls to `apps/studymesh` first instead of the repository root.
+
+Default LeanCTX workflow:
+
+- Use `ctx_compose` first for broad code questions or before editing unfamiliar behavior.
+- Use `ctx_glob`, `ctx_search`, and `ctx_read` for targeted file discovery, search, and reads. Prefer `ctx_read` modes `signatures`, `map`, or `lines:N-M`; use `full` only when exact edit context is needed.
+- Use `ctx_tree` only on scoped directories such as `apps/studymesh` or `apps/studymesh/src`, with shallow depth. Avoid repository-root `ctx_tree` scans unless explicitly needed because they can time out on this monorepo.
+- Prefer cache hits and focused LeanCTX reads over repeated full-file reads. Avoid `ctx_compare` or broad compression previews on large files unless explicitly investigating token usage because they can print huge diffs.
+
+Keep shell execution under RTK: always prefix shell commands with `rtk`. Do not enable LeanCTX shell hooks unless explicitly requested.
+
+If LeanCTX is unavailable, fall back to normal `rg`, file reads, and `rtk`-wrapped shell commands.
+
 ## Project Structure & Module Organization
 
 StudyMesh is an npm/Turborepo monorepo. Application code lives in `apps/`: `apps/studymesh` is the main dashboard builder, `apps/control-flow` and `apps/system-lens` are federated React apps (not used). Shared packages live in `packages/` (not used). Theme and PrimeReact SCSS sources are under `style/`. Documentation images and tutorials are in `readme_docs/`. Git hook utilities are in `tools/git-hooks/`.

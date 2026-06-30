@@ -254,7 +254,7 @@
   min-width: 0;
   box-sizing: border-box;
   overflow: hidden;
-  padding: 0;
+  padding: 16px;
 }
 
 .studymesh-mobile-widget-card *,
@@ -334,6 +334,18 @@
 }
 
 @media (max-width: 768px) {
+  .studymesh-mobile-widget-card .MuiTable-root {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .studymesh-mobile-widget-card .MuiTableCell-root {
+    min-width: 0;
+    padding: 10px 8px;
+    hyphens: auto;
+  }
+
   .studymesh-mobile-widget-card > * {
     width: 100% !important;
     max-width: 100% !important;

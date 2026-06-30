@@ -1615,41 +1615,41 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     return (
       <Box
         sx={(theme) => ({
-          '--flashcard-face-bg':
-            theme.palette.mode === 'dark'
-              ? alpha(theme.palette.common.white, 0.06)
-              : alpha(theme.palette.common.white, 0.74),
+          '--flashcard-face-bg': {
+            xs: theme.palette.background.paper,
+            sm:
+              theme.palette.mode === 'dark'
+                ? alpha(theme.palette.common.white, 0.06)
+                : alpha(theme.palette.common.white, 0.74),
+          },
           minHeight: { xs: 'calc(100dvh - 156px)', md: 'calc(100vh - 170px)' },
           display: 'grid',
           alignContent: 'center',
           px: { xs: 2, sm: 2 },
           py: { xs: 0.75, sm: 2 },
           overflow: 'hidden',
-          background:
-            theme.palette.mode === 'dark'
-              ? {
-                  xs: `radial-gradient(ellipse 120% 88% at 50% 68%, ${alpha(
-                    theme.palette.success.main,
-                    0.11,
-                  )} 0%, ${alpha(theme.palette.primary.main, 0.06)} 42%, transparent 78%)`,
-                  sm: `radial-gradient(circle at 50% 65%, ${alpha(
+          background: {
+            xs: 'none',
+            sm:
+              theme.palette.mode === 'dark'
+                ? `radial-gradient(circle at 50% 65%, ${alpha(
                     theme.palette.success.main,
                     0.2,
-                  )} 0%, ${alpha(theme.palette.primary.main, 0.1)} 32%, transparent 62%)`,
-                }
-              : {
-                  xs: `radial-gradient(ellipse 120% 88% at 50% 68%, ${alpha(
-                    theme.palette.success.main,
-                    0.16,
-                  )} 0%, ${alpha(theme.palette.primary.main, 0.08)} 42%, transparent 78%)`,
-                  sm: `radial-gradient(circle at 50% 68%, ${alpha(
+                  )} 0%, ${alpha(
+                    theme.palette.primary.main,
+                    0.1,
+                  )} 32%, transparent 62%)`
+                : `radial-gradient(circle at 50% 68%, ${alpha(
                     theme.palette.success.main,
                     0.28,
-                  )} 0%, ${alpha(theme.palette.primary.main, 0.16)} 34%, ${alpha(
+                  )} 0%, ${alpha(
+                    theme.palette.primary.main,
+                    0.16,
+                  )} 34%, ${alpha(
                     theme.palette.success.light,
                     0.08,
                   )} 54%, transparent 76%)`,
-                },
+          },
           '@keyframes flashcardGradeAway': {
             '0%': {
               opacity: 0,
@@ -2397,42 +2397,86 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     return (
       <Box
         sx={(theme) => ({
-          minHeight: { xs: 'calc(100dvh - 180px)', md: 'calc(100vh - 190px)' },
+          minHeight: {
+            xs: 'auto',
+            sm: 'calc(100dvh - 180px)',
+            md: 'calc(100vh - 190px)',
+          },
           display: 'grid',
-          placeItems: 'center',
-          px: { xs: 1, md: 3 },
-          py: { xs: 2, md: 4 },
+          placeItems: { xs: 'start stretch', sm: 'center' },
+          px: { xs: 0.5, sm: 1, md: 3 },
+          py: { xs: 1, sm: 2, md: 4 },
           overflow: 'hidden',
-          background:
-            theme.palette.mode === 'dark'
-              ? `radial-gradient(circle at 50% 60%, ${alpha(
-                  theme.palette.success.main,
-                  0.16,
-                )} 0%, ${alpha(theme.palette.primary.main, 0.09)} 34%, transparent 68%)`
-              : `radial-gradient(circle at 50% 62%, ${alpha(
-                  theme.palette.success.main,
-                  0.18,
-                )} 0%, ${alpha(theme.palette.primary.main, 0.11)} 38%, ${alpha(
-                  theme.palette.success.light,
-                  0.07,
-                )} 58%, transparent 78%)`,
+          background: {
+            xs: 'none',
+            sm:
+              theme.palette.mode === 'dark'
+                ? `radial-gradient(circle at 50% 60%, ${alpha(
+                    theme.palette.success.main,
+                    0.16,
+                  )} 0%, ${alpha(
+                    theme.palette.primary.main,
+                    0.09,
+                  )} 34%, transparent 68%)`
+                : `radial-gradient(circle at 50% 62%, ${alpha(
+                    theme.palette.success.main,
+                    0.18,
+                  )} 0%, ${alpha(
+                    theme.palette.primary.main,
+                    0.11,
+                  )} 38%, ${alpha(
+                    theme.palette.success.light,
+                    0.07,
+                  )} 58%, transparent 78%)`,
+          },
         })}
       >
-        <Stack spacing={2.5} sx={{ width: 'min(820px, 100%)' }}>
-          <Stack direction="row" justifyContent="space-between" gap={2}>
+        <Stack
+          spacing={{ xs: 1.25, sm: 2.5 }}
+          sx={{ width: 'min(820px, 100%)' }}
+        >
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            justifyContent="space-between"
+            gap={{ xs: 0.75, sm: 2 }}
+          >
             <Box sx={{ minWidth: 0 }}>
               <Typography
                 variant="h5"
                 fontWeight={600}
-                sx={{ fontSize: { xs: '1.35rem', sm: '1.5rem' } }}
+                sx={{
+                  fontSize: { xs: '1.15rem', sm: '1.5rem' },
+                  lineHeight: { xs: 1.18, sm: 1.25 },
+                  overflowWrap: 'anywhere',
+                }}
               >
                 {title}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.78rem', sm: '0.875rem' } }}
+              >
                 {safeIndex + 1} / {questions.length}
               </Typography>
             </Box>
-            <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="end">
+            <Stack
+              direction="row"
+              gap={0.75}
+              flexWrap="wrap"
+              justifyContent={{ xs: 'start', sm: 'end' }}
+              sx={{
+                '& .MuiChip-root': {
+                  height: { xs: 28, sm: 32 },
+                  borderRadius: 999,
+                },
+                '& .MuiChip-label': {
+                  px: { xs: 1, sm: 1.5 },
+                  fontSize: { xs: '0.72rem', sm: '0.8125rem' },
+                  fontWeight: 800,
+                },
+              }}
+            >
               <Chip
                 label={`${t('practice.answered')} ${answered}/${
                   questions.length
@@ -2448,22 +2492,24 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           <Paper
             variant="outlined"
             sx={{
-              p: { xs: 2, sm: 4 },
-              borderRadius: 2,
+              p: { xs: 1.5, sm: 4 },
+              borderRadius: { xs: 1.5, sm: 2 },
               bgcolor: 'background.paper',
             }}
           >
-            <Stack spacing={2.25}>
+            <Stack spacing={{ xs: 1.35, sm: 2.25 }}>
               <Typography
                 variant="h5"
                 sx={{
-                  fontSize: { xs: '1.35rem', sm: '1.5rem' },
-                  lineHeight: { xs: 1.28, sm: 1.35 },
+                  fontSize: { xs: '1.08rem', sm: '1.5rem' },
+                  lineHeight: { xs: 1.25, sm: 1.35 },
+                  fontWeight: 700,
+                  overflowWrap: 'anywhere',
                 }}
               >
                 {question.question}
               </Typography>
-              <Stack spacing={1.25}>
+              <Stack spacing={{ xs: 0.75, sm: 1.25 }}>
                 {question.options.map((option, index) => {
                   const isCorrect = index === question.correctIndex
                   const isSelected = selected === index
@@ -2522,12 +2568,14 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                             width: '100%',
                             justifyContent: 'flex-start',
                             textAlign: 'left',
-                            minHeight: 52,
+                            minHeight: { xs: 46, sm: 52 },
                             whiteSpace: 'normal',
                             color: 'text.primary',
                             borderColor: hasAnswered ? resultBorder : 'divider',
                             alignItems: 'stretch',
-                            py: 1.25,
+                            py: { xs: 0.9, sm: 1.25 },
+                            px: { xs: 1.25, sm: 2 },
+                            borderRadius: 1.25,
                             cursor: hasAnswered ? 'default' : 'pointer',
                             bgcolor:
                               hasAnswered && (isCorrect || isSelected)
@@ -2554,7 +2602,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                             component="span"
                             variant="body2"
                             fontWeight={700}
-                            sx={{ fontSize: { xs: '0.86rem', sm: '0.875rem' } }}
+                            sx={{
+                              fontSize: { xs: '0.82rem', sm: '0.875rem' },
+                              overflowWrap: 'anywhere',
+                            }}
                           >
                             {quizOptionLabel(index, option)}
                           </Typography>

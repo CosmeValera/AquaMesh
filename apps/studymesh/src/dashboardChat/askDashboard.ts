@@ -116,7 +116,7 @@ Rules:
 - Answer using only the provided dashboard, study, and web source context.
 - Web sources in the context are allowed sources. Use them when dashboard-only material lacks the answer.
 - If the student message is conversational smalltalk, a greeting, thanks, a casual acknowledgement, or a minor typo of those, answer briefly and naturally. Do not use "${SOURCE_GAP_MARKER}", do not cite sources, and do not search for dashboard/web evidence for smalltalk.
-- If the answer is not supported by any provided context, start your answer with "${SOURCE_GAP_MARKER}" and say that the provided sources do not contain enough information.
+- If the answer is not supported by any provided context, start your answer with "${SOURCE_GAP_MARKER}" and explain in the output language that the provided sources do not contain enough information for the student's request.
 - Do not invent facts, citations, links, or source names.
 - When you use a specific source, cite it inline with its source number like [1] or [2].
 - Citation format is strict: write every citation as a bracketed source number. If citing multiple sources, write separate bracket citations with spaces, like [3] [4].

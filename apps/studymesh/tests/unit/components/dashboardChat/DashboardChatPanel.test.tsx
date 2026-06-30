@@ -461,7 +461,7 @@ describe('DashboardChatPanel chat management', () => {
     expect(sessions[0].messages).toHaveLength(0)
     expect(sessions[1].messages).toHaveLength(2)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Start new AI chat' }))
+    fireEvent.click(screen.getByRole('button', { name: 'New chat' }))
 
     sessions = getLastPersistedChatSessions()
     expect(countEmptyChatSessions(sessions)).toBe(1)
@@ -732,16 +732,8 @@ describe('DashboardChatPanel chat management', () => {
       expect.objectContaining({ citationNumber: 1, dashboardKey: 'lesson-1' }),
     )
     fireEvent.click(screen.getByRole('button', { name: 'Open web source 12' }))
-    expect(screen.getByRole('dialog')).toHaveTextContent(
-      'External photosynthesis source',
-    )
     expect(openSpy).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: 'Open source' }))
-    expect(openSpy).toHaveBeenCalledWith(
-      'https://example.com/photosynthesis',
-      '_blank',
-      'noopener,noreferrer',
-    )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.queryByText('Based on:')).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'Open source 9' }),
@@ -918,11 +910,13 @@ describe('DashboardChatPanel chat management', () => {
       ),
     )
     expect(
-      await screen.findByRole('button', { name: 'Add Ansible guide as page' }),
+      await screen.findByRole('button', {
+        name: 'Add this source: Ansible guide',
+      }),
     ).toBeEnabled()
     const openSpy = vi.spyOn(window, 'open').mockReturnValue(null)
     fireEvent.click(
-      screen.getByRole('button', { name: 'Open found source Ansible guide' }),
+      screen.getByRole('button', { name: 'Open source: Ansible guide' }),
     )
     expect(openSpy).not.toHaveBeenCalled()
     expect(screen.getByRole('dialog')).toHaveTextContent('Ansible guide')
@@ -1170,7 +1164,9 @@ describe('DashboardChatPanel chat management', () => {
     ).not.toBeInTheDocument()
 
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Add Ansible guide as page' }),
+      await screen.findByRole('button', {
+        name: 'Add this source: Ansible guide',
+      }),
     )
 
     expect(onAddExternalSourceToGuide).toHaveBeenCalledWith(
@@ -1217,7 +1213,9 @@ describe('DashboardChatPanel chat management', () => {
     renderPanel({ messages, onAddExternalSourceToGuide: vi.fn() })
 
     expect(
-      await screen.findByRole('button', { name: 'Add Ansible guide as page' }),
+      await screen.findByRole('button', {
+        name: 'Add this source: Ansible guide',
+      }),
     ).toBeDisabled()
     expect(screen.getByText('Could not prepare page')).toBeInTheDocument()
   })
@@ -1330,19 +1328,25 @@ describe('DashboardChatPanel chat management', () => {
       screen.queryByRole('button', { name: 'Clear dashboard chat' }),
     ).not.toBeInTheDocument()
     fireEvent.click(await screen.findByRole('button', { name: 'Chats' }))
-    expect(screen.getByLabelText('Delete First chat')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Delete chat: First chat' }),
+    ).toBeInTheDocument()
     expect(screen.getByText('1 reply')).toBeInTheDocument()
     expect(screen.getByText('0 replies')).toBeInTheDocument()
     expect(screen.queryByText(/messages/)).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByLabelText('Delete First chat'))
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Delete chat: First chat' }),
+    )
 
     await waitFor(() =>
       expect(
-        screen.queryByLabelText('Delete First chat'),
+        screen.queryByRole('button', { name: 'Delete chat: First chat' }),
       ).not.toBeInTheDocument(),
     )
-    expect(screen.getByLabelText('Delete New chat')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Delete chat: New chat' }),
+    ).not.toBeInTheDocument()
     expect(screen.getByText('0 replies')).toBeInTheDocument()
   })
 })

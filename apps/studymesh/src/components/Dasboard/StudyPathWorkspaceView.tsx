@@ -486,16 +486,16 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
             <Tooltip
               title={
                 isEditingCurrentPage
-                  ? 'Preview current page'
-                  : 'Edit current page'
+                  ? t('workspace.previewCurrentPage')
+                  : t('workspace.editCurrentPage')
               }
             >
               <IconButton
                 size="small"
                 aria-label={
                   isEditingCurrentPage
-                    ? 'Preview current page'
-                    : 'Edit current page'
+                    ? t('workspace.previewCurrentPage')
+                    : t('workspace.editCurrentPage')
                 }
                 onClick={toggleCurrentPageEditing}
                 sx={pageIconButtonSx()}

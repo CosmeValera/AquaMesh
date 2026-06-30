@@ -458,6 +458,9 @@ const DashboardChatPanel = ({
   const panelRef = useRef<HTMLDivElement | null>(null)
   const chatScrollRef = useRef<HTMLDivElement | null>(null)
   const draftInputRef = useRef<HTMLTextAreaElement | null>(null)
+  const externalSourceAddButtonRefs = useRef(
+    new Map<string, HTMLButtonElement>(),
+  )
   const composerDragRef = useRef<{
     startY: number
     startHeight: number
@@ -1997,6 +2000,34 @@ const DashboardChatPanel = ({
     onOpenSource?.(source)
   }
 
+  const focusExternalSourceAddButton = (sourceId: string) => {
+    const addButton = externalSourceAddButtonRefs.current.get(sourceId)
+    if (!addButton) {
+      return false
+    }
+
+    addButton.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    window.setTimeout(() => addButton.focus(), 200)
+    return true
+  }
+
+  const openWebSourceInGuide = (sourceRef: DashboardAnswerSourceRef) => {
+    const externalSource = findExternalSourceById(sourceRef.chunkId)
+    if (!externalSource) {
+      return
+    }
+
+    if (
+      onAddExternalSourceToGuide &&
+      externalSource.guidePageDraftStatus === 'ready'
+    ) {
+      onAddExternalSourceToGuide(externalSource)
+      return
+    }
+
+    focusExternalSourceAddButton(externalSource.id)
+  }
+
   const startEditingUserPrompt = (message: DashboardChatMessage) => {
     setEditingPromptId(message.id)
     setEditingPromptDraft(message.content)
@@ -2426,7 +2457,11 @@ const DashboardChatPanel = ({
           }
           onClick={(event) => {
             event.stopPropagation()
-            openSource(source)
+            if (isWebSource) {
+              openWebSourceInGuide(source)
+            } else {
+              openSource(source)
+            }
           }}
           sx={{
             mx: 0.25,
@@ -2477,14 +2512,14 @@ const DashboardChatPanel = ({
     }
     const addSourceLabel = (source: DashboardExternalSource) => {
       if (source.guidePageDraftStatus === 'ready') {
-        return 'Add this source'
+        return t('chat.addThisSource')
       }
 
       if (source.guidePageDraftStatus === 'failed') {
-        return 'Could not prepare page'
+        return t('chat.couldNotPreparePage')
       }
 
-      return 'Preparing page...'
+      return t('chat.preparingPage')
     }
 
     return (
@@ -2505,17 +2540,19 @@ const DashboardChatPanel = ({
       >
         {message.webLookup.status === 'searching' ? (
           <Typography variant="caption" color="text.secondary">
-            Searching web...
+            {t('chat.searchingWebShort')}
           </Typography>
         ) : message.webLookup.status === 'failed' ? (
           <Typography variant="caption" color="error.main">
-            {message.webLookup.error || 'Web search failed.'}
+            {message.webLookup.error || t('chat.webSearchFailed')}
           </Typography>
         ) : sources.length > 0 ? (
           <Stack spacing={0.75}>
             <Box>
               <Typography variant="caption" fontWeight={700}>
-                {sources.length === 1 ? 'Found source' : 'Found sources'}
+                {sources.length === 1
+                  ? t('chat.foundSource')
+                  : t('chat.foundSources')}
               </Typography>
               <Stack spacing={0.5} sx={{ mt: 0.25 }}>
                 {sources.map((source) => (
@@ -2535,7 +2572,7 @@ const DashboardChatPanel = ({
                           url: source.url,
                         })
                       }
-                      aria-label={`Open found source ${source.title}`}
+                      aria-label={`${t('chat.openSource')}: ${source.title}`}
                       sx={{
                         display: 'block',
                         width: '100%',
@@ -2567,7 +2604,19 @@ const DashboardChatPanel = ({
                         size="small"
                         variant="outlined"
                         startIcon={<AddCircleOutlineIcon fontSize="small" />}
-                        aria-label={`Add ${source.title} as page`}
+                        aria-label={`${t('chat.addThisSource')}: ${source.title}`}
+                        ref={(node) => {
+                          if (node) {
+                            externalSourceAddButtonRefs.current.set(
+                              source.id,
+                              node,
+                            )
+                          } else {
+                            externalSourceAddButtonRefs.current.delete(
+                              source.id,
+                            )
+                          }
+                        }}
                         disabled={source.guidePageDraftStatus !== 'ready'}
                         onClick={() => {
                           if (source.guidePageDraftStatus === 'ready') {
@@ -2934,11 +2983,11 @@ const DashboardChatPanel = ({
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Open external source?</DialogTitle>
+        <DialogTitle>{t('chat.openExternalSourceTitle')}</DialogTitle>
         <DialogContent>
           <Stack spacing={1}>
             <Typography variant="body2" color="text.secondary">
-              StudyMesh will open this source in a new tab.
+              {t('chat.openExternalSourceBody')}
             </Typography>
             <Typography variant="subtitle2" fontWeight={700}>
               {externalSourcePrompt?.title}
@@ -2953,9 +3002,11 @@ const DashboardChatPanel = ({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setExternalSourcePrompt(null)}>Cancel</Button>
+          <Button onClick={() => setExternalSourcePrompt(null)}>
+            {t('common.cancel')}
+          </Button>
           <Button variant="contained" onClick={confirmExternalSourceOpen}>
-            Open source
+            {t('chat.openSource')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -2982,6 +3033,7 @@ const DashboardChatPanel = ({
       >
         {chatSessions.map((session) => {
           const selected = session.id === activeChatId
+          const canDeleteSession = !isEmptyChatSession(session)
           const replyCount = session.messages.filter(
             (message) => message.role === 'assistant',
           ).length
@@ -3037,37 +3089,41 @@ const DashboardChatPanel = ({
                   {replyCount === 1 ? t('chat.reply') : t('chat.replies')}
                 </Typography>
               </Box>
-              <IconButton
-                size="small"
-                aria-label={`${t('chat.deleteChat')}: ${displayChatTitle(
-                  session.title,
-                )}`}
-                disableRipple
-                onClick={(event) => {
-                  event.stopPropagation()
-                  deleteChatSession(session.id)
-                }}
-                sx={{
-                  width: 32,
-                  height: 32,
-                  flex: '0 0 auto',
-                  border: 1,
-                  borderColor: alpha(theme.palette.text.primary, 0.14),
-                  color:
-                    theme.palette.mode === 'dark'
-                      ? theme.palette.error.light
-                      : theme.palette.error.dark,
-                  bgcolor: alpha(theme.palette.background.paper, 0.72),
-                  transition: 'none',
-                  '&:hover': {
-                    borderColor: alpha(theme.palette.error.main, 0.48),
-                    color: 'error.main',
-                    bgcolor: alpha(theme.palette.error.main, 0.1),
-                  },
-                }}
-              >
-                <DeleteOutlineIcon fontSize="small" />
-              </IconButton>
+              {canDeleteSession ? (
+                <IconButton
+                  size="small"
+                  aria-label={`${t('chat.deleteChat')}: ${displayChatTitle(
+                    session.title,
+                  )}`}
+                  disableRipple
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    deleteChatSession(session.id)
+                  }}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    flex: '0 0 auto',
+                    border: 1,
+                    borderColor: alpha(theme.palette.text.primary, 0.14),
+                    color:
+                      theme.palette.mode === 'dark'
+                        ? theme.palette.error.light
+                        : theme.palette.error.dark,
+                    bgcolor: alpha(theme.palette.background.paper, 0.72),
+                    transition: 'none',
+                    '&:hover': {
+                      borderColor: alpha(theme.palette.error.main, 0.48),
+                      color: 'error.main',
+                      bgcolor: alpha(theme.palette.error.main, 0.1),
+                    },
+                  }}
+                >
+                  <DeleteOutlineIcon fontSize="small" />
+                </IconButton>
+              ) : (
+                <Box sx={{ width: 32, height: 32, flex: '0 0 auto' }} />
+              )}
             </MenuItem>
           )
         })}

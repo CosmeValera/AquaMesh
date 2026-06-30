@@ -67,119 +67,6 @@ const assistantCitationNumbersFromMatch = (
   return citationMatch[2].split('').map((digit) => Number(digit))
 }
 
-const sourceDomain = (url: string): string => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '')
-  } catch {
-    return url
-  }
-}
-
-const cleanExternalSourceText = (text: string): string =>
-  text
-    .replace(/!\[[^\]]*]\([^)]*\)/g, '')
-    .replace(/\[([^\]]{1,180})]\([^)]*\)/g, '$1')
-    .replace(/\[\]\([^)]*\)/g, '')
-    .replace(/\[\]\(/g, '')
-    .replace(/#{1,6}\s*/g, '')
-    .replace(/data:image\/[^\s)]+/gi, '')
-    .replace(/https?:\/\/\S+/g, '')
-    .replace(/\bIf you already have an account,?\s*Sign in\.?/gi, '')
-    .replace(/\bShare\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-
-const sourceTitleStem = (title: string): string =>
-  title
-    .split(/\s+-\s+|\s+\|\s+/)[0]
-    .replace(/\s+/g, ' ')
-    .trim()
-
-const escapeRegExp = (value: string): string =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
-const focusExternalSourceText = (source: DashboardExternalSource): string => {
-  const cleaned = cleanExternalSourceText(source.text)
-  const titleStem = sourceTitleStem(source.title)
-
-  if (titleStem.length < 8) {
-    return cleaned
-  }
-
-  const titleIndex = cleaned.toLowerCase().indexOf(titleStem.toLowerCase())
-  return titleIndex > 0 ? cleaned.slice(titleIndex) : cleaned
-}
-
-const normalizeExternalSourceSentence = (
-  source: DashboardExternalSource,
-  sentence: string,
-): string => {
-  const titleStem = sourceTitleStem(source.title)
-  return sentence
-    .replace(
-      titleStem ? new RegExp(`^${escapeRegExp(titleStem)}\\s*[-|:]?\\s*`, 'i') : /^$/,
-      '',
-    )
-    .replace(/^(?:cold case christianity|answers in genesis)\s*[-|:]?\s*/i, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-const isUsefulExternalSourceSentence = (sentence: string): boolean => {
-  const normalized = sentence.trim()
-  const lower = normalized.toLowerCase()
-  const words = normalized.split(/\s+/).filter(Boolean)
-
-  return (
-    words.length >= 8 &&
-    normalized.length <= 320 &&
-    !/[{}<>[\]]/.test(normalized) &&
-    !/^\s*(?:about|books|writings|videos|articles|resources)\b/i.test(
-      normalized,
-    ) &&
-    !/\b(?:cookie|privacy policy|subscribe|newsletter|connect with us|what are you looking for|copyright|all rights reserved|menu|login|sign up|gospels contradict|case for christianity|share the gospel|start conversations|better christian case maker)\b/i.test(
-      lower,
-    )
-  )
-}
-
-const externalSourceExcerpts = (source: DashboardExternalSource): string[] => {
-  const focused = focusExternalSourceText(source)
-  const sentences = focused
-    .split(/(?<=[.!?])\s+|\s+[+*]\s+|\n+/)
-    .map((sentence) => normalizeExternalSourceSentence(source, sentence))
-    .filter(isUsefulExternalSourceSentence)
-
-  return Array.from(new Set(sentences)).slice(0, 6)
-}
-
-const buildExternalSourceMarkdown = (
-  source: DashboardExternalSource,
-): string => {
-  const summary = source.summary
-    ? cleanExternalSourceText(source.summary)
-    : externalSourceExcerpts(source)[0] || ''
-  const excerpts = externalSourceExcerpts(source).filter(
-    (excerpt) => excerpt !== summary,
-  )
-  const notes = [
-    summary ? `- ${summary}` : '',
-    ...excerpts.map((excerpt) => `- ${excerpt}`),
-  ].filter(Boolean)
-
-  return `# ${source.title}
-
-Source: [${sourceDomain(source.url)}](${source.url})
-
-## Useful notes from this source
-
-${
-  notes.length > 0
-    ? notes.join('\n')
-    : 'No clean excerpt was available. Open the original source before using it as study material.'
-}`
-}
-
 const normalizeGeneratedPageLayouts = (
   studyPath: StudyPathContainerState,
 ): StudyPathContainerState => {
@@ -374,9 +261,13 @@ const GuideWorkspacePage = () => {
   }
 
   const addExternalSourceToGuide = (source: DashboardExternalSource) => {
+    if (!source.guidePageDraft) {
+      return
+    }
+
     appendMarkdownPage(
-      source.title || t('workspace.webSource'),
-      buildExternalSourceMarkdown(source),
+      source.guidePageDraft.title || source.title || t('workspace.webSource'),
+      source.guidePageDraft.markdown,
       'chat',
     )
     setMobileSection('study-guide')

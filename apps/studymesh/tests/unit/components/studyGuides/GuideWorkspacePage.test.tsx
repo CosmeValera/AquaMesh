@@ -295,6 +295,13 @@ describe('GuideWorkspacePage responsive sections', () => {
         url: 'https://example.com/dinosaurs',
         title: 'Useful web source',
         text: 'Useful web source. Dinosaurs were discussed in this article with enough detail for a clean study note.',
+        guidePageDraftStatus: 'ready',
+        guidePageDraft: {
+          title: 'Useful web source',
+          markdown:
+            '# Useful web source\n\nSource: [example.com](https://example.com/dinosaurs)\n\n## Why this source matters\nThis page explains the useful dinosaur detail.',
+          generatedAt: 1,
+        },
         searchQuery: 'student typo query',
         fetchedAt: 1,
       })
@@ -306,7 +313,7 @@ describe('GuideWorkspacePage responsive sections', () => {
     expect(screen.queryByTestId('chat-panel')).not.toBeInTheDocument()
     expect(localStorage.setItem).toHaveBeenCalledWith(
       STUDY_GUIDES_STORAGE_KEY,
-      expect.stringContaining('Useful notes from this source'),
+      expect.stringContaining('Why this source matters'),
     )
     expect(localStorage.setItem).not.toHaveBeenCalledWith(
       STUDY_GUIDES_STORAGE_KEY,

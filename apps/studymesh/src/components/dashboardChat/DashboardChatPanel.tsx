@@ -59,6 +59,7 @@ import {
   fetchDashboardExternalSource,
   type DashboardExternalSource,
 } from '../../dashboardChat/externalSources'
+import { prepareDashboardExternalSourcePageDraft } from '../../dashboardChat/sourcePageDrafts'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
 import {
   quickCreateActionGroups,
@@ -246,6 +247,8 @@ const getQuickCreateActionDescriptionKey = (actionId: QuickCreateActionId) => {
 
 const SOURCE_REJECTION_PATTERN =
   /\b(?:don't|dont|do not|stop)\s+use\b|\btry another\b|\banother source\b|\bwrong source\b|\bbad source\b|\bnot that source\b/i
+const SOURCE_SUPPORT_FOLLOWUP_PATTERN =
+  /\b(?:what(?:'s| is)? your source|what source|cite|citation|where did you get|what(?:'s| is)? your basis|what(?:'s| is)? your base|base to say|source to say)\b/i
 const SMALLTALK_PATTERN =
   /^(?:hi|hello|hey|thanks?|thank you|thx|ty|ok|okay|cool|nice|great|what can you do\??)$/i
 const SMALLTALK_HINT_PATTERN =
@@ -257,6 +260,8 @@ const QUESTION_TERM_STOPWORDS = new Set([
   'apps',
   'app',
   'are',
+  'base',
+  'basis',
   'automatization',
   'automation',
   'and',
@@ -268,14 +273,19 @@ const QUESTION_TERM_STOPWORDS = new Set([
   'does',
   'from',
   'guide',
+  'information',
   'into',
   'lesson',
   'key',
   'ideas',
   'or',
   'source',
+  'sources',
   'study',
   'summarize',
+  'say',
+  'says',
+  'that',
   'the',
   'their',
   'this',
@@ -285,7 +295,11 @@ const QUESTION_TERM_STOPWORDS = new Set([
   'versus',
   'vs',
   'what',
+  'where',
+  'why',
   'with',
+  'you',
+  'your',
 ])
 const TECHNICAL_EVIDENCE_TERMS = [
   'automation',
@@ -813,6 +827,26 @@ const DashboardChatPanel = ({
     question: string,
     historyMessages: DashboardChatMessage[],
   ): string => {
+    const latestUserQuestion = [...historyMessages]
+      .reverse()
+      .find((message) => message.role === 'user')?.content
+    const previousAssistant = [...historyMessages]
+      .reverse()
+      .find((message) => message.role === 'assistant')
+    const sourceSupportFollowUp = SOURCE_SUPPORT_FOLLOWUP_PATTERN.test(question)
+
+    if (sourceSupportFollowUp && previousAssistant) {
+      const answerTerms = extractQuestionTerms(previousAssistant.content).slice(
+        0,
+        12,
+      )
+      return Array.from(
+        new Set([latestUserQuestion || '', ...answerTerms, question]),
+      )
+        .filter(Boolean)
+        .join(' ')
+    }
+
     const followUp =
       /\bwhat about\b|\bhow about\b|\bthey\b|\bthose\b|\bthem\b|\bit\b/i.test(
         question,
@@ -821,9 +855,6 @@ const DashboardChatPanel = ({
       return question
     }
 
-    const previousAssistant = [...historyMessages]
-      .reverse()
-      .find((message) => message.role === 'assistant')
     const priorTerms = previousAssistant
       ? extractQuestionTerms(previousAssistant.content)
           .filter((term) => contextTextContains(term))
@@ -855,10 +886,11 @@ const DashboardChatPanel = ({
       /\bwhat about\b|\bhow about\b|\bvs\b|\bcompare\b|\bdifference\b/i.test(
         question,
       )
+    const sourceSupportFollowUp = SOURCE_SUPPORT_FOLLOWUP_PATTERN.test(question)
 
-    return (comparisonFollowUp ? expandedTerms : questionTerms).filter(
-      (term) => !isConceptSufficientInDashboard(term, question),
-    )
+    return (
+      comparisonFollowUp || sourceSupportFollowUp ? expandedTerms : questionTerms
+    ).filter((term) => !isConceptSufficientInDashboard(term, expanded))
   }
 
   const contextTextContains = (term: string): boolean =>
@@ -1218,6 +1250,21 @@ const DashboardChatPanel = ({
   }, [messages])
 
   useEffect(() => {
+    if (messages.length === 0) {
+      return
+    }
+
+    const scrollId = window.setTimeout(() => {
+      chatScrollRef.current?.scrollTo({
+        top: chatScrollRef.current.scrollHeight,
+        behavior: 'auto',
+      })
+    }, 0)
+
+    return () => window.clearTimeout(scrollId)
+  }, [activeChatId, messages.length])
+
+  useEffect(() => {
     const refreshPet = () => {
       try {
         const stored = window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY)
@@ -1423,6 +1470,75 @@ const DashboardChatPanel = ({
     sources: DashboardExternalSource[],
   ): DashboardExternalSource[] => sources.map(upsertExternalSource)
 
+  const updateExternalSourceDraftState = (
+    sourceId: string,
+    updater: (source: DashboardExternalSource) => DashboardExternalSource,
+  ) => {
+    updateActiveChatExternalSources((externalSources) =>
+      externalSources.map((source) =>
+        source.id === sourceId ? updater(source) : source,
+      ),
+    )
+  }
+
+  const prepareGuidePageDraftsForSources = (
+    sourceIds: string[],
+    question: string,
+    answer: string,
+  ) => {
+    const uniqueSourceIds = Array.from(new Set(sourceIds))
+    const sources = uniqueSourceIds
+      .map(findExternalSourceById)
+      .filter((source): source is DashboardExternalSource => Boolean(source))
+      .filter(
+        (source) =>
+          source.guidePageDraftStatus !== 'ready' &&
+          source.guidePageDraftStatus !== 'pending',
+      )
+
+    if (sources.length === 0) {
+      return
+    }
+
+    sources.forEach((source) => {
+      updateExternalSourceDraftState(source.id, (current) => ({
+        ...current,
+        guidePageDraftStatus: 'pending',
+        guidePageDraftError: undefined,
+      }))
+    })
+
+    void (async () => {
+      for (const source of sources) {
+        try {
+          const draft = await prepareDashboardExternalSourcePageDraft({
+            source,
+            question,
+            dashboardTitle: context.dashboardTitle,
+            answer,
+            contentLanguage:
+              dashboard?.contentLanguage || dashboard?.studyPath?.contentLanguage,
+          })
+          updateExternalSourceDraftState(source.id, (current) => ({
+            ...current,
+            guidePageDraft: draft,
+            guidePageDraftStatus: 'ready',
+            guidePageDraftError: undefined,
+          }))
+        } catch (error) {
+          updateExternalSourceDraftState(source.id, (current) => ({
+            ...current,
+            guidePageDraftStatus: 'failed',
+            guidePageDraftError:
+              error instanceof Error
+                ? error.message
+                : 'Could not prepare this source page.',
+          }))
+        }
+      }
+    })()
+  }
+
   const buildExternalLookupContextSummary = (): string =>
     context.chunks
       .slice(0, 4)
@@ -1619,6 +1735,7 @@ const DashboardChatPanel = ({
         pending: false,
       }))
       updateLatestLookupDisplayedSources(externalSourceIds, usedWebSourceIds)
+      prepareGuidePageDraftsForSources(usedWebSourceIds, question, result.answer)
       if (!result.needsExternalSource) {
         rememberFinalAnswer({
           userQuestion: question,
@@ -2330,6 +2447,17 @@ const DashboardChatPanel = ({
         return source.url
       }
     }
+    const addSourceLabel = (source: DashboardExternalSource) => {
+      if (source.guidePageDraftStatus === 'ready') {
+        return 'Add this source'
+      }
+
+      if (source.guidePageDraftStatus === 'failed') {
+        return 'Could not prepare page'
+      }
+
+      return 'Preparing page...'
+    }
 
     return (
       <Box
@@ -2412,7 +2540,12 @@ const DashboardChatPanel = ({
                         variant="outlined"
                         startIcon={<AddCircleOutlineIcon fontSize="small" />}
                         aria-label={`Add ${source.title} as page`}
-                        onClick={() => onAddExternalSourceToGuide(source)}
+                        disabled={source.guidePageDraftStatus !== 'ready'}
+                        onClick={() => {
+                          if (source.guidePageDraftStatus === 'ready') {
+                            onAddExternalSourceToGuide(source)
+                          }
+                        }}
                         sx={{
                           display: 'flex',
                           mt: 0.75,
@@ -2421,7 +2554,7 @@ const DashboardChatPanel = ({
                           textTransform: 'none',
                         }}
                       >
-                        Add this source
+                        {addSourceLabel(source)}
                       </Button>
                     ) : null}
                   </Box>

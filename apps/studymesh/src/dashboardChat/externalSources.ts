@@ -5,6 +5,9 @@ export interface DashboardExternalSource {
   url: string
   title: string
   text: string
+  guidePageDraft?: DashboardExternalSourcePageDraft
+  guidePageDraftStatus?: 'pending' | 'ready' | 'failed'
+  guidePageDraftError?: string
   normalizedUrl?: string
   domain?: string
   summary?: string
@@ -14,6 +17,12 @@ export interface DashboardExternalSource {
   score?: number
   favicon?: string
   fetchedAt: number
+}
+
+export interface DashboardExternalSourcePageDraft {
+  title: string
+  markdown: string
+  generatedAt: number
 }
 
 export interface DashboardExternalSourceLookupRequest {

@@ -9,6 +9,7 @@ import DashboardChatPanel, {
 } from '../../../../src/components/dashboardChat/DashboardChatPanel'
 import { askDashboardSources } from '../../../../src/dashboardChat/askDashboard'
 import { fetchDashboardExternalSource } from '../../../../src/dashboardChat/externalSources'
+import { prepareDashboardExternalSourcePageDraft } from '../../../../src/dashboardChat/sourcePageDrafts'
 import type { StateDashboard } from '../../../../src/state/store'
 
 vi.mock('../../../../src/quickCreate/ai', () => ({
@@ -24,6 +25,11 @@ vi.mock('../../../../src/dashboardChat/askDashboard', () => ({
 vi.mock('../../../../src/dashboardChat/externalSources', () => ({
   __esModule: true,
   fetchDashboardExternalSource: vi.fn(),
+}))
+
+vi.mock('../../../../src/dashboardChat/sourcePageDrafts', () => ({
+  __esModule: true,
+  prepareDashboardExternalSourcePageDraft: vi.fn(),
 }))
 
 vi.mock(
@@ -149,6 +155,13 @@ beforeEach(() => {
       fetchedAt: 1,
     },
   ])
+  vi.mocked(prepareDashboardExternalSourcePageDraft).mockReset()
+  vi.mocked(prepareDashboardExternalSourcePageDraft).mockResolvedValue({
+    title: 'Ansible source notes',
+    markdown:
+      '# Ansible source notes\n\nSource: [example.com](https://example.com/ansible)\n\n## Why this source matters\nAnsible helps explain the missing comparison.\n\n## Key points\n- Ansible automates provisioning and configuration management.',
+    generatedAt: 1,
+  })
 })
 
 describe('DashboardChatPanel quick create menu', () => {
@@ -335,6 +348,33 @@ describe('DashboardChatPanel chat management', () => {
 
   const countEmptyChatSessions = (sessions: { messages: unknown[] }[]) =>
     sessions.filter((session) => session.messages.length === 0).length
+
+  it('scrolls to the latest message when opening a chat with history', async () => {
+    renderPanel({
+      messages: [
+        {
+          id: 'message-1',
+          role: 'user',
+          content: 'Earlier question',
+          createdAt: 1,
+        },
+        {
+          id: 'message-2',
+          role: 'assistant',
+          content: 'Latest answer',
+          createdAt: 2,
+        },
+      ],
+    })
+
+    await waitFor(() =>
+      expect(HTMLElement.prototype.scrollTo).toHaveBeenCalledWith(
+        expect.objectContaining({
+          behavior: 'auto',
+        }),
+      ),
+    )
+  })
 
   it('keeps one empty chat at the top when loading saved sessions', async () => {
     vi.mocked(localStorage.getItem).mockImplementation((key) =>
@@ -836,6 +876,7 @@ describe('DashboardChatPanel chat management', () => {
           }}
           onClose={vi.fn()}
           onQuickCreatePage={vi.fn()}
+          onAddExternalSourceToGuide={vi.fn()}
         />
       )
     }
@@ -867,6 +908,18 @@ describe('DashboardChatPanel chat management', () => {
     )
     expect(screen.queryByText('Add web source')).not.toBeInTheDocument()
     expect(await screen.findByText('Found source')).toBeInTheDocument()
+    await waitFor(() =>
+      expect(prepareDashboardExternalSourcePageDraft).toHaveBeenCalledWith(
+        expect.objectContaining({
+          question: 'How does Ansible compare?',
+          answer: 'Ansible automates provisioning [2].',
+          source: expect.objectContaining({ id: 'web-source-1' }),
+        }),
+      ),
+    )
+    expect(
+      await screen.findByRole('button', { name: 'Add Ansible guide as page' }),
+    ).toBeEnabled()
     const openSpy = vi.spyOn(window, 'open').mockReturnValue(null)
     fireEvent.click(
       screen.getByRole('button', { name: 'Open found source Ansible guide' }),
@@ -989,6 +1042,88 @@ describe('DashboardChatPanel chat management', () => {
     expect(lookupQuestion.toLowerCase()).not.toContain('summarize')
   })
 
+  it('uses the previous answer topic when a follow-up asks for sources', async () => {
+    vi.mocked(askDashboardSources)
+      .mockResolvedValueOnce({
+        answer:
+          'The Study Guide does not contain enough information about Vue or React.',
+        sourceRefs: [],
+        needsExternalSource: true,
+      })
+      .mockResolvedValueOnce({
+        answer: 'Vue and React can be compared using their official docs [2].',
+        sourceRefs: [
+          {
+            citationNumber: 2,
+            chunkId: 'web-source-vue-react',
+            title: 'Vue and React docs',
+            type: 'web source',
+            textPreview: 'Vue and React are JavaScript UI frameworks.',
+            origin: 'web',
+            url: 'https://example.com/vue-react',
+          },
+        ],
+        needsExternalSource: false,
+      })
+    vi.mocked(fetchDashboardExternalSource).mockResolvedValue([
+      {
+        id: 'web-source-vue-react',
+        url: 'https://example.com/vue-react',
+        title: 'Vue and React docs',
+        text: 'Vue and React are JavaScript UI frameworks for components, state, templates, JSX, and user interfaces.',
+        searchQuery: 'Vue React comparison',
+        fetchedAt: 1,
+      },
+    ])
+    const initialMessages = [
+      {
+        id: 'user-1',
+        role: 'user' as const,
+        content: 'difference between vue and react ?',
+        createdAt: 1,
+      },
+      {
+        id: 'assistant-1',
+        role: 'assistant' as const,
+        content:
+          'Vue is a progressive JavaScript framework with templates. React is a UI library using JSX and component state.',
+        createdAt: 2,
+      },
+    ]
+    const Harness = () => {
+      const [panelMessages, setPanelMessages] =
+        React.useState<
+          React.ComponentProps<typeof DashboardChatPanel>['messages']
+        >(initialMessages)
+
+      return (
+        <DashboardChatPanel
+          dashboard={dashboardWithContext}
+          messages={panelMessages}
+          onMessagesChange={setPanelMessages}
+          onClose={vi.fn()}
+          onQuickCreatePage={vi.fn()}
+        />
+      )
+    }
+
+    render(<Harness />)
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: 'what is your source to say that ?' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() => expect(fetchDashboardExternalSource).toHaveBeenCalled())
+    const lookupQuestion = vi.mocked(fetchDashboardExternalSource).mock
+      .calls[0][0].question
+    expect(lookupQuestion.toLowerCase()).toContain('vue')
+    expect(lookupQuestion.toLowerCase()).toContain('react')
+    expect(lookupQuestion.toLowerCase()).toContain('javascript')
+    expect(lookupQuestion.toLowerCase()).not.toContain('synonym')
+  })
+
   it('shows Add as page only when Study Guide supplies a web-source callback', async () => {
     const onAddExternalSourceToGuide = vi.fn()
     const messages = [
@@ -1013,6 +1148,13 @@ describe('DashboardChatPanel chat management', () => {
                   url: 'https://example.com/ansible',
                   title: 'Ansible guide',
                   text: 'Ansible automates provisioning and configuration management.',
+                  guidePageDraftStatus: 'ready',
+                  guidePageDraft: {
+                    title: 'Ansible source notes',
+                    markdown:
+                      '# Ansible source notes\n\nSource: [example.com](https://example.com/ansible)\n\n## Key points\n- Ansible automates provisioning.',
+                    generatedAt: 1,
+                  },
                   searchQuery: 'Ansible',
                   fetchedAt: 1,
                 },
@@ -1040,6 +1182,50 @@ describe('DashboardChatPanel chat management', () => {
     expect(onAddExternalSourceToGuide).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'web-source-1' }),
     )
+  })
+
+  it('disables Add source when the web source page draft failed', async () => {
+    const messages = [
+      {
+        id: 'assistant-1',
+        role: 'assistant' as const,
+        content: 'The dashboard sources do not contain enough information.',
+        webLookup: { status: 'found' as const, sourceId: 'web-source-1' },
+        createdAt: 1,
+      },
+    ]
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === 'studymesh-dashboard-chat-sessions-dashboard-1'
+        ? JSON.stringify([
+            {
+              id: 'chat-1',
+              title: 'Ansible',
+              messages,
+              externalSources: [
+                {
+                  id: 'web-source-1',
+                  url: 'https://example.com/ansible',
+                  title: 'Ansible guide',
+                  text: 'Boilerplate only.',
+                  guidePageDraftStatus: 'failed',
+                  guidePageDraftError: 'Source page draft was not clean enough.',
+                  searchQuery: 'Ansible',
+                  fetchedAt: 1,
+                },
+              ],
+              createdAt: 1,
+              updatedAt: 1,
+            },
+          ])
+        : null,
+    )
+
+    renderPanel({ messages, onAddExternalSourceToGuide: vi.fn() })
+
+    expect(
+      await screen.findByRole('button', { name: 'Add Ansible guide as page' }),
+    ).toBeDisabled()
+    expect(screen.getByText('Could not prepare page')).toBeInTheDocument()
   })
 
   it('rejects the previous found source and searches again when asked for another source', async () => {

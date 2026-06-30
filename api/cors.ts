@@ -34,6 +34,18 @@ export const getHeader = (headers: HeaderMap, name: string): string => {
 
 const normalizeOrigin = (origin: string): string => origin.replace(/\/+$/, '')
 
+const isLocalDevelopmentOrigin = (origin: string): boolean => {
+  try {
+    const url = new URL(origin)
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
+    )
+  } catch {
+    return false
+  }
+}
+
 export const getAllowedOrigins = (): Set<string> => {
   const origins = new Set<string>()
   const appUrl = getEnv('STUDYMESH_APP_URL')
@@ -62,7 +74,10 @@ export const applyCors = (
 ): CorsCheck => {
   const origin = normalizeOrigin(getHeader(req.headers, 'origin'))
   const allowedOrigins = getAllowedOrigins()
-  const allowed = !origin || allowedOrigins.has(origin)
+  const allowed =
+    !origin ||
+    allowedOrigins.has(origin) ||
+    (getEnv('NODE_ENV') !== 'production' && isLocalDevelopmentOrigin(origin))
 
   res.setHeader('vary', 'Origin')
   res.setHeader('access-control-allow-methods', 'POST, OPTIONS')

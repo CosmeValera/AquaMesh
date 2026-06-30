@@ -1,6 +1,6 @@
-// eld does not export the smaller browser bundles through package exports/types.
-// @ts-expect-error Internal ELD entry has no published declaration file.
-import { eld } from '../../../../node_modules/eld/src/entries/static.extrasmall.js'
+import { eld } from 'eld/extrasmall'
+
+export { createAiOutputLanguageInstruction } from './contentLanguagePrompt'
 
 export type StudyMeshLanguageCode =
   | 'en'
@@ -463,16 +463,3 @@ export const resolveContentLanguage = ({
   return { language: DEFAULT_CONTENT_LANGUAGE, source: 'fallback' }
 }
 
-export const createAiOutputLanguageInstruction = (
-  code: StudyMeshLanguageCode | undefined,
-): string => {
-  const language = getContentLanguagePromptName(
-    code || DEFAULT_CONTENT_LANGUAGE,
-  )
-  return [
-    `Output language: ${language}.`,
-    'Write every user-visible JSON string in that language, including title, folderName, summary, rawNotes, quickStart, lesson notes, questions, answers, hints, explanations, flashcards, and chat responses.',
-    'Keep JSON keys, enum values, citations, code, formulas, URLs, product names, and API names unchanged.',
-    'For language-learning content, the output language is the explanation language, not necessarily the language being studied. Use the studied language only for examples, vocabulary, and short phrases.',
-  ].join(' ')
-}

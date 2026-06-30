@@ -2,7 +2,7 @@ import type { StudyGuideQuickStart } from '../state/store'
 import {
   createAiOutputLanguageInstruction,
   type StudyMeshLanguageCode,
-} from '../language/contentLanguage'
+} from '../language/contentLanguagePrompt'
 import { sanitizeUserKnownTopics } from '../profileContext'
 
 export const STUDY_GUIDE_KEY_IDEA_MAX_WORDS = 35

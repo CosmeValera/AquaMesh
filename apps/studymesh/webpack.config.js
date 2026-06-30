@@ -29,6 +29,14 @@ module.exports = (_, argv) => ({
     hot: argv.mode === 'development',
     liveReload: argv.mode !== 'development',
     watchFiles: [path.resolve(__dirname, 'src')],
+    proxy: {
+      '/api': {
+        target:
+          process.env.STUDYMESH_API_DEV_ORIGIN || 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     client: {
       overlay: true,
     },

@@ -4,6 +4,10 @@ import {
   Box,
   Button,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Drawer,
   IconButton,
   InputAdornment,
@@ -39,7 +43,6 @@ import CheckIcon from '@mui/icons-material/Check'
 import CloseIcon from '@mui/icons-material/Close'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import ReplayIcon from '@mui/icons-material/Replay'
 import { StateDashboard } from '../../state/store'
 import {
@@ -112,6 +115,11 @@ interface DashboardChatSession {
   branchSnapshots?: Record<string, DashboardChatMessage[][]>
   createdAt: number
   updatedAt: number
+}
+
+interface ExternalSourcePrompt {
+  title: string
+  url: string
 }
 
 interface DashboardChatPanelProps {
@@ -427,14 +435,8 @@ const DashboardChatPanel = ({
   const [chatComposerHeight, setChatComposerHeight] = useState(108)
   const [chatComposerResized, setChatComposerResized] = useState(false)
   const [draftHasMultipleLines, setDraftHasMultipleLines] = useState(false)
-  const [userMessageMenuAnchor, setUserMessageMenuAnchor] =
-    useState<HTMLElement | null>(null)
-  const [userMessageMenuMessage, setUserMessageMenuMessage] =
-    useState<DashboardChatMessage | null>(null)
-  const [assistantMessageMenuAnchor, setAssistantMessageMenuAnchor] =
-    useState<HTMLElement | null>(null)
-  const [assistantMessageMenuMessage, setAssistantMessageMenuMessage] =
-    useState<DashboardChatMessage | null>(null)
+  const [externalSourcePrompt, setExternalSourcePrompt] =
+    useState<ExternalSourcePrompt | null>(null)
   const [quickCreateSourceScope, setQuickCreateSourceScope] =
     useState<QuickCreateSourceScope>(
       supportsStudyGuideCreateScope ? 'studyGuide' : 'currentPage',
@@ -687,6 +689,23 @@ const DashboardChatPanel = ({
     !/^The Study Guide does not contain enough info/i.test(message.content) &&
     !/^I could not find a reliable web source/i.test(message.content) &&
     !/^The provided .*do not contain/i.test(message.content)
+
+  const isWebLookupStatusOnlyMessage = (
+    message: DashboardChatMessage,
+  ): boolean =>
+    message.role === 'assistant' &&
+    Boolean(message.webLookup) &&
+    !message.pending &&
+    ((message.sourceRefs || []).length === 0 ||
+      message.needsExternalSource ||
+      /^This dashboard does not have enough source content/i.test(
+        message.content,
+      ) ||
+      /^The dashboard sources do not contain enough information/i.test(
+        message.content,
+      ) ||
+      /^The Study Guide does not contain enough info/i.test(message.content) ||
+      /^The provided .*do not contain/i.test(message.content))
 
   const answerSmalltalk = (question: string): string => {
     if (/^(?:cool|nice|great|ok|okay)$/i.test(question.trim())) {
@@ -1803,21 +1822,34 @@ const DashboardChatPanel = ({
     void navigator.clipboard?.writeText(content)
   }
 
-  const openSource = (source: DashboardAnswerSourceRef) => {
-    onOpenSource?.(source)
-    if (source.url && !onOpenSource) {
-      window.open(source.url, '_blank', 'noopener,noreferrer')
+  const requestExternalSourceOpen = (source: ExternalSourcePrompt) => {
+    setExternalSourcePrompt(source)
+  }
+
+  const confirmExternalSourceOpen = () => {
+    if (!externalSourcePrompt) {
+      return
     }
+
+    window.open(externalSourcePrompt.url, '_blank', 'noopener,noreferrer')
+    setExternalSourcePrompt(null)
   }
 
-  const closeUserMessageMenu = () => {
-    setUserMessageMenuAnchor(null)
-    setUserMessageMenuMessage(null)
-  }
+  const openSource = (source: DashboardAnswerSourceRef) => {
+    if (source.dashboardKey && onOpenSource) {
+      onOpenSource(source)
+      return
+    }
 
-  const closeAssistantMessageMenu = () => {
-    setAssistantMessageMenuAnchor(null)
-    setAssistantMessageMenuMessage(null)
+    if (source.url) {
+      requestExternalSourceOpen({
+        title: source.title || 'External source',
+        url: source.url,
+      })
+      return
+    }
+
+    onOpenSource?.(source)
   }
 
   const startEditingUserPrompt = (message: DashboardChatMessage) => {
@@ -2235,12 +2267,18 @@ const DashboardChatPanel = ({
         return `[${citationNumber}]`
       }
 
+      const isWebSource = source.origin === 'web'
+
       return (
         <Box
           key={key}
           component="button"
           type="button"
-          aria-label={`Open source ${citationNumber}`}
+          aria-label={
+            isWebSource
+              ? `Open web source ${citationNumber}`
+              : `Open source ${citationNumber}`
+          }
           onClick={(event) => {
             event.stopPropagation()
             openSource(source)
@@ -2251,6 +2289,7 @@ const DashboardChatPanel = ({
             height: 22,
             borderRadius: '50%',
             border: 1,
+            borderStyle: isWebSource ? 'dashed' : 'solid',
             borderColor: alpha(theme.palette.primary.main, 0.35),
             bgcolor: alpha(theme.palette.primary.main, 0.08),
             color: 'primary.main',
@@ -2324,12 +2363,21 @@ const DashboardChatPanel = ({
               </Typography>
               <Stack spacing={0.5} sx={{ mt: 0.25 }}>
                 {sources.map((source) => (
-                  <Box key={source.id}>
+                  <Box
+                    key={source.id}
+                    sx={{
+                      pb: 0.75,
+                      '&:last-child': { pb: 0 },
+                    }}
+                  >
                     <Box
                       component="button"
                       type="button"
                       onClick={() =>
-                        window.open(source.url, '_blank', 'noopener,noreferrer')
+                        requestExternalSourceOpen({
+                          title: source.title || 'External source',
+                          url: source.url,
+                        })
                       }
                       aria-label={`Open found source ${source.title}`}
                       sx={{
@@ -2351,34 +2399,35 @@ const DashboardChatPanel = ({
                     >
                       {source.title}
                     </Box>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block' }}
+                    >
                       {sourceDomain(source)}
                     </Typography>
+                    {onAddExternalSourceToGuide ? (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<AddCircleOutlineIcon fontSize="small" />}
+                        aria-label={`Add ${source.title} as page`}
+                        onClick={() => onAddExternalSourceToGuide(source)}
+                        sx={{
+                          display: 'flex',
+                          mt: 0.75,
+                          minHeight: 30,
+                          borderRadius: 1,
+                          textTransform: 'none',
+                        }}
+                      >
+                        Add this source
+                      </Button>
+                    ) : null}
                   </Box>
                 ))}
               </Stack>
             </Box>
-            {onAddExternalSourceToGuide ? (
-              <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                {sources.map((source) => (
-                  <Button
-                    key={source.id}
-                    size="small"
-                    variant="outlined"
-                    startIcon={<AddCircleOutlineIcon fontSize="small" />}
-                    onClick={() => onAddExternalSourceToGuide(source)}
-                    sx={{
-                      alignSelf: 'flex-start',
-                      minHeight: 30,
-                      borderRadius: 1,
-                      textTransform: 'none',
-                    }}
-                  >
-                    Add as page
-                  </Button>
-                ))}
-              </Stack>
-            ) : null}
           </Stack>
         ) : null}
       </Box>
@@ -2436,26 +2485,19 @@ const DashboardChatPanel = ({
 
     if (isMobile) {
       return (
-        <Tooltip title={t('chat.messageActions')}>
-          <IconButton
-            size="small"
-            aria-label={t('chat.assistantMessageActions')}
-            onClick={(event) => {
-              event.stopPropagation()
-              setAssistantMessageMenuAnchor(event.currentTarget)
-              setAssistantMessageMenuMessage(message)
-            }}
-            sx={{
-              ...userActionIconButtonSx,
-              position: 'absolute',
-              top: -10,
-              left: isPhone ? 40 : 48,
-              zIndex: 2,
-            }}
-          >
-            <MoreHorizIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
+        <Stack
+          direction="row"
+          spacing={0.35}
+          alignItems="center"
+          sx={{
+            ml: isPhone ? 5 : 6,
+            mt: 0.35,
+            p: 0.25,
+            borderRadius: 1,
+          }}
+        >
+          {actions}
+        </Stack>
       )
     }
 
@@ -2725,6 +2767,37 @@ const DashboardChatPanel = ({
           })}
         </Stack>
       </Popover>
+      <Dialog
+        open={Boolean(externalSourcePrompt)}
+        onClose={() => setExternalSourcePrompt(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Open external source?</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1}>
+            <Typography variant="body2" color="text.secondary">
+              StudyMesh will open this source in a new tab.
+            </Typography>
+            <Typography variant="subtitle2" fontWeight={700}>
+              {externalSourcePrompt?.title}
+            </Typography>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ overflowWrap: 'anywhere' }}
+            >
+              {externalSourcePrompt?.url}
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setExternalSourcePrompt(null)}>Cancel</Button>
+          <Button variant="contained" onClick={confirmExternalSourceOpen}>
+            Open source
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Menu
         anchorEl={chatMenuAnchor}
         open={chatMenuOpen}
@@ -2925,9 +2998,11 @@ const DashboardChatPanel = ({
                     message.role === 'user' ? 'flex-end' : 'flex-start',
                   maxWidth: message.role === 'user' ? '90%' : '96%',
                   width:
-                    message.role === 'user' && editingPromptId === message.id
-                      ? 'min(90%, 360px)'
-                      : 'auto',
+                    message.role === 'assistant'
+                      ? '100%'
+                      : message.role === 'user' && editingPromptId === message.id
+                        ? 'min(90%, 360px)'
+                        : 'auto',
                   minWidth: 0,
                   display: 'flex',
                   flexDirection: 'column',
@@ -2964,7 +3039,12 @@ const DashboardChatPanel = ({
                     },
                 }}
               >
-                <Stack direction="row" spacing={0.75} alignItems="flex-end">
+                <Stack
+                  direction="row"
+                  spacing={0.75}
+                  alignItems="flex-end"
+                  sx={{ maxWidth: '100%', minWidth: 0 }}
+                >
                   {message.role === 'assistant' && (
                     <Box
                       sx={{
@@ -2998,10 +3078,14 @@ const DashboardChatPanel = ({
                       minWidth: 0,
                       maxWidth: '100%',
                       width:
-                        message.role === 'user' &&
-                        editingPromptId === message.id
+                        message.role === 'assistant'
                           ? '100%'
-                          : 'auto',
+                          : message.role === 'user' &&
+                              editingPromptId === message.id
+                           ? '100%'
+                           : 'auto',
+                      flex: message.role === 'assistant' ? '1 1 auto' : undefined,
+                      overflow: 'hidden',
                       px: 1.5,
                       py: 1.1,
                       borderRadius: 1.5,
@@ -3087,7 +3171,23 @@ const DashboardChatPanel = ({
                             whiteSpace: 'pre-wrap',
                             overflowWrap: 'anywhere',
                           },
-                          '& code': { overflowWrap: 'anywhere' },
+                           '& code': { overflowWrap: 'anywhere' },
+                          '& .MuiTableContainer-root': {
+                            maxWidth: '100%',
+                            overflowX: 'auto',
+                            whiteSpace: 'normal',
+                          },
+                          '& .MuiTable-root': {
+                            minWidth: isPhone ? 520 : 560,
+                            tableLayout: 'auto',
+                          },
+                          '& .MuiTableCell-root': {
+                            minWidth: isPhone ? 132 : 148,
+                            whiteSpace: 'normal',
+                            wordBreak: 'normal',
+                            overflowWrap: 'normal',
+                            verticalAlign: 'top',
+                          },
                         }}
                       >
                         {renderMarkdown(message.content, {
@@ -3175,26 +3275,93 @@ const DashboardChatPanel = ({
                 </Stack>
                 {message.role === 'user' && editingPromptId !== message.id ? (
                   isMobile ? (
-                    <Tooltip title={t('chat.messageActions')}>
-                      <IconButton
-                        size="small"
-                        aria-label="User message actions"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          setUserMessageMenuAnchor(event.currentTarget)
-                          setUserMessageMenuMessage(message)
-                        }}
-                        sx={{
-                          ...userActionIconButtonSx,
-                          position: 'absolute',
-                          top: -10,
-                          right: -8,
-                          zIndex: 2,
-                        }}
-                      >
-                        <MoreHorizIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                    <Stack
+                      direction="row"
+                      spacing={0.35}
+                      justifyContent="flex-end"
+                      alignItems="center"
+                      sx={{
+                        mt: 0.35,
+                        p: 0.25,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Tooltip title={t('chat.copyPrompt')}>
+                        <IconButton
+                          size="small"
+                          aria-label={t('chat.copyPrompt')}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            copyUserPrompt(message.content)
+                          }}
+                          sx={userActionIconButtonSx}
+                        >
+                          <ContentCopyIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title={t('chat.editPrompt')}>
+                        <IconButton
+                          size="small"
+                          aria-label={t('chat.editPrompt')}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            startEditingUserPrompt(message)
+                          }}
+                          sx={userActionIconButtonSx}
+                        >
+                          <EditOutlinedIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      {message.promptBranchId &&
+                      (message.promptBranchCount || 0) > 1 ? (
+                        <>
+                          <IconButton
+                            size="small"
+                            aria-label="Previous prompt branch"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              switchUserPromptBranch(message, -1)
+                            }}
+                            sx={{
+                              ...userActionIconButtonSx,
+                              width: 22,
+                            }}
+                          >
+                            <ChevronLeftIcon fontSize="small" />
+                          </IconButton>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{
+                              minWidth: 24,
+                              textAlign: 'center',
+                              bgcolor: 'background.paper',
+                              border: 1,
+                              borderColor: 'divider',
+                              borderRadius: 1,
+                              px: 0.5,
+                            }}
+                          >
+                            {(message.promptBranchIndex ?? 0) + 1}/
+                            {message.promptBranchCount}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            aria-label="Next prompt branch"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              switchUserPromptBranch(message, 1)
+                            }}
+                            sx={{
+                              ...userActionIconButtonSx,
+                              width: 22,
+                            }}
+                          >
+                            <ChevronRightIcon fontSize="small" />
+                          </IconButton>
+                        </>
+                      ) : null}
+                    </Stack>
                   ) : (
                     <Stack
                       className="studymesh-user-message-actions"
@@ -3291,117 +3458,14 @@ const DashboardChatPanel = ({
                 ) : null}
                 {message.role === 'assistant' && !message.pending ? (
                   <>
-                    {renderAssistantActions(message)}
+                    {isWebLookupStatusOnlyMessage(message)
+                      ? null
+                      : renderAssistantActions(message)}
                     {renderWebLookupStatus(message)}
                   </>
                 ) : null}
               </Box>
             ))}
-            <Menu
-              anchorEl={userMessageMenuAnchor}
-              open={Boolean(userMessageMenuAnchor && userMessageMenuMessage)}
-              onClose={closeUserMessageMenu}
-              PaperProps={{ sx: { minWidth: 220 } }}
-            >
-              {userMessageMenuMessage ? (
-                <>
-                  <MenuItem
-                    onClick={() => {
-                      copyUserPrompt(userMessageMenuMessage.content)
-                      closeUserMessageMenu()
-                    }}
-                  >
-                    <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
-                    {t('chat.copyPrompt')}
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      startEditingUserPrompt(userMessageMenuMessage)
-                      closeUserMessageMenu()
-                    }}
-                  >
-                    <EditOutlinedIcon fontSize="small" sx={{ mr: 1 }} />
-                    {t('chat.editPrompt')}
-                  </MenuItem>
-                  {userMessageMenuMessage.promptBranchId &&
-                  (userMessageMenuMessage.promptBranchCount || 0) > 1 ? (
-                    <>
-                      <Divider />
-                      <MenuItem
-                        onClick={() => {
-                          switchUserPromptBranch(userMessageMenuMessage, -1)
-                          closeUserMessageMenu()
-                        }}
-                      >
-                        <ChevronLeftIcon fontSize="small" sx={{ mr: 1 }} />
-                        {t('chat.previousBranch')}
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          switchUserPromptBranch(userMessageMenuMessage, 1)
-                          closeUserMessageMenu()
-                        }}
-                      >
-                        <ChevronRightIcon fontSize="small" sx={{ mr: 1 }} />
-                        {t('chat.nextBranch')}
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ ml: 'auto' }}
-                        >
-                          {(userMessageMenuMessage.promptBranchIndex ?? 0) + 1}/
-                          {userMessageMenuMessage.promptBranchCount}
-                        </Typography>
-                      </MenuItem>
-                    </>
-                  ) : null}
-                </>
-              ) : null}
-            </Menu>
-            <Menu
-              anchorEl={assistantMessageMenuAnchor}
-              open={Boolean(
-                assistantMessageMenuAnchor && assistantMessageMenuMessage,
-              )}
-              onClose={closeAssistantMessageMenu}
-              PaperProps={{ sx: { minWidth: 220 } }}
-            >
-              {assistantMessageMenuMessage ? (
-                <>
-                  <MenuItem
-                    onClick={() => {
-                      copyAssistantAnswer(assistantMessageMenuMessage.content)
-                      closeAssistantMessageMenu()
-                    }}
-                  >
-                    <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
-                    {t('chat.copyAnswer')}
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      retryAssistantAnswer(assistantMessageMenuMessage)
-                      closeAssistantMessageMenu()
-                    }}
-                  >
-                    <ReplayIcon fontSize="small" sx={{ mr: 1 }} />
-                    {t('chat.retryAnswer')}
-                  </MenuItem>
-                  {onAddAssistantMessageToGuide ? (
-                    <MenuItem
-                      onClick={() => {
-                        onAddAssistantMessageToGuide(
-                          assistantMessageMenuMessage,
-                        )
-                        closeAssistantMessageMenu()
-                      }}
-                    >
-                      <AddCircleOutlineIcon fontSize="small" sx={{ mr: 1 }} />
-                      {t('chat.addToStudyGuide')}
-                    </MenuItem>
-                  ) : null}
-                </>
-              ) : null}
-            </Menu>
           </Stack>
         )}
         {replyScrollBufferActive &&

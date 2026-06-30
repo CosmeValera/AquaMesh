@@ -263,6 +263,57 @@ describe('GuideWorkspacePage responsive sections', () => {
     )
   })
 
+  it('shows the new Study Guide page after adding a web source from mobile chat', async () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <Routes>
+          <Route
+            path="/workspace/:studyGuideId"
+            element={<GuideWorkspacePage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await screen.findByTestId('study-guide-panel')
+    fireEvent.click(screen.getByRole('button', { name: 'AI Chat' }))
+    expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
+    const latestProps = dashboardChatPanelSpy.mock.calls.at(-1)?.[0] as {
+      onAddExternalSourceToGuide: (source: {
+        id: string
+        url: string
+        title: string
+        text: string
+        searchQuery: string
+        fetchedAt: number
+      }) => void
+    }
+
+    act(() => {
+      latestProps.onAddExternalSourceToGuide({
+        id: 'web-source-1',
+        url: 'https://example.com/dinosaurs',
+        title: 'Useful web source',
+        text: 'Useful web source. Dinosaurs were discussed in this article with enough detail for a clean study note.',
+        searchQuery: 'student typo query',
+        fetchedAt: 1,
+      })
+    })
+
+    expect(await screen.findByTestId('study-guide-panel')).toHaveTextContent(
+      'Useful web source',
+    )
+    expect(screen.queryByTestId('chat-panel')).not.toBeInTheDocument()
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      STUDY_GUIDES_STORAGE_KEY,
+      expect.stringContaining('Useful notes from this source'),
+    )
+    expect(localStorage.setItem).not.toHaveBeenCalledWith(
+      STUDY_GUIDES_STORAGE_KEY,
+      expect.stringContaining('student typo query'),
+    )
+  })
+
   it('saves adjacent assistant citations as separate internal page links', async () => {
     render(
       <MemoryRouter initialEntries={['/workspace/guide-1']}>

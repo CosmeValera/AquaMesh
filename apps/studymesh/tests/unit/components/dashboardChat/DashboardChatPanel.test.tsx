@@ -653,13 +653,14 @@ describe('DashboardChatPanel chat management', () => {
 
   it('renders inline citations and hides the old Based on block', () => {
     const onOpenSource = vi.fn()
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
     renderPanel({
       onOpenSource,
       messages: [
         {
           id: 'assistant-1',
           role: 'assistant',
-          content: 'Photosynthesis stores energy [1]. Unknown [9].',
+          content: 'Photosynthesis stores energy [1]. Web context [12]. Unknown [9].',
           createdAt: 1,
           sourceRefs: [
             {
@@ -671,6 +672,15 @@ describe('DashboardChatPanel chat management', () => {
               dashboardKey: 'lesson-1',
               dashboardTitle: 'Lesson 1',
             },
+            {
+              citationNumber: 12,
+              chunkId: 'web-source-1',
+              title: 'External photosynthesis source',
+              type: 'web source',
+              textPreview: 'External source preview.',
+              origin: 'web',
+              url: 'https://example.com/photosynthesis',
+            },
           ],
         },
       ],
@@ -681,11 +691,23 @@ describe('DashboardChatPanel chat management', () => {
     expect(onOpenSource).toHaveBeenCalledWith(
       expect.objectContaining({ citationNumber: 1, dashboardKey: 'lesson-1' }),
     )
+    fireEvent.click(screen.getByRole('button', { name: 'Open web source 12' }))
+    expect(screen.getByRole('dialog')).toHaveTextContent(
+      'External photosynthesis source',
+    )
+    expect(openSpy).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Open source' }))
+    expect(openSpy).toHaveBeenCalledWith(
+      'https://example.com/photosynthesis',
+      '_blank',
+      'noopener,noreferrer',
+    )
     expect(screen.queryByText('Based on:')).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'Open source 9' }),
     ).not.toBeInTheDocument()
     expect(document.body).toHaveTextContent('[9]')
+    openSpy.mockRestore()
   })
 
   it('does not render a bottom sources section after answers', () => {
@@ -849,6 +871,9 @@ describe('DashboardChatPanel chat management', () => {
     fireEvent.click(
       screen.getByRole('button', { name: 'Open found source Ansible guide' }),
     )
+    expect(openSpy).not.toHaveBeenCalled()
+    expect(screen.getByRole('dialog')).toHaveTextContent('Ansible guide')
+    fireEvent.click(screen.getByRole('button', { name: 'Open source' }))
     expect(openSpy).toHaveBeenCalledWith(
       'https://example.com/ansible',
       '_blank',
@@ -1001,7 +1026,16 @@ describe('DashboardChatPanel chat management', () => {
 
     renderPanel({ messages, onAddExternalSourceToGuide })
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Add as page' }))
+    expect(
+      screen.queryByRole('button', { name: 'Copy answer' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Retry answer' }),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Add Ansible guide as page' }),
+    )
 
     expect(onAddExternalSourceToGuide).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'web-source-1' }),

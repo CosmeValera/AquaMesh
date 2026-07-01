@@ -145,6 +145,7 @@ const generatePath = async () => {
 describe('CreateStudyGuideModal Study Guide generation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(localStorage.getItem).mockReturnValue(null)
     vi.mocked(readQuickCreateAiSettings).mockReturnValue({
       provider: 'gemini',
       apiToken: 'test-token',

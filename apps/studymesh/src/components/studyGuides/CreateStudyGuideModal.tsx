@@ -653,6 +653,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
     setLocalAiFailureDebug(null)
     setError('')
     const resolvedLanguage = resolveContentLanguage({ text: effectivePrompt })
+    const knownTopics = getAllUserKnownTopics()
     setResolvedContentLanguage(resolvedLanguage)
     if (autoCreateOnGenerate) {
       onCollapse?.()
@@ -668,7 +669,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
         prompt: effectivePrompt,
         outputLanguage: resolvedLanguage.language,
         signal: generationController.signal,
-        userKnownTopics: getAllUserKnownTopics(),
+        userKnownTopics: knownTopics,
         onProgress: (event) => {
           if (generationController.signal.aborted) {
             return

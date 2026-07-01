@@ -1,4 +1,7 @@
-import type { StudyGuideQuickStart } from '../state/store'
+import type {
+  StudyGuideQuickStart,
+  StudyGuideQuickStartVariant,
+} from '../state/store'
 import {
   createAiOutputLanguageInstruction,
   type StudyMeshLanguageCode,
@@ -21,6 +24,7 @@ const quickStartBridgeStrategies = [
   'light_reference',
   'none',
 ] as const
+const studyGuideBridgeModes = ['auto', 'force'] as const
 
 export type StudyGuideQuickStartTargetTopicType =
   (typeof quickStartTargetTopicTypes)[number]
@@ -30,6 +34,12 @@ export type StudyGuideQuickStartBridgeStrength =
 
 export type StudyGuideQuickStartBridgeStrategy =
   (typeof quickStartBridgeStrategies)[number]
+
+export type StudyGuideBridgeMode = (typeof studyGuideBridgeModes)[number]
+
+export const normalizeStudyGuideBridgeMode = (
+  value: unknown,
+): StudyGuideBridgeMode => (value === 'force' ? 'force' : 'auto')
 
 export interface StudyGuideQuickStartRelevanceDecision {
   shouldUseKnownTopic: boolean
@@ -116,6 +126,33 @@ export const createNeutralStudyGuideQuickStartRelevanceDecision =
     bridgeStrength: 'none',
     bridgeStrategy: 'none',
   })
+
+export const ensureForcedStudyGuideQuickStartRelevanceDecision = (
+  decision: StudyGuideQuickStartRelevanceDecision | undefined,
+  userKnownTopics: string[] = [],
+): StudyGuideQuickStartRelevanceDecision | undefined => {
+  const safeTopics = sanitizeUserKnownTopics(userKnownTopics, { maxTopics: 4 })
+  if (!safeTopics.length) {
+    return undefined
+  }
+
+  if (
+    decision?.shouldUseKnownTopic &&
+    decision.knownTopicsForQuickStart.length
+  ) {
+    return decision
+  }
+
+  return {
+    ...(decision || createNeutralStudyGuideQuickStartRelevanceDecision()),
+    shouldUseKnownTopic: true,
+    knownTopicsForQuickStart: safeTopics,
+    knownTopicRelevanceReason:
+      'Learner-context view requested. Choose the closest available learner context from these candidates, but frame the bridge as weak if the match is imperfect.',
+    bridgeStrength: 'weak',
+    bridgeStrategy: 'light_reference',
+  }
+}
 
 const parseJsonObject = (text: string): unknown => {
   try {
@@ -264,9 +301,9 @@ export const parseStudyGuideQuickStartRelevanceDecision = (
   }
 }
 
-export const sanitizeStudyGuideQuickStart = (
-  value: Partial<StudyGuideQuickStart> | null | undefined,
-): StudyGuideQuickStart | null => {
+const sanitizeStudyGuideQuickStartVariant = (
+  value: Partial<StudyGuideQuickStartVariant> | null | undefined,
+): StudyGuideQuickStartVariant | null => {
   const keyIdea = clampWords(
     stripTextLabels(String(value?.keyIdea || ''))
       .replace(/\s+/g, ' ')
@@ -306,6 +343,18 @@ export const sanitizeStudyGuideQuickStart = (
   return { keyIdea, quickSummary }
 }
 
+export const sanitizeStudyGuideQuickStart = (
+  value: Partial<StudyGuideQuickStart> | null | undefined,
+): StudyGuideQuickStart | null => {
+  const base = sanitizeStudyGuideQuickStartVariant(value)
+  if (!base) {
+    return null
+  }
+
+  const forcedBridge = sanitizeStudyGuideQuickStartVariant(value?.forcedBridge)
+  return forcedBridge ? { ...base, forcedBridge } : base
+}
+
 export const parseStudyGuideQuickStart = (
   text: string,
 ): StudyGuideQuickStart | null => {
@@ -326,6 +375,7 @@ export const parseStudyGuideQuickStart = (
 export const parseStudyGuideKnowledgeBridgeBlocks = (
   text: string,
   dashboardCount: number,
+  allowedDashboardIndexes?: number[],
 ): StudyGuideKnowledgeBridgeBlock[] => {
   let parsed: unknown
   try {
@@ -342,6 +392,9 @@ export const parseStudyGuideKnowledgeBridgeBlocks = (
     ? (parsed as Record<string, unknown>).blocks
     : []
   const usedIndexes = new Set<number>()
+  const allowedIndexes = Array.isArray(allowedDashboardIndexes)
+    ? new Set(allowedDashboardIndexes)
+    : null
 
   return blocks
     .map((block) => {
@@ -366,6 +419,7 @@ export const parseStudyGuideKnowledgeBridgeBlocks = (
       if (
         dashboardIndex < 0 ||
         dashboardIndex >= dashboardCount ||
+        (allowedIndexes && !allowedIndexes.has(dashboardIndex)) ||
         usedIndexes.has(dashboardIndex) ||
         !title ||
         !body
@@ -384,19 +438,23 @@ export const buildStudyGuideQuickStartPrompt = ({
   title,
   source,
   relevanceDecision,
+  bridgeMode = 'auto',
   outputLanguage,
 }: {
   title: string
   source: string
   relevanceDecision?: StudyGuideQuickStartRelevanceDecision
+  bridgeMode?: StudyGuideBridgeMode
   outputLanguage?: StudyMeshLanguageCode
 }): string => {
   const decision =
     relevanceDecision || createNeutralStudyGuideQuickStartRelevanceDecision()
+  const mode = normalizeStudyGuideBridgeMode(bridgeMode)
+  const forcedBridge = mode === 'force'
   const selectedTopics = sanitizeUserKnownTopics(
     decision.knownTopicsForQuickStart,
     {
-      maxTopics: 2,
+      maxTopics: forcedBridge ? 4 : 2,
     },
   )
   const shouldUseKnownTopic =
@@ -421,18 +479,25 @@ Rules:
 - Do not write "This guide teaches...", "This guide explains...", "This page explains...", "You will learn...", or similar framing.
 - Introduce at most 2-3 new technical terms. Prefer plain words for everything else.
 - Avoid cute, random, or decorative analogies when a direct explanation or direct comparison is clearer.
+- Bridge mode: ${mode}.
 ${
   shouldUseKnownTopic
-    ? `- Use only this selected known topic bridge if it improves clarity: ${selectedTopics.join(', ')}.
+    ? `- Candidate known topic bridge(s): ${selectedTopics.join(', ')}.
 - Why this bridge helps: ${decision.knownTopicRelevanceReason}
 - Bridge strength: ${decision.bridgeStrength}.
 - Bridge strategy: ${decision.bridgeStrategy}.
+- If bridge mode is force and multiple candidate topics are listed, choose the single candidate that best reduces confusion for this target topic; do not use the first candidate by default.
 - If bridge strength is strong, the selected known topic must lead the Quick Start. Do not save it for a final caveat.
+- If bridge mode is force and bridge strength is weak, keep keyIdea neutral, explain the topic directly first, then use the selected topic as a short contrast in quickSummary.
+- If bridge mode is force, state where the comparison breaks. Do not pretend a weak bridge is exact.
 - If bridge strategy is analogy_skeleton, start from the known topic, sustain the mapping through the explanation, then briefly say where the analogy breaks.
 - If bridge strategy is direct_comparison, compare the new concept directly with the selected known topic.
 - If bridge strategy is light_reference, use a normal explanation and mention the known topic at most once.
 - Include one brief caveat about where the comparison breaks in quickSummary.`
-    : `- No known topic was selected as clearly useful. Do not force a personalized analogy.
+    : forcedBridge
+      ? `- Force bridge was requested, but no safe known topic was selected. Use a neutral beginner-friendly explanation.
+- Do not invent a bridge. Include one brief caveat, boundary, or common misconception in quickSummary.`
+      : `- No known topic was selected as clearly useful. Do not force a personalized analogy.
 - Use a neutral beginner-friendly explanation and include one brief caveat, boundary, or common misconception in quickSummary.`
 }
 - Target topic type: ${decision.targetTopicType}.
@@ -449,15 +514,18 @@ export const buildStudyGuideQuickStartRelevancePrompt = ({
   prompt,
   source,
   userKnownTopics = [],
+  bridgeMode = 'auto',
   outputLanguage,
 }: {
   title: string
   prompt: string
   source: string
   userKnownTopics?: string[]
+  bridgeMode?: StudyGuideBridgeMode
   outputLanguage?: StudyMeshLanguageCode
 }): string => {
   const safeTopics = sanitizeUserKnownTopics(userKnownTopics)
+  const mode = normalizeStudyGuideBridgeMode(bridgeMode)
 
   return `Choose whether any known topic should be used to explain the Study Guide topic in its Quick Start.
 
@@ -473,6 +541,7 @@ Return strict JSON only with this shape:
 
 Decision rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
+- Bridge mode: ${mode}.
 - Goal: reduce learner cognitive effort, not personalize every Quick Start.
 - Choose only from provided known topics. Never invent a known topic.
 - Use at most 1 known topic. Use 2 only when both are clearly relevant and same-domain.
@@ -488,7 +557,11 @@ Decision rules:
 - Use analogy_skeleton only when the known topic maps structurally to the new concept across multiple parts and the limits are easy to state.
 - Use light_reference only for weak but genuinely helpful bridges.
 - Human or management target: avoid infrastructure/tool analogies unless explicitly requested.
-- If no topic clearly helps, set shouldUseKnownTopic false, knownTopicsForQuickStart [], bridgeStrength "none", and bridgeStrategy "none".
+- Auto mode: if no topic clearly helps, set shouldUseKnownTopic false, knownTopicsForQuickStart [], bridgeStrength "none", and bridgeStrategy "none".
+- Force mode: the user explicitly wants the closest useful bridge from their knowledge. Rank the provided known topics by usefulness and select the least-bad bridge, even when the bridge is only weak.
+- Force mode: do not return no bridge merely because every option is imperfect. Return no bridge only if every available comparison would actively mislead the learner, be unsafe, or be dehumanizing.
+- Force mode: if the bridge is weak but still useful as a contrast, select it with bridgeStrength "weak" and bridgeStrategy "light_reference"; explain in knownTopicRelevanceReason that it is imperfect.
+- Force mode: interpret learner topic wording flexibly, but do not use hidden hardcoded topic-pair rules.
 - Do not write the Quick Start.
 
 Generic examples:
@@ -510,20 +583,24 @@ export const buildStudyGuideKnowledgeBridgeBlocksPrompt = ({
   prompt,
   dashboards,
   relevanceDecision,
+  bridgeMode = 'auto',
   outputLanguage,
 }: {
   title: string
   prompt: string
   dashboards: Array<{
+    dashboardIndex?: number
     title: string
     summary?: string
     rawNotes?: string
   }>
   relevanceDecision?: StudyGuideQuickStartRelevanceDecision
+  bridgeMode?: StudyGuideBridgeMode
   outputLanguage?: StudyMeshLanguageCode
 }): string => {
   const decision =
     relevanceDecision || createNeutralStudyGuideQuickStartRelevanceDecision()
+  const mode = normalizeStudyGuideBridgeMode(bridgeMode)
   const selectedTopics = sanitizeUserKnownTopics(
     decision.knownTopicsForQuickStart,
     { maxTopics: 2 },
@@ -536,7 +613,7 @@ export const buildStudyGuideKnowledgeBridgeBlocksPrompt = ({
   const dashboardExcerpt = dashboards
     .map((dashboard, index) =>
       [
-        `dashboardIndex: ${index}`,
+        `dashboardIndex: ${dashboard.dashboardIndex ?? index}`,
         `title: ${dashboard.title || `Dashboard ${index + 1}`}`,
         dashboard.summary ? `summary: ${dashboard.summary}` : '',
         dashboard.rawNotes
@@ -564,11 +641,14 @@ Return strict JSON only:
 Rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
 - The base Study Guide already exists. Do not rewrite lessons.
+- Bridge mode: ${mode}.
 - Selected known topic bridge: ${selectedTopics.join(', ')}.
 - Bridge reason: ${decision.knownTopicRelevanceReason}
 - Bridge strength: ${decision.bridgeStrength}.
 - Bridge strategy: ${decision.bridgeStrategy}.
-- Add 0-2 blocks total. Return [] if no dashboard has a natural bridge.
+- The dashboards below are already eligible for bridge notes. Do not mention first-page or quiz-page placement rules.
+- Auto mode: add 0-2 blocks total. Return [] if no dashboard has a natural bridge.
+- Force mode: add 1 block when a safe bridge can help one eligible dashboard; return [] only when every possible bridge would mislead.
 - Use each dashboardIndex at most once. dashboardIndex is zero-based.
 - Each block must connect one freshly taught concept to the selected known topic.
 - Keep body short, concrete, and note-like.

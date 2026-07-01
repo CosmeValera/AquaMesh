@@ -7,6 +7,7 @@ import React, {
 } from 'react'
 import {
   Box,
+  Button,
   IconButton,
   Paper,
   Stack,
@@ -110,111 +111,137 @@ const StudyGuideQuickStartCard = ({
   expanded: boolean
   onToggle: () => void
   t: ReturnType<typeof useInterfaceText>['t']
-}) => (
-  <Box
-    sx={{
-      px: { xs: 1, md: 3 },
-      pt: { xs: 1, md: 3 },
-      display: 'flex',
-      justifyContent: 'center',
-    }}
-  >
-    <Paper
-      variant="outlined"
-      data-testid="study-guide-quick-start-card"
+}) => {
+  const [showForcedBridge, setShowForcedBridge] = useState(false)
+  const activeQuickStart =
+    showForcedBridge && quickStart.forcedBridge
+      ? quickStart.forcedBridge
+      : quickStart
+
+  return (
+    <Box
       sx={{
-        width: '100%',
-        maxWidth: 960,
-        borderRadius: 2,
-        p: { xs: 2, md: 2.5 },
-        bgcolor: 'background.paper',
+        px: { xs: 1, md: 3 },
+        pt: { xs: 1, md: 3 },
+        display: 'flex',
+        justifyContent: 'center',
       }}
     >
-      <Stack spacing={expanded ? 2 : 0}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          gap={2}
-        >
-          <Box minWidth={0}>
-            <Typography variant="subtitle1" fontWeight={800}>
-              {t('workspace.quickStart')}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {t('workspace.keyIdeaBeforeReading')}
-            </Typography>
-          </Box>
-          <Tooltip
-            title={
-              expanded
-                ? t('workspace.collapseQuickStart')
-                : t('workspace.expandQuickStart')
-            }
+      <Paper
+        variant="outlined"
+        data-testid="study-guide-quick-start-card"
+        sx={{
+          width: '100%',
+          maxWidth: 960,
+          borderRadius: 2,
+          p: { xs: 2, md: 2.5 },
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Stack spacing={expanded ? 2 : 0}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            gap={2}
           >
-            <IconButton
-              size="small"
-              aria-label={
+            <Box minWidth={0}>
+              <Typography variant="subtitle1" fontWeight={800}>
+                {t('workspace.quickStart')}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {t('workspace.keyIdeaBeforeReading')}
+              </Typography>
+            </Box>
+            <Tooltip
+              title={
                 expanded
                   ? t('workspace.collapseQuickStart')
                   : t('workspace.expandQuickStart')
               }
-              onClick={onToggle}
-              sx={pageIconButtonSx()}
             >
-              {expanded ? (
-                <ExpandLessIcon fontSize="small" />
-              ) : (
-                <ExpandMoreIcon fontSize="small" />
-              )}
-            </IconButton>
-          </Tooltip>
-        </Stack>
-        {expanded ? (
-          <Stack spacing={1.75}>
-            <Box>
-              <Typography
-                variant="overline"
-                color="primary"
-                fontWeight={800}
-                sx={{ letterSpacing: 0 }}
+              <IconButton
+                size="small"
+                aria-label={
+                  expanded
+                    ? t('workspace.collapseQuickStart')
+                    : t('workspace.expandQuickStart')
+                }
+                onClick={onToggle}
+                sx={pageIconButtonSx()}
               >
-                {t('workspace.keyIdea')}
-              </Typography>
-              <Typography variant="body1" sx={{ lineHeight: 1.65 }}>
-                {quickStart.keyIdea}
-              </Typography>
-            </Box>
-            <Box>
-              <Typography
-                variant="overline"
-                color="primary"
-                fontWeight={800}
-                sx={{ letterSpacing: 0 }}
-              >
-                {t('workspace.quickSummary')}
-              </Typography>
-              <Stack spacing={1}>
-                {quickSummaryParagraphs(quickStart.quickSummary).map(
-                  (paragraph, index) => (
-                    <Typography
-                      key={`${paragraph.slice(0, 24)}-${index}`}
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ lineHeight: 1.7 }}
-                    >
-                      {paragraph}
-                    </Typography>
-                  ),
+                {expanded ? (
+                  <ExpandLessIcon fontSize="small" />
+                ) : (
+                  <ExpandMoreIcon fontSize="small" />
                 )}
-              </Stack>
-            </Box>
+              </IconButton>
+            </Tooltip>
           </Stack>
-        ) : null}
-      </Stack>
-    </Paper>
-  </Box>
-)
+          {expanded ? (
+            <Stack spacing={1.75}>
+              {quickStart.forcedBridge && (
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <Button
+                    size="small"
+                    variant={showForcedBridge ? 'outlined' : 'contained'}
+                    onClick={() => setShowForcedBridge(false)}
+                  >
+                    {t('workspace.defaultQuickStart')}
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={showForcedBridge ? 'contained' : 'outlined'}
+                    onClick={() => setShowForcedBridge(true)}
+                  >
+                    {t('workspace.forcedBridgeQuickStart')}
+                  </Button>
+                </Stack>
+              )}
+              <Box>
+                <Typography
+                  variant="overline"
+                  color="primary"
+                  fontWeight={800}
+                  sx={{ letterSpacing: 0 }}
+                >
+                  {t('workspace.keyIdea')}
+                </Typography>
+                <Typography variant="body1" sx={{ lineHeight: 1.65 }}>
+                  {activeQuickStart.keyIdea}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography
+                  variant="overline"
+                  color="primary"
+                  fontWeight={800}
+                  sx={{ letterSpacing: 0 }}
+                >
+                  {t('workspace.quickSummary')}
+                </Typography>
+                <Stack spacing={1}>
+                  {quickSummaryParagraphs(activeQuickStart.quickSummary).map(
+                    (paragraph, index) => (
+                      <Typography
+                        key={`${paragraph.slice(0, 24)}-${index}`}
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ lineHeight: 1.7 }}
+                      >
+                        {paragraph}
+                      </Typography>
+                    ),
+                  )}
+                </Stack>
+              </Box>
+            </Stack>
+          ) : null}
+        </Stack>
+      </Paper>
+    </Box>
+  )
+}
 
 const sanitizeStudentWidgetName = (name?: string): string | undefined => {
   if (!name) {

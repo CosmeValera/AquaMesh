@@ -277,9 +277,9 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
         parts,
         responseSchema,
         timeoutMs,
-        ...(userKnownTopics?.length
-          ? { quickStartOptions: { userKnownTopics } }
-          : {}),
+        quickStartOptions: {
+          ...(userKnownTopics?.length ? { userKnownTopics } : {}),
+        },
       })
       const text = payload.text?.trim()
 

@@ -815,6 +815,16 @@ describe('API payment and hosted AI hardening', () => {
                               summary: 'Backend flow preview.',
                               rawNotes:
                                 'Backend systems receive requests and coordinate durable work.',
+                              dashboardRole: 'normal',
+                              practiceType: 'none',
+                            },
+                            {
+                              title: '02 - Backend durability',
+                              summary: 'Backend durability preview.',
+                              rawNotes:
+                                'Backend systems can coordinate durable asynchronous work.',
+                              dashboardRole: 'normal',
+                              practiceType: 'none',
                             },
                           ],
                         })
@@ -838,7 +848,7 @@ describe('API payment and hosted AI hardening', () => {
                           : JSON.stringify({
                               blocks: [
                                 {
-                                  dashboardIndex: 0,
+                                  dashboardIndex: 1,
                                   title: 'Backend bridge',
                                   body: 'Backend request flow is a useful comparison, but Kafka-style durability changes the shape.',
                                 },
@@ -888,25 +898,30 @@ describe('API payment and hosted AI hardening', () => {
       },
       bridgeBlocks: [
         {
-          dashboardIndex: 0,
+          dashboardIndex: 1,
           title: 'Backend bridge',
           body: 'Backend request flow is a useful comparison, but Kafka-style durability changes the shape.',
         },
       ],
     })
+    expect(response.body.quickStart).not.toHaveProperty('forcedBridge')
     expect(providerBodies).toHaveLength(4)
     expect(JSON.stringify(providerBodies[1])).toContain(
       'Known topics, strongest first: Backend, Databases',
     )
+    expect(JSON.stringify(providerBodies[1])).toContain('Bridge mode: auto')
     expect(JSON.stringify(providerBodies[2])).toContain(
-      'Use only this selected known topic bridge if it improves clarity: Backend',
+      'Candidate known topic bridge(s): Backend',
     )
     expect(JSON.stringify(providerBodies[2])).not.toContain(
-      'Use only this selected known topic bridge if it improves clarity: Backend, Databases',
+      'Candidate known topic bridge(s): Backend, Databases',
     )
+    expect(JSON.stringify(providerBodies)).not.toContain('Bridge mode: force')
     expect(JSON.stringify(providerBodies[3])).toContain(
       'Create optional knowledge-context bridge note blocks',
     )
+    expect(JSON.stringify(providerBodies[3])).toContain('dashboardIndex: 1')
+    expect(JSON.stringify(providerBodies[3])).not.toContain('dashboardIndex: 0')
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 2 })
     expect(rpcBodies[1].p_provider_call_count).toBe(4)

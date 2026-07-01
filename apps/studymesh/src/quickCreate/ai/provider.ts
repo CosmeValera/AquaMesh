@@ -29,6 +29,7 @@ import {
   buildStudyGuideKnowledgeBridgeBlocksPrompt,
   buildStudyGuideQuickStartPrompt,
   buildStudyGuideQuickStartRelevancePrompt,
+  ensureForcedStudyGuideQuickStartRelevanceDecision,
   parseStudyGuideKnowledgeBridgeBlocks,
   parseStudyGuideQuickStart,
   parseStudyGuideQuickStartRelevanceDecision,
@@ -38,6 +39,7 @@ import {
   STUDY_GUIDE_QUICK_START_SCHEMA,
 } from '../../studyGuides/quickStart'
 import type {
+  StudyGuideBridgeMode,
   StudyGuideKnowledgeBridgeBlock,
   StudyGuideQuickStartRelevanceDecision,
 } from '../../studyGuides/quickStart'
@@ -93,6 +95,77 @@ const makeKnowledgeBridgeNote = (
   tags: ['knowledge-context-bridge'],
 })
 
+const normalizeComparableTitle = (value: string): string =>
+  value
+    .trim()
+    .replace(/^#+\s*/, '')
+    .replace(/^\d+\s*[-.)]\s+/, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+
+const stripTrailingDuplicateMarkdownTitle = (
+  markdown: string,
+  title: string,
+): string => {
+  const normalizedTitle = normalizeComparableTitle(title)
+  if (!normalizedTitle) {
+    return markdown
+  }
+
+  const lines = markdown.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n')
+  let lastContentIndex = lines.length - 1
+  while (lastContentIndex >= 0 && !lines[lastContentIndex].trim()) {
+    lastContentIndex -= 1
+  }
+
+  if (lastContentIndex < 0) {
+    return ''
+  }
+
+  const lastLine = lines[lastContentIndex].trim()
+  const headingMatch = lastLine.match(/^#{1,6}\s+(.+)$/)
+  const lastLineTitle = headingMatch?.[1] || lastLine
+  if (normalizeComparableTitle(lastLineTitle) !== normalizedTitle) {
+    return markdown
+  }
+
+  return lines.slice(0, lastContentIndex).join('\n').replace(/\n+$/g, '')
+}
+
+const stripDashboardTitleEchoBeforeBridge = (
+  dashboard: AiStudyPathDraft['dashboards'][number],
+): AiStudyPathDraft['dashboards'][number] => ({
+  ...dashboard,
+  rawNotes: stripTrailingDuplicateMarkdownTitle(
+    dashboard.rawNotes,
+    dashboard.title,
+  ),
+  objects: dashboard.objects.map((object) =>
+    object.kind === 'markdown'
+      ? {
+          ...object,
+          markdown: stripTrailingDuplicateMarkdownTitle(
+            object.markdown,
+            dashboard.title,
+          ),
+        }
+      : object,
+  ),
+})
+
+const getEligibleKnowledgeBridgeDashboards = (draft: AiStudyPathDraft) =>
+  draft.dashboards
+    .map((dashboard, index) => ({ dashboard, index }))
+    .filter(
+      ({ dashboard, index }) =>
+        index > 0 &&
+        dashboard.dashboardRole === 'normal' &&
+        dashboard.practiceType === 'none',
+    )
+
+const getEligibleKnowledgeBridgeIndexes = (draft: AiStudyPathDraft) =>
+  getEligibleKnowledgeBridgeDashboards(draft).map(({ index }) => index)
+
 const applyKnowledgeBridgeBlocks = (
   draft: AiStudyPathDraft,
   blocks: StudyGuideKnowledgeBridgeBlock[],
@@ -124,11 +197,12 @@ const applyKnowledgeBridgeBlocks = (
         return dashboard
       }
 
+      const cleanDashboard = stripDashboardTitleEchoBeforeBridge(dashboard)
       return {
-        ...dashboard,
+        ...cleanDashboard,
         objects: [
-          ...dashboard.objects,
-          makeKnowledgeBridgeNote(block, dashboard.title),
+          ...cleanDashboard.objects,
+          makeKnowledgeBridgeNote(block, cleanDashboard.title),
         ],
       }
     }),
@@ -143,6 +217,7 @@ const generateStudyGuideKnowledgeBridgeBlocksWithAi = async ({
   prompt,
   draft,
   relevanceDecision,
+  bridgeMode = 'auto',
   outputLanguage,
 }: {
   provider: QuickCreateAiProvider
@@ -152,6 +227,7 @@ const generateStudyGuideKnowledgeBridgeBlocksWithAi = async ({
   prompt: string
   draft: AiStudyPathDraft
   relevanceDecision?: StudyGuideQuickStartRelevanceDecision
+  bridgeMode?: StudyGuideBridgeMode
   outputLanguage?: StudyMeshLanguageCode
 }): Promise<StudyGuideKnowledgeBridgeBlock[]> => {
   if (
@@ -159,6 +235,11 @@ const generateStudyGuideKnowledgeBridgeBlocksWithAi = async ({
     !relevanceDecision?.shouldUseKnownTopic ||
     !relevanceDecision.knownTopicsForQuickStart.length
   ) {
+    return []
+  }
+
+  const eligibleDashboards = getEligibleKnowledgeBridgeDashboards(draft)
+  if (!eligibleDashboards.length) {
     return []
   }
 
@@ -172,12 +253,14 @@ const generateStudyGuideKnowledgeBridgeBlocksWithAi = async ({
           text: buildStudyGuideKnowledgeBridgeBlocksPrompt({
             title,
             prompt,
-            dashboards: draft.dashboards.map((dashboard) => ({
+            dashboards: eligibleDashboards.map(({ dashboard, index }) => ({
+              dashboardIndex: index,
               title: dashboard.title,
               summary: dashboard.summary,
               rawNotes: dashboard.rawNotes,
             })),
             relevanceDecision,
+            bridgeMode,
             outputLanguage,
           }),
         },
@@ -186,7 +269,11 @@ const generateStudyGuideKnowledgeBridgeBlocksWithAi = async ({
       timeoutMs: 60 * 1000,
     })
 
-    return parseStudyGuideKnowledgeBridgeBlocks(text, draft.dashboards.length)
+    return parseStudyGuideKnowledgeBridgeBlocks(
+      text,
+      draft.dashboards.length,
+      eligibleDashboards.map(({ index }) => index),
+    )
   } catch {
     return []
   }
@@ -222,7 +309,6 @@ export const generateStudyGuideQuickStartWithAi = async ({
 
   const source = studyPathDraftToQuickStartSource(draft, prompt)
   const safeKnownTopics = sanitizeUserKnownTopics(userKnownTopics)
-  let relevanceDecision: StudyGuideQuickStartRelevanceDecision | undefined
 
   if (provider === 'hosted') {
     throw new Error(
@@ -234,7 +320,11 @@ export const generateStudyGuideQuickStartWithAi = async ({
     throw new Error(`Unknown AI provider: ${provider}`)
   }
 
-  if (safeKnownTopics.length) {
+  const getRelevanceDecision = async (bridgeMode: StudyGuideBridgeMode) => {
+    if (!safeKnownTopics.length) {
+      return undefined
+    }
+
     const relevanceText = await callStrongAiModel({
       provider,
       apiToken,
@@ -246,6 +336,7 @@ export const generateStudyGuideQuickStartWithAi = async ({
             prompt,
             source,
             userKnownTopics: safeKnownTopics,
+            bridgeMode,
             outputLanguage,
           }),
         },
@@ -253,37 +344,67 @@ export const generateStudyGuideQuickStartWithAi = async ({
       responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
       timeoutMs: 60 * 1000,
     })
-    relevanceDecision = parseStudyGuideQuickStartRelevanceDecision(
+    return parseStudyGuideQuickStartRelevanceDecision(
       relevanceText,
       safeKnownTopics,
     )
   }
+
+  const generateQuickStartVariant = async (
+    relevanceDecision: StudyGuideQuickStartRelevanceDecision | undefined,
+    bridgeMode: StudyGuideBridgeMode,
+  ) =>
+    parseStudyGuideQuickStart(
+      await callStrongAiModel({
+        provider,
+        apiToken,
+        model,
+        parts: [
+          {
+            text: buildStudyGuideQuickStartPrompt({
+              title,
+              source,
+              relevanceDecision,
+              bridgeMode,
+              outputLanguage,
+            }),
+          },
+        ],
+        responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
+        timeoutMs: 60 * 1000,
+      }),
+    )
+
+  const relevanceDecision = await getRelevanceDecision('auto')
   onRelevanceDecision?.(relevanceDecision)
 
-  const text = await callStrongAiModel({
-    provider,
-    apiToken,
-    model,
-    parts: [
-      {
-        text: buildStudyGuideQuickStartPrompt({
-          title,
-          source,
-          relevanceDecision,
-          outputLanguage,
-        }),
-      },
-    ],
-    responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
-    timeoutMs: 60 * 1000,
-  })
-
-  const quickStart = parseStudyGuideQuickStart(text)
+  const quickStart = await generateQuickStartVariant(relevanceDecision, 'auto')
   if (!quickStart) {
     throw new Error('AI did not return a Study Guide Quick Start.')
   }
 
-  return quickStart
+  if (
+    !safeKnownTopics.length ||
+    (relevanceDecision?.shouldUseKnownTopic &&
+      relevanceDecision.knownTopicsForQuickStart.length)
+  ) {
+    return quickStart
+  }
+
+  try {
+    const forcedRelevanceDecision =
+      ensureForcedStudyGuideQuickStartRelevanceDecision(
+        await getRelevanceDecision('force'),
+        safeKnownTopics,
+      )
+    const forcedBridge = forcedRelevanceDecision
+      ? await generateQuickStartVariant(forcedRelevanceDecision, 'force')
+      : null
+
+    return forcedBridge ? { ...quickStart, forcedBridge } : quickStart
+  } catch {
+    return quickStart
+  }
 }
 
 const resolveProvider = (
@@ -391,7 +512,11 @@ export const generateStudyPathWithAi = async (
 
     return applyKnowledgeBridgeBlocks(
       { ...draft, quickStart },
-      hostedBridgeBlocks,
+      parseStudyGuideKnowledgeBridgeBlocks(
+        JSON.stringify({ blocks: hostedBridgeBlocks }),
+        draft.dashboards.length,
+        getEligibleKnowledgeBridgeIndexes(draft),
+      ),
     )
   }
 

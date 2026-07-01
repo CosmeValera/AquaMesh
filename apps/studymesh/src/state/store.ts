@@ -40,9 +40,13 @@ export interface StudyPathDashboardItem {
   deletable?: boolean
 }
 
-export interface StudyGuideQuickStart {
+export interface StudyGuideQuickStartVariant {
   keyIdea: string
   quickSummary: string
+}
+
+export interface StudyGuideQuickStart extends StudyGuideQuickStartVariant {
+  forcedBridge?: StudyGuideQuickStartVariant
 }
 
 export interface StudyPathContainerState {

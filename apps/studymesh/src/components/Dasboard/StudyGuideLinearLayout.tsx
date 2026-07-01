@@ -42,6 +42,81 @@ const toMobileStudyGuideVariant = (
   return variant
 }
 
+const normalizeComparableTitle = (value: string): string =>
+  value
+    .trim()
+    .replace(/^#{1,6}\s+/, '')
+    .replace(/^\d+\s*[-.)]\s+/, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+
+const stripTrailingDuplicateTitle = (
+  markdown: string,
+  title: string,
+): string => {
+  const normalizedTitle = normalizeComparableTitle(title)
+  if (!normalizedTitle) {
+    return markdown
+  }
+
+  const lines = markdown.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n')
+  let lastContentIndex = lines.length - 1
+  while (lastContentIndex >= 0 && !lines[lastContentIndex].trim()) {
+    lastContentIndex -= 1
+  }
+
+  if (lastContentIndex < 0) {
+    return ''
+  }
+
+  const lastLine = lines[lastContentIndex].trim()
+  const lastLineTitle = lastLine.match(/^#{1,6}\s+(.+)$/)?.[1] || lastLine
+  if (normalizeComparableTitle(lastLineTitle) !== normalizedTitle) {
+    return markdown
+  }
+
+  return lines.slice(0, lastContentIndex).join('\n').replace(/\n+$/g, '')
+}
+
+const isKnowledgeBridgeGroup = (group: StudyGuideCardGroup | undefined) =>
+  Boolean(
+    group?.components.some(
+      (component) =>
+        component.type === 'StudyNoteBlock' &&
+        Array.isArray(component.props.suggestedTypes) &&
+        component.props.suggestedTypes.length === 0,
+    ),
+  )
+
+const pageContentTitle = (group: StudyGuideCardGroup): string =>
+  String(
+    group.components.find((component) => component.type === 'Label')?.props
+      .text || '',
+  )
+
+const cleanComponentForBridgePlacement = (
+  component: StudyGuideComponentNode,
+  title: string,
+  shouldClean: boolean,
+): StudyGuideComponentNode => {
+  if (!shouldClean || component.type !== 'MarkdownBlock') {
+    return component
+  }
+
+  const markdown = component.props.markdown
+  if (typeof markdown !== 'string') {
+    return component
+  }
+
+  return {
+    ...component,
+    props: {
+      ...component.props,
+      markdown: stripTrailingDuplicateTitle(markdown, title),
+    },
+  }
+}
+
 const collectStudyGuideComponentNodes = (
   node: DashboardLayout | undefined,
   path: string[] = [],
@@ -122,12 +197,16 @@ const StudyGuideLinearLayout = ({
 
   return (
     <div className="studymesh-mobile-dashboard-layout">
-      {cardGroups.map((group) => {
+      {cardGroups.map((group, groupIndex) => {
         const isPageContentCard =
           group.components[0]?.type === 'Label' &&
           group.components.some(
             (component) => component.type === 'MarkdownBlock',
           )
+        const shouldCleanBridgeLeadIn =
+          isPageContentCard &&
+          isKnowledgeBridgeGroup(cardGroups[groupIndex + 1])
+        const title = pageContentTitle(group)
         return (
           <section
             key={group.id}
@@ -137,13 +216,17 @@ const StudyGuideLinearLayout = ({
                 : 'studymesh-mobile-widget-card'
             }
           >
-            {group.components.map((component, index) => {
+            {group.components.map((rawComponent, index) => {
+              const component = cleanComponentForBridgePlacement(
+                rawComponent,
+                title,
+                shouldCleanBridgeLeadIn,
+              )
               const isLast = index === group.components.length - 1
 
               if (component.type === 'Label') {
                 const labelVariant =
-                  (component.props.variant as StudyGuideLabelVariant) ||
-                  'body1'
+                  (component.props.variant as StudyGuideLabelVariant) || 'body1'
                 const renderedVariant = compactView
                   ? toMobileStudyGuideVariant(labelVariant)
                   : labelVariant

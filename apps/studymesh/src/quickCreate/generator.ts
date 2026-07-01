@@ -132,7 +132,8 @@ const objectToComponents = (
           },
         },
       ]
-    case 'note':
+    case 'note': {
+      const isKnowledgeBridge = object.tags.includes('knowledge-context-bridge')
       return [
         {
           id: createComponentId(widgetId, object, 'note'),
@@ -141,10 +142,13 @@ const objectToComponents = (
             __blockType: 'StudyNoteBlock',
             title: object.title || 'Study note',
             text: object.body,
-            suggestedTypes: ['definition', 'flashcard', 'review'],
+            suggestedTypes: isKnowledgeBridge
+              ? []
+              : ['definition', 'flashcard', 'review'],
           },
         },
       ]
+    }
     case 'term':
       return [
         {

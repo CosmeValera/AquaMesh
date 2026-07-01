@@ -165,7 +165,7 @@ describe('Study Guide Quick Start helpers', () => {
 
     expect(prompt).toContain('"keyIdea"')
     expect(prompt).toContain('"quickSummary"')
-    expect(prompt).toContain('Use only this selected known topic bridge')
+    expect(prompt).toContain('Candidate known topic bridge(s)')
     expect(prompt).toContain('Specific related concept')
     expect(prompt).toContain('Bridge strength: strong')
     expect(prompt).toContain('Bridge strategy: direct_comparison')
@@ -192,6 +192,28 @@ describe('Study Guide Quick Start helpers', () => {
     expect(prompt).toContain('neutral beginner-friendly explanation')
   })
 
+  it('keeps forced weak bridges caveated and secondary in Quick Start prompt', () => {
+    const prompt = buildStudyGuideQuickStartPrompt({
+      title: 'New technical topic',
+      source: 'The new technical topic coordinates work asynchronously.',
+      bridgeMode: 'force',
+      relevanceDecision: {
+        shouldUseKnownTopic: true,
+        knownTopicsForQuickStart: ['Known request pattern'],
+        knownTopicRelevanceReason:
+          'Known request pattern is only useful as a contrast.',
+        targetTopicType: 'technical',
+        bridgeStrength: 'weak',
+        bridgeStrategy: 'light_reference',
+      },
+    })
+
+    expect(prompt).toContain('Bridge mode: force')
+    expect(prompt).toContain('keep keyIdea neutral')
+    expect(prompt).toContain('explain the topic directly first')
+    expect(prompt).toContain('state where the comparison breaks')
+  })
+
   it('builds a strong-model relevance prompt with generic bridge rules', () => {
     const prompt = buildStudyGuideQuickStartRelevancePrompt({
       title: 'New topic',
@@ -212,6 +234,21 @@ describe('Study Guide Quick Start helpers', () => {
     expect(prompt).not.toContain('Catalan')
     expect(prompt).not.toContain('Vue')
     expect(prompt).not.toContain('React')
+  })
+
+  it('builds a forced relevance prompt without hardcoded topic pairs', () => {
+    const prompt = buildStudyGuideQuickStartRelevancePrompt({
+      title: 'New topic',
+      prompt: 'new topic',
+      source: 'The new topic needs a beginner-friendly mental model.',
+      userKnownTopics: ['Known request pattern', 'Broad category'],
+      bridgeMode: 'force',
+    })
+
+    expect(prompt).toContain('Bridge mode: force')
+    expect(prompt).toContain('the closest useful bridge')
+    expect(prompt).toContain('bridgeStrength "weak"')
+    expect(prompt).toContain('do not use hidden hardcoded topic-pair rules')
   })
 
   it.each([
@@ -371,6 +408,40 @@ describe('Study Guide Quick Start helpers', () => {
         dashboardIndex: 0,
         title: 'Events you already know',
         body: 'Kafka topics are event streams, but they also retain ordered records so consumers can replay from offsets.',
+      },
+    ])
+  })
+
+  it('filters parsed bridge blocks to eligible dashboard indexes', () => {
+    const blocks = parseStudyGuideKnowledgeBridgeBlocks(
+      JSON.stringify({
+        blocks: [
+          {
+            dashboardIndex: 0,
+            title: 'First page',
+            body: 'This should not be placed on the first page.',
+          },
+          {
+            dashboardIndex: 1,
+            title: 'Quiz page',
+            body: 'This should not be placed on a quiz page.',
+          },
+          {
+            dashboardIndex: 2,
+            title: 'Plain lesson page',
+            body: 'This page can receive a concise bridge note.',
+          },
+        ],
+      }),
+      3,
+      [2],
+    )
+
+    expect(blocks).toEqual([
+      {
+        dashboardIndex: 2,
+        title: 'Plain lesson page',
+        body: 'This page can receive a concise bridge note.',
       },
     ])
   })

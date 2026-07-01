@@ -3,12 +3,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createQuickCreateOrchestratorWidgets } from '../../../src/quickCreate'
 import { generateStudyPathWithAi } from '../../../src/quickCreate/ai/provider'
 
-const makeDashboard = () => ({
-  title: '01 - Target concept flow',
+const makeDashboard = (index: number, practiceType = 'none') => ({
+  title: `${String(index).padStart(2, '0')} - Target concept flow`,
   summary: 'Target concept flow preview',
   rawNotes:
-    'The target concept stores ordered records that producers write and consumers read.',
-  practiceType: 'none',
+    'The target concept stores ordered records that producers write and consumers read.\n\n## Target concept flow',
+  dashboardRole: 'normal',
+  practiceType,
   sourceSummary: {
     title: 'Target concept summary',
     bullets: ['The target concept retains records for later reading.'],
@@ -46,7 +47,11 @@ describe('Study Guide knowledge bridges', () => {
       title: 'Target Concept',
       folderName: 'Target Concept',
       emoji: 'T',
-      dashboards: [makeDashboard()],
+      dashboards: [
+        makeDashboard(1, 'none'),
+        makeDashboard(2, 'quiz'),
+        makeDashboard(3, 'none'),
+      ],
     }
     const fetchMock = vi
       .fn()
@@ -79,6 +84,16 @@ describe('Study Guide knowledge bridges', () => {
             blocks: [
               {
                 dashboardIndex: 0,
+                title: 'First page ignored',
+                body: 'This should be ignored because first pages cannot receive bridge notes.',
+              },
+              {
+                dashboardIndex: 1,
+                title: 'Quiz page ignored',
+                body: 'This should be ignored because quiz pages cannot receive bridge notes.',
+              },
+              {
+                dashboardIndex: 2,
                 title: 'Related concept bridge',
                 body: 'If you know the specific related concept, this target concept plays a similar flow role between writers and readers. Caveat: this target concept also stores ordered records for replay.',
               },
@@ -113,12 +128,33 @@ describe('Study Guide knowledge bridges', () => {
       'Known topics, strongest first: Broad category, Adjacent category, Specific related concept',
     )
     expect(requestBodies[2]).toContain(
-      'Use only this selected known topic bridge if it improves clarity: Specific related concept',
+      'Candidate known topic bridge(s): Specific related concept',
     )
     expect(requestBodies[3]).toContain(
       'Create optional knowledge-context bridge note blocks',
     )
-    expect(draft.dashboards[0].objects).toEqual(
+    expect(requestBodies[3]).toContain('dashboardIndex: 2')
+    expect(requestBodies[3]).not.toContain('dashboardIndex: 0')
+    expect(requestBodies[3]).not.toContain('dashboardIndex: 1')
+    expect(draft.quickStart?.keyIdea).toBe(
+      'The target concept is a durable record-flow mechanism.',
+    )
+    expect(draft.quickStart?.forcedBridge).toBeUndefined()
+    expect(draft.dashboards[0].objects).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          tags: ['knowledge-context-bridge'],
+        }),
+      ]),
+    )
+    expect(draft.dashboards[1].objects).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          tags: ['knowledge-context-bridge'],
+        }),
+      ]),
+    )
+    expect(draft.dashboards[2].objects).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: 'note',
@@ -128,13 +164,16 @@ describe('Study Guide knowledge bridges', () => {
         }),
       ]),
     )
+    expect(draft.dashboards[2].rawNotes).not.toMatch(
+      /##\s+Target concept flow\s*$/,
+    )
 
     const widgets = createQuickCreateOrchestratorWidgets(
       {
         id: 'target-bridge',
         title: 'Target Concept',
         sourceFormat: 'text',
-        objects: draft.dashboards[0].objects,
+        objects: draft.dashboards[2].objects,
         warnings: [],
         dashboardRole: 'normal',
       },
@@ -144,10 +183,10 @@ describe('Study Guide knowledge bridges', () => {
         studyPath: {
           pathId: 'path-target',
           title: 'Target Concept',
-          dashboardKey: 'path-target-1',
-          dashboardName: '01 - Target concept flow',
-          dashboardIndex: 1,
-          dashboardCount: 1,
+          dashboardKey: 'path-target-3',
+          dashboardName: '03 - Target concept flow',
+          dashboardIndex: 3,
+          dashboardCount: 3,
           folderName: 'Target Concept',
           dashboardRole: 'normal',
           practiceType: 'none',
@@ -162,7 +201,99 @@ describe('Study Guide knowledge bridges', () => {
           props: expect.objectContaining({
             title: 'Related concept bridge',
             text: expect.stringContaining('target concept'),
+            suggestedTypes: [],
           }),
+        }),
+      ]),
+    )
+  })
+
+  it('still creates an alternate forced Quick Start when the force selector returns no bridge', async () => {
+    const guide = {
+      title: 'Kafka',
+      folderName: 'Kafka',
+      emoji: 'K',
+      dashboards: [makeDashboard(1, 'none'), makeDashboard(2, 'none')],
+    }
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(geminiResponse(JSON.stringify(guide)))
+      .mockResolvedValueOnce(
+        geminiResponse(
+          JSON.stringify({
+            shouldUseKnownTopic: false,
+            knownTopicsForQuickStart: [],
+            knownTopicRelevanceReason: 'No clearly useful bridge.',
+            targetTopicType: 'technical',
+            bridgeStrength: 'none',
+            bridgeStrategy: 'none',
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        geminiResponse(
+          JSON.stringify({
+            keyIdea: 'Kafka is a durable event-streaming log.',
+            quickSummary:
+              'Kafka stores ordered records in partitions and lets consumers replay them later.',
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        geminiResponse(
+          JSON.stringify({
+            shouldUseKnownTopic: false,
+            knownTopicsForQuickStart: [],
+            knownTopicRelevanceReason:
+              'Every provided bridge is imperfect for Kafka.',
+            targetTopicType: 'technical',
+            bridgeStrength: 'none',
+            bridgeStrategy: 'none',
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        geminiResponse(
+          JSON.stringify({
+            keyIdea: 'Kafka is still best understood as a durable event log.',
+            quickSummary:
+              'Among the available learner topics, web development is the least-bad contrast: Kafka connects systems by events, while web apps often connect requests directly. The comparison breaks because Kafka stores replayable streams.',
+          }),
+        ),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const draft = await generateStudyPathWithAi({
+      provider: 'gemini',
+      apiToken: 'test-token',
+      model: 'gemini-test',
+      title: 'Kafka',
+      prompt: 'Kafka',
+      folderName: '',
+      singleRequest: true,
+      userKnownTopics: ['web development', 'valencian'],
+    })
+    const requestBodies = fetchMock.mock.calls.map(([, init]) =>
+      String(init?.body || ''),
+    )
+
+    expect(fetchMock).toHaveBeenCalledTimes(5)
+    expect(requestBodies[4]).toContain(
+      'Candidate known topic bridge(s): web development, valencian',
+    )
+    expect(requestBodies[4]).toContain(
+      'choose the single candidate that best reduces confusion',
+    )
+    expect(draft.quickStart?.keyIdea).toBe(
+      'Kafka is a durable event-streaming log.',
+    )
+    expect(draft.quickStart?.forcedBridge?.quickSummary).toContain(
+      'web development',
+    )
+    expect(draft.dashboards[1].objects).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          tags: ['knowledge-context-bridge'],
         }),
       ]),
     )

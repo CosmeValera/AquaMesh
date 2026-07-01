@@ -281,8 +281,9 @@ describe('Interactive Study Guide UX', () => {
     fireEvent.click(screen.getByRole('button', { name: 'delete-lesson-2' }))
 
     const savedDashboards = JSON.parse(storage.get('customDashboards') || '[]')
-    expect(savedDashboards.map((dashboard: { id: string }) => dashboard.id))
-      .toEqual(['lesson-1', 'lesson-3', 'lesson-4', 'lesson-5'])
+    expect(
+      savedDashboards.map((dashboard: { id: string }) => dashboard.id),
+    ).toEqual(['lesson-1', 'lesson-3', 'lesson-4', 'lesson-5'])
     expect(storage.has(flashcardStorageKey)).toBe(false)
   })
 
@@ -308,6 +309,138 @@ describe('Interactive Study Guide UX', () => {
     expect(onStudyPathChange).toHaveBeenCalledWith(
       expect.objectContaining({ selectedIndex: 1 }),
     )
+  })
+
+  it('shows learner context as an alternate Quick Start view', () => {
+    const studyPath = {
+      ...createStudyPath(),
+      quickStart: {
+        keyIdea: 'Default key idea',
+        quickSummary: 'Default summary paragraph.',
+        forcedBridge: {
+          keyIdea: 'Forced bridge key idea',
+          quickSummary: 'Context summary paragraph.',
+        },
+      },
+    }
+
+    render(
+      <MemoryRouter>
+        <StudyPathWorkspaceView
+          studyPath={studyPath}
+          onStudyPathChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Default key idea')).toBeInTheDocument()
+    expect(screen.queryByText('Forced bridge key idea')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /use my context/i }))
+
+    expect(screen.getByText('Forced bridge key idea')).toBeInTheDocument()
+    expect(screen.getByText('Context summary paragraph.')).toBeInTheDocument()
+  })
+
+  it('hides learner context toggle when Quick Start has no alternate view', () => {
+    const studyPath = {
+      ...createStudyPath(),
+      quickStart: {
+        keyIdea: 'Default key idea only',
+        quickSummary: 'Default summary paragraph.',
+      },
+    }
+
+    render(
+      <MemoryRouter>
+        <StudyPathWorkspaceView
+          studyPath={studyPath}
+          onStudyPathChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Default key idea only')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /use my context/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('removes duplicate page title before a knowledge-context bridge card', () => {
+    const title = '03 - Data Binding & Directives'
+    const studyPath = {
+      ...createStudyPath(),
+      selectedIndex: 0,
+      dashboards: [
+        {
+          ...createStudyPath().dashboards[0],
+          name: title,
+          layout: {
+            type: 'row',
+            name: title,
+            children: [
+              {
+                type: 'tabset',
+                children: [
+                  {
+                    type: 'tab',
+                    name: title,
+                    component: 'CustomWidget',
+                    config: {
+                      customProps: {
+                        components: [
+                          {
+                            id: 'page-title',
+                            type: 'Label',
+                            props: {
+                              text: title,
+                              variant: 'h6',
+                              fontWeight: 700,
+                            },
+                          },
+                          {
+                            id: 'page-markdown',
+                            type: 'MarkdownBlock',
+                            props: {
+                              title,
+                              markdown:
+                                'Mastering these bindings lets you create responsive, data-driven interfaces.\n\n## 03 - Data Binding & Directives',
+                            },
+                          },
+                          {
+                            id: 'bridge-note',
+                            type: 'StudyNoteBlock',
+                            props: {
+                              title: 'Event Queue & Change Detection',
+                              text: 'Angular change detection can be compared with an event queue.',
+                              suggestedTypes: [],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    }
+
+    render(
+      <MemoryRouter>
+        <StudyPathWorkspaceView
+          studyPath={studyPath}
+          onStudyPathChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getAllByText(title)).toHaveLength(1)
+    expect(
+      screen.getByText('Event Queue & Change Detection'),
+    ).toBeInTheDocument()
   })
 
   it('keeps separate scroll positions for each Study Guide page', () => {
@@ -370,8 +503,7 @@ describe('Interactive Study Guide UX', () => {
             markdown: '',
             source: 'manual',
           })
-          const nextPage =
-            nextStudyPath.dashboards[nextStudyPath.selectedIndex]
+          const nextPage = nextStudyPath.dashboards[nextStudyPath.selectedIndex]
           setEditingPageKey(nextPage?.dashboardKey || null)
           return nextStudyPath
         })
@@ -415,8 +547,7 @@ describe('Interactive Study Guide UX', () => {
       markdown: '',
       source: 'manual',
     })
-    const customPage =
-      customStudyPath.dashboards[customStudyPath.selectedIndex]
+    const customPage = customStudyPath.dashboards[customStudyPath.selectedIndex]
 
     const renderStudyPath = (
       nextStudyPath: StudyPathContainerState,
@@ -446,7 +577,9 @@ describe('Interactive Study Guide UX', () => {
     scrollContainer = screen.getByTestId('study-path-page-scroll-container')
     expect(scrollContainer.scrollTop).toBe(0)
 
-    secondView.rerender(renderStudyPath({ ...customStudyPath, selectedIndex: 0 }))
+    secondView.rerender(
+      renderStudyPath({ ...customStudyPath, selectedIndex: 0 }),
+    )
     expect(scrollContainer.scrollTop).toBe(420)
   })
 

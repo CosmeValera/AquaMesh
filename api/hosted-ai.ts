@@ -13,6 +13,7 @@ import {
   buildStudyGuideKnowledgeBridgeBlocksPrompt,
   buildStudyGuideQuickStartPrompt,
   buildStudyGuideQuickStartRelevancePrompt,
+  ensureForcedStudyGuideQuickStartRelevanceDecision,
   parseStudyGuideKnowledgeBridgeBlocks,
   parseStudyGuideQuickStart,
   parseStudyGuideQuickStartRelevanceDecision,
@@ -662,6 +663,7 @@ const handleGenerate = async (
                       prompt: getHostedRequestText(request),
                       source: text,
                       userKnownTopics: safeKnownTopics,
+                      bridgeMode: "auto",
                       outputLanguage: request.outputLanguage,
                     }),
                   },
@@ -686,6 +688,7 @@ const handleGenerate = async (
                   title: "Study Guide",
                   source: text,
                   relevanceDecision,
+                  bridgeMode: "auto",
                   outputLanguage: request.outputLanguage,
                 }),
               },
@@ -698,6 +701,79 @@ const handleGenerate = async (
       );
 
       if (
+        quickStart &&
+        safeKnownTopics.length &&
+        !(
+          relevanceDecision?.shouldUseKnownTopic &&
+          relevanceDecision.knownTopicsForQuickStart.length
+        )
+      ) {
+        try {
+          const forcedRelevanceDecision =
+            parseStudyGuideQuickStartRelevanceDecision(
+              await callCerebras(
+                {
+                  ...usageRequest,
+                  responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
+                  parts: [
+                    {
+                      text: buildStudyGuideQuickStartRelevancePrompt({
+                        title: "Study Guide",
+                        prompt: getHostedRequestText(request),
+                        source: text,
+                        userKnownTopics: safeKnownTopics,
+                        bridgeMode: "force",
+                        outputLanguage: request.outputLanguage,
+                      }),
+                    },
+                  ],
+                },
+                model,
+              ).finally(() => {
+                providerCallCount += 1;
+              }),
+              safeKnownTopics,
+            );
+          const safeForcedRelevanceDecision =
+            ensureForcedStudyGuideQuickStartRelevanceDecision(
+              forcedRelevanceDecision,
+              safeKnownTopics,
+            );
+
+          if (safeForcedRelevanceDecision) {
+            const forcedBridge = parseStudyGuideQuickStart(
+              await callCerebras(
+                {
+                  ...usageRequest,
+                  responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
+                  parts: [
+                    {
+                      text: buildStudyGuideQuickStartPrompt({
+                        title: "Study Guide",
+                        source: text,
+                        relevanceDecision: safeForcedRelevanceDecision,
+                        bridgeMode: "force",
+                        outputLanguage: request.outputLanguage,
+                      }),
+                    },
+                  ],
+                },
+                model,
+              ).finally(() => {
+                providerCallCount += 1;
+              }),
+            );
+
+            if (forcedBridge) {
+              quickStart = { ...quickStart, forcedBridge };
+            }
+          }
+        } catch {
+          // Optional alternate explanation should not fail the Study Guide.
+        }
+      }
+
+      if (
         relevanceDecision?.shouldUseKnownTopic &&
         relevanceDecision.knownTopicsForQuickStart.length
       ) {
@@ -707,14 +783,25 @@ const handleGenerate = async (
               .filter((dashboard): dashboard is JsonObject =>
                 isObject(dashboard),
               )
-              .map((dashboard) => ({
+              .map((dashboard, index) => ({
+                dashboardIndex: index,
                 title: stringValue(dashboard.title),
                 summary: stringValue(dashboard.summary),
                 rawNotes: stringValue(dashboard.rawNotes),
+                dashboardRole: stringValue(dashboard.dashboardRole),
+                practiceType: stringValue(dashboard.practiceType),
               }))
           : [];
+        const eligibleDashboards = dashboards.filter((dashboard) => {
+          const role = dashboard.dashboardRole || "normal";
+          return (
+            dashboard.dashboardIndex > 0 &&
+            role === "normal" &&
+            dashboard.practiceType === "none"
+          );
+        });
 
-        if (dashboards.length) {
+        if (eligibleDashboards.length) {
           try {
             bridgeBlocks = parseStudyGuideKnowledgeBridgeBlocks(
               await callCerebras(
@@ -727,8 +814,9 @@ const handleGenerate = async (
                         title:
                           stringValue(guideRecord?.folderName) || "Study Guide",
                         prompt: getHostedRequestText(request),
-                        dashboards,
+                        dashboards: eligibleDashboards,
                         relevanceDecision,
+                        bridgeMode: "auto",
                         outputLanguage: request.outputLanguage,
                       }),
                     },
@@ -739,6 +827,7 @@ const handleGenerate = async (
                 providerCallCount += 1;
               }),
               dashboards.length,
+              eligibleDashboards.map((dashboard) => dashboard.dashboardIndex),
             );
           } catch {
             bridgeBlocks = [];

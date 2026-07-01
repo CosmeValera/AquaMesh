@@ -642,11 +642,15 @@ const createWidgetRecord = (
     ),
   )
   const components: ComponentData[] = [
-    createLabel(
-      `${widgetId}-title`,
-      pack.title,
-      widgetIndex === 0 ? 'h6' : 'subtitle1',
-    ),
+    ...(!options.studyPath
+      ? [
+          createLabel(
+            `${widgetId}-title`,
+            pack.title,
+            widgetIndex === 0 ? 'h6' : 'subtitle1',
+          ),
+        ]
+      : []),
     ...(includeSummaryChart && widgetIndex === 0
       ? [createSummaryChart(pack, widgetId)]
       : []),

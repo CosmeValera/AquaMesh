@@ -4,7 +4,8 @@ import { generateQuickCreateWithAi } from '../../../src/quickCreate/ai'
 import type { StudyPathContainerState } from '../../../src/state/store'
 
 vi.mock('../../../src/quickCreate/ai', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../../src/quickCreate/ai')>()
+  const actual =
+    await importOriginal<typeof import('../../../src/quickCreate/ai')>()
   return {
     ...actual,
     generateQuickCreateWithAi: vi.fn().mockResolvedValue({
@@ -61,5 +62,29 @@ describe('appendAiQuickCreatePage', () => {
       }),
     )
   })
-})
 
+  it('uses the Study Guide language when creating quiz or flashcard pages', async () => {
+    await appendAiQuickCreatePage({
+      studyPath: {
+        ...studyPath,
+        contentLanguage: 'en',
+        contentLanguageSource: 'detected',
+      },
+      resourceType: {
+        actionId: 'quiz',
+        resourceType: 'quiz',
+        label: 'Create quiz',
+      },
+      sourceTitle: 'React',
+      sourceText:
+        'Qual diferença principal entre componentes funcionais e baseados em classe?',
+    })
+
+    expect(generateQuickCreateWithAi).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resourceType: 'quiz',
+        outputLanguage: 'en',
+      }),
+    )
+  })
+})

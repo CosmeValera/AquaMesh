@@ -287,10 +287,14 @@ export const appendAiQuickCreatePage = async ({
   const { resourceType } = normalizeQuickCreateActionInput(resourceTypeInput)
   const settings = readQuickCreateAiSettings()
   const provider = settings.provider || 'hosted'
-  const resolvedLanguage = resolveContentLanguage({
-    text: sourceText,
-    inheritedLanguage: studyPath.contentLanguage,
-  })
+  const resolvedLanguage = studyPath.contentLanguage
+    ? {
+        language: studyPath.contentLanguage,
+        source: studyPath.contentLanguageSource || ('inherited' as const),
+      }
+    : resolveContentLanguage({
+        text: sourceText,
+      })
   const credentials = isStrongAiProvider(provider)
     ? resolveQuickCreateAiCredentials(provider)
     : resolveQuickCreateAiCredentials()

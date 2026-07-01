@@ -57,6 +57,10 @@ describe('content language resolver', () => {
     })
   })
 
+  it('does not classify single-word technical topics as natural-language prompts', () => {
+    expect(detectContentLanguage('React')).toBeNull()
+  })
+
   it('lets explicit output-language wording override detected prompt language', () => {
     expect(
       resolveContentLanguage({

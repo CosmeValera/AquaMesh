@@ -28,6 +28,7 @@ import type { StrongAiCallOptions, StrongAiProviderId } from './strongProviders'
 import type { StudyGuideQuickStart } from '../../state/store'
 import {
   createAiOutputLanguageInstruction,
+  detectContentLanguage,
   type StudyMeshLanguageCode,
 } from '../../language/contentLanguage'
 
@@ -785,6 +786,98 @@ const getPracticeOrDefault = (input: Record<string, unknown>) =>
 
 const getFlashcardsOrDefault = (input: Record<string, unknown>) =>
   Array.isArray(input.flashcards) ? input.flashcards : emptyFlashcards
+
+const generatedTextMatchesOutputLanguage = (
+  value: string,
+  outputLanguage: StudyMeshLanguageCode | undefined,
+): boolean => {
+  if (!outputLanguage) {
+    return true
+  }
+
+  const detected = detectContentLanguage(value)
+  return !detected || detected === outputLanguage
+}
+
+const languageTextFromUnknown = (value: unknown): string =>
+  typeof value === 'string' ? value.trim() : ''
+
+const sanitizeGeneratedSupportLanguage = (
+  input: Record<string, unknown>,
+  outputLanguage: StudyMeshLanguageCode | undefined,
+  events: string[],
+): Record<string, unknown> => {
+  const practice =
+    input.practice && typeof input.practice === 'object'
+      ? (input.practice as Record<string, unknown>)
+      : null
+  const multipleChoice = Array.isArray(practice?.multipleChoice)
+    ? practice.multipleChoice
+    : null
+  const filteredMultipleChoice = multipleChoice?.filter((item) => {
+    if (!item || typeof item !== 'object') {
+      return true
+    }
+
+    const record = item as Record<string, unknown>
+    return generatedTextMatchesOutputLanguage(
+      [
+        languageTextFromUnknown(record.question),
+        ...(Array.isArray(record.options)
+          ? record.options.map(languageTextFromUnknown)
+          : []),
+        languageTextFromUnknown(record.hint),
+        languageTextFromUnknown(record.explanation),
+      ]
+        .filter(Boolean)
+        .join(' '),
+      outputLanguage,
+    )
+  })
+  const flashcards = Array.isArray(input.flashcards) ? input.flashcards : null
+  const filteredFlashcards = flashcards?.filter((item) => {
+    if (!item || typeof item !== 'object') {
+      return true
+    }
+
+    const record = item as Record<string, unknown>
+    return generatedTextMatchesOutputLanguage(
+      [
+        languageTextFromUnknown(record.front),
+        languageTextFromUnknown(record.back),
+      ]
+        .filter(Boolean)
+        .join(' '),
+      outputLanguage,
+    )
+  })
+
+  if (
+    filteredMultipleChoice &&
+    multipleChoice &&
+    filteredMultipleChoice.length !== multipleChoice.length
+  ) {
+    events.push('Dropped quiz questions that did not match the guide language.')
+  }
+  if (
+    filteredFlashcards &&
+    flashcards &&
+    filteredFlashcards.length !== flashcards.length
+  ) {
+    events.push('Dropped flashcards that did not match the guide language.')
+  }
+
+  return {
+    ...input,
+    practice: practice
+      ? {
+          ...practice,
+          multipleChoice: filteredMultipleChoice || practice.multipleChoice,
+        }
+      : input.practice,
+    flashcards: filteredFlashcards || input.flashcards,
+  }
+}
 
 const sanitizeDashboardInputForRole = (
   input: Record<string, unknown>,
@@ -1861,6 +1954,7 @@ Required dashboard fields:
 
 Quality rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
+- Keep every support item in that output language too: practice.multipleChoice questions/options/hints/explanations and flashcard front/back strings.
 - rawNotes must be 350-800 words of real teaching, formatted as Markdown with short topic-specific sections.
 - Never reuse a generic section scaffold across dashboards. Avoid generic headings like "Goal", "Content", "Common Mistakes/Misconceptions", and "Quick Recall".
 - Use the lesson contentMode:
@@ -1923,13 +2017,18 @@ ${JSON.stringify(dashboard)}`
 const createStudyPathDashboardRepairPrompt = ({
   dashboard,
   repairInstructions,
+  outputLanguage,
 }: {
   dashboard: Record<string, unknown>
   repairInstructions: string[]
+  outputLanguage?: StudyMeshLanguageCode
 }): string => `Repair this StudyMesh Study Guide dashboard. Return the same one-dashboard JSON shape only.
 
 Repair instructions:
 ${repairInstructions.map((item) => `- ${item}`).join('\n')}
+
+- ${createAiOutputLanguageInstruction(outputLanguage)}
+- Keep quiz questions, quiz options, hints, explanations, and flashcards in that output language.
 
 Preserve topic, title intent, module, and dashboard count position. Improve teaching quality, examples, misconceptions, retrieval practice, and layout fit.
 
@@ -2190,6 +2289,7 @@ const generateStudyPathJsonWithPipeline = async ({
                   repairInstructions.length > 0
                     ? repairInstructions
                     : deterministicIssues,
+                outputLanguage,
               }),
             },
           ],
@@ -2319,6 +2419,7 @@ Return exactly this structure:
 Rules:
 - Return strict valid JSON only: double-quoted property names and strings, comma-separated array/object entries, matching { } and [ ], no trailing commas, no comments, no Markdown fences, no prose before or after the JSON.
 - ${languageInstruction}
+- Keep every support item in that output language too: practice.multipleChoice questions/options/hints/explanations and flashcard front/back strings.
 - Choose a concise, topic-specific folderName for the Study Guide, such as "French B1 Subjunctive" or "Calculus Derivatives". Do not use a generic folderName like "Study Guide" unless the topic is truly unknown.
 - Choose exactly one topic-specific emoji for the Study Guide. It must be a single emoji character or emoji sequence, not text, and it should match the user's topic.
 - Create exactly ${dashboardCount} ordered lesson dashboards, grouped mentally into 1-3 modules. Give each dashboard a useful topic-specific title.
@@ -2618,8 +2719,13 @@ ${prompt}`
         title: dashboardTitle,
         summary: dashboardSummary,
       }
+      const languageEvents: string[] = []
       const roleSanitizedInput = sanitizeDashboardInputForRole(
-        rawDashboardInput,
+        sanitizeGeneratedSupportLanguage(
+          rawDashboardInput,
+          outputLanguage,
+          languageEvents,
+        ),
         dashboardRole,
         dashboardTitle,
       )
@@ -2633,7 +2739,10 @@ ${prompt}`
         packId,
         supportArtifacts,
       )
-      const finalEvents = [...(draft.debugTrace?.droppedOrRepairedItems || [])]
+      const finalEvents = [
+        ...(draft.debugTrace?.droppedOrRepairedItems || []),
+        ...languageEvents,
+      ]
       if (
         dashboardRole === 'normal' &&
         incompleteNormalDashboardIndexes.has(index)

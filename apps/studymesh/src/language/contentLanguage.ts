@@ -50,8 +50,8 @@ export const CONTENT_LANGUAGE_SETTINGS_CHANGED_EVENT =
 
 export const DEFAULT_CONTENT_LANGUAGE: StudyMeshLanguageCode = 'en'
 export const DEFAULT_INTERFACE_LANGUAGE: InterfaceLanguageCode = 'en'
-const ELD_MIN_SCORE_DELTA = 0.03
-const ELD_SHORT_TEXT_MIN_SCORE_DELTA = 0.05
+const ELD_MIN_SCORE_DELTA = 0.06
+const ELD_SHORT_TEXT_MIN_SCORE_DELTA = 0.1
 const ELD_SHORT_TEXT_MAX_WORDS = 4
 
 export const CONTENT_LANGUAGE_OPTIONS: ContentLanguageOption[] = [
@@ -462,4 +462,3 @@ export const resolveContentLanguage = ({
 
   return { language: DEFAULT_CONTENT_LANGUAGE, source: 'fallback' }
 }
-

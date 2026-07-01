@@ -78,7 +78,7 @@ const pageIconButtonSx =
 interface StudyPathWorkspaceViewProps {
   studyPath: StudyPathContainerState
   onStudyPathChange: (studyPath: StudyPathContainerState) => void
-  mobileView?: boolean
+  pageScrollPositionsRef?: React.MutableRefObject<Record<string, number>>
   editingPageKey?: string | null
   onEditingPageKeyChange?: (pageKey: string | null) => void
   onAddPage?: () => void
@@ -90,6 +90,15 @@ const quickSummaryParagraphs = (value: string): string[] =>
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.replace(/\s+/g, ' ').trim())
     .filter(Boolean)
+
+const setElementScrollTop = (element: HTMLElement, top: number) => {
+  if (typeof element.scrollTo === 'function') {
+    element.scrollTo({ top, behavior: 'auto' })
+    return
+  }
+
+  element.scrollTop = top
+}
 
 const StudyGuideQuickStartCard = ({
   quickStart,
@@ -284,7 +293,7 @@ const sanitizeStudentLayout = (
 const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   studyPath,
   onStudyPathChange,
-  mobileView = false,
+  pageScrollPositionsRef: externalPageScrollPositionsRef,
   editingPageKey = null,
   onEditingPageKeyChange,
   onAddPage,
@@ -294,7 +303,11 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   const theme = useTheme()
   const navigate = useNavigate()
   const showPageRail = useMediaQuery(theme.breakpoints.up('lg'))
-  const rootRef = useRef<HTMLDivElement | null>(null)
+  const pageScrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const internalPageScrollPositionsRef = useRef<Record<string, number>>({})
+  const pageScrollPositionsRef =
+    externalPageScrollPositionsRef || internalPageScrollPositionsRef
+  const lastPathIdRef = useRef(studyPath.pathId)
   const [quickStartExpanded, setQuickStartExpanded] = useState(true)
   const selectedIndex = Math.min(
     Math.max(studyPath.selectedIndex || 0, 0),
@@ -329,42 +342,52 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   }, [studyPath.pathId])
 
   useLayoutEffect(() => {
-    if (!mobileView) {
-      return undefined
+    if (lastPathIdRef.current === studyPath.pathId) {
+      return
     }
 
-    const resetStudyPathScroll = () => {
-      let element = rootRef.current?.parentElement
+    pageScrollPositionsRef.current = {}
+    lastPathIdRef.current = studyPath.pathId
+  }, [pageScrollPositionsRef, studyPath.pathId])
 
-      while (element) {
-        const overflowY = window.getComputedStyle(element).overflowY
-        const canScroll =
-          (overflowY === 'auto' || overflowY === 'scroll') &&
-          element.scrollHeight > element.clientHeight
-
-        if (canScroll || element.scrollTop > 0) {
-          element.scrollTo({ top: 0, behavior: 'auto' })
-          return
-        }
-
-        element = element.parentElement
-      }
-
-      window.scrollTo({ top: 0, behavior: 'auto' })
+  useLayoutEffect(() => {
+    const scrollContainer = pageScrollContainerRef.current
+    if (!scrollContainer || !currentPageKey) {
+      return
     }
 
-    resetStudyPathScroll()
-    const frame = window.requestAnimationFrame(resetStudyPathScroll)
-    const timeout = window.setTimeout(resetStudyPathScroll, 80)
+    setElementScrollTop(
+      scrollContainer,
+      pageScrollPositionsRef.current[currentPageKey] ?? 0,
+    )
+  }, [currentPageKey])
 
-    return () => {
-      window.cancelAnimationFrame(frame)
-      window.clearTimeout(timeout)
+  const saveCurrentPageScroll = () => {
+    if (!currentPageKey || !pageScrollContainerRef.current) {
+      return
     }
-  }, [currentLesson?.dashboardKey, mobileView, selectedIndex])
+
+    pageScrollPositionsRef.current[currentPageKey] =
+      pageScrollContainerRef.current.scrollTop
+  }
+
+  const handlePageScroll = () => {
+    saveCurrentPageScroll()
+  }
 
   const selectLesson = (index: number) => {
+    saveCurrentPageScroll()
     onStudyPathChange({ ...studyPath, selectedIndex: index })
+  }
+
+  const handleStudyPathChange = (nextStudyPath: StudyPathContainerState) => {
+    saveCurrentPageScroll()
+    onStudyPathChange(nextStudyPath)
+  }
+
+  const handleAddPage = () => {
+    saveCurrentPageScroll()
+    onAddPage?.()
   }
 
   const updateCurrentMarkdownPage = (title: string, markdown: string) => {
@@ -406,7 +429,6 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
 
   return (
     <Box
-      ref={rootRef}
       data-testid="study-path-workspace"
       sx={{
         height: '100%',
@@ -550,12 +572,15 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
         {showPageRail ? (
           <StudyGuidePagesPanel
             studyPath={studyPath}
-            onStudyPathChange={onStudyPathChange}
-            onAddPage={onAddPage}
+            onStudyPathChange={handleStudyPathChange}
+            onAddPage={handleAddPage}
             variant="desktop"
           />
         ) : null}
         <Box
+          ref={pageScrollContainerRef}
+          data-testid="study-path-page-scroll-container"
+          onScroll={handlePageScroll}
           sx={{
             flex: 1,
             minWidth: 0,

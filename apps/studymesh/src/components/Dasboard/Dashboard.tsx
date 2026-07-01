@@ -232,7 +232,6 @@ const Dashboards = () => {
               onStudyPathChange={(studyPath) =>
                 updateStudyGuide(currentDashboard.id, studyPath)
               }
-              mobileView={isMobileDashboardView}
               editingPageKey={editingPageKeys[currentDashboard.id] || null}
               onEditingPageKeyChange={(pageKey) =>
                 setEditingPageKeys((current) => ({

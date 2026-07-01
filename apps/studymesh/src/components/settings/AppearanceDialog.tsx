@@ -12,6 +12,7 @@ import Brightness6Icon from '@mui/icons-material/Brightness6'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
 
 import AccentColorPicker from '../../theme/AccentColorPicker'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 import ThemeModeToggle from '../shared/ThemeModeToggle'
 
 interface AppearanceDialogProps {
@@ -22,42 +23,46 @@ interface AppearanceDialogProps {
 const AppearanceDialog: React.FC<AppearanceDialogProps> = ({
   open,
   onClose,
-}) => (
-  <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-    <DialogTitle>Appearance</DialogTitle>
-    <DialogContent dividers>
-      <Box sx={{ display: 'grid', gap: 2.5 }}>
-        <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <Brightness6Icon
-              fontSize="small"
-              sx={{ color: 'primary.main', mr: 1 }}
-            />
-            <Typography variant="body2" fontWeight={700}>
-              Light / dark mode
-            </Typography>
-          </Box>
-          <ThemeModeToggle compact />
-        </Box>
+}) => {
+  const { t } = useInterfaceText()
 
-        <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <ColorLensIcon
-              fontSize="small"
-              sx={{ color: 'primary.main', mr: 1 }}
-            />
-            <Typography variant="body2" fontWeight={700}>
-              Accent color
-            </Typography>
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+      <DialogTitle>{t('topnav.appearance')}</DialogTitle>
+      <DialogContent dividers>
+        <Box sx={{ display: 'grid', gap: 2.5 }}>
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Brightness6Icon
+                fontSize="small"
+                sx={{ color: 'primary.main', mr: 1 }}
+              />
+              <Typography variant="body2" fontWeight={700}>
+                {t('appearance.themeMode')}
+              </Typography>
+            </Box>
+            <ThemeModeToggle compact />
           </Box>
-          <AccentColorPicker dense />
+
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <ColorLensIcon
+                fontSize="small"
+                sx={{ color: 'primary.main', mr: 1 }}
+              />
+              <Typography variant="body2" fontWeight={700}>
+                {t('appearance.accentColor')}
+              </Typography>
+            </Box>
+            <AccentColorPicker dense />
+          </Box>
         </Box>
-      </Box>
-    </DialogContent>
-    <DialogActions>
-      <Button onClick={onClose}>Close</Button>
-    </DialogActions>
-  </Dialog>
-)
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>{t('settings.close')}</Button>
+      </DialogActions>
+    </Dialog>
+  )
+}
 
 export default AppearanceDialog

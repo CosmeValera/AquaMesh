@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
   Box,
@@ -124,6 +124,7 @@ const GuideWorkspacePage = () => {
   } | null>(null)
   const [aiChatOpen, setAiChatOpen] = useState(true)
   const [aiChatWidth, setAiChatWidth] = useState(AI_CHAT_MIN_WIDTH)
+  const pageScrollPositionsRef = useRef<Record<string, number>>({})
   const [mobileSection, setMobileSection] = useState<
     'pages' | 'study-guide' | 'ai-chat'
   >('study-guide')
@@ -148,6 +149,10 @@ const GuideWorkspacePage = () => {
   }
 
   useEffect(loadRecord, [studyGuideId, isCreateRoute])
+
+  useEffect(() => {
+    pageScrollPositionsRef.current = {}
+  }, [studyGuideId])
 
   const dashboard = useMemo<StateDashboard | undefined>(() => {
     if (!record) {
@@ -486,7 +491,7 @@ const GuideWorkspacePage = () => {
       <StudyPathWorkspaceView
         studyPath={record.studyPath}
         onStudyPathChange={persistStudyPath}
-        mobileView
+        pageScrollPositionsRef={pageScrollPositionsRef}
         editingPageKey={editingPageKey}
         onEditingPageKeyChange={setEditingPageKey}
         onAddPage={addManualPage}

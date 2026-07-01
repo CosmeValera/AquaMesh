@@ -20,7 +20,10 @@ import {
 } from '../../../src/state/store'
 import { useStore } from '../../../src/state/store'
 import { STUDY_GUIDES_STORAGE_KEY } from '../../../src/studyGuides/storage'
-import { createMarkdownStudyGuidePageLayout } from '../../../src/studyGuides/pages'
+import {
+  appendStudyGuideMarkdownPage,
+  createMarkdownStudyGuidePageLayout,
+} from '../../../src/studyGuides/pages'
 import { createFocusedFlashcardStorageKey } from '../../../src/components/study/StudyBlockView'
 
 vi.mock('../../../src/customHooks/useWorkspaceActions', () => ({
@@ -305,6 +308,146 @@ describe('Interactive Study Guide UX', () => {
     expect(onStudyPathChange).toHaveBeenCalledWith(
       expect.objectContaining({ selectedIndex: 1 }),
     )
+  })
+
+  it('keeps separate scroll positions for each Study Guide page', () => {
+    const ControlledStudyPathView = () => {
+      const [studyPath, setStudyPath] = React.useState(createStudyPath())
+
+      return (
+        <MemoryRouter>
+          <StudyPathWorkspaceView
+            studyPath={studyPath}
+            onStudyPathChange={setStudyPath}
+          />
+        </MemoryRouter>
+      )
+    }
+
+    render(<ControlledStudyPathView />)
+
+    const scrollContainer = screen.getByTestId(
+      'study-path-page-scroll-container',
+    )
+    scrollContainer.scrollTop = 240
+    fireEvent.scroll(scrollContainer)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+    expect(scrollContainer.scrollTop).toBe(0)
+
+    scrollContainer.scrollTop = 90
+    fireEvent.scroll(scrollContainer)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Previous page' }))
+    expect(scrollContainer.scrollTop).toBe(240)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+    expect(scrollContainer.scrollTop).toBe(90)
+  })
+
+  it('keeps generated page scroll after adding and leaving a custom page', () => {
+    vi.mocked(window.matchMedia).mockImplementation((query) => ({
+      matches: query.includes('min-width'),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
+
+    const ControlledStudyPathView = () => {
+      const [studyPath, setStudyPath] = React.useState(createStudyPath())
+      const [editingPageKey, setEditingPageKey] = React.useState<string | null>(
+        null,
+      )
+
+      const addPage = () => {
+        setStudyPath((current) => {
+          const nextStudyPath = appendStudyGuideMarkdownPage(current, {
+            title: 'Custom notes',
+            markdown: '',
+            source: 'manual',
+          })
+          const nextPage =
+            nextStudyPath.dashboards[nextStudyPath.selectedIndex]
+          setEditingPageKey(nextPage?.dashboardKey || null)
+          return nextStudyPath
+        })
+      }
+
+      return (
+        <MemoryRouter>
+          <StudyPathWorkspaceView
+            studyPath={studyPath}
+            onStudyPathChange={setStudyPath}
+            editingPageKey={editingPageKey}
+            onEditingPageKeyChange={setEditingPageKey}
+            onAddPage={addPage}
+          />
+        </MemoryRouter>
+      )
+    }
+
+    render(<ControlledStudyPathView />)
+
+    const scrollContainer = screen.getByTestId(
+      'study-path-page-scroll-container',
+    )
+    scrollContainer.scrollTop = 360
+    fireEvent.scroll(scrollContainer)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add page' }))
+    expect(scrollContainer.scrollTop).toBe(0)
+
+    fireEvent.click(screen.getByRole('button', { name: /^01 Lesson 1$/ }))
+    expect(scrollContainer.scrollTop).toBe(360)
+  })
+
+  it('keeps generated page scroll when the Study Guide view remounts after adding a custom page', () => {
+    const pageScrollPositionsRef: React.MutableRefObject<
+      Record<string, number>
+    > = { current: {} }
+    const studyPath = createStudyPath()
+    const customStudyPath = appendStudyGuideMarkdownPage(studyPath, {
+      title: 'Custom notes',
+      markdown: '',
+      source: 'manual',
+    })
+    const customPage =
+      customStudyPath.dashboards[customStudyPath.selectedIndex]
+
+    const renderStudyPath = (
+      nextStudyPath: StudyPathContainerState,
+      editingPageKey: string | null = null,
+    ) => (
+      <MemoryRouter>
+        <StudyPathWorkspaceView
+          studyPath={nextStudyPath}
+          onStudyPathChange={vi.fn()}
+          pageScrollPositionsRef={pageScrollPositionsRef}
+          editingPageKey={editingPageKey}
+        />
+      </MemoryRouter>
+    )
+
+    const firstView = render(renderStudyPath(studyPath))
+
+    let scrollContainer = screen.getByTestId('study-path-page-scroll-container')
+    scrollContainer.scrollTop = 420
+    fireEvent.scroll(scrollContainer)
+
+    firstView.unmount()
+
+    const secondView = render(
+      renderStudyPath(customStudyPath, customPage?.dashboardKey || null),
+    )
+    scrollContainer = screen.getByTestId('study-path-page-scroll-container')
+    expect(scrollContainer.scrollTop).toBe(0)
+
+    secondView.rerender(renderStudyPath({ ...customStudyPath, selectedIndex: 0 }))
+    expect(scrollContainer.scrollTop).toBe(420)
   })
 
   it('renders Quick Start as a collapsible card separate from page content', () => {

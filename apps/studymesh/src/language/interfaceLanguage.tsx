@@ -56,6 +56,8 @@ const translations = {
     'settings.close': 'Close',
     'settings.cancel': 'Cancel',
     'common.cancel': 'Cancel',
+    'appearance.themeMode': 'Light / dark mode',
+    'appearance.accentColor': 'Accent color',
     'settings.deleteConfirmTitle': 'Delete StudyMesh Account Data?',
     'settings.deleteConfirmBody':
       'This permanently deletes your StudyMesh account data, including synced study guides and profile details. You will be signed out when deletion finishes.',
@@ -442,6 +444,8 @@ const translations = {
     'settings.close': 'Cerrar',
     'settings.cancel': 'Cancelar',
     'common.cancel': 'Cancelar',
+    'appearance.themeMode': 'Modo claro / oscuro',
+    'appearance.accentColor': 'Color de acento',
     'settings.deleteConfirmTitle': '¿Eliminar datos de cuenta StudyMesh?',
     'settings.deleteConfirmBody':
       'Esto elimina permanentemente tus datos de cuenta de StudyMesh, incluyendo Study Guides sincronizadas y detalles del perfil. Se cerrará tu sesión al terminar.',
@@ -840,6 +844,8 @@ const translationOverrides: Record<
     'settings.close': 'Fermer',
     'settings.cancel': 'Annuler',
     'common.cancel': 'Annuler',
+    'appearance.themeMode': 'Mode clair / sombre',
+    'appearance.accentColor': "Couleur d'accent",
     'settings.deleteConfirmTitle':
       'Supprimer les données du compte StudyMesh ?',
     'settings.deleteConfirmBody':
@@ -1232,6 +1238,8 @@ const translationOverrides: Record<
     'settings.close': 'Schließen',
     'settings.cancel': 'Abbrechen',
     'common.cancel': 'Abbrechen',
+    'appearance.themeMode': 'Hell- / Dunkelmodus',
+    'appearance.accentColor': 'Akzentfarbe',
     'settings.deleteConfirmTitle': 'StudyMesh-Kontodaten löschen?',
     'settings.deleteConfirmBody':
       'Dies löscht deine StudyMesh-Kontodaten dauerhaft, einschließlich synchronisierter Guides und Profildetails. Du wirst danach abgemeldet.',

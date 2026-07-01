@@ -127,6 +127,7 @@ interface DashboardChatPanelProps {
   dashboard?: StateDashboard
   messages: DashboardChatMessage[]
   onMessagesChange: (messages: DashboardChatMessage[]) => void
+  onStorageError?: (error: unknown) => void
   onClose: () => void
   showCloseButton?: boolean
   onAddAssistantMessageToGuide?: (message: DashboardChatMessage) => void
@@ -404,6 +405,7 @@ const DashboardChatPanel = ({
   dashboard,
   messages,
   onMessagesChange,
+  onStorageError,
   onClose,
   showCloseButton = true,
   onAddAssistantMessageToGuide,
@@ -558,6 +560,7 @@ const DashboardChatPanel = ({
       )
     } catch (storageError) {
       console.error('Failed to persist dashboard chat sessions', storageError)
+      onStorageError?.(storageError)
     }
   }
 
@@ -897,7 +900,9 @@ const DashboardChatPanel = ({
     const sourceSupportFollowUp = SOURCE_SUPPORT_FOLLOWUP_PATTERN.test(question)
 
     return (
-      comparisonFollowUp || sourceSupportFollowUp ? expandedTerms : questionTerms
+      comparisonFollowUp || sourceSupportFollowUp
+        ? expandedTerms
+        : questionTerms
     ).filter((term) => !isConceptSufficientInDashboard(term, expanded))
   }
 
@@ -1525,7 +1530,8 @@ const DashboardChatPanel = ({
             dashboardTitle: context.dashboardTitle,
             answer,
             contentLanguage:
-              dashboard?.contentLanguage || dashboard?.studyPath?.contentLanguage,
+              dashboard?.contentLanguage ||
+              dashboard?.studyPath?.contentLanguage,
           })
           updateExternalSourceDraftState(source.id, (current) => ({
             ...current,
@@ -1766,7 +1772,11 @@ const DashboardChatPanel = ({
         pending: false,
       }))
       updateLatestLookupDisplayedSources(externalSourceIds, usedWebSourceIds)
-      prepareGuidePageDraftsForSources(usedWebSourceIds, question, result.answer)
+      prepareGuidePageDraftsForSources(
+        usedWebSourceIds,
+        question,
+        result.answer,
+      )
       if (!result.needsExternalSource) {
         rememberFinalAnswer({
           userQuestion: question,
@@ -3217,7 +3227,8 @@ const DashboardChatPanel = ({
                   width:
                     message.role === 'assistant'
                       ? '100%'
-                      : message.role === 'user' && editingPromptId === message.id
+                      : message.role === 'user' &&
+                          editingPromptId === message.id
                         ? 'min(90%, 360px)'
                         : 'auto',
                   minWidth: 0,
@@ -3299,9 +3310,10 @@ const DashboardChatPanel = ({
                           ? '100%'
                           : message.role === 'user' &&
                               editingPromptId === message.id
-                           ? '100%'
-                           : 'auto',
-                      flex: message.role === 'assistant' ? '1 1 auto' : undefined,
+                            ? '100%'
+                            : 'auto',
+                      flex:
+                        message.role === 'assistant' ? '1 1 auto' : undefined,
                       overflow: 'hidden',
                       px: 1.5,
                       py: 1.1,
@@ -3388,7 +3400,7 @@ const DashboardChatPanel = ({
                             whiteSpace: 'pre-wrap',
                             overflowWrap: 'anywhere',
                           },
-                           '& code': { overflowWrap: 'anywhere' },
+                          '& code': { overflowWrap: 'anywhere' },
                           '& .MuiTableContainer-root': {
                             maxWidth: '100%',
                             overflowX: 'auto',

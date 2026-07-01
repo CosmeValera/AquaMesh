@@ -421,7 +421,11 @@ const parseTavilyCandidates = (
 
     const url = firstString(result.url);
     const title = firstString(result.title, url);
-    const snippet = firstString(result.content, result.snippet, result.description);
+    const snippet = firstString(
+      result.content,
+      result.snippet,
+      result.description,
+    );
 
     if (!url || !title) {
       continue;
@@ -512,10 +516,11 @@ const parseExtractedTextByUrl = (
   const extracted = new Map<string, ExtractedSourceText>();
   for (const result of payload.results.filter(isObject)) {
     const url = firstString(result.url);
-    const text = firstString(result.raw_content, result.content, result.text).slice(
-      0,
-      MAX_TEXT_CHARS,
-    );
+    const text = firstString(
+      result.raw_content,
+      result.content,
+      result.text,
+    ).slice(0, MAX_TEXT_CHARS);
 
     if (!url || text.length < MIN_SOURCE_TEXT_CHARS) {
       continue;

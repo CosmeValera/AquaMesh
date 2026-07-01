@@ -6,7 +6,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import GuideWorkspacePage, {
   AI_CHAT_MIN_WIDTH,
 } from '../../../../src/components/studyGuides/GuideWorkspacePage'
-import { STUDY_GUIDES_STORAGE_KEY } from '../../../../src/studyGuides/storage'
+import {
+  STUDY_GUIDES_STORAGE_FULL_MESSAGE,
+  STUDY_GUIDES_STORAGE_KEY,
+} from '../../../../src/studyGuides/storage'
 
 vi.mock('../../../../src/components/topnavbar/TopNavBar', () => ({
   default: () => <div data-testid="top-nav" />,
@@ -26,14 +29,19 @@ vi.mock('../../../../src/components/Dasboard/StudyPathWorkspaceView', () => ({
   default: ({
     studyPath,
     onAskAi,
+    onAddPage,
   }: {
     studyPath: { selectedIndex: number; dashboards: Array<{ name: string }> }
     onAskAi?: (content: string) => void
+    onAddPage?: () => void
   }) => (
     <div data-testid="study-guide-panel">
       {studyPath.dashboards[studyPath.selectedIndex]?.name}
       <button type="button" onClick={() => onAskAi?.('Explain quiz miss')}>
         Ask AI from study block
+      </button>
+      <button type="button" onClick={() => onAddPage?.()}>
+        Add page from study guide
       </button>
     </div>
   ),
@@ -474,5 +482,130 @@ describe('GuideWorkspacePage responsive sections', () => {
     expect(savedPayload).toContain('studymesh-page:core')
     expect(savedPayload).not.toContain('Sources:')
     expect(savedPayload).not.toContain('Rundeck fundamentals')
+  })
+
+  it('shows a workspace storage warning when Add Page cannot save', async () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <Routes>
+          <Route
+            path="/workspace/:studyGuideId"
+            element={<GuideWorkspacePage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await screen.findByTestId('study-guide-panel')
+    vi.mocked(localStorage.setItem).mockImplementation((key) => {
+      if (key === STUDY_GUIDES_STORAGE_KEY) {
+        throw new DOMException(
+          'Setting the value exceeded the quota.',
+          'QuotaExceededError',
+        )
+      }
+    })
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Add page from study guide' }),
+    )
+
+    expect(
+      await screen.findByText(STUDY_GUIDES_STORAGE_FULL_MESSAGE),
+    ).toBeInTheDocument()
+  })
+
+  it('shows a workspace storage warning when Add Source cannot save', async () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <Routes>
+          <Route
+            path="/workspace/:studyGuideId"
+            element={<GuideWorkspacePage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await screen.findByTestId('study-guide-panel')
+    fireEvent.click(screen.getByRole('button', { name: 'AI Chat' }))
+    const latestProps = dashboardChatPanelSpy.mock.calls.at(-1)?.[0] as {
+      onAddExternalSourceToGuide: (source: {
+        id: string
+        url: string
+        title: string
+        text: string
+        guidePageDraftStatus: string
+        guidePageDraft: {
+          title: string
+          markdown: string
+          generatedAt: number
+        }
+        searchQuery: string
+        fetchedAt: number
+      }) => void
+    }
+    vi.mocked(localStorage.setItem).mockImplementation((key) => {
+      if (key === STUDY_GUIDES_STORAGE_KEY) {
+        throw new DOMException(
+          'Setting the value exceeded the quota.',
+          'QuotaExceededError',
+        )
+      }
+    })
+
+    act(() => {
+      latestProps.onAddExternalSourceToGuide({
+        id: 'web-source-1',
+        url: 'https://example.com/dinosaurs',
+        title: 'Useful web source',
+        text: 'Useful web source text.',
+        guidePageDraftStatus: 'ready',
+        guidePageDraft: {
+          title: 'Useful web source',
+          markdown: '# Useful web source\n\nUseful source note.',
+          generatedAt: 1,
+        },
+        searchQuery: 'student query',
+        fetchedAt: 1,
+      })
+    })
+
+    expect(
+      await screen.findByText(STUDY_GUIDES_STORAGE_FULL_MESSAGE),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
+  })
+
+  it('shows a workspace storage warning when chat session persistence is full', async () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <Routes>
+          <Route
+            path="/workspace/:studyGuideId"
+            element={<GuideWorkspacePage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await screen.findByTestId('study-guide-panel')
+    fireEvent.click(screen.getByRole('button', { name: 'AI Chat' }))
+    const latestProps = dashboardChatPanelSpy.mock.calls.at(-1)?.[0] as {
+      onStorageError: (error: unknown) => void
+    }
+
+    act(() => {
+      latestProps.onStorageError(
+        new DOMException(
+          'Setting the value exceeded the quota.',
+          'QuotaExceededError',
+        ),
+      )
+    })
+
+    expect(
+      await screen.findByText(STUDY_GUIDES_STORAGE_FULL_MESSAGE),
+    ).toBeInTheDocument()
   })
 })

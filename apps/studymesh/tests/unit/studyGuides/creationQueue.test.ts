@@ -5,6 +5,7 @@ import {
   STUDY_GUIDE_CREATION_QUEUE_KEY,
   StudyGuideCreationQueueStorage,
 } from '../../../src/studyGuides/creationQueue'
+import { STUDY_GUIDES_STORAGE_FULL_MESSAGE } from '../../../src/studyGuides/storage'
 
 describe('StudyGuideCreationQueueStorage', () => {
   beforeEach(() => {
@@ -78,6 +79,25 @@ describe('StudyGuideCreationQueueStorage', () => {
 
     StudyGuideCreationQueueStorage.remove('job-1')
     expect(StudyGuideCreationQueueStorage.getAll()).toEqual([])
+  })
+
+  it('uses a friendly error when the queue is too large to save', () => {
+    vi.mocked(window.localStorage.setItem).mockImplementation(() => {
+      throw new DOMException(
+        'Setting the value exceeded the quota.',
+        'QuotaExceededError',
+      )
+    })
+
+    expect(() =>
+      StudyGuideCreationQueueStorage.upsert({
+        id: 'job-1',
+        prompt: 'Study biology',
+        provider: 'hosted',
+        status: 'queued',
+        estimateSeconds: 20,
+      }),
+    ).toThrow(STUDY_GUIDES_STORAGE_FULL_MESSAGE)
   })
 
   it('requeues running jobs on hydration', () => {

@@ -85,6 +85,8 @@ const translations = {
     'studyGuides.interruptedMessage':
       'Creation was interrupted by a refresh. Retry when ready.',
     'studyGuides.failedMessage': 'Could not create this Study Guide.',
+    'studyGuides.storageFullMessage':
+      'Your Study Guide library is full. Delete a few old or unused Study Guides, then try again.',
     'studyGuides.elapsed': 'Elapsed',
     'studyGuides.waiting': 'Waiting',
     'studyGuides.estimate': 'Estimate',
@@ -469,6 +471,8 @@ const translations = {
     'studyGuides.interruptedMessage':
       'La creación se interrumpió por una recarga. Reintenta cuando quieras.',
     'studyGuides.failedMessage': 'No se pudo crear esta guía de estudio.',
+    'studyGuides.storageFullMessage':
+      'Tu biblioteca de guías de estudio está llena. Elimina algunas guías antiguas o que ya no uses y vuelve a intentarlo.',
     'studyGuides.elapsed': 'Tiempo',
     'studyGuides.waiting': 'Esperando',
     'studyGuides.estimate': 'Estimado',
@@ -867,6 +871,8 @@ const translationOverrides: Record<
     'studyGuides.interruptedMessage':
       'La création a été interrompue par un rechargement. Réessayez quand vous voulez.',
     'studyGuides.failedMessage': 'Impossible de créer ce guide d’étude.',
+    'studyGuides.storageFullMessage':
+      'Votre bibliothèque de guides d’étude est pleine. Supprimez quelques anciens guides ou guides inutilisés, puis réessayez.',
     'studyGuides.elapsed': 'Temps',
     'studyGuides.waiting': 'En attente',
     'studyGuides.estimate': 'Estimation',
@@ -1256,6 +1262,8 @@ const translationOverrides: Record<
       'Die Erstellung wurde durch ein Neuladen unterbrochen. Versuche es erneut, wenn du bereit bist.',
     'studyGuides.failedMessage':
       'Dieser Study Guide konnte nicht erstellt werden.',
+    'studyGuides.storageFullMessage':
+      'Deine Study-Guide-Bibliothek ist voll. Lösche ein paar alte oder ungenutzte Study Guides und versuche es erneut.',
     'studyGuides.elapsed': 'Verstrichen',
     'studyGuides.waiting': 'Warten',
     'studyGuides.estimate': 'Schätzung',

@@ -240,6 +240,34 @@ describe('StudyGuidesPage create flow', () => {
     saveSpy.mockRestore()
   })
 
+  it('shows a friendly error when the creation queue cannot be saved', async () => {
+    vi.mocked(window.localStorage.setItem).mockImplementation((key: string) => {
+      if (key === STUDY_GUIDE_CREATION_QUEUE_KEY) {
+        throw new DOMException(
+          'Setting the value exceeded the quota.',
+          'QuotaExceededError',
+        )
+      }
+    })
+    renderStudyGuidesPage('/study-guides')
+
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /new study guide/i })[0],
+    )
+    fireEvent.change(await screen.findByLabelText(/study guide prompt/i), {
+      target: { value: 'Teach me organic chemistry.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /create guide/i }))
+
+    expect(
+      await screen.findByText(STUDY_GUIDES_STORAGE_FULL_MESSAGE),
+    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+    expect(generateStudyPathStateFromPrompt).not.toHaveBeenCalled()
+  })
+
   it('keeps a failed Study Guide card retryable with the original prompt', async () => {
     vi.mocked(generateStudyPathStateFromPrompt)
       .mockRejectedValueOnce(

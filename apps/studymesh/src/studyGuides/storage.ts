@@ -88,7 +88,7 @@ const setStoredPinnedStudyGuide = (id: string, pinnedAt: string | null) => {
   writePinnedStudyGuides(pinnedGuides)
 }
 
-const isStorageQuotaError = (error: unknown): boolean =>
+export const isStudyGuidesStorageQuotaError = (error: unknown): boolean =>
   error instanceof DOMException &&
   (error.name === 'QuotaExceededError' ||
     error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
@@ -99,7 +99,7 @@ const writeStorageValue = (key: string, value: string) => {
   try {
     window.localStorage.setItem(key, value)
   } catch (error) {
-    if (isStorageQuotaError(error)) {
+    if (isStudyGuidesStorageQuotaError(error)) {
       throw new Error(STUDY_GUIDES_STORAGE_FULL_MESSAGE)
     }
 

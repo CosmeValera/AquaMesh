@@ -43,6 +43,7 @@ import { useNavigate } from 'react-router-dom'
 import type { StudyGuideRecord } from '../../cloud/types'
 import {
   STUDY_GUIDES_CHANGED_EVENT,
+  STUDY_GUIDES_STORAGE_FULL_MESSAGE,
   StudyGuideStorage,
   createStudyGuideRecord,
 } from '../../studyGuides/storage'
@@ -141,6 +142,19 @@ const getPendingErrorMessage = (
   (guide.status === 'interrupted'
     ? t('studyGuides.interruptedMessage')
     : t('studyGuides.failedMessage'))
+
+const getCreationErrorMessage = (
+  error: unknown,
+  t: ReturnType<typeof useInterfaceText>['t'],
+): string => {
+  if (!(error instanceof Error)) {
+    return t('studyGuides.failedMessage')
+  }
+
+  return error.message === STUDY_GUIDES_STORAGE_FULL_MESSAGE
+    ? t('studyGuides.storageFullMessage')
+    : error.message
+}
 
 const isLocalProvider = (provider: StudyGuideCreationProvider): boolean =>
   provider === 'local'
@@ -383,18 +397,41 @@ const StudyGuidesPage = () => {
   }
 
   const enqueueCreateGuide = (prompt: string, id = nanoid()) => {
-    const pendingGuide = StudyGuideCreationQueueStorage.upsert({
-      id,
-      prompt,
-      provider: getActiveAiProvider(),
-      status: 'queued',
-      estimateSeconds: getGenerationEstimateSeconds(),
-      autoRetryCount: 0,
-      startedAt: null,
-      finishedAt: null,
-      errorMessage: null,
-      resultStudyGuideId: null,
-    })
+    const provider = getActiveAiProvider()
+    const estimateSeconds = getGenerationEstimateSeconds()
+    let pendingGuide: PendingGuide
+
+    try {
+      pendingGuide = StudyGuideCreationQueueStorage.upsert({
+        id,
+        prompt,
+        provider,
+        status: 'queued',
+        estimateSeconds,
+        autoRetryCount: 0,
+        startedAt: null,
+        finishedAt: null,
+        errorMessage: null,
+        resultStudyGuideId: null,
+      })
+    } catch (error) {
+      const timestamp = new Date().toISOString()
+      pendingGuide = {
+        id,
+        prompt,
+        provider,
+        status: 'failed',
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        estimateSeconds,
+        autoRetryCount: 0,
+        startedAt: null,
+        finishedAt: timestamp,
+        errorMessage: getCreationErrorMessage(error, t),
+        resultStudyGuideId: null,
+      }
+    }
+
     setPendingGuides((current) =>
       sortPendingGuidesForDisplay([
         pendingGuide,
@@ -402,7 +439,56 @@ const StudyGuidesPage = () => {
       ]),
     )
     setCreateOpen(false)
-    setCreateGuidePrompt('')
+    if (pendingGuide.status !== 'failed') {
+      setCreateGuidePrompt('')
+    }
+  }
+
+  const retryPendingGuide = (guide: PendingGuide) => {
+    let updatedGuide: PendingGuide | null = null
+
+    try {
+      updatedGuide = StudyGuideCreationQueueStorage.update(guide.id, {
+        status: 'queued',
+        startedAt: null,
+        finishedAt: null,
+        autoRetryCount: 0,
+        errorMessage: null,
+      })
+    } catch (error) {
+      setPendingGuides((current) =>
+        current.map((item) =>
+          item.id === guide.id
+            ? {
+                ...item,
+                status: 'failed',
+                errorMessage: getCreationErrorMessage(error, t),
+              }
+            : item,
+        ),
+      )
+      return
+    }
+
+    if (!updatedGuide) {
+      enqueueCreateGuide(guide.prompt, guide.id)
+      return
+    }
+
+    loadPendingGuides()
+  }
+
+  const deletePendingGuide = (guide: PendingGuide) => {
+    activeJobsRef.current.get(guide.id)?.controller.abort()
+
+    try {
+      StudyGuideCreationQueueStorage.remove(guide.id)
+      loadPendingGuides()
+    } catch {
+      setPendingGuides((current) =>
+        current.filter((item) => item.id !== guide.id),
+      )
+    }
   }
 
   const runQueuedGuide = async (job: PendingGuide) => {
@@ -465,8 +551,8 @@ const StudyGuidesPage = () => {
           job.provider === 'hosted'
             ? HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE
             : nextStatus === 'failed'
-            ? errorMessage
-            : null,
+              ? errorMessage
+              : null,
       })
     } finally {
       activeJobsRef.current.delete(job.id)
@@ -511,24 +597,6 @@ const StudyGuidesPage = () => {
       void runQueuedGuide(job)
     })
   }, [pendingGuides])
-
-  const retryPendingGuide = (guide: PendingGuide) => {
-    StudyGuideCreationQueueStorage.update(guide.id, {
-      status: 'queued',
-      startedAt: null,
-      finishedAt: null,
-      autoRetryCount: 0,
-      errorMessage: null,
-    })
-    loadPendingGuides()
-  }
-
-  const deletePendingGuide = (guide: PendingGuide) => {
-    activeJobsRef.current.get(guide.id)?.controller.abort()
-
-    StudyGuideCreationQueueStorage.remove(guide.id)
-    loadPendingGuides()
-  }
 
   const submitCreateGuide = async () => {
     const prompt = createGuidePrompt.trim()
@@ -1099,10 +1167,10 @@ const StudyGuidesPage = () => {
                   guide.emoji === '🧬'
                     ? '#0b84a5'
                     : guide.emoji === '📚'
-                    ? '#5b3f92'
-                    : guide.emoji === '🎨'
-                    ? '#b86b2d'
-                    : '#0b6f4f'
+                      ? '#5b3f92'
+                      : guide.emoji === '🎨'
+                        ? '#b86b2d'
+                        : '#0b6f4f'
                 const isNewlyCreated = newlyCreatedGuideIds.has(guide.id)
                 return (
                   <Paper
@@ -1123,8 +1191,8 @@ const StudyGuidesPage = () => {
                       borderColor: isNewlyCreated
                         ? theme.palette.warning.main
                         : guide.pinnedAt
-                        ? alpha(theme.palette.primary.main, 0.32)
-                        : 'divider',
+                          ? alpha(theme.palette.primary.main, 0.32)
+                          : 'divider',
                       bgcolor: 'background.paper',
                       cursor: 'pointer',
                       overflow: 'hidden',
@@ -1156,8 +1224,8 @@ const StudyGuidesPage = () => {
                               theme.palette.mode === 'dark' ? 0.2 : 0.16,
                             )}`
                           : theme.palette.mode === 'dark'
-                          ? '0 18px 44px rgba(0,0,0,0.36)'
-                          : '0 20px 46px rgba(15,23,42,0.11)',
+                            ? '0 18px 44px rgba(0,0,0,0.36)'
+                            : '0 20px 46px rgba(15,23,42,0.11)',
                       },
                     })}
                   >

@@ -1,4 +1,8 @@
 import type { QuickCreateAiProvider } from '../quickCreate/ai'
+import {
+  STUDY_GUIDES_STORAGE_FULL_MESSAGE,
+  isStudyGuidesStorageQuotaError,
+} from './storage'
 
 export type StudyGuideCreationProvider = QuickCreateAiProvider
 
@@ -136,10 +140,18 @@ const readQueue = (): StudyGuideCreationJob[] => {
 }
 
 const writeQueue = (jobs: StudyGuideCreationJob[]) => {
-  window.localStorage.setItem(
-    STUDY_GUIDE_CREATION_QUEUE_KEY,
-    JSON.stringify(jobs),
-  )
+  try {
+    window.localStorage.setItem(
+      STUDY_GUIDE_CREATION_QUEUE_KEY,
+      JSON.stringify(jobs),
+    )
+  } catch (error) {
+    if (isStudyGuidesStorageQuotaError(error)) {
+      throw new Error(STUDY_GUIDES_STORAGE_FULL_MESSAGE)
+    }
+
+    throw error
+  }
   dispatchQueueChanged()
 }
 

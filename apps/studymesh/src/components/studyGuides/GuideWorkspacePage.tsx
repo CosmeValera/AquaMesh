@@ -37,8 +37,10 @@ import {
 } from '../../studyGuides/pages'
 import { appendAiQuickCreatePage } from '../../studyGuides/generation'
 import {
+  STUDY_GUIDES_STORAGE_FULL_MESSAGE,
   StudyGuideStorage,
   createStudyGuideRecord,
+  isStudyGuidesStorageQuotaError,
 } from '../../studyGuides/storage'
 import {
   createStudyGuidePageHref,
@@ -98,6 +100,11 @@ const normalizeGeneratedPageLayouts = (
   }
 }
 
+const isStudyGuidesStorageFullError = (error: unknown): boolean =>
+  (error instanceof Error &&
+    error.message === STUDY_GUIDES_STORAGE_FULL_MESSAGE) ||
+  isStudyGuidesStorageQuotaError(error)
+
 const GuideWorkspacePage = () => {
   const { t } = useInterfaceText()
   const theme = useTheme()
@@ -110,6 +117,7 @@ const GuideWorkspacePage = () => {
   const [messages, setMessages] = useState<DashboardChatMessage[]>([])
   const [editingPageKey, setEditingPageKey] = useState<string | null>(null)
   const [quickCreateError, setQuickCreateError] = useState('')
+  const [workspaceStorageError, setWorkspaceStorageError] = useState(false)
   const [queuedChatQuestion, setQueuedChatQuestion] = useState<{
     id: string
     content: string
@@ -167,29 +175,43 @@ const GuideWorkspacePage = () => {
       return
     }
 
-    const nextRecord = StudyGuideStorage.save({
-      ...record,
-      visitedPageKeys: [...(record.visitedPageKeys || []), pageKey],
-    })
-    setRecord(nextRecord)
+    try {
+      const nextRecord = StudyGuideStorage.save({
+        ...record,
+        visitedPageKeys: [...(record.visitedPageKeys || []), pageKey],
+      })
+      setRecord(nextRecord)
+    } catch (error) {
+      if (!handleStorageError(error)) {
+        throw error
+      }
+    }
   }, [record?.id, record?.studyPath.selectedIndex])
 
   const persistStudyPath = (studyPath: StudyPathContainerState) => {
     const normalized = normalizeGeneratedPageLayouts(studyPath)
-    const nextRecord = record
-      ? StudyGuideStorage.save({
-          ...record,
-          title: normalized.title || record.title,
-          folderName: normalized.folderName || record.folderName,
-          studyPath: normalized,
-        })
-      : StudyGuideStorage.save(
-          createStudyGuideRecord(normalized, {
-            id: studyGuideId,
-          }),
-        )
-    setRecord(nextRecord)
-    return nextRecord
+    try {
+      const nextRecord = record
+        ? StudyGuideStorage.save({
+            ...record,
+            title: normalized.title || record.title,
+            folderName: normalized.folderName || record.folderName,
+            studyPath: normalized,
+          })
+        : StudyGuideStorage.save(
+            createStudyGuideRecord(normalized, {
+              id: studyGuideId,
+            }),
+          )
+      setRecord(nextRecord)
+      return nextRecord
+    } catch (error) {
+      if (handleStorageError(error)) {
+        return null
+      }
+
+      throw error
+    }
   }
 
   const appendMarkdownPage = (
@@ -198,21 +220,23 @@ const GuideWorkspacePage = () => {
     source: 'manual' | 'chat' | 'quickCreate',
   ) => {
     if (!record) {
-      return
+      return false
     }
 
-    persistStudyPath(
-      appendStudyGuideMarkdownPage(record.studyPath, {
-        title,
-        markdown,
-        source,
-      }),
+    return Boolean(
+      persistStudyPath(
+        appendStudyGuideMarkdownPage(record.studyPath, {
+          title,
+          markdown,
+          source,
+        }),
+      ),
     )
   }
 
   const addManualPage = () => {
     if (!record) {
-      return
+      return false
     }
 
     const nextStudyPath = appendStudyGuideMarkdownPage(record.studyPath, {
@@ -221,9 +245,13 @@ const GuideWorkspacePage = () => {
       source: 'manual',
     })
     const nextRecord = persistStudyPath(nextStudyPath)
+    if (!nextRecord) {
+      return false
+    }
     const newPage =
       nextRecord.studyPath.dashboards[nextRecord.studyPath.selectedIndex]
     setEditingPageKey(newPage?.dashboardKey || null)
+    return true
   }
 
   const linkAssistantCitations = (message: DashboardChatMessage): string => {
@@ -265,12 +293,28 @@ const GuideWorkspacePage = () => {
       return
     }
 
-    appendMarkdownPage(
+    const added = appendMarkdownPage(
       source.guidePageDraft.title || source.title || t('workspace.webSource'),
       source.guidePageDraft.markdown,
       'chat',
     )
+    if (!added) {
+      return
+    }
     setMobileSection('study-guide')
+  }
+
+  const showStorageFullError = () => {
+    setWorkspaceStorageError(true)
+  }
+
+  const handleStorageError = (error: unknown): boolean => {
+    if (!isStudyGuidesStorageFullError(error)) {
+      return false
+    }
+
+    showStorageFullError()
+    return true
   }
 
   const openStudyGuidePageKey = (dashboardKey: string) => {
@@ -285,10 +329,13 @@ const GuideWorkspacePage = () => {
       return
     }
 
-    persistStudyPath({
+    const nextRecord = persistStudyPath({
       ...record.studyPath,
       selectedIndex: pageIndex,
     })
+    if (!nextRecord) {
+      return
+    }
     setMobileSection('study-guide')
   }
 
@@ -373,6 +420,9 @@ const GuideWorkspacePage = () => {
         sourceText,
       })
       const nextRecord = persistStudyPath(nextStudyPath)
+      if (!nextRecord) {
+        return
+      }
       const newPage =
         nextRecord.studyPath.dashboards[nextRecord.studyPath.selectedIndex]
       if (request.resourceType === 'improvedNotes') {
@@ -465,8 +515,9 @@ const GuideWorkspacePage = () => {
         onStudyPathChange={persistStudyPath}
         onPageSelected={() => setMobileSection('study-guide')}
         onAddPage={() => {
-          addManualPage()
-          setMobileSection('study-guide')
+          if (addManualPage()) {
+            setMobileSection('study-guide')
+          }
         }}
         variant="mobile"
       />
@@ -491,6 +542,7 @@ const GuideWorkspacePage = () => {
         dashboard={dashboard}
         messages={messages}
         onMessagesChange={setMessages}
+        onStorageError={handleStorageError}
         onClose={() =>
           isMobile ? setMobileSection('study-guide') : setAiChatOpen(false)
         }
@@ -592,6 +644,37 @@ const GuideWorkspacePage = () => {
               overflow: 'hidden',
             }}
           >
+            {workspaceStorageError ? (
+              <Alert
+                severity="warning"
+                action={
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={() => navigate('/study-guides')}
+                    >
+                      {t('workspace.backToGuides')}
+                    </Button>
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={() => setWorkspaceStorageError(false)}
+                    >
+                      {t('settings.close')}
+                    </Button>
+                  </Box>
+                }
+                sx={{
+                  flex: '0 0 auto',
+                  m: isMobile ? 0 : 1,
+                  mb: isMobile ? 1 : 0,
+                  alignItems: 'center',
+                }}
+              >
+                {t('studyGuides.storageFullMessage')}
+              </Alert>
+            ) : null}
             {isMobile ? (
               <>
                 <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>

@@ -10,10 +10,13 @@ import type {
   HostedAiSurface,
 } from "../apps/studymesh/src/quickCreate/ai/hostedCredits";
 import {
+  buildStudyGuideKnowledgeBridgeBlocksPrompt,
   buildStudyGuideQuickStartPrompt,
   buildStudyGuideQuickStartRelevancePrompt,
+  parseStudyGuideKnowledgeBridgeBlocks,
   parseStudyGuideQuickStart,
   parseStudyGuideQuickStartRelevanceDecision,
+  STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
   STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
   STUDY_GUIDE_QUICK_START_SCHEMA,
 } from "../apps/studymesh/src/studyGuides/quickStart";
@@ -112,6 +115,18 @@ const errorResponse = (
 
 const isObject = (value: unknown): value is JsonObject =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const stringValue = (value: unknown): string =>
+  typeof value === "string" ? value.trim() : "";
+
+const parseJsonRecord = (value: string): JsonObject | null => {
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return isObject(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
 
 const normalizeRequest = (body: unknown): HostedAiGatewayRequest | null => {
   if (typeof body === "string") {
@@ -628,6 +643,7 @@ const handleGenerate = async (
   try {
     const text = await callCerebras(usageRequest, model);
     let quickStart: HostedAiGatewayResponse["quickStart"] | undefined;
+    let bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"] | undefined;
 
     if (includeQuickStart) {
       const safeKnownTopics = sanitizeUserKnownTopics(
@@ -680,6 +696,55 @@ const handleGenerate = async (
           providerCallCount += 1;
         }),
       );
+
+      if (
+        relevanceDecision?.shouldUseKnownTopic &&
+        relevanceDecision.knownTopicsForQuickStart.length
+      ) {
+        const guideRecord = parseJsonRecord(text);
+        const dashboards = Array.isArray(guideRecord?.dashboards)
+          ? guideRecord.dashboards
+              .filter((dashboard): dashboard is JsonObject =>
+                isObject(dashboard),
+              )
+              .map((dashboard) => ({
+                title: stringValue(dashboard.title),
+                summary: stringValue(dashboard.summary),
+                rawNotes: stringValue(dashboard.rawNotes),
+              }))
+          : [];
+
+        if (dashboards.length) {
+          try {
+            bridgeBlocks = parseStudyGuideKnowledgeBridgeBlocks(
+              await callCerebras(
+                {
+                  ...usageRequest,
+                  responseSchema: STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
+                  parts: [
+                    {
+                      text: buildStudyGuideKnowledgeBridgeBlocksPrompt({
+                        title:
+                          stringValue(guideRecord?.folderName) || "Study Guide",
+                        prompt: getHostedRequestText(request),
+                        dashboards,
+                        relevanceDecision,
+                        outputLanguage: request.outputLanguage,
+                      }),
+                    },
+                  ],
+                },
+                model,
+              ).finally(() => {
+                providerCallCount += 1;
+              }),
+              dashboards.length,
+            );
+          } catch {
+            bridgeBlocks = [];
+          }
+        }
+      }
     }
     if (includeQuickStart && !quickStart) {
       const error = new Error("Hosted AI returned no Study Guide Quick Start.");
@@ -697,7 +762,7 @@ const handleGenerate = async (
         providerCallCount,
       ).catch(() => undefined)) || started.status;
 
-    return { ok: true, text, quickStart, status };
+    return { ok: true, text, quickStart, bridgeBlocks, status };
   } catch (error) {
     const mapped = mapFailure(error);
 

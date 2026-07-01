@@ -9,8 +9,10 @@ import {
   stripDuplicateStudyGuideMarkdownTitle,
 } from '../../../src/studyGuides/pages'
 import {
+  buildStudyGuideKnowledgeBridgeBlocksPrompt,
   buildStudyGuideQuickStartPrompt,
   buildStudyGuideQuickStartRelevancePrompt,
+  parseStudyGuideKnowledgeBridgeBlocks,
   parseStudyGuideQuickStart,
   parseStudyGuideQuickStartRelevanceDecision,
   sanitizeStudyGuideQuickStart,
@@ -148,13 +150,13 @@ describe('Study Guide Quick Start helpers', () => {
 
   it('includes selected known topic and clarity rules in Quick Start prompt', () => {
     const prompt = buildStudyGuideQuickStartPrompt({
-      title: 'Data lakes',
-      source: 'Data lake lesson notes.',
+      title: 'Target concept',
+      source: 'Target concept lesson notes.',
       relevanceDecision: {
         shouldUseKnownTopic: true,
-        knownTopicsForQuickStart: ['MinIO'],
+        knownTopicsForQuickStart: ['Specific related concept'],
         knownTopicRelevanceReason:
-          'MinIO gives a direct object-storage bridge for data lake storage.',
+          'Specific related concept gives a direct same-domain bridge for the target concept.',
         targetTopicType: 'technical',
         bridgeStrength: 'strong',
         bridgeStrategy: 'direct_comparison',
@@ -164,16 +166,15 @@ describe('Study Guide Quick Start helpers', () => {
     expect(prompt).toContain('"keyIdea"')
     expect(prompt).toContain('"quickSummary"')
     expect(prompt).toContain('Use only this selected known topic bridge')
-    expect(prompt).toContain('MinIO')
+    expect(prompt).toContain('Specific related concept')
     expect(prompt).toContain('Bridge strength: strong')
     expect(prompt).toContain('Bridge strategy: direct_comparison')
     expect(prompt).toContain('the selected known topic must lead')
     expect(prompt).toContain('where the comparison breaks')
     expect(prompt).toContain('keyIdea introduces at most 1 technical term')
     expect(prompt).toContain('Introduce at most 2-3 new technical terms')
-    expect(prompt).toContain('Do not start Vue with proxies')
-    expect(prompt).not.toContain('Backend')
-    expect(prompt).not.toContain('Databases')
+    expect(prompt).toContain('Good bridge shape')
+    expect(prompt).toContain('Bad bridge shape')
     expect(prompt).toContain('This guide teaches')
     expect(prompt).toContain('This page explains')
     expect(prompt).toContain('You will learn')
@@ -191,38 +192,40 @@ describe('Study Guide Quick Start helpers', () => {
     expect(prompt).toContain('neutral beginner-friendly explanation')
   })
 
-  it('builds a strong-model relevance prompt with direct-comparison examples', () => {
+  it('builds a strong-model relevance prompt with generic bridge rules', () => {
     const prompt = buildStudyGuideQuickStartRelevancePrompt({
-      title: 'GraphQL',
-      prompt: 'graphql',
-      source: 'GraphQL lets clients request fields from a schema.',
-      userKnownTopics: ['REST API', 'Docker'],
+      title: 'New topic',
+      prompt: 'new topic',
+      source: 'The new topic solves a specific learning problem.',
+      userKnownTopics: ['Broad category', 'Specific related topic'],
     })
 
     expect(prompt).toContain('Goal: reduce learner cognitive effort')
     expect(prompt).toContain('Prefer same-domain direct comparisons')
+    expect(prompt).toContain('Prefer specific topics over broad categories')
+    expect(prompt).toContain('Generic examples')
     expect(prompt).toContain(
-      'Target "GraphQL", known ["REST API", "Docker"]: select REST API only; bridgeStrength "strong"; bridgeStrategy "direct_comparison"',
+      'Target "narrow domain topic", known ["broad category", "specific related topic"]',
     )
-    expect(prompt).toContain(
-      'Target "How does the eye focus light?", known ["photography"]: select photography; bridgeStrength "strong"; bridgeStrategy "analogy_skeleton"',
-    )
-    expect(prompt).toContain(
-      'Target "Managing very junior reports", known ["Docker"]: select none; bridgeStrength "none"; bridgeStrategy "none"',
-    )
-    expect(prompt).toContain('Target "Data lakes", known ["MinIO"]')
+    expect(prompt).not.toContain('Kafka')
+    expect(prompt).not.toContain('Valencian')
+    expect(prompt).not.toContain('Catalan')
+    expect(prompt).not.toContain('Vue')
+    expect(prompt).not.toContain('React')
   })
 
   it.each([
-    ['Vue', ['React'], ['React'], 'direct_comparison'],
-    ['Zustand', ['Redux'], ['Redux'], 'direct_comparison'],
-    ['Kubernetes', ['Docker'], ['Docker'], 'direct_comparison'],
-    ['GraphQL', ['REST API', 'Docker'], ['REST API'], 'direct_comparison'],
-    ['Data lakes', ['MinIO'], ['MinIO'], 'direct_comparison'],
+    ['New library', ['Known library'], ['Known library'], 'direct_comparison'],
     [
-      'How does the eye focus light?',
-      ['photography'],
-      ['photography'],
+      'New protocol',
+      ['Broad technical category', 'Specific related protocol'],
+      ['Specific related protocol'],
+      'direct_comparison',
+    ],
+    [
+      'New biological process',
+      ['Known mechanical process'],
+      ['Known mechanical process'],
       'analogy_skeleton',
     ],
   ])(
@@ -307,6 +310,69 @@ describe('Study Guide Quick Start helpers', () => {
     expect(decision.targetTopicType).toBe('human_management')
     expect(decision.bridgeStrength).toBe('none')
     expect(decision.bridgeStrategy).toBe('none')
+  })
+
+  it('builds and parses optional knowledge bridge blocks', () => {
+    const relevanceDecision = {
+      shouldUseKnownTopic: true,
+      knownTopicsForQuickStart: ['Event-driven architecture'],
+      knownTopicRelevanceReason:
+        'Event streams are a direct bridge for Kafka topics.',
+      targetTopicType: 'technical' as const,
+      bridgeStrength: 'strong' as const,
+      bridgeStrategy: 'direct_comparison' as const,
+    }
+    const prompt = buildStudyGuideKnowledgeBridgeBlocksPrompt({
+      title: 'Kafka',
+      prompt: 'Kafka',
+      dashboards: [
+        {
+          title: '01 - Event streams',
+          summary: 'Topics store event streams.',
+          rawNotes: 'Kafka topics keep ordered event records.',
+        },
+      ],
+      relevanceDecision,
+    })
+
+    expect(prompt).toContain(
+      'Create optional knowledge-context bridge note blocks',
+    )
+    expect(prompt).toContain(
+      'Selected known topic bridge: Event-driven architecture',
+    )
+    expect(prompt).toContain('dashboardIndex: 0')
+
+    const blocks = parseStudyGuideKnowledgeBridgeBlocks(
+      JSON.stringify({
+        blocks: [
+          {
+            dashboardIndex: 0,
+            title: 'Events you already know',
+            body: 'Kafka topics are event streams, but they also retain ordered records so consumers can replay from offsets.',
+          },
+          {
+            dashboardIndex: 0,
+            title: 'Duplicate ignored',
+            body: 'This should be skipped because the dashboard already has a bridge.',
+          },
+          {
+            dashboardIndex: 9,
+            title: 'Out of range',
+            body: 'This should be skipped.',
+          },
+        ],
+      }),
+      1,
+    )
+
+    expect(blocks).toEqual([
+      {
+        dashboardIndex: 0,
+        title: 'Events you already know',
+        body: 'Kafka topics are event streams, but they also retain ordered records so consumers can replay from offsets.',
+      },
+    ])
   })
 })
 

@@ -806,7 +806,18 @@ describe('API payment and hosted AI hardening', () => {
                 message: {
                   content:
                     providerBodies.length === 1
-                      ? '{"title":"Guide","dashboards":[]}'
+                      ? JSON.stringify({
+                          title: 'Guide',
+                          folderName: 'Guide',
+                          dashboards: [
+                            {
+                              title: '01 - Backend flow',
+                              summary: 'Backend flow preview.',
+                              rawNotes:
+                                'Backend systems receive requests and coordinate durable work.',
+                            },
+                          ],
+                        })
                       : providerBodies.length === 2
                         ? JSON.stringify({
                             shouldUseKnownTopic: true,
@@ -817,12 +828,22 @@ describe('API payment and hosted AI hardening', () => {
                             bridgeStrength: 'strong',
                             bridgeStrategy: 'direct_comparison',
                           })
-                        : JSON.stringify({
-                            keyIdea:
-                              'Backend gives a useful short mental model.',
-                            quickSummary:
-                              'First short paragraph.\n\nSecond short paragraph with one caveat.',
-                          }),
+                        : providerBodies.length === 3
+                          ? JSON.stringify({
+                              keyIdea:
+                                'Backend gives a useful short mental model.',
+                              quickSummary:
+                                'First short paragraph.\n\nSecond short paragraph with one caveat.',
+                            })
+                          : JSON.stringify({
+                              blocks: [
+                                {
+                                  dashboardIndex: 0,
+                                  title: 'Backend bridge',
+                                  body: 'Backend request flow is a useful comparison, but Kafka-style durability changes the shape.',
+                                },
+                              ],
+                            }),
                 },
               },
             ],
@@ -859,14 +880,21 @@ describe('API payment and hosted AI hardening', () => {
     expect(response.statusCode).toBe(200)
     expect(response.body).toMatchObject({
       ok: true,
-      text: '{"title":"Guide","dashboards":[]}',
+      text: expect.any(String),
       quickStart: {
         keyIdea: 'Backend gives a useful short mental model.',
         quickSummary:
           'First short paragraph.\n\nSecond short paragraph with one caveat.',
       },
+      bridgeBlocks: [
+        {
+          dashboardIndex: 0,
+          title: 'Backend bridge',
+          body: 'Backend request flow is a useful comparison, but Kafka-style durability changes the shape.',
+        },
+      ],
     })
-    expect(providerBodies).toHaveLength(3)
+    expect(providerBodies).toHaveLength(4)
     expect(JSON.stringify(providerBodies[1])).toContain(
       'Known topics, strongest first: Backend, Databases',
     )
@@ -876,9 +904,12 @@ describe('API payment and hosted AI hardening', () => {
     expect(JSON.stringify(providerBodies[2])).not.toContain(
       'Use only this selected known topic bridge if it improves clarity: Backend, Databases',
     )
+    expect(JSON.stringify(providerBodies[3])).toContain(
+      'Create optional knowledge-context bridge note blocks',
+    )
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 2 })
-    expect(rpcBodies[1].p_provider_call_count).toBe(3)
+    expect(rpcBodies[1].p_provider_call_count).toBe(4)
   })
 
   it('maps hosted Study Guide risky retry guard to rate limit before provider call', async () => {

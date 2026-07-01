@@ -19,7 +19,7 @@ import {
   normalizeQuickCreateActionInput,
   type QuickCreateActionInput,
 } from '../quickCreate/quickCreateActions'
-import { getUserKnownTopics } from '../profileContext'
+import { getAllUserKnownTopics } from '../profileContext'
 import type {
   StudyGuideQuickStart,
   StudyPathContainerState,
@@ -136,7 +136,7 @@ export const generateStudyPathStateFromPrompt = async ({
     prompt,
     outputLanguage: resolvedLanguage.language,
     signal,
-    userKnownTopics: getUserKnownTopics(),
+    userKnownTopics: getAllUserKnownTopics(),
   })
   const title = draft.folderName || draft.title || 'Study Guide'
   const count = draft.dashboards.length

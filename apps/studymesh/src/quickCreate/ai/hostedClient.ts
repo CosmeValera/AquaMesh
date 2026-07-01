@@ -247,11 +247,15 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
   userKnownTopics,
   outputLanguage,
   onQuickStart,
+  onBridgeBlocks,
 }: {
   userKnownTopics?: string[]
   outputLanguage?: StrongAiCallOptions['outputLanguage']
   onQuickStart: (
     quickStart: NonNullable<HostedAiGatewayResponse['quickStart']>,
+  ) => void
+  onBridgeBlocks?: (
+    bridgeBlocks: NonNullable<HostedAiGatewayResponse['bridgeBlocks']>,
   ) => void
 }): HostedAiTransport => {
   return async ({
@@ -288,6 +292,7 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
       }
 
       onQuickStart(payload.quickStart)
+      onBridgeBlocks?.(payload.bridgeBlocks || [])
       return text
     } finally {
       dispatchHostedAiUsageChanged()

@@ -40,6 +40,12 @@ export interface StudyGuideQuickStartRelevanceDecision {
   bridgeStrategy: StudyGuideQuickStartBridgeStrategy
 }
 
+export interface StudyGuideKnowledgeBridgeBlock {
+  dashboardIndex: number
+  title: string
+  body: string
+}
+
 export const STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA = {
   type: 'OBJECT',
   properties: {
@@ -79,6 +85,25 @@ export const STUDY_GUIDE_QUICK_START_SCHEMA = {
     quickSummary: { type: 'STRING' },
   },
   required: ['keyIdea', 'quickSummary'],
+}
+
+export const STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    blocks: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          dashboardIndex: { type: 'NUMBER' },
+          title: { type: 'STRING' },
+          body: { type: 'STRING' },
+        },
+        required: ['dashboardIndex', 'title', 'body'],
+      },
+    },
+  },
+  required: ['blocks'],
 }
 
 export const createNeutralStudyGuideQuickStartRelevanceDecision =
@@ -298,6 +323,63 @@ export const parseStudyGuideQuickStart = (
   return sanitizeStudyGuideQuickStart(parsed as Partial<StudyGuideQuickStart>)
 }
 
+export const parseStudyGuideKnowledgeBridgeBlocks = (
+  text: string,
+  dashboardCount: number,
+): StudyGuideKnowledgeBridgeBlock[] => {
+  let parsed: unknown
+  try {
+    parsed = parseJsonObject(text)
+  } catch {
+    return []
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return []
+  }
+
+  const blocks = Array.isArray((parsed as Record<string, unknown>).blocks)
+    ? (parsed as Record<string, unknown>).blocks
+    : []
+  const usedIndexes = new Set<number>()
+
+  return blocks
+    .map((block) => {
+      if (!block || typeof block !== 'object' || Array.isArray(block)) {
+        return null
+      }
+
+      const record = block as Record<string, unknown>
+      const dashboardIndex =
+        typeof record.dashboardIndex === 'number'
+          ? Math.trunc(record.dashboardIndex)
+          : -1
+      const title = stripTextLabels(stringValue(record.title))
+        .replace(/\s+/g, ' ')
+        .slice(0, 80)
+        .trim()
+      const body = stripTextLabels(stringValue(record.body))
+        .replace(/\n{3,}/g, '\n\n')
+        .slice(0, 700)
+        .trim()
+
+      if (
+        dashboardIndex < 0 ||
+        dashboardIndex >= dashboardCount ||
+        usedIndexes.has(dashboardIndex) ||
+        !title ||
+        !body
+      ) {
+        return null
+      }
+
+      usedIndexes.add(dashboardIndex)
+      return { dashboardIndex, title, body }
+    })
+    .filter((block): block is StudyGuideKnowledgeBridgeBlock => Boolean(block))
+    .slice(0, 2)
+}
+
 export const buildStudyGuideQuickStartPrompt = ({
   title,
   source,
@@ -355,14 +437,8 @@ ${
 }
 - Target topic type: ${decision.targetTopicType}.
 - If this is a human or management topic, do not compare people to infrastructure, tools, machines, or deployment systems.
-- Good keyIdea examples:
-  - Vue + React: "Vue is a React-like frontend framework where templates and reactive data stay automatically synced."
-  - GraphQL + REST API: "GraphQL is an API style where the client asks for exactly the fields it needs instead of using many fixed REST endpoints."
-  - Data lakes + MinIO/S3: "A data lake is like MinIO/S3 used as central raw-data storage, plus catalogs and processing tools to analyze those files later."
-  - Kubernetes + Docker: "Kubernetes manages Docker-style containers across many machines so they can scale, restart, and stay reachable automatically."
-- Bad keyIdea examples:
-  - Do not start Vue with proxies, dependency tracking, or internals.
-  - Do not start Kubernetes with control planes, Pods, or scheduling internals.
+- Good bridge shape: "The new topic is in the same family as the known topic, but differs in this one important boundary."
+- Bad bridge shape: starting with low-level internals, trivia, implementation mechanisms, or a comparison that only shares vocabulary.
 
 Final Study Guide content:
 ${source.slice(0, 60000)}`
@@ -406,20 +482,20 @@ Decision rules:
 - No useful bridge means ignore userKnownTopics completely.
 - Technical target + directly related technical known topic: select the best direct comparison.
 - Technical target + unrelated technical known topic: ignore it.
-- Use direct_comparison for Vue/React, Zustand/Redux, GraphQL/REST, Kubernetes/Docker, and data lake/MinIO/S3.
-- Use analogy_skeleton when the known topic maps structurally to the new concept, such as eye optics/photography/camera.
+- Use direct_comparison when the known topic and target topic share a domain, purpose, or problem space and the difference can be stated precisely.
+- Prefer specific topics over broad categories when both are provided and relevant.
+- Prefer a narrower domain bridge over a broad category bridge.
+- Use analogy_skeleton only when the known topic maps structurally to the new concept across multiple parts and the limits are easy to state.
 - Use light_reference only for weak but genuinely helpful bridges.
 - Human or management target: avoid infrastructure/tool analogies unless explicitly requested.
 - If no topic clearly helps, set shouldUseKnownTopic false, knownTopicsForQuickStart [], bridgeStrength "none", and bridgeStrategy "none".
 - Do not write the Quick Start.
 
-Examples:
-- Target "Vue", known ["React"]: select React; bridgeStrength "strong"; bridgeStrategy "direct_comparison".
-- Target "Zustand", known ["Redux"]: select Redux; bridgeStrength "strong"; bridgeStrategy "direct_comparison".
-- Target "GraphQL", known ["REST API", "Docker"]: select REST API only; bridgeStrength "strong"; bridgeStrategy "direct_comparison".
-- Target "How does the eye focus light?", known ["photography"]: select photography; bridgeStrength "strong"; bridgeStrategy "analogy_skeleton".
-- Target "Managing very junior reports", known ["Docker"]: select none; bridgeStrength "none"; bridgeStrategy "none".
-- Target "Data lakes", known ["MinIO"]: select MinIO only if object storage helps explain it; bridgeStrength "strong"; bridgeStrategy "direct_comparison".
+Generic examples:
+- Target "specific tool or concept", known ["same-domain predecessor or alternative", "unrelated tool"]: select the same-domain predecessor or alternative only.
+- Target "process with parts and flow", known ["structurally similar process"]: select it only when the mapping helps more than a direct explanation.
+- Target "human or social topic", known ["infrastructure tool"]: select none unless the user explicitly asks for that metaphor.
+- Target "narrow domain topic", known ["broad category", "specific related topic"]: select the specific related topic only.
 
 Study Guide title: ${title}
 Learner prompt: ${prompt || title}
@@ -427,4 +503,83 @@ Known topics, strongest first: ${safeTopics.length ? safeTopics.join(', ') : 'no
 
 Study Guide content excerpt:
 ${source.slice(0, 12000)}`
+}
+
+export const buildStudyGuideKnowledgeBridgeBlocksPrompt = ({
+  title,
+  prompt,
+  dashboards,
+  relevanceDecision,
+  outputLanguage,
+}: {
+  title: string
+  prompt: string
+  dashboards: Array<{
+    title: string
+    summary?: string
+    rawNotes?: string
+  }>
+  relevanceDecision?: StudyGuideQuickStartRelevanceDecision
+  outputLanguage?: StudyMeshLanguageCode
+}): string => {
+  const decision =
+    relevanceDecision || createNeutralStudyGuideQuickStartRelevanceDecision()
+  const selectedTopics = sanitizeUserKnownTopics(
+    decision.knownTopicsForQuickStart,
+    { maxTopics: 2 },
+  )
+
+  if (!decision.shouldUseKnownTopic || selectedTopics.length === 0) {
+    return `Return strict JSON only: {"blocks":[]}`
+  }
+
+  const dashboardExcerpt = dashboards
+    .map((dashboard, index) =>
+      [
+        `dashboardIndex: ${index}`,
+        `title: ${dashboard.title || `Dashboard ${index + 1}`}`,
+        dashboard.summary ? `summary: ${dashboard.summary}` : '',
+        dashboard.rawNotes
+          ? `notes excerpt: ${dashboard.rawNotes.slice(0, 1200)}`
+          : '',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    )
+    .join('\n\n---\n\n')
+
+  return `Create optional knowledge-context bridge note blocks for a StudyMesh Study Guide.
+
+Return strict JSON only:
+{
+  "blocks": [
+    {
+      "dashboardIndex": 0,
+      "title": "short note title",
+      "body": "80-140 words"
+    }
+  ]
+}
+
+Rules:
+- ${createAiOutputLanguageInstruction(outputLanguage)}
+- The base Study Guide already exists. Do not rewrite lessons.
+- Selected known topic bridge: ${selectedTopics.join(', ')}.
+- Bridge reason: ${decision.knownTopicRelevanceReason}
+- Bridge strength: ${decision.bridgeStrength}.
+- Bridge strategy: ${decision.bridgeStrategy}.
+- Add 0-2 blocks total. Return [] if no dashboard has a natural bridge.
+- Use each dashboardIndex at most once. dashboardIndex is zero-based.
+- Each block must connect one freshly taught concept to the selected known topic.
+- Keep body short, concrete, and note-like.
+- Do not repeat the Quick Start.
+- Do not force analogies. If bridge is only weak, use at most one light reference.
+- Include one caveat when the comparison could mislead.
+- For topics involving identity, history, politics, culture, or people, keep the bridge factual and avoid reductive claims.
+
+Study Guide title: ${title}
+Learner prompt: ${prompt || title}
+
+Dashboards:
+${dashboardExcerpt.slice(0, 16000)}`
 }

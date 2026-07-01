@@ -15,8 +15,8 @@ const guideEmojiRules: Array<[RegExp, string]> = [
   [/\b(math|algebra|calculus|geometry|equation|statistics)\b/i, '\u{1f522}'],
   [/\b(biology|anatomy|cell|organ|medicine|health)\b/i, '\u{1f9ec}'],
   [/\b(history|war|empire|revolution|ancient)\b/i, '\u{1f3db}\ufe0f'],
-  [/\b(language|spanish|english|grammar|vocab|literature)\b/i, '\u{1f4da}'],
-  [/\b(code|programming|javascript|python|react|software)\b/i, '\u{1f4bb}'],
+  [/\b(language|grammar|vocab|literature)\b/i, '\u{1f4da}'],
+  [/\b(code|programming|software)\b/i, '\u{1f4bb}'],
   [/\b(physics|chemistry|science|energy|atom)\b/i, '\u2697\ufe0f'],
   [/\b(music|art|design|drawing)\b/i, '\u{1f3a8}'],
 ]

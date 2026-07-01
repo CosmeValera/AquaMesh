@@ -46,7 +46,7 @@ import {
 } from '../../quickCreate/ai'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
 import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
-import { getUserKnownTopics } from '../../profileContext'
+import { getAllUserKnownTopics } from '../../profileContext'
 import type { StudyGuideQuickStart } from '../../state/store'
 import { resolveContentLanguage } from '../../language/contentLanguage'
 import { useInterfaceText } from '../../language/interfaceLanguage'
@@ -160,10 +160,10 @@ const statusColor = (status: LocalPipelineStep['status']) =>
   status === 'failed'
     ? 'error'
     : status === 'complete'
-    ? 'success'
-    : status === 'running'
-    ? 'primary'
-    : 'default'
+      ? 'success'
+      : status === 'running'
+        ? 'primary'
+        : 'default'
 
 const aggregatePipelineSteps = (
   steps: LocalPipelineStep[],
@@ -187,10 +187,10 @@ const aggregatePipelineSteps = (
       )
         ? 'failed'
         : groupSteps.some((step) => step.status === 'running')
-        ? 'running'
-        : completeCount === groupSteps.length
-        ? 'complete'
-        : 'pending'
+          ? 'running'
+          : completeCount === groupSteps.length
+            ? 'complete'
+            : 'pending'
       const percent = Math.round(
         groupSteps.reduce((total, step) => total + step.percent, 0) /
           groupSteps.length,
@@ -439,18 +439,18 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
     provider === 'local'
       ? t('studyGuides.generatingWithLocalAi')
       : isStrongAiProvider(provider)
-      ? `${t('studyGuides.generatingWithProvider')} ${providerLabel(
-          provider,
-        )}...`
-      : t('studyGuides.generatingWithHosted')
+        ? `${t('studyGuides.generatingWithProvider')} ${providerLabel(
+            provider,
+          )}...`
+        : t('studyGuides.generatingWithHosted')
   const providerPathDescription = (provider: QuickCreateAiProvider): string =>
     provider === 'local'
       ? t('studyGuides.localProviderDescription')
       : isStrongAiProvider(provider)
-      ? `${t('studyGuides.strongProviderDescriptionPrefix')} ${providerLabel(
-          provider,
-        )} ${t('studyGuides.strongProviderDescriptionSuffix')}`
-      : t('studyGuides.hostedProviderDescription')
+        ? `${t('studyGuides.strongProviderDescriptionPrefix')} ${providerLabel(
+            provider,
+          )} ${t('studyGuides.strongProviderDescriptionSuffix')}`
+        : t('studyGuides.hostedProviderDescription')
   const [step, setStep] = useState<'prompt' | 'review'>('prompt')
   const [prompt, setPrompt] = useState(initialPrompt || defaultStudyPathPrompt)
   const [aiProvider, setAiProvider] = useState<QuickCreateAiProvider>('hosted')
@@ -668,7 +668,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
         prompt: effectivePrompt,
         outputLanguage: resolvedLanguage.language,
         signal: generationController.signal,
-        userKnownTopics: getUserKnownTopics(),
+        userKnownTopics: getAllUserKnownTopics(),
         onProgress: (event) => {
           if (generationController.signal.aborted) {
             return
@@ -1126,8 +1126,8 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                                           lane.active?.status === 'failed'
                                             ? 'error'
                                             : lane.active?.status === 'complete'
-                                            ? 'success'
-                                            : 'primary'
+                                              ? 'success'
+                                              : 'primary'
                                         }
                                       />
                                       {lane.steps.length > 0 ? (

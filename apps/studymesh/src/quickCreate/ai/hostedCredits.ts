@@ -1,5 +1,6 @@
 import type { StudyGuideQuickStart } from '../../state/store'
 import type { StudyMeshLanguageCode } from '../../language/contentLanguage'
+import type { StudyGuideKnowledgeBridgeBlock } from '../../studyGuides/quickStart'
 
 export const STUDY_CREDITS_LABEL = 'Study Credits'
 export const STUDY_CREDITS_SYMBOL = 'SC'
@@ -94,6 +95,7 @@ export interface HostedAiGatewayResponse {
   ok: boolean
   text?: string
   quickStart?: StudyGuideQuickStart
+  bridgeBlocks?: StudyGuideKnowledgeBridgeBlock[]
   status?: HostedAiStatus
   error?: {
     code:

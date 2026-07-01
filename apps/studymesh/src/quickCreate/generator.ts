@@ -900,20 +900,29 @@ const createVisibleStudyPathWidgetGroups = (
   }
 
   const dashboardRole = studyPath.dashboardRole || pack.dashboardRole
+  const bridgeNotes = pack.objects.filter(
+    (object) =>
+      object.kind === 'note' &&
+      object.tags.includes('knowledge-context-bridge'),
+  )
+  const bridgeGroups = bridgeNotes.map((object) => ({
+    name: object.title || `${pack.title} knowledge bridge`,
+    objects: [object],
+  }))
 
-  if (
-    dashboardRole === 'summary' ||
-    dashboardRole === 'exercises' ||
-    studyPath.practiceType === 'none'
-  ) {
+  if (dashboardRole === 'summary' || dashboardRole === 'exercises') {
     return []
   }
 
-  if (studyPath.practiceType === 'quiz' || studyPath.practiceType === 'mixed') {
-    return createStudyPathVisibleQuizGroups(pack)
+  if (studyPath.practiceType === 'none') {
+    return bridgeGroups
   }
 
-  return []
+  if (studyPath.practiceType === 'quiz' || studyPath.practiceType === 'mixed') {
+    return [...bridgeGroups, ...createStudyPathVisibleQuizGroups(pack)]
+  }
+
+  return bridgeGroups
 }
 
 export const createQuickCreateSmartWidgetGroups = (

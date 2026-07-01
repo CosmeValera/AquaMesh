@@ -6,6 +6,8 @@ import type { StudyPathContainerState } from '../state/store'
 export const STUDY_GUIDES_CHANGED_EVENT = 'studymesh-study-guides-changed'
 export const STUDY_GUIDES_STORAGE_KEY = 'studymesh_study_guides'
 export const STUDY_GUIDES_PINNED_KEY = 'studymesh.studyGuides.pinned'
+export const STUDY_GUIDES_STORAGE_FULL_MESSAGE =
+  'Your Study Guide library is full. Delete a few old or unused Study Guides, then try again.'
 
 const nowIso = () => new Date().toISOString()
 
@@ -73,10 +75,7 @@ const readPinnedStudyGuides = (): Record<string, string> => {
 }
 
 const writePinnedStudyGuides = (pinnedGuides: Record<string, string>) => {
-  window.localStorage.setItem(
-    STUDY_GUIDES_PINNED_KEY,
-    JSON.stringify(pinnedGuides),
-  )
+  writeStorageValue(STUDY_GUIDES_PINNED_KEY, JSON.stringify(pinnedGuides))
 }
 
 const setStoredPinnedStudyGuide = (id: string, pinnedAt: string | null) => {
@@ -89,11 +88,27 @@ const setStoredPinnedStudyGuide = (id: string, pinnedAt: string | null) => {
   writePinnedStudyGuides(pinnedGuides)
 }
 
+const isStorageQuotaError = (error: unknown): boolean =>
+  error instanceof DOMException &&
+  (error.name === 'QuotaExceededError' ||
+    error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+    error.code === 22 ||
+    error.code === 1014)
+
+const writeStorageValue = (key: string, value: string) => {
+  try {
+    window.localStorage.setItem(key, value)
+  } catch (error) {
+    if (isStorageQuotaError(error)) {
+      throw new Error(STUDY_GUIDES_STORAGE_FULL_MESSAGE)
+    }
+
+    throw error
+  }
+}
+
 const writeStoredStudyGuides = (studyGuides: StudyGuideRecord[]) => {
-  window.localStorage.setItem(
-    STUDY_GUIDES_STORAGE_KEY,
-    JSON.stringify(studyGuides),
-  )
+  writeStorageValue(STUDY_GUIDES_STORAGE_KEY, JSON.stringify(studyGuides))
 }
 
 export const createStudyGuideRecord = (

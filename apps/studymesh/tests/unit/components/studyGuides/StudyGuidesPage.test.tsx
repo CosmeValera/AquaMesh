@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 
 import StudyGuidesPage from '../../../../src/components/studyGuides/StudyGuidesPage'
 import {
+  STUDY_GUIDES_STORAGE_FULL_MESSAGE,
   STUDY_GUIDES_STORAGE_KEY,
   StudyGuideStorage,
 } from '../../../../src/studyGuides/storage'
@@ -616,5 +617,25 @@ describe('StudyGuidesPage create flow', () => {
         .map((element) => element.textContent)
       expect(titles).toEqual(['Music Theory', 'Algebra', 'Zoology'])
     })
+  })
+
+  it('shows a friendly error when the Study Guide library is too large to save', () => {
+    vi.mocked(window.localStorage.setItem).mockImplementation(() => {
+      throw new DOMException(
+        'Setting the value exceeded the quota.',
+        'QuotaExceededError',
+      )
+    })
+
+    expect(() =>
+      StudyGuideStorage.save(
+        makeStoredGuide({
+          id: 'large-guide',
+          title: 'Large guide',
+          description: 'Large local guide',
+          createdAt: '2026-01-04T00:00:00.000Z',
+        }),
+      ),
+    ).toThrow(STUDY_GUIDES_STORAGE_FULL_MESSAGE)
   })
 })

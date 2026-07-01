@@ -208,6 +208,52 @@ describe('API payment and hosted AI hardening', () => {
     })
   })
 
+  it('returns invalid request when hosted AI receives malformed JSON', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+    vi.stubEnv('HOSTED_CEREBRAS_API_KEY', 'hosted-cerebras-key')
+    const { response, res } = makeResponse()
+    const req = {
+      method: 'POST',
+      headers: {},
+    } as { method: string; headers: Record<string, string>; body?: unknown }
+    Object.defineProperty(req, 'body', {
+      get() {
+        throw new Error('Invalid JSON')
+      },
+    })
+
+    await hostedAiHandler(req, res)
+
+    expect(response.statusCode).toBe(400)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: { code: 'invalid_request' },
+    })
+  })
+
+  it('returns invalid request when dashboard source receives malformed JSON', async () => {
+    const { response, res } = makeResponse()
+    const req = {
+      method: 'POST',
+      headers: {},
+    } as { method: string; headers: Record<string, string>; body?: unknown }
+    Object.defineProperty(req, 'body', {
+      get() {
+        throw new Error('Invalid JSON')
+      },
+    })
+
+    await dashboardSourceHandler(req, res)
+
+    expect(response.statusCode).toBe(400)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: { code: 'invalid_request' },
+    })
+  })
+
   it('requires auth for dashboard source search in production', async () => {
     vi.stubEnv('NODE_ENV', 'production')
     vi.stubEnv('STUDYMESH_APP_URL', 'https://app.studymesh.test')

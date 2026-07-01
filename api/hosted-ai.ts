@@ -129,6 +129,14 @@ const normalizeRequest = (body: unknown): HostedAiGatewayRequest | null => {
   return body as unknown as HostedAiGatewayRequest;
 };
 
+const readRequest = (req: VercelRequest): HostedAiGatewayRequest | null => {
+  try {
+    return normalizeRequest(req.body);
+  } catch {
+    return null;
+  }
+};
+
 const getBearerToken = (req: VercelRequest): string => {
   const authorization = getHeader(req.headers, "authorization");
   const match = authorization.match(/^Bearer\s+(.+)$/i);
@@ -733,7 +741,7 @@ export default async function handler(
     return;
   }
 
-  const request = normalizeRequest(req.body);
+  const request = readRequest(req);
 
   if (!request) {
     json(

@@ -172,6 +172,14 @@ const normalizeRequest = (body: unknown): DashboardSourceRequest | null => {
   };
 };
 
+const readRequest = (req: VercelRequest): DashboardSourceRequest | null => {
+  try {
+    return normalizeRequest(req.body);
+  } catch {
+    return null;
+  }
+};
+
 const normalizeSupabaseUrl = (url: string): string => url.replace(/\/+$/, "");
 
 const readResponseJson = async (response: Response): Promise<unknown> => {
@@ -725,22 +733,22 @@ export default async function handler(
     return;
   }
 
+  const request = readRequest(req);
+
+  if (!request) {
+    json(
+      res,
+      400,
+      errorResponse(
+        "invalid_request",
+        "Question and dashboard title are required.",
+      ),
+    );
+    return;
+  }
+
   try {
     await requireAuthInProduction(req);
-    const request = normalizeRequest(req.body);
-
-    if (!request) {
-      json(
-        res,
-        400,
-        errorResponse(
-          "invalid_request",
-          "Question and dashboard title are required.",
-        ),
-      );
-      return;
-    }
-
     const sources = await searchDashboardSource(request);
     json(res, 200, { ok: true, source: sources[0], sources });
   } catch (error) {

@@ -2828,9 +2828,50 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     const suggestions = toStringArray(props.suggestedTypes)
     const title = String(props.title || 'Study note')
     const text = String(props.text || '')
+    const isContextBridge =
+      Boolean(props.contextBridge) || suggestions.length === 0
     const setTemporaryMode = (mode: string) => {
       setNoteMode(mode)
       writeStoredMode(noteStorageKey, mode)
+    }
+
+    if (isContextBridge) {
+      return (
+        <Box
+          sx={(theme) => ({
+            mb: 2,
+            py: { xs: 1, sm: 1.25 },
+            pr: { xs: 1, sm: 1.5 },
+            pl: { xs: 1.5, sm: 2 },
+            borderLeft: `4px solid ${theme.palette.primary.main}`,
+            borderRadius: 1,
+            backgroundColor: alpha(
+              theme.palette.primary.main,
+              theme.palette.mode === 'dark' ? 0.12 : 0.06,
+            ),
+          })}
+        >
+          <Stack spacing={1.1}>
+            <Typography
+              variant="subtitle1"
+              fontWeight={800}
+              color="primary"
+              sx={{ lineHeight: 1.2 }}
+            >
+              Context Bridge
+            </Typography>
+            <Typography variant="subtitle1" fontWeight={700}>
+              {title}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.65 }}
+            >
+              {text}
+            </Typography>
+          </Stack>
+        </Box>
+      )
     }
 
     if (noteMode === 'flashcard') {

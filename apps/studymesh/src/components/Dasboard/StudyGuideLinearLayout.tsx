@@ -206,6 +206,7 @@ const StudyGuideLinearLayout = ({
         const shouldCleanBridgeLeadIn =
           isPageContentCard &&
           isKnowledgeBridgeGroup(cardGroups[groupIndex + 1])
+        const isContextBridgeCard = isKnowledgeBridgeGroup(group)
         const title = pageContentTitle(group)
         return (
           <section
@@ -265,7 +266,11 @@ const StudyGuideLinearLayout = ({
                   {isStudyBlockType(component.type) ? (
                     <StudyBlockView
                       type={component.type}
-                      props={component.props}
+                      props={
+                        isContextBridgeCard
+                          ? { ...component.props, contextBridge: true }
+                          : component.props
+                      }
                       unframed={component.type === 'MarkdownBlock'}
                       onAskAi={onAskAi}
                     />

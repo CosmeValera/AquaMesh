@@ -142,6 +142,7 @@ const objectToComponents = (
             __blockType: 'StudyNoteBlock',
             title: object.title || 'Study note',
             text: object.body,
+            contextBridge: isKnowledgeBridge || undefined,
             suggestedTypes: isKnowledgeBridge
               ? []
               : ['definition', 'flashcard', 'review'],

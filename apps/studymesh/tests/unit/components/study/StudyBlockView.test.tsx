@@ -5,8 +5,8 @@ import StudyBlockView from '../../../../src/components/study/StudyBlockView'
 describe('StudyBlockView quiz feedback', () => {
   beforeEach(() => {
     const storage = new Map<string, string>()
-    vi.mocked(window.localStorage.getItem).mockImplementation((key) =>
-      storage.get(key) ?? null,
+    vi.mocked(window.localStorage.getItem).mockImplementation(
+      (key) => storage.get(key) ?? null,
     )
     vi.mocked(window.localStorage.setItem).mockImplementation((key, value) => {
       storage.set(key, value)
@@ -18,6 +18,98 @@ describe('StudyBlockView quiz feedback', () => {
       storage.clear()
     })
     window.localStorage.clear()
+  })
+
+  it('renders markdown and code-like identifiers inside context bridge notes', () => {
+    const { container } = render(
+      <StudyBlockView
+        type="StudyNoteBlock"
+        props={{
+          contextBridge: true,
+          title: 'React **useState** vs Vue ref/reactive',
+          text: 'Use **state**, *effects*, `setCount`, ref(), and count.value as examples.',
+          suggestedTypes: [],
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Context Bridge')).toBeInTheDocument()
+    expect(container.querySelector('strong')?.textContent).toBe('useState')
+    expect(container.querySelector('em')?.textContent).toBe('effects')
+    expect(
+      [...container.querySelectorAll('code')].map((node) => node.textContent),
+    ).toEqual(expect.arrayContaining(['setCount', 'ref()', 'count.value']))
+    expect(container.textContent).not.toContain('**')
+  })
+
+  it('renders markdown inside quiz questions, options, and feedback', () => {
+    const { container } = render(
+      <StudyBlockView
+        type="QuizBlock"
+        props={{
+          question: 'How does **state** update?',
+          options: ['**setState** changes state', '`useState` stores state'],
+          correctIndex: 1,
+          answer: '`useState` stores state',
+          explanation: '**useState** keeps local component state.',
+          optionFeedback: [
+            {
+              option: '**setState** changes state',
+              explanation: 'Incorrect - class-style **state** helper.',
+            },
+            {
+              option: '`useState` stores state',
+              explanation: 'Correct - hook-based `state` helper.',
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'A. setState changes state' }),
+    )
+
+    expect(container.textContent).not.toContain('**')
+    expect(
+      [...container.querySelectorAll('strong')].map((node) => node.textContent),
+    ).toEqual(expect.arrayContaining(['state', 'setState', 'useState']))
+    expect(
+      [...container.querySelectorAll('code')].map((node) => node.textContent),
+    ).toEqual(expect.arrayContaining(['useState', 'state']))
+  })
+
+  it('cleans malformed markdown artifacts in focused quiz cards', () => {
+    const { container } = render(
+      <StudyBlockView
+        type="QuizCarouselBlock"
+        props={{
+          title: 'Core topics',
+          items: [
+            {
+              question: 'How would you apply - **State in a new example?',
+              options: [
+                '- **State (useState)**: Local data that triggers re-renders.',
+                '- JSX: Syntax that blends HTML-like markup.',
+              ],
+              correctIndex: 0,
+              answer: 'State (useState)',
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(
+      screen.getByText('How would you apply State in a new example?'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', {
+        name: /A\. State \(useState\)\s*: Local data/,
+      }),
+    ).toBeInTheDocument()
+    expect(container.textContent).not.toContain('**')
+    expect(container.textContent).not.toContain('A. -')
   })
 
   it('shows hints before answering and option feedback after answering', () => {
@@ -267,7 +359,9 @@ describe('StudyBlockView quiz feedback', () => {
     expect(screen.getByText('Answered 2/3')).toBeInTheDocument()
     expect(screen.getByText('Known 1')).toBeInTheDocument()
     expect(screen.getByText('Missed 1')).toBeInTheDocument()
-    expect(screen.getByText('An isolated state environment.')).toBeInTheDocument()
+    expect(
+      screen.getByText('An isolated state environment.'),
+    ).toBeInTheDocument()
   })
 
   it('grades consecutive flashcards when the same grade button is clicked rapidly', () => {
@@ -402,7 +496,9 @@ describe('StudyBlockView quiz feedback', () => {
       expect(screen.getByText('Flashcards complete.')).toBeInTheDocument(),
     )
     fireEvent.click(screen.getByRole('button', { name: 'Practice again' }))
-    expect(screen.getByRole('menuitem', { name: 'All cards' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('menuitem', { name: 'All cards' }),
+    ).toBeInTheDocument()
     expect(
       screen.getByRole('menuitem', { name: 'Same cards' }),
     ).toBeInTheDocument()

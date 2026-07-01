@@ -106,9 +106,6 @@ const toFocusedItems = (value: unknown): Array<Record<string, unknown>> =>
 const normalizeFeedbackKey = (value: string): string =>
   normalizeAnswer(value).replace(/\s+/g, ' ')
 
-const quizOptionLabel = (index: number, option: string): string =>
-  `${String.fromCharCode(65 + index)}. ${option}`
-
 const toOptionFeedback = (value: unknown): QuizFeedbackItem[] =>
   Array.isArray(value)
     ? value
@@ -524,6 +521,40 @@ interface RenderMarkdownOptions {
 }
 
 const wholeCitationGroupPattern = /^(?:\[\d{1,2}\]|\d{1,2}|\s+)+$/
+const codeLikeInlinePattern =
+  /^(?:[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?\([^()\n]{0,40}\)|[a-z_$][\w$]*(?:\.[a-z_$][\w$]*)+)$/
+
+const removeUnbalancedInlineMarkdownMarkers = (value: string): string => {
+  let cleaned = value
+  const doubleMarkerCount = cleaned.match(/\*\*/g)?.length || 0
+  if (doubleMarkerCount % 2 !== 0) {
+    cleaned = cleaned.replace(/\*\*/g, '')
+  }
+
+  const codeMarkerCount = cleaned.match(/`/g)?.length || 0
+  if (codeMarkerCount % 2 !== 0) {
+    cleaned = cleaned.replace(/`/g, '')
+  }
+
+  const emphasisMarkerCount = cleaned.match(/(?<!\*)\*(?!\*)/g)?.length || 0
+  if (emphasisMarkerCount % 2 !== 0) {
+    cleaned = cleaned.replace(/(?<!\*)\*(?!\*)/g, '')
+  }
+
+  return cleaned
+}
+
+const cleanGeneratedInlineText = (value: string): string =>
+  removeUnbalancedInlineMarkdownMarkers(value).replace(/\s+/g, ' ').trim()
+
+const cleanGeneratedQuizQuestion = (value: string): string =>
+  cleanGeneratedInlineText(value).replace(
+    /\b(apply|use|explain|practice|review|understand)\s+-\s+/i,
+    '$1 ',
+  )
+
+const cleanGeneratedQuizOption = (value: string): string =>
+  cleanGeneratedInlineText(value).replace(/^[-*]\s+/, '')
 
 const citationNumbersFromMatch = (
   citationMatch: RegExpMatchArray,
@@ -539,15 +570,16 @@ const renderMarkdownInline = (
   value: string,
   options: RenderMarkdownOptions = {},
 ): React.ReactNode[] => {
+  const inlineValue = removeUnbalancedInlineMarkdownMarkers(value)
   const nodes: React.ReactNode[] = []
   const tokenPattern =
-    /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|(?:\[\d{1,2}\]|(?:(?<=[\u00a0\u202f])\d{1,2}(?:\s+\d{1,2})*|\d{1,2}(?=\s*\[\d{1,2}\]))(?=\s*(?:\[\d{1,2}\]|[.,;:!?)]|$)))+|\*[^*]+\*)/g
+    /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|(?:\[\d{1,2}\]|(?:(?<=[\u00a0\u202f])\d{1,2}(?:\s+\d{1,2})*|\d{1,2}(?=\s*\[\d{1,2}\]))(?=\s*(?:\[\d{1,2}\]|[.,;:!?)]|$)))+|\*[^*]+\*|\b[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?\([^()\n]{0,40}\)|\b[a-z_$][\w$]*(?:\.[a-z_$][\w$]*)+\b)/g
   let cursor = 0
   let match: RegExpExecArray | null
 
-  while ((match = tokenPattern.exec(value)) !== null) {
+  while ((match = tokenPattern.exec(inlineValue)) !== null) {
     if (match.index > cursor) {
-      nodes.push(value.slice(cursor, match.index))
+      nodes.push(inlineValue.slice(cursor, match.index))
     }
 
     const token = match[0]
@@ -649,7 +681,7 @@ const renderMarkdownInline = (
           {token.slice(2, -2)}
         </Box>,
       )
-    } else if (token.startsWith('`')) {
+    } else if (token.startsWith('`') || codeLikeInlinePattern.test(token)) {
       nodes.push(
         <Box
           component="code"
@@ -663,7 +695,7 @@ const renderMarkdownInline = (
             fontSize: '0.9em',
           }}
         >
-          {token.slice(1, -1)}
+          {token.startsWith('`') ? token.slice(1, -1) : token}
         </Box>,
       )
     } else {
@@ -677,8 +709,8 @@ const renderMarkdownInline = (
     cursor = match.index + token.length
   }
 
-  if (cursor < value.length) {
-    nodes.push(value.slice(cursor))
+  if (cursor < inlineValue.length) {
+    nodes.push(inlineValue.slice(cursor))
   }
 
   return nodes
@@ -1173,11 +1205,11 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             {flipped ? t('practice.answer') : t('practice.prompt')}
           </Typography>
           <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-            {flipped ? back : front}
+            {renderMarkdownInline(flipped ? back : front)}
           </Typography>
           {!flipped && hint && (
             <Typography variant="body2" color="text.secondary">
-              {t('practice.hint')}: {hint}
+              {t('practice.hint')}: {renderMarkdownInline(hint)}
             </Typography>
           )}
           {flipped && Boolean(props.selfGrade) && (
@@ -1683,7 +1715,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           >
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="h5" fontWeight={600}>
-                {title}
+                {renderMarkdownInline(title)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {safeIndex + 1} / {activeCardEntries.length}
@@ -1790,7 +1822,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                       fontWeight: 650,
                     }}
                   >
-                    {card.front}
+                    {renderMarkdownInline(card.front)}
                   </Typography>
                   <Typography
                     variant="body2"
@@ -1843,7 +1875,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                       overflowWrap: 'anywhere',
                     }}
                   >
-                    {card.back}
+                    {renderMarkdownInline(card.back)}
                   </Typography>
                   <Box>
                     <Button
@@ -2023,6 +2055,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
 
   if (type === 'QuizBlock') {
     const question = String(props.question || t('practice.question'))
+    const displayQuestion = cleanGeneratedQuizQuestion(question)
     const correctIndex = Math.max(
       0,
       Math.min(3, Number(props.correctIndex || 0)),
@@ -2039,10 +2072,11 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Stack spacing={1.5}>
           <Typography variant="subtitle1" fontWeight={700}>
-            {question}
+            {renderMarkdownInline(displayQuestion)}
           </Typography>
           <Stack spacing={1}>
             {options.map((option, index) => {
+              const displayOption = cleanGeneratedQuizOption(option)
               const isSelected = selectedIndex === index
               const isCorrect = index === correctIndex
               const showResult = selectedIndex !== null
@@ -2116,9 +2150,12 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                       <Typography
                         component="span"
                         variant="body2"
-                        fontWeight={700}
+                        sx={{ fontWeight: 400, overflowWrap: 'anywhere' }}
                       >
-                        {quizOptionLabel(index, option)}
+                        <Box component="span" sx={{ fontWeight: 700 }}>
+                          {String.fromCharCode(65 + index)}.{' '}
+                        </Box>
+                        {renderMarkdownInline(displayOption)}
                       </Typography>
                       {verdict ? (
                         <Stack
@@ -2145,7 +2182,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                           color="text.secondary"
                           sx={{ lineHeight: 1.55 }}
                         >
-                          {feedback}
+                          {renderMarkdownInline(feedback)}
                         </Typography>
                       ) : null}
                     </Stack>
@@ -2170,14 +2207,14 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   color="text.secondary"
                   sx={{ mt: 1 }}
                 >
-                  {hint}
+                  {renderMarkdownInline(hint)}
                 </Typography>
               ) : null}
             </Box>
           ) : null}
           {selectedIndex !== null && explanation && (
             <Typography variant="body2" color="text.secondary">
-              {explanation}
+              {renderMarkdownInline(explanation)}
             </Typography>
           )}
           {selectedIndex !== null ? (
@@ -2450,7 +2487,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   overflowWrap: 'anywhere',
                 }}
               >
-                {title}
+                {renderMarkdownInline(title)}
               </Typography>
               <Typography
                 variant="body2"
@@ -2507,10 +2544,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   overflowWrap: 'anywhere',
                 }}
               >
-                {question.question}
+                {renderMarkdownInline(
+                  cleanGeneratedQuizQuestion(question.question),
+                )}
               </Typography>
               <Stack spacing={{ xs: 0.75, sm: 1.25 }}>
                 {question.options.map((option, index) => {
+                  const displayOption = cleanGeneratedQuizOption(option)
                   const isCorrect = index === question.correctIndex
                   const isSelected = selected === index
 
@@ -2601,13 +2641,16 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                           <Typography
                             component="span"
                             variant="body2"
-                            fontWeight={700}
                             sx={{
                               fontSize: { xs: '0.82rem', sm: '0.875rem' },
+                              fontWeight: 400,
                               overflowWrap: 'anywhere',
                             }}
                           >
-                            {quizOptionLabel(index, option)}
+                            <Box component="span" sx={{ fontWeight: 700 }}>
+                              {String.fromCharCode(65 + index)}.{' '}
+                            </Box>
+                            {renderMarkdownInline(displayOption)}
                           </Typography>
                           {verdict ? (
                             <Stack
@@ -2640,7 +2683,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                                 lineHeight: 1.5,
                               }}
                             >
-                              {feedback}
+                              {renderMarkdownInline(feedback)}
                             </Typography>
                           ) : null}
                         </Stack>
@@ -2651,8 +2694,12 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               </Stack>
               {hasAnswered && (
                 <Typography variant="body2" color="text.secondary">
-                  {question.explanation ||
-                    `${t('practice.correctAnswer')}: ${question.answer}`}
+                  {question.explanation
+                    ? renderMarkdownInline(question.explanation)
+                    : [
+                        `${t('practice.correctAnswer')}: `,
+                        ...renderMarkdownInline(question.answer),
+                      ]}
                 </Typography>
               )}
             </Stack>
@@ -2663,7 +2710,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               sx={{ px: 2, py: 1.25, borderRadius: 1.5 }}
             >
               <Typography variant="body2" color="text.secondary">
-                {question.hint}
+                {renderMarkdownInline(question.hint)}
               </Typography>
             </Paper>
           ) : null}
@@ -2772,7 +2819,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Stack spacing={1.5}>
           <Typography variant="subtitle1" fontWeight={700}>
-            {question}
+            {renderMarkdownInline(question)}
           </Typography>
           <Stack spacing={1}>
             <TextField
@@ -2789,13 +2836,16 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               >
                 {shortAnswerCorrect
                   ? t('practice.correct')
-                  : `${t('practice.expected')}: ${answer}`}
+                  : [
+                      `${t('practice.expected')}: `,
+                      ...renderMarkdownInline(answer),
+                    ]}
               </Typography>
             )}
           </Stack>
           {submittedShortAnswer && explanation && (
             <Typography variant="body2" color="text.secondary">
-              {explanation}
+              {renderMarkdownInline(explanation)}
             </Typography>
           )}
         </Stack>
@@ -2808,11 +2858,11 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Stack spacing={1.5}>
           <Typography variant="subtitle1" fontWeight={700}>
-            {String(props.prompt || t('practice.prompt'))}
+            {renderMarkdownInline(String(props.prompt || t('practice.prompt')))}
           </Typography>
           {revealed ? (
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-              {String(props.hiddenText || '')}
+              {renderMarkdownInline(String(props.hiddenText || ''))}
             </Typography>
           ) : (
             <Button variant="outlined" onClick={() => setRevealed(true)}>
@@ -2828,8 +2878,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     const suggestions = toStringArray(props.suggestedTypes)
     const title = String(props.title || 'Study note')
     const text = String(props.text || '')
-    const isContextBridge =
-      Boolean(props.contextBridge) || suggestions.length === 0
+    const isContextBridge = Boolean(props.contextBridge)
     const setTemporaryMode = (mode: string) => {
       setNoteMode(mode)
       writeStoredMode(noteStorageKey, mode)
@@ -2861,14 +2910,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               Context Bridge
             </Typography>
             <Typography variant="subtitle1" fontWeight={700}>
-              {title}
+              {renderMarkdownInline(title)}
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.65 }}
-            >
-              {text}
-            </Typography>
+            <Stack spacing={0.9}>{renderMarkdown(text)}</Stack>
           </Stack>
         </Box>
       )
@@ -2906,7 +2950,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               {flipped ? t('practice.answer') : t('practice.prompt')}
             </Typography>
             <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-              {flipped ? back : front}
+              {renderMarkdownInline(flipped ? back : front)}
             </Typography>
           </Stack>
         </Paper>
@@ -2935,10 +2979,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               </Button>
             </Stack>
             <Typography variant="subtitle1" fontWeight={700}>
-              {front}
+              {renderMarkdownInline(front)}
             </Typography>
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-              {back}
+              {renderMarkdownInline(back)}
             </Typography>
           </Stack>
         </Paper>
@@ -2965,10 +3009,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               </Button>
             </Stack>
             <Typography variant="subtitle1" fontWeight={700}>
-              {title}
+              {renderMarkdownInline(title)}
             </Typography>
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-              {text}
+              {renderMarkdownInline(text)}
             </Typography>
           </Stack>
         </Paper>
@@ -2979,11 +3023,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Stack spacing={1.25}>
           <Typography variant="subtitle1" fontWeight={700}>
-            {title}
+            {renderMarkdownInline(title)}
           </Typography>
-          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-            {text}
-          </Typography>
+          <Stack spacing={0.9}>{renderMarkdown(text)}</Stack>
           {suggestions.length > 0 && (
             <Stack direction="row" gap={1} flexWrap="wrap">
               {suggestions.map((suggestion) => (
@@ -3016,7 +3058,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       <Stack spacing={1.5}>
         {title && !isStudyGuidePage && (
           <Typography variant="subtitle1" fontWeight={700}>
-            {title}
+            {renderMarkdownInline(title)}
           </Typography>
         )}
         <Stack spacing={1.25}>{renderMarkdown(markdown)}</Stack>
@@ -3053,13 +3095,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               flexWrap="wrap"
             >
               <Typography variant="subtitle1" fontWeight={700}>
-                {title}
+                {renderMarkdownInline(title)}
               </Typography>
               {language && <Chip label={language} size="small" />}
             </Stack>
             {caption && (
               <Typography variant="caption" color="text.secondary">
-                {caption}
+                {renderMarkdownInline(caption)}
               </Typography>
             )}
           </Box>
@@ -3095,16 +3137,16 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Stack spacing={1.25}>
           <Typography variant="subtitle1" fontWeight={700}>
-            {term}
+            {renderMarkdownInline(term)}
           </Typography>
           {showDefinition ? (
             <>
               <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                {definition}
+                {renderMarkdownInline(definition)}
               </Typography>
               {example && (
                 <Typography variant="body2" color="text.secondary">
-                  Example: {example}
+                  Example: {renderMarkdownInline(example)}
                 </Typography>
               )}
             </>
@@ -3128,7 +3170,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     return (
       <Box sx={{ mb: 2 }}>
         <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-          {String(props.title || 'Comparison')}
+          {renderMarkdownInline(String(props.title || 'Comparison'))}
         </Typography>
         <TableContainer
           component={Paper}
@@ -3144,7 +3186,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                       key={`${column}-${index}`}
                       sx={{ fontWeight: 700 }}
                     >
-                      {column}
+                      {renderMarkdownInline(column)}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -3155,7 +3197,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 <TableRow key={`comparison-row-${rowIndex}`}>
                   {Array.from({ length: columnCount }, (_, cellIndex) => (
                     <TableCell key={`comparison-cell-${rowIndex}-${cellIndex}`}>
-                      {row[cellIndex] || ''}
+                      {renderMarkdownInline(row[cellIndex] || '')}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -3175,7 +3217,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     return (
       <Box sx={{ mb: 2 }}>
         <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-          {String(props.title || defaultTitle)}
+          {renderMarkdownInline(String(props.title || defaultTitle))}
         </Typography>
         <Box
           component={ordered ? 'ol' : 'ul'}
@@ -3208,7 +3250,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   sx={{ mr: 0.5, p: 0.25 }}
                 />
               )}
-              {step}
+              {renderMarkdownInline(step)}
             </Typography>
           ))}
         </Box>
@@ -3239,7 +3281,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             flexWrap="wrap"
           >
             <Typography variant="subtitle1" fontWeight={700}>
-              {String(props.title || 'Review this')}
+              {renderMarkdownInline(String(props.title || 'Review this'))}
             </Typography>
             <Chip
               label={statusLabels[reviewStatus] || reviewStatus}
@@ -3250,11 +3292,11 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             />
           </Stack>
           <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-            {String(props.prompt || '')}
+            {renderMarkdownInline(String(props.prompt || ''))}
           </Typography>
           {Boolean(props.reason) && props.reason !== props.prompt && (
             <Typography variant="body2" color="text.secondary">
-              {String(props.reason)}
+              {renderMarkdownInline(String(props.reason))}
             </Typography>
           )}
         </Stack>

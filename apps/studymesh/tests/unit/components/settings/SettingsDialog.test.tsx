@@ -49,6 +49,24 @@ describe('SettingsDialog', () => {
     expect(screen.getByText('S3')).toBeInTheDocument()
     expect(screen.getByText('Frontend')).toBeInTheDocument()
     expect(screen.getByText('Security')).toBeInTheDocument()
+    expect(
+      screen
+        .getAllByText(
+          /^(Frontend|Security|DevOps|Testing|APIs|Cloud|Backend|Databases|S3|MinIO)$/,
+        )
+        .map((item) => item.textContent),
+    ).toEqual([
+      'Frontend',
+      'Security',
+      'DevOps',
+      'Testing',
+      'APIs',
+      'Cloud',
+      'Backend',
+      'Databases',
+      'S3',
+      'MinIO',
+    ])
   })
 
   it('updates the open settings dialog when switching to French and German', () => {

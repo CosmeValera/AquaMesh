@@ -99,7 +99,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   }
 
   const profileContext = readProfileContext()
-  const knownTopics = getAllUserKnownTopics(profileContext)
+  const knownTopics = [...getAllUserKnownTopics(profileContext)].reverse()
   const roleLabel = profileContext?.roles?.length
     ? profileContext.roles
         .map((role) => getUserKnowledgeRoleLabel(role))

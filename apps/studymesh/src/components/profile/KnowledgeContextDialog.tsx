@@ -206,7 +206,7 @@ const KnowledgeContextForm: React.FC<{
   const [specificKnowledge, setSpecificKnowledge] = React.useState<string[]>([])
   const [specificKnowledgeInput, setSpecificKnowledgeInput] = React.useState('')
   const [sortMode, setSortMode] =
-    React.useState<KnowledgeContextSortMode>('older')
+    React.useState<KnowledgeContextSortMode>('newer')
 
   React.useEffect(() => {
     const nextBroadKnowledge = initialContext?.broadKnowledge || []
@@ -386,8 +386,8 @@ const KnowledgeContextForm: React.FC<{
                     },
                   }}
                 >
-                  <MenuItem value="older">Older</MenuItem>
                   <MenuItem value="newer">Newer</MenuItem>
+                  <MenuItem value="older">Older</MenuItem>
                   <MenuItem value="az">A-Z</MenuItem>
                   <MenuItem value="za">Z-A</MenuItem>
                 </Select>

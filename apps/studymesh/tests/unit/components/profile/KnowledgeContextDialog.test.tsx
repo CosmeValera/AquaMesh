@@ -144,12 +144,9 @@ describe('KnowledgeContextDialog', () => {
     const visibleTopics = () =>
       screen.getAllByText(/^(Alpha|Zulu)$/).map((item) => item.textContent)
 
-    expect(visibleTopics()).toEqual(['Zulu', 'Alpha'])
-
-    fireEvent.mouseDown(
+    expect(
       screen.getByRole('combobox', { name: /sort knowledge context/i }),
-    )
-    fireEvent.click(screen.getByRole('option', { name: 'Newer' }))
+    ).toHaveTextContent('Newer')
     expect(visibleTopics()).toEqual(['Alpha', 'Zulu'])
 
     fireEvent.mouseDown(
@@ -157,6 +154,12 @@ describe('KnowledgeContextDialog', () => {
     )
     fireEvent.click(screen.getByRole('option', { name: 'Older' }))
     expect(visibleTopics()).toEqual(['Zulu', 'Alpha'])
+
+    fireEvent.mouseDown(
+      screen.getByRole('combobox', { name: /sort knowledge context/i }),
+    )
+    fireEvent.click(screen.getByRole('option', { name: 'Newer' }))
+    expect(visibleTopics()).toEqual(['Alpha', 'Zulu'])
 
     fireEvent.mouseDown(
       screen.getByRole('combobox', { name: /sort knowledge context/i }),

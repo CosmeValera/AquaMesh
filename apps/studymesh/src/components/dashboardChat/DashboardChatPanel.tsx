@@ -35,7 +35,6 @@ import SendIcon from '@mui/icons-material/Send'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import QuizIcon from '@mui/icons-material/Quiz'
 import StyleIcon from '@mui/icons-material/Style'
-import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SearchIcon from '@mui/icons-material/Search'
 import ArticleIcon from '@mui/icons-material/Article'
@@ -73,6 +72,7 @@ import {
 import { renderMarkdown } from '../study/StudyBlockView'
 import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 import { useInterfaceText } from '../../language/interfaceLanguage'
+import { useAccentColor } from '../../theme/AccentColorContext'
 
 export type { DashboardAnswerSourceRef } from '../../dashboardChat/askDashboard'
 
@@ -211,10 +211,24 @@ const titleFromQuestion = (question: string) => {
     : title || 'New chat'
 }
 
-const quickCreateIcons: Record<QuickCreateActionId, React.ReactNode> = {
+type DashboardChatQuickCreateAction = QuickCreateAction & {
+  id: Exclude<QuickCreateActionId, 'improvedNotes'>
+}
+
+const isDashboardChatQuickCreateAction = (
+  action: QuickCreateAction,
+): action is DashboardChatQuickCreateAction => action.id !== 'improvedNotes'
+
+const dashboardChatQuickCreateActions = quickCreateActions.filter(
+  isDashboardChatQuickCreateAction,
+)
+
+const quickCreateIcons: Record<
+  Exclude<QuickCreateActionId, 'improvedNotes'>,
+  React.ReactNode
+> = {
   quiz: <QuizIcon fontSize="small" />,
   flashcards: <StyleIcon fontSize="small" />,
-  improvedNotes: <AutoStoriesIcon fontSize="small" />,
 }
 
 const getQuickCreateGroupLabelKey = (group: QuickCreateActionGroup) => {
@@ -419,6 +433,7 @@ const DashboardChatPanel = ({
   onQueuedQuestionConsumed,
 }: DashboardChatPanelProps) => {
   const { t } = useInterfaceText()
+  const { accentColor } = useAccentColor()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
@@ -2275,15 +2290,15 @@ const DashboardChatPanel = ({
   }
 
   const quickCreateEstimateSeconds = getQuickCreateEstimateSeconds()
-  const activeQuickCreateAction = quickCreateActions.find(
+  const activeQuickCreateAction = dashboardChatQuickCreateActions.find(
     (action) => action.id === quickCreateActionId,
   )
   const quickCreateMenuOpen = Boolean(quickCreateMenuAnchor)
   const chatMenuOpen = Boolean(chatMenuAnchor)
-  const showQuickCreateSearch = quickCreateActions.length > 5
+  const showQuickCreateSearch = dashboardChatQuickCreateActions.length > 5
   const normalizedQuickCreateSearch = quickCreateSearch.trim().toLowerCase()
   const filteredQuickCreateActions = normalizedQuickCreateSearch
-    ? quickCreateActions.filter((action) =>
+    ? dashboardChatQuickCreateActions.filter((action) =>
         [
           action.label,
           action.shortLabel,
@@ -2297,7 +2312,7 @@ const DashboardChatPanel = ({
           .toLowerCase()
           .includes(normalizedQuickCreateSearch),
       )
-    : quickCreateActions
+    : dashboardChatQuickCreateActions
   const renderQuickCreateMenuContent = () => (
     <Box
       sx={{
@@ -2420,11 +2435,12 @@ const DashboardChatPanel = ({
                         flex: '0 0 auto',
                         display: 'grid',
                         placeItems: 'center',
-                        color: active ? 'inherit' : 'text.secondary',
+                        color: active ? 'inherit' : accentColor.main,
                         bgcolor: active
                           ? 'rgba(255,255,255,0.18)'
-                          : 'action.hover',
+                          : alpha(accentColor.main, 0.12),
                       }}
+                      data-testid={`quick-create-action-icon-${action.id}`}
                     >
                       {quickCreateIcons[action.id]}
                     </Box>

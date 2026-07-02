@@ -11,6 +11,12 @@ import { askDashboardSources } from '../../../../src/dashboardChat/askDashboard'
 import { fetchDashboardExternalSource } from '../../../../src/dashboardChat/externalSources'
 import { prepareDashboardExternalSourcePageDraft } from '../../../../src/dashboardChat/sourcePageDrafts'
 import type { StateDashboard } from '../../../../src/state/store'
+import { AccentColorProvider } from '../../../../src/theme/AccentColorContext'
+import {
+  accentColorOptions,
+  getAccentColorById,
+  type AccentColorId,
+} from '../../../../src/theme/accentColors'
 
 vi.mock('../../../../src/quickCreate/ai', () => ({
   __esModule: true,
@@ -107,20 +113,34 @@ const renderPanel = (
     >['onAddExternalSourceToGuide']
     supportsStudyGuideCreateScope?: boolean
     messages?: React.ComponentProps<typeof DashboardChatPanel>['messages']
+    accentColorId?: AccentColorId
   } = {},
-) =>
-  render(
-    <DashboardChatPanel
-      dashboard={options.dashboard ?? dashboardWithContext}
-      messages={options.messages ?? []}
-      onMessagesChange={vi.fn()}
-      onClose={vi.fn()}
-      onQuickCreatePage={options.onQuickCreatePage ?? vi.fn()}
-      onOpenSource={options.onOpenSource}
-      onAddExternalSourceToGuide={options.onAddExternalSourceToGuide}
-      supportsStudyGuideCreateScope={options.supportsStudyGuideCreateScope}
-    />,
+) => {
+  const accentColorId = options.accentColorId ?? 'purple'
+  const accentColor = getAccentColorById(accentColorId)
+
+  return render(
+    <AccentColorProvider
+      value={{
+        accentColorId,
+        accentColor,
+        setAccentColorId: vi.fn(),
+        options: accentColorOptions,
+      }}
+    >
+      <DashboardChatPanel
+        dashboard={options.dashboard ?? dashboardWithContext}
+        messages={options.messages ?? []}
+        onMessagesChange={vi.fn()}
+        onClose={vi.fn()}
+        onQuickCreatePage={options.onQuickCreatePage ?? vi.fn()}
+        onOpenSource={options.onOpenSource}
+        onAddExternalSourceToGuide={options.onAddExternalSourceToGuide}
+        supportsStudyGuideCreateScope={options.supportsStudyGuideCreateScope}
+      />
+    </AccentColorProvider>,
   )
+}
 
 beforeEach(() => {
   HTMLElement.prototype.scrollTo = vi.fn()
@@ -257,6 +277,21 @@ describe('DashboardChatPanel quick create menu', () => {
     renderPanel({ onQuickCreatePage })
 
     fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
+    expect(screen.getByRole('button', { name: /^Quiz$/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /^Flashcards$/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /^Expand on this$/i }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByTestId('quick-create-action-icon-quiz')).toHaveStyle({
+      color: '#7B1FA2',
+    })
+    expect(
+      screen.getByTestId('quick-create-action-icon-flashcards'),
+    ).toHaveStyle({
+      color: '#7B1FA2',
+    })
     fireEvent.click(screen.getByRole('button', { name: /^Quiz$/i }))
 
     await waitFor(() =>

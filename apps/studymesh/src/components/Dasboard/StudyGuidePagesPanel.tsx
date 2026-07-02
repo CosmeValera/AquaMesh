@@ -189,12 +189,30 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 1,
+            gap: 0.75,
             py: 1,
           }}
         >
-          <MenuBookOutlinedIcon fontSize="small" />
-          <Typography variant="caption" sx={{ writingMode: 'vertical-rl' }}>
+          <Box
+            component="span"
+            sx={{
+              width: 32,
+              height: 32,
+              display: 'grid',
+              placeItems: 'center',
+              color: 'primary.main',
+            }}
+          >
+            <MenuBookOutlinedIcon fontSize="small" />
+          </Box>
+          <Typography
+            variant="caption"
+            sx={{
+              writingMode: 'vertical-rl',
+              fontWeight: 500,
+              color: 'primary.main',
+            }}
+          >
             {t('workspace.pages')}
           </Typography>
         </Box>

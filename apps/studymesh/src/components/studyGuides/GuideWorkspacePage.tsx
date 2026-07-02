@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  IconButton,
   Paper,
   Tooltip,
   Typography,
@@ -832,20 +831,29 @@ const GuideWorkspacePage = () => {
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
-                          gap: 1,
+                          gap: 0.75,
                           py: 1,
                         }}
                       >
-                        <IconButton
-                          size="small"
-                          tabIndex={-1}
-                          sx={{ color: 'primary.main' }}
+                        <Box
+                          component="span"
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            display: 'grid',
+                            placeItems: 'center',
+                            color: 'primary.main',
+                          }}
                         >
                           <ChatBubbleOutlineIcon fontSize="small" />
-                        </IconButton>
+                        </Box>
                         <Typography
                           variant="caption"
-                          sx={{ writingMode: 'vertical-rl', fontWeight: 500 }}
+                          sx={{
+                            writingMode: 'vertical-rl',
+                            fontWeight: 500,
+                            color: 'primary.main',
+                          }}
                         >
                           {t('workspace.aiChat')}
                         </Typography>

@@ -513,8 +513,7 @@ const DashboardChatPanel = ({
   const [externalSourcePrompt, setExternalSourcePrompt] =
     useState<ExternalSourcePrompt | null>(null)
   const [addSourceDialogOpen, setAddSourceDialogOpen] = useState(false)
-  const [addSourceMode, setAddSourceMode] = useState<AddSourceMode>('text')
-  const [addSourceTitle, setAddSourceTitle] = useState('')
+  const [addSourceMode, setAddSourceMode] = useState<AddSourceMode>('web')
   const [addSourceText, setAddSourceText] = useState('')
   const [addSourceUrl, setAddSourceUrl] = useState('')
   const [addSourceError, setAddSourceError] = useState('')
@@ -1672,7 +1671,7 @@ const DashboardChatPanel = ({
   }
 
   const resetAddSourceDialog = () => {
-    setAddSourceTitle('')
+    setAddSourceMode('web')
     setAddSourceText('')
     setAddSourceUrl('')
     setAddSourceError('')
@@ -1723,14 +1722,14 @@ const DashboardChatPanel = ({
 
   const addPastedTextSource = () => {
     const { text, trimmed } = truncateUserSourceText(addSourceText)
-    const title = addSourceTitle.trim() || 'Pasted source'
+    const title = 'Pasted source'
 
     if (text.length < 20) {
       setAddSourceError('Add at least a few sentences of source text.')
       return
     }
 
-    const sourceHash = hashSourceValue(`${title}\n${text}`)
+    const sourceHash = hashSourceValue(text)
     const result = addUserAddedSource({
       id: `user-text-source-${sourceHash}`,
       url: `studymesh://user-source/${sourceHash}`,
@@ -1746,7 +1745,6 @@ const DashboardChatPanel = ({
 
   const addWebSource = async () => {
     const sourceUrl = addSourceUrl.trim()
-    const titleOverride = addSourceTitle.trim()
 
     try {
       const parsedUrl = new URL(sourceUrl)
@@ -1772,7 +1770,7 @@ const DashboardChatPanel = ({
       const { text, trimmed } = truncateUserSourceText(source.text)
       const result = addUserAddedSource({
         ...source,
-        title: titleOverride || source.title || sourceUrl,
+        title: source.title || sourceUrl,
         text,
         originType: 'user-web',
         trimmed: trimmed || source.trimmed,
@@ -3370,18 +3368,11 @@ const DashboardChatPanel = ({
               }}
               aria-label={t('chat.addSource')}
             >
+              <ToggleButton value="web">{t('chat.webpageSource')}</ToggleButton>
               <ToggleButton value="text">
                 {t('chat.pasteTextSource')}
               </ToggleButton>
-              <ToggleButton value="web">{t('chat.webpageSource')}</ToggleButton>
             </ToggleButtonGroup>
-            <TextField
-              value={addSourceTitle}
-              onChange={(event) => setAddSourceTitle(event.target.value)}
-              label={t('chat.sourceTitleOptional')}
-              size="small"
-              fullWidth
-            />
             {addSourceMode === 'text' ? (
               <TextField
                 value={addSourceText}
@@ -4266,11 +4257,6 @@ const DashboardChatPanel = ({
                   >
                     {source.title}
                   </Typography>
-                  {source.trimmed ? (
-                    <Typography variant="caption" color="text.secondary">
-                      {t('chat.sourceTrimmed')}
-                    </Typography>
-                  ) : null}
                   <IconButton
                     size="small"
                     aria-label={`${t('chat.removeSource')}: ${source.title}`}
@@ -4331,32 +4317,6 @@ const DashboardChatPanel = ({
             sx={{ flex: '0 0 auto' }}
           >
             <Stack direction="row" spacing={0.75} alignItems="center">
-              <Tooltip title={t('chat.addSource')}>
-                <span>
-                  <IconButton
-                    size="small"
-                    aria-label={t('chat.addSource')}
-                    onClick={openAddSourceDialog}
-                    sx={{
-                      height: 40,
-                      minHeight: 40,
-                      width: 40,
-                      flex: '0 0 auto',
-                      borderRadius: 1,
-                      border: 1,
-                      borderColor: alpha(theme.palette.primary.main, 0.3),
-                      color: 'primary.main',
-                      bgcolor: alpha(theme.palette.primary.main, 0.06),
-                      '&:hover': {
-                        borderColor: alpha(theme.palette.primary.main, 0.5),
-                        bgcolor: alpha(theme.palette.primary.main, 0.12),
-                      },
-                    }}
-                  >
-                    <AttachFileIcon fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
               {onQuickCreatePage ? (
                 <Tooltip title={t('chat.create')}>
                   <span>
@@ -4396,6 +4356,33 @@ const DashboardChatPanel = ({
                   </span>
                 </Tooltip>
               ) : null}
+              <Tooltip title={t('chat.addSource')}>
+                <span>
+                  <IconButton
+                    size="small"
+                    aria-label={t('chat.addSource')}
+                    onClick={openAddSourceDialog}
+                    sx={{
+                      height: 40,
+                      minHeight: 40,
+                      width: 40,
+                      flex: '0 0 auto',
+                      borderRadius: 1,
+                      border: 1,
+                      borderColor: 'divider',
+                      color: 'text.secondary',
+                      bgcolor: 'background.paper',
+                      '&:hover': {
+                        borderColor: alpha(theme.palette.primary.main, 0.32),
+                        color: 'primary.main',
+                        bgcolor: alpha(theme.palette.primary.main, 0.05),
+                      },
+                    }}
+                  >
+                    <AttachFileIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </Stack>
             <IconButton
               color="primary"

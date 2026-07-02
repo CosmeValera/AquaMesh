@@ -348,9 +348,10 @@ describe('DashboardChatPanel quick create menu', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^Add source$/i }))
     const dialog = screen.getByRole('dialog')
-    fireEvent.change(within(dialog).getByLabelText('Title (optional)'), {
-      target: { value: 'ATP notes' },
-    })
+    expect(within(dialog).queryByLabelText('Title (optional)')).toBeNull()
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: /^Paste text$/i }),
+    )
     fireEvent.change(within(dialog).getByLabelText('Source text'), {
       target: {
         value:
@@ -365,7 +366,7 @@ describe('DashboardChatPanel quick create menu', () => {
 
     expect(fetchDashboardExternalSource).not.toHaveBeenCalled()
     expect(askDashboardSources).not.toHaveBeenCalled()
-    expect(await screen.findByText('ATP notes')).toBeInTheDocument()
+    expect(await screen.findByText('Pasted source')).toBeInTheDocument()
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     )
@@ -388,9 +389,6 @@ describe('DashboardChatPanel quick create menu', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^Add source$/i }))
     const dialog = screen.getByRole('dialog')
-    fireEvent.click(
-      within(dialog).getByRole('button', { name: /^Webpage URL$/i }),
-    )
     fireEvent.change(within(dialog).getByLabelText('Webpage URL'), {
       target: { value: 'https://example.com/ansible' },
     })
@@ -457,9 +455,9 @@ describe('DashboardChatPanel quick create menu', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^Add source$/i }))
     const dialog = screen.getByRole('dialog')
-    fireEvent.change(within(dialog).getByLabelText('Title (optional)'), {
-      target: { value: 'Temporary notes' },
-    })
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: /^Paste text$/i }),
+    )
     fireEvent.change(within(dialog).getByLabelText('Source text'), {
       target: { value: 'Temporary source text with enough content to save.' },
     })
@@ -469,15 +467,15 @@ describe('DashboardChatPanel quick create menu', () => {
     await waitFor(() => expect(addPastedSourceButton).toBeEnabled())
     fireEvent.click(addPastedSourceButton)
 
-    expect(await screen.findByText('Temporary notes')).toBeInTheDocument()
+    expect(await screen.findByText('Pasted source')).toBeInTheDocument()
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     )
     fireEvent.click(
-      screen.getByRole('button', { name: /^Remove source: Temporary notes$/i }),
+      screen.getByRole('button', { name: /^Remove source: Pasted source$/i }),
     )
 
-    expect(screen.queryByText('Temporary notes')).not.toBeInTheDocument()
+    expect(screen.queryByText('Pasted source')).not.toBeInTheDocument()
     expect(
       screen.getByPlaceholderText('Add study material before chatting'),
     ).toBeDisabled()

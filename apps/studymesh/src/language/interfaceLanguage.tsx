@@ -333,8 +333,7 @@ const translations = {
     'chat.addedSources': 'Sources',
     'chat.sourceTrimmed': 'trimmed',
     'chat.removeSource': 'Remove source',
-    'chat.sourceLimitHelp':
-      'Up to 5 sources per chat. The most relevant 3 are used per answer.',
+    'chat.sourceLimitHelp': 'Up to 5 sources per chat.',
     'ai.mode': 'AI Mode',
     'ai.modeHelp': 'Choose how StudyMesh generates study materials.',
     'ai.closeMode': 'Close AI mode',

@@ -2,16 +2,16 @@ import React from 'react'
 import {
   Box,
   Button,
+  Chip,
   Container,
+  Divider,
   Grid,
   Paper,
   Stack,
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import CloudQueueIcon from '@mui/icons-material/CloudQueue'
 import KeyIcon from '@mui/icons-material/Key'
 import MemoryIcon from '@mui/icons-material/Memory'
 
@@ -41,9 +41,23 @@ const pricingBrand = {
   mintSoft: '#DDF9EF',
 }
 
-const formatCreditPackPrice = (label: string) => label.replace(' EUR', '€')
 const pricingCreditIconFilter =
   'drop-shadow(0 0 1px rgba(0,95,88,0.95)) drop-shadow(0 0 2px rgba(0,95,88,0.28))'
+
+const packBadgeLabel = (packId: string): string => {
+  if (packId === 'starter') {
+    return 'Starter'
+  }
+
+  if (packId === 'popular') {
+    return 'Popular'
+  }
+
+  return 'Best value'
+}
+
+const packValueLabel = (credits: number, priceCents: number): string =>
+  `${Math.round(credits / (priceCents / 100))} credits / EUR`
 
 const CreditAmount = ({
   amount,
@@ -326,149 +340,181 @@ const StudyMeshPricingPage = () => {
               <Grid container spacing={2} alignItems="stretch">
                 {HOSTED_AI_CREDIT_PACKS.map((pack) => {
                   const highlighted = pack.id !== 'starter'
+                  const isPremium = pack.id === 'value'
 
                   return (
                     <Grid item xs={12} md={4} key={pack.id}>
-                      <Paper
-                        elevation={0}
+                      <Box
                         sx={{
                           height: '100%',
-                          p: 2,
-                          borderRadius: 2,
-                          border: '1px solid',
-                          borderColor: highlighted
-                            ? alpha(pricingBrand.blue, 0.62)
-                            : alpha(pricingBrand.line, 0.9),
-                          bgcolor: highlighted
-                            ? alpha(pricingBrand.blue, 0.08)
-                            : alpha(pricingBrand.surface, 0.78),
+                          borderRadius: 2.5,
+                          ...(isPremium && {
+                            p: '2px',
+                            background:
+                              'linear-gradient(115deg, #7c3aed, #22d3ee, #f59e0b, #ec4899, #7c3aed)',
+                            backgroundSize: '300% 300%',
+                            animation: 'premiumBorderFlow 5s ease infinite',
+                            boxShadow:
+                              '0 14px 34px rgba(124,58,237,0.20), 0 0 24px rgba(34,211,238,0.16)',
+                            '@keyframes premiumBorderFlow': {
+                              '0%': { backgroundPosition: '0% 50%' },
+                              '50%': { backgroundPosition: '100% 50%' },
+                              '100%': { backgroundPosition: '0% 50%' },
+                            },
+                          }),
                         }}
                       >
-                        <Stack spacing={1.35} height="100%">
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                          >
-                            <Box
+                        <Paper
+                          elevation={0}
+                          variant="outlined"
+                          sx={{
+                            position: 'relative',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            height: '100%',
+                            minHeight: 318,
+                            p: 2,
+                            borderRadius: isPremium
+                              ? 'calc(20px - 2px)'
+                              : 2.5,
+                            borderWidth: highlighted && !isPremium ? 2 : 1,
+                            borderColor: isPremium
+                              ? 'transparent'
+                              : highlighted
+                              ? '#008575'
+                              : 'divider',
+                            bgcolor: 'background.paper',
+                            backgroundImage: isPremium
+                              ? 'radial-gradient(circle at 92% 8%, rgba(34,211,238,0.20), transparent 42%), radial-gradient(circle at 4% 94%, rgba(124,58,237,0.20), transparent 48%)'
+                              : 'none',
+                            boxShadow:
+                              highlighted && !isPremium
+                                ? '0 10px 24px rgba(0,137,123,0.10)'
+                                : 0,
+                            transition:
+                              'transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease',
+                            '&:hover': {
+                              transform: 'translateY(-3px)',
+                              boxShadow: isPremium
+                                ? '0 16px 36px rgba(124,58,237,0.22), 0 0 26px rgba(34,211,238,0.18)'
+                                : '0 16px 34px rgba(0,137,123,0.16)',
+                              borderColor: isPremium
+                                ? 'transparent'
+                                : '#008575',
+                            },
+                          }}
+                        >
+                          <Stack spacing={1.35} height="100%">
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              justifyContent="space-between"
+                              gap={1}
+                              sx={{ mb: 0.15 }}
+                            >
+                              <Chip
+                                label={packBadgeLabel(pack.id)}
+                                size="small"
+                                sx={{
+                                  height: 26,
+                                  fontWeight: 950,
+                                  color: '#fff',
+                                  bgcolor: isPremium ? '#ec4899' : '#008575',
+                                  ...(isPremium && {
+                                    background:
+                                      'linear-gradient(115deg, #f97316, #ec4899, #8b5cf6)',
+                                    boxShadow:
+                                      '0 6px 14px rgba(236,72,153,0.28)',
+                                  }),
+                                  '& .MuiChip-label': { px: 1.2 },
+                                }}
+                              />
+                            </Stack>
+                            <Stack
+                              direction="row"
+                              spacing={0.85}
+                              alignItems="center"
+                              aria-label={`${pack.credits} Study Credits`}
+                            >
+                              <Typography
+                                variant="h4"
+                                fontWeight={950}
+                                lineHeight={1.05}
+                              >
+                                {pack.credits}
+                              </Typography>
+                              <StudyCreditIcon size={27} />
+                            </Stack>
+
+                            <Divider sx={{ my: 0.05 }} />
+
+                            <Stack
+                              direction="row"
+                              alignItems="baseline"
+                              justifyContent="space-between"
+                              gap={1}
+                            >
+                              <Typography variant="h5" fontWeight={950}>
+                                {pack.label}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {packValueLabel(pack.credits, pack.priceCents)}
+                              </Typography>
+                            </Stack>
+                            <Stack spacing={0.75} sx={{ mt: 0.75 }}>
+                              {[
+                                'No API key to manage',
+                                'Use for Study Guides',
+                                'Use for Quick Create and chat',
+                              ].map((feature) => (
+                                <Stack
+                                  key={feature}
+                                  direction="row"
+                                  spacing={0.75}
+                                  alignItems="center"
+                                >
+                                  <CheckCircleIcon
+                                    fontSize="small"
+                                    sx={{ color: '#008575' }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ color: pricingBrand.ink }}
+                                  >
+                                    {feature}
+                                  </Typography>
+                                </Stack>
+                              ))}
+                            </Stack>
+                            <Button
+                              variant="outlined"
+                              href="/signup"
                               sx={{
-                                width: 34,
-                                height: 34,
-                                borderRadius: '50%',
-                                display: 'grid',
-                                placeItems: 'center',
-                                color: highlighted
-                                  ? pricingBrand.surface
-                                  : pricingBrand.blue,
-                                bgcolor: highlighted
-                                  ? pricingBrand.blue
-                                  : alpha(pricingBrand.blue, 0.1),
+                                mt: 'auto',
+                                py: 0.9,
+                                px: 1.5,
+                                borderRadius: 1.5,
+                                color: '#008575',
+                                bgcolor: 'transparent',
+                                borderColor: '#008575',
+                                textTransform: 'none',
+                                fontWeight: 950,
+                                fontSize: '1rem',
+                                '&:hover': {
+                                  bgcolor: alpha('#008575', 0.06),
+                                  borderColor: '#008575',
+                                },
                               }}
                             >
-                              {highlighted ? (
-                                <AutoAwesomeIcon fontSize="small" />
-                              ) : (
-                                <CloudQueueIcon fontSize="small" />
-                              )}
-                            </Box>
-                            <Typography
-                              variant="caption"
-                              sx={{ color: pricingBrand.softText }}
-                            >
-                              {pack.badge ?? 'Credit pack'}
-                            </Typography>
+                              Buy credits ({pack.credits})
+                            </Button>
                           </Stack>
-                          <Box>
-                            <CreditAmount
-                              amount={pack.credits}
-                              size="h6"
-                              iconSize={24}
-                            />
-                            <Typography
-                              variant="h4"
-                              fontWeight={950}
-                              sx={{ color: pricingBrand.ink }}
-                            >
-                              {formatCreditPackPrice(pack.label)}
-                            </Typography>
-                          </Box>
-                          <Typography
-                            variant="body2"
-                            sx={{ color: pricingBrand.muted }}
-                          >
-                            One-time credit purchase. Credits stay in your
-                            StudyMesh account.
-                          </Typography>
-                          <Stack spacing={0.75} sx={{ mt: 'auto' }}>
-                            {[
-                              'No API key to manage',
-                              'Use for Study Guides',
-                              'Use for Quick Create and chat',
-                            ].map((feature) => (
-                              <Stack
-                                key={feature}
-                                direction="row"
-                                spacing={0.75}
-                                alignItems="center"
-                              >
-                                <CheckCircleIcon
-                                  fontSize="small"
-                                  sx={{
-                                    color: highlighted
-                                      ? pricingBrand.blue
-                                      : pricingBrand.mintDark,
-                                  }}
-                                />
-                                <Typography
-                                  variant="body2"
-                                  sx={{ color: pricingBrand.ink }}
-                                >
-                                  {feature}
-                                </Typography>
-                              </Stack>
-                            ))}
-                          </Stack>
-                          <Button
-                            variant={highlighted ? 'contained' : 'outlined'}
-                            href="/signup"
-                            sx={{
-                              mt: 1,
-                              borderRadius: 999,
-                              borderColor: highlighted
-                                ? pricingBrand.blue
-                                : alpha(pricingBrand.blue, 0.36),
-                              bgcolor: highlighted
-                                ? pricingBrand.blue
-                                : alpha(pricingBrand.surface, 0.76),
-                              color: highlighted
-                                ? pricingBrand.surface
-                                : pricingBrand.blueDark,
-                              textTransform: 'none',
-                              fontWeight: 900,
-                              boxShadow: highlighted
-                                ? `0 14px 28px ${alpha(
-                                    pricingBrand.blue,
-                                    0.18,
-                                  )}`
-                                : 'none',
-                              '&:hover': {
-                                borderColor: pricingBrand.blue,
-                                bgcolor: highlighted
-                                  ? pricingBrand.blueDark
-                                  : alpha(pricingBrand.blue, 0.08),
-                                boxShadow: highlighted
-                                  ? `0 16px 32px ${alpha(
-                                      pricingBrand.blue,
-                                      0.24,
-                                    )}`
-                                  : 'none',
-                              },
-                            }}
-                          >
-                            Sign up
-                          </Button>
-                        </Stack>
-                      </Paper>
+                        </Paper>
+                      </Box>
                     </Grid>
                   )
                 })}

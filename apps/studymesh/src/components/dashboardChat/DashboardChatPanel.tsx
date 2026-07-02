@@ -36,6 +36,9 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
 import LinkIcon from '@mui/icons-material/Link'
 import NotesIcon from '@mui/icons-material/Notes'
+import UploadFileIcon from '@mui/icons-material/UploadFile'
+import ContentPasteIcon from '@mui/icons-material/ContentPaste'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import QuizIcon from '@mui/icons-material/Quiz'
 import StyleIcon from '@mui/icons-material/Style'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
@@ -85,8 +88,7 @@ const MAX_USER_ADDED_SOURCES = 5
 const MAX_USER_SOURCE_TEXT_CHARS = 12_000
 const MAX_USER_SOURCE_CONTEXT_CHARS = 18_000
 const MAX_USER_SOURCES_PER_ANSWER = 3
-
-type AddSourceMode = 'text' | 'web'
+const MAX_USER_SOURCE_FILE_BYTES = 1_000_000
 
 export interface DashboardChatMessage {
   id: string
@@ -203,6 +205,50 @@ const hashSourceValue = (value: string): string => {
     hash = (hash * 31 + value.charCodeAt(index)) >>> 0
   }
   return hash.toString(36)
+}
+
+const TEXT_SOURCE_FILE_EXTENSIONS = new Set([
+  'txt',
+  'md',
+  'markdown',
+  'csv',
+  'json',
+  'html',
+  'htm',
+  'xml',
+  'yaml',
+  'yml',
+  'log',
+])
+
+const isReadableUserSourceFile = (file: File): boolean => {
+  if (file.type.startsWith('text/')) {
+    return true
+  }
+
+  if (
+    ['application/json', 'application/xml', 'application/xhtml+xml'].includes(
+      file.type,
+    )
+  ) {
+    return true
+  }
+
+  const extension = file.name.split('.').pop()?.toLowerCase() || ''
+  return TEXT_SOURCE_FILE_EXTENSIONS.has(extension)
+}
+
+const readUserSourceFileText = (file: File): Promise<string> => {
+  if (typeof file.text === 'function') {
+    return file.text()
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(reader.error || new Error('read_failed'))
+    reader.readAsText(file)
+  })
 }
 
 const createEmptyChatSession = (): DashboardChatSession => ({
@@ -513,7 +559,7 @@ const DashboardChatPanel = ({
   const [externalSourcePrompt, setExternalSourcePrompt] =
     useState<ExternalSourcePrompt | null>(null)
   const [addSourceDialogOpen, setAddSourceDialogOpen] = useState(false)
-  const [addSourceMode, setAddSourceMode] = useState<AddSourceMode>('web')
+  const [pasteSourceDialogOpen, setPasteSourceDialogOpen] = useState(false)
   const [addSourceText, setAddSourceText] = useState('')
   const [addSourceUrl, setAddSourceUrl] = useState('')
   const [addSourceError, setAddSourceError] = useState('')
@@ -530,6 +576,7 @@ const DashboardChatPanel = ({
     new Map<string, HTMLButtonElement>(),
   )
   const userSourceChipRefs = useRef(new Map<string, HTMLDivElement>())
+  const sourceFileInputRef = useRef<HTMLInputElement | null>(null)
   const composerDragRef = useRef<{
     startY: number
     startHeight: number
@@ -1671,7 +1718,6 @@ const DashboardChatPanel = ({
   }
 
   const resetAddSourceDialog = () => {
-    setAddSourceMode('web')
     setAddSourceText('')
     setAddSourceUrl('')
     setAddSourceError('')
@@ -1690,7 +1736,25 @@ const DashboardChatPanel = ({
     }
 
     setAddSourceDialogOpen(false)
+    setPasteSourceDialogOpen(false)
     resetAddSourceDialog()
+  }
+
+  const openPasteSourceDialog = () => {
+    setAddSourceText('')
+    setAddSourceError('')
+    setAddSourceNotice('')
+    setPasteSourceDialogOpen(true)
+  }
+
+  const closePasteSourceDialog = () => {
+    if (addSourceLoading) {
+      return
+    }
+
+    setPasteSourceDialogOpen(false)
+    setAddSourceText('')
+    setAddSourceError('')
   }
 
   const handleUserSourceResult = (
@@ -1717,6 +1781,7 @@ const DashboardChatPanel = ({
           : 'Source already exists in this chat.',
     )
     setAddSourceDialogOpen(false)
+    setPasteSourceDialogOpen(false)
     resetAddSourceDialog()
   }
 
@@ -1744,7 +1809,10 @@ const DashboardChatPanel = ({
   }
 
   const addWebSource = async () => {
-    const sourceUrl = addSourceUrl.trim()
+    let sourceUrl = addSourceUrl.trim()
+    if (sourceUrl && !/^[a-z][a-z0-9+.-]*:\/\//i.test(sourceUrl)) {
+      sourceUrl = `https://${sourceUrl}`
+    }
 
     try {
       const parsedUrl = new URL(sourceUrl)
@@ -1788,13 +1856,88 @@ const DashboardChatPanel = ({
     }
   }
 
-  const submitAddSource = () => {
-    if (addSourceMode === 'text') {
-      addPastedTextSource()
+  const addSourceFile = async (file: File): Promise<boolean> => {
+    if (!isReadableUserSourceFile(file)) {
+      setAddSourceError('Use a text, Markdown, CSV, JSON, HTML, or XML file.')
+      return false
+    }
+
+    if (file.size > MAX_USER_SOURCE_FILE_BYTES) {
+      setAddSourceError('Use a file under 1 MB.')
+      return false
+    }
+
+    const { text, trimmed } = truncateUserSourceText(
+      await readUserSourceFileText(file),
+    )
+    if (text.length < 20) {
+      setAddSourceError('This file does not contain enough source text.')
+      return false
+    }
+
+    const sourceHash = hashSourceValue(`${file.name}\n${text}`)
+    const result = addUserAddedSource({
+      id: `user-file-source-${sourceHash}`,
+      url: `studymesh://user-source-file/${sourceHash}`,
+      title: file.name,
+      text,
+      originType: 'user-text',
+      trimmed,
+      searchQuery: file.name,
+      fetchedAt: Date.now(),
+    })
+
+    if (result.limitReached) {
+      setAddSourceError(
+        `You can add up to ${MAX_USER_ADDED_SOURCES} sources per chat.`,
+      )
+      return false
+    }
+
+    return Boolean(result.savedSource)
+  }
+
+  const addSourceFiles = async (files: FileList | File[]) => {
+    const fileList = Array.from(files)
+    if (fileList.length === 0) {
       return
     }
 
-    void addWebSource()
+    setAddSourceLoading(true)
+    setAddSourceError('')
+
+    try {
+      let addedAny = false
+      for (const file of fileList) {
+        const added = await addSourceFile(file)
+        addedAny = addedAny || added
+        if (!added) {
+          break
+        }
+      }
+
+      if (addedAny) {
+        setAddSourceDialogOpen(false)
+        resetAddSourceDialog()
+      }
+    } finally {
+      setAddSourceLoading(false)
+      if (sourceFileInputRef.current) {
+        sourceFileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleSourceFileInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    if (event.target.files) {
+      void addSourceFiles(event.target.files)
+    }
+  }
+
+  const openSourceFilePicker = () => {
+    sourceFileInputRef.current?.click()
   }
 
   const updateExternalSourceDraftState = (
@@ -3347,57 +3490,117 @@ const DashboardChatPanel = ({
         onClose={closeAddSourceDialog}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            overflow: 'hidden',
+            background:
+              theme.palette.mode === 'dark'
+                ? `radial-gradient(circle at 22% 0%, ${alpha(
+                    accentColor.main,
+                    0.28,
+                  )}, transparent 34%), radial-gradient(circle at 82% 10%, ${alpha(
+                    theme.palette.success.main,
+                    0.22,
+                  )}, transparent 36%), ${theme.palette.background.paper}`
+                : `radial-gradient(circle at 18% 0%, ${alpha(
+                    accentColor.main,
+                    0.16,
+                  )}, transparent 36%), radial-gradient(circle at 82% 8%, ${alpha(
+                    theme.palette.success.main,
+                    0.12,
+                  )}, transparent 34%), ${theme.palette.background.paper}`,
+          },
+        }}
       >
         <DialogTitle>{t('chat.addSourceTitle')}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={1.5} sx={{ pt: 0.5 }}>
+        <DialogContent sx={{ pb: 2 }}>
+          <Stack spacing={2.25} sx={{ pt: 0.5 }}>
             <Typography variant="body2" color="text.secondary">
               {t('chat.addSourceHelp')}
             </Typography>
-            <ToggleButtonGroup
-              value={addSourceMode}
-              exclusive
-              fullWidth
-              size="small"
-              onChange={(_, value: AddSourceMode | null) => {
-                if (value) {
-                  setAddSourceMode(value)
-                  setAddSourceError('')
-                  setAddSourceNotice('')
+            <TextField
+              value={addSourceUrl}
+              onChange={(event) => setAddSourceUrl(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && addSourceUrl.trim()) {
+                  event.preventDefault()
+                  void addWebSource()
                 }
               }}
-              aria-label={t('chat.addSource')}
+              label={t('chat.sourceUrl')}
+              size="small"
+              fullWidth
+              autoFocus
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LinkIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Box
+              onDragOver={(event) => {
+                event.preventDefault()
+              }}
+              onDrop={(event) => {
+                event.preventDefault()
+                void addSourceFiles(event.dataTransfer.files)
+              }}
+              sx={{
+                minHeight: 188,
+                border: 1,
+                borderStyle: 'dashed',
+                borderColor: alpha(theme.palette.text.primary, 0.28),
+                borderRadius: 1.5,
+                bgcolor: alpha(theme.palette.background.paper, 0.62),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                px: 2,
+                py: 3,
+              }}
             >
-              <ToggleButton value="web">{t('chat.webpageSource')}</ToggleButton>
-              <ToggleButton value="text">
-                {t('chat.pasteTextSource')}
-              </ToggleButton>
-            </ToggleButtonGroup>
-            {addSourceMode === 'text' ? (
-              <TextField
-                value={addSourceText}
-                onChange={(event) => setAddSourceText(event.target.value)}
-                label={t('chat.sourceText')}
-                multiline
-                minRows={6}
-                fullWidth
-              />
-            ) : (
-              <TextField
-                value={addSourceUrl}
-                onChange={(event) => setAddSourceUrl(event.target.value)}
-                label={t('chat.sourceUrl')}
-                size="small"
-                fullWidth
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LinkIcon fontSize="small" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            )}
+              <Stack spacing={1.75} alignItems="center">
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    {t('chat.dropFiles')}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {t('chat.fileTypesHelp')}
+                  </Typography>
+                </Box>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Button
+                    variant="outlined"
+                    startIcon={<UploadFileIcon />}
+                    onClick={openSourceFilePicker}
+                    disabled={addSourceLoading}
+                    sx={{ borderRadius: 999, bgcolor: 'background.paper' }}
+                  >
+                    {t('chat.uploadFiles')}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<ContentPasteIcon />}
+                    onClick={openPasteSourceDialog}
+                    disabled={addSourceLoading}
+                    sx={{ borderRadius: 999, bgcolor: 'background.paper' }}
+                  >
+                    {t('chat.copiedText')}
+                  </Button>
+                </Stack>
+              </Stack>
+            </Box>
+            <input
+              ref={sourceFileInputRef}
+              type="file"
+              multiple
+              hidden
+              accept=".txt,.md,.markdown,.csv,.json,.html,.htm,.xml,.yaml,.yml,.log,text/*,application/json,application/xml,application/xhtml+xml"
+              onChange={handleSourceFileInputChange}
+            />
             <Typography variant="caption" color="text.secondary">
               {t('chat.sourceLimitHelp')}
             </Typography>
@@ -3415,17 +3618,84 @@ const DashboardChatPanel = ({
           </Button>
           <Button
             variant="contained"
-            onClick={submitAddSource}
-            disabled={
-              addSourceLoading ||
-              (addSourceMode === 'text'
-                ? !addSourceText.trim()
-                : !addSourceUrl.trim())
-            }
+            onClick={() => void addWebSource()}
+            disabled={addSourceLoading || !addSourceUrl.trim()}
           >
             {addSourceLoading
               ? t('chat.searchingWebShort')
               : t('chat.addSourceButton')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={pasteSourceDialogOpen}
+        onClose={closePasteSourceDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            background:
+              theme.palette.mode === 'dark'
+                ? `radial-gradient(circle at 18% 0%, ${alpha(
+                    accentColor.main,
+                    0.24,
+                  )}, transparent 34%), radial-gradient(circle at 84% 0%, ${alpha(
+                    theme.palette.success.main,
+                    0.16,
+                  )}, transparent 34%), ${theme.palette.background.paper}`
+                : undefined,
+          },
+        }}
+      >
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <IconButton
+              size="small"
+              aria-label={t('common.back')}
+              onClick={closePasteSourceDialog}
+            >
+              <ArrowBackIcon fontSize="small" />
+            </IconButton>
+            <Typography variant="h6" component="span" sx={{ flex: 1 }}>
+              {t('chat.pasteCopiedTextTitle')}
+            </Typography>
+            <IconButton
+              size="small"
+              aria-label={t('common.close')}
+              onClick={closePasteSourceDialog}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={2}>
+            <Typography variant="body2" color="text.secondary">
+              {t('chat.pasteCopiedTextHelp')}
+            </Typography>
+            <TextField
+              value={addSourceText}
+              onChange={(event) => setAddSourceText(event.target.value)}
+              inputProps={{ 'aria-label': t('chat.sourceText') }}
+              placeholder={t('chat.pasteTextHere')}
+              multiline
+              minRows={8}
+              fullWidth
+              autoFocus
+            />
+            {addSourceError ? (
+              <Alert severity="error">{addSourceError}</Alert>
+            ) : null}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="contained"
+            onClick={addPastedTextSource}
+            disabled={!addSourceText.trim()}
+          >
+            {t('chat.insertSource')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -4161,16 +4431,6 @@ const DashboardChatPanel = ({
           p: 1.5,
           bgcolor: 'background.paper',
           flex: '0 0 auto',
-          height:
-            draftHasMultipleLines && chatComposerResized
-              ? chatComposerHeight
-              : 'auto',
-          minHeight:
-            draftHasMultipleLines && chatComposerResized
-              ? MIN_RESIZED_CHAT_COMPOSER_HEIGHT
-              : undefined,
-          maxHeight:
-            draftHasMultipleLines && chatComposerResized ? '48%' : undefined,
         }}
       >
         {onQuickCreatePage && activeQuickCreateAction ? (
@@ -4185,13 +4445,7 @@ const DashboardChatPanel = ({
             {t('chat.estimate')} {formatSeconds(quickCreateEstimateSeconds)}
           </Typography>
         ) : null}
-        <Stack
-          spacing={1}
-          sx={{
-            height:
-              draftHasMultipleLines && chatComposerResized ? '100%' : 'auto',
-          }}
-        >
+        <Stack spacing={1} sx={{ minHeight: 0 }}>
           {userAddedSources.length > 0 ? (
             <Stack
               direction="row"
@@ -4282,53 +4536,107 @@ const DashboardChatPanel = ({
               ))}
             </Stack>
           ) : null}
-          <TextField
-            inputRef={draftInputRef}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder={
-              hasAnswerContext
-                ? t('chat.askAnything')
-                : t('chat.addStudyMaterial')
-            }
-            disabled={!hasAnswerContext}
-            fullWidth
-            multiline
-            minRows={1}
-            maxRows={
-              draftHasMultipleLines && chatComposerResized ? undefined : 4
-            }
-            size="small"
-            sx={composerInputSx}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault()
-                if (!hasAnswerContext) {
-                  return
-                }
-                sendQuestion(draft)
-              }
-            }}
-          />
           <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ flex: '0 0 auto' }}
+            spacing={1}
+            sx={{
+              height:
+                draftHasMultipleLines && chatComposerResized
+                  ? chatComposerHeight
+                  : 'auto',
+              minHeight:
+                draftHasMultipleLines && chatComposerResized
+                  ? MIN_RESIZED_CHAT_COMPOSER_HEIGHT
+                  : undefined,
+              maxHeight:
+                draftHasMultipleLines && chatComposerResized
+                  ? '48vh'
+                  : undefined,
+              overflow: 'hidden',
+            }}
           >
-            <Stack direction="row" spacing={0.75} alignItems="center">
-              {onQuickCreatePage ? (
-                <Tooltip title={t('chat.create')}>
+            <TextField
+              inputRef={draftInputRef}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder={
+                hasAnswerContext
+                  ? t('chat.askAnything')
+                  : t('chat.addStudyMaterial')
+              }
+              disabled={!hasAnswerContext}
+              fullWidth
+              multiline
+              minRows={1}
+              maxRows={
+                draftHasMultipleLines && chatComposerResized ? undefined : 4
+              }
+              size="small"
+              sx={composerInputSx}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault()
+                  if (!hasAnswerContext) {
+                    return
+                  }
+                  sendQuestion(draft)
+                }
+              }}
+            />
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ flex: '0 0 auto' }}
+            >
+              <Stack direction="row" spacing={0.75} alignItems="center">
+                {onQuickCreatePage ? (
+                  <Tooltip title={t('chat.create')}>
+                    <span>
+                      <IconButton
+                        size="small"
+                        aria-label={t('chat.create')}
+                        disabled={!hasContext || Boolean(quickCreateActionId)}
+                        onClick={(event) =>
+                          setQuickCreateMenuAnchor(event.currentTarget)
+                        }
+                        aria-haspopup="menu"
+                        aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
+                        sx={{
+                          height: 40,
+                          minHeight: 40,
+                          width: 40,
+                          flex: '0 0 auto',
+                          borderRadius: 1,
+                          border: 1,
+                          borderColor: 'divider',
+                          color: 'text.secondary',
+                          bgcolor: 'background.paper',
+                          '&:hover': {
+                            borderColor: alpha(
+                              theme.palette.primary.main,
+                              0.32,
+                            ),
+                            color: 'primary.main',
+                            bgcolor: alpha(theme.palette.primary.main, 0.05),
+                          },
+                          '&.Mui-disabled': {
+                            borderColor: 'divider',
+                            color: 'text.disabled',
+                            bgcolor: 'action.disabledBackground',
+                          },
+                        }}
+                      >
+                        <AddCircleOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                ) : null}
+                <Tooltip title={t('chat.addSource')}>
                   <span>
                     <IconButton
                       size="small"
-                      aria-label={t('chat.create')}
-                      disabled={!hasContext || Boolean(quickCreateActionId)}
-                      onClick={(event) =>
-                        setQuickCreateMenuAnchor(event.currentTarget)
-                      }
-                      aria-haspopup="menu"
-                      aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
+                      aria-label={t('chat.addSource')}
+                      onClick={openAddSourceDialog}
                       sx={{
                         height: 40,
                         minHeight: 40,
@@ -4344,73 +4652,41 @@ const DashboardChatPanel = ({
                           color: 'primary.main',
                           bgcolor: alpha(theme.palette.primary.main, 0.05),
                         },
-                        '&.Mui-disabled': {
-                          borderColor: 'divider',
-                          color: 'text.disabled',
-                          bgcolor: 'action.disabledBackground',
-                        },
                       }}
                     >
-                      <AddCircleOutlineIcon fontSize="small" />
+                      <AttachFileIcon fontSize="small" />
                     </IconButton>
                   </span>
                 </Tooltip>
-              ) : null}
-              <Tooltip title={t('chat.addSource')}>
-                <span>
-                  <IconButton
-                    size="small"
-                    aria-label={t('chat.addSource')}
-                    onClick={openAddSourceDialog}
-                    sx={{
-                      height: 40,
-                      minHeight: 40,
-                      width: 40,
-                      flex: '0 0 auto',
-                      borderRadius: 1,
-                      border: 1,
-                      borderColor: 'divider',
-                      color: 'text.secondary',
-                      bgcolor: 'background.paper',
-                      '&:hover': {
-                        borderColor: alpha(theme.palette.primary.main, 0.32),
-                        color: 'primary.main',
-                        bgcolor: alpha(theme.palette.primary.main, 0.05),
-                      },
-                    }}
-                  >
-                    <AttachFileIcon fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-            </Stack>
-            <IconButton
-              color="primary"
-              onClick={() => sendQuestion(draft)}
-              disabled={!hasAnswerContext || !draft.trim()}
-              aria-label="Send dashboard question"
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1,
-                bgcolor:
-                  hasAnswerContext && draft.trim()
-                    ? 'primary.main'
-                    : 'action.disabledBackground',
-                color:
-                  hasAnswerContext && draft.trim()
-                    ? 'primary.contrastText'
-                    : 'text.disabled',
-                '&:hover': {
+              </Stack>
+              <IconButton
+                color="primary"
+                onClick={() => sendQuestion(draft)}
+                disabled={!hasAnswerContext || !draft.trim()}
+                aria-label="Send dashboard question"
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 1,
                   bgcolor:
                     hasAnswerContext && draft.trim()
-                      ? 'primary.dark'
+                      ? 'primary.main'
                       : 'action.disabledBackground',
-                },
-              }}
-            >
-              <SendIcon />
-            </IconButton>
+                  color:
+                    hasAnswerContext && draft.trim()
+                      ? 'primary.contrastText'
+                      : 'text.disabled',
+                  '&:hover': {
+                    bgcolor:
+                      hasAnswerContext && draft.trim()
+                        ? 'primary.dark'
+                        : 'action.disabledBackground',
+                  },
+                }}
+              >
+                <SendIcon />
+              </IconButton>
+            </Stack>
           </Stack>
           {onQuickCreatePage ? (
             <>

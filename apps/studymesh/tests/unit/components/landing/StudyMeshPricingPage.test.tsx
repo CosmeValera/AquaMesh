@@ -44,11 +44,20 @@ describe('StudyMeshPricingPage', () => {
 
     expect(screen.getByText(/Study Credits pay for hosted generation/i)).toBeInTheDocument()
     expect(screen.getByLabelText('80 Study Credits')).toBeInTheDocument()
-    expect(screen.getByText('2€')).toBeInTheDocument()
+    expect(screen.getByText('2 EUR')).toBeInTheDocument()
+    expect(screen.getByText('40 credits / EUR')).toBeInTheDocument()
     expect(screen.getByLabelText('250 Study Credits')).toBeInTheDocument()
-    expect(screen.getByText('5€')).toBeInTheDocument()
+    expect(screen.getByText('5 EUR')).toBeInTheDocument()
+    expect(screen.getByText('50 credits / EUR')).toBeInTheDocument()
     expect(screen.getByLabelText('600 Study Credits')).toBeInTheDocument()
-    expect(screen.getByText('10€')).toBeInTheDocument()
+    expect(screen.getByText('10 EUR')).toBeInTheDocument()
+    expect(screen.getByText('60 credits / EUR')).toBeInTheDocument()
+    expect(screen.getByText('Starter')).toBeInTheDocument()
+    expect(screen.getByText('Popular')).toBeInTheDocument()
+    expect(screen.getByText('Best value')).toBeInTheDocument()
+    expect(screen.getAllByText('No API key to manage')).toHaveLength(3)
+    expect(screen.getAllByText('Use for Study Guides')).toHaveLength(3)
+    expect(screen.getAllByText('Use for Quick Create and chat')).toHaveLength(3)
 
     expect(screen.getByLabelText('20 Study Credits')).toBeInTheDocument()
     expect(screen.getByLabelText('2 Study Credits')).toBeInTheDocument()
@@ -61,9 +70,12 @@ describe('StudyMeshPricingPage', () => {
     ).toBeInTheDocument()
     expect(screen.queryByText(/\bSC\b/)).not.toBeInTheDocument()
 
-    const signupButtons = screen.getAllByRole('link', { name: /^sign up$/i })
-    expect(signupButtons).toHaveLength(3)
-    signupButtons.forEach((button) => {
+    const creditLinks = [
+      screen.getByRole('link', { name: /buy credits \(80\)/i }),
+      screen.getByRole('link', { name: /buy credits \(250\)/i }),
+      screen.getByRole('link', { name: /buy credits \(600\)/i }),
+    ]
+    creditLinks.forEach((button) => {
       expect(button).toHaveAttribute('href', '/signup')
     })
 

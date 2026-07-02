@@ -347,22 +347,30 @@ describe('DashboardChatPanel quick create menu', () => {
     renderPanel({ dashboard: dashboardWithoutContext })
 
     fireEvent.click(screen.getByRole('button', { name: /^Add source$/i }))
-    const dialog = screen.getByRole('dialog')
-    expect(within(dialog).queryByLabelText('Title (optional)')).toBeNull()
+    const sourceDialog = screen.getByRole('dialog', {
+      name: 'Add source to AI Chat',
+    })
+    expect(within(sourceDialog).queryByLabelText('Title (optional)')).toBeNull()
     fireEvent.click(
-      within(dialog).getByRole('button', { name: /^Paste text$/i }),
+      within(sourceDialog).getByRole('button', { name: /^Copied text$/i }),
     )
-    fireEvent.change(within(dialog).getByLabelText('Source text'), {
-      target: {
-        value:
-          'ATP stores usable energy for cells. Mitochondria produce ATP during cellular respiration.',
+    const pasteDialog = screen.getByRole('dialog', {
+      name: 'Paste copied text',
+    })
+    fireEvent.change(
+      within(pasteDialog).getByRole('textbox', { name: 'Source text' }),
+      {
+        target: {
+          value:
+            'ATP stores usable energy for cells. Mitochondria produce ATP during cellular respiration.',
+        },
       },
+    )
+    const insertSourceButton = within(pasteDialog).getByRole('button', {
+      name: /^Insert$/i,
     })
-    const addPastedSourceButton = within(dialog).getByRole('button', {
-      name: /^Add source$/i,
-    })
-    await waitFor(() => expect(addPastedSourceButton).toBeEnabled())
-    fireEvent.click(addPastedSourceButton)
+    await waitFor(() => expect(insertSourceButton).toBeEnabled())
+    fireEvent.click(insertSourceButton)
 
     expect(fetchDashboardExternalSource).not.toHaveBeenCalled()
     expect(askDashboardSources).not.toHaveBeenCalled()
@@ -384,23 +392,43 @@ describe('DashboardChatPanel quick create menu', () => {
     ).toContain('ATP stores usable energy for cells.')
   })
 
+  it('adds text file source without asking AI', async () => {
+    renderPanel({ dashboard: dashboardWithoutContext })
+
+    fireEvent.click(screen.getByRole('button', { name: /^Add source$/i }))
+    const fileInput = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement
+    const file = new File(
+      ['File source text about glycolysis and ATP production.'],
+      'glycolysis.md',
+      { type: 'text/markdown' },
+    )
+
+    fireEvent.change(fileInput, { target: { files: [file] } })
+
+    expect(fetchDashboardExternalSource).not.toHaveBeenCalled()
+    expect(askDashboardSources).not.toHaveBeenCalled()
+    expect(await screen.findByText('glycolysis.md')).toBeInTheDocument()
+  })
+
   it('adds webpage source through extraction without asking AI', async () => {
     renderPanel()
 
     fireEvent.click(screen.getByRole('button', { name: /^Add source$/i }))
-    const dialog = screen.getByRole('dialog')
+    const dialog = screen.getByRole('dialog', {
+      name: 'Add source to AI Chat',
+    })
     fireEvent.change(within(dialog).getByLabelText('Webpage URL'), {
-      target: { value: 'https://example.com/ansible' },
+      target: { value: 'google.com' },
     })
-    const addWebSourceButton = within(dialog).getByRole('button', {
-      name: /^Add source$/i,
+    fireEvent.keyDown(within(dialog).getByLabelText('Webpage URL'), {
+      key: 'Enter',
     })
-    await waitFor(() => expect(addWebSourceButton).toBeEnabled())
-    fireEvent.click(addWebSourceButton)
 
     await waitFor(() =>
       expect(fetchDashboardExternalSource).toHaveBeenCalledWith({
-        url: 'https://example.com/ansible',
+        url: 'https://google.com',
         dashboardTitle: 'Biology Dashboard',
       }),
     )
@@ -454,15 +482,23 @@ describe('DashboardChatPanel quick create menu', () => {
     renderPanel({ dashboard: dashboardWithoutContext })
 
     fireEvent.click(screen.getByRole('button', { name: /^Add source$/i }))
-    const dialog = screen.getByRole('dialog')
-    fireEvent.click(
-      within(dialog).getByRole('button', { name: /^Paste text$/i }),
-    )
-    fireEvent.change(within(dialog).getByLabelText('Source text'), {
-      target: { value: 'Temporary source text with enough content to save.' },
+    const dialog = screen.getByRole('dialog', {
+      name: 'Add source to AI Chat',
     })
-    const addPastedSourceButton = within(dialog).getByRole('button', {
-      name: /^Add source$/i,
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: /^Copied text$/i }),
+    )
+    const pasteDialog = screen.getByRole('dialog', {
+      name: 'Paste copied text',
+    })
+    fireEvent.change(
+      within(pasteDialog).getByRole('textbox', { name: 'Source text' }),
+      {
+        target: { value: 'Temporary source text with enough content to save.' },
+      },
+    )
+    const addPastedSourceButton = within(pasteDialog).getByRole('button', {
+      name: /^Insert$/i,
     })
     await waitFor(() => expect(addPastedSourceButton).toBeEnabled())
     fireEvent.click(addPastedSourceButton)

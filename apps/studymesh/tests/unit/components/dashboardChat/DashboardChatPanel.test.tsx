@@ -953,6 +953,105 @@ describe('DashboardChatPanel chat management', () => {
     openSpy.mockRestore()
   })
 
+  it('adds user text citation sources as Study Guide pages', () => {
+    const onAddExternalSourceToGuide = vi.fn()
+    const messages = [
+      {
+        id: 'assistant-1',
+        role: 'assistant' as const,
+        content: 'Use the uploaded source [1].',
+        createdAt: 1,
+        sourceRefs: [
+          {
+            citationNumber: 1,
+            chunkId: 'user-source-1',
+            title: 'Uploaded notes.txt',
+            type: 'pasted source',
+            textPreview: 'Inline source text.',
+            origin: 'web',
+            originType: 'user-text' as const,
+            url: 'studymesh://user-source/1',
+          },
+        ],
+      },
+    ]
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === 'studymesh-dashboard-chat-sessions-dashboard-1'
+        ? JSON.stringify([
+            {
+              id: 'chat-1',
+              title: 'Uploaded notes',
+              messages,
+              externalSources: [
+                {
+                  id: 'user-source-1',
+                  url: 'studymesh://user-source/1',
+                  title: 'Uploaded notes.txt',
+                  text: 'Inline source text that should become a guide page.',
+                  originType: 'user-text',
+                  searchQuery: 'Uploaded notes.txt',
+                  fetchedAt: 1,
+                },
+              ],
+              createdAt: 1,
+              updatedAt: 1,
+            },
+          ])
+        : null,
+    )
+
+    renderPanel({ messages, onAddExternalSourceToGuide })
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Add source as page 1' }),
+    )
+
+    expect(onAddExternalSourceToGuide).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'user-source-1',
+        guidePageDraftStatus: 'ready',
+        guidePageDraft: expect.objectContaining({
+          title: 'Uploaded notes.txt',
+          markdown: expect.stringContaining(
+            'Inline source text that should become a guide page.',
+          ),
+        }),
+      }),
+    )
+  })
+
+  it('opens user webpage citation sources through the external confirmation', () => {
+    const messages = [
+      {
+        id: 'assistant-1',
+        role: 'assistant' as const,
+        content: 'Use the webpage source [1].',
+        createdAt: 1,
+        sourceRefs: [
+          {
+            citationNumber: 1,
+            chunkId: 'user-web-source-1',
+            title: 'Example source',
+            type: 'user webpage',
+            textPreview: 'Webpage source text.',
+            origin: 'web',
+            originType: 'user-web' as const,
+            url: 'https://example.com/source',
+          },
+        ],
+      },
+    ]
+
+    renderPanel({ messages })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open added source 1' }))
+
+    expect(
+      screen.getByRole('dialog', { name: 'Open external source?' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('https://example.com/source')).toBeInTheDocument()
+  })
+
   it('does not render a bottom sources section after answers', () => {
     renderPanel({
       messages: [

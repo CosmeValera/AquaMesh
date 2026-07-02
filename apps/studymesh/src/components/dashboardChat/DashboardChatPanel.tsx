@@ -554,6 +554,7 @@ const DashboardChatPanel = ({
   const [chatComposerHeight, setChatComposerHeight] = useState(
     MIN_RESIZED_CHAT_COMPOSER_HEIGHT,
   )
+  const [sourceChipRowHeight, setSourceChipRowHeight] = useState(0)
   const [chatComposerResized, setChatComposerResized] = useState(false)
   const [draftHasMultipleLines, setDraftHasMultipleLines] = useState(false)
   const [externalSourcePrompt, setExternalSourcePrompt] =
@@ -576,6 +577,7 @@ const DashboardChatPanel = ({
     new Map<string, HTMLButtonElement>(),
   )
   const userSourceChipRefs = useRef(new Map<string, HTMLDivElement>())
+  const userSourceRowRef = useRef<HTMLDivElement | null>(null)
   const sourceFileInputRef = useRef<HTMLInputElement | null>(null)
   const composerDragRef = useRef<{
     startY: number
@@ -1507,6 +1509,29 @@ const DashboardChatPanel = ({
       setChatComposerHeight(MIN_RESIZED_CHAT_COMPOSER_HEIGHT)
     }
   }, [draft])
+
+  useEffect(() => {
+    const sourceRow = userSourceRowRef.current
+    if (!sourceRow) {
+      setSourceChipRowHeight(0)
+      return undefined
+    }
+
+    const measureSourceRow = () => {
+      setSourceChipRowHeight(
+        Math.ceil(sourceRow.getBoundingClientRect().height),
+      )
+    }
+
+    measureSourceRow()
+    if (typeof ResizeObserver === 'undefined') {
+      return undefined
+    }
+
+    const observer = new ResizeObserver(measureSourceRow)
+    observer.observe(sourceRow)
+    return () => observer.disconnect()
+  }, [userAddedSources.length])
 
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
@@ -2497,6 +2522,48 @@ const DashboardChatPanel = ({
     focusExternalSourceAddButton(externalSource.id)
   }
 
+  const buildUserSourceGuideDraft = (
+    source: DashboardExternalSource,
+  ): DashboardExternalSource => {
+    const title = source.title || 'AI Chat source'
+    const text = normalizeUserSourceText(source.text)
+    const markdown = [
+      `# ${title}`,
+      '',
+      'Source added from AI Chat.',
+      '',
+      '## Content',
+      '',
+      text || 'No readable text was available for this source.',
+    ].join('\n')
+
+    return {
+      ...source,
+      guidePageDraftStatus: 'ready',
+      guidePageDraft: {
+        title,
+        markdown,
+        generatedAt: Date.now(),
+      },
+    }
+  }
+
+  const openUserSourceInGuide = (sourceRef: DashboardAnswerSourceRef) => {
+    const externalSource = findExternalSourceById(sourceRef.chunkId)
+    if (!externalSource) {
+      return
+    }
+
+    if (onAddExternalSourceToGuide) {
+      const sourceWithDraft = buildUserSourceGuideDraft(externalSource)
+      updateExternalSourceDraftState(externalSource.id, () => sourceWithDraft)
+      onAddExternalSourceToGuide(sourceWithDraft)
+      return
+    }
+
+    focusUserSourceChip(externalSource.id)
+  }
+
   const startEditingUserPrompt = (message: DashboardChatMessage) => {
     setEditingPromptId(message.id)
     setEditingPromptDraft(message.content)
@@ -2924,14 +2991,18 @@ const DashboardChatPanel = ({
           aria-label={
             isWebSource
               ? isUserAddedCitation
-                ? `Show added source ${citationNumber}`
+                ? source.originType === 'user-web'
+                  ? `Open added source ${citationNumber}`
+                  : `Add source as page ${citationNumber}`
                 : `Open web source ${citationNumber}`
               : `Open source ${citationNumber}`
           }
           onClick={(event) => {
             event.stopPropagation()
             if (source.originType === 'user-text') {
-              focusUserSourceChip(source.chunkId)
+              openUserSourceInGuide(source)
+            } else if (source.originType === 'user-web') {
+              openSource(source)
             } else if (isWebSource && !isUserAddedCitation) {
               openWebSourceInGuide(source)
             } else {
@@ -4382,8 +4453,14 @@ const DashboardChatPanel = ({
             aria-hidden
             sx={{
               height: {
-                xs: 'max(220px, calc(100% - 120px))',
-                sm: 'max(260px, calc(100% - 132px))',
+                xs:
+                  sourceChipRowHeight > 0
+                    ? `max(64px, calc(100% - ${120 + sourceChipRowHeight}px))`
+                    : `max(180px, calc(100% - 120px))`,
+                sm:
+                  sourceChipRowHeight > 0
+                    ? `max(80px, calc(100% - ${132 + sourceChipRowHeight}px))`
+                    : `max(220px, calc(100% - 132px))`,
               },
             }}
           />
@@ -4448,6 +4525,7 @@ const DashboardChatPanel = ({
         <Stack spacing={1} sx={{ minHeight: 0 }}>
           {userAddedSources.length > 0 ? (
             <Stack
+              ref={userSourceRowRef}
               direction="row"
               spacing={0.75}
               alignItems="center"

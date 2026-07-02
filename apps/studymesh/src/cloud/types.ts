@@ -47,10 +47,29 @@ export interface LocalWorkspaceSnapshot {
 export interface CloudWorkspaceBundle {
   profile: UserProfile | null
   dashboards: SavedDashboard[]
-  studyGuides: StudyGuideRecord[]
+  studyGuides: StudyGuideSummary[]
   widgets: CustomWidget[]
   widgetVersions: WidgetVersion[]
   workspaceState: WorkspaceState | null
+}
+
+export interface CloudWorkspaceSaveBundle
+  extends Omit<CloudWorkspaceBundle, 'profile' | 'studyGuides'> {
+  profile?: UserProfile | null
+  studyGuides: StudyGuideRecord[]
+}
+
+export interface StudyGuideSummary {
+  id: string
+  title: string
+  folderName: string
+  description?: string
+  emoji?: string
+  pinnedAt?: string | null
+  pageCount?: number
+  firstPageTitle?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface StudyGuideRecord {

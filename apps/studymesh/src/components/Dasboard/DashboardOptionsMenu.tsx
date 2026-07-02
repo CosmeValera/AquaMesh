@@ -18,6 +18,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import { useNavigate } from 'react-router-dom'
 import { DashboardLayout, StudyPathContainerState } from '../../state/store'
 import { useDashboards } from './DashboardProvider'
 import {
@@ -60,7 +61,7 @@ interface StudyPathMenuGroup {
   id: string
   folderName: string
   dashboards: SavedDashboard[]
-  studyPath: StudyPathContainerState
+  studyPath: StudyPathContainerState | null
 }
 
 // Button with label component
@@ -126,10 +127,11 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
   compactMobile = false,
 }) => {
   const { t } = useInterfaceText()
+  const navigate = useNavigate()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [customDashboards, setCustomDashboards] = useState<SavedDashboard[]>([])
   const [studyGuides, setStudyGuides] = useState<
-    ReturnType<typeof StudyGuideStorage.getAll>
+    ReturnType<typeof StudyGuideStorage.getSummaries>
   >([])
   const [expandedDashboardFolders, setExpandedDashboardFolders] = useState<
     string[]
@@ -224,7 +226,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
       if (dashboards) {
         setCustomDashboards(JSON.parse(dashboards))
       }
-      setStudyGuides(StudyGuideStorage.getAll())
+      setStudyGuides(StudyGuideStorage.getSummaries())
     } catch (error) {
       console.error('Failed to load saved dashboards', error)
     }
@@ -268,12 +270,15 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
     ),
   )
   const storedStudyPathGroups: StudyPathMenuGroup[] = studyGuides.map(
-    (studyGuide) => ({
-      id: studyGuide.id,
-      folderName: studyGuide.folderName,
-      dashboards: studyGuide.studyPath.dashboards,
-      studyPath: studyGuide.studyPath,
-    }),
+    (studyGuide) => {
+      const fullGuide = StudyGuideStorage.getById(studyGuide.id)
+      return {
+        id: studyGuide.id,
+        folderName: studyGuide.folderName,
+        dashboards: fullGuide?.studyPath.dashboards || [],
+        studyPath: fullGuide?.studyPath || null,
+      }
+    },
   )
   const studyPathGroups = storedStudyPathGroups
   const studyPathFolderNames = new Set(
@@ -395,6 +400,12 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
   }
 
   const openStudyPathGroup = (group: StudyPathMenuGroup, selectedIndex = 0) => {
+    if (!group.studyPath) {
+      navigate(`/workspace/${group.id}`)
+      handleClose()
+      return
+    }
+
     const normalizedIndex = Math.min(
       Math.max(selectedIndex, 0),
       Math.max(group.studyPath.dashboards.length - 1, 0),
@@ -434,6 +445,12 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
     group: StudyPathMenuGroup,
     lessonIndex: number,
   ) => {
+    if (!group.studyPath) {
+      navigate(`/workspace/${group.id}`)
+      handleClose()
+      return
+    }
+
     const lesson = group.studyPath.dashboards[lessonIndex]
     if (!lesson) {
       return

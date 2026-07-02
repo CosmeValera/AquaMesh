@@ -40,7 +40,7 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule'
 import { nanoid } from 'nanoid'
 import { useNavigate } from 'react-router-dom'
 
-import type { StudyGuideRecord } from '../../cloud/types'
+import type { StudyGuideSummary } from '../../cloud/types'
 import {
   STUDY_GUIDES_CHANGED_EVENT,
   STUDY_GUIDES_STORAGE_FULL_MESSAGE,
@@ -248,7 +248,7 @@ const storeStudyGuideSortMode = (mode: StudyGuideSortMode) => {
   }
 }
 
-const sortGuides = (guides: StudyGuideRecord[], sortMode: StudyGuideSortMode) =>
+const sortGuides = (guides: StudyGuideSummary[], sortMode: StudyGuideSortMode) =>
   [...guides].sort((first, second) => {
     const firstPinned = first.pinnedAt ? Date.parse(first.pinnedAt) : 0
     const secondPinned = second.pinnedAt ? Date.parse(second.pinnedAt) : 0
@@ -282,15 +282,15 @@ const StudyGuidesPage = () => {
   const navigate = useNavigate()
   const theme = useTheme()
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
-  const [guides, setGuides] = useState<StudyGuideRecord[]>([])
+  const [guides, setGuides] = useState<StudyGuideSummary[]>([])
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
-  const [menuGuide, setMenuGuide] = useState<StudyGuideRecord | null>(null)
+  const [menuGuide, setMenuGuide] = useState<StudyGuideSummary | null>(null)
   const [sortAnchor, setSortAnchor] = useState<HTMLElement | null>(null)
   const [viewMode, setViewMode] =
     useState<StudyGuideViewMode>(readStoredViewMode)
   const [sortMode, setSortMode] =
     useState<StudyGuideSortMode>(readStoredSortMode)
-  const [renameGuide, setRenameGuide] = useState<StudyGuideRecord | null>(null)
+  const [renameGuide, setRenameGuide] = useState<StudyGuideSummary | null>(null)
   const [renameTitle, setRenameTitle] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [createGuidePrompt, setCreateGuidePrompt] = useState('')
@@ -314,7 +314,7 @@ const StudyGuidesPage = () => {
 
   const loadGuides = () => {
     if (isMountedRef.current) {
-      setGuides(StudyGuideStorage.getAll())
+      setGuides(StudyGuideStorage.getSummaries())
     }
   }
   const loadPendingGuides = () => {
@@ -609,7 +609,7 @@ const StudyGuidesPage = () => {
 
   const openMenu = (
     event: React.MouseEvent<HTMLButtonElement>,
-    guide: StudyGuideRecord,
+    guide: StudyGuideSummary,
   ) => {
     event.stopPropagation()
     setMenuAnchor(event.currentTarget)
@@ -651,17 +651,23 @@ const StudyGuidesPage = () => {
     if (!menuGuide) {
       return
     }
+    const fullGuide = StudyGuideStorage.getById(menuGuide.id)
+    if (!fullGuide) {
+      navigate(`/workspace/${menuGuide.id}`)
+      closeMenu()
+      return
+    }
 
     const id = nanoid()
     const title = `${menuGuide.title} copy`
     StudyGuideStorage.save({
-      ...menuGuide,
+      ...fullGuide,
       id,
       title,
       folderName: title,
       pinnedAt: null,
       studyPath: {
-        ...menuGuide.studyPath,
+        ...fullGuide.studyPath,
         pathId: id,
         title,
         folderName: title,
@@ -1162,7 +1168,7 @@ const StudyGuidesPage = () => {
           })}
           {viewMode === 'grid'
             ? filteredGuides.map((guide) => {
-                const pageCount = guide.studyPath.dashboards.length
+                const pageCount = guide.pageCount ?? 0
                 const accent =
                   guide.emoji === '🧬'
                     ? '#0b84a5'
@@ -1307,16 +1313,19 @@ const StudyGuidesPage = () => {
                           }}
                         >
                           {guide.description ||
-                            guide.studyPath.dashboards[0]?.name ||
+                            guide.firstPageTitle ||
                             t('studyGuides.openWorkspace')}
                         </Typography>
                       </Box>
                       <Typography variant="body2" color="text.secondary">
                         {formatGuideDate(guide.createdAt, t, language)} &middot;{' '}
-                        {pageCount}{' '}
-                        {pageCount === 1
-                          ? t('studyGuides.page')
-                          : t('studyGuides.pages')}
+                        {pageCount > 0
+                          ? `${pageCount} ${
+                              pageCount === 1
+                                ? t('studyGuides.page')
+                                : t('studyGuides.pages')
+                            }`
+                          : t('studyGuides.openWorkspace')}
                       </Typography>
                     </Stack>
                   </Paper>
@@ -1338,7 +1347,12 @@ const StudyGuidesPage = () => {
               overflowX: 'auto',
             }}
           >
-            <Table size="small" aria-label={t('studyGuides.listView')}>
+            <Table
+              size="small"
+              aria-label={`${t('studyGuides.title')} ${t(
+                'studyGuides.listView',
+              )}`}
+            >
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 700 }}>
@@ -1375,7 +1389,7 @@ const StudyGuidesPage = () => {
               </TableHead>
               <TableBody>
                 {filteredGuides.map((guide) => {
-                  const pageCount = guide.studyPath.dashboards.length
+                  const pageCount = guide.pageCount ?? 0
                   const isNewlyCreated = newlyCreatedGuideIds.has(guide.id)
 
                   return (
@@ -1428,10 +1442,13 @@ const StudyGuidesPage = () => {
                       <TableCell
                         sx={{ display: { xs: 'none', md: 'table-cell' } }}
                       >
-                        {pageCount}{' '}
-                        {pageCount === 1
-                          ? t('studyGuides.page')
-                          : t('studyGuides.pages')}
+                        {pageCount > 0
+                          ? `${pageCount} ${
+                              pageCount === 1
+                                ? t('studyGuides.page')
+                                : t('studyGuides.pages')
+                            }`
+                          : '-'}
                       </TableCell>
                       <TableCell
                         sx={{
@@ -1444,7 +1461,7 @@ const StudyGuidesPage = () => {
                         }}
                       >
                         {guide.description ||
-                          guide.studyPath.dashboards[0]?.name ||
+                          guide.firstPageTitle ||
                           t('studyGuides.openWorkspace')}
                       </TableCell>
                       <TableCell

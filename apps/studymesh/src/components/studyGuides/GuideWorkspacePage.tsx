@@ -3,6 +3,7 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   IconButton,
   Paper,
   Tooltip,
@@ -14,6 +15,9 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import type { StudyGuideRecord } from '../../cloud/types'
+import { createCloudRepository } from '../../cloud/repository'
+import { useAuth } from '../../auth/AuthProvider'
+import { isSupabaseConfigured, supabase } from '../../auth/supabaseClient'
 import type { StateDashboard, StudyPathContainerState } from '../../state/store'
 import {
   normalizeQuickCreateActionInput,
@@ -105,8 +109,14 @@ const isStudyGuidesStorageFullError = (error: unknown): boolean =>
     error.message === STUDY_GUIDES_STORAGE_FULL_MESSAGE) ||
   isStudyGuidesStorageQuotaError(error)
 
+const isOpenableStudyGuideRecord = (
+  value: StudyGuideRecord | null,
+): value is StudyGuideRecord => Array.isArray(value?.studyPath?.dashboards)
+
 const GuideWorkspacePage = () => {
   const { t } = useInterfaceText()
+  const { user } = useAuth()
+  const repository = useMemo(() => createCloudRepository(supabase), [])
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'))
   const { studyGuideId = '' } = useParams()
@@ -114,6 +124,7 @@ const GuideWorkspacePage = () => {
   const navigate = useNavigate()
   const [record, setRecord] = useState<StudyGuideRecord | null>(null)
   const [notFound, setNotFound] = useState(false)
+  const [loadingRemoteRecord, setLoadingRemoteRecord] = useState(false)
   const [messages, setMessages] = useState<DashboardChatMessage[]>([])
   const [editingPageKey, setEditingPageKey] = useState<string | null>(null)
   const [quickCreateError, setQuickCreateError] = useState('')
@@ -138,17 +149,64 @@ const GuideWorkspacePage = () => {
     if (existing) {
       setRecord(existing)
       setNotFound(false)
+      setLoadingRemoteRecord(false)
       return
     }
 
     setRecord(null)
-    setNotFound(!isCreateRoute)
+    const hasSummary = Boolean(StudyGuideStorage.getSummaryById(studyGuideId))
+    setNotFound(!isCreateRoute && !hasSummary)
     if (isCreateRoute) {
       navigate('/study-guides', { replace: true })
     }
   }
 
   useEffect(loadRecord, [studyGuideId, isCreateRoute])
+
+  useEffect(() => {
+    if (
+      record ||
+      notFound ||
+      isCreateRoute ||
+      !studyGuideId ||
+      !user ||
+      !isSupabaseConfigured ||
+      !StudyGuideStorage.getSummaryById(studyGuideId)
+    ) {
+      return undefined
+    }
+
+    let cancelled = false
+    setLoadingRemoteRecord(true)
+    repository
+      .getStudyGuide(user.id, studyGuideId)
+      .then((cloudRecord) => {
+        if (cancelled) {
+          return
+        }
+        if (isOpenableStudyGuideRecord(cloudRecord)) {
+          setRecord(StudyGuideStorage.cacheFromCloud(cloudRecord))
+          setNotFound(false)
+        } else {
+          setNotFound(true)
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.error('Failed to load Study Guide from cloud', error)
+          setNotFound(true)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingRemoteRecord(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isCreateRoute, notFound, record, repository, studyGuideId, user])
 
   useEffect(() => {
     pageScrollPositionsRef.current = {}
@@ -181,11 +239,17 @@ const GuideWorkspacePage = () => {
     }
 
     try {
-      const nextRecord = StudyGuideStorage.save({
-        ...record,
-        visitedPageKeys: [...(record.visitedPageKeys || []), pageKey],
-      })
-      setRecord(nextRecord)
+      const nextRecord = StudyGuideStorage.markVisitedPage(record.id, pageKey)
+      if (nextRecord) {
+        setRecord((current) =>
+          current?.id === record.id
+            ? {
+                ...current,
+                visitedPageKeys: nextRecord.visitedPageKeys,
+              }
+            : nextRecord,
+        )
+      }
     } catch (error) {
       if (!handleStorageError(error)) {
         throw error
@@ -635,6 +699,33 @@ const GuideWorkspacePage = () => {
               >
                 {t('workspace.backToGuides')}
               </Button>
+            </Paper>
+          </Box>
+        ) : loadingRemoteRecord ? (
+          <Box
+            sx={{
+              height: '100%',
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: 'background.default',
+              p: 2,
+            }}
+          >
+            <Paper
+              elevation={0}
+              sx={{
+                width: 'min(420px, 100%)',
+                p: 4,
+                borderRadius: 3,
+                border: 1,
+                borderColor: 'divider',
+                textAlign: 'center',
+              }}
+            >
+              <CircularProgress size={28} />
+              <Typography color="text.secondary" sx={{ mt: 2 }}>
+                Loading Study Guide...
+              </Typography>
             </Paper>
           </Box>
         ) : record ? (

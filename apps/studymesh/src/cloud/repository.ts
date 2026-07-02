@@ -6,8 +6,10 @@ import type {
 import type {
   CloudJson,
   CloudWorkspaceBundle,
+  CloudWorkspaceSaveBundle,
   DashboardMergeResult,
   StudyGuideRecord,
+  StudyGuideSummary,
   StudyMeshSupabaseClient,
   UserProfile,
   WorkspaceState,
@@ -114,6 +116,17 @@ export interface StudyGuideRow {
   description?: string | null
   emoji?: string | null
   study_path: CloudJson
+  created_at: string
+  updated_at: string
+}
+
+export interface StudyGuideSummaryRow {
+  id: string
+  owner_id: string
+  title: string
+  folder_name: string
+  description?: string | null
+  emoji?: string | null
   created_at: string
   updated_at: string
 }
@@ -299,6 +312,45 @@ const studyGuideFromRow = (row: StudyGuideRow): StudyGuideRecord => {
     updatedAt: row.updated_at,
   }
 }
+
+const studyGuideSummaryFromRow = (
+  row: StudyGuideSummaryRow,
+): StudyGuideSummary => ({
+  id: row.id,
+  title: row.title,
+  folderName: row.folder_name,
+  description: row.description || undefined,
+  emoji: row.emoji || undefined,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+})
+
+const studyGuideSummaryFromRecord = (
+  record: StudyGuideRecord,
+): StudyGuideSummary => ({
+  id: record.id,
+  title: record.title,
+  folderName: record.folderName,
+  description: record.description,
+  emoji: record.emoji || record.studyPath.emoji,
+  pageCount: record.studyPath.dashboards.length,
+  firstPageTitle: record.studyPath.dashboards[0]?.name,
+  createdAt: record.createdAt,
+  updatedAt: record.updatedAt,
+})
+
+const studyGuideSummaryToRow = (
+  summary: StudyGuideSummary,
+): Pick<
+  StudyGuideSummaryRow,
+  'title' | 'folder_name' | 'description' | 'emoji' | 'updated_at'
+> => ({
+  title: summary.title,
+  folder_name: summary.folderName,
+  description: summary.description,
+  emoji: summary.emoji,
+  updated_at: summary.updatedAt || nowIso(),
+})
 
 const studyGuideToRow = (
   ownerId: string,
@@ -582,11 +634,16 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
     const row = await assertSingle<WorkspaceStateRow>(
       client
         .from('user_workspace_state')
-        .select('*')
+        .select('owner_id,selected_dashboard,settings,updated_at')
         .eq('owner_id', ownerId)
         .maybeSingle(),
     )
-    return row ? workspaceStateFromRow(row) : null
+    return row
+      ? workspaceStateFromRow({
+          ...row,
+          open_dashboards: [],
+        })
+      : null
   },
 
   async upsertWorkspaceState(
@@ -604,15 +661,51 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
     return workspaceStateFromRow(row)
   },
 
-  async listStudyGuides(ownerId: string): Promise<StudyGuideRecord[]> {
-    const rows = await assertMany<StudyGuideRow>(
+  async listStudyGuides(ownerId: string): Promise<StudyGuideSummary[]> {
+    const rows = await assertMany<StudyGuideSummaryRow>(
+      client
+        .from('user_study_guides')
+        .select(
+          'id,owner_id,title,folder_name,description,emoji,created_at,updated_at',
+        )
+        .eq('owner_id', ownerId)
+        .order('updated_at', { ascending: false }),
+    )
+    return rows.map(studyGuideSummaryFromRow)
+  },
+
+  async getStudyGuide(
+    ownerId: string,
+    studyGuideId: string,
+  ): Promise<StudyGuideRecord | null> {
+    const row = await assertSingle<StudyGuideRow>(
       client
         .from('user_study_guides')
         .select('*')
         .eq('owner_id', ownerId)
-        .order('updated_at', { ascending: false }),
+        .eq('id', studyGuideId)
+        .maybeSingle(),
     )
-    return rows.map(studyGuideFromRow)
+    return row ? studyGuideFromRow(row) : null
+  },
+
+  async updateStudyGuideSummary(
+    ownerId: string,
+    summary: StudyGuideSummary,
+  ): Promise<StudyGuideSummary> {
+    const row = studyGuideSummaryToRow(summary)
+    await assertMutation(
+      client
+        .from('user_study_guides')
+        .update(row)
+        .eq('owner_id', ownerId)
+        .eq('id', summary.id),
+    )
+
+    return {
+      ...summary,
+      updatedAt: row.updated_at,
+    }
   },
 
   async upsertStudyGuide(
@@ -672,9 +765,7 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
 
   async saveWorkspaceBundle(
     ownerId: string,
-    bundle: Omit<CloudWorkspaceBundle, 'profile'> & {
-      profile?: UserProfile | null
-    },
+    bundle: CloudWorkspaceSaveBundle,
   ): Promise<CloudWorkspaceBundle> {
     const profile = bundle.profile
       ? await this.upsertProfile(bundle.profile)

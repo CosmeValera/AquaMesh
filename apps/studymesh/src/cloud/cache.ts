@@ -15,6 +15,7 @@ export const CLOUD_CACHE_KEYS = {
   widgets: 'studymesh_custom_widgets',
   widgetVersions: 'studymesh_widget_versions',
   studyGuides: 'studymesh_study_guides',
+  studyGuideSummaries: 'studymesh_study_guides_summaries',
   owner: 'studymesh-cloud-cache-owner-v1',
 } as const
 

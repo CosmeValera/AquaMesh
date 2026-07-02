@@ -1,5 +1,5 @@
 import React from 'react'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -10,6 +10,23 @@ import {
   STUDY_GUIDES_STORAGE_FULL_MESSAGE,
   STUDY_GUIDES_STORAGE_KEY,
 } from '../../../../src/studyGuides/storage'
+
+const guideWorkspaceCloudMocks = vi.hoisted(() => ({
+  getStudyGuide: vi.fn(),
+}))
+
+vi.mock('../../../../src/auth/AuthProvider', () => ({
+  useAuth: () => ({ user: null }),
+}))
+
+vi.mock('../../../../src/auth/supabaseClient', () => ({
+  isSupabaseConfigured: false,
+  supabase: {},
+}))
+
+vi.mock('../../../../src/cloud/repository', () => ({
+  createCloudRepository: () => guideWorkspaceCloudMocks,
+}))
 
 vi.mock('../../../../src/components/topnavbar/TopNavBar', () => ({
   default: () => <div data-testid="top-nav" />,
@@ -95,6 +112,18 @@ const storedGuide = {
   createdAt: '2026-06-01T00:00:00.000Z',
   updatedAt: '2026-06-01T00:00:00.000Z',
 }
+
+const latestStoredStudyGuidesPayload = () =>
+  vi
+    .mocked(localStorage.setItem)
+    .mock.calls.filter(([key]) => key === STUDY_GUIDES_STORAGE_KEY)
+    .at(-1)?.[1]
+
+const storedStudyGuidesPayloads = () =>
+  vi
+    .mocked(localStorage.setItem)
+    .mock.calls.filter(([key]) => key === STUDY_GUIDES_STORAGE_KEY)
+    .map(([, value]) => value)
 
 describe('GuideWorkspacePage responsive sections', () => {
   it('allows the desktop AI Chat panel to shrink to 310px', () => {
@@ -315,9 +344,11 @@ describe('GuideWorkspacePage responsive sections', () => {
       })
     })
 
-    expect(await screen.findByTestId('study-guide-panel')).toHaveTextContent(
-      'Useful web source',
-    )
+    await waitFor(() => {
+      expect(screen.getByTestId('study-guide-panel')).toHaveTextContent(
+        'Useful web source',
+      )
+    })
     expect(screen.queryByTestId('chat-panel')).not.toBeInTheDocument()
     expect(localStorage.setItem).toHaveBeenCalledWith(
       STUDY_GUIDES_STORAGE_KEY,
@@ -400,7 +431,9 @@ describe('GuideWorkspacePage responsive sections', () => {
       })
     })
 
-    const savedPayload = vi.mocked(localStorage.setItem).mock.calls.at(-1)?.[1]
+    const savedPayload = storedStudyGuidesPayloads().find((payload) =>
+      payload.includes('Decision checklist (quick guide)'),
+    )
     expect(savedPayload).toContain(
       'Decision checklist (quick guide)\u202f[1](studymesh-page:core).',
     )
@@ -477,7 +510,9 @@ describe('GuideWorkspacePage responsive sections', () => {
       })
     })
 
-    const savedPayload = vi.mocked(localStorage.setItem).mock.calls.at(-1)?.[1]
+    const savedPayload = storedStudyGuidesPayloads().find((payload) =>
+      payload.includes('The goal is to cut mistakes'),
+    )
     expect(savedPayload).toContain('The goal is to cut mistakes')
     expect(savedPayload).toContain('studymesh-page:core')
     expect(savedPayload).not.toContain('Sources:')

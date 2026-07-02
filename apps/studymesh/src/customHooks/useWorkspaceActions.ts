@@ -219,9 +219,7 @@ export const useWorkspaceActions = () => {
 
   const openStudyMeshGuide = useCallback(() => {
     ensureStarterDashboards()
-    const guide = StudyGuideStorage.getAll().find(
-      (studyGuide) => studyGuide.id === STUDYMESH_GUIDE_STUDY_PATH_ID,
-    )
+    const guide = StudyGuideStorage.getById(STUDYMESH_GUIDE_STUDY_PATH_ID)
 
     if (guide) {
       addStudyPathContainer(guide.studyPath)

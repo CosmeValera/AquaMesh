@@ -6,10 +6,17 @@ const cloudSyncMocks = vi.hoisted(() => {
     loadWorkspaceBundle: vi.fn(),
     saveWorkspaceBundle: vi.fn(),
     upsertProfile: vi.fn(),
+    upsertStudyGuide: vi.fn(),
+    updateStudyGuideSummary: vi.fn(),
     deleteWidgetVersions: vi.fn(),
     deleteWidget: vi.fn(),
     deleteDashboard: vi.fn(),
     deleteStudyGuide: vi.fn(),
+  }
+  const studyGuideStorage = {
+    replaceSummariesFromCloud: vi.fn(),
+    getById: vi.fn(),
+    getSummaryById: vi.fn(),
   }
   const storeState = {
     setDashboards: vi.fn(),
@@ -20,6 +27,7 @@ const cloudSyncMocks = vi.hoisted(() => {
 
   return {
     repository,
+    studyGuideStorage,
     storeState,
     useStore,
     subscribe,
@@ -73,6 +81,7 @@ vi.mock('../../../src/components/WidgetEditor/WidgetStorage', () => ({
 
 vi.mock('../../../src/studyGuides/storage', () => ({
   STUDY_GUIDES_CHANGED_EVENT: 'studyGuidesChanged',
+  StudyGuideStorage: cloudSyncMocks.studyGuideStorage,
 }))
 
 vi.mock('../../../src/studyGuides/studyMeshGuideSeed', () => ({
@@ -112,9 +121,16 @@ describe('CloudWorkspaceSync profile deletion guard', () => {
     cloudSyncMocks.repository.saveWorkspaceBundle.mockResolvedValue(
       emptyCloudBundle,
     )
+    cloudSyncMocks.repository.upsertStudyGuide.mockResolvedValue({})
+    cloudSyncMocks.repository.updateStudyGuideSummary.mockResolvedValue({})
     cloudSyncMocks.repository.upsertProfile.mockResolvedValue({
       id: 'user-1',
     })
+    cloudSyncMocks.studyGuideStorage.replaceSummariesFromCloud.mockReturnValue(
+      undefined,
+    )
+    cloudSyncMocks.studyGuideStorage.getById.mockReturnValue(null)
+    cloudSyncMocks.studyGuideStorage.getSummaryById.mockReturnValue(null)
     cloudSyncMocks.readLocalWorkspaceSnapshot.mockReturnValue(
       emptyLocalSnapshot,
     )

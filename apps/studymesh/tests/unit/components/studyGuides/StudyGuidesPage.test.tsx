@@ -184,14 +184,25 @@ describe('StudyGuidesPage create flow', () => {
   })
 
   it('creates a Study Guide from prompt only and keeps the AI title', async () => {
-    const storedGuides: ReturnType<typeof StudyGuideStorage.getAll> = []
-    const getAllSpy = vi
-      .spyOn(StudyGuideStorage, 'getAll')
+    const storedGuides: ReturnType<typeof StudyGuideStorage.getSummaries> = []
+    const getSummariesSpy = vi
+      .spyOn(StudyGuideStorage, 'getSummaries')
       .mockImplementation(() => [...storedGuides])
     const saveSpy = vi
       .spyOn(StudyGuideStorage, 'save')
       .mockImplementation((guide) => {
-        storedGuides.push(guide)
+        storedGuides.push({
+          id: guide.id,
+          title: guide.title,
+          folderName: guide.folderName,
+          description: guide.description,
+          emoji: guide.emoji || guide.studyPath.emoji,
+          pinnedAt: guide.pinnedAt ?? null,
+          pageCount: guide.studyPath.dashboards.length,
+          firstPageTitle: guide.studyPath.dashboards[0]?.name,
+          createdAt: guide.createdAt,
+          updatedAt: guide.updatedAt,
+        })
         return guide
       })
     renderStudyGuidesPage('/study-guides')
@@ -236,7 +247,7 @@ describe('StudyGuidesPage create flow', () => {
       await screen.findByTestId('newly-created-study-guide-card'),
     ).toHaveTextContent('AI Named Guide')
     expect(screen.queryByText(/% read/i)).not.toBeInTheDocument()
-    getAllSpy.mockRestore()
+    getSummariesSpy.mockRestore()
     saveSpy.mockRestore()
   })
 
@@ -508,7 +519,9 @@ describe('StudyGuidesPage create flow', () => {
   })
 
   it('offers inline search, list view, and title sorting', async () => {
-    const getAllSpy = vi.spyOn(StudyGuideStorage, 'getAll').mockReturnValue([
+    const getSummariesSpy = vi
+      .spyOn(StudyGuideStorage, 'getSummaries')
+      .mockReturnValue([
       makeStoredGuide({
         id: 'z-guide',
         title: 'Zoology',
@@ -553,12 +566,12 @@ describe('StudyGuidesPage create flow', () => {
       screen.getByRole('table', { name: /study guides list/i }),
     ).toBeInTheDocument()
     expect(screen.getByText('Title')).toBeInTheDocument()
-    expect(screen.getByText('Pages')).toBeInTheDocument()
+    expect(screen.getByText(/pages/i)).toBeInTheDocument()
     expect(screen.getByText('Prompt')).toBeInTheDocument()
     expect(screen.getByText('Created')).toBeInTheDocument()
     expect(screen.getByText('🔢')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /most recent/i }))
+    fireEvent.click(screen.getByRole('button', { name: /recent/i }))
     fireEvent.click(screen.getByRole('menuitem', { name: /title/i }))
     expect(window.localStorage.getItem('studymesh.studyGuides.sortMode')).toBe(
       'title',
@@ -576,7 +589,7 @@ describe('StudyGuidesPage create flow', () => {
     expect(screen.getByText('Algebra')).toBeInTheDocument()
     expect(screen.queryByText('Zoology')).not.toBeInTheDocument()
 
-    getAllSpy.mockRestore()
+    getSummariesSpy.mockRestore()
   })
 
   it('pins guides to the top from grid and list views', async () => {
@@ -607,7 +620,7 @@ describe('StudyGuidesPage create flow', () => {
     renderStudyGuidesPage('/study-guides')
 
     fireEvent.click(
-      screen.getByRole('button', { name: /open algebra options/i }),
+      screen.getByRole('button', { name: /open options.*algebra/i }),
     )
     fireEvent.click(
       await screen.findByRole('menuitem', { name: /pin to top/i }),
@@ -629,7 +642,7 @@ describe('StudyGuidesPage create flow', () => {
       await screen.findByRole('table', { name: /study guides list/i }),
     ).toBeInTheDocument()
     fireEvent.click(
-      screen.getByRole('button', { name: /open music theory options/i }),
+      screen.getByRole('button', { name: /open options.*music theory/i }),
     )
     fireEvent.click(
       await screen.findByRole('menuitem', { name: /pin to top/i }),

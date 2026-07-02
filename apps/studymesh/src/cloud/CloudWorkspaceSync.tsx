@@ -16,7 +16,11 @@ import {
 } from '../components/WidgetEditor/WidgetStorage'
 import { useStore } from '../state/store'
 import { clearStudyMeshGuideSeedMarker } from '../studyGuides/studyMeshGuideSeed'
-import { STUDY_GUIDES_CHANGED_EVENT } from '../studyGuides/storage'
+import {
+  STUDY_GUIDES_CHANGED_EVENT,
+  StudyGuideStorage,
+  type StudyGuideChangeDetail,
+} from '../studyGuides/storage'
 import {
   PROFILE_CONTEXT_CHANGED_EVENT,
   readProfileContext,
@@ -32,6 +36,7 @@ import { createCloudRepository } from './repository'
 import type {
   CloudJson,
   CloudWorkspaceBundle,
+  CloudWorkspaceSaveBundle,
   UserProfile,
   WorkspaceState,
 } from './types'
@@ -116,10 +121,30 @@ const getUserDisplayName = (user: {
       : user.email || 'Student'
 }
 
-const applyCloudBundleToLocalCache = (bundle: CloudWorkspaceBundle): void => {
+const isStudyPathDashboard = (dashboard: {
+  kind?: string
+  studyPath?: unknown
+}) => dashboard.kind === 'studyPathContainer' || Boolean(dashboard.studyPath)
+
+const cloudSafeOpenDashboards = (
+  dashboards: NonNullable<WorkspaceState['openDashboards']>,
+) => dashboards.filter((dashboard) => !isStudyPathDashboard(dashboard))
+
+const isOpenableStudyGuideRecord = (
+  value: CloudWorkspaceSaveBundle['studyGuides'][number],
+) => Array.isArray(value?.studyPath?.dashboards)
+
+const applyCloudBundleToLocalCache = (
+  bundle: CloudWorkspaceBundle,
+  options: { preserveFullStudyGuides?: boolean } = {},
+): void => {
+  const currentSnapshot = options.preserveFullStudyGuides
+    ? readLocalWorkspaceSnapshot()
+    : null
+
   writeLocalWorkspaceSnapshot({
     dashboards: bundle.dashboards,
-    studyGuides: bundle.studyGuides,
+    studyGuides: currentSnapshot?.studyGuides || [],
     widgets: bundle.widgets,
     widgetVersions: bundle.widgetVersions,
     workspaceState: bundle.workspaceState
@@ -129,6 +154,7 @@ const applyCloudBundleToLocalCache = (bundle: CloudWorkspaceBundle): void => {
         }
       : null,
   })
+  StudyGuideStorage.replaceSummariesFromCloud(bundle.studyGuides)
 
   if (bundle.workspaceState?.settings?.profileContext) {
     writeProfileContextFromCloud(bundle.workspaceState.settings.profileContext)
@@ -137,7 +163,11 @@ const applyCloudBundleToLocalCache = (bundle: CloudWorkspaceBundle): void => {
   window.dispatchEvent(new Event(SAVED_DASHBOARDS_CHANGED_EVENT))
   window.dispatchEvent(new CustomEvent('dashboardStorageUpdated'))
   document.dispatchEvent(new CustomEvent(WIDGET_STORAGE_UPDATED))
-  window.dispatchEvent(new Event(STUDY_GUIDES_CHANGED_EVENT))
+  window.dispatchEvent(
+    new CustomEvent<StudyGuideChangeDetail>(STUDY_GUIDES_CHANGED_EVENT, {
+      detail: { action: 'cache' },
+    }),
+  )
 }
 
 const buildWorkspaceBundleFromLocalCache = (
@@ -145,17 +175,19 @@ const buildWorkspaceBundleFromLocalCache = (
   profile: UserProfile,
   overrides: Partial<
     Pick<
-      CloudWorkspaceBundle,
+      CloudWorkspaceSaveBundle,
       'dashboards' | 'studyGuides' | 'widgets' | 'widgetVersions'
     >
   > = {},
-): Omit<CloudWorkspaceBundle, 'profile'> & { profile: UserProfile } => {
+): CloudWorkspaceSaveBundle & { profile: UserProfile } => {
   const snapshot = readLocalWorkspaceSnapshot()
   const profileContext = readProfileContext()
   const workspaceState: WorkspaceState = {
     ownerId,
     selectedDashboard: snapshot.workspaceState?.selectedDashboard || 0,
-    openDashboards: snapshot.workspaceState?.openDashboards || [],
+    openDashboards: cloudSafeOpenDashboards(
+      snapshot.workspaceState?.openDashboards || [],
+    ),
     settings: profileContext
       ? {
           profileContext: profileContext as unknown as CloudJson,
@@ -167,7 +199,9 @@ const buildWorkspaceBundleFromLocalCache = (
   return {
     profile,
     dashboards: overrides.dashboards || snapshot.dashboards,
-    studyGuides: overrides.studyGuides || snapshot.studyGuides,
+    studyGuides:
+      overrides.studyGuides ||
+      snapshot.studyGuides.filter(isOpenableStudyGuideRecord),
     widgets: overrides.widgets || snapshot.widgets,
     widgetVersions: overrides.widgetVersions || snapshot.widgetVersions,
     workspaceState,
@@ -260,7 +294,9 @@ const CloudWorkspaceSync = () => {
 
         if (action === 'apply-cloud') {
           isApplyingRemoteRef.current = true
-          applyCloudBundleToLocalCache(cloudBundle)
+          applyCloudBundleToLocalCache(cloudBundle, {
+            preserveFullStudyGuides: cacheOwnerId === ownerId,
+          })
           writeWorkspaceCacheOwner(ownerId)
           if (cloudBundle.workspaceState?.openDashboards.length) {
             setDashboards(cloudBundle.workspaceState.openDashboards)
@@ -286,7 +322,9 @@ const CloudWorkspaceSync = () => {
           if (cacheOwnerId !== ownerId) {
             clearStudyMeshGuideSeedMarker()
           }
-          applyCloudBundleToLocalCache(cloudBundle)
+          applyCloudBundleToLocalCache(cloudBundle, {
+            preserveFullStudyGuides: false,
+          })
           writeWorkspaceCacheOwner(ownerId)
           setDashboards([])
           setSelectedDashboard(0)
@@ -344,7 +382,9 @@ const CloudWorkspaceSync = () => {
         dispatchCloudSyncStatus('syncing')
         await repository.saveWorkspaceBundle(
           ownerId,
-          buildWorkspaceBundleFromLocalCache(ownerId, profile),
+          buildWorkspaceBundleFromLocalCache(ownerId, profile, {
+            studyGuides: [],
+          }),
         )
         writeWorkspaceCacheOwner(ownerId)
         dispatchCloudSyncStatus('synced')
@@ -412,6 +452,52 @@ const CloudWorkspaceSync = () => {
       }
     }
 
+    const runCloudStudyGuideSave = async (studyGuideId: string) => {
+      if (isProfileDeleteInProgressRef.current) {
+        return
+      }
+
+      const studyGuide = StudyGuideStorage.getById(studyGuideId)
+      if (!studyGuide) {
+        return
+      }
+
+      try {
+        dispatchCloudSyncStatus('syncing')
+        await repository.upsertStudyGuide(ownerId, studyGuide)
+        dispatchCloudSyncStatus('synced')
+      } catch (error) {
+        console.error('StudyMesh cloud Study Guide save failed', error)
+        dispatchCloudSyncStatus(
+          'error',
+          error instanceof Error ? error.message : 'Cloud save failed.',
+        )
+      }
+    }
+
+    const runCloudStudyGuideMetadataSave = async (studyGuideId: string) => {
+      if (isProfileDeleteInProgressRef.current) {
+        return
+      }
+
+      const summary = StudyGuideStorage.getSummaryById(studyGuideId)
+      if (!summary) {
+        return
+      }
+
+      try {
+        dispatchCloudSyncStatus('syncing')
+        await repository.updateStudyGuideSummary(ownerId, summary)
+        dispatchCloudSyncStatus('synced')
+      } catch (error) {
+        console.error('StudyMesh cloud Study Guide metadata save failed', error)
+        dispatchCloudSyncStatus(
+          'error',
+          error instanceof Error ? error.message : 'Cloud save failed.',
+        )
+      }
+    }
+
     const scheduleSync = () => {
       if (isProfileDeleteInProgressRef.current) {
         return
@@ -450,12 +536,28 @@ const CloudWorkspaceSync = () => {
     }
 
     const handleStudyGuidesUpdated = (event: Event) => {
-      const detail = (
-        event as CustomEvent<{ action?: string; studyGuideId?: string }>
-      ).detail
+      const detail = (event as CustomEvent<StudyGuideChangeDetail>).detail
 
       if (detail?.action === 'delete' && detail.studyGuideId) {
         void runCloudStudyGuideDelete(detail.studyGuideId)
+        return
+      }
+
+      if (detail?.action === 'save' && detail.studyGuideId) {
+        void runCloudStudyGuideSave(detail.studyGuideId)
+        return
+      }
+
+      if (detail?.action === 'metadata' && detail.studyGuideId) {
+        void runCloudStudyGuideMetadataSave(detail.studyGuideId)
+        return
+      }
+
+      if (
+        detail?.action === 'pin' ||
+        detail?.action === 'progress' ||
+        detail?.action === 'cache'
+      ) {
         return
       }
 

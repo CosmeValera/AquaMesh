@@ -432,6 +432,64 @@ describe('workspace cloud repository', () => {
     expect(deleteBuilder.eq).toHaveBeenCalledWith('id', 'guide-1')
   })
 
+  it('loads Study Guide library metadata without requiring full study paths', async () => {
+    const profileBuilder = createQueryBuilder()
+    const dashboardBuilder = createQueryBuilder()
+    const studyGuideBuilder = createQueryBuilder()
+    const widgetBuilder = createQueryBuilder()
+    const widgetVersionBuilder = createQueryBuilder()
+    const workspaceStateBuilder = createQueryBuilder()
+
+    profileBuilder.maybeSingle.mockResolvedValue({ data: null, error: null })
+    dashboardBuilder.order.mockResolvedValue({ data: [], error: null })
+    studyGuideBuilder.order.mockResolvedValue({
+      data: [
+        {
+          id: 'guide-1',
+          owner_id: 'user-1',
+          title: 'Cloud Algebra',
+          folder_name: 'Algebra',
+          description: 'Linear equations prompt',
+          emoji: '🔢',
+          created_at: '2026-06-01T10:00:00.000Z',
+          updated_at: '2026-06-02T10:00:00.000Z',
+        },
+      ],
+      error: null,
+    })
+    widgetBuilder.order.mockResolvedValue({ data: [], error: null })
+    widgetVersionBuilder.order.mockResolvedValue({ data: [], error: null })
+    workspaceStateBuilder.maybeSingle.mockResolvedValue({
+      data: null,
+      error: null,
+    })
+    const supabase = {
+      from: vi
+        .fn()
+        .mockReturnValueOnce(profileBuilder)
+        .mockReturnValueOnce(dashboardBuilder)
+        .mockReturnValueOnce(studyGuideBuilder)
+        .mockReturnValueOnce(widgetBuilder)
+        .mockReturnValueOnce(widgetVersionBuilder)
+        .mockReturnValueOnce(workspaceStateBuilder),
+    }
+    const repository = createCloudRepository(supabase as never)
+
+    const bundle = await repository.loadWorkspaceBundle('user-1')
+
+    expect(studyGuideBuilder.select).toHaveBeenCalledWith(
+      'id,owner_id,title,folder_name,description,emoji,created_at,updated_at',
+    )
+    expect(bundle.studyGuides).toEqual([
+      expect.objectContaining({
+        id: 'guide-1',
+        title: 'Cloud Algebra',
+        folderName: 'Algebra',
+        description: 'Linear equations prompt',
+      }),
+    ])
+  })
+
   it('deletes widgets and their version history from cloud storage', async () => {
     const versionBuilder = createQueryBuilder()
     const widgetBuilder = createQueryBuilder()

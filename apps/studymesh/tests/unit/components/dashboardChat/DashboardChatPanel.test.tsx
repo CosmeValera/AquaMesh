@@ -255,9 +255,9 @@ describe('DashboardChatPanel quick create menu', () => {
     renderPanel()
 
     expect(screen.getByRole('button', { name: /^Create$/i })).toHaveStyle({
-      height: '40px',
-      minHeight: '40px',
-      width: '40px',
+      height: '32px',
+      minHeight: '32px',
+      width: '32px',
     })
     expect(
       screen.getByRole('button', { name: /^Create$/i }),
@@ -271,6 +271,22 @@ describe('DashboardChatPanel quick create menu', () => {
     expect(
       screen.queryByRole('button', { name: /^Expand on this$/i }),
     ).not.toBeInTheDocument()
+  })
+
+  it('focuses the chat textbox when the composer surface is clicked', () => {
+    renderPanel()
+
+    fireEvent.mouseDown(screen.getByTestId('dashboard-chat-composer'))
+
+    expect(screen.getByPlaceholderText('Ask anything')).toHaveFocus()
+  })
+
+  it('focuses the chat textbox when the composer action row is clicked', () => {
+    renderPanel()
+
+    fireEvent.mouseDown(screen.getByTestId('dashboard-chat-composer-actions'))
+
+    expect(screen.getByPlaceholderText('Ask anything')).toHaveFocus()
   })
 
   it('opens action menu and sends the selected quick-create request', async () => {
@@ -521,6 +537,16 @@ describe('DashboardChatPanel quick create menu', () => {
     renderPanel({ dashboard: dashboardWithoutContext })
 
     expect(screen.getByRole('button', { name: /^Create$/i })).toBeDisabled()
+  })
+
+  it('does not focus the composer surface before chat has answer context', () => {
+    renderPanel({ dashboard: dashboardWithoutContext })
+
+    fireEvent.mouseDown(screen.getByTestId('dashboard-chat-composer'))
+
+    expect(
+      screen.getByPlaceholderText('Add study material before chatting'),
+    ).not.toHaveFocus()
   })
 
   it('shows compact progress and disables create while quick-create runs', async () => {

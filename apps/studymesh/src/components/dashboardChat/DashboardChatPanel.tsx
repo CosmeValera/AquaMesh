@@ -11,6 +11,7 @@ import {
   Drawer,
   IconButton,
   InputAdornment,
+  InputBase,
   Menu,
   MenuItem,
   Popover,
@@ -668,6 +669,26 @@ const DashboardChatPanel = ({
         })
       }
     })
+  }
+
+  const focusComposerFromSurface = (
+    event: React.MouseEvent<HTMLDivElement>,
+  ) => {
+    if (!hasAnswerContext) {
+      return
+    }
+
+    const target = event.target as HTMLElement | null
+    if (
+      target?.closest(
+        'button, a, input, textarea, [role="button"]',
+      )
+    ) {
+      return
+    }
+
+    event.preventDefault()
+    draftInputRef.current?.focus()
   }
 
   const persistChatSessions = (nextSessions: DashboardChatSession[]) => {
@@ -3277,23 +3298,52 @@ const DashboardChatPanel = ({
     )
   }
 
+  const composerSurfaceSx = useMemo<SxProps<Theme>>(
+    () => ({
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 0.75,
+      p: 1,
+      border: 1,
+      borderColor: 'divider',
+      borderRadius: 1.5,
+      bgcolor:
+        theme.palette.mode === 'dark'
+          ? 'rgba(15,23,42,0.78)'
+          : 'rgba(248,250,252,0.96)',
+      boxShadow:
+        theme.palette.mode === 'dark'
+          ? 'inset 0 1px 0 rgba(255,255,255,0.04)'
+          : 'inset 0 1px 0 rgba(255,255,255,0.9)',
+      cursor: hasAnswerContext ? 'text' : 'default',
+      transition:
+        'border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease',
+      '&:hover': hasAnswerContext
+        ? {
+            borderColor: alpha(theme.palette.primary.main, 0.42),
+          }
+        : undefined,
+      '&:focus-within': hasAnswerContext
+        ? {
+            borderColor: 'primary.main',
+            boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.14)}`,
+          }
+        : undefined,
+    }),
+    [hasAnswerContext, theme.palette.mode, theme.palette.primary.main],
+  )
+
   const composerInputSx = useMemo<SxProps<Theme>>(
     () => ({
-      flex: 1,
+      flex: draftHasMultipleLines && chatComposerResized ? '1 1 auto' : '0 1 auto',
       minWidth: 0,
-      '& .MuiOutlinedInput-root': {
-        height:
-          draftHasMultipleLines && chatComposerResized ? '100%' : undefined,
-        alignItems: 'flex-start',
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 1,
-        bgcolor:
-          theme.palette.mode === 'dark'
-            ? 'rgba(15,23,42,0.72)'
-            : 'rgba(248,250,252,0.92)',
-      },
-      '& .MuiInputBase-inputMultiline': {
+      minHeight: 0,
+      width: '100%',
+      alignItems: 'flex-start',
+      px: 0.5,
+      py: 0.25,
+      color: 'text.primary',
+      '& textarea': {
         height:
           draftHasMultipleLines && chatComposerResized
             ? '100% !important'
@@ -3301,10 +3351,77 @@ const DashboardChatPanel = ({
         maxHeight: draftHasMultipleLines ? '100% !important' : undefined,
         boxSizing: 'border-box',
         overflowY: draftHasMultipleLines ? 'auto !important' : undefined,
+        resize: 'none',
+      },
+      '& .MuiInputBase-input': {
+        p: 0,
+        fontSize: '1rem',
+        lineHeight: 1.5,
       },
     }),
-    [chatComposerResized, draftHasMultipleLines, theme.palette.mode],
+    [chatComposerResized, draftHasMultipleLines],
   )
+
+  const composerActionButtonSx = {
+    height: 32,
+    minHeight: 32,
+    width: 32,
+    flex: '0 0 auto',
+    borderRadius: 1,
+    border: 0,
+    color: 'text.secondary',
+    bgcolor: 'transparent',
+    '&:hover': {
+      color: 'primary.main',
+      bgcolor: alpha(theme.palette.primary.main, 0.08),
+    },
+    '&.Mui-disabled': {
+      color: 'text.disabled',
+      bgcolor: 'transparent',
+    },
+    '& svg': {
+      fontSize: 21,
+    },
+  }
+
+  const sendComposerButtonSx = {
+    width: 34,
+    height: 34,
+    flex: '0 0 auto',
+    borderRadius: 1,
+    bgcolor:
+      hasAnswerContext && draft.trim()
+        ? 'primary.main'
+        : 'action.disabledBackground',
+    color:
+      hasAnswerContext && draft.trim()
+        ? 'primary.contrastText'
+        : 'text.disabled',
+    '&:hover': {
+      bgcolor:
+        hasAnswerContext && draft.trim()
+          ? 'primary.dark'
+          : 'action.disabledBackground',
+    },
+    '&.Mui-disabled': {
+      bgcolor: 'action.disabledBackground',
+      color: 'text.disabled',
+    },
+    '& svg': {
+      fontSize: 22,
+    },
+  }
+
+  const composerResizeSx = {
+    height:
+      draftHasMultipleLines && chatComposerResized ? chatComposerHeight : 'auto',
+    minHeight:
+      draftHasMultipleLines && chatComposerResized
+        ? MIN_RESIZED_CHAT_COMPOSER_HEIGHT
+        : undefined,
+    maxHeight: draftHasMultipleLines && chatComposerResized ? '48vh' : undefined,
+    overflow: 'hidden',
+  }
 
   return (
     <Box
@@ -4527,7 +4644,7 @@ const DashboardChatPanel = ({
             <Stack
               ref={userSourceRowRef}
               direction="row"
-              spacing={0.75}
+              spacing={0.5}
               alignItems="center"
               flexWrap="wrap"
               useFlexGap
@@ -4554,13 +4671,13 @@ const DashboardChatPanel = ({
                   tabIndex={-1}
                   data-testid={`dashboard-chat-added-source-${source.id}`}
                   sx={{
-                    minHeight: 30,
+                    minHeight: 26,
                     maxWidth: '100%',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 0.5,
-                    px: 0.75,
-                    py: 0.35,
+                    gap: 0.4,
+                    px: 0.6,
+                    py: 0.2,
                     border: 1,
                     borderColor: alpha(theme.palette.primary.main, 0.28),
                     borderRadius: 1,
@@ -4577,15 +4694,15 @@ const DashboardChatPanel = ({
                   }}
                 >
                   {source.originType === 'user-web' ? (
-                    <LinkIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+                    <LinkIcon sx={{ fontSize: 14, color: 'primary.main' }} />
                   ) : (
-                    <NotesIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+                    <NotesIcon sx={{ fontSize: 14, color: 'primary.main' }} />
                   )}
                   <Typography
                     variant="caption"
                     fontWeight={600}
                     noWrap
-                    sx={{ maxWidth: 150 }}
+                    sx={{ maxWidth: 140, fontSize: '0.72rem' }}
                   >
                     {source.title}
                   </Typography>
@@ -4594,8 +4711,8 @@ const DashboardChatPanel = ({
                     aria-label={`${t('chat.removeSource')}: ${source.title}`}
                     onClick={() => removeUserAddedSource(source.id)}
                     sx={{
-                      width: 22,
-                      height: 22,
+                      width: 20,
+                      height: 20,
                       ml: 0.1,
                       border: 1,
                       borderColor: alpha(theme.palette.text.primary, 0.18),
@@ -4608,31 +4725,18 @@ const DashboardChatPanel = ({
                       },
                     }}
                   >
-                    <CloseIcon sx={{ fontSize: 15 }} />
+                    <CloseIcon sx={{ fontSize: 14 }} />
                   </IconButton>
                 </Box>
               ))}
             </Stack>
           ) : null}
-          <Stack
-            spacing={1}
-            sx={{
-              height:
-                draftHasMultipleLines && chatComposerResized
-                  ? chatComposerHeight
-                  : 'auto',
-              minHeight:
-                draftHasMultipleLines && chatComposerResized
-                  ? MIN_RESIZED_CHAT_COMPOSER_HEIGHT
-                  : undefined,
-              maxHeight:
-                draftHasMultipleLines && chatComposerResized
-                  ? '48vh'
-                  : undefined,
-              overflow: 'hidden',
-            }}
+          <Box
+            data-testid="dashboard-chat-composer"
+            onMouseDown={focusComposerFromSurface}
+            sx={[composerSurfaceSx, composerResizeSx]}
           >
-            <TextField
+            <InputBase
               inputRef={draftInputRef}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
@@ -4648,7 +4752,6 @@ const DashboardChatPanel = ({
               maxRows={
                 draftHasMultipleLines && chatComposerResized ? undefined : 4
               }
-              size="small"
               sx={composerInputSx}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && !event.shiftKey) {
@@ -4664,7 +4767,8 @@ const DashboardChatPanel = ({
               direction="row"
               alignItems="center"
               justifyContent="space-between"
-              sx={{ flex: '0 0 auto' }}
+              data-testid="dashboard-chat-composer-actions"
+              sx={{ flex: '0 0 auto', gap: 1 }}
             >
               <Stack direction="row" spacing={0.75} alignItems="center">
                 {onQuickCreatePage ? (
@@ -4679,30 +4783,7 @@ const DashboardChatPanel = ({
                         }
                         aria-haspopup="menu"
                         aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
-                        sx={{
-                          height: 40,
-                          minHeight: 40,
-                          width: 40,
-                          flex: '0 0 auto',
-                          borderRadius: 1,
-                          border: 1,
-                          borderColor: 'divider',
-                          color: 'text.secondary',
-                          bgcolor: 'background.paper',
-                          '&:hover': {
-                            borderColor: alpha(
-                              theme.palette.primary.main,
-                              0.32,
-                            ),
-                            color: 'primary.main',
-                            bgcolor: alpha(theme.palette.primary.main, 0.05),
-                          },
-                          '&.Mui-disabled': {
-                            borderColor: 'divider',
-                            color: 'text.disabled',
-                            bgcolor: 'action.disabledBackground',
-                          },
-                        }}
+                        sx={composerActionButtonSx}
                       >
                         <AddCircleOutlineIcon fontSize="small" />
                       </IconButton>
@@ -4715,22 +4796,7 @@ const DashboardChatPanel = ({
                       size="small"
                       aria-label={t('chat.addSource')}
                       onClick={openAddSourceDialog}
-                      sx={{
-                        height: 40,
-                        minHeight: 40,
-                        width: 40,
-                        flex: '0 0 auto',
-                        borderRadius: 1,
-                        border: 1,
-                        borderColor: 'divider',
-                        color: 'text.secondary',
-                        bgcolor: 'background.paper',
-                        '&:hover': {
-                          borderColor: alpha(theme.palette.primary.main, 0.32),
-                          color: 'primary.main',
-                          bgcolor: alpha(theme.palette.primary.main, 0.05),
-                        },
-                      }}
+                      sx={composerActionButtonSx}
                     >
                       <AttachFileIcon fontSize="small" />
                     </IconButton>
@@ -4742,30 +4808,12 @@ const DashboardChatPanel = ({
                 onClick={() => sendQuestion(draft)}
                 disabled={!hasAnswerContext || !draft.trim()}
                 aria-label="Send dashboard question"
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 1,
-                  bgcolor:
-                    hasAnswerContext && draft.trim()
-                      ? 'primary.main'
-                      : 'action.disabledBackground',
-                  color:
-                    hasAnswerContext && draft.trim()
-                      ? 'primary.contrastText'
-                      : 'text.disabled',
-                  '&:hover': {
-                    bgcolor:
-                      hasAnswerContext && draft.trim()
-                        ? 'primary.dark'
-                        : 'action.disabledBackground',
-                  },
-                }}
+                sx={sendComposerButtonSx}
               >
                 <SendIcon />
               </IconButton>
             </Stack>
-          </Stack>
+          </Box>
           {onQuickCreatePage ? (
             <>
               {isMobile ? (

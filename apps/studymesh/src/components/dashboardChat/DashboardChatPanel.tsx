@@ -3389,26 +3389,23 @@ const DashboardChatPanel = ({
     height: 34,
     flex: '0 0 auto',
     borderRadius: 1,
-    bgcolor:
-      hasAnswerContext && draft.trim()
-        ? 'primary.main'
-        : 'action.disabledBackground',
+    bgcolor: 'transparent',
     color:
       hasAnswerContext && draft.trim()
-        ? 'primary.contrastText'
+        ? 'primary.main'
         : 'text.disabled',
     '&:hover': {
       bgcolor:
         hasAnswerContext && draft.trim()
-          ? 'primary.dark'
-          : 'action.disabledBackground',
+          ? alpha(theme.palette.primary.main, 0.08)
+          : 'transparent',
     },
     '&.Mui-disabled': {
-      bgcolor: 'action.disabledBackground',
+      bgcolor: 'transparent',
       color: 'text.disabled',
     },
     '& svg': {
-      fontSize: 22,
+      fontSize: 24,
     },
   }
 

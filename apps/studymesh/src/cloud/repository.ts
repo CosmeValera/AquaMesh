@@ -41,6 +41,15 @@ const assertMany = async <T>(
   return data || []
 }
 
+const assertMutation = async (
+  query: PromiseLike<{ error: { message: string } | null }>,
+): Promise<void> => {
+  const { error } = await query
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
 interface ProfileRow {
   id: string
   email?: string | null
@@ -388,16 +397,12 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   },
 
   async upsertProfile(profile: UserProfile): Promise<UserProfile> {
-    const row = await assertSingle<ProfileRow>(
+    const row = profileToRow(profile)
+    await assertMutation(
       client
         .from('profiles')
-        .upsert(profileToRow(profile), { onConflict: 'id' })
-        .select('*')
-        .single(),
+        .upsert(row, { onConflict: 'id' }),
     )
-    if (!row) {
-      throw new Error('Profile upsert returned no row')
-    }
 
     return profileFromRow(row)
   },
@@ -449,18 +454,14 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
     ownerId: string,
     dashboard: SavedDashboard,
   ): Promise<SavedDashboard> {
-    const row = await assertSingle<DashboardRow>(
+    const row = mapSavedDashboardToDashboardRow(ownerId, dashboard)
+    await assertMutation(
       client
         .from('user_dashboards')
-        .upsert(mapSavedDashboardToDashboardRow(ownerId, dashboard), {
+        .upsert(row, {
           onConflict: 'owner_id,id',
-        })
-        .select('*')
-        .single(),
+        }),
     )
-    if (!row) {
-      throw new Error('Dashboard upsert returned no row')
-    }
 
     return mapDashboardRowToSavedDashboard(row)
   },
@@ -509,16 +510,12 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
     ownerId: string,
     widget: CustomWidget,
   ): Promise<CustomWidget> {
-    const row = await assertSingle<WidgetRow>(
+    const row = widgetToRow(ownerId, widget)
+    await assertMutation(
       client
         .from('user_widgets')
-        .upsert(widgetToRow(ownerId, widget), { onConflict: 'owner_id,id' })
-        .select('*')
-        .single(),
+        .upsert(row, { onConflict: 'owner_id,id' }),
     )
-    if (!row) {
-      throw new Error('Widget upsert returned no row')
-    }
 
     return widgetFromRow(row)
   },
@@ -557,18 +554,14 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
     ownerId: string,
     version: WidgetVersion,
   ): Promise<WidgetVersion> {
-    const row = await assertSingle<WidgetVersionRow>(
+    const row = widgetVersionToRow(ownerId, version)
+    await assertMutation(
       client
         .from('user_widget_versions')
-        .upsert(widgetVersionToRow(ownerId, version), {
+        .upsert(row, {
           onConflict: 'owner_id,widget_id,version',
-        })
-        .select('*')
-        .single(),
+        }),
     )
-    if (!row) {
-      throw new Error('Widget version upsert returned no row')
-    }
 
     return widgetVersionFromRow(row)
   },
@@ -599,18 +592,14 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   async upsertWorkspaceState(
     workspaceState: WorkspaceState,
   ): Promise<WorkspaceState> {
-    const row = await assertSingle<WorkspaceStateRow>(
+    const row = workspaceStateToRow(workspaceState)
+    await assertMutation(
       client
         .from('user_workspace_state')
-        .upsert(workspaceStateToRow(workspaceState), {
+        .upsert(row, {
           onConflict: 'owner_id',
-        })
-        .select('*')
-        .single(),
+        }),
     )
-    if (!row) {
-      throw new Error('Workspace state upsert returned no row')
-    }
 
     return workspaceStateFromRow(row)
   },
@@ -630,18 +619,14 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
     ownerId: string,
     studyGuide: StudyGuideRecord,
   ): Promise<StudyGuideRecord> {
-    const row = await assertSingle<StudyGuideRow>(
+    const row = studyGuideToRow(ownerId, studyGuide)
+    await assertMutation(
       client
         .from('user_study_guides')
-        .upsert(studyGuideToRow(ownerId, studyGuide), {
+        .upsert(row, {
           onConflict: 'owner_id,id',
-        })
-        .select('*')
-        .single(),
+        }),
     )
-    if (!row) {
-      throw new Error('Study Guide upsert returned no row')
-    }
 
     return studyGuideFromRow(row)
   },

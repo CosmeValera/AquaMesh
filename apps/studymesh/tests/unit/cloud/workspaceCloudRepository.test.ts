@@ -157,8 +157,8 @@ describe('workspace cloud repository', () => {
       }),
       { onConflict: 'owner_id,id' },
     )
-    expect(builder.select).toHaveBeenCalledWith('*')
-    expect(builder.single).toHaveBeenCalled()
+    expect(builder.select).not.toHaveBeenCalled()
+    expect(builder.single).not.toHaveBeenCalled()
   })
 
   it('deletes the signed-in StudyMesh profile row', async () => {

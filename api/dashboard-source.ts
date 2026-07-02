@@ -25,6 +25,7 @@ interface DashboardSource {
   url: string;
   title: string;
   text: string;
+  originType?: "web" | "user-web";
   searchQuery: string;
   score?: number;
   favicon?: string;
@@ -49,6 +50,7 @@ interface DashboardSourceResponse {
 interface DashboardSourceRequest {
   question: string;
   dashboardTitle: string;
+  sourceUrl?: string;
   contextSummary?: string;
   rejectedUrls?: string[];
   rejectedDomains?: string[];
@@ -151,6 +153,7 @@ const normalizeRequest = (body: unknown): DashboardSourceRequest | null => {
 
   const question = normalizeText(body.question);
   const dashboardTitle = normalizeText(body.dashboardTitle);
+  const sourceUrl = normalizeText(body.sourceUrl || body.url);
   const contextSummary = normalizeText(body.contextSummary);
   const rejectedUrls = Array.isArray(body.rejectedUrls)
     ? body.rejectedUrls.map(normalizeText).filter(Boolean)
@@ -159,13 +162,14 @@ const normalizeRequest = (body: unknown): DashboardSourceRequest | null => {
     ? body.rejectedDomains.map(normalizeText).filter(Boolean)
     : [];
 
-  if (!question || !dashboardTitle) {
+  if ((!question && !sourceUrl) || !dashboardTitle) {
     return null;
   }
 
   return {
-    question,
+    question: question || sourceUrl,
     dashboardTitle,
+    ...(sourceUrl ? { sourceUrl } : {}),
     ...(contextSummary ? { contextSummary } : {}),
     ...(rejectedUrls.length ? { rejectedUrls } : {}),
     ...(rejectedDomains.length ? { rejectedDomains } : {}),
@@ -328,6 +332,19 @@ const normalizeUrl = (value: string): string => {
     return url.toString().toLowerCase();
   } catch {
     return value.trim().toLowerCase();
+  }
+};
+
+const assertReadableHttpUrl = (value: string): string => {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error("unsupported_content");
+    }
+    url.hash = "";
+    return url.toString();
+  } catch {
+    throw new Error("unsupported_content");
   }
 };
 
@@ -659,6 +676,55 @@ const searchDashboardSource = async (
   }
 };
 
+const extractDashboardSourceUrl = async (
+  request: DashboardSourceRequest,
+): Promise<DashboardSource[]> => {
+  const apiKey = getEnv("TAVILY_API_KEY");
+  if (!apiKey) {
+    throw new Error("missing_tavily_key");
+  }
+  if (!request.sourceUrl) {
+    throw new Error("unsupported_content");
+  }
+
+  const sourceUrl = assertReadableHttpUrl(request.sourceUrl);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), SEARCH_TIMEOUT_MS);
+
+  try {
+    const extractedByUrl = await extractSelectedCandidates(
+      [
+        {
+          url: sourceUrl,
+          title: sourceUrl,
+          snippet: "",
+          searchQuery: sourceUrl,
+        },
+      ],
+      apiKey,
+      controller.signal,
+    );
+    const extracted = extractedByUrl.get(normalizeUrl(sourceUrl));
+    if (!extracted) {
+      throw new Error("unsupported_content");
+    }
+
+    return [
+      {
+        id: `user-web-source-${randomUUID()}`,
+        url: sourceUrl,
+        title: extracted.title || sourceUrl,
+        text: extracted.text,
+        originType: "user-web",
+        searchQuery: sourceUrl,
+        fetchedAt: extracted.fetchedAt,
+      },
+    ];
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 const mapError = (
   error: unknown,
 ): { statusCode: number; response: DashboardSourceResponse } => {
@@ -754,7 +820,9 @@ export default async function handler(
 
   try {
     await requireAuthInProduction(req);
-    const sources = await searchDashboardSource(request);
+    const sources = request.sourceUrl
+      ? await extractDashboardSourceUrl(request)
+      : await searchDashboardSource(request);
     json(res, 200, { ok: true, source: sources[0], sources });
   } catch (error) {
     const mapped = mapError(error);

@@ -33,6 +33,9 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendIcon from '@mui/icons-material/Send'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
+import AttachFileIcon from '@mui/icons-material/AttachFile'
+import LinkIcon from '@mui/icons-material/Link'
+import NotesIcon from '@mui/icons-material/Notes'
 import QuizIcon from '@mui/icons-material/Quiz'
 import StyleIcon from '@mui/icons-material/Style'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
@@ -57,6 +60,7 @@ import {
 import {
   fetchDashboardExternalSource,
   type DashboardExternalSource,
+  type DashboardExternalSourceOriginType,
 } from '../../dashboardChat/externalSources'
 import { prepareDashboardExternalSourcePageDraft } from '../../dashboardChat/sourcePageDrafts'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
@@ -77,6 +81,12 @@ import { useAccentColor } from '../../theme/AccentColorContext'
 export type { DashboardAnswerSourceRef } from '../../dashboardChat/askDashboard'
 
 const MIN_RESIZED_CHAT_COMPOSER_HEIGHT = 148
+const MAX_USER_ADDED_SOURCES = 5
+const MAX_USER_SOURCE_TEXT_CHARS = 12_000
+const MAX_USER_SOURCE_CONTEXT_CHARS = 18_000
+const MAX_USER_SOURCES_PER_ANSWER = 3
+
+type AddSourceMode = 'text' | 'web'
 
 export interface DashboardChatMessage {
   id: string
@@ -165,6 +175,36 @@ const makeChatSessionId = () =>
 const getChatSessionStorageKey = (dashboardId?: string) =>
   `studymesh-dashboard-chat-sessions-${dashboardId || 'workspace'}`
 
+const isUserAddedSourceOriginType = (
+  originType: DashboardExternalSourceOriginType | undefined,
+) => originType === 'user-text' || originType === 'user-web'
+
+const isUserAddedSource = (source: DashboardExternalSource) =>
+  isUserAddedSourceOriginType(source.originType)
+
+const normalizeUserSourceText = (value: string) =>
+  value.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim()
+
+const truncateUserSourceText = (value: string) => {
+  const normalized = normalizeUserSourceText(value)
+  if (normalized.length <= MAX_USER_SOURCE_TEXT_CHARS) {
+    return { text: normalized, trimmed: false }
+  }
+
+  return {
+    text: normalized.slice(0, MAX_USER_SOURCE_TEXT_CHARS).trim(),
+    trimmed: true,
+  }
+}
+
+const hashSourceValue = (value: string): string => {
+  let hash = 0
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0
+  }
+  return hash.toString(36)
+}
+
 const createEmptyChatSession = (): DashboardChatSession => ({
   id: makeChatSessionId(),
   title: 'New chat',
@@ -177,7 +217,7 @@ const createEmptyChatSession = (): DashboardChatSession => ({
 })
 
 const isEmptyChatSession = (session: DashboardChatSession) =>
-  session.messages.length === 0
+  session.messages.length === 0 && (session.externalSources || []).length === 0
 
 const normalizeChatSessions = (
   sessions: DashboardChatSession[],
@@ -472,6 +512,14 @@ const DashboardChatPanel = ({
   const [draftHasMultipleLines, setDraftHasMultipleLines] = useState(false)
   const [externalSourcePrompt, setExternalSourcePrompt] =
     useState<ExternalSourcePrompt | null>(null)
+  const [addSourceDialogOpen, setAddSourceDialogOpen] = useState(false)
+  const [addSourceMode, setAddSourceMode] = useState<AddSourceMode>('text')
+  const [addSourceTitle, setAddSourceTitle] = useState('')
+  const [addSourceText, setAddSourceText] = useState('')
+  const [addSourceUrl, setAddSourceUrl] = useState('')
+  const [addSourceError, setAddSourceError] = useState('')
+  const [addSourceNotice, setAddSourceNotice] = useState('')
+  const [addSourceLoading, setAddSourceLoading] = useState(false)
   const [quickCreateSourceScope, setQuickCreateSourceScope] =
     useState<QuickCreateSourceScope>(
       supportsStudyGuideCreateScope ? 'studyGuide' : 'currentPage',
@@ -482,6 +530,7 @@ const DashboardChatPanel = ({
   const externalSourceAddButtonRefs = useRef(
     new Map<string, HTMLButtonElement>(),
   )
+  const userSourceChipRefs = useRef(new Map<string, HTMLDivElement>())
   const composerDragRef = useRef<{
     startY: number
     startHeight: number
@@ -503,9 +552,14 @@ const DashboardChatPanel = ({
   const hasContext = context.chunks.length > 0
   const activePet =
     aiChatPets.find((pet) => pet.id === activePetId) || aiChatPets[0]
-  const activeChatTitle =
-    chatSessions.find((session) => session.id === activeChatId)?.title ||
-    'New chat'
+  const activeChatSession = chatSessions.find(
+    (session) => session.id === activeChatId,
+  )
+  const userAddedSources = (activeChatSession?.externalSources || []).filter(
+    isUserAddedSource,
+  )
+  const hasAnswerContext = hasContext || userAddedSources.length > 0
+  const activeChatTitle = activeChatSession?.title || 'New chat'
   const displayChatTitle = (title: string) =>
     title === 'New chat' ? t('chat.newChat') : title
   const displayedActiveChatTitle = displayChatTitle(activeChatTitle)
@@ -658,9 +712,15 @@ const DashboardChatPanel = ({
   ): DashboardSourceChunk => ({
     id: source.id,
     title: source.title,
-    type: 'web source',
-    text: source.text,
+    type:
+      source.originType === 'user-text'
+        ? 'pasted source'
+        : source.originType === 'user-web'
+          ? 'user webpage'
+          : 'web source',
+    text: source.text.slice(0, MAX_USER_SOURCE_TEXT_CHARS),
     origin: 'web',
+    originType: source.originType || 'web',
     url: source.url,
   })
 
@@ -716,7 +776,7 @@ const DashboardChatPanel = ({
       return 'recall_previous_chat'
     }
 
-    return hasContext ? 'study_guide_question' : 'external_info_needed'
+    return hasAnswerContext ? 'study_guide_question' : 'external_info_needed'
   }
 
   const isUsefulAssistantAnswer = (message: DashboardChatMessage): boolean =>
@@ -1022,15 +1082,25 @@ const DashboardChatPanel = ({
       )
     }
 
+    let selectedUserSourceCount = 0
+
     return availableExternalSources
       .map((source) => ({
         source,
         score: scoreExternalSource(source, question),
       }))
-      .filter(({ score }) => score > 0)
+      .filter(({ source, score }) => score > 0 || isUserAddedSource(source))
       .sort((left, right) => right.score - left.score)
-      .slice(0, 3)
       .map(({ source }) => source)
+      .filter((source) => {
+        if (!isUserAddedSource(source)) {
+          return true
+        }
+
+        selectedUserSourceCount += 1
+        return selectedUserSourceCount <= MAX_USER_SOURCES_PER_ANSWER
+      })
+      .slice(0, 3)
   }
 
   const scoreTextForQuestion = (text: string, question: string): number => {
@@ -1136,13 +1206,30 @@ const DashboardChatPanel = ({
       question,
       externalSourceIds,
     )
-    const externalChunks = selectedExternalSources.map(externalSourceToChunk)
+    let remainingUserSourceChars = MAX_USER_SOURCE_CONTEXT_CHARS
+    const externalChunks = selectedExternalSources
+      .map((source): DashboardExternalSource | null => {
+        if (!isUserAddedSource(source)) {
+          return source
+        }
+
+        if (remainingUserSourceChars <= 0) {
+          return null
+        }
+
+        const text = source.text.slice(
+          0,
+          Math.min(MAX_USER_SOURCE_TEXT_CHARS, remainingUserSourceChars),
+        )
+        remainingUserSourceChars -= text.length
+        return { ...source, text }
+      })
+      .filter((source): source is DashboardExternalSource => Boolean(source))
+      .map(externalSourceToChunk)
 
     return {
       sourceChunks: [...dashboardChunks, ...externalChunks],
-      selectedExternalSourceIds: selectedExternalSources.map(
-        (source) => source.id,
-      ),
+      selectedExternalSourceIds: externalChunks.map((chunk) => chunk.id),
     }
   }
 
@@ -1470,20 +1557,24 @@ const DashboardChatPanel = ({
     )
   }
 
+  const enrichExternalSource = (
+    source: DashboardExternalSource,
+  ): DashboardExternalSource => ({
+    ...source,
+    normalizedUrl:
+      source.normalizedUrl || normalizeSourceUrlForDedupe(source.url),
+    domain: source.domain || getSourceDomain(source.url),
+    summary: source.summary || source.text.slice(0, 500),
+    coveredEntities:
+      source.coveredEntities ||
+      extractCoveredEntities(`${source.title} ${source.text}`),
+    usedInAnswer: source.usedInAnswer || false,
+  })
+
   const upsertExternalSource = (
     source: DashboardExternalSource,
   ): DashboardExternalSource => {
-    const enrichedSource: DashboardExternalSource = {
-      ...source,
-      normalizedUrl:
-        source.normalizedUrl || normalizeSourceUrlForDedupe(source.url),
-      domain: source.domain || getSourceDomain(source.url),
-      summary: source.summary || source.text.slice(0, 500),
-      coveredEntities:
-        source.coveredEntities ||
-        extractCoveredEntities(`${source.title} ${source.text}`),
-      usedInAnswer: source.usedInAnswer || false,
-    }
+    const enrichedSource = enrichExternalSource(source)
     let savedSource = enrichedSource
     updateActiveChatExternalSources((externalSources) => {
       const normalizedUrl = normalizeSourceUrlForDedupe(enrichedSource.url)
@@ -1507,6 +1598,207 @@ const DashboardChatPanel = ({
     sources: DashboardExternalSource[],
   ): DashboardExternalSource[] => sources.map(upsertExternalSource)
 
+  const addUserAddedSource = (
+    source: DashboardExternalSource,
+  ): {
+    savedSource?: DashboardExternalSource
+    added: boolean
+    limitReached: boolean
+  } => {
+    const enrichedSource = enrichExternalSource(source)
+    let savedSource: DashboardExternalSource | undefined = enrichedSource
+    let added = false
+    let limitReached = false
+
+    updateActiveChatExternalSources((externalSources) => {
+      const normalizedUrl = normalizeSourceUrlForDedupe(enrichedSource.url)
+      const existingSource = externalSources.find(
+        (candidate) =>
+          normalizeSourceUrlForDedupe(candidate.url) === normalizedUrl,
+      )
+
+      if (existingSource) {
+        if (isUserAddedSource(existingSource)) {
+          savedSource = existingSource
+          return externalSources
+        }
+
+        const upgradedSource = {
+          ...existingSource,
+          ...enrichedSource,
+          text: enrichedSource.text || existingSource.text,
+          title: enrichedSource.title || existingSource.title,
+          fetchedAt: enrichedSource.fetchedAt || existingSource.fetchedAt,
+          usedInAnswer:
+            existingSource.usedInAnswer || enrichedSource.usedInAnswer,
+        }
+        savedSource = upgradedSource
+        added = true
+        return externalSources.map((candidate) =>
+          candidate.id === existingSource.id ? upgradedSource : candidate,
+        )
+      }
+
+      if (
+        externalSources.filter(isUserAddedSource).length >=
+        MAX_USER_ADDED_SOURCES
+      ) {
+        limitReached = true
+        savedSource = undefined
+        return externalSources
+      }
+
+      added = true
+      return [enrichedSource, ...externalSources]
+    })
+
+    return { savedSource, added, limitReached }
+  }
+
+  const removeUserAddedSource = (sourceId: string) => {
+    updateActiveChatExternalSources((externalSources) =>
+      externalSources.filter((source) => source.id !== sourceId),
+    )
+  }
+
+  const focusUserSourceChip = (sourceId: string) => {
+    const chip = userSourceChipRefs.current.get(sourceId)
+    if (!chip) {
+      return
+    }
+
+    chip.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    window.setTimeout(() => chip.focus(), 160)
+  }
+
+  const resetAddSourceDialog = () => {
+    setAddSourceTitle('')
+    setAddSourceText('')
+    setAddSourceUrl('')
+    setAddSourceError('')
+    setAddSourceNotice('')
+    setAddSourceLoading(false)
+  }
+
+  const openAddSourceDialog = () => {
+    resetAddSourceDialog()
+    setAddSourceDialogOpen(true)
+  }
+
+  const closeAddSourceDialog = () => {
+    if (addSourceLoading) {
+      return
+    }
+
+    setAddSourceDialogOpen(false)
+    resetAddSourceDialog()
+  }
+
+  const handleUserSourceResult = (
+    result: ReturnType<typeof addUserAddedSource>,
+    trimmed: boolean,
+  ) => {
+    if (result.limitReached) {
+      setAddSourceError(
+        `You can add up to ${MAX_USER_ADDED_SOURCES} sources per chat.`,
+      )
+      return
+    }
+
+    if (!result.savedSource) {
+      setAddSourceError('Could not add this source.')
+      return
+    }
+
+    setAddSourceNotice(
+      trimmed
+        ? 'Source was trimmed to fit chat limits.'
+        : result.added
+          ? 'Source added.'
+          : 'Source already exists in this chat.',
+    )
+    setAddSourceDialogOpen(false)
+    resetAddSourceDialog()
+  }
+
+  const addPastedTextSource = () => {
+    const { text, trimmed } = truncateUserSourceText(addSourceText)
+    const title = addSourceTitle.trim() || 'Pasted source'
+
+    if (text.length < 20) {
+      setAddSourceError('Add at least a few sentences of source text.')
+      return
+    }
+
+    const sourceHash = hashSourceValue(`${title}\n${text}`)
+    const result = addUserAddedSource({
+      id: `user-text-source-${sourceHash}`,
+      url: `studymesh://user-source/${sourceHash}`,
+      title,
+      text,
+      originType: 'user-text',
+      trimmed,
+      searchQuery: title,
+      fetchedAt: Date.now(),
+    })
+    handleUserSourceResult(result, trimmed)
+  }
+
+  const addWebSource = async () => {
+    const sourceUrl = addSourceUrl.trim()
+    const titleOverride = addSourceTitle.trim()
+
+    try {
+      const parsedUrl = new URL(sourceUrl)
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        throw new Error('Use an http or https URL.')
+      }
+    } catch {
+      setAddSourceError('Enter a valid webpage URL.')
+      return
+    }
+
+    setAddSourceLoading(true)
+    setAddSourceError('')
+
+    try {
+      const [source] = await fetchDashboardExternalSource({
+        url: sourceUrl,
+        dashboardTitle: context.dashboardTitle,
+      })
+      if (!source) {
+        throw new Error('Could not read this webpage source.')
+      }
+      const { text, trimmed } = truncateUserSourceText(source.text)
+      const result = addUserAddedSource({
+        ...source,
+        title: titleOverride || source.title || sourceUrl,
+        text,
+        originType: 'user-web',
+        trimmed: trimmed || source.trimmed,
+        searchQuery: sourceUrl,
+      })
+      handleUserSourceResult(result, Boolean(trimmed || source.trimmed))
+    } catch (addError) {
+      setAddSourceError(
+        addError instanceof Error
+          ? addError.message
+          : 'Could not add this webpage source.',
+      )
+    } finally {
+      setAddSourceLoading(false)
+    }
+  }
+
+  const submitAddSource = () => {
+    if (addSourceMode === 'text') {
+      addPastedTextSource()
+      return
+    }
+
+    void addWebSource()
+  }
+
   const updateExternalSourceDraftState = (
     sourceId: string,
     updater: (source: DashboardExternalSource) => DashboardExternalSource,
@@ -1527,6 +1819,7 @@ const DashboardChatPanel = ({
     const sources = uniqueSourceIds
       .map(findExternalSourceById)
       .filter((source): source is DashboardExternalSource => Boolean(source))
+      .filter((source) => !isUserAddedSource(source))
       .filter(
         (source) =>
           source.guidePageDraftStatus !== 'ready' &&
@@ -1756,7 +2049,7 @@ const DashboardChatPanel = ({
     const { sourceChunks, selectedExternalSourceIds } =
       selectAnswerSourceChunks(question, externalSourceIds)
 
-    if (!hasContext && selectedExternalSourceIds.length === 0) {
+    if (!hasAnswerContext && selectedExternalSourceIds.length === 0) {
       updateMessage(pendingMessageId, (message) => ({
         ...message,
         content:
@@ -2023,10 +2316,11 @@ const DashboardChatPanel = ({
       return
     }
 
-    if (source.url) {
+    const sourceUrl = source.url
+    if (sourceUrl && /^https?:\/\//i.test(sourceUrl)) {
       requestExternalSourceOpen({
         title: source.title || 'External source',
-        url: source.url,
+        url: sourceUrl,
       })
       return
     }
@@ -2479,6 +2773,7 @@ const DashboardChatPanel = ({
       }
 
       const isWebSource = source.origin === 'web'
+      const isUserAddedCitation = isUserAddedSourceOriginType(source.originType)
 
       return (
         <Box
@@ -2487,12 +2782,16 @@ const DashboardChatPanel = ({
           type="button"
           aria-label={
             isWebSource
-              ? `Open web source ${citationNumber}`
+              ? isUserAddedCitation
+                ? `Show added source ${citationNumber}`
+                : `Open web source ${citationNumber}`
               : `Open source ${citationNumber}`
           }
           onClick={(event) => {
             event.stopPropagation()
-            if (isWebSource) {
+            if (source.originType === 'user-text') {
+              focusUserSourceChip(source.chunkId)
+            } else if (isWebSource && !isUserAddedCitation) {
               openWebSourceInGuide(source)
             } else {
               openSource(source)
@@ -3045,6 +3344,100 @@ const DashboardChatPanel = ({
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog
+        open={addSourceDialogOpen}
+        onClose={closeAddSourceDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>{t('chat.addSourceTitle')}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5} sx={{ pt: 0.5 }}>
+            <Typography variant="body2" color="text.secondary">
+              {t('chat.addSourceHelp')}
+            </Typography>
+            <ToggleButtonGroup
+              value={addSourceMode}
+              exclusive
+              fullWidth
+              size="small"
+              onChange={(_, value: AddSourceMode | null) => {
+                if (value) {
+                  setAddSourceMode(value)
+                  setAddSourceError('')
+                  setAddSourceNotice('')
+                }
+              }}
+              aria-label={t('chat.addSource')}
+            >
+              <ToggleButton value="text">
+                {t('chat.pasteTextSource')}
+              </ToggleButton>
+              <ToggleButton value="web">{t('chat.webpageSource')}</ToggleButton>
+            </ToggleButtonGroup>
+            <TextField
+              value={addSourceTitle}
+              onChange={(event) => setAddSourceTitle(event.target.value)}
+              label={t('chat.sourceTitleOptional')}
+              size="small"
+              fullWidth
+            />
+            {addSourceMode === 'text' ? (
+              <TextField
+                value={addSourceText}
+                onChange={(event) => setAddSourceText(event.target.value)}
+                label={t('chat.sourceText')}
+                multiline
+                minRows={6}
+                fullWidth
+              />
+            ) : (
+              <TextField
+                value={addSourceUrl}
+                onChange={(event) => setAddSourceUrl(event.target.value)}
+                label={t('chat.sourceUrl')}
+                size="small"
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LinkIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            )}
+            <Typography variant="caption" color="text.secondary">
+              {t('chat.sourceLimitHelp')}
+            </Typography>
+            {addSourceError ? (
+              <Alert severity="error">{addSourceError}</Alert>
+            ) : null}
+            {addSourceNotice ? (
+              <Alert severity="info">{addSourceNotice}</Alert>
+            ) : null}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeAddSourceDialog} disabled={addSourceLoading}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={submitAddSource}
+            disabled={
+              addSourceLoading ||
+              (addSourceMode === 'text'
+                ? !addSourceText.trim()
+                : !addSourceUrl.trim())
+            }
+          >
+            {addSourceLoading
+              ? t('chat.searchingWebShort')
+              : t('chat.addSourceButton')}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Menu
         anchorEl={chatMenuAnchor}
         open={chatMenuOpen}
@@ -3178,7 +3571,7 @@ const DashboardChatPanel = ({
               : 'background.light',
         }}
       >
-        {!hasContext ? (
+        {!hasAnswerContext ? (
           <Alert severity="info">{t('chat.noSourceContent')}</Alert>
         ) : messages.length === 0 ? (
           <Stack
@@ -3212,7 +3605,7 @@ const DashboardChatPanel = ({
                 <Button
                   key={suggestion.labelKey}
                   variant="outlined"
-                  disabled={!hasContext}
+                  disabled={!hasAnswerContext}
                   onClick={() => sendQuestion(t(suggestion.labelKey))}
                   sx={{
                     minHeight: 36,
@@ -3808,14 +4201,111 @@ const DashboardChatPanel = ({
               draftHasMultipleLines && chatComposerResized ? '100%' : 'auto',
           }}
         >
+          {userAddedSources.length > 0 ? (
+            <Stack
+              direction="row"
+              spacing={0.75}
+              alignItems="center"
+              flexWrap="wrap"
+              useFlexGap
+              data-testid="dashboard-chat-added-sources"
+            >
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={700}
+                sx={{ mr: 0.25 }}
+              >
+                {t('chat.addedSources')}
+              </Typography>
+              {userAddedSources.map((source) => (
+                <Box
+                  key={source.id}
+                  ref={(node: HTMLDivElement | null) => {
+                    if (node) {
+                      userSourceChipRefs.current.set(source.id, node)
+                    } else {
+                      userSourceChipRefs.current.delete(source.id)
+                    }
+                  }}
+                  tabIndex={-1}
+                  data-testid={`dashboard-chat-added-source-${source.id}`}
+                  sx={{
+                    minHeight: 30,
+                    maxWidth: '100%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    px: 0.75,
+                    py: 0.35,
+                    border: 1,
+                    borderColor: alpha(theme.palette.primary.main, 0.28),
+                    borderRadius: 1,
+                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                    color: 'text.primary',
+                    outline: 'none',
+                    '&:focus-visible': {
+                      borderColor: 'primary.main',
+                      boxShadow: `0 0 0 2px ${alpha(
+                        theme.palette.primary.main,
+                        0.18,
+                      )}`,
+                    },
+                  }}
+                >
+                  {source.originType === 'user-web' ? (
+                    <LinkIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+                  ) : (
+                    <NotesIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+                  )}
+                  <Typography
+                    variant="caption"
+                    fontWeight={600}
+                    noWrap
+                    sx={{ maxWidth: 150 }}
+                  >
+                    {source.title}
+                  </Typography>
+                  {source.trimmed ? (
+                    <Typography variant="caption" color="text.secondary">
+                      {t('chat.sourceTrimmed')}
+                    </Typography>
+                  ) : null}
+                  <IconButton
+                    size="small"
+                    aria-label={`${t('chat.removeSource')}: ${source.title}`}
+                    onClick={() => removeUserAddedSource(source.id)}
+                    sx={{
+                      width: 22,
+                      height: 22,
+                      ml: 0.1,
+                      border: 1,
+                      borderColor: alpha(theme.palette.text.primary, 0.18),
+                      bgcolor: 'background.paper',
+                      color: 'text.secondary',
+                      '&:hover': {
+                        borderColor: alpha(theme.palette.error.main, 0.45),
+                        bgcolor: alpha(theme.palette.error.main, 0.08),
+                        color: 'error.main',
+                      },
+                    }}
+                  >
+                    <CloseIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                </Box>
+              ))}
+            </Stack>
+          ) : null}
           <TextField
             inputRef={draftInputRef}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             placeholder={
-              hasContext ? t('chat.askAnything') : t('chat.addStudyMaterial')
+              hasAnswerContext
+                ? t('chat.askAnything')
+                : t('chat.addStudyMaterial')
             }
-            disabled={!hasContext}
+            disabled={!hasAnswerContext}
             fullWidth
             multiline
             minRows={1}
@@ -3827,7 +4317,7 @@ const DashboardChatPanel = ({
             onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault()
-                if (!hasContext) {
+                if (!hasAnswerContext) {
                   return
                 }
                 sendQuestion(draft)
@@ -3837,21 +4327,16 @@ const DashboardChatPanel = ({
           <Stack
             direction="row"
             alignItems="center"
-            justifyContent={onQuickCreatePage ? 'space-between' : 'flex-end'}
+            justifyContent="space-between"
             sx={{ flex: '0 0 auto' }}
           >
-            {onQuickCreatePage ? (
-              <Tooltip title={t('chat.create')}>
+            <Stack direction="row" spacing={0.75} alignItems="center">
+              <Tooltip title={t('chat.addSource')}>
                 <span>
                   <IconButton
                     size="small"
-                    aria-label={t('chat.create')}
-                    disabled={!hasContext || Boolean(quickCreateActionId)}
-                    onClick={(event) =>
-                      setQuickCreateMenuAnchor(event.currentTarget)
-                    }
-                    aria-haspopup="menu"
-                    aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
+                    aria-label={t('chat.addSource')}
+                    onClick={openAddSourceDialog}
                     sx={{
                       height: 40,
                       minHeight: 40,
@@ -3859,46 +4344,79 @@ const DashboardChatPanel = ({
                       flex: '0 0 auto',
                       borderRadius: 1,
                       border: 1,
-                      borderColor: 'divider',
-                      color: 'text.secondary',
-                      bgcolor: 'background.paper',
+                      borderColor: alpha(theme.palette.primary.main, 0.3),
+                      color: 'primary.main',
+                      bgcolor: alpha(theme.palette.primary.main, 0.06),
                       '&:hover': {
-                        borderColor: alpha(theme.palette.primary.main, 0.32),
-                        color: 'primary.main',
-                        bgcolor: alpha(theme.palette.primary.main, 0.05),
-                      },
-                      '&.Mui-disabled': {
-                        borderColor: 'divider',
-                        color: 'text.disabled',
-                        bgcolor: 'action.disabledBackground',
+                        borderColor: alpha(theme.palette.primary.main, 0.5),
+                        bgcolor: alpha(theme.palette.primary.main, 0.12),
                       },
                     }}
                   >
-                    <AddCircleOutlineIcon fontSize="small" />
+                    <AttachFileIcon fontSize="small" />
                   </IconButton>
                 </span>
               </Tooltip>
-            ) : null}
+              {onQuickCreatePage ? (
+                <Tooltip title={t('chat.create')}>
+                  <span>
+                    <IconButton
+                      size="small"
+                      aria-label={t('chat.create')}
+                      disabled={!hasContext || Boolean(quickCreateActionId)}
+                      onClick={(event) =>
+                        setQuickCreateMenuAnchor(event.currentTarget)
+                      }
+                      aria-haspopup="menu"
+                      aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
+                      sx={{
+                        height: 40,
+                        minHeight: 40,
+                        width: 40,
+                        flex: '0 0 auto',
+                        borderRadius: 1,
+                        border: 1,
+                        borderColor: 'divider',
+                        color: 'text.secondary',
+                        bgcolor: 'background.paper',
+                        '&:hover': {
+                          borderColor: alpha(theme.palette.primary.main, 0.32),
+                          color: 'primary.main',
+                          bgcolor: alpha(theme.palette.primary.main, 0.05),
+                        },
+                        '&.Mui-disabled': {
+                          borderColor: 'divider',
+                          color: 'text.disabled',
+                          bgcolor: 'action.disabledBackground',
+                        },
+                      }}
+                    >
+                      <AddCircleOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              ) : null}
+            </Stack>
             <IconButton
               color="primary"
               onClick={() => sendQuestion(draft)}
-              disabled={!hasContext || !draft.trim()}
+              disabled={!hasAnswerContext || !draft.trim()}
               aria-label="Send dashboard question"
               sx={{
                 width: 40,
                 height: 40,
                 borderRadius: 1,
                 bgcolor:
-                  hasContext && draft.trim()
+                  hasAnswerContext && draft.trim()
                     ? 'primary.main'
                     : 'action.disabledBackground',
                 color:
-                  hasContext && draft.trim()
+                  hasAnswerContext && draft.trim()
                     ? 'primary.contrastText'
                     : 'text.disabled',
                 '&:hover': {
                   bgcolor:
-                    hasContext && draft.trim()
+                    hasAnswerContext && draft.trim()
                       ? 'primary.dark'
                       : 'action.disabledBackground',
                 },

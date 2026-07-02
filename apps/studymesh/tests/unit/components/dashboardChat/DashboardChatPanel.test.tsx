@@ -1,6 +1,13 @@
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import DashboardChatPanel, {
   AI_CHAT_PET_CHANGED_EVENT,
   AI_CHAT_PET_STORAGE_KEY,
@@ -38,30 +45,24 @@ vi.mock('../../../../src/dashboardChat/sourcePageDrafts', () => ({
   prepareDashboardExternalSourcePageDraft: vi.fn(),
 }))
 
-vi.mock(
-  '../../../../src/components/study/StudyBlockView',
-  () => ({
-    __esModule: true,
-    renderMarkdown: (
-      value: string,
-      options?: {
-        renderCitation?: (
-          citationNumber: number,
-          key: string,
-        ) => React.ReactNode
-      },
-    ) => (
-      <span>
-        {value.split(/(\[\d+\])/).map((part, index) => {
-          const citation = part.match(/^\[(\d+)\]$/)
-          return citation && options?.renderCitation
-            ? options.renderCitation(Number(citation[1]), `${part}-${index}`)
-            : part
-        })}
-      </span>
-    ),
-  }),
-)
+vi.mock('../../../../src/components/study/StudyBlockView', () => ({
+  __esModule: true,
+  renderMarkdown: (
+    value: string,
+    options?: {
+      renderCitation?: (citationNumber: number, key: string) => React.ReactNode
+    },
+  ) => (
+    <span>
+      {value.split(/(\[\d+\])/).map((part, index) => {
+        const citation = part.match(/^\[(\d+)\]$/)
+        return citation && options?.renderCitation
+          ? options.renderCitation(Number(citation[1]), `${part}-${index}`)
+          : part
+      })}
+    </span>
+  ),
+}))
 
 const dashboardWithContext: StateDashboard = {
   id: 'dashboard-1',
@@ -340,6 +341,146 @@ describe('DashboardChatPanel quick create menu', () => {
         sourceScope: 'currentPage',
       }),
     )
+  })
+
+  it('adds pasted source without AI and uses it in later chat answers', async () => {
+    renderPanel({ dashboard: dashboardWithoutContext })
+
+    fireEvent.click(screen.getByRole('button', { name: /^Add source$/i }))
+    const dialog = screen.getByRole('dialog')
+    fireEvent.change(within(dialog).getByLabelText('Title (optional)'), {
+      target: { value: 'ATP notes' },
+    })
+    fireEvent.change(within(dialog).getByLabelText('Source text'), {
+      target: {
+        value:
+          'ATP stores usable energy for cells. Mitochondria produce ATP during cellular respiration.',
+      },
+    })
+    const addPastedSourceButton = within(dialog).getByRole('button', {
+      name: /^Add source$/i,
+    })
+    await waitFor(() => expect(addPastedSourceButton).toBeEnabled())
+    fireEvent.click(addPastedSourceButton)
+
+    expect(fetchDashboardExternalSource).not.toHaveBeenCalled()
+    expect(askDashboardSources).not.toHaveBeenCalled()
+    expect(await screen.findByText('ATP notes')).toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    )
+
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: 'How does ATP work?' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
+    expect(
+      vi.mocked(askDashboardSources).mock.calls[0][0].contextText,
+    ).toContain('ATP stores usable energy for cells.')
+  })
+
+  it('adds webpage source through extraction without asking AI', async () => {
+    renderPanel()
+
+    fireEvent.click(screen.getByRole('button', { name: /^Add source$/i }))
+    const dialog = screen.getByRole('dialog')
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: /^Webpage URL$/i }),
+    )
+    fireEvent.change(within(dialog).getByLabelText('Webpage URL'), {
+      target: { value: 'https://example.com/ansible' },
+    })
+    const addWebSourceButton = within(dialog).getByRole('button', {
+      name: /^Add source$/i,
+    })
+    await waitFor(() => expect(addWebSourceButton).toBeEnabled())
+    fireEvent.click(addWebSourceButton)
+
+    await waitFor(() =>
+      expect(fetchDashboardExternalSource).toHaveBeenCalledWith({
+        url: 'https://example.com/ansible',
+        dashboardTitle: 'Biology Dashboard',
+      }),
+    )
+    expect(askDashboardSources).not.toHaveBeenCalled()
+    expect(await screen.findByText('Ansible guide')).toBeInTheDocument()
+  })
+
+  it('limits added source context to the top three user sources per answer', async () => {
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === 'studymesh-dashboard-chat-sessions-dashboard-2'
+        ? JSON.stringify([
+            {
+              id: 'source-chat',
+              title: 'Source chat',
+              messages: [],
+              externalSources: [1, 2, 3, 4].map((index) => ({
+                id: `user-source-${index}`,
+                url: `studymesh://user-source/${index}`,
+                title: `Source ${index}`,
+                text: `Shared source content ${index}.`,
+                originType: 'user-text',
+                searchQuery: `Source ${index}`,
+                fetchedAt: index,
+              })),
+              createdAt: 1,
+              updatedAt: 1,
+            },
+          ])
+        : null,
+    )
+    renderPanel({ dashboard: dashboardWithoutContext })
+
+    await screen.findByText('Source 1')
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: 'summarize my sources' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
+    const contextText =
+      vi.mocked(askDashboardSources).mock.calls[0][0].contextText
+    expect(contextText).toContain('Source 1')
+    expect(contextText).toContain('Source 2')
+    expect(contextText).toContain('Source 3')
+    expect(contextText).not.toContain('Source 4')
+  })
+
+  it('removes added sources from later chat context', async () => {
+    renderPanel({ dashboard: dashboardWithoutContext })
+
+    fireEvent.click(screen.getByRole('button', { name: /^Add source$/i }))
+    const dialog = screen.getByRole('dialog')
+    fireEvent.change(within(dialog).getByLabelText('Title (optional)'), {
+      target: { value: 'Temporary notes' },
+    })
+    fireEvent.change(within(dialog).getByLabelText('Source text'), {
+      target: { value: 'Temporary source text with enough content to save.' },
+    })
+    const addPastedSourceButton = within(dialog).getByRole('button', {
+      name: /^Add source$/i,
+    })
+    await waitFor(() => expect(addPastedSourceButton).toBeEnabled())
+    fireEvent.click(addPastedSourceButton)
+
+    expect(await screen.findByText('Temporary notes')).toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    )
+    fireEvent.click(
+      screen.getByRole('button', { name: /^Remove source: Temporary notes$/i }),
+    )
+
+    expect(screen.queryByText('Temporary notes')).not.toBeInTheDocument()
+    expect(
+      screen.getByPlaceholderText('Add study material before chatting'),
+    ).toBeDisabled()
   })
 
   it('disables create when the dashboard has no chat context', () => {
@@ -735,7 +876,8 @@ describe('DashboardChatPanel chat management', () => {
         {
           id: 'assistant-1',
           role: 'assistant',
-          content: 'Photosynthesis stores energy [1]. Web context [12]. Unknown [9].',
+          content:
+            'Photosynthesis stores energy [1]. Web context [12]. Unknown [9].',
           createdAt: 1,
           sourceRefs: [
             {
@@ -1233,7 +1375,8 @@ describe('DashboardChatPanel chat management', () => {
                   title: 'Ansible guide',
                   text: 'Boilerplate only.',
                   guidePageDraftStatus: 'failed',
-                  guidePageDraftError: 'Source page draft was not clean enough.',
+                  guidePageDraftError:
+                    'Source page draft was not clean enough.',
                   searchQuery: 'Ansible',
                   fetchedAt: 1,
                 },

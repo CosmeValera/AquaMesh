@@ -37,6 +37,7 @@ export interface DashboardAnswerSourceRef {
   type: string
   textPreview: string
   origin?: 'dashboard' | 'web'
+  originType?: 'web' | 'user-text' | 'user-web'
   url?: string
   dashboardKey?: string
   dashboardTitle?: string
@@ -183,7 +184,10 @@ const isConversationalQuestion = (question: string): boolean => {
   )
 }
 
-const detectNeedsExternalSource = (answer: string, question: string): boolean => {
+const detectNeedsExternalSource = (
+  answer: string,
+  question: string,
+): boolean => {
   if (isConversationalQuestion(question)) {
     return false
   }
@@ -275,7 +279,10 @@ export const askDashboardSources = async (
     throw new Error('Choose a supported AI mode before asking the dashboard.')
   }
 
-  const needsExternalSource = detectNeedsExternalSource(answer, options.question)
+  const needsExternalSource = detectNeedsExternalSource(
+    answer,
+    options.question,
+  )
 
   const answerSourceChunks = options.sourceChunks.map((chunk, index) => ({
     chunk,
@@ -294,6 +301,7 @@ export const askDashboardSources = async (
           ? `${chunk.text.slice(0, 240).trim()}...`
           : chunk.text,
       origin: chunk.origin,
+      originType: chunk.originType,
       url: chunk.url,
       dashboardKey: chunk.dashboardKey,
       dashboardTitle: chunk.dashboardTitle,

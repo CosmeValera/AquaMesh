@@ -1,10 +1,14 @@
 import { isSupabaseConfigured, supabase } from '../auth/supabaseClient'
 
+export type DashboardExternalSourceOriginType = 'web' | 'user-text' | 'user-web'
+
 export interface DashboardExternalSource {
   id: string
   url: string
   title: string
   text: string
+  originType?: DashboardExternalSourceOriginType
+  trimmed?: boolean
   guidePageDraft?: DashboardExternalSourcePageDraft
   guidePageDraftStatus?: 'pending' | 'ready' | 'failed'
   guidePageDraftError?: string
@@ -31,6 +35,11 @@ export interface DashboardExternalSourceLookupRequest {
   contextSummary?: string
   rejectedUrls?: string[]
   rejectedDomains?: string[]
+}
+
+export interface DashboardExternalSourceUrlRequest {
+  url: string
+  dashboardTitle: string
 }
 
 interface DashboardSourceResponse {
@@ -71,7 +80,9 @@ const parseResponse = async (
 }
 
 export const fetchDashboardExternalSource = async (
-  request: DashboardExternalSourceLookupRequest,
+  request:
+    | DashboardExternalSourceLookupRequest
+    | DashboardExternalSourceUrlRequest,
 ): Promise<DashboardExternalSource[]> => {
   const accessToken = await getAccessToken()
   const response = await fetch(DASHBOARD_SOURCE_ENDPOINT, {

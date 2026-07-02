@@ -1,5 +1,6 @@
 import { DashboardLayout, StateDashboard } from '../state/store'
 import WidgetStorage from '../components/WidgetEditor/WidgetStorage'
+import type { DashboardExternalSourceOriginType } from './externalSources'
 
 export interface DashboardSourceChunk {
   id: string
@@ -7,6 +8,7 @@ export interface DashboardSourceChunk {
   type: string
   text: string
   origin?: 'dashboard' | 'web'
+  originType?: DashboardExternalSourceOriginType
   url?: string
   dashboardKey?: string
   dashboardTitle?: string

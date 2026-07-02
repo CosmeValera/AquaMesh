@@ -38,6 +38,7 @@ import StudyGuidePageEditor from './StudyGuidePageEditor'
 import { useNavigate } from 'react-router-dom'
 import StudyGuidePagesPanel from './StudyGuidePagesPanel'
 import { useInterfaceText } from '../../language/interfaceLanguage'
+import { renderMarkdownInline } from '../study/StudyBlockView'
 
 type PageIconTone = 'primary' | 'error'
 
@@ -208,7 +209,7 @@ const StudyGuideQuickStartCard = ({
                   {t('workspace.keyIdea')}
                 </Typography>
                 <Typography variant="body1" sx={{ lineHeight: 1.65 }}>
-                  {activeQuickStart.keyIdea}
+                  {renderMarkdownInline(activeQuickStart.keyIdea)}
                 </Typography>
               </Box>
               <Box>
@@ -229,7 +230,7 @@ const StudyGuideQuickStartCard = ({
                         color="text.secondary"
                         sx={{ lineHeight: 1.7 }}
                       >
-                        {paragraph}
+                        {renderMarkdownInline(paragraph)}
                       </Typography>
                     ),
                   )}

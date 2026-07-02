@@ -587,9 +587,10 @@ describe('Interactive Study Guide UX', () => {
     const studyPath = {
       ...createStudyPath(),
       quickStart: {
-        keyIdea: 'A data lake is raw shared storage plus tools for later use.',
+        keyIdea:
+          'A **data lake** is raw shared storage plus *tools* for later use.',
         quickSummary:
-          'First paragraph gives the learner a fast model.\n\nSecond paragraph adds a caveat without listing pages.',
+          'First paragraph uses `schema` as a fast model.\n\nSecond paragraph adds a caveat without listing pages.',
       },
     }
     const firstPage = studyPath.dashboards[0]
@@ -614,28 +615,29 @@ describe('Interactive Study Guide UX', () => {
     const quickStartCard = screen.getByTestId('study-guide-quick-start-card')
     expect(within(quickStartCard).getByText('Quick Start')).toBeInTheDocument()
     expect(within(quickStartCard).getByText('Key idea')).toBeInTheDocument()
-    expect(
-      within(quickStartCard).getByText(
-        'A data lake is raw shared storage plus tools for later use.',
-      ),
-    ).toBeInTheDocument()
+    expect(quickStartCard.textContent).toContain(
+      'A data lake is raw shared storage plus tools for later use.',
+    )
+    expect(quickStartCard.querySelector('strong')?.textContent).toBe(
+      'data lake',
+    )
+    expect(quickStartCard.querySelector('em')?.textContent).toBe('tools')
+    expect(quickStartCard.querySelector('code')?.textContent).toBe('schema')
+    expect(quickStartCard.textContent).not.toContain('**')
+    expect(quickStartCard.textContent).not.toContain('`schema`')
     expect(screen.getByText('Main page body starts here.')).toBeInTheDocument()
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Collapse Quick Start' }),
     )
-    expect(
-      screen.queryByText(
-        'A data lake is raw shared storage plus tools for later use.',
-      ),
-    ).not.toBeInTheDocument()
+    expect(quickStartCard.textContent).not.toContain(
+      'A data lake is raw shared storage plus tools for later use.',
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'Expand Quick Start' }))
-    expect(
-      screen.getByText(
-        'A data lake is raw shared storage plus tools for later use.',
-      ),
-    ).toBeInTheDocument()
+    expect(quickStartCard.textContent).toContain(
+      'A data lake is raw shared storage plus tools for later use.',
+    )
 
     rerender(
       <MemoryRouter>

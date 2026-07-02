@@ -566,7 +566,7 @@ const citationNumbersFromMatch = (
   return citationMatch[2].split('').map((digit) => Number(digit))
 }
 
-const renderMarkdownInline = (
+export const renderMarkdownInline = (
   value: string,
   options: RenderMarkdownOptions = {},
 ): React.ReactNode[] => {

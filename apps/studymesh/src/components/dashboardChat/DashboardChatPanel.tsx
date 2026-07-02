@@ -76,6 +76,8 @@ import { useInterfaceText } from '../../language/interfaceLanguage'
 
 export type { DashboardAnswerSourceRef } from '../../dashboardChat/askDashboard'
 
+const MIN_RESIZED_CHAT_COMPOSER_HEIGHT = 148
+
 export interface DashboardChatMessage {
   id: string
   role: 'user' | 'assistant'
@@ -448,7 +450,9 @@ const DashboardChatPanel = ({
   })
   const [quickCreateSearch, setQuickCreateSearch] = useState('')
   const [replyScrollBufferActive, setReplyScrollBufferActive] = useState(false)
-  const [chatComposerHeight, setChatComposerHeight] = useState(108)
+  const [chatComposerHeight, setChatComposerHeight] = useState(
+    MIN_RESIZED_CHAT_COMPOSER_HEIGHT,
+  )
   const [chatComposerResized, setChatComposerResized] = useState(false)
   const [draftHasMultipleLines, setDraftHasMultipleLines] = useState(false)
   const [externalSourcePrompt, setExternalSourcePrompt] =
@@ -1352,7 +1356,7 @@ const DashboardChatPanel = ({
     measureDraftLines()
     if (draft.length === 0) {
       setChatComposerResized(false)
-      setChatComposerHeight(108)
+      setChatComposerHeight(MIN_RESIZED_CHAT_COMPOSER_HEIGHT)
     }
   }, [draft])
 
@@ -1367,7 +1371,12 @@ const DashboardChatPanel = ({
       const maxHeight = Math.max(160, Math.floor(panelHeight * 0.48))
       const nextHeight =
         dragState.startHeight + dragState.startY - event.clientY
-      setChatComposerHeight(Math.min(Math.max(nextHeight, 108), maxHeight))
+      setChatComposerHeight(
+        Math.min(
+          Math.max(nextHeight, MIN_RESIZED_CHAT_COMPOSER_HEIGHT),
+          maxHeight,
+        ),
+      )
     }
 
     const handlePointerUp = () => {
@@ -3757,7 +3766,9 @@ const DashboardChatPanel = ({
               ? chatComposerHeight
               : 'auto',
           minHeight:
-            draftHasMultipleLines && chatComposerResized ? 108 : undefined,
+            draftHasMultipleLines && chatComposerResized
+              ? MIN_RESIZED_CHAT_COMPOSER_HEIGHT
+              : undefined,
           maxHeight:
             draftHasMultipleLines && chatComposerResized ? '48%' : undefined,
         }}
@@ -3775,54 +3786,12 @@ const DashboardChatPanel = ({
           </Typography>
         ) : null}
         <Stack
-          direction="row"
           spacing={1}
-          alignItems="stretch"
           sx={{
             height:
               draftHasMultipleLines && chatComposerResized ? '100%' : 'auto',
           }}
         >
-          {onQuickCreatePage ? (
-            <Tooltip title={t('chat.create')}>
-              <span>
-                <IconButton
-                  size="small"
-                  aria-label={t('chat.create')}
-                  disabled={!hasContext || Boolean(quickCreateActionId)}
-                  onClick={(event) =>
-                    setQuickCreateMenuAnchor(event.currentTarget)
-                  }
-                  aria-haspopup="menu"
-                  aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
-                  sx={{
-                    height: 40,
-                    minHeight: 40,
-                    width: 40,
-                    alignSelf: 'flex-end',
-                    flex: '0 0 auto',
-                    borderRadius: 1,
-                    border: 1,
-                    borderColor: 'divider',
-                    color: 'text.secondary',
-                    bgcolor: 'background.paper',
-                    '&:hover': {
-                      borderColor: alpha(theme.palette.primary.main, 0.32),
-                      color: 'primary.main',
-                      bgcolor: alpha(theme.palette.primary.main, 0.05),
-                    },
-                    '&.Mui-disabled': {
-                      borderColor: 'divider',
-                      color: 'text.disabled',
-                      bgcolor: 'action.disabledBackground',
-                    },
-                  }}
-                >
-                  <AddCircleOutlineIcon fontSize="small" />
-                </IconButton>
-              </span>
-            </Tooltip>
-          ) : null}
           <TextField
             inputRef={draftInputRef}
             value={draft}
@@ -3849,6 +3818,79 @@ const DashboardChatPanel = ({
               }
             }}
           />
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent={onQuickCreatePage ? 'space-between' : 'flex-end'}
+            sx={{ flex: '0 0 auto' }}
+          >
+            {onQuickCreatePage ? (
+              <Tooltip title={t('chat.create')}>
+                <span>
+                  <IconButton
+                    size="small"
+                    aria-label={t('chat.create')}
+                    disabled={!hasContext || Boolean(quickCreateActionId)}
+                    onClick={(event) =>
+                      setQuickCreateMenuAnchor(event.currentTarget)
+                    }
+                    aria-haspopup="menu"
+                    aria-expanded={quickCreateMenuOpen ? 'true' : undefined}
+                    sx={{
+                      height: 40,
+                      minHeight: 40,
+                      width: 40,
+                      flex: '0 0 auto',
+                      borderRadius: 1,
+                      border: 1,
+                      borderColor: 'divider',
+                      color: 'text.secondary',
+                      bgcolor: 'background.paper',
+                      '&:hover': {
+                        borderColor: alpha(theme.palette.primary.main, 0.32),
+                        color: 'primary.main',
+                        bgcolor: alpha(theme.palette.primary.main, 0.05),
+                      },
+                      '&.Mui-disabled': {
+                        borderColor: 'divider',
+                        color: 'text.disabled',
+                        bgcolor: 'action.disabledBackground',
+                      },
+                    }}
+                  >
+                    <AddCircleOutlineIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            ) : null}
+            <IconButton
+              color="primary"
+              onClick={() => sendQuestion(draft)}
+              disabled={!hasContext || !draft.trim()}
+              aria-label="Send dashboard question"
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 1,
+                bgcolor:
+                  hasContext && draft.trim()
+                    ? 'primary.main'
+                    : 'action.disabledBackground',
+                color:
+                  hasContext && draft.trim()
+                    ? 'primary.contrastText'
+                    : 'text.disabled',
+                '&:hover': {
+                  bgcolor:
+                    hasContext && draft.trim()
+                      ? 'primary.dark'
+                      : 'action.disabledBackground',
+                },
+              }}
+            >
+              <SendIcon />
+            </IconButton>
+          </Stack>
           {onQuickCreatePage ? (
             <>
               {isMobile ? (
@@ -3889,33 +3931,6 @@ const DashboardChatPanel = ({
               )}
             </>
           ) : null}
-          <IconButton
-            color="primary"
-            onClick={() => sendQuestion(draft)}
-            disabled={!hasContext || !draft.trim()}
-            aria-label="Send dashboard question"
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: 1,
-              bgcolor:
-                hasContext && draft.trim()
-                  ? 'primary.main'
-                  : 'action.disabledBackground',
-              color:
-                hasContext && draft.trim()
-                  ? 'primary.contrastText'
-                  : 'text.disabled',
-              '&:hover': {
-                bgcolor:
-                  hasContext && draft.trim()
-                    ? 'primary.dark'
-                    : 'action.disabledBackground',
-              },
-            }}
-          >
-            <SendIcon />
-          </IconButton>
         </Stack>
       </Box>
     </Box>

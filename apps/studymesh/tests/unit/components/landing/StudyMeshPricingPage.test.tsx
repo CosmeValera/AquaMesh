@@ -9,9 +9,7 @@ import { MemoryRouter } from 'react-router-dom'
 import StudyMeshPricingPage from '../../../../src/components/landing/StudyMeshPricingPage'
 import { createStudyMeshTheme } from '../../../../src/theme'
 
-const renderPricingPage = (
-  theme = createStudyMeshTheme('light'),
-) => {
+const renderPricingPage = (theme = createStudyMeshTheme('light')) => {
   return render(
     <MemoryRouter>
       <ThemeProvider theme={theme}>
@@ -42,7 +40,9 @@ describe('StudyMeshPricingPage', () => {
     expect(screen.queryByText(/strong ai quality/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/good privacy path/i)).not.toBeInTheDocument()
 
-    expect(screen.getByText(/Study Credits pay for hosted generation/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Study Credits pay for hosted generation/i),
+    ).toBeInTheDocument()
     expect(screen.getByLabelText('80 Study Credits')).toBeInTheDocument()
     expect(screen.getByText('2 EUR')).toBeInTheDocument()
     expect(screen.getByText('40 credits / EUR')).toBeInTheDocument()
@@ -65,17 +65,12 @@ describe('StudyMeshPricingPage', () => {
     expect(
       screen.getByText(/only increase through completed credit purchases/i),
     ).toBeInTheDocument()
-    expect(
-      screen.getByText(/study guides cost/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/study guides cost/i)).toBeInTheDocument()
     expect(screen.queryByText(/\bSC\b/)).not.toBeInTheDocument()
 
-    const creditLinks = [
-      screen.getByRole('link', { name: /buy credits \(80\)/i }),
-      screen.getByRole('link', { name: /buy credits \(250\)/i }),
-      screen.getByRole('link', { name: /buy credits \(600\)/i }),
-    ]
-    creditLinks.forEach((button) => {
+    const signupButtons = screen.getAllByRole('link', { name: /^sign up$/i })
+    expect(signupButtons).toHaveLength(3)
+    signupButtons.forEach((button) => {
       expect(button).toHaveAttribute('href', '/signup')
     })
 
@@ -84,14 +79,12 @@ describe('StudyMeshPricingPage', () => {
     expect(screen.queryByText(/higher hourly limits/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/one-time 2/i)).not.toBeInTheDocument()
 
-    expect(screen.getByRole('link', { name: /knowledge bridge/i })).toHaveAttribute(
-      'href',
-      '/#knowledge-context',
-    )
-    expect(screen.getByRole('link', { name: /growing guides/i })).toHaveAttribute(
-      'href',
-      '/#growing-guide',
-    )
+    expect(
+      screen.getByRole('link', { name: /knowledge bridge/i }),
+    ).toHaveAttribute('href', '/#knowledge-context')
+    expect(
+      screen.getByRole('link', { name: /growing guides/i }),
+    ).toHaveAttribute('href', '/#growing-guide')
   })
 
   it('keeps fixed pricing colors under dark mode and custom accent', () => {

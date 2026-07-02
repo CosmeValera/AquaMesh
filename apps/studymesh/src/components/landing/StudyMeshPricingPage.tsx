@@ -346,7 +346,6 @@ const StudyMeshPricingPage = () => {
                     <Grid item xs={12} md={4} key={pack.id}>
                       <Box
                         sx={{
-                          height: '100%',
                           borderRadius: 2.5,
                           ...(isPremium && {
                             p: '2px',
@@ -372,18 +371,15 @@ const StudyMeshPricingPage = () => {
                             overflow: 'hidden',
                             display: 'flex',
                             flexDirection: 'column',
-                            height: '100%',
-                            minHeight: 318,
+                            minHeight: 0,
                             p: 2,
-                            borderRadius: isPremium
-                              ? 'calc(20px - 2px)'
-                              : 2.5,
+                            borderRadius: isPremium ? 'calc(20px - 2px)' : 2.5,
                             borderWidth: highlighted && !isPremium ? 2 : 1,
                             borderColor: isPremium
                               ? 'transparent'
                               : highlighted
-                              ? '#008575'
-                              : 'divider',
+                                ? '#008575'
+                                : 'divider',
                             bgcolor: 'background.paper',
                             backgroundImage: isPremium
                               ? 'radial-gradient(circle at 92% 8%, rgba(34,211,238,0.20), transparent 42%), radial-gradient(circle at 4% 94%, rgba(124,58,237,0.20), transparent 48%)'
@@ -405,7 +401,7 @@ const StudyMeshPricingPage = () => {
                             },
                           }}
                         >
-                          <Stack spacing={1.35} height="100%">
+                          <Stack spacing={1.35}>
                             <Stack
                               direction="row"
                               alignItems="center"
@@ -465,7 +461,18 @@ const StudyMeshPricingPage = () => {
                                 {packValueLabel(pack.credits, pack.priceCents)}
                               </Typography>
                             </Stack>
-                            <Stack spacing={0.75} sx={{ mt: 0.75 }}>
+                            <Stack
+                              spacing={0.75}
+                              sx={{
+                                mt: 0.45,
+                                py: 1,
+                                px: 1.1,
+                                borderRadius: 1.5,
+                                bgcolor: alpha('#008575', 0.045),
+                                border: '1px solid',
+                                borderColor: alpha('#008575', 0.11),
+                              }}
+                            >
                               {[
                                 'No API key to manage',
                                 'Use for Study Guides',
@@ -494,7 +501,6 @@ const StudyMeshPricingPage = () => {
                               variant="outlined"
                               href="/signup"
                               sx={{
-                                mt: 'auto',
                                 py: 0.9,
                                 px: 1.5,
                                 borderRadius: 1.5,
@@ -510,7 +516,7 @@ const StudyMeshPricingPage = () => {
                                 },
                               }}
                             >
-                              Buy credits ({pack.credits})
+                              Sign up
                             </Button>
                           </Stack>
                         </Paper>
@@ -536,9 +542,11 @@ const StudyMeshPricingPage = () => {
                   <CreditAmount amount={HOSTED_AI_INITIAL_FREE_CREDITS} />.
                   After that, Study Credits only increase through completed
                   credit purchases. Study Guides cost{' '}
-                  <CreditAmount amount={getHostedAiCreditCost('study-guide')} />;
-                  Quick Create and chat cost{' '}
-                  <CreditAmount amount={getHostedAiCreditCost('quick-create')} />
+                  <CreditAmount amount={getHostedAiCreditCost('study-guide')} />
+                  ; Quick Create and chat cost{' '}
+                  <CreditAmount
+                    amount={getHostedAiCreditCost('quick-create')}
+                  />
                   .
                 </Typography>
               </Paper>

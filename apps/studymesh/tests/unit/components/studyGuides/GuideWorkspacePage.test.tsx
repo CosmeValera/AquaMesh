@@ -9,18 +9,29 @@ import GuideWorkspacePage, {
 import {
   STUDY_GUIDES_STORAGE_FULL_MESSAGE,
   STUDY_GUIDES_STORAGE_KEY,
+  STUDY_GUIDES_SUMMARY_STORAGE_KEY,
 } from '../../../../src/studyGuides/storage'
+
+const guideWorkspaceAuthMocks = vi.hoisted(() => ({
+  user: null as { id: string } | null,
+}))
 
 const guideWorkspaceCloudMocks = vi.hoisted(() => ({
   getStudyGuide: vi.fn(),
 }))
 
+const guideWorkspaceSupabaseMocks = vi.hoisted(() => ({
+  isSupabaseConfigured: false,
+}))
+
 vi.mock('../../../../src/auth/AuthProvider', () => ({
-  useAuth: () => ({ user: null }),
+  useAuth: () => ({ user: guideWorkspaceAuthMocks.user }),
 }))
 
 vi.mock('../../../../src/auth/supabaseClient', () => ({
-  isSupabaseConfigured: false,
+  get isSupabaseConfigured() {
+    return guideWorkspaceSupabaseMocks.isSupabaseConfigured
+  },
   supabase: {},
 }))
 
@@ -131,7 +142,10 @@ describe('GuideWorkspacePage responsive sections', () => {
   })
 
   beforeEach(() => {
+    guideWorkspaceAuthMocks.user = null
+    guideWorkspaceSupabaseMocks.isSupabaseConfigured = false
     dashboardChatPanelSpy.mockClear()
+    guideWorkspaceCloudMocks.getStudyGuide.mockReset()
     vi.mocked(localStorage.setItem).mockClear()
     vi.mocked(window.matchMedia).mockImplementation((query) => ({
       matches: query.includes('max-width'),
@@ -145,6 +159,52 @@ describe('GuideWorkspacePage responsive sections', () => {
     }))
     vi.mocked(localStorage.getItem).mockImplementation((key) =>
       key === STUDY_GUIDES_STORAGE_KEY ? JSON.stringify([storedGuide]) : null,
+    )
+  })
+
+  it('renders the lazy-loaded full Study Guide after starting from summary cache only', async () => {
+    guideWorkspaceAuthMocks.user = { id: 'user-1' }
+    guideWorkspaceSupabaseMocks.isSupabaseConfigured = true
+    guideWorkspaceCloudMocks.getStudyGuide.mockResolvedValue(storedGuide)
+    vi.mocked(localStorage.getItem).mockImplementation((key) => {
+      if (key === STUDY_GUIDES_STORAGE_KEY) {
+        return null
+      }
+      if (key === STUDY_GUIDES_SUMMARY_STORAGE_KEY) {
+        return JSON.stringify([
+          {
+            id: storedGuide.id,
+            title: storedGuide.title,
+            folderName: storedGuide.folderName,
+            pageCount: storedGuide.studyPath.dashboards.length,
+            firstPageTitle: storedGuide.studyPath.dashboards[0]?.name,
+            createdAt: storedGuide.createdAt,
+            updatedAt: storedGuide.updatedAt,
+          },
+        ])
+      }
+      return null
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <Routes>
+          <Route
+            path="/workspace/:studyGuideId"
+            element={<GuideWorkspacePage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Loading Study Guide...')).toBeInTheDocument()
+    expect(await screen.findByTestId('study-guide-panel')).toHaveTextContent(
+      'Core lesson',
+    )
+    expect(screen.queryByText('Loading Study Guide...')).not.toBeInTheDocument()
+    expect(guideWorkspaceCloudMocks.getStudyGuide).toHaveBeenCalledWith(
+      'user-1',
+      'guide-1',
     )
   })
 

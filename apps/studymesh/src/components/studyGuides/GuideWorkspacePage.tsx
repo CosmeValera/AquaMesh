@@ -185,15 +185,18 @@ const GuideWorkspacePage = () => {
           return
         }
         if (isOpenableStudyGuideRecord(cloudRecord)) {
+          setLoadingRemoteRecord(false)
           setRecord(StudyGuideStorage.cacheFromCloud(cloudRecord))
           setNotFound(false)
         } else {
+          setLoadingRemoteRecord(false)
           setNotFound(true)
         }
       })
       .catch((error) => {
         if (!cancelled) {
           console.error('Failed to load Study Guide from cloud', error)
+          setLoadingRemoteRecord(false)
           setNotFound(true)
         }
       })
@@ -701,33 +704,6 @@ const GuideWorkspacePage = () => {
               </Button>
             </Paper>
           </Box>
-        ) : loadingRemoteRecord ? (
-          <Box
-            sx={{
-              height: '100%',
-              display: 'grid',
-              placeItems: 'center',
-              bgcolor: 'background.default',
-              p: 2,
-            }}
-          >
-            <Paper
-              elevation={0}
-              sx={{
-                width: 'min(420px, 100%)',
-                p: 4,
-                borderRadius: 3,
-                border: 1,
-                borderColor: 'divider',
-                textAlign: 'center',
-              }}
-            >
-              <CircularProgress size={28} />
-              <Typography color="text.secondary" sx={{ mt: 2 }}>
-                Loading Study Guide...
-              </Typography>
-            </Paper>
-          </Box>
         ) : record ? (
           <Box
             sx={{
@@ -906,6 +882,33 @@ const GuideWorkspacePage = () => {
                 </Box>
               </Box>
             )}
+          </Box>
+        ) : loadingRemoteRecord ? (
+          <Box
+            sx={{
+              height: '100%',
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: 'background.default',
+              p: 2,
+            }}
+          >
+            <Paper
+              elevation={0}
+              sx={{
+                width: 'min(420px, 100%)',
+                p: 4,
+                borderRadius: 3,
+                border: 1,
+                borderColor: 'divider',
+                textAlign: 'center',
+              }}
+            >
+              <CircularProgress size={28} />
+              <Typography color="text.secondary" sx={{ mt: 2 }}>
+                Loading Study Guide...
+              </Typography>
+            </Paper>
           </Box>
         ) : null}
         <HostedAiIntroModal />

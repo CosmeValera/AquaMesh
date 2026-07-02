@@ -374,6 +374,8 @@ describe('workspace cloud repository', () => {
         folder_name: 'Physics',
         description: null,
         emoji: '⚛️',
+        page_count: 0,
+        first_page_title: null,
         study_path: {
           pathId: 'guide-1',
           title: 'Physics Guide',
@@ -423,6 +425,8 @@ describe('workspace cloud repository', () => {
         title: 'Physics Guide',
         folder_name: 'Physics',
         emoji: '⚛️',
+        page_count: 0,
+        first_page_title: null,
       }),
       { onConflict: 'owner_id,id' },
     )
@@ -451,6 +455,8 @@ describe('workspace cloud repository', () => {
           folder_name: 'Algebra',
           description: 'Linear equations prompt',
           emoji: '🔢',
+          page_count: 3,
+          first_page_title: 'Intro',
           created_at: '2026-06-01T10:00:00.000Z',
           updated_at: '2026-06-02T10:00:00.000Z',
         },
@@ -478,7 +484,7 @@ describe('workspace cloud repository', () => {
     const bundle = await repository.loadWorkspaceBundle('user-1')
 
     expect(studyGuideBuilder.select).toHaveBeenCalledWith(
-      'id,owner_id,title,folder_name,description,emoji,created_at,updated_at',
+      'id,owner_id,title,folder_name,description,emoji,page_count,first_page_title,created_at,updated_at',
     )
     expect(bundle.studyGuides).toEqual([
       expect.objectContaining({
@@ -486,6 +492,8 @@ describe('workspace cloud repository', () => {
         title: 'Cloud Algebra',
         folderName: 'Algebra',
         description: 'Linear equations prompt',
+        pageCount: 3,
+        firstPageTitle: 'Intro',
       }),
     ])
   })

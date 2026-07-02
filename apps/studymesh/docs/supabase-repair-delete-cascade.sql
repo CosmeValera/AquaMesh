@@ -15,6 +15,8 @@ create table if not exists public.user_study_guides (
   folder_name text not null default 'Study Guide',
   description text,
   emoji text,
+  page_count integer,
+  first_page_title text,
   study_path jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -22,7 +24,16 @@ create table if not exists public.user_study_guides (
 );
 
 alter table public.user_study_guides
-  add column if not exists emoji text;
+  add column if not exists emoji text,
+  add column if not exists page_count integer,
+  add column if not exists first_page_title text;
+
+update public.user_study_guides
+set
+  page_count = coalesce(jsonb_array_length(study_path -> 'dashboards'), 0),
+  first_page_title = study_path -> 'dashboards' -> 0 ->> 'name'
+where page_count is null
+  and jsonb_typeof(study_path -> 'dashboards') = 'array';
 
 -- Remove rows for profiles/Auth users that no longer exist. App tables are
 -- profile-owned, and profiles cascade from auth.users.

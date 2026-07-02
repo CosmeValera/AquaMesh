@@ -115,6 +115,8 @@ export interface StudyGuideRow {
   folder_name: string
   description?: string | null
   emoji?: string | null
+  page_count?: number | null
+  first_page_title?: string | null
   study_path: CloudJson
   created_at: string
   updated_at: string
@@ -127,6 +129,8 @@ export interface StudyGuideSummaryRow {
   folder_name: string
   description?: string | null
   emoji?: string | null
+  page_count?: number | null
+  first_page_title?: string | null
   created_at: string
   updated_at: string
 }
@@ -321,6 +325,8 @@ const studyGuideSummaryFromRow = (
   folderName: row.folder_name,
   description: row.description || undefined,
   emoji: row.emoji || undefined,
+  pageCount: row.page_count ?? undefined,
+  firstPageTitle: row.first_page_title || undefined,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 })
@@ -343,12 +349,20 @@ const studyGuideSummaryToRow = (
   summary: StudyGuideSummary,
 ): Pick<
   StudyGuideSummaryRow,
-  'title' | 'folder_name' | 'description' | 'emoji' | 'updated_at'
+  | 'title'
+  | 'folder_name'
+  | 'description'
+  | 'emoji'
+  | 'page_count'
+  | 'first_page_title'
+  | 'updated_at'
 > => ({
   title: summary.title,
   folder_name: summary.folderName,
   description: summary.description,
   emoji: summary.emoji,
+  page_count: summary.pageCount ?? null,
+  first_page_title: summary.firstPageTitle || null,
   updated_at: summary.updatedAt || nowIso(),
 })
 
@@ -362,6 +376,8 @@ const studyGuideToRow = (
   folder_name: studyGuide.folderName,
   description: studyGuide.description,
   emoji: studyGuide.emoji || studyGuide.studyPath.emoji,
+  page_count: studyGuide.studyPath.dashboards.length,
+  first_page_title: studyGuide.studyPath.dashboards[0]?.name || null,
   study_path: toCloudJson(studyGuide.studyPath),
   created_at: studyGuide.createdAt,
   updated_at: studyGuide.updatedAt || nowIso(),
@@ -666,7 +682,7 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
       client
         .from('user_study_guides')
         .select(
-          'id,owner_id,title,folder_name,description,emoji,created_at,updated_at',
+          'id,owner_id,title,folder_name,description,emoji,page_count,first_page_title,created_at,updated_at',
         )
         .eq('owner_id', ownerId)
         .order('updated_at', { ascending: false }),

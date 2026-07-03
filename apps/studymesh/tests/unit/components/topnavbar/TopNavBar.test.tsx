@@ -22,6 +22,7 @@ const hostedAiStatus = vi.hoisted(() => ({
     'study-guide': 2,
     'quick-create': 1,
     chat: 1,
+    podcast: 1,
   },
 }))
 
@@ -333,10 +334,11 @@ describe('TopNavBar Component', () => {
             studyCredits: 8,
             initialFreeCredits: 20,
             costs: {
-              'study-guide': 2,
-              'quick-create': 1,
-              chat: 1,
-            },
+        'study-guide': 2,
+        'quick-create': 1,
+        chat: 1,
+        podcast: 1,
+      },
           },
         }),
       }),

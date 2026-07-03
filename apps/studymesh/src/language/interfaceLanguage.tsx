@@ -299,6 +299,9 @@ const translations = {
     'chat.quickCreateFlashcards': 'Flashcards',
     'chat.quickCreateFlashcardsDescription':
       'Create recall cards for key terms and ideas.',
+    'chat.quickCreatePodcast': 'Podcast',
+    'chat.quickCreatePodcastDescription':
+      'Create a short audio recap from this material.',
     'chat.quickCreateExpand': 'Expand on this',
     'chat.quickCreateExpandDescription':
       'Turn this material into clearer study notes.',
@@ -715,6 +718,9 @@ const translations = {
     'chat.quickCreateFlashcards': 'Tarjetas de repaso',
     'chat.quickCreateFlashcardsDescription':
       'Crea tarjetas de repaso para términos e ideas clave.',
+    'chat.quickCreatePodcast': 'Podcast',
+    'chat.quickCreatePodcastDescription':
+      'Crea un breve repaso en audio desde este material.',
     'chat.quickCreateExpand': 'Ampliar esto',
     'chat.quickCreateExpandDescription':
       'Convierte este material en apuntes de estudio más claros.',
@@ -1144,6 +1150,9 @@ const translationOverrides: Record<
     'chat.quickCreateFlashcards': 'Flashcards',
     'chat.quickCreateFlashcardsDescription':
       'Créer des cartes de révision pour les termes et idées clés.',
+    'chat.quickCreatePodcast': 'Podcast',
+    'chat.quickCreatePodcastDescription':
+      'Créer un court récapitulatif audio à partir de ce matériel.',
     'chat.quickCreateExpand': 'Développer ceci',
     'chat.quickCreateExpandDescription':
       'Transformer ce matériel en notes d’étude plus claires.',
@@ -1566,6 +1575,9 @@ const translationOverrides: Record<
     'chat.quickCreateFlashcards': 'Karteikarten',
     'chat.quickCreateFlashcardsDescription':
       'Karteikarten für Schlüsselbegriffe und Ideen erstellen.',
+    'chat.quickCreatePodcast': 'Podcast',
+    'chat.quickCreatePodcastDescription':
+      'Eine kurze Audio-Zusammenfassung aus diesem Material erstellen.',
     'chat.quickCreateExpand': 'Dies erweitern',
     'chat.quickCreateExpandDescription':
       'Dieses Material in klarere Lernnotizen umwandeln.',

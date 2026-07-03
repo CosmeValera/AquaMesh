@@ -10,12 +10,13 @@ export const HOSTED_AI_VISUAL_SPEND_EVENT = 'studymesh-hosted-ai-visual-spend'
 export const HOSTED_AI_INSUFFICIENT_CREDITS_EVENT =
   'studymesh-hosted-ai-insufficient-credits'
 
-export type HostedAiSurface = 'study-guide' | 'quick-create' | 'chat'
+export type HostedAiSurface = 'study-guide' | 'quick-create' | 'chat' | 'podcast'
 
 export const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
   'study-guide': 2,
   'quick-create': 1,
   chat: 1,
+  podcast: 1,
 }
 
 export const HOSTED_AI_INITIAL_FREE_CREDITS = 20
@@ -79,7 +80,12 @@ export interface HostedAiGatewayPart {
 }
 
 export interface HostedAiGatewayRequest {
-  action: 'status' | 'markIntroSeen' | 'generate' | 'generateWithQuickStart'
+  action:
+    | 'status'
+    | 'markIntroSeen'
+    | 'generate'
+    | 'generateWithQuickStart'
+    | 'generatePodcast'
   surface?: HostedAiSurface
   model?: string
   outputLanguage?: StudyMeshLanguageCode
@@ -89,6 +95,35 @@ export interface HostedAiGatewayRequest {
   quickStartOptions?: {
     userKnownTopics?: string[]
   }
+  podcastOptions?: {
+    studyGuideId: string
+    sourceTitle: string
+    sourceScope: 'studyGuide' | 'currentPage'
+  }
+}
+
+export interface HostedAiPodcastTranscriptTurn {
+  speaker: 'hostA' | 'hostB'
+  text: string
+}
+
+export interface HostedAiPodcastChapter {
+  title: string
+  startTurn: number
+}
+
+export interface HostedAiPodcast {
+  id: string
+  title: string
+  description: string
+  durationSeconds: number
+  audioPath: string
+  mimeType: string
+  transcriptTurns: HostedAiPodcastTranscriptTurn[]
+  chapters: HostedAiPodcastChapter[]
+  sourceTitle: string
+  sourceScope: 'studyGuide' | 'currentPage'
+  createdAt: string
 }
 
 export interface HostedAiGatewayResponse {
@@ -96,6 +131,7 @@ export interface HostedAiGatewayResponse {
   text?: string
   quickStart?: StudyGuideQuickStart
   bridgeBlocks?: StudyGuideKnowledgeBridgeBlock[]
+  podcast?: HostedAiPodcast
   status?: HostedAiStatus
   error?: {
     code:

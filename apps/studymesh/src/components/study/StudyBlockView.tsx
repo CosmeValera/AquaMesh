@@ -33,6 +33,10 @@ import {
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
 import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 import StudyCreditIcon from '../hostedAi/StudyCreditIcon'
+import {
+  getHostedAiPodcastAudioUrl,
+  type HostedAiPodcast,
+} from '../../quickCreate/ai'
 import type { DashboardLayout } from '../../state/store'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 interface StudyBlockViewProps {
@@ -78,6 +82,7 @@ const STUDY_BLOCK_TYPES = [
   'QuizCarouselBlock',
   'FocusedFlashcardSessionBlock',
   'FocusedQuizSessionBlock',
+  'PodcastBlock',
 ]
 
 export const isStudyBlockType = (type: string) =>
@@ -460,6 +465,71 @@ const toStringArray = (value: unknown): string[] => {
   }
 
   return []
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+
+const toPodcastTranscriptTurns = (
+  value: unknown,
+): HostedAiPodcast['transcriptTurns'] =>
+  Array.isArray(value)
+    ? value
+        .filter(isRecord)
+        .map((turn) => ({
+          speaker: turn.speaker === 'hostB' ? 'hostB' : 'hostA',
+          text: String(turn.text || '').trim(),
+        }))
+        .filter((turn) => turn.text)
+    : []
+
+const toPodcastChapters = (value: unknown): HostedAiPodcast['chapters'] =>
+  Array.isArray(value)
+    ? value
+        .filter(isRecord)
+        .map((chapter) => ({
+          title: String(chapter.title || '').trim(),
+          startTurn:
+            typeof chapter.startTurn === 'number'
+              ? chapter.startTurn
+              : Number(chapter.startTurn) || 0,
+        }))
+        .filter((chapter) => chapter.title)
+    : []
+
+const toHostedAiPodcast = (value: unknown): HostedAiPodcast | null => {
+  if (!isRecord(value)) {
+    return null
+  }
+
+  const audioPath = String(value.audioPath || '').trim()
+  const transcriptTurns = toPodcastTranscriptTurns(value.transcriptTurns)
+  if (!audioPath || transcriptTurns.length === 0) {
+    return null
+  }
+
+  return {
+    id: String(value.id || `podcast-${hashValue(audioPath)}`),
+    title: String(value.title || 'Podcast'),
+    description: String(value.description || ''),
+    durationSeconds:
+      typeof value.durationSeconds === 'number' ? value.durationSeconds : 0,
+    audioPath,
+    mimeType: String(value.mimeType || 'audio/mpeg'),
+    transcriptTurns,
+    chapters: toPodcastChapters(value.chapters),
+    sourceTitle: String(value.sourceTitle || ''),
+    sourceScope:
+      value.sourceScope === 'currentPage' ? 'currentPage' : 'studyGuide',
+    createdAt: String(value.createdAt || ''),
+  }
+}
+
+const formatDuration = (seconds: number): string => {
+  const safeSeconds = Math.max(0, Math.round(seconds))
+  const minutes = Math.floor(safeSeconds / 60)
+  const remainingSeconds = safeSeconds % 60
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }
 
 const toFourOptions = (value: unknown): string[] => {
@@ -1075,10 +1145,47 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   const [reviewStatus, setReviewStatus] = useState(
     String(props.status || 'needsReview'),
   )
+  const podcast = useMemo(
+    () => toHostedAiPodcast(props.podcast),
+    [props.podcast],
+  )
+  const [podcastAudioUrl, setPodcastAudioUrl] = useState('')
+  const [podcastAudioError, setPodcastAudioError] = useState('')
 
   useEffect(() => {
     setQuizHintOpen(false)
   }, [focusedQuestionIndex, selectedIndex, type])
+
+  useEffect(() => {
+    if (type !== 'PodcastBlock' || !podcast?.audioPath) {
+      setPodcastAudioUrl('')
+      setPodcastAudioError('')
+      return
+    }
+
+    let cancelled = false
+    setPodcastAudioUrl('')
+    setPodcastAudioError('')
+    getHostedAiPodcastAudioUrl(podcast.audioPath)
+      .then((signedUrl) => {
+        if (!cancelled) {
+          setPodcastAudioUrl(signedUrl)
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setPodcastAudioError(
+            error instanceof Error
+              ? error.message
+              : 'Could not open podcast audio.',
+          )
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [podcast?.audioPath, type])
 
   useEffect(() => {
     return () => {
@@ -3062,6 +3169,114 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           </Typography>
         )}
         <Stack spacing={1.25}>{renderMarkdown(markdown)}</Stack>
+      </Stack>
+    )
+
+    if (unframed) {
+      return content
+    }
+
+    return (
+      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+        {content}
+      </Paper>
+    )
+  }
+
+  if (type === 'PodcastBlock') {
+    if (!podcast) {
+      return (
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Podcast data is unavailable.
+          </Typography>
+        </Paper>
+      )
+    }
+
+    const content = (
+      <Stack spacing={2}>
+        <Stack spacing={0.75}>
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            flexWrap="wrap"
+          >
+            <Typography variant="subtitle1" fontWeight={700}>
+              {renderMarkdownInline(podcast.title)}
+            </Typography>
+            {podcast.durationSeconds > 0 ? (
+              <Chip
+                label={formatDuration(podcast.durationSeconds)}
+                size="small"
+                variant="outlined"
+              />
+            ) : null}
+          </Stack>
+          {podcast.description ? (
+            <Typography variant="body2" color="text.secondary">
+              {podcast.description}
+            </Typography>
+          ) : null}
+        </Stack>
+
+        {podcastAudioUrl ? (
+          <Box
+            component="audio"
+            controls
+            src={podcastAudioUrl}
+            onError={() => {
+              setPodcastAudioError(
+                'Podcast audio is not available yet. Try regenerating the podcast.',
+              )
+              setPodcastAudioUrl('')
+            }}
+            sx={{ width: '100%' }}
+          />
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            {podcastAudioError || 'Preparing podcast audio...'}
+          </Typography>
+        )}
+
+        {podcast.chapters.length > 0 ? (
+          <Stack spacing={0.75}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              Chapters
+            </Typography>
+            <Stack direction="row" gap={1} flexWrap="wrap">
+              {podcast.chapters.map((chapter, index) => (
+                <Chip
+                  key={`${chapter.startTurn}-${chapter.title}-${index}`}
+                  label={chapter.title}
+                  size="small"
+                  variant="outlined"
+                />
+              ))}
+            </Stack>
+          </Stack>
+        ) : null}
+
+        <Stack spacing={1}>
+          <Typography variant="subtitle2" fontWeight={700}>
+            Transcript
+          </Typography>
+          <Stack spacing={1}>
+            {podcast.transcriptTurns.map((turn, index) => (
+              <Box key={`${turn.speaker}-${index}`}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={700}
+                >
+                  {turn.speaker === 'hostB' ? 'Host 2' : 'Host 1'}
+                </Typography>
+                <Typography variant="body2">{turn.text}</Typography>
+              </Box>
+            ))}
+          </Stack>
+        </Stack>
       </Stack>
     )
 

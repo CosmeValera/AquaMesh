@@ -19,6 +19,7 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import QuizIcon from '@mui/icons-material/Quiz'
 import RouteIcon from '@mui/icons-material/Route'
 import StyleIcon from '@mui/icons-material/Style'
+import PodcastsIcon from '@mui/icons-material/Podcasts'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import LoopIcon from '@mui/icons-material/Loop'
@@ -90,6 +91,7 @@ import StudyBlockView, { isStudyBlockType } from '../study/StudyBlockView'
 const quickCreateIcons: Record<StudyMaterialResourceType, React.ReactNode> = {
   quiz: <QuizIcon fontSize="small" />,
   flashcards: <StyleIcon fontSize="small" />,
+  podcast: <PodcastsIcon fontSize="small" />,
   improvedNotes: <AutoStoriesIcon fontSize="small" />,
 }
 
@@ -126,6 +128,11 @@ const detailLevelCountLimits: Record<
     short: { max: 30 },
     medium: { max: 50 },
     long: { max: 65 },
+  },
+  podcast: {
+    short: { max: 700 },
+    medium: { max: 1400 },
+    long: { max: 2600 },
   },
 }
 
@@ -200,6 +207,10 @@ const resourceTypeTitle = (resourceType?: string | null) => {
 
   if (resourceType === 'quiz') {
     return 'Quiz'
+  }
+
+  if (resourceType === 'podcast') {
+    return 'Podcast'
   }
 
   if (resourceType === 'improvedNotes') {

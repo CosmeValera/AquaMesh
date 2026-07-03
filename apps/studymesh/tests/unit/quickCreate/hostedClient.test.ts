@@ -33,6 +33,7 @@ const statusPayload = (studyCredits: number) => ({
       'study-guide': 2,
       'quick-create': 1,
       chat: 1,
+      podcast: 1,
     },
   },
 })

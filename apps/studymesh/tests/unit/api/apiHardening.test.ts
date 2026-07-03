@@ -9,6 +9,7 @@ import hostedAiHandler, {
   getHostedCerebrasModel,
 } from '../../../../../api/hosted-ai'
 import dashboardSourceHandler from '../../../../../api/dashboard-source'
+import podcastAudioHandler from '../../../../../api/study-guide-podcast-audio'
 
 const makeResponse = () => {
   const headers = new Map<string, string>()
@@ -751,6 +752,443 @@ describe('API payment and hosted AI hardening', () => {
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_request_id).toEqual(rpcBodies[1].p_request_id)
     expect(rpcBodies[0].p_request_id).not.toBe('client-reused-id')
+  })
+
+  it('generates hosted podcasts through Cerebras, Unreal Speech, and Supabase Storage', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+    vi.stubEnv('HOSTED_CEREBRAS_API_KEY', 'hosted-cerebras-key')
+    vi.stubEnv('UNREAL_SPEECH_API_KEY', 'unreal-key')
+
+    const rpcBodies: Record<string, unknown>[] = []
+    const monthlyUsageBodies: Record<string, unknown>[] = []
+    const providerBodies: Record<string, unknown>[] = []
+    const unrealRequests: Array<{
+      body: Record<string, unknown>
+      headers?: HeadersInit
+    }> = []
+    const storageUploads: Array<{
+      url: string
+      body?: BodyInit | null
+      headers?: HeadersInit
+    }> = []
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+      arrayBuffer: vi
+        .fn()
+        .mockResolvedValue(new TextEncoder().encode('ID3mp3').buffer),
+    })
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve(jsonResponse({ id: 'user-1' }))
+      }
+
+      if (target.includes('/rest/v1/hosted_ai_usage_events')) {
+        return Promise.resolve(jsonResponse([]))
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            status: {
+              studyCredits: 9,
+              introSeen: true,
+            },
+          }),
+        )
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_finish_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            status: {
+              studyCredits: 8,
+              introSeen: true,
+            },
+          }),
+        )
+      }
+
+      if (target.includes('/rest/v1/rpc/podcast_tts_reserve_monthly_usage')) {
+        monthlyUsageBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse([
+            {
+              owner_id: 'user-1',
+              usage_month: '2026-07',
+              characters_used: 240,
+              monthly_cap: 225000,
+            },
+          ]),
+        )
+      }
+
+      if (target.includes('api.cerebras.ai')) {
+        providerBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    title: 'Podcast: Biology',
+                    description: 'A short recap.',
+                    transcriptTurns: [
+                      {
+                        speaker: 'hostA',
+                        text: 'Photosynthesis turns light into usable energy.',
+                      },
+                      {
+                        speaker: 'hostB',
+                        text: 'ATP helps cells move that energy around.',
+                      },
+                      {
+                        speaker: 'hostA',
+                        text: 'The key idea is energy conversion.',
+                      },
+                      {
+                        speaker: 'hostB',
+                        text: 'That connects the lesson together.',
+                      },
+                    ],
+                    chapters: [{ title: 'Energy', startTurn: 0 }],
+                  }),
+                },
+              },
+            ],
+          }),
+        )
+      }
+
+      if (target === 'https://api.v8.unrealspeech.com/synthesisTasks') {
+        unrealRequests.push({
+          body: JSON.parse(String(init?.body)),
+          headers: init?.headers,
+        })
+        return Promise.resolve(
+          jsonResponse({
+            SynthesisTask: {
+              TaskId: 'task-1',
+              OutputUri: 'https://audio.unrealspeech.test/podcast.mp3',
+            },
+          }),
+        )
+      }
+
+      if (target === 'https://audio.unrealspeech.test/podcast.mp3') {
+        return Promise.resolve(jsonResponse({}, true, 200))
+      }
+
+      if (target.includes('/storage/v1/object/study-guide-podcasts/')) {
+        storageUploads.push({
+          url: target,
+          body: init?.body,
+          headers: init?.headers,
+        })
+        return Promise.resolve(jsonResponse({ Key: 'podcast.mp3' }))
+      }
+
+      return Promise.resolve(
+        jsonResponse({ message: 'unexpected url' }, false, 500),
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer [REDACTED:Bearer token]',
+        },
+        body: {
+          action: 'generatePodcast',
+          surface: 'podcast',
+          parts: [
+            {
+              text: 'Photosynthesis uses light to create usable energy for plants. ATP stores energy for cells. '.repeat(
+                8,
+              ),
+            },
+          ],
+          podcastOptions: {
+            studyGuideId: 'guide-1',
+            sourceTitle: 'Biology',
+            sourceScope: 'studyGuide',
+          },
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      podcast: {
+        title: 'Podcast: Biology',
+        audioPath: expect.stringContaining('user-1/guide-1/'),
+      },
+    })
+    expect(rpcBodies[0]).toMatchObject({
+      p_surface: 'podcast',
+      p_provider: 'cerebras',
+    })
+    expect(rpcBodies[1]).toMatchObject({
+      p_status: 'succeeded',
+      p_provider_call_count: 2,
+    })
+    expect(providerBodies).toHaveLength(1)
+    expect(monthlyUsageBodies).toHaveLength(1)
+    expect(monthlyUsageBodies[0]).toMatchObject({
+      p_owner_id: 'user-1',
+      p_character_count: expect.any(Number),
+      p_monthly_cap: 225000,
+    })
+    expect(monthlyUsageBodies[0].p_character_count).toBeGreaterThan(0)
+    expect(unrealRequests).toHaveLength(1)
+    expect(unrealRequests[0].body).toMatchObject({
+      VoiceId: 'Sierra',
+      Bitrate: '64k',
+    })
+    expect(String(unrealRequests[0].body.Text)).toContain('Host A:')
+    expect(String(unrealRequests[0].body.Text)).toContain('Host B:')
+    expect(
+      (unrealRequests[0].headers as Record<string, string>).authorization,
+    ).toBe('Bearer unreal-key')
+    expect(storageUploads).toHaveLength(1)
+    expect(storageUploads[0].url).toContain('user-1/guide-1/')
+    expect((storageUploads[0].headers as Record<string, string>)['x-upsert']).toBe(
+      'true',
+    )
+    expect(
+      (storageUploads[0].headers as Record<string, string>)['content-type'],
+    ).toBe('audio/mpeg')
+  })
+
+  it('refuses hosted podcast TTS before Unreal Speech when the monthly free cap is reached', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+    vi.stubEnv('HOSTED_CEREBRAS_API_KEY', 'hosted-cerebras-key')
+    vi.stubEnv('UNREAL_SPEECH_API_KEY', 'unreal-key')
+
+    const rpcBodies: Record<string, unknown>[] = []
+    const providerBodies: Record<string, unknown>[] = []
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+      arrayBuffer: vi
+        .fn()
+        .mockResolvedValue(new TextEncoder().encode('ID3mp3').buffer),
+    })
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve(jsonResponse({ id: 'user-1' }))
+      }
+
+      if (target.includes('/rest/v1/hosted_ai_usage_events')) {
+        return Promise.resolve(jsonResponse([]))
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            status: {
+              studyCredits: 9,
+              introSeen: true,
+            },
+          }),
+        )
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_finish_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            status: {
+              studyCredits: 9,
+              introSeen: true,
+            },
+          }),
+        )
+      }
+
+      if (target.includes('/rest/v1/rpc/podcast_tts_reserve_monthly_usage')) {
+        return Promise.resolve(
+          jsonResponse(
+            { message: 'Monthly free podcast audio limit reached.' },
+            false,
+            429,
+          ),
+        )
+      }
+
+      if (target.includes('api.cerebras.ai')) {
+        providerBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    title: 'Podcast: Biology',
+                    description: 'A short recap.',
+                    transcriptTurns: [
+                      {
+                        speaker: 'hostA',
+                        text: 'Photosynthesis turns light into usable energy.',
+                      },
+                      {
+                        speaker: 'hostB',
+                        text: 'ATP helps cells move that energy around.',
+                      },
+                      {
+                        speaker: 'hostA',
+                        text: 'The key idea is energy conversion.',
+                      },
+                      {
+                        speaker: 'hostB',
+                        text: 'That connects the lesson together.',
+                      },
+                    ],
+                    chapters: [{ title: 'Energy', startTurn: 0 }],
+                  }),
+                },
+              },
+            ],
+          }),
+        )
+      }
+
+      return Promise.resolve(
+        jsonResponse({ message: 'unexpected url' }, false, 500),
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer [REDACTED:Bearer token]',
+        },
+        body: {
+          action: 'generatePodcast',
+          surface: 'podcast',
+          parts: [
+            {
+              text: 'Photosynthesis uses light to create usable energy for plants. ATP stores energy for cells. '.repeat(
+                8,
+              ),
+            },
+          ],
+          podcastOptions: {
+            studyGuideId: 'guide-1',
+            sourceTitle: 'Biology',
+            sourceScope: 'studyGuide',
+          },
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(429)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: {
+        code: 'rate_limited',
+        message: 'Monthly free podcast audio limit reached.',
+      },
+    })
+    expect(
+      fetchMock.mock.calls.some(([url]) =>
+        String(url).includes('api.v8.unrealspeech.com'),
+      ),
+    ).toBe(false)
+    expect(
+      fetchMock.mock.calls.some(([url]) =>
+        String(url).includes('/storage/v1/object/'),
+      ),
+    ).toBe(false)
+    expect(providerBodies).toHaveLength(1)
+    expect(rpcBodies[1]).toMatchObject({
+      p_status: 'failed',
+      p_error_code: 'rate_limited',
+      p_error_message: 'Monthly free podcast audio limit reached.',
+    })
+  })
+
+  it('returns a playable Supabase Storage signed URL for podcast audio', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    })
+    const fetchMock = vi.fn((url: string) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve(jsonResponse({ id: 'user-1' }))
+      }
+
+      if (
+        target.includes(
+          '/storage/v1/object/sign/study-guide-podcasts/user-1/guide-1/podcast.mp3',
+        )
+      ) {
+        return Promise.resolve(
+          jsonResponse({
+            signedURL:
+              '/object/sign/study-guide-podcasts/user-1/guide-1/podcast.mp3?token=signed-token',
+          }),
+        )
+      }
+
+      return Promise.resolve(
+        jsonResponse({ message: 'unexpected url' }, false, 500),
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { response, res } = makeResponse()
+
+    await podcastAudioHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer [REDACTED:Bearer token]',
+        },
+        body: {
+          audioPath: 'user-1/guide-1/podcast.mp3',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      signedUrl:
+        'https://supabase.test/storage/v1/object/sign/study-guide-podcasts/user-1/guide-1/podcast.mp3?token=signed-token',
+    })
   })
 
   it('bundles hosted Study Guide Quick Start into one usage charge', async () => {

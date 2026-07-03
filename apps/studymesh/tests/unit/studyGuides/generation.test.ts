@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { appendAiQuickCreatePage } from '../../../src/studyGuides/generation'
-import { generateQuickCreateWithAi } from '../../../src/quickCreate/ai'
+import {
+  appendAiPodcastPage,
+  appendAiQuickCreatePage,
+} from '../../../src/studyGuides/generation'
+import {
+  generateHostedAiPodcast,
+  generateQuickCreateWithAi,
+} from '../../../src/quickCreate/ai'
 import type { StudyPathContainerState } from '../../../src/state/store'
 
 vi.mock('../../../src/quickCreate/ai', async (importOriginal) => {
@@ -23,6 +29,22 @@ vi.mock('../../../src/quickCreate/ai', async (importOriginal) => {
         },
       ],
       warnings: [],
+    }),
+    generateHostedAiPodcast: vi.fn().mockResolvedValue({
+      id: 'podcast-1',
+      title: 'Podcast: Biology',
+      description: 'A short biology recap.',
+      durationSeconds: 240,
+      audioPath: 'user-1/guide-1/podcast-1.mp3',
+      mimeType: 'audio/mpeg',
+      transcriptTurns: [
+        { speaker: 'hostA', text: 'Today we recap photosynthesis.' },
+        { speaker: 'hostB', text: 'Plants use light to make energy.' },
+      ],
+      chapters: [{ title: 'Photosynthesis', startTurn: 0 }],
+      sourceTitle: 'Biology',
+      sourceScope: 'studyGuide',
+      createdAt: '2026-01-01T00:00:00.000Z',
     }),
     readQuickCreateAiSettings: () => ({ provider: 'gemini' }),
     resolveQuickCreateAiCredentials: () => ({
@@ -86,5 +108,26 @@ describe('appendAiQuickCreatePage', () => {
         outputLanguage: 'en',
       }),
     )
+  })
+
+  it('appends hosted podcast pages with a PodcastBlock', async () => {
+    const next = await appendAiPodcastPage({
+      studyPath,
+      sourceTitle: 'Biology',
+      sourceText: 'Photosynthesis uses light. Cells use ATP.',
+      sourceScope: 'studyGuide',
+    })
+
+    expect(generateHostedAiPodcast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceText: 'Photosynthesis uses light. Cells use ATP.',
+        studyGuideId: 'guide-1',
+        sourceTitle: 'Biology',
+        sourceScope: 'studyGuide',
+      }),
+    )
+    expect(next.dashboards).toHaveLength(1)
+    expect(JSON.stringify(next.dashboards[0].layout)).toContain('PodcastBlock')
+    expect(next.dashboards[0].createdBy).toBe('quickCreate')
   })
 })

@@ -42,6 +42,7 @@ import ContentPasteIcon from '@mui/icons-material/ContentPaste'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import QuizIcon from '@mui/icons-material/Quiz'
 import StyleIcon from '@mui/icons-material/Style'
+import PodcastsIcon from '@mui/icons-material/Podcasts'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SearchIcon from '@mui/icons-material/Search'
 import ArticleIcon from '@mui/icons-material/Article'
@@ -316,6 +317,7 @@ const quickCreateIcons: Record<
 > = {
   quiz: <QuizIcon fontSize="small" />,
   flashcards: <StyleIcon fontSize="small" />,
+  podcast: <PodcastsIcon fontSize="small" />,
 }
 
 const getQuickCreateGroupLabelKey = (group: QuickCreateActionGroup) => {
@@ -333,6 +335,8 @@ const getQuickCreateActionLabelKey = (actionId: QuickCreateActionId) => {
       return 'chat.quickCreateQuiz'
     case 'flashcards':
       return 'chat.quickCreateFlashcards'
+    case 'podcast':
+      return 'chat.quickCreatePodcast'
     case 'improvedNotes':
       return 'chat.quickCreateExpand'
   }
@@ -344,6 +348,8 @@ const getQuickCreateActionDescriptionKey = (actionId: QuickCreateActionId) => {
       return 'chat.quickCreateQuizDescription'
     case 'flashcards':
       return 'chat.quickCreateFlashcardsDescription'
+    case 'podcast':
+      return 'chat.quickCreatePodcastDescription'
     case 'improvedNotes':
       return 'chat.quickCreateExpandDescription'
   }
@@ -490,7 +496,13 @@ const AiChatPet = ({
   )
 }
 
-const getQuickCreateEstimateSeconds = (): number => {
+const getQuickCreateEstimateSeconds = (
+  actionId?: QuickCreateActionId | null,
+): number => {
+  if (actionId === 'podcast') {
+    return 90
+  }
+
   const provider = readQuickCreateAiSettings().provider || 'hosted'
 
   if (provider === 'local') {
@@ -2812,7 +2824,8 @@ const DashboardChatPanel = ({
       : `${remainingSeconds}s`
   }
 
-  const quickCreateEstimateSeconds = getQuickCreateEstimateSeconds()
+  const quickCreateEstimateSeconds =
+    getQuickCreateEstimateSeconds(quickCreateActionId)
   const activeQuickCreateAction = dashboardChatQuickCreateActions.find(
     (action) => action.id === quickCreateActionId,
   )
@@ -4580,7 +4593,28 @@ const DashboardChatPanel = ({
           />
         ) : null}
         {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <Alert
+            severity="error"
+            sx={{ mt: 2 }}
+            action={
+              <IconButton
+                aria-label="Dismiss error"
+                size="small"
+                onClick={() => setError('')}
+                sx={{
+                  color: 'error.dark',
+                  bgcolor: alpha(theme.palette.error.main, 0.08),
+                  border: 1,
+                  borderColor: alpha(theme.palette.error.main, 0.24),
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.error.main, 0.16),
+                  },
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            }
+          >
             {error}
           </Alert>
         )}

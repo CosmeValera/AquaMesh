@@ -2,9 +2,11 @@ import {
   createQuickCreateDashboardLayout,
   createQuickCreateOrchestratorWidgets,
   type StudyObject,
+  type QuickCreateWidgetRecord,
   type QuickCreateDashboardLayoutMode,
 } from '../quickCreate'
 import {
+  generateHostedAiPodcast,
   generateQuickCreateWithAi,
   generateStudyPathWithAi,
   isStrongAiProvider,
@@ -15,6 +17,7 @@ import {
   type AiStudyPathDraft,
   type StudyMaterialResourceType,
 } from '../quickCreate/ai'
+import type { HostedAiPodcast } from '../quickCreate/ai'
 import {
   normalizeQuickCreateActionInput,
   type QuickCreateActionInput,
@@ -271,6 +274,62 @@ const draftToMarkdown = (draft: AiQuickCreateDraft): string => {
   return chunks.join('\n\n')
 }
 
+const createPodcastWidget = (
+  podcast: HostedAiPodcast,
+): QuickCreateWidgetRecord => ({
+  id: `${podcast.id}-widget`,
+  name: podcast.title,
+  createdAt: podcast.createdAt,
+  updatedAt: podcast.createdAt,
+  category: 'Study',
+  tags: ['quick-create', 'podcast'],
+  description: podcast.description,
+  components: [
+    {
+      id: `${podcast.id}-player`,
+      type: 'PodcastBlock',
+      props: {
+        podcast,
+      },
+    },
+  ],
+})
+
+export const appendAiPodcastPage = async ({
+  studyPath,
+  sourceTitle,
+  sourceText,
+  sourceScope,
+}: {
+  studyPath: StudyPathContainerState
+  sourceTitle: string
+  sourceText: string
+  sourceScope: 'studyGuide' | 'currentPage'
+}): Promise<StudyPathContainerState> => {
+  const resolvedLanguage = studyPath.contentLanguage
+    ? {
+        language: studyPath.contentLanguage,
+        source: studyPath.contentLanguageSource || ('inherited' as const),
+      }
+    : resolveContentLanguage({
+        text: sourceText,
+      })
+  const podcast = await generateHostedAiPodcast({
+    sourceText,
+    studyGuideId: studyPath.pathId,
+    sourceTitle,
+    sourceScope,
+    outputLanguage: resolvedLanguage.language,
+  })
+
+  return appendStudyGuideWidgetPage(studyPath, {
+    title: podcast.title || `Podcast: ${sourceTitle}`,
+    widgets: [createPodcastWidget(podcast)],
+    layoutMode: 'tabs',
+    source: 'quickCreate',
+  })
+}
+
 export const appendAiQuickCreatePage = async ({
   studyPath,
   resourceType: resourceTypeInput,
@@ -285,6 +344,9 @@ export const appendAiQuickCreatePage = async ({
   signal?: AbortSignal
 }): Promise<StudyPathContainerState> => {
   const { resourceType } = normalizeQuickCreateActionInput(resourceTypeInput)
+  if (resourceType === 'podcast') {
+    throw new Error('Podcast generation uses the hosted podcast flow.')
+  }
   const settings = readQuickCreateAiSettings()
   const provider = settings.provider || 'hosted'
   const resolvedLanguage = studyPath.contentLanguage
@@ -301,6 +363,7 @@ export const appendAiQuickCreatePage = async ({
   const labels: Record<StudyMaterialResourceType, string> = {
     quiz: 'Quiz',
     flashcards: 'Flashcards',
+    podcast: 'Podcast',
     improvedNotes: 'Expanded notes',
   }
   const draft = await generateQuickCreateWithAi({

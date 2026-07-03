@@ -6,6 +6,7 @@
     "bashunit": "bash tools/git-hooks/lib/bashunit tools/git-hooks/tests",
     "start": "vercel dev",
     "start-dev": "turbo start",
+    "vercel-env-pull": "vercel env pull",
     "test": "turbo test",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""

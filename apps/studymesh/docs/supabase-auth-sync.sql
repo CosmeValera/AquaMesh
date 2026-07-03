@@ -165,7 +165,7 @@ create table if not exists public.hosted_ai_usage_events (
   completed_at timestamptz,
   unique (owner_id, request_id),
   constraint hosted_ai_usage_events_surface_check
-    check (surface in ('study-guide', 'quick-create', 'chat')),
+    check (surface in ('study-guide', 'quick-create', 'chat', 'podcast')),
   constraint hosted_ai_usage_events_status_check
     check (status in ('reserved', 'succeeded', 'failed')),
   constraint hosted_ai_usage_events_nonnegative_credits_check
@@ -200,6 +200,40 @@ create table if not exists public.hosted_ai_credit_purchases (
   constraint hosted_ai_credit_purchases_expected_currency_check
     check (expected_currency = lower(expected_currency))
 );
+
+-- Monthly TTS character accounting for Study Guide podcast audio. This caps
+-- app-side Unreal Speech free-tier use before a provider request is made.
+create table if not exists public.podcast_tts_monthly_usage (
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  usage_month text not null,
+  characters_used integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (owner_id, usage_month),
+  constraint podcast_tts_monthly_usage_month_check
+    check (usage_month ~ '^[0-9]{4}-[0-9]{2}$'),
+  constraint podcast_tts_monthly_usage_nonnegative_check
+    check (characters_used >= 0)
+);
+
+insert into storage.buckets (
+  id,
+  name,
+  public,
+  file_size_limit,
+  allowed_mime_types
+)
+values (
+  'study-guide-podcasts',
+  'study-guide-podcasts',
+  false,
+  15000000,
+  array['audio/mpeg']
+)
+on conflict (id) do update
+set public = false,
+    file_size_limit = 15000000,
+    allowed_mime_types = array['audio/mpeg'];
 
 drop trigger if exists profiles_set_updated_at on public.profiles;
 create trigger profiles_set_updated_at
@@ -244,6 +278,11 @@ for each row execute function public.set_updated_at();
 drop trigger if exists hosted_ai_credit_purchases_set_updated_at on public.hosted_ai_credit_purchases;
 create trigger hosted_ai_credit_purchases_set_updated_at
 before update on public.hosted_ai_credit_purchases
+for each row execute function public.set_updated_at();
+
+drop trigger if exists podcast_tts_monthly_usage_set_updated_at on public.podcast_tts_monthly_usage;
+create trigger podcast_tts_monthly_usage_set_updated_at
+before update on public.podcast_tts_monthly_usage
 for each row execute function public.set_updated_at();
 
 -- Indexes for owner fetches, recent-sync ordering, soft-delete filtering.
@@ -294,6 +333,9 @@ create index if not exists hosted_ai_credit_purchases_owner_created_idx
 
 create index if not exists hosted_ai_credit_purchases_session_idx
   on public.hosted_ai_credit_purchases(stripe_checkout_session_id);
+
+create index if not exists podcast_tts_monthly_usage_owner_month_idx
+  on public.podcast_tts_monthly_usage(owner_id, usage_month);
 
 -- Optional profile bootstrap. Safe if app also upserts profile on login.
 create or replace function public.handle_new_user()
@@ -388,6 +430,7 @@ as $$
     when 'study-guide' then 2
     when 'quick-create' then 1
     when 'chat' then 1
+    when 'podcast' then 1
     else null
   end
 $$;
@@ -691,6 +734,85 @@ begin
 end;
 $$;
 
+create or replace function public.podcast_tts_reserve_monthly_usage(
+  p_owner_id uuid,
+  p_usage_month text,
+  p_character_count integer,
+  p_monthly_cap integer
+)
+returns table (
+  owner_id uuid,
+  usage_month text,
+  characters_used integer,
+  monthly_cap integer
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_count integer;
+begin
+  if p_owner_id is null then
+    raise exception 'owner_id is required';
+  end if;
+
+  if p_usage_month is null or p_usage_month !~ '^[0-9]{4}-[0-9]{2}$' then
+    raise exception 'invalid podcast TTS usage month';
+  end if;
+
+  if p_character_count is null or p_character_count <= 0 then
+    raise exception 'invalid podcast TTS character count';
+  end if;
+
+  if p_monthly_cap is null or p_monthly_cap <= 0 then
+    raise exception 'invalid podcast TTS monthly cap';
+  end if;
+
+  insert into public.profiles (id)
+  values (p_owner_id)
+  on conflict (id) do nothing;
+
+  insert into public.podcast_tts_monthly_usage (
+    owner_id,
+    usage_month,
+    characters_used
+  )
+  values (
+    p_owner_id,
+    p_usage_month,
+    0
+  )
+  on conflict on constraint podcast_tts_monthly_usage_pkey do nothing;
+
+  select usage.characters_used
+  into current_count
+  from public.podcast_tts_monthly_usage usage
+  where usage.owner_id = p_owner_id
+    and usage.usage_month = p_usage_month
+  for update;
+
+  if current_count + p_character_count > p_monthly_cap then
+    raise exception 'Monthly free podcast audio limit reached.';
+  end if;
+
+  update public.podcast_tts_monthly_usage usage
+  set characters_used = usage.characters_used + p_character_count
+  where usage.owner_id = p_owner_id
+    and usage.usage_month = p_usage_month
+  returning usage.owner_id,
+            usage.usage_month,
+            usage.characters_used,
+            p_monthly_cap
+  into owner_id,
+       usage_month,
+       characters_used,
+       monthly_cap;
+
+  return next;
+end;
+$$;
+
 create or replace function public.hosted_ai_create_credit_purchase(
   p_owner_id uuid,
   p_expected_credits integer,
@@ -938,6 +1060,7 @@ revoke all on function public.hosted_ai_get_or_create_account(uuid) from public;
 revoke all on function public.hosted_ai_mark_intro_seen(uuid) from public;
 revoke all on function public.hosted_ai_begin_usage(uuid, text, text, text, text, jsonb) from public;
 revoke all on function public.hosted_ai_finish_usage(uuid, text, text, integer, text, text, jsonb) from public;
+revoke all on function public.podcast_tts_reserve_monthly_usage(uuid, text, integer, integer) from public;
 revoke all on function public.hosted_ai_create_credit_purchase(uuid, integer, integer, text, jsonb) from public;
 revoke all on function public.hosted_ai_attach_checkout_session(uuid, uuid, text, jsonb) from public;
 revoke all on function public.hosted_ai_mark_credit_purchase_paid(uuid, text, text, integer, integer, text, jsonb) from public;
@@ -948,6 +1071,7 @@ grant execute on function public.hosted_ai_get_or_create_account(uuid) to servic
 grant execute on function public.hosted_ai_mark_intro_seen(uuid) to service_role;
 grant execute on function public.hosted_ai_begin_usage(uuid, text, text, text, text, jsonb) to service_role;
 grant execute on function public.hosted_ai_finish_usage(uuid, text, text, integer, text, text, jsonb) to service_role;
+grant execute on function public.podcast_tts_reserve_monthly_usage(uuid, text, integer, integer) to service_role;
 grant execute on function public.hosted_ai_create_credit_purchase(uuid, integer, integer, text, jsonb) to service_role;
 grant execute on function public.hosted_ai_attach_checkout_session(uuid, uuid, text, jsonb) to service_role;
 grant execute on function public.hosted_ai_mark_credit_purchase_paid(uuid, text, text, integer, integer, text, jsonb) to service_role;
@@ -964,6 +1088,7 @@ alter table public.hosted_ai_accounts enable row level security;
 alter table public.hosted_ai_account_history enable row level security;
 alter table public.hosted_ai_usage_events enable row level security;
 alter table public.hosted_ai_credit_purchases enable row level security;
+alter table public.podcast_tts_monthly_usage enable row level security;
 
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own"

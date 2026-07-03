@@ -9,6 +9,7 @@ import {
 import type {
   HostedAiGatewayRequest,
   HostedAiGatewayResponse,
+  HostedAiPodcast,
   HostedAiStatus,
   HostedAiSurface,
 } from './hostedCredits'
@@ -26,6 +27,7 @@ export type HostedAiTransport = (
 ) => Promise<string>
 
 const HOSTED_AI_ENDPOINT = '/api/hosted-ai'
+const PODCAST_AUDIO_ENDPOINT = '/api/study-guide-podcast-audio'
 
 const dispatchInsufficientCredits = (): void => {
   if (typeof window !== 'undefined') {
@@ -216,6 +218,73 @@ export const callHostedAiModel = async (
 ): Promise<string> => {
   await assertHostedAiCreditsAvailable(options.surface)
   return callHostedAiModelUnchecked(options)
+}
+
+export const generateHostedAiPodcast = async ({
+  sourceText,
+  studyGuideId,
+  sourceTitle,
+  sourceScope,
+  outputLanguage,
+}: {
+  sourceText: string
+  studyGuideId: string
+  sourceTitle: string
+  sourceScope: 'studyGuide' | 'currentPage'
+  outputLanguage?: HostedAiModelOptions['outputLanguage']
+}): Promise<HostedAiPodcast> => {
+  const surface: HostedAiSurface = 'podcast'
+  await assertHostedAiCreditsAvailable(surface)
+  dispatchHostedAiVisualSpend(surface)
+
+  try {
+    const payload = await callHostedAiGateway({
+      action: 'generatePodcast',
+      surface,
+      outputLanguage,
+      parts: [{ text: sourceText }],
+      podcastOptions: {
+        studyGuideId,
+        sourceTitle,
+        sourceScope,
+      },
+      timeoutMs: 90_000,
+    })
+
+    if (!payload.podcast) {
+      throw new Error('Hosted AI returned no podcast.')
+    }
+
+    return payload.podcast
+  } finally {
+    dispatchHostedAiUsageChanged()
+  }
+}
+
+export const getHostedAiPodcastAudioUrl = async (
+  audioPath: string,
+): Promise<string> => {
+  const accessToken = await getHostedAiAccessToken()
+  const response = await fetch(PODCAST_AUDIO_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ audioPath }),
+  })
+
+  const payload = (await response.json().catch(() => null)) as
+    | { ok?: boolean; signedUrl?: string; error?: { message?: string } }
+    | null
+
+  if (!response.ok || !payload?.ok || !payload.signedUrl) {
+    throw new Error(
+      payload?.error?.message || 'Could not open podcast audio.',
+    )
+  }
+
+  return payload.signedUrl
 }
 
 export const createHostedAiTransport = ({

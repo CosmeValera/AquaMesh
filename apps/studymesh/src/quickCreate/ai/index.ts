@@ -94,6 +94,8 @@ export {
   callHostedAiModel,
   createHostedAiTransport,
   createHostedStudyGuideTransportWithQuickStart,
+  generateHostedAiPodcast,
+  getHostedAiPodcastAudioUrl,
   getHostedAiStatus,
   markHostedAiIntroSeen,
 } from './hostedClient'
@@ -121,6 +123,9 @@ export type {
   HostedAiGatewayPart,
   HostedAiGatewayRequest,
   HostedAiGatewayResponse,
+  HostedAiPodcast,
+  HostedAiPodcastChapter,
+  HostedAiPodcastTranscriptTurn,
   HostedAiCreditPack,
   HostedAiCreditPackId,
   HostedAiStatus,

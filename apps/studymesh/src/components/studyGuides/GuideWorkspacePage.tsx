@@ -38,7 +38,10 @@ import {
   getStudyGuideCreationSourceText,
   getStudyGuidePageText,
 } from '../../studyGuides/pages'
-import { appendAiQuickCreatePage } from '../../studyGuides/generation'
+import {
+  appendAiPodcastPage,
+  appendAiQuickCreatePage,
+} from '../../studyGuides/generation'
 import {
   STUDY_GUIDES_STORAGE_FULL_MESSAGE,
   StudyGuideStorage,
@@ -484,12 +487,20 @@ const GuideWorkspacePage = () => {
       : record.studyPath.title || record.title
 
     try {
-      const nextStudyPath = await appendAiQuickCreatePage({
-        studyPath: record.studyPath,
-        resourceType: request.resourceType,
-        sourceTitle,
-        sourceText,
-      })
+      const nextStudyPath =
+        request.resourceType === 'podcast'
+          ? await appendAiPodcastPage({
+              studyPath: record.studyPath,
+              sourceTitle,
+              sourceText,
+              sourceScope: useCurrentPage ? 'currentPage' : 'studyGuide',
+            })
+          : await appendAiQuickCreatePage({
+              studyPath: record.studyPath,
+              resourceType: request.resourceType,
+              sourceTitle,
+              sourceText,
+            })
       const nextRecord = persistStudyPath(nextStudyPath)
       if (!nextRecord) {
         return

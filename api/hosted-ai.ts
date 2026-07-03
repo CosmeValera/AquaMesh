@@ -6,6 +6,9 @@ import type {
   HostedAiGatewayPart,
   HostedAiGatewayRequest,
   HostedAiGatewayResponse,
+  HostedAiPodcast,
+  HostedAiPodcastChapter,
+  HostedAiPodcastTranscriptTurn,
   HostedAiStatus,
   HostedAiSurface,
 } from "../apps/studymesh/src/quickCreate/ai/hostedCredits";
@@ -79,11 +82,20 @@ const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
   "study-guide": 2,
   "quick-create": 1,
   chat: 1,
+  podcast: 1,
 };
 
 const HOSTED_AI_INITIAL_FREE_CREDITS = 20;
 export const DEFAULT_CEREBRAS_MODEL = "gpt-oss-120b";
 const MAX_TEXT_CHARS = 120_000;
+const MIN_PODCAST_SOURCE_CHARS = 400;
+const MAX_PODCAST_SOURCE_CHARS = 24_000;
+const MAX_PODCAST_AUDIO_BYTES = 15_000_000;
+const PODCAST_TTS_MONTHLY_CHARACTER_CAP = 225_000;
+const UNREAL_SPEECH_API_BASE = "https://api.v8.unrealspeech.com";
+const UNREAL_SPEECH_DEFAULT_VOICE_ID = "Sierra";
+const UNREAL_SPEECH_POLL_ATTEMPTS = 30;
+const UNREAL_SPEECH_POLL_DELAY_MS = 2_000;
 const CEREBRAS_CHAT_COMPLETIONS_URL =
   "https://api.cerebras.ai/v1/chat/completions";
 
@@ -91,6 +103,7 @@ const VALID_SURFACES = new Set<HostedAiSurface>([
   "study-guide",
   "quick-create",
   "chat",
+  "podcast",
 ]);
 
 const getEnv = (name: string): string => process.env[name]?.trim() || "";
@@ -195,6 +208,14 @@ const readResponseJson = async (response: Response): Promise<unknown> => {
   }
 };
 
+const readResponseText = async (response: Response): Promise<string> => {
+  try {
+    return await response.text();
+  } catch {
+    return "";
+  }
+};
+
 const getSupabaseErrorMessage = (payload: unknown): string => {
   if (isObject(payload)) {
     const message = payload.message;
@@ -249,7 +270,9 @@ const callSupabaseRpc = async <T>(
     const error = new Error(message);
     error.name =
       response.status === 429 ||
-      /retry limit|rate limit|too many/i.test(message)
+      /retry limit|rate limit|too many|monthly free podcast audio limit reached/i.test(
+        message,
+      )
         ? "rate_limited"
         : "rpc_error";
     throw error;
@@ -549,6 +572,556 @@ const callCerebras = async (
   } finally {
     clearTimeout(timeout);
   }
+};
+
+interface PodcastScript {
+  title: string;
+  description: string;
+  transcriptTurns: HostedAiPodcastTranscriptTurn[];
+  chapters: HostedAiPodcastChapter[];
+}
+
+const PODCAST_SCRIPT_SCHEMA = {
+  type: "object",
+  properties: {
+    title: { type: "string" },
+    description: { type: "string" },
+    transcriptTurns: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          speaker: { type: "string" },
+          text: { type: "string" },
+        },
+        required: ["speaker", "text"],
+      },
+    },
+    chapters: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          startTurn: { type: "integer" },
+        },
+        required: ["title", "startTurn"],
+      },
+    },
+  },
+  required: ["title", "description", "transcriptTurns", "chapters"],
+};
+
+const safePodcastText = (value: unknown, maxLength: number): string =>
+  stringValue(value).replace(/\s+/g, " ").slice(0, maxLength).trim();
+
+const parseJsonFromText = (value: string): JsonObject | null => {
+  const trimmed = value.trim();
+  const direct = parseJsonRecord(trimmed);
+  if (direct) {
+    return direct;
+  }
+
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1];
+  if (fenced) {
+    return parseJsonRecord(fenced.trim());
+  }
+
+  const firstBrace = trimmed.indexOf("{");
+  const lastBrace = trimmed.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return parseJsonRecord(trimmed.slice(firstBrace, lastBrace + 1));
+  }
+
+  return null;
+};
+
+const normalizePodcastTurn = (
+  value: unknown,
+  index: number,
+): HostedAiPodcastTranscriptTurn | null => {
+  if (!isObject(value)) {
+    return null;
+  }
+
+  const speaker = value.speaker === "hostB" ? "hostB" : "hostA";
+  const text = safePodcastText(value.text, 700);
+  if (!text) {
+    return null;
+  }
+
+  return {
+    speaker: index % 2 === 0 ? speaker : speaker,
+    text,
+  };
+};
+
+const normalizePodcastChapter = (
+  value: unknown,
+  turnCount: number,
+): HostedAiPodcastChapter | null => {
+  if (!isObject(value)) {
+    return null;
+  }
+
+  const title = safePodcastText(value.title, 90);
+  const rawStartTurn =
+    typeof value.startTurn === "number" ? value.startTurn : Number(value.startTurn);
+  const startTurn = Number.isFinite(rawStartTurn)
+    ? Math.max(0, Math.min(turnCount - 1, Math.floor(rawStartTurn)))
+    : 0;
+
+  return title ? { title, startTurn } : null;
+};
+
+const normalizePodcastScript = (
+  text: string,
+  fallbackTitle: string,
+): PodcastScript => {
+  const parsed = parseJsonFromText(text);
+  if (!parsed) {
+    const error = new Error("Hosted AI returned an unreadable podcast script.");
+    error.name = "provider_error";
+    throw error;
+  }
+
+  const transcriptTurns = Array.isArray(parsed.transcriptTurns)
+    ? parsed.transcriptTurns
+        .map(normalizePodcastTurn)
+        .filter((turn): turn is HostedAiPodcastTranscriptTurn => Boolean(turn))
+        .slice(0, 18)
+    : [];
+
+  if (transcriptTurns.length < 4) {
+    const error = new Error("Hosted AI returned too little podcast dialogue.");
+    error.name = "provider_error";
+    throw error;
+  }
+
+  const chapters = Array.isArray(parsed.chapters)
+    ? parsed.chapters
+        .map((chapter) => normalizePodcastChapter(chapter, transcriptTurns.length))
+        .filter((chapter): chapter is HostedAiPodcastChapter => Boolean(chapter))
+        .slice(0, 6)
+    : [];
+
+  return {
+    title: safePodcastText(parsed.title, 100) || `Podcast: ${fallbackTitle}`,
+    description:
+      safePodcastText(parsed.description, 240) ||
+      "Short Study Guide audio recap.",
+    transcriptTurns,
+    chapters: chapters.length ? chapters : [{ title: "Recap", startTurn: 0 }],
+  };
+};
+
+const wordsInPodcastScript = (script: PodcastScript): number =>
+  script.transcriptTurns.reduce(
+    (total, turn) => total + (turn.text.match(/\S+/g)?.length || 0),
+    0,
+  );
+
+const estimatePodcastDurationSeconds = (script: PodcastScript): number =>
+  Math.max(120, Math.min(300, Math.round((wordsInPodcastScript(script) / 155) * 60)));
+
+const buildPodcastScriptPrompt = ({
+  sourceTitle,
+  sourceText,
+  outputLanguage,
+}: {
+  sourceTitle: string;
+  sourceText: string;
+  outputLanguage: HostedAiGatewayRequest["outputLanguage"];
+}): string => {
+  const languageInstruction = outputLanguage
+    ? `Write the podcast in language code "${outputLanguage}".`
+    : "Write the podcast in the same language as the source.";
+
+  return [
+    "Create a short StudyMesh educational podcast script from ONLY the provided Study Guide source.",
+    languageInstruction,
+    "Return strict JSON with: title, description, transcriptTurns, chapters.",
+    "transcriptTurns must use speakers hostA and hostB only.",
+    "Target 520-850 spoken words, 10-18 turns, warm but focused two-host dialogue.",
+    "Do not invent facts. Do not mention web lookup. Do not cite sources unless the source text already contains them.",
+    "If the source is thin, still create the best concise recap from available content without adding outside facts.",
+    `Source title: ${sourceTitle}`,
+    "Source:",
+    sourceText,
+  ].join("\n\n");
+};
+
+interface PodcastAudioGenerationResult {
+  audioBuffer: Buffer;
+  mimeType: string;
+  characterCount: number;
+}
+
+const podcastScriptToSpeechText = (script: PodcastScript): string =>
+  script.transcriptTurns
+    .map((turn) => {
+      const speaker = turn.speaker === "hostB" ? "Host B" : "Host A";
+      return `${speaker}: ${turn.text}`;
+    })
+    .join("\n\n");
+
+const getPodcastTtsCharacterCount = (script: PodcastScript): number =>
+  podcastScriptToSpeechText(script).length;
+
+const getPodcastMonthlyCharacterCap = (): number => {
+  const configured = Number(getEnv("PODCAST_TTS_MONTHLY_CHARACTER_CAP"));
+
+  return Number.isFinite(configured) && configured > 0
+    ? configured
+    : PODCAST_TTS_MONTHLY_CHARACTER_CAP;
+};
+
+const getPodcastUsageMonth = (): string => new Date().toISOString().slice(0, 7);
+
+const reservePodcastTtsCharacters = async (
+  userId: string,
+  characterCount: number,
+): Promise<void> => {
+  await callSupabaseRpc<unknown>("podcast_tts_reserve_monthly_usage", {
+    p_owner_id: userId,
+    p_usage_month: getPodcastUsageMonth(),
+    p_character_count: characterCount,
+    p_monthly_cap: getPodcastMonthlyCharacterCap(),
+  });
+};
+
+const delay = (ms: number): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+const getUnrealSpeechOutputUri = (payload: unknown): string => {
+  const source = isObject(payload) && isObject(payload.SynthesisTask)
+    ? payload.SynthesisTask
+    : payload;
+  if (!isObject(source)) {
+    return "";
+  }
+
+  const outputUri = source.OutputUri || source.outputUri || source.output_uri;
+  if (typeof outputUri === "string") {
+    return outputUri;
+  }
+
+  if (Array.isArray(outputUri) && typeof outputUri[0] === "string") {
+    return outputUri[0];
+  }
+
+  return "";
+};
+
+const getUnrealSpeechTaskStatus = (payload: unknown): string => {
+  const source = isObject(payload) && isObject(payload.SynthesisTask)
+    ? payload.SynthesisTask
+    : payload;
+  if (!isObject(source)) {
+    return "";
+  }
+
+  return (
+    stringValue(source.TaskStatus) ||
+    stringValue(source.taskStatus) ||
+    stringValue(source.task_status) ||
+    stringValue(source.status)
+  ).toLowerCase();
+};
+
+const isUnrealSpeechTaskReady = (payload: unknown): boolean => {
+  const status = getUnrealSpeechTaskStatus(payload);
+  return (
+    !status ||
+    status === "completed" ||
+    status === "complete" ||
+    status === "succeeded" ||
+    status === "success"
+  );
+};
+
+const getUnrealSpeechTaskId = (payload: unknown): string => {
+  const source = isObject(payload) && isObject(payload.SynthesisTask)
+    ? payload.SynthesisTask
+    : payload;
+  if (!isObject(source)) {
+    return "";
+  }
+
+  return (
+    stringValue(source.TaskId) ||
+    stringValue(source.taskId) ||
+    stringValue(source.task_id)
+  );
+};
+
+const fetchUnrealSpeechTask = async (taskId: string): Promise<unknown> => {
+  const response = await fetch(
+    `${UNREAL_SPEECH_API_BASE}/synthesisTasks/${encodeURIComponent(taskId)}`,
+    {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${getEnv("UNREAL_SPEECH_API_KEY")}`,
+      },
+    },
+  );
+  const payload = await readResponseJson(response);
+
+  if (!response.ok) {
+    const message =
+      getSupabaseErrorMessage(payload) || "Unreal Speech task lookup failed.";
+    const error = new Error(message);
+    error.name = response.status === 429 ? "rate_limited" : "provider_error";
+    throw error;
+  }
+
+  return payload;
+};
+
+const waitForUnrealSpeechOutputUri = async (
+  taskId: string,
+): Promise<string> => {
+  for (let attempt = 0; attempt < UNREAL_SPEECH_POLL_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) {
+      await delay(UNREAL_SPEECH_POLL_DELAY_MS);
+    }
+
+    const payload = await fetchUnrealSpeechTask(taskId);
+    const outputUri = getUnrealSpeechOutputUri(payload);
+    if (outputUri && isUnrealSpeechTaskReady(payload)) {
+      return outputUri;
+    }
+  }
+
+  const error = new Error("Unreal Speech audio generation timed out.");
+  error.name = "provider_error";
+  throw error;
+};
+
+const downloadUnrealSpeechAudio = async (outputUri: string): Promise<Buffer> => {
+  const response = await fetch(outputUri, { method: "GET" });
+  if (!response.ok) {
+    const message =
+      (await readResponseText(response)) || "Could not download podcast audio.";
+    const error = new Error(message);
+    error.name = response.status === 429 ? "rate_limited" : "provider_error";
+    throw error;
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  const prefix = buffer.toString("utf8", 0, Math.min(buffer.length, 256)).trim();
+  if (buffer.length === 0) {
+    const error = new Error("Unreal Speech returned empty audio.");
+    error.name = "provider_error";
+    throw error;
+  }
+
+  if (/^<\?xml|^<Error\b|AccessDenied/i.test(prefix)) {
+    const error = new Error("Unreal Speech audio file is not ready yet.");
+    error.name = "provider_error";
+    throw error;
+  }
+
+  const isMp3 =
+    prefix.startsWith("ID3") ||
+    (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0);
+  if (!isMp3) {
+    const error = new Error("Unreal Speech did not return a playable MP3.");
+    error.name = "provider_error";
+    throw error;
+  }
+
+  if (buffer.length > MAX_PODCAST_AUDIO_BYTES) {
+    const error = new Error("Podcast audio is too large.");
+    error.name = "provider_error";
+    throw error;
+  }
+
+  return buffer;
+};
+
+const downloadUnrealSpeechAudioWithRetry = async (
+  outputUri: string,
+): Promise<Buffer> => {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < UNREAL_SPEECH_POLL_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) {
+      await delay(UNREAL_SPEECH_POLL_DELAY_MS);
+    }
+
+    try {
+      return await downloadUnrealSpeechAudio(outputUri);
+    } catch (error) {
+      lastError = error;
+      if (
+        !(error instanceof Error) ||
+        !/access denied|not found|forbidden|not ready/i.test(error.message)
+      ) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Could not download podcast audio.");
+};
+
+const generatePodcastAudioFromScript = async (
+  script: PodcastScript,
+): Promise<PodcastAudioGenerationResult> => {
+  const text = podcastScriptToSpeechText(script);
+  const model = getEnv("UNREAL_SPEECH_MODEL");
+  const body: JsonObject = {
+    Text: text,
+    VoiceId: getEnv("UNREAL_SPEECH_VOICE_ID") || UNREAL_SPEECH_DEFAULT_VOICE_ID,
+    Bitrate: "64k",
+  };
+
+  if (model) {
+    body.Model = model;
+  }
+
+  const response = await fetch(`${UNREAL_SPEECH_API_BASE}/synthesisTasks`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${getEnv("UNREAL_SPEECH_API_KEY")}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const payload = await readResponseJson(response);
+
+  if (!response.ok) {
+    const message =
+      getSupabaseErrorMessage(payload) || "Unreal Speech synthesis failed.";
+    const error = new Error(message);
+    error.name = response.status === 429 ? "rate_limited" : "provider_error";
+    throw error;
+  }
+
+  const taskId = getUnrealSpeechTaskId(payload);
+  const outputUri =
+    getUnrealSpeechOutputUri(payload) && isUnrealSpeechTaskReady(payload)
+      ? getUnrealSpeechOutputUri(payload)
+      : "";
+  const taskOutputUri = outputUri || !taskId
+    ? ""
+    : await waitForUnrealSpeechOutputUri(taskId);
+
+  if (!outputUri && !taskOutputUri) {
+    const error = new Error("Unreal Speech returned no audio URL.");
+    error.name = "provider_error";
+    throw error;
+  }
+
+  return {
+    audioBuffer: await downloadUnrealSpeechAudioWithRetry(
+      outputUri || taskOutputUri,
+    ),
+    mimeType: "audio/mpeg",
+    characterCount: text.length,
+  };
+};
+
+const getPodcastBucket = (): string =>
+  getEnv("PODCAST_AUDIO_BUCKET") || "study-guide-podcasts";
+
+const encodeStoragePath = (path: string): string =>
+  path.split("/").map(encodeURIComponent).join("/");
+
+const podcastPathSegment = (value: string, fallback: string): string =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || fallback;
+
+const uploadPodcastAudio = async (
+  path: string,
+  audio: Buffer,
+): Promise<void> => {
+  const supabaseUrl = normalizeSupabaseUrl(getEnv("SUPABASE_URL"));
+  const serviceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const bucket = getPodcastBucket();
+  const response = await fetch(
+    `${supabaseUrl}/storage/v1/object/${bucket}/${encodeStoragePath(path)}`,
+    {
+      method: "POST",
+      headers: {
+        apikey: serviceKey,
+        authorization: `Bearer ${serviceKey}`,
+        "cache-control": "2592000",
+        "content-type": "audio/mpeg",
+        "x-upsert": "true",
+      },
+      body: audio,
+    },
+  );
+
+  if (!response.ok) {
+    const message =
+      (await readResponseText(response)) || "Could not store podcast audio.";
+    const error = new Error(message);
+    error.name = "provider_error";
+    throw error;
+  }
+};
+
+const assertPodcastDailyLimit = async (userId: string): Promise<void> => {
+  const limit = Number(getEnv("PODCAST_MAX_GENERATIONS_PER_USER_PER_DAY") || 3);
+  if (!Number.isFinite(limit) || limit <= 0) {
+    return;
+  }
+
+  const supabaseUrl = normalizeSupabaseUrl(getEnv("SUPABASE_URL"));
+  const serviceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const query = new URLSearchParams({
+    select: "id",
+    owner_id: `eq.${userId}`,
+    surface: "eq.podcast",
+    created_at: `gte.${since}`,
+  });
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/hosted_ai_usage_events?${query.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        apikey: serviceKey,
+        authorization: `Bearer ${serviceKey}`,
+      },
+    },
+  );
+  const payload = await readResponseJson(response);
+  const count = Array.isArray(payload) ? payload.length : 0;
+
+  if (response.ok && count >= limit) {
+    const error = new Error(
+      "Daily podcast generation limit reached. Try again tomorrow.",
+    );
+    error.name = "rate_limited";
+    throw error;
+  }
+};
+
+const ensurePodcastConfigured = (): HostedAiGatewayResponse | null => {
+  const required = ["UNREAL_SPEECH_API_KEY"];
+  const missing = required.filter((name) => !getEnv(name));
+
+  if (missing.length > 0) {
+    return errorResponse(
+      "not_configured",
+      `Podcast generation is missing server configuration: ${missing.join(
+        ", ",
+      )}.`,
+    );
+  }
+
+  return null;
 };
 
 const ensureConfigured = (): HostedAiGatewayResponse | null => {
@@ -868,6 +1441,138 @@ const handleGenerate = async (
   }
 };
 
+const validatePodcastRequest = (
+  request: HostedAiGatewayRequest,
+): HostedAiGatewayResponse | null => {
+  const invalid = validateGenerateRequest({
+    ...request,
+    surface: "podcast",
+  });
+  if (invalid) {
+    return invalid;
+  }
+
+  const options = request.podcastOptions;
+  if (
+    !options ||
+    !stringValue(options.studyGuideId) ||
+    !stringValue(options.sourceTitle) ||
+    (options.sourceScope !== "studyGuide" && options.sourceScope !== "currentPage")
+  ) {
+    return errorResponse(
+      "invalid_request",
+      "Podcast generation requires Study Guide metadata.",
+    );
+  }
+
+  const sourceText = buildPrompt(request.parts || []);
+  if (sourceText.length < MIN_PODCAST_SOURCE_CHARS) {
+    return errorResponse(
+      "invalid_request",
+      "This Study Guide does not have enough source content for a podcast yet.",
+    );
+  }
+
+  return ensurePodcastConfigured();
+};
+
+const handleGeneratePodcast = async (
+  userId: string,
+  request: HostedAiGatewayRequest,
+): Promise<HostedAiGatewayResponse> => {
+  const invalid = validatePodcastRequest(request);
+  if (invalid) {
+    return invalid;
+  }
+
+  await assertPodcastDailyLimit(userId);
+
+  const model = getHostedCerebrasModel();
+  const requestId = randomUUID();
+  const usageRequest = { ...request, surface: "podcast" as const, requestId };
+  const started = await startHostedUsage(userId, usageRequest, model);
+  let providerCallCount = 1;
+
+  try {
+    const sourceText = buildPrompt(request.parts || []).slice(
+      0,
+      MAX_PODCAST_SOURCE_CHARS,
+    );
+    const sourceTitle = safePodcastText(
+      request.podcastOptions?.sourceTitle,
+      100,
+    );
+    const scriptText = await callCerebras(
+      {
+        ...usageRequest,
+        responseSchema: PODCAST_SCRIPT_SCHEMA,
+        parts: [
+          {
+            text: buildPodcastScriptPrompt({
+              sourceTitle,
+              sourceText,
+              outputLanguage: request.outputLanguage,
+            }),
+          },
+        ],
+      },
+      model,
+    );
+    const script = normalizePodcastScript(scriptText, sourceTitle);
+    const characterCount = getPodcastTtsCharacterCount(script);
+    await reservePodcastTtsCharacters(userId, characterCount);
+    const audio = await generatePodcastAudioFromScript(script);
+    providerCallCount += 1;
+
+    const podcastId = `podcast-${randomUUID()}`;
+    const studyGuideId = podcastPathSegment(
+      request.podcastOptions?.studyGuideId || "",
+      "study-guide",
+    );
+    const audioPath = `${userId}/${studyGuideId}/${podcastId}.mp3`;
+    await uploadPodcastAudio(audioPath, audio.audioBuffer);
+
+    const podcast: HostedAiPodcast = {
+      id: podcastId,
+      title: script.title,
+      description: script.description,
+      durationSeconds: estimatePodcastDurationSeconds(script),
+      audioPath,
+      mimeType: audio.mimeType,
+      transcriptTurns: script.transcriptTurns,
+      chapters: script.chapters,
+      sourceTitle,
+      sourceScope: request.podcastOptions?.sourceScope || "studyGuide",
+      createdAt: new Date().toISOString(),
+    };
+
+    const status =
+      (await finishHostedUsage(
+        userId,
+        requestId,
+        "succeeded",
+        undefined,
+        undefined,
+        providerCallCount,
+      ).catch(() => undefined)) || started.status;
+
+    return { ok: true, podcast, status };
+  } catch (error) {
+    const mapped = mapFailure(error);
+
+    await finishHostedUsage(
+      userId,
+      requestId,
+      "failed",
+      mapped.response.error?.code,
+      mapped.response.error?.message,
+      providerCallCount,
+    ).catch(() => undefined);
+
+    throw error;
+  }
+};
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
@@ -938,6 +1643,12 @@ export default async function handler(
 
     if (request.action === "generateWithQuickStart") {
       const response = await handleGenerate(user.id, request, true);
+      json(res, 200, response);
+      return;
+    }
+
+    if (request.action === "generatePodcast") {
+      const response = await handleGeneratePodcast(user.id, request);
       json(res, 200, response);
       return;
     }

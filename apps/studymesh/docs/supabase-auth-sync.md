@@ -32,11 +32,13 @@ The SQL creates:
 - `user_widget_versions`: per-user widget snapshots.
 - `user_workspace_state`: selected/open dashboards, study progress, and workspace settings.
 - `hosted_ai_account_history`: auth-user-backed hosted credit history that survives StudyMesh profile deletion, so recreated profiles do not receive another first-login Study Credits grant.
+- `podcast_tts_monthly_usage`: per-user monthly podcast TTS character usage for the app-side Unreal Speech free-tier cap.
 - Owner indexes for sync reads.
 - `on delete cascade` constraints from `auth.users` to `profiles`, and from `profiles` to app-owned rows, so deleting an auth user removes that user's profile, dashboards, widgets, widget versions, and workspace state.
 - `on delete cascade` from `user_widgets` to `user_widget_versions`, so deleting a widget removes its version history.
 - `updated_at` trigger.
-- RLS policies that allow authenticated users to access only their own rows.
+- RLS policies that allow authenticated users to access only their own app rows.
+  Podcast TTS monthly usage is service-role-managed through the hosted gateway.
 
 Sharing is intentionally not implemented. `visibility` only accepts `private` in v1.
 
@@ -51,6 +53,22 @@ avatars/{userId}/avatar.{ext}
 ```
 
 Use the commented storage policies at the bottom of `supabase-auth-sync.sql` after the bucket exists. Those policies require the first folder segment to match `auth.uid()`.
+
+## Podcast Audio Storage
+
+Study Guide podcasts use server-side uploads and signed URLs. The SQL creates a
+private Supabase Storage bucket named `study-guide-podcasts` with a 15 MB MP3
+limit. The SQL also creates `podcast_tts_monthly_usage` plus the
+`podcast_tts_reserve_monthly_usage` RPC so the app enforces its own monthly TTS
+character cap before calling Unreal Speech.
+
+Required server env vars:
+
+- `UNREAL_SPEECH_API_KEY`
+- `UNREAL_SPEECH_VOICE_ID` optional, defaults to `Sierra`
+- `UNREAL_SPEECH_MODEL` optional
+- `PODCAST_AUDIO_BUCKET` optional, defaults to `study-guide-podcasts`
+- `PODCAST_TTS_MONTHLY_CHARACTER_CAP` optional, defaults to `225000`
 
 ## Local Storage Migration Contract
 

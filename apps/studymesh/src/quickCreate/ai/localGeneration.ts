@@ -1109,7 +1109,7 @@ const conceptFlashcard = (
 })
 
 const localResourceLimits: Record<
-  Exclude<StudyMaterialResourceType, 'improvedNotes'>,
+  Exclude<StudyMaterialResourceType, 'improvedNotes' | 'podcast'>,
   Record<StudyMaterialDetailLevel, { min: number; max: number }>
 > = {
   flashcards: {

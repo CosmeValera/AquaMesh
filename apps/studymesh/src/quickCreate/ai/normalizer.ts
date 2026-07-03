@@ -149,7 +149,11 @@ export interface AiQuickCreateDraft {
   debugTrace?: AiGenerationDebugTrace
 }
 
-export type StudyMaterialResourceType = 'improvedNotes' | 'flashcards' | 'quiz'
+export type StudyMaterialResourceType =
+  | 'improvedNotes'
+  | 'flashcards'
+  | 'quiz'
+  | 'podcast'
 export type StudyMaterialDetailLevel = 'short' | 'medium' | 'long'
 
 export interface NormalizeAiQuickCreateDraftOptions {
@@ -259,11 +263,13 @@ export const applyStudyMaterialResourceTypeToDraft = (
     objects = draft.objects.filter(
       (object) => object.kind === 'qa' || object.kind === 'reveal',
     )
-  } else {
+  } else if (resourceType === 'quiz') {
     objects = draft.objects.filter(
       (object): object is Extract<StudyObject, { kind: 'quiz' }> =>
         object.kind === 'quiz' && object.quizMode === 'multipleChoice',
     )
+  } else {
+    return draft
   }
 
   const hasFilteredContent =

@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const hostedAiClientMock = vi.hoisted(() => ({
   callHostedAiModel: vi.fn(),
+  generateHostedAiPodcast: vi.fn(),
+  getHostedAiPodcastAudioUrl: vi.fn(),
   getHostedAiStatus: vi.fn(),
   markHostedAiIntroSeen: vi.fn(),
 }))
@@ -46,6 +48,8 @@ vi.mock('../../../src/quickCreate/ai/hostedClient', () => ({
       return text
     },
   getHostedAiStatus: hostedAiClientMock.getHostedAiStatus,
+  generateHostedAiPodcast: hostedAiClientMock.generateHostedAiPodcast,
+  getHostedAiPodcastAudioUrl: hostedAiClientMock.getHostedAiPodcastAudioUrl,
   markHostedAiIntroSeen: hostedAiClientMock.markHostedAiIntroSeen,
 }))
 
@@ -259,8 +263,10 @@ describe('quick create AI settings', () => {
       'study-guide': 2,
       'quick-create': 1,
       chat: 1,
+      podcast: 1,
     })
     expect(getHostedAiCreditCost('study-guide')).toBe(2)
+    expect(getHostedAiCreditCost('podcast')).toBe(1)
   })
 
   it('routes hosted Quick Create through the hosted gateway without a browser API key', async () => {

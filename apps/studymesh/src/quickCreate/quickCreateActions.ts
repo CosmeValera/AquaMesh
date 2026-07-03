@@ -1,6 +1,10 @@
 import type { StudyMaterialResourceType } from './ai'
 
-export type QuickCreateActionId = 'quiz' | 'flashcards' | 'improvedNotes'
+export type QuickCreateActionId =
+  | 'quiz'
+  | 'flashcards'
+  | 'podcast'
+  | 'improvedNotes'
 export type QuickCreateActionGroup = 'Practice' | 'Notes'
 export type QuickCreateSourceScope = 'studyGuide' | 'currentPage'
 
@@ -52,6 +56,17 @@ export const quickCreateActions: QuickCreateAction[] = [
     accent: '#b66cff',
   },
   {
+    id: 'podcast',
+    resourceType: 'podcast',
+    label: 'Podcast',
+    shortLabel: 'Podcast',
+    description: 'Create a short audio recap from this material.',
+    group: 'Practice',
+    folder: 'Podcasts',
+    generationTargets: ['podcast'],
+    accent: '#f57c00',
+  },
+  {
     id: 'improvedNotes',
     resourceType: 'improvedNotes',
     label: 'Expand on this',
@@ -95,7 +110,10 @@ export const quickCreateAccents: Record<StudyMaterialResourceType, string> =
 export const isStudyMaterialResourceType = (
   value: unknown,
 ): value is StudyMaterialResourceType =>
-  value === 'quiz' || value === 'flashcards' || value === 'improvedNotes'
+  value === 'quiz' ||
+  value === 'flashcards' ||
+  value === 'podcast' ||
+  value === 'improvedNotes'
 
 export const normalizeQuickCreateActionInput = (
   input: QuickCreateActionInput,

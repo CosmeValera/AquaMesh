@@ -269,6 +269,9 @@ describe('DashboardChatPanel quick create menu', () => {
       screen.queryByRole('button', { name: /^Flashcards$/i }),
     ).not.toBeInTheDocument()
     expect(
+      screen.queryByRole('button', { name: /^Podcast$/i }),
+    ).not.toBeInTheDocument()
+    expect(
       screen.queryByRole('button', { name: /^Expand on this$/i }),
     ).not.toBeInTheDocument()
   })
@@ -298,6 +301,7 @@ describe('DashboardChatPanel quick create menu', () => {
     expect(
       screen.getByRole('button', { name: /^Flashcards$/i }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Podcast$/i })).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /^Expand on this$/i }),
     ).not.toBeInTheDocument()
@@ -307,6 +311,9 @@ describe('DashboardChatPanel quick create menu', () => {
     expect(
       screen.getByTestId('quick-create-action-icon-flashcards'),
     ).toHaveStyle({
+      color: '#7B1FA2',
+    })
+    expect(screen.getByTestId('quick-create-action-icon-podcast')).toHaveStyle({
       color: '#7B1FA2',
     })
     fireEvent.click(screen.getByRole('button', { name: /^Quiz$/i }))
@@ -336,6 +343,23 @@ describe('DashboardChatPanel quick create menu', () => {
         actionId: 'quiz',
         resourceType: 'quiz',
         label: 'Quiz',
+        sourceScope: 'studyGuide',
+      }),
+    )
+  })
+
+  it('sends podcast quick-create requests from the Study Guide source', async () => {
+    const onQuickCreatePage = vi.fn().mockResolvedValue(undefined)
+    renderPanel({ onQuickCreatePage, supportsStudyGuideCreateScope: true })
+
+    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Podcast$/i }))
+
+    await waitFor(() =>
+      expect(onQuickCreatePage).toHaveBeenCalledWith({
+        actionId: 'podcast',
+        resourceType: 'podcast',
+        label: 'Podcast',
         sourceScope: 'studyGuide',
       }),
     )

@@ -606,7 +606,7 @@ const StudyMeshLanding = () => {
         <Box
           sx={{
             bgcolor: 'transparent',
-            pt: { xs: 2.5, md: 3.5 },
+            pt: { xs: 5.5, md: 8, lg: 9 },
             pb: { xs: 5, md: 7 },
           }}
         >
@@ -760,7 +760,7 @@ const GrowingGuidesSection = () => (
     sx={{
       position: 'relative',
       bgcolor: 'transparent',
-      pt: { xs: 11, lg: 14 },
+      pt: { xs: 7, md: 8, lg: 9 },
       pb: { xs: 2, md: 3.5 },
       overflow: 'hidden',
     }}

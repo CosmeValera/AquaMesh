@@ -183,4 +183,40 @@ describe('CloudWorkspaceSync profile deletion guard', () => {
       cloudSyncMocks.clearStudyMeshGuideSeedMarker,
     ).not.toHaveBeenCalled()
   })
+
+  it('syncs Study Guide pin changes as metadata updates', async () => {
+    cloudSyncMocks.studyGuideStorage.getSummaryById.mockReturnValue({
+      id: 'guide-1',
+      title: 'Pinned guide',
+      folderName: 'Pinned guide',
+      pinnedAt: '2026-07-03T10:00:00.000Z',
+      createdAt: '2026-07-01T10:00:00.000Z',
+      updatedAt: '2026-07-03T10:00:00.000Z',
+    })
+
+    render(<CloudWorkspaceSync />)
+
+    await waitFor(() => {
+      expect(cloudSyncMocks.repository.upsertProfile).toHaveBeenCalled()
+    })
+    cloudSyncMocks.repository.updateStudyGuideSummary.mockClear()
+
+    window.dispatchEvent(
+      new CustomEvent('studyGuidesChanged', {
+        detail: { action: 'pin', studyGuideId: 'guide-1' },
+      }),
+    )
+
+    await waitFor(() => {
+      expect(
+        cloudSyncMocks.repository.updateStudyGuideSummary,
+      ).toHaveBeenCalledWith(
+        'user-1',
+        expect.objectContaining({
+          id: 'guide-1',
+          pinnedAt: '2026-07-03T10:00:00.000Z',
+        }),
+      )
+    })
+  })
 })

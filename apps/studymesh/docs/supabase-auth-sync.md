@@ -33,6 +33,12 @@ The SQL creates:
 - `user_workspace_state`: selected/open dashboards, study progress, and workspace settings.
 - `hosted_ai_account_history`: auth-user-backed hosted credit history that survives StudyMesh profile deletion, so recreated profiles do not receive another first-login Study Credits grant.
 - `podcast_tts_monthly_usage`: per-user monthly podcast TTS character usage for the app-side Unreal Speech free-tier cap.
+- `podcast_audio_objects`: private podcast MP3 lifecycle metadata. The latest 5
+  podcast audio files per user are kept; older audio becomes a deletion
+  candidate and can be removed after 30 days while the transcript page remains.
+- `user_study_guides.pinned_at` and `retention_candidate_at`: Study Guide
+  retention metadata. The newest pinned guides are kept first, then newest
+  unpinned guides, up to 50 total per user.
 - Owner indexes for sync reads.
 - `on delete cascade` constraints from `auth.users` to `profiles`, and from `profiles` to app-owned rows, so deleting an auth user removes that user's profile, dashboards, widgets, widget versions, and workspace state.
 - `on delete cascade` from `user_widgets` to `user_widget_versions`, so deleting a widget removes its version history.
@@ -58,9 +64,9 @@ Use the commented storage policies at the bottom of `supabase-auth-sync.sql` aft
 
 Study Guide podcasts use server-side uploads and signed URLs. The SQL creates a
 private Supabase Storage bucket named `study-guide-podcasts` with a 15 MB MP3
-limit. The SQL also creates `podcast_tts_monthly_usage` plus the
-`podcast_tts_reserve_monthly_usage` RPC so the app enforces its own monthly TTS
-character cap before calling Unreal Speech.
+limit. The SQL also creates podcast TTS/accounting tables and RPCs so the app
+enforces its own monthly TTS character cap before calling Unreal Speech and can
+clean up old private MP3s without deleting the Study Guide transcript page.
 
 Required server env vars:
 
@@ -69,6 +75,19 @@ Required server env vars:
 - `UNREAL_SPEECH_MODEL` optional
 - `PODCAST_AUDIO_BUCKET` optional, defaults to `study-guide-podcasts`
 - `PODCAST_TTS_MONTHLY_CHARACTER_CAP` optional, defaults to `225000`
+- `CRON_SECRET` or `PODCAST_CLEANUP_SECRET` for `/api/podcast-audio-cleanup`
+  daily cleanup auth
+
+Vercel runs `/api/podcast-audio-cleanup` daily. It refreshes Study Guide
+retention candidates first, deletes expired Study Guide candidates after 30
+days, deletes any MP3s embedded in those guides, then recomputes podcast MP3
+retention and deletes expired podcast-only candidates. To run it manually after
+deploy:
+
+```bash
+curl -X GET "https://YOUR_DOMAIN/api/podcast-audio-cleanup" \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
 
 ## Local Storage Migration Contract
 

@@ -287,6 +287,21 @@ export const getHostedAiPodcastAudioUrl = async (
   return payload.signedUrl
 }
 
+export const deleteHostedAiPodcastAudio = async (
+  audioPath: string,
+  deletedReason: 'page-deleted' | 'study-guide-deleted' = 'page-deleted',
+): Promise<void> => {
+  const accessToken = await getHostedAiAccessToken()
+  await fetch(PODCAST_AUDIO_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action: 'delete', audioPath, deletedReason }),
+  })
+}
+
 export const createHostedAiTransport = ({
   surface,
 }: {

@@ -270,6 +270,31 @@ describe('workspace cloud repository', () => {
     )
   })
 
+  it('keeps Study Guide and podcast retention RPCs in the Supabase schema', () => {
+    const sqlPath = resolve(process.cwd(), 'docs/supabase-auth-sync.sql')
+    const sql = readFileSync(sqlPath, 'utf8').replace(/\s+/g, ' ')
+
+    expect(sql).toContain('add column if not exists pinned_at timestamptz')
+    expect(sql).toContain(
+      'add column if not exists retention_candidate_at timestamptz',
+    )
+    expect(sql).toContain(
+      'create or replace function public.study_guides_refresh_retention_candidates',
+    )
+    expect(sql).toContain(
+      'case when guide.pinned_at is not null then 0 else 1 end',
+    )
+    expect(sql).toContain(
+      'coalesce(guide.pinned_at, guide.created_at) desc',
+    )
+    expect(sql).toContain(
+      'create or replace function public.podcast_audio_refresh_retention_candidates',
+    )
+    expect(sql).toContain(
+      'grant execute on function public.study_guides_refresh_retention_candidates(integer) to service_role',
+    )
+  })
+
   it('upserts widgets and workspace state using owner-scoped rows', async () => {
     const widgetBuilder = createQueryBuilder()
     widgetBuilder.single.mockResolvedValue({
@@ -376,6 +401,7 @@ describe('workspace cloud repository', () => {
         emoji: '⚛️',
         page_count: 0,
         first_page_title: null,
+        pinned_at: '2026-06-03T10:00:00.000Z',
         study_path: {
           pathId: 'guide-1',
           title: 'Physics Guide',
@@ -403,6 +429,7 @@ describe('workspace cloud repository', () => {
       title: 'Physics Guide',
       folderName: 'Physics',
       emoji: '⚛️',
+      pinnedAt: '2026-06-03T10:00:00.000Z',
       studyPath: {
         pathId: 'guide-1',
         title: 'Physics Guide',
@@ -417,6 +444,7 @@ describe('workspace cloud repository', () => {
     await repository.deleteStudyGuide('user-1', 'guide-1')
 
     expect(savedGuide.emoji).toBe('⚛️')
+    expect(savedGuide.pinnedAt).toBe('2026-06-03T10:00:00.000Z')
     expect(supabase.from).toHaveBeenNthCalledWith(1, 'user_study_guides')
     expect(upsertBuilder.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -427,6 +455,8 @@ describe('workspace cloud repository', () => {
         emoji: '⚛️',
         page_count: 0,
         first_page_title: null,
+        pinned_at: '2026-06-03T10:00:00.000Z',
+        retention_candidate_at: null,
       }),
       { onConflict: 'owner_id,id' },
     )
@@ -457,6 +487,7 @@ describe('workspace cloud repository', () => {
           emoji: '🔢',
           page_count: 3,
           first_page_title: 'Intro',
+          pinned_at: '2026-06-03T10:00:00.000Z',
           created_at: '2026-06-01T10:00:00.000Z',
           updated_at: '2026-06-02T10:00:00.000Z',
         },
@@ -484,7 +515,7 @@ describe('workspace cloud repository', () => {
     const bundle = await repository.loadWorkspaceBundle('user-1')
 
     expect(studyGuideBuilder.select).toHaveBeenCalledWith(
-      'id,owner_id,title,folder_name,description,emoji,page_count,first_page_title,created_at,updated_at',
+      'id,owner_id,title,folder_name,description,emoji,page_count,first_page_title,pinned_at,created_at,updated_at',
     )
     expect(bundle.studyGuides).toEqual([
       expect.objectContaining({
@@ -494,6 +525,7 @@ describe('workspace cloud repository', () => {
         description: 'Linear equations prompt',
         pageCount: 3,
         firstPageTitle: 'Intro',
+        pinnedAt: '2026-06-03T10:00:00.000Z',
       }),
     ])
   })

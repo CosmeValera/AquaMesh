@@ -94,6 +94,7 @@ export {
   callHostedAiModel,
   createHostedAiTransport,
   createHostedStudyGuideTransportWithQuickStart,
+  deleteHostedAiPodcastAudio,
   generateHostedAiPodcast,
   getHostedAiPodcastAudioUrl,
   getHostedAiStatus,

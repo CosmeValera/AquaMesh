@@ -57,6 +57,8 @@ create table if not exists public.user_study_guides (
   page_count integer,
   first_page_title text,
   study_path jsonb not null default '{}'::jsonb,
+  pinned_at timestamptz,
+  retention_candidate_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   primary key (owner_id, id)
@@ -65,7 +67,9 @@ create table if not exists public.user_study_guides (
 alter table public.user_study_guides
   add column if not exists emoji text,
   add column if not exists page_count integer,
-  add column if not exists first_page_title text;
+  add column if not exists first_page_title text,
+  add column if not exists pinned_at timestamptz,
+  add column if not exists retention_candidate_at timestamptz;
 
 update public.user_study_guides
 set
@@ -216,6 +220,46 @@ create table if not exists public.podcast_tts_monthly_usage (
     check (characters_used >= 0)
 );
 
+create table if not exists public.podcast_audio_objects (
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  audio_path text not null,
+  study_guide_id text,
+  podcast_id text,
+  candidate_at timestamptz,
+  deleted_at timestamptz,
+  deleted_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (owner_id, audio_path),
+  constraint podcast_audio_objects_path_owner_check
+    check (audio_path like owner_id::text || '/%'),
+  constraint podcast_audio_objects_deleted_reason_check
+    check (
+      deleted_reason is null
+      or deleted_reason in (
+        'expired',
+        'page-deleted',
+        'study-guide-expired',
+        'study-guide-deleted'
+      )
+    )
+);
+
+alter table public.podcast_audio_objects
+  drop constraint if exists podcast_audio_objects_deleted_reason_check;
+
+alter table public.podcast_audio_objects
+  add constraint podcast_audio_objects_deleted_reason_check
+  check (
+    deleted_reason is null
+    or deleted_reason in (
+      'expired',
+      'page-deleted',
+      'study-guide-expired',
+      'study-guide-deleted'
+    )
+  );
+
 insert into storage.buckets (
   id,
   name,
@@ -285,6 +329,11 @@ create trigger podcast_tts_monthly_usage_set_updated_at
 before update on public.podcast_tts_monthly_usage
 for each row execute function public.set_updated_at();
 
+drop trigger if exists podcast_audio_objects_set_updated_at on public.podcast_audio_objects;
+create trigger podcast_audio_objects_set_updated_at
+before update on public.podcast_audio_objects
+for each row execute function public.set_updated_at();
+
 -- Indexes for owner fetches, recent-sync ordering, soft-delete filtering.
 create index if not exists profiles_email_idx
   on public.profiles(email);
@@ -303,6 +352,13 @@ create index if not exists user_dashboards_referenced_widget_ids_gin_idx
 
 create index if not exists user_study_guides_owner_updated_idx
   on public.user_study_guides(owner_id, updated_at desc);
+
+create index if not exists user_study_guides_owner_retention_idx
+  on public.user_study_guides(owner_id, pinned_at desc, created_at desc);
+
+create index if not exists user_study_guides_retention_candidates_idx
+  on public.user_study_guides(owner_id, retention_candidate_at, created_at)
+  where retention_candidate_at is not null;
 
 create index if not exists user_widgets_owner_updated_idx
   on public.user_widgets(owner_id, updated_at desc);
@@ -336,6 +392,13 @@ create index if not exists hosted_ai_credit_purchases_session_idx
 
 create index if not exists podcast_tts_monthly_usage_owner_month_idx
   on public.podcast_tts_monthly_usage(owner_id, usage_month);
+
+create index if not exists podcast_audio_objects_owner_created_idx
+  on public.podcast_audio_objects(owner_id, created_at desc);
+
+create index if not exists podcast_audio_objects_expired_candidates_idx
+  on public.podcast_audio_objects(owner_id, candidate_at, created_at)
+  where deleted_at is null and candidate_at is not null;
 
 -- Optional profile bootstrap. Safe if app also upserts profile on login.
 create or replace function public.handle_new_user()
@@ -813,6 +876,169 @@ begin
 end;
 $$;
 
+create or replace function public.podcast_audio_register(
+  p_owner_id uuid,
+  p_audio_path text,
+  p_study_guide_id text default null,
+  p_podcast_id text default null,
+  p_keep_count integer default 5
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_owner_id is null then
+    raise exception 'owner_id is required';
+  end if;
+
+  if p_audio_path is null or btrim(p_audio_path) = '' then
+    raise exception 'audio_path is required';
+  end if;
+
+  if p_audio_path not like p_owner_id::text || '/%' then
+    raise exception 'audio_path must be owned by owner_id';
+  end if;
+
+  insert into public.profiles (id)
+  values (p_owner_id)
+  on conflict (id) do nothing;
+
+  insert into public.podcast_audio_objects (
+    owner_id,
+    audio_path,
+    study_guide_id,
+    podcast_id
+  )
+  values (
+    p_owner_id,
+    p_audio_path,
+    nullif(btrim(coalesce(p_study_guide_id, '')), ''),
+    nullif(btrim(coalesce(p_podcast_id, '')), '')
+  )
+  on conflict on constraint podcast_audio_objects_pkey do update
+    set study_guide_id = excluded.study_guide_id,
+        podcast_id = excluded.podcast_id,
+        deleted_at = null,
+        deleted_reason = null;
+
+  with ranked as (
+    select audio.owner_id,
+           audio.audio_path,
+           row_number() over (
+             partition by audio.owner_id
+             order by audio.created_at desc, audio.audio_path desc
+           ) as retained_rank
+    from public.podcast_audio_objects audio
+    where audio.owner_id = p_owner_id
+      and audio.deleted_at is null
+  )
+  update public.podcast_audio_objects audio
+  set candidate_at = case
+        when ranked.retained_rank > greatest(coalesce(p_keep_count, 5), 0)
+        then coalesce(audio.candidate_at, now())
+        else null
+      end
+  from ranked
+  where audio.owner_id = ranked.owner_id
+    and audio.audio_path = ranked.audio_path;
+end;
+$$;
+
+create or replace function public.podcast_audio_mark_deleted(
+  p_owner_id uuid,
+  p_audio_path text,
+  p_deleted_reason text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_deleted_reason not in (
+    'expired',
+    'page-deleted',
+    'study-guide-expired',
+    'study-guide-deleted'
+  ) then
+    raise exception 'invalid podcast audio deletion reason';
+  end if;
+
+  update public.podcast_audio_objects audio
+  set deleted_at = coalesce(audio.deleted_at, now()),
+      deleted_reason = p_deleted_reason
+  where audio.owner_id = p_owner_id
+    and audio.audio_path = p_audio_path;
+end;
+$$;
+
+create or replace function public.podcast_audio_refresh_retention_candidates(
+  p_keep_count integer default 5
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  with ranked as (
+    select audio.owner_id,
+           audio.audio_path,
+           row_number() over (
+             partition by audio.owner_id
+             order by audio.created_at desc, audio.audio_path desc
+           ) as retained_rank
+    from public.podcast_audio_objects audio
+    where audio.deleted_at is null
+  )
+  update public.podcast_audio_objects audio
+  set candidate_at = case
+        when ranked.retained_rank > greatest(coalesce(p_keep_count, 5), 0)
+        then coalesce(audio.candidate_at, now())
+        else null
+      end
+  from ranked
+  where audio.owner_id = ranked.owner_id
+    and audio.audio_path = ranked.audio_path;
+end;
+$$;
+
+create or replace function public.study_guides_refresh_retention_candidates(
+  p_keep_count integer default 50
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  with ranked as (
+    select guide.owner_id,
+           guide.id,
+           row_number() over (
+             partition by guide.owner_id
+             order by
+               case when guide.pinned_at is not null then 0 else 1 end,
+               coalesce(guide.pinned_at, guide.created_at) desc,
+               guide.created_at desc,
+               guide.id desc
+           ) as retained_rank
+    from public.user_study_guides guide
+  )
+  update public.user_study_guides guide
+  set retention_candidate_at = case
+        when ranked.retained_rank > greatest(coalesce(p_keep_count, 50), 0)
+        then coalesce(guide.retention_candidate_at, now())
+        else null
+      end
+  from ranked
+  where guide.owner_id = ranked.owner_id
+    and guide.id = ranked.id;
+end;
+$$;
+
 create or replace function public.hosted_ai_create_credit_purchase(
   p_owner_id uuid,
   p_expected_credits integer,
@@ -1061,6 +1287,10 @@ revoke all on function public.hosted_ai_mark_intro_seen(uuid) from public;
 revoke all on function public.hosted_ai_begin_usage(uuid, text, text, text, text, jsonb) from public;
 revoke all on function public.hosted_ai_finish_usage(uuid, text, text, integer, text, text, jsonb) from public;
 revoke all on function public.podcast_tts_reserve_monthly_usage(uuid, text, integer, integer) from public;
+revoke all on function public.podcast_audio_register(uuid, text, text, text, integer) from public;
+revoke all on function public.podcast_audio_mark_deleted(uuid, text, text) from public;
+revoke all on function public.podcast_audio_refresh_retention_candidates(integer) from public;
+revoke all on function public.study_guides_refresh_retention_candidates(integer) from public;
 revoke all on function public.hosted_ai_create_credit_purchase(uuid, integer, integer, text, jsonb) from public;
 revoke all on function public.hosted_ai_attach_checkout_session(uuid, uuid, text, jsonb) from public;
 revoke all on function public.hosted_ai_mark_credit_purchase_paid(uuid, text, text, integer, integer, text, jsonb) from public;
@@ -1072,6 +1302,10 @@ grant execute on function public.hosted_ai_mark_intro_seen(uuid) to service_role
 grant execute on function public.hosted_ai_begin_usage(uuid, text, text, text, text, jsonb) to service_role;
 grant execute on function public.hosted_ai_finish_usage(uuid, text, text, integer, text, text, jsonb) to service_role;
 grant execute on function public.podcast_tts_reserve_monthly_usage(uuid, text, integer, integer) to service_role;
+grant execute on function public.podcast_audio_register(uuid, text, text, text, integer) to service_role;
+grant execute on function public.podcast_audio_mark_deleted(uuid, text, text) to service_role;
+grant execute on function public.podcast_audio_refresh_retention_candidates(integer) to service_role;
+grant execute on function public.study_guides_refresh_retention_candidates(integer) to service_role;
 grant execute on function public.hosted_ai_create_credit_purchase(uuid, integer, integer, text, jsonb) to service_role;
 grant execute on function public.hosted_ai_attach_checkout_session(uuid, uuid, text, jsonb) to service_role;
 grant execute on function public.hosted_ai_mark_credit_purchase_paid(uuid, text, text, integer, integer, text, jsonb) to service_role;
@@ -1089,6 +1323,7 @@ alter table public.hosted_ai_account_history enable row level security;
 alter table public.hosted_ai_usage_events enable row level security;
 alter table public.hosted_ai_credit_purchases enable row level security;
 alter table public.podcast_tts_monthly_usage enable row level security;
+alter table public.podcast_audio_objects enable row level security;
 
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own"

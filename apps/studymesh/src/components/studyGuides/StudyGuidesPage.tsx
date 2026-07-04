@@ -48,7 +48,11 @@ import {
   createStudyGuideRecord,
 } from '../../studyGuides/storage'
 import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
-import { readQuickCreateAiSettings } from '../../quickCreate/ai'
+import {
+  deleteHostedAiPodcastAudio,
+  readQuickCreateAiSettings,
+} from '../../quickCreate/ai'
+import { collectPodcastAudioPathsFromStudyPath } from '../../studyGuides/podcasts'
 import {
   HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT,
   HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
@@ -681,6 +685,17 @@ const StudyGuidesPage = () => {
 
   const deleteGuide = () => {
     if (menuGuide) {
+      const fullGuide = StudyGuideStorage.getById(menuGuide.id)
+      if (fullGuide) {
+        collectPodcastAudioPathsFromStudyPath(fullGuide.studyPath).forEach(
+          (audioPath) => {
+            void deleteHostedAiPodcastAudio(
+              audioPath,
+              'study-guide-deleted',
+            ).catch(() => undefined)
+          },
+        )
+      }
       StudyGuideStorage.delete(menuGuide.id)
       loadGuides()
     }

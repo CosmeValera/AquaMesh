@@ -17,6 +17,19 @@ import {
   StudyGuideCreationQueueStorage,
 } from '../../../../src/studyGuides/creationQueue'
 
+const deleteHostedAiPodcastAudioMock = vi.hoisted(() => vi.fn())
+
+vi.mock('../../../../src/quickCreate/ai', async () => {
+  const actual = await vi.importActual<typeof import('../../../../src/quickCreate/ai')>(
+    '../../../../src/quickCreate/ai',
+  )
+
+  return {
+    ...actual,
+    deleteHostedAiPodcastAudio: deleteHostedAiPodcastAudioMock,
+  }
+})
+
 vi.mock('../../../../src/components/topnavbar/TopNavBar', () => ({
   __esModule: true,
   default: () => <div data-testid="top-nav-bar" />,
@@ -153,6 +166,7 @@ const createGuideFromPrompt = async (prompt: string) => {
 describe('StudyGuidesPage create flow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    deleteHostedAiPodcastAudioMock.mockResolvedValue(undefined)
     const storage = new Map<string, string>()
     vi.mocked(window.localStorage.getItem).mockImplementation(
       (key: string) => storage.get(key) ?? null,
@@ -658,6 +672,46 @@ describe('StudyGuidesPage create flow', () => {
         .map((element) => element.textContent)
       expect(titles).toEqual(['Music Theory', 'Algebra', 'Zoology'])
     })
+  })
+
+  it('deletes embedded podcast audio when deleting a full Study Guide', async () => {
+    const guide = makeStoredGuide({
+      id: 'podcast-guide',
+      title: 'Podcast Guide',
+      description: 'Audio recap prompt',
+      createdAt: '2026-01-04T00:00:00.000Z',
+    })
+    guide.studyPath.dashboards[0].layout = {
+      type: 'row',
+      config: {
+        customProps: {
+          components: [
+            {
+              id: 'podcast-player',
+              type: 'PodcastBlock',
+              props: {
+                podcast: {
+                  audioPath: 'user-1/podcast-guide/podcast-audio.mp3',
+                },
+              },
+            },
+          ],
+        },
+      },
+    }
+    StudyGuideStorage.save(guide)
+    renderStudyGuidesPage('/study-guides')
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /open options.*podcast guide/i }),
+    )
+    fireEvent.click(await screen.findByRole('menuitem', { name: /delete/i }))
+
+    expect(deleteHostedAiPodcastAudioMock).toHaveBeenCalledWith(
+      'user-1/podcast-guide/podcast-audio.mp3',
+      'study-guide-deleted',
+    )
+    expect(StudyGuideStorage.getById('podcast-guide')).toBeNull()
   })
 
   it('shows a friendly error when the Study Guide library is too large to save', () => {

@@ -548,15 +548,16 @@ const CloudWorkspaceSync = () => {
         return
       }
 
-      if (detail?.action === 'metadata' && detail.studyGuideId) {
+      if (
+        (detail?.action === 'metadata' || detail?.action === 'pin') &&
+        detail.studyGuideId
+      ) {
         void runCloudStudyGuideMetadataSave(detail.studyGuideId)
         return
       }
 
       if (
-        detail?.action === 'pin' ||
-        detail?.action === 'progress' ||
-        detail?.action === 'cache'
+        detail?.action === 'progress' || detail?.action === 'cache'
       ) {
         return
       }

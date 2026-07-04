@@ -27,10 +27,17 @@ interface PodcastAudioResponse {
   signedUrl?: string;
   expiresIn?: number;
   error?: {
-    code: "not_authenticated" | "not_configured" | "invalid_request" | "server_error";
+    code:
+      | "not_authenticated"
+      | "not_configured"
+      | "invalid_request"
+      | "expired"
+      | "server_error";
     message: string;
   };
 }
+
+type PodcastAudioDeletedReason = "page-deleted" | "study-guide-deleted";
 
 const SIGNED_URL_EXPIRES_SECONDS = 60 * 60;
 
@@ -91,6 +98,34 @@ const getAudioPath = (body: unknown): string => {
     : "";
 };
 
+const getAction = (body: unknown): string => {
+  if (typeof body === "string") {
+    try {
+      return getAction(JSON.parse(body) as unknown);
+    } catch {
+      return "";
+    }
+  }
+
+  return isObject(body) && typeof body.action === "string"
+    ? body.action.trim()
+    : "";
+};
+
+const getDeletedReason = (body: unknown): PodcastAudioDeletedReason => {
+  if (typeof body === "string") {
+    try {
+      return getDeletedReason(JSON.parse(body) as unknown);
+    } catch {
+      return "page-deleted";
+    }
+  }
+
+  return isObject(body) && body.deletedReason === "study-guide-deleted"
+    ? "study-guide-deleted"
+    : "page-deleted";
+};
+
 const verifyUser = async (accessToken: string): Promise<SupabaseUser> => {
   const supabaseUrl = normalizeSupabaseUrl(getEnv("SUPABASE_URL"));
   const anonKey = getEnv("SUPABASE_ANON_KEY");
@@ -117,6 +152,37 @@ const verifyUser = async (accessToken: string): Promise<SupabaseUser> => {
 
 const encodeStoragePath = (path: string): string =>
   path.split("/").map(encodeURIComponent).join("/");
+
+const getPodcastAudioDeletedAt = async (
+  userId: string,
+  audioPath: string,
+): Promise<string> => {
+  const supabaseUrl = normalizeSupabaseUrl(getEnv("SUPABASE_URL"));
+  const serviceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const query = new URLSearchParams({
+    select: "deleted_at",
+    owner_id: `eq.${userId}`,
+    audio_path: `eq.${audioPath}`,
+    limit: "1",
+  });
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/podcast_audio_objects?${query.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        apikey: serviceKey,
+        authorization: `Bearer ${serviceKey}`,
+      },
+    },
+  );
+  const payload = await readResponseJson(response);
+
+  if (!response.ok || !Array.isArray(payload) || !isObject(payload[0])) {
+    return "";
+  }
+
+  return typeof payload[0].deleted_at === "string" ? payload[0].deleted_at : "";
+};
 
 const createSignedUrl = async (audioPath: string): Promise<string> => {
   const supabaseUrl = normalizeSupabaseUrl(getEnv("SUPABASE_URL"));
@@ -157,6 +223,49 @@ const createSignedUrl = async (audioPath: string): Promise<string> => {
   return signedPath.startsWith("/storage/v1/")
     ? `${supabaseUrl}${signedPath}`
     : `${supabaseUrl}/storage/v1${signedPath}`;
+};
+
+const deletePodcastAudio = async (
+  userId: string,
+  audioPath: string,
+  deletedReason: PodcastAudioDeletedReason,
+): Promise<void> => {
+  const supabaseUrl = normalizeSupabaseUrl(getEnv("SUPABASE_URL"));
+  const serviceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const bucket = getEnv("PODCAST_AUDIO_BUCKET") || "study-guide-podcasts";
+  if (!supabaseUrl || !serviceKey) {
+    throw new Error("not_configured");
+  }
+
+  const deleteResponse = await fetch(`${supabaseUrl}/storage/v1/object/${bucket}`, {
+    method: "DELETE",
+    headers: {
+      apikey: serviceKey,
+      authorization: `Bearer ${serviceKey}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ prefixes: [audioPath] }),
+  });
+  if (!deleteResponse.ok) {
+    throw new Error("server_error");
+  }
+
+  const metadataResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/podcast_audio_mark_deleted`, {
+    method: "POST",
+    headers: {
+      apikey: serviceKey,
+      authorization: `Bearer ${serviceKey}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      p_owner_id: userId,
+      p_audio_path: audioPath,
+      p_deleted_reason: deletedReason,
+    }),
+  });
+  if (!metadataResponse.ok) {
+    throw new Error("server_error");
+  }
 };
 
 const mapError = (
@@ -229,6 +338,21 @@ export default async function handler(
         res,
         400,
         errorResponse("invalid_request", "Invalid podcast audio path."),
+      );
+      return;
+    }
+
+    if (getAction(req.body) === "delete") {
+      await deletePodcastAudio(user.id, audioPath, getDeletedReason(req.body));
+      json(res, 200, { ok: true });
+      return;
+    }
+
+    if (await getPodcastAudioDeletedAt(user.id, audioPath)) {
+      json(
+        res,
+        410,
+        errorResponse("expired", "Audio expired, regenerate podcast."),
       );
       return;
     }

@@ -118,6 +118,8 @@ export interface StudyGuideRow {
   page_count?: number | null
   first_page_title?: string | null
   study_path: CloudJson
+  pinned_at?: string | null
+  retention_candidate_at?: string | null
   created_at: string
   updated_at: string
 }
@@ -131,6 +133,7 @@ export interface StudyGuideSummaryRow {
   emoji?: string | null
   page_count?: number | null
   first_page_title?: string | null
+  pinned_at?: string | null
   created_at: string
   updated_at: string
 }
@@ -311,6 +314,7 @@ const studyGuideFromRow = (row: StudyGuideRow): StudyGuideRecord => {
     folderName: row.folder_name,
     description: row.description || undefined,
     emoji: row.emoji || studyPath.emoji,
+    pinnedAt: row.pinned_at || null,
     studyPath,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -325,6 +329,7 @@ const studyGuideSummaryFromRow = (
   folderName: row.folder_name,
   description: row.description || undefined,
   emoji: row.emoji || undefined,
+  pinnedAt: row.pinned_at || null,
   pageCount: row.page_count ?? undefined,
   firstPageTitle: row.first_page_title || undefined,
   createdAt: row.created_at,
@@ -339,6 +344,7 @@ const studyGuideSummaryFromRecord = (
   folderName: record.folderName,
   description: record.description,
   emoji: record.emoji || record.studyPath.emoji,
+  pinnedAt: record.pinnedAt ?? null,
   pageCount: record.studyPath.dashboards.length,
   firstPageTitle: record.studyPath.dashboards[0]?.name,
   createdAt: record.createdAt,
@@ -355,6 +361,7 @@ const studyGuideSummaryToRow = (
   | 'emoji'
   | 'page_count'
   | 'first_page_title'
+  | 'pinned_at'
   | 'updated_at'
 > => ({
   title: summary.title,
@@ -363,6 +370,7 @@ const studyGuideSummaryToRow = (
   emoji: summary.emoji,
   page_count: summary.pageCount ?? null,
   first_page_title: summary.firstPageTitle || null,
+  pinned_at: summary.pinnedAt ?? null,
   updated_at: summary.updatedAt || nowIso(),
 })
 
@@ -379,6 +387,8 @@ const studyGuideToRow = (
   page_count: studyGuide.studyPath.dashboards.length,
   first_page_title: studyGuide.studyPath.dashboards[0]?.name || null,
   study_path: toCloudJson(studyGuide.studyPath),
+  pinned_at: studyGuide.pinnedAt ?? null,
+  retention_candidate_at: null,
   created_at: studyGuide.createdAt,
   updated_at: studyGuide.updatedAt || nowIso(),
 })
@@ -682,7 +692,7 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
       client
         .from('user_study_guides')
         .select(
-          'id,owner_id,title,folder_name,description,emoji,page_count,first_page_title,created_at,updated_at',
+          'id,owner_id,title,folder_name,description,emoji,page_count,first_page_title,pinned_at,created_at,updated_at',
         )
         .eq('owner_id', ownerId)
         .order('updated_at', { ascending: false }),

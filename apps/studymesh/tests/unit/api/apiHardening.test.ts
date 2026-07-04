@@ -9,6 +9,7 @@ import hostedAiHandler, {
   getHostedCerebrasModel,
 } from '../../../../../api/hosted-ai'
 import dashboardSourceHandler from '../../../../../api/dashboard-source'
+import podcastAudioCleanupHandler from '../../../../../api/podcast-audio-cleanup'
 import podcastAudioHandler from '../../../../../api/study-guide-podcast-audio'
 
 const makeResponse = () => {
@@ -830,6 +831,15 @@ describe('API payment and hosted AI hardening', () => {
         )
       }
 
+      if (target.includes('/rest/v1/rpc/podcast_audio_register')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(jsonResponse(null))
+      }
+
+      if (target.includes('/rest/v1/podcast_audio_objects')) {
+        return Promise.resolve(jsonResponse([]))
+      }
+
       if (target.includes('api.cerebras.ai')) {
         providerBodies.push(JSON.parse(String(init?.body)))
         return Promise.resolve(
@@ -942,6 +952,10 @@ describe('API payment and hosted AI hardening', () => {
       p_provider: 'cerebras',
     })
     expect(rpcBodies[1]).toMatchObject({
+      p_audio_path: expect.stringContaining('user-1/guide-1/'),
+      p_keep_count: 5,
+    })
+    expect(rpcBodies[2]).toMatchObject({
       p_status: 'succeeded',
       p_provider_call_count: 2,
     })
@@ -1149,6 +1163,10 @@ describe('API payment and hosted AI hardening', () => {
         return Promise.resolve(jsonResponse({ id: 'user-1' }))
       }
 
+      if (target.includes('/rest/v1/podcast_audio_objects')) {
+        return Promise.resolve(jsonResponse([]))
+      }
+
       if (
         target.includes(
           '/storage/v1/object/sign/study-guide-podcasts/user-1/guide-1/podcast.mp3',
@@ -1189,6 +1207,252 @@ describe('API payment and hosted AI hardening', () => {
       signedUrl:
         'https://supabase.test/storage/v1/object/sign/study-guide-podcasts/user-1/guide-1/podcast.mp3?token=signed-token',
     })
+  })
+
+  it('reports expired podcast audio without deleting the transcript page', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    })
+    const fetchMock = vi.fn((url: string) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve(jsonResponse({ id: 'user-1' }))
+      }
+
+      if (target.includes('/rest/v1/podcast_audio_objects')) {
+        return Promise.resolve(
+          jsonResponse([{ deleted_at: '2026-07-03T18:00:00.000Z' }]),
+        )
+      }
+
+      return Promise.resolve(
+        jsonResponse({ message: 'unexpected url' }, false, 500),
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { response, res } = makeResponse()
+
+    await podcastAudioHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer [REDACTED:Bearer token]',
+        },
+        body: {
+          audioPath: 'user-1/guide-1/podcast.mp3',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(410)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: {
+        code: 'expired',
+        message: 'Audio expired, regenerate podcast.',
+      },
+    })
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      expect.stringContaining('/storage/v1/object/sign/'),
+      expect.anything(),
+    )
+  })
+
+  it('requires bearer auth for scheduled podcast audio cleanup', async () => {
+    vi.stubEnv('CRON_SECRET', 'cron-secret')
+    const { response, res } = makeResponse()
+
+    await podcastAudioCleanupHandler(
+      {
+        method: 'GET',
+        headers: {},
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(401)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: { code: 'not_authorized' },
+    })
+  })
+
+  it('deletes expired Study Guides before recomputing podcast cleanup', async () => {
+    vi.stubEnv('CRON_SECRET', 'cron-secret')
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+
+    const rpcCalls: string[] = []
+    const storageDeleteBodies: unknown[] = []
+    const markDeletedBodies: unknown[] = []
+    const deletedStudyGuideUrls: string[] = []
+    let studyGuideQueryCount = 0
+    let podcastQueryCount = 0
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    })
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      const target = String(url)
+
+      if (
+        target.includes('/rest/v1/rpc/study_guides_refresh_retention_candidates')
+      ) {
+        rpcCalls.push('study-guides-refresh')
+        expect(JSON.parse(String(init?.body))).toEqual({ p_keep_count: 50 })
+        return Promise.resolve(jsonResponse({}))
+      }
+
+      if (
+        target.includes('/rest/v1/rpc/podcast_audio_refresh_retention_candidates')
+      ) {
+        rpcCalls.push('podcast-audio-refresh')
+        expect(JSON.parse(String(init?.body))).toEqual({ p_keep_count: 5 })
+        return Promise.resolve(jsonResponse({}))
+      }
+
+      if (target.includes('/rest/v1/user_study_guides')) {
+        if (init?.method === 'DELETE') {
+          deletedStudyGuideUrls.push(target)
+          return Promise.resolve(jsonResponse({}))
+        }
+
+        studyGuideQueryCount += 1
+        expect(target).toContain(
+          'order=retention_candidate_at.asc%2Ccreated_at.asc',
+        )
+        return Promise.resolve(
+          jsonResponse(
+            studyGuideQueryCount === 1
+              ? [
+                  {
+                    owner_id: 'user-1',
+                    id: 'guide-old',
+                    study_path: {
+                      dashboards: [
+                        {
+                          layout: {
+                            config: {
+                              customProps: {
+                                components: [
+                                  {
+                                    type: 'PodcastBlock',
+                                    props: {
+                                      podcast: {
+                                        audioPath:
+                                          'user-1/guide-old/podcast-from-guide.mp3',
+                                      },
+                                    },
+                                  },
+                                  {
+                                    type: 'PodcastBlock',
+                                    props: {
+                                      podcast: {
+                                        audioPath:
+                                          'other-user/guide-old/not-owned.mp3',
+                                      },
+                                    },
+                                  },
+                                ],
+                              },
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ]
+              : [],
+          ),
+        )
+      }
+
+      if (target.includes('/rest/v1/podcast_audio_objects')) {
+        podcastQueryCount += 1
+        expect(target).toContain('order=candidate_at.asc%2Ccreated_at.asc')
+        return Promise.resolve(
+          jsonResponse(
+            podcastQueryCount === 1
+              ? [
+                  {
+                    owner_id: 'user-1',
+                    audio_path: 'user-1/podcast-only/podcast-old.mp3',
+                  },
+                ]
+              : [],
+          ),
+        )
+      }
+
+      if (target.includes('/storage/v1/object/study-guide-podcasts')) {
+        storageDeleteBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(jsonResponse([]))
+      }
+
+      if (target.includes('/rest/v1/rpc/podcast_audio_mark_deleted')) {
+        markDeletedBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(jsonResponse({}))
+      }
+
+      return Promise.resolve(
+        jsonResponse({ message: 'unexpected url' }, false, 500),
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await podcastAudioCleanupHandler(
+      {
+        method: 'GET',
+        headers: {
+          authorization: 'Bearer cron-secret',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      deletedCount: 3,
+      deletedStudyGuideCount: 1,
+      deletedStudyGuidePodcastAudioCount: 1,
+      deletedPodcastAudioCount: 1,
+    })
+    expect(rpcCalls).toEqual(['study-guides-refresh', 'podcast-audio-refresh'])
+    expect(storageDeleteBodies).toEqual([
+      {
+        prefixes: ['user-1/guide-old/podcast-from-guide.mp3'],
+      },
+      {
+        prefixes: ['user-1/podcast-only/podcast-old.mp3'],
+      },
+    ])
+    expect(markDeletedBodies).toEqual([
+      {
+        p_owner_id: 'user-1',
+        p_audio_path: 'user-1/guide-old/podcast-from-guide.mp3',
+        p_deleted_reason: 'study-guide-expired',
+      },
+      {
+        p_owner_id: 'user-1',
+        p_audio_path: 'user-1/podcast-only/podcast-old.mp3',
+        p_deleted_reason: 'expired',
+      },
+    ])
+    expect(deletedStudyGuideUrls).toHaveLength(1)
+    expect(deletedStudyGuideUrls[0]).toContain('owner_id=eq.user-1')
+    expect(deletedStudyGuideUrls[0]).toContain('id=eq.guide-old')
   })
 
   it('bundles hosted Study Guide Quick Start into one usage charge', async () => {

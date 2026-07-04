@@ -92,6 +92,9 @@ const MIN_PODCAST_SOURCE_CHARS = 400;
 const MAX_PODCAST_SOURCE_CHARS = 24_000;
 const MAX_PODCAST_AUDIO_BYTES = 15_000_000;
 const PODCAST_TTS_MONTHLY_CHARACTER_CAP = 225_000;
+const PODCAST_RETAINED_AUDIO_COUNT = 5;
+const PODCAST_AUDIO_CANDIDATE_RETENTION_DAYS = 30;
+const PODCAST_EXPIRED_CLEANUP_LIMIT = 20;
 const UNREAL_SPEECH_API_BASE = "https://api.v8.unrealspeech.com";
 const UNREAL_SPEECH_DEFAULT_VOICE_ID = "Sierra";
 const UNREAL_SPEECH_POLL_ATTEMPTS = 30;
@@ -1071,6 +1074,115 @@ const uploadPodcastAudio = async (
   }
 };
 
+const registerPodcastAudio = async ({
+  userId,
+  audioPath,
+  studyGuideId,
+  podcastId,
+}: {
+  userId: string;
+  audioPath: string;
+  studyGuideId: string;
+  podcastId: string;
+}): Promise<void> => {
+  await callSupabaseRpc<unknown>("podcast_audio_register", {
+    p_owner_id: userId,
+    p_audio_path: audioPath,
+    p_study_guide_id: studyGuideId,
+    p_podcast_id: podcastId,
+    p_keep_count: PODCAST_RETAINED_AUDIO_COUNT,
+  });
+};
+
+const markPodcastAudioDeleted = async (
+  userId: string,
+  audioPath: string,
+  reason: "expired" | "page-deleted",
+): Promise<void> => {
+  await callSupabaseRpc<unknown>("podcast_audio_mark_deleted", {
+    p_owner_id: userId,
+    p_audio_path: audioPath,
+    p_deleted_reason: reason,
+  });
+};
+
+const getExpiredPodcastAudioPaths = async (userId: string): Promise<string[]> => {
+  const supabaseUrl = normalizeSupabaseUrl(getEnv("SUPABASE_URL"));
+  const serviceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const cutoff = new Date(
+    Date.now() - PODCAST_AUDIO_CANDIDATE_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const query = new URLSearchParams({
+    select: "audio_path",
+    owner_id: `eq.${userId}`,
+    deleted_at: "is.null",
+    candidate_at: `lte.${cutoff}`,
+    order: "candidate_at.asc,created_at.asc",
+    limit: String(PODCAST_EXPIRED_CLEANUP_LIMIT),
+  });
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/podcast_audio_objects?${query.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        apikey: serviceKey,
+        authorization: `Bearer ${serviceKey}`,
+      },
+    },
+  );
+  const payload = await readResponseJson(response);
+
+  if (!response.ok || !Array.isArray(payload)) {
+    return [];
+  }
+
+  return payload
+    .map((row) =>
+      isObject(row) && typeof row.audio_path === "string" ? row.audio_path : "",
+    )
+    .filter(Boolean);
+};
+
+const deletePodcastStorageObjects = async (paths: string[]): Promise<void> => {
+  if (paths.length === 0) {
+    return;
+  }
+
+  const supabaseUrl = normalizeSupabaseUrl(getEnv("SUPABASE_URL"));
+  const serviceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const bucket = getPodcastBucket();
+  const response = await fetch(`${supabaseUrl}/storage/v1/object/${bucket}`, {
+    method: "DELETE",
+    headers: {
+      apikey: serviceKey,
+      authorization: `Bearer ${serviceKey}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ prefixes: paths }),
+  });
+  if (!response.ok) {
+    const message =
+      (await readResponseText(response)) || "Could not delete podcast audio.";
+    const error = new Error(message);
+    error.name = "provider_error";
+    throw error;
+  }
+};
+
+const cleanupExpiredPodcastAudio = async (userId: string): Promise<void> => {
+  const expiredPaths = await getExpiredPodcastAudioPaths(userId);
+  if (expiredPaths.length === 0) {
+    return;
+  }
+
+  await deletePodcastStorageObjects(expiredPaths);
+  await Promise.all(
+    expiredPaths.map((path) =>
+      markPodcastAudioDeleted(userId, path, "expired").catch(() => undefined),
+    ),
+  );
+};
+
 const assertPodcastDailyLimit = async (userId: string): Promise<void> => {
   const limit = Number(getEnv("PODCAST_MAX_GENERATIONS_PER_USER_PER_DAY") || 3);
   if (!Number.isFinite(limit) || limit <= 0) {
@@ -1531,6 +1643,13 @@ const handleGeneratePodcast = async (
     );
     const audioPath = `${userId}/${studyGuideId}/${podcastId}.mp3`;
     await uploadPodcastAudio(audioPath, audio.audioBuffer);
+    await registerPodcastAudio({
+      userId,
+      audioPath,
+      studyGuideId,
+      podcastId,
+    });
+    await cleanupExpiredPodcastAudio(userId).catch(() => undefined);
 
     const podcast: HostedAiPodcast = {
       id: podcastId,

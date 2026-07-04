@@ -20,6 +20,8 @@ import {
   deleteStudyGuidePage,
   reorderStudyGuidePage,
 } from '../../studyGuides/pages'
+import { collectPodcastAudioPathsFromPage } from '../../studyGuides/podcasts'
+import { deleteHostedAiPodcastAudio } from '../../quickCreate/ai'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 
 type StudyGuidePagesPanelVariant = 'desktop' | 'mobile'
@@ -97,6 +99,19 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
 
   const movePage = (fromIndex: number, toIndex: number) => {
     onStudyPathChange(reorderStudyGuidePage(studyPath, fromIndex, toIndex))
+  }
+
+  const deletePage = (pageKey: string) => {
+    const page = studyPath.dashboards.find(
+      (dashboard) => dashboard.dashboardKey === pageKey,
+    )
+    if (page) {
+      collectPodcastAudioPathsFromPage(page).forEach((audioPath) => {
+        void deleteHostedAiPodcastAudio(audioPath).catch(() => undefined)
+      })
+    }
+
+    onStudyPathChange(deleteStudyGuidePage(studyPath, pageKey))
   }
 
   const getInsertionIndex = (clientY: number): number => {
@@ -465,11 +480,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                       className="study-guide-page-delete-action"
                       size="small"
                       aria-label={`${t('workspace.deletePage')}: ${pageTitle}`}
-                      onClick={() =>
-                        onStudyPathChange(
-                          deleteStudyGuidePage(studyPath, page.dashboardKey),
-                        )
-                      }
+                      onClick={() => deletePage(page.dashboardKey)}
                       sx={(theme) => ({
                         ...pageIconButtonSx('error')(theme),
                         mr: mobile ? 0 : 0.25,

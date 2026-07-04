@@ -1,9 +1,15 @@
 import React from 'react'
 import { createEvent, fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import StudyGuidePagesPanel from '../../../../src/components/Dasboard/StudyGuidePagesPanel'
 import type { StudyPathContainerState } from '../../../../src/state/store'
+
+const deleteHostedAiPodcastAudioMock = vi.hoisted(() => vi.fn())
+
+vi.mock('../../../../src/quickCreate/ai', () => ({
+  deleteHostedAiPodcastAudio: deleteHostedAiPodcastAudioMock,
+}))
 
 const createStudyPath = (): StudyPathContainerState => ({
   pathId: 'guide-1',
@@ -43,6 +49,39 @@ const createStudyPath = (): StudyPathContainerState => ({
     },
   ],
 })
+
+const createStudyPathWithPodcastPage = (): StudyPathContainerState => {
+  const studyPath = createStudyPath()
+  return {
+    ...studyPath,
+    dashboards: studyPath.dashboards.map((page) =>
+      page.dashboardKey === 'manual'
+        ? {
+            ...page,
+            layout: {
+              type: 'row',
+              config: {
+                customProps: {
+                  components: [
+                    {
+                      id: 'podcast-player',
+                      type: 'PodcastBlock',
+                      props: {
+                        podcast: {
+                          audioPath:
+                            'user-1/guide-1/podcast-audio-to-delete.mp3',
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          }
+        : page,
+    ),
+  }
+}
 
 const createDataTransfer = (index: number) => ({
   effectAllowed: 'none',
@@ -88,6 +127,11 @@ const dropAt = (
 }
 
 describe('StudyGuidePagesPanel', () => {
+  beforeEach(() => {
+    deleteHostedAiPodcastAudioMock.mockReset()
+    deleteHostedAiPodcastAudioMock.mockResolvedValue(undefined)
+  })
+
   it('collapses, opens, selects pages, and only exposes deletable trash actions', () => {
     const onStudyPathChange = vi.fn()
 
@@ -100,9 +144,9 @@ describe('StudyGuidePagesPanel', () => {
     )
 
     expect(
-      screen.queryByLabelText('Delete Core lesson'),
+      screen.queryByLabelText('Delete page: Core lesson'),
     ).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Delete Manual note')).toBeInTheDocument()
+    expect(screen.getByLabelText('Delete page: Manual note')).toBeInTheDocument()
     expect(screen.queryByText('03 - Quiz')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /^03 Quiz$/ }))
@@ -133,9 +177,12 @@ describe('StudyGuidePagesPanel', () => {
     setPageRowRects()
     const panel = screen.getByTestId('study-guide-pages-panel-desktop')
 
-    fireEvent.dragStart(screen.getByLabelText('Drag Quiz to reorder'), {
-      dataTransfer,
-    })
+    fireEvent.dragStart(
+      screen.getByLabelText('Drag page to reorder: Quiz'),
+      {
+        dataTransfer,
+      },
+    )
     dragOverAt(panel, 80, dataTransfer)
     expect(screen.getByTestId('study-guide-page-row-0')).toHaveAttribute(
       'data-drop-before',
@@ -171,9 +218,12 @@ describe('StudyGuidePagesPanel', () => {
     setPageRowRects()
     const panel = screen.getByTestId('study-guide-pages-panel-desktop')
 
-    fireEvent.dragStart(screen.getByLabelText('Drag Core lesson to reorder'), {
-      dataTransfer,
-    })
+    fireEvent.dragStart(
+      screen.getByLabelText('Drag page to reorder: Core lesson'),
+      {
+        dataTransfer,
+      },
+    )
     dragOverAt(panel, 500, dataTransfer)
     expect(screen.getByTestId('study-guide-page-end-slot')).toHaveAttribute(
       'data-drop-active',
@@ -199,7 +249,7 @@ describe('StudyGuidePagesPanel', () => {
       />,
     )
     setPageRowRects()
-    const handle = screen.getByLabelText('Drag Manual note to reorder')
+    const handle = screen.getByLabelText('Drag page to reorder: Manual note')
     const row = screen.getByTestId('study-guide-page-row-1')
 
     fireEvent.dragStart(handle, { dataTransfer })
@@ -247,17 +297,36 @@ describe('StudyGuidePagesPanel', () => {
     )
 
     expect(
-      screen.queryByLabelText('Drag Quiz to reorder'),
+      screen.queryByLabelText('Drag page to reorder: Quiz'),
     ).not.toBeInTheDocument()
-    fireEvent.click(screen.getByLabelText('Move Quiz up'))
+    fireEvent.click(screen.getByLabelText('Move page up: Quiz'))
     expect(onStudyPathChange.mock.calls[0][0].dashboards[1].dashboardKey).toBe(
       'quiz',
     )
 
-    fireEvent.click(screen.getByLabelText('Delete Manual note'))
+    fireEvent.click(screen.getByLabelText('Delete page: Manual note'))
     expect(onStudyPathChange.mock.calls[1][0].dashboards).toHaveLength(2)
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Page' }))
     expect(onAddPage).toHaveBeenCalledOnce()
+  })
+
+  it('requests podcast audio deletion when a podcast page is deleted', () => {
+    const onStudyPathChange = vi.fn()
+
+    render(
+      <StudyGuidePagesPanel
+        studyPath={createStudyPathWithPodcastPage()}
+        onStudyPathChange={onStudyPathChange}
+        variant="mobile"
+      />,
+    )
+
+    fireEvent.click(screen.getByLabelText('Delete page: Manual note'))
+
+    expect(deleteHostedAiPodcastAudioMock).toHaveBeenCalledWith(
+      'user-1/guide-1/podcast-audio-to-delete.mp3',
+    )
+    expect(onStudyPathChange.mock.calls[0][0].dashboards).toHaveLength(2)
   })
 })

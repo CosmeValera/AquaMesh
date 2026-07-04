@@ -1,7 +1,13 @@
 /// <reference types="@testing-library/jest-dom" />
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { CssBaseline } from '@mui/material'
 import { ThemeProvider } from '@mui/material/styles'
 import { MemoryRouter, useLocation } from 'react-router-dom'
@@ -64,6 +70,12 @@ const mockHeroWrapProbeLines = (lineTops: number[]) => {
   )
 }
 
+const firePointerMoveAt = (target: HTMLElement, clientX: number) => {
+  const event = new Event('pointermove', { bubbles: true })
+  Object.defineProperty(event, 'clientX', { value: clientX })
+  fireEvent(target, event)
+}
+
 describe('StudyMeshLanding', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -109,29 +121,27 @@ describe('StudyMeshLanding', () => {
     expect(screen.getByText(/with photography context/i)).toBeInTheDocument()
     expect(
       screen.getByRole('link', {
-        name: /read about ausubel's meaningful learning theory/i,
+        name: /read domain-specific prior knowledge and learning/i,
       }),
     ).toHaveAttribute(
       'href',
-      'https://www.structural-learning.com/post/ausubels-meaningful-learning-theory-teachers-guide',
+      'https://www.uni-trier.de/fileadmin/fb1/prof/PSY/PAE/Team/Schneider/SimonsmeierEtAl2021.pdf',
     )
     expect(
       screen.getByText(
-        /The most important factor in learning is what the learner already knows/i,
+        /prior knowledge shapes how learners understand new information/i,
       ),
     ).toBeInTheDocument()
-    expect(screen.getByText(/one question/i))
-      .toBeInTheDocument()
     expect(
       screen.getByRole('heading', {
         name: /your guide doesn't stop at page 5/i,
       }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/docker overview/i)).toBeInTheDocument()
-    expect(screen.getByText(/images and layers/i)).toBeInTheDocument()
-    expect(screen.getByText(/container lifecycle/i)).toBeInTheDocument()
-    expect(screen.getByText(/writing dockerfiles/i)).toBeInTheDocument()
-    expect(screen.getByText(/docker compose basics/i)).toBeInTheDocument()
+    expect(screen.getByText(/the water cycle/i)).toBeInTheDocument()
+    expect(screen.getByText(/evaporation/i)).toBeInTheDocument()
+    expect(screen.getByText(/condensation/i)).toBeInTheDocument()
+    expect(screen.getByText(/cloud growth/i)).toBeInTheDocument()
+    expect(screen.getByText(/precipitation/i)).toBeInTheDocument()
     expect(screen.getAllByText(/review pack/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/^new$/i)).toBeInTheDocument()
     expect(
@@ -144,6 +154,21 @@ describe('StudyMeshLanding', () => {
     expect(getComputedStyle(screen.getByTestId('studymesh-landing')).color).toBe(
       'rgb(7, 17, 39)',
     )
+
+    const footer = screen.getByTestId('studymesh-footer')
+    expect(footer).toBeInTheDocument()
+    expect(
+      within(footer).getByText(/adaptive study guides that connect new ideas/i),
+    ).toBeInTheDocument()
+    expect(
+      within(footer).getByRole('link', { name: /knowledge bridge/i }),
+    ).toHaveAttribute('href', '#knowledge-context')
+    expect(
+      within(footer).getByRole('link', { name: /growing guides/i }),
+    ).toHaveAttribute('href', '#growing-guide')
+    expect(
+      within(footer).getByRole('link', { name: /create a study guide/i }),
+    ).toHaveAttribute('href', '/study-guides?create=1')
   })
 
   it('switches knowledge context examples from the landing carousel', () => {
@@ -152,9 +177,7 @@ describe('StudyMeshLanding', () => {
     expect(screen.getByText(/think of exposure settings/i)).toBeInTheDocument()
     expect(screen.getAllByText(/what is a trade-off/i).length).toBeGreaterThan(0)
 
-    fireEvent.click(
-      screen.getByRole('button', { name: /show next knowledge context/i }),
-    )
+    fireEvent.click(screen.getByRole('button', { name: /gaming/i }))
 
     expect(screen.getByRole('button', { name: /gaming/i })).toHaveAttribute(
       'aria-pressed',
@@ -174,10 +197,10 @@ describe('StudyMeshLanding', () => {
 
     Object.defineProperties(topicsRow, {
       clientWidth: { configurable: true, value: 600 },
+      scrollBy: { configurable: true, value: scrollBy },
       scrollLeft: { configurable: true, value: 240, writable: true },
       scrollWidth: { configurable: true, value: 1200 },
     })
-    Object.assign(topicsRow, { scrollBy })
     vi.spyOn(topicsRow, 'getBoundingClientRect').mockReturnValue({
       bottom: 120,
       height: 120,
@@ -191,11 +214,11 @@ describe('StudyMeshLanding', () => {
     })
     vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(1)
 
-    fireEvent.pointerMove(topicsRow, { clientX: 690 })
+    firePointerMoveAt(topicsRow, 690)
 
     expect(scrollBy).toHaveBeenLastCalledWith({ behavior: 'auto', left: 6 })
 
-    fireEvent.pointerMove(topicsRow, { clientX: 110 })
+    firePointerMoveAt(topicsRow, 110)
 
     expect(scrollBy).toHaveBeenLastCalledWith({ behavior: 'auto', left: -6 })
   })

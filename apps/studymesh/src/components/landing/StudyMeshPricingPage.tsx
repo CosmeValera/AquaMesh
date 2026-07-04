@@ -16,6 +16,7 @@ import KeyIcon from '@mui/icons-material/Key'
 import MemoryIcon from '@mui/icons-material/Memory'
 
 import StudyCreditIcon from '../hostedAi/StudyCreditIcon'
+import StudyMeshFooter from './StudyMeshFooter'
 import LandingTopNav from './LandingTopNav'
 import {
   HOSTED_AI_CREDIT_PACKS,
@@ -554,6 +555,7 @@ const StudyMeshPricingPage = () => {
           </Paper>
         </Box>
       </Container>
+      <StudyMeshFooter sectionHrefPrefix="/" />
     </Box>
   )
 }

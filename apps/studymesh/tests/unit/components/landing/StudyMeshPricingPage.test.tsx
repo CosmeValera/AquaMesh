@@ -1,7 +1,7 @@
 /// <reference types="@testing-library/jest-dom" />
 import React from 'react'
 import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { CssBaseline } from '@mui/material'
 import { ThemeProvider } from '@mui/material/styles'
 import { MemoryRouter } from 'react-router-dom'
@@ -29,7 +29,9 @@ describe('StudyMeshPricingPage', () => {
         name: /free without a subscription/i,
       }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/no credit card required/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/no credit card required/i).length).toBeGreaterThan(
+      0,
+    )
     expect(screen.getByText('Free product')).toBeInTheDocument()
     expect(screen.getByText('0€')).toBeInTheDocument()
 
@@ -79,12 +81,25 @@ describe('StudyMeshPricingPage', () => {
     expect(screen.queryByText(/higher hourly limits/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/one-time 2/i)).not.toBeInTheDocument()
 
+    const header = screen.getByRole('banner')
     expect(
-      screen.getByRole('link', { name: /knowledge bridge/i }),
+      within(header).getByRole('link', { name: /knowledge bridge/i }),
     ).toHaveAttribute('href', '/#knowledge-context')
     expect(
-      screen.getByRole('link', { name: /growing guides/i }),
+      within(header).getByRole('link', { name: /growing guides/i }),
     ).toHaveAttribute('href', '/#growing-guide')
+
+    const footer = screen.getByTestId('studymesh-footer')
+    expect(footer).toBeInTheDocument()
+    expect(
+      within(footer).getByRole('link', { name: /knowledge bridge/i }),
+    ).toHaveAttribute('href', '/#knowledge-context')
+    expect(
+      within(footer).getByRole('link', { name: /growing guides/i }),
+    ).toHaveAttribute('href', '/#growing-guide')
+    expect(
+      within(footer).getByRole('link', { name: /create a study guide/i }),
+    ).toHaveAttribute('href', '/study-guides?create=1')
   })
 
   it('keeps fixed pricing colors under dark mode and custom accent', () => {

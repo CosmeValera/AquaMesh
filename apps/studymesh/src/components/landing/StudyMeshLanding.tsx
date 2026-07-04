@@ -25,6 +25,7 @@ import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import CheckIcon from '@mui/icons-material/Check'
 import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
 
+import StudyMeshFooter from './StudyMeshFooter'
 import LandingTopNav, { scrollToLandingSection } from './LandingTopNav'
 
 const brand = {
@@ -647,6 +648,7 @@ const StudyMeshLanding = () => {
           </Container>
         </Box>
       </Box>
+      <StudyMeshFooter />
     </Box>
   )
 }

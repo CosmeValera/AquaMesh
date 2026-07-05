@@ -776,10 +776,10 @@ describe('API payment and hosted AI hardening', () => {
       headers?: HeadersInit
     }> = []
     const expectedTurnTexts = [
-      'Photosynthesis turns light into usable energy.',
-      'ATP helps cells move that energy around.',
-      'The key idea is energy conversion.',
-      'That connects the lesson together.',
+      'La fotosíntesis convierte la luz en energía utilizable.',
+      'El ATP ayuda a las células a mover esa energía.',
+      'La idea clave es la conversión de energía.',
+      'Eso conecta toda la lección.',
     ]
     const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
       ok,
@@ -859,6 +859,44 @@ describe('API payment and hosted AI hardening', () => {
 
       if (target.includes('api.cerebras.ai')) {
         providerBodies.push(JSON.parse(String(init?.body)))
+        const transcriptTurns =
+          providerBodies.length === 1
+            ? [
+                {
+                  speaker: 'hostA',
+                  text: 'A fotossíntese transforma luz em energia utilizável.',
+                },
+                {
+                  speaker: 'hostB',
+                  text: 'O ATP ajuda as células a mover essa energia.',
+                },
+                {
+                  speaker: 'hostA',
+                  text: 'A ideia principal é a conversão de energia.',
+                },
+                {
+                  speaker: 'hostB',
+                  text: 'Isso conecta toda a lição.',
+                },
+              ]
+            : [
+                {
+                  speaker: 'hostA',
+                  text: 'La fotosíntesis convierte la luz en energía utilizable.',
+                },
+                {
+                  speaker: 'hostB',
+                  text: 'El ATP ayuda a las células a mover esa energía.',
+                },
+                {
+                  speaker: 'hostA',
+                  text: 'La idea clave es la conversión de energía.',
+                },
+                {
+                  speaker: 'hostB',
+                  text: 'Eso conecta toda la lección.',
+                },
+              ]
         return Promise.resolve(
           jsonResponse({
             choices: [
@@ -867,24 +905,7 @@ describe('API payment and hosted AI hardening', () => {
                   content: JSON.stringify({
                     title: 'Podcast: Biology',
                     description: 'A short recap.',
-                    transcriptTurns: [
-                      {
-                        speaker: 'hostA',
-                        text: 'Photosynthesis turns light into usable energy.',
-                      },
-                      {
-                        speaker: 'hostB',
-                        text: 'ATP helps cells move that energy around.',
-                      },
-                      {
-                        speaker: 'hostA',
-                        text: 'The key idea is energy conversion.',
-                      },
-                      {
-                        speaker: 'hostB',
-                        text: 'That connects the lesson together.',
-                      },
-                    ],
+                    transcriptTurns,
                     chapters: [{ title: 'Energy', startTurn: 0 }],
                   }),
                 },
@@ -941,6 +962,7 @@ describe('API payment and hosted AI hardening', () => {
         body: {
           action: 'generatePodcast',
           surface: 'podcast',
+          outputLanguage: 'es',
           parts: [
             {
               text: 'Photosynthesis uses light to create usable energy for plants. ATP stores energy for cells. '.repeat(
@@ -976,9 +998,13 @@ describe('API payment and hosted AI hardening', () => {
     })
     expect(rpcBodies[2]).toMatchObject({
       p_status: 'succeeded',
-      p_provider_call_count: 5,
+      p_provider_call_count: 6,
     })
-    expect(providerBodies).toHaveLength(1)
+    expect(providerBodies).toHaveLength(2)
+    expect(JSON.stringify(providerBodies[0])).toContain('Output language: Spanish')
+    expect(JSON.stringify(providerBodies[1])).toContain(
+      'previous podcast script was rejected',
+    )
     expect(monthlyUsageBodies).toHaveLength(1)
     expect(monthlyUsageBodies[0]).toMatchObject({
       p_owner_id: 'user-1',
@@ -990,10 +1016,10 @@ describe('API payment and hosted AI hardening', () => {
       expectedTurnTexts,
     )
     expect(unrealRequests.map((request) => request.body.VoiceId)).toEqual([
-      'Sierra',
-      'Daniel',
-      'Sierra',
-      'Daniel',
+      'ef_dora',
+      'em_alex',
+      'ef_dora',
+      'em_alex',
     ])
     expect(unrealRequests.every((request) => request.body.Bitrate === '64k')).toBe(
       true,

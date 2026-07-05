@@ -24,6 +24,11 @@ import {
   STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
   STUDY_GUIDE_QUICK_START_SCHEMA,
 } from "../apps/studymesh/src/studyGuides/quickStart";
+import {
+  createAiOutputLanguageInstruction,
+  getContentLanguagePromptName,
+  type StudyMeshLanguageCode,
+} from "../apps/studymesh/src/language/contentLanguagePrompt";
 import { sanitizeUserKnownTopics } from "../apps/studymesh/src/profileContext";
 
 loadLocalApiEnv();
@@ -101,6 +106,21 @@ const UNREAL_SPEECH_DEFAULT_HOST_B_VOICE_ID = "Daniel";
 const UNREAL_SPEECH_POLL_ATTEMPTS = 30;
 const UNREAL_SPEECH_POLL_DELAY_MS = 2_000;
 const UNREAL_SPEECH_SEGMENT_CONCURRENCY = 3;
+const UNREAL_SPEECH_LANGUAGE_VOICES: Partial<
+  Record<
+    StudyMeshLanguageCode,
+    Record<HostedAiPodcastTranscriptTurn["speaker"], string>
+  >
+> = {
+  en: { hostA: UNREAL_SPEECH_DEFAULT_VOICE_ID, hostB: UNREAL_SPEECH_DEFAULT_HOST_B_VOICE_ID },
+  es: { hostA: "ef_dora", hostB: "em_alex" },
+  fr: { hostA: "ff_siwis", hostB: "ff_siwis" },
+  it: { hostA: "if_sara", hostB: "im_nicola" },
+  pt: { hostA: "pf_dora", hostB: "pm_alex" },
+  hi: { hostA: "hf_alpha", hostB: "hm_omega" },
+  zh: { hostA: "zf_xiaobei", hostB: "zm_yunjian" },
+  ja: { hostA: "jf_alpha", hostB: "jm_kumo" },
+};
 const CEREBRAS_CHAT_COMPLETIONS_URL =
   "https://api.cerebras.ai/v1/chat/completions";
 
@@ -729,6 +749,88 @@ const wordsInPodcastScript = (script: PodcastScript): number =>
 const estimatePodcastDurationSeconds = (script: PodcastScript): number =>
   Math.max(120, Math.min(300, Math.round((wordsInPodcastScript(script) / 155) * 60)));
 
+const getPodcastTranscriptText = (script: PodcastScript): string =>
+  script.transcriptTurns.map((turn) => turn.text).join("\n\n");
+
+const countPodcastLanguageMarkers = (
+  text: string,
+  markers: RegExp[],
+): number =>
+  markers.reduce(
+    (total, marker) => total + (text.match(marker)?.length || 0),
+    0,
+  );
+
+const detectPodcastScriptLanguage = (
+  text: string,
+): StudyMeshLanguageCode | undefined => {
+  const normalized = ` ${text.toLowerCase().normalize("NFC")} `;
+  const scores: Partial<Record<StudyMeshLanguageCode, number>> = {
+    es: countPodcastLanguageMarkers(normalized, [
+      /\b(el|la|los|las|un|una|de|del|que|para|con|por|como|esto|esta|este|energía|células|lección)\b/g,
+      /[áéíóúñ¿¡]/g,
+    ]),
+    pt: countPodcastLanguageMarkers(normalized, [
+      /\b(o|a|os|as|um|uma|de|do|da|que|para|com|por|como|isso|essa|este|energia|células|lição)\b/g,
+      /[ãõç]/g,
+    ]),
+    fr: countPodcastLanguageMarkers(normalized, [
+      /\b(le|la|les|un|une|des|de|du|que|pour|avec|par|comme|cela|cette|énergie|cellules|leçon)\b/g,
+      /[àâçéèêëîïôûùüÿœ]/g,
+    ]),
+    it: countPodcastLanguageMarkers(normalized, [
+      /\b(il|lo|la|gli|le|un|una|di|che|per|con|come|questo|questa|energia|cellule|lezione)\b/g,
+      /[àèéìíîòóù]/g,
+    ]),
+    en: countPodcastLanguageMarkers(normalized, [
+      /\b(the|and|that|with|for|this|these|those|energy|cells|lesson|today|study|guide)\b/g,
+    ]),
+  };
+  const best = Object.entries(scores)
+    .sort(([, left], [, right]) => (right || 0) - (left || 0))[0] as
+    | [StudyMeshLanguageCode, number]
+    | undefined;
+
+  return best && best[1] >= 4 ? best[0] : undefined;
+};
+
+const podcastScriptMatchesOutputLanguage = (
+  script: PodcastScript,
+  outputLanguage: StudyMeshLanguageCode | undefined,
+): boolean => {
+  if (!outputLanguage) {
+    return true;
+  }
+
+  const detected = detectPodcastScriptLanguage(
+    [script.title, script.description, getPodcastTranscriptText(script)].join(
+      "\n\n",
+    ),
+  );
+
+  return !detected || detected === outputLanguage;
+};
+
+const buildPodcastLanguageRetryPrompt = ({
+  script,
+  outputLanguage,
+  sourceTitle,
+  sourceText,
+}: {
+  script: PodcastScript;
+  outputLanguage: StudyMeshLanguageCode;
+  sourceTitle: string;
+  sourceText: string;
+}): string =>
+  [
+    buildPodcastScriptPrompt({ sourceTitle, sourceText, outputLanguage }),
+    `The previous podcast script was rejected because it was not in ${getContentLanguagePromptName(outputLanguage)}.`,
+    `Rewrite it now in ${getContentLanguagePromptName(outputLanguage)} only.`,
+    "Keep the same JSON schema and keep only facts present in the source.",
+    "Rejected transcript:",
+    getPodcastTranscriptText(script),
+  ].join("\n\n");
+
 const buildPodcastScriptPrompt = ({
   sourceTitle,
   sourceText,
@@ -739,7 +841,11 @@ const buildPodcastScriptPrompt = ({
   outputLanguage: HostedAiGatewayRequest["outputLanguage"];
 }): string => {
   const languageInstruction = outputLanguage
-    ? `Write the podcast in language code "${outputLanguage}".`
+    ? [
+        createAiOutputLanguageInstruction(outputLanguage),
+        `Hard rule for this podcast: title, description, chapters, and every transcript turn must be in ${getContentLanguagePromptName(outputLanguage)}.`,
+        "If the source contains another language or mixed languages, explain it in the required output language; never switch to Portuguese, English, or any third language unless that is the required output language.",
+      ].join(" ")
     : "Write the podcast in the same language as the source.";
 
   return [
@@ -769,23 +875,49 @@ interface PodcastSpeechSegment {
   voiceId: string;
 }
 
-const getPodcastVoiceIds = (): Record<
+const getLanguageVoiceEnv = (
+  speaker: HostedAiPodcastTranscriptTurn["speaker"],
+  language: StudyMeshLanguageCode | undefined,
+): string => {
+  if (!language) {
+    return "";
+  }
+
+  const host = speaker === "hostB" ? "HOST_B" : "HOST_A";
+  return getEnv(`UNREAL_SPEECH_${host}_VOICE_ID_${language.toUpperCase()}`);
+};
+
+const getPodcastVoiceIds = (
+  language: StudyMeshLanguageCode | undefined,
+): Record<
   HostedAiPodcastTranscriptTurn["speaker"],
   string
-> => ({
-  hostA:
-    getEnv("UNREAL_SPEECH_HOST_A_VOICE_ID") ||
-    getEnv("UNREAL_SPEECH_VOICE_ID") ||
-    UNREAL_SPEECH_DEFAULT_VOICE_ID,
-  hostB:
-    getEnv("UNREAL_SPEECH_HOST_B_VOICE_ID") ||
-    UNREAL_SPEECH_DEFAULT_HOST_B_VOICE_ID,
-});
+> => {
+  const languageVoices =
+    language && UNREAL_SPEECH_LANGUAGE_VOICES[language]
+      ? UNREAL_SPEECH_LANGUAGE_VOICES[language]
+      : UNREAL_SPEECH_LANGUAGE_VOICES.en;
+
+  return {
+    hostA:
+      getLanguageVoiceEnv("hostA", language) ||
+      (language === "en" ? getEnv("UNREAL_SPEECH_HOST_A_VOICE_ID") : "") ||
+      (language === "en" ? getEnv("UNREAL_SPEECH_VOICE_ID") : "") ||
+      languageVoices?.hostA ||
+      UNREAL_SPEECH_DEFAULT_VOICE_ID,
+    hostB:
+      getLanguageVoiceEnv("hostB", language) ||
+      (language === "en" ? getEnv("UNREAL_SPEECH_HOST_B_VOICE_ID") : "") ||
+      languageVoices?.hostB ||
+      UNREAL_SPEECH_DEFAULT_HOST_B_VOICE_ID,
+  };
+};
 
 const getPodcastSpeechSegments = (
   script: PodcastScript,
+  language: StudyMeshLanguageCode | undefined,
 ): PodcastSpeechSegment[] => {
-  const voiceIds = getPodcastVoiceIds();
+  const voiceIds = getPodcastVoiceIds(language);
 
   return script.transcriptTurns.map((turn) => ({
     speaker: turn.speaker,
@@ -1146,8 +1278,9 @@ const synthesizePodcastSegments = async (
 
 const generatePodcastAudioFromScript = async (
   script: PodcastScript,
+  language: StudyMeshLanguageCode | undefined,
 ): Promise<PodcastAudioGenerationResult> => {
-  const segments = getPodcastSpeechSegments(script);
+  const segments = getPodcastSpeechSegments(script, language);
   const audioSegments = await synthesizePodcastSegments(segments);
 
   return {
@@ -1758,10 +1891,47 @@ const handleGeneratePodcast = async (
       },
       model,
     );
-    const script = normalizePodcastScript(scriptText, sourceTitle);
+    let script = normalizePodcastScript(scriptText, sourceTitle);
+    if (
+      request.outputLanguage &&
+      !podcastScriptMatchesOutputLanguage(script, request.outputLanguage)
+    ) {
+      const retryText = await callCerebras(
+        {
+          ...usageRequest,
+          responseSchema: PODCAST_SCRIPT_SCHEMA,
+          parts: [
+            {
+              text: buildPodcastLanguageRetryPrompt({
+                script,
+                outputLanguage: request.outputLanguage,
+                sourceTitle,
+                sourceText,
+              }),
+            },
+          ],
+        },
+        model,
+      ).finally(() => {
+        providerCallCount += 1;
+      });
+      script = normalizePodcastScript(retryText, sourceTitle);
+
+      if (!podcastScriptMatchesOutputLanguage(script, request.outputLanguage)) {
+        const error = new Error(
+          `Hosted AI returned a podcast outside ${getContentLanguagePromptName(request.outputLanguage)}.`,
+        );
+        error.name = "provider_error";
+        throw error;
+      }
+    }
+
     const characterCount = getPodcastTtsCharacterCount(script);
     await reservePodcastTtsCharacters(userId, characterCount);
-    const audio = await generatePodcastAudioFromScript(script);
+    const audio = await generatePodcastAudioFromScript(
+      script,
+      request.outputLanguage,
+    );
     providerCallCount += audio.providerCallCount;
 
     const podcastId = `podcast-${randomUUID()}`;

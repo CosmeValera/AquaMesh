@@ -71,9 +71,12 @@ clean up old private MP3s without deleting the Study Guide transcript page.
 Required server env vars:
 
 - `UNREAL_SPEECH_API_KEY`
-- `UNREAL_SPEECH_HOST_A_VOICE_ID` optional, defaults to `UNREAL_SPEECH_VOICE_ID`
-  or `Sierra`
-- `UNREAL_SPEECH_HOST_B_VOICE_ID` optional, defaults to `Daniel`
+- `UNREAL_SPEECH_HOST_A_VOICE_ID` optional English/default Host A voice,
+  defaults to `UNREAL_SPEECH_VOICE_ID` or `Sierra`
+- `UNREAL_SPEECH_HOST_B_VOICE_ID` optional English/default Host B voice,
+  defaults to `Daniel`
+- `UNREAL_SPEECH_HOST_A_VOICE_ID_ES`, `UNREAL_SPEECH_HOST_B_VOICE_ID_ES`,
+  and equivalent language suffixes optional per-language voice overrides
 - `UNREAL_SPEECH_VOICE_ID` optional legacy Host A fallback
 - `UNREAL_SPEECH_MODEL` optional
 - `PODCAST_AUDIO_BUCKET` optional, defaults to `study-guide-podcasts`

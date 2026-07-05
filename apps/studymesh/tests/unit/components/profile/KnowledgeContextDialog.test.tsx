@@ -18,7 +18,32 @@ describe('KnowledgeContextDialog', () => {
     )
   })
 
-  it('shows onboarding skills only after the user picks a broad role', () => {
+  it('explains the purpose and invites relevant examples without a wizard', () => {
+    render(
+      <KnowledgeContextDialog
+        open
+        surface="onboarding"
+        initialContext={null}
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(
+      screen.getByText(/explain new topics using things you already understand/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/relevant to the Study Guides you create/i),
+    ).toBeInTheDocument()
+    expect(screen.getByLabelText(/helpful things you know/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Valencian, Docker, anatomy, football, LEGO/i),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /next/i })).not.toBeInTheDocument()
+    expect(screen.queryByText(/step 1 of 3/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /accept/i })).toBeDisabled()
+  })
+
+  it('saves typed examples in onboarding as specific knowledge', () => {
     const onClose = vi.fn()
     render(
       <KnowledgeContextDialog
@@ -29,104 +54,24 @@ describe('KnowledgeContextDialog', () => {
       />,
     )
 
-    expect(screen.getByText(/what best describes you/i)).toBeInTheDocument()
-    expect(screen.getByText('Recommended: 3-5.')).toBeInTheDocument()
-    expect(screen.queryByText(/knowledge areas/i)).not.toBeInTheDocument()
-    expect(
-      screen.queryByLabelText(/anything else you know well/i),
-    ).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /accept/i })).toBeDisabled()
-
-    fireEvent.click(screen.getByText('Software / IT'))
-    expect(screen.getByText(/knowledge areas/i)).toBeInTheDocument()
-    expect(screen.getByText('Backend')).toBeInTheDocument()
-    expect(
-      screen.queryByLabelText(/anything else you know well/i),
-    ).not.toBeInTheDocument()
-    expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
-      roles: ['software_it'],
-      broadKnowledge: [],
-      specificKnowledge: [],
-    })
-
-    fireEvent.click(screen.getByText('Backend'))
-    expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
-      roles: ['software_it'],
-      broadKnowledge: ['Backend'],
-      specificKnowledge: [],
-    })
-    expect(screen.getByRole('button', { name: /accept/i })).toBeEnabled()
-    fireEvent.click(screen.getByRole('button', { name: /accept/i }))
-
-    const saved = JSON.parse(storage['studymesh-profile-context-v1'])
-    expect(saved).toMatchObject({
-      roles: ['software_it'],
-      broadKnowledge: ['Backend'],
-      specificKnowledge: [],
-    })
-    expect(onClose).toHaveBeenCalled()
-  })
-
-  it('shows detailed knowledge controls when editing settings', () => {
-    render(
-      <KnowledgeContextDialog
-        open
-        surface="settings"
-        initialContext={null}
-        onClose={vi.fn()}
-      />,
-    )
-
-    expect(screen.getByText(/knowledge areas/i)).toBeInTheDocument()
-    expect(
-      screen.getByLabelText(/add something else you know/i),
-    ).toBeInTheDocument()
-    expect(screen.queryByText(/3-5|you can skip/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/recommended: 5 or more/i)).toBeInTheDocument()
-  })
-
-  it('supports multiple roles and Add/Enter knowledge context chips', () => {
-    render(
-      <KnowledgeContextDialog
-        open
-        surface="settings"
-        initialContext={null}
-        onClose={vi.fn()}
-      />,
-    )
-
-    fireEvent.click(screen.getByText('Software / IT'))
-    fireEvent.click(screen.getByText('Finance'))
-
-    expect(screen.getAllByText('Software / IT')).toHaveLength(2)
-    expect(screen.getAllByText('Finance')).toHaveLength(2)
-    expect(screen.queryByText('Software / IT |')).not.toBeInTheDocument()
-    expect(screen.getByText('Backend')).toBeInTheDocument()
-    expect(screen.getByText('Investing')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByText('Backend'))
-    fireEvent.click(screen.getByRole('button', { name: 'Software / IT' }))
-    expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
-      roles: ['finance'],
-      broadKnowledge: ['Backend'],
-      specificKnowledge: [],
-    })
-    fireEvent.change(screen.getByLabelText(/add something else you know/i), {
-      target: { value: 'MinIO' },
+    fireEvent.change(screen.getByLabelText(/helpful things you know/i), {
+      target: { value: 'Valencian, LEGO' },
     })
     fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
 
-    expect(screen.getByText('Knowledge context')).toBeInTheDocument()
-    expect(screen.getByText('Backend')).toBeInTheDocument()
-    expect(screen.getByText('MinIO')).toBeInTheDocument()
+    expect(screen.getByText('Valencian')).toBeInTheDocument()
+    expect(screen.getByText('LEGO')).toBeInTheDocument()
     expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
-      roles: ['finance'],
-      broadKnowledge: ['Backend'],
-      specificKnowledge: ['MinIO'],
+      roles: [],
+      broadKnowledge: [],
+      specificKnowledge: ['Valencian', 'LEGO'],
     })
+
+    fireEvent.click(screen.getByRole('button', { name: /accept/i }))
+    expect(onClose).toHaveBeenCalled()
   })
 
-  it('sorts knowledge context chips without changing saved selection order', () => {
+  it('keeps study/work suggestions optional and role-scoped', () => {
     render(
       <KnowledgeContextDialog
         open
@@ -136,7 +81,32 @@ describe('KnowledgeContextDialog', () => {
       />,
     )
 
-    fireEvent.change(screen.getByLabelText(/add something else you know/i), {
+    expect(screen.queryByText(/suggested familiar areas/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/optional: show suggestions/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Software / IT'))
+    expect(screen.getByText(/suggested familiar areas/i)).toBeInTheDocument()
+    expect(screen.getByText('Backend')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Backend'))
+    expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
+      roles: ['software_it'],
+      broadKnowledge: ['Backend'],
+      specificKnowledge: [],
+    })
+  })
+
+  it('shows context newest-first without changing saved selection order', () => {
+    render(
+      <KnowledgeContextDialog
+        open
+        surface="settings"
+        initialContext={null}
+        onClose={vi.fn()}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText(/helpful things you know/i), {
       target: { value: 'Zulu, Alpha' },
     })
     fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
@@ -144,37 +114,40 @@ describe('KnowledgeContextDialog', () => {
     const visibleTopics = () =>
       screen.getAllByText(/^(Alpha|Zulu)$/).map((item) => item.textContent)
 
+    expect(visibleTopics()).toEqual(['Alpha', 'Zulu'])
     expect(
-      screen.getByRole('combobox', { name: /sort knowledge context/i }),
-    ).toHaveTextContent('Newer')
-    expect(visibleTopics()).toEqual(['Alpha', 'Zulu'])
-
-    fireEvent.mouseDown(
-      screen.getByRole('combobox', { name: /sort knowledge context/i }),
-    )
-    fireEvent.click(screen.getByRole('option', { name: 'Older' }))
-    expect(visibleTopics()).toEqual(['Zulu', 'Alpha'])
-
-    fireEvent.mouseDown(
-      screen.getByRole('combobox', { name: /sort knowledge context/i }),
-    )
-    fireEvent.click(screen.getByRole('option', { name: 'Newer' }))
-    expect(visibleTopics()).toEqual(['Alpha', 'Zulu'])
-
-    fireEvent.mouseDown(
-      screen.getByRole('combobox', { name: /sort knowledge context/i }),
-    )
-    fireEvent.click(screen.getByRole('option', { name: 'A-Z' }))
-    expect(visibleTopics()).toEqual(['Alpha', 'Zulu'])
-
-    fireEvent.mouseDown(
-      screen.getByRole('combobox', { name: /sort knowledge context/i }),
-    )
-    fireEvent.click(screen.getByRole('option', { name: 'Z-A' }))
-    expect(visibleTopics()).toEqual(['Zulu', 'Alpha'])
-
+      screen.queryByRole('combobox', { name: /sort knowledge context/i }),
+    ).not.toBeInTheDocument()
     expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
       specificKnowledge: ['Zulu', 'Alpha'],
+    })
+  })
+
+  it('renders saved broad and specific context as removable chips', () => {
+    const initialContext = {
+      version: 1 as const,
+      roles: ['software_it' as const],
+      broadKnowledge: ['Backend'],
+      specificKnowledge: ['MinIO', 'S3'],
+      confidence: 'self_reported' as const,
+      updatedAt: '2026-06-23T00:00:00.000Z',
+    }
+    render(
+      <KnowledgeContextDialog
+        open
+        surface="settings"
+        initialContext={initialContext}
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(
+      screen.getAllByText(/^(Backend|MinIO|S3)$/).map((item) => item.textContent),
+    ).toEqual(['S3', 'MinIO', 'Backend', 'Backend'])
+    fireEvent.click(screen.getAllByTestId('CancelIcon')[0])
+    expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
+      broadKnowledge: ['Backend'],
+      specificKnowledge: ['MinIO'],
     })
   })
 })

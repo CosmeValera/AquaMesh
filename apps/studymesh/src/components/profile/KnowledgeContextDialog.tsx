@@ -7,8 +7,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  MenuItem,
-  Select,
+  Paper,
   Stack,
   TextField,
   Typography,
@@ -18,7 +17,6 @@ import type { Theme } from '@mui/material/styles'
 
 import {
   getBroadKnowledgeGroups,
-  getBroadKnowledgeOptions,
   parseSpecificKnowledgeInput,
   ProfileContext,
   saveProfileContext,
@@ -41,24 +39,26 @@ interface KnowledgeContextDraft {
   specificKnowledge: string[]
 }
 
-type KnowledgeContextSortMode = 'older' | 'newer' | 'az' | 'za'
-
 const getRecommendationText = (surface: KnowledgeContextSurface): string =>
   surface === 'onboarding' ? 'Recommended: 3-5.' : 'Recommended: 5 or more.'
 
 const selectedChipSx = (selected: boolean) =>
   selected
     ? (theme: Theme) => ({
-        borderColor: theme.palette.primary.main,
-        bgcolor: theme.palette.primary.main,
-        color: theme.palette.primary.contrastText,
+        borderColor: alpha(theme.palette.primary.main, 0.85),
+        bgcolor: alpha(theme.palette.primary.main, 0.16),
+        color:
+          theme.palette.mode === 'dark'
+            ? theme.palette.primary.light
+            : theme.palette.primary.dark,
+        fontWeight: 700,
         '&:hover': {
-          bgcolor: theme.palette.primary.dark,
+          bgcolor: alpha(theme.palette.primary.main, 0.24),
         },
         '& .MuiChip-deleteIcon': {
-          color: alpha(theme.palette.primary.contrastText, 0.75),
+          color: alpha(theme.palette.primary.main, 0.75),
           '&:hover': {
-            color: theme.palette.primary.contrastText,
+            color: theme.palette.primary.main,
           },
         },
       })
@@ -94,22 +94,9 @@ const getSelectedKnowledgeCount = (draft: {
   specificKnowledge: string[]
 }): number => getSelectedKnowledge(draft).length
 
-const sortSelectedKnowledge = (
-  topics: string[],
-  sortMode: KnowledgeContextSortMode,
-): string[] => {
-  if (sortMode === 'older') {
-    return topics
-  }
-
-  if (sortMode === 'newer') {
-    return [...topics].reverse()
-  }
-
-  return [...topics].sort((left, right) =>
-    sortMode === 'az' ? left.localeCompare(right) : right.localeCompare(left),
-  )
-}
+const getNewestSelectedKnowledge = (topics: string[]): string[] => [
+  ...topics,
+].reverse()
 
 const KnowledgeRolePicker: React.FC<{
   roles: UserKnowledgeRoleId[]
@@ -117,7 +104,7 @@ const KnowledgeRolePicker: React.FC<{
 }> = ({ roles, onToggleRole }) => (
   <Box>
     <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
-      What best describes you?
+      Optional: show suggestions for a study/work area
     </Typography>
     <Stack direction="row" gap={1} flexWrap="wrap">
       {userKnowledgeRoles.map((item) => {
@@ -129,6 +116,7 @@ const KnowledgeRolePicker: React.FC<{
             clickable
             color={selected ? 'primary' : 'default'}
             variant={selected ? 'filled' : 'outlined'}
+            sx={selectedChipSx(selected)}
             onClick={() => onToggleRole(item.id)}
           />
         )
@@ -142,20 +130,16 @@ const KnowledgeAreaGroups: React.FC<{
   broadKnowledge: string[]
   onToggleBroadKnowledge: (topic: string) => void
 }> = ({ roles, broadKnowledge, onToggleBroadKnowledge }) => {
-  const groups = roles.length
-    ? getBroadKnowledgeGroups(roles)
-    : [
-        {
-          role: 'general_curious' as const,
-          label: 'General curious learner',
-          topics: getBroadKnowledgeOptions('general_curious'),
-        },
-      ]
+  const groups = getBroadKnowledgeGroups(roles)
+
+  if (!groups.length) {
+    return null
+  }
 
   return (
     <Box>
       <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
-        Knowledge areas
+        Suggested familiar areas
       </Typography>
       <Stack spacing={1.75}>
         {groups.map((group) => (
@@ -205,8 +189,6 @@ const KnowledgeContextForm: React.FC<{
   const [broadKnowledge, setBroadKnowledge] = React.useState<string[]>([])
   const [specificKnowledge, setSpecificKnowledge] = React.useState<string[]>([])
   const [specificKnowledgeInput, setSpecificKnowledgeInput] = React.useState('')
-  const [sortMode, setSortMode] =
-    React.useState<KnowledgeContextSortMode>('newer')
 
   React.useEffect(() => {
     const nextBroadKnowledge = initialContext?.broadKnowledge || []
@@ -228,14 +210,8 @@ const KnowledgeContextForm: React.FC<{
     broadKnowledge,
     specificKnowledge,
   })
-  const sortedSelectedKnowledge = sortSelectedKnowledge(
-    selectedKnowledge,
-    sortMode,
-  )
+  const newestSelectedKnowledge = getNewestSelectedKnowledge(selectedKnowledge)
   const selectedCount = selectedKnowledge.length
-  const showBroadKnowledge =
-    surface === 'settings' || roles.length > 0 || selectedCount > 0
-  const showSpecificKnowledge = surface === 'settings'
   const recommendationText = getRecommendationText(surface)
 
   const persist = React.useCallback(
@@ -243,11 +219,10 @@ const KnowledgeContextForm: React.FC<{
       saveProfileContext({
         roles: draft.roles,
         broadKnowledge: draft.broadKnowledge,
-        specificKnowledge:
-          surface === 'settings' ? draft.specificKnowledge : [],
+        specificKnowledge: draft.specificKnowledge,
       })
     },
-    [surface],
+    [],
   )
 
   const updateDraft = React.useCallback(
@@ -314,103 +289,89 @@ const KnowledgeContextForm: React.FC<{
 
   return (
     <Stack spacing={2.25}>
-      <Box>
-        <Typography fontWeight={750} sx={{ mb: 0.75 }}>
-          Help StudyMesh explain things using concepts you already know.
+      <Paper
+        elevation={0}
+        sx={(theme) => ({
+          p: 2,
+          border: 1,
+          borderColor: alpha(theme.palette.primary.main, 0.2),
+          background:
+            theme.palette.mode === 'dark'
+              ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.28)} 0%, ${alpha(theme.palette.secondary.main, 0.18)} 48%, ${alpha(theme.palette.background.paper, 0.86)} 100%)`
+              : `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.32)} 0%, ${alpha(theme.palette.secondary.light, 0.22)} 52%, ${alpha(theme.palette.background.paper, 0.94)} 100%)`,
+        })}
+      >
+        <Typography fontWeight={800} sx={{ mb: 0.75 }}>
+          Help StudyMesh explain new topics using things you already understand.
         </Typography>
-        {surface === 'onboarding' && selectedCount === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            {recommendationText}
+        <Typography variant="body2" color="text.secondary">
+          Add a few examples that are relevant to the Study Guides you create.
+          These can be school subjects, tools, languages, places, hobbies,
+          books, sports, or daily routines. StudyMesh only uses them when they
+          make an explanation easier.
+        </Typography>
+      </Paper>
+
+      <Stack spacing={1}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+          <TextField
+            label="Helpful things you know"
+            helperText="Use commas or Enter. Examples: Valencian, Docker, anatomy, football, LEGO."
+            value={specificKnowledgeInput}
+            onChange={(event) =>
+              setSpecificKnowledgeInput(event.target.value)
+            }
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                addSpecificKnowledge()
+              }
+            }}
+            placeholder="Valencian, Docker, anatomy, football..."
+            fullWidth
+            size="small"
+          />
+          <Button
+            variant="outlined"
+            onClick={addSpecificKnowledge}
+            sx={{ minWidth: { sm: 88 }, alignSelf: { sm: 'flex-start' } }}
+          >
+            Add
+          </Button>
+        </Stack>
+      </Stack>
+
+      {selectedCount ? (
+        <Box>
+          <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
+            Your context
           </Typography>
-        ) : null}
-      </Box>
+          <Stack direction="row" gap={1} flexWrap="wrap">
+            {newestSelectedKnowledge.map((topic) => (
+              <Chip
+                key={topic}
+                label={topic}
+                color="primary"
+                variant="filled"
+                sx={selectedChipSx(true)}
+                onDelete={() => removeKnowledge(topic)}
+              />
+            ))}
+          </Stack>
+        </Box>
+      ) : null}
 
       <KnowledgeRolePicker roles={roles} onToggleRole={toggleRole} />
 
-      {showBroadKnowledge ? (
-        <>
-          <KnowledgeAreaGroups
-            roles={roles}
-            broadKnowledge={broadKnowledge}
-            onToggleBroadKnowledge={toggleBroadKnowledge}
-          />
+      <KnowledgeAreaGroups
+        roles={roles}
+        broadKnowledge={broadKnowledge}
+        onToggleBroadKnowledge={toggleBroadKnowledge}
+      />
 
-          {showSpecificKnowledge ? (
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-              <TextField
-                label="Add something else you know"
-                value={specificKnowledgeInput}
-                onChange={(event) =>
-                  setSpecificKnowledgeInput(event.target.value)
-                }
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault()
-                    addSpecificKnowledge()
-                  }
-                }}
-                placeholder="MinIO"
-                fullWidth
-                size="small"
-              />
-              <Button variant="outlined" onClick={addSpecificKnowledge}>
-                Add
-              </Button>
-            </Stack>
-          ) : null}
-
-          {selectedCount ? (
-            <Box>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                gap={1.5}
-                sx={{ mb: 1 }}
-              >
-                <Typography variant="subtitle2" fontWeight={750}>
-                  Knowledge context
-                </Typography>
-                <Select
-                  value={sortMode}
-                  onChange={(event) =>
-                    setSortMode(event.target.value as KnowledgeContextSortMode)
-                  }
-                  size="small"
-                  inputProps={{ 'aria-label': 'Sort knowledge context' }}
-                  sx={{
-                    minWidth: 132,
-                    '& .MuiSelect-select': {
-                      py: 0.5,
-                      fontSize: '0.8125rem',
-                    },
-                  }}
-                >
-                  <MenuItem value="newer">Newer</MenuItem>
-                  <MenuItem value="older">Older</MenuItem>
-                  <MenuItem value="az">A-Z</MenuItem>
-                  <MenuItem value="za">Z-A</MenuItem>
-                </Select>
-              </Stack>
-              <Stack direction="row" gap={1} flexWrap="wrap">
-                {sortedSelectedKnowledge.map((topic) => (
-                  <Chip
-                    key={topic}
-                    label={topic}
-                    color="primary"
-                    sx={selectedChipSx(true)}
-                    onDelete={() => removeKnowledge(topic)}
-                  />
-                ))}
-              </Stack>
-            </Box>
-          ) : null}
-
-          <Typography variant="caption" color="text.secondary">
-            {selectedCount} selected. {recommendationText}
-          </Typography>
-        </>
-      ) : null}
+      <Typography variant="caption" color="text.secondary">
+        {selectedCount} selected. {recommendationText}
+      </Typography>
     </Stack>
   )
 }

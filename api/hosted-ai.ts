@@ -97,8 +97,10 @@ const PODCAST_AUDIO_CANDIDATE_RETENTION_DAYS = 30;
 const PODCAST_EXPIRED_CLEANUP_LIMIT = 20;
 const UNREAL_SPEECH_API_BASE = "https://api.v8.unrealspeech.com";
 const UNREAL_SPEECH_DEFAULT_VOICE_ID = "Sierra";
+const UNREAL_SPEECH_DEFAULT_HOST_B_VOICE_ID = "Daniel";
 const UNREAL_SPEECH_POLL_ATTEMPTS = 30;
 const UNREAL_SPEECH_POLL_DELAY_MS = 2_000;
+const UNREAL_SPEECH_SEGMENT_CONCURRENCY = 3;
 const CEREBRAS_CHAT_COMPLETIONS_URL =
   "https://api.cerebras.ai/v1/chat/completions";
 
@@ -745,7 +747,7 @@ const buildPodcastScriptPrompt = ({
     languageInstruction,
     "Return strict JSON with: title, description, transcriptTurns, chapters.",
     "transcriptTurns must use speakers hostA and hostB only.",
-    "Target 520-850 spoken words, 10-18 turns, warm but focused two-host dialogue.",
+    "Target 520-850 spoken words, 10-18 short turns, warm but focused two-host dialogue. Alternate hostA and hostB when natural.",
     "Do not invent facts. Do not mention web lookup. Do not cite sources unless the source text already contains them.",
     "If the source is thin, still create the best concise recap from available content without adding outside facts.",
     `Source title: ${sourceTitle}`,
@@ -758,18 +760,42 @@ interface PodcastAudioGenerationResult {
   audioBuffer: Buffer;
   mimeType: string;
   characterCount: number;
+  providerCallCount: number;
 }
 
-const podcastScriptToSpeechText = (script: PodcastScript): string =>
-  script.transcriptTurns
-    .map((turn) => {
-      const speaker = turn.speaker === "hostB" ? "Host B" : "Host A";
-      return `${speaker}: ${turn.text}`;
-    })
-    .join("\n\n");
+interface PodcastSpeechSegment {
+  speaker: HostedAiPodcastTranscriptTurn["speaker"];
+  text: string;
+  voiceId: string;
+}
+
+const getPodcastVoiceIds = (): Record<
+  HostedAiPodcastTranscriptTurn["speaker"],
+  string
+> => ({
+  hostA:
+    getEnv("UNREAL_SPEECH_HOST_A_VOICE_ID") ||
+    getEnv("UNREAL_SPEECH_VOICE_ID") ||
+    UNREAL_SPEECH_DEFAULT_VOICE_ID,
+  hostB:
+    getEnv("UNREAL_SPEECH_HOST_B_VOICE_ID") ||
+    UNREAL_SPEECH_DEFAULT_HOST_B_VOICE_ID,
+});
+
+const getPodcastSpeechSegments = (
+  script: PodcastScript,
+): PodcastSpeechSegment[] => {
+  const voiceIds = getPodcastVoiceIds();
+
+  return script.transcriptTurns.map((turn) => ({
+    speaker: turn.speaker,
+    text: turn.text,
+    voiceId: voiceIds[turn.speaker],
+  }));
+};
 
 const getPodcastTtsCharacterCount = (script: PodcastScript): number =>
-  podcastScriptToSpeechText(script).length;
+  script.transcriptTurns.reduce((total, turn) => total + turn.text.length, 0);
 
 const getPodcastMonthlyCharacterCap = (): number => {
   const configured = Number(getEnv("PODCAST_TTS_MONTHLY_CHARACTER_CAP"));
@@ -973,14 +999,14 @@ const downloadUnrealSpeechAudioWithRetry = async (
     : new Error("Could not download podcast audio.");
 };
 
-const generatePodcastAudioFromScript = async (
-  script: PodcastScript,
-): Promise<PodcastAudioGenerationResult> => {
-  const text = podcastScriptToSpeechText(script);
+const createUnrealSpeechRequestBody = (
+  text: string,
+  voiceId: string,
+): JsonObject => {
   const model = getEnv("UNREAL_SPEECH_MODEL");
   const body: JsonObject = {
     Text: text,
-    VoiceId: getEnv("UNREAL_SPEECH_VOICE_ID") || UNREAL_SPEECH_DEFAULT_VOICE_ID,
+    VoiceId: voiceId,
     Bitrate: "64k",
   };
 
@@ -988,13 +1014,20 @@ const generatePodcastAudioFromScript = async (
     body.Model = model;
   }
 
+  return body;
+};
+
+const synthesizeUnrealSpeechMp3 = async (
+  text: string,
+  voiceId: string,
+): Promise<Buffer> => {
   const response = await fetch(`${UNREAL_SPEECH_API_BASE}/synthesisTasks`, {
     method: "POST",
     headers: {
       authorization: `Bearer ${getEnv("UNREAL_SPEECH_API_KEY")}`,
       "content-type": "application/json",
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(createUnrealSpeechRequestBody(text, voiceId)),
   });
   const payload = await readResponseJson(response);
 
@@ -1021,12 +1054,107 @@ const generatePodcastAudioFromScript = async (
     throw error;
   }
 
-  return {
-    audioBuffer: await downloadUnrealSpeechAudioWithRetry(
-      outputUri || taskOutputUri,
+  return downloadUnrealSpeechAudioWithRetry(outputUri || taskOutputUri);
+};
+
+const getId3v2TagSize = (buffer: Buffer): number => {
+  if (buffer.length < 10 || buffer.toString("utf8", 0, 3) !== "ID3") {
+    return 0;
+  }
+
+  const tagSize =
+    ((buffer[6] & 0x7f) << 21) |
+    ((buffer[7] & 0x7f) << 14) |
+    ((buffer[8] & 0x7f) << 7) |
+    (buffer[9] & 0x7f);
+  const hasFooter = (buffer[5] & 0x10) === 0x10;
+  const fullSize = 10 + tagSize + (hasFooter ? 10 : 0);
+
+  return fullSize > 0 && fullSize < buffer.length ? fullSize : 0;
+};
+
+const stripLeadingId3v2Tag = (buffer: Buffer): Buffer => {
+  const tagSize = getId3v2TagSize(buffer);
+  return tagSize ? buffer.subarray(tagSize) : buffer;
+};
+
+const isMp3Buffer = (buffer: Buffer): boolean => {
+  const withoutId3 = stripLeadingId3v2Tag(buffer);
+
+  return (
+    buffer.toString("utf8", 0, Math.min(buffer.length, 3)) === "ID3" ||
+    (withoutId3.length >= 2 &&
+      withoutId3[0] === 0xff &&
+      (withoutId3[1] & 0xe0) === 0xe0)
+  );
+};
+
+const joinPodcastMp3Segments = (segments: Buffer[]): Buffer => {
+  if (!segments.length) {
+    const error = new Error("Unreal Speech returned no podcast audio segments.");
+    error.name = "provider_error";
+    throw error;
+  }
+
+  const parts = segments.map((segment, index) => {
+    if (!isMp3Buffer(segment)) {
+      const error = new Error("Unreal Speech did not return a playable MP3.");
+      error.name = "provider_error";
+      throw error;
+    }
+
+    return index === 0 ? segment : stripLeadingId3v2Tag(segment);
+  });
+  const audioBuffer = Buffer.concat(parts);
+
+  if (audioBuffer.length > MAX_PODCAST_AUDIO_BYTES) {
+    const error = new Error("Podcast audio is too large.");
+    error.name = "provider_error";
+    throw error;
+  }
+
+  return audioBuffer;
+};
+
+const synthesizePodcastSegments = async (
+  segments: PodcastSpeechSegment[],
+): Promise<Buffer[]> => {
+  const audioSegments = new Array<Buffer>(segments.length);
+  let nextIndex = 0;
+
+  const worker = async (): Promise<void> => {
+    while (nextIndex < segments.length) {
+      const segmentIndex = nextIndex;
+      nextIndex += 1;
+      const segment = segments[segmentIndex];
+      audioSegments[segmentIndex] = await synthesizeUnrealSpeechMp3(
+        segment.text,
+        segment.voiceId,
+      );
+    }
+  };
+
+  await Promise.all(
+    Array.from(
+      { length: Math.min(UNREAL_SPEECH_SEGMENT_CONCURRENCY, segments.length) },
+      () => worker(),
     ),
+  );
+
+  return audioSegments;
+};
+
+const generatePodcastAudioFromScript = async (
+  script: PodcastScript,
+): Promise<PodcastAudioGenerationResult> => {
+  const segments = getPodcastSpeechSegments(script);
+  const audioSegments = await synthesizePodcastSegments(segments);
+
+  return {
+    audioBuffer: joinPodcastMp3Segments(audioSegments),
     mimeType: "audio/mpeg",
-    characterCount: text.length,
+    characterCount: getPodcastTtsCharacterCount(script),
+    providerCallCount: segments.length,
   };
 };
 
@@ -1634,7 +1762,7 @@ const handleGeneratePodcast = async (
     const characterCount = getPodcastTtsCharacterCount(script);
     await reservePodcastTtsCharacters(userId, characterCount);
     const audio = await generatePodcastAudioFromScript(script);
-    providerCallCount += 1;
+    providerCallCount += audio.providerCallCount;
 
     const podcastId = `podcast-${randomUUID()}`;
     const studyGuideId = podcastPathSegment(

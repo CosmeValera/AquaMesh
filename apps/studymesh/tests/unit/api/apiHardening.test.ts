@@ -761,6 +761,7 @@ describe('API payment and hosted AI hardening', () => {
     vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
     vi.stubEnv('HOSTED_CEREBRAS_API_KEY', 'hosted-cerebras-key')
     vi.stubEnv('UNREAL_SPEECH_API_KEY', 'unreal-key')
+    vi.stubEnv('UNREAL_SPEECH_HOST_A_VOICE_ID', 'Sierra')
 
     const rpcBodies: Record<string, unknown>[] = []
     const monthlyUsageBodies: Record<string, unknown>[] = []
@@ -774,6 +775,12 @@ describe('API payment and hosted AI hardening', () => {
       body?: BodyInit | null
       headers?: HeadersInit
     }> = []
+    const expectedTurnTexts = [
+      'Photosynthesis turns light into usable energy.',
+      'ATP helps cells move that energy around.',
+      'The key idea is energy conversion.',
+      'That connects the lesson together.',
+    ]
     const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
       ok,
       status,
@@ -782,6 +789,16 @@ describe('API payment and hosted AI hardening', () => {
         .fn()
         .mockResolvedValue(new TextEncoder().encode('ID3mp3').buffer),
     })
+    const audioResponse = (bytes: number[]) => {
+      const buffer = Uint8Array.from(bytes)
+
+      return {
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue('{}'),
+        arrayBuffer: vi.fn().mockResolvedValue(buffer.buffer),
+      }
+    }
     const fetchMock = vi.fn((url: string, init?: RequestInit) => {
       const target = String(url)
 
@@ -878,6 +895,7 @@ describe('API payment and hosted AI hardening', () => {
       }
 
       if (target === 'https://api.v8.unrealspeech.com/synthesisTasks') {
+        const requestNumber = unrealRequests.length + 1
         unrealRequests.push({
           body: JSON.parse(String(init?.body)),
           headers: init?.headers,
@@ -885,15 +903,16 @@ describe('API payment and hosted AI hardening', () => {
         return Promise.resolve(
           jsonResponse({
             SynthesisTask: {
-              TaskId: 'task-1',
-              OutputUri: 'https://audio.unrealspeech.test/podcast.mp3',
+              TaskId: `task-${requestNumber}`,
+              OutputUri: `https://audio.unrealspeech.test/segment-${requestNumber}.mp3`,
             },
           }),
         )
       }
 
-      if (target === 'https://audio.unrealspeech.test/podcast.mp3') {
-        return Promise.resolve(jsonResponse({}, true, 200))
+      if (target.startsWith('https://audio.unrealspeech.test/segment-')) {
+        const segment = Number(target.match(/segment-(\d+)\.mp3/)?.[1] || '0')
+        return Promise.resolve(audioResponse([0xff, 0xfb, segment]))
       }
 
       if (target.includes('/storage/v1/object/study-guide-podcasts/')) {
@@ -957,28 +976,39 @@ describe('API payment and hosted AI hardening', () => {
     })
     expect(rpcBodies[2]).toMatchObject({
       p_status: 'succeeded',
-      p_provider_call_count: 2,
+      p_provider_call_count: 5,
     })
     expect(providerBodies).toHaveLength(1)
     expect(monthlyUsageBodies).toHaveLength(1)
     expect(monthlyUsageBodies[0]).toMatchObject({
       p_owner_id: 'user-1',
-      p_character_count: expect.any(Number),
+      p_character_count: expectedTurnTexts.join('').length,
       p_monthly_cap: 225000,
     })
-    expect(monthlyUsageBodies[0].p_character_count).toBeGreaterThan(0)
-    expect(unrealRequests).toHaveLength(1)
-    expect(unrealRequests[0].body).toMatchObject({
-      VoiceId: 'Sierra',
-      Bitrate: '64k',
-    })
-    expect(String(unrealRequests[0].body.Text)).toContain('Host A:')
-    expect(String(unrealRequests[0].body.Text)).toContain('Host B:')
+    expect(unrealRequests).toHaveLength(4)
+    expect(unrealRequests.map((request) => request.body.Text)).toEqual(
+      expectedTurnTexts,
+    )
+    expect(unrealRequests.map((request) => request.body.VoiceId)).toEqual([
+      'Sierra',
+      'Daniel',
+      'Sierra',
+      'Daniel',
+    ])
+    expect(unrealRequests.every((request) => request.body.Bitrate === '64k')).toBe(
+      true,
+    )
+    expect(
+      unrealRequests.every((request) => !String(request.body.Text).includes('Host ')),
+    ).toBe(true)
     expect(
       (unrealRequests[0].headers as Record<string, string>).authorization,
     ).toBe('Bearer unreal-key')
     expect(storageUploads).toHaveLength(1)
     expect(storageUploads[0].url).toContain('user-1/guide-1/')
+    expect(Buffer.from(storageUploads[0].body as Buffer)).toEqual(
+      Buffer.from([0xff, 0xfb, 1, 0xff, 0xfb, 2, 0xff, 0xfb, 3, 0xff, 0xfb, 4]),
+    )
     expect((storageUploads[0].headers as Record<string, string>)['x-upsert']).toBe(
       'true',
     )

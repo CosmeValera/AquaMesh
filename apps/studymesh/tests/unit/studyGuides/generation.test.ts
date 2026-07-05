@@ -34,7 +34,6 @@ vi.mock('../../../src/quickCreate/ai', async (importOriginal) => {
       id: 'podcast-1',
       title: 'Podcast: Biology',
       description: 'A short biology recap.',
-      durationSeconds: 240,
       audioPath: 'user-1/guide-1/podcast-1.mp3',
       mimeType: 'audio/mpeg',
       transcriptTurns: [

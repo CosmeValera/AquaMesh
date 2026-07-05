@@ -512,8 +512,6 @@ const toHostedAiPodcast = (value: unknown): HostedAiPodcast | null => {
     id: String(value.id || `podcast-${hashValue(audioPath)}`),
     title: String(value.title || 'Podcast'),
     description: String(value.description || ''),
-    durationSeconds:
-      typeof value.durationSeconds === 'number' ? value.durationSeconds : 0,
     audioPath,
     mimeType: String(value.mimeType || 'audio/mpeg'),
     transcriptTurns,
@@ -523,13 +521,6 @@ const toHostedAiPodcast = (value: unknown): HostedAiPodcast | null => {
       value.sourceScope === 'currentPage' ? 'currentPage' : 'studyGuide',
     createdAt: String(value.createdAt || ''),
   }
-}
-
-const formatDuration = (seconds: number): string => {
-  const safeSeconds = Math.max(0, Math.round(seconds))
-  const minutes = Math.floor(safeSeconds / 60)
-  const remainingSeconds = safeSeconds % 60
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }
 
 const toFourOptions = (value: unknown): string[] => {
@@ -3206,13 +3197,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             <Typography variant="subtitle1" fontWeight={700}>
               {renderMarkdownInline(podcast.title)}
             </Typography>
-            {podcast.durationSeconds > 0 ? (
-              <Chip
-                label={formatDuration(podcast.durationSeconds)}
-                size="small"
-                variant="outlined"
-              />
-            ) : null}
           </Stack>
           {podcast.description ? (
             <Typography variant="body2" color="text.secondary">

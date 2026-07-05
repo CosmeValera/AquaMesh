@@ -740,15 +740,6 @@ const normalizePodcastScript = (
   };
 };
 
-const wordsInPodcastScript = (script: PodcastScript): number =>
-  script.transcriptTurns.reduce(
-    (total, turn) => total + (turn.text.match(/\S+/g)?.length || 0),
-    0,
-  );
-
-const estimatePodcastDurationSeconds = (script: PodcastScript): number =>
-  Math.max(120, Math.min(300, Math.round((wordsInPodcastScript(script) / 155) * 60)));
-
 const getPodcastTranscriptText = (script: PodcastScript): string =>
   script.transcriptTurns.map((turn) => turn.text).join("\n\n");
 
@@ -1953,7 +1944,6 @@ const handleGeneratePodcast = async (
       id: podcastId,
       title: script.title,
       description: script.description,
-      durationSeconds: estimatePodcastDurationSeconds(script),
       audioPath,
       mimeType: audio.mimeType,
       transcriptTurns: script.transcriptTurns,

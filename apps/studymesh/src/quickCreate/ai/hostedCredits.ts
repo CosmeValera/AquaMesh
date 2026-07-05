@@ -116,7 +116,6 @@ export interface HostedAiPodcast {
   id: string
   title: string
   description: string
-  durationSeconds: number
   audioPath: string
   mimeType: string
   transcriptTurns: HostedAiPodcastTranscriptTurn[]

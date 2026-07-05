@@ -365,6 +365,32 @@ describe('DashboardChatPanel quick create menu', () => {
     )
   })
 
+  it('dismisses quick-create failure alerts', async () => {
+    const onQuickCreatePage = vi
+      .fn()
+      .mockRejectedValue(
+        new Error('Daily podcast generation limit reached. Try again tomorrow.'),
+      )
+    renderPanel({ onQuickCreatePage, supportsStudyGuideCreateScope: true })
+
+    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Podcast$/i }))
+
+    expect(
+      await screen.findByText(
+        'Daily podcast generation limit reached. Try again tomorrow.',
+      ),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Dismiss alert/i }))
+
+    expect(
+      screen.queryByText(
+        'Daily podcast generation limit reached. Try again tomorrow.',
+      ),
+    ).not.toBeInTheDocument()
+  })
+
   it('can create from only the current Study Guide page', async () => {
     const onQuickCreatePage = vi.fn().mockResolvedValue(undefined)
     renderPanel({ onQuickCreatePage, supportsStudyGuideCreateScope: true })

@@ -578,6 +578,8 @@ const DashboardChatPanel = ({
   const [addSourceUrl, setAddSourceUrl] = useState('')
   const [addSourceError, setAddSourceError] = useState('')
   const [addSourceNotice, setAddSourceNotice] = useState('')
+  const [noSourceContentNoticeDismissed, setNoSourceContentNoticeDismissed] =
+    useState(false)
   const [addSourceLoading, setAddSourceLoading] = useState(false)
   const [quickCreateSourceScope, setQuickCreateSourceScope] =
     useState<QuickCreateSourceScope>(
@@ -613,6 +615,39 @@ const DashboardChatPanel = ({
   const hasContext = context.chunks.length > 0
   const activePet =
     aiChatPets.find((pet) => pet.id === activePetId) || aiChatPets[0]
+  const dismissibleAlertSx = {
+    '& .MuiAlert-action': {
+      alignItems: 'flex-start',
+      ml: 'auto',
+      pl: 1,
+    },
+  }
+  const renderDismissAlertAction = (
+    onDismiss: () => void,
+    severity: 'error' | 'info' = 'error',
+  ) => {
+    const palette = theme.palette[severity]
+
+    return (
+      <IconButton
+        aria-label="Dismiss alert"
+        size="small"
+        onClick={onDismiss}
+        sx={{
+          flexShrink: 0,
+          color: `${severity}.dark`,
+          bgcolor: alpha(palette.main, 0.08),
+          border: 1,
+          borderColor: alpha(palette.main, 0.24),
+          '&:hover': {
+            bgcolor: alpha(palette.main, 0.16),
+          },
+        }}
+      >
+        <CloseIcon fontSize="small" />
+      </IconButton>
+    )
+  }
   const activeChatSession = chatSessions.find(
     (session) => session.id === activeChatId,
   )
@@ -3803,10 +3838,25 @@ const DashboardChatPanel = ({
               {t('chat.sourceLimitHelp')}
             </Typography>
             {addSourceError ? (
-              <Alert severity="error">{addSourceError}</Alert>
+              <Alert
+                severity="error"
+                sx={dismissibleAlertSx}
+                action={renderDismissAlertAction(() => setAddSourceError(''))}
+              >
+                {addSourceError}
+              </Alert>
             ) : null}
             {addSourceNotice ? (
-              <Alert severity="info">{addSourceNotice}</Alert>
+              <Alert
+                severity="info"
+                sx={dismissibleAlertSx}
+                action={renderDismissAlertAction(
+                  () => setAddSourceNotice(''),
+                  'info',
+                )}
+              >
+                {addSourceNotice}
+              </Alert>
             ) : null}
           </Stack>
         </DialogContent>
@@ -3883,7 +3933,13 @@ const DashboardChatPanel = ({
               autoFocus
             />
             {addSourceError ? (
-              <Alert severity="error">{addSourceError}</Alert>
+              <Alert
+                severity="error"
+                sx={dismissibleAlertSx}
+                action={renderDismissAlertAction(() => setAddSourceError(''))}
+              >
+                {addSourceError}
+              </Alert>
             ) : null}
           </Stack>
         </DialogContent>
@@ -4031,7 +4087,18 @@ const DashboardChatPanel = ({
         }}
       >
         {!hasAnswerContext ? (
-          <Alert severity="info">{t('chat.noSourceContent')}</Alert>
+          noSourceContentNoticeDismissed ? null : (
+            <Alert
+              severity="info"
+              sx={dismissibleAlertSx}
+              action={renderDismissAlertAction(
+                () => setNoSourceContentNoticeDismissed(true),
+                'info',
+              )}
+            >
+              {t('chat.noSourceContent')}
+            </Alert>
+          )
         ) : messages.length === 0 ? (
           <Stack
             spacing={1.5}
@@ -4595,25 +4662,8 @@ const DashboardChatPanel = ({
         {error && (
           <Alert
             severity="error"
-            sx={{ mt: 2 }}
-            action={
-              <IconButton
-                aria-label="Dismiss error"
-                size="small"
-                onClick={() => setError('')}
-                sx={{
-                  color: 'error.dark',
-                  bgcolor: alpha(theme.palette.error.main, 0.08),
-                  border: 1,
-                  borderColor: alpha(theme.palette.error.main, 0.24),
-                  '&:hover': {
-                    bgcolor: alpha(theme.palette.error.main, 0.16),
-                  },
-                }}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            }
+            sx={{ mt: 2, ...dismissibleAlertSx }}
+            action={renderDismissAlertAction(() => setError(''))}
           >
             {error}
           </Alert>

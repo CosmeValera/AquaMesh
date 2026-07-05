@@ -24,6 +24,11 @@ const guideWorkspaceSupabaseMocks = vi.hoisted(() => ({
   isSupabaseConfigured: false,
 }))
 
+const guideWorkspaceGenerationMocks = vi.hoisted(() => ({
+  appendAiPodcastPage: vi.fn(),
+  appendAiQuickCreatePage: vi.fn(),
+}))
+
 vi.mock('../../../../src/auth/AuthProvider', () => ({
   useAuth: () => ({ user: guideWorkspaceAuthMocks.user }),
 }))
@@ -88,6 +93,11 @@ vi.mock('../../../../src/components/dashboardChat/DashboardChatPanel', () => ({
   },
 }))
 
+vi.mock('../../../../src/studyGuides/generation', () => ({
+  appendAiPodcastPage: guideWorkspaceGenerationMocks.appendAiPodcastPage,
+  appendAiQuickCreatePage: guideWorkspaceGenerationMocks.appendAiQuickCreatePage,
+}))
+
 const storedGuide = {
   id: 'guide-1',
   title: 'Biology',
@@ -146,6 +156,14 @@ describe('GuideWorkspacePage responsive sections', () => {
     guideWorkspaceSupabaseMocks.isSupabaseConfigured = false
     dashboardChatPanelSpy.mockClear()
     guideWorkspaceCloudMocks.getStudyGuide.mockReset()
+    guideWorkspaceGenerationMocks.appendAiPodcastPage.mockReset()
+    guideWorkspaceGenerationMocks.appendAiPodcastPage.mockResolvedValue(
+      storedGuide.studyPath,
+    )
+    guideWorkspaceGenerationMocks.appendAiQuickCreatePage.mockReset()
+    guideWorkspaceGenerationMocks.appendAiQuickCreatePage.mockResolvedValue(
+      storedGuide.studyPath,
+    )
     vi.mocked(localStorage.setItem).mockClear()
     vi.mocked(window.matchMedia).mockImplementation((query) => ({
       matches: query.includes('max-width'),
@@ -608,6 +626,57 @@ describe('GuideWorkspacePage responsive sections', () => {
     expect(
       await screen.findByText(STUDY_GUIDES_STORAGE_FULL_MESSAGE),
     ).toBeInTheDocument()
+  })
+
+  it('dismisses Study Guide quick-create failure alerts', async () => {
+    guideWorkspaceGenerationMocks.appendAiPodcastPage.mockRejectedValue(
+      new Error('Daily podcast generation limit reached. Try again tomorrow.'),
+    )
+
+    render(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <Routes>
+          <Route
+            path="/workspace/:studyGuideId"
+            element={<GuideWorkspacePage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await screen.findByTestId('study-guide-panel')
+    fireEvent.click(screen.getByRole('button', { name: 'AI Chat' }))
+    const latestProps = dashboardChatPanelSpy.mock.calls.at(-1)?.[0] as {
+      onQuickCreatePage: (input: {
+        actionId: 'podcast'
+        resourceType: 'podcast'
+        label: 'Podcast'
+        sourceScope: 'studyGuide'
+      }) => Promise<void>
+    }
+
+    await act(async () => {
+      await latestProps.onQuickCreatePage({
+        actionId: 'podcast',
+        resourceType: 'podcast',
+        label: 'Podcast',
+        sourceScope: 'studyGuide',
+      })
+    })
+
+    expect(
+      await screen.findByText(
+        'Daily podcast generation limit reached. Try again tomorrow.',
+      ),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Dismiss alert/i }))
+
+    expect(
+      screen.queryByText(
+        'Daily podcast generation limit reached. Try again tomorrow.',
+      ),
+    ).not.toBeInTheDocument()
   })
 
   it('shows a workspace storage warning when Add Source cannot save', async () => {

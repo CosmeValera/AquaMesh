@@ -4,13 +4,16 @@ import {
   Box,
   Button,
   CircularProgress,
+  IconButton,
   Paper,
   Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
+import CloseIcon from '@mui/icons-material/Close'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import type { StudyGuideRecord } from '../../cloud/types'
@@ -644,12 +647,36 @@ const GuideWorkspacePage = () => {
       {quickCreateError ? (
         <Alert
           severity="error"
+          action={
+            <IconButton
+              aria-label="Dismiss alert"
+              size="small"
+              onClick={() => setQuickCreateError('')}
+              sx={{
+                flexShrink: 0,
+                color: 'error.dark',
+                bgcolor: alpha(theme.palette.error.main, 0.08),
+                border: 1,
+                borderColor: alpha(theme.palette.error.main, 0.24),
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.error.main, 0.16),
+                },
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          }
           sx={{
             position: 'absolute',
             right: 16,
             bottom: 16,
             maxWidth: 420,
             zIndex: 10,
+            '& .MuiAlert-action': {
+              alignItems: 'flex-start',
+              ml: 'auto',
+              pl: 1,
+            },
           }}
         >
           {quickCreateError}

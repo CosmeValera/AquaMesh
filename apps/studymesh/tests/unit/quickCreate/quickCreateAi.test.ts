@@ -82,6 +82,11 @@ import {
   clearQuickCreateAiToken,
   saveQuickCreateAiSessionKey,
 } from '../../../src/quickCreate/ai'
+import {
+  createApplicationQuestion,
+  extractLearningConcepts,
+} from '../../../src/quickCreate/concepts'
+import type { LearningConcept } from '../../../src/quickCreate/concepts'
 
 const QUICK_CREATE_AI_SESSION_KEY = 'studymesh-quick-create-ai-session-keys-v1'
 
@@ -891,6 +896,126 @@ describe('local AI helpers', () => {
         expect.stringContaining('Dropped quiz 1'),
         expect.stringContaining('removed duplicate options'),
       ]),
+    )
+  })
+
+  it('does not turn markdown heading fragments into local fallback quiz questions', () => {
+    const rawNotes =
+      'Charts, Releases, and Values ## Chart structure A Helm chart is a directory that contains templates and metadata for an application.\n\n' +
+      'A release is rendered with a chosen set of values and stored as a release.\n\n' +
+      'Values are configuration inputs that customize a release for one environment.'
+    const concepts = extractLearningConcepts(rawNotes, 'Charts, Releases, and Values')
+    const serializedConcepts = JSON.stringify(concepts)
+
+    expect(serializedConcepts).not.toContain('##')
+    expect(serializedConcepts).not.toContain(
+      'Charts, Releases, and Values ## Chart structure',
+    )
+
+    const questions = concepts
+      .map((concept, index) =>
+        createApplicationQuestion(concept, index, concepts),
+      )
+      .filter(Boolean)
+
+    expect(JSON.stringify(questions)).not.toContain('What rule does')
+    expect(JSON.stringify(questions)).not.toContain('This describe')
+  })
+
+  it('skips suspicious local quiz concepts instead of forcing generic stems', () => {
+    const badConcept: LearningConcept = {
+      concept: 'This',
+      type: 'definition',
+      explanation:
+        'This placeholder label came from a malformed fallback concept and should be ignored.',
+      example: '',
+      correctAnswer:
+        'A placeholder label came from a malformed fallback concept.',
+      expectedLearning:
+        'Recognize that placeholder labels are not useful quiz concepts.',
+      distractors: [
+        'A chart package with Kubernetes templates.',
+        'A release rendered with selected values.',
+      ],
+      sourceLine: 1,
+      definition:
+        'This placeholder label came from a malformed fallback concept.',
+      formationRule: '',
+      usageRule: '',
+      commonMistake: '',
+      contrast: '',
+    }
+    const definitionConcepts: LearningConcept[] = [
+      {
+        concept: 'Helm chart',
+        type: 'definition',
+        explanation:
+          'A Helm chart is a reusable package containing Kubernetes templates and metadata.',
+        example: '',
+        correctAnswer:
+          'A reusable package containing Kubernetes templates and metadata.',
+        expectedLearning:
+          'Explain that a Helm chart is the reusable package layer.',
+        distractors: [
+          'One installed instance of a chart in a cluster.',
+          'Configuration inputs that customize a release.',
+        ],
+        sourceLine: 1,
+        definition:
+          'A Helm chart is a reusable package containing Kubernetes templates and metadata.',
+        formationRule: '',
+        usageRule: '',
+        commonMistake: '',
+        contrast: '',
+      },
+      {
+        concept: 'Helm release',
+        type: 'definition',
+        explanation:
+          'A Helm release is one installed instance of a chart in a Kubernetes cluster.',
+        example: '',
+        correctAnswer: 'One installed instance of a chart in a cluster.',
+        expectedLearning:
+          'Explain that a release is the installed instance.',
+        sourceLine: 2,
+        definition:
+          'A Helm release is one installed instance of a chart in a Kubernetes cluster.',
+        formationRule: '',
+        usageRule: '',
+        commonMistake: '',
+        contrast: '',
+      },
+    ]
+
+    const usageConcepts: LearningConcept[] = [
+      {
+        concept: 'Subjunctive trigger: pour que',
+        type: 'usage',
+        explanation:
+          'Pour que introduces a dependent clause that normally requires the subjunctive.',
+        example: '',
+        correctAnswer: 'pour que',
+        expectedLearning:
+          'Recognize pour que as a trigger for the subjunctive.',
+        distractors: ['parce que', 'quand', 'apres que'],
+        sourceLine: 3,
+        definition: '',
+        formationRule: '',
+        usageRule:
+          'Pour que introduces a dependent clause that normally requires the subjunctive.',
+        commonMistake: '',
+        contrast: '',
+      },
+    ]
+
+    expect(createApplicationQuestion(badConcept, 0, [badConcept])).toBeNull()
+    expect(
+      createApplicationQuestion(definitionConcepts[0], 0, definitionConcepts),
+    ).toBeNull()
+    expect(createApplicationQuestion(usageConcepts[0], 0, usageConcepts)).toEqual(
+      expect.objectContaining({
+        question: 'Which expression or context requires pour que?',
+      }),
     )
   })
 

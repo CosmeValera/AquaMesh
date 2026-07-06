@@ -30,7 +30,9 @@ const sentenceFragments = (value: string): string[] =>
     .filter((fragment) => fragment.split(/\s+/).length >= 5)
 
 const genericQuestionPattern =
-  /what does .+ help you understand|core idea behind|which statement best explains|what do the notes say|according to the notes|which statement matches/i
+  /what rule does|what does .+ help you understand|core idea behind|which statement best explains|what do the notes say|according to the notes|which statement matches/i
+const malformedQuestionPattern =
+  /(?:^|\s)#{1,6}\s|\bwhat does this describe\b|\bthis describe\b/i
 
 const bannedQuizOptionPattern =
   /^(?:[a-d]|option\s+[a-d]|choice\s+[a-d]|all of the above|none of the above)$/i
@@ -56,6 +58,7 @@ const isCopiedFromSource = (question: string, rawNotes = ''): boolean => {
 const isUsefulQuestion = (question: string, rawNotes = ''): boolean =>
   question.split(/\s+/).filter(Boolean).length >= 4 &&
   !genericQuestionPattern.test(question) &&
+  !malformedQuestionPattern.test(question) &&
   !isCopiedFromSource(question, rawNotes)
 
 const stringValue = z

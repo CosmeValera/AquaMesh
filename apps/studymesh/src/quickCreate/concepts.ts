@@ -37,13 +37,24 @@ const blockedConcepts = new Set([
   'example',
   'goal',
   'it',
+  'key idea',
+  'quick summary',
   'quantity',
+  'scope note',
+  'this',
+  'this concept',
+  'this lesson',
+  'this material',
+  'what to remember now',
 ])
 
 const genericPromptPattern =
-  /what does .+ help you understand or do|core idea behind|which statement best explains|what do the notes say|which statement matches the notes|according to the notes/i
+  /what rule does|what does .+ help you understand or do|core idea behind|which statement best explains|what do the notes say|which statement matches the notes|according to the notes/i
 const lazyQuizOptionPattern =
   /\b(?:not supported|opposite of|guess from the title|all of the above|none of the above|not enough information)\b/i
+const markdownFragmentPattern = /(?:^|\s)#{1,6}\s|\*\*|__|`|\[[^\]]+\]\(/i
+const embeddedHeadingPattern =
+  /\b(?:chart structure|common beginner mistake|common mistakes|context bridge|final takeaway|key idea|quick summary|scope note|what to remember now)\b/i
 
 const normalizeSpaces = (value: string): string =>
   value.replace(/\s+/g, ' ').trim()
@@ -123,7 +134,8 @@ const isExpandedRuleLabel = (value: string): boolean =>
   )
 
 export const isBadConceptCandidate = (value: string, title = ''): boolean => {
-  const candidate = normalizeSpaces(value.replace(/^#+\s*/, ''))
+  const rawCandidate = normalizeSpaces(value)
+  const candidate = normalizeSpaces(rawCandidate.replace(/^#+\s*/, ''))
   const key = normalizeConceptKey(candidate)
   const titleKey = normalizeConceptKey(title)
   const tokenCount = words(candidate).length
@@ -140,7 +152,29 @@ export const isBadConceptCandidate = (value: string, title = ''): boolean => {
     return true
   }
 
+  if (
+    titleKey &&
+    (key.startsWith(`${titleKey} `) || key.includes(` ${titleKey} `))
+  ) {
+    return true
+  }
+
+  if (markdownFragmentPattern.test(rawCandidate)) {
+    return true
+  }
+
   if (genericPromptPattern.test(candidate)) {
+    return true
+  }
+
+  if (/^(?:this|these|that)\b/i.test(candidate)) {
+    return true
+  }
+
+  if (
+    (tokenCount > 8 || embeddedHeadingPattern.test(candidate)) &&
+    !isExpandedRuleLabel(candidate)
+  ) {
     return true
   }
 
@@ -541,7 +575,7 @@ export const isLowQualityStudyObject = (
   return false
 }
 
-const createQuestionStem = (concept: LearningConcept): string => {
+const createQuestionStem = (concept: LearningConcept): string | null => {
   if (concept.type === 'formation') {
     return `How do you form ${concept.concept.replace(/\s+rule$/i, '')}?`
   }
@@ -565,7 +599,7 @@ const createQuestionStem = (concept: LearningConcept): string => {
     return `What exception behavior applies to ${concept.concept}?`
   }
 
-  return `What rule does ${concept.concept} describe?`
+  return null
 }
 
 export const createApplicationQuestion = (
@@ -583,6 +617,10 @@ export const createApplicationQuestion = (
   | 'hint'
   | 'optionFeedback'
 > | null => {
+  if (!hasConceptSubstance(concept)) {
+    return null
+  }
+
   const answer = concept.correctAnswer || conceptExplanation(concept)
   const distractors = [
     ...(concept.distractors || []),
@@ -617,9 +655,14 @@ export const createApplicationQuestion = (
     return null
   }
 
+  const question = createQuestionStem(concept)
+  if (!question || genericPromptPattern.test(question)) {
+    return null
+  }
+
   return {
     quizMode: 'multipleChoice',
-    question: createQuestionStem(concept),
+    question,
     options,
     correctIndex: 0,
     answer,

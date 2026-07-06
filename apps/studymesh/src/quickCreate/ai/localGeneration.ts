@@ -218,6 +218,10 @@ const titleValue = (value: unknown, fallback: string): string =>
 
 const localBadTextPattern =
   /\btarget rule\b|\bformation rule\b|proposed that matter\s*:|what rule does|how do you form|what do the notes say|according to the notes|which statement matches|core idea behind/i
+const localMarkdownFragmentPattern =
+  /(?:^|\s)#{1,6}\s|\*\*|__|`|\[[^\]]+\]\(/i
+const localSectionHeadingPattern =
+  /\b(?:chart structure|common beginner mistake|common mistakes|context bridge|final takeaway|key idea|quick summary|scope note|what to remember now)\b/i
 
 const genericFolderNames = new Set([
   'aquamesh',
@@ -235,16 +239,24 @@ const localBadConceptKeys = new Set([
   'grammar',
   'introduction',
   'it',
+  'key idea',
   'lesson',
   'concepts',
   'overview',
   'practice',
+  'quick summary',
+  'scope note',
   'target rule',
   'formation rule',
   'target rule formation rule',
   'proposed that matter',
   'source summary',
   'summary',
+  'this',
+  'this concept',
+  'this lesson',
+  'this material',
+  'what to remember now',
 ])
 
 const isBadLocalText = (value: string): boolean =>
@@ -259,6 +271,11 @@ const isBadConcept = (value: string): boolean => {
     key.length < 3 ||
     localBadConceptKeys.has(key) ||
     localBadTextPattern.test(value) ||
+    localMarkdownFragmentPattern.test(value) ||
+    ((wordCount > 8 || localSectionHeadingPattern.test(value)) &&
+      !/\b(?:trigger|formation|ending|mistake|contrast|exception|rule|irregular|conjugation|indicative|vs)\b/i.test(
+        value,
+      )) ||
     (wordCount <= 1 && key.length < 6)
   )
 }

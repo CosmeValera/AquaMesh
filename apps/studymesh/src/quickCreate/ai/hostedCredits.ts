@@ -18,6 +18,7 @@ export type HostedAiSurface =
 export type HostedAiStage =
   | 'study_guide_main'
   | 'quick_start_fallback'
+  | 'quick_start_personalized'
   | 'quick_start_relevance_auto'
   | 'quick_start_relevance_force'
   | 'quick_start_forced_bridge'

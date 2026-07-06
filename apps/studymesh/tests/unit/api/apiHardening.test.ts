@@ -1088,6 +1088,29 @@ describe('API payment and hosted AI hardening', () => {
           )
         }
 
+        if (prompt.includes('Create one Quick Start object')) {
+          return Promise.resolve(
+            jsonResponse({
+              choices: [
+                {
+                  message: {
+                    content: JSON.stringify({
+                      keyIdea: 'Algebra gives the guide a personalized start.',
+                      quickSummary:
+                        'Algebra helps frame the first idea.\n\nThe guide still teaches the new topic directly.',
+                    }),
+                  },
+                },
+              ],
+              usage: {
+                prompt_tokens: 150,
+                completion_tokens: 60,
+                total_tokens: 210,
+              },
+            }),
+          )
+        }
+
         return Promise.resolve(
           jsonResponse({
             choices: [
@@ -1158,12 +1181,13 @@ describe('API payment and hosted AI hardening', () => {
       'gpt-5.4-mini-route',
       'gpt-5.4-nano-route',
       'gpt-5.4-nano-route',
+      'gpt-5.4-nano-route',
     ])
     expect(rpcBodies[0]).toMatchObject({
       p_provider: 'openai',
       p_model: 'openai:gpt-5.4-mini-route',
     })
-    expect(rpcBodies[1].p_provider_call_count).toBe(3)
+    expect(rpcBodies[1].p_provider_call_count).toBe(4)
     expect(rpcBodies[1].p_metadata).toMatchObject({
       estimatedCostUsdTotal: expect.any(Number),
       stageCosts: [
@@ -1179,6 +1203,12 @@ describe('API payment and hosted AI hardening', () => {
           model: 'gpt-5.4-nano-route',
           inputTokens: 200,
           outputTokens: 50,
+        }),
+        expect.objectContaining({
+          stage: 'quick_start_personalized',
+          model: 'gpt-5.4-nano-route',
+          inputTokens: 150,
+          outputTokens: 60,
         }),
         expect.objectContaining({
           stage: 'knowledge_bridge_blocks',
@@ -2099,10 +2129,9 @@ describe('API payment and hosted AI hardening', () => {
                           title: 'Guide',
                           folderName: 'Guide',
                           quickStart: {
-                            keyIdea:
-                              'Backend gives a useful short mental model.',
+                            keyIdea: 'Neutral quick start from the main guide.',
                             quickSummary:
-                              'First short paragraph.\n\nSecond short paragraph with one caveat.',
+                              'First neutral paragraph.\n\nSecond neutral paragraph.',
                           },
                           dashboards: [
                             {
@@ -2133,15 +2162,22 @@ describe('API payment and hosted AI hardening', () => {
                             bridgeStrength: 'strong',
                             bridgeStrategy: 'direct_comparison',
                           })
-                        : JSON.stringify({
-                            blocks: [
-                              {
-                                dashboardIndex: 1,
-                                title: 'Backend bridge',
-                                body: 'Backend request flow is a useful comparison, but Kafka-style durability changes the shape.',
-                              },
-                            ],
-                          }),
+                        : providerBodies.length === 3
+                          ? JSON.stringify({
+                              keyIdea:
+                                'Backend gives a useful short mental model.',
+                              quickSummary:
+                                'First short paragraph.\n\nSecond short paragraph with one caveat.',
+                            })
+                          : JSON.stringify({
+                              blocks: [
+                                {
+                                  dashboardIndex: 1,
+                                  title: 'Backend bridge',
+                                  body: 'Backend request flow is a useful comparison, but Kafka-style durability changes the shape.',
+                                },
+                              ],
+                            }),
                 },
               },
             ],
@@ -2193,7 +2229,7 @@ describe('API payment and hosted AI hardening', () => {
       ],
     })
     expect(response.body.quickStart).not.toHaveProperty('forcedBridge')
-    expect(providerBodies).toHaveLength(3)
+    expect(providerBodies).toHaveLength(4)
     expect(JSON.stringify(providerBodies[1])).toContain(
       'Known topics, strongest first: Backend, Databases',
     )
@@ -2201,15 +2237,24 @@ describe('API payment and hosted AI hardening', () => {
     expect(JSON.stringify(providerBodies[2])).not.toContain(
       'Candidate known topic bridge(s): Backend, Databases',
     )
-    expect(JSON.stringify(providerBodies)).not.toContain('Bridge mode: force')
     expect(JSON.stringify(providerBodies[2])).toContain(
+      'Candidate known topic bridge(s): Backend',
+    )
+    expect(JSON.stringify(providerBodies[2])).toContain(
+      'Create one Quick Start object',
+    )
+    expect(JSON.stringify(providerBodies)).not.toContain('Bridge mode: force')
+    expect(JSON.stringify(providerBodies[3])).toContain(
       'Create optional knowledge-context bridge note blocks',
     )
-    expect(JSON.stringify(providerBodies[2])).toContain('dashboardIndex: 1')
-    expect(JSON.stringify(providerBodies[2])).not.toContain('dashboardIndex: 0')
+    expect(JSON.stringify(providerBodies[3])).toContain('dashboardIndex: 1')
+    expect(JSON.stringify(providerBodies[3])).not.toContain('dashboardIndex: 0')
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 2 })
-    expect(rpcBodies[1].p_provider_call_count).toBe(3)
+    expect(rpcBodies[1].p_provider_call_count).toBe(4)
+    expect(rpcBodies[1].p_metadata).toMatchObject({
+      quickStartPersonalizedRewriteUsed: true,
+    })
   })
 
   it('keeps hosted forced Quick Start bridge when auto relevance finds no useful topic', async () => {

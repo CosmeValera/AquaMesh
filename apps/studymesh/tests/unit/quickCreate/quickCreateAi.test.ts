@@ -410,10 +410,14 @@ describe('quick create AI settings', () => {
     const request = hostedAiClientMock.callHostedAiModel.mock.calls[0][0]
     const promptText = request.parts[0].text
     expect(promptText).toContain('"quickStart"')
+    expect(promptText).toContain('quickStart must explain the concept itself')
     expect(promptText).toContain(
       'Lean hosted profile: create exactly 3 dashboards',
     )
     expect(promptText).toContain('rawNotes must be 180-260 words')
+    expect(promptText).toContain(
+      'include small fenced code/config blocks inside rawNotes',
+    )
     expect(promptText).toContain(
       'final dashboard must include exactly 3 multiple-choice questions',
     )

@@ -1971,6 +1971,41 @@ const handleGenerate = async (
 
       if (
         quickStart &&
+        relevanceDecision?.shouldUseKnownTopic &&
+        relevanceDecision.knownTopicsForQuickStart.length
+      ) {
+        try {
+          const personalizedQuickStart = parseStudyGuideQuickStart(
+            await callStage("quick_start_personalized", {
+              ...usageRequest,
+              responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
+              parts: [
+                {
+                  text: buildStudyGuideQuickStartPrompt({
+                    title: "Study Guide",
+                    source: text,
+                    relevanceDecision,
+                    bridgeMode: "auto",
+                    outputLanguage: request.outputLanguage,
+                  }),
+                },
+              ],
+            }).finally(() => {
+              providerCallCount += 1;
+            }),
+          );
+
+          if (personalizedQuickStart) {
+            metadataFlags.quickStartPersonalizedRewriteUsed = true;
+            quickStart = personalizedQuickStart;
+          }
+        } catch {
+          metadataFlags.quickStartPersonalizedRewriteSkipped = true;
+        }
+      }
+
+      if (
+        quickStart &&
         safeKnownTopics.length &&
         !(
           relevanceDecision?.shouldUseKnownTopic &&

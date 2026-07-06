@@ -2212,6 +2212,163 @@ describe('API payment and hosted AI hardening', () => {
     expect(rpcBodies[1].p_provider_call_count).toBe(3)
   })
 
+  it('keeps hosted forced Quick Start bridge when auto relevance finds no useful topic', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+    vi.stubEnv('HOSTED_CEREBRAS_API_KEY', 'hosted-cerebras-key')
+
+    const rpcBodies: Record<string, unknown>[] = []
+    const providerBodies: Record<string, unknown>[] = []
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    })
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve(jsonResponse({ id: 'user-1' }))
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(jsonResponse({ status: { studyCredits: 8 } }))
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_finish_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(jsonResponse({ status: { studyCredits: 6 } }))
+      }
+
+      if (target.includes('api.cerebras.ai')) {
+        providerBodies.push(JSON.parse(String(init?.body)))
+        const prompt = String(
+          (
+            JSON.parse(String(init?.body)).messages as Array<{
+              content: string
+            }>
+          )[0].content,
+        )
+        if (prompt.includes('Bridge mode: auto')) {
+          return Promise.resolve(
+            jsonResponse({
+              choices: [
+                {
+                  message: {
+                    content: JSON.stringify({
+                      shouldUseKnownTopic: false,
+                      knownTopicsForQuickStart: [],
+                      knownTopicRelevanceReason: 'No strong bridge.',
+                      targetTopicType: 'technical',
+                      bridgeStrength: 'none',
+                      bridgeStrategy: 'none',
+                    }),
+                  },
+                },
+              ],
+            }),
+          )
+        }
+
+        if (prompt.includes('Bridge mode: force')) {
+          return Promise.resolve(
+            jsonResponse({
+              choices: [
+                {
+                  message: {
+                    content: prompt.includes('keyIdea')
+                      ? JSON.stringify({
+                          keyIdea: 'Use Kubernetes as a loose mental bridge.',
+                          quickSummary:
+                            'Kubernetes organizes running systems.\n\nThis topic uses a different layer, but the control idea helps.',
+                        })
+                      : JSON.stringify({
+                          shouldUseKnownTopic: true,
+                          knownTopicsForQuickStart: ['Kubernetes'],
+                          knownTopicRelevanceReason: 'Closest useful bridge.',
+                          targetTopicType: 'technical',
+                          bridgeStrength: 'weak',
+                          bridgeStrategy: 'light_reference',
+                        }),
+                  },
+                },
+              ],
+            }),
+          )
+        }
+
+        return Promise.resolve(
+          jsonResponse({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    title: 'Guide',
+                    folderName: 'Guide',
+                    quickStart: {
+                      keyIdea: 'Neutral key idea.',
+                      quickSummary: 'First paragraph.\n\nSecond paragraph.',
+                    },
+                    dashboards: [
+                      {
+                        title: '01 - Map',
+                        summary: 'Map preview.',
+                        rawNotes: 'Map notes.',
+                        dashboardRole: 'normal',
+                        practiceType: 'none',
+                      },
+                    ],
+                  }),
+                },
+              },
+            ],
+          }),
+        )
+      }
+
+      return Promise.resolve(
+        jsonResponse({ message: 'unexpected url' }, false, 500),
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer user-token' },
+        body: {
+          action: 'generateWithQuickStart',
+          surface: 'study-guide',
+          parts: [{ text: 'Create study guide' }],
+          quickStartOptions: { userKnownTopics: ['Kubernetes'] },
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body.quickStart).toMatchObject({
+      keyIdea: 'Neutral key idea.',
+      forcedBridge: {
+        keyIdea: 'Use Kubernetes as a loose mental bridge.',
+      },
+    })
+    expect(providerBodies).toHaveLength(4)
+    expect(JSON.stringify(providerBodies[2])).toContain('Bridge mode: force')
+    expect(JSON.stringify(providerBodies[3])).toContain('Bridge mode: force')
+    expect(rpcBodies[1].p_provider_call_count).toBe(4)
+    expect(rpcBodies[1].p_metadata).toMatchObject({
+      stageCosts: expect.arrayContaining([
+        expect.objectContaining({ stage: 'quick_start_relevance_force' }),
+        expect.objectContaining({ stage: 'quick_start_forced_bridge' }),
+      ]),
+    })
+  })
+
   it('maps hosted Study Guide risky retry guard to rate limit before provider call', async () => {
     vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
     vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')

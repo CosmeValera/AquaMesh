@@ -670,13 +670,13 @@ const extractChatCompletionText = (payload: ChatCompletionResponse): string => {
 };
 
 const getDefaultOpenAiInputPrice = (model: string): number =>
-  model.includes("nano") ? 0.05 : 0.25;
+  model.includes("nano") ? 0.2 : 0.75;
 
 const getDefaultOpenAiCachedInputPrice = (model: string): number =>
-  model.includes("nano") ? 0.005 : 0.025;
+  model.includes("nano") ? 0.02 : 0.075;
 
 const getDefaultOpenAiOutputPrice = (model: string): number =>
-  model.includes("nano") ? 0.4 : 2;
+  model.includes("nano") ? 1.25 : 4.5;
 
 const getModelPriceEnvSuffix = (model: string): string =>
   model

@@ -41,10 +41,10 @@ interface GeminiPart {
 }
 
 const GEMINI_REQUEST_TIMEOUT_MS = 5 * 60 * 1000
-const GEMINI_TIMEOUT_MESSAGE =
-  'Gemini took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or another AI mode.'
-const GEMINI_OUTPUT_FORMAT_MESSAGE =
-  'Gemini could not follow the requested output format. StudyMesh retried with a simpler JSON prompt, but the response was still unusable.'
+const STRONG_MODEL_TIMEOUT_MESSAGE =
+  'The AI model took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or another AI mode.'
+const STRONG_MODEL_OUTPUT_FORMAT_MESSAGE =
+  'The AI model could not follow the requested output format. StudyMesh retried with a simpler JSON prompt, but the response was still unusable.'
 
 export type StrongAiModelTransport = (
   options: StrongAiCallOptions,
@@ -1369,7 +1369,7 @@ const callStrongModel = async (
       error instanceof Error &&
       /strong model request took longer than 5 minutes/i.test(error.message)
     ) {
-      throw new Error(GEMINI_TIMEOUT_MESSAGE)
+      throw new Error(STRONG_MODEL_TIMEOUT_MESSAGE)
     }
 
     throw error
@@ -1596,7 +1596,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
         text = await callPromptModeFallback()
         parsed = parseGeminiJson(text)
       } catch {
-        throw new Error(GEMINI_OUTPUT_FORMAT_MESSAGE)
+        throw new Error(STRONG_MODEL_OUTPUT_FORMAT_MESSAGE)
       }
     } else {
       throw new Error(GEMINI_OUTPUT_FORMAT_MESSAGE)
@@ -2559,7 +2559,7 @@ ${originalJson}`
       parsed = parseGeminiJson(text)
     } catch {
       if (singleRequest) {
-        throw new Error(GEMINI_OUTPUT_FORMAT_MESSAGE)
+        throw new Error(STRONG_MODEL_OUTPUT_FORMAT_MESSAGE)
       }
 
       try {

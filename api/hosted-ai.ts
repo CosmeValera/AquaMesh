@@ -69,7 +69,9 @@ const getHostedRequestText = (request: HostedAiGatewayRequest): string =>
     .filter(Boolean)
     .join("\n\n");
 
-interface CerebrasChatCompletion {
+type HostedTextProvider = "cerebras" | "openai";
+
+interface ChatCompletionResponse {
   choices?: Array<{
     message?: {
       content?: string | Array<{ text?: string; type?: string }>;
@@ -92,6 +94,7 @@ const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
 
 const HOSTED_AI_INITIAL_FREE_CREDITS = 20;
 export const DEFAULT_CEREBRAS_MODEL = "gpt-oss-120b";
+export const DEFAULT_OPENAI_MODEL = "gpt-5.4-mini";
 const MAX_TEXT_CHARS = 120_000;
 const MIN_PODCAST_SOURCE_CHARS = 400;
 const MAX_PODCAST_SOURCE_CHARS = 24_000;
@@ -123,6 +126,8 @@ const UNREAL_SPEECH_LANGUAGE_VOICES: Partial<
 };
 const CEREBRAS_CHAT_COMPLETIONS_URL =
   "https://api.cerebras.ai/v1/chat/completions";
+const OPENAI_CHAT_COMPLETIONS_URL =
+  "https://api.openai.com/v1/chat/completions";
 
 const VALID_SURFACES = new Set<HostedAiSurface>([
   "study-guide",
@@ -135,6 +140,24 @@ const getEnv = (name: string): string => process.env[name]?.trim() || "";
 
 export const getHostedCerebrasModel = (): string =>
   getEnv("HOSTED_CEREBRAS_MODEL") || DEFAULT_CEREBRAS_MODEL;
+
+export const getHostedTextProvider = (): HostedTextProvider =>
+  getEnv("HOSTED_AI_TEXT_PROVIDER").toLowerCase() === "openai"
+    ? "openai"
+    : "cerebras";
+
+export const getHostedOpenAiModel = (): string =>
+  getEnv("HOSTED_OPENAI_MODEL") || DEFAULT_OPENAI_MODEL;
+
+export const getHostedTextModel = (
+  provider: HostedTextProvider = getHostedTextProvider(),
+): string =>
+  provider === "openai" ? getHostedOpenAiModel() : getHostedCerebrasModel();
+
+const getHostedUsageModelLabel = (
+  provider: HostedTextProvider,
+  model: string,
+): string => `${provider}:${model}`;
 
 const json = (
   res: VercelResponse,
@@ -383,6 +406,7 @@ const markIntroSeen = async (userId: string): Promise<HostedAiStatus> => {
 const startHostedUsage = async (
   userId: string,
   request: HostedAiUsageRequest,
+  provider: HostedTextProvider,
   model: string,
 ): Promise<{ status: HostedAiStatus; usageId?: string }> => {
   const surface = request.surface as HostedAiSurface;
@@ -392,7 +416,7 @@ const startHostedUsage = async (
       p_owner_id: userId,
       p_request_id: request.requestId,
       p_surface: surface,
-      p_provider: "cerebras",
+      p_provider: provider,
       p_model: model,
       p_metadata: {
         requestedCredits: HOSTED_AI_CREDIT_COSTS[surface],
@@ -487,9 +511,12 @@ const convertSchemaType = (type: unknown): string | undefined => {
   return lower === "number" ? "number" : lower;
 };
 
-const toJsonSchema = (schema: unknown): unknown => {
+const toJsonSchema = (
+  schema: unknown,
+  options: { requireAllObjectProperties?: boolean } = {},
+): unknown => {
   if (Array.isArray(schema)) {
-    return schema.map(toJsonSchema);
+    return schema.map((item) => toJsonSchema(item, options));
   }
 
   if (!schema || typeof schema !== "object") {
@@ -508,20 +535,50 @@ const toJsonSchema = (schema: unknown): unknown => {
       return;
     }
 
-    next[key] = toJsonSchema(value);
+    next[key] = toJsonSchema(value, options);
   });
 
   if (next.type === "object") {
     next.additionalProperties = false;
+    if (options.requireAllObjectProperties && isObject(next.properties)) {
+      next.required = Object.keys(next.properties);
+    }
   }
 
   return next;
 };
 
-const callCerebras = async (
+const getChatCompletionConfig = (
+  provider: HostedTextProvider,
+): { url: string; apiKey: string; label: string } =>
+  provider === "openai"
+    ? {
+        url: OPENAI_CHAT_COMPLETIONS_URL,
+        apiKey: getEnv("HOSTED_OPENAI_API_KEY"),
+        label: "OpenAI",
+      }
+    : {
+        url: CEREBRAS_CHAT_COMPLETIONS_URL,
+        apiKey: getEnv("HOSTED_CEREBRAS_API_KEY"),
+        label: "Cerebras",
+      };
+
+const extractChatCompletionText = (payload: ChatCompletionResponse): string => {
+  const content = payload.choices?.[0]?.message?.content;
+
+  return typeof content === "string"
+    ? content
+    : Array.isArray(content)
+      ? content.map((part) => part.text || "").join("")
+      : payload.choices?.[0]?.text || "";
+};
+
+const callHostedTextModel = async (
   request: HostedAiGatewayRequest,
+  provider: HostedTextProvider,
   model: string,
 ): Promise<string> => {
+  const config = getChatCompletionConfig(provider);
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
@@ -546,31 +603,33 @@ const callCerebras = async (
       json_schema: {
         name: "studymesh_response",
         strict: true,
-        schema: toJsonSchema(request.responseSchema),
+        schema: toJsonSchema(request.responseSchema, {
+          requireAllObjectProperties: provider === "openai",
+        }),
       },
     };
   }
 
   try {
-    const response = await fetch(CEREBRAS_CHAT_COMPLETIONS_URL, {
+    const response = await fetch(config.url, {
       method: "POST",
       signal: controller.signal,
       headers: {
-        authorization: `Bearer ${getEnv("HOSTED_CEREBRAS_API_KEY")}`,
+        authorization: `Bearer ${config.apiKey}`,
         "content-type": "application/json",
       },
       body: JSON.stringify(body),
     });
     const payload = (await readResponseJson(
       response,
-    )) as CerebrasChatCompletion;
+    )) as ChatCompletionResponse;
 
     if (!response.ok) {
       const message =
         payload?.error?.message ||
         (isObject(payload) && typeof payload.message === "string"
           ? payload.message
-          : "Cerebras hosted AI request failed.");
+          : `${config.label} hosted AI request failed.`);
       const error = new Error(message);
       error.name =
         response.status === 429 || /rate limit|quota|limit/i.test(message)
@@ -579,16 +638,10 @@ const callCerebras = async (
       throw error;
     }
 
-    const content = payload.choices?.[0]?.message?.content;
-    const text =
-      typeof content === "string"
-        ? content
-        : Array.isArray(content)
-          ? content.map((part) => part.text || "").join("")
-          : payload.choices?.[0]?.text || "";
+    const text = extractChatCompletionText(payload);
 
     if (!text.trim()) {
-      const error = new Error("Cerebras returned an empty response.");
+      const error = new Error(`${config.label} returned an empty response.`);
       error.name = "provider_error";
       throw error;
     }
@@ -1489,8 +1542,11 @@ const ensurePodcastConfigured = (): HostedAiGatewayResponse | null => {
 };
 
 const ensureConfigured = (): HostedAiGatewayResponse | null => {
+  const provider = getHostedTextProvider();
   const required = [
-    "HOSTED_CEREBRAS_API_KEY",
+    provider === "openai"
+      ? "HOSTED_OPENAI_API_KEY"
+      : "HOSTED_CEREBRAS_API_KEY",
     "SUPABASE_URL",
     "SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
@@ -1572,14 +1628,21 @@ const handleGenerate = async (
     return invalid;
   }
 
-  const model = getHostedCerebrasModel();
+  const provider = getHostedTextProvider();
+  const model = getHostedTextModel(provider);
+  const usageModel = getHostedUsageModelLabel(provider, model);
   const requestId = randomUUID();
   const usageRequest = { ...request, requestId };
-  const started = await startHostedUsage(userId, usageRequest, model);
+  const started = await startHostedUsage(
+    userId,
+    usageRequest,
+    provider,
+    usageModel,
+  );
   let providerCallCount = 1;
 
   try {
-    const text = await callCerebras(usageRequest, model);
+    const text = await callHostedTextModel(usageRequest, provider, model);
     let quickStart: HostedAiGatewayResponse["quickStart"] | undefined;
     let bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"] | undefined;
 
@@ -1589,7 +1652,7 @@ const handleGenerate = async (
       );
       const relevanceDecision = safeKnownTopics.length
         ? parseStudyGuideQuickStartRelevanceDecision(
-            await callCerebras(
+            await callHostedTextModel(
               {
                 ...usageRequest,
                 responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
@@ -1606,6 +1669,7 @@ const handleGenerate = async (
                   },
                 ],
               },
+              provider,
               model,
             ).finally(() => {
               providerCallCount += 1;
@@ -1615,7 +1679,7 @@ const handleGenerate = async (
         : undefined;
 
       quickStart = parseStudyGuideQuickStart(
-        await callCerebras(
+        await callHostedTextModel(
           {
             ...usageRequest,
             responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
@@ -1631,6 +1695,7 @@ const handleGenerate = async (
               },
             ],
           },
+          provider,
           model,
         ).finally(() => {
           providerCallCount += 1;
@@ -1648,7 +1713,7 @@ const handleGenerate = async (
         try {
           const forcedRelevanceDecision =
             parseStudyGuideQuickStartRelevanceDecision(
-              await callCerebras(
+              await callHostedTextModel(
                 {
                   ...usageRequest,
                   responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
@@ -1665,6 +1730,7 @@ const handleGenerate = async (
                     },
                   ],
                 },
+                provider,
                 model,
               ).finally(() => {
                 providerCallCount += 1;
@@ -1679,7 +1745,7 @@ const handleGenerate = async (
 
           if (safeForcedRelevanceDecision) {
             const forcedBridge = parseStudyGuideQuickStart(
-              await callCerebras(
+              await callHostedTextModel(
                 {
                   ...usageRequest,
                   responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
@@ -1695,6 +1761,7 @@ const handleGenerate = async (
                     },
                   ],
                 },
+                provider,
                 model,
               ).finally(() => {
                 providerCallCount += 1;
@@ -1741,7 +1808,7 @@ const handleGenerate = async (
         if (eligibleDashboards.length) {
           try {
             bridgeBlocks = parseStudyGuideKnowledgeBridgeBlocks(
-              await callCerebras(
+              await callHostedTextModel(
                 {
                   ...usageRequest,
                   responseSchema: STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
@@ -1759,6 +1826,7 @@ const handleGenerate = async (
                     },
                   ],
                 },
+                provider,
                 model,
               ).finally(() => {
                 providerCallCount += 1;
@@ -1851,10 +1919,17 @@ const handleGeneratePodcast = async (
 
   await assertPodcastDailyLimit(userId);
 
-  const model = getHostedCerebrasModel();
+  const provider = getHostedTextProvider();
+  const model = getHostedTextModel(provider);
+  const usageModel = getHostedUsageModelLabel(provider, model);
   const requestId = randomUUID();
   const usageRequest = { ...request, surface: "podcast" as const, requestId };
-  const started = await startHostedUsage(userId, usageRequest, model);
+  const started = await startHostedUsage(
+    userId,
+    usageRequest,
+    provider,
+    usageModel,
+  );
   let providerCallCount = 1;
 
   try {
@@ -1866,7 +1941,7 @@ const handleGeneratePodcast = async (
       request.podcastOptions?.sourceTitle,
       100,
     );
-    const scriptText = await callCerebras(
+    const scriptText = await callHostedTextModel(
       {
         ...usageRequest,
         responseSchema: PODCAST_SCRIPT_SCHEMA,
@@ -1880,6 +1955,7 @@ const handleGeneratePodcast = async (
           },
         ],
       },
+      provider,
       model,
     );
     let script = normalizePodcastScript(scriptText, sourceTitle);
@@ -1887,7 +1963,7 @@ const handleGeneratePodcast = async (
       request.outputLanguage &&
       !podcastScriptMatchesOutputLanguage(script, request.outputLanguage)
     ) {
-      const retryText = await callCerebras(
+      const retryText = await callHostedTextModel(
         {
           ...usageRequest,
           responseSchema: PODCAST_SCRIPT_SCHEMA,
@@ -1902,6 +1978,7 @@ const handleGeneratePodcast = async (
             },
           ],
         },
+        provider,
         model,
       ).finally(() => {
         providerCallCount += 1;

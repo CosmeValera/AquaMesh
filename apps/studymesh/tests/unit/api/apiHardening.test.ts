@@ -6,7 +6,11 @@ import hostedAiBillingHandler, {
 } from '../../../../../api/hosted-ai-billing'
 import hostedAiHandler, {
   DEFAULT_CEREBRAS_MODEL,
+  DEFAULT_OPENAI_MODEL,
   getHostedCerebrasModel,
+  getHostedOpenAiModel,
+  getHostedTextModel,
+  getHostedTextProvider,
 } from '../../../../../api/hosted-ai'
 import dashboardSourceHandler from '../../../../../api/dashboard-source'
 import podcastAudioCleanupHandler from '../../../../../api/podcast-audio-cleanup'
@@ -606,6 +610,48 @@ describe('API payment and hosted AI hardening', () => {
     expect(getHostedCerebrasModel()).toBe('server-model')
   })
 
+  it('uses only server OpenAI provider and model configuration', () => {
+    vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
+    vi.stubEnv('HOSTED_OPENAI_MODEL', '')
+
+    expect(getHostedTextProvider()).toBe('openai')
+    expect(getHostedOpenAiModel()).toBe(DEFAULT_OPENAI_MODEL)
+    expect(getHostedTextModel()).toBe(DEFAULT_OPENAI_MODEL)
+
+    vi.stubEnv('HOSTED_OPENAI_MODEL', 'gpt-5.4-mini-test')
+
+    expect(getHostedTextModel()).toBe('gpt-5.4-mini-test')
+  })
+
+  it('returns missing config when hosted OpenAI key is absent', async () => {
+    vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
+    vi.stubEnv('HOSTED_OPENAI_API_KEY', '')
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: { action: 'status' },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(500)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: {
+        code: 'not_configured',
+        message:
+          'Hosted AI gateway is missing server configuration: HOSTED_OPENAI_API_KEY.',
+      },
+    })
+  })
+
   it('returns Supabase RPC details for hosted AI database failures', async () => {
     vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
     vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
@@ -753,6 +799,255 @@ describe('API payment and hosted AI hardening', () => {
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_request_id).toEqual(rpcBodies[1].p_request_id)
     expect(rpcBodies[0].p_request_id).not.toBe('client-reused-id')
+  })
+
+  it('routes hosted generation through OpenAI with strict JSON schema', async () => {
+    vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
+    vi.stubEnv('HOSTED_OPENAI_API_KEY', 'hosted-openai-key')
+    vi.stubEnv('HOSTED_OPENAI_MODEL', 'gpt-5.4-mini')
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+
+    const rpcBodies: Record<string, unknown>[] = []
+    const providerBodies: Record<string, unknown>[] = []
+    const providerHeaders: HeadersInit[] = []
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    })
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve(jsonResponse({ id: 'user-1' }))
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            status: {
+              studyCredits: 8,
+              introSeen: true,
+            },
+          }),
+        )
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_finish_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(
+          jsonResponse({
+            status: {
+              studyCredits: 7,
+              introSeen: true,
+            },
+          }),
+        )
+      }
+
+      if (target.includes('api.openai.com/v1/chat/completions')) {
+        providerBodies.push(JSON.parse(String(init?.body)))
+        providerHeaders.push(init?.headers || {})
+        return Promise.resolve(
+          jsonResponse({
+            choices: [
+              {
+                message: {
+                  content: '{"title":"OpenAI generated material"}',
+                },
+              },
+            ],
+          }),
+        )
+      }
+
+      return Promise.resolve(
+        jsonResponse({ message: 'unexpected url' }, false, 500),
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer [REDACTED:Bearer token]',
+        },
+        body: {
+          action: 'generate',
+          surface: 'quick-create',
+          parts: [{ text: 'Make a quiz' }],
+          responseSchema: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              supportArtifacts: {
+                type: 'object',
+                properties: {
+                  contrastTable: {
+                    type: 'object',
+                    properties: {
+                      title: { type: 'string' },
+                      headers: {
+                        type: 'array',
+                        items: { type: 'string' },
+                      },
+                      rows: {
+                        type: 'array',
+                        items: {
+                          type: 'array',
+                          items: { type: 'string' },
+                        },
+                      },
+                    },
+                    required: ['headers', 'rows'],
+                  },
+                },
+                required: ['contrastTable'],
+              },
+            },
+            required: ['title'],
+          },
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      text: '{"title":"OpenAI generated material"}',
+    })
+    expect(rpcBodies[0]).toMatchObject({
+      p_provider: 'openai',
+      p_model: 'openai:gpt-5.4-mini',
+    })
+    expect(providerHeaders[0]).toMatchObject({
+      authorization: 'Bearer hosted-openai-key',
+    })
+    expect(providerBodies[0]).toMatchObject({
+      model: 'gpt-5.4-mini',
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'studymesh_response',
+          strict: true,
+        },
+      },
+    })
+    expect(
+      (providerBodies[0].response_format as Record<string, unknown>)
+        .json_schema,
+    ).toMatchObject({
+      schema: {
+        type: 'object',
+        required: ['title', 'supportArtifacts'],
+        additionalProperties: false,
+      },
+    })
+    const schema = (
+      (providerBodies[0].response_format as Record<string, unknown>)
+        .json_schema as Record<string, unknown>
+    ).schema as {
+      properties: {
+        supportArtifacts: {
+          properties: {
+            contrastTable: {
+              required: string[]
+            }
+          }
+        }
+      }
+    }
+    expect(
+      schema.properties.supportArtifacts.properties.contrastTable.required,
+    ).toEqual(['title', 'headers', 'rows'])
+  })
+
+  it('maps OpenAI rate limits to hosted rate_limited errors', async () => {
+    vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
+    vi.stubEnv('HOSTED_OPENAI_API_KEY', 'hosted-openai-key')
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    })
+    const fetchMock = vi.fn((url: string) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve(jsonResponse({ id: 'user-1' }))
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+        return Promise.resolve(
+          jsonResponse({
+            status: {
+              studyCredits: 8,
+              introSeen: true,
+            },
+          }),
+        )
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_finish_usage')) {
+        return Promise.resolve(jsonResponse({}))
+      }
+
+      if (target.includes('api.openai.com/v1/chat/completions')) {
+        return Promise.resolve(
+          jsonResponse(
+            {
+              error: {
+                message: 'Rate limit reached for requests.',
+              },
+            },
+            false,
+            429,
+          ),
+        )
+      }
+
+      return Promise.resolve(
+        jsonResponse({ message: 'unexpected url' }, false, 500),
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer [REDACTED:Bearer token]',
+        },
+        body: {
+          action: 'generate',
+          surface: 'quick-create',
+          parts: [{ text: 'Make a quiz' }],
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(429)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: {
+        code: 'rate_limited',
+        message: 'Rate limit reached for requests.',
+      },
+    })
   })
 
   it('generates hosted podcasts through Cerebras, Unreal Speech, and Supabase Storage', async () => {

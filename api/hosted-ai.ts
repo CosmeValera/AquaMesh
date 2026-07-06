@@ -9,6 +9,8 @@ import type {
   HostedAiPodcast,
   HostedAiPodcastChapter,
   HostedAiPodcastTranscriptTurn,
+  HostedAiStage,
+  HostedAiStageCost,
   HostedAiStatus,
   HostedAiSurface,
 } from "../apps/studymesh/src/quickCreate/ai/hostedCredits";
@@ -83,6 +85,19 @@ interface ChatCompletionResponse {
     message?: string;
     type?: string;
   };
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+    input_tokens?: number;
+    output_tokens?: number;
+    prompt_tokens_details?: {
+      cached_tokens?: number;
+    };
+    input_tokens_details?: {
+      cached_tokens?: number;
+    };
+  };
 }
 
 const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
@@ -95,6 +110,8 @@ const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
 const HOSTED_AI_INITIAL_FREE_CREDITS = 20;
 export const DEFAULT_CEREBRAS_MODEL = "gpt-oss-120b";
 export const DEFAULT_OPENAI_MODEL = "gpt-5.4-mini";
+export const DEFAULT_OPENAI_STUDY_GUIDE_MODEL = "gpt-5.4-mini";
+export const DEFAULT_OPENAI_FAST_MODEL = "gpt-5.4-nano";
 const MAX_TEXT_CHARS = 120_000;
 const MIN_PODCAST_SOURCE_CHARS = 400;
 const MAX_PODCAST_SOURCE_CHARS = 24_000;
@@ -115,7 +132,10 @@ const UNREAL_SPEECH_LANGUAGE_VOICES: Partial<
     Record<HostedAiPodcastTranscriptTurn["speaker"], string>
   >
 > = {
-  en: { hostA: UNREAL_SPEECH_DEFAULT_VOICE_ID, hostB: UNREAL_SPEECH_DEFAULT_HOST_B_VOICE_ID },
+  en: {
+    hostA: UNREAL_SPEECH_DEFAULT_VOICE_ID,
+    hostB: UNREAL_SPEECH_DEFAULT_HOST_B_VOICE_ID,
+  },
   es: { hostA: "ef_dora", hostB: "em_alex" },
   fr: { hostA: "ff_siwis", hostB: "ff_siwis" },
   it: { hostA: "if_sara", hostB: "im_nicola" },
@@ -137,6 +157,15 @@ const VALID_SURFACES = new Set<HostedAiSurface>([
 ]);
 
 const getEnv = (name: string): string => process.env[name]?.trim() || "";
+const numberEnv = (name: string): number | undefined => {
+  const raw = getEnv(name);
+  if (!raw) {
+    return undefined;
+  }
+
+  const value = Number(raw);
+  return Number.isFinite(value) && value >= 0 ? value : undefined;
+};
 
 export const getHostedCerebrasModel = (): string =>
   getEnv("HOSTED_CEREBRAS_MODEL") || DEFAULT_CEREBRAS_MODEL;
@@ -149,10 +178,29 @@ export const getHostedTextProvider = (): HostedTextProvider =>
 export const getHostedOpenAiModel = (): string =>
   getEnv("HOSTED_OPENAI_MODEL") || DEFAULT_OPENAI_MODEL;
 
+export const getHostedOpenAiModelForStage = (stage: HostedAiStage): string => {
+  if (stage === "study_guide_main") {
+    return (
+      getEnv("HOSTED_OPENAI_STUDY_GUIDE_MODEL") ||
+      getEnv("HOSTED_OPENAI_MODEL") ||
+      DEFAULT_OPENAI_STUDY_GUIDE_MODEL
+    );
+  }
+
+  return (
+    getEnv("HOSTED_OPENAI_FAST_MODEL") ||
+    getEnv("HOSTED_OPENAI_MODEL") ||
+    DEFAULT_OPENAI_FAST_MODEL
+  );
+};
+
 export const getHostedTextModel = (
   provider: HostedTextProvider = getHostedTextProvider(),
+  stage: HostedAiStage = "quick_create",
 ): string =>
-  provider === "openai" ? getHostedOpenAiModel() : getHostedCerebrasModel();
+  provider === "openai"
+    ? getHostedOpenAiModelForStage(stage)
+    : getHostedCerebrasModel();
 
 const getHostedUsageModelLabel = (
   provider: HostedTextProvider,
@@ -437,6 +485,7 @@ const finishHostedUsage = async (
   errorCode?: string,
   errorMessage?: string,
   providerCallCount = 1,
+  metadata: JsonObject = {},
 ): Promise<HostedAiStatus | undefined> => {
   const payload = await callSupabaseRpc<unknown>("hosted_ai_finish_usage", {
     p_owner_id: userId,
@@ -445,10 +494,57 @@ const finishHostedUsage = async (
     p_provider_call_count: providerCallCount,
     p_error_code: errorCode || null,
     p_error_message: errorMessage || null,
-    p_metadata: {},
+    p_metadata: metadata,
   });
 
   return normalizeStatus(payload);
+};
+
+const getStageForSurface = (surface: HostedAiSurface): HostedAiStage => {
+  if (surface === "chat") {
+    return "chat";
+  }
+
+  if (surface === "quick-create") {
+    return "quick_create";
+  }
+
+  if (surface === "podcast") {
+    return "podcast_script";
+  }
+
+  return "study_guide_main";
+};
+
+const getHostedTextModelForStage = (
+  provider: HostedTextProvider,
+  stage: HostedAiStage,
+): string => getHostedTextModel(provider, stage);
+
+const createUsageMetadata = (
+  stageCosts: HostedAiStageCost[],
+  extra: JsonObject = {},
+): JsonObject => {
+  const estimatedCostUsdTotal = stageCosts.reduce(
+    (total, stage) => total + (stage.estimatedCostUsd || 0),
+    0,
+  );
+  const promptCharacterCountTotal = stageCosts.reduce(
+    (total, stage) => total + stage.promptCharacters,
+    0,
+  );
+  const responseCharacterCountTotal = stageCosts.reduce(
+    (total, stage) => total + stage.responseCharacters,
+    0,
+  );
+
+  return {
+    ...extra,
+    estimatedCostUsdTotal: Number(estimatedCostUsdTotal.toFixed(8)),
+    promptCharacterCountTotal,
+    responseCharacterCountTotal,
+    stageCosts,
+  };
 };
 
 const validateGenerateRequest = (
@@ -573,24 +669,160 @@ const extractChatCompletionText = (payload: ChatCompletionResponse): string => {
       : payload.choices?.[0]?.text || "";
 };
 
+const getDefaultOpenAiInputPrice = (model: string): number =>
+  model.includes("nano") ? 0.05 : 0.25;
+
+const getDefaultOpenAiCachedInputPrice = (model: string): number =>
+  model.includes("nano") ? 0.005 : 0.025;
+
+const getDefaultOpenAiOutputPrice = (model: string): number =>
+  model.includes("nano") ? 0.4 : 2;
+
+const getModelPriceEnvSuffix = (model: string): string =>
+  model
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+const getTokenPricePerMillion = (
+  provider: HostedTextProvider,
+  model: string,
+  kind: "INPUT" | "CACHED_INPUT" | "OUTPUT",
+): number => {
+  if (provider !== "openai") {
+    return 0;
+  }
+
+  const suffix = getModelPriceEnvSuffix(model);
+  const configured =
+    numberEnv(`HOSTED_OPENAI_${suffix}_${kind}_MTOK_USD`) ??
+    numberEnv(`HOSTED_OPENAI_${kind}_MTOK_USD`);
+  if (configured !== undefined) {
+    return configured;
+  }
+
+  if (kind === "INPUT") {
+    return getDefaultOpenAiInputPrice(model);
+  }
+
+  if (kind === "CACHED_INPUT") {
+    return getDefaultOpenAiCachedInputPrice(model);
+  }
+
+  return getDefaultOpenAiOutputPrice(model);
+};
+
+const estimateStageCostUsd = (
+  provider: HostedTextProvider,
+  model: string,
+  inputTokens: number,
+  cachedInputTokens: number,
+  outputTokens: number,
+): number | undefined => {
+  if (inputTokens <= 0 && outputTokens <= 0) {
+    return undefined;
+  }
+
+  const uncachedInputTokens = Math.max(0, inputTokens - cachedInputTokens);
+  const cost =
+    (uncachedInputTokens * getTokenPricePerMillion(provider, model, "INPUT")) /
+      1_000_000 +
+    (cachedInputTokens *
+      getTokenPricePerMillion(provider, model, "CACHED_INPUT")) /
+      1_000_000 +
+    (outputTokens * getTokenPricePerMillion(provider, model, "OUTPUT")) /
+      1_000_000;
+
+  return Number(cost.toFixed(8));
+};
+
+const readUsageNumber = (
+  source: ChatCompletionResponse["usage"],
+  ...keys: string[]
+): number | undefined => {
+  for (const key of keys) {
+    const value = source?.[key as keyof NonNullable<typeof source>];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+  }
+
+  return undefined;
+};
+
+const createStageCost = ({
+  stage,
+  provider,
+  model,
+  payload,
+  prompt,
+  text,
+}: {
+  stage: HostedAiStage;
+  provider: HostedTextProvider;
+  model: string;
+  payload: ChatCompletionResponse;
+  prompt: string;
+  text: string;
+}): HostedAiStageCost => {
+  const usage = payload.usage;
+  const inputTokens = readUsageNumber(usage, "prompt_tokens", "input_tokens");
+  const outputTokens = readUsageNumber(
+    usage,
+    "completion_tokens",
+    "output_tokens",
+  );
+  const totalTokens = readUsageNumber(usage, "total_tokens");
+  const cachedInputTokens =
+    usage?.prompt_tokens_details?.cached_tokens ??
+    usage?.input_tokens_details?.cached_tokens;
+  const estimatedCostUsd = estimateStageCostUsd(
+    provider,
+    model,
+    inputTokens || 0,
+    cachedInputTokens || 0,
+    outputTokens || 0,
+  );
+
+  return {
+    stage,
+    provider,
+    model,
+    promptCharacters: prompt.length,
+    responseCharacters: text.length,
+    ...(inputTokens !== undefined ? { inputTokens } : {}),
+    ...(cachedInputTokens !== undefined ? { cachedInputTokens } : {}),
+    ...(outputTokens !== undefined ? { outputTokens } : {}),
+    ...(totalTokens !== undefined ? { totalTokens } : {}),
+    ...(estimatedCostUsd !== undefined ? { estimatedCostUsd } : {}),
+  };
+};
+
+interface HostedTextModelResult {
+  text: string;
+  stageCost: HostedAiStageCost;
+}
+
 const callHostedTextModel = async (
   request: HostedAiGatewayRequest,
   provider: HostedTextProvider,
   model: string,
-): Promise<string> => {
+  stage: HostedAiStage,
+): Promise<HostedTextModelResult> => {
   const config = getChatCompletionConfig(provider);
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
     Math.min(Math.max(request.timeoutMs || 60_000, 5_000), 120_000),
   );
+  const prompt = buildPrompt(request.parts || []);
 
   const body: JsonObject = {
     model,
     messages: [
       {
         role: "user",
-        content: buildPrompt(request.parts || []),
+        content: prompt,
       },
     ],
     temperature: 0.2,
@@ -646,7 +878,17 @@ const callHostedTextModel = async (
       throw error;
     }
 
-    return text;
+    return {
+      text,
+      stageCost: createStageCost({
+        stage,
+        provider,
+        model,
+        payload,
+        prompt,
+        text,
+      }),
+    };
   } finally {
     clearTimeout(timeout);
   }
@@ -744,7 +986,9 @@ const normalizePodcastChapter = (
 
   const title = safePodcastText(value.title, 90);
   const rawStartTurn =
-    typeof value.startTurn === "number" ? value.startTurn : Number(value.startTurn);
+    typeof value.startTurn === "number"
+      ? value.startTurn
+      : Number(value.startTurn);
   const startTurn = Number.isFinite(rawStartTurn)
     ? Math.max(0, Math.min(turnCount - 1, Math.floor(rawStartTurn)))
     : 0;
@@ -778,8 +1022,12 @@ const normalizePodcastScript = (
 
   const chapters = Array.isArray(parsed.chapters)
     ? parsed.chapters
-        .map((chapter) => normalizePodcastChapter(chapter, transcriptTurns.length))
-        .filter((chapter): chapter is HostedAiPodcastChapter => Boolean(chapter))
+        .map((chapter) =>
+          normalizePodcastChapter(chapter, transcriptTurns.length),
+        )
+        .filter((chapter): chapter is HostedAiPodcastChapter =>
+          Boolean(chapter),
+        )
         .slice(0, 6)
     : [];
 
@@ -796,10 +1044,7 @@ const normalizePodcastScript = (
 const getPodcastTranscriptText = (script: PodcastScript): string =>
   script.transcriptTurns.map((turn) => turn.text).join("\n\n");
 
-const countPodcastLanguageMarkers = (
-  text: string,
-  markers: RegExp[],
-): number =>
+const countPodcastLanguageMarkers = (text: string, markers: RegExp[]): number =>
   markers.reduce(
     (total, marker) => total + (text.match(marker)?.length || 0),
     0,
@@ -830,10 +1075,9 @@ const detectPodcastScriptLanguage = (
       /\b(the|and|that|with|for|this|these|those|energy|cells|lesson|today|study|guide)\b/g,
     ]),
   };
-  const best = Object.entries(scores)
-    .sort(([, left], [, right]) => (right || 0) - (left || 0))[0] as
-    | [StudyMeshLanguageCode, number]
-    | undefined;
+  const best = Object.entries(scores).sort(
+    ([, left], [, right]) => (right || 0) - (left || 0),
+  )[0] as [StudyMeshLanguageCode, number] | undefined;
 
   return best && best[1] >= 4 ? best[0] : undefined;
 };
@@ -933,10 +1177,7 @@ const getLanguageVoiceEnv = (
 
 const getPodcastVoiceIds = (
   language: StudyMeshLanguageCode | undefined,
-): Record<
-  HostedAiPodcastTranscriptTurn["speaker"],
-  string
-> => {
+): Record<HostedAiPodcastTranscriptTurn["speaker"], string> => {
   const languageVoices =
     language && UNREAL_SPEECH_LANGUAGE_VOICES[language]
       ? UNREAL_SPEECH_LANGUAGE_VOICES[language]
@@ -1001,9 +1242,10 @@ const delay = (ms: number): Promise<void> =>
   });
 
 const getUnrealSpeechOutputUri = (payload: unknown): string => {
-  const source = isObject(payload) && isObject(payload.SynthesisTask)
-    ? payload.SynthesisTask
-    : payload;
+  const source =
+    isObject(payload) && isObject(payload.SynthesisTask)
+      ? payload.SynthesisTask
+      : payload;
   if (!isObject(source)) {
     return "";
   }
@@ -1021,9 +1263,10 @@ const getUnrealSpeechOutputUri = (payload: unknown): string => {
 };
 
 const getUnrealSpeechTaskStatus = (payload: unknown): string => {
-  const source = isObject(payload) && isObject(payload.SynthesisTask)
-    ? payload.SynthesisTask
-    : payload;
+  const source =
+    isObject(payload) && isObject(payload.SynthesisTask)
+      ? payload.SynthesisTask
+      : payload;
   if (!isObject(source)) {
     return "";
   }
@@ -1048,9 +1291,10 @@ const isUnrealSpeechTaskReady = (payload: unknown): boolean => {
 };
 
 const getUnrealSpeechTaskId = (payload: unknown): string => {
-  const source = isObject(payload) && isObject(payload.SynthesisTask)
-    ? payload.SynthesisTask
-    : payload;
+  const source =
+    isObject(payload) && isObject(payload.SynthesisTask)
+      ? payload.SynthesisTask
+      : payload;
   if (!isObject(source)) {
     return "";
   }
@@ -1105,7 +1349,9 @@ const waitForUnrealSpeechOutputUri = async (
   throw error;
 };
 
-const downloadUnrealSpeechAudio = async (outputUri: string): Promise<Buffer> => {
+const downloadUnrealSpeechAudio = async (
+  outputUri: string,
+): Promise<Buffer> => {
   const response = await fetch(outputUri, { method: "GET" });
   if (!response.ok) {
     const message =
@@ -1116,7 +1362,9 @@ const downloadUnrealSpeechAudio = async (outputUri: string): Promise<Buffer> => 
   }
 
   const buffer = Buffer.from(await response.arrayBuffer());
-  const prefix = buffer.toString("utf8", 0, Math.min(buffer.length, 256)).trim();
+  const prefix = buffer
+    .toString("utf8", 0, Math.min(buffer.length, 256))
+    .trim();
   if (buffer.length === 0) {
     const error = new Error("Unreal Speech returned empty audio.");
     error.name = "provider_error";
@@ -1220,9 +1468,8 @@ const synthesizeUnrealSpeechMp3 = async (
     getUnrealSpeechOutputUri(payload) && isUnrealSpeechTaskReady(payload)
       ? getUnrealSpeechOutputUri(payload)
       : "";
-  const taskOutputUri = outputUri || !taskId
-    ? ""
-    : await waitForUnrealSpeechOutputUri(taskId);
+  const taskOutputUri =
+    outputUri || !taskId ? "" : await waitForUnrealSpeechOutputUri(taskId);
 
   if (!outputUri && !taskOutputUri) {
     const error = new Error("Unreal Speech returned no audio URL.");
@@ -1267,7 +1514,9 @@ const isMp3Buffer = (buffer: Buffer): boolean => {
 
 const joinPodcastMp3Segments = (segments: Buffer[]): Buffer => {
   if (!segments.length) {
-    const error = new Error("Unreal Speech returned no podcast audio segments.");
+    const error = new Error(
+      "Unreal Speech returned no podcast audio segments.",
+    );
     error.name = "provider_error";
     throw error;
   }
@@ -1411,7 +1660,9 @@ const markPodcastAudioDeleted = async (
   });
 };
 
-const getExpiredPodcastAudioPaths = async (userId: string): Promise<string[]> => {
+const getExpiredPodcastAudioPaths = async (
+  userId: string,
+): Promise<string[]> => {
   const supabaseUrl = normalizeSupabaseUrl(getEnv("SUPABASE_URL"));
   const serviceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
   const cutoff = new Date(
@@ -1544,9 +1795,7 @@ const ensurePodcastConfigured = (): HostedAiGatewayResponse | null => {
 const ensureConfigured = (): HostedAiGatewayResponse | null => {
   const provider = getHostedTextProvider();
   const required = [
-    provider === "openai"
-      ? "HOSTED_OPENAI_API_KEY"
-      : "HOSTED_CEREBRAS_API_KEY",
+    provider === "openai" ? "HOSTED_OPENAI_API_KEY" : "HOSTED_CEREBRAS_API_KEY",
     "SUPABASE_URL",
     "SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
@@ -1629,7 +1878,10 @@ const handleGenerate = async (
   }
 
   const provider = getHostedTextProvider();
-  const model = getHostedTextModel(provider);
+  const mainStage: HostedAiStage = includeQuickStart
+    ? "study_guide_main"
+    : request.stage || getStageForSurface(request.surface as HostedAiSurface);
+  const model = getHostedTextModelForStage(provider, mainStage);
   const usageModel = getHostedUsageModelLabel(provider, model);
   const requestId = randomUUID();
   const usageRequest = { ...request, requestId };
@@ -1640,9 +1892,25 @@ const handleGenerate = async (
     usageModel,
   );
   let providerCallCount = 1;
+  const stageCosts: HostedAiStageCost[] = [];
+  const metadataFlags: JsonObject = {};
+  const callStage = async (
+    stage: HostedAiStage,
+    stageRequest: HostedAiGatewayRequest,
+  ): Promise<string> => {
+    const stageModel = getHostedTextModelForStage(provider, stage);
+    const result = await callHostedTextModel(
+      stageRequest,
+      provider,
+      stageModel,
+      stage,
+    );
+    stageCosts.push(result.stageCost);
+    return result.text;
+  };
 
   try {
-    const text = await callHostedTextModel(usageRequest, provider, model);
+    const text = await callStage(mainStage, usageRequest);
     let quickStart: HostedAiGatewayResponse["quickStart"] | undefined;
     let bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"] | undefined;
 
@@ -1650,37 +1918,16 @@ const handleGenerate = async (
       const safeKnownTopics = sanitizeUserKnownTopics(
         request.quickStartOptions?.userKnownTopics,
       );
-      const relevanceDecision = safeKnownTopics.length
-        ? parseStudyGuideQuickStartRelevanceDecision(
-            await callHostedTextModel(
-              {
-                ...usageRequest,
-                responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
-                parts: [
-                  {
-                    text: buildStudyGuideQuickStartRelevancePrompt({
-                      title: "Study Guide",
-                      prompt: getHostedRequestText(request),
-                      source: text,
-                      userKnownTopics: safeKnownTopics,
-                      bridgeMode: "auto",
-                      outputLanguage: request.outputLanguage,
-                    }),
-                  },
-                ],
-              },
-              provider,
-              model,
-            ).finally(() => {
-              providerCallCount += 1;
-            }),
-            safeKnownTopics,
-          )
-        : undefined;
-
+      const guideRecord = parseJsonRecord(text);
       quickStart = parseStudyGuideQuickStart(
-        await callHostedTextModel(
-          {
+        JSON.stringify(
+          isObject(guideRecord?.quickStart) ? guideRecord.quickStart : {},
+        ),
+      );
+      if (!quickStart) {
+        metadataFlags.quickStartFallbackUsed = true;
+        quickStart = parseStudyGuideQuickStart(
+          await callStage("quick_start_fallback", {
             ...usageRequest,
             responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
             parts: [
@@ -1688,19 +1935,39 @@ const handleGenerate = async (
                 text: buildStudyGuideQuickStartPrompt({
                   title: "Study Guide",
                   source: text,
-                  relevanceDecision,
                   bridgeMode: "auto",
                   outputLanguage: request.outputLanguage,
                 }),
               },
             ],
-          },
-          provider,
-          model,
-        ).finally(() => {
-          providerCallCount += 1;
-        }),
-      );
+          }).finally(() => {
+            providerCallCount += 1;
+          }),
+        );
+      }
+      const relevanceDecision = safeKnownTopics.length
+        ? parseStudyGuideQuickStartRelevanceDecision(
+            await callStage("quick_start_relevance_auto", {
+              ...usageRequest,
+              responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
+              parts: [
+                {
+                  text: buildStudyGuideQuickStartRelevancePrompt({
+                    title: "Study Guide",
+                    prompt: getHostedRequestText(request),
+                    source: text,
+                    userKnownTopics: safeKnownTopics,
+                    bridgeMode: "auto",
+                    outputLanguage: request.outputLanguage,
+                  }),
+                },
+              ],
+            }).finally(() => {
+              providerCallCount += 1;
+            }),
+            safeKnownTopics,
+          )
+        : undefined;
 
       if (
         quickStart &&
@@ -1713,26 +1980,22 @@ const handleGenerate = async (
         try {
           const forcedRelevanceDecision =
             parseStudyGuideQuickStartRelevanceDecision(
-              await callHostedTextModel(
-                {
-                  ...usageRequest,
-                  responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
-                  parts: [
-                    {
-                      text: buildStudyGuideQuickStartRelevancePrompt({
-                        title: "Study Guide",
-                        prompt: getHostedRequestText(request),
-                        source: text,
-                        userKnownTopics: safeKnownTopics,
-                        bridgeMode: "force",
-                        outputLanguage: request.outputLanguage,
-                      }),
-                    },
-                  ],
-                },
-                provider,
-                model,
-              ).finally(() => {
+              await callStage("quick_start_relevance_force", {
+                ...usageRequest,
+                responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
+                parts: [
+                  {
+                    text: buildStudyGuideQuickStartRelevancePrompt({
+                      title: "Study Guide",
+                      prompt: getHostedRequestText(request),
+                      source: text,
+                      userKnownTopics: safeKnownTopics,
+                      bridgeMode: "force",
+                      outputLanguage: request.outputLanguage,
+                    }),
+                  },
+                ],
+              }).finally(() => {
                 providerCallCount += 1;
               }),
               safeKnownTopics,
@@ -1745,25 +2008,21 @@ const handleGenerate = async (
 
           if (safeForcedRelevanceDecision) {
             const forcedBridge = parseStudyGuideQuickStart(
-              await callHostedTextModel(
-                {
-                  ...usageRequest,
-                  responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
-                  parts: [
-                    {
-                      text: buildStudyGuideQuickStartPrompt({
-                        title: "Study Guide",
-                        source: text,
-                        relevanceDecision: safeForcedRelevanceDecision,
-                        bridgeMode: "force",
-                        outputLanguage: request.outputLanguage,
-                      }),
-                    },
-                  ],
-                },
-                provider,
-                model,
-              ).finally(() => {
+              await callStage("quick_start_forced_bridge", {
+                ...usageRequest,
+                responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
+                parts: [
+                  {
+                    text: buildStudyGuideQuickStartPrompt({
+                      title: "Study Guide",
+                      source: text,
+                      relevanceDecision: safeForcedRelevanceDecision,
+                      bridgeMode: "force",
+                      outputLanguage: request.outputLanguage,
+                    }),
+                  },
+                ],
+              }).finally(() => {
                 providerCallCount += 1;
               }),
             );
@@ -1773,7 +2032,7 @@ const handleGenerate = async (
             }
           }
         } catch {
-          // Optional alternate explanation should not fail the Study Guide.
+          metadataFlags.forcedBridgeSkipped = true;
         }
       }
 
@@ -1781,7 +2040,6 @@ const handleGenerate = async (
         relevanceDecision?.shouldUseKnownTopic &&
         relevanceDecision.knownTopicsForQuickStart.length
       ) {
-        const guideRecord = parseJsonRecord(text);
         const dashboards = Array.isArray(guideRecord?.dashboards)
           ? guideRecord.dashboards
               .filter((dashboard): dashboard is JsonObject =>
@@ -1808,27 +2066,23 @@ const handleGenerate = async (
         if (eligibleDashboards.length) {
           try {
             bridgeBlocks = parseStudyGuideKnowledgeBridgeBlocks(
-              await callHostedTextModel(
-                {
-                  ...usageRequest,
-                  responseSchema: STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
-                  parts: [
-                    {
-                      text: buildStudyGuideKnowledgeBridgeBlocksPrompt({
-                        title:
-                          stringValue(guideRecord?.folderName) || "Study Guide",
-                        prompt: getHostedRequestText(request),
-                        dashboards: eligibleDashboards,
-                        relevanceDecision,
-                        bridgeMode: "auto",
-                        outputLanguage: request.outputLanguage,
-                      }),
-                    },
-                  ],
-                },
-                provider,
-                model,
-              ).finally(() => {
+              await callStage("knowledge_bridge_blocks", {
+                ...usageRequest,
+                responseSchema: STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
+                parts: [
+                  {
+                    text: buildStudyGuideKnowledgeBridgeBlocksPrompt({
+                      title:
+                        stringValue(guideRecord?.folderName) || "Study Guide",
+                      prompt: getHostedRequestText(request),
+                      dashboards: eligibleDashboards,
+                      relevanceDecision,
+                      bridgeMode: "auto",
+                      outputLanguage: request.outputLanguage,
+                    }),
+                  },
+                ],
+              }).finally(() => {
                 providerCallCount += 1;
               }),
               dashboards.length,
@@ -1841,6 +2095,7 @@ const handleGenerate = async (
       }
     }
     if (includeQuickStart && !quickStart) {
+      metadataFlags.quickStartUnusable = true;
       const error = new Error("Hosted AI returned no Study Guide Quick Start.");
       error.name = "provider_error";
       throw error;
@@ -1854,6 +2109,7 @@ const handleGenerate = async (
         undefined,
         undefined,
         providerCallCount,
+        createUsageMetadata(stageCosts, metadataFlags),
       ).catch(() => undefined)) || started.status;
 
     return { ok: true, text, quickStart, bridgeBlocks, status };
@@ -1867,6 +2123,11 @@ const handleGenerate = async (
       mapped.response.error?.code,
       mapped.response.error?.message,
       providerCallCount,
+      createUsageMetadata(stageCosts, {
+        ...metadataFlags,
+        failed: true,
+        failureCode: mapped.response.error?.code,
+      }),
     ).catch(() => undefined);
 
     throw error;
@@ -1889,7 +2150,8 @@ const validatePodcastRequest = (
     !options ||
     !stringValue(options.studyGuideId) ||
     !stringValue(options.sourceTitle) ||
-    (options.sourceScope !== "studyGuide" && options.sourceScope !== "currentPage")
+    (options.sourceScope !== "studyGuide" &&
+      options.sourceScope !== "currentPage")
   ) {
     return errorResponse(
       "invalid_request",
@@ -1920,7 +2182,8 @@ const handleGeneratePodcast = async (
   await assertPodcastDailyLimit(userId);
 
   const provider = getHostedTextProvider();
-  const model = getHostedTextModel(provider);
+  const stage: HostedAiStage = "podcast_script";
+  const model = getHostedTextModelForStage(provider, stage);
   const usageModel = getHostedUsageModelLabel(provider, model);
   const requestId = randomUUID();
   const usageRequest = { ...request, surface: "podcast" as const, requestId };
@@ -1931,6 +2194,7 @@ const handleGeneratePodcast = async (
     usageModel,
   );
   let providerCallCount = 1;
+  const stageCosts: HostedAiStageCost[] = [];
 
   try {
     const sourceText = buildPrompt(request.parts || []).slice(
@@ -1941,7 +2205,7 @@ const handleGeneratePodcast = async (
       request.podcastOptions?.sourceTitle,
       100,
     );
-    const scriptText = await callHostedTextModel(
+    const scriptResult = await callHostedTextModel(
       {
         ...usageRequest,
         responseSchema: PODCAST_SCRIPT_SCHEMA,
@@ -1957,13 +2221,16 @@ const handleGeneratePodcast = async (
       },
       provider,
       model,
+      stage,
     );
+    stageCosts.push(scriptResult.stageCost);
+    const scriptText = scriptResult.text;
     let script = normalizePodcastScript(scriptText, sourceTitle);
     if (
       request.outputLanguage &&
       !podcastScriptMatchesOutputLanguage(script, request.outputLanguage)
     ) {
-      const retryText = await callHostedTextModel(
+      const retryResult = await callHostedTextModel(
         {
           ...usageRequest,
           responseSchema: PODCAST_SCRIPT_SCHEMA,
@@ -1980,9 +2247,12 @@ const handleGeneratePodcast = async (
         },
         provider,
         model,
+        stage,
       ).finally(() => {
         providerCallCount += 1;
       });
+      stageCosts.push(retryResult.stageCost);
+      const retryText = retryResult.text;
       script = normalizePodcastScript(retryText, sourceTitle);
 
       if (!podcastScriptMatchesOutputLanguage(script, request.outputLanguage)) {
@@ -2038,6 +2308,9 @@ const handleGeneratePodcast = async (
         undefined,
         undefined,
         providerCallCount,
+        createUsageMetadata(stageCosts, {
+          ttsCharacterCount: audio.characterCount,
+        }),
       ).catch(() => undefined)) || started.status;
 
     return { ok: true, podcast, status };
@@ -2051,6 +2324,10 @@ const handleGeneratePodcast = async (
       mapped.response.error?.code,
       mapped.response.error?.message,
       providerCallCount,
+      createUsageMetadata(stageCosts, {
+        failed: true,
+        failureCode: mapped.response.error?.code,
+      }),
     ).catch(() => undefined);
 
     throw error;

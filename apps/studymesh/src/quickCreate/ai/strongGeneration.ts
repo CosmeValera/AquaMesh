@@ -26,6 +26,7 @@ import {
 } from './strongProviders'
 import type { StrongAiCallOptions, StrongAiProviderId } from './strongProviders'
 import type { StudyGuideQuickStart } from '../../state/store'
+import { sanitizeStudyGuideQuickStart } from '../../studyGuides/quickStart'
 import {
   createAiOutputLanguageInstruction,
   detectContentLanguage,
@@ -87,6 +88,7 @@ const geminiDetailTargets: Record<
 }
 
 export type QuizQuestionStyle = 'mixed' | 'conceptual' | 'examLike'
+export type StudyGuideGenerationProfile = 'standard' | 'lean'
 
 export interface GenerateQuickCreateWithAiOptions {
   apiToken: string
@@ -206,6 +208,7 @@ export interface GenerateStudyPathWithAiOptions {
   strongProvider?: StrongAiProviderId
   strongTransport?: StrongAiModelTransport
   singleRequest?: boolean
+  studyGuideProfile?: StudyGuideGenerationProfile
   outputLanguage?: StudyMeshLanguageCode
   title: string
   prompt: string
@@ -518,6 +521,14 @@ const studyPathSchema = {
     title: { type: 'STRING' },
     folderName: { type: 'STRING' },
     emoji: { type: 'STRING' },
+    quickStart: {
+      type: 'OBJECT',
+      properties: {
+        keyIdea: { type: 'STRING' },
+        quickSummary: { type: 'STRING' },
+      },
+      required: ['keyIdea', 'quickSummary'],
+    },
     dashboards: {
       type: 'ARRAY',
       items: {
@@ -587,7 +598,7 @@ const studyPathSchema = {
       },
     },
   },
-  required: ['title', 'folderName', 'emoji', 'dashboards'],
+  required: ['title', 'folderName', 'emoji', 'quickStart', 'dashboards'],
 }
 
 const studyPathBlueprintLessonSchema = {
@@ -1337,7 +1348,7 @@ const parseGeminiJson = (text: string): unknown => {
       return JSON.parse(text.slice(firstObject, lastObject + 1))
     }
 
-    throw new Error('Gemini returned invalid JSON.')
+    throw new Error('The AI model returned invalid JSON.')
   }
 }
 
@@ -1599,7 +1610,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
         throw new Error(STRONG_MODEL_OUTPUT_FORMAT_MESSAGE)
       }
     } else {
-      throw new Error(GEMINI_OUTPUT_FORMAT_MESSAGE)
+      throw new Error(STRONG_MODEL_OUTPUT_FORMAT_MESSAGE)
     }
   }
 
@@ -1889,6 +1900,7 @@ const createStudyPathDashboardPrompt = ({
   lesson,
   lessonIndex,
   blueprint,
+  isLeanStudyGuide = false,
   outputLanguage,
 }: {
   title: string
@@ -1897,6 +1909,7 @@ const createStudyPathDashboardPrompt = ({
   lesson: AiStudyPathBlueprintLesson
   lessonIndex: number
   blueprint: AiStudyPathBlueprint
+  isLeanStudyGuide?: boolean
   outputLanguage?: StudyMeshLanguageCode
 }): string => `Create one StudyMesh Study Guide dashboard as strict JSON.
 
@@ -1929,13 +1942,17 @@ Required dashboard fields:
   "lessonType": "...",
   "learnerQuestion": "...",
   "learningOutcome": "...",
-  "supportArtifacts": {
+  ${
+    isLeanStudyGuide
+      ? ''
+      : `"supportArtifacts": {
     "glossary": [{ "term": "...", "definition": "..." }],
     "contrastTable": { "title": "...", "headers": ["...", "..."], "rows": [["...", "..."]] },
     "discussionPrompts": ["..."],
     "answerKey": [{ "question": "...", "answer": "..." }],
     "checkpointRubric": ["..."]
-  },
+  },`
+  }
   "rawNotes": "Complete readable Markdown lesson",
   "sourceSummary": { "title": "...", "bullets": ["..."] },
   "conceptRecap": { "title": "...", "sections": [{ "title": "...", "bullets": ["..."], "example": "..." }] },
@@ -1949,7 +1966,7 @@ Required dashboard fields:
       "optionFeedback": [{ "option": "...", "explanation": "why this option is right or tempting but wrong, without starting with Correct or Incorrect" }]
     }]
   },
-  "flashcards": [{ "front": "...", "back": "..." }]
+  "flashcards": ${isLeanStudyGuide ? '[]' : '[{ "front": "...", "back": "..." }]'}
 }
 
 Quality rules:
@@ -2365,12 +2382,16 @@ export const generateStudyPathWithAi = async ({
   strongProvider = DEFAULT_STRONG_AI_PROVIDER,
   strongTransport,
   singleRequest = false,
+  studyGuideProfile = 'standard',
   outputLanguage,
   title,
   prompt,
   folderName,
 }: GenerateStudyPathWithAiOptions): Promise<AiStudyPathDraft> => {
-  const stepNames = getStudyPathStepNames()
+  const isLeanStudyGuide = studyGuideProfile === 'lean'
+  const stepNames = isLeanStudyGuide
+    ? ['Orientation', 'Core lesson', 'Final check']
+    : getStudyPathStepNames()
   const dashboardCount = stepNames.length
   const practiceAmount = 'medium'
   const practiceProfile = createQuickCreatePracticeProfile(practiceAmount, [
@@ -2385,6 +2406,10 @@ Return exactly this structure:
   "title": "Path title",
   "folderName": "Folder name for all dashboards",
   "emoji": "One emoji that represents the Study Guide topic",
+  "quickStart": {
+    "keyIdea": "One compact mental model for the whole Study Guide",
+    "quickSummary": "Two short paragraphs that help the learner start before opening page 1"
+  },
   "dashboards": [
     {
       "title": "01 - Content 1",
@@ -2411,7 +2436,7 @@ Return exactly this structure:
           "optionFeedback": [{ "option": "...", "explanation": "why this option is right or tempting but wrong, without starting with Correct or Incorrect" }]
         }]
       },
-      "flashcards": [{ "front": "...", "back": "..." }]
+      "flashcards": ${isLeanStudyGuide ? '[]' : '[{ "front": "...", "back": "..." }]'}
     }
   ]
 }
@@ -2420,9 +2445,11 @@ Rules:
 - Return strict valid JSON only: double-quoted property names and strings, comma-separated array/object entries, matching { } and [ ], no trailing commas, no comments, no Markdown fences, no prose before or after the JSON.
 - ${languageInstruction}
 - Keep every support item in that output language too: practice.multipleChoice questions/options/hints/explanations and flashcard front/back strings.
+- Include top-level quickStart.keyIdea and quickStart.quickSummary. Keep it independent of any dashboard widget. quickSummary must be two short paragraphs separated by a blank line.
 - Choose a concise, topic-specific folderName for the Study Guide, such as "French B1 Subjunctive" or "Calculus Derivatives". Do not use a generic folderName like "Study Guide" unless the topic is truly unknown.
 - Choose exactly one topic-specific emoji for the Study Guide. It must be a single emoji character or emoji sequence, not text, and it should match the user's topic.
 - Create exactly ${dashboardCount} ordered lesson dashboards, grouped mentally into 1-3 modules. Give each dashboard a useful topic-specific title.
+${isLeanStudyGuide ? '- Lean hosted profile: create exactly 3 dashboards. Do not choose more or fewer pages.\n- Lean hosted profile: rawNotes must be 180-260 words per dashboard.\n- Lean hosted profile: only the final dashboard may include practice.multipleChoice.\n- Lean hosted profile: final dashboard must include exactly 3 multiple-choice questions, exactly 3 options per question, and short explanations only.\n- Lean hosted profile: base guide must not include flashcards, podcast material, supportArtifacts, glossary, contrastTable, discussionPrompts, answerKey, or checkpointRubric.\n- Lean hosted profile: sourceSummary and conceptRecap should be minimal compatibility fields only.' : ''}
 - Treat this as a bounded learning sprint, not a complete course on everything. Include scope in lesson choices: what gets covered now, what waits for later.
 - Do not follow a fixed role template by position. You are responsible for choosing each dashboard's purpose, practiceType, rawNotes, and practice mix from the lesson content itself.
 - Every dashboard is a normal lesson dashboard in the product. Do not make the last dashboard an automatic exercise dump or the previous one an automatic summary. Choose content only from teaching need.
@@ -2473,8 +2500,9 @@ ${prompt}`
 The previous response failed JSON formatting. Retry with a simpler response:
 - Return plain JSON only.
 - Return syntactically valid JSON with all commas and braces in place.
-- Use only the Study Guide fields: title, folderName, emoji, dashboards, summary, rawNotes, dashboardPurpose, practiceType, layoutReason, sourceRefs, sourceSummary, conceptRecap, practice, flashcards.
+- Use only the Study Guide fields: title, folderName, emoji, quickStart, dashboards, summary, rawNotes, dashboardPurpose, practiceType, layoutReason, sourceRefs, sourceSummary, conceptRecap, practice, flashcards.
 - For normal lesson dashboards selected for quiz practice, keep practiceType quiz or mixed and include 3-6 multiple-choice questions. Use practiceType none for the other dashboards.
+- If lean hosted profile rules are present, preserve them: exactly 3 dashboards, no flashcards, and only final page has exactly 3 multiple-choice questions.
 - Do not use markdown code fences.
 - Do not include comments, trailing commas, undefined, NaN, or extra text.`
   const createRepairPrompt = (originalJson: string) => `${promptText}
@@ -2573,7 +2601,7 @@ ${originalJson}`
         )
         parsed = parseGeminiJson(text)
       } catch {
-        throw new Error(GEMINI_OUTPUT_FORMAT_MESSAGE)
+        throw new Error(STRONG_MODEL_OUTPUT_FORMAT_MESSAGE)
       }
     }
   }
@@ -2707,10 +2735,9 @@ ${prompt}`
         contentMode,
         dashboardPurpose,
       )
-      const quizBlockAllowed = shouldUseStudyPathQuizBlock(
-        index,
-        normalizedRawDashboards.length,
-      )
+      const quizBlockAllowed = isLeanStudyGuide
+        ? index === normalizedRawDashboards.length - 1
+        : shouldUseStudyPathQuizBlock(index, normalizedRawDashboards.length)
       const practiceType = quizBlockAllowed ? plannedPracticeType : 'none'
       const layoutReason = stringFromUnknown(input.layoutReason)
       const sourceRefs = normalizeSourceRefs(input.sourceRefs)
@@ -2792,14 +2819,18 @@ ${prompt}`
       const visiblePracticeTarget =
         practiceType === 'none'
           ? 0
-          : getStudyPathVisiblePracticeTarget(dashboardRole)
+          : isLeanStudyGuide
+            ? 3
+            : getStudyPathVisiblePracticeTarget(dashboardRole)
       const filledVisibleObjects =
         visiblePracticeTarget > 0
           ? augmentQuickCreatePracticeObjects(cappedVisibleRoleObjects, {
               packId,
               title: dashboardTitle,
               rawNotes: textFromRawNotes(input.rawNotes),
-              generationTargets: ['quizzes', 'flashcards'],
+              generationTargets: isLeanStudyGuide
+                ? ['quizzes']
+                : ['quizzes', 'flashcards'],
               generationAmount: practiceAmount,
               visiblePracticeTarget,
               visiblePracticeOnly: true,
@@ -2899,7 +2930,9 @@ ${prompt}`
     )
 
   if (dashboards.length === 0) {
-    throw new Error('Gemini did not return any usable Study Guide dashboards.')
+    throw new Error(
+      'The AI model did not return any usable Study Guide dashboards.',
+    )
   }
 
   const finalPathIssues = scanStudyPathDashboards(
@@ -2926,6 +2959,10 @@ ${prompt}`
         ? record.emoji.trim()
         : undefined,
     contentLanguage: outputLanguage,
+    quickStart:
+      sanitizeStudyGuideQuickStart(
+        record.quickStart as Partial<StudyGuideQuickStart> | null | undefined,
+      ) || undefined,
     dashboards,
     warnings,
     blueprint,

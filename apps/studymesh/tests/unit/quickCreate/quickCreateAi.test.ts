@@ -407,6 +407,22 @@ describe('quick create AI settings', () => {
       }),
     )
     expect(hostedAiClientMock.callHostedAiModel).toHaveBeenCalledTimes(1)
+    const request = hostedAiClientMock.callHostedAiModel.mock.calls[0][0]
+    const promptText = request.parts[0].text
+    expect(promptText).toContain('"quickStart"')
+    expect(promptText).toContain(
+      'Lean hosted profile: create exactly 3 dashboards',
+    )
+    expect(promptText).toContain('rawNotes must be 180-260 words')
+    expect(promptText).toContain(
+      'final dashboard must include exactly 3 multiple-choice questions',
+    )
+    expect(promptText).toContain(
+      'base guide must not include flashcards, podcast material, supportArtifacts',
+    )
+    expect(promptText).toContain('"flashcards": []')
+    expect(promptText).not.toContain('"front": "..."')
+    expect(promptText).not.toContain('"supportArtifacts": {')
     expect(draft.title).toBe('Algebra Study Guide')
   })
 
@@ -904,7 +920,10 @@ describe('local AI helpers', () => {
       'Charts, Releases, and Values ## Chart structure A Helm chart is a directory that contains templates and metadata for an application.\n\n' +
       'A release is rendered with a chosen set of values and stored as a release.\n\n' +
       'Values are configuration inputs that customize a release for one environment.'
-    const concepts = extractLearningConcepts(rawNotes, 'Charts, Releases, and Values')
+    const concepts = extractLearningConcepts(
+      rawNotes,
+      'Charts, Releases, and Values',
+    )
     const serializedConcepts = JSON.stringify(concepts)
 
     expect(serializedConcepts).not.toContain('##')
@@ -975,8 +994,7 @@ describe('local AI helpers', () => {
           'A Helm release is one installed instance of a chart in a Kubernetes cluster.',
         example: '',
         correctAnswer: 'One installed instance of a chart in a cluster.',
-        expectedLearning:
-          'Explain that a release is the installed instance.',
+        expectedLearning: 'Explain that a release is the installed instance.',
         sourceLine: 2,
         definition:
           'A Helm release is one installed instance of a chart in a Kubernetes cluster.',
@@ -1012,7 +1030,9 @@ describe('local AI helpers', () => {
     expect(
       createApplicationQuestion(definitionConcepts[0], 0, definitionConcepts),
     ).toBeNull()
-    expect(createApplicationQuestion(usageConcepts[0], 0, usageConcepts)).toEqual(
+    expect(
+      createApplicationQuestion(usageConcepts[0], 0, usageConcepts),
+    ).toEqual(
       expect.objectContaining({
         question: 'Which expression or context requires pour que?',
       }),

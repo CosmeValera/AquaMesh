@@ -10,7 +10,21 @@ export const HOSTED_AI_VISUAL_SPEND_EVENT = 'studymesh-hosted-ai-visual-spend'
 export const HOSTED_AI_INSUFFICIENT_CREDITS_EVENT =
   'studymesh-hosted-ai-insufficient-credits'
 
-export type HostedAiSurface = 'study-guide' | 'quick-create' | 'chat' | 'podcast'
+export type HostedAiSurface =
+  | 'study-guide'
+  | 'quick-create'
+  | 'chat'
+  | 'podcast'
+export type HostedAiStage =
+  | 'study_guide_main'
+  | 'quick_start_fallback'
+  | 'quick_start_relevance_auto'
+  | 'quick_start_relevance_force'
+  | 'quick_start_forced_bridge'
+  | 'knowledge_bridge_blocks'
+  | 'podcast_script'
+  | 'chat'
+  | 'quick_create'
 
 export const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
   'study-guide': 2,
@@ -87,6 +101,7 @@ export interface HostedAiGatewayRequest {
     | 'generateWithQuickStart'
     | 'generatePodcast'
   surface?: HostedAiSurface
+  stage?: HostedAiStage
   model?: string
   outputLanguage?: StudyMeshLanguageCode
   parts?: HostedAiGatewayPart[]
@@ -100,6 +115,19 @@ export interface HostedAiGatewayRequest {
     sourceTitle: string
     sourceScope: 'studyGuide' | 'currentPage'
   }
+}
+
+export interface HostedAiStageCost {
+  stage: HostedAiStage
+  provider: string
+  model: string
+  promptCharacters: number
+  responseCharacters: number
+  inputTokens?: number
+  cachedInputTokens?: number
+  outputTokens?: number
+  totalTokens?: number
+  estimatedCostUsd?: number
 }
 
 export interface HostedAiPodcastTranscriptTurn {

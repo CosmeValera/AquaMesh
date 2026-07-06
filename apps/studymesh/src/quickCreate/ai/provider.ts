@@ -494,6 +494,7 @@ export const generateStudyPathWithAi = async (
       strongProvider: 'cerebras',
       // Hosted billing is per gateway call, so one guide must use one call.
       singleRequest: true,
+      studyGuideProfile: 'lean',
       strongTransport: createHostedStudyGuideTransportWithQuickStart({
         userKnownTopics: options.userKnownTopics,
         outputLanguage: options.outputLanguage,
@@ -505,7 +506,9 @@ export const generateStudyPathWithAi = async (
         },
       }),
     })
-    const quickStart = sanitizeStudyGuideQuickStart(hostedQuickStart)
+    const quickStart = sanitizeStudyGuideQuickStart(
+      hostedQuickStart || draft.quickStart,
+    )
     if (!quickStart) {
       throw new Error('Hosted AI did not return a Study Guide Quick Start.')
     }
@@ -545,20 +548,24 @@ export const generateStudyPathWithAi = async (
     strongProvider: provider,
   })
   let relevanceDecision: StudyGuideQuickStartRelevanceDecision | undefined
-  const quickStart = await generateStudyGuideQuickStartWithAi({
-    provider,
-    apiToken: credentials.apiToken,
-    model: credentials.model,
-    title: draft.folderName || draft.title || options.title,
-    prompt: options.prompt,
-    draft,
-    signal: options.signal,
-    userKnownTopics: options.userKnownTopics,
-    outputLanguage: options.outputLanguage,
-    onRelevanceDecision: (decision) => {
-      relevanceDecision = decision
-    },
-  })
+  const embeddedQuickStart = sanitizeStudyGuideQuickStart(draft.quickStart)
+  const quickStart =
+    embeddedQuickStart && !options.userKnownTopics?.length
+      ? embeddedQuickStart
+      : await generateStudyGuideQuickStartWithAi({
+          provider,
+          apiToken: credentials.apiToken,
+          model: credentials.model,
+          title: draft.folderName || draft.title || options.title,
+          prompt: options.prompt,
+          draft,
+          signal: options.signal,
+          userKnownTopics: options.userKnownTopics,
+          outputLanguage: options.outputLanguage,
+          onRelevanceDecision: (decision) => {
+            relevanceDecision = decision
+          },
+        })
   const bridgeBlocks = await generateStudyGuideKnowledgeBridgeBlocksWithAi({
     provider,
     apiToken: credentials.apiToken,

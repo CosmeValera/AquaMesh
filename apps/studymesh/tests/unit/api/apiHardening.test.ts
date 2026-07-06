@@ -6,9 +6,12 @@ import hostedAiBillingHandler, {
 } from '../../../../../api/hosted-ai-billing'
 import hostedAiHandler, {
   DEFAULT_CEREBRAS_MODEL,
+  DEFAULT_OPENAI_FAST_MODEL,
   DEFAULT_OPENAI_MODEL,
+  DEFAULT_OPENAI_STUDY_GUIDE_MODEL,
   getHostedCerebrasModel,
   getHostedOpenAiModel,
+  getHostedOpenAiModelForStage,
   getHostedTextModel,
   getHostedTextProvider,
 } from '../../../../../api/hosted-ai'
@@ -613,14 +616,34 @@ describe('API payment and hosted AI hardening', () => {
   it('uses only server OpenAI provider and model configuration', () => {
     vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
     vi.stubEnv('HOSTED_OPENAI_MODEL', '')
+    vi.stubEnv('HOSTED_OPENAI_STUDY_GUIDE_MODEL', '')
+    vi.stubEnv('HOSTED_OPENAI_FAST_MODEL', '')
 
     expect(getHostedTextProvider()).toBe('openai')
     expect(getHostedOpenAiModel()).toBe(DEFAULT_OPENAI_MODEL)
-    expect(getHostedTextModel()).toBe(DEFAULT_OPENAI_MODEL)
+    expect(getHostedOpenAiModelForStage('study_guide_main')).toBe(
+      DEFAULT_OPENAI_STUDY_GUIDE_MODEL,
+    )
+    expect(getHostedOpenAiModelForStage('quick_create')).toBe(
+      DEFAULT_OPENAI_FAST_MODEL,
+    )
+    expect(getHostedTextModel(undefined, 'study_guide_main')).toBe(
+      DEFAULT_OPENAI_STUDY_GUIDE_MODEL,
+    )
 
     vi.stubEnv('HOSTED_OPENAI_MODEL', 'gpt-5.4-mini-test')
 
     expect(getHostedTextModel()).toBe('gpt-5.4-mini-test')
+
+    vi.stubEnv('HOSTED_OPENAI_STUDY_GUIDE_MODEL', 'gpt-5.4-mini-stage')
+    vi.stubEnv('HOSTED_OPENAI_FAST_MODEL', 'gpt-5.4-nano-stage')
+
+    expect(getHostedTextModel(undefined, 'study_guide_main')).toBe(
+      'gpt-5.4-mini-stage',
+    )
+    expect(getHostedTextModel(undefined, 'quick_create')).toBe(
+      'gpt-5.4-nano-stage',
+    )
   })
 
   it('returns missing config when hosted OpenAI key is absent', async () => {
@@ -969,6 +992,211 @@ describe('API payment and hosted AI hardening', () => {
     ).toEqual(['title', 'headers', 'rows'])
   })
 
+  it('stores OpenAI per-stage usage costs and routes Study Guide stages by model', async () => {
+    vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
+    vi.stubEnv('HOSTED_OPENAI_API_KEY', 'hosted-openai-key')
+    vi.stubEnv('HOSTED_OPENAI_STUDY_GUIDE_MODEL', 'gpt-5.4-mini-route')
+    vi.stubEnv('HOSTED_OPENAI_FAST_MODEL', 'gpt-5.4-nano-route')
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+
+    const rpcBodies: Record<string, unknown>[] = []
+    const providerBodies: Record<string, unknown>[] = []
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    })
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve(jsonResponse({ id: 'user-1' }))
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(jsonResponse({ status: { studyCredits: 8 } }))
+      }
+
+      if (target.includes('/rest/v1/rpc/hosted_ai_finish_usage')) {
+        rpcBodies.push(JSON.parse(String(init?.body)))
+        return Promise.resolve(jsonResponse({ status: { studyCredits: 6 } }))
+      }
+
+      if (target.includes('api.openai.com/v1/chat/completions')) {
+        const body = JSON.parse(String(init?.body))
+        providerBodies.push(body)
+        const prompt = String(body.messages?.[0]?.content || '')
+
+        if (prompt.includes('Choose whether any known topic')) {
+          return Promise.resolve(
+            jsonResponse({
+              choices: [
+                {
+                  message: {
+                    content: JSON.stringify({
+                      shouldUseKnownTopic: true,
+                      knownTopicsForQuickStart: ['Algebra'],
+                      knownTopicRelevanceReason: 'Algebra helps.',
+                      targetTopicType: 'general',
+                      bridgeStrength: 'strong',
+                      bridgeStrategy: 'direct_comparison',
+                    }),
+                  },
+                },
+              ],
+              usage: {
+                prompt_tokens: 200,
+                completion_tokens: 50,
+                total_tokens: 250,
+              },
+            }),
+          )
+        }
+
+        if (
+          prompt.includes(
+            'Create optional knowledge-context bridge note blocks',
+          )
+        ) {
+          return Promise.resolve(
+            jsonResponse({
+              choices: [
+                {
+                  message: {
+                    content: JSON.stringify({
+                      blocks: [
+                        {
+                          dashboardIndex: 1,
+                          title: 'Algebra bridge',
+                          body: 'Algebraic structure helps organize the new idea.',
+                        },
+                      ],
+                    }),
+                  },
+                },
+              ],
+              usage: {
+                prompt_tokens: 300,
+                completion_tokens: 100,
+                total_tokens: 400,
+                prompt_tokens_details: { cached_tokens: 25 },
+              },
+            }),
+          )
+        }
+
+        return Promise.resolve(
+          jsonResponse({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    title: 'Guide',
+                    folderName: 'Guide',
+                    quickStart: {
+                      keyIdea: 'Main guide includes the quick start.',
+                      quickSummary:
+                        'Start with the main idea.\n\nThen use the pages in order.',
+                    },
+                    dashboards: [
+                      {
+                        title: '01 - Map',
+                        summary: 'Map preview.',
+                        rawNotes: 'First page notes teach the map.',
+                        dashboardRole: 'normal',
+                        practiceType: 'none',
+                      },
+                      {
+                        title: '02 - Apply',
+                        summary: 'Apply preview.',
+                        rawNotes: 'Second page notes apply the idea.',
+                        dashboardRole: 'normal',
+                        practiceType: 'none',
+                      },
+                    ],
+                  }),
+                },
+              },
+            ],
+            usage: {
+              prompt_tokens: 1000,
+              completion_tokens: 500,
+              total_tokens: 1500,
+              prompt_tokens_details: { cached_tokens: 100 },
+            },
+          }),
+        )
+      }
+
+      return Promise.resolve(
+        jsonResponse({ message: 'unexpected url' }, false, 500),
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer user-token' },
+        body: {
+          action: 'generateWithQuickStart',
+          surface: 'study-guide',
+          parts: [{ text: 'Create study guide' }],
+          quickStartOptions: { userKnownTopics: ['Algebra'] },
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(providerBodies.map((body) => body.model)).toEqual([
+      'gpt-5.4-mini-route',
+      'gpt-5.4-nano-route',
+      'gpt-5.4-nano-route',
+    ])
+    expect(rpcBodies[0]).toMatchObject({
+      p_provider: 'openai',
+      p_model: 'openai:gpt-5.4-mini-route',
+    })
+    expect(rpcBodies[1].p_provider_call_count).toBe(3)
+    expect(rpcBodies[1].p_metadata).toMatchObject({
+      estimatedCostUsdTotal: expect.any(Number),
+      stageCosts: [
+        expect.objectContaining({
+          stage: 'study_guide_main',
+          model: 'gpt-5.4-mini-route',
+          inputTokens: 1000,
+          cachedInputTokens: 100,
+          outputTokens: 500,
+        }),
+        expect.objectContaining({
+          stage: 'quick_start_relevance_auto',
+          model: 'gpt-5.4-nano-route',
+          inputTokens: 200,
+          outputTokens: 50,
+        }),
+        expect.objectContaining({
+          stage: 'knowledge_bridge_blocks',
+          model: 'gpt-5.4-nano-route',
+          inputTokens: 300,
+          cachedInputTokens: 25,
+          outputTokens: 100,
+        }),
+      ],
+    })
+    expect(
+      Number(
+        (rpcBodies[1].p_metadata as { estimatedCostUsdTotal: number })
+          .estimatedCostUsdTotal,
+      ),
+    ).toBeGreaterThan(0)
+  })
+
   it('maps OpenAI rate limits to hosted rate_limited errors', async () => {
     vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
     vi.stubEnv('HOSTED_OPENAI_API_KEY', 'hosted-openai-key')
@@ -1296,7 +1524,9 @@ describe('API payment and hosted AI hardening', () => {
       p_provider_call_count: 6,
     })
     expect(providerBodies).toHaveLength(2)
-    expect(JSON.stringify(providerBodies[0])).toContain('Output language: Spanish')
+    expect(JSON.stringify(providerBodies[0])).toContain(
+      'Output language: Spanish',
+    )
     expect(JSON.stringify(providerBodies[1])).toContain(
       'previous podcast script was rejected',
     )
@@ -1316,11 +1546,13 @@ describe('API payment and hosted AI hardening', () => {
       'ef_dora',
       'em_alex',
     ])
-    expect(unrealRequests.every((request) => request.body.Bitrate === '64k')).toBe(
-      true,
-    )
     expect(
-      unrealRequests.every((request) => !String(request.body.Text).includes('Host ')),
+      unrealRequests.every((request) => request.body.Bitrate === '64k'),
+    ).toBe(true)
+    expect(
+      unrealRequests.every(
+        (request) => !String(request.body.Text).includes('Host '),
+      ),
     ).toBe(true)
     expect(
       (unrealRequests[0].headers as Record<string, string>).authorization,
@@ -1330,9 +1562,9 @@ describe('API payment and hosted AI hardening', () => {
     expect(Buffer.from(storageUploads[0].body as Buffer)).toEqual(
       Buffer.from([0xff, 0xfb, 1, 0xff, 0xfb, 2, 0xff, 0xfb, 3, 0xff, 0xfb, 4]),
     )
-    expect((storageUploads[0].headers as Record<string, string>)['x-upsert']).toBe(
-      'true',
-    )
+    expect(
+      (storageUploads[0].headers as Record<string, string>)['x-upsert'],
+    ).toBe('true')
     expect(
       (storageUploads[0].headers as Record<string, string>)['content-type'],
     ).toBe('audio/mpeg')
@@ -1657,7 +1889,9 @@ describe('API payment and hosted AI hardening', () => {
       const target = String(url)
 
       if (
-        target.includes('/rest/v1/rpc/study_guides_refresh_retention_candidates')
+        target.includes(
+          '/rest/v1/rpc/study_guides_refresh_retention_candidates',
+        )
       ) {
         rpcCalls.push('study-guides-refresh')
         expect(JSON.parse(String(init?.body))).toEqual({ p_keep_count: 50 })
@@ -1665,7 +1899,9 @@ describe('API payment and hosted AI hardening', () => {
       }
 
       if (
-        target.includes('/rest/v1/rpc/podcast_audio_refresh_retention_candidates')
+        target.includes(
+          '/rest/v1/rpc/podcast_audio_refresh_retention_candidates',
+        )
       ) {
         rpcCalls.push('podcast-audio-refresh')
         expect(JSON.parse(String(init?.body))).toEqual({ p_keep_count: 5 })
@@ -1862,6 +2098,12 @@ describe('API payment and hosted AI hardening', () => {
                       ? JSON.stringify({
                           title: 'Guide',
                           folderName: 'Guide',
+                          quickStart: {
+                            keyIdea:
+                              'Backend gives a useful short mental model.',
+                            quickSummary:
+                              'First short paragraph.\n\nSecond short paragraph with one caveat.',
+                          },
                           dashboards: [
                             {
                               title: '01 - Backend flow',
@@ -1891,22 +2133,15 @@ describe('API payment and hosted AI hardening', () => {
                             bridgeStrength: 'strong',
                             bridgeStrategy: 'direct_comparison',
                           })
-                        : providerBodies.length === 3
-                          ? JSON.stringify({
-                              keyIdea:
-                                'Backend gives a useful short mental model.',
-                              quickSummary:
-                                'First short paragraph.\n\nSecond short paragraph with one caveat.',
-                            })
-                          : JSON.stringify({
-                              blocks: [
-                                {
-                                  dashboardIndex: 1,
-                                  title: 'Backend bridge',
-                                  body: 'Backend request flow is a useful comparison, but Kafka-style durability changes the shape.',
-                                },
-                              ],
-                            }),
+                        : JSON.stringify({
+                            blocks: [
+                              {
+                                dashboardIndex: 1,
+                                title: 'Backend bridge',
+                                body: 'Backend request flow is a useful comparison, but Kafka-style durability changes the shape.',
+                              },
+                            ],
+                          }),
                 },
               },
             ],
@@ -1958,26 +2193,23 @@ describe('API payment and hosted AI hardening', () => {
       ],
     })
     expect(response.body.quickStart).not.toHaveProperty('forcedBridge')
-    expect(providerBodies).toHaveLength(4)
+    expect(providerBodies).toHaveLength(3)
     expect(JSON.stringify(providerBodies[1])).toContain(
       'Known topics, strongest first: Backend, Databases',
     )
     expect(JSON.stringify(providerBodies[1])).toContain('Bridge mode: auto')
-    expect(JSON.stringify(providerBodies[2])).toContain(
-      'Candidate known topic bridge(s): Backend',
-    )
     expect(JSON.stringify(providerBodies[2])).not.toContain(
       'Candidate known topic bridge(s): Backend, Databases',
     )
     expect(JSON.stringify(providerBodies)).not.toContain('Bridge mode: force')
-    expect(JSON.stringify(providerBodies[3])).toContain(
+    expect(JSON.stringify(providerBodies[2])).toContain(
       'Create optional knowledge-context bridge note blocks',
     )
-    expect(JSON.stringify(providerBodies[3])).toContain('dashboardIndex: 1')
-    expect(JSON.stringify(providerBodies[3])).not.toContain('dashboardIndex: 0')
+    expect(JSON.stringify(providerBodies[2])).toContain('dashboardIndex: 1')
+    expect(JSON.stringify(providerBodies[2])).not.toContain('dashboardIndex: 0')
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 2 })
-    expect(rpcBodies[1].p_provider_call_count).toBe(4)
+    expect(rpcBodies[1].p_provider_call_count).toBe(3)
   })
 
   it('maps hosted Study Guide risky retry guard to rate limit before provider call', async () => {

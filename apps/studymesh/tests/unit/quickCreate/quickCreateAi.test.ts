@@ -733,6 +733,176 @@ describe('quick create AI normalizer', () => {
     )
   })
 
+  it('normalizes multiple-choice option feedback without English fallbacks', () => {
+    const draft = normalizeAiQuickCreateDraft(
+      {
+        title: 'Ecoute musicale',
+        sourceSummary: {
+          title: 'Repere',
+          bullets: ['Le guide propose quatre niveaux ecoute.'],
+        },
+        conceptRecap: {
+          title: 'Concept recap',
+          sections: [
+            {
+              title: 'Repere ecoute',
+              bullets: ['Relier theme, couleur musicale, voix, et scene.'],
+              example: 'Comparer la voix et la couleur musicale.',
+            },
+          ],
+        },
+        practice: {
+          multipleChoice: [
+            {
+              question: 'Quel repere aide a analyser une chanson sur scene?',
+              options: [
+                'Theme, couleur musicale, voix, effet scenique',
+                'Un seul genre dominant',
+                'Les paroles seulement',
+                'Ignorer la scene et la voix',
+              ],
+              correctOptionIndex: 0,
+              explanation:
+                'Le guide propose un repere en quatre niveaux: theme, couleur musicale, voix, effet sur scene.',
+              hint: 'Cherche les quatre niveaux.',
+              optionFeedback: [
+                {
+                  option: 'Theme, couleur musicale, voix, effet scenique',
+                  explanation:
+                    'Cette reponse reprend les quatre niveaux proposes. Cette phrase ne doit pas rester.',
+                },
+                {
+                  option: 'Un seul genre dominant',
+                  explanation:
+                    'Le genre unique ignore la combinaison entre theme, couleur, voix et scene.',
+                },
+                {
+                  option: 'Les paroles seulement',
+                  explanation:
+                    "This option misses the guide's main distinction.",
+                },
+                {
+                  option: 'Ignorer la scene et la voix',
+                  explanation:
+                    "This option misses the guide's main distinction.",
+                },
+              ],
+            },
+          ],
+        },
+        flashcards: [],
+      },
+      'ecoute-musicale',
+    )
+
+    const quiz = draft.objects.find((object) => object.kind === 'quiz')
+
+    expect(quiz).toMatchObject({
+      optionFeedback: [
+        {
+          option: 'Theme, couleur musicale, voix, effet scenique',
+          explanation: 'Cette reponse reprend les quatre niveaux proposes.',
+        },
+        {
+          option: 'Un seul genre dominant',
+          explanation:
+            'Le genre unique ignore la combinaison entre theme, couleur, voix et scene.',
+        },
+        {
+          option: 'Les paroles seulement',
+          explanation: expect.stringContaining('Les paroles seulement'),
+        },
+        {
+          option: 'Ignorer la scene et la voix',
+          explanation: expect.stringContaining('Ignorer la scene et la voix'),
+        },
+      ],
+    })
+    if (quiz?.kind === 'quiz') {
+      expect(quiz.optionFeedback).toHaveLength(4)
+      expect(JSON.stringify(quiz.optionFeedback)).not.toContain(
+        "This option misses the guide's main distinction.",
+      )
+    }
+  })
+
+  it('replaces repeated option feedback instead of showing one explanation everywhere', () => {
+    const repeatedExplanation =
+      'Le guide propose un repere en quatre niveaux: theme, couleur musicale, voix, effet sur scene.'
+    const draft = normalizeAiQuickCreateDraft(
+      {
+        title: 'Ecoute musicale',
+        sourceSummary: {
+          title: 'Repere',
+          bullets: ['Le guide propose quatre niveaux ecoute.'],
+        },
+        conceptRecap: {
+          title: 'Concept recap',
+          sections: [
+            {
+              title: 'Repere ecoute',
+              bullets: ['Relier theme, couleur musicale, voix, et scene.'],
+              example: 'Comparer la voix et la couleur musicale.',
+            },
+          ],
+        },
+        practice: {
+          multipleChoice: [
+            {
+              question: 'Quel repere aide a analyser une chanson sur scene?',
+              options: [
+                'Theme, couleur musicale, voix, effet scenique',
+                'Un seul genre dominant',
+                'Les paroles seulement',
+                'Ignorer la scene et la voix',
+              ],
+              correctOptionIndex: 0,
+              explanation: repeatedExplanation,
+              hint: 'Cherche les quatre niveaux.',
+              optionFeedback: [
+                {
+                  option: 'Theme, couleur musicale, voix, effet scenique',
+                  explanation: repeatedExplanation,
+                },
+                {
+                  option: 'Un seul genre dominant',
+                  explanation: repeatedExplanation,
+                },
+                {
+                  option: 'Les paroles seulement',
+                  explanation: repeatedExplanation,
+                },
+                {
+                  option: 'Ignorer la scene et la voix',
+                  explanation: repeatedExplanation,
+                },
+              ],
+            },
+          ],
+        },
+        flashcards: [],
+      },
+      'ecoute-musicale',
+    )
+
+    const quiz = draft.objects.find((object) => object.kind === 'quiz')
+
+    if (quiz?.kind !== 'quiz') {
+      throw new Error('Expected normalized quiz object.')
+    }
+
+    expect(quiz.optionFeedback).toHaveLength(4)
+    expect(
+      new Set(quiz.optionFeedback.map((feedback) => feedback.explanation)).size,
+    ).toBe(4)
+    expect(
+      quiz.optionFeedback.map((feedback) => feedback.explanation),
+    ).not.toContain(repeatedExplanation)
+    expect(quiz.optionFeedback[1].explanation).toContain(
+      'Un seul genre dominant',
+    )
+  })
+
   it('rejects loose AI objects instead of guessing kinds', () => {
     const draft = normalizeAiQuickCreateDraft(
       {
@@ -3077,8 +3247,8 @@ describe('Gemini quick create client', () => {
           index === 1
             ? 'orientationMap'
             : index === 3
-              ? 'practiceCheckpoint'
-              : 'workedExampleLab',
+            ? 'practiceCheckpoint'
+            : 'workedExampleLab',
         sectionPlan: ['Topic map', 'Worked loop', 'Try it'],
         mustTeach: [`Loop idea ${index}`],
         workedExample: `Loop worked example ${index}.`,
@@ -3111,8 +3281,8 @@ describe('Gemini quick create client', () => {
                           index === 1
                             ? 'orientationMap'
                             : index === 3
-                              ? 'practiceCheckpoint'
-                              : 'workedExampleLab',
+                            ? 'practiceCheckpoint'
+                            : 'workedExampleLab',
                         supportArtifacts:
                           index === 1
                             ? {

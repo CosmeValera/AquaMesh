@@ -7,6 +7,10 @@ import {
   StudyPathPracticeType,
   StudyPathSourceRef,
 } from '../types'
+import {
+  detectContentLanguage,
+  type StudyMeshLanguageCode,
+} from '../../language/contentLanguage'
 
 const normalizeSpaces = (value: string): string =>
   value.replace(/\s+/g, ' ').trim()
@@ -40,6 +44,9 @@ const bannedQuizOptionPattern =
 const lazyQuizOptionPattern =
   /\b(?:not supported|opposite of|guess from the title|review the notes|not enough information)\b/i
 
+const lazyQuizFeedbackPattern =
+  /\b(?:this option misses|misses the (?:guide'?s|lesson'?s|notes'?|main) (?:main )?(?:distinction|point|idea)|does not address the main distinction|not the main distinction|review the (?:guide|lesson|notes)|too vague|not supported by the (?:guide|lesson|notes))\b/i
+
 const isCopiedFromSource = (question: string, rawNotes = ''): boolean => {
   const key = normalizeKey(question)
   if (!key || !rawNotes.trim()) {
@@ -60,6 +67,145 @@ const isUsefulQuestion = (question: string, rawNotes = ''): boolean =>
   !genericQuestionPattern.test(question) &&
   !malformedQuestionPattern.test(question) &&
   !isCopiedFromSource(question, rawNotes)
+
+const compactQuizFeedback = (value: string): string => {
+  const compact = normalizeSpaces(value).replace(
+    /\bAnalyzed answer distinctions[^.?!]*(?:[.?!]\s*)?/gi,
+    '',
+  )
+  const firstSentence = compact.match(/^.{24,180}?[.!?](?=\s|$)/)?.[0]
+  const candidate = firstSentence || compact
+
+  return candidate.length > 180
+    ? `${candidate.slice(0, 177).trim()}...`
+    : candidate
+}
+
+const isUsefulQuizFeedback = (value: string): boolean =>
+  value.split(/\s+/).filter(Boolean).length >= 5 &&
+  !lazyQuizFeedbackPattern.test(value)
+
+const shortenFeedbackFragment = (value: string): string => {
+  const compact = compactQuizFeedback(value).replace(/[.!?]+$/, '')
+
+  return compact.length > 70 ? `${compact.slice(0, 67).trim()}...` : compact
+}
+
+const fallbackQuizFeedbackTemplates: Record<
+  StudyMeshLanguageCode,
+  {
+    correct: (main: string) => string
+    wrong: (option: string, correct: string) => string
+  }
+> = {
+  en: {
+    correct: (main) => `This matches the key idea: ${main}.`,
+    wrong: (option, correct) =>
+      `This says "${option}", but the answer should focus on "${correct}".`,
+  },
+  es: {
+    correct: (main) => `Coincide con la idea clave: ${main}.`,
+    wrong: (option, correct) =>
+      `Esta opcion habla de "${option}", pero la respuesta debe centrarse en "${correct}".`,
+  },
+  fr: {
+    correct: (main) => `Cela reprend l'idee cle: ${main}.`,
+    wrong: (option, correct) =>
+      `Ce choix parle de "${option}", mais la reponse attendue vise "${correct}".`,
+  },
+  de: {
+    correct: (main) => `Das passt zur Kernidee: ${main}.`,
+    wrong: (option, correct) =>
+      `Diese Option spricht von "${option}", aber die Antwort zielt auf "${correct}".`,
+  },
+  it: {
+    correct: (main) => `Riprende l'idea chiave: ${main}.`,
+    wrong: (option, correct) =>
+      `Questa opzione parla di "${option}", ma la risposta mira a "${correct}".`,
+  },
+  pt: {
+    correct: (main) => `Isto corresponde a ideia central: ${main}.`,
+    wrong: (option, correct) =>
+      `Esta opcao fala de "${option}", mas a resposta deve focar "${correct}".`,
+  },
+  nl: {
+    correct: (main) => `Dit past bij de kern: ${main}.`,
+    wrong: (option, correct) =>
+      `Deze optie gaat over "${option}", maar het antwoord moet richten op "${correct}".`,
+  },
+  pl: {
+    correct: (main) => `To pasuje do glownej idei: ${main}.`,
+    wrong: (option, correct) =>
+      `Ta opcja dotyczy "${option}", ale odpowiedz powinna wskazywac "${correct}".`,
+  },
+  ru: {
+    correct: (main) => `Это соответствует главной идее: ${main}.`,
+    wrong: (option, correct) =>
+      `Этот вариант про "${option}", но ответ должен быть про "${correct}".`,
+  },
+  ar: {
+    correct: (main) => `هذا يطابق الفكرة الأساسية: ${main}.`,
+    wrong: (option, correct) =>
+      `هذا الخيار يركز على "${option}"، لكن الإجابة يجب أن تركز على "${correct}".`,
+  },
+  hi: {
+    correct: (main) => `यह मुख्य विचार से मेल खाता है: ${main}.`,
+    wrong: (option, correct) =>
+      `यह विकल्प "${option}" पर है, लेकिन उत्तर "${correct}" पर होना चाहिए.`,
+  },
+  zh: {
+    correct: (main) => `这符合核心思路：${main}。`,
+    wrong: (option, correct) =>
+      `这个选项关注“${option}”，但答案应关注“${correct}”。`,
+  },
+  ja: {
+    correct: (main) => `これは要点に合っています: ${main}。`,
+    wrong: (option, correct) =>
+      `この選択肢は「${option}」に寄りますが、答えは「${correct}」です。`,
+  },
+  ko: {
+    correct: (main) => `핵심 생각과 맞습니다: ${main}.`,
+    wrong: (option, correct) =>
+      `이 선택지는 "${option}"에 초점이 있지만 답은 "${correct}"입니다.`,
+  },
+}
+
+const inferQuizFeedbackLanguage = (
+  item: { question: string; explanation: string },
+  options: string[],
+  rawNotes: string,
+): StudyMeshLanguageCode => {
+  const generatedText = [item.question, ...options, item.explanation].join(' ')
+
+  return (
+    detectContentLanguage(generatedText) ||
+    detectContentLanguage(rawNotes) ||
+    'en'
+  )
+}
+
+const fallbackQuizFeedback = ({
+  option,
+  correctOption,
+  explanation,
+  language,
+  isCorrect,
+}: {
+  option: string
+  correctOption: string
+  explanation: string
+  language: StudyMeshLanguageCode
+  isCorrect: boolean
+}): string => {
+  const template = fallbackQuizFeedbackTemplates[language]
+  const main = shortenFeedbackFragment(explanation || correctOption)
+  const optionFragment = shortenFeedbackFragment(option)
+  const correctFragment = shortenFeedbackFragment(correctOption)
+
+  return isCorrect
+    ? compactQuizFeedback(template.correct(main))
+    : compactQuizFeedback(template.wrong(optionFragment, correctFragment))
+}
 
 const stringValue = z
   .string()
@@ -382,11 +528,51 @@ const normalizeMultipleChoice = (
       feedback.explanation,
     ]),
   )
-  const optionFeedback = options
-    .map((option) => ({
+  const feedbackLanguage = inferQuizFeedbackLanguage(item, options, rawNotes)
+  const correctOption = options[correctOptionIndex]
+  const optionFeedbackDrafts = options.map((option) => {
+    const explanation = compactQuizFeedback(
+      feedbackByOption.get(normalizeKey(option)) || '',
+    )
+
+    return {
       option,
-      explanation: feedbackByOption.get(normalizeKey(option)) || '',
-    }))
+      explanation: isUsefulQuizFeedback(explanation) ? explanation : '',
+      feedbackKey: normalizeKey(explanation),
+    }
+  })
+  const feedbackCounts = optionFeedbackDrafts.reduce((counts, feedback) => {
+    if (feedback.explanation && feedback.feedbackKey) {
+      counts.set(
+        feedback.feedbackKey,
+        (counts.get(feedback.feedbackKey) || 0) + 1,
+      )
+    }
+
+    return counts
+  }, new Map<string, number>())
+  const optionFeedback = optionFeedbackDrafts
+    .map((feedback) => {
+      const hasUniqueGeneratedFeedback =
+        feedback.explanation &&
+        feedback.feedbackKey &&
+        feedbackCounts.get(feedback.feedbackKey) === 1
+      const isCorrect =
+        normalizeKey(feedback.option) === normalizeKey(correctOption)
+
+      return {
+        option: feedback.option,
+        explanation: hasUniqueGeneratedFeedback
+          ? feedback.explanation
+          : fallbackQuizFeedback({
+              option: feedback.option,
+              correctOption,
+              explanation: item.explanation,
+              language: feedbackLanguage,
+              isCorrect,
+            }),
+      }
+    })
     .filter((feedback) => feedback.explanation)
 
   return { ...item, options, correctOptionIndex, optionFeedback }

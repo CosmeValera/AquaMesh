@@ -46,6 +46,8 @@ const STRONG_MODEL_TIMEOUT_MESSAGE =
   'The AI model took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or another AI mode.'
 const STRONG_MODEL_OUTPUT_FORMAT_MESSAGE =
   'The AI model could not follow the requested output format. StudyMesh retried with a simpler JSON prompt, but the response was still unusable.'
+const QUIZ_OPTION_FEEDBACK_INSTRUCTION =
+  'For every multiple-choice quiz, include optionFeedback with exactly one item per option and matching option text. Correct option: explain why it matches the core rule. Wrong options: name the exact part that conflicts with the core rule. Use the selected output language, 6-16 words each, no repeated explanations, no generic phrases, and never start with Correct/Incorrect/Right/Wrong.'
 
 export type StrongAiModelTransport = (
   options: StrongAiCallOptions,
@@ -475,7 +477,6 @@ const dashboardContractProperties = {
             'correctOptionIndex',
             'explanation',
             'hint',
-            'optionFeedback',
           ],
         },
       },
@@ -1484,7 +1485,7 @@ Return exactly one JSON object with this shape:
         "explanation": "...",
         "hint": "...",
         "optionFeedback": [
-          { "option": "...", "explanation": "why this option is right or tempting but wrong, without starting with Correct or Incorrect" }
+          { "option": "...", "explanation": "specific feedback for this option" }
         ]
       }
     ]
@@ -1517,7 +1518,7 @@ Rules:
 - Never use placeholder options like A, B, C, option A, choice B, "all of the above", or near-duplicate options.
 - Avoid "According to the text..." style questions unless strictly necessary.
 - Every quiz explanation must teach why the correct answer is correct.
-- Every quiz must include one concise hint and optionFeedback for every option. The correct option feedback says why it is right. Each wrong option feedback says why it is tempting but wrong. Do not start feedback with "Correct", "Incorrect", "Right", or "Wrong"; the UI already shows that with color.
+- ${QUIZ_OPTION_FEEDBACK_INSTRUCTION}
 - Quizzes must test application, usage, contrast, formation, exceptions, or common mistakes with a concrete expected answer. Do not ask "Which statement best explains X?", "Which statement matches the notes?", "What does X help you understand or do?", "What is the core idea behind X?", or questions about what the notes say.
 - For language-learning Quick Creates, generate grammar/application questions from accepted concepts only: complete a form, choose the trigger expression, choose indicative vs subjunctive, or fix a common mistake.
 - ${
@@ -1530,7 +1531,7 @@ Rules:
 - In AI Tutor mode, teach the topic through sourceSummary and conceptRecap before practice.
 - Generate exercises even from short notes. A single wiki paragraph should still produce multiple grounded quizzes and flashcards.
 - Prefer useful learning material from the selected target types, but never output widget kinds.
-- For multiple-choice questions, include 3-4 meaningful options, correctOptionIndex, hint, and optionFeedback. Vary the correct answer position across questions; do not always put the correct answer first.
+- For multiple-choice questions, include 3-4 meaningful options, correctOptionIndex, explanation, hint, and optionFeedback. Vary the correct answer position across questions; do not always put the correct answer first.
 - Generated quiz practice must be multiple-choice only.
 - ${
     promptMode
@@ -1963,7 +1964,7 @@ Required dashboard fields:
       "correctOptionIndex": 0,
       "explanation": "...",
       "hint": "...",
-      "optionFeedback": [{ "option": "...", "explanation": "why this option is right or tempting but wrong, without starting with Correct or Incorrect" }]
+      "optionFeedback": [{ "option": "...", "explanation": "specific feedback for this option" }]
     }]
   },
   "flashcards": ${isLeanStudyGuide ? '[]' : '[{ "front": "...", "back": "..." }]'}
@@ -1992,7 +1993,7 @@ Quality rules:
 - Add practice.multipleChoice only on dashboards selected for quiz practice. Quiz dashboards should usually have 3-6 questions.
 - After dashboard 2, you may include 0-2 light spiral-review questions from previous dashboards, but only when they naturally connect to the current lesson.
 - Practice questions must be answerable from rawNotes but should require recall, application, comparison, error diagnosis, prediction, explanation, or transfer. Do not copy lesson sentences as questions.
-- Every quiz must include one concise hint and optionFeedback for every option. The correct option feedback says why it is right. Each wrong option feedback says why it is tempting but wrong. Do not start feedback with "Correct", "Incorrect", "Right", or "Wrong"; the UI already shows that with color.
+- ${QUIZ_OPTION_FEEDBACK_INSTRUCTION}
 - Do not add visible flashcards by default. Flashcards are on-demand support, not a second dashboard widget.
 - Use simple dashboard layout. Reduce cognitive load: clear hierarchy, signal key ideas, keep examples near rules.
 - Keep prompt-only Study Guides useful without sources. Add accurate general teaching content, but do not invent fake citations or source claims.
@@ -2433,7 +2434,7 @@ Return exactly this structure:
           "correctOptionIndex": 0,
           "explanation": "...",
           "hint": "...",
-          "optionFeedback": [{ "option": "...", "explanation": "why this option is right or tempting but wrong, without starting with Correct or Incorrect" }]
+          "optionFeedback": [{ "option": "...", "explanation": "specific feedback for this option" }]
         }]
       },
       "flashcards": ${isLeanStudyGuide ? '[]' : '[{ "front": "...", "back": "..." }]'}
@@ -2464,7 +2465,7 @@ ${isLeanStudyGuide ? '- Lean hosted profile: create exactly 3 dashboards. Do not
 - Add practice.multipleChoice only on dashboards selected for quiz practice. Quiz dashboards should usually have 3-6 questions.
 - After dashboard 2, you may include 0-2 light spiral-review questions from previous dashboards, but only when they naturally connect to the current lesson.
 - Practice questions must be answerable from rawNotes but should require recall, application, comparison, error diagnosis, prediction, explanation, or transfer. Do not copy lesson sentences as questions.
-- Every quiz must include one concise hint and optionFeedback for every option. The correct option feedback says why it is right. Each wrong option feedback says why it is tempting but wrong. Do not start feedback with "Correct", "Incorrect", "Right", or "Wrong"; the UI already shows that with color.
+- ${QUIZ_OPTION_FEEDBACK_INSTRUCTION}
 - Do not add visible flashcards by default. Flashcards are on-demand support, not a second dashboard widget.
 - Each dashboard must be useful by itself as teaching content, not as a container for many practice widgets.
 - Usually return ${

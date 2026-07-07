@@ -905,6 +905,7 @@ const StudyGuidesPage = () => {
               variant="contained"
               startIcon={<AddIcon />}
               onClick={openCreateGuide}
+              disableRipple
               sx={{
                 flexShrink: 0,
                 borderRadius: 999,
@@ -1592,6 +1593,7 @@ const StudyGuidesPage = () => {
       <Dialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
+        disableRestoreFocus
         maxWidth="sm"
         fullWidth
         PaperProps={{

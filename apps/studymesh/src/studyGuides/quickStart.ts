@@ -10,8 +10,10 @@ import { sanitizeUserKnownTopics } from '../profileContext'
 
 export const STUDY_GUIDE_KEY_IDEA_MAX_WORDS = 35
 export const STUDY_GUIDE_QUICK_SUMMARY_MAX_WORDS = 120
+const STUDY_GUIDE_QUICK_SUMMARY_SENTENCE_OVERFLOW_WORDS = 24
 
 const markdownFencePattern = /^```(?:\w+)?\s*|\s*```$/g
+const completeSentenceEndPattern = /[.!?]["')\]]?$/
 const quickStartTargetTopicTypes = [
   'technical',
   'human_management',
@@ -195,8 +197,58 @@ const stripTextLabels = (value: string): string =>
     .join('\n')
     .trim()
 
+const wordsFromText = (value: string): string[] =>
+  value.split(/\s+/).filter(Boolean)
+
 const clampWords = (value: string, maxWords: number): string =>
-  value.split(/\s+/).filter(Boolean).slice(0, maxWords).join(' ')
+  wordsFromText(value).slice(0, maxWords).join(' ')
+
+const findCompleteSentenceWordCount = (
+  words: string[],
+  minWords: number,
+): number | null => {
+  for (
+    let index = words.length - 1;
+    index >= Math.max(0, minWords - 1);
+    index -= 1
+  ) {
+    if (completeSentenceEndPattern.test(words[index])) {
+      return index + 1
+    }
+  }
+
+  return null
+}
+
+const clampParagraphToCompleteSentence = (
+  paragraph: string,
+  maxWords: number,
+  overflowWords = 0,
+): string => {
+  const words = wordsFromText(paragraph)
+  if (words.length <= maxWords) {
+    return words.join(' ')
+  }
+
+  const overflowSlice = words.slice(0, maxWords + overflowWords)
+  const overflowSentenceWordCount = findCompleteSentenceWordCount(
+    overflowSlice,
+    maxWords,
+  )
+  if (overflowSentenceWordCount) {
+    return words.slice(0, overflowSentenceWordCount).join(' ')
+  }
+
+  const priorSentenceWordCount = findCompleteSentenceWordCount(
+    words.slice(0, maxWords),
+    1,
+  )
+  if (priorSentenceWordCount) {
+    return words.slice(0, priorSentenceWordCount).join(' ')
+  }
+
+  return words.slice(0, maxWords).join(' ')
+}
 
 const normalizeParagraphs = (value: string): string[] =>
   stripTextLabels(value)
@@ -310,13 +362,6 @@ const sanitizeStudyGuideQuickStartVariant = (
       .trim(),
     STUDY_GUIDE_KEY_IDEA_MAX_WORDS,
   )
-  const summaryWords = normalizeParagraphs(
-    String(value?.quickSummary || ''),
-  ).flatMap((paragraph) => paragraph.split(/\s+/).filter(Boolean))
-  const clampedSummaryWords = summaryWords.slice(
-    0,
-    STUDY_GUIDE_QUICK_SUMMARY_MAX_WORDS,
-  )
   const quickSummary = normalizeParagraphs(String(value?.quickSummary || ''))
     .reduce<{ paragraphs: string[]; remainingWords: number }>(
       (state, paragraph) => {
@@ -324,14 +369,24 @@ const sanitizeStudyGuideQuickStartVariant = (
           return state
         }
 
-        const words = paragraph.split(/\s+/).filter(Boolean)
-        const usedWords = words.slice(0, state.remainingWords)
+        const paragraphWords = wordsFromText(paragraph)
+        const usedText =
+          paragraphWords.length <= state.remainingWords
+            ? paragraphWords.join(' ')
+            : clampParagraphToCompleteSentence(
+                paragraph,
+                state.remainingWords,
+                STUDY_GUIDE_QUICK_SUMMARY_SENTENCE_OVERFLOW_WORDS,
+              )
+        const usedWords = wordsFromText(usedText)
         return {
-          paragraphs: [...state.paragraphs, usedWords.join(' ')],
-          remainingWords: state.remainingWords - usedWords.length,
+          paragraphs: usedText
+            ? [...state.paragraphs, usedText]
+            : state.paragraphs,
+          remainingWords: Math.max(0, state.remainingWords - usedWords.length),
         }
       },
-      { paragraphs: [], remainingWords: clampedSummaryWords.length },
+      { paragraphs: [], remainingWords: STUDY_GUIDE_QUICK_SUMMARY_MAX_WORDS },
     )
     .paragraphs.filter(Boolean)
     .join('\n\n')
@@ -465,7 +520,7 @@ export const buildStudyGuideQuickStartPrompt = ({
 Return strict JSON only:
 {
   "keyIdea": "one sentence, maximum 35 words, ideally 25-35 words",
-  "quickSummary": "2-3 short paragraphs, 80-120 words total"
+  "quickSummary": "2-3 short paragraphs, 70-105 words target"
 }
 
 Rules:
@@ -474,7 +529,10 @@ Rules:
 - keyIdea must explain the category or mental box the topic belongs to, not internal architecture.
 - keyIdea introduces at most 1 technical term, avoids listing components, and avoids implementation details unless they are the essence of the concept.
 - Prefer "what is this like or for?" over "how does it work internally?".
-- quickSummary: 2-3 short paragraphs separated by blank lines.
+- quickSummary: 2-3 short paragraphs separated by blank lines, 70-105 words target.
+- Every quickSummary paragraph must end as a complete sentence.
+- If the word target is tight, finish the current sentence cleanly instead of ending mid-thought.
+- Prefer a shorter complete summary over using the full limit.
 - Explain the concept itself directly. Do not summarize the guide structure, sections, or page order.
 - Do not write "This guide teaches...", "This guide explains...", "This page explains...", "You will learn...", or similar framing.
 - Introduce at most 2-3 new technical terms. Prefer plain words for everything else.

@@ -148,6 +148,19 @@ describe('Study Guide Quick Start helpers', () => {
     expect(quickStart?.quickSummary).toContain('\n\n')
   })
 
+  it('preserves a complete Quick Start sentence when summary is slightly long', () => {
+    const sentenceOne = Array.from(
+      { length: 120 },
+      (_value, index) => `word${index}`,
+    ).join(' ')
+    const quickStart = sanitizeStudyGuideQuickStart({
+      keyIdea: 'A short complete key idea.',
+      quickSummary: `${sentenceOne} final sentence.`,
+    })
+
+    expect(quickStart?.quickSummary).toMatch(/final sentence\.$/)
+  })
+
   it('includes selected known topic and clarity rules in Quick Start prompt', () => {
     const prompt = buildStudyGuideQuickStartPrompt({
       title: 'Target concept',
@@ -178,7 +191,9 @@ describe('Study Guide Quick Start helpers', () => {
     expect(prompt).toContain('This guide teaches')
     expect(prompt).toContain('This page explains')
     expect(prompt).toContain('You will learn')
-    expect(prompt).toContain('80-120 words total')
+    expect(prompt).toContain('70-105 words target')
+    expect(prompt).toContain('Every quickSummary paragraph must end')
+    expect(prompt).toContain('finish the current sentence cleanly')
   })
 
   it('asks for a neutral Quick Start when no known topic is selected', () => {

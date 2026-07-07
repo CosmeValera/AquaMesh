@@ -100,6 +100,36 @@ interface ChatCompletionResponse {
   };
 }
 
+interface EnhancedStudyGuideBlueprintPage {
+  title: string;
+  keyFacts: string[];
+  conciseNotes: string;
+  examplesNeeded: string[];
+  quizSkills: string[];
+}
+
+interface EnhancedStudyGuideBlueprint {
+  title: string;
+  folderName: string;
+  emoji: string;
+  quickStart: NonNullable<HostedAiGatewayResponse["quickStart"]>;
+  pages: EnhancedStudyGuideBlueprintPage[];
+}
+
+interface EnhancedStudyGuidePage {
+  title: string;
+  summary: string;
+  rawNotes: string;
+}
+
+interface EnhancedStudyGuideQuizQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+  skillTested: string;
+}
+
 const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
   "study-guide": 2,
   "quick-create": 1,
@@ -178,8 +208,19 @@ export const getHostedTextProvider = (): HostedTextProvider =>
 export const getHostedOpenAiModel = (): string =>
   getEnv("HOSTED_OPENAI_MODEL") || DEFAULT_OPENAI_MODEL;
 
+const MINI_OPENAI_STAGES = new Set<HostedAiStage>([
+  "study_guide_main",
+  "study_guide_blueprint",
+  "quick_start_fallback",
+  "quick_start_personalized",
+  "quick_start_relevance_auto",
+  "quick_start_relevance_force",
+  "quick_start_forced_bridge",
+  "knowledge_bridge_blocks",
+]);
+
 export const getHostedOpenAiModelForStage = (stage: HostedAiStage): string => {
-  if (stage === "study_guide_main") {
+  if (MINI_OPENAI_STAGES.has(stage)) {
     return (
       getEnv("HOSTED_OPENAI_STUDY_GUIDE_MODEL") ||
       getEnv("HOSTED_OPENAI_MODEL") ||
@@ -597,6 +638,445 @@ const buildPrompt = (parts: HostedAiGatewayPart[]): string =>
     .map((part) => (typeof part.text === "string" ? part.text.trim() : ""))
     .filter(Boolean)
     .join("\n\n");
+
+const textArraySchema = { type: "ARRAY", items: { type: "STRING" } };
+
+const ENHANCED_STUDY_GUIDE_BLUEPRINT_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    title: { type: "STRING" },
+    folderName: { type: "STRING" },
+    emoji: { type: "STRING" },
+    quickStart: {
+      type: "OBJECT",
+      properties: {
+        keyIdea: { type: "STRING" },
+        quickSummary: { type: "STRING" },
+      },
+      required: ["keyIdea", "quickSummary"],
+    },
+    pages: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          title: { type: "STRING" },
+          keyFacts: textArraySchema,
+          conciseNotes: { type: "STRING" },
+          examplesNeeded: textArraySchema,
+          quizSkills: textArraySchema,
+        },
+        required: [
+          "title",
+          "keyFacts",
+          "conciseNotes",
+          "examplesNeeded",
+          "quizSkills",
+        ],
+      },
+    },
+  },
+  required: ["title", "folderName", "emoji", "quickStart", "pages"],
+};
+
+const ENHANCED_STUDY_GUIDE_PAGE_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    title: { type: "STRING" },
+    summary: { type: "STRING" },
+    rawNotes: { type: "STRING" },
+  },
+  required: ["title", "summary", "rawNotes"],
+};
+
+const ENHANCED_STUDY_GUIDE_QUIZ_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    questions: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          question: { type: "STRING" },
+          options: textArraySchema,
+          correctIndex: { type: "NUMBER" },
+          explanation: { type: "STRING" },
+          skillTested: { type: "STRING" },
+        },
+        required: [
+          "question",
+          "options",
+          "correctIndex",
+          "explanation",
+          "skillTested",
+        ],
+      },
+    },
+  },
+  required: ["questions"],
+};
+
+const extractPromptField = (prompt: string, label: string): string => {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = prompt.match(new RegExp(`${escaped}:\\s*([^\\n]+)`, "i"));
+  return match?.[1]?.trim() || "";
+};
+
+const extractHostedStudyGuideTopic = (requestText: string): string => {
+  const match = requestText.match(/User request\/topic:\s*([\s\S]+)$/i);
+  return (match?.[1] || requestText).trim().slice(0, 4000);
+};
+
+const normalizeEnhancedBlueprint = (
+  value: unknown,
+  fallbackTitle: string,
+  fallbackFolderName: string,
+): EnhancedStudyGuideBlueprint => {
+  const record = isObject(value) ? value : {};
+  const pages = Array.isArray(record.pages) ? record.pages : [];
+  const normalizedPages = pages.slice(0, 3).map((page, index) => {
+    const pageRecord = isObject(page) ? page : {};
+    return {
+      title:
+        stringValue(pageRecord.title) ||
+        `${String(index + 1).padStart(2, "0")} - Lesson ${index + 1}`,
+      keyFacts: Array.isArray(pageRecord.keyFacts)
+        ? pageRecord.keyFacts.map(stringValue).filter(Boolean).slice(0, 12)
+        : [],
+      conciseNotes: stringValue(pageRecord.conciseNotes),
+      examplesNeeded: Array.isArray(pageRecord.examplesNeeded)
+        ? pageRecord.examplesNeeded.map(stringValue).filter(Boolean).slice(0, 6)
+        : [],
+      quizSkills: Array.isArray(pageRecord.quizSkills)
+        ? pageRecord.quizSkills.map(stringValue).filter(Boolean).slice(0, 6)
+        : [],
+    };
+  });
+  const quickStart = parseStudyGuideQuickStart(
+    JSON.stringify(isObject(record.quickStart) ? record.quickStart : {}),
+  );
+
+  if (normalizedPages.length !== 3 || !quickStart) {
+    const error = new Error(
+      "Hosted AI returned an unusable Study Guide blueprint.",
+    );
+    error.name = "provider_error";
+    throw error;
+  }
+
+  return {
+    title: stringValue(record.title) || fallbackTitle,
+    folderName: stringValue(record.folderName) || fallbackFolderName,
+    emoji: stringValue(record.emoji).slice(0, 8) || "📘",
+    quickStart,
+    pages: normalizedPages,
+  };
+};
+
+const normalizeEnhancedPage = (
+  value: unknown,
+  fallbackTitle: string,
+): EnhancedStudyGuidePage => {
+  const record = isObject(value) ? value : {};
+  const rawNotes = stringValue(record.rawNotes);
+  if (!rawNotes) {
+    const error = new Error("Hosted AI returned an unusable Study Guide page.");
+    error.name = "provider_error";
+    throw error;
+  }
+
+  return {
+    title: stringValue(record.title) || fallbackTitle,
+    summary: stringValue(record.summary) || `${fallbackTitle} lesson notes.`,
+    rawNotes,
+  };
+};
+
+const normalizeEnhancedQuizQuestions = (
+  value: unknown,
+): EnhancedStudyGuideQuizQuestion[] => {
+  const record = isObject(value) ? value : {};
+  const questions = Array.isArray(record.questions) ? record.questions : [];
+  const normalized = questions.slice(0, 6).map((question) => {
+    const questionRecord = isObject(question) ? question : {};
+    const options = Array.isArray(questionRecord.options)
+      ? questionRecord.options.map(stringValue).filter(Boolean).slice(0, 3)
+      : [];
+    return {
+      question: stringValue(questionRecord.question),
+      options,
+      correctIndex:
+        typeof questionRecord.correctIndex === "number"
+          ? Math.trunc(questionRecord.correctIndex)
+          : 0,
+      explanation: stringValue(questionRecord.explanation),
+      skillTested: stringValue(questionRecord.skillTested),
+    };
+  });
+
+  if (
+    normalized.length !== 6 ||
+    normalized.some(
+      (question) =>
+        !question.question ||
+        question.options.length !== 3 ||
+        question.correctIndex < 0 ||
+        question.correctIndex > 2 ||
+        !question.explanation,
+    )
+  ) {
+    const error = new Error("Hosted AI returned an unusable final quiz.");
+    error.name = "provider_error";
+    throw error;
+  }
+
+  return normalized;
+};
+
+const buildEnhancedBlueprintPrompt = ({
+  requestText,
+  topic,
+  titleFallback,
+  folderNameFallback,
+  userKnownTopics,
+  outputLanguage,
+}: {
+  requestText: string;
+  topic: string;
+  titleFallback: string;
+  folderNameFallback: string;
+  userKnownTopics: string[];
+  outputLanguage?: StudyMeshLanguageCode;
+}): string => `Create an enhanced compact factual blueprint for a StudyMesh Study Guide.
+
+Return strict JSON only:
+{
+  "title": "...",
+  "folderName": "...",
+  "emoji": "one emoji",
+  "quickStart": { "keyIdea": "...", "quickSummary": "two short paragraphs" },
+  "pages": [
+    {
+      "title": "01 - ...",
+      "keyFacts": ["fact"],
+      "conciseNotes": "100-140 words",
+      "examplesNeeded": ["example"],
+      "quizSkills": ["skill"]
+    }
+  ]
+}
+
+Rules:
+- ${createAiOutputLanguageInstruction(outputLanguage)}
+- Exactly 3 pages.
+- Mini owns facts and structure; a cheaper model will only expand this blueprint.
+- keyFacts must contain 8-10 precise, conservative facts per page.
+- conciseNotes must include enough factual material to anchor expansion.
+- quickStart is mini-owned: explain the concept directly, not the guide structure.
+- quickSummary target is 70-105 words. Every paragraph must end with a complete sentence.
+- If close to a word target, finish the current sentence cleanly instead of ending mid-thought.
+- Prefer a shorter complete sentence over using the whole word budget.
+- Learner context candidates: ${userKnownTopics.length ? userKnownTopics.join(", ") : "none"}.
+- Include comparison material in keyFacts/conciseNotes when a learner context candidate clearly reduces confusion.
+- Do not force irrelevant analogies inside the pages, but prepare useful bridge material when there is a good context match.
+- For programming, framework, DevOps, IaC, config, or command-line topics, examplesNeeded must request at least one real minimal code/config/command snippet.
+- Never ask for placeholder snippets. Forbidden examples include "example_resource", "arguments would go here", "component logic goes here", "configuration would go here", and "pseudo-code placeholder".
+- For non-code topics, examplesNeeded should request concrete examples, timelines, scenarios, or comparisons instead of code.
+- Include enough final quiz skills for a 6-question application quiz.
+
+Title fallback: ${titleFallback}
+Folder fallback: ${folderNameFallback}
+Learner request/topic:
+${topic}
+
+Full hosted Study Guide request:
+${requestText.slice(0, 18000)}`;
+
+const buildEnhancedPagePrompt = ({
+  topic,
+  blueprint,
+  page,
+  outputLanguage,
+}: {
+  topic: string;
+  blueprint: EnhancedStudyGuideBlueprint;
+  page: EnhancedStudyGuideBlueprintPage;
+  outputLanguage?: StudyMeshLanguageCode;
+}): string => `Expand one Study Guide page using only this enhanced mini-authored blueprint.
+
+Return strict JSON only:
+{ "title": "...", "summary": "one preview sentence", "rawNotes": "Markdown lesson notes" }
+
+Rules:
+- ${createAiOutputLanguageInstruction(outputLanguage)}
+- Write 280-360 words.
+- Finish every paragraph and the final line as a complete sentence.
+- If close to the word target, finish the current sentence cleanly instead of ending mid-thought.
+- Do not end rawNotes with a comma, colon, "and", "or", "but", "because", "while", or an unfinished list.
+- Do not add facts not present or directly implied by keyFacts/conciseNotes/examplesNeeded.
+- Add connective explanation, examples, and learner-friendly structure.
+- If examplesNeeded requests code/config/commands, include a real fenced snippet with a language tag.
+- Never write placeholder snippets or placeholder comments like "arguments would go here", "component logic goes here", or "configuration would go here".
+- If the blueprint does not provide enough detail for a real snippet, use a concrete prose example instead of fake code.
+- Do not include quiz questions in rawNotes.
+
+Topic: ${topic}
+
+Full blueprint:
+${JSON.stringify(blueprint, null, 2)}
+
+Page blueprint:
+${JSON.stringify(page, null, 2)}`;
+
+const buildEnhancedGuideSource = ({
+  topic,
+  blueprint,
+  pages,
+}: {
+  topic: string;
+  blueprint: EnhancedStudyGuideBlueprint;
+  pages: EnhancedStudyGuidePage[];
+}): string =>
+  [
+    `Learner request: ${topic}`,
+    `Guide topic: ${blueprint.title}`,
+    `Quick Start: ${blueprint.quickStart.keyIdea}\n${blueprint.quickStart.quickSummary}`,
+    ...pages.map((page, index) =>
+      [`Page ${index + 1}: ${page.title}`, page.rawNotes].join("\n"),
+    ),
+  ].join("\n\n---\n\n");
+
+const buildEnhancedQuizPrompt = ({
+  topic,
+  source,
+  bridgeBlocks,
+  outputLanguage,
+}: {
+  topic: string;
+  source: string;
+  bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"];
+  outputLanguage?: StudyMeshLanguageCode;
+}): string => `Create 6 strong multiple-choice questions for the final page of this Study Guide.
+
+Return strict JSON only:
+{
+  "questions": [
+    {
+      "question": "...",
+      "options": ["...", "...", "..."],
+      "correctIndex": 0,
+      "explanation": "...",
+      "skillTested": "..."
+    }
+  ]
+}
+
+Rules:
+- ${createAiOutputLanguageInstruction(outputLanguage)}
+- Create exactly 6 questions.
+- Each question has exactly 3 options.
+- Avoid literal recall of copied sentences.
+- Prefer application, comparison, error diagnosis, prediction, or transfer.
+- Do not ask "According to the page..." or "Which statement is directly stated...".
+- Every question must be answerable from the guide.
+- Keep explanations short and specific.
+
+Topic: ${topic}
+
+Guide:
+${source.slice(0, 18000)}
+
+Context bridge notes:
+${JSON.stringify(bridgeBlocks || [], null, 2)}`;
+
+const createMinimalSourceSummary = (
+  page: EnhancedStudyGuidePage,
+  blueprintPage: EnhancedStudyGuideBlueprintPage,
+) => ({
+  title: `${page.title} source summary`,
+  bullets: (blueprintPage.keyFacts.length
+    ? blueprintPage.keyFacts
+    : [page.summary]
+  ).slice(0, 3),
+});
+
+const createMinimalConceptRecap = (
+  page: EnhancedStudyGuidePage,
+  blueprintPage: EnhancedStudyGuideBlueprintPage,
+) => ({
+  title: `${page.title} concept recap`,
+  sections: [
+    {
+      title: "Core ideas",
+      bullets: (blueprintPage.keyFacts.length
+        ? blueprintPage.keyFacts
+        : [page.summary]
+      ).slice(0, 4),
+      example: blueprintPage.examplesNeeded[0] || "",
+    },
+  ],
+});
+
+const createQuizPractice = (questions: EnhancedStudyGuideQuizQuestion[]) => ({
+  multipleChoice: questions.map((question) => ({
+    question: question.question,
+    options: question.options,
+    correctOptionIndex: question.correctIndex,
+    explanation: question.explanation,
+    hint: question.skillTested || "Use the guide's examples and comparisons.",
+    optionFeedback: question.options.map((option, index) => ({
+      option,
+      explanation:
+        index === question.correctIndex
+          ? question.explanation
+          : "This option misses the guide's main distinction.",
+    })),
+  })),
+});
+
+const buildEnhancedStudyGuideText = ({
+  blueprint,
+  pages,
+  questions,
+  quickStart,
+}: {
+  blueprint: EnhancedStudyGuideBlueprint;
+  pages: EnhancedStudyGuidePage[];
+  questions: EnhancedStudyGuideQuizQuestion[];
+  quickStart: NonNullable<HostedAiGatewayResponse["quickStart"]>;
+}): string =>
+  JSON.stringify({
+    title: blueprint.title,
+    folderName: blueprint.folderName,
+    emoji: blueprint.emoji,
+    quickStart,
+    dashboards: pages.map((page, index) => ({
+      title: page.title,
+      summary: page.summary,
+      rawNotes: page.rawNotes,
+      dashboardPurpose: index === pages.length - 1 ? "finalReview" : "lesson",
+      practiceType: index === pages.length - 1 ? "quiz" : "none",
+      layoutReason:
+        index === pages.length - 1
+          ? "Final Study Guide page includes one source-grounded quiz."
+          : "Lean Study Guide lesson page.",
+      contentMode:
+        index === pages.length - 1 ? "synthesisReview" : "conceptLesson",
+      sourceSummary: createMinimalSourceSummary(
+        page,
+        blueprint.pages[index] || blueprint.pages[0],
+      ),
+      conceptRecap: createMinimalConceptRecap(
+        page,
+        blueprint.pages[index] || blueprint.pages[0],
+      ),
+      practice:
+        index === pages.length - 1
+          ? createQuizPractice(questions)
+          : { multipleChoice: [] },
+      flashcards: [],
+    })),
+  });
 
 const convertSchemaType = (type: unknown): string | undefined => {
   if (typeof type !== "string") {
@@ -1866,6 +2346,295 @@ const mapFailure = (
   };
 };
 
+const generateEnhancedHostedStudyGuide = async ({
+  usageRequest,
+  callStage,
+  metadataFlags,
+}: {
+  usageRequest: HostedAiUsageRequest;
+  callStage: (
+    stage: HostedAiStage,
+    stageRequest: HostedAiGatewayRequest,
+  ) => Promise<string>;
+  metadataFlags: JsonObject;
+}): Promise<{
+  text: string;
+  quickStart: HostedAiGatewayResponse["quickStart"];
+  bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"];
+}> => {
+  metadataFlags.generationStrategy = "enhanced_4_plus_2_v1";
+
+  const requestText = getHostedRequestText(usageRequest);
+  const topic = extractHostedStudyGuideTopic(requestText);
+  const titleFallback =
+    extractPromptField(requestText, "Path title fallback") || "Study Guide";
+  const folderNameFallback =
+    extractPromptField(
+      requestText,
+      "Folder name fallback if you cannot infer a better one",
+    ) || titleFallback;
+  const safeKnownTopics = sanitizeUserKnownTopics(
+    usageRequest.quickStartOptions?.userKnownTopics,
+  );
+
+  let blueprint: EnhancedStudyGuideBlueprint;
+  try {
+    blueprint = normalizeEnhancedBlueprint(
+      parseJsonRecord(
+        await callStage("study_guide_blueprint", {
+          ...usageRequest,
+          responseSchema: ENHANCED_STUDY_GUIDE_BLUEPRINT_SCHEMA,
+          parts: [
+            {
+              text: buildEnhancedBlueprintPrompt({
+                requestText,
+                topic,
+                titleFallback,
+                folderNameFallback,
+                userKnownTopics: safeKnownTopics,
+                outputLanguage: usageRequest.outputLanguage,
+              }),
+            },
+          ],
+        }),
+      ),
+      titleFallback,
+      folderNameFallback,
+    );
+  } catch (error) {
+    metadataFlags.blueprintUnusable = true;
+    throw error;
+  }
+
+  const pages: EnhancedStudyGuidePage[] = [];
+  for (const page of blueprint.pages) {
+    try {
+      pages.push(
+        normalizeEnhancedPage(
+          parseJsonRecord(
+            await callStage("study_guide_page_expand", {
+              ...usageRequest,
+              responseSchema: ENHANCED_STUDY_GUIDE_PAGE_SCHEMA,
+              parts: [
+                {
+                  text: buildEnhancedPagePrompt({
+                    topic,
+                    blueprint,
+                    page,
+                    outputLanguage: usageRequest.outputLanguage,
+                  }),
+                },
+              ],
+            }),
+          ),
+          page.title,
+        ),
+      );
+    } catch (error) {
+      metadataFlags.pageExpansionUnusable = true;
+      throw error;
+    }
+  }
+
+  let quickStart = blueprint.quickStart;
+  let bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"] = [];
+  let relevanceDecision:
+    | ReturnType<typeof parseStudyGuideQuickStartRelevanceDecision>
+    | undefined;
+  const baseSource = buildEnhancedGuideSource({ topic, blueprint, pages });
+
+  if (safeKnownTopics.length) {
+    try {
+      relevanceDecision = parseStudyGuideQuickStartRelevanceDecision(
+        await callStage("quick_start_relevance_auto", {
+          ...usageRequest,
+          responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
+          parts: [
+            {
+              text: buildStudyGuideQuickStartRelevancePrompt({
+                title: blueprint.title,
+                prompt: topic,
+                source: baseSource,
+                userKnownTopics: safeKnownTopics,
+                bridgeMode: "auto",
+                outputLanguage: usageRequest.outputLanguage,
+              }),
+            },
+          ],
+        }),
+        safeKnownTopics,
+      );
+    } catch {
+      metadataFlags.quickStartRelevanceSkipped = true;
+    }
+  }
+
+  if (
+    relevanceDecision?.shouldUseKnownTopic &&
+    relevanceDecision.knownTopicsForQuickStart.length
+  ) {
+    try {
+      const personalizedQuickStart = parseStudyGuideQuickStart(
+        await callStage("quick_start_personalized", {
+          ...usageRequest,
+          responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
+          parts: [
+            {
+              text: buildStudyGuideQuickStartPrompt({
+                title: blueprint.title,
+                source: baseSource,
+                relevanceDecision,
+                bridgeMode: "auto",
+                outputLanguage: usageRequest.outputLanguage,
+              }),
+            },
+          ],
+        }),
+      );
+
+      if (personalizedQuickStart) {
+        metadataFlags.quickStartPersonalizedRewriteUsed = true;
+        quickStart = personalizedQuickStart;
+      }
+    } catch {
+      metadataFlags.quickStartPersonalizedRewriteSkipped = true;
+    }
+
+    const eligibleDashboard = pages[1];
+    if (eligibleDashboard) {
+      try {
+        bridgeBlocks = parseStudyGuideKnowledgeBridgeBlocks(
+          await callStage("knowledge_bridge_blocks", {
+            ...usageRequest,
+            responseSchema: STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
+            parts: [
+              {
+                text: buildStudyGuideKnowledgeBridgeBlocksPrompt({
+                  title: blueprint.title,
+                  prompt: topic,
+                  dashboards: [
+                    {
+                      dashboardIndex: 1,
+                      title: eligibleDashboard.title,
+                      summary: eligibleDashboard.summary,
+                      rawNotes: eligibleDashboard.rawNotes,
+                    },
+                  ],
+                  relevanceDecision,
+                  bridgeMode: "auto",
+                  outputLanguage: usageRequest.outputLanguage,
+                }),
+              },
+            ],
+          }),
+          pages.length,
+          [1],
+        );
+      } catch {
+        bridgeBlocks = [];
+        metadataFlags.knowledgeBridgeSkipped = true;
+      }
+    }
+  } else if (safeKnownTopics.length) {
+    try {
+      const forcedRelevanceDecision =
+        ensureForcedStudyGuideQuickStartRelevanceDecision(
+          parseStudyGuideQuickStartRelevanceDecision(
+            await callStage("quick_start_relevance_force", {
+              ...usageRequest,
+              responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
+              parts: [
+                {
+                  text: buildStudyGuideQuickStartRelevancePrompt({
+                    title: blueprint.title,
+                    prompt: topic,
+                    source: baseSource,
+                    userKnownTopics: safeKnownTopics,
+                    bridgeMode: "force",
+                    outputLanguage: usageRequest.outputLanguage,
+                  }),
+                },
+              ],
+            }),
+            safeKnownTopics,
+          ),
+          safeKnownTopics,
+        );
+
+      if (forcedRelevanceDecision) {
+        const forcedBridge = parseStudyGuideQuickStart(
+          await callStage("quick_start_forced_bridge", {
+            ...usageRequest,
+            responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
+            parts: [
+              {
+                text: buildStudyGuideQuickStartPrompt({
+                  title: blueprint.title,
+                  source: baseSource,
+                  relevanceDecision: forcedRelevanceDecision,
+                  bridgeMode: "force",
+                  outputLanguage: usageRequest.outputLanguage,
+                }),
+              },
+            ],
+          }),
+        );
+
+        if (forcedBridge) {
+          quickStart = { ...quickStart, forcedBridge };
+        }
+      }
+    } catch {
+      metadataFlags.forcedBridgeSkipped = true;
+    }
+  }
+
+  const sourceWithQuickStart = buildEnhancedGuideSource({
+    topic,
+    blueprint: { ...blueprint, quickStart },
+    pages,
+  });
+  let questions: EnhancedStudyGuideQuizQuestion[];
+  try {
+    questions = normalizeEnhancedQuizQuestions(
+      parseJsonRecord(
+        await callStage("study_guide_final_quiz", {
+          ...usageRequest,
+          responseSchema: ENHANCED_STUDY_GUIDE_QUIZ_SCHEMA,
+          parts: [
+            {
+              text: buildEnhancedQuizPrompt({
+                topic,
+                source: sourceWithQuickStart,
+                bridgeBlocks,
+                outputLanguage: usageRequest.outputLanguage,
+              }),
+            },
+          ],
+        }),
+      ),
+    );
+  } catch (error) {
+    metadataFlags.finalQuizUnusable = true;
+    throw error;
+  }
+
+  metadataFlags.pageCount = pages.length;
+  metadataFlags.finalQuizQuestionCount = questions.length;
+  metadataFlags.contextBridgeBlockCount = bridgeBlocks?.length || 0;
+
+  return {
+    text: buildEnhancedStudyGuideText({
+      blueprint,
+      pages,
+      questions,
+      quickStart,
+    }),
+    quickStart,
+    bridgeBlocks,
+  };
+};
+
 const handleGenerate = async (
   userId: string,
   request: HostedAiGatewayRequest,
@@ -1879,7 +2648,7 @@ const handleGenerate = async (
 
   const provider = getHostedTextProvider();
   const mainStage: HostedAiStage = includeQuickStart
-    ? "study_guide_main"
+    ? "study_guide_blueprint"
     : request.stage || getStageForSurface(request.surface as HostedAiSurface);
   const model = getHostedTextModelForStage(provider, mainStage);
   const usageModel = getHostedUsageModelLabel(provider, model);
@@ -1891,7 +2660,7 @@ const handleGenerate = async (
     provider,
     usageModel,
   );
-  let providerCallCount = 1;
+  let providerCallCount = includeQuickStart ? 0 : 1;
   const stageCosts: HostedAiStageCost[] = [];
   const metadataFlags: JsonObject = {};
   const callStage = async (
@@ -1899,242 +2668,45 @@ const handleGenerate = async (
     stageRequest: HostedAiGatewayRequest,
   ): Promise<string> => {
     const stageModel = getHostedTextModelForStage(provider, stage);
-    const result = await callHostedTextModel(
-      stageRequest,
-      provider,
-      stageModel,
-      stage,
-    );
-    stageCosts.push(result.stageCost);
-    return result.text;
+    try {
+      const result = await callHostedTextModel(
+        stageRequest,
+        provider,
+        stageModel,
+        stage,
+      );
+      stageCosts.push(result.stageCost);
+      return result.text;
+    } finally {
+      if (includeQuickStart) {
+        providerCallCount += 1;
+      }
+    }
   };
 
   try {
-    const text = await callStage(mainStage, usageRequest);
-    let quickStart: HostedAiGatewayResponse["quickStart"] | undefined;
-    let bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"] | undefined;
-
     if (includeQuickStart) {
-      const safeKnownTopics = sanitizeUserKnownTopics(
-        request.quickStartOptions?.userKnownTopics,
-      );
-      const guideRecord = parseJsonRecord(text);
-      quickStart = parseStudyGuideQuickStart(
-        JSON.stringify(
-          isObject(guideRecord?.quickStart) ? guideRecord.quickStart : {},
-        ),
-      );
-      if (!quickStart) {
-        metadataFlags.quickStartFallbackUsed = true;
-        quickStart = parseStudyGuideQuickStart(
-          await callStage("quick_start_fallback", {
-            ...usageRequest,
-            responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
-            parts: [
-              {
-                text: buildStudyGuideQuickStartPrompt({
-                  title: "Study Guide",
-                  source: text,
-                  bridgeMode: "auto",
-                  outputLanguage: request.outputLanguage,
-                }),
-              },
-            ],
-          }).finally(() => {
-            providerCallCount += 1;
-          }),
-        );
-      }
-      const relevanceDecision = safeKnownTopics.length
-        ? parseStudyGuideQuickStartRelevanceDecision(
-            await callStage("quick_start_relevance_auto", {
-              ...usageRequest,
-              responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
-              parts: [
-                {
-                  text: buildStudyGuideQuickStartRelevancePrompt({
-                    title: "Study Guide",
-                    prompt: getHostedRequestText(request),
-                    source: text,
-                    userKnownTopics: safeKnownTopics,
-                    bridgeMode: "auto",
-                    outputLanguage: request.outputLanguage,
-                  }),
-                },
-              ],
-            }).finally(() => {
-              providerCallCount += 1;
-            }),
-            safeKnownTopics,
-          )
-        : undefined;
+      const enhanced = await generateEnhancedHostedStudyGuide({
+        usageRequest,
+        callStage,
+        metadataFlags,
+      });
+      metadataFlags.providerCallCount = providerCallCount;
+      const status =
+        (await finishHostedUsage(
+          userId,
+          requestId,
+          "succeeded",
+          undefined,
+          undefined,
+          providerCallCount,
+          createUsageMetadata(stageCosts, metadataFlags),
+        ).catch(() => undefined)) || started.status;
 
-      if (
-        quickStart &&
-        relevanceDecision?.shouldUseKnownTopic &&
-        relevanceDecision.knownTopicsForQuickStart.length
-      ) {
-        try {
-          const personalizedQuickStart = parseStudyGuideQuickStart(
-            await callStage("quick_start_personalized", {
-              ...usageRequest,
-              responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
-              parts: [
-                {
-                  text: buildStudyGuideQuickStartPrompt({
-                    title: "Study Guide",
-                    source: text,
-                    relevanceDecision,
-                    bridgeMode: "auto",
-                    outputLanguage: request.outputLanguage,
-                  }),
-                },
-              ],
-            }).finally(() => {
-              providerCallCount += 1;
-            }),
-          );
-
-          if (personalizedQuickStart) {
-            metadataFlags.quickStartPersonalizedRewriteUsed = true;
-            quickStart = personalizedQuickStart;
-          }
-        } catch {
-          metadataFlags.quickStartPersonalizedRewriteSkipped = true;
-        }
-      }
-
-      if (
-        quickStart &&
-        safeKnownTopics.length &&
-        !(
-          relevanceDecision?.shouldUseKnownTopic &&
-          relevanceDecision.knownTopicsForQuickStart.length
-        )
-      ) {
-        try {
-          const forcedRelevanceDecision =
-            parseStudyGuideQuickStartRelevanceDecision(
-              await callStage("quick_start_relevance_force", {
-                ...usageRequest,
-                responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
-                parts: [
-                  {
-                    text: buildStudyGuideQuickStartRelevancePrompt({
-                      title: "Study Guide",
-                      prompt: getHostedRequestText(request),
-                      source: text,
-                      userKnownTopics: safeKnownTopics,
-                      bridgeMode: "force",
-                      outputLanguage: request.outputLanguage,
-                    }),
-                  },
-                ],
-              }).finally(() => {
-                providerCallCount += 1;
-              }),
-              safeKnownTopics,
-            );
-          const safeForcedRelevanceDecision =
-            ensureForcedStudyGuideQuickStartRelevanceDecision(
-              forcedRelevanceDecision,
-              safeKnownTopics,
-            );
-
-          if (safeForcedRelevanceDecision) {
-            const forcedBridge = parseStudyGuideQuickStart(
-              await callStage("quick_start_forced_bridge", {
-                ...usageRequest,
-                responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
-                parts: [
-                  {
-                    text: buildStudyGuideQuickStartPrompt({
-                      title: "Study Guide",
-                      source: text,
-                      relevanceDecision: safeForcedRelevanceDecision,
-                      bridgeMode: "force",
-                      outputLanguage: request.outputLanguage,
-                    }),
-                  },
-                ],
-              }).finally(() => {
-                providerCallCount += 1;
-              }),
-            );
-
-            if (forcedBridge) {
-              quickStart = { ...quickStart, forcedBridge };
-            }
-          }
-        } catch {
-          metadataFlags.forcedBridgeSkipped = true;
-        }
-      }
-
-      if (
-        relevanceDecision?.shouldUseKnownTopic &&
-        relevanceDecision.knownTopicsForQuickStart.length
-      ) {
-        const dashboards = Array.isArray(guideRecord?.dashboards)
-          ? guideRecord.dashboards
-              .filter((dashboard): dashboard is JsonObject =>
-                isObject(dashboard),
-              )
-              .map((dashboard, index) => ({
-                dashboardIndex: index,
-                title: stringValue(dashboard.title),
-                summary: stringValue(dashboard.summary),
-                rawNotes: stringValue(dashboard.rawNotes),
-                dashboardRole: stringValue(dashboard.dashboardRole),
-                practiceType: stringValue(dashboard.practiceType),
-              }))
-          : [];
-        const eligibleDashboards = dashboards.filter((dashboard) => {
-          const role = dashboard.dashboardRole || "normal";
-          return (
-            dashboard.dashboardIndex > 0 &&
-            role === "normal" &&
-            dashboard.practiceType === "none"
-          );
-        });
-
-        if (eligibleDashboards.length) {
-          try {
-            bridgeBlocks = parseStudyGuideKnowledgeBridgeBlocks(
-              await callStage("knowledge_bridge_blocks", {
-                ...usageRequest,
-                responseSchema: STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
-                parts: [
-                  {
-                    text: buildStudyGuideKnowledgeBridgeBlocksPrompt({
-                      title:
-                        stringValue(guideRecord?.folderName) || "Study Guide",
-                      prompt: getHostedRequestText(request),
-                      dashboards: eligibleDashboards,
-                      relevanceDecision,
-                      bridgeMode: "auto",
-                      outputLanguage: request.outputLanguage,
-                    }),
-                  },
-                ],
-              }).finally(() => {
-                providerCallCount += 1;
-              }),
-              dashboards.length,
-              eligibleDashboards.map((dashboard) => dashboard.dashboardIndex),
-            );
-          } catch {
-            bridgeBlocks = [];
-          }
-        }
-      }
+      return { ok: true, ...enhanced, status };
     }
-    if (includeQuickStart && !quickStart) {
-      metadataFlags.quickStartUnusable = true;
-      const error = new Error("Hosted AI returned no Study Guide Quick Start.");
-      error.name = "provider_error";
-      throw error;
-    }
+
+    const text = await callStage(mainStage, usageRequest);
 
     const status =
       (await finishHostedUsage(
@@ -2147,9 +2719,10 @@ const handleGenerate = async (
         createUsageMetadata(stageCosts, metadataFlags),
       ).catch(() => undefined)) || started.status;
 
-    return { ok: true, text, quickStart, bridgeBlocks, status };
+    return { ok: true, text, status };
   } catch (error) {
     const mapped = mapFailure(error);
+    metadataFlags.providerCallCount = providerCallCount;
 
     await finishHostedUsage(
       userId,

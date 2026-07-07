@@ -516,6 +516,28 @@ const getQuickCreateEstimateSeconds = (
   return 60
 }
 
+const getDashboardChatFailureMessage = (error: unknown): string => {
+  const message = error instanceof Error ? error.message : ''
+
+  if (/sign in|session expired|unauthorized|rejected the request/i.test(message)) {
+    return 'The chat request needs a fresh sign-in before it can answer.'
+  }
+
+  if (/not configured|api key|provider rejected/i.test(message)) {
+    return 'Hosted AI is not configured correctly on this server yet.'
+  }
+
+  if (/rate limited|try again later/i.test(message)) {
+    return 'Hosted AI is rate limited right now. Try again later.'
+  }
+
+  if (/structured output|output format|JSON/i.test(message)) {
+    return 'The model returned an unusable response. Try the question again.'
+  }
+
+  return 'I could not answer from this dashboard yet.'
+}
+
 const DashboardChatPanel = ({
   dashboard,
   messages,
@@ -2343,9 +2365,10 @@ const DashboardChatPanel = ({
         )
       }
     } catch (err) {
+      const failureMessage = getDashboardChatFailureMessage(err)
       updateMessage(pendingMessageId, (message) => ({
         ...message,
-        content: 'I could not answer from this dashboard yet.',
+        content: failureMessage,
         pending: false,
       }))
       setError(

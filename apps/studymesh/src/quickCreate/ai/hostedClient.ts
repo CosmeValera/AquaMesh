@@ -85,7 +85,16 @@ const formatHostedAiError = (
   }
 
   if (code === 'not_authenticated') {
-    return new Error(message || 'Sign in to use hosted Study Credits.')
+    return new Error(
+      message ||
+        'Your hosted AI session expired. Sign in again, then retry the request.',
+    )
+  }
+
+  if (response?.status === 401) {
+    return new Error(
+      'Your hosted AI session expired or the gateway rejected the request. Refresh, sign in again, then retry.',
+    )
   }
 
   if (code === 'not_configured') {
@@ -97,6 +106,18 @@ const formatHostedAiError = (
   if (code === 'rate_limited') {
     return new Error(
       message || 'Hosted AI is rate limited right now. Try again later.',
+    )
+  }
+
+  if (code === 'provider_auth') {
+    return new Error(
+      'Hosted AI reached the server, but the hosted model provider rejected the API key. Check the server OpenAI/Cerebras env var, restart the dev server if needed, then retry.',
+    )
+  }
+
+  if (code === 'output_format') {
+    return new Error(
+      'Hosted AI returned unusable structured output. Try again; if it repeats, use the stronger model for this surface or reduce the request size.',
     )
   }
 

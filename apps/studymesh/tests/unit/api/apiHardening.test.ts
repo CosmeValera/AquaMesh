@@ -760,6 +760,182 @@ describe('API payment and hosted AI hardening', () => {
     })
   })
 
+  it('classifies hosted model authentication failures separately', async () => {
+    vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
+    vi.stubEnv('HOSTED_OPENAI_API_KEY', 'bad-hosted-openai-key')
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        const target = String(url)
+
+        if (target.includes('/auth/v1/user')) {
+          return Promise.resolve(jsonResponse({ id: 'user-1' }))
+        }
+
+        if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+          return Promise.resolve(
+            jsonResponse({
+              status: {
+                studyCredits: 8,
+                introSeen: true,
+              },
+            }),
+          )
+        }
+
+        if (target.includes('/rest/v1/rpc/hosted_ai_finish_usage')) {
+          return Promise.resolve(
+            jsonResponse({
+              status: {
+                studyCredits: 7,
+                introSeen: true,
+              },
+            }),
+          )
+        }
+
+        if (target.includes('api.openai.com')) {
+          return Promise.resolve(
+            jsonResponse(
+              { error: { message: 'Incorrect API key provided.' } },
+              false,
+              401,
+            ),
+          )
+        }
+
+        return Promise.resolve(
+          jsonResponse({ message: 'unexpected url' }, false, 500),
+        )
+      }),
+    )
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer [REDACTED:Bearer token]',
+        },
+        body: {
+          action: 'generate',
+          surface: 'chat',
+          parts: [{ text: 'Explain this dashboard.' }],
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(502)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: {
+        code: 'provider_auth',
+        message: 'Incorrect API key provided.',
+      },
+    })
+  })
+
+  it('classifies hosted structured output failures separately', async () => {
+    vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
+    vi.stubEnv('HOSTED_OPENAI_API_KEY', 'hosted-openai-key')
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+    vi.stubEnv('UNREAL_SPEECH_API_KEY', 'tts-key')
+
+    const jsonResponse = (payload: unknown, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        const target = String(url)
+
+        if (target.includes('/auth/v1/user')) {
+          return Promise.resolve(jsonResponse({ id: 'user-1' }))
+        }
+
+        if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+          return Promise.resolve(
+            jsonResponse({
+              status: {
+                studyCredits: 8,
+                introSeen: true,
+              },
+            }),
+          )
+        }
+
+        if (target.includes('/rest/v1/rpc/hosted_ai_finish_usage')) {
+          return Promise.resolve(
+            jsonResponse({
+              status: {
+                studyCredits: 7,
+                introSeen: true,
+              },
+            }),
+          )
+        }
+
+        if (target.includes('api.openai.com')) {
+          return Promise.resolve(
+            jsonResponse({
+              choices: [{ message: { content: 'not json' } }],
+            }),
+          )
+        }
+
+        return Promise.resolve(
+          jsonResponse({ message: 'unexpected url' }, false, 500),
+        )
+      }),
+    )
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer [REDACTED:Bearer token]',
+        },
+        body: {
+          action: 'generatePodcast',
+          surface: 'podcast',
+          parts: [{ text: 'Podcast source content. '.repeat(30) }],
+          podcastOptions: {
+            studyGuideId: 'guide-1',
+            sourceTitle: 'Podcast Source',
+            sourceScope: 'currentPage',
+          },
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(502)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: {
+        code: 'output_format',
+        message: 'Hosted AI returned an unreadable podcast script.',
+      },
+    })
+  })
+
   it('ignores caller supplied hosted AI request ids for usage accounting', async () => {
     vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
     vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')

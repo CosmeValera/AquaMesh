@@ -2333,6 +2333,28 @@ const mapFailure = (
     }
 
     if (error.name === "provider_error") {
+      if (
+        /401|unauthori[sz]ed|authentication|api key|invalid key|incorrect api key/i.test(
+          message,
+        )
+      ) {
+        return {
+          statusCode: 502,
+          response: errorResponse("provider_auth", message),
+        };
+      }
+
+      if (
+        /output format|invalid json|malformed json|unreadable podcast script|too little podcast dialogue|unusable Study Guide/i.test(
+          message,
+        )
+      ) {
+        return {
+          statusCode: 502,
+          response: errorResponse("output_format", message),
+        };
+      }
+
       return {
         statusCode: 502,
         response: errorResponse("provider_error", message),

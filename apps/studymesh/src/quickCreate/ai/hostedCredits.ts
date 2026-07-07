@@ -170,6 +170,8 @@ export interface HostedAiGatewayResponse {
       | 'not_configured'
       | 'insufficient_credits'
       | 'invalid_request'
+      | 'output_format'
+      | 'provider_auth'
       | 'provider_error'
       | 'rate_limited'
       | 'server_error'

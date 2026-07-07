@@ -1,0 +1,910 @@
+{
+  "runAt": "2026-07-07T11:27:46.641Z",
+  "models": {
+    "mini": "gpt-5.4-mini",
+    "nano": "gpt-5.4-nano"
+  },
+  "surfaces": {
+    "chat": {
+      "summary": {
+        "calls": 5,
+        "totalCostUsd": 0.0012261,
+        "totalCostCents": 0.1226,
+        "avgCostCents": 0.0245
+      },
+      "calls": [
+        {
+          "surface": "chat",
+          "strategy": "nano_smalltalk",
+          "stage": "chat",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 2046,
+          "responseCharacters": 178,
+          "inputTokens": 403,
+          "cachedInputTokens": 0,
+          "outputTokens": 44,
+          "totalTokens": 447,
+          "estimatedCostUsd": 0.0001356,
+          "estimatedCostCents": 0.0136,
+          "latencyMs": 3241
+        },
+        {
+          "surface": "chat",
+          "strategy": "nano_grounded_normal",
+          "stage": "chat",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 2109,
+          "responseCharacters": 419,
+          "inputTokens": 415,
+          "cachedInputTokens": 0,
+          "outputTokens": 84,
+          "totalTokens": 499,
+          "estimatedCostUsd": 0.000188,
+          "estimatedCostCents": 0.0188,
+          "latencyMs": 2088
+        },
+        {
+          "surface": "chat",
+          "strategy": "nano_source_gap_latest",
+          "stage": "chat",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 2078,
+          "responseCharacters": 172,
+          "inputTokens": 410,
+          "cachedInputTokens": 0,
+          "outputTokens": 39,
+          "totalTokens": 449,
+          "estimatedCostUsd": 0.00013075,
+          "estimatedCostCents": 0.0131,
+          "latencyMs": 1470
+        },
+        {
+          "surface": "chat",
+          "strategy": "nano_multi_source_reasoning",
+          "stage": "chat",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 2818,
+          "responseCharacters": 890,
+          "inputTokens": 545,
+          "cachedInputTokens": 0,
+          "outputTokens": 169,
+          "totalTokens": 714,
+          "estimatedCostUsd": 0.00032025,
+          "estimatedCostCents": 0.032,
+          "latencyMs": 2542
+        },
+        {
+          "surface": "chat",
+          "strategy": "mini_source_gap_compare",
+          "stage": "chat",
+          "model": "gpt-5.4-mini",
+          "promptCharacters": 2078,
+          "responseCharacters": 158,
+          "inputTokens": 410,
+          "cachedInputTokens": 0,
+          "outputTokens": 32,
+          "totalTokens": 442,
+          "estimatedCostUsd": 0.0004515,
+          "estimatedCostCents": 0.0452,
+          "latencyMs": 1611
+        }
+      ],
+      "outputs": [
+        {
+          "strategy": "nano_smalltalk",
+          "answer": "You’re welcome! If you want, tell me what part of the Angular Basics dashboard you’re working on (components, bindings, forms, routing, or HTTP), and I’ll help you understand it.",
+          "evaluation": {
+            "wordCount": 29,
+            "hasGap": false,
+            "citations": [],
+            "issueCount": 1,
+            "issues": [
+              "grounded answer has no citation"
+            ],
+            "quality": 4
+          }
+        },
+        {
+          "strategy": "nano_grounded_normal",
+          "answer": "Use a **service** instead of keeping logic in a component when the logic is **reusable** or involves **data access** that multiple components might need. In Angular, services are meant to hold reusable logic and handle data access, while components should focus on combining the class, template, and styles and interacting with component state. Services are also provided to components via **dependency injection**. [1]",
+          "evaluation": {
+            "wordCount": 63,
+            "hasGap": false,
+            "citations": [
+              "[1]"
+            ],
+            "issueCount": 1,
+            "issues": [
+              "answer may be truncated"
+            ],
+            "quality": 4
+          }
+        },
+        {
+          "strategy": "nano_source_gap_latest",
+          "answer": "SOURCE_GAP: The provided “Angular Basics” dashboard content doesn’t mention Angular 22 or any “signal APIs,” so there isn’t enough information here to explain what changed.",
+          "evaluation": {
+            "wordCount": 25,
+            "hasGap": true,
+            "citations": [],
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          }
+        },
+        {
+          "strategy": "nano_multi_source_reasoning",
+          "answer": "Ansible and Terraform solve different automation layers: Ansible is agentless automation that connects to existing Linux (via SSH) or Windows (via WinRM) hosts, uses an inventory to target groups, and runs playbooks that map hosts to ordered tasks—ideally calling modules like package, service, template, and copy—so you can configure software and systems safely with idempotence (re-running shouldn’t cause extra changes) [1]. Terraform is infrastructure as code for provisioning and changing cloud/platform resources: you declare providers, resources, variables, outputs, and modules, Terraform builds a dependency graph, compares configuration with protected state, and produces a plan before applying changes to converge infrastructure toward the desired configuration [2]. Memory hook: “Ansible = configure the machines you already have; Terraform = build the infrastructure you want.”",
+          "evaluation": {
+            "wordCount": 122,
+            "hasGap": false,
+            "citations": [
+              "[1]",
+              "[2]"
+            ],
+            "issueCount": 1,
+            "issues": [
+              "answer may be truncated"
+            ],
+            "quality": 4
+          }
+        },
+        {
+          "strategy": "mini_source_gap_compare",
+          "answer": "SOURCE_GAP: The provided dashboard context only covers general Angular basics and does not include any information about Angular 22 or changes to signal APIs.",
+          "evaluation": {
+            "wordCount": 24,
+            "hasGap": true,
+            "citations": [],
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          }
+        }
+      ]
+    },
+    "quiz": {
+      "summary": {
+        "calls": 5,
+        "totalCostUsd": 0.0152626,
+        "totalCostCents": 1.5263,
+        "avgCostCents": 0.3053
+      },
+      "calls": [
+        {
+          "surface": "quiz",
+          "strategy": "nano_current_medium_30",
+          "stage": "quick_create",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 1661,
+          "responseCharacters": 15430,
+          "inputTokens": 425,
+          "cachedInputTokens": 0,
+          "outputTokens": 2981,
+          "totalTokens": 3406,
+          "estimatedCostUsd": 0.00381125,
+          "estimatedCostCents": 0.3811,
+          "latencyMs": 21594
+        },
+        {
+          "surface": "quiz",
+          "strategy": "nano_lean_8",
+          "stage": "quick_create",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 1470,
+          "responseCharacters": 4962,
+          "inputTokens": 410,
+          "cachedInputTokens": 0,
+          "outputTokens": 982,
+          "totalTokens": 1392,
+          "estimatedCostUsd": 0.0013095,
+          "estimatedCostCents": 0.1309,
+          "latencyMs": 6434
+        },
+        {
+          "surface": "quiz",
+          "strategy": "mini_blueprint_10",
+          "stage": "quiz_blueprint",
+          "model": "gpt-5.4-mini",
+          "promptCharacters": 1853,
+          "responseCharacters": 5641,
+          "inputTokens": 462,
+          "cachedInputTokens": 0,
+          "outputTokens": 1022,
+          "totalTokens": 1484,
+          "estimatedCostUsd": 0.0049455,
+          "estimatedCostCents": 0.4946,
+          "latencyMs": 8618
+        },
+        {
+          "surface": "quiz",
+          "strategy": "mini_blueprint_nano_10",
+          "stage": "quick_create",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 7468,
+          "responseCharacters": 4794,
+          "inputTokens": 1568,
+          "cachedInputTokens": 0,
+          "outputTokens": 899,
+          "totalTokens": 2467,
+          "estimatedCostUsd": 0.00143735,
+          "estimatedCostCents": 0.1437,
+          "latencyMs": 9093
+        },
+        {
+          "surface": "quiz",
+          "strategy": "mini_lean_8_compare",
+          "stage": "quick_create",
+          "model": "gpt-5.4-mini",
+          "promptCharacters": 1470,
+          "responseCharacters": 3661,
+          "inputTokens": 410,
+          "cachedInputTokens": 0,
+          "outputTokens": 767,
+          "totalTokens": 1177,
+          "estimatedCostUsd": 0.003759,
+          "estimatedCostCents": 0.3759,
+          "latencyMs": 6738
+        }
+      ],
+      "outputs": [
+        {
+          "strategy": "nano_current_medium_30",
+          "evaluation": {
+            "count": 33,
+            "applicationLike": 20,
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          },
+          "sample": [
+            {
+              "question": "You’re building a structured web app in Angular. Which choice best matches Angular’s role?",
+              "options": [
+                "A TypeScript-based front-end framework for structured web applications",
+                "A Java-based back-end framework for REST APIs",
+                "A CSS preprocessor for styling web pages",
+                "A database engine for storing application data"
+              ],
+              "correctIndex": 0,
+              "explanation": "Angular is described as a TypeScript-based front-end framework used to build structured web applications, not a back-end framework, styling tool, or database engine.",
+              "skillTested": "Framework understanding"
+            },
+            {
+              "question": "In Angular, a component is best thought of as combining which three parts?",
+              "options": [
+                "A class, an HTML template, and styles",
+                "A database schema, a server route, and a stylesheet",
+                "A controller, a view, and a model",
+                "A service, a guard, and a resolver"
+              ],
+              "correctIndex": 0,
+              "explanation": "The source states that components combine a class, an HTML template, and styles, which together define behavior, markup, and appearance.",
+              "skillTested": "Component architecture"
+            },
+            {
+              "question": "You want the template to show a value from component state. Which mechanism from the source is intended for that?",
+              "options": [
+                "Interpolation",
+                "Direct DOM manipulation",
+                "Manual string concatenation in the browser",
+                "CSS variables"
+              ],
+              "correctIndex": 0,
+              "explanation": "Interpolation is listed as a way templates connect to component state, enabling values to be displayed in the HTML.",
+              "skillTested": "Template binding"
+            }
+          ]
+        },
+        {
+          "strategy": "nano_lean_8",
+          "evaluation": {
+            "count": 8,
+            "applicationLike": 4,
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          },
+          "sample": [
+            {
+              "question": "You need to automate configuration on a set of Linux servers without installing an agent. Which approach best matches the described automation model?",
+              "options": [
+                "Install a local agent on each server and push commands",
+                "Use an agentless system that connects over SSH to Linux hosts",
+                "Use RDP to connect to Linux hosts",
+                "Run a cron job on your laptop to execute tasks remotely without connections"
+              ],
+              "correctIndex": 1,
+              "explanation": "The source states that Ansible is agentless automation that usually connects to Linux hosts over SSH. Installing agents or using unrelated protocols contradicts that model.",
+              "skillTested": "Applying core concept (agentless + SSH) to a scenario"
+            },
+            {
+              "question": "Your team has both Linux and Windows targets. How should you plan connectivity based on the source?",
+              "options": [
+                "Use SSH for both Linux and Windows",
+                "Use WinRM for both Linux and Windows",
+                "Use SSH for Linux hosts and WinRM for Windows hosts",
+                "Use only local execution with no remote connections"
+              ],
+              "correctIndex": 2,
+              "explanation": "The source explicitly says Ansible usually connects to Linux hosts over SSH and Windows hosts over WinRM. Using the wrong protocol would break connectivity assumptions.",
+              "skillTested": "Selecting correct connection method for mixed environments"
+            },
+            {
+              "question": "A new engineer says, “Inventory is where I define the tasks to run.” What is the best correction?",
+              "options": [
+                "Inventory defines target hosts and groups; tasks are defined in playbooks",
+                "Inventory defines ordered tasks; playbooks only list variables",
+                "Inventory defines modules; playbooks define inventory",
+                "Inventory is optional; playbooks contain everything"
+              ],
+              "correctIndex": 0,
+              "explanation": "The source explains that inventory defines target hosts and groups, while playbooks map hosts to ordered tasks. Tasks belong in playbooks, not inventory.",
+              "skillTested": "Error-fixing: distinguishing inventory vs playbooks"
+            }
+          ]
+        },
+        {
+          "strategy": "mini_blueprint_nano_10",
+          "blueprintConcepts": 10,
+          "evaluation": {
+            "count": 10,
+            "applicationLike": 3,
+            "issueCount": 1,
+            "issues": [
+              "Q3 smells text-literal"
+            ],
+            "quality": 3
+          },
+          "sample": [
+            {
+              "question": "You need to create and update cloud resources (e.g., networks, instances, and other platform components). Which tool best matches this goal?",
+              "options": [
+                "Ansible",
+                "Terraform",
+                "A mix of Terraform and Ansible for the same step",
+                "Neither tool"
+              ],
+              "correctIndex": 1,
+              "explanation": "Terraform is infrastructure as code for provisioning cloud and platform resources and is strongest for creating and changing infrastructure resources.",
+              "skillTested": "Terraform purpose and declarative model"
+            },
+            {
+              "question": "A team wants to manage host-level software configuration (packages/services and related setup) on existing machines. Which tool is typically the better fit?",
+              "options": [
+                "Terraform",
+                "Ansible",
+                "Terraform only, because it is declarative",
+                "Neither tool"
+              ],
+              "correctIndex": 1,
+              "explanation": "Ansible is commonly used to configure software inside machines, while Terraform focuses on provisioning infrastructure resources.",
+              "skillTested": "Terraform vs Ansible scope"
+            },
+            {
+              "question": "Which statement best describes Terraform’s configuration approach?",
+              "options": [
+                "Terraform is imperative and runs commands directly on hosts",
+                "Terraform is declarative and declares desired infrastructure",
+                "Terraform is mainly for installing software inside machines",
+                "Terraform requires an agent on managed hosts"
+              ],
+              "correctIndex": 1,
+              "explanation": "Terraform is declarative and is used to provision infrastructure resources; it is not a general configuration management tool.",
+              "skillTested": "Terraform purpose and declarative model"
+            }
+          ]
+        },
+        {
+          "strategy": "mini_lean_8_compare",
+          "evaluation": {
+            "count": 8,
+            "applicationLike": 6,
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          },
+          "sample": [
+            {
+              "question": "You need to manage a Linux server with Ansible without installing an agent on it. What connection method is the usual fit?",
+              "options": [
+                "SSH",
+                "WinRM",
+                "RDP"
+              ],
+              "correctIndex": 0,
+              "explanation": "Ansible is agentless and usually connects to Linux hosts over SSH, so SSH is the standard choice here.",
+              "skillTested": "Choosing the right connection method"
+            },
+            {
+              "question": "A teammate says, \"I'll put the server list inside the playbook so we don't need anything else.\" What is the better place to define target hosts and groups?",
+              "options": [
+                "Inventory",
+                "Handlers",
+                "Templates",
+                "Tags"
+              ],
+              "correctIndex": 0,
+              "explanation": "Inventory is where Ansible defines target hosts and groups. Playbooks then use that inventory to run ordered tasks against those hosts.",
+              "skillTested": "Understanding inventory vs playbooks"
+            },
+            {
+              "question": "A playbook needs to install a package, start a service, and place a config file. Which approach best matches Ansible's preferred style?",
+              "options": [
+                "Use package, service, and copy/template modules",
+                "Use only raw shell commands for everything",
+                "Put the commands in a single long script file",
+                "Run the tasks manually on each host"
+              ],
+              "correctIndex": 0,
+              "explanation": "Ansible prefers calling modules like package, service, template, and copy instead of raw shell commands when possible because modules are more structured and safer.",
+              "skillTested": "Choosing modules over shell commands"
+            }
+          ]
+        }
+      ]
+    },
+    "flashcard": {
+      "summary": {
+        "calls": 5,
+        "totalCostUsd": 0.00884895,
+        "totalCostCents": 0.8849,
+        "avgCostCents": 0.177
+      },
+      "calls": [
+        {
+          "surface": "flashcard",
+          "strategy": "nano_current_medium_40",
+          "stage": "quick_create",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 1238,
+          "responseCharacters": 6622,
+          "inputTokens": 315,
+          "cachedInputTokens": 0,
+          "outputTokens": 1260,
+          "totalTokens": 1575,
+          "estimatedCostUsd": 0.001638,
+          "estimatedCostCents": 0.1638,
+          "latencyMs": 7295
+        },
+        {
+          "surface": "flashcard",
+          "strategy": "nano_lean_10",
+          "stage": "quick_create",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 1216,
+          "responseCharacters": 2701,
+          "inputTokens": 315,
+          "cachedInputTokens": 0,
+          "outputTokens": 502,
+          "totalTokens": 817,
+          "estimatedCostUsd": 0.0006905,
+          "estimatedCostCents": 0.0691,
+          "latencyMs": 4435
+        },
+        {
+          "surface": "flashcard",
+          "strategy": "nano_technical_16",
+          "stage": "quick_create",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 1187,
+          "responseCharacters": 3519,
+          "inputTokens": 319,
+          "cachedInputTokens": 0,
+          "outputTokens": 716,
+          "totalTokens": 1035,
+          "estimatedCostUsd": 0.0009588,
+          "estimatedCostCents": 0.0959,
+          "latencyMs": 4309
+        },
+        {
+          "surface": "flashcard",
+          "strategy": "mini_blueprint_12",
+          "stage": "flashcard_blueprint",
+          "model": "gpt-5.4-mini",
+          "promptCharacters": 1250,
+          "responseCharacters": 5444,
+          "inputTokens": 344,
+          "cachedInputTokens": 0,
+          "outputTokens": 974,
+          "totalTokens": 1318,
+          "estimatedCostUsd": 0.004641,
+          "estimatedCostCents": 0.4641,
+          "latencyMs": 7533
+        },
+        {
+          "surface": "flashcard",
+          "strategy": "mini_blueprint_nano_12",
+          "stage": "quick_create",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 7409,
+          "responseCharacters": 2848,
+          "inputTokens": 1522,
+          "cachedInputTokens": 0,
+          "outputTokens": 493,
+          "totalTokens": 2015,
+          "estimatedCostUsd": 0.00092065,
+          "estimatedCostCents": 0.0921,
+          "latencyMs": 3845
+        }
+      ],
+      "outputs": [
+        {
+          "strategy": "nano_current_medium_40",
+          "evaluation": {
+            "count": 35,
+            "reasoningLike": 32,
+            "issueCount": 6,
+            "issues": [
+              "Card 15 back is too thin",
+              "Card 21 back is too thin",
+              "Card 22 back is too thin",
+              "Card 28 back is too thin",
+              "Card 31 back is too thin",
+              "Card 32 back is too thin"
+            ],
+            "quality": 4
+          },
+          "sample": [
+            {
+              "front": "Use Helm to manage Kubernetes packages—what is Helm’s role?",
+              "back": "Helm is a Kubernetes package manager that helps you package and manage Kubernetes resources as charts.",
+              "concept": "Helm"
+            },
+            {
+              "front": "Choose the best description of a chart—what does a Helm chart contain?",
+              "back": "A chart is a reusable package of Kubernetes manifests plus templates and default values.",
+              "concept": "Chart"
+            },
+            {
+              "front": "Explain how values.yaml affects a chart’s configuration.",
+              "back": "values.yaml provides default configuration that templates use when rendering.",
+              "concept": "values.yaml"
+            },
+            {
+              "front": "Choose how users can change chart behavior—how do overrides work?",
+              "back": "Users override values during helm install or helm upgrade to change what the templates render.",
+              "concept": "Values overrides"
+            }
+          ]
+        },
+        {
+          "strategy": "nano_lean_10",
+          "evaluation": {
+            "count": 10,
+            "reasoningLike": 8,
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          },
+          "sample": [
+            {
+              "front": "Use the timeline: What event marks the start of the Roman Empire under Augustus?",
+              "back": "In 27 BCE, Augustus became the first emperor, transitioning from the Roman Republic to the Empire while keeping republican forms in appearance.",
+              "concept": "Transition from Republic to Empire"
+            },
+            {
+              "front": "Choose the best description: How did Augustus rule while preserving republican forms?",
+              "back": "He became emperor but maintained republican-looking institutions, so the government appeared similar even though imperial rule had begun.",
+              "concept": "Augustus and republican forms"
+            },
+            {
+              "front": "Compare: What roles did military power and roads play in governing the empire?",
+              "back": "Military power helped control territories, while roads supported movement and administration across large distances.",
+              "concept": "Tools of imperial governance"
+            },
+            {
+              "front": "Diagnose: Why did the empire rely on local elites?",
+              "back": "Local elites helped manage and govern areas within the empire, supporting control over large territories.",
+              "concept": "Local elites in administration"
+            }
+          ]
+        },
+        {
+          "strategy": "nano_technical_16",
+          "evaluation": {
+            "count": 16,
+            "reasoningLike": 15,
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          },
+          "sample": [
+            {
+              "front": "Use Ansible’s connection model: which protocol does Ansible usually use for Linux vs Windows hosts?",
+              "back": "Linux hosts are usually reached over SSH, while Windows hosts are usually reached over WinRM.",
+              "concept": "Agentless connectivity (SSH/WinRM)"
+            },
+            {
+              "front": "Choose the right inventory concept: how do you define which hosts and groups Ansible should target?",
+              "back": "Inventory defines the target hosts and the groups they belong to.",
+              "concept": "Inventory (hosts and groups)"
+            },
+            {
+              "front": "Explain how playbooks relate to hosts and tasks: what do playbooks do?",
+              "back": "Playbooks map hosts to an ordered list of tasks.",
+              "concept": "Playbooks (host-to-task mapping)"
+            },
+            {
+              "front": "Compare approaches: why should you prefer modules like package/service/template/copy over raw shell commands?",
+              "back": "Using modules instead of raw shell commands when possible helps tasks manage desired state more appropriately.",
+              "concept": "Modules vs raw shell commands"
+            }
+          ]
+        },
+        {
+          "strategy": "mini_blueprint_nano_12",
+          "blueprintConcepts": 12,
+          "evaluation": {
+            "count": 12,
+            "reasoningLike": 7,
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          },
+          "sample": [
+            {
+              "front": "What problem does Terraform primarily solve in infrastructure work?",
+              "back": "Terraform is infrastructure as code, used to provision cloud and platform resources, and it’s strongest for creating and changing infrastructure resources.",
+              "concept": "Terraform purpose"
+            },
+            {
+              "front": "When is Terraform a better fit than a configuration management tool?",
+              "back": "It’s strongest for creating and changing infrastructure resources (provisioning). Configuration management tools are more about configuring software inside machines.",
+              "concept": "Terraform vs Ansible"
+            },
+            {
+              "front": "Which elements can be declared in a Terraform configuration?",
+              "back": "Providers, resources, variables, outputs, and modules can be declared in Terraform configuration.",
+              "concept": "Terraform configuration"
+            },
+            {
+              "front": "A Terraform configuration includes more than just resources—what other elements must you account for?",
+              "back": "You should include modules, variables, and outputs (along with providers and resources).",
+              "concept": "Terraform configuration"
+            }
+          ]
+        }
+      ]
+    },
+    "podcast": {
+      "summary": {
+        "calls": 5,
+        "totalCostUsd": 0.0071863,
+        "totalCostCents": 0.7186,
+        "avgCostCents": 0.1437
+      },
+      "calls": [
+        {
+          "surface": "podcast",
+          "strategy": "nano_current_target_520_850",
+          "stage": "podcast_script",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 1425,
+          "responseCharacters": 4020,
+          "inputTokens": 368,
+          "cachedInputTokens": 0,
+          "outputTokens": 843,
+          "totalTokens": 1211,
+          "estimatedCostUsd": 0.00112735,
+          "estimatedCostCents": 0.1127,
+          "latencyMs": 5584
+        },
+        {
+          "surface": "podcast",
+          "strategy": "nano_compact_target_300_450",
+          "stage": "podcast_script",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 1241,
+          "responseCharacters": 2212,
+          "inputTokens": 344,
+          "cachedInputTokens": 0,
+          "outputTokens": 478,
+          "totalTokens": 822,
+          "estimatedCostUsd": 0.0006663,
+          "estimatedCostCents": 0.0666,
+          "latencyMs": 4715
+        },
+        {
+          "surface": "podcast",
+          "strategy": "nano_medium_target_420_620",
+          "stage": "podcast_script",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 1244,
+          "responseCharacters": 2520,
+          "inputTokens": 353,
+          "cachedInputTokens": 0,
+          "outputTokens": 574,
+          "totalTokens": 927,
+          "estimatedCostUsd": 0.0007881,
+          "estimatedCostCents": 0.0788,
+          "latencyMs": 4285
+        },
+        {
+          "surface": "podcast",
+          "strategy": "mini_current_target_520_850",
+          "stage": "podcast_script",
+          "model": "gpt-5.4-mini",
+          "promptCharacters": 1425,
+          "responseCharacters": 3431,
+          "inputTokens": 368,
+          "cachedInputTokens": 0,
+          "outputTokens": 712,
+          "totalTokens": 1080,
+          "estimatedCostUsd": 0.00348,
+          "estimatedCostCents": 0.348,
+          "latencyMs": 5325
+        },
+        {
+          "surface": "podcast",
+          "strategy": "nano_current_long_source",
+          "stage": "podcast_script",
+          "model": "gpt-5.4-nano",
+          "promptCharacters": 2694,
+          "responseCharacters": 3756,
+          "inputTokens": 604,
+          "cachedInputTokens": 0,
+          "outputTokens": 803,
+          "totalTokens": 1407,
+          "estimatedCostUsd": 0.00112455,
+          "estimatedCostCents": 0.1125,
+          "latencyMs": 5222
+        }
+      ],
+      "outputs": [
+        {
+          "strategy": "nano_current_target_520_850",
+          "evaluation": {
+            "turns": 17,
+            "chapters": 6,
+            "transcriptWords": 415,
+            "ttsCharacters": 2784,
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          },
+          "sample": {
+            "title": "StudyMesh: Angular Basics in a Nutshell",
+            "description": "A short, warm recap of core Angular concepts: components, templates and bindings, services with dependency injection, routing, forms, HTTP with Observables, and route optimization with guards, resolvers, and lazy loading.",
+            "firstTurns": [
+              {
+                "speaker": "hostA",
+                "text": "Welcome back to StudyMesh! Today we’re doing a quick, focused walkthrough of Angular Basics—just the essentials, no fluff."
+              },
+              {
+                "speaker": "hostB",
+                "text": "Angular is a TypeScript-based front-end framework for building structured web applications. The key idea is structure: you build with components and clear responsibilities."
+              },
+              {
+                "speaker": "hostA",
+                "text": "Right. In Angular, components combine a class, an HTML template, and styles. So you have the logic in the class, the UI in the template, and the look-and-feel in styles."
+              }
+            ]
+          }
+        },
+        {
+          "strategy": "nano_compact_target_300_450",
+          "evaluation": {
+            "turns": 9,
+            "chapters": 3,
+            "transcriptWords": 232,
+            "ttsCharacters": 1495,
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          },
+          "sample": {
+            "title": "StudyMesh: Photography Basics—Exposure & Composition",
+            "description": "A short, beginner-friendly recap of how aperture, shutter speed, and ISO work together for exposure, plus key composition tools and a simple practice workflow.",
+            "firstTurns": [
+              {
+                "speaker": "hostA",
+                "text": "Welcome back to StudyMesh! Today we’re covering Photography Basics—specifically exposure and composition—so you can make intentional choices instead of guessing."
+              },
+              {
+                "speaker": "hostB",
+                "text": "Let’s start with exposure. Exposure depends on three main settings: aperture, shutter speed, and ISO. Together, they determine how bright your photo looks and how it behaves."
+              },
+              {
+                "speaker": "hostA",
+                "text": "Aperture changes depth of field and the amount of light entering the lens. So if you want more of the scene sharp, you’ll think differently than if you want a softer background."
+              }
+            ]
+          }
+        },
+        {
+          "strategy": "nano_medium_target_420_620",
+          "evaluation": {
+            "turns": 10,
+            "chapters": 6,
+            "transcriptWords": 232,
+            "ttsCharacters": 1488,
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          },
+          "sample": {
+            "title": "StudyMesh: Ansible Basics—Agentless Automation, Inventories, and Idempotence",
+            "description": "A short, warm walkthrough of what Ansible is, how it targets hosts, how playbooks organize tasks, and why idempotence plus reusable features like variables, conditionals, and check/diff modes make automation safer.",
+            "firstTurns": [
+              {
+                "speaker": "hostA",
+                "text": "Welcome back to StudyMesh! Today we’re covering Ansible Basics—what it is and the core ideas you’ll use right away."
+              },
+              {
+                "speaker": "hostB",
+                "text": "Let’s start with the big picture: Ansible is agentless automation. That means you don’t install an agent on the managed machines."
+              },
+              {
+                "speaker": "hostA",
+                "text": "And it connects to hosts using common protocols: usually Linux hosts over SSH, and Windows hosts over WinRM."
+              }
+            ]
+          }
+        },
+        {
+          "strategy": "mini_current_target_520_850",
+          "evaluation": {
+            "turns": 14,
+            "chapters": 6,
+            "transcriptWords": 383,
+            "ttsCharacters": 2463,
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          },
+          "sample": {
+            "title": "Angular Basics: Components, Binding, and Core Building Blocks",
+            "description": "A short, focused StudyMesh podcast recap of Angular fundamentals, including components, templates, services, routing, forms, and data handling.",
+            "firstTurns": [
+              {
+                "speaker": "hostA",
+                "text": "Welcome back to StudyMesh. Today we’re covering Angular basics, and the big idea is simple: Angular is a TypeScript-based front-end framework for building structured web applications."
+              },
+              {
+                "speaker": "hostB",
+                "text": "Right, and one of the first things to understand is the component. In Angular, a component combines a class, an HTML template, and styles. That makes it the core building block for the user interface."
+              },
+              {
+                "speaker": "hostA",
+                "text": "And the template is where the component connects to what the user sees. Angular gives you a few key ways to do that: interpolation, property binding, event binding, and two-way binding."
+              }
+            ]
+          }
+        },
+        {
+          "strategy": "nano_current_long_source",
+          "evaluation": {
+            "turns": 19,
+            "chapters": 3,
+            "transcriptWords": 389,
+            "ttsCharacters": 2629,
+            "issueCount": 0,
+            "issues": [],
+            "quality": 5
+          },
+          "sample": {
+            "title": "StudyMesh Review: Angular, Ansible, and Helm",
+            "description": "A warm, focused recap of key ideas from the Study Guide: Angular’s component model and bindings, Ansible’s agentless automation concepts, and Helm’s chart/release workflow for Kubernetes.",
+            "firstTurns": [
+              {
+                "speaker": "hostA",
+                "text": "Welcome back to StudyMesh! Today we’re doing a quick review of three big topics: Angular, Ansible, and Helm—staying strictly within the study guide."
+              },
+              {
+                "speaker": "hostB",
+                "text": "Let’s start with Angular. Angular is a TypeScript-based front-end framework for building structured web applications."
+              },
+              {
+                "speaker": "hostA",
+                "text": "Right—and the core building block is the component. A component combines a class, an HTML template, and styles."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "pricingSource": "default_openai_rates_mini_0.75in_0.075cached_4.50out_nano_0.20in_0.02cached_1.25out",
+  "repricedAt": "2026-07-07T11:32:37.801Z"
+}

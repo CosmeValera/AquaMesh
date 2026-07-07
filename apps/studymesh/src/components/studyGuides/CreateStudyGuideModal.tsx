@@ -44,8 +44,12 @@ import {
   QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
   QuickCreateAiProvider,
 } from '../../quickCreate/ai'
+import {
+  getHostedAiCreditCost,
+} from '../../quickCreate/ai/hostedCredits'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
 import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
+import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
 import { getAllUserKnownTopics } from '../../profileContext'
 import type { StudyGuideQuickStart } from '../../state/store'
 import { resolveContentLanguage } from '../../language/contentLanguage'
@@ -400,6 +404,8 @@ const combinedDebugTrace = (
 
 const makeStudyPathId = (title: string) =>
   title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'study-path'
+
+const studyGuideCreditCost = getHostedAiCreditCost('study-guide')
 
 const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
   open,
@@ -1455,9 +1461,24 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
             onClick={() => void generatePath()}
             disabled={isGenerating || !prompt.trim()}
           >
-            {isGenerating
-              ? t('studyGuides.generating')
-              : t('studyGuides.generateStudyGuide')}
+            <Stack
+              component="span"
+              direction="row"
+              spacing={1}
+              alignItems="center"
+            >
+              <span>
+                {isGenerating
+                  ? t('studyGuides.generating')
+                  : t('studyGuides.generateStudyGuide')}
+              </span>
+              {!isGenerating && aiProvider === 'hosted' ? (
+                <StudyCreditCostLabel
+                  amount={studyGuideCreditCost}
+                  variant="contained"
+                />
+              ) : null}
+            </Stack>
           </Button>
         ) : (
           <Button variant="contained" onClick={createPath}>

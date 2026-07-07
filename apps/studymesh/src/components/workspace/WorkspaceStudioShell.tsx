@@ -42,6 +42,9 @@ import {
   StudyMaterialResourceType,
   QuickCreateAiProvider,
 } from '../../quickCreate/ai'
+import {
+  getHostedAiCreditCost,
+} from '../../quickCreate/ai/hostedCredits'
 import { useDashboards } from '../Dasboard/DashboardProvider'
 import { createStudyPathContainerState } from '../Dasboard/studyPathContainer'
 import {
@@ -87,6 +90,7 @@ import { augmentQuickCreatePracticeObjects } from '../../quickCreate/practice'
 import { StudyObject } from '../../quickCreate/types'
 import { useResponsiveWorkspaceMode } from './useResponsiveWorkspaceMode'
 import StudyBlockView, { isStudyBlockType } from '../study/StudyBlockView'
+import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
 
 const quickCreateIcons: Record<StudyMaterialResourceType, React.ReactNode> = {
   quiz: <QuizIcon fontSize="small" />,
@@ -94,6 +98,9 @@ const quickCreateIcons: Record<StudyMaterialResourceType, React.ReactNode> = {
   podcast: <PodcastsIcon fontSize="small" />,
   improvedNotes: <AutoStoriesIcon fontSize="small" />,
 }
+
+const studyGuideCreditCost = getHostedAiCreditCost('study-guide')
+const quickCreateCreditCost = getHostedAiCreditCost('quick-create')
 
 const GENERATION_RETRY_STORE_KEY = 'studymesh-generation-retry-snapshots'
 const GENERATION_QUEUE_STORE_KEY = 'studymesh-generation-queue-v1'
@@ -1850,9 +1857,22 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 <Box sx={{ color: accent }}>
                   {quickCreateIcons[resourceType]}
                 </Box>
-                <Typography variant="subtitle2" fontWeight={900}>
-                  {displayLabel}
-                </Typography>
+                <Stack
+                  direction="row"
+                  spacing={0.65}
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Typography variant="subtitle2" fontWeight={900}>
+                    {displayLabel}
+                  </Typography>
+                  {aiProvider === 'hosted' ? (
+                    <StudyCreditCostLabel
+                      amount={quickCreateCreditCost}
+                      variant="badge"
+                    />
+                  ) : null}
+                </Stack>
               </Stack>
             </Paper>
           )
@@ -1943,7 +1963,20 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 fontWeight: 950,
               }}
             >
-              Create Study Guide
+              <Stack
+                component="span"
+                direction="row"
+                spacing={1}
+                alignItems="center"
+              >
+                <span>Create Study Guide</span>
+                {aiProvider === 'hosted' ? (
+                  <StudyCreditCostLabel
+                    amount={studyGuideCreditCost}
+                    variant="contained"
+                  />
+                ) : null}
+              </Stack>
             </Button>
           </Stack>
         </Paper>
@@ -2496,7 +2529,19 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       ).map((resourceType) => (
         <Tooltip
           key={resourceType}
-          title={quickCreateLabels[resourceType]}
+          title={
+            aiProvider === 'hosted'
+              ? (
+                  <Stack direction="row" spacing={0.75} alignItems="center">
+                    <span>{quickCreateLabels[resourceType]} -</span>
+                    <StudyCreditCostLabel
+                      amount={quickCreateCreditCost}
+                      variant="tooltip"
+                    />
+                  </Stack>
+                )
+              : quickCreateLabels[resourceType]
+          }
           placement="right"
         >
           <Box component="span" sx={{ display: 'grid' }}>

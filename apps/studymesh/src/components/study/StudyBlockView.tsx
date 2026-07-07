@@ -32,7 +32,7 @@ import {
 } from '../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
 import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
-import StudyCreditIcon from '../hostedAi/StudyCreditIcon'
+import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
 import {
   getHostedAiPodcastAudioUrl,
   type HostedAiPodcast,
@@ -1063,9 +1063,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       alignItems="center"
       sx={{ display: 'inline-flex' }}
     >
-      <span>{t('practice.explain')} (1</span>
-      <StudyCreditIcon size={14} />
-      <span>)</span>
+      <span>{t('practice.explain')}</span>
+      <StudyCreditCostLabel amount={1} variant="badge" />
     </Stack>
   )
   const focusedQuizStorageKey = useMemo(

@@ -70,6 +70,9 @@ import {
 import { prepareDashboardExternalSourcePageDraft } from '../../dashboardChat/sourcePageDrafts'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
 import {
+  getHostedAiCreditCost,
+} from '../../quickCreate/ai/hostedCredits'
+import {
   quickCreateActionGroups,
   quickCreateActions,
   type QuickCreateAction,
@@ -82,6 +85,7 @@ import { renderMarkdown } from '../study/StudyBlockView'
 import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 import { useAccentColor } from '../../theme/AccentColorContext'
+import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
 
 export type { DashboardAnswerSourceRef } from '../../dashboardChat/askDashboard'
 
@@ -319,6 +323,9 @@ const quickCreateIcons: Record<
   flashcards: <StyleIcon fontSize="small" />,
   podcast: <PodcastsIcon fontSize="small" />,
 }
+
+const quickCreateCreditCost = getHostedAiCreditCost('quick-create')
+const chatCreditCost = getHostedAiCreditCost('chat')
 
 const getQuickCreateGroupLabelKey = (group: QuickCreateActionGroup) => {
   switch (group) {
@@ -623,7 +630,9 @@ const DashboardChatPanel = ({
   const messagesRef = useRef(messages)
   const chatSessionsRef = useRef<DashboardChatSession[]>([])
   const settings = readQuickCreateAiSettings()
-  const isLocalAi = settings.provider === 'local'
+  const currentAiProvider = settings.provider || 'hosted'
+  const isHostedAi = currentAiProvider === 'hosted'
+  const isLocalAi = currentAiProvider === 'local'
   const context = useMemo(
     () =>
       buildDashboardChatContext(
@@ -3038,12 +3047,31 @@ const DashboardChatPanel = ({
                     >
                       {quickCreateIcons[action.id]}
                     </Box>
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="body2" fontWeight={600}>
-                        {active
-                          ? t('chat.thinking')
-                          : t(getQuickCreateActionLabelKey(action.id))}
-                      </Typography>
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        alignItems="center"
+                        justifyContent="space-between"
+                        sx={{ minWidth: 0 }}
+                      >
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          noWrap
+                          sx={{ minWidth: 0 }}
+                        >
+                          {active
+                            ? t('chat.thinking')
+                            : t(getQuickCreateActionLabelKey(action.id))}
+                        </Typography>
+                        {isHostedAi && !active ? (
+                          <StudyCreditCostLabel
+                            amount={quickCreateCreditCost}
+                            variant="badge"
+                          />
+                        ) : null}
+                      </Stack>
                       <Typography
                         variant="caption"
                         color={active ? 'inherit' : 'text.secondary'}
@@ -3369,38 +3397,39 @@ const DashboardChatPanel = ({
     )
   }
 
-  const composerSurfaceSx = useMemo<SxProps<Theme>>(
-    () => ({
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 0.75,
-      p: 1,
-      border: 1,
-      borderColor: 'divider',
-      borderRadius: 1.5,
-      bgcolor:
-        theme.palette.mode === 'dark'
-          ? 'rgba(15,23,42,0.78)'
-          : 'rgba(248,250,252,0.96)',
-      boxShadow:
-        theme.palette.mode === 'dark'
-          ? 'inset 0 1px 0 rgba(255,255,255,0.04)'
-          : 'inset 0 1px 0 rgba(255,255,255,0.9)',
-      cursor: hasAnswerContext ? 'text' : 'default',
-      transition:
-        'border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease',
-      '&:hover': hasAnswerContext
-        ? {
-            borderColor: alpha(theme.palette.primary.main, 0.42),
-          }
-        : undefined,
-      '&:focus-within': hasAnswerContext
-        ? {
-            borderColor: 'primary.main',
-            boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.14)}`,
-          }
-        : undefined,
-    }),
+  const composerSurfaceSx = useMemo(
+    () =>
+      ({
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0.75,
+        p: 1,
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 1.5,
+        bgcolor:
+          theme.palette.mode === 'dark'
+            ? 'rgba(15,23,42,0.78)'
+            : 'rgba(248,250,252,0.96)',
+        boxShadow:
+          theme.palette.mode === 'dark'
+            ? 'inset 0 1px 0 rgba(255,255,255,0.04)'
+            : 'inset 0 1px 0 rgba(255,255,255,0.9)',
+        cursor: hasAnswerContext ? 'text' : 'default',
+        transition:
+          'border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease',
+        '&:hover': hasAnswerContext
+          ? {
+              borderColor: alpha(theme.palette.primary.main, 0.42),
+            }
+          : undefined,
+        '&:focus-within': hasAnswerContext
+          ? {
+              borderColor: 'primary.main',
+              boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.14)}`,
+            }
+          : undefined,
+      }) satisfies SxProps<Theme>,
     [hasAnswerContext, theme.palette.mode, theme.palette.primary.main],
   )
 
@@ -4907,15 +4936,33 @@ const DashboardChatPanel = ({
                   </span>
                 </Tooltip>
               </Stack>
-              <IconButton
-                color="primary"
-                onClick={() => sendQuestion(draft)}
-                disabled={!hasAnswerContext || !draft.trim()}
-                aria-label="Send dashboard question"
-                sx={sendComposerButtonSx}
+              <Tooltip
+                title={
+                  isHostedAi ? (
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <span>Send -</span>
+                      <StudyCreditCostLabel
+                        amount={chatCreditCost}
+                        variant="tooltip"
+                      />
+                    </Stack>
+                  ) : (
+                    'Send'
+                  )
+                }
               >
-                <SendIcon />
-              </IconButton>
+                <span style={{ display: 'inline-flex' }}>
+                  <IconButton
+                    color="primary"
+                    onClick={() => sendQuestion(draft)}
+                    disabled={!hasAnswerContext || !draft.trim()}
+                    aria-label="Send dashboard question"
+                    sx={sendComposerButtonSx}
+                  >
+                    <SendIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </Stack>
           </Box>
           {onQuickCreatePage ? (

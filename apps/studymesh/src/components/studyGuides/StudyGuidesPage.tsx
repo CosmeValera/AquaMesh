@@ -52,6 +52,7 @@ import {
   deleteHostedAiPodcastAudio,
   readQuickCreateAiSettings,
 } from '../../quickCreate/ai'
+import { getHostedAiCreditCost } from '../../quickCreate/ai/hostedCredits'
 import { collectPodcastAudioPathsFromStudyPath } from '../../studyGuides/podcasts'
 import {
   HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT,
@@ -64,6 +65,7 @@ import {
   type StudyGuideCreationStatus,
 } from '../../studyGuides/creationQueue'
 import TopNavBar from '../topnavbar/TopNavBar'
+import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 
 type PendingGuide = StudyGuideCreationJob
@@ -102,6 +104,8 @@ const getGenerationEstimateSeconds = (): number => {
 
 const getActiveAiProvider = () =>
   readQuickCreateAiSettings().provider || 'hosted'
+
+const studyGuideCreditCost = getHostedAiCreditCost('study-guide')
 
 const isVisiblePendingStatus = (status: StudyGuideCreationStatus): boolean =>
   status === 'queued' ||
@@ -166,14 +170,6 @@ const isLocalProvider = (provider: StudyGuideCreationProvider): boolean =>
 const canAutoRetryPendingGuide = (guide: PendingGuide): boolean =>
   guide.provider !== 'hosted' ||
   guide.autoRetryCount < HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT
-
-const getRetryButtonLabel = (
-  guide: PendingGuide,
-  t: ReturnType<typeof useInterfaceText>['t'],
-): string =>
-  guide.provider === 'hosted'
-    ? t('studyGuides.retryCredits')
-    : t('studyGuides.retry')
 
 const formatDuration = (seconds: number): string => {
   const safeSeconds = Math.max(0, Math.floor(seconds))
@@ -1129,7 +1125,22 @@ const StudyGuidesPage = () => {
                             textTransform: 'none',
                           }}
                         >
-                          {getRetryButtonLabel(guide, t)}
+                          {guide.provider === 'hosted' ? (
+                            <Stack
+                              component="span"
+                              direction="row"
+                              spacing={0.75}
+                              alignItems="center"
+                            >
+                              <span>{t('studyGuides.retry')}</span>
+                              <StudyCreditCostLabel
+                                amount={studyGuideCreditCost}
+                                variant="badge"
+                              />
+                            </Stack>
+                          ) : (
+                            t('studyGuides.retry')
+                          )}
                         </Button>
                         <Button
                           variant="text"
@@ -1648,7 +1659,20 @@ const StudyGuidesPage = () => {
             onClick={() => void submitCreateGuide()}
             disabled={!createGuidePrompt.trim()}
           >
-            {t('studyGuides.createGuide')}
+            <Stack
+              component="span"
+              direction="row"
+              spacing={1}
+              alignItems="center"
+            >
+              <span>{t('studyGuides.createGuide')}</span>
+              {getActiveAiProvider() === 'hosted' ? (
+                <StudyCreditCostLabel
+                  amount={studyGuideCreditCost}
+                  variant="contained"
+                />
+              ) : null}
+            </Stack>
           </Button>
         </DialogActions>
       </Dialog>

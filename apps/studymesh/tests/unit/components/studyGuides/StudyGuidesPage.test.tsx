@@ -513,7 +513,7 @@ describe('StudyGuidesPage create flow', () => {
       screen.getByText(HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /retry \(2 sc\)/i }),
+      screen.getByRole('button', { name: /retry 3/i }),
     ).toBeInTheDocument()
   })
 

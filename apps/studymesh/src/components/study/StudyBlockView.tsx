@@ -2595,34 +2595,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 {safeIndex + 1} / {questions.length}
               </Typography>
             </Box>
-            <Stack
-              direction="row"
-              gap={0.75}
-              flexWrap="wrap"
-              justifyContent={{ xs: 'start', sm: 'end' }}
-              sx={{
-                '& .MuiChip-root': {
-                  height: { xs: 28, sm: 32 },
-                  borderRadius: 999,
-                },
-                '& .MuiChip-label': {
-                  px: { xs: 1, sm: 1.5 },
-                  fontSize: { xs: '0.72rem', sm: '0.8125rem' },
-                  fontWeight: 800,
-                },
-              }}
-            >
-              <Chip
-                label={`${t('practice.answered')} ${answered}/${
-                  questions.length
-                }`}
-              />
-              <Chip
-                color="success"
-                label={`${t('practice.correct')} ${correct}`}
-              />
-              <Chip color="error" label={`${t('practice.wrong')} ${wrong}`} />
-            </Stack>
           </Stack>
           <Paper
             variant="outlined"

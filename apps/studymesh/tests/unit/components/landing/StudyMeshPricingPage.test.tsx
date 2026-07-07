@@ -45,27 +45,29 @@ describe('StudyMeshPricingPage', () => {
     expect(
       screen.getByText(/Study Credits pay for hosted generation/i),
     ).toBeInTheDocument()
-    expect(screen.getByLabelText('80 Study Credits')).toBeInTheDocument()
+    expect(screen.getByLabelText('150 Study Credits')).toBeInTheDocument()
     expect(screen.getByText('2 EUR')).toBeInTheDocument()
-    expect(screen.getByText('40 credits / EUR')).toBeInTheDocument()
-    expect(screen.getByLabelText('250 Study Credits')).toBeInTheDocument()
+    expect(screen.getByText('75 credits / EUR')).toBeInTheDocument()
+    expect(screen.getByLabelText('450 Study Credits')).toBeInTheDocument()
     expect(screen.getByText('5 EUR')).toBeInTheDocument()
-    expect(screen.getByText('50 credits / EUR')).toBeInTheDocument()
-    expect(screen.getByLabelText('600 Study Credits')).toBeInTheDocument()
+    expect(screen.getByText('90 credits / EUR')).toBeInTheDocument()
+    expect(screen.getByLabelText('1000 Study Credits')).toBeInTheDocument()
     expect(screen.getByText('10 EUR')).toBeInTheDocument()
-    expect(screen.getByText('60 credits / EUR')).toBeInTheDocument()
+    expect(screen.getByText('100 credits / EUR')).toBeInTheDocument()
     expect(screen.getByText('Starter')).toBeInTheDocument()
     expect(screen.getByText('Popular')).toBeInTheDocument()
     expect(screen.getByText('Best value')).toBeInTheDocument()
     expect(screen.getAllByText('No API key to manage')).toHaveLength(3)
     expect(screen.getAllByText('Use for Study Guides')).toHaveLength(3)
-    expect(screen.getAllByText('Use for Quick Create and chat')).toHaveLength(3)
+    expect(
+      screen.getAllByText('Use for Quiz, Flashcards, Podcast, and chat'),
+    ).toHaveLength(3)
 
-    expect(screen.getByLabelText('20 Study Credits')).toBeInTheDocument()
-    expect(screen.getByLabelText('2 Study Credits')).toBeInTheDocument()
+    expect(screen.getByLabelText('30 Study Credits')).toBeInTheDocument()
+    expect(screen.getByLabelText('3 Study Credits')).toBeInTheDocument()
     expect(screen.getByLabelText('1 Study Credits')).toBeInTheDocument()
     expect(
-      screen.getByText(/only increase through completed credit purchases/i),
+      screen.getByText(/2 Study Guides \+ 1 more creation/i),
     ).toBeInTheDocument()
     expect(screen.getByText(/study guides cost/i)).toBeInTheDocument()
     expect(screen.queryByText(/\bSC\b/)).not.toBeInTheDocument()

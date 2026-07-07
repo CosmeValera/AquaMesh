@@ -95,7 +95,7 @@ const translations = {
     'studyGuides.waiting': 'Waiting',
     'studyGuides.estimate': 'Estimate',
     'studyGuides.retry': 'Retry',
-    'studyGuides.retryCredits': 'Retry (2 SC)',
+    'studyGuides.retryCredits': 'Retry (3 SC)',
     'studyGuides.cancel': 'Cancel',
     'studyGuides.delete': 'Delete',
     'studyGuides.rename': 'Rename',
@@ -129,7 +129,7 @@ const translations = {
     'studyGuides.localAiEstimate':
       'Local AI runs on your device and can be slow. For faster, richer Study Guides, use a Gemini or Cerebras API key.',
     'studyGuides.hostedCreditsNotice':
-      'Hosted AI uses Study Credits. Creating a Study Guide costs 2 credits.',
+      'Hosted AI uses Study Credits. Creating a Study Guide costs 3 credits.',
     'studyGuides.generatingWithLocalAi':
       'Generating dashboards with Google Local AI...',
     'studyGuides.generatingWithProvider': 'Generating ordered dashboards with',
@@ -378,9 +378,9 @@ const translations = {
     'ai.loadingStudyCredits': 'Loading Study Credits...',
     'ai.studyCreditsUnavailable': 'Study Credits unavailable.',
     'ai.yourBalance': 'Your balance',
-    'ai.creditBalance': 'Credit balance',
+    'ai.creditBalance': 'Free daily refill',
     'ai.creditBalanceHelp':
-      'Study Credits only increase when a credit purchase is completed. Creating, retrying, refreshing, or failed hosted generations never add credits back.',
+      'You can create 2 Study Guides + 1 more creation every day for free. If you need more, you can buy a credit pack.',
     'ai.chooseCreditPack': 'Choose a credit pack',
     'ai.creditPackHelp':
       'One-time purchases. Credits stay in your StudyMesh account.',
@@ -512,7 +512,7 @@ const translations = {
     'studyGuides.waiting': 'Esperando',
     'studyGuides.estimate': 'Estimado',
     'studyGuides.retry': 'Reintentar',
-    'studyGuides.retryCredits': 'Reintentar (2 SC)',
+    'studyGuides.retryCredits': 'Reintentar (3 SC)',
     'studyGuides.cancel': 'Cancelar',
     'studyGuides.delete': 'Eliminar',
     'studyGuides.rename': 'Renombrar',
@@ -547,7 +547,7 @@ const translations = {
     'studyGuides.localAiEstimate':
       'La IA local se ejecuta en tu dispositivo y puede ser lenta. Para guías de estudio más rápidas y completas, usa una clave API de Gemini o Cerebras.',
     'studyGuides.hostedCreditsNotice':
-      'La IA alojada usa créditos de estudio. Crear una guía de estudio cuesta 2 créditos.',
+      'La IA alojada usa créditos de estudio. Crear una guía de estudio cuesta 3 créditos.',
     'studyGuides.generatingWithLocalAi':
       'Generando dashboards con IA Local de Google...',
     'studyGuides.generatingWithProvider': 'Generando dashboards ordenados con',
@@ -798,9 +798,9 @@ const translations = {
     'ai.loadingStudyCredits': 'Cargando créditos de estudio...',
     'ai.studyCreditsUnavailable': 'Créditos de estudio no disponibles.',
     'ai.yourBalance': 'Tu saldo',
-    'ai.creditBalance': 'Saldo de créditos',
+    'ai.creditBalance': 'Recarga diaria gratuita',
     'ai.creditBalanceHelp':
-      'Los créditos solo aumentan al completar una compra. Crear, reintentar, actualizar o las generaciones fallidas nunca devuelven créditos.',
+      'Puedes crear 2 guías de estudio + 1 creación más gratis cada día. Si necesitas más, puedes comprar un paquete de créditos.',
     'ai.chooseCreditPack': 'Elige un paquete de créditos',
     'ai.creditPackHelp':
       'Compras únicas. Los créditos permanecen en tu cuenta de StudyMesh.',
@@ -944,7 +944,7 @@ const translationOverrides: Record<
     'studyGuides.waiting': 'En attente',
     'studyGuides.estimate': 'Estimation',
     'studyGuides.retry': 'Réessayer',
-    'studyGuides.retryCredits': 'Réessayer (2 SC)',
+    'studyGuides.retryCredits': 'Réessayer (3 SC)',
     'studyGuides.cancel': 'Annuler',
     'studyGuides.delete': 'Supprimer',
     'studyGuides.rename': 'Renommer',
@@ -979,7 +979,7 @@ const translationOverrides: Record<
     'studyGuides.localAiEstimate':
       'L’IA locale s’exécute sur votre appareil et peut être lente. Pour des guides plus rapides et plus riches, utilisez une clé API Gemini ou Cerebras.',
     'studyGuides.hostedCreditsNotice':
-      'L’IA hébergée utilise des crédits d’étude. Créer un guide coûte 2 crédits.',
+      'L’IA hébergée utilise des crédits d’étude. Créer un guide coûte 3 crédits.',
     'studyGuides.generatingWithLocalAi':
       'Génération des dashboards avec l’IA locale Google...',
     'studyGuides.generatingWithProvider':
@@ -1231,9 +1231,9 @@ const translationOverrides: Record<
     'ai.loadingStudyCredits': 'Chargement des crédits d’étude...',
     'ai.studyCreditsUnavailable': 'Crédits d’étude indisponibles.',
     'ai.yourBalance': 'Votre solde',
-    'ai.creditBalance': 'Solde de crédits',
+    'ai.creditBalance': 'Recharge quotidienne gratuite',
     'ai.creditBalanceHelp':
-      'Les crédits n’augmentent que lorsqu’un achat est terminé. Créer, réessayer, actualiser ou échouer une génération hébergée ne rend jamais les crédits.',
+      'Vous pouvez créer 2 guides d’étude + 1 création de plus gratuitement chaque jour. Si vous avez besoin de plus, vous pouvez acheter un pack de crédits.',
     'ai.chooseCreditPack': 'Choisir un pack de crédits',
     'ai.creditPackHelp':
       'Achats uniques. Les crédits restent dans votre compte StudyMesh.',
@@ -1367,7 +1367,7 @@ const translationOverrides: Record<
     'studyGuides.waiting': 'Warten',
     'studyGuides.estimate': 'Schätzung',
     'studyGuides.retry': 'Erneut versuchen',
-    'studyGuides.retryCredits': 'Erneut versuchen (2 SC)',
+    'studyGuides.retryCredits': 'Erneut versuchen (3 SC)',
     'studyGuides.cancel': 'Abbrechen',
     'studyGuides.delete': 'Löschen',
     'studyGuides.rename': 'Umbenennen',
@@ -1402,7 +1402,7 @@ const translationOverrides: Record<
     'studyGuides.localAiEstimate':
       'Lokale KI läuft auf deinem Gerät und kann langsam sein. Für schnellere und bessere Study Guides nutze einen Gemini- oder Cerebras-API-Schlüssel.',
     'studyGuides.hostedCreditsNotice':
-      'Gehostete KI nutzt Lerncredits. Einen Study Guide zu erstellen kostet 2 Credits.',
+      'Gehostete KI nutzt Lerncredits. Einen Study Guide zu erstellen kostet 3 Credits.',
     'studyGuides.generatingWithLocalAi':
       'Dashboards werden mit Google Local AI generiert...',
     'studyGuides.generatingWithProvider':
@@ -1656,9 +1656,9 @@ const translationOverrides: Record<
     'ai.loadingStudyCredits': 'Study Credits werden geladen...',
     'ai.studyCreditsUnavailable': 'Study Credits nicht verfügbar.',
     'ai.yourBalance': 'Dein Guthaben',
-    'ai.creditBalance': 'Credit-Guthaben',
+    'ai.creditBalance': 'Kostenlose tägliche Auffüllung',
     'ai.creditBalanceHelp':
-      'Study Credits erhöhen sich nur, wenn ein Kauf abgeschlossen ist. Erstellen, Wiederholen, Aktualisieren oder fehlgeschlagene gehostete Generierungen geben keine Credits zurück.',
+      'Du kannst jeden Tag 2 Study Guides + 1 weitere Erstellung kostenlos erstellen. Wenn du mehr brauchst, kannst du ein Credit-Paket kaufen.',
     'ai.chooseCreditPack': 'Credit-Paket auswählen',
     'ai.creditPackHelp':
       'Einmalkäufe. Credits bleiben in deinem StudyMesh-Konto.',

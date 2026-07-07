@@ -2617,7 +2617,7 @@ describe('API payment and hosted AI hardening', () => {
       'Create 6 strong multiple-choice questions',
     )
     expect(rpcBodies).toHaveLength(2)
-    expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 2 })
+    expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 3 })
     expect(rpcBodies[1].p_provider_call_count).toBe(8)
     expect(rpcBodies[1].p_metadata).toMatchObject({
       generationStrategy: 'enhanced_4_plus_2_v1',

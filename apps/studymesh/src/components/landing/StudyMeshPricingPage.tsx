@@ -477,7 +477,7 @@ const StudyMeshPricingPage = () => {
                               {[
                                 'No API key to manage',
                                 'Use for Study Guides',
-                                'Use for Quick Create and chat',
+                                'Use for Quiz, Flashcards, Podcast, and chat',
                               ].map((feature) => (
                                 <Stack
                                   key={feature}
@@ -541,14 +541,14 @@ const StudyMeshPricingPage = () => {
                 <Typography variant="body2" sx={{ color: pricingBrand.muted }}>
                   New accounts start with{' '}
                   <CreditAmount amount={HOSTED_AI_INITIAL_FREE_CREDITS} />.
-                  After that, Study Credits only increase through completed
-                  credit purchases. Study Guides cost{' '}
+                  Study Guides cost{' '}
                   <CreditAmount amount={getHostedAiCreditCost('study-guide')} />
-                  ; Quick Create and chat cost{' '}
+                  ; Quiz, Flashcards, Podcast, and AI Chat cost{' '}
                   <CreditAmount
                     amount={getHostedAiCreditCost('quick-create')}
                   />
-                  .
+                  . Every day, your free refill covers 2 Study Guides + 1 more
+                  creation.
                 </Typography>
               </Paper>
             </Box>

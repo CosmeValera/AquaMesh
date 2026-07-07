@@ -67,6 +67,7 @@ import {
   getHostedAiCreditCost,
   HOSTED_AI_CREDIT_PACKS,
   HOSTED_AI_CREDIT_COSTS,
+  HOSTED_AI_DAILY_FREE_CREDIT_FLOOR,
   HOSTED_AI_INITIAL_FREE_CREDITS,
   HOSTED_AI_REFILL_CURRENCY,
   STUDY_CREDITS_LABEL,
@@ -235,13 +236,14 @@ describe('quick create AI settings', () => {
 
   it('keeps hosted Study Credits costs in the shared contract', () => {
     expect(STUDY_CREDITS_LABEL).toBe('Study Credits')
-    expect(HOSTED_AI_INITIAL_FREE_CREDITS).toBe(20)
+    expect(HOSTED_AI_INITIAL_FREE_CREDITS).toBe(30)
+    expect(HOSTED_AI_DAILY_FREE_CREDIT_FLOOR).toBe(7)
     expect(HOSTED_AI_REFILL_CURRENCY).toBe('eur')
     expect(DEFAULT_HOSTED_AI_CREDIT_PACK_ID).toBe('popular')
     expect(HOSTED_AI_CREDIT_PACKS).toEqual([
       {
         id: 'starter',
-        credits: 80,
+        credits: 150,
         priceCents: 200,
         currency: 'eur',
         label: '2 EUR',
@@ -249,7 +251,7 @@ describe('quick create AI settings', () => {
       },
       {
         id: 'popular',
-        credits: 250,
+        credits: 450,
         priceCents: 500,
         currency: 'eur',
         label: '5 EUR',
@@ -257,7 +259,7 @@ describe('quick create AI settings', () => {
       },
       {
         id: 'value',
-        credits: 600,
+        credits: 1000,
         priceCents: 1000,
         currency: 'eur',
         label: '10 EUR',
@@ -265,12 +267,12 @@ describe('quick create AI settings', () => {
       },
     ])
     expect(HOSTED_AI_CREDIT_COSTS).toEqual({
-      'study-guide': 2,
+      'study-guide': 3,
       'quick-create': 1,
       chat: 1,
       podcast: 1,
     })
-    expect(getHostedAiCreditCost('study-guide')).toBe(2)
+    expect(getHostedAiCreditCost('study-guide')).toBe(3)
     expect(getHostedAiCreditCost('podcast')).toBe(1)
   })
 

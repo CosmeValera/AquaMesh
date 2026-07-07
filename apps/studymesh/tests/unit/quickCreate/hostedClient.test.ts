@@ -28,9 +28,10 @@ const statusPayload = (studyCredits: number) => ({
     accountReady: true,
     introSeen: true,
     studyCredits,
-    initialFreeCredits: 20,
+    initialFreeCredits: 30,
+    dailyFreeCreditFloor: 7,
     costs: {
-      'study-guide': 2,
+      'study-guide': 3,
       'quick-create': 1,
       chat: 1,
       podcast: 1,
@@ -209,9 +210,9 @@ describe('hosted AI client credit failures', () => {
       }),
     ).rejects.toThrow('Model failed.')
 
-    expect(spendListener).toHaveBeenCalledWith(
-      expect.objectContaining({ detail: { credits: 2 } }),
-    )
+    expect(spendListener.mock.calls[0][0]).toMatchObject({
+      detail: { credits: 3 },
+    })
 
     window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, spendListener)
   })
@@ -256,9 +257,9 @@ describe('hosted AI client credit failures', () => {
       keyIdea: 'Backend helps explain the guide topic quickly.',
       quickSummary: 'First short paragraph.\n\nSecond short paragraph.',
     })
-    expect(spendListener).toHaveBeenCalledWith(
-      expect.objectContaining({ detail: { credits: 2 } }),
-    )
+    expect(spendListener.mock.calls[0][0]).toMatchObject({
+      detail: { credits: 3 },
+    })
     const requestBodies = vi
       .mocked(fetch)
       .mock.calls.map(([, init]) => JSON.parse(String(init?.body)))

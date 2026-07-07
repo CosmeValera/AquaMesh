@@ -124,7 +124,7 @@ create table if not exists public.user_workspace_state (
 -- the Supabase account across devices.
 create table if not exists public.hosted_ai_accounts (
   owner_id uuid primary key references public.profiles(id) on delete cascade,
-  study_credit_balance integer not null default 20,
+  study_credit_balance integer not null default 30,
   intro_seen boolean not null default false,
   last_daily_refill_date date not null default current_date,
   created_at timestamptz not null default now(),
@@ -134,7 +134,7 @@ create table if not exists public.hosted_ai_accounts (
 );
 
 alter table public.hosted_ai_accounts
-  alter column study_credit_balance set default 20;
+  alter column study_credit_balance set default 30;
 
 -- Auth-user-backed history. This survives StudyMesh profile deletion so
 -- recreating the profile cannot mint another first-login credit grant. It still
@@ -431,7 +431,7 @@ begin
           and history.last_profile_deleted_at is not null
       )
       then 0
-      else 20
+      else 30
     end
   )
   on conflict on constraint hosted_ai_accounts_pkey do nothing;
@@ -490,7 +490,7 @@ language sql
 immutable
 as $$
   select case p_surface
-    when 'study-guide' then 2
+    when 'study-guide' then 3
     when 'quick-create' then 1
     when 'chat' then 1
     when 'podcast' then 1
@@ -526,7 +526,7 @@ begin
           and history.last_profile_deleted_at is not null
       )
       then 0
-      else 20
+      else 30
     end
   )
   on conflict on constraint hosted_ai_accounts_pkey do nothing;
@@ -536,12 +536,22 @@ begin
   on conflict on constraint hosted_ai_account_history_pkey do update
     set first_profile_created_at = public.hosted_ai_account_history.first_profile_created_at;
 
+  update public.hosted_ai_accounts account
+  set study_credit_balance = case
+        when account.study_credit_balance < 7
+        then greatest(account.study_credit_balance, 7)
+        else account.study_credit_balance
+      end,
+      last_daily_refill_date = current_date
+  where account.owner_id = p_owner_id
+    and account.last_daily_refill_date < current_date;
+
   return query
   select account.owner_id,
          account.study_credit_balance,
          account.intro_seen,
          account.last_daily_refill_date,
-         null::timestamptz
+         (account.last_daily_refill_date + 1)::timestamptz
   from public.hosted_ai_accounts account
   where account.owner_id = p_owner_id;
 end;
@@ -572,7 +582,7 @@ begin
          account.study_credit_balance,
          account.intro_seen,
          account.last_daily_refill_date,
-         null::timestamptz
+         (account.last_daily_refill_date + 1)::timestamptz
   from public.hosted_ai_accounts account
   where account.owner_id = p_owner_id;
 end;

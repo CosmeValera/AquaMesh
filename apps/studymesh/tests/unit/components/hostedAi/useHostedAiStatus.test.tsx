@@ -26,13 +26,14 @@ const makeStatus = (studyCredits: number) => ({
   accountReady: true,
   introSeen: true,
   studyCredits,
-  initialFreeCredits: 20,
+  initialFreeCredits: 30,
+  dailyFreeCreditFloor: 7,
   costs: {
-      'study-guide': 2,
-      'quick-create': 1,
-      chat: 1,
-      podcast: 1,
-    },
+    'study-guide': 3,
+    'quick-create': 1,
+    chat: 1,
+    podcast: 1,
+  },
 })
 
 describe('useHostedAiStatus', () => {

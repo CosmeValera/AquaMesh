@@ -127,6 +127,7 @@ Recommended migration flow:
 - Deleting a widget should hard-delete the widget row and its related `user_widget_versions` rows.
 - Deleting the signed-in StudyMesh profile row should be allowed from the app and should cascade-delete that profile's StudyMesh rows.
 - Recreating a StudyMesh profile for the same Supabase Auth user should start hosted Study Credits at 0 if that profile was deleted before. First-time Auth users still get the normal initial Study Credits grant.
+- Hosted Study Credits have a daily floor allowance: once per day, active accounts below 7 Study Credits are restored up to 7. Failed hosted generations do not refund credits.
 - Deleting an auth user should cascade-delete all StudyMesh rows owned by that user.
 - Conflict default: last-write-wins by `updated_at`, except migration duplicates newer cloud conflicts as described above.
 - User logout should clear in-memory workspace state. Local cache may remain, but should not hydrate into another account without session/user match.

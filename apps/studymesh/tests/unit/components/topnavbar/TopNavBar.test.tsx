@@ -17,9 +17,10 @@ const hostedAiStatus = vi.hoisted(() => ({
   accountReady: true,
   introSeen: true,
   studyCredits: 8,
-  initialFreeCredits: 20,
+  initialFreeCredits: 30,
+  dailyFreeCreditFloor: 7,
   costs: {
-    'study-guide': 2,
+    'study-guide': 3,
     'quick-create': 1,
     chat: 1,
     podcast: 1,
@@ -332,13 +333,14 @@ describe('TopNavBar Component', () => {
             accountReady: true,
             introSeen: true,
             studyCredits: 8,
-            initialFreeCredits: 20,
+            initialFreeCredits: 30,
+            dailyFreeCreditFloor: 7,
             costs: {
-        'study-guide': 2,
-        'quick-create': 1,
-        chat: 1,
-        podcast: 1,
-      },
+              'study-guide': 3,
+              'quick-create': 1,
+              chat: 1,
+              podcast: 1,
+            },
           },
         }),
       }),
@@ -392,17 +394,18 @@ describe('TopNavBar Component', () => {
     expect(
       await screen.findByRole('dialog', { name: /AI Mode/i }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/study guide.*2/i)).toBeInTheDocument()
+    expect(screen.getByText(/study guide.*3/i)).toBeInTheDocument()
     expect(screen.getByText(/quick create.*1/i)).toBeInTheDocument()
     expect(screen.getByText(/chat.*1/i)).toBeInTheDocument()
+    expect(screen.getByText(/podcast.*1/i)).toBeInTheDocument()
     expect(
       screen.getByRole('button', {
-        name: /buy 250 credits for 5 eur/i,
+        name: /buy credits for 5 eur/i,
       }),
     ).toBeEnabled()
     expect(
       screen.getByRole('button', {
-        name: /buy 600 credits for 10 eur/i,
+        name: /buy credits for 10 eur/i,
       }),
     ).toBeEnabled()
     expect(

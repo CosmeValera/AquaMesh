@@ -131,13 +131,14 @@ interface EnhancedStudyGuideQuizQuestion {
 }
 
 const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
-  "study-guide": 2,
+  "study-guide": 3,
   "quick-create": 1,
   chat: 1,
   podcast: 1,
 };
 
-const HOSTED_AI_INITIAL_FREE_CREDITS = 20;
+const HOSTED_AI_INITIAL_FREE_CREDITS = 30;
+const HOSTED_AI_DAILY_FREE_CREDIT_FLOOR = 7;
 export const DEFAULT_CEREBRAS_MODEL = "gpt-oss-120b";
 export const DEFAULT_OPENAI_MODEL = "gpt-5.4-mini";
 export const DEFAULT_OPENAI_STUDY_GUIDE_MODEL = "gpt-5.4-mini";
@@ -430,6 +431,7 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
       introSeen: false,
       studyCredits: 0,
       initialFreeCredits: HOSTED_AI_INITIAL_FREE_CREDITS,
+      dailyFreeCreditFloor: HOSTED_AI_DAILY_FREE_CREDIT_FLOOR,
       costs: HOSTED_AI_CREDIT_COSTS,
     };
   }
@@ -442,6 +444,12 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
         : typeof statusSource.study_credit_balance === "number"
           ? statusSource.study_credit_balance
           : 0;
+  const nextDailyRefillAt =
+    typeof statusSource.nextDailyRefillAt === "string"
+      ? statusSource.nextDailyRefillAt
+      : typeof statusSource.next_daily_refill_at === "string"
+        ? statusSource.next_daily_refill_at
+        : undefined;
 
   return {
     available:
@@ -465,6 +473,13 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
       typeof statusSource.initialFreeCredits === "number"
         ? statusSource.initialFreeCredits
         : HOSTED_AI_INITIAL_FREE_CREDITS,
+    dailyFreeCreditFloor:
+      typeof statusSource.dailyFreeCreditFloor === "number"
+        ? statusSource.dailyFreeCreditFloor
+        : typeof statusSource.daily_free_credit_floor === "number"
+          ? statusSource.daily_free_credit_floor
+          : HOSTED_AI_DAILY_FREE_CREDIT_FLOOR,
+    nextDailyRefillAt,
     costs: HOSTED_AI_CREDIT_COSTS,
     message:
       typeof statusSource.message === "string"

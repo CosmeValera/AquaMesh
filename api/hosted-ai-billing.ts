@@ -48,19 +48,19 @@ const REFILL_CURRENCY = 'eur'
 const CREDIT_PACKS = [
   {
     id: 'starter',
-    credits: 80,
+    credits: 150,
     priceCents: 200,
     envName: 'STRIPE_STUDY_CREDITS_PRICE_ID_2_EUR',
   },
   {
     id: 'popular',
-    credits: 250,
+    credits: 450,
     priceCents: 500,
     envName: 'STRIPE_STUDY_CREDITS_PRICE_ID_5_EUR',
   },
   {
     id: 'value',
-    credits: 600,
+    credits: 1000,
     priceCents: 1000,
     envName: 'STRIPE_STUDY_CREDITS_PRICE_ID_10_EUR',
   },

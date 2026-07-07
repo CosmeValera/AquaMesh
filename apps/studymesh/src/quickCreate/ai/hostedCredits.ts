@@ -31,13 +31,14 @@ export type HostedAiStage =
   | 'quick_create'
 
 export const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
-  'study-guide': 2,
+  'study-guide': 3,
   'quick-create': 1,
   chat: 1,
   podcast: 1,
 }
 
-export const HOSTED_AI_INITIAL_FREE_CREDITS = 20
+export const HOSTED_AI_INITIAL_FREE_CREDITS = 30
+export const HOSTED_AI_DAILY_FREE_CREDIT_FLOOR = 7
 export const HOSTED_AI_REFILL_CURRENCY = 'eur'
 export type HostedAiCreditPackId = 'starter' | 'popular' | 'value'
 
@@ -53,7 +54,7 @@ export interface HostedAiCreditPack {
 export const HOSTED_AI_CREDIT_PACKS: HostedAiCreditPack[] = [
   {
     id: 'starter',
-    credits: 80,
+    credits: 150,
     priceCents: 200,
     currency: HOSTED_AI_REFILL_CURRENCY,
     label: '2 EUR',
@@ -61,7 +62,7 @@ export const HOSTED_AI_CREDIT_PACKS: HostedAiCreditPack[] = [
   },
   {
     id: 'popular',
-    credits: 250,
+    credits: 450,
     priceCents: 500,
     currency: HOSTED_AI_REFILL_CURRENCY,
     label: '5 EUR',
@@ -69,7 +70,7 @@ export const HOSTED_AI_CREDIT_PACKS: HostedAiCreditPack[] = [
   },
   {
     id: 'value',
-    credits: 600,
+    credits: 1000,
     priceCents: 1000,
     currency: HOSTED_AI_REFILL_CURRENCY,
     label: '10 EUR',
@@ -85,6 +86,8 @@ export interface HostedAiStatus {
   introSeen: boolean
   studyCredits: number
   initialFreeCredits: number
+  dailyFreeCreditFloor: number
+  nextDailyRefillAt?: string
   costs: Record<HostedAiSurface, number>
   message?: string
 }

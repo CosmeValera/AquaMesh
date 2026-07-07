@@ -230,11 +230,18 @@ describe('workspace cloud repository', () => {
       'create table if not exists public.hosted_ai_account_history',
     )
     expect(sql).toContain(
+      'study_credit_balance integer not null default 30',
+    )
+    expect(sql).toContain(
+      'alter column study_credit_balance set default 30',
+    )
+    expect(sql).toContain("when 'study-guide' then 3")
+    expect(sql).toContain(
       'owner_id uuid primary key references auth.users(id) on delete cascade',
     )
     expect(sql).toContain('last_profile_deleted_at timestamptz')
     expect(sql).toContain(
-      'when exists ( select 1 from public.hosted_ai_account_history history where history.owner_id = p_owner_id and history.last_profile_deleted_at is not null ) then 0 else 20',
+      'when exists ( select 1 from public.hosted_ai_account_history history where history.owner_id = p_owner_id and history.last_profile_deleted_at is not null ) then 0 else 30',
     )
     expect(sql).toContain(
       'insert into public.profiles (id) values (p_owner_id) on conflict (id) do nothing',
@@ -244,14 +251,11 @@ describe('workspace cloud repository', () => {
     )
     expect(sql).not.toContain('on conflict (owner_id) do update')
     expect(sql).toContain(
-      'when exists ( select 1 from public.hosted_ai_account_history history where history.owner_id = new.id and history.last_profile_deleted_at is not null ) then 0 else 20',
-    )
-    expect(sql).not.toContain(
-      'update public.hosted_ai_accounts account set study_credit_balance = greatest(account.study_credit_balance, 5)',
+      'when exists ( select 1 from public.hosted_ai_account_history history where history.owner_id = new.id and history.last_profile_deleted_at is not null ) then 0 else 30',
     )
   })
 
-  it('keeps Study Credits from increasing outside completed purchases', () => {
+  it('keeps Study Credits from increasing outside allowed grants', () => {
     const sqlPath = resolve(process.cwd(), 'docs/supabase-auth-sync.sql')
     const sql = readFileSync(sqlPath, 'utf8').replace(/\s+/g, ' ')
 
@@ -261,8 +265,14 @@ describe('workspace cloud repository', () => {
     expect(sql).not.toContain(
       'study_credit_balance = account.study_credit_balance + refund_amount',
     )
-    expect(sql).not.toContain(
-      'study_credit_balance = greatest(account.study_credit_balance, 5)',
+    expect(sql).toContain(
+      'when account.study_credit_balance < 7 then greatest(account.study_credit_balance, 7) else account.study_credit_balance end',
+    )
+    expect(sql).toContain(
+      'and account.last_daily_refill_date < current_date',
+    )
+    expect(sql).toContain(
+      '(account.last_daily_refill_date + 1)::timestamptz',
     )
     expect(sql).toContain('credits_refunded = event.credits_refunded')
     expect(sql).toContain(

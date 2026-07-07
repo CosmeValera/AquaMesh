@@ -4,6 +4,7 @@ import AutoStoriesOutlinedIcon from '@mui/icons-material/AutoStoriesOutlined'
 import BoltOutlinedIcon from '@mui/icons-material/BoltOutlined'
 import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
 import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined'
+import PodcastsOutlinedIcon from '@mui/icons-material/PodcastsOutlined'
 
 import { useInterfaceText } from '../../language/interfaceLanguage'
 import HostedAiPricingCards from './HostedAiPricingCards'
@@ -265,6 +266,7 @@ const HostedAiSettingsPanel: React.FC = () => {
           gridTemplateColumns: {
             xs: '1fr',
             sm: 'repeat(3, minmax(0, 1fr))',
+            md: 'repeat(4, minmax(0, 1fr))',
           },
           gap: 1.5,
         }}
@@ -286,6 +288,12 @@ const HostedAiSettingsPanel: React.FC = () => {
           title={t('ai.chatMessage')}
           credits={status.costs.chat}
           creditLabel={creditUnit(status.costs.chat)}
+        />
+        <CostCard
+          icon={<PodcastsOutlinedIcon />}
+          title={t('chat.quickCreatePodcast')}
+          credits={status.costs.podcast}
+          creditLabel={creditUnit(status.costs.podcast)}
         />
       </Box>
 

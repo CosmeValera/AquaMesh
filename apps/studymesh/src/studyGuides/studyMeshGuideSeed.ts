@@ -100,10 +100,10 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
     id: 'studymesh-guide-ai-modes',
     title: '03 - StudyMesh AI Generation Modes',
     sourceMarkdown:
-      '## StudyMesh AI Generation Modes\n### Hosted AI\nHosted AI is the default path for new users. It uses Study Credits stored in your StudyMesh account, so your balance follows you across devices. New users start with 20 Study Credits, and after that Study Credits only increase through completed credit purchases.\n\n### Google Local AI\nRuns on the local Chrome built-in AI model. It is free and can work offline. It is slower and weaker than hosted or own-key strong models, but it keeps generation on your device.\n\n### Own Gemini API token\nUses the user-provided Gemini API key for rich Study Guides and study dashboards.\n\n### Own Cerebras API key\nUses the user-provided Cerebras API key for fast hosted text generation.',
+      '## StudyMesh AI Generation Modes\n### Hosted AI\nHosted AI is the default path for new users. It uses Study Credits stored in your StudyMesh account, so your balance follows you across devices. New users start with 30 Study Credits, and the daily free allowance restores low balances for 2 Study Guides + 1 more creation.\n\n### Google Local AI\nRuns on the local Chrome built-in AI model. It is free and can work offline. It is slower and weaker than hosted or own-key strong models, but it keeps generation on your device.\n\n### Own Gemini API token\nUses the user-provided Gemini API key for rich Study Guides and study dashboards.\n\n### Own Cerebras API key\nUses the user-provided Cerebras API key for fast hosted text generation.',
     summaryTitle: 'AI Mode Summary',
     summaryItems: [
-      'Hosted AI uses Study Credits. Study Guides cost 2 credits, and quick creations or dashboard chat cost 1 credit.',
+      'Hosted AI uses Study Credits. Study Guides cost 3 credits, and quick creations, podcasts, or dashboard chat cost 1 credit.',
       'Google Local AI runs locally, but is slower and weaker than hosted or own-key strong models.',
       'Own Gemini API token is the preferred high-quality generation mode.',
       'Own Cerebras API key is useful for fast hosted text generation.',
@@ -141,7 +141,7 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
       },
       {
         front: 'How do Hosted AI Study Credits work?',
-        back: 'They are account-based credits for hosted AI. New users start with 20, Study Guides cost 2, quick creations or chat cost 1, and credits only increase through completed credit purchases.',
+        back: 'They are account-based credits for hosted AI. New users start with 30, Study Guides cost 3, quick creations, podcasts, or chat cost 1, and the daily free allowance restores low balances.',
       },
     ],
   },

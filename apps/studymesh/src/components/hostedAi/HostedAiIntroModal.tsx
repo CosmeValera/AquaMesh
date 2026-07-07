@@ -107,11 +107,13 @@ const HostedAiIntroModal: React.FC = () => {
             <Chip label={`Study Guide: ${status.costs['study-guide']}`} />
             <Chip label={`Quick Create: ${status.costs['quick-create']}`} />
             <Chip label={`Chat: ${status.costs.chat}`} />
+            <Chip label={`Podcast: ${status.costs.podcast}`} />
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-            You get {status.initialFreeCredits} credits on first login. After
-            that, Study Credits only increase when a credit purchase is
-            completed.
+            You get {status.initialFreeCredits} credits on first login. When
+            your balance is low, the daily free allowance restores enough for 2
+            Study Guides + 1 more creation, daily. Failed generations never add
+            credits back.
           </Typography>
         </Box>
       </DialogContent>

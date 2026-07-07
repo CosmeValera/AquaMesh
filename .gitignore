@@ -41,3 +41,9 @@ tmp/*.log
 .DS_Store
 *.pem
 .env*
+
+# Worktrees
+workspace
+workspaces
+worktree
+worktrees

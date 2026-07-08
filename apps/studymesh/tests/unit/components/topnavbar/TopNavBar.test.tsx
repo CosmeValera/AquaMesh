@@ -94,7 +94,6 @@ vi.mock('../../../../src/components/hostedAi/useHostedAiStatus', () => ({
     loading: false,
     error: '',
     refresh: vi.fn(),
-    markIntroSeen: vi.fn(),
   }),
 }))
 

@@ -3,12 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const hostedAiMocks = vi.hoisted(() => ({
   getHostedAiStatus: vi.fn(),
-  markHostedAiIntroSeen: vi.fn(),
 }))
 
 vi.mock('../../../../src/quickCreate/ai', () => ({
   getHostedAiStatus: hostedAiMocks.getHostedAiStatus,
-  markHostedAiIntroSeen: hostedAiMocks.markHostedAiIntroSeen,
   HOSTED_AI_USAGE_CHANGED_EVENT: 'studymesh-hosted-ai-usage-changed',
   HOSTED_AI_VISUAL_SPEND_EVENT: 'studymesh-hosted-ai-visual-spend',
 }))

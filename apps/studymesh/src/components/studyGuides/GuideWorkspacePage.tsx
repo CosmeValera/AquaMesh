@@ -34,7 +34,6 @@ import DashboardChatPanel, {
 import type { DashboardExternalSource } from '../../dashboardChat/externalSources'
 import TopNavBar from '../topnavbar/TopNavBar'
 import Main from '../Main'
-import HostedAiIntroModal from '../hostedAi/HostedAiIntroModal'
 import {
   appendStudyGuideMarkdownPage,
   createMarkdownStudyGuidePageLayout,
@@ -1046,7 +1045,6 @@ const GuideWorkspacePage = () => {
             </Paper>
           </Box>
         ) : null}
-        <HostedAiIntroModal />
       </Main>
     </Box>
   )

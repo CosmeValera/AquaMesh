@@ -21,9 +21,9 @@ const deleteHostedAiPodcastAudioMock = vi.hoisted(() => vi.fn())
 const useHostedAiStatusMock = vi.hoisted(() => vi.fn())
 
 vi.mock('../../../../src/quickCreate/ai', async () => {
-  const actual = await vi.importActual<typeof import('../../../../src/quickCreate/ai')>(
-    '../../../../src/quickCreate/ai',
-  )
+  const actual = await vi.importActual<
+    typeof import('../../../../src/quickCreate/ai')
+  >('../../../../src/quickCreate/ai')
 
   return {
     ...actual,
@@ -178,7 +178,6 @@ describe('StudyGuidesPage create flow', () => {
       loading: false,
       error: '',
       refresh: vi.fn(),
-      markIntroSeen: vi.fn(),
     })
     const storage = new Map<string, string>()
     vi.mocked(window.localStorage.getItem).mockImplementation(
@@ -463,7 +462,6 @@ describe('StudyGuidesPage create flow', () => {
       loading: false,
       error: '',
       refresh: vi.fn(),
-      markIntroSeen: vi.fn(),
     })
     StudyGuideCreationQueueStorage.upsert({
       id: 'failed-credit-guide',
@@ -506,7 +504,6 @@ describe('StudyGuidesPage create flow', () => {
       loading: false,
       error: '',
       refresh: vi.fn(),
-      markIntroSeen: vi.fn(),
     })
     StudyGuideCreationQueueStorage.upsert({
       id: 'retry-credit-guide',
@@ -601,9 +598,7 @@ describe('StudyGuidesPage create flow', () => {
     expect(
       screen.getByText(HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE),
     ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /retry 3/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /retry 3/i })).toBeInTheDocument()
   })
 
   it('keeps non-retryable provider failures failed for manual retry', async () => {
@@ -625,26 +620,26 @@ describe('StudyGuidesPage create flow', () => {
     const getSummariesSpy = vi
       .spyOn(StudyGuideStorage, 'getSummaries')
       .mockReturnValue([
-      makeStoredGuide({
-        id: 'z-guide',
-        title: 'Zoology',
-        description: 'Animal classification prompt',
-        createdAt: '2026-01-03T00:00:00.000Z',
-      }),
-      makeStoredGuide({
-        id: 'a-guide',
-        title: 'Algebra',
-        description: 'Linear equations prompt',
-        createdAt: '2026-01-01T00:00:00.000Z',
-        emoji: '🔢',
-      }),
-      makeStoredGuide({
-        id: 'm-guide',
-        title: 'Music Theory',
-        description: 'Intervals prompt',
-        createdAt: '2026-01-02T00:00:00.000Z',
-      }),
-    ])
+        makeStoredGuide({
+          id: 'z-guide',
+          title: 'Zoology',
+          description: 'Animal classification prompt',
+          createdAt: '2026-01-03T00:00:00.000Z',
+        }),
+        makeStoredGuide({
+          id: 'a-guide',
+          title: 'Algebra',
+          description: 'Linear equations prompt',
+          createdAt: '2026-01-01T00:00:00.000Z',
+          emoji: '🔢',
+        }),
+        makeStoredGuide({
+          id: 'm-guide',
+          title: 'Music Theory',
+          description: 'Intervals prompt',
+          createdAt: '2026-01-02T00:00:00.000Z',
+        }),
+      ])
     renderStudyGuidesPage('/study-guides')
 
     expect(

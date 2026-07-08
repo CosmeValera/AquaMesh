@@ -5,7 +5,6 @@ const hostedAiClientMock = vi.hoisted(() => ({
   generateHostedAiPodcast: vi.fn(),
   getHostedAiPodcastAudioUrl: vi.fn(),
   getHostedAiStatus: vi.fn(),
-  markHostedAiIntroSeen: vi.fn(),
 }))
 
 vi.mock('../../../src/quickCreate/ai/hostedClient', () => ({
@@ -50,7 +49,6 @@ vi.mock('../../../src/quickCreate/ai/hostedClient', () => ({
   getHostedAiStatus: hostedAiClientMock.getHostedAiStatus,
   generateHostedAiPodcast: hostedAiClientMock.generateHostedAiPodcast,
   getHostedAiPodcastAudioUrl: hostedAiClientMock.getHostedAiPodcastAudioUrl,
-  markHostedAiIntroSeen: hostedAiClientMock.markHostedAiIntroSeen,
 }))
 
 import {
@@ -3247,8 +3245,8 @@ describe('Gemini quick create client', () => {
           index === 1
             ? 'orientationMap'
             : index === 3
-            ? 'practiceCheckpoint'
-            : 'workedExampleLab',
+              ? 'practiceCheckpoint'
+              : 'workedExampleLab',
         sectionPlan: ['Topic map', 'Worked loop', 'Try it'],
         mustTeach: [`Loop idea ${index}`],
         workedExample: `Loop worked example ${index}.`,
@@ -3281,8 +3279,8 @@ describe('Gemini quick create client', () => {
                           index === 1
                             ? 'orientationMap'
                             : index === 3
-                            ? 'practiceCheckpoint'
-                            : 'workedExampleLab',
+                              ? 'practiceCheckpoint'
+                              : 'workedExampleLab',
                         supportArtifacts:
                           index === 1
                             ? {

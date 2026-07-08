@@ -194,16 +194,6 @@ export const getHostedAiStatus = async (): Promise<HostedAiStatus> => {
   return payload.status
 }
 
-export const markHostedAiIntroSeen = async (): Promise<HostedAiStatus> => {
-  const payload = await callHostedAiGateway({ action: 'markIntroSeen' })
-  if (!payload.status) {
-    throw new Error('Hosted AI did not return account status.')
-  }
-
-  dispatchHostedAiUsageChanged()
-  return payload.status
-}
-
 const callHostedAiModelUnchecked = async ({
   surface,
   model,

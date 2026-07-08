@@ -55,10 +55,6 @@ vi.mock('../../../../src/components/Main', () => ({
   ),
 }))
 
-vi.mock('../../../../src/components/hostedAi/HostedAiIntroModal', () => ({
-  default: () => null,
-}))
-
 vi.mock('../../../../src/components/Dasboard/StudyPathWorkspaceView', () => ({
   default: ({
     studyPath,

@@ -98,7 +98,6 @@ export {
   generateHostedAiPodcast,
   getHostedAiPodcastAudioUrl,
   getHostedAiStatus,
-  markHostedAiIntroSeen,
 } from './hostedClient'
 export {
   confirmHostedAiCreditCheckout,

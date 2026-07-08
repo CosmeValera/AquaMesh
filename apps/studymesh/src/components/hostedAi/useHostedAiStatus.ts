@@ -5,7 +5,6 @@ import {
   HOSTED_AI_USAGE_CHANGED_EVENT,
   HOSTED_AI_VISUAL_SPEND_EVENT,
   HostedAiStatus,
-  markHostedAiIntroSeen,
 } from '../../quickCreate/ai'
 import { useAuth } from '../../auth/AuthProvider'
 
@@ -55,7 +54,6 @@ interface UseHostedAiStatusResult {
   loading: boolean
   error: string
   refresh: () => Promise<void>
-  markIntroSeen: () => Promise<void>
 }
 
 export const useHostedAiStatus = (): UseHostedAiStatusResult => {
@@ -139,22 +137,11 @@ export const useHostedAiStatus = (): UseHostedAiStatusResult => {
     }
   }, [ownerId, refresh])
 
-  const markIntroSeen = React.useCallback(async () => {
-    const nextStatus = await markHostedAiIntroSeen()
-    setStatus(nextStatus)
-    setCachedStudyCredits(nextStatus.studyCredits)
-    if (ownerId) {
-      writeCachedStudyCredits(ownerId, nextStatus.studyCredits)
-    }
-    setError(nextStatus.message || '')
-  }, [ownerId])
-
   return {
     status,
     displayStudyCredits,
     loading,
     error,
     refresh,
-    markIntroSeen,
   }
 }

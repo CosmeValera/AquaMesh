@@ -208,7 +208,7 @@ describe('StudyBlockView quiz feedback', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /A\. Une traversee/ }))
     const explainButton = screen.getByRole('button', { name: /Explain/ })
-    expect(explainButton).toHaveTextContent(/^Explain$/)
+    expect(explainButton).toHaveTextContent('Explain')
     expect(explainButton).not.toHaveTextContent('1')
     fireEvent.click(explainButton)
 
@@ -272,7 +272,7 @@ describe('StudyBlockView quiz feedback', () => {
     expect(screen.getByText('Wrong 1')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
     expect(screen.getByText('You did it! Quiz complete.')).toBeInTheDocument()
     expect(screen.getByText('Skipped')).toBeInTheDocument()

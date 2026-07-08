@@ -16,6 +16,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -26,6 +27,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import CloseIcon from '@mui/icons-material/Close'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import TipsAndUpdatesOutlinedIcon from '@mui/icons-material/TipsAndUpdatesOutlined'
 import {
   OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
   readStudyGuidePageHref,
@@ -1047,6 +1049,95 @@ export const renderMarkdown = (
   return blocks
 }
 
+type StudyRoundControlTone = 'primary' | 'hint' | 'explain'
+
+const studyRoundControlColor = (tone: StudyRoundControlTone) => {
+  switch (tone) {
+    case 'hint':
+      return 'info.main'
+    case 'explain':
+      return 'info.main'
+    case 'primary':
+      return 'primary.main'
+  }
+}
+
+const StudyRoundIconButton = ({
+  label,
+  disabled = false,
+  onClick,
+  tone = 'primary',
+  showLabel = false,
+  children,
+}: {
+  label: string
+  disabled?: boolean
+  onClick?: React.MouseEventHandler<HTMLButtonElement>
+  tone?: StudyRoundControlTone
+  showLabel?: boolean
+  children: React.ReactNode
+}) => (
+  <Tooltip title={label}>
+    <span style={{ display: 'inline-flex' }}>
+      <Button
+        aria-label={label}
+        variant="outlined"
+        disabled={disabled}
+        onClick={onClick}
+        sx={(theme) => {
+          const color = studyRoundControlColor(tone)
+          return {
+            minWidth: showLabel ? { xs: 104, sm: 112 } : { xs: 42, sm: 64 },
+            width: showLabel ? 'auto' : { xs: 42, sm: 64 },
+            height: { xs: 42, sm: 64 },
+            borderRadius: 999,
+            gap: showLabel ? { xs: 1, sm: 1.1 } : 0,
+            px: showLabel ? { xs: 2.25, sm: 2.5 } : 0,
+            color,
+            bgcolor: alpha(theme.palette.background.paper, 0.42),
+            borderColor: alpha(theme.palette.text.primary, 0.18),
+            '&:hover': {
+              bgcolor: alpha(
+                theme.palette[tone === 'primary' ? 'primary' : 'info'].main,
+                0.12,
+              ),
+              borderColor: alpha(
+                theme.palette[tone === 'primary' ? 'primary' : 'info'].main,
+                0.44,
+              ),
+            },
+            '&.Mui-disabled': {
+              color: alpha(theme.palette.text.primary, 0.38),
+              bgcolor: alpha(theme.palette.background.paper, 0.3),
+              borderColor: alpha(theme.palette.text.primary, 0.12),
+            },
+            '& .MuiSvgIcon-root': {
+              fontSize: { xs: 22, sm: 26 },
+            },
+          }
+        }}
+      >
+        {children}
+        {showLabel ? (
+          <Typography
+            component="span"
+            variant="button"
+            sx={{
+              fontSize: { xs: '0.78rem', sm: '0.82rem' },
+              fontWeight: 800,
+              lineHeight: 1,
+              textTransform: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {label}
+          </Typography>
+        ) : null}
+      </Button>
+    </span>
+  </Tooltip>
+)
+
 const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   type,
   props,
@@ -2030,27 +2121,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               '& .MuiButton-root': { flexShrink: 0 },
             }}
           >
-            <Button
-              aria-label={t('practice.previous')}
-              variant="outlined"
+            <StudyRoundIconButton
+              label={t('practice.previous')}
               disabled={safeIndex === 0}
               onClick={() => moveToFlashcardIndex(Math.max(0, safeIndex - 1))}
-              sx={(theme) => ({
-                minWidth: { xs: 42, sm: 64 },
-                width: { xs: 42, sm: 'auto' },
-                height: { xs: 42, sm: 64 },
-                borderRadius: 999,
-                color: 'primary.main',
-                bgcolor: alpha(theme.palette.background.paper, 0.42),
-                borderColor: alpha(theme.palette.text.primary, 0.18),
-                '&:hover': {
-                  bgcolor: alpha(theme.palette.primary.main, 0.12),
-                  borderColor: alpha(theme.palette.primary.main, 0.44),
-                },
-              })}
             >
               <ArrowBackIcon />
-            </Button>
+            </StudyRoundIconButton>
             <Button
               aria-label={t('practice.wrongAnswer')}
               variant="outlined"
@@ -2095,9 +2172,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               {known}
               <CheckIcon />
             </Button>
-            <Button
-              aria-label={t('practice.next')}
-              variant="outlined"
+            <StudyRoundIconButton
+              label={t('practice.next')}
               onClick={() => {
                 if (safeIndex >= activeCardEntries.length - 1) {
                   persistFlashcardSession({
@@ -2116,22 +2192,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                   Math.min(activeCardEntries.length - 1, safeIndex + 1),
                 )
               }}
-              sx={(theme) => ({
-                minWidth: { xs: 42, sm: 64 },
-                width: { xs: 42, sm: 'auto' },
-                height: { xs: 42, sm: 64 },
-                borderRadius: 999,
-                color: 'primary.main',
-                bgcolor: alpha(theme.palette.background.paper, 0.42),
-                borderColor: alpha(theme.palette.text.primary, 0.18),
-                '&:hover': {
-                  bgcolor: alpha(theme.palette.primary.main, 0.12),
-                  borderColor: alpha(theme.palette.primary.main, 0.44),
-                },
-              })}
             >
               <ArrowForwardIcon />
-            </Button>
+            </StudyRoundIconButton>
           </Stack>
         </Stack>
       </Box>
@@ -2774,27 +2837,51 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: '1fr auto 1fr' },
+              gridTemplateColumns: 'repeat(3, auto)',
               gap: 1.25,
               alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            <Box sx={{ justifySelf: { xs: 'center', sm: 'start' } }}>
+            <StudyRoundIconButton
+              label={t('practice.previous')}
+              disabled={safeIndex === 0}
+              onClick={() => {
+                const previousIndex = Math.max(0, safeIndex - 1)
+                persistQuizSession({
+                  questionIndex: previousIndex,
+                  answers: focusedQuizAnswers,
+                  resultsOpen: false,
+                })
+                setFocusedQuestionIndex(previousIndex)
+              }}
+            >
+              <ArrowBackIcon />
+            </StudyRoundIconButton>
+            <Box
+              sx={{
+                minWidth: 0,
+                height: { xs: 42, sm: 64 },
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               {!hasAnswered && question.hint ? (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<HelpOutlineIcon fontSize="small" />}
+                <StudyRoundIconButton
+                  label={t('practice.hint')}
+                  tone="hint"
+                  showLabel
                   onClick={() => setQuizHintOpen((current) => !current)}
                 >
-                  {t('practice.hint')}
-                </Button>
+                  <TipsAndUpdatesOutlinedIcon />
+                </StudyRoundIconButton>
               ) : null}
               {hasAnswered ? (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
+                <StudyRoundIconButton
+                  label={t('practice.explain')}
+                  tone="explain"
+                  showLabel
                   onClick={() =>
                     askAi(
                       buildQuizExplainPrompt({
@@ -2806,57 +2893,34 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     )
                   }
                 >
-                  {explainButtonLabel}
-                </Button>
+                  <ChatBubbleOutlineIcon />
+                </StudyRoundIconButton>
               ) : null}
             </Box>
-            <Stack direction="row" spacing={1.25} justifyContent="center">
-              <Button
-                variant="outlined"
-                disabled={safeIndex === 0}
-                onClick={() => {
-                  const previousIndex = Math.max(0, safeIndex - 1)
+            <StudyRoundIconButton
+              label={t('practice.next')}
+              onClick={() => {
+                if (safeIndex >= questions.length - 1) {
                   persistQuizSession({
-                    questionIndex: previousIndex,
+                    questionIndex: safeIndex,
                     answers: focusedQuizAnswers,
-                    resultsOpen: false,
+                    resultsOpen: true,
                   })
-                  setFocusedQuestionIndex(previousIndex)
-                }}
-              >
-                {t('practice.previous')}
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  if (safeIndex >= questions.length - 1) {
-                    persistQuizSession({
-                      questionIndex: safeIndex,
-                      answers: focusedQuizAnswers,
-                      resultsOpen: true,
-                    })
-                    setQuizResultsOpen(true)
-                    return
-                  }
+                  setQuizResultsOpen(true)
+                  return
+                }
 
-                  const nextIndex = Math.min(
-                    questions.length - 1,
-                    safeIndex + 1,
-                  )
-                  persistQuizSession({
-                    questionIndex: nextIndex,
-                    answers: focusedQuizAnswers,
-                    resultsOpen: false,
-                  })
-                  setFocusedQuestionIndex(nextIndex)
-                }}
-              >
-                {safeIndex >= questions.length - 1
-                  ? t('practice.done')
-                  : t('practice.next')}
-              </Button>
-            </Stack>
-            <Box />
+                const nextIndex = Math.min(questions.length - 1, safeIndex + 1)
+                persistQuizSession({
+                  questionIndex: nextIndex,
+                  answers: focusedQuizAnswers,
+                  resultsOpen: false,
+                })
+                setFocusedQuestionIndex(nextIndex)
+              }}
+            >
+              <ArrowForwardIcon />
+            </StudyRoundIconButton>
           </Box>
         </Stack>
       </Box>

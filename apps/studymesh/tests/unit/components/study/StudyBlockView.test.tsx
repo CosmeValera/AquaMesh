@@ -42,6 +42,66 @@ describe('StudyBlockView quiz feedback', () => {
     expect(container.textContent).not.toContain('**')
   })
 
+  it('lets markdown task checkboxes toggle and persist locally', () => {
+    const props = {
+      title: 'Task notes',
+      markdown: '- [ ] Read the page\n- [x] Review the quiz',
+      studyPathId: 'guide-1',
+      studyPathDashboardKey: 'page-1',
+    }
+    const { unmount } = render(
+      <StudyBlockView type="MarkdownBlock" props={props} />,
+    )
+
+    const readCheckbox = screen.getByRole('checkbox', {
+      name: 'Read the page',
+    })
+    const reviewCheckbox = screen.getByRole('checkbox', {
+      name: 'Review the quiz',
+    })
+    expect(readCheckbox).not.toBeChecked()
+    expect(reviewCheckbox).toBeChecked()
+
+    fireEvent.click(readCheckbox)
+    fireEvent.click(reviewCheckbox)
+    expect(readCheckbox).toBeChecked()
+    expect(reviewCheckbox).not.toBeChecked()
+
+    unmount()
+    render(<StudyBlockView type="MarkdownBlock" props={props} />)
+
+    expect(
+      screen.getByRole('checkbox', { name: 'Read the page' }),
+    ).toBeChecked()
+    expect(
+      screen.getByRole('checkbox', { name: 'Review the quiz' }),
+    ).not.toBeChecked()
+  })
+
+  it('keeps interactive list checks across remounts', () => {
+    const props = {
+      title: 'Practice checklist',
+      items: 'Create quiz\nAsk AI chat',
+      interactiveChecklist: true,
+      studyPathId: 'guide-1',
+      studyPathDashboardKey: 'page-2',
+    }
+    const { unmount } = render(
+      <StudyBlockView type="ListBlock" props={props} />,
+    )
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Create quiz' }))
+    expect(screen.getByRole('checkbox', { name: 'Create quiz' })).toBeChecked()
+
+    unmount()
+    render(<StudyBlockView type="ListBlock" props={props} />)
+
+    expect(screen.getByRole('checkbox', { name: 'Create quiz' })).toBeChecked()
+    expect(
+      screen.getByRole('checkbox', { name: 'Ask AI chat' }),
+    ).not.toBeChecked()
+  })
+
   it('renders markdown inside quiz questions, options, and feedback', () => {
     const { container } = render(
       <StudyBlockView
@@ -268,20 +328,24 @@ describe('StudyBlockView quiz feedback', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /A\. Une traversee/ }))
     fireEvent.click(screen.getByRole('button', { name: /B\. Un periple/ }))
-    expect(screen.getByText('Correct 0')).toBeInTheDocument()
-    expect(screen.getByText('Wrong 1')).toBeInTheDocument()
+    expect(screen.getByText('Not quite')).toBeInTheDocument()
+    expect(screen.getByText('Right answer')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByRole('button', { name: /A\. Une escale/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
     expect(screen.getByText('You did it! Quiz complete.')).toBeInTheDocument()
-    expect(screen.getByText('Skipped')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Retake quiz' }))
     expect(
       screen.queryByText('You did it! Quiz complete.'),
     ).not.toBeInTheDocument()
-    expect(screen.getByText('Answered 0/2')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Which term best describes a long trip with many stages?',
+      ),
+    ).toBeInTheDocument()
   })
 
   it('restores focused quiz progress after the quiz page remounts', () => {
@@ -318,8 +382,15 @@ describe('StudyBlockView quiz feedback', () => {
     expect(
       screen.getByText('Which term describes a stop during air travel?'),
     ).toBeInTheDocument()
-    expect(screen.getByText('Answered 1/2')).toBeInTheDocument()
-    expect(screen.getByText('Correct 1')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }))
+
+    expect(
+      screen.getByText(
+        'Which term best describes a long trip with many stages?',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByText("That's right")).toBeInTheDocument()
   })
 
   it('restores focused flashcard progress after the flashcard page remounts', async () => {

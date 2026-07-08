@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   STUDYMESH_GUIDE_STUDY_PATH_ID,
@@ -11,6 +11,8 @@ describe('StudyMesh guide seed', () => {
   const storage = new Map<string, string>()
 
   beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-08T10:20:30.000Z'))
     storage.clear()
     vi.mocked(localStorage.getItem).mockImplementation(
       (key: string) => storage.get(key) || null,
@@ -24,6 +26,10 @@ describe('StudyMesh guide seed', () => {
       storage.delete(key)
     })
     vi.mocked(localStorage.clear).mockImplementation(() => storage.clear())
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('seeds the StudyMesh Guide only once so users can delete it', () => {
@@ -41,29 +47,44 @@ describe('StudyMesh guide seed', () => {
       id: STUDYMESH_GUIDE_STUDY_PATH_ID,
       title: 'Welcome to StudyMesh',
     })
-    expect(studyGuides[0].studyPath.dashboards).toHaveLength(2)
+    expect(studyGuides[0].createdAt).toBe('2026-07-08T10:20:30.000Z')
+    expect(studyGuides[0].updatedAt).toBe('2026-07-08T10:20:30.000Z')
+    expect(studyGuides[0].pinnedAt).toBeNull()
+    expect(studyGuides[0].studyPath.dashboards).toHaveLength(3)
     expect(studyGuides[0].studyPath.dashboards[0].name).toBe(
       '01 - StudyMesh Basics',
     )
     expect(studyGuides[0].studyPath.dashboards[1].name).toBe(
       '02 - First StudyMesh Practice',
     )
+    expect(studyGuides[0].studyPath.dashboards[2].name).toBe(
+      '03 - StudyMesh AI Generation Modes',
+    )
 
     const firstLayout =
       studyGuides[0].studyPath.dashboards[0].layout.children[0].children[0]
     const secondLayout =
       studyGuides[0].studyPath.dashboards[1].layout.children[0].children[0]
-    expect(firstLayout.config.customProps.components).toHaveLength(2)
+    expect(firstLayout.config.customProps.components).toHaveLength(3)
     expect(secondLayout.config.customProps.components).toHaveLength(2)
     expect(firstLayout.config.customProps.components[1].type).toBe(
       'MarkdownBlock',
     )
+    expect(firstLayout.config.customProps.components[2]).toMatchObject({
+      type: 'QuizCarouselBlock',
+      props: expect.objectContaining({
+        title: 'Mini quiz',
+      }),
+    })
     expect(secondLayout.config.customProps.components[1]).toMatchObject({
       type: 'ListBlock',
       props: expect.objectContaining({
         interactiveChecklist: true,
       }),
     })
+    expect(JSON.stringify(studyGuides)).not.toContain('Pomodoro')
+    expect(JSON.stringify(studyGuides)).not.toContain('Canva')
+    expect(JSON.stringify(studyGuides)).not.toContain('Misc')
 
     window.localStorage.setItem('studymesh_study_guides', JSON.stringify([]))
 
@@ -93,6 +114,22 @@ describe('StudyMesh guide seed', () => {
     expect(dashboards).toHaveLength(1)
     expect(studyGuides).toHaveLength(1)
     expect(studyGuides[0].id).toBe(STUDYMESH_GUIDE_STUDY_PATH_ID)
+    expect(studyGuides[0].createdAt).toBe('2026-07-08T10:20:30.000Z')
+    expect(studyGuides[0].pinnedAt).toBeNull()
+  })
+
+  it('refreshes the guide date and content when Settings reinstalls it', () => {
+    expect(seedStudyMeshGuideStudyPath()).toBe(true)
+
+    vi.setSystemTime(new Date('2026-07-09T08:00:00.000Z'))
+    expect(seedStudyMeshGuideStudyPath({ force: true })).toBe(true)
+
+    const studyGuides = JSON.parse(
+      window.localStorage.getItem('studymesh_study_guides') || '[]',
+    )
+    expect(studyGuides).toHaveLength(1)
+    expect(studyGuides[0].createdAt).toBe('2026-07-09T08:00:00.000Z')
+    expect(studyGuides[0].studyPath.dashboards).toHaveLength(3)
   })
 
   it('can clear the seed marker when a different cloud owner starts empty', () => {

@@ -38,6 +38,11 @@ import { type HostedAiPodcast } from '../../quickCreate/ai'
 import type { DashboardLayout } from '../../state/store'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 import { PodcastPagePlayer } from '../podcast/PodcastPlayerProvider'
+import {
+  createChecklistItemKey,
+  createChecklistScopeId,
+  usePersistentChecklistState,
+} from '../../studyGuides/checklistState'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -578,6 +583,8 @@ const openStudyGuidePageLink = (href: string): boolean => {
 
 interface RenderMarkdownOptions {
   renderCitation?: (citationNumber: number, key: string) => React.ReactNode
+  getChecklistChecked?: (itemKey: string, defaultChecked?: boolean) => boolean
+  onChecklistChange?: (itemKey: string, checked: boolean) => void
 }
 
 const wholeCitationGroupPattern = /^(?:\[\d{1,2}\]|\d{1,2}|\s+)+$/
@@ -676,8 +683,8 @@ export const renderMarkdownInline = (
             studyGuideCitationLink
               ? 'study-guide-citation'
               : studyGuidePageLink
-                ? 'study-guide-page'
-                : undefined
+              ? 'study-guide-page'
+              : undefined
           }
           target={studyGuidePageLink ? undefined : '_blank'}
           rel={studyGuidePageLink ? undefined : 'noreferrer'}
@@ -712,22 +719,22 @@ export const renderMarkdownInline = (
                   },
                 })
               : studyGuidePageLink
-                ? (theme) => ({
-                    px: 0.75,
-                    py: 0.1,
-                    borderRadius: 999,
-                    border: 1,
-                    borderColor: alpha(theme.palette.primary.main, 0.32),
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                    color: 'primary.main',
-                    fontWeight: 700,
+              ? (theme) => ({
+                  px: 0.75,
+                  py: 0.1,
+                  borderRadius: 999,
+                  border: 1,
+                  borderColor: alpha(theme.palette.primary.main, 0.32),
+                  bgcolor: alpha(theme.palette.primary.main, 0.08),
+                  color: 'primary.main',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.primary.main, 0.15),
                     textDecoration: 'none',
-                    '&:hover': {
-                      bgcolor: alpha(theme.palette.primary.main, 0.15),
-                      textDecoration: 'none',
-                    },
-                  })
-                : undefined
+                  },
+                })
+              : undefined
           }
         >
           {linkLabel}
@@ -933,7 +940,11 @@ export const renderMarkdown = (
     const orderedMatch = trimmed.match(/^\d+[.)]\s+(.+)$/)
     if (unorderedMatch || orderedMatch) {
       const ordered = Boolean(orderedMatch)
-      const listItems: Array<{ text: string; checked?: boolean }> = []
+      const listItems: Array<{
+        text: string
+        checked?: boolean
+        itemKey?: string
+      }> = []
 
       while (index < lines.length) {
         const itemTrimmed = lines[index].trim()
@@ -944,10 +955,15 @@ export const renderMarkdown = (
           break
         }
 
+        const itemLineIndex = index
         const checkbox = unorderedItem?.[1]
+        const text = (unorderedItem?.[2] || orderedItem?.[1] || '').trim()
         listItems.push({
-          text: (unorderedItem?.[2] || orderedItem?.[1] || '').trim(),
+          text,
           checked: checkbox ? /\[[xX]\]/.test(checkbox) : undefined,
+          itemKey: checkbox
+            ? createChecklistItemKey(text, itemLineIndex)
+            : undefined,
         })
         index += 1
       }
@@ -961,29 +977,47 @@ export const renderMarkdown = (
             my: 0,
           }}
         >
-          {listItems.map((item, itemIndex) => (
-            <Typography
-              component="li"
-              variant="body2"
-              key={`${item.text}-${itemIndex}`}
-              sx={{
-                mb: 0.5,
-                display: item.checked === undefined ? 'list-item' : 'flex',
-                alignItems: 'center',
-                listStyle: item.checked === undefined ? undefined : 'none',
-              }}
-            >
-              {item.checked !== undefined && (
-                <Checkbox
-                  size="small"
-                  checked={item.checked}
-                  readOnly
-                  sx={{ p: 0.25, mr: 0.5 }}
-                />
-              )}
-              {renderMarkdownInline(item.text, options)}
-            </Typography>
-          ))}
+          {listItems.map((item, itemIndex) => {
+            const isChecklistItem =
+              item.checked !== undefined && Boolean(item.itemKey)
+            const defaultChecked = item.checked === true
+            const checked = isChecklistItem
+              ? options.getChecklistChecked?.(item.itemKey!, defaultChecked) ??
+                defaultChecked
+              : false
+
+            return (
+              <Typography
+                component="li"
+                variant="body2"
+                key={`${item.text}-${itemIndex}`}
+                sx={{
+                  mb: 0.5,
+                  display: isChecklistItem ? 'flex' : 'list-item',
+                  alignItems: 'center',
+                  listStyle: isChecklistItem ? 'none' : undefined,
+                  textDecoration: checked ? 'line-through' : 'none',
+                  color: checked ? 'text.secondary' : 'text.primary',
+                }}
+              >
+                {isChecklistItem && (
+                  <Checkbox
+                    size="small"
+                    checked={checked}
+                    inputProps={{ 'aria-label': item.text }}
+                    onChange={(event) =>
+                      options.onChecklistChange?.(
+                        item.itemKey!,
+                        event.target.checked,
+                      )
+                    }
+                    sx={{ p: 0.25, mr: 0.5 }}
+                  />
+                )}
+                {renderMarkdownInline(item.text, options)}
+              </Typography>
+            )
+          })}
         </Box>,
       )
       continue
@@ -1207,7 +1241,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     useState<null | HTMLElement>(null)
   const [shortAnswer, setShortAnswer] = useState('')
   const [quizHintOpen, setQuizHintOpen] = useState(false)
-  const [checkedSteps, setCheckedSteps] = useState<Record<number, boolean>>({})
   const [definitionStudy, setDefinitionStudy] = useState(false)
   const [reviewStatus, setReviewStatus] = useState(
     String(props.status || 'needsReview'),
@@ -1322,6 +1355,40 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   )
   const columns = useMemo(() => toStringArray(props.columns), [props.columns])
   const rows = useMemo(() => toRows(props.rows), [props.rows])
+  const checklistScopeId = useMemo(
+    () =>
+      createChecklistScopeId([
+        'study-block',
+        type,
+        props.studyPathId,
+        props.studyPathDashboardKey,
+        props.studyPathItemId,
+        props.title,
+        props.markdown,
+        props.items,
+        props.steps,
+        props.text,
+      ]),
+    [
+      props.items,
+      props.markdown,
+      props.steps,
+      props.studyPathDashboardKey,
+      props.studyPathId,
+      props.studyPathItemId,
+      props.text,
+      props.title,
+      type,
+    ],
+  )
+  const checklistState = usePersistentChecklistState(checklistScopeId)
+  const markdownOptions = useMemo<RenderMarkdownOptions>(
+    () => ({
+      getChecklistChecked: checklistState.isChecked,
+      onChecklistChange: checklistState.setChecked,
+    }),
+    [checklistState.isChecked, checklistState.setChecked],
+  )
 
   if (type === 'FlashcardBlock') {
     const front = String(props.front || t('practice.question'))
@@ -1631,7 +1698,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     borderRadius: '50%',
                     display: 'grid',
                     placeItems: 'center',
-                    background: `conic-gradient(${theme.palette.success.main} 0deg ${knownDegrees}deg, ${theme.palette.error.main} ${knownDegrees}deg ${knownDegrees + missedDegrees}deg, ${theme.palette.action.selected} ${knownDegrees + missedDegrees}deg 360deg)`,
+                    background: `conic-gradient(${
+                      theme.palette.success.main
+                    } 0deg ${knownDegrees}deg, ${
+                      theme.palette.error.main
+                    } ${knownDegrees}deg ${knownDegrees + missedDegrees}deg, ${
+                      theme.palette.action.selected
+                    } ${knownDegrees + missedDegrees}deg 360deg)`,
                     position: 'relative',
                     '&::before': {
                       content: '""',
@@ -2196,8 +2269,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               const resultColor = isCorrect
                 ? 'success.main'
                 : isSelected
-                  ? 'error.main'
-                  : 'divider'
+                ? 'error.main'
+                : 'divider'
 
               const feedback = stripFeedbackVerdict(
                 feedbackForOption(optionFeedback, option),
@@ -2212,12 +2285,12 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                       color: 'success.main',
                     }
                   : showResult && isSelected
-                    ? {
-                        icon: <CloseIcon fontSize="small" />,
-                        label: t('practice.notQuite'),
-                        color: 'error.main',
-                      }
-                    : null
+                  ? {
+                      icon: <CloseIcon fontSize="small" />,
+                      label: t('practice.notQuite'),
+                      color: 'error.main',
+                    }
+                  : null
 
               return (
                 <Box key={`${option}-${index}`} sx={{ width: '100%' }}>
@@ -2466,7 +2539,15 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     borderRadius: '50%',
                     display: 'grid',
                     placeItems: 'center',
-                    background: `conic-gradient(${theme.palette.success.main} 0deg ${correctDegrees}deg, ${theme.palette.error.main} ${correctDegrees}deg ${correctDegrees + wrongDegrees}deg, ${theme.palette.action.selected} ${correctDegrees + wrongDegrees}deg 360deg)`,
+                    background: `conic-gradient(${
+                      theme.palette.success.main
+                    } 0deg ${correctDegrees}deg, ${
+                      theme.palette.error.main
+                    } ${correctDegrees}deg ${
+                      correctDegrees + wrongDegrees
+                    }deg, ${theme.palette.action.selected} ${
+                      correctDegrees + wrongDegrees
+                    }deg 360deg)`,
                     position: 'relative',
                     '&::before': {
                       content: '""',
@@ -2652,12 +2733,12 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                           color: 'success.main',
                         }
                       : hasAnswered && isSelected
-                        ? {
-                            icon: <CloseIcon fontSize="small" />,
-                            label: t('practice.notQuite'),
-                            color: 'error.main',
-                          }
-                        : null
+                      ? {
+                          icon: <CloseIcon fontSize="small" />,
+                          label: t('practice.notQuite'),
+                          color: 'error.main',
+                        }
+                      : null
 
                   return (
                     <Box key={`${option}-${index}`} sx={{ width: '100%' }}>
@@ -2686,8 +2767,8 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                           const resultBorder = isCorrect
                             ? 'success.main'
                             : isSelected
-                              ? 'error.main'
-                              : 'divider'
+                            ? 'error.main'
+                            : 'divider'
 
                           return {
                             width: '100%',
@@ -2998,7 +3079,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             <Typography variant="subtitle1" fontWeight={700}>
               {renderMarkdownInline(title)}
             </Typography>
-            <Stack spacing={0.9}>{renderMarkdown(text)}</Stack>
+            <Stack spacing={0.9}>{renderMarkdown(text, markdownOptions)}</Stack>
           </Stack>
         </Box>
       )
@@ -3111,7 +3192,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           <Typography variant="subtitle1" fontWeight={700}>
             {renderMarkdownInline(title)}
           </Typography>
-          <Stack spacing={0.9}>{renderMarkdown(text)}</Stack>
+          <Stack spacing={0.9}>{renderMarkdown(text, markdownOptions)}</Stack>
           {suggestions.length > 0 && (
             <Stack direction="row" gap={1} flexWrap="wrap">
               {suggestions.map((suggestion) => (
@@ -3147,7 +3228,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             {renderMarkdownInline(title)}
           </Typography>
         )}
-        <Stack spacing={1.25}>{renderMarkdown(markdown)}</Stack>
+        <Stack spacing={1.25}>
+          {renderMarkdown(markdown, markdownOptions)}
+        </Stack>
       </Stack>
     )
 
@@ -3393,36 +3476,39 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           component={ordered ? 'ol' : 'ul'}
           sx={{ pl: interactive ? 0 : 3, my: 0 }}
         >
-          {steps.map((step, index) => (
-            <Typography
-              component="li"
-              variant="body2"
-              key={`${step}-${index}`}
-              sx={{
-                mb: 0.5,
-                display: interactive ? 'flex' : 'list-item',
-                alignItems: 'center',
-                listStyle: interactive ? 'none' : undefined,
-                textDecoration: checkedSteps[index] ? 'line-through' : 'none',
-                color: checkedSteps[index] ? 'text.secondary' : 'text.primary',
-              }}
-            >
-              {interactive && (
-                <Checkbox
-                  size="small"
-                  checked={Boolean(checkedSteps[index])}
-                  onChange={(event) =>
-                    setCheckedSteps((current) => ({
-                      ...current,
-                      [index]: event.target.checked,
-                    }))
-                  }
-                  sx={{ mr: 0.5, p: 0.25 }}
-                />
-              )}
-              {renderMarkdownInline(step)}
-            </Typography>
-          ))}
+          {steps.map((step, index) => {
+            const itemKey = createChecklistItemKey(step, index)
+            const checked = checklistState.isChecked(itemKey)
+
+            return (
+              <Typography
+                component="li"
+                variant="body2"
+                key={`${step}-${index}`}
+                sx={{
+                  mb: 0.5,
+                  display: interactive ? 'flex' : 'list-item',
+                  alignItems: 'center',
+                  listStyle: interactive ? 'none' : undefined,
+                  textDecoration: checked ? 'line-through' : 'none',
+                  color: checked ? 'text.secondary' : 'text.primary',
+                }}
+              >
+                {interactive && (
+                  <Checkbox
+                    size="small"
+                    checked={checked}
+                    inputProps={{ 'aria-label': step }}
+                    onChange={(event) =>
+                      checklistState.setChecked(itemKey, event.target.checked)
+                    }
+                    sx={{ mr: 0.5, p: 0.25 }}
+                  />
+                )}
+                {renderMarkdownInline(step)}
+              </Typography>
+            )
+          })}
         </Box>
       </Box>
     )

@@ -1,6 +1,10 @@
 {
-  "editor.tokenColorCustomizations": {
-    "comments": "",
-    "textMateRules": []
+  "window.title": "🟩 StudyMesh — Main — ${activeEditorShort}",
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#166534",
+    "titleBar.activeForeground": "#ffffff",
+    "activityBar.background": "#15803d",
+    "statusBar.background": "#16a34a",
+    "statusBar.foreground": "#ffffff"
   }
 }

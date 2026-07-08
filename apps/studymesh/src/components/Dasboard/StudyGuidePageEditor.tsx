@@ -695,10 +695,26 @@ const StudyGuidePageEditor: React.FC<StudyGuidePageEditorProps> = ({
               '& .tiptap ul[data-type="taskList"]': {
                 listStyle: 'none',
                 paddingLeft: 0,
+                margin: theme.spacing(0.75, 0),
               },
               '& .tiptap li[data-type="taskItem"]': {
                 display: 'flex',
-                gap: theme.spacing(0.75),
+                alignItems: 'flex-start',
+                gap: theme.spacing(1),
+                margin: theme.spacing(0.5, 0),
+                listStyle: 'none',
+              },
+              '& .tiptap li[data-type="taskItem"] > label': {
+                flex: '0 0 auto',
+                marginTop: theme.spacing(0.35),
+                userSelect: 'none',
+              },
+              '& .tiptap li[data-type="taskItem"] > div': {
+                flex: '1 1 auto',
+                minWidth: 0,
+              },
+              '& .tiptap li[data-type="taskItem"] > div > p': {
+                margin: 0,
               },
               '& .tiptap .is-empty::before': {
                 color: theme.palette.text.disabled,

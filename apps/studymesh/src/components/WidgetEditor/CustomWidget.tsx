@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Typography,
@@ -44,6 +44,11 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
 import ComponentPreview from './components/preview/ComponentPreview'
 import StudyBlockView, { isStudyBlockType } from '../study/StudyBlockView'
+import {
+  createChecklistItemKey,
+  createChecklistScopeId,
+  usePersistentChecklistState,
+} from '../../studyGuides/checklistState'
 
 interface ComponentData {
   id: string
@@ -98,9 +103,18 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({
     Record<string, boolean>
   >({})
   const [inputValues, setInputValues] = useState<Record<string, string>>({})
-  const [checkedListItems, setCheckedListItems] = useState<
-    Record<string, Record<number, boolean>>
-  >({})
+  const checklistScopeId = useMemo(
+    () =>
+      createChecklistScopeId([
+        'custom-widget',
+        widgetId,
+        customProps?.widgetId,
+        name,
+        widgetName,
+      ]),
+    [customProps?.widgetId, name, widgetId, widgetName],
+  )
+  const checklistState = usePersistentChecklistState(checklistScopeId)
 
   const resolveStoredWidget = () => {
     const directWidgetId = widgetId || customProps?.widgetId
@@ -232,8 +246,8 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({
       valueSource === 'firstInput'
         ? getFirstInputValue()
         : valueSource === 'checkedListCount'
-          ? getCheckedListCount()
-          : buttonProps.chartValue || 1
+        ? getCheckedListCount()
+        : buttonProps.chartValue || 1
     const value = Number(rawValue)
 
     if (!Number.isFinite(value)) {
@@ -556,8 +570,8 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({
           alignment === 'right'
             ? 'flex-end'
             : alignment === 'center'
-              ? 'center'
-              : 'flex-start'
+            ? 'center'
+            : 'flex-start'
 
         return (
           <Box
@@ -604,8 +618,8 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({
                       color: component.props.customTextColor
                         ? (component.props.customTextColor as string)
                         : component.props.variant === 'contained'
-                          ? '#fff'
-                          : (component.props.customColor as string),
+                        ? '#fff'
+                        : (component.props.customColor as string),
                       '&:hover': {
                         backgroundColor:
                           component.props.variant === 'contained'
@@ -766,43 +780,45 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({
               component={ordered ? 'ol' : 'ul'}
               sx={{ pl: interactive ? 0 : 3, my: 0 }}
             >
-              {items.map((item, index) => (
-                <Typography
-                  component="li"
-                  variant="body2"
-                  key={`${item}-${index}`}
-                  sx={{
-                    mb: 0.5,
-                    display: interactive ? 'flex' : 'list-item',
-                    alignItems: 'center',
-                    listStyle: interactive ? 'none' : undefined,
-                    textDecoration: checkedListItems[component.id]?.[index]
-                      ? 'line-through'
-                      : 'none',
-                    color: checkedListItems[component.id]?.[index]
-                      ? 'text.secondary'
-                      : 'text.primary',
-                  }}
-                >
-                  {interactive && (
-                    <Checkbox
-                      size="small"
-                      checked={Boolean(checkedListItems[component.id]?.[index])}
-                      onChange={(event) =>
-                        setCheckedListItems((currentItems) => ({
-                          ...currentItems,
-                          [component.id]: {
-                            ...(currentItems[component.id] || {}),
-                            [index]: event.target.checked,
-                          },
-                        }))
-                      }
-                      sx={{ mr: 0.5, p: 0.25 }}
-                    />
-                  )}
-                  {item}
-                </Typography>
-              ))}
+              {items.map((item, index) => {
+                const itemKey = createChecklistItemKey(
+                  `${component.id}:${item}`,
+                  index,
+                )
+                const checked = checklistState.isChecked(itemKey)
+
+                return (
+                  <Typography
+                    component="li"
+                    variant="body2"
+                    key={`${item}-${index}`}
+                    sx={{
+                      mb: 0.5,
+                      display: interactive ? 'flex' : 'list-item',
+                      alignItems: 'center',
+                      listStyle: interactive ? 'none' : undefined,
+                      textDecoration: checked ? 'line-through' : 'none',
+                      color: checked ? 'text.secondary' : 'text.primary',
+                    }}
+                  >
+                    {interactive && (
+                      <Checkbox
+                        size="small"
+                        checked={checked}
+                        inputProps={{ 'aria-label': item }}
+                        onChange={(event) =>
+                          checklistState.setChecked(
+                            itemKey,
+                            event.target.checked,
+                          )
+                        }
+                        sx={{ mr: 0.5, p: 0.25 }}
+                      />
+                    )}
+                    {item}
+                  </Typography>
+                )
+              })}
             </Box>
           </Box>
         )
@@ -1006,7 +1022,9 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({
         }
 
         if (component.props.border) {
-          flexStyles.border = `1px ${component.props.border} ${component.props.borderColor || '#ccc'}`
+          flexStyles.border = `1px ${component.props.border} ${
+            component.props.borderColor || '#ccc'
+          }`
         }
 
         if (component.props.scrollable) {
@@ -1049,10 +1067,14 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({
         // Prepare the grid style object
         const gridStyles = {
           display: 'grid',
-          gridTemplateColumns: `repeat(${(component.props.columns as number) || 2}, 1fr)`,
+          gridTemplateColumns: `repeat(${
+            (component.props.columns as number) || 2
+          }, 1fr)`,
           gridTemplateRows: component.props.autoRows
             ? 'auto'
-            : `repeat(${(component.props.rows as number) || 1}, ${component.props.equalHeight ? '1fr' : 'auto'})`,
+            : `repeat(${(component.props.rows as number) || 1}, ${
+                component.props.equalHeight ? '1fr' : 'auto'
+              })`,
           gap: (component.props.spacing as number) || 2,
           width: '100%',
           mb: 1,
@@ -1067,7 +1089,11 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({
         }
 
         if (component.props.borderStyle) {
-          gridStyles.border = `1px ${component.props.borderStyle} ${component.props.useCustomColor ? component.props.borderColor : '#ccc'}`
+          gridStyles.border = `1px ${component.props.borderStyle} ${
+            component.props.useCustomColor
+              ? component.props.borderColor
+              : '#ccc'
+          }`
         }
 
         if (component.props.alignCenter) {
@@ -1114,7 +1140,11 @@ const CustomWidget: React.FC<CustomWidgetProps> = ({
                   component.props.borderStyle &&
                   component.props.borderStyle !== 'none'
                 ) {
-                  cellProps.border = `1px ${component.props.borderStyle} ${component.props.useCustomColor ? component.props.borderColor : '#ccc'}`
+                  cellProps.border = `1px ${component.props.borderStyle} ${
+                    component.props.useCustomColor
+                      ? component.props.borderColor
+                      : '#ccc'
+                  }`
 
                   if (
                     component.props.borderRadius &&

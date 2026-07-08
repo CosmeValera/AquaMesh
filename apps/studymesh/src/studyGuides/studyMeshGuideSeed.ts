@@ -71,15 +71,75 @@ interface GuideDashboard {
   markdown?: string
   checklistTitle?: string
   checklistItems?: string[]
+  quizzes?: Array<{
+    question: string
+    options: string[]
+    correctIndex: number
+    answer: string
+    explanation: string
+    hint?: string
+  }>
+  sourceMarkdown?: string
+  summaryTitle?: string
+  summaryItems?: string[]
+  flashcards?: Array<{
+    front: string
+    back: string
+  }>
 }
 
-const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
+const guideLessons: GuideDashboard[] = [
   {
     id: 'studymesh-guide-basics',
     title: '01 - StudyMesh Basics',
     widgetTitle: 'Key Concepts',
     markdown:
-      '## What is StudyMesh?\nStudyMesh is a student knowledge wiki. It helps you turn a learning goal and the current workspace context into Study Guides, pages, markdown notes, flashcards, quizzes, and exercises.\n\n## Key concepts\n### Study Guide\nA Study Guide is a step-by-step learning workspace for a topic. It can contain lessons, practice, references, and AI-assisted notes.\n\n### Page\nA page is one focused part of a Study Guide. Pages can hold markdown, explanations, quizzes, flashcards, and practice material.\n\n### Markdown notes\nMarkdown notes are editable text pages for explanations, summaries, examples, and references.\n\n### Workspace\nThe workspace is the main StudyMesh area where you create, open, edit, and reuse Study Guides, pages, Quick Create results, and AI chat.\n\n---\n## Changing AI mode\nClick the AI mode pill in the top bar to choose Hosted AI, Google Local AI, Own Gemini API token, or Own Cerebras API key.\n\n---\n## What to do next?\nThis is a Study Guide designed for step-by-step learning. Use the page controls to move through the guide and add your own pages.',
+      '## What is StudyMesh?\nStudyMesh is a student knowledge wiki. It helps you turn a learning goal and your current workspace context into Study Guides, pages, markdown notes, quizzes, flashcards, podcasts, and AI chat support.\n\n## Key concepts\n### Study Guide\nA Study Guide is a step-by-step learning workspace for a topic. It can contain lessons, practice widgets, references, and AI-assisted notes.\n\n### Page\nA page is one focused part of a Study Guide. Pages can hold markdown, explanations, quizzes, flashcards, podcasts, and practice material.\n\n### Quick Create\nQuick Create uses the active Study Guide or page context to generate focused practice, such as a quiz, flashcards or podcasts.\n\n### AI Chat\nAI Chat helps you ask follow-up questions while studying. It can use the current page context and, when needed, web sources from the chat source tools.\n\n### Markdown notes\nMarkdown notes are editable pages for explanations, summaries, examples, references, and checklists.\n\n---\n## What to do next?\nMove through this guide, try the mini quiz below, then use the practice checklist on the next page.',
+    quizzes: [
+      {
+        question: 'What is the main purpose of StudyMesh?',
+        options: [
+          'To act as a student knowledge wiki for creating and studying learning material',
+          'To replace every external productivity app',
+          'To store only plain text notes',
+          'To generate content without any workspace context',
+        ],
+        correctIndex: 0,
+        answer:
+          'To act as a student knowledge wiki for creating and studying learning material',
+        explanation:
+          'StudyMesh centers Study Guides, pages, practice widgets, markdown notes, and AI chat around student knowledge.',
+        hint: 'Think about the phrase used at the start of this page.',
+      },
+      {
+        question: 'What does Quick Create use by default?',
+        options: [
+          'The active Study Guide or page context',
+          'A mandatory file upload',
+          'Only a pasted PDF',
+          'A blank workspace with no context',
+        ],
+        correctIndex: 0,
+        answer: 'The active Study Guide or page context',
+        explanation:
+          'Quick Create is meant for fast generation from the context the user is already studying.',
+        hint: 'Look at the Quick Create section.',
+      },
+      {
+        question: 'What can markdown notes include?',
+        options: [
+          'Explanations, summaries, examples, references, and checklists',
+          'Only headings',
+          'Only multiple-choice questions',
+          'Only account settings',
+        ],
+        correctIndex: 0,
+        answer: 'Explanations, summaries, examples, references, and checklists',
+        explanation:
+          'Markdown notes are editable pages for structured study material, including checklists.',
+        hint: 'This was listed under Markdown notes.',
+      },
+    ],
   },
   {
     id: 'studymesh-guide-practice',
@@ -88,47 +148,25 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
     checklistTitle: 'Try these actions',
     checklistItems: [
       'Create your first Study Guide.',
-      'Create a quiz to practice with the Study Guide.',
-      'Create flashcards to practice with the Study Guide.',
-      'Open Pomodoro, Canva, or another useful tool from Misc.',
-      'Add your profile picture and display name.',
+      'Use Quick Create to make a quiz from the current Study Guide.',
+      'Use Quick Create to make flashcards from the current Study Guide.',
+      'Generate a podcast for a topic you want to review while listening.',
       'Add your own markdown page.',
       'Use AI chat while studying a page.',
+      'Mark a checklist item as done and come back to confirm it stays checked.',
     ],
   },
   {
     id: 'studymesh-guide-ai-modes',
     title: '03 - StudyMesh AI Generation Modes',
     sourceMarkdown:
-      '## StudyMesh AI Generation Modes\n### Hosted AI\nHosted AI is the default path for new users. It uses Study Credits stored in your StudyMesh account, so your balance follows you across devices. New users start with 30 Study Credits, and the daily free allowance restores low balances for 2 Study Guides + 1 more creation.\n\n### Google Local AI\nRuns on the local Chrome built-in AI model. It is free and can work offline. It is slower and weaker than hosted or own-key strong models, but it keeps generation on your device.\n\n### Own Gemini API token\nUses the user-provided Gemini API key for rich Study Guides and study dashboards.\n\n### Own Cerebras API key\nUses the user-provided Cerebras API key for fast hosted text generation.',
+      '## StudyMesh AI Generation Modes\n### Hosted AI\nHosted AI uses Study Credits stored in your StudyMesh account, so your balance follows you across devices.\n\n### Google Local AI\nGoogle Local AI runs on the local Chrome built-in AI model. It is free and can work offline, but it is usually slower and weaker than hosted or own-key strong models.\n\n### Own Gemini API token\nOwn Gemini API token mode uses your Gemini API key for rich Study Guides and study dashboards.\n\n### Own Cerebras API key\nOwn Cerebras API key mode uses your Cerebras API key for fast hosted text generation.',
     summaryTitle: 'AI Mode Summary',
     summaryItems: [
       'Hosted AI uses Study Credits. Study Guides cost 3 credits, and quick creations, podcasts, or dashboard chat cost 1 credit.',
       'Google Local AI runs locally, but is slower and weaker than hosted or own-key strong models.',
       'Own Gemini API token is the preferred high-quality generation mode.',
       'Own Cerebras API key is useful for fast hosted text generation.',
-    ],
-    quizzes: [
-      {
-        question: 'How do Hosted AI Study Credits work?',
-        answer: 'They are account-based credits for hosted AI generation.',
-        explanation:
-          'Hosted AI uses Study Credits for Study Guides, quick creations, and dashboard chat.',
-      },
-      {
-        question:
-          'Which mode should a user choose for the highest quality Study Guide if they have an API key?',
-        options: [
-          'Google Local AI',
-          'Hosted AI Study Credits',
-          'Own Gemini API token',
-          'Own Cerebras API key',
-        ],
-        correctIndex: 2,
-        answer: 'Own Gemini API token',
-        explanation:
-          'Gemini API mode uses a stronger hosted model and produces richer study material.',
-      },
     ],
     flashcards: [
       {
@@ -141,7 +179,7 @@ const guideLessons: Array<GuideDashboard & Record<string, unknown>> = [
       },
       {
         front: 'How do Hosted AI Study Credits work?',
-        back: 'They are account-based credits for hosted AI. New users start with 30, Study Guides cost 3, quick creations, podcasts, or chat cost 1, and the daily free allowance restores low balances.',
+        back: 'They are account-based credits for hosted AI generation.',
       },
     ],
   },
@@ -173,22 +211,26 @@ const withStudyPathProps = (
   studyPathDashboardKey: `${STUDYMESH_GUIDE_STUDY_PATH_ID}-${index}`,
   studyPathDashboardName: lesson.title,
   studyPathDashboardIndex: index,
-  studyPathDashboardCount: guideLessons.slice(0, 2).length,
+  studyPathDashboardCount: guideLessons.length,
   studyPathFolderName: STUDYMESH_GUIDE_FOLDER_NAME,
 })
+
+const countGuideComponents = (lesson: GuideDashboard): number =>
+  2 + (lesson.quizzes?.length ? 1 : 0)
 
 const createGuideLayout = (
   lesson: GuideDashboard,
   index: number,
 ): DashboardLayout => {
-  const contentBlock: ComponentData = lesson.markdown
+  const markdown = lesson.markdown || lesson.sourceMarkdown
+  const contentBlock: ComponentData = markdown
     ? {
         id: `${lesson.id}-markdown`,
         type: 'MarkdownBlock',
         props: withStudyPathProps(lesson, index, {
           __blockType: 'MarkdownBlock',
           title: lesson.widgetTitle || lesson.title,
-          markdown: lesson.markdown,
+          markdown,
         }),
       }
     : {
@@ -203,6 +245,18 @@ const createGuideLayout = (
         }),
       }
 
+  const quizBlock: ComponentData | null = lesson.quizzes?.length
+    ? {
+        id: `${lesson.id}-mini-quiz`,
+        type: 'QuizCarouselBlock',
+        props: withStudyPathProps(lesson, index, {
+          __blockType: 'QuizCarouselBlock',
+          title: 'Mini quiz',
+          items: lesson.quizzes,
+        }),
+      }
+    : null
+
   const components: ComponentData[] = [
     {
       id: `${lesson.id}-title`,
@@ -215,6 +269,7 @@ const createGuideLayout = (
       },
     },
     contentBlock,
+    ...(quizBlock ? [quizBlock] : []),
   ]
 
   return {
@@ -244,10 +299,10 @@ const createGuideLayout = (
   }
 }
 
-export const createStudyMeshGuideDashboards = (): SavedDashboardRecord[] => {
-  const now = '2026-05-19T23:47:47.841Z'
-
-  return guideLessons.slice(0, 2).map((lesson, lessonIndex) => {
+export const createStudyMeshGuideDashboards = (
+  now = new Date().toISOString(),
+): SavedDashboardRecord[] =>
+  guideLessons.map((lesson, lessonIndex) => {
     const index = lessonIndex + 1
     return {
       id: `studymesh-guide-dashboard-${index}`,
@@ -260,15 +315,15 @@ export const createStudyMeshGuideDashboards = (): SavedDashboardRecord[] => {
       isPublic: false,
       createdAt: now,
       updatedAt: now,
-      componentsCount: 2,
+      componentsCount: countGuideComponents(lesson),
     }
   })
-}
 
-export const createStudyMeshGuideStudyGuide = (): StudyGuideRecord => {
-  const now = '2026-05-19T23:47:47.841Z'
+export const createStudyMeshGuideStudyGuide = (
+  now = new Date().toISOString(),
+): StudyGuideRecord => {
   const studyPath = createStudyPathContainerState(
-    createStudyMeshGuideDashboards(),
+    createStudyMeshGuideDashboards(now),
   )
 
   if (!studyPath) {
@@ -371,7 +426,7 @@ export const seedStudyMeshGuideStudyPath = ({
     return removedLegacyGuideDashboards
   }
 
-  if (existingGuide) {
+  if (!force && existingGuide) {
     window.localStorage.setItem(STUDYMESH_GUIDE_SEEDED_KEY, 'true')
     return removedLegacyGuideDashboards
   }

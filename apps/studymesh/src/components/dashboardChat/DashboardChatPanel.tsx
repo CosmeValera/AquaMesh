@@ -2481,7 +2481,6 @@ const DashboardChatPanel = ({
 
     setDraft(trimmed)
     setError('')
-    window.setTimeout(() => draftInputRef.current?.focus(), 0)
   }
 
   useEffect(() => {

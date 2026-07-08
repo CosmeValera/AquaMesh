@@ -277,6 +277,7 @@ describe('DashboardChatPanel quick create menu', () => {
     await waitFor(() => expect(input).toHaveValue('Explain photosynthesis'))
     expect(onQueuedDraftConsumed).toHaveBeenCalledWith('explain-draft-1')
     expect(askDashboardSources).not.toHaveBeenCalled()
+    expect(input).not.toHaveFocus()
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Send dashboard question' }),
@@ -300,6 +301,7 @@ describe('DashboardChatPanel quick create menu', () => {
 
     await waitFor(() => expect(input).toHaveValue('Replacement explain prompt'))
     expect(askDashboardSources).not.toHaveBeenCalled()
+    expect(input).not.toHaveFocus()
   })
 
   it('shows one Create entry point instead of permanent quick-create buttons', () => {

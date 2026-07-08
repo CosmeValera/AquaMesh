@@ -27,6 +27,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import CloseIcon from '@mui/icons-material/Close'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import TipsAndUpdatesOutlinedIcon from '@mui/icons-material/TipsAndUpdatesOutlined'
 import {
   OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
@@ -34,12 +35,10 @@ import {
 } from '../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
 import { PREFILL_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
-import {
-  getHostedAiPodcastAudioUrl,
-  type HostedAiPodcast,
-} from '../../quickCreate/ai'
+import { type HostedAiPodcast } from '../../quickCreate/ai'
 import type { DashboardLayout } from '../../state/store'
 import { useInterfaceText } from '../../language/interfaceLanguage'
+import { useOptionalPodcastPlayer } from '../podcast/PodcastPlayerProvider'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -1145,6 +1144,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   onAskAi,
 }) => {
   const { t } = useInterfaceText()
+  const podcastPlayer = useOptionalPodcastPlayer()
   const explainButtonLabel = t('practice.explain')
   const focusedQuizStorageKey = useMemo(
     () => createFocusedQuizStorageKey(type, props),
@@ -1218,43 +1218,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     () => toHostedAiPodcast(props.podcast),
     [props.podcast],
   )
-  const [podcastAudioUrl, setPodcastAudioUrl] = useState('')
-  const [podcastAudioError, setPodcastAudioError] = useState('')
 
   useEffect(() => {
     setQuizHintOpen(false)
   }, [focusedQuestionIndex, selectedIndex, type])
-
-  useEffect(() => {
-    if (type !== 'PodcastBlock' || !podcast?.audioPath) {
-      setPodcastAudioUrl('')
-      setPodcastAudioError('')
-      return
-    }
-
-    let cancelled = false
-    setPodcastAudioUrl('')
-    setPodcastAudioError('')
-    getHostedAiPodcastAudioUrl(podcast.audioPath)
-      .then((signedUrl) => {
-        if (!cancelled) {
-          setPodcastAudioUrl(signedUrl)
-        }
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          setPodcastAudioError(
-            error instanceof Error
-              ? error.message
-              : 'Could not open podcast audio.',
-          )
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [podcast?.audioPath, type])
 
   useEffect(() => {
     return () => {
@@ -3228,24 +3195,24 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           ) : null}
         </Stack>
 
-        {podcastAudioUrl ? (
-          <Box
-            component="audio"
-            controls
-            src={podcastAudioUrl}
-            onError={() => {
-              setPodcastAudioError(
-                'Podcast audio is not available yet. Try regenerating the podcast.',
-              )
-              setPodcastAudioUrl('')
-            }}
-            sx={{ width: '100%' }}
-          />
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            {podcastAudioError || 'Preparing podcast audio...'}
-          </Typography>
-        )}
+        <Button
+          variant="contained"
+          startIcon={<PlayArrowIcon />}
+          disabled={!podcastPlayer}
+          onClick={() => {
+            podcastPlayer?.openPodcast({ podcast })
+          }}
+          sx={{
+            alignSelf: 'flex-start',
+            borderRadius: 1.25,
+            textTransform: 'none',
+            fontWeight: 800,
+          }}
+        >
+          {podcastPlayer?.activePodcast?.audioPath === podcast.audioPath
+            ? t('podcastPlayer.openPlayer')
+            : t('podcastPlayer.listen')}
+        </Button>
 
         {podcast.chapters.length > 0 ? (
           <Stack spacing={0.75}>

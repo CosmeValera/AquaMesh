@@ -310,7 +310,7 @@ export const createStudyMeshGuideDashboards = (
       folder: STUDYMESH_GUIDE_FOLDER_NAME,
       folderColor: STUDYMESH_GUIDE_FOLDER_COLOR,
       layout: createGuideLayout(lesson, index),
-      description: 'Built-in StudyMesh guide Study Guide.',
+      description: 'Quick StudyMesh tutorial.',
       tags: ['quick-create', 'study-path', 'starter', 'guide'],
       isPublic: false,
       createdAt: now,
@@ -334,7 +334,7 @@ export const createStudyMeshGuideStudyGuide = (
     id: STUDYMESH_GUIDE_STUDY_PATH_ID,
     title: STUDYMESH_GUIDE_TITLE,
     folderName: STUDYMESH_GUIDE_FOLDER_NAME,
-    description: 'Built-in StudyMesh guide Study Guide.',
+    description: 'Quick StudyMesh tutorial.',
     studyPath,
     createdAt: now,
     updatedAt: now,
@@ -436,19 +436,10 @@ export const seedStudyMeshGuideStudyPath = ({
   return true
 }
 
-export const clearStudyMeshGuideSeedMarker = () => {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  window.localStorage.removeItem(STUDYMESH_GUIDE_SEEDED_KEY)
-}
-
 export const ensureStarterDashboards = () => {
   const oldStartersRemoved = removeOldStarterDashboards()
-  const guideSeeded = seedStudyMeshGuideStudyPath()
 
-  if ((oldStartersRemoved || guideSeeded) && typeof window !== 'undefined') {
+  if (oldStartersRemoved && typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('dashboardStorageUpdated'))
   }
 }

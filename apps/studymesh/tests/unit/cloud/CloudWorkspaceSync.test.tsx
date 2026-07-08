@@ -6,6 +6,7 @@ const cloudSyncMocks = vi.hoisted(() => {
     loadWorkspaceBundle: vi.fn(),
     saveWorkspaceBundle: vi.fn(),
     upsertProfile: vi.fn(),
+    seedWelcomeGuideForNewAccount: vi.fn(),
     upsertStudyGuide: vi.fn(),
     updateStudyGuideSummary: vi.fn(),
     deleteWidgetVersions: vi.fn(),
@@ -15,6 +16,7 @@ const cloudSyncMocks = vi.hoisted(() => {
   }
   const studyGuideStorage = {
     replaceSummariesFromCloud: vi.fn(),
+    cacheFromCloud: vi.fn(),
     getById: vi.fn(),
     getSummaryById: vi.fn(),
   }
@@ -35,7 +37,14 @@ const cloudSyncMocks = vi.hoisted(() => {
     readWorkspaceCacheOwner: vi.fn(),
     writeLocalWorkspaceSnapshot: vi.fn(),
     writeWorkspaceCacheOwner: vi.fn(),
-    clearStudyMeshGuideSeedMarker: vi.fn(),
+    createStudyMeshGuideStudyGuide: vi.fn(() => ({
+      id: 'studymesh-student-knowledge-wiki-a-beginner-s-guide',
+      title: 'Welcome to StudyMesh',
+      folderName: 'StudyMesh Guide',
+      studyPath: { dashboards: [] },
+      createdAt: '2026-07-08T00:00:00.000Z',
+      updatedAt: '2026-07-08T00:00:00.000Z',
+    })),
   }
 })
 
@@ -85,8 +94,7 @@ vi.mock('../../../src/studyGuides/storage', () => ({
 }))
 
 vi.mock('../../../src/studyGuides/studyMeshGuideSeed', () => ({
-  clearStudyMeshGuideSeedMarker:
-    cloudSyncMocks.clearStudyMeshGuideSeedMarker,
+  createStudyMeshGuideStudyGuide: cloudSyncMocks.createStudyMeshGuideStudyGuide,
 }))
 
 vi.mock('../../../src/state/store', () => ({
@@ -123,11 +131,17 @@ describe('CloudWorkspaceSync profile deletion guard', () => {
     )
     cloudSyncMocks.repository.upsertStudyGuide.mockResolvedValue({})
     cloudSyncMocks.repository.updateStudyGuideSummary.mockResolvedValue({})
+    cloudSyncMocks.repository.seedWelcomeGuideForNewAccount.mockResolvedValue(
+      null,
+    )
     cloudSyncMocks.repository.upsertProfile.mockResolvedValue({
       id: 'user-1',
     })
     cloudSyncMocks.studyGuideStorage.replaceSummariesFromCloud.mockReturnValue(
       undefined,
+    )
+    cloudSyncMocks.studyGuideStorage.cacheFromCloud.mockImplementation(
+      (studyGuide) => studyGuide,
     )
     cloudSyncMocks.studyGuideStorage.getById.mockReturnValue(null)
     cloudSyncMocks.studyGuideStorage.getSummaryById.mockReturnValue(null)
@@ -156,31 +170,47 @@ describe('CloudWorkspaceSync profile deletion guard', () => {
     expect(cloudSyncMocks.repository.saveWorkspaceBundle).not.toHaveBeenCalled()
   })
 
-  it('clears the StudyMesh Guide seed marker for a different empty owner', async () => {
+  it('asks Supabase to seed the welcome guide for a new empty owner', async () => {
     cloudSyncMocks.readWorkspaceCacheOwner.mockReturnValue('old-user')
+    const seededGuide = {
+      id: 'studymesh-student-knowledge-wiki-a-beginner-s-guide',
+      title: 'Welcome to StudyMesh',
+      folderName: 'StudyMesh Guide',
+      studyPath: { dashboards: [] },
+      createdAt: '2026-07-08T00:00:00.000Z',
+      updatedAt: '2026-07-08T00:00:00.000Z',
+    }
+    cloudSyncMocks.repository.seedWelcomeGuideForNewAccount.mockResolvedValue(
+      seededGuide,
+    )
 
     render(<CloudWorkspaceSync />)
 
     await waitFor(() => {
       expect(
-        cloudSyncMocks.clearStudyMeshGuideSeedMarker,
-      ).toHaveBeenCalled()
+        cloudSyncMocks.repository.seedWelcomeGuideForNewAccount,
+      ).toHaveBeenCalledWith(expect.objectContaining({ id: seededGuide.id }))
+      expect(
+        cloudSyncMocks.studyGuideStorage.cacheFromCloud,
+      ).toHaveBeenCalledWith(seededGuide)
     })
     expect(cloudSyncMocks.writeWorkspaceCacheOwner).toHaveBeenCalledWith(
       'user-1',
     )
   })
 
-  it('keeps the StudyMesh Guide seed marker for the same empty owner', async () => {
+  it('does not cache a welcome guide when Supabase reports no seed', async () => {
     cloudSyncMocks.readWorkspaceCacheOwner.mockReturnValue('user-1')
 
     render(<CloudWorkspaceSync />)
 
     await waitFor(() => {
-      expect(cloudSyncMocks.repository.upsertProfile).toHaveBeenCalled()
+      expect(
+        cloudSyncMocks.repository.seedWelcomeGuideForNewAccount,
+      ).toHaveBeenCalled()
     })
     expect(
-      cloudSyncMocks.clearStudyMeshGuideSeedMarker,
+      cloudSyncMocks.studyGuideStorage.cacheFromCloud,
     ).not.toHaveBeenCalled()
   })
 

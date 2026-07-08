@@ -138,6 +138,11 @@ export interface StudyGuideSummaryRow {
   updated_at: string
 }
 
+interface WelcomeGuideSeedRpcRow {
+  seed_status: string
+  seeded_study_guide: StudyGuideRow | null
+}
+
 const profileFromRow = (row: ProfileRow): UserProfile => ({
   id: row.id,
   email: row.email || undefined,
@@ -336,21 +341,6 @@ const studyGuideSummaryFromRow = (
   updatedAt: row.updated_at,
 })
 
-const studyGuideSummaryFromRecord = (
-  record: StudyGuideRecord,
-): StudyGuideSummary => ({
-  id: record.id,
-  title: record.title,
-  folderName: record.folderName,
-  description: record.description,
-  emoji: record.emoji || record.studyPath.emoji,
-  pinnedAt: record.pinnedAt ?? null,
-  pageCount: record.studyPath.dashboards.length,
-  firstPageTitle: record.studyPath.dashboards[0]?.name,
-  createdAt: record.createdAt,
-  updatedAt: record.updatedAt,
-})
-
 const studyGuideSummaryToRow = (
   summary: StudyGuideSummary,
 ): Pick<
@@ -477,9 +467,7 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   async upsertProfile(profile: UserProfile): Promise<UserProfile> {
     const row = profileToRow(profile)
     await assertMutation(
-      client
-        .from('profiles')
-        .upsert(row, { onConflict: 'id' }),
+      client.from('profiles').upsert(row, { onConflict: 'id' }),
     )
 
     return profileFromRow(row)
@@ -498,6 +486,25 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
         'StudyMesh profile was not deleted. Apply the delete_own_profile Supabase RPC, then try again.',
       )
     }
+  },
+
+  async seedWelcomeGuideForNewAccount(
+    studyGuide: StudyGuideRecord,
+  ): Promise<StudyGuideRecord | null> {
+    const { data, error } = await client.rpc('seed_own_welcome_guide', {
+      study_guide: toCloudJson(studyGuide),
+    })
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    const result = (
+      Array.isArray(data) ? data[0] : data
+    ) as WelcomeGuideSeedRpcRow | null
+    return result?.seeded_study_guide
+      ? studyGuideFromRow(result.seeded_study_guide)
+      : null
   },
 
   async listDashboards(ownerId: string): Promise<SavedDashboard[]> {
@@ -534,11 +541,9 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   ): Promise<SavedDashboard> {
     const row = mapSavedDashboardToDashboardRow(ownerId, dashboard)
     await assertMutation(
-      client
-        .from('user_dashboards')
-        .upsert(row, {
-          onConflict: 'owner_id,id',
-        }),
+      client.from('user_dashboards').upsert(row, {
+        onConflict: 'owner_id,id',
+      }),
     )
 
     return mapDashboardRowToSavedDashboard(row)
@@ -590,9 +595,7 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   ): Promise<CustomWidget> {
     const row = widgetToRow(ownerId, widget)
     await assertMutation(
-      client
-        .from('user_widgets')
-        .upsert(row, { onConflict: 'owner_id,id' }),
+      client.from('user_widgets').upsert(row, { onConflict: 'owner_id,id' }),
     )
 
     return widgetFromRow(row)
@@ -634,11 +637,9 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   ): Promise<WidgetVersion> {
     const row = widgetVersionToRow(ownerId, version)
     await assertMutation(
-      client
-        .from('user_widget_versions')
-        .upsert(row, {
-          onConflict: 'owner_id,widget_id,version',
-        }),
+      client.from('user_widget_versions').upsert(row, {
+        onConflict: 'owner_id,widget_id,version',
+      }),
     )
 
     return widgetVersionFromRow(row)
@@ -677,11 +678,9 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   ): Promise<WorkspaceState> {
     const row = workspaceStateToRow(workspaceState)
     await assertMutation(
-      client
-        .from('user_workspace_state')
-        .upsert(row, {
-          onConflict: 'owner_id',
-        }),
+      client.from('user_workspace_state').upsert(row, {
+        onConflict: 'owner_id',
+      }),
     )
 
     return workspaceStateFromRow(row)
@@ -740,11 +739,9 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
   ): Promise<StudyGuideRecord> {
     const row = studyGuideToRow(ownerId, studyGuide)
     await assertMutation(
-      client
-        .from('user_study_guides')
-        .upsert(row, {
-          onConflict: 'owner_id,id',
-        }),
+      client.from('user_study_guides').upsert(row, {
+        onConflict: 'owner_id,id',
+      }),
     )
 
     return studyGuideFromRow(row)

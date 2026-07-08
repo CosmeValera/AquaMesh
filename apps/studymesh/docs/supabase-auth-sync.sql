@@ -147,6 +147,17 @@ create table if not exists public.hosted_ai_account_history (
   updated_at timestamptz not null default now()
 );
 
+-- Auth-user lifecycle onboarding. Rows are created only when the Supabase Auth
+-- user is first created, so deleting/recreating the StudyMesh profile does not
+-- re-arm first-run onboarding.
+create table if not exists public.account_onboarding_state (
+  owner_id uuid primary key references auth.users(id) on delete cascade,
+  welcome_guide_pending boolean not null default true,
+  welcome_guide_seeded_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Audit trail for hosted AI gateway usage. The browser may read its own
 -- events, but writes are reserved for the Vercel gateway through service role
 -- RPCs so users cannot mint or spend credits directly from the client.
@@ -314,6 +325,11 @@ create trigger hosted_ai_account_history_set_updated_at
 before update on public.hosted_ai_account_history
 for each row execute function public.set_updated_at();
 
+drop trigger if exists account_onboarding_state_set_updated_at on public.account_onboarding_state;
+create trigger account_onboarding_state_set_updated_at
+before update on public.account_onboarding_state
+for each row execute function public.set_updated_at();
+
 drop trigger if exists hosted_ai_usage_events_set_updated_at on public.hosted_ai_usage_events;
 create trigger hosted_ai_usage_events_set_updated_at
 before update on public.hosted_ai_usage_events
@@ -378,6 +394,10 @@ create index if not exists hosted_ai_accounts_updated_idx
 create index if not exists hosted_ai_account_history_deleted_idx
   on public.hosted_ai_account_history(last_profile_deleted_at);
 
+create index if not exists account_onboarding_state_pending_idx
+  on public.account_onboarding_state(owner_id, welcome_guide_pending)
+  where welcome_guide_pending = true;
+
 create index if not exists hosted_ai_usage_events_owner_created_idx
   on public.hosted_ai_usage_events(owner_id, created_at desc);
 
@@ -441,6 +461,10 @@ begin
   on conflict on constraint hosted_ai_account_history_pkey do update
     set first_profile_created_at = public.hosted_ai_account_history.first_profile_created_at;
 
+  insert into public.account_onboarding_state (owner_id)
+  values (new.id)
+  on conflict on constraint account_onboarding_state_pkey do nothing;
+
   return new;
 end;
 $$;
@@ -483,6 +507,124 @@ $$;
 
 revoke all on function public.delete_own_profile() from public;
 grant execute on function public.delete_own_profile() to authenticated;
+
+create or replace function public.seed_own_welcome_guide(study_guide jsonb)
+returns table (
+  seed_status text,
+  seeded_study_guide jsonb
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_owner uuid := auth.uid();
+  onboarding public.account_onboarding_state%rowtype;
+  existing_guide public.user_study_guides%rowtype;
+  inserted_guide public.user_study_guides%rowtype;
+  guide_path jsonb := study_guide -> 'studyPath';
+  guide_id text := study_guide ->> 'id';
+  created_at_value timestamptz := coalesce(nullif(study_guide ->> 'createdAt', '')::timestamptz, now());
+  updated_at_value timestamptz := coalesce(nullif(study_guide ->> 'updatedAt', '')::timestamptz, created_at_value);
+  dashboard_count integer := 0;
+  first_title text := null;
+begin
+  if current_owner is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select *
+  into onboarding
+  from public.account_onboarding_state
+  where owner_id = current_owner
+  for update;
+
+  if not found then
+    seed_status := 'not-eligible';
+    seeded_study_guide := null;
+    return next;
+    return;
+  end if;
+
+  if onboarding.welcome_guide_pending is not true
+     or onboarding.welcome_guide_seeded_at is not null then
+    seed_status := 'already-seeded';
+    seeded_study_guide := null;
+    return next;
+    return;
+  end if;
+
+  if guide_id <> 'studymesh-student-knowledge-wiki-a-beginner-s-guide' then
+    raise exception 'Invalid welcome guide id';
+  end if;
+
+  if jsonb_typeof(guide_path) <> 'object' then
+    raise exception 'Invalid welcome guide payload';
+  end if;
+
+  if jsonb_typeof(guide_path -> 'dashboards') = 'array' then
+    dashboard_count := jsonb_array_length(guide_path -> 'dashboards');
+    first_title := guide_path -> 'dashboards' -> 0 ->> 'name';
+  end if;
+
+  insert into public.user_study_guides (
+    id,
+    owner_id,
+    title,
+    folder_name,
+    description,
+    emoji,
+    page_count,
+    first_page_title,
+    study_path,
+    pinned_at,
+    retention_candidate_at,
+    created_at,
+    updated_at
+  )
+  values (
+    guide_id,
+    current_owner,
+    study_guide ->> 'title',
+    coalesce(study_guide ->> 'folderName', 'StudyMesh Guide'),
+    nullif(study_guide ->> 'description', ''),
+    nullif(study_guide ->> 'emoji', ''),
+    dashboard_count,
+    first_title,
+    guide_path,
+    null,
+    null,
+    created_at_value,
+    updated_at_value
+  )
+  on conflict (owner_id, id) do nothing
+  returning * into inserted_guide;
+
+  if inserted_guide.id is null then
+    select *
+    into existing_guide
+    from public.user_study_guides
+    where owner_id = current_owner
+      and id = guide_id;
+
+    seed_status := 'already-exists';
+  else
+    existing_guide := inserted_guide;
+    seed_status := 'seeded';
+  end if;
+
+  update public.account_onboarding_state
+  set welcome_guide_pending = false,
+      welcome_guide_seeded_at = coalesce(welcome_guide_seeded_at, now())
+  where owner_id = current_owner;
+
+  seeded_study_guide := to_jsonb(existing_guide);
+  return next;
+end;
+$$;
+
+revoke all on function public.seed_own_welcome_guide(jsonb) from public;
+grant execute on function public.seed_own_welcome_guide(jsonb) to authenticated;
 
 create or replace function public.hosted_ai_credit_cost(p_surface text)
 returns integer
@@ -1330,6 +1472,7 @@ alter table public.user_widget_versions enable row level security;
 alter table public.user_workspace_state enable row level security;
 alter table public.hosted_ai_accounts enable row level security;
 alter table public.hosted_ai_account_history enable row level security;
+alter table public.account_onboarding_state enable row level security;
 alter table public.hosted_ai_usage_events enable row level security;
 alter table public.hosted_ai_credit_purchases enable row level security;
 alter table public.podcast_tts_monthly_usage enable row level security;
@@ -1388,6 +1531,12 @@ using (owner_id = auth.uid());
 drop policy if exists "user_study_guides_select_own" on public.user_study_guides;
 create policy "user_study_guides_select_own"
 on public.user_study_guides for select
+to authenticated
+using (owner_id = auth.uid());
+
+drop policy if exists "account_onboarding_state_select_own" on public.account_onboarding_state;
+create policy "account_onboarding_state_select_own"
+on public.account_onboarding_state for select
 to authenticated
 using (owner_id = auth.uid());
 

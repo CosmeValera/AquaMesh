@@ -15,7 +15,7 @@ import {
   type WidgetStorageUpdatedDetail,
 } from '../components/WidgetEditor/WidgetStorage'
 import { useStore } from '../state/store'
-import { clearStudyMeshGuideSeedMarker } from '../studyGuides/studyMeshGuideSeed'
+import { createStudyMeshGuideStudyGuide } from '../studyGuides/studyMeshGuideSeed'
 import {
   STUDY_GUIDES_CHANGED_EVENT,
   StudyGuideStorage,
@@ -117,8 +117,8 @@ const getUserDisplayName = (user: {
   return typeof displayName === 'string'
     ? displayName
     : typeof fullName === 'string'
-      ? fullName
-      : user.email || 'Student'
+    ? fullName
+    : user.email || 'Student'
 }
 
 const isStudyPathDashboard = (dashboard: {
@@ -319,9 +319,6 @@ const CloudWorkspaceSync = () => {
           writeWorkspaceCacheOwner(ownerId)
         } else {
           isApplyingRemoteRef.current = true
-          if (cacheOwnerId !== ownerId) {
-            clearStudyMeshGuideSeedMarker()
-          }
           applyCloudBundleToLocalCache(cloudBundle, {
             preserveFullStudyGuides: false,
           })
@@ -335,6 +332,20 @@ const CloudWorkspaceSync = () => {
             return
           }
           await repository.upsertProfile(profile)
+        }
+
+        if (!cancelled && !isProfileDeleteInProgressRef.current) {
+          const seededWelcomeGuide =
+            await repository.seedWelcomeGuideForNewAccount(
+              createStudyMeshGuideStudyGuide(),
+            )
+          if (seededWelcomeGuide && !cancelled) {
+            isApplyingRemoteRef.current = true
+            StudyGuideStorage.cacheFromCloud(seededWelcomeGuide)
+            window.setTimeout(() => {
+              isApplyingRemoteRef.current = false
+            }, 0)
+          }
         }
 
         setHasHydrated(true)
@@ -371,10 +382,7 @@ const CloudWorkspaceSync = () => {
     }
 
     const runSync = async () => {
-      if (
-        isApplyingRemoteRef.current ||
-        isProfileDeleteInProgressRef.current
-      ) {
+      if (isApplyingRemoteRef.current || isProfileDeleteInProgressRef.current) {
         return
       }
 
@@ -556,9 +564,7 @@ const CloudWorkspaceSync = () => {
         return
       }
 
-      if (
-        detail?.action === 'progress' || detail?.action === 'cache'
-      ) {
+      if (detail?.action === 'progress' || detail?.action === 'cache') {
         return
       }
 

@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   STUDYMESH_GUIDE_STUDY_PATH_ID,
-  clearStudyMeshGuideSeedMarker,
   ensureStarterDashboards,
   seedStudyMeshGuideStudyPath,
 } from '../../../src/studyGuides/studyMeshGuideSeed'
@@ -132,21 +131,6 @@ describe('StudyMesh guide seed', () => {
     expect(studyGuides[0].studyPath.dashboards).toHaveLength(3)
   })
 
-  it('can clear the seed marker when a different cloud owner starts empty', () => {
-    expect(seedStudyMeshGuideStudyPath()).toBe(true)
-
-    window.localStorage.setItem('studymesh_study_guides', JSON.stringify([]))
-    expect(seedStudyMeshGuideStudyPath()).toBe(false)
-
-    clearStudyMeshGuideSeedMarker()
-
-    expect(seedStudyMeshGuideStudyPath()).toBe(true)
-    const studyGuides = JSON.parse(
-      window.localStorage.getItem('studymesh_study_guides') || '[]',
-    )
-    expect(studyGuides[0].id).toBe(STUDYMESH_GUIDE_STUDY_PATH_ID)
-  })
-
   it('removes legacy starter dashboards without recreating them', () => {
     window.localStorage.setItem(
       'customDashboards',
@@ -181,5 +165,8 @@ describe('StudyMesh guide seed', () => {
         folder: 'Mine',
       },
     ])
+    expect(
+      JSON.parse(window.localStorage.getItem('studymesh_study_guides') || '[]'),
+    ).toEqual([])
   })
 })

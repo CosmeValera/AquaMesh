@@ -203,6 +203,90 @@ describe('workspace cloud repository', () => {
     )
   })
 
+  it('seeds the Welcome Guide through the auth-lifecycle RPC', async () => {
+    const studyGuide = {
+      id: 'studymesh-student-knowledge-wiki-a-beginner-s-guide',
+      title: 'Welcome to StudyMesh',
+      folderName: 'StudyMesh Guide',
+      emoji: '\u2728',
+      studyPath: {
+        pathId: 'studymesh-student-knowledge-wiki-a-beginner-s-guide',
+        title: 'Welcome to StudyMesh',
+        folderName: 'StudyMesh Guide',
+        dashboards: [],
+        selectedIndex: 0,
+      },
+      createdAt: '2026-07-08T00:00:00.000Z',
+      updatedAt: '2026-07-08T00:00:00.000Z',
+    }
+    const supabase = {
+      rpc: vi.fn().mockResolvedValue({
+        data: {
+          seed_status: 'seeded',
+          seeded_study_guide: {
+            id: studyGuide.id,
+            owner_id: 'user-1',
+            title: studyGuide.title,
+            folder_name: studyGuide.folderName,
+            description: null,
+            emoji: studyGuide.emoji,
+            page_count: 0,
+            first_page_title: null,
+            study_path: studyGuide.studyPath,
+            pinned_at: null,
+            created_at: studyGuide.createdAt,
+            updated_at: studyGuide.updatedAt,
+          },
+        },
+        error: null,
+      }),
+    }
+    const repository = createCloudRepository(supabase as never)
+
+    const seeded = await repository.seedWelcomeGuideForNewAccount(studyGuide)
+
+    expect(supabase.rpc).toHaveBeenCalledWith('seed_own_welcome_guide', {
+      study_guide: studyGuide,
+    })
+    expect(seeded).toEqual(
+      expect.objectContaining({
+        id: studyGuide.id,
+        title: studyGuide.title,
+        folderName: studyGuide.folderName,
+      }),
+    )
+  })
+
+  it('returns null when the Welcome Guide was already handled', async () => {
+    const supabase = {
+      rpc: vi.fn().mockResolvedValue({
+        data: {
+          seed_status: 'already-seeded',
+          seeded_study_guide: null,
+        },
+        error: null,
+      }),
+    }
+    const repository = createCloudRepository(supabase as never)
+
+    const seeded = await repository.seedWelcomeGuideForNewAccount({
+      id: 'studymesh-student-knowledge-wiki-a-beginner-s-guide',
+      title: 'Welcome to StudyMesh',
+      folderName: 'StudyMesh Guide',
+      studyPath: {
+        pathId: 'studymesh-student-knowledge-wiki-a-beginner-s-guide',
+        title: 'Welcome to StudyMesh',
+        folderName: 'StudyMesh Guide',
+        dashboards: [],
+        selectedIndex: 0,
+      },
+      createdAt: '2026-07-08T00:00:00.000Z',
+      updatedAt: '2026-07-08T00:00:00.000Z',
+    })
+
+    expect(seeded).toBeNull()
+  })
+
   it('keeps the StudyMesh profile delete RPC in the Supabase schema', () => {
     const sqlPath = resolve(process.cwd(), 'docs/supabase-auth-sync.sql')
     const sql = readFileSync(sqlPath, 'utf8').replace(/\s+/g, ' ')
@@ -222,6 +306,33 @@ describe('workspace cloud repository', () => {
     )
   })
 
+  it('keeps Welcome Guide onboarding tied to Supabase Auth user creation', () => {
+    const sqlPath = resolve(process.cwd(), 'docs/supabase-auth-sync.sql')
+    const sql = readFileSync(sqlPath, 'utf8').replace(/\s+/g, ' ')
+
+    expect(sql).toContain(
+      'create table if not exists public.account_onboarding_state',
+    )
+    expect(sql).toContain(
+      'owner_id uuid primary key references auth.users(id) on delete cascade',
+    )
+    expect(sql).toContain(
+      'insert into public.account_onboarding_state (owner_id) values (new.id) on conflict on constraint account_onboarding_state_pkey do nothing',
+    )
+    expect(sql).toContain(
+      'create or replace function public.seed_own_welcome_guide(study_guide jsonb)',
+    )
+    expect(sql).toContain(
+      "for update; if not found then seed_status := 'not-eligible'",
+    )
+    expect(sql).toContain(
+      'welcome_guide_pending is not true or onboarding.welcome_guide_seeded_at is not null',
+    )
+    expect(sql).toContain(
+      'grant execute on function public.seed_own_welcome_guide(jsonb) to authenticated',
+    )
+  })
+
   it('keeps recreated StudyMesh profiles from receiving another initial hosted credit grant', () => {
     const sqlPath = resolve(process.cwd(), 'docs/supabase-auth-sync.sql')
     const sql = readFileSync(sqlPath, 'utf8').replace(/\s+/g, ' ')
@@ -229,12 +340,8 @@ describe('workspace cloud repository', () => {
     expect(sql).toContain(
       'create table if not exists public.hosted_ai_account_history',
     )
-    expect(sql).toContain(
-      'study_credit_balance integer not null default 30',
-    )
-    expect(sql).toContain(
-      'alter column study_credit_balance set default 30',
-    )
+    expect(sql).toContain('study_credit_balance integer not null default 30')
+    expect(sql).toContain('alter column study_credit_balance set default 30')
     expect(sql).toContain("when 'study-guide' then 3")
     expect(sql).toContain(
       'owner_id uuid primary key references auth.users(id) on delete cascade',
@@ -268,12 +375,8 @@ describe('workspace cloud repository', () => {
     expect(sql).toContain(
       'when account.study_credit_balance < 7 then greatest(account.study_credit_balance, 7) else account.study_credit_balance end',
     )
-    expect(sql).toContain(
-      'and account.last_daily_refill_date < current_date',
-    )
-    expect(sql).toContain(
-      '(account.last_daily_refill_date + 1)::timestamptz',
-    )
+    expect(sql).toContain('and account.last_daily_refill_date < current_date')
+    expect(sql).toContain('(account.last_daily_refill_date + 1)::timestamptz')
     expect(sql).toContain('credits_refunded = event.credits_refunded')
     expect(sql).toContain(
       'set study_credit_balance = account.study_credit_balance + purchase.expected_credits',
@@ -294,9 +397,7 @@ describe('workspace cloud repository', () => {
     expect(sql).toContain(
       'case when guide.pinned_at is not null then 0 else 1 end',
     )
-    expect(sql).toContain(
-      'coalesce(guide.pinned_at, guide.created_at) desc',
-    )
+    expect(sql).toContain('coalesce(guide.pinned_at, guide.created_at) desc')
     expect(sql).toContain(
       'create or replace function public.podcast_audio_refresh_retention_candidates',
     )

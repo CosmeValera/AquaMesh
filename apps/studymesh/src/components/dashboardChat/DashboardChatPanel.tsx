@@ -60,6 +60,8 @@ import {
 } from '../../dashboardChat/contextBuilder'
 import {
   askDashboardSources,
+  type DashboardAnswerBasis,
+  type DashboardAnswerContextSupport,
   type DashboardAnswerSourceRef,
 } from '../../dashboardChat/askDashboard'
 import {
@@ -100,7 +102,8 @@ export interface DashboardChatMessage {
   content: string
   createdAt: number
   sourceRefs?: DashboardAnswerSourceRef[]
-  needsExternalSource?: boolean
+  answerBasis?: DashboardAnswerBasis[]
+  contextSupport?: DashboardAnswerContextSupport
   webLookup?: {
     status: 'searching' | 'found' | 'failed'
     sourceId?: string
@@ -367,12 +370,14 @@ const SOURCE_REJECTION_PATTERN =
   /\b(?:don't|dont|do not|stop)\s+use\b|\btry another\b|\banother source\b|\bwrong source\b|\bbad source\b|\bnot that source\b/i
 const SOURCE_SUPPORT_FOLLOWUP_PATTERN =
   /\b(?:what(?:'s| is)? your source|what source|cite|citation|where did you get|what(?:'s| is)? your basis|what(?:'s| is)? your base|base to say|source to say)\b/i
+const WEB_LOOKUP_REQUEST_PATTERN =
+  /\b(?:search|look up|lookup|internet|web|online|latest|current|up[- ]?to[- ]?date|source|sources|citation|cite)\b/i
 const SMALLTALK_PATTERN =
   /^(?:hi|hello|hey|thanks?|thank you|thx|ty|ok|okay|cool|nice|great|what can you do\??)$/i
 const SMALLTALK_HINT_PATTERN =
   /^(?:say\s+hi\b.*|how\s+(?:are|r)?\s*you\b|how you\b|tank\s+yuo)$/i
 const RECALL_PATTERN =
-  /\bagain\b|\brepeat\b|\bearlier\b|\bwhat did you say\b|\bwhat was\b|\bremind me\b/i
+  /\brepeat\b|\bearlier\b|\bwhat did you say\b|\bwhat was\b|\bremind me\b/i
 const QUESTION_TERM_STOPWORDS = new Set([
   'about',
   'apps',
@@ -419,24 +424,6 @@ const QUESTION_TERM_STOPWORDS = new Set([
   'you',
   'your',
 ])
-const TECHNICAL_EVIDENCE_TERMS = [
-  'automation',
-  'workflow',
-  'integration',
-  'configuration',
-  'orchestration',
-  'infrastructure',
-  'provision',
-  'state',
-  'runbook',
-  'job',
-  'schedule',
-  'api',
-  'deploy',
-  'manage',
-  'service',
-]
-
 type AiChatPetId = 'dolphin' | 'bee' | 'parrot'
 
 interface AiChatPetDefinition {
@@ -625,8 +612,6 @@ const DashboardChatPanel = ({
   const [addSourceUrl, setAddSourceUrl] = useState('')
   const [addSourceError, setAddSourceError] = useState('')
   const [addSourceNotice, setAddSourceNotice] = useState('')
-  const [noSourceContentNoticeDismissed, setNoSourceContentNoticeDismissed] =
-    useState(false)
   const [addSourceLoading, setAddSourceLoading] = useState(false)
   const [quickCreateSourceScope, setQuickCreateSourceScope] =
     useState<QuickCreateSourceScope>(
@@ -706,7 +691,6 @@ const DashboardChatPanel = ({
   const userAddedSources = (activeChatSession?.externalSources || []).filter(
     isUserAddedSource,
   )
-  const hasAnswerContext = hasContext || userAddedSources.length > 0
   const activeChatTitle = activeChatSession?.title || 'New chat'
   const displayChatTitle = (title: string) =>
     title === 'New chat' ? t('chat.newChat') : title
@@ -773,10 +757,6 @@ const DashboardChatPanel = ({
   const focusComposerFromSurface = (
     event: React.MouseEvent<HTMLDivElement>,
   ) => {
-    if (!hasAnswerContext) {
-      return
-    }
-
     const target = event.target as HTMLElement | null
     if (target?.closest('button, a, input, textarea, [role="button"]')) {
       return
@@ -921,8 +901,7 @@ const DashboardChatPanel = ({
   ):
     | 'conversational_smalltalk'
     | 'recall_previous_chat'
-    | 'study_guide_question'
-    | 'external_info_needed' => {
+    | 'study_guide_question' => {
     const normalized = question
       .trim()
       .toLowerCase()
@@ -940,7 +919,7 @@ const DashboardChatPanel = ({
       return 'recall_previous_chat'
     }
 
-    return hasAnswerContext ? 'study_guide_question' : 'external_info_needed'
+    return 'study_guide_question'
   }
 
   const isUsefulAssistantAnswer = (message: DashboardChatMessage): boolean =>
@@ -952,23 +931,6 @@ const DashboardChatPanel = ({
     !/^The Study Guide does not contain enough info/i.test(message.content) &&
     !/^I could not find a reliable web source/i.test(message.content) &&
     !/^The provided .*do not contain/i.test(message.content)
-
-  const isWebLookupStatusOnlyMessage = (
-    message: DashboardChatMessage,
-  ): boolean =>
-    message.role === 'assistant' &&
-    Boolean(message.webLookup) &&
-    !message.pending &&
-    ((message.sourceRefs || []).length === 0 ||
-      message.needsExternalSource ||
-      /^This dashboard does not have enough source content/i.test(
-        message.content,
-      ) ||
-      /^The dashboard sources do not contain enough information/i.test(
-        message.content,
-      ) ||
-      /^The Study Guide does not contain enough info/i.test(message.content) ||
-      /^The provided .*do not contain/i.test(message.content))
 
   const answerSmalltalk = (question: string): string => {
     if (/^(?:cool|nice|great|ok|okay)$/i.test(question.trim())) {
@@ -1129,83 +1091,9 @@ const DashboardChatPanel = ({
       ),
     )
 
-  const requiredConceptsForQuestion = (
-    question: string,
-    historyMessages: DashboardChatMessage[] = [],
-  ): string[] => {
-    const expanded = expandQuestionWithChatContext(question, historyMessages)
-    const questionTerms = extractQuestionTerms(question)
-    const expandedTerms = extractQuestionTerms(expanded)
-    const comparisonFollowUp =
-      /\bwhat about\b|\bhow about\b|\bvs\b|\bcompare\b|\bdifference\b/i.test(
-        question,
-      )
-    const sourceSupportFollowUp = SOURCE_SUPPORT_FOLLOWUP_PATTERN.test(question)
-
-    return (
-      comparisonFollowUp || sourceSupportFollowUp
-        ? expandedTerms
-        : questionTerms
-    ).filter((term) => !isConceptSufficientInDashboard(term, expanded))
-  }
-
   const contextTextContains = (term: string): boolean =>
     context.chunks.some((chunk) =>
       `${chunk.title} ${chunk.text}`.toLowerCase().includes(term),
-    )
-
-  const isConceptSufficientInDashboard = (
-    concept: string,
-    question: string,
-  ): boolean => {
-    const relevantChunks = context.chunks.filter((chunk) =>
-      `${chunk.title} ${chunk.text}`.toLowerCase().includes(concept),
-    )
-    if (relevantChunks.length === 0) {
-      return false
-    }
-
-    const combined = relevantChunks
-      .map((chunk) => `${chunk.title} ${chunk.text}`)
-      .join(' ')
-      .toLowerCase()
-    const asksComparison =
-      /\bvs\b|\bcompare\b|\bdifference\b|\bsimilar\b|\bcategory\b/i.test(
-        question,
-      )
-    const asksIntegration = /\bintegrat|work with|connect|run\b/i.test(question)
-
-    if (asksIntegration) {
-      return relevantChunks.some((chunk) => chunk.text.length > 120)
-    }
-
-    if (asksComparison) {
-      return (
-        relevantChunks.some((chunk) => chunk.text.length > 220) &&
-        TECHNICAL_EVIDENCE_TERMS.some((term) => combined.includes(term))
-      )
-    }
-
-    return relevantChunks.some((chunk) => chunk.text.length > 160)
-  }
-
-  const sourceCoversConcept = (
-    source: Pick<DashboardExternalSource, 'title' | 'text'>,
-    concept: string,
-  ): boolean => {
-    const haystack = `${source.title} ${source.text}`.toLowerCase()
-    return (
-      haystack.includes(concept) &&
-      TECHNICAL_EVIDENCE_TERMS.some((term) => haystack.includes(term))
-    )
-  }
-
-  const coveredConceptsFromSources = (
-    sources: Array<Pick<DashboardExternalSource, 'title' | 'text'>>,
-    requiredConcepts: string[],
-  ): string[] =>
-    requiredConcepts.filter((concept) =>
-      sources.some((source) => sourceCoversConcept(source, concept)),
     )
 
   const scoreExternalSource = (
@@ -2146,48 +2034,23 @@ const DashboardChatPanel = ({
       .join('\n')
       .slice(0, 1200)
 
-  const appendWebRetryAnswer = (
-    question: string,
-    historyMessages: DashboardChatMessage[],
-    sourceIds: string[],
-  ) => {
-    const pendingMessage: DashboardChatMessage = {
-      id: makeMessageId(),
-      role: 'assistant',
-      content: '',
-      createdAt: Date.now(),
-      pending: true,
-      externalSourceIds: sourceIds,
-    }
-
-    replaceActiveChatMessages(
-      [...messagesRef.current, pendingMessage],
-      undefined,
-      {
-        scrollToBottom: true,
-      },
-    )
-    void answerQuestion(question, pendingMessage.id, historyMessages, sourceIds)
-  }
-
   const runExternalSourceLookup = async (
     question: string,
-    gapMessageId: string,
+    messageId: string,
     historyMessages: DashboardChatMessage[],
-  ) => {
-    const gapMessageIndex = messagesRef.current.findIndex(
-      (message) => message.id === gapMessageId,
+  ): Promise<string[]> => {
+    const messageIndex = messagesRef.current.findIndex(
+      (message) => message.id === messageId,
     )
     const liveHistoryMessages =
-      gapMessageIndex > 0
-        ? messagesRef.current.slice(0, gapMessageIndex)
+      messageIndex > 0
+        ? messagesRef.current.slice(0, messageIndex)
         : messagesRef.current
     const lookupHistoryMessages =
       historyMessages.length > 0 ? historyMessages : liveHistoryMessages
 
-    updateMessage(gapMessageId, (message) => ({
+    updateMessage(messageId, (message) => ({
       ...message,
-      content: t('chat.searchingWeb'),
       webLookup: { status: 'searching' },
     }))
 
@@ -2195,17 +2058,6 @@ const DashboardChatPanel = ({
       const lookupQuestion = expandQuestionWithChatContext(
         question,
         lookupHistoryMessages,
-      )
-      const requiredConcepts = requiredConceptsForQuestion(
-        question,
-        lookupHistoryMessages,
-      )
-      const dashboardCoveredConcepts = coveredConceptsFromSources(
-        context.chunks,
-        requiredConcepts,
-      )
-      const missingConcepts = requiredConcepts.filter(
-        (concept) => !dashboardCoveredConcepts.includes(concept),
       )
       const sources = upsertExternalSources(
         await fetchDashboardExternalSource({
@@ -2215,25 +2067,9 @@ const DashboardChatPanel = ({
           ...getRejectedSourceFilters(),
         }),
       )
-      const usableSourceIds =
-        missingConcepts.length > 0
-          ? Array.from(
-              new Set(
-                sources
-                  .filter((source) =>
-                    missingConcepts.some((concept) =>
-                      sourceCoversConcept(source, concept),
-                    ),
-                  )
-                  .map((source) => source.id),
-              ),
-            )
-          : sources.map((source) => source.id)
-      const sourceIds = usableSourceIds.length
-        ? usableSourceIds
-        : Array.from(new Set(sources.map((source) => source.id)))
+      const sourceIds = Array.from(new Set(sources.map((source) => source.id)))
 
-      updateMessage(gapMessageId, (message) => ({
+      updateMessage(messageId, (message) => ({
         ...message,
         webLookup: {
           status: 'found',
@@ -2241,12 +2077,10 @@ const DashboardChatPanel = ({
           sourceIds,
         },
       }))
-      appendWebRetryAnswer(question, lookupHistoryMessages, sourceIds)
+      return sourceIds
     } catch (err) {
-      updateMessage(gapMessageId, (message) => ({
+      updateMessage(messageId, (message) => ({
         ...message,
-        content:
-          'I could not find a reliable web source for the missing topic.',
         webLookup: {
           status: 'failed',
           error:
@@ -2255,6 +2089,7 @@ const DashboardChatPanel = ({
               : 'Could not find a useful web source.',
         },
       }))
+      return []
     }
   }
 
@@ -2305,6 +2140,7 @@ const DashboardChatPanel = ({
     historyMessages: DashboardChatMessage[],
     externalSourceIds: string[] = [],
     signal?: AbortSignal,
+    options: { searchWebFirst?: boolean } = {},
   ) => {
     const pendingMessageIndex = messagesRef.current.findIndex(
       (message) => message.id === pendingMessageId,
@@ -2315,25 +2151,16 @@ const DashboardChatPanel = ({
         : messagesRef.current
     const effectiveHistoryMessages =
       historyMessages.length > 0 ? historyMessages : liveHistoryMessages
+    const lookupSourceIds =
+      options.searchWebFirst && externalSourceIds.length === 0
+        ? await runExternalSourceLookup(
+            question,
+            pendingMessageId,
+            effectiveHistoryMessages,
+          )
+        : externalSourceIds
     const { sourceChunks, selectedExternalSourceIds } =
-      selectAnswerSourceChunks(question, externalSourceIds)
-
-    if (!hasAnswerContext && selectedExternalSourceIds.length === 0) {
-      updateMessage(pendingMessageId, (message) => ({
-        ...message,
-        content:
-          'This dashboard does not have enough source content to answer from yet.',
-        needsExternalSource: true,
-        webLookup: { status: 'searching' },
-        pending: false,
-      }))
-      void runExternalSourceLookup(
-        question,
-        pendingMessageId,
-        effectiveHistoryMessages,
-      )
-      return
-    }
+      selectAnswerSourceChunks(question, lookupSourceIds)
 
     try {
       const result = await askDashboardSources({
@@ -2353,30 +2180,22 @@ const DashboardChatPanel = ({
         ...message,
         content: result.answer,
         sourceRefs: result.sourceRefs,
-        needsExternalSource: result.needsExternalSource,
+        answerBasis: result.answerBasis,
+        contextSupport: result.contextSupport,
         externalSourceIds: selectedExternalSourceIds,
         pending: false,
       }))
-      updateLatestLookupDisplayedSources(externalSourceIds, usedWebSourceIds)
+      updateLatestLookupDisplayedSources(lookupSourceIds, usedWebSourceIds)
       prepareGuidePageDraftsForSources(
         usedWebSourceIds,
         question,
         result.answer,
       )
-      if (!result.needsExternalSource) {
-        rememberFinalAnswer({
-          userQuestion: question,
-          finalAssistantAnswer: result.answer,
-          usedSourceIds: usedWebSourceIds,
-        })
-      }
-      if (result.needsExternalSource && externalSourceIds.length === 0) {
-        void runExternalSourceLookup(
-          question,
-          pendingMessageId,
-          effectiveHistoryMessages,
-        )
-      }
+      rememberFinalAnswer({
+        userQuestion: question,
+        finalAssistantAnswer: result.answer,
+        usedSourceIds: usedWebSourceIds,
+      })
     } catch (err) {
       if (isAbortError(err)) {
         updateMessage(pendingMessageId, (message) => ({
@@ -2406,7 +2225,10 @@ const DashboardChatPanel = ({
     }
   }
 
-  const sendQuestion = (question: string) => {
+  const sendQuestion = (
+    question: string,
+    options: { searchWebFirst?: boolean } = {},
+  ) => {
     const trimmed = question.trim()
     if (!trimmed) {
       return
@@ -2475,7 +2297,21 @@ const DashboardChatPanel = ({
       }
     }
 
-    void answerQuestion(trimmed, pendingMessage.id, previousMessages)
+    const searchWebFirst =
+      Boolean(options.searchWebFirst) && intent !== 'conversational_smalltalk'
+    const shouldSearchWeb =
+      searchWebFirst ||
+      (WEB_LOOKUP_REQUEST_PATTERN.test(trimmed) &&
+        intent !== 'conversational_smalltalk')
+
+    void answerQuestion(
+      trimmed,
+      pendingMessage.id,
+      previousMessages,
+      [],
+      undefined,
+      { searchWebFirst: shouldSearchWeb },
+    )
   }
 
   const prefillDraft = (content: string) => {
@@ -2558,9 +2394,9 @@ const DashboardChatPanel = ({
     const pendingMessage: DashboardChatMessage = {
       id: makeMessageId(),
       role: 'assistant',
-      content: 'Trying another source...',
+      content: '',
       createdAt: Date.now(),
-      pending: false,
+      pending: true,
       webLookup: { status: 'searching' },
     }
     const previousMessages = messagesRef.current
@@ -2573,7 +2409,14 @@ const DashboardChatPanel = ({
     )
     setDraft('')
     setError('')
-    void runExternalSourceLookup(question, pendingMessage.id, previousMessages)
+    void answerQuestion(
+      question,
+      pendingMessage.id,
+      previousMessages,
+      [],
+      undefined,
+      { searchWebFirst: true },
+    )
     return true
   }
 
@@ -3120,6 +2963,90 @@ const DashboardChatPanel = ({
     </Box>
   )
 
+  const inferAnswerBasis = (
+    message: DashboardChatMessage,
+  ): DashboardAnswerBasis[] => {
+    if (message.answerBasis?.length) {
+      return message.answerBasis
+    }
+
+    const basis = new Set<DashboardAnswerBasis>()
+    ;(message.sourceRefs || []).forEach((sourceRef) => {
+      if (sourceRef.origin === 'web') {
+        basis.add(
+          sourceRef.originType === 'user-text' ||
+            sourceRef.originType === 'user-web'
+            ? 'added-source'
+            : 'web',
+        )
+        return
+      }
+
+      basis.add('study-guide')
+    })
+
+    return Array.from(basis)
+  }
+
+  const getAnswerBasisLabelKey = (basis: DashboardAnswerBasis) => {
+    switch (basis) {
+      case 'study-guide':
+        return 'chat.basisStudyGuide'
+      case 'added-source':
+        return 'chat.basisAddedSource'
+      case 'web':
+        return 'chat.basisWeb'
+      case 'general':
+        return 'chat.basisGeneral'
+    }
+  }
+
+  const renderAnswerBasisBadges = (message: DashboardChatMessage) => {
+    const basis = inferAnswerBasis(message)
+    if (basis.length === 0) {
+      return null
+    }
+
+    return (
+      <Stack
+        direction="row"
+        spacing={0.5}
+        flexWrap="wrap"
+        useFlexGap
+        sx={{ mb: 0.75 }}
+      >
+        {basis.map((item) => (
+          <Box
+            key={item}
+            component="span"
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              minHeight: 22,
+              px: 0.75,
+              borderRadius: 1,
+              border: 1,
+              borderColor:
+                item === 'general'
+                  ? alpha(theme.palette.warning.main, 0.34)
+                  : alpha(theme.palette.primary.main, 0.28),
+              bgcolor:
+                item === 'general'
+                  ? alpha(theme.palette.warning.main, 0.08)
+                  : alpha(theme.palette.primary.main, 0.07),
+              color: 'text.secondary',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              lineHeight: 1.2,
+            }}
+          >
+            {t(getAnswerBasisLabelKey(item))}
+          </Box>
+        ))}
+      </Stack>
+    )
+  }
+
   const renderCitation = (message: DashboardChatMessage) => {
     const sourceRefs = message.sourceRefs || []
 
@@ -3446,22 +3373,18 @@ const DashboardChatPanel = ({
           theme.palette.mode === 'dark'
             ? 'inset 0 1px 0 rgba(255,255,255,0.04)'
             : 'inset 0 1px 0 rgba(255,255,255,0.9)',
-        cursor: hasAnswerContext ? 'text' : 'default',
+        cursor: 'text',
         transition:
           'border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease',
-        '&:hover': hasAnswerContext
-          ? {
-              borderColor: alpha(theme.palette.primary.main, 0.42),
-            }
-          : undefined,
-        '&:focus-within': hasAnswerContext
-          ? {
-              borderColor: 'primary.main',
-              boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.14)}`,
-            }
-          : undefined,
+        '&:hover': {
+          borderColor: alpha(theme.palette.primary.main, 0.42),
+        },
+        '&:focus-within': {
+          borderColor: 'primary.main',
+          boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.14)}`,
+        },
       }) satisfies SxProps<Theme>,
-    [hasAnswerContext, theme.palette.mode, theme.palette.primary.main],
+    [theme.palette.mode, theme.palette.primary.main],
   )
 
   const composerInputSx = useMemo<SxProps<Theme>>(
@@ -3522,12 +3445,11 @@ const DashboardChatPanel = ({
     flex: '0 0 auto',
     borderRadius: 1,
     bgcolor: 'transparent',
-    color: hasAnswerContext && draft.trim() ? 'primary.main' : 'text.disabled',
+    color: draft.trim() ? 'primary.main' : 'text.disabled',
     '&:hover': {
-      bgcolor:
-        hasAnswerContext && draft.trim()
-          ? alpha(theme.palette.primary.main, 0.08)
-          : 'transparent',
+      bgcolor: draft.trim()
+        ? alpha(theme.palette.primary.main, 0.08)
+        : 'transparent',
     },
     '&.Mui-disabled': {
       bgcolor: 'transparent',
@@ -4170,20 +4092,7 @@ const DashboardChatPanel = ({
               : 'background.light',
         }}
       >
-        {!hasAnswerContext ? (
-          noSourceContentNoticeDismissed ? null : (
-            <Alert
-              severity="info"
-              sx={dismissibleAlertSx}
-              action={renderDismissAlertAction(
-                () => setNoSourceContentNoticeDismissed(true),
-                'info',
-              )}
-            >
-              {t('chat.noSourceContent')}
-            </Alert>
-          )
-        ) : messages.length === 0 ? (
+        {messages.length === 0 ? (
           <Stack
             spacing={1.5}
             alignItems="center"
@@ -4215,7 +4124,6 @@ const DashboardChatPanel = ({
                 <Button
                   key={suggestion.labelKey}
                   variant="outlined"
-                  disabled={!hasAnswerContext}
                   onClick={() => sendQuestion(t(suggestion.labelKey))}
                   sx={{
                     minHeight: 36,
@@ -4440,6 +4348,7 @@ const DashboardChatPanel = ({
                           },
                         }}
                       >
+                        {renderAnswerBasisBadges(message)}
                         {renderMarkdown(message.content, {
                           renderCitation: renderCitation(message),
                         })}
@@ -4708,9 +4617,7 @@ const DashboardChatPanel = ({
                 ) : null}
                 {message.role === 'assistant' && !message.pending ? (
                   <>
-                    {isWebLookupStatusOnlyMessage(message)
-                      ? null
-                      : renderAssistantActions(message)}
+                    {renderAssistantActions(message)}
                     {renderWebLookupStatus(message)}
                   </>
                 ) : null}
@@ -4970,12 +4877,7 @@ const DashboardChatPanel = ({
               inputRef={draftInputRef}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
-              placeholder={
-                hasAnswerContext
-                  ? t('chat.askAnything')
-                  : t('chat.addStudyMaterial')
-              }
-              disabled={!hasAnswerContext}
+              placeholder={t('chat.askAnything')}
               fullWidth
               multiline
               minRows={1}
@@ -4986,9 +4888,6 @@ const DashboardChatPanel = ({
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault()
-                  if (!hasAnswerContext) {
-                    return
-                  }
                   sendQuestion(draft)
                 }
               }}
@@ -5033,33 +4932,50 @@ const DashboardChatPanel = ({
                   </span>
                 </Tooltip>
               </Stack>
-              <Tooltip
-                title={
-                  isHostedAi ? (
-                    <Stack direction="row" spacing={0.75} alignItems="center">
-                      <span>Send -</span>
-                      <StudyCreditCostLabel
-                        amount={chatCreditCost}
-                        variant="tooltip"
-                      />
-                    </Stack>
-                  ) : (
-                    'Send'
-                  )
-                }
-              >
-                <span style={{ display: 'inline-flex' }}>
-                  <IconButton
-                    color="primary"
-                    onClick={() => sendQuestion(draft)}
-                    disabled={!hasAnswerContext || !draft.trim()}
-                    aria-label="Send dashboard question"
-                    sx={sendComposerButtonSx}
-                  >
-                    <SendIcon />
-                  </IconButton>
-                </span>
-              </Tooltip>
+              <Stack direction="row" spacing={0.25} alignItems="center">
+                <Tooltip title={t('chat.searchWebAndAnswer')}>
+                  <span style={{ display: 'inline-flex' }}>
+                    <IconButton
+                      size="small"
+                      onClick={() =>
+                        sendQuestion(draft, { searchWebFirst: true })
+                      }
+                      disabled={!draft.trim()}
+                      aria-label={t('chat.searchWebAndAnswer')}
+                      sx={composerActionButtonSx}
+                    >
+                      <SearchIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip
+                  title={
+                    isHostedAi ? (
+                      <Stack direction="row" spacing={0.75} alignItems="center">
+                        <span>Send -</span>
+                        <StudyCreditCostLabel
+                          amount={chatCreditCost}
+                          variant="tooltip"
+                        />
+                      </Stack>
+                    ) : (
+                      'Send'
+                    )
+                  }
+                >
+                  <span style={{ display: 'inline-flex' }}>
+                    <IconButton
+                      color="primary"
+                      onClick={() => sendQuestion(draft)}
+                      disabled={!draft.trim()}
+                      aria-label="Send dashboard question"
+                      sx={sendComposerButtonSx}
+                    >
+                      <SendIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Stack>
             </Stack>
           </Box>
           {onQuickCreatePage ? (

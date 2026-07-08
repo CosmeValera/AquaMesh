@@ -41,6 +41,7 @@ tmp/*.log
 .DS_Store
 *.pem
 .env*
+.vscode/settings.json
 
 # Worktrees
 workspace

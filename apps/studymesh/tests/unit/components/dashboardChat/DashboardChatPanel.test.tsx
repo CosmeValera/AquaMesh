@@ -172,7 +172,8 @@ beforeEach(() => {
         dashboardTitle: 'Source Notes',
       },
     ],
-    needsExternalSource: false,
+    answerBasis: ['study-guide'],
+    contextSupport: 'direct',
   })
   vi.mocked(fetchDashboardExternalSource).mockReset()
   vi.mocked(fetchDashboardExternalSource).mockResolvedValue([
@@ -668,7 +669,7 @@ describe('DashboardChatPanel quick create menu', () => {
 
     await screen.findByText('Source 1')
     fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
-      target: { value: 'summarize my sources' },
+      target: { value: 'summarize shared content' },
     })
     fireEvent.click(
       screen.getByRole('button', { name: 'Send dashboard question' }),
@@ -717,9 +718,7 @@ describe('DashboardChatPanel quick create menu', () => {
     )
 
     expect(screen.queryByText('Pasted source')).not.toBeInTheDocument()
-    expect(
-      screen.getByPlaceholderText('Add study material before chatting'),
-    ).toBeDisabled()
+    expect(screen.getByPlaceholderText('Ask anything')).toBeEnabled()
   })
 
   it('disables create when the dashboard has no chat context', () => {
@@ -728,14 +727,12 @@ describe('DashboardChatPanel quick create menu', () => {
     expect(screen.getByRole('button', { name: /^Create$/i })).toBeDisabled()
   })
 
-  it('does not focus the composer surface before chat has answer context', () => {
+  it('focuses the composer surface even before chat has study material', () => {
     renderPanel({ dashboard: dashboardWithoutContext })
 
     fireEvent.mouseDown(screen.getByTestId('dashboard-chat-composer'))
 
-    expect(
-      screen.getByPlaceholderText('Add study material before chatting'),
-    ).not.toHaveFocus()
+    expect(screen.getByPlaceholderText('Ask anything')).toHaveFocus()
   })
 
   it('shows compact progress and keeps create available while quick-create runs', async () => {
@@ -1002,7 +999,7 @@ describe('DashboardChatPanel chat management', () => {
     render(<Harness />)
 
     fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
-      target: { value: 'what is aws again?' },
+      target: { value: 'remind me what you said about aws' },
     })
     fireEvent.click(
       screen.getByRole('button', { name: 'Send dashboard question' }),
@@ -1356,31 +1353,25 @@ describe('DashboardChatPanel chat management', () => {
     await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
   })
 
-  it('searches web automatically after a source-gap answer and retries with the found source', async () => {
+  it('searches web before answering when the explicit web button is used', async () => {
     const onMessagesChange = vi.fn()
-    vi.mocked(askDashboardSources)
-      .mockResolvedValueOnce({
-        answer:
-          'The dashboard sources do not contain enough information about Ansible.',
-        sourceRefs: [],
-        needsExternalSource: true,
-      })
-      .mockResolvedValueOnce({
-        answer: 'Ansible automates provisioning [2].',
-        sourceRefs: [
-          {
-            citationNumber: 2,
-            chunkId: 'web-source-1',
-            title: 'Ansible guide',
-            type: 'web source',
-            textPreview:
-              'Ansible automates provisioning and configuration management.',
-            origin: 'web',
-            url: 'https://example.com/ansible',
-          },
-        ],
-        needsExternalSource: false,
-      })
+    vi.mocked(askDashboardSources).mockResolvedValueOnce({
+      answer: 'Ansible automates provisioning [2].',
+      sourceRefs: [
+        {
+          citationNumber: 2,
+          chunkId: 'web-source-1',
+          title: 'Ansible guide',
+          type: 'web source',
+          textPreview:
+            'Ansible automates provisioning and configuration management.',
+          origin: 'web',
+          url: 'https://example.com/ansible',
+        },
+      ],
+      answerBasis: ['web'],
+      contextSupport: 'direct',
+    })
     const Harness = () => {
       const [panelMessages, setPanelMessages] = React.useState<
         React.ComponentProps<typeof DashboardChatPanel>['messages']
@@ -1407,7 +1398,7 @@ describe('DashboardChatPanel chat management', () => {
       target: { value: 'How does Ansible compare?' },
     })
     fireEvent.click(
-      screen.getByRole('button', { name: 'Send dashboard question' }),
+      screen.getByRole('button', { name: 'Search web and answer' }),
     )
 
     await waitFor(() =>
@@ -1417,9 +1408,9 @@ describe('DashboardChatPanel chat management', () => {
         contextSummary: expect.stringContaining('Photosynthesis notes'),
       }),
     )
-    await waitFor(() => expect(askDashboardSources).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(askDashboardSources).toHaveBeenCalledTimes(1))
     expect(
-      vi.mocked(askDashboardSources).mock.calls[1][0].contextText,
+      vi.mocked(askDashboardSources).mock.calls[0][0].contextText,
     ).toContain('Ansible automates provisioning')
     expect(onMessagesChange).toHaveBeenCalledWith(
       expect.arrayContaining([
@@ -1456,12 +1447,12 @@ describe('DashboardChatPanel chat management', () => {
     )
   })
 
-  it('shows a non-blocking error card when automatic web lookup fails', async () => {
+  it('still answers and shows a non-blocking error card when web lookup fails', async () => {
     vi.mocked(askDashboardSources).mockResolvedValueOnce({
-      answer:
-        'The dashboard sources do not contain enough information about Ansible.',
+      answer: 'In general, Ansible automates provisioning.',
       sourceRefs: [],
-      needsExternalSource: true,
+      answerBasis: ['general'],
+      contextSupport: 'none',
     })
     vi.mocked(fetchDashboardExternalSource).mockRejectedValueOnce(
       new Error('Web search is not configured.'),
@@ -1488,21 +1479,24 @@ describe('DashboardChatPanel chat management', () => {
       target: { value: 'How does Ansible compare?' },
     })
     fireEvent.click(
-      screen.getByRole('button', { name: 'Send dashboard question' }),
+      screen.getByRole('button', { name: 'Search web and answer' }),
     )
 
     expect(
       await screen.findByText('Web search is not configured.'),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText('In general, Ansible automates provisioning.'),
     ).toBeInTheDocument()
     expect(askDashboardSources).toHaveBeenCalledTimes(1)
   })
 
   it('does not include a previous summarize request in follow-up web lookup', async () => {
     vi.mocked(askDashboardSources).mockResolvedValueOnce({
-      answer:
-        'The provided sources do not contain enough information about Rundeck or n8n.',
+      answer: 'Rundeck provides operations orchestration [2].',
       sourceRefs: [],
-      needsExternalSource: true,
+      answerBasis: ['web'],
+      contextSupport: 'direct',
     })
     vi.mocked(fetchDashboardExternalSource).mockResolvedValue([
       {
@@ -1551,7 +1545,7 @@ describe('DashboardChatPanel chat management', () => {
       },
     })
     fireEvent.click(
-      screen.getByRole('button', { name: 'Send dashboard question' }),
+      screen.getByRole('button', { name: 'Search web and answer' }),
     )
 
     await waitFor(() => expect(fetchDashboardExternalSource).toHaveBeenCalled())
@@ -1562,28 +1556,22 @@ describe('DashboardChatPanel chat management', () => {
   })
 
   it('uses the previous answer topic when a follow-up asks for sources', async () => {
-    vi.mocked(askDashboardSources)
-      .mockResolvedValueOnce({
-        answer:
-          'The Study Guide does not contain enough information about Vue or React.',
-        sourceRefs: [],
-        needsExternalSource: true,
-      })
-      .mockResolvedValueOnce({
-        answer: 'Vue and React can be compared using their official docs [2].',
-        sourceRefs: [
-          {
-            citationNumber: 2,
-            chunkId: 'web-source-vue-react',
-            title: 'Vue and React docs',
-            type: 'web source',
-            textPreview: 'Vue and React are JavaScript UI frameworks.',
-            origin: 'web',
-            url: 'https://example.com/vue-react',
-          },
-        ],
-        needsExternalSource: false,
-      })
+    vi.mocked(askDashboardSources).mockResolvedValueOnce({
+      answer: 'Vue and React can be compared using their official docs [2].',
+      sourceRefs: [
+        {
+          citationNumber: 2,
+          chunkId: 'web-source-vue-react',
+          title: 'Vue and React docs',
+          type: 'web source',
+          textPreview: 'Vue and React are JavaScript UI frameworks.',
+          origin: 'web',
+          url: 'https://example.com/vue-react',
+        },
+      ],
+      answerBasis: ['web'],
+      contextSupport: 'direct',
+    })
     vi.mocked(fetchDashboardExternalSource).mockResolvedValue([
       {
         id: 'web-source-vue-react',
@@ -1684,12 +1672,8 @@ describe('DashboardChatPanel chat management', () => {
 
     renderPanel({ messages, onAddExternalSourceToGuide })
 
-    expect(
-      screen.queryByRole('button', { name: 'Copy answer' }),
-    ).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Retry answer' }),
-    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Copy answer' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Retry answer' })).toBeEnabled()
 
     fireEvent.click(
       await screen.findByRole('button', {

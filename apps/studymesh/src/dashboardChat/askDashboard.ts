@@ -28,8 +28,17 @@ interface AskDashboardOptions {
 export interface AskDashboardResult {
   answer: string
   sourceRefs: DashboardAnswerSourceRef[]
-  needsExternalSource: boolean
+  answerBasis: DashboardAnswerBasis[]
+  contextSupport: DashboardAnswerContextSupport
 }
+
+export type DashboardAnswerBasis =
+  | 'study-guide'
+  | 'added-source'
+  | 'web'
+  | 'general'
+
+export type DashboardAnswerContextSupport = 'direct' | 'partial' | 'none'
 
 export interface DashboardAnswerSourceRef {
   citationNumber: number
@@ -47,9 +56,6 @@ export interface DashboardAnswerSourceRef {
 
 const STRONG_MODEL_CHAT_TIMEOUT_MS = 45000
 const STRONG_CHAT_RECENT_HISTORY_MESSAGES = 4
-const SOURCE_GAP_MARKER = 'SOURCE_GAP:'
-const CONVERSATIONAL_QUESTION_PATTERN =
-  /\b(?:hi|hello|hey|thanks?|thank you|thx|ty|ok|okay|cool|nice|great)\b|\bhow\s+(?:are|r)?\s*you\b|\bhow you\b|\bsay\s+hi\b/i
 
 type ChatMemoryProvider = 'hosted' | 'local' | 'gemini' | 'cerebras' | string
 
@@ -115,11 +121,11 @@ const buildPrompt = ({
 
 Rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
-- Answer using only the provided dashboard, study, and web source context.
-- Web sources in the context are allowed sources. Use them when dashboard-only material lacks the answer.
-- If the student message is conversational smalltalk, a greeting, thanks, a casual acknowledgement, or a minor typo of those, answer briefly and naturally. Do not use "${SOURCE_GAP_MARKER}", do not cite sources, and do not search for dashboard/web evidence for smalltalk.
-- If the answer is not supported by any provided context, start your answer with "${SOURCE_GAP_MARKER}" and explain in the output language that the provided sources do not contain enough information for the student's request.
-- Do not invent facts, citations, links, or source names.
+- Prefer the provided dashboard, study, and source context when it helps.
+- If the provided context only partially answers the question, answer the rest from general knowledge and make that transition clear with phrasing such as "In general".
+- If the provided context does not help, still answer from general knowledge.
+- If the student message is conversational smalltalk, a greeting, thanks, a casual acknowledgement, or a minor typo of those, answer briefly and naturally. Do not cite sources for smalltalk.
+- Do not invent citations, links, source names, or claims about what a source says.
 - When you use a specific source, cite it inline with its source number like [1] or [2].
 - Citation format is strict: write every citation as a bracketed source number. If citing multiple sources, write separate bracket citations with spaces, like [3] [4].
 - Never write bare citation numbers like 3, compressed citations like 3[4] or [3][4], or combined numbers like [34].
@@ -127,6 +133,7 @@ Rules:
 - Only cite source numbers shown in the dashboard/source context.
 - Never output JSON, code blocks, objects, arrays, "sources" fields, or structured metadata. The answer must be normal readable prose/Markdown only.
 - Do not add a final Sources, References, or Based on section. Use inline citations only.
+- Do not say "as I said earlier" unless the student explicitly asks you to repeat or recall a prior answer.
 - Be concise, clear, student-friendly, and practical.
 - Use bullets, examples, and study tips when helpful.
 
@@ -141,13 +148,6 @@ ${formatChatMemory(memory)}
 Student question: ${question}
 
 Answer:`
-
-const sourceGapPatterns = [
-  /\bdashboard sources?\b.*\b(?:do not|don't|does not|doesn't|lack|missing|not contain|insufficient|not enough)\b/i,
-  /\bnot enough (?:information|context|source)/i,
-  /\bno (?:source|dashboard) (?:content|context|information)/i,
-  /\bprovided context\b.*\b(?:does not|doesn't|not enough|insufficient|lack)/i,
-]
 
 const stripLeakedSourcesJson = (answer: string): string => {
   const withoutFencedJson = answer.replace(
@@ -166,38 +166,7 @@ const stripLeakedSourcesJson = (answer: string): string => {
 }
 
 const cleanAnswer = (answer: string): AskDashboardResult['answer'] => {
-  return stripLeakedSourcesJson(answer)
-    .replace(new RegExp(`^\\s*${SOURCE_GAP_MARKER}\\s*`, 'i'), '')
-    .trim()
-}
-
-const isConversationalQuestion = (question: string): boolean => {
-  const normalized = question
-    .trim()
-    .toLowerCase()
-    .replace(/[!?.,]+$/g, '')
-    .replace(/\s+/g, ' ')
-
-  return (
-    normalized.length <= 48 &&
-    (CONVERSATIONAL_QUESTION_PATTERN.test(normalized) ||
-      /^tank\s+yuo$/.test(normalized))
-  )
-}
-
-const detectNeedsExternalSource = (
-  answer: string,
-  question: string,
-): boolean => {
-  if (isConversationalQuestion(question)) {
-    return false
-  }
-
-  if (new RegExp(`^\\s*${SOURCE_GAP_MARKER}`, 'i').test(answer)) {
-    return true
-  }
-
-  return sourceGapPatterns.some((pattern) => pattern.test(answer))
+  return stripLeakedSourcesJson(answer).trim()
 }
 
 const callStrongModelText = async (
@@ -228,6 +197,80 @@ const callStrongModelText = async (
 
     throw error
   }
+}
+
+const extractUsedCitationNumbers = (answer: string): Set<number> => {
+  const numbers = new Set<number>()
+  for (const match of answer.matchAll(/\[(\d{1,3})]/g)) {
+    const citationNumber = Number(match[1])
+    if (Number.isFinite(citationNumber) && citationNumber > 0) {
+      numbers.add(citationNumber)
+    }
+  }
+  return numbers
+}
+
+const sourceRefFromChunk = (
+  chunk: DashboardSourceChunk,
+  sourceIndex: number,
+): DashboardAnswerSourceRef => ({
+  citationNumber: chunk.dashboardIndex || sourceIndex + 1,
+  chunkId: chunk.id,
+  title: chunk.title,
+  type: chunk.type,
+  textPreview:
+    chunk.text.length > 240
+      ? `${chunk.text.slice(0, 240).trim()}...`
+      : chunk.text,
+  origin: chunk.origin,
+  originType: chunk.originType,
+  url: chunk.url,
+  dashboardKey: chunk.dashboardKey,
+  dashboardTitle: chunk.dashboardTitle,
+  dashboardIndex: chunk.dashboardIndex,
+})
+
+const isGeneralKnowledgeCue = (answer: string): boolean =>
+  /\b(?:in general|generally|outside (?:the|this) (?:guide|source|context)|beyond (?:the|this) (?:guide|source|context))\b/i.test(
+    answer,
+  )
+
+const deriveAnswerBasis = (
+  sourceRefs: DashboardAnswerSourceRef[],
+  answer: string,
+): DashboardAnswerBasis[] => {
+  const basis = new Set<DashboardAnswerBasis>()
+
+  sourceRefs.forEach((sourceRef) => {
+    if (sourceRef.origin === 'web') {
+      basis.add(
+        sourceRef.originType === 'user-text' ||
+          sourceRef.originType === 'user-web'
+          ? 'added-source'
+          : 'web',
+      )
+      return
+    }
+
+    basis.add('study-guide')
+  })
+
+  if (basis.size === 0 || isGeneralKnowledgeCue(answer)) {
+    basis.add('general')
+  }
+
+  return Array.from(basis)
+}
+
+const deriveContextSupport = (
+  sourceRefs: DashboardAnswerSourceRef[],
+  answerBasis: DashboardAnswerBasis[],
+): DashboardAnswerContextSupport => {
+  if (sourceRefs.length === 0) {
+    return 'none'
+  }
+
+  return answerBasis.includes('general') ? 'partial' : 'direct'
 }
 
 export const askDashboardSources = async (
@@ -285,34 +328,27 @@ export const askDashboardSources = async (
     throw new Error('Choose a supported AI mode before asking the dashboard.')
   }
 
-  const needsExternalSource = detectNeedsExternalSource(
-    answer,
-    options.question,
-  )
+  const cleanedAnswer = cleanAnswer(answer)
+  const usedCitationNumbers = extractUsedCitationNumbers(cleanedAnswer)
+  const sourceRefs = options.sourceChunks
+    .map(sourceRefFromChunk)
+    .filter((sourceRef, index, refs) => {
+      if (!usedCitationNumbers.has(sourceRef.citationNumber)) {
+        return false
+      }
 
-  const answerSourceChunks = options.sourceChunks.map((chunk, index) => ({
-    chunk,
-    sourceIndex: index,
-  }))
+      return (
+        refs.findIndex(
+          (candidate) => candidate.citationNumber === sourceRef.citationNumber,
+        ) === index
+      )
+    })
+  const answerBasis = deriveAnswerBasis(sourceRefs, cleanedAnswer)
 
   return {
-    answer: cleanAnswer(answer),
-    sourceRefs: answerSourceChunks.map(({ chunk, sourceIndex }) => ({
-      citationNumber: chunk.dashboardIndex || sourceIndex + 1,
-      chunkId: chunk.id,
-      title: chunk.title,
-      type: chunk.type,
-      textPreview:
-        chunk.text.length > 240
-          ? `${chunk.text.slice(0, 240).trim()}...`
-          : chunk.text,
-      origin: chunk.origin,
-      originType: chunk.originType,
-      url: chunk.url,
-      dashboardKey: chunk.dashboardKey,
-      dashboardTitle: chunk.dashboardTitle,
-      dashboardIndex: chunk.dashboardIndex,
-    })),
-    needsExternalSource,
+    answer: cleanedAnswer,
+    sourceRefs,
+    answerBasis,
+    contextSupport: deriveContextSupport(sourceRefs, answerBasis),
   }
 }

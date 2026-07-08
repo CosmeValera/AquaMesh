@@ -42,8 +42,10 @@ import {
   getStudyGuidePageText,
 } from '../../studyGuides/pages'
 import {
-  appendAiPodcastPage,
-  appendAiQuickCreatePage,
+  appendGeneratedStudyGuidePage,
+  createAiPodcastPageDraft,
+  createAiQuickCreatePageDraft,
+  type AiGeneratedStudyGuidePage,
 } from '../../studyGuides/generation'
 import {
   STUDY_GUIDES_STORAGE_FULL_MESSAGE,
@@ -118,6 +120,11 @@ const isOpenableStudyGuideRecord = (
   value: StudyGuideRecord | null,
 ): value is StudyGuideRecord => Array.isArray(value?.studyPath?.dashboards)
 
+const isAbortError = (error: unknown): boolean =>
+  error instanceof DOMException
+    ? error.name === 'AbortError'
+    : error instanceof Error && error.name === 'AbortError'
+
 const GuideWorkspacePage = () => {
   const { t } = useInterfaceText()
   const { user } = useAuth()
@@ -144,7 +151,24 @@ const GuideWorkspacePage = () => {
   const [mobileSection, setMobileSection] = useState<
     'pages' | 'study-guide' | 'ai-chat'
   >('study-guide')
+  const recordRef = useRef<StudyGuideRecord | null>(null)
+  const quickCreateCommitRecordRef = useRef<StudyGuideRecord | null>(null)
+  const quickCreateCommitStudyPathRef = useRef<StudyPathContainerState | null>(
+    null,
+  )
+  const quickCreateCommitQueueRef = useRef(Promise.resolve())
   const isCreateRoute = searchParams.get('create') === '1'
+
+  useEffect(() => {
+    recordRef.current = record
+    if (
+      !quickCreateCommitRecordRef.current ||
+      quickCreateCommitRecordRef.current.id !== record?.id
+    ) {
+      quickCreateCommitRecordRef.current = record
+      quickCreateCommitStudyPathRef.current = record?.studyPath || null
+    }
+  }, [record])
 
   const loadRecord = () => {
     if (!studyGuideId) {
@@ -152,12 +176,18 @@ const GuideWorkspacePage = () => {
     }
     const existing = StudyGuideStorage.getById(studyGuideId)
     if (existing) {
+      recordRef.current = existing
+      quickCreateCommitRecordRef.current = existing
+      quickCreateCommitStudyPathRef.current = existing.studyPath
       setRecord(existing)
       setNotFound(false)
       setLoadingRemoteRecord(false)
       return
     }
 
+    recordRef.current = null
+    quickCreateCommitRecordRef.current = null
+    quickCreateCommitStudyPathRef.current = null
     setRecord(null)
     const hasSummary = Boolean(StudyGuideStorage.getSummaryById(studyGuideId))
     setNotFound(!isCreateRoute && !hasSummary)
@@ -265,14 +295,18 @@ const GuideWorkspacePage = () => {
     }
   }, [record?.id, record?.studyPath.selectedIndex])
 
-  const persistStudyPath = (studyPath: StudyPathContainerState) => {
+  const persistStudyPath = (
+    studyPath: StudyPathContainerState,
+    baseRecord: StudyGuideRecord | null = recordRef.current,
+  ) => {
     const normalized = normalizeGeneratedPageLayouts(studyPath)
     try {
-      const nextRecord = record
+      const currentRecord = baseRecord
+      const nextRecord = currentRecord
         ? StudyGuideStorage.save({
-            ...record,
-            title: normalized.title || record.title,
-            folderName: normalized.folderName || record.folderName,
+            ...currentRecord,
+            title: normalized.title || currentRecord.title,
+            folderName: normalized.folderName || currentRecord.folderName,
             studyPath: normalized,
           })
         : StudyGuideStorage.save(
@@ -280,6 +314,9 @@ const GuideWorkspacePage = () => {
               id: studyGuideId,
             }),
           )
+      recordRef.current = nextRecord
+      quickCreateCommitRecordRef.current = nextRecord
+      quickCreateCommitStudyPathRef.current = nextRecord.studyPath
       setRecord(nextRecord)
       return nextRecord
     } catch (error) {
@@ -464,56 +501,110 @@ const GuideWorkspacePage = () => {
     }
   }, [record?.studyPath])
 
-  const quickCreatePage = async (input: QuickCreateActionInput) => {
-    if (!record) {
-      return
-    }
+  const enqueueQuickCreatePageCommit = (
+    page: AiGeneratedStudyGuidePage,
+    resourceType: QuickCreateActionInput,
+    signal?: AbortSignal,
+  ) => {
+    const commit = quickCreateCommitQueueRef.current.then(() => {
+      if (signal?.aborted) {
+        return
+      }
 
-    const request = normalizeQuickCreateActionInput(input)
-    setQuickCreateError('')
-    const currentPage =
-      record.studyPath.dashboards[record.studyPath.selectedIndex] ||
-      record.studyPath.dashboards[0]
-    const currentPageText = getStudyGuidePageText(currentPage)
-    const studyGuideSourceText = getStudyGuideCreationSourceText(
-      record.studyPath,
-    )
-    const useCurrentPage = request.sourceScope === 'currentPage'
-    const sourceText = useCurrentPage
-      ? currentPageText || studyGuideSourceText || record.studyPath.title
-      : studyGuideSourceText ||
-        currentPageText ||
-        record.studyPath.title ||
-        t('workspace.studyGuide')
-    const sourceTitle = useCurrentPage
-      ? currentPage?.name || record.title
-      : record.studyPath.title || record.title
+      const latestRecord =
+        quickCreateCommitRecordRef.current || recordRef.current
+      if (!latestRecord) {
+        return
+      }
 
-    try {
-      const nextStudyPath =
-        request.resourceType === 'podcast'
-          ? await appendAiPodcastPage({
-              studyPath: record.studyPath,
-              sourceTitle,
-              sourceText,
-              sourceScope: useCurrentPage ? 'currentPage' : 'studyGuide',
-            })
-          : await appendAiQuickCreatePage({
-              studyPath: record.studyPath,
-              resourceType: request.resourceType,
-              sourceTitle,
-              sourceText,
-            })
-      const nextRecord = persistStudyPath(nextStudyPath)
+      const latestStudyPath =
+        quickCreateCommitStudyPathRef.current || latestRecord.studyPath
+      const nextStudyPath = appendGeneratedStudyGuidePage(latestStudyPath, page)
+      const nextRecord = persistStudyPath(
+        nextStudyPath,
+        quickCreateCommitRecordRef.current || latestRecord,
+      )
       if (!nextRecord) {
         return
       }
+      quickCreateCommitRecordRef.current = nextRecord
+      quickCreateCommitStudyPathRef.current = nextRecord.studyPath
+
+      const request = normalizeQuickCreateActionInput(resourceType)
       const newPage =
         nextRecord.studyPath.dashboards[nextRecord.studyPath.selectedIndex]
       if (request.resourceType === 'improvedNotes') {
         setEditingPageKey(newPage?.dashboardKey || null)
       }
+    })
+
+    quickCreateCommitQueueRef.current = commit.catch(() => undefined)
+    return commit
+  }
+
+  const quickCreatePage = async (
+    input: QuickCreateActionInput,
+    options?: { signal?: AbortSignal },
+  ) => {
+    const sourceRecord = recordRef.current || record
+    if (!sourceRecord) {
+      return
+    }
+    if (
+      !quickCreateCommitRecordRef.current ||
+      quickCreateCommitRecordRef.current.id !== sourceRecord.id
+    ) {
+      quickCreateCommitRecordRef.current = sourceRecord
+      quickCreateCommitStudyPathRef.current = sourceRecord.studyPath
+    }
+
+    const request = normalizeQuickCreateActionInput(input)
+    setQuickCreateError('')
+    const currentPage =
+      sourceRecord.studyPath.dashboards[sourceRecord.studyPath.selectedIndex] ||
+      sourceRecord.studyPath.dashboards[0]
+    const currentPageText = getStudyGuidePageText(currentPage)
+    const studyGuideSourceText = getStudyGuideCreationSourceText(
+      sourceRecord.studyPath,
+    )
+    const useCurrentPage = request.sourceScope === 'currentPage'
+    const sourceText = useCurrentPage
+      ? currentPageText || studyGuideSourceText || sourceRecord.studyPath.title
+      : studyGuideSourceText ||
+        currentPageText ||
+        sourceRecord.studyPath.title ||
+        t('workspace.studyGuide')
+    const sourceTitle = useCurrentPage
+      ? currentPage?.name || sourceRecord.title
+      : sourceRecord.studyPath.title || sourceRecord.title
+
+    try {
+      const page =
+        request.resourceType === 'podcast'
+          ? await createAiPodcastPageDraft({
+              studyPath: sourceRecord.studyPath,
+              sourceTitle,
+              sourceText,
+              sourceScope: useCurrentPage ? 'currentPage' : 'studyGuide',
+              signal: options?.signal,
+            })
+          : await createAiQuickCreatePageDraft({
+              studyPath: sourceRecord.studyPath,
+              resourceType: request.resourceType,
+              sourceTitle,
+              sourceText,
+              signal: options?.signal,
+            })
+      if (options?.signal?.aborted) {
+        return
+      }
+
+      await enqueueQuickCreatePageCommit(page, request, options?.signal)
     } catch (error) {
+      if (isAbortError(error)) {
+        return
+      }
+
       setQuickCreateError(
         error instanceof Error
           ? error.message

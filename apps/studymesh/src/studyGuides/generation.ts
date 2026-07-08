@@ -295,17 +295,60 @@ const createPodcastWidget = (
   ],
 })
 
-export const appendAiPodcastPage = async ({
+export type AiGeneratedStudyGuidePage =
+  | {
+      kind: 'markdown'
+      title: string
+      markdown: string
+      source: 'quickCreate'
+    }
+  | {
+      kind: 'widgets'
+      title: string
+      widgets: QuickCreateWidgetRecord[]
+      layoutMode: 'tabs'
+      source: 'quickCreate'
+    }
+
+const throwIfAborted = (signal?: AbortSignal) => {
+  if (signal?.aborted) {
+    throw new DOMException('The creation was cancelled.', 'AbortError')
+  }
+}
+
+export const appendGeneratedStudyGuidePage = (
+  studyPath: StudyPathContainerState,
+  page: AiGeneratedStudyGuidePage,
+): StudyPathContainerState => {
+  if (page.kind === 'markdown') {
+    return appendStudyGuideMarkdownPage(studyPath, {
+      title: page.title,
+      markdown: page.markdown,
+      source: page.source,
+    })
+  }
+
+  return appendStudyGuideWidgetPage(studyPath, {
+    title: page.title,
+    widgets: page.widgets,
+    layoutMode: page.layoutMode,
+    source: page.source,
+  })
+}
+
+export const createAiPodcastPageDraft = async ({
   studyPath,
   sourceTitle,
   sourceText,
   sourceScope,
+  signal,
 }: {
   studyPath: StudyPathContainerState
   sourceTitle: string
   sourceText: string
   sourceScope: 'studyGuide' | 'currentPage'
-}): Promise<StudyPathContainerState> => {
+  signal?: AbortSignal
+}): Promise<AiGeneratedStudyGuidePage> => {
   const resolvedLanguage = studyPath.contentLanguage
     ? {
         language: studyPath.contentLanguage,
@@ -320,17 +363,44 @@ export const appendAiPodcastPage = async ({
     sourceTitle,
     sourceScope,
     outputLanguage: resolvedLanguage.language,
+    signal,
   })
+  throwIfAborted(signal)
 
-  return appendStudyGuideWidgetPage(studyPath, {
+  return {
+    kind: 'widgets',
     title: podcast.title || `Podcast: ${sourceTitle}`,
     widgets: [createPodcastWidget(podcast)],
     layoutMode: 'tabs',
     source: 'quickCreate',
-  })
+  }
 }
 
-export const appendAiQuickCreatePage = async ({
+export const appendAiPodcastPage = async ({
+  studyPath,
+  sourceTitle,
+  sourceText,
+  sourceScope,
+  signal,
+}: {
+  studyPath: StudyPathContainerState
+  sourceTitle: string
+  sourceText: string
+  sourceScope: 'studyGuide' | 'currentPage'
+  signal?: AbortSignal
+}): Promise<StudyPathContainerState> =>
+  appendGeneratedStudyGuidePage(
+    studyPath,
+    await createAiPodcastPageDraft({
+      studyPath,
+      sourceTitle,
+      sourceText,
+      sourceScope,
+      signal,
+    }),
+  )
+
+export const createAiQuickCreatePageDraft = async ({
   studyPath,
   resourceType: resourceTypeInput,
   sourceTitle,
@@ -342,7 +412,7 @@ export const appendAiQuickCreatePage = async ({
   sourceTitle: string
   sourceText: string
   signal?: AbortSignal
-}): Promise<StudyPathContainerState> => {
+}): Promise<AiGeneratedStudyGuidePage> => {
   const { resourceType } = normalizeQuickCreateActionInput(resourceTypeInput)
   if (resourceType === 'podcast') {
     throw new Error('Podcast generation uses the hosted podcast flow.')
@@ -386,13 +456,15 @@ export const appendAiQuickCreatePage = async ({
     outputLanguage: resolvedLanguage.language,
     signal,
   })
+  throwIfAborted(signal)
 
   if (resourceType === 'improvedNotes') {
-    return appendStudyGuideMarkdownPage(studyPath, {
+    return {
+      kind: 'markdown',
       title: draft.title || labels[resourceType],
       markdown: draftToMarkdown(draft),
       source: 'quickCreate',
-    })
+    }
   }
 
   const widgets = createQuickCreateOrchestratorWidgets(
@@ -413,10 +485,35 @@ export const appendAiQuickCreatePage = async ({
     },
   )
 
-  return appendStudyGuideWidgetPage(studyPath, {
+  return {
+    kind: 'widgets',
     title: draft.title || labels[resourceType],
     widgets,
     layoutMode: 'tabs',
     source: 'quickCreate',
-  })
+  }
 }
+
+export const appendAiQuickCreatePage = async ({
+  studyPath,
+  resourceType,
+  sourceTitle,
+  sourceText,
+  signal,
+}: {
+  studyPath: StudyPathContainerState
+  resourceType: QuickCreateActionInput
+  sourceTitle: string
+  sourceText: string
+  signal?: AbortSignal
+}): Promise<StudyPathContainerState> =>
+  appendGeneratedStudyGuidePage(
+    studyPath,
+    await createAiQuickCreatePageDraft({
+      studyPath,
+      resourceType,
+      sourceTitle,
+      sourceText,
+      signal,
+    }),
+  )

@@ -18,6 +18,7 @@ export interface StrongAiCallOptions {
   apiToken: string
   model: string
   outputLanguage?: StudyMeshLanguageCode
+  signal?: AbortSignal
   parts: Array<{
     text?: string
     inline_data?: {
@@ -108,14 +109,30 @@ export const getEnvStrongProviderApiKey = (
 const withTimeout = async (
   timeoutMs: number,
   run: (signal: AbortSignal) => Promise<Response>,
+  externalSignal?: AbortSignal,
 ): Promise<Response> => {
   const controller = new AbortController()
-  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
+  let timedOut = false
+  const timeoutId = window.setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, timeoutMs)
+  const abortFromExternal = () => controller.abort()
+
+  if (externalSignal?.aborted) {
+    controller.abort()
+  } else {
+    externalSignal?.addEventListener('abort', abortFromExternal, { once: true })
+  }
 
   try {
     return await run(controller.signal)
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
+      if (!timedOut) {
+        throw error
+      }
+
       throw new Error(
         'Strong model request took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or another AI mode.',
       )
@@ -124,6 +141,7 @@ const withTimeout = async (
     throw error
   } finally {
     window.clearTimeout(timeoutId)
+    externalSignal?.removeEventListener('abort', abortFromExternal)
   }
 }
 
@@ -173,31 +191,35 @@ const callGemini = async ({
   parts,
   responseSchema,
   timeoutMs,
+  signal: externalSignal,
 }: StrongAiCallOptions): Promise<string> => {
-  const response = await withTimeout(timeoutMs, (signal) =>
-    fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-        model,
-      )}:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiToken,
-        },
-        signal,
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts }],
-          generationConfig: {
-            temperature: 0.2,
-            responseMimeType: responseSchema
-              ? 'application/json'
-              : 'text/plain',
-            ...(responseSchema ? { responseSchema } : {}),
+  const response = await withTimeout(
+    timeoutMs,
+    (signal) =>
+      fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+          model,
+        )}:generateContent`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiToken,
           },
-        }),
-      },
-    ),
+          signal,
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts }],
+            generationConfig: {
+              temperature: 0.2,
+              responseMimeType: responseSchema
+                ? 'application/json'
+                : 'text/plain',
+              ...(responseSchema ? { responseSchema } : {}),
+            },
+          }),
+        },
+      ),
+    externalSignal,
   )
 
   const payload = (await response.json()) as GeminiResponse
@@ -240,11 +262,10 @@ const callCerebras = async ({
   parts,
   responseSchema,
   timeoutMs,
+  signal: externalSignal,
 }: StrongAiCallOptions): Promise<string> => {
   if (parts.some((part) => part.inline_data)) {
-    throw new Error(
-      'Cerebras text mode accepts text context only.',
-    )
+    throw new Error('Cerebras text mode accepts text context only.')
   }
 
   const prompt = parts
@@ -261,22 +282,25 @@ const callCerebras = async ({
         },
       }
     : undefined
-  const response = await withTimeout(timeoutMs, (signal) =>
-    fetch('https://api.cerebras.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiToken}`,
-      },
-      signal,
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.2,
-        max_completion_tokens: 8192,
-        ...(responseFormat ? { response_format: responseFormat } : {}),
+  const response = await withTimeout(
+    timeoutMs,
+    (signal) =>
+      fetch('https://api.cerebras.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiToken}`,
+        },
+        signal,
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.2,
+          max_completion_tokens: 8192,
+          ...(responseFormat ? { response_format: responseFormat } : {}),
+        }),
       }),
-    }),
+    externalSignal,
   )
 
   const payload = (await response.json()) as CerebrasResponse

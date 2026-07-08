@@ -25,8 +25,9 @@ const guideWorkspaceSupabaseMocks = vi.hoisted(() => ({
 }))
 
 const guideWorkspaceGenerationMocks = vi.hoisted(() => ({
-  appendAiPodcastPage: vi.fn(),
-  appendAiQuickCreatePage: vi.fn(),
+  appendGeneratedStudyGuidePage: vi.fn(),
+  createAiPodcastPageDraft: vi.fn(),
+  createAiQuickCreatePageDraft: vi.fn(),
 }))
 
 vi.mock('../../../../src/auth/AuthProvider', () => ({
@@ -94,8 +95,12 @@ vi.mock('../../../../src/components/dashboardChat/DashboardChatPanel', () => ({
 }))
 
 vi.mock('../../../../src/studyGuides/generation', () => ({
-  appendAiPodcastPage: guideWorkspaceGenerationMocks.appendAiPodcastPage,
-  appendAiQuickCreatePage: guideWorkspaceGenerationMocks.appendAiQuickCreatePage,
+  appendGeneratedStudyGuidePage:
+    guideWorkspaceGenerationMocks.appendGeneratedStudyGuidePage,
+  createAiPodcastPageDraft:
+    guideWorkspaceGenerationMocks.createAiPodcastPageDraft,
+  createAiQuickCreatePageDraft:
+    guideWorkspaceGenerationMocks.createAiQuickCreatePageDraft,
 }))
 
 const storedGuide = {
@@ -156,13 +161,46 @@ describe('GuideWorkspacePage responsive sections', () => {
     guideWorkspaceSupabaseMocks.isSupabaseConfigured = false
     dashboardChatPanelSpy.mockClear()
     guideWorkspaceCloudMocks.getStudyGuide.mockReset()
-    guideWorkspaceGenerationMocks.appendAiPodcastPage.mockReset()
-    guideWorkspaceGenerationMocks.appendAiPodcastPage.mockResolvedValue(
-      storedGuide.studyPath,
+    guideWorkspaceGenerationMocks.appendGeneratedStudyGuidePage.mockReset()
+    guideWorkspaceGenerationMocks.appendGeneratedStudyGuidePage.mockImplementation(
+      (studyPath, page) => {
+        const pageIndex = studyPath.dashboards.length + 1
+        return {
+          ...studyPath,
+          dashboards: [
+            ...studyPath.dashboards,
+            {
+              name: page.title,
+              dashboardKey: `generated-${pageIndex}`,
+              dashboardIndex: pageIndex,
+              dashboardCount: pageIndex,
+              folderName: studyPath.folderName,
+              layout: { type: 'row' },
+              createdBy: 'quickCreate',
+              deletable: true,
+            },
+          ],
+          selectedIndex: pageIndex - 1,
+        }
+      },
     )
-    guideWorkspaceGenerationMocks.appendAiQuickCreatePage.mockReset()
-    guideWorkspaceGenerationMocks.appendAiQuickCreatePage.mockResolvedValue(
-      storedGuide.studyPath,
+    guideWorkspaceGenerationMocks.createAiPodcastPageDraft.mockReset()
+    guideWorkspaceGenerationMocks.createAiPodcastPageDraft.mockResolvedValue({
+      kind: 'widgets',
+      title: 'Generated podcast',
+      widgets: [],
+      layoutMode: 'tabs',
+      source: 'quickCreate',
+    })
+    guideWorkspaceGenerationMocks.createAiQuickCreatePageDraft.mockReset()
+    guideWorkspaceGenerationMocks.createAiQuickCreatePageDraft.mockResolvedValue(
+      {
+        kind: 'widgets',
+        title: 'Generated quick create',
+        widgets: [],
+        layoutMode: 'tabs',
+        source: 'quickCreate',
+      },
     )
     vi.mocked(localStorage.setItem).mockClear()
     vi.mocked(window.matchMedia).mockImplementation((query) => ({
@@ -628,8 +666,103 @@ describe('GuideWorkspacePage responsive sections', () => {
     ).toBeInTheDocument()
   })
 
+  it('adds concurrent chat quick-create pages in completion order', async () => {
+    let studyGuidesPayload = JSON.stringify([storedGuide])
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === STUDY_GUIDES_STORAGE_KEY ? studyGuidesPayload : null,
+    )
+    vi.mocked(localStorage.setItem).mockImplementation((key, value) => {
+      if (key === STUDY_GUIDES_STORAGE_KEY) {
+        studyGuidesPayload = value
+      }
+    })
+    const resolvers = new Map<string, (page: unknown) => void>()
+    guideWorkspaceGenerationMocks.createAiQuickCreatePageDraft.mockImplementation(
+      ({ resourceType }: { resourceType: string }) =>
+        new Promise((resolve) => {
+          resolvers.set(resourceType, resolve)
+        }),
+    )
+
+    render(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <Routes>
+          <Route
+            path="/workspace/:studyGuideId"
+            element={<GuideWorkspacePage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await screen.findByTestId('study-guide-panel')
+    fireEvent.click(screen.getByRole('button', { name: 'AI Chat' }))
+    const latestProps = dashboardChatPanelSpy.mock.calls.at(-1)?.[0] as {
+      onQuickCreatePage: (
+        input: {
+          actionId: 'quiz' | 'flashcards'
+          resourceType: 'quiz' | 'flashcards'
+          label: string
+          sourceScope: 'studyGuide'
+        },
+        options?: { signal?: AbortSignal },
+      ) => Promise<void>
+    }
+    const quizController = new AbortController()
+    const flashcardsController = new AbortController()
+    const quizPromise = latestProps.onQuickCreatePage(
+      {
+        actionId: 'quiz',
+        resourceType: 'quiz',
+        label: 'Quiz',
+        sourceScope: 'studyGuide',
+      },
+      { signal: quizController.signal },
+    )
+    const flashcardsPromise = latestProps.onQuickCreatePage(
+      {
+        actionId: 'flashcards',
+        resourceType: 'flashcards',
+        label: 'Flashcards',
+        sourceScope: 'studyGuide',
+      },
+      { signal: flashcardsController.signal },
+    )
+
+    await act(async () => {
+      resolvers.get('flashcards')?.({
+        kind: 'widgets',
+        title: 'Flashcards done',
+        widgets: [],
+        layoutMode: 'tabs',
+        source: 'quickCreate',
+      })
+      await flashcardsPromise
+    })
+    await act(async () => {
+      resolvers.get('quiz')?.({
+        kind: 'widgets',
+        title: 'Quiz done',
+        widgets: [],
+        layoutMode: 'tabs',
+        source: 'quickCreate',
+      })
+      await quizPromise
+    })
+
+    const savedPayload = latestStoredStudyGuidesPayload()
+    const savedGuides = JSON.parse(savedPayload || '[]') as Array<{
+      studyPath: { dashboards: Array<{ name: string }> }
+    }>
+    const pageNames = savedGuides[0].studyPath.dashboards.map(
+      (dashboard) => dashboard.name,
+    )
+
+    expect(pageNames.slice(-2)).toEqual(['Flashcards done', 'Quiz done'])
+  })
+
   it('dismisses Study Guide quick-create failure alerts', async () => {
-    guideWorkspaceGenerationMocks.appendAiPodcastPage.mockRejectedValue(
+    guideWorkspaceGenerationMocks.createAiPodcastPageDraft.mockRejectedValue(
       new Error('Daily podcast generation limit reached. Try again tomorrow.'),
     )
 

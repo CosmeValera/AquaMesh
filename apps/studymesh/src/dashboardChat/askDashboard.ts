@@ -22,6 +22,7 @@ interface AskDashboardOptions {
   history: Array<{ role: 'user' | 'assistant'; content: string }>
   sourceChunks: DashboardSourceChunk[]
   contentLanguage?: StudyMeshLanguageCode
+  signal?: AbortSignal
 }
 
 export interface AskDashboardResult {
@@ -204,6 +205,7 @@ const callStrongModelText = async (
   apiToken: string,
   model: string,
   prompt: string,
+  signal?: AbortSignal,
 ): Promise<string> => {
   try {
     return await callStrongAiModel({
@@ -212,6 +214,7 @@ const callStrongModelText = async (
       model,
       parts: [{ text: prompt }],
       timeoutMs: STRONG_MODEL_CHAT_TIMEOUT_MS,
+      signal,
     })
   } catch (error) {
     if (
@@ -250,6 +253,7 @@ export const askDashboardSources = async (
       outputLanguage: resolvedLanguage.language,
       parts: [{ text: prompt }],
       timeoutMs: STRONG_MODEL_CHAT_TIMEOUT_MS,
+      signal: options.signal,
     })
   } else if (provider === 'local') {
     if (!isLocalAiContentLanguageSupported(resolvedLanguage.language)) {
@@ -261,6 +265,7 @@ export const askDashboardSources = async (
       outputLanguage: resolvedLanguage.language,
       promptType: 'notes',
       stepLabel: 'Ask dashboard sources',
+      signal: options.signal,
     })
   } else if (isStrongAiProvider(provider)) {
     const credentials = resolveQuickCreateAiCredentials(provider)
@@ -274,6 +279,7 @@ export const askDashboardSources = async (
       credentials.apiToken,
       credentials.model,
       prompt,
+      options.signal,
     )
   } else {
     throw new Error('Choose a supported AI mode before asking the dashboard.')

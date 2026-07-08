@@ -98,6 +98,7 @@ export interface GenerateQuickCreateWithAiOptions {
   strongProvider?: StrongAiProviderId
   strongTransport?: StrongAiModelTransport
   outputLanguage?: StudyMeshLanguageCode
+  signal?: AbortSignal
   title: string
   rawNotes: string
   packId: string
@@ -212,6 +213,7 @@ export interface GenerateStudyPathWithAiOptions {
   singleRequest?: boolean
   studyGuideProfile?: StudyGuideGenerationProfile
   outputLanguage?: StudyMeshLanguageCode
+  signal?: AbortSignal
   title: string
   prompt: string
   folderName: string
@@ -1366,6 +1368,7 @@ const callStrongModel = async (
   responseSchema?: Record<string, unknown>,
   provider: StrongAiProviderId = DEFAULT_STRONG_AI_PROVIDER,
   transport: StrongAiModelTransport = callStrongAiModel,
+  signal?: AbortSignal,
 ): Promise<string> => {
   try {
     return await transport({
@@ -1375,6 +1378,7 @@ const callStrongModel = async (
       parts,
       responseSchema,
       timeoutMs: GEMINI_REQUEST_TIMEOUT_MS,
+      signal,
     })
   } catch (error) {
     if (
@@ -1404,6 +1408,7 @@ export const generateQuickCreateWithAi = async ({
   studyPathMode = false,
   strongTransport,
   outputLanguage,
+  signal,
 }: GenerateQuickCreateWithAiOptions): Promise<AiQuickCreateDraft> => {
   const effectiveTargets = getEffectiveGenerationTargets(generationTargets)
   const practiceProfile = createQuickCreatePracticeProfile(
@@ -1573,6 +1578,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
       undefined,
       strongProvider,
       strongTransport,
+      signal,
     )
 
   let text: string
@@ -1585,6 +1591,7 @@ The previous response failed JSON formatting. Retry with a simpler response:
       objectSchema,
       strongProvider,
       strongTransport,
+      signal,
     )
   } catch (error) {
     if (!isGeminiOutputFormatError(error)) {
@@ -2173,6 +2180,7 @@ const generateStudyPathJsonWithPipeline = async ({
   dashboardCount,
   autoDashboardCount,
   outputLanguage,
+  signal,
 }: {
   apiToken: string
   model: string
@@ -2184,6 +2192,7 @@ const generateStudyPathJsonWithPipeline = async ({
   dashboardCount: number
   autoDashboardCount: boolean
   outputLanguage?: StudyMeshLanguageCode
+  signal?: AbortSignal
 }): Promise<{
   text: string
   parsed: unknown
@@ -2208,6 +2217,7 @@ const generateStudyPathJsonWithPipeline = async ({
     studyPathBlueprintSchema,
     strongProvider,
     strongTransport,
+    signal,
   )
   const parsedBlueprint = parseGeminiJson(blueprintText)
   if (
@@ -2254,6 +2264,7 @@ const generateStudyPathJsonWithPipeline = async ({
       studyPathDashboardSchema,
       strongProvider,
       strongTransport,
+      signal,
     )
     const parsedDashboard = parseGeminiJson(dashboardText)
     let dashboard =
@@ -2277,6 +2288,7 @@ const generateStudyPathJsonWithPipeline = async ({
         studyPathQualitySchema,
         strongProvider,
         strongTransport,
+        signal,
       )
       const qualityParsed = parseGeminiJson(qualityText)
       const qualityRecord =
@@ -2314,6 +2326,7 @@ const generateStudyPathJsonWithPipeline = async ({
           studyPathDashboardSchema,
           strongProvider,
           strongTransport,
+          signal,
         )
         const repaired = parseGeminiJson(repairText)
         if (repaired && typeof repaired === 'object') {
@@ -2385,6 +2398,7 @@ export const generateStudyPathWithAi = async ({
   singleRequest = false,
   studyGuideProfile = 'standard',
   outputLanguage,
+  signal,
   title,
   prompt,
   folderName,
@@ -2535,6 +2549,7 @@ ${originalJson}`
         studyPathSchema,
         strongProvider,
         strongTransport,
+        signal,
       )
     } else {
       const pipelineResult = await generateStudyPathJsonWithPipeline({
@@ -2548,6 +2563,7 @@ ${originalJson}`
         autoDashboardCount: true,
         outputLanguage,
         strongTransport,
+        signal,
       })
       text = pipelineResult.text
       parsed = pipelineResult.parsed
@@ -2568,6 +2584,7 @@ ${originalJson}`
           studyPathSchema,
           strongProvider,
           strongTransport,
+          signal,
         )
       } catch {
         throw error
@@ -2580,6 +2597,7 @@ ${originalJson}`
         undefined,
         strongProvider,
         strongTransport,
+        signal,
       )
     }
   }
@@ -2600,6 +2618,7 @@ ${originalJson}`
           undefined,
           strongProvider,
           strongTransport,
+          signal,
         )
         parsed = parseGeminiJson(text)
       } catch {
@@ -2636,6 +2655,7 @@ ${originalJson}`
         studyPathSchema,
         strongProvider,
         strongTransport,
+        signal,
       )
       parsed = parseGeminiJson(repairText)
       record =

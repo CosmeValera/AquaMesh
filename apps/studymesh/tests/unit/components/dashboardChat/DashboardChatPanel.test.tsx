@@ -301,7 +301,9 @@ describe('DashboardChatPanel quick create menu', () => {
     expect(
       screen.getByRole('button', { name: /^Flashcards$/i }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Podcast$/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /^Podcast$/i }),
+    ).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /^Expand on this$/i }),
     ).not.toBeInTheDocument()
@@ -319,11 +321,14 @@ describe('DashboardChatPanel quick create menu', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Quiz$/i }))
 
     await waitFor(() =>
-      expect(onQuickCreatePage).toHaveBeenCalledWith({
-        actionId: 'quiz',
-        resourceType: 'quiz',
-        label: 'Quiz',
-      }),
+      expect(onQuickCreatePage).toHaveBeenCalledWith(
+        {
+          actionId: 'quiz',
+          resourceType: 'quiz',
+          label: 'Quiz',
+        },
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      ),
     )
   })
 
@@ -339,12 +344,15 @@ describe('DashboardChatPanel quick create menu', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Quiz$/i }))
 
     await waitFor(() =>
-      expect(onQuickCreatePage).toHaveBeenCalledWith({
-        actionId: 'quiz',
-        resourceType: 'quiz',
-        label: 'Quiz',
-        sourceScope: 'studyGuide',
-      }),
+      expect(onQuickCreatePage).toHaveBeenCalledWith(
+        {
+          actionId: 'quiz',
+          resourceType: 'quiz',
+          label: 'Quiz',
+          sourceScope: 'studyGuide',
+        },
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      ),
     )
   })
 
@@ -356,20 +364,95 @@ describe('DashboardChatPanel quick create menu', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Podcast$/i }))
 
     await waitFor(() =>
-      expect(onQuickCreatePage).toHaveBeenCalledWith({
-        actionId: 'podcast',
-        resourceType: 'podcast',
-        label: 'Podcast',
-        sourceScope: 'studyGuide',
-      }),
+      expect(onQuickCreatePage).toHaveBeenCalledWith(
+        {
+          actionId: 'podcast',
+          resourceType: 'podcast',
+          label: 'Podcast',
+          sourceScope: 'studyGuide',
+        },
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      ),
     )
+  })
+
+  it('allows multiple quick-create tasks to run at the same time', async () => {
+    const resolvers = new Map<string, () => void>()
+    const onQuickCreatePage = vi.fn(
+      (request: { actionId: string }) =>
+        new Promise<void>((resolve) => {
+          resolvers.set(request.actionId, resolve)
+        }),
+    )
+    renderPanel({ onQuickCreatePage })
+
+    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Quiz$/i }))
+
+    expect(
+      await screen.findByTestId('dashboard-chat-quick-create-task-quiz'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Create$/i })).not.toBeDisabled()
+
+    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Flashcards$/i }))
+
+    expect(
+      await screen.findByTestId('dashboard-chat-quick-create-task-flashcards'),
+    ).toBeInTheDocument()
+    expect(onQuickCreatePage).toHaveBeenCalledTimes(2)
+
+    await act(async () => {
+      resolvers.get('flashcards')?.()
+    })
+
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId('dashboard-chat-quick-create-task-flashcards'),
+      ).not.toBeInTheDocument(),
+    )
+    expect(
+      screen.getByTestId('dashboard-chat-quick-create-task-quiz'),
+    ).toBeInTheDocument()
+  })
+
+  it('cancels a quick-create task without showing a failure alert', async () => {
+    let signal: AbortSignal | undefined
+    const onQuickCreatePage = vi.fn(
+      (_request, options?: { signal?: AbortSignal }) =>
+        new Promise<void>((_resolve, reject) => {
+          signal = options?.signal
+          options?.signal?.addEventListener('abort', () => {
+            reject(new DOMException('Cancelled', 'AbortError'))
+          })
+        }),
+    )
+    renderPanel({ onQuickCreatePage })
+
+    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Quiz$/i }))
+
+    expect(
+      await screen.findByTestId('dashboard-chat-quick-create-task-quiz'),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Cancel Quiz/i }))
+
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId('dashboard-chat-quick-create-task-quiz'),
+      ).not.toBeInTheDocument(),
+    )
+    expect(signal?.aborted).toBe(true)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('dismisses quick-create failure alerts', async () => {
     const onQuickCreatePage = vi
       .fn()
       .mockRejectedValue(
-        new Error('Daily podcast generation limit reached. Try again tomorrow.'),
+        new Error(
+          'Daily podcast generation limit reached. Try again tomorrow.',
+        ),
       )
     renderPanel({ onQuickCreatePage, supportsStudyGuideCreateScope: true })
 
@@ -400,12 +483,15 @@ describe('DashboardChatPanel quick create menu', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Flashcards$/i }))
 
     await waitFor(() =>
-      expect(onQuickCreatePage).toHaveBeenCalledWith({
-        actionId: 'flashcards',
-        resourceType: 'flashcards',
-        label: 'Flashcards',
-        sourceScope: 'currentPage',
-      }),
+      expect(onQuickCreatePage).toHaveBeenCalledWith(
+        {
+          actionId: 'flashcards',
+          resourceType: 'flashcards',
+          label: 'Flashcards',
+          sourceScope: 'currentPage',
+        },
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      ),
     )
   })
 
@@ -599,7 +685,7 @@ describe('DashboardChatPanel quick create menu', () => {
     ).not.toHaveFocus()
   })
 
-  it('shows compact progress and disables create while quick-create runs', async () => {
+  it('shows compact progress and keeps create available while quick-create runs', async () => {
     let resolveQuickCreate: () => void = () => {}
     const onQuickCreatePage = vi.fn(
       () =>
@@ -612,7 +698,7 @@ describe('DashboardChatPanel quick create menu', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
     fireEvent.click(screen.getByRole('button', { name: /^Flashcards$/i }))
 
-    expect(screen.getByRole('button', { name: /^Create$/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /^Create$/i })).toBeEnabled()
     expect(screen.getByText(/Creating Flashcards/i)).toBeInTheDocument()
 
     await act(async () => {
@@ -622,6 +708,7 @@ describe('DashboardChatPanel quick create menu', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /^Create$/i })).toBeEnabled(),
     )
+    expect(screen.queryByText(/Creating Flashcards/i)).not.toBeInTheDocument()
   })
 })
 

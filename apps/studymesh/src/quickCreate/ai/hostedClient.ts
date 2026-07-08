@@ -16,7 +16,7 @@ import type {
 
 export type HostedAiModelOptions = Pick<
   StrongAiCallOptions,
-  'model' | 'parts' | 'responseSchema' | 'timeoutMs'
+  'model' | 'parts' | 'responseSchema' | 'timeoutMs' | 'signal'
 > & {
   surface: HostedAiSurface
   outputLanguage?: StrongAiCallOptions['outputLanguage']
@@ -164,6 +164,7 @@ const assertHostedAiCreditsAvailable = async (
 
 const callHostedAiGateway = async (
   request: HostedAiGatewayRequest,
+  signal?: AbortSignal,
 ): Promise<HostedAiGatewayResponse> => {
   const accessToken = await getHostedAiAccessToken()
   const response = await fetch(HOSTED_AI_ENDPOINT, {
@@ -172,6 +173,7 @@ const callHostedAiGateway = async (
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
+    signal,
     body: JSON.stringify(request),
   })
   const payload = await parseGatewayResponse(response)
@@ -209,19 +211,23 @@ const callHostedAiModelUnchecked = async ({
   parts,
   responseSchema,
   timeoutMs,
+  signal,
 }: HostedAiModelOptions): Promise<string> => {
   dispatchHostedAiVisualSpend(surface)
 
   try {
-    const payload = await callHostedAiGateway({
-      action: 'generate',
-      surface,
-      model,
-      outputLanguage,
-      parts,
-      responseSchema,
-      timeoutMs,
-    })
+    const payload = await callHostedAiGateway(
+      {
+        action: 'generate',
+        surface,
+        model,
+        outputLanguage,
+        parts,
+        responseSchema,
+        timeoutMs,
+      },
+      signal,
+    )
     const text = payload.text?.trim()
 
     if (!text) {
@@ -247,30 +253,35 @@ export const generateHostedAiPodcast = async ({
   sourceTitle,
   sourceScope,
   outputLanguage,
+  signal,
 }: {
   sourceText: string
   studyGuideId: string
   sourceTitle: string
   sourceScope: 'studyGuide' | 'currentPage'
   outputLanguage?: HostedAiModelOptions['outputLanguage']
+  signal?: AbortSignal
 }): Promise<HostedAiPodcast> => {
   const surface: HostedAiSurface = 'podcast'
   await assertHostedAiCreditsAvailable(surface)
   dispatchHostedAiVisualSpend(surface)
 
   try {
-    const payload = await callHostedAiGateway({
-      action: 'generatePodcast',
-      surface,
-      outputLanguage,
-      parts: [{ text: sourceText }],
-      podcastOptions: {
-        studyGuideId,
-        sourceTitle,
-        sourceScope,
+    const payload = await callHostedAiGateway(
+      {
+        action: 'generatePodcast',
+        surface,
+        outputLanguage,
+        parts: [{ text: sourceText }],
+        podcastOptions: {
+          studyGuideId,
+          sourceTitle,
+          sourceScope,
+        },
+        timeoutMs: 90_000,
       },
-      timeoutMs: 90_000,
-    })
+      signal,
+    )
 
     if (!payload.podcast) {
       throw new Error('Hosted AI returned no podcast.')
@@ -295,14 +306,14 @@ export const getHostedAiPodcastAudioUrl = async (
     body: JSON.stringify({ audioPath }),
   })
 
-  const payload = (await response.json().catch(() => null)) as
-    | { ok?: boolean; signedUrl?: string; error?: { message?: string } }
-    | null
+  const payload = (await response.json().catch(() => null)) as {
+    ok?: boolean
+    signedUrl?: string
+    error?: { message?: string }
+  } | null
 
   if (!response.ok || !payload?.ok || !payload.signedUrl) {
-    throw new Error(
-      payload?.error?.message || 'Could not open podcast audio.',
-    )
+    throw new Error(payload?.error?.message || 'Could not open podcast audio.')
   }
 
   return payload.signedUrl
@@ -334,6 +345,7 @@ export const createHostedAiTransport = ({
     parts,
     responseSchema,
     timeoutMs,
+    signal,
   }: StrongAiCallOptions) => {
     await assertHostedAiCreditsAvailable(surface)
 
@@ -344,6 +356,7 @@ export const createHostedAiTransport = ({
       parts,
       responseSchema,
       timeoutMs,
+      signal,
     })
   }
 }
@@ -368,24 +381,28 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
     parts,
     responseSchema,
     timeoutMs,
+    signal,
   }: StrongAiCallOptions) => {
     const surface: HostedAiSurface = 'study-guide'
     await assertHostedAiCreditsAvailable(surface)
     dispatchHostedAiVisualSpend(surface)
 
     try {
-      const payload = await callHostedAiGateway({
-        action: 'generateWithQuickStart',
-        surface,
-        model,
-        outputLanguage,
-        parts,
-        responseSchema,
-        timeoutMs,
-        quickStartOptions: {
-          ...(userKnownTopics?.length ? { userKnownTopics } : {}),
+      const payload = await callHostedAiGateway(
+        {
+          action: 'generateWithQuickStart',
+          surface,
+          model,
+          outputLanguage,
+          parts,
+          responseSchema,
+          timeoutMs,
+          quickStartOptions: {
+            ...(userKnownTopics?.length ? { userKnownTopics } : {}),
+          },
         },
-      })
+        signal,
+      )
       const text = payload.text?.trim()
 
       if (!text) {

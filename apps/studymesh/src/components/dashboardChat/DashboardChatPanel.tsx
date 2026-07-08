@@ -69,9 +69,7 @@ import {
 } from '../../dashboardChat/externalSources'
 import { prepareDashboardExternalSourcePageDraft } from '../../dashboardChat/sourcePageDrafts'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
-import {
-  getHostedAiCreditCost,
-} from '../../quickCreate/ai/hostedCredits'
+import { getHostedAiCreditCost } from '../../quickCreate/ai/hostedCredits'
 import {
   quickCreateActionGroups,
   quickCreateActions,
@@ -153,7 +151,10 @@ interface DashboardChatPanelProps {
   onAddAssistantMessageToGuide?: (message: DashboardChatMessage) => void
   onAddExternalSourceToGuide?: (source: DashboardExternalSource) => void
   onOpenSource?: (source: DashboardAnswerSourceRef) => void
-  onQuickCreatePage?: (request: QuickCreateActionRequest) => Promise<void>
+  onQuickCreatePage?: (
+    request: QuickCreateActionRequest,
+    options?: { signal?: AbortSignal },
+  ) => Promise<void>
   supportsStudyGuideCreateScope?: boolean
   queuedQuestion?: { id: string; content: string } | null
   onQueuedQuestionConsumed?: (id: string) => void
@@ -526,7 +527,9 @@ const getQuickCreateEstimateSeconds = (
 const getDashboardChatFailureMessage = (error: unknown): string => {
   const message = error instanceof Error ? error.message : ''
 
-  if (/sign in|session expired|unauthorized|rejected the request/i.test(message)) {
+  if (
+    /sign in|session expired|unauthorized|rejected the request/i.test(message)
+  ) {
     return 'The chat request needs a fresh sign-in before it can answer.'
   }
 
@@ -543,6 +546,21 @@ const getDashboardChatFailureMessage = (error: unknown): string => {
   }
 
   return 'I could not answer from this dashboard yet.'
+}
+
+const isAbortError = (error: unknown): boolean =>
+  error instanceof DOMException
+    ? error.name === 'AbortError'
+    : error instanceof Error && error.name === 'AbortError'
+
+interface PendingQuickCreateTask {
+  id: string
+  actionId: Exclude<QuickCreateActionId, 'improvedNotes'>
+  resourceType: QuickCreateActionRequest['resourceType']
+  label: string
+  sourceScope?: QuickCreateSourceScope
+  startedAt: number
+  estimateSeconds: number
 }
 
 const DashboardChatPanel = ({
@@ -567,14 +585,10 @@ const DashboardChatPanel = ({
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const [draft, setDraft] = useState('')
   const [error, setError] = useState('')
-  const [activeStartedAt, setActiveStartedAt] = useState<number | null>(null)
-  const [elapsedSeconds, setElapsedSeconds] = useState(0)
-  const [quickCreateStartedAt, setQuickCreateStartedAt] = useState<
-    number | null
-  >(null)
-  const [quickCreateElapsedSeconds, setQuickCreateElapsedSeconds] = useState(0)
-  const [quickCreateActionId, setQuickCreateActionId] =
-    useState<QuickCreateActionId | null>(null)
+  const [timerNow, setTimerNow] = useState(Date.now())
+  const [pendingQuickCreateTasks, setPendingQuickCreateTasks] = useState<
+    PendingQuickCreateTask[]
+  >([])
   const [quickCreateMenuAnchor, setQuickCreateMenuAnchor] =
     useState<HTMLElement | null>(null)
   const [chatMenuAnchor, setChatMenuAnchor] = useState<HTMLElement | null>(null)
@@ -623,6 +637,9 @@ const DashboardChatPanel = ({
   const userSourceChipRefs = useRef(new Map<string, HTMLDivElement>())
   const userSourceRowRef = useRef<HTMLDivElement | null>(null)
   const sourceFileInputRef = useRef<HTMLInputElement | null>(null)
+  const quickCreateAbortControllersRef = useRef(
+    new Map<string, AbortController>(),
+  )
   const composerDragRef = useRef<{
     startY: number
     startHeight: number
@@ -757,11 +774,7 @@ const DashboardChatPanel = ({
     }
 
     const target = event.target as HTMLElement | null
-    if (
-      target?.closest(
-        'button, a, input, textarea, [role="button"]',
-      )
-    ) {
+    if (target?.closest('button, a, input, textarea, [role="button"]')) {
       return
     }
 
@@ -1574,32 +1587,18 @@ const DashboardChatPanel = ({
   }, [dashboard?.id])
 
   useEffect(() => {
-    if (!activeStartedAt) {
-      setElapsedSeconds(0)
+    const hasPendingMessages = messages.some((message) => message.pending)
+    if (!hasPendingMessages && pendingQuickCreateTasks.length === 0) {
       return undefined
     }
 
+    setTimerNow(Date.now())
     const interval = window.setInterval(() => {
-      setElapsedSeconds(Math.floor((Date.now() - activeStartedAt) / 1000))
+      setTimerNow(Date.now())
     }, 1000)
 
     return () => window.clearInterval(interval)
-  }, [activeStartedAt])
-
-  useEffect(() => {
-    if (!quickCreateStartedAt) {
-      setQuickCreateElapsedSeconds(0)
-      return undefined
-    }
-
-    const interval = window.setInterval(() => {
-      setQuickCreateElapsedSeconds(
-        Math.floor((Date.now() - quickCreateStartedAt) / 1000),
-      )
-    }, 1000)
-
-    return () => window.clearInterval(interval)
-  }, [quickCreateStartedAt])
+  }, [messages, pendingQuickCreateTasks.length])
 
   useEffect(() => {
     measureDraftLines()
@@ -1630,7 +1629,7 @@ const DashboardChatPanel = ({
     const observer = new ResizeObserver(measureSourceRow)
     observer.observe(sourceRow)
     return () => observer.disconnect()
-  }, [userAddedSources.length])
+  }, [userAddedSources.length, pendingQuickCreateTasks.length])
 
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
@@ -2300,8 +2299,8 @@ const DashboardChatPanel = ({
     pendingMessageId: string,
     historyMessages: DashboardChatMessage[],
     externalSourceIds: string[] = [],
+    signal?: AbortSignal,
   ) => {
-    setActiveStartedAt(Date.now())
     const pendingMessageIndex = messagesRef.current.findIndex(
       (message) => message.id === pendingMessageId,
     )
@@ -2323,7 +2322,6 @@ const DashboardChatPanel = ({
         webLookup: { status: 'searching' },
         pending: false,
       }))
-      setActiveStartedAt(null)
       void runExternalSourceLookup(
         question,
         pendingMessageId,
@@ -2341,6 +2339,7 @@ const DashboardChatPanel = ({
         sourceChunks,
         contentLanguage:
           dashboard?.contentLanguage || dashboard?.studyPath?.contentLanguage,
+        signal,
       })
       const usedWebSourceIds = result.sourceRefs
         .filter((sourceRef) => sourceRef.origin === 'web')
@@ -2374,6 +2373,14 @@ const DashboardChatPanel = ({
         )
       }
     } catch (err) {
+      if (isAbortError(err)) {
+        updateMessage(pendingMessageId, (message) => ({
+          ...message,
+          pending: false,
+        }))
+        return
+      }
+
       const failureMessage = getDashboardChatFailureMessage(err)
       updateMessage(pendingMessageId, (message) => ({
         ...message,
@@ -2386,8 +2393,11 @@ const DashboardChatPanel = ({
           : 'Could not answer from this dashboard.',
       )
     } finally {
-      setReplyScrollBufferActive(false)
-      setActiveStartedAt(null)
+      setReplyScrollBufferActive(
+        messagesRef.current.some(
+          (message) => message.pending && message.id !== pendingMessageId,
+        ),
+      )
     }
   }
 
@@ -2854,33 +2864,62 @@ const DashboardChatPanel = ({
     )
   }
 
-  const runQuickCreate = async (action: QuickCreateAction) => {
-    if (!onQuickCreatePage || quickCreateActionId) {
+  const runQuickCreate = async (action: DashboardChatQuickCreateAction) => {
+    if (!onQuickCreatePage) {
       return
     }
 
+    const controller = new AbortController()
+    const taskId = `quick-create-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}`
+    const request: QuickCreateActionRequest = {
+      actionId: action.id,
+      resourceType: action.resourceType,
+      label: action.label,
+      ...(supportsStudyGuideCreateScope
+        ? { sourceScope: quickCreateSourceScope }
+        : {}),
+    }
+    const task: PendingQuickCreateTask = {
+      id: taskId,
+      actionId: action.id,
+      resourceType: action.resourceType,
+      label: action.label,
+      sourceScope: request.sourceScope,
+      startedAt: Date.now(),
+      estimateSeconds: getQuickCreateEstimateSeconds(action.id),
+    }
+
     setError('')
-    setQuickCreateActionId(action.id)
-    setQuickCreateStartedAt(Date.now())
+    quickCreateAbortControllersRef.current.set(taskId, controller)
+    setPendingQuickCreateTasks((current) => [...current, task])
     setQuickCreateMenuAnchor(null)
     setQuickCreateSearch('')
     try {
-      await onQuickCreatePage({
-        actionId: action.id,
-        resourceType: action.resourceType,
-        label: action.label,
-        ...(supportsStudyGuideCreateScope
-          ? { sourceScope: quickCreateSourceScope }
-          : {}),
-      })
+      await onQuickCreatePage(request, { signal: controller.signal })
     } catch (err) {
+      if (isAbortError(err) || controller.signal.aborted) {
+        return
+      }
+
       setError(
         err instanceof Error ? err.message : 'Could not create this page.',
       )
     } finally {
-      setQuickCreateActionId(null)
-      setQuickCreateStartedAt(null)
+      quickCreateAbortControllersRef.current.delete(taskId)
+      setPendingQuickCreateTasks((current) =>
+        current.filter((candidate) => candidate.id !== taskId),
+      )
     }
+  }
+
+  const cancelQuickCreateTask = (taskId: string) => {
+    quickCreateAbortControllersRef.current.get(taskId)?.abort()
+    quickCreateAbortControllersRef.current.delete(taskId)
+    setPendingQuickCreateTasks((current) =>
+      current.filter((task) => task.id !== taskId),
+    )
   }
 
   const formatSeconds = (seconds: number) => {
@@ -2891,11 +2930,9 @@ const DashboardChatPanel = ({
       : `${remainingSeconds}s`
   }
 
-  const quickCreateEstimateSeconds =
-    getQuickCreateEstimateSeconds(quickCreateActionId)
-  const activeQuickCreateAction = dashboardChatQuickCreateActions.find(
-    (action) => action.id === quickCreateActionId,
-  )
+  const getElapsedSeconds = (startedAt: number) =>
+    Math.max(0, Math.floor((timerNow - startedAt) / 1000))
+
   const quickCreateMenuOpen = Boolean(quickCreateMenuAnchor)
   const chatMenuOpen = Boolean(chatMenuAnchor)
   const showQuickCreateSearch = dashboardChatQuickCreateActions.length > 5
@@ -2998,14 +3035,13 @@ const DashboardChatPanel = ({
                 </Typography>
               </Divider>
               {actions.map((action) => {
-                const active = quickCreateActionId === action.id
                 return (
                   <Button
                     key={action.id}
                     fullWidth
                     aria-label={t(getQuickCreateActionLabelKey(action.id))}
-                    variant={active ? 'contained' : 'text'}
-                    disabled={!hasContext || Boolean(quickCreateActionId)}
+                    variant="text"
+                    disabled={!hasContext}
                     onClick={() => void runQuickCreate(action)}
                     sx={{
                       justifyContent: 'flex-start',
@@ -3017,17 +3053,7 @@ const DashboardChatPanel = ({
                       py: 1,
                       textAlign: 'left',
                       textTransform: 'none',
-                      color: active ? 'warning.contrastText' : 'text.primary',
-                      ...(active
-                        ? {
-                            bgcolor: 'warning.main',
-                            '&.Mui-disabled': {
-                              bgcolor: 'warning.main',
-                              color: 'warning.contrastText',
-                              opacity: 0.9,
-                            },
-                          }
-                        : {}),
+                      color: 'text.primary',
                     }}
                   >
                     <Box
@@ -3038,10 +3064,8 @@ const DashboardChatPanel = ({
                         flex: '0 0 auto',
                         display: 'grid',
                         placeItems: 'center',
-                        color: active ? 'inherit' : accentColor.main,
-                        bgcolor: active
-                          ? 'rgba(255,255,255,0.18)'
-                          : alpha(accentColor.main, 0.12),
+                        color: accentColor.main,
+                        bgcolor: alpha(accentColor.main, 0.12),
                       }}
                       data-testid={`quick-create-action-icon-${action.id}`}
                     >
@@ -3061,21 +3085,16 @@ const DashboardChatPanel = ({
                           noWrap
                           sx={{ minWidth: 0 }}
                         >
-                          {active
-                            ? t('chat.thinking')
-                            : t(getQuickCreateActionLabelKey(action.id))}
+                          {t(getQuickCreateActionLabelKey(action.id))}
                         </Typography>
-                        {isHostedAi && !active ? (
+                        {isHostedAi ? (
                           <StudyCreditCostLabel
                             amount={quickCreateCreditCost}
                             variant="badge"
                           />
                         ) : null}
                       </Stack>
-                      <Typography
-                        variant="caption"
-                        color={active ? 'inherit' : 'text.secondary'}
-                      >
+                      <Typography variant="caption" color="text.secondary">
                         {t(getQuickCreateActionDescriptionKey(action.id))}
                       </Typography>
                     </Box>
@@ -3435,7 +3454,8 @@ const DashboardChatPanel = ({
 
   const composerInputSx = useMemo<SxProps<Theme>>(
     () => ({
-      flex: draftHasMultipleLines && chatComposerResized ? '1 1 auto' : '0 1 auto',
+      flex:
+        draftHasMultipleLines && chatComposerResized ? '1 1 auto' : '0 1 auto',
       minWidth: 0,
       minHeight: 0,
       width: '100%',
@@ -3490,10 +3510,7 @@ const DashboardChatPanel = ({
     flex: '0 0 auto',
     borderRadius: 1,
     bgcolor: 'transparent',
-    color:
-      hasAnswerContext && draft.trim()
-        ? 'primary.main'
-        : 'text.disabled',
+    color: hasAnswerContext && draft.trim() ? 'primary.main' : 'text.disabled',
     '&:hover': {
       bgcolor:
         hasAnswerContext && draft.trim()
@@ -3511,12 +3528,15 @@ const DashboardChatPanel = ({
 
   const composerResizeSx = {
     height:
-      draftHasMultipleLines && chatComposerResized ? chatComposerHeight : 'auto',
+      draftHasMultipleLines && chatComposerResized
+        ? chatComposerHeight
+        : 'auto',
     minHeight:
       draftHasMultipleLines && chatComposerResized
         ? MIN_RESIZED_CHAT_COMPOSER_HEIGHT
         : undefined,
-    maxHeight: draftHasMultipleLines && chatComposerResized ? '48vh' : undefined,
+    maxHeight:
+      draftHasMultipleLines && chatComposerResized ? '48vh' : undefined,
     overflow: 'hidden',
   }
 
@@ -4366,22 +4386,15 @@ const DashboardChatPanel = ({
                           ))}
                         </Stack>
                         <Typography variant="caption" color="text.secondary">
-                          {activeStartedAt &&
-                          messages.findIndex(({ id }) => id === message.id) ===
-                            messages.findIndex(
-                              ({ role, pending }) =>
-                                role === 'assistant' && pending,
-                            )
-                            ? isLocalAi
-                              ? `${t('chat.localAiReplying')}… ${formatSeconds(
-                                  elapsedSeconds,
-                                )} ${t('chat.elapsedLower')}. ${t(
-                                  'chat.estimateAbout',
-                                )} 1:30.`
-                              : `${t('chat.replying')}… ${formatSeconds(
-                                  elapsedSeconds,
-                                )} ${t('chat.elapsedLower')}.`
-                            : t('chat.queuedReply')}
+                          {isLocalAi
+                            ? `${t('chat.localAiReplying')}… ${formatSeconds(
+                                getElapsedSeconds(message.createdAt),
+                              )} ${t('chat.elapsedLower')}. ${t(
+                                'chat.estimateAbout',
+                              )} 1:30.`
+                            : `${t('chat.replying')}… ${formatSeconds(
+                                getElapsedSeconds(message.createdAt),
+                              )} ${t('chat.elapsedLower')}.`}
                         </Typography>
                       </Stack>
                     ) : message.role === 'assistant' ? (
@@ -4760,108 +4773,186 @@ const DashboardChatPanel = ({
           flex: '0 0 auto',
         }}
       >
-        {onQuickCreatePage && activeQuickCreateAction ? (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: 'block', mb: 0.75 }}
-          >
-            {t('chat.creating')}{' '}
-            {t(getQuickCreateActionLabelKey(activeQuickCreateAction.id))} -{' '}
-            {t('chat.elapsed')} {formatSeconds(quickCreateElapsedSeconds)} -{' '}
-            {t('chat.estimate')} {formatSeconds(quickCreateEstimateSeconds)}
-          </Typography>
-        ) : null}
         <Stack spacing={1} sx={{ minHeight: 0 }}>
-          {userAddedSources.length > 0 ? (
+          {userAddedSources.length > 0 || pendingQuickCreateTasks.length > 0 ? (
             <Stack
               ref={userSourceRowRef}
-              direction="row"
-              spacing={0.5}
-              alignItems="center"
-              flexWrap="wrap"
-              useFlexGap
-              data-testid="dashboard-chat-added-sources"
+              spacing={0.75}
+              data-testid="dashboard-chat-inline-status"
             >
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                fontWeight={700}
-                sx={{ mr: 0.25 }}
-              >
-                {t('chat.addedSources')}
-              </Typography>
-              {userAddedSources.map((source) => (
-                <Box
-                  key={source.id}
-                  ref={(node: HTMLDivElement | null) => {
-                    if (node) {
-                      userSourceChipRefs.current.set(source.id, node)
-                    } else {
-                      userSourceChipRefs.current.delete(source.id)
-                    }
-                  }}
-                  tabIndex={-1}
-                  data-testid={`dashboard-chat-added-source-${source.id}`}
-                  sx={{
-                    minHeight: 26,
-                    maxWidth: '100%',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 0.4,
-                    px: 0.6,
-                    py: 0.2,
-                    border: 1,
-                    borderColor: alpha(theme.palette.primary.main, 0.28),
-                    borderRadius: 1,
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                    color: 'text.primary',
-                    outline: 'none',
-                    '&:focus-visible': {
-                      borderColor: 'primary.main',
-                      boxShadow: `0 0 0 2px ${alpha(
-                        theme.palette.primary.main,
-                        0.18,
-                      )}`,
-                    },
-                  }}
+              {userAddedSources.length > 0 ? (
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  alignItems="center"
+                  flexWrap="wrap"
+                  useFlexGap
+                  data-testid="dashboard-chat-added-sources"
                 >
-                  {source.originType === 'user-web' ? (
-                    <LinkIcon sx={{ fontSize: 14, color: 'primary.main' }} />
-                  ) : (
-                    <NotesIcon sx={{ fontSize: 14, color: 'primary.main' }} />
-                  )}
                   <Typography
                     variant="caption"
-                    fontWeight={600}
-                    noWrap
-                    sx={{ maxWidth: 140, fontSize: '0.72rem' }}
+                    color="text.secondary"
+                    fontWeight={700}
+                    sx={{ mr: 0.25 }}
                   >
-                    {source.title}
+                    {t('chat.addedSources')}
                   </Typography>
-                  <IconButton
-                    size="small"
-                    aria-label={`${t('chat.removeSource')}: ${source.title}`}
-                    onClick={() => removeUserAddedSource(source.id)}
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      ml: 0.1,
-                      border: 1,
-                      borderColor: alpha(theme.palette.text.primary, 0.18),
-                      bgcolor: 'background.paper',
-                      color: 'text.secondary',
-                      '&:hover': {
-                        borderColor: alpha(theme.palette.error.main, 0.45),
-                        bgcolor: alpha(theme.palette.error.main, 0.08),
-                        color: 'error.main',
-                      },
-                    }}
-                  >
-                    <CloseIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
-                </Box>
-              ))}
+                  {userAddedSources.map((source) => (
+                    <Box
+                      key={source.id}
+                      ref={(node: HTMLDivElement | null) => {
+                        if (node) {
+                          userSourceChipRefs.current.set(source.id, node)
+                        } else {
+                          userSourceChipRefs.current.delete(source.id)
+                        }
+                      }}
+                      tabIndex={-1}
+                      data-testid={`dashboard-chat-added-source-${source.id}`}
+                      sx={{
+                        minHeight: 26,
+                        maxWidth: '100%',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 0.4,
+                        px: 0.6,
+                        py: 0.2,
+                        border: 1,
+                        borderColor: alpha(theme.palette.primary.main, 0.28),
+                        borderRadius: 1,
+                        bgcolor: alpha(theme.palette.primary.main, 0.08),
+                        color: 'text.primary',
+                        outline: 'none',
+                        '&:focus-visible': {
+                          borderColor: 'primary.main',
+                          boxShadow: `0 0 0 2px ${alpha(
+                            theme.palette.primary.main,
+                            0.18,
+                          )}`,
+                        },
+                      }}
+                    >
+                      {source.originType === 'user-web' ? (
+                        <LinkIcon
+                          sx={{ fontSize: 14, color: 'primary.main' }}
+                        />
+                      ) : (
+                        <NotesIcon
+                          sx={{ fontSize: 14, color: 'primary.main' }}
+                        />
+                      )}
+                      <Typography
+                        variant="caption"
+                        fontWeight={600}
+                        noWrap
+                        sx={{ maxWidth: 140, fontSize: '0.72rem' }}
+                      >
+                        {source.title}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        aria-label={`${t('chat.removeSource')}: ${source.title}`}
+                        onClick={() => removeUserAddedSource(source.id)}
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          ml: 0.1,
+                          border: 1,
+                          borderColor: alpha(theme.palette.text.primary, 0.18),
+                          bgcolor: 'background.paper',
+                          color: 'text.secondary',
+                          '&:hover': {
+                            borderColor: alpha(theme.palette.error.main, 0.45),
+                            bgcolor: alpha(theme.palette.error.main, 0.08),
+                            color: 'error.main',
+                          },
+                        }}
+                      >
+                        <CloseIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Stack>
+              ) : null}
+              {pendingQuickCreateTasks.length > 0 ? (
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  alignItems="center"
+                  flexWrap="wrap"
+                  useFlexGap
+                  data-testid="dashboard-chat-quick-create-tasks"
+                >
+                  {pendingQuickCreateTasks.map((task) => {
+                    const elapsed = getElapsedSeconds(task.startedAt)
+                    const remaining = Math.max(
+                      task.estimateSeconds - elapsed,
+                      0,
+                    )
+                    return (
+                      <Box
+                        key={task.id}
+                        data-testid={`dashboard-chat-quick-create-task-${task.actionId}`}
+                        sx={{
+                          minHeight: 28,
+                          maxWidth: '100%',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          px: 0.75,
+                          py: 0.25,
+                          border: 1,
+                          borderColor: alpha(accentColor.main, 0.34),
+                          borderRadius: 1,
+                          bgcolor: alpha(accentColor.main, 0.1),
+                          color: 'text.primary',
+                        }}
+                      >
+                        {quickCreateIcons[task.actionId]}
+                        <Typography
+                          variant="caption"
+                          fontWeight={700}
+                          noWrap
+                          sx={{ maxWidth: 92, fontSize: '0.72rem' }}
+                        >
+                          {t('chat.creating')}{' '}
+                          {t(getQuickCreateActionLabelKey(task.actionId))}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          noWrap
+                          sx={{ fontSize: '0.7rem' }}
+                        >
+                          {formatSeconds(elapsed)} / {formatSeconds(remaining)}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          aria-label={`${t('common.cancel')} ${t(
+                            getQuickCreateActionLabelKey(task.actionId),
+                          )}`}
+                          onClick={() => cancelQuickCreateTask(task.id)}
+                          sx={{
+                            width: 20,
+                            height: 20,
+                            border: 1,
+                            borderColor: alpha(theme.palette.text.primary, 0.2),
+                            bgcolor: 'background.paper',
+                            color: 'text.secondary',
+                            '&:hover': {
+                              borderColor: alpha(theme.palette.error.main, 0.5),
+                              bgcolor: alpha(theme.palette.error.main, 0.08),
+                              color: 'error.main',
+                            },
+                          }}
+                        >
+                          <CloseIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                      </Box>
+                    )
+                  })}
+                </Stack>
+              ) : null}
             </Stack>
           ) : null}
           <Box
@@ -4910,7 +5001,7 @@ const DashboardChatPanel = ({
                       <IconButton
                         size="small"
                         aria-label={t('chat.create')}
-                        disabled={!hasContext || Boolean(quickCreateActionId)}
+                        disabled={!hasContext}
                         onClick={(event) =>
                           setQuickCreateMenuAnchor(event.currentTarget)
                         }

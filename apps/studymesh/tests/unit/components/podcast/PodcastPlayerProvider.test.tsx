@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -34,6 +34,7 @@ const renderPodcastBlock = (podcast = createPodcast()) =>
 
 describe('PodcastPlayerProvider', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     vi.mocked(getHostedAiPodcastAudioUrl).mockResolvedValue(
       'https://audio.test/podcast.mp3',
     )
@@ -43,28 +44,74 @@ describe('PodcastPlayerProvider', () => {
     )
   })
 
-  it('opens podcasts in the floating player', async () => {
+  it('autoplays the page podcast player after loading', async () => {
     renderPodcastBlock()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Listen' }))
-
-    expect(await screen.findByTestId('floating-podcast-player')).toBeVisible()
+    expect(screen.getByTestId('podcast-page-player')).toBeVisible()
     expect(screen.getAllByText('Podcast: Biology').length).toBeGreaterThan(0)
     await waitFor(() => {
       expect(getHostedAiPodcastAudioUrl).toHaveBeenCalledWith(
         'user-1/guide-1/podcast-biology.mp3',
       )
     })
+    expect(screen.queryByTestId('floating-podcast-player')).not.toBeInTheDocument()
     await waitFor(() => {
       expect(window.HTMLMediaElement.prototype.play).toHaveBeenCalled()
     })
+  })
+
+  it('opens a synced mini-player from the page player', async () => {
+    renderPodcastBlock()
+
+    await waitFor(() => {
+      expect(getHostedAiPodcastAudioUrl).toHaveBeenCalled()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Open player' }))
+
+    expect(screen.getByTestId('floating-podcast-player')).toBeVisible()
+    expect(screen.getAllByText('Podcast: Biology').length).toBeGreaterThan(1)
+    expect(screen.getByText('Playing in mini player')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Bring player here' })).toBeVisible()
+    expect(
+      within(screen.getByTestId('podcast-page-player')).queryByRole('button', {
+        name: 'Play',
+      }),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }))
+    await waitFor(() => {
+      expect(window.HTMLMediaElement.prototype.play).toHaveBeenCalled()
+    })
+  })
+
+  it('brings the mini-player controls back to the page without stopping', async () => {
+    renderPodcastBlock()
+
+    await waitFor(() => {
+      expect(getHostedAiPodcastAudioUrl).toHaveBeenCalled()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Open player' }))
+    expect(screen.getByTestId('floating-podcast-player')).toBeVisible()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bring player here' }))
+
+    expect(screen.queryByTestId('floating-podcast-player')).not.toBeInTheDocument()
+    expect(
+      within(screen.getByTestId('podcast-page-player')).getByRole('button', {
+        name: 'Play',
+      }),
+    ).toBeVisible()
+    expect(window.HTMLMediaElement.prototype.pause).not.toHaveBeenCalled()
   })
 
   it('keeps the floating podcast player after the podcast block unmounts', async () => {
     const podcast = createPodcast('Podcast: Chemistry')
     const { rerender } = renderPodcastBlock(podcast)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Listen' }))
+    await waitFor(() => {
+      expect(getHostedAiPodcastAudioUrl).toHaveBeenCalled()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Open player' }))
     expect(await screen.findByTestId('floating-podcast-player')).toBeVisible()
 
     rerender(
@@ -82,10 +129,13 @@ describe('PodcastPlayerProvider', () => {
     expect(screen.getByText('Podcast: Chemistry')).toBeInTheDocument()
   })
 
-  it('closes the floating podcast player', async () => {
+  it('hides the mini-player without stopping while the page player is mounted', async () => {
     renderPodcastBlock(createPodcast('Podcast: History'))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Listen' }))
+    await waitFor(() => {
+      expect(getHostedAiPodcastAudioUrl).toHaveBeenCalled()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Open player' }))
     expect(await screen.findByTestId('floating-podcast-player')).toBeVisible()
 
     fireEvent.click(
@@ -93,6 +143,124 @@ describe('PodcastPlayerProvider', () => {
     )
 
     expect(screen.queryByTestId('floating-podcast-player')).not.toBeInTheDocument()
-    expect(window.HTMLMediaElement.prototype.pause).toHaveBeenCalled()
+    expect(screen.getByTestId('podcast-page-player')).toBeVisible()
+    expect(
+      within(screen.getByTestId('podcast-page-player')).getByRole('button', {
+        name: 'Play',
+      }),
+    ).toBeVisible()
+    expect(window.HTMLMediaElement.prototype.pause).not.toHaveBeenCalled()
+  })
+
+  it('lets the mini-player move around the viewport', async () => {
+    const rectSpy = vi.spyOn(
+      window.HTMLElement.prototype,
+      'getBoundingClientRect',
+    )
+    rectSpy.mockReturnValue({
+      x: 100,
+      y: 100,
+      left: 100,
+      top: 100,
+      right: 480,
+      bottom: 300,
+      width: 380,
+      height: 200,
+      toJSON: () => ({}),
+    } as DOMRect)
+    renderPodcastBlock()
+
+    await waitFor(() => {
+      expect(getHostedAiPodcastAudioUrl).toHaveBeenCalled()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Open player' }))
+    const miniPlayer = screen.getByTestId('floating-podcast-player')
+    const dragHandle = screen.getByRole('button', {
+      name: 'Move podcast player',
+    })
+
+    const downEvent = new Event('pointerdown', { bubbles: true })
+    Object.defineProperties(downEvent, {
+      button: { value: 0 },
+      clientX: { value: 200 },
+      clientY: { value: 150 },
+      pointerId: { value: 1 },
+      pointerType: { value: 'mouse' },
+    })
+    fireEvent(dragHandle, downEvent)
+    await waitFor(() => {
+      expect(miniPlayer).toHaveStyle({ left: '100px', top: '100px' })
+    })
+    const moveEvent = new Event('pointermove', { bubbles: true })
+    Object.defineProperties(moveEvent, {
+      clientX: { value: 260 },
+      clientY: { value: 190 },
+      pointerId: { value: 1 },
+      pointerType: { value: 'mouse' },
+    })
+    fireEvent(dragHandle, moveEvent)
+    fireEvent.pointerUp(dragHandle, { pointerId: 1, pointerType: 'mouse' })
+
+    expect(miniPlayer).toHaveStyle({ left: '160px', top: '140px' })
+    rectSpy.mockRestore()
+  })
+
+  it('stops after closing the mini-player when no page player remains', async () => {
+    const podcast = createPodcast('Podcast: History')
+    const { rerender } = renderPodcastBlock(podcast)
+
+    await waitFor(() => {
+      expect(getHostedAiPodcastAudioUrl).toHaveBeenCalled()
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Open player' }))
+    expect(await screen.findByTestId('floating-podcast-player')).toBeVisible()
+
+    rerender(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <PodcastPlayerProvider>
+          <StudyBlockView
+            type="StudyNoteBlock"
+            props={{ title: 'Other page', text: 'Keep studying.' }}
+          />
+        </PodcastPlayerProvider>
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Close podcast player' }),
+    )
+
+    await waitFor(() => {
+      expect(window.HTMLMediaElement.prototype.pause).toHaveBeenCalled()
+    })
+    expect(screen.queryByTestId('floating-podcast-player')).not.toBeInTheDocument()
+  })
+
+  it('preserves the current mini-player when a different podcast page opens', async () => {
+    const firstPodcast = createPodcast('Podcast: Biology')
+    const secondPodcast = createPodcast('Podcast: Algebra')
+    const { rerender } = renderPodcastBlock(firstPodcast)
+
+    await waitFor(() => {
+      expect(getHostedAiPodcastAudioUrl).toHaveBeenCalledTimes(1)
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Open player' }))
+
+    rerender(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <PodcastPlayerProvider>
+          <StudyBlockView type="PodcastBlock" props={{ podcast: secondPodcast }} />
+        </PodcastPlayerProvider>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByTestId('floating-podcast-player')).toBeVisible()
+    expect(screen.getByTestId('floating-podcast-player')).toHaveTextContent(
+      'Podcast: Biology',
+    )
+    expect(
+      screen.getByRole('button', { name: 'Switch to this podcast' }),
+    ).toBeVisible()
+    expect(getHostedAiPodcastAudioUrl).toHaveBeenCalledTimes(1)
   })
 })

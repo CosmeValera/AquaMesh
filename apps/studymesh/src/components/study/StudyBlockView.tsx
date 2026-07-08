@@ -27,7 +27,6 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import CloseIcon from '@mui/icons-material/Close'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
-import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import TipsAndUpdatesOutlinedIcon from '@mui/icons-material/TipsAndUpdatesOutlined'
 import {
   OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
@@ -38,7 +37,7 @@ import { PREFILL_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 import { type HostedAiPodcast } from '../../quickCreate/ai'
 import type { DashboardLayout } from '../../state/store'
 import { useInterfaceText } from '../../language/interfaceLanguage'
-import { useOptionalPodcastPlayer } from '../podcast/PodcastPlayerProvider'
+import { PodcastPagePlayer } from '../podcast/PodcastPlayerProvider'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -1144,7 +1143,6 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   onAskAi,
 }) => {
   const { t } = useInterfaceText()
-  const podcastPlayer = useOptionalPodcastPlayer()
   const explainButtonLabel = t('practice.explain')
   const focusedQuizStorageKey = useMemo(
     () => createFocusedQuizStorageKey(type, props),
@@ -3195,24 +3193,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           ) : null}
         </Stack>
 
-        <Button
-          variant="contained"
-          startIcon={<PlayArrowIcon />}
-          disabled={!podcastPlayer}
-          onClick={() => {
-            podcastPlayer?.openPodcast({ podcast })
-          }}
-          sx={{
-            alignSelf: 'flex-start',
-            borderRadius: 1.25,
-            textTransform: 'none',
-            fontWeight: 800,
-          }}
-        >
-          {podcastPlayer?.activePodcast?.audioPath === podcast.audioPath
-            ? t('podcastPlayer.openPlayer')
-            : t('podcastPlayer.listen')}
-        </Button>
+        <PodcastPagePlayer podcast={podcast} />
 
         {podcast.chapters.length > 0 ? (
           <Stack spacing={0.75}>

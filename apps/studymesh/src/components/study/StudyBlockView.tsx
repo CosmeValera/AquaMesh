@@ -31,8 +31,7 @@ import {
   readStudyGuidePageHref,
 } from '../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
-import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
-import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
+import { PREFILL_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 import {
   getHostedAiPodcastAudioUrl,
   type HostedAiPodcast,
@@ -1055,18 +1054,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   onAskAi,
 }) => {
   const { t } = useInterfaceText()
-  const explainButtonLabel = (
-    <Stack
-      component="span"
-      direction="row"
-      spacing={0.5}
-      alignItems="center"
-      sx={{ display: 'inline-flex' }}
-    >
-      <span>{t('practice.explain')}</span>
-      <StudyCreditCostLabel amount={1} variant="badge" />
-    </Stack>
-  )
+  const explainButtonLabel = t('practice.explain')
   const focusedQuizStorageKey = useMemo(
     () => createFocusedQuizStorageKey(type, props),
     [props, type],
@@ -1260,7 +1248,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent(ASK_DASHBOARD_CHAT_EVENT, {
+        new CustomEvent(PREFILL_DASHBOARD_CHAT_EVENT, {
           detail: { content },
         }),
       )

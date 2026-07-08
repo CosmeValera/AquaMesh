@@ -24,6 +24,7 @@ import {
   getAccentColorById,
   type AccentColorId,
 } from '../../../../src/theme/accentColors'
+import { PREFILL_DASHBOARD_CHAT_EVENT } from '../../../../src/components/workspace/workspaceEvents'
 
 vi.mock('../../../../src/quickCreate/ai', () => ({
   __esModule: true,
@@ -112,6 +113,13 @@ const renderPanel = (
     onAddExternalSourceToGuide?: React.ComponentProps<
       typeof DashboardChatPanel
     >['onAddExternalSourceToGuide']
+    onMessagesChange?: React.ComponentProps<
+      typeof DashboardChatPanel
+    >['onMessagesChange']
+    queuedDraft?: React.ComponentProps<typeof DashboardChatPanel>['queuedDraft']
+    onQueuedDraftConsumed?: React.ComponentProps<
+      typeof DashboardChatPanel
+    >['onQueuedDraftConsumed']
     supportsStudyGuideCreateScope?: boolean
     messages?: React.ComponentProps<typeof DashboardChatPanel>['messages']
     accentColorId?: AccentColorId
@@ -132,11 +140,13 @@ const renderPanel = (
       <DashboardChatPanel
         dashboard={options.dashboard ?? dashboardWithContext}
         messages={options.messages ?? []}
-        onMessagesChange={vi.fn()}
+        onMessagesChange={options.onMessagesChange ?? vi.fn()}
         onClose={vi.fn()}
         onQuickCreatePage={options.onQuickCreatePage ?? vi.fn()}
         onOpenSource={options.onOpenSource}
         onAddExternalSourceToGuide={options.onAddExternalSourceToGuide}
+        queuedDraft={options.queuedDraft}
+        onQueuedDraftConsumed={options.onQueuedDraftConsumed}
         supportsStudyGuideCreateScope={options.supportsStudyGuideCreateScope}
       />
     </AccentColorProvider>,
@@ -249,6 +259,47 @@ describe('DashboardChatPanel quick create menu', () => {
     expect(
       screen.queryByRole('button', { name: 'More ideas' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('prefills a queued explain draft without sending it', async () => {
+    const onMessagesChange = vi.fn()
+    const onQueuedDraftConsumed = vi.fn()
+    renderPanel({
+      onMessagesChange,
+      onQueuedDraftConsumed,
+      queuedDraft: {
+        id: 'explain-draft-1',
+        content: ' Explain photosynthesis ',
+      },
+    })
+
+    const input = screen.getByPlaceholderText('Ask anything')
+    await waitFor(() => expect(input).toHaveValue('Explain photosynthesis'))
+    expect(onQueuedDraftConsumed).toHaveBeenCalledWith('explain-draft-1')
+    expect(askDashboardSources).not.toHaveBeenCalled()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
+  })
+
+  it('replaces an existing draft when an explain prefill event arrives', async () => {
+    renderPanel()
+    const input = screen.getByPlaceholderText('Ask anything')
+    fireEvent.change(input, { target: { value: 'Existing draft' } })
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(PREFILL_DASHBOARD_CHAT_EVENT, {
+          detail: { content: 'Replacement explain prompt' },
+        }),
+      )
+    })
+
+    await waitFor(() => expect(input).toHaveValue('Replacement explain prompt'))
+    expect(askDashboardSources).not.toHaveBeenCalled()
   })
 
   it('shows one Create entry point instead of permanent quick-create buttons', () => {

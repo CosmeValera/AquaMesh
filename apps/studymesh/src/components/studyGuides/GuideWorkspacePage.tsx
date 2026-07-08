@@ -141,7 +141,7 @@ const GuideWorkspacePage = () => {
   const [editingPageKey, setEditingPageKey] = useState<string | null>(null)
   const [quickCreateError, setQuickCreateError] = useState('')
   const [workspaceStorageError, setWorkspaceStorageError] = useState(false)
-  const [queuedChatQuestion, setQueuedChatQuestion] = useState<{
+  const [queuedChatDraft, setQueuedChatDraft] = useState<{
     id: string
     content: string
   } | null>(null)
@@ -472,7 +472,7 @@ const GuideWorkspacePage = () => {
 
     setAiChatOpen(true)
     setMobileSection('ai-chat')
-    setQueuedChatQuestion({
+    setQueuedChatDraft({
       id: `study-block-explain-${Date.now()}-${Math.random()
         .toString(36)
         .slice(2)}`,
@@ -728,11 +728,9 @@ const GuideWorkspacePage = () => {
         onOpenSource={openChatSource}
         onQuickCreatePage={quickCreatePage}
         supportsStudyGuideCreateScope
-        queuedQuestion={queuedChatQuestion}
-        onQueuedQuestionConsumed={(id) =>
-          setQueuedChatQuestion((current) =>
-            current?.id === id ? null : current,
-          )
+        queuedDraft={queuedChatDraft}
+        onQueuedDraftConsumed={(id) =>
+          setQueuedChatDraft((current) => (current?.id === id ? null : current))
         }
       />
       {quickCreateError ? (

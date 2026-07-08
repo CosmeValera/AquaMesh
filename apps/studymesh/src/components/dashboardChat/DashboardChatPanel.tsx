@@ -80,7 +80,7 @@ import {
   type QuickCreateSourceScope,
 } from '../../quickCreate/quickCreateActions'
 import { renderMarkdown } from '../study/StudyBlockView'
-import { ASK_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
+import { PREFILL_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 import { useAccentColor } from '../../theme/AccentColorContext'
 import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
@@ -156,8 +156,8 @@ interface DashboardChatPanelProps {
     options?: { signal?: AbortSignal },
   ) => Promise<void>
   supportsStudyGuideCreateScope?: boolean
-  queuedQuestion?: { id: string; content: string } | null
-  onQueuedQuestionConsumed?: (id: string) => void
+  queuedDraft?: { id: string; content: string } | null
+  onQueuedDraftConsumed?: (id: string) => void
 }
 
 const suggestions = [
@@ -575,8 +575,8 @@ const DashboardChatPanel = ({
   onOpenSource,
   onQuickCreatePage,
   supportsStudyGuideCreateScope = false,
-  queuedQuestion,
-  onQueuedQuestionConsumed,
+  queuedDraft,
+  onQueuedDraftConsumed,
 }: DashboardChatPanelProps) => {
   const { t } = useInterfaceText()
   const { accentColor } = useAccentColor()
@@ -2473,36 +2473,44 @@ const DashboardChatPanel = ({
     void answerQuestion(trimmed, pendingMessage.id, previousMessages)
   }
 
+  const prefillDraft = (content: string) => {
+    const trimmed = content.trim()
+    if (!trimmed) {
+      return
+    }
+
+    setDraft(trimmed)
+    setError('')
+    window.setTimeout(() => draftInputRef.current?.focus(), 0)
+  }
+
   useEffect(() => {
-    const askFromEvent = (event: Event) => {
+    const prefillFromEvent = (event: Event) => {
       const detail = (event as CustomEvent<{ content?: unknown }>).detail
       if (typeof detail?.content !== 'string' || !detail.content.trim()) {
         return
       }
 
-      sendQuestion(detail.content)
+      prefillDraft(detail.content)
     }
 
-    window.addEventListener(ASK_DASHBOARD_CHAT_EVENT, askFromEvent)
+    window.addEventListener(PREFILL_DASHBOARD_CHAT_EVENT, prefillFromEvent)
 
     return () => {
-      window.removeEventListener(ASK_DASHBOARD_CHAT_EVENT, askFromEvent)
+      window.removeEventListener(PREFILL_DASHBOARD_CHAT_EVENT, prefillFromEvent)
     }
   }, [])
 
-  const lastQueuedQuestionIdRef = useRef<string | null>(null)
+  const lastQueuedDraftIdRef = useRef<string | null>(null)
   useEffect(() => {
-    if (
-      !queuedQuestion ||
-      lastQueuedQuestionIdRef.current === queuedQuestion.id
-    ) {
+    if (!queuedDraft || lastQueuedDraftIdRef.current === queuedDraft.id) {
       return
     }
 
-    lastQueuedQuestionIdRef.current = queuedQuestion.id
-    sendQuestion(queuedQuestion.content)
-    onQueuedQuestionConsumed?.(queuedQuestion.id)
-  }, [queuedQuestion])
+    lastQueuedDraftIdRef.current = queuedDraft.id
+    prefillDraft(queuedDraft.content)
+    onQueuedDraftConsumed?.(queuedDraft.id)
+  }, [queuedDraft])
 
   const findLastFoundExternalSource = (): {
     source?: DashboardExternalSource

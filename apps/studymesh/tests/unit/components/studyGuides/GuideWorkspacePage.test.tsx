@@ -290,7 +290,7 @@ describe('GuideWorkspacePage responsive sections', () => {
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
   })
 
-  it('opens mobile AI Chat and queues Study Block explain prompts', async () => {
+  it('opens mobile AI Chat and queues Study Block explain drafts', async () => {
     render(
       <MemoryRouter initialEntries={['/workspace/guide-1']}>
         <Routes>
@@ -309,11 +309,11 @@ describe('GuideWorkspacePage responsive sections', () => {
 
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument()
     const latestProps = dashboardChatPanelSpy.mock.calls.at(-1)?.[0] as {
-      queuedQuestion?: { id: string; content: string } | null
+      queuedDraft?: { id: string; content: string } | null
     }
 
-    expect(latestProps.queuedQuestion?.id).toMatch(/^study-block-explain-/)
-    expect(latestProps.queuedQuestion?.content).toBe('Explain quiz miss')
+    expect(latestProps.queuedDraft?.id).toMatch(/^study-block-explain-/)
+    expect(latestProps.queuedDraft?.content).toBe('Explain quiz miss')
   })
 
   it('opens chat sources on the referenced Study Guide page', async () => {

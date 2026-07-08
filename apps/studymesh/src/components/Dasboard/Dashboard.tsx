@@ -8,9 +8,9 @@ import { StudyGuideStorage } from '../../studyGuides/storage'
 import { STUDYMESH_GUIDE_STUDY_PATH_ID } from '../../studyGuides/studyMeshGuideSeed'
 import { ensureStarterDashboards } from '../../customHooks/useWorkspaceActions'
 import {
-  ASK_DASHBOARD_CHAT_EVENT,
   CLOSE_DASHBOARD_CHAT_EVENT,
   OPEN_DASHBOARD_CHAT_EVENT,
+  PREFILL_DASHBOARD_CHAT_EVENT,
 } from '../workspace/workspaceEvents'
 import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceMode'
 import DashboardChatPanel, {
@@ -44,7 +44,7 @@ const Dashboards = () => {
   const [dashboardChatMessages, setDashboardChatMessages] = useState<
     Record<string, DashboardChatMessage[]>
   >({})
-  const [queuedChatQuestion, setQueuedChatQuestion] = useState<{
+  const [queuedChatDraft, setQueuedChatDraft] = useState<{
     id: string
     content: string
   } | null>(null)
@@ -118,9 +118,9 @@ const Dashboards = () => {
     }))
   }
 
-  const askDashboardChat = (content: string) => {
+  const prefillDashboardChat = (content: string) => {
     setDashboardChatOpen(true)
-    setQueuedChatQuestion({
+    setQueuedChatDraft({
       id: `quiz-explain-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       content,
     })
@@ -129,7 +129,7 @@ const Dashboards = () => {
   useEffect(() => {
     const openDashboardChat = () => setDashboardChatOpen(true)
     const closeDashboardChat = () => setDashboardChatOpen(false)
-    const askDashboardChatFromEvent = (event: Event) => {
+    const prefillDashboardChatFromEvent = (event: Event) => {
       const detail = (event as CustomEvent<{ content?: unknown }>).detail
       if (typeof detail?.content !== 'string' || !detail.content.trim()) {
         setDashboardChatOpen(true)
@@ -140,19 +140,22 @@ const Dashboards = () => {
         return
       }
 
-      askDashboardChat(detail.content)
+      prefillDashboardChat(detail.content)
     }
 
     window.addEventListener(OPEN_DASHBOARD_CHAT_EVENT, openDashboardChat)
     window.addEventListener(CLOSE_DASHBOARD_CHAT_EVENT, closeDashboardChat)
-    window.addEventListener(ASK_DASHBOARD_CHAT_EVENT, askDashboardChatFromEvent)
+    window.addEventListener(
+      PREFILL_DASHBOARD_CHAT_EVENT,
+      prefillDashboardChatFromEvent,
+    )
 
     return () => {
       window.removeEventListener(OPEN_DASHBOARD_CHAT_EVENT, openDashboardChat)
       window.removeEventListener(CLOSE_DASHBOARD_CHAT_EVENT, closeDashboardChat)
       window.removeEventListener(
-        ASK_DASHBOARD_CHAT_EVENT,
-        askDashboardChatFromEvent,
+        PREFILL_DASHBOARD_CHAT_EVENT,
+        prefillDashboardChatFromEvent,
       )
     }
   }, [dashboardChatOpen])
@@ -242,7 +245,7 @@ const Dashboards = () => {
               onAddPage={() =>
                 addPage(currentDashboard.id, currentDashboard.studyPath)
               }
-              onAskAi={askDashboardChat}
+              onAskAi={prefillDashboardChat}
             />
           ) : (
             <Box
@@ -321,9 +324,9 @@ const Dashboards = () => {
               supportsStudyGuideCreateScope={isStudyGuideDashboard(
                 currentDashboard,
               )}
-              queuedQuestion={queuedChatQuestion}
-              onQueuedQuestionConsumed={(id) =>
-                setQueuedChatQuestion((current) =>
+              queuedDraft={queuedChatDraft}
+              onQueuedDraftConsumed={(id) =>
+                setQueuedChatDraft((current) =>
                   current?.id === id ? null : current,
                 )
               }

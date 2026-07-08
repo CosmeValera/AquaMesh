@@ -264,6 +264,8 @@ const errorResponse = (
   ok: false,
   error: { code, message },
 });
+const INSUFFICIENT_STUDY_CREDITS_MESSAGE =
+  "You don't have enough Study Credits for this action. Add more credits or switch AI provider, then try again.";
 
 const isObject = (value: unknown): value is JsonObject =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -2330,6 +2332,16 @@ const mapFailure = (
       };
     }
 
+    if (/insufficient|credit|quota/i.test(message)) {
+      return {
+        statusCode: 402,
+        response: errorResponse(
+          "insufficient_credits",
+          INSUFFICIENT_STUDY_CREDITS_MESSAGE,
+        ),
+      };
+    }
+
     if (error.name === "rpc_error") {
       return {
         statusCode: 500,
@@ -2337,13 +2349,6 @@ const mapFailure = (
           "server_error",
           `Hosted AI database error: ${message}`,
         ),
-      };
-    }
-
-    if (/insufficient|credit|quota/i.test(message)) {
-      return {
-        statusCode: 402,
-        response: errorResponse("insufficient_credits", message),
       };
     }
 

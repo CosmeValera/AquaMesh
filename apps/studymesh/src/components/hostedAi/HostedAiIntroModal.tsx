@@ -112,8 +112,7 @@ const HostedAiIntroModal: React.FC = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
             You get {status.initialFreeCredits} credits on first login. When
             your balance is low, the daily free allowance restores enough for 2
-            Study Guides + 1 more creation, daily. Failed generations never add
-            credits back.
+            Study Guides + 1 more creation, daily.
           </Typography>
         </Box>
       </DialogContent>

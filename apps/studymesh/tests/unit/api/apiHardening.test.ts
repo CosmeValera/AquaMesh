@@ -760,6 +760,73 @@ describe('API payment and hosted AI hardening', () => {
     })
   })
 
+  it('returns a friendly Study Credits message for hosted AI credit failures', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
+    vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
+    vi.stubEnv('HOSTED_CEREBRAS_API_KEY', 'hosted-cerebras-key')
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        const target = String(url)
+
+        if (target.includes('/auth/v1/user')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            text: vi.fn().mockResolvedValue(JSON.stringify({ id: 'user-1' })),
+          })
+        }
+
+        if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
+          return Promise.resolve({
+            ok: false,
+            status: 400,
+            text: vi
+              .fn()
+              .mockResolvedValue(
+                JSON.stringify({ message: 'insufficient Study Credits' }),
+              ),
+          })
+        }
+
+        return Promise.resolve({
+          ok: false,
+          status: 500,
+          text: vi.fn().mockResolvedValue(JSON.stringify({})),
+        })
+      }),
+    )
+
+    const { response, res } = makeResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer [REDACTED:Bearer token]',
+        },
+        body: {
+          action: 'generate',
+          surface: 'quick-create',
+          parts: [{ text: 'Make a quiz about vectors.' }],
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(402)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: {
+        code: 'insufficient_credits',
+        message:
+          "You don't have enough Study Credits for this action. Add more credits or switch AI provider, then try again.",
+      },
+    })
+  })
+
   it('classifies hosted model authentication failures separately', async () => {
     vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
     vi.stubEnv('HOSTED_OPENAI_API_KEY', 'bad-hosted-openai-key')

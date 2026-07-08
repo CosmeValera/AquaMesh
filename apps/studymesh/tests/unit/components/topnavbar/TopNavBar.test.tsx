@@ -450,6 +450,29 @@ describe('TopNavBar Component', () => {
     ).toBeInTheDocument()
   })
 
+  it('opens AI Mode without the warning notice for direct credit pack actions', async () => {
+    render(
+      <BrowserRouter>
+        <TopNavBar />
+      </BrowserRouter>,
+    )
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT, {
+          detail: { showNotice: false },
+        }),
+      )
+    })
+
+    expect(
+      await screen.findByRole('dialog', { name: /AI Mode/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(/you do not have enough study credits/i),
+    ).not.toBeInTheDocument()
+  })
+
   it('shows the active own-key mode in the AI pill', () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {

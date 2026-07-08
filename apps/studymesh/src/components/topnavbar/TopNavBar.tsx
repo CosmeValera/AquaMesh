@@ -280,9 +280,12 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   }, [])
 
   useEffect(() => {
-    const handleInsufficientCredits = () => {
+    const handleInsufficientCredits = (event: Event) => {
+      const detail = (event as CustomEvent<{ showNotice?: boolean }>).detail
       setAiModeNotice(
-        'You do not have enough Study Credits for that action. Buy a credit pack, switch to your own API key, or use local AI.',
+        detail?.showNotice === false
+          ? ''
+          : 'You do not have enough Study Credits for that action. Buy a credit pack, switch to your own API key, or use local AI.',
       )
       setIsAiModeOpen(true)
     }

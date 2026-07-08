@@ -18,6 +18,7 @@ import {
 } from '../../../../src/studyGuides/creationQueue'
 
 const deleteHostedAiPodcastAudioMock = vi.hoisted(() => vi.fn())
+const useHostedAiStatusMock = vi.hoisted(() => vi.fn())
 
 vi.mock('../../../../src/quickCreate/ai', async () => {
   const actual = await vi.importActual<typeof import('../../../../src/quickCreate/ai')>(
@@ -33,6 +34,10 @@ vi.mock('../../../../src/quickCreate/ai', async () => {
 vi.mock('../../../../src/components/topnavbar/TopNavBar', () => ({
   __esModule: true,
   default: () => <div data-testid="top-nav-bar" />,
+}))
+
+vi.mock('../../../../src/components/hostedAi/useHostedAiStatus', () => ({
+  useHostedAiStatus: useHostedAiStatusMock,
 }))
 
 vi.mock('../../../../src/studyGuides/generation', () => ({
@@ -167,6 +172,14 @@ describe('StudyGuidesPage create flow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     deleteHostedAiPodcastAudioMock.mockResolvedValue(undefined)
+    useHostedAiStatusMock.mockReturnValue({
+      status: null,
+      displayStudyCredits: 30,
+      loading: false,
+      error: '',
+      refresh: vi.fn(),
+      markIntroSeen: vi.fn(),
+    })
     const storage = new Map<string, string>()
     vi.mocked(window.localStorage.getItem).mockImplementation(
       (key: string) => storage.get(key) ?? null,
@@ -441,6 +454,81 @@ describe('StudyGuidesPage create flow', () => {
     })
     expect(StudyGuideCreationQueueStorage.getAll()).toEqual([])
     saveSpy.mockRestore()
+  })
+
+  it('shows a buy credit pack action for failed hosted guides when credits are under cost', async () => {
+    useHostedAiStatusMock.mockReturnValue({
+      status: null,
+      displayStudyCredits: 2,
+      loading: false,
+      error: '',
+      refresh: vi.fn(),
+      markIntroSeen: vi.fn(),
+    })
+    StudyGuideCreationQueueStorage.upsert({
+      id: 'failed-credit-guide',
+      prompt: 'git common commands',
+      provider: 'hosted',
+      status: 'failed',
+      estimateSeconds: 20,
+      startedAt: null,
+      finishedAt: new Date().toISOString(),
+      errorMessage:
+        'Not enough Study Credits. This action needs 3 SC and you have 2 SC.',
+      resultStudyGuideId: null,
+    })
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+
+    renderStudyGuidesPage('/study-guides')
+
+    const buyButton = await screen.findByRole('button', {
+      name: /buy a credit pack/i,
+    })
+    expect(buyButton).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /^retry/i }),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(buyButton)
+
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'studymesh-hosted-ai-insufficient-credits',
+        detail: { showNotice: false },
+      }),
+    )
+  })
+
+  it('keeps retry available for failed hosted guides once credits cover the cost', async () => {
+    useHostedAiStatusMock.mockReturnValue({
+      status: null,
+      displayStudyCredits: 3,
+      loading: false,
+      error: '',
+      refresh: vi.fn(),
+      markIntroSeen: vi.fn(),
+    })
+    StudyGuideCreationQueueStorage.upsert({
+      id: 'retry-credit-guide',
+      prompt: 'git common commands',
+      provider: 'hosted',
+      status: 'failed',
+      estimateSeconds: 20,
+      startedAt: null,
+      finishedAt: new Date().toISOString(),
+      errorMessage:
+        'Not enough Study Credits. This action needs 3 SC and you have 2 SC.',
+      resultStudyGuideId: null,
+    })
+
+    renderStudyGuidesPage('/study-guides')
+
+    expect(
+      await screen.findByRole('button', { name: /^retry/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /buy a credit pack/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('auto-retries running jobs after a refresh', async () => {

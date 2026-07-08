@@ -51,6 +51,7 @@ import {
 import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
 import {
   deleteHostedAiPodcastAudio,
+  HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   readQuickCreateAiSettings,
 } from '../../quickCreate/ai'
 import { getHostedAiCreditCost } from '../../quickCreate/ai/hostedCredits'
@@ -67,6 +68,8 @@ import {
 } from '../../studyGuides/creationQueue'
 import TopNavBar from '../topnavbar/TopNavBar'
 import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
+import StudyCreditIcon from '../hostedAi/StudyCreditIcon'
+import { useHostedAiStatus } from '../hostedAi/useHostedAiStatus'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 
 type PendingGuide = StudyGuideCreationJob
@@ -171,6 +174,32 @@ const isLocalProvider = (provider: StudyGuideCreationProvider): boolean =>
 const canAutoRetryPendingGuide = (guide: PendingGuide): boolean =>
   guide.provider !== 'hosted' ||
   guide.autoRetryCount < HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT
+
+const isStudyCreditShortageMessage = (message?: string | null): boolean =>
+  Boolean(
+    message &&
+      /(?:not enough|insufficient|don't have enough|do not have enough).*Study Credits|Study Credits.*(?:not enough|insufficient)/i.test(
+        message,
+      ),
+  )
+
+const shouldShowBuyCreditPack = (
+  guide: PendingGuide,
+  displayStudyCredits: number | null,
+): boolean =>
+  guide.provider === 'hosted' &&
+  guide.status === 'failed' &&
+  displayStudyCredits !== null &&
+  displayStudyCredits < studyGuideCreditCost &&
+  isStudyCreditShortageMessage(guide.errorMessage)
+
+const openStudyCreditPackDialog = (): void => {
+  window.dispatchEvent(
+    new CustomEvent(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT, {
+      detail: { showNotice: false },
+    }),
+  )
+}
 
 const formatDuration = (seconds: number): string => {
   const safeSeconds = Math.max(0, Math.floor(seconds))
@@ -298,6 +327,7 @@ const StudyGuidesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [pendingGuides, setPendingGuides] = useState<PendingGuide[]>([])
+  const { displayStudyCredits } = useHostedAiStatus()
   const [newlyCreatedGuideIds, setNewlyCreatedGuideIds] = useState<Set<string>>(
     () => new Set(),
   )
@@ -1033,6 +1063,10 @@ const StudyGuidesPage = () => {
             const isProblem =
               guide.status === 'failed' || guide.status === 'interrupted'
             const isRunning = guide.status === 'running'
+            const showBuyCreditPack = shouldShowBuyCreditPack(
+              guide,
+              displayStudyCredits,
+            )
             return (
               <Paper
                 key={guide.id}
@@ -1115,35 +1149,58 @@ const StudyGuidesPage = () => {
                         direction="row"
                         justifyContent="space-between"
                         alignItems="center"
-                        sx={{ width: '100%' }}
+                        sx={{ width: '100%', flexWrap: 'wrap', gap: 1 }}
                       >
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={<ReplayIcon />}
-                          onClick={() => retryPendingGuide(guide)}
-                          sx={{
-                            borderRadius: 2,
-                            textTransform: 'none',
-                          }}
-                        >
-                          {guide.provider === 'hosted' ? (
+                        {showBuyCreditPack ? (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={openStudyCreditPackDialog}
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontWeight: 700,
+                            }}
+                          >
                             <Stack
                               component="span"
                               direction="row"
                               spacing={0.75}
                               alignItems="center"
                             >
-                              <span>{t('studyGuides.retry')}</span>
-                              <StudyCreditCostLabel
-                                amount={studyGuideCreditCost}
-                                variant="badge"
-                              />
+                              <span>{t('studyGuides.buyCreditPack')}</span>
+                              <StudyCreditIcon size={16} />
                             </Stack>
-                          ) : (
-                            t('studyGuides.retry')
-                          )}
-                        </Button>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<ReplayIcon />}
+                            onClick={() => retryPendingGuide(guide)}
+                            sx={{
+                              borderRadius: 2,
+                              textTransform: 'none',
+                            }}
+                          >
+                            {guide.provider === 'hosted' ? (
+                              <Stack
+                                component="span"
+                                direction="row"
+                                spacing={0.75}
+                                alignItems="center"
+                              >
+                                <span>{t('studyGuides.retry')}</span>
+                                <StudyCreditCostLabel
+                                  amount={studyGuideCreditCost}
+                                  variant="badge"
+                                />
+                              </Stack>
+                            ) : (
+                              t('studyGuides.retry')
+                            )}
+                          </Button>
+                        )}
                         <Button
                           variant="text"
                           color="error"

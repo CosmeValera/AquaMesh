@@ -336,7 +336,7 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
       screen.getByRole('button', { name: /generate study guide/i }),
     )
 
-    expect(screen.getByText(/estimated total 1m/i)).toBeInTheDocument()
+    expect(screen.getByText(/estimated total 45s/i)).toBeInTheDocument()
     expect(screen.getByText(/keep this tab open/i)).toBeInTheDocument()
 
     act(() => {

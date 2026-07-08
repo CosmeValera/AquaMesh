@@ -31,10 +31,9 @@ export interface StudyGuideCreationJob {
 }
 
 export const HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT = 1
-export const HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE =
-  `Creation was interrupted again. Retry will spend ${getHostedAiCreditCost(
-    'study-guide',
-  )} Study Credits.`
+export const HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE = `Creation was interrupted again. Retry will spend ${getHostedAiCreditCost(
+  'study-guide',
+)} Study Credits.`
 export const isRetryableStudyGuideCreationError = (
   message?: string | null,
 ): boolean =>
@@ -114,7 +113,7 @@ const normalizeJob = (value: unknown): StudyGuideCreationJob | null => {
       typeof source.estimateSeconds === 'number' &&
       Number.isFinite(source.estimateSeconds)
         ? source.estimateSeconds
-        : 60,
+        : 45,
     autoRetryCount: normalizeAutoRetryCount(source.autoRetryCount),
     startedAt: typeof source.startedAt === 'string' ? source.startedAt : null,
     finishedAt:

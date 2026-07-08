@@ -507,8 +507,16 @@ const AiChatPet = ({
 const getQuickCreateEstimateSeconds = (
   actionId?: QuickCreateActionId | null,
 ): number => {
+  if (actionId === 'quiz') {
+    return 70
+  }
+
+  if (actionId === 'flashcards') {
+    return 25
+  }
+
   if (actionId === 'podcast') {
-    return 90
+    return 45
   }
 
   const provider = readQuickCreateAiSettings().provider || 'hosted'
@@ -517,11 +525,7 @@ const getQuickCreateEstimateSeconds = (
     return 90
   }
 
-  if (provider === 'cerebras' || provider === 'hosted') {
-    return 20
-  }
-
-  return 60
+  return 45
 }
 
 const getDashboardChatFailureMessage = (error: unknown): string => {
@@ -1588,7 +1592,8 @@ const DashboardChatPanel = ({
 
   useEffect(() => {
     const hasPendingMessages = messages.some((message) => message.pending)
-    if (!hasPendingMessages && pendingQuickCreateTasks.length === 0) {
+    const hasPendingQuickCreateTasks = pendingQuickCreateTasks.length > 0
+    if (!hasPendingMessages && !hasPendingQuickCreateTasks) {
       return undefined
     }
 
@@ -4890,74 +4895,68 @@ const DashboardChatPanel = ({
                   useFlexGap
                   data-testid="dashboard-chat-quick-create-tasks"
                 >
-                  {pendingQuickCreateTasks.map((task) => {
-                    const elapsed = getElapsedSeconds(task.startedAt)
-                    const remaining = Math.max(
-                      task.estimateSeconds - elapsed,
-                      0,
-                    )
-                    return (
-                      <Box
-                        key={task.id}
-                        data-testid={`dashboard-chat-quick-create-task-${task.actionId}`}
+                  {pendingQuickCreateTasks.map((task) => (
+                    <Box
+                      key={task.id}
+                      data-testid={`dashboard-chat-quick-create-task-${task.actionId}`}
+                      sx={{
+                        minHeight: 28,
+                        maxWidth: '100%',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        px: 0.75,
+                        py: 0.25,
+                        border: 1,
+                        borderColor: alpha(accentColor.main, 0.34),
+                        borderRadius: 1,
+                        bgcolor: alpha(accentColor.main, 0.1),
+                        color: 'text.primary',
+                      }}
+                    >
+                      {quickCreateIcons[task.actionId]}
+                      <Typography
+                        variant="caption"
+                        fontWeight={700}
+                        noWrap
+                        sx={{ maxWidth: 92, fontSize: '0.72rem' }}
+                      >
+                        {t('chat.creating')}{' '}
+                        {t(getQuickCreateActionLabelKey(task.actionId))}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        noWrap
+                        sx={{ fontSize: '0.7rem' }}
+                      >
+                        {formatSeconds(getElapsedSeconds(task.startedAt))} / ~{' '}
+                        {formatSeconds(task.estimateSeconds)}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        aria-label={`${t('common.cancel')} ${t(
+                          getQuickCreateActionLabelKey(task.actionId),
+                        )}`}
+                        onClick={() => cancelQuickCreateTask(task.id)}
                         sx={{
-                          minHeight: 28,
-                          maxWidth: '100%',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 0.5,
-                          px: 0.75,
-                          py: 0.25,
+                          width: 20,
+                          height: 20,
                           border: 1,
-                          borderColor: alpha(accentColor.main, 0.34),
-                          borderRadius: 1,
-                          bgcolor: alpha(accentColor.main, 0.1),
-                          color: 'text.primary',
+                          borderColor: alpha(theme.palette.text.primary, 0.2),
+                          bgcolor: 'background.paper',
+                          color: 'text.secondary',
+                          '&:hover': {
+                            borderColor: alpha(theme.palette.error.main, 0.5),
+                            bgcolor: alpha(theme.palette.error.main, 0.08),
+                            color: 'error.main',
+                          },
                         }}
                       >
-                        {quickCreateIcons[task.actionId]}
-                        <Typography
-                          variant="caption"
-                          fontWeight={700}
-                          noWrap
-                          sx={{ maxWidth: 92, fontSize: '0.72rem' }}
-                        >
-                          {t('chat.creating')}{' '}
-                          {t(getQuickCreateActionLabelKey(task.actionId))}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          noWrap
-                          sx={{ fontSize: '0.7rem' }}
-                        >
-                          {formatSeconds(elapsed)} / {formatSeconds(remaining)}
-                        </Typography>
-                        <IconButton
-                          size="small"
-                          aria-label={`${t('common.cancel')} ${t(
-                            getQuickCreateActionLabelKey(task.actionId),
-                          )}`}
-                          onClick={() => cancelQuickCreateTask(task.id)}
-                          sx={{
-                            width: 20,
-                            height: 20,
-                            border: 1,
-                            borderColor: alpha(theme.palette.text.primary, 0.2),
-                            bgcolor: 'background.paper',
-                            color: 'text.secondary',
-                            '&:hover': {
-                              borderColor: alpha(theme.palette.error.main, 0.5),
-                              bgcolor: alpha(theme.palette.error.main, 0.08),
-                              color: 'error.main',
-                            },
-                          }}
-                        >
-                          <CloseIcon sx={{ fontSize: 14 }} />
-                        </IconButton>
-                      </Box>
-                    )
-                  })}
+                        <CloseIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    </Box>
+                  ))}
                 </Stack>
               ) : null}
             </Stack>

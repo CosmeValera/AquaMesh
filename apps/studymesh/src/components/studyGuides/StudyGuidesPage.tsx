@@ -99,11 +99,7 @@ const getGenerationEstimateSeconds = (): number => {
     return 90
   }
 
-  if (provider === 'cerebras' || provider === 'hosted') {
-    return 20
-  }
-
-  return 60
+  return 45
 }
 
 const getActiveAiProvider = () =>
@@ -278,7 +274,10 @@ const storeStudyGuideSortMode = (mode: StudyGuideSortMode) => {
   }
 }
 
-const sortGuides = (guides: StudyGuideSummary[], sortMode: StudyGuideSortMode) =>
+const sortGuides = (
+  guides: StudyGuideSummary[],
+  sortMode: StudyGuideSortMode,
+) =>
   [...guides].sort((first, second) => {
     const firstPinned = first.pinnedAt ? Date.parse(first.pinnedAt) : 0
     const secondPinned = second.pinnedAt ? Date.parse(second.pinnedAt) : 0

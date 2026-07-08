@@ -44,9 +44,7 @@ import {
   QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
   QuickCreateAiProvider,
 } from '../../quickCreate/ai'
-import {
-  getHostedAiCreditCost,
-} from '../../quickCreate/ai/hostedCredits'
+import { getHostedAiCreditCost } from '../../quickCreate/ai/hostedCredits'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
 import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
 import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
@@ -86,8 +84,8 @@ interface CreateStudyGuideModalProps {
   initialPrompt?: string
 }
 
-const GEMINI_STUDY_PATH_ESTIMATE_MS = 60 * 1000
-const CEREBRAS_STUDY_PATH_ESTIMATE_MS = 10 * 1000
+const GEMINI_STUDY_PATH_ESTIMATE_MS = 45 * 1000
+const CEREBRAS_STUDY_PATH_ESTIMATE_MS = 45 * 1000
 interface GeminiTimedProgress {
   startedAt: number
   elapsedMs: number

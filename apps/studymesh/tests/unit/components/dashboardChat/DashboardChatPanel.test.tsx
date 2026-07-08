@@ -753,6 +753,8 @@ describe('DashboardChatPanel quick create menu', () => {
 
     expect(screen.getByRole('button', { name: /^Create$/i })).toBeEnabled()
     expect(screen.getByText(/Creating Flashcards/i)).toBeInTheDocument()
+    expect(screen.getByText(/0s\s*\/\s*~\s*25s/i)).toBeInTheDocument()
+    expect(screen.queryByText(/\d+s\s*\/\s*25s/i)).not.toBeInTheDocument()
 
     await act(async () => {
       resolveQuickCreate()

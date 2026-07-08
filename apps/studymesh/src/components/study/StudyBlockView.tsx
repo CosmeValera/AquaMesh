@@ -34,12 +34,10 @@ import {
 } from '../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
 import { PREFILL_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
-import {
-  getHostedAiPodcastAudioUrl,
-  type HostedAiPodcast,
-} from '../../quickCreate/ai'
+import { type HostedAiPodcast } from '../../quickCreate/ai'
 import type { DashboardLayout } from '../../state/store'
 import { useInterfaceText } from '../../language/interfaceLanguage'
+import { PodcastPagePlayer } from '../podcast/PodcastPlayerProvider'
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -1218,43 +1216,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     () => toHostedAiPodcast(props.podcast),
     [props.podcast],
   )
-  const [podcastAudioUrl, setPodcastAudioUrl] = useState('')
-  const [podcastAudioError, setPodcastAudioError] = useState('')
 
   useEffect(() => {
     setQuizHintOpen(false)
   }, [focusedQuestionIndex, selectedIndex, type])
-
-  useEffect(() => {
-    if (type !== 'PodcastBlock' || !podcast?.audioPath) {
-      setPodcastAudioUrl('')
-      setPodcastAudioError('')
-      return
-    }
-
-    let cancelled = false
-    setPodcastAudioUrl('')
-    setPodcastAudioError('')
-    getHostedAiPodcastAudioUrl(podcast.audioPath)
-      .then((signedUrl) => {
-        if (!cancelled) {
-          setPodcastAudioUrl(signedUrl)
-        }
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          setPodcastAudioError(
-            error instanceof Error
-              ? error.message
-              : 'Could not open podcast audio.',
-          )
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [podcast?.audioPath, type])
 
   useEffect(() => {
     return () => {
@@ -3228,24 +3193,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           ) : null}
         </Stack>
 
-        {podcastAudioUrl ? (
-          <Box
-            component="audio"
-            controls
-            src={podcastAudioUrl}
-            onError={() => {
-              setPodcastAudioError(
-                'Podcast audio is not available yet. Try regenerating the podcast.',
-              )
-              setPodcastAudioUrl('')
-            }}
-            sx={{ width: '100%' }}
-          />
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            {podcastAudioError || 'Preparing podcast audio...'}
-          </Typography>
-        )}
+        <PodcastPagePlayer podcast={podcast} />
 
         {podcast.chapters.length > 0 ? (
           <Stack spacing={0.75}>

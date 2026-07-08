@@ -5,6 +5,7 @@
     "build": "turbo build",
     "bashunit": "bash tools/git-hooks/lib/bashunit tools/git-hooks/tests",
     "start": "vercel dev",
+    "start-worktree": "vercel dev --listen 3003",
     "start-dev": "turbo start",
     "vercel-env-pull": "vercel env pull",
     "test": "turbo test",

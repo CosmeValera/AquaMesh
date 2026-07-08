@@ -27,6 +27,7 @@ import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
 import StudyGuidesPage from './components/studyGuides/StudyGuidesPage'
 import GuideWorkspacePage from './components/studyGuides/GuideWorkspacePage'
 import HostedAiCheckoutReturn from './components/hostedAi/HostedAiCheckoutReturn'
+import { PodcastPlayerProvider } from './components/podcast/PodcastPlayerProvider'
 import KnowledgeContextOnboarding from './components/profile/KnowledgeContextOnboarding'
 import { InterfaceLanguageProvider } from './language/interfaceLanguage'
 
@@ -99,50 +100,58 @@ const AppShell = () => {
             <KnowledgeContextOnboarding />
             <DashboardProvider>
               <LayoutProvider>
-                <Routes>
-                  <Route path="/" element={<StudyMeshLanding />} />
-                  <Route path="/pricing" element={<StudyMeshPricingPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/signup" element={<SignupPage />} />
-                  <Route
-                    path="/reset-password"
-                    element={<ResetPasswordPage />}
-                  />
-                  <Route path="/auth/callback" element={<AuthCallbackPage />} />
-                  <Route
-                    path="/account/update-password"
-                    element={<UpdatePasswordPage />}
-                  />
-                  <Route
-                    path="/study-guides"
-                    element={
-                      <RequireAuth>
-                        <StudyGuidesPage />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/workspace"
-                    element={
-                      <Navigate
-                        to={{
-                          pathname: '/study-guides',
-                          search: location.search,
-                        }}
-                        replace
-                      />
-                    }
-                  />
-                  <Route
-                    path="/workspace/:studyGuideId"
-                    element={
-                      <RequireAuth>
-                        <GuideWorkspacePage />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
+                <PodcastPlayerProvider>
+                  <Routes>
+                    <Route path="/" element={<StudyMeshLanding />} />
+                    <Route
+                      path="/pricing"
+                      element={<StudyMeshPricingPage />}
+                    />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignupPage />} />
+                    <Route
+                      path="/reset-password"
+                      element={<ResetPasswordPage />}
+                    />
+                    <Route
+                      path="/auth/callback"
+                      element={<AuthCallbackPage />}
+                    />
+                    <Route
+                      path="/account/update-password"
+                      element={<UpdatePasswordPage />}
+                    />
+                    <Route
+                      path="/study-guides"
+                      element={
+                        <RequireAuth>
+                          <StudyGuidesPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/workspace"
+                      element={
+                        <Navigate
+                          to={{
+                            pathname: '/study-guides',
+                            search: location.search,
+                          }}
+                          replace
+                        />
+                      }
+                    />
+                    <Route
+                      path="/workspace/:studyGuideId"
+                      element={
+                        <RequireAuth>
+                          <GuideWorkspacePage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </PodcastPlayerProvider>
               </LayoutProvider>
             </DashboardProvider>
           </PrimeReactProvider>

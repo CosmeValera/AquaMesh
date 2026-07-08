@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -91,6 +92,7 @@ import { StudyObject } from '../../quickCreate/types'
 import { useResponsiveWorkspaceMode } from './useResponsiveWorkspaceMode'
 import StudyBlockView, { isStudyBlockType } from '../study/StudyBlockView'
 import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
+import { useInterfaceText } from '../../language/interfaceLanguage'
 
 const quickCreateIcons: Record<StudyMaterialResourceType, React.ReactNode> = {
   quiz: <QuizIcon fontSize="small" />,
@@ -445,6 +447,7 @@ const isTerminalGenerationStatus = (draft: GenerationDraft) =>
 
 const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const { theme, isPhoneOrTablet: isMobile } = useResponsiveWorkspaceMode()
+  const { t } = useInterfaceText()
   const initialDrafts = useMemo(() => {
     const placeholders = [
       createGenerationDraft('study-path', { isPlaceholder: true }),
@@ -2278,6 +2281,25 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                         >
                           {detail}
                         </Typography>
+                        {isGenerating && draft.flow === 'study-path' ? (
+                          <Alert
+                            severity="info"
+                            variant="outlined"
+                            icon={false}
+                            sx={{
+                              mt: 0.75,
+                              py: 0.25,
+                              px: 0.75,
+                              '& .MuiAlert-message': {
+                                p: 0,
+                                fontSize: '0.75rem',
+                                lineHeight: 1.35,
+                              },
+                            }}
+                          >
+                            {t('studyGuides.keepTabOpenNotice')}
+                          </Alert>
+                        ) : null}
                       </Box>
                       {isReady && !opened ? (
                         <Chip

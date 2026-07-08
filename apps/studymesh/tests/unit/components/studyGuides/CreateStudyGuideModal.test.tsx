@@ -337,6 +337,7 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
     )
 
     expect(screen.getByText(/estimated total 1m/i)).toBeInTheDocument()
+    expect(screen.getByText(/keep this tab open/i)).toBeInTheDocument()
 
     act(() => {
       vi.advanceTimersByTime(60 * 1000)

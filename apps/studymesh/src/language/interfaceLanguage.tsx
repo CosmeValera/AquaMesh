@@ -58,6 +58,27 @@ const translations = {
     'common.cancel': 'Cancel',
     'common.back': 'Back',
     'common.close': 'Close',
+    'knowledgeContext.title': 'Personal explanation context',
+    'knowledgeContext.introTitle':
+      'Help StudyMesh explain new topics using things you already understand.',
+    'knowledgeContext.introBody':
+      'Add a few examples that are relevant to the Study Guides you create. These can be school subjects, tools, languages, places, hobbies, books, sports, or daily routines. StudyMesh only uses them when they make an explanation easier.',
+    'knowledgeContext.inputLabel': 'Helpful things you know',
+    'knowledgeContext.inputExamples':
+      'Math, biology, football, cooking, music',
+    'knowledgeContext.inputHelper':
+      'Use commas or Enter. Examples: Math, biology, football, cooking, music.',
+    'knowledgeContext.add': 'Add',
+    'knowledgeContext.yourContext': 'Your context',
+    'knowledgeContext.rolePickerTitle':
+      'Optional: show suggestions for a study/work area',
+    'knowledgeContext.suggestedAreas': 'Suggested familiar areas',
+    'knowledgeContext.selectedCount': '{count} selected.',
+    'knowledgeContext.recommendedOnboarding': 'Recommended: 3-5.',
+    'knowledgeContext.recommendedSettings': 'Recommended: 5 or more.',
+    'knowledgeContext.skip': 'Skip',
+    'knowledgeContext.accept': 'Accept',
+    'knowledgeContext.close': 'Close',
     'appearance.themeMode': 'Light / dark mode',
     'appearance.accentColor': 'Accent color',
     'settings.deleteConfirmTitle': 'Delete StudyMesh Account Data?',
@@ -143,6 +164,8 @@ const translations = {
     'studyGuides.hostedProviderDescription':
       'Hosted AI uses Study Credits and the app-hosted Cerebras model.',
     'studyGuides.generationRunning': 'Study Guide generation running',
+    'studyGuides.keepTabOpenNotice':
+      'Keep this tab open while StudyMesh creates your guide.',
     'studyGuides.continueCreating': 'Continue Creating',
     'studyGuides.continueInBackground': 'Continue in Background',
     'studyGuides.folderName': 'Folder name',
@@ -474,6 +497,27 @@ const translations = {
     'common.cancel': 'Cancelar',
     'common.back': 'Atrás',
     'common.close': 'Cerrar',
+    'knowledgeContext.title': 'Contexto personal de explicación',
+    'knowledgeContext.introTitle':
+      'Ayuda a StudyMesh a explicar temas nuevos usando cosas que ya entiendes.',
+    'knowledgeContext.introBody':
+      'Añade algunos ejemplos relevantes para las guías de estudio que creas. Pueden ser asignaturas, herramientas, idiomas, lugares, hobbies, libros, deportes o rutinas diarias. StudyMesh solo los usa cuando facilitan una explicación.',
+    'knowledgeContext.inputLabel': 'Cosas útiles que conoces',
+    'knowledgeContext.inputExamples':
+      'Matemáticas, biología, fútbol, cocina, música',
+    'knowledgeContext.inputHelper':
+      'Usa comas o Enter. Ejemplos: matemáticas, biología, fútbol, cocina, música.',
+    'knowledgeContext.add': 'Añadir',
+    'knowledgeContext.yourContext': 'Tu contexto',
+    'knowledgeContext.rolePickerTitle':
+      'Opcional: mostrar sugerencias por área de estudio/trabajo',
+    'knowledgeContext.suggestedAreas': 'Áreas familiares sugeridas',
+    'knowledgeContext.selectedCount': '{count} seleccionados.',
+    'knowledgeContext.recommendedOnboarding': 'Recomendado: 3-5.',
+    'knowledgeContext.recommendedSettings': 'Recomendado: 5 o más.',
+    'knowledgeContext.skip': 'Omitir',
+    'knowledgeContext.accept': 'Aceptar',
+    'knowledgeContext.close': 'Cerrar',
     'appearance.themeMode': 'Modo claro / oscuro',
     'appearance.accentColor': 'Color de acento',
     'settings.deleteConfirmTitle': '¿Eliminar datos de cuenta StudyMesh?',
@@ -560,6 +604,8 @@ const translations = {
     'studyGuides.hostedProviderDescription':
       'La IA alojada usa créditos de estudio y el modelo Cerebras alojado por la app.',
     'studyGuides.generationRunning': 'Generación de guía de estudio en curso',
+    'studyGuides.keepTabOpenNotice':
+      'Mantén esta pestaña abierta mientras StudyMesh crea tu guía.',
     'studyGuides.continueCreating': 'Continuar creando',
     'studyGuides.continueInBackground': 'Continuar en segundo plano',
     'studyGuides.folderName': 'Nombre de carpeta',
@@ -903,6 +949,27 @@ const translationOverrides: Record<
     'common.cancel': 'Annuler',
     'common.back': 'Retour',
     'common.close': 'Fermer',
+    'knowledgeContext.title': "Contexte personnel d'explication",
+    'knowledgeContext.introTitle':
+      'Aidez StudyMesh à expliquer de nouveaux sujets avec ce que vous comprenez déjà.',
+    'knowledgeContext.introBody':
+      'Ajoutez quelques exemples pertinents pour les guides que vous créez. Il peut s’agir de matières scolaires, outils, langues, lieux, loisirs, livres, sports ou routines quotidiennes. StudyMesh ne les utilise que lorsqu’ils rendent une explication plus simple.',
+    'knowledgeContext.inputLabel': 'Choses utiles que vous connaissez',
+    'knowledgeContext.inputExamples':
+      'Maths, biologie, football, cuisine, musique',
+    'knowledgeContext.inputHelper':
+      'Utilisez des virgules ou Entrée. Exemples : maths, biologie, football, cuisine, musique.',
+    'knowledgeContext.add': 'Ajouter',
+    'knowledgeContext.yourContext': 'Votre contexte',
+    'knowledgeContext.rolePickerTitle':
+      'Optionnel : afficher des suggestions par domaine d’étude/travail',
+    'knowledgeContext.suggestedAreas': 'Domaines familiers suggérés',
+    'knowledgeContext.selectedCount': '{count} sélectionnés.',
+    'knowledgeContext.recommendedOnboarding': 'Recommandé : 3-5.',
+    'knowledgeContext.recommendedSettings': 'Recommandé : 5 ou plus.',
+    'knowledgeContext.skip': 'Ignorer',
+    'knowledgeContext.accept': 'Accepter',
+    'knowledgeContext.close': 'Fermer',
     'appearance.themeMode': 'Mode clair / sombre',
     'appearance.accentColor': "Couleur d'accent",
     'settings.deleteConfirmTitle':
@@ -992,6 +1059,8 @@ const translationOverrides: Record<
     'studyGuides.hostedProviderDescription':
       'L’IA hébergée utilise des crédits d’étude et le modèle Cerebras hébergé par l’app.',
     'studyGuides.generationRunning': 'Génération du guide en cours',
+    'studyGuides.keepTabOpenNotice':
+      'Gardez cet onglet ouvert pendant que StudyMesh crée votre guide.',
     'studyGuides.continueCreating': 'Continuer la création',
     'studyGuides.continueInBackground': 'Continuer en arrière-plan',
     'studyGuides.folderName': 'Nom du dossier',
@@ -1326,6 +1395,27 @@ const translationOverrides: Record<
     'common.cancel': 'Abbrechen',
     'common.back': 'Zurück',
     'common.close': 'Schließen',
+    'knowledgeContext.title': 'Persönlicher Erklärungskontext',
+    'knowledgeContext.introTitle':
+      'Hilf StudyMesh, neue Themen mit Dingen zu erklären, die du schon verstehst.',
+    'knowledgeContext.introBody':
+      'Füge ein paar Beispiele hinzu, die zu deinen Study Guides passen. Das können Schulfächer, Tools, Sprachen, Orte, Hobbys, Bücher, Sportarten oder Alltagsroutinen sein. StudyMesh nutzt sie nur, wenn sie eine Erklärung einfacher machen.',
+    'knowledgeContext.inputLabel': 'Hilfreiche Dinge, die du kennst',
+    'knowledgeContext.inputExamples':
+      'Mathe, Biologie, Fußball, Kochen, Musik',
+    'knowledgeContext.inputHelper':
+      'Nutze Kommas oder Enter. Beispiele: Mathe, Biologie, Fußball, Kochen, Musik.',
+    'knowledgeContext.add': 'Hinzufügen',
+    'knowledgeContext.yourContext': 'Dein Kontext',
+    'knowledgeContext.rolePickerTitle':
+      'Optional: Vorschläge für einen Lern-/Arbeitsbereich anzeigen',
+    'knowledgeContext.suggestedAreas': 'Vorgeschlagene vertraute Bereiche',
+    'knowledgeContext.selectedCount': '{count} ausgewählt.',
+    'knowledgeContext.recommendedOnboarding': 'Empfohlen: 3-5.',
+    'knowledgeContext.recommendedSettings': 'Empfohlen: 5 oder mehr.',
+    'knowledgeContext.skip': 'Überspringen',
+    'knowledgeContext.accept': 'Akzeptieren',
+    'knowledgeContext.close': 'Schließen',
     'appearance.themeMode': 'Hell- / Dunkelmodus',
     'appearance.accentColor': 'Akzentfarbe',
     'settings.deleteConfirmTitle': 'StudyMesh-Kontodaten löschen?',
@@ -1414,6 +1504,8 @@ const translationOverrides: Record<
     'studyGuides.hostedProviderDescription':
       'Gehostete KI nutzt Lerncredits und das von der App gehostete Cerebras-Modell.',
     'studyGuides.generationRunning': 'Study-Guide-Generierung läuft',
+    'studyGuides.keepTabOpenNotice':
+      'Lass diesen Tab offen, während StudyMesh deinen Guide erstellt.',
     'studyGuides.continueCreating': 'Weiter erstellen',
     'studyGuides.continueInBackground': 'Im Hintergrund fortsetzen',
     'studyGuides.folderName': 'Ordnername',

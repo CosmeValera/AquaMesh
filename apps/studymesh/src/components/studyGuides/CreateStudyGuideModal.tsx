@@ -1224,6 +1224,9 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                     <Typography variant="subtitle2" fontWeight={900}>
                       {t('studyGuides.generationRunning')}
                     </Typography>
+                    <Alert severity="info" variant="outlined">
+                      {t('studyGuides.keepTabOpenNotice')}
+                    </Alert>
                     <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                       <Button onClick={cancelGeneration}>
                         {t('studyGuides.cancel')}

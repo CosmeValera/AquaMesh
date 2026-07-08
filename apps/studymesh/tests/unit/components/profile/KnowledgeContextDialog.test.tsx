@@ -1,7 +1,11 @@
+import type React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import KnowledgeContextDialog from '../../../../src/components/profile/KnowledgeContextDialog'
+import { InterfaceLanguageProvider } from '../../../../src/language/interfaceLanguage'
+import { CONTENT_LANGUAGE_SETTINGS_KEY } from '../../../../src/language/contentLanguage'
+import type { InterfaceLanguageCode } from '../../../../src/language/contentLanguage'
 
 describe('KnowledgeContextDialog', () => {
   let storage: Record<string, string>
@@ -16,7 +20,21 @@ describe('KnowledgeContextDialog', () => {
         storage[key] = value
       },
     )
+    window.sessionStorage.clear()
   })
+
+  const renderWithLanguage = (
+    language: InterfaceLanguageCode,
+    element: React.ReactElement,
+  ) => {
+    storage[CONTENT_LANGUAGE_SETTINGS_KEY] = JSON.stringify({
+      interfaceLanguage: language,
+      defaultContentLanguage: language,
+      autoDetectAiLanguage: true,
+    })
+
+    return render(<InterfaceLanguageProvider>{element}</InterfaceLanguageProvider>)
+  }
 
   it('explains the purpose and invites relevant examples without a wizard', () => {
     render(
@@ -36,8 +54,9 @@ describe('KnowledgeContextDialog', () => {
     ).toBeInTheDocument()
     expect(screen.getByLabelText(/helpful things you know/i)).toBeInTheDocument()
     expect(
-      screen.getByText(/Valencian, Docker, anatomy, football, LEGO/i),
+      screen.getByText(/Math, biology, football, cooking, music/i),
     ).toBeInTheDocument()
+    expect(screen.queryByText(/Valencian|Docker|LEGO/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /next/i })).not.toBeInTheDocument()
     expect(screen.queryByText(/step 1 of 3/i)).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /accept/i })).toBeDisabled()
@@ -55,20 +74,56 @@ describe('KnowledgeContextDialog', () => {
     )
 
     fireEvent.change(screen.getByLabelText(/helpful things you know/i), {
-      target: { value: 'Valencian, LEGO' },
+      target: { value: 'Math, Cooking' },
     })
     fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
 
-    expect(screen.getByText('Valencian')).toBeInTheDocument()
-    expect(screen.getByText('LEGO')).toBeInTheDocument()
+    expect(screen.getByText('Math')).toBeInTheDocument()
+    expect(screen.getByText('Cooking')).toBeInTheDocument()
     expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({
       roles: [],
       broadKnowledge: [],
-      specificKnowledge: ['Valencian', 'LEGO'],
+      specificKnowledge: ['Math', 'Cooking'],
     })
 
     fireEvent.click(screen.getByRole('button', { name: /accept/i }))
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('keeps typed draft examples across close and reopen until added', () => {
+    const firstRender = render(
+      <KnowledgeContextDialog
+        open
+        surface="settings"
+        initialContext={null}
+        onClose={vi.fn()}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText(/helpful things you know/i), {
+      target: { value: 'Math, cooking' },
+    })
+    firstRender.unmount()
+
+    render(
+      <KnowledgeContextDialog
+        open
+        surface="settings"
+        initialContext={null}
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByLabelText(/helpful things you know/i)).toHaveValue(
+      'Math, cooking',
+    )
+    fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
+    expect(screen.getByLabelText(/helpful things you know/i)).toHaveValue('')
+    expect(
+      window.sessionStorage.getItem(
+        'studymesh-profile-context-input-draft-settings',
+      ),
+    ).toBeNull()
   })
 
   it('keeps study/work suggestions optional and role-scoped', () => {
@@ -93,6 +148,68 @@ describe('KnowledgeContextDialog', () => {
       roles: ['software_it'],
       broadKnowledge: ['Backend'],
       specificKnowledge: [],
+    })
+  })
+
+  it('localizes modal copy and suggestion labels for supported interface languages', () => {
+    const cases: Array<{
+      language: InterfaceLanguageCode
+      title: RegExp
+      label: RegExp
+      role: string
+      topic: string
+      close: RegExp
+      accept: RegExp
+    }> = [
+      {
+        language: 'es',
+        title: /contexto personal de explicación/i,
+        label: /cosas útiles que conoces/i,
+        role: 'Estudiante',
+        topic: 'Exámenes',
+        close: /^cerrar$/i,
+        accept: /^aceptar$/i,
+      },
+      {
+        language: 'fr',
+        title: /contexte personnel/i,
+        label: /choses utiles/i,
+        role: 'Étudiant',
+        topic: 'Examens',
+        close: /^fermer$/i,
+        accept: /^accepter$/i,
+      },
+      {
+        language: 'de',
+        title: /persönlicher erklärungskontext/i,
+        label: /hilfreiche dinge/i,
+        role: 'Schüler / Student',
+        topic: 'Prüfungen',
+        close: /^schließen$/i,
+        accept: /^akzeptieren$/i,
+      },
+    ]
+
+    cases.forEach(({ language, title, label, role, topic, close, accept }) => {
+      const view = renderWithLanguage(
+        language,
+        <KnowledgeContextDialog
+          open
+          surface="settings"
+          initialContext={null}
+          onClose={vi.fn()}
+        />,
+      )
+
+      expect(screen.getByText(title)).toBeInTheDocument()
+      expect(screen.getByLabelText(label)).toBeInTheDocument()
+      fireEvent.click(screen.getByText(role))
+      expect(screen.getByText(topic)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: close })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: accept })).toBeInTheDocument()
+
+      view.unmount()
+      window.sessionStorage.clear()
     })
   })
 

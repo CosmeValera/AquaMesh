@@ -455,6 +455,7 @@ describe('StudyGuidesPage create flow', () => {
 
     await createGuideFromPrompt('Refresh-sensitive prompt')
     await screen.findByText('Creating')
+    expect(screen.getByText(/keep this tab open/i)).toBeInTheDocument()
     expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(1)
 
     firstRender.unmount()

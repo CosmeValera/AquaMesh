@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  Alert,
   Box,
   Button,
   CircularProgress,
@@ -1171,6 +1172,21 @@ const StudyGuidesPage = () => {
                               'studyGuides.estimate',
                             )} ${formatDuration(guide.estimateSeconds)}`}
                       </Typography>
+                      {isRunning ? (
+                        <Alert
+                          severity="info"
+                          variant="outlined"
+                          sx={{
+                            py: 0.5,
+                            '& .MuiAlert-message': {
+                              fontSize: '0.8125rem',
+                              lineHeight: 1.35,
+                            },
+                          }}
+                        >
+                          {t('studyGuides.keepTabOpenNotice')}
+                        </Alert>
+                      ) : null}
                       <Button
                         variant="text"
                         color="error"

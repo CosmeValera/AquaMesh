@@ -1,13 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { askDashboardSources } from '../../../src/dashboardChat/askDashboard'
-import { callStrongAiModel, readQuickCreateAiSettings } from '../../../src/quickCreate/ai'
+import {
+  callStrongAiModel,
+  readQuickCreateAiSettings,
+} from '../../../src/quickCreate/ai'
 
 vi.mock('../../../src/quickCreate/ai', async () => {
-  const actual =
-    await vi.importActual<typeof import('../../../src/quickCreate/ai')>(
-      '../../../src/quickCreate/ai',
-    )
+  const actual = await vi.importActual<
+    typeof import('../../../src/quickCreate/ai')
+  >('../../../src/quickCreate/ai')
 
   return {
     ...actual,
@@ -56,5 +58,14 @@ describe('askDashboardSources', () => {
     expect(result.answer).toContain('[1]')
     expect(result.answer).not.toContain('"sources"')
     expect(result.answer).not.toContain('{')
+    expect(result.sourceRefs).toEqual([
+      expect.objectContaining({
+        citationNumber: 1,
+        chunkId: 'web-source-1',
+        origin: 'web',
+      }),
+    ])
+    expect(result.answerBasis).toEqual(['web'])
+    expect(result.contextSupport).toBe('direct')
   })
 })

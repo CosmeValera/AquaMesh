@@ -48,9 +48,12 @@ const loadEnvFile = (filePath) => {
 }
 
 const loadLocalEnv = () => {
-  ;['.env.local', '.env', 'apps/studymesh/.env.local', 'apps/studymesh/.env'].forEach(
-    (relativePath) => loadEnvFile(path.join(repoRoot, relativePath)),
-  )
+  ;[
+    '.env.local',
+    '.env',
+    'apps/studymesh/.env.local',
+    'apps/studymesh/.env',
+  ].forEach((relativePath) => loadEnvFile(path.join(repoRoot, relativePath)))
 }
 
 loadLocalEnv()
@@ -73,10 +76,12 @@ const nanoModel =
   getEnv('HOSTED_OPENAI_IMPLEMENTER_MODEL') ||
   DEFAULT_NANO_MODEL
 
-const getDefaultOpenAiInputPrice = (model) => (model.includes('nano') ? 0.2 : 0.75)
+const getDefaultOpenAiInputPrice = (model) =>
+  model.includes('nano') ? 0.2 : 0.75
 const getDefaultOpenAiCachedInputPrice = (model) =>
   model.includes('nano') ? 0.02 : 0.075
-const getDefaultOpenAiOutputPrice = (model) => (model.includes('nano') ? 1.25 : 4.5)
+const getDefaultOpenAiOutputPrice = (model) =>
+  model.includes('nano') ? 1.25 : 4.5
 
 const getTokenPricePerMillion = (model, kind) => {
   if (kind === 'INPUT') {
@@ -88,10 +93,16 @@ const getTokenPricePerMillion = (model, kind) => {
   return getDefaultOpenAiOutputPrice(model)
 }
 
-const estimateCostUsd = (model, inputTokens, cachedInputTokens, outputTokens) => {
+const estimateCostUsd = (
+  model,
+  inputTokens,
+  cachedInputTokens,
+  outputTokens,
+) => {
   const uncachedInputTokens = Math.max(0, inputTokens - cachedInputTokens)
   const cost =
-    (uncachedInputTokens * getTokenPricePerMillion(model, 'INPUT')) / 1_000_000 +
+    (uncachedInputTokens * getTokenPricePerMillion(model, 'INPUT')) /
+      1_000_000 +
     (cachedInputTokens * getTokenPricePerMillion(model, 'CACHED_INPUT')) /
       1_000_000 +
     (outputTokens * getTokenPricePerMillion(model, 'OUTPUT')) / 1_000_000
@@ -146,7 +157,9 @@ const callOpenAi = async ({
     body.response_format = {
       type: 'json_schema',
       json_schema: {
-        name: `${surface}_${stage}`.replace(/[^A-Za-z0-9_]+/g, '_').slice(0, 64),
+        name: `${surface}_${stage}`
+          .replace(/[^A-Za-z0-9_]+/g, '_')
+          .slice(0, 64),
         strict: true,
         schema,
       },
@@ -164,7 +177,9 @@ const callOpenAi = async ({
   })
   const payload = await response.json()
   if (!response.ok) {
-    throw new Error(payload?.error?.message || `OpenAI request failed: ${response.status}`)
+    throw new Error(
+      payload?.error?.message || `OpenAI request failed: ${response.status}`,
+    )
   }
 
   const text = extractText(payload)
@@ -223,7 +238,13 @@ const quizSchema = {
           explanation: { type: 'string' },
           skillTested: { type: 'string' },
         },
-        required: ['question', 'options', 'correctIndex', 'explanation', 'skillTested'],
+        required: [
+          'question',
+          'options',
+          'correctIndex',
+          'explanation',
+          'skillTested',
+        ],
       },
     },
   },
@@ -324,11 +345,17 @@ const photoNotes = `Exposure in photography depends on aperture, shutter speed, 
 const sourceWithNumbers = (title, body, number = 1) =>
   `[${number}] ${title}\nType: dashboard\nText: ${body}`
 
-const buildChatPrompt = ({ dashboardTitle, contextText, question, history = [] }) => {
+const buildChatPrompt = ({
+  dashboardTitle,
+  contextText,
+  question,
+  history = [],
+}) => {
   const memory = history.length
     ? `Recent chat:\n${history
-        .map((message) =>
-          `${message.role === 'user' ? 'Student' : 'Assistant'}: ${message.content}`,
+        .map(
+          (message) =>
+            `${message.role === 'user' ? 'Student' : 'Assistant'}: ${message.content}`,
         )
         .join('\n')}`
     : 'None'
@@ -337,11 +364,11 @@ const buildChatPrompt = ({ dashboardTitle, contextText, question, history = [] }
 
 Rules:
 - Write the answer in English.
-- Answer using only the provided dashboard, study, and web source context.
-- Web sources in the context are allowed sources. Use them when dashboard-only material lacks the answer.
-- If the student message is conversational smalltalk, a greeting, thanks, or a casual acknowledgement, answer briefly and naturally. Do not use "SOURCE_GAP:", do not cite sources, and do not search for dashboard/web evidence for smalltalk.
-- If the answer is not supported by any provided context, start your answer with "SOURCE_GAP:" and explain that the provided sources do not contain enough information for the student's request.
-- Do not invent facts, citations, links, or source names.
+- Prefer the provided dashboard, study, and source context when it helps.
+- If the provided context only partially answers the question, answer the rest from general knowledge and make that transition clear with phrasing such as "In general".
+- If the provided context does not help, still answer from general knowledge.
+- If the student message is conversational smalltalk, a greeting, thanks, or a casual acknowledgement, answer briefly and naturally. Do not cite sources for smalltalk.
+- Do not invent citations, links, source names, or claims about what a source says.
 - When you use a specific source, cite it inline with its source number like [1] or [2].
 - Only cite source numbers shown in the dashboard/source context.
 - Never output JSON, code blocks, objects, arrays, "sources" fields, or structured metadata.
@@ -360,7 +387,12 @@ Student question: ${question}
 Answer:`
 }
 
-const buildQuizPrompt = ({ title, source, count, style = 'mixed' }) => `Create a quiz JSON object from the source.
+const buildQuizPrompt = ({
+  title,
+  source,
+  count,
+  style = 'mixed',
+}) => `Create a quiz JSON object from the source.
 
 Return strict JSON only:
 {
@@ -391,7 +423,11 @@ Title: ${title}
 Source:
 ${source}`
 
-const buildFlashcardPrompt = ({ title, source, count }) => `Create a flashcard JSON object from the source.
+const buildFlashcardPrompt = ({
+  title,
+  source,
+  count,
+}) => `Create a flashcard JSON object from the source.
 
 Return strict JSON only:
 {
@@ -416,7 +452,12 @@ Title: ${title}
 Source:
 ${source}`
 
-const buildBlueprintPrompt = ({ title, source, count, artifact }) => `Create a compact ${artifact} blueprint from this source.
+const buildBlueprintPrompt = ({
+  title,
+  source,
+  count,
+  artifact,
+}) => `Create a compact ${artifact} blueprint from this source.
 
 Return strict JSON only:
 {
@@ -443,7 +484,10 @@ Title: ${title}
 Source:
 ${source}`
 
-const buildQuizFromBlueprintPrompt = ({ blueprint, count }) => `Create the final quiz from this locked blueprint.
+const buildQuizFromBlueprintPrompt = ({
+  blueprint,
+  count,
+}) => `Create the final quiz from this locked blueprint.
 
 Return strict JSON only with this shape:
 {
@@ -468,7 +512,10 @@ Rules:
 Blueprint:
 ${JSON.stringify(blueprint, null, 2)}`
 
-const buildFlashcardsFromBlueprintPrompt = ({ blueprint, count }) => `Create the final flashcards from this locked blueprint.
+const buildFlashcardsFromBlueprintPrompt = ({
+  blueprint,
+  count,
+}) => `Create the final flashcards from this locked blueprint.
 
 Return strict JSON only with this shape:
 {
@@ -491,7 +538,11 @@ Rules:
 Blueprint:
 ${JSON.stringify(blueprint, null, 2)}`
 
-const buildPodcastPrompt = ({ sourceTitle, sourceText, target }) => `Create a short StudyMesh educational podcast script from ONLY the provided Study Guide source.
+const buildPodcastPrompt = ({
+  sourceTitle,
+  sourceText,
+  target,
+}) => `Create a short StudyMesh educational podcast script from ONLY the provided Study Guide source.
 
 Write the podcast in English.
 
@@ -525,7 +576,10 @@ const evaluateQuiz = (questions) => {
     if (!Array.isArray(question.options) || question.options.length < 3) {
       issues.push(`${label} has fewer than 3 options`)
     }
-    if (uniq((question.options || []).map((option) => option.toLowerCase())).length !== question.options?.length) {
+    if (
+      uniq((question.options || []).map((option) => option.toLowerCase()))
+        .length !== question.options?.length
+    ) {
       issues.push(`${label} has duplicate options`)
     }
     if (
@@ -587,17 +641,13 @@ const evaluateFlashcards = (cards) => {
   }
 }
 
-const evaluateChat = (text, expectsGap) => {
-  const hasGap = /^SOURCE_GAP:/i.test(text.trim())
+const evaluateChat = (text, { requireCitation = true } = {}) => {
   const citations = text.match(/\[\d+]/g) || []
   const issues = []
-  if (expectsGap && !hasGap) {
-    issues.push('expected SOURCE_GAP but answer did not mark it')
+  if (/SOURCE_GAP:/i.test(text)) {
+    issues.push('legacy source gap refusal')
   }
-  if (!expectsGap && /SOURCE_GAP:/i.test(text)) {
-    issues.push('unexpected source gap')
-  }
-  if (!expectsGap && citations.length === 0 && wordCount(text) > 20) {
+  if (requireCitation && citations.length === 0 && wordCount(text) > 20) {
     issues.push('grounded answer has no citation')
   }
   if (/```|\{\s*"sources"|based on sources/i.test(text)) {
@@ -618,7 +668,9 @@ const evaluateChat = (text, expectsGap) => {
 }
 
 const evaluatePodcast = (script) => {
-  const transcript = (script.transcriptTurns || []).map((turn) => turn.text).join('\n\n')
+  const transcript = (script.transcriptTurns || [])
+    .map((turn) => turn.text)
+    .join('\n\n')
   const issues = []
   const speakers = (script.transcriptTurns || []).map((turn) => turn.speaker)
   if ((script.transcriptTurns || []).length < 4) {
@@ -665,12 +717,17 @@ const scoreFromIssues = (count, issueCount, reasoningCount) => {
 }
 
 const summarizeCalls = (calls) => {
-  const totalCostUsd = calls.reduce((total, call) => total + call.estimatedCostUsd, 0)
+  const totalCostUsd = calls.reduce(
+    (total, call) => total + call.estimatedCostUsd,
+    0,
+  )
   return {
     calls: calls.length,
     totalCostUsd: Number(totalCostUsd.toFixed(8)),
     totalCostCents: Number((totalCostUsd * 100).toFixed(4)),
-    avgCostCents: Number(((totalCostUsd * 100) / Math.max(1, calls.length)).toFixed(4)),
+    avgCostCents: Number(
+      ((totalCostUsd * 100) / Math.max(1, calls.length)).toFixed(4),
+    ),
   }
 }
 
@@ -729,7 +786,7 @@ const runChatEval = async () => {
     {
       strategy: 'nano_smalltalk',
       model: nanoModel,
-      expectsGap: false,
+      requireCitation: false,
       prompt: buildChatPrompt({
         dashboardTitle: 'Angular Basics',
         contextText: sourceWithNumbers('Angular Basics', angularNotes),
@@ -739,17 +796,18 @@ const runChatEval = async () => {
     {
       strategy: 'nano_grounded_normal',
       model: nanoModel,
-      expectsGap: false,
+      requireCitation: true,
       prompt: buildChatPrompt({
         dashboardTitle: 'Angular Basics',
         contextText: sourceWithNumbers('Angular Basics', angularNotes),
-        question: 'When should I use a service instead of keeping logic in the component?',
+        question:
+          'When should I use a service instead of keeping logic in the component?',
       }),
     },
     {
-      strategy: 'nano_source_gap_latest',
+      strategy: 'nano_general_latest',
       model: nanoModel,
-      expectsGap: true,
+      requireCitation: false,
       prompt: buildChatPrompt({
         dashboardTitle: 'Angular Basics',
         contextText: sourceWithNumbers('Angular Basics', angularNotes),
@@ -759,7 +817,7 @@ const runChatEval = async () => {
     {
       strategy: 'nano_multi_source_reasoning',
       model: nanoModel,
-      expectsGap: false,
+      requireCitation: true,
       prompt: buildChatPrompt({
         dashboardTitle: 'Automation Tools',
         contextText: [
@@ -770,7 +828,8 @@ const runChatEval = async () => {
           { role: 'user', content: 'I know Docker and Kubernetes already.' },
           {
             role: 'assistant',
-            content: 'Use orchestration comparisons carefully and stay source-grounded.',
+            content:
+              'Use orchestration comparisons carefully and stay source-grounded.',
           },
         ],
         question:
@@ -778,9 +837,9 @@ const runChatEval = async () => {
       }),
     },
     {
-      strategy: 'mini_source_gap_compare',
+      strategy: 'mini_general_latest',
       model: miniModel,
-      expectsGap: true,
+      requireCitation: false,
       prompt: buildChatPrompt({
         dashboardTitle: 'Angular Basics',
         contextText: sourceWithNumbers('Angular Basics', angularNotes),
@@ -804,7 +863,9 @@ const runChatEval = async () => {
     outputs.push({
       strategy: testCase.strategy,
       answer: call.text,
-      evaluation: evaluateChat(call.text, testCase.expectsGap),
+      evaluation: evaluateChat(call.text, {
+        requireCitation: testCase.requireCitation,
+      }),
     })
   }
 

@@ -208,6 +208,117 @@ describe('Study Guide knowledge bridges', () => {
     )
   })
 
+  it('skips knowledge-context work when the learner has no known topics', async () => {
+    const guide = {
+      title: 'Target Concept',
+      folderName: 'Target Concept',
+      emoji: 'T',
+      quickStart: {
+        keyIdea: 'Target concept has a plain default start.',
+        quickSummary:
+          'The guide starts without learner context.\\n\\nNo alternate context view is needed.',
+      },
+      dashboards: [makeDashboard(1, 'none'), makeDashboard(2, 'none')],
+    }
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(geminiResponse(JSON.stringify(guide)))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const draft = await generateStudyPathWithAi({
+      provider: 'gemini',
+      apiToken: 'test-token',
+      model: 'gemini-test',
+      title: 'Target Concept',
+      prompt: 'Target concept',
+      folderName: '',
+      singleRequest: true,
+      userKnownTopics: [],
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(draft.quickStart?.keyIdea).toBe(
+      'Target concept has a plain default start.',
+    )
+    expect(draft.quickStart?.forcedBridge).toBeUndefined()
+  })
+
+  it('creates a one-topic forced Quick Start without a forced selector call', async () => {
+    const guide = {
+      title: 'Object Storage',
+      folderName: 'Object Storage',
+      emoji: 'S',
+      dashboards: [makeDashboard(1, 'none'), makeDashboard(2, 'none')],
+    }
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(geminiResponse(JSON.stringify(guide)))
+      .mockResolvedValueOnce(
+        geminiResponse(
+          JSON.stringify({
+            shouldUseKnownTopic: false,
+            knownTopicsForQuickStart: [],
+            knownTopicRelevanceReason: 'No clear direct bridge.',
+            targetTopicType: 'technical',
+            bridgeStrength: 'none',
+            bridgeStrategy: 'none',
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        geminiResponse(
+          JSON.stringify({
+            keyIdea: 'Object storage keeps files behind bucket-style APIs.',
+            quickSummary:
+              'Object storage stores data as named objects.\\n\\nThe guide explains lookup, metadata, and access control directly.',
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        geminiResponse(
+          JSON.stringify({
+            keyIdea: 'Use Kubernetes as a loose mental bridge.',
+            quickSummary:
+              'Kubernetes organizes running systems.\\n\\nObject storage works at a different layer, but the control idea helps.',
+          }),
+        ),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const draft = await generateStudyPathWithAi({
+      provider: 'gemini',
+      apiToken: 'test-token',
+      model: 'gemini-test',
+      title: 'Object Storage',
+      prompt: 'Object storage',
+      folderName: '',
+      singleRequest: true,
+      userKnownTopics: ['Kubernetes'],
+    })
+    const requestBodies = fetchMock.mock.calls.map(([, init]) =>
+      String(init?.body || ''),
+    )
+
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+    expect(
+      requestBodies.filter(
+        (body) =>
+          body.includes('Choose whether any known topic') &&
+          body.includes('Bridge mode: force'),
+      ),
+    ).toHaveLength(0)
+    expect(requestBodies[3]).toContain(
+      'Candidate known topic bridge(s): Kubernetes',
+    )
+    expect(requestBodies[3]).toContain('Bridge mode: force')
+    expect(draft.quickStart?.keyIdea).toBe(
+      'Object storage keeps files behind bucket-style APIs.',
+    )
+    expect(draft.quickStart?.forcedBridge?.keyIdea).toBe(
+      'Use Kubernetes as a loose mental bridge.',
+    )
+  })
+
   it('still creates an alternate forced Quick Start when the force selector returns no bridge', async () => {
     const guide = {
       title: 'Kafka',

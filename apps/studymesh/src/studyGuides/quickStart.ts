@@ -58,6 +58,30 @@ export interface StudyGuideKnowledgeBridgeBlock {
   body: string
 }
 
+export type StudyGuideKnowledgeContextMode = 'none' | 'single' | 'multiple'
+
+export interface StudyGuideKnowledgeContextPlan {
+  mode: StudyGuideKnowledgeContextMode
+  topics: string[]
+  shouldRunAutoRelevance: boolean
+  shouldRunForcedRelevanceSelector: boolean
+}
+
+export const resolveStudyGuideKnowledgeContextPlan = (
+  userKnownTopics: unknown,
+): StudyGuideKnowledgeContextPlan => {
+  const topics = sanitizeUserKnownTopics(userKnownTopics)
+  const mode =
+    topics.length === 0 ? 'none' : topics.length === 1 ? 'single' : 'multiple'
+
+  return {
+    mode,
+    topics,
+    shouldRunAutoRelevance: topics.length > 0,
+    shouldRunForcedRelevanceSelector: topics.length > 1,
+  }
+}
+
 export const STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA = {
   type: 'OBJECT',
   properties: {

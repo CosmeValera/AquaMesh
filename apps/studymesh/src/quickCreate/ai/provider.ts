@@ -33,6 +33,7 @@ import {
   parseStudyGuideKnowledgeBridgeBlocks,
   parseStudyGuideQuickStart,
   parseStudyGuideQuickStartRelevanceDecision,
+  resolveStudyGuideKnowledgeContextPlan,
   sanitizeStudyGuideQuickStart,
   STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
   STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
@@ -44,7 +45,6 @@ import type {
   StudyGuideQuickStartRelevanceDecision,
 } from '../../studyGuides/quickStart'
 import type { StudyGuideQuickStart } from '../../state/store'
-import { sanitizeUserKnownTopics } from '../../profileContext'
 import type { StudyMeshLanguageCode } from '../../language/contentLanguage'
 import type { StudyObject } from '../types'
 
@@ -308,7 +308,9 @@ export const generateStudyGuideQuickStartWithAi = async ({
   }
 
   const source = studyPathDraftToQuickStartSource(draft, prompt)
-  const safeKnownTopics = sanitizeUserKnownTopics(userKnownTopics)
+  const knowledgeContextPlan =
+    resolveStudyGuideKnowledgeContextPlan(userKnownTopics)
+  const safeKnownTopics = knowledgeContextPlan.topics
 
   if (provider === 'hosted') {
     throw new Error(
@@ -321,7 +323,7 @@ export const generateStudyGuideQuickStartWithAi = async ({
   }
 
   const getRelevanceDecision = async (bridgeMode: StudyGuideBridgeMode) => {
-    if (!safeKnownTopics.length) {
+    if (!knowledgeContextPlan.shouldRunAutoRelevance) {
       return undefined
     }
 
@@ -375,7 +377,14 @@ export const generateStudyGuideQuickStartWithAi = async ({
       }),
     )
 
-  const relevanceDecision = await getRelevanceDecision('auto')
+  let relevanceDecision: StudyGuideQuickStartRelevanceDecision | undefined
+  let relevanceDecisionFailed = false
+  try {
+    relevanceDecision = await getRelevanceDecision('auto')
+  } catch {
+    relevanceDecision = undefined
+    relevanceDecisionFailed = true
+  }
   onRelevanceDecision?.(relevanceDecision)
 
   const quickStart = await generateQuickStartVariant(relevanceDecision, 'auto')
@@ -385,6 +394,7 @@ export const generateStudyGuideQuickStartWithAi = async ({
 
   if (
     !safeKnownTopics.length ||
+    relevanceDecisionFailed ||
     (relevanceDecision?.shouldUseKnownTopic &&
       relevanceDecision.knownTopicsForQuickStart.length)
   ) {
@@ -393,10 +403,15 @@ export const generateStudyGuideQuickStartWithAi = async ({
 
   try {
     const forcedRelevanceDecision =
-      ensureForcedStudyGuideQuickStartRelevanceDecision(
-        await getRelevanceDecision('force'),
-        safeKnownTopics,
-      )
+      knowledgeContextPlan.shouldRunForcedRelevanceSelector
+        ? ensureForcedStudyGuideQuickStartRelevanceDecision(
+            await getRelevanceDecision('force'),
+            safeKnownTopics,
+          )
+        : ensureForcedStudyGuideQuickStartRelevanceDecision(
+            relevanceDecision,
+            safeKnownTopics,
+          )
     const forcedBridge = forcedRelevanceDecision
       ? await generateQuickStartVariant(forcedRelevanceDecision, 'force')
       : null
@@ -485,6 +500,9 @@ export const generateStudyPathWithAi = async (
   }
 
   if (provider === 'hosted') {
+    const knowledgeContextPlan = resolveStudyGuideKnowledgeContextPlan(
+      options.userKnownTopics,
+    )
     let hostedQuickStart: StudyGuideQuickStart | null = null
     let hostedBridgeBlocks: StudyGuideKnowledgeBridgeBlock[] = []
     const draft = await generateStudyPathWithGemini({
@@ -496,7 +514,7 @@ export const generateStudyPathWithAi = async (
       singleRequest: true,
       studyGuideProfile: 'lean',
       strongTransport: createHostedStudyGuideTransportWithQuickStart({
-        userKnownTopics: options.userKnownTopics,
+        userKnownTopics: knowledgeContextPlan.topics,
         outputLanguage: options.outputLanguage,
         onQuickStart: (quickStart) => {
           hostedQuickStart = quickStart
@@ -548,9 +566,12 @@ export const generateStudyPathWithAi = async (
     strongProvider: provider,
   })
   let relevanceDecision: StudyGuideQuickStartRelevanceDecision | undefined
+  const knowledgeContextPlan = resolveStudyGuideKnowledgeContextPlan(
+    options.userKnownTopics,
+  )
   const embeddedQuickStart = sanitizeStudyGuideQuickStart(draft.quickStart)
   const quickStart =
-    embeddedQuickStart && !options.userKnownTopics?.length
+    embeddedQuickStart && !knowledgeContextPlan.topics.length
       ? embeddedQuickStart
       : await generateStudyGuideQuickStartWithAi({
           provider,
@@ -560,7 +581,7 @@ export const generateStudyPathWithAi = async (
           prompt: options.prompt,
           draft,
           signal: options.signal,
-          userKnownTopics: options.userKnownTopics,
+          userKnownTopics: knowledgeContextPlan.topics,
           outputLanguage: options.outputLanguage,
           onRelevanceDecision: (decision) => {
             relevanceDecision = decision

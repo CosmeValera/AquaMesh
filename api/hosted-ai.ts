@@ -22,6 +22,7 @@ import {
   parseStudyGuideKnowledgeBridgeBlocks,
   parseStudyGuideQuickStart,
   parseStudyGuideQuickStartRelevanceDecision,
+  resolveStudyGuideKnowledgeContextPlan,
   STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
   STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
   STUDY_GUIDE_QUICK_START_SCHEMA,
@@ -2418,6 +2419,8 @@ const generateEnhancedHostedStudyGuide = async ({
   const safeKnownTopics = sanitizeUserKnownTopics(
     usageRequest.quickStartOptions?.userKnownTopics,
   );
+  const knowledgeContextPlan =
+    resolveStudyGuideKnowledgeContextPlan(safeKnownTopics);
 
   let blueprint: EnhancedStudyGuideBlueprint;
   try {
@@ -2483,9 +2486,10 @@ const generateEnhancedHostedStudyGuide = async ({
   let relevanceDecision:
     | ReturnType<typeof parseStudyGuideQuickStartRelevanceDecision>
     | undefined;
+  let relevanceDecisionFailed = false;
   const baseSource = buildEnhancedGuideSource({ topic, blueprint, pages });
 
-  if (safeKnownTopics.length) {
+  if (knowledgeContextPlan.shouldRunAutoRelevance) {
     try {
       relevanceDecision = parseStudyGuideQuickStartRelevanceDecision(
         await callStage("quick_start_relevance_auto", {
@@ -2508,6 +2512,7 @@ const generateEnhancedHostedStudyGuide = async ({
       );
     } catch {
       metadataFlags.quickStartRelevanceSkipped = true;
+      relevanceDecisionFailed = true;
     }
   }
 
@@ -2577,31 +2582,36 @@ const generateEnhancedHostedStudyGuide = async ({
         metadataFlags.knowledgeBridgeSkipped = true;
       }
     }
-  } else if (safeKnownTopics.length) {
+  } else if (knowledgeContextPlan.topics.length && !relevanceDecisionFailed) {
     try {
       const forcedRelevanceDecision =
-        ensureForcedStudyGuideQuickStartRelevanceDecision(
-          parseStudyGuideQuickStartRelevanceDecision(
-            await callStage("quick_start_relevance_force", {
-              ...usageRequest,
-              responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
-              parts: [
-                {
-                  text: buildStudyGuideQuickStartRelevancePrompt({
-                    title: blueprint.title,
-                    prompt: topic,
-                    source: baseSource,
-                    userKnownTopics: safeKnownTopics,
-                    bridgeMode: "force",
-                    outputLanguage: usageRequest.outputLanguage,
-                  }),
-                },
-              ],
-            }),
-            safeKnownTopics,
-          ),
-          safeKnownTopics,
-        );
+        knowledgeContextPlan.shouldRunForcedRelevanceSelector
+          ? ensureForcedStudyGuideQuickStartRelevanceDecision(
+              parseStudyGuideQuickStartRelevanceDecision(
+                await callStage("quick_start_relevance_force", {
+                  ...usageRequest,
+                  responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
+                  parts: [
+                    {
+                      text: buildStudyGuideQuickStartRelevancePrompt({
+                        title: blueprint.title,
+                        prompt: topic,
+                        source: baseSource,
+                        userKnownTopics: safeKnownTopics,
+                        bridgeMode: "force",
+                        outputLanguage: usageRequest.outputLanguage,
+                      }),
+                    },
+                  ],
+                }),
+                safeKnownTopics,
+              ),
+              safeKnownTopics,
+            )
+          : ensureForcedStudyGuideQuickStartRelevanceDecision(
+              relevanceDecision,
+              safeKnownTopics,
+            );
 
       if (forcedRelevanceDecision) {
         const forcedBridge = parseStudyGuideQuickStart(

@@ -2892,19 +2892,29 @@ describe('API payment and hosted AI hardening', () => {
     }
     expect(guide.dashboards).toHaveLength(3)
     expect(guide.dashboards[2]?.practice?.multipleChoice).toHaveLength(6)
-    expect(providerBodies).toHaveLength(8)
+    expect(providerBodies).toHaveLength(7)
     expect(JSON.stringify(providerBodies[4])).toContain('Bridge mode: auto')
+    expect(
+      providerBodies.filter((body) => {
+        const prompt = JSON.stringify(body)
+        return (
+          prompt.includes('Choose whether any known topic') &&
+          prompt.includes('Bridge mode: force')
+        )
+      }),
+    ).toHaveLength(0)
     expect(JSON.stringify(providerBodies[5])).toContain('Bridge mode: force')
-    expect(JSON.stringify(providerBodies[6])).toContain('Bridge mode: force')
-    expect(providerBodies[6].model).toBe(DEFAULT_OPENAI_STUDY_GUIDE_MODEL)
-    expect(providerBodies[7].model).toBe(DEFAULT_OPENAI_FAST_MODEL)
-    expect(rpcBodies[1].p_provider_call_count).toBe(8)
+    expect(providerBodies[5].model).toBe(DEFAULT_OPENAI_STUDY_GUIDE_MODEL)
+    expect(providerBodies[6].model).toBe(DEFAULT_OPENAI_FAST_MODEL)
+    expect(rpcBodies[1].p_provider_call_count).toBe(7)
+    expect(JSON.stringify(rpcBodies[1].p_metadata)).not.toContain(
+      'quick_start_relevance_force',
+    )
     expect(rpcBodies[1].p_metadata).toMatchObject({
       generationStrategy: 'enhanced_4_plus_2_v1',
       finalQuizQuestionCount: 6,
       stageCosts: expect.arrayContaining([
         expect.objectContaining({ stage: 'study_guide_blueprint' }),
-        expect.objectContaining({ stage: 'quick_start_relevance_force' }),
         expect.objectContaining({ stage: 'quick_start_forced_bridge' }),
         expect.objectContaining({ stage: 'study_guide_final_quiz' }),
       ]),

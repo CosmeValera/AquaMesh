@@ -1,15 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Alert,
   Box,
   Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
   InputAdornment,
+  LinearProgress,
   Menu,
   MenuItem,
   Paper,
@@ -29,9 +28,12 @@ import {
 import { alpha } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import EditIcon from '@mui/icons-material/Edit'
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import PushPinIcon from '@mui/icons-material/PushPin'
 import ReplayIcon from '@mui/icons-material/Replay'
@@ -1059,6 +1061,12 @@ const StudyGuidesPage = () => {
                 (now - Date.parse(guide.startedAt || guide.createdAt)) / 1000,
               ),
             )
+            const progressPercent = Math.min(
+              100,
+              Math.round(
+                (elapsedSeconds / Math.max(guide.estimateSeconds, 1)) * 100,
+              ),
+            )
             const isProblem =
               guide.status === 'failed' || guide.status === 'interrupted'
             const isRunning = guide.status === 'running'
@@ -1086,50 +1094,55 @@ const StudyGuidesPage = () => {
                       : '0 18px 44px rgba(15,23,42,0.1)',
                 })}
               >
-                <Stack spacing={2} sx={{ height: '100%' }}>
-                  <Stack direction="row" justifyContent="space-between">
+                <Stack spacing={1.75} sx={{ height: '100%' }}>
+                  <Stack
+                    direction="row"
+                    spacing={1.25}
+                    alignItems="center"
+                  >
                     <Box
-                      sx={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: 2,
+                      sx={(theme) => ({
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
                         display: 'grid',
                         placeItems: 'center',
-                        bgcolor: isProblem ? 'error.light' : 'action.hover',
-                        color: isProblem ? 'error.contrastText' : 'inherit',
-                      }}
+                        flexShrink: 0,
+                        bgcolor: isProblem
+                          ? alpha(theme.palette.error.main, 0.1)
+                          : alpha(theme.palette.primary.main, 0.1),
+                        color: isProblem ? 'error.main' : 'primary.main',
+                      })}
                     >
                       {isProblem ? (
-                        '!'
-                      ) : isRunning ? (
-                        <CircularProgress size={22} />
+                        <ErrorOutlineIcon fontSize="small" />
                       ) : (
-                        <CircularProgress
-                          size={22}
-                          variant="determinate"
-                          value={0}
-                        />
+                        <AutoAwesomeIcon fontSize="small" />
                       )}
                     </Box>
-                    <Typography variant="caption" color="text.secondary">
-                      {getPendingStatusLabel(guide.status, t)}
-                    </Typography>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography
+                        variant="caption"
+                        color={isProblem ? 'error.main' : 'primary.main'}
+                        fontWeight={700}
+                      >
+                        {getPendingStatusLabel(guide.status, t)}
+                      </Typography>
+                      <Typography
+                        variant="h6"
+                        fontWeight={700}
+                        sx={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          lineHeight: 1.22,
+                        }}
+                      >
+                        {guide.prompt}
+                      </Typography>
+                    </Box>
                   </Stack>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography
-                      variant="h6"
-                      fontWeight={650}
-                      sx={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        lineHeight: 1.18,
-                      }}
-                    >
-                      {guide.prompt}
-                    </Typography>
-                  </Box>
                   {isProblem ? (
                     <Stack spacing={1.25}>
                       <Typography
@@ -1216,32 +1229,82 @@ const StudyGuidesPage = () => {
                       </Stack>
                     </Stack>
                   ) : (
-                    <Stack spacing={1}>
-                      <Typography variant="body2" color="text.secondary">
-                        {isRunning
-                          ? `${t('studyGuides.elapsed')} ${formatDuration(
-                              elapsedSeconds,
-                            )} · ${t('studyGuides.estimate')} ${formatDuration(
-                              guide.estimateSeconds,
-                            )}`
-                          : `${t('studyGuides.waiting')} · ${t(
-                              'studyGuides.estimate',
-                            )} ${formatDuration(guide.estimateSeconds)}`}
-                      </Typography>
+                    <Stack spacing={1.25} sx={{ flex: 1 }}>
                       {isRunning ? (
-                        <Alert
-                          severity="info"
-                          variant="outlined"
-                          sx={{
-                            py: 0.5,
-                            '& .MuiAlert-message': {
-                              fontSize: '0.8125rem',
-                              lineHeight: 1.35,
-                            },
-                          }}
+                        <Box
+                          sx={(theme) => ({
+                            p: 1.5,
+                            borderRadius: 2,
+                            bgcolor: alpha(theme.palette.primary.main, 0.055),
+                          })}
                         >
-                          {t('studyGuides.keepTabOpenNotice')}
-                        </Alert>
+                          <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            sx={{ mb: 1 }}
+                          >
+                            <Typography
+                              variant="body2"
+                              color="primary.main"
+                              fontWeight={700}
+                            >
+                              {progressPercent}%
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ whiteSpace: 'nowrap' }}
+                            >
+                              {t('studyGuides.elapsed')}{' '}
+                              {formatDuration(elapsedSeconds)} ·{' '}
+                              {t('studyGuides.estimate')}{' '}
+                              {formatDuration(guide.estimateSeconds)}
+                            </Typography>
+                          </Stack>
+                          <LinearProgress
+                            variant="determinate"
+                            value={progressPercent}
+                            aria-label={`${progressPercent}%`}
+                            sx={(theme) => ({
+                              height: 9,
+                              borderRadius: 1,
+                              bgcolor: alpha(theme.palette.primary.main, 0.14),
+                              '& .MuiLinearProgress-bar': {
+                                borderRadius: 1,
+                              },
+                            })}
+                          />
+                        </Box>
+                      ) : (
+                        <Box
+                          sx={(theme) => ({
+                            p: 1.5,
+                            borderRadius: 2,
+                            bgcolor: alpha(theme.palette.primary.main, 0.055),
+                          })}
+                        >
+                          <Typography variant="body2" color="text.secondary">
+                            {t('studyGuides.waiting')} ·{' '}
+                            {t('studyGuides.estimate')}{' '}
+                            {formatDuration(guide.estimateSeconds)}
+                          </Typography>
+                        </Box>
+                      )}
+                      {isRunning ? (
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="flex-start"
+                          sx={{ color: 'text.secondary', px: 0.5 }}
+                        >
+                          <InfoOutlinedIcon
+                            sx={{ fontSize: 18, mt: '1px', flexShrink: 0 }}
+                          />
+                          <Typography variant="caption" sx={{ lineHeight: 1.4 }}>
+                            {t('studyGuides.keepTabOpenNotice')}
+                          </Typography>
+                        </Stack>
                       ) : null}
                       <Button
                         variant="text"
@@ -1251,7 +1314,9 @@ const StudyGuidesPage = () => {
                         onClick={() => deletePendingGuide(guide)}
                         sx={{
                           alignSelf: 'flex-start',
-                          borderRadius: 2,
+                          mt: 'auto',
+                          px: 0.75,
+                          borderRadius: 1,
                           textTransform: 'none',
                         }}
                       >

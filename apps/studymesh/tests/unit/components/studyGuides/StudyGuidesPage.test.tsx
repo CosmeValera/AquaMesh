@@ -528,6 +528,35 @@ describe('StudyGuidesPage create flow', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('shows determinate progress with timing for a running guide', async () => {
+    const startedAt = new Date(Date.now() - 10_000).toISOString()
+    StudyGuideCreationQueueStorage.upsert({
+      id: 'running-progress-guide',
+      prompt: 'Running progress prompt',
+      provider: 'hosted',
+      status: 'running',
+      estimateSeconds: 20,
+      startedAt,
+      finishedAt: null,
+      errorMessage: null,
+      resultStudyGuideId: null,
+    })
+    vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
+      () => new Promise(() => undefined),
+    )
+
+    renderStudyGuidesPage('/study-guides')
+
+    const progress = await screen.findByRole('progressbar', { name: /%/ })
+    expect(Number(progress.getAttribute('aria-valuenow'))).toBeGreaterThanOrEqual(
+      0,
+    )
+    expect(Number(progress.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(
+      100,
+    )
+    expect(screen.getByText(/Elapsed \d+s · Estimate 20s/)).toBeInTheDocument()
+  })
+
   it('auto-retries running jobs after a refresh', async () => {
     const resolvers: Array<(title: string) => void> = []
     vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(

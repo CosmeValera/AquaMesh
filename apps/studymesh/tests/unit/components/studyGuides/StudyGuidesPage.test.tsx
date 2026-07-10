@@ -554,7 +554,9 @@ describe('StudyGuidesPage create flow', () => {
     expect(Number(progress.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(
       100,
     )
-    expect(screen.getByText(/Elapsed \d+s · Estimate 20s/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Elapsed \d+s · Estimated total 20s/),
+    ).toBeInTheDocument()
   })
 
   it('auto-retries running jobs after a refresh', async () => {

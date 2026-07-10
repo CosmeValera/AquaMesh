@@ -29,6 +29,7 @@ import { alpha } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import CloseIcon from '@mui/icons-material/Close'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import EditIcon from '@mui/icons-material/Edit'
@@ -1062,7 +1063,7 @@ const StudyGuidesPage = () => {
               ),
             )
             const progressPercent = Math.min(
-              100,
+              95,
               Math.round(
                 (elapsedSeconds / Math.max(guide.estimateSeconds, 1)) * 100,
               ),
@@ -1079,7 +1080,7 @@ const StudyGuidesPage = () => {
                 key={guide.id}
                 elevation={0}
                 sx={(theme) => ({
-                  minHeight: 180,
+                  alignSelf: 'start',
                   p: 2.25,
                   borderRadius: 3,
                   border: 1,
@@ -1129,7 +1130,7 @@ const StudyGuidesPage = () => {
                         {getPendingStatusLabel(guide.status, t)}
                       </Typography>
                       <Typography
-                        variant="h6"
+                        variant="subtitle1"
                         fontWeight={700}
                         sx={{
                           display: '-webkit-box',
@@ -1142,6 +1143,34 @@ const StudyGuidesPage = () => {
                         {guide.prompt}
                       </Typography>
                     </Box>
+                    {!isProblem ? (
+                      <Tooltip title={t('studyGuides.cancel')}>
+                        <IconButton
+                          size="small"
+                          aria-label={t('studyGuides.cancel')}
+                          onClick={() => deletePendingGuide(guide)}
+                          sx={(theme) => ({
+                            flexShrink: 0,
+                            color: 'text.secondary',
+                            bgcolor: 'transparent',
+                            border: 1,
+                            borderColor: 'transparent',
+                            '&:hover': {
+                              color: 'error.main',
+                              bgcolor: alpha(theme.palette.error.main, 0.08),
+                              borderColor: alpha(theme.palette.error.main, 0.18),
+                            },
+                            '&.Mui-disabled': {
+                              color: 'action.disabled',
+                              bgcolor: 'transparent',
+                              borderColor: 'transparent',
+                            },
+                          })}
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    ) : null}
                   </Stack>
                   {isProblem ? (
                     <Stack spacing={1.25}>
@@ -1233,7 +1262,7 @@ const StudyGuidesPage = () => {
                       {isRunning ? (
                         <Box
                           sx={(theme) => ({
-                            p: 1.5,
+                            p: 1.25,
                             borderRadius: 2,
                             bgcolor: alpha(theme.palette.primary.main, 0.055),
                           })}
@@ -1258,7 +1287,7 @@ const StudyGuidesPage = () => {
                             >
                               {t('studyGuides.elapsed')}{' '}
                               {formatDuration(elapsedSeconds)} ·{' '}
-                              {t('studyGuides.estimate')}{' '}
+                              {t('studyGuides.estimatedTotal')}{' '}
                               {formatDuration(guide.estimateSeconds)}
                             </Typography>
                           </Stack>
@@ -1299,31 +1328,20 @@ const StudyGuidesPage = () => {
                           sx={{ color: 'text.secondary', px: 0.5 }}
                         >
                           <InfoOutlinedIcon
-                            sx={{ fontSize: 18, mt: '1px', flexShrink: 0 }}
+                            sx={{ fontSize: 17, mt: '1px', flexShrink: 0 }}
                           />
-                          <Typography variant="caption" sx={{ lineHeight: 1.4 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontSize: '0.735rem',
+                              lineHeight: 1.35,
+                              whiteSpace: { sm: 'nowrap' },
+                            }}
+                          >
                             {t('studyGuides.keepTabOpenNotice')}
                           </Typography>
                         </Stack>
                       ) : null}
-                      <Button
-                        variant="text"
-                        color="error"
-                        size="small"
-                        startIcon={<DeleteOutlineIcon />}
-                        onClick={() => deletePendingGuide(guide)}
-                        sx={{
-                          alignSelf: 'flex-start',
-                          mt: 'auto',
-                          px: 0.75,
-                          borderRadius: 1,
-                          textTransform: 'none',
-                        }}
-                      >
-                        {isRunning
-                          ? t('studyGuides.cancel')
-                          : t('studyGuides.delete')}
-                      </Button>
                     </Stack>
                   )}
                 </Stack>

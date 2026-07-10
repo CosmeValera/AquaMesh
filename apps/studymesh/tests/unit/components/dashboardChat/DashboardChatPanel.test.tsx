@@ -17,6 +17,7 @@ import DashboardChatPanel, {
 import { askDashboardSources } from '../../../../src/dashboardChat/askDashboard'
 import { fetchDashboardExternalSource } from '../../../../src/dashboardChat/externalSources'
 import { prepareDashboardExternalSourcePageDraft } from '../../../../src/dashboardChat/sourcePageDrafts'
+import { planDashboardChatSources } from '../../../../src/dashboardChat/sourcePlanner'
 import type { StateDashboard } from '../../../../src/state/store'
 import { AccentColorProvider } from '../../../../src/theme/AccentColorContext'
 import {
@@ -44,6 +45,21 @@ vi.mock('../../../../src/dashboardChat/externalSources', () => ({
 vi.mock('../../../../src/dashboardChat/sourcePageDrafts', () => ({
   __esModule: true,
   prepareDashboardExternalSourcePageDraft: vi.fn(),
+}))
+
+vi.mock('../../../../src/dashboardChat/sourcePlanner', () => ({
+  __esModule: true,
+  fallbackDashboardChatSourcePlan: vi.fn(
+    (question: string, selectedSources: string[]) => ({
+      selectedSources: selectedSources.length
+        ? selectedSources
+        : ['study-guide', 'general'],
+      shouldSearchWeb: selectedSources.includes('web'),
+      searchQuery: question,
+      answerStyleHint: 'Respect the prompt.',
+    }),
+  ),
+  planDashboardChatSources: vi.fn(),
 }))
 
 vi.mock('../../../../src/components/study/StudyBlockView', () => ({
@@ -153,12 +169,31 @@ const renderPanel = (
   )
 }
 
+const enableWebSourceSelection = () => {
+  fireEvent.click(screen.getByRole('button', { name: /Answer sources/i }))
+  fireEvent.click(screen.getByRole('menuitem', { name: /Web search/i }))
+  fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
+}
+
+const enableGeneralSourceSelection = () => {
+  fireEvent.click(screen.getByRole('button', { name: /Answer sources/i }))
+  fireEvent.click(screen.getByRole('menuitem', { name: /General knowledge/i }))
+  fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
+}
+
 beforeEach(() => {
   HTMLElement.prototype.scrollTo = vi.fn()
   vi.mocked(localStorage.getItem).mockReset()
   vi.mocked(localStorage.getItem).mockReturnValue(null)
   vi.mocked(localStorage.setItem).mockReset()
   vi.mocked(askDashboardSources).mockReset()
+  vi.mocked(planDashboardChatSources).mockReset()
+  vi.mocked(planDashboardChatSources).mockResolvedValue({
+    selectedSources: ['study-guide', 'general'],
+    shouldSearchWeb: false,
+    searchQuery: 'default search query',
+    answerStyleHint: 'Respect the prompt.',
+  })
   vi.mocked(askDashboardSources).mockResolvedValue({
     answer: 'Use the dashboard source notes [1].',
     sourceRefs: [
@@ -260,6 +295,39 @@ describe('DashboardChatPanel quick create menu', () => {
     expect(
       screen.queryByRole('button', { name: 'More ideas' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('persists answer source selection locally', async () => {
+    renderPanel()
+
+    enableWebSourceSelection()
+
+    await waitFor(() =>
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        'studymesh-dashboard-chat-source-selection',
+        JSON.stringify(['web']),
+      ),
+    )
+  })
+
+  it('honors Study Guide only source selection without web lookup', async () => {
+    renderPanel()
+
+    fireEvent.click(screen.getByRole('button', { name: /Answer sources/i }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /^Study Guide$/i }))
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: 'What are the biggest muscles?' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
+    expect(fetchDashboardExternalSource).not.toHaveBeenCalled()
+    expect(vi.mocked(askDashboardSources).mock.calls[0][0]).toMatchObject({
+      allowedSources: ['study-guide'],
+    })
   })
 
   it('prefills a queued explain draft without sending it', async () => {
@@ -1353,8 +1421,47 @@ describe('DashboardChatPanel chat management', () => {
     await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
   })
 
-  it('searches web before answering when the explicit web button is used', async () => {
+  it('shows a compact source selector label without Auto as a menu option', () => {
+    renderPanel()
+
+    const sourceButton = screen.getByRole('button', {
+      name: 'Answer sources: Auto',
+    })
+    expect(sourceButton).toHaveTextContent('Auto')
+
+    fireEvent.click(sourceButton)
+
+    expect(
+      screen.queryByRole('menuitem', { name: /Auto/i }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('menuitem', { name: /Study Guide/i }))
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
+    expect(
+      screen.getByRole('button', { name: 'Answer sources: Study Guide' }),
+    ).toHaveTextContent('Study Guide')
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Answer sources: Study Guide' }),
+    )
+    fireEvent.click(
+      screen.getByRole('menuitem', { name: /General knowledge/i }),
+    )
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
+    expect(
+      screen.getByRole('button', {
+        name: 'Answer sources: Study Guide, General knowledge',
+      }),
+    ).toHaveTextContent('SG, GK')
+  })
+
+  it('searches web before answering when Web search is selected', async () => {
     const onMessagesChange = vi.fn()
+    vi.mocked(planDashboardChatSources).mockResolvedValueOnce({
+      selectedSources: ['web'],
+      shouldSearchWeb: true,
+      searchQuery: 'Ansible comparison',
+      answerStyleHint: 'Answer directly.',
+    })
     vi.mocked(askDashboardSources).mockResolvedValueOnce({
       answer: 'Ansible automates provisioning [2].',
       sourceRefs: [
@@ -1397,16 +1504,21 @@ describe('DashboardChatPanel chat management', () => {
     fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
       target: { value: 'How does Ansible compare?' },
     })
+    enableWebSourceSelection()
+    enableGeneralSourceSelection()
     fireEvent.click(
-      screen.getByRole('button', { name: 'Search web and answer' }),
+      screen.getByRole('button', { name: 'Send dashboard question' }),
     )
 
     await waitFor(() =>
-      expect(fetchDashboardExternalSource).toHaveBeenCalledWith({
-        question: 'How does Ansible compare?',
-        dashboardTitle: 'Biology Dashboard',
-        contextSummary: expect.stringContaining('Photosynthesis notes'),
-      }),
+      expect(fetchDashboardExternalSource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          question: 'How does Ansible compare?',
+          searchQuery: 'Ansible comparison',
+          dashboardTitle: 'Biology Dashboard',
+          contextSummary: expect.stringContaining('Photosynthesis notes'),
+        }),
+      ),
     )
     await waitFor(() => expect(askDashboardSources).toHaveBeenCalledTimes(1))
     expect(
@@ -1448,6 +1560,12 @@ describe('DashboardChatPanel chat management', () => {
   })
 
   it('still answers and shows a non-blocking error card when web lookup fails', async () => {
+    vi.mocked(planDashboardChatSources).mockResolvedValueOnce({
+      selectedSources: ['web', 'general'],
+      shouldSearchWeb: true,
+      searchQuery: 'Ansible comparison',
+      answerStyleHint: 'Answer directly.',
+    })
     vi.mocked(askDashboardSources).mockResolvedValueOnce({
       answer: 'In general, Ansible automates provisioning.',
       sourceRefs: [],
@@ -1478,8 +1596,9 @@ describe('DashboardChatPanel chat management', () => {
     fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
       target: { value: 'How does Ansible compare?' },
     })
+    enableWebSourceSelection()
     fireEvent.click(
-      screen.getByRole('button', { name: 'Search web and answer' }),
+      screen.getByRole('button', { name: 'Send dashboard question' }),
     )
 
     expect(
@@ -1492,6 +1611,12 @@ describe('DashboardChatPanel chat management', () => {
   })
 
   it('does not include a previous summarize request in follow-up web lookup', async () => {
+    vi.mocked(planDashboardChatSources).mockResolvedValueOnce({
+      selectedSources: ['web'],
+      shouldSearchWeb: true,
+      searchQuery: 'rundeck n8n terraform ansible comparison',
+      answerStyleHint: 'Answer directly.',
+    })
     vi.mocked(askDashboardSources).mockResolvedValueOnce({
       answer: 'Rundeck provides operations orchestration [2].',
       sourceRefs: [],
@@ -1544,8 +1669,9 @@ describe('DashboardChatPanel chat management', () => {
           'what about rundeck and n8n? are they similar to terraform and ansible?',
       },
     })
+    enableWebSourceSelection()
     fireEvent.click(
-      screen.getByRole('button', { name: 'Search web and answer' }),
+      screen.getByRole('button', { name: 'Send dashboard question' }),
     )
 
     await waitFor(() => expect(fetchDashboardExternalSource).toHaveBeenCalled())
@@ -1556,6 +1682,12 @@ describe('DashboardChatPanel chat management', () => {
   })
 
   it('uses the previous answer topic when a follow-up asks for sources', async () => {
+    vi.mocked(planDashboardChatSources).mockResolvedValueOnce({
+      selectedSources: ['study-guide', 'general', 'web'],
+      shouldSearchWeb: true,
+      searchQuery: 'Vue React JavaScript UI framework comparison sources',
+      answerStyleHint: 'Answer directly.',
+    })
     vi.mocked(askDashboardSources).mockResolvedValueOnce({
       answer: 'Vue and React can be compared using their official docs [2].',
       sourceRefs: [
@@ -1636,6 +1768,17 @@ describe('DashboardChatPanel chat management', () => {
         role: 'assistant' as const,
         content: 'The dashboard sources do not contain enough information.',
         webLookup: { status: 'found' as const, sourceId: 'web-source-1' },
+        sourceRefs: [
+          {
+            citationNumber: 1,
+            chunkId: 'web-source-1',
+            title: 'Ansible guide',
+            type: 'web source',
+            textPreview: 'Ansible automates provisioning.',
+            origin: 'web' as const,
+            url: 'https://example.com/ansible',
+          },
+        ],
         createdAt: 1,
       },
     ]
@@ -1686,13 +1829,24 @@ describe('DashboardChatPanel chat management', () => {
     )
   })
 
-  it('disables Add source when the web source page draft failed', async () => {
+  it('shows a retry action when the web source page draft failed', async () => {
     const messages = [
       {
         id: 'assistant-1',
         role: 'assistant' as const,
         content: 'The dashboard sources do not contain enough information.',
         webLookup: { status: 'found' as const, sourceId: 'web-source-1' },
+        sourceRefs: [
+          {
+            citationNumber: 1,
+            chunkId: 'web-source-1',
+            title: 'Ansible guide',
+            type: 'web source',
+            textPreview: 'Boilerplate only.',
+            origin: 'web' as const,
+            url: 'https://example.com/ansible',
+          },
+        ],
         createdAt: 1,
       },
     ]
@@ -1729,11 +1883,20 @@ describe('DashboardChatPanel chat management', () => {
       await screen.findByRole('button', {
         name: 'Add this source: Ansible guide',
       }),
-    ).toBeDisabled()
-    expect(screen.getByText('Could not prepare page')).toBeInTheDocument()
+    ).toBeEnabled()
+    expect(screen.getByText('Retry preparing page')).toBeInTheDocument()
+    expect(
+      screen.getByText('Source page draft was not clean enough.'),
+    ).toBeInTheDocument()
   })
 
   it('rejects the previous found source and searches again when asked for another source', async () => {
+    vi.mocked(planDashboardChatSources).mockResolvedValueOnce({
+      selectedSources: ['study-guide', 'web'],
+      shouldSearchWeb: true,
+      searchQuery: 'Ansible official documentation',
+      answerStyleHint: 'Answer directly.',
+    })
     const messages = [
       {
         id: 'user-1',

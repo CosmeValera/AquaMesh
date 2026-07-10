@@ -378,6 +378,74 @@ describe('API payment and hosted AI hardening', () => {
     })
   })
 
+  it('uses a rewritten dashboard source search query when provided', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    const fetchMock = vi.fn((url: string) => {
+      if (String(url).includes('/extract')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(
+            JSON.stringify({
+              results: [
+                {
+                  title: 'Human muscle reference',
+                  url: 'https://example.com/muscles',
+                  raw_content:
+                    'The largest skeletal muscles include gluteus maximus, latissimus dorsi, quadriceps, hamstrings, and other major muscle groups.',
+                },
+              ],
+            }),
+          ),
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            results: [
+              {
+                title: 'Human muscle reference',
+                url: 'https://example.com/muscles',
+                content: 'Major skeletal muscle reference.',
+                score: 0.8,
+              },
+            ],
+          }),
+        ),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question:
+            'please urgently bones sorry muscles skeletal biggest in body',
+          searchQuery: 'largest skeletal muscles in the human body',
+          dashboardTitle: 'Human Anatomy',
+        },
+      },
+      res,
+    )
+
+    const searchBody = JSON.parse(String(fetchMock.mock.calls[0][1]?.body))
+    expect(searchBody.query).toBe('largest skeletal muscles in the human body')
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      source: {
+        searchQuery: 'largest skeletal muscles in the human body',
+      },
+    })
+  })
+
   it('prioritizes missing question terms over already-covered context topics', async () => {
     vi.stubEnv('NODE_ENV', 'test')
     vi.stubEnv('TAVILY_API_KEY', 'tavily-key')

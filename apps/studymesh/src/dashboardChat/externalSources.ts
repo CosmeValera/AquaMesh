@@ -32,6 +32,7 @@ export interface DashboardExternalSourcePageDraft {
 export interface DashboardExternalSourceLookupRequest {
   question: string
   dashboardTitle: string
+  searchQuery?: string
   contextSummary?: string
   rejectedUrls?: string[]
   rejectedDomains?: string[]

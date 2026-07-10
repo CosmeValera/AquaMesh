@@ -50,6 +50,7 @@ interface DashboardSourceResponse {
 interface DashboardSourceRequest {
   question: string;
   dashboardTitle: string;
+  searchQuery?: string;
   sourceUrl?: string;
   contextSummary?: string;
   rejectedUrls?: string[];
@@ -153,6 +154,7 @@ const normalizeRequest = (body: unknown): DashboardSourceRequest | null => {
 
   const question = normalizeText(body.question);
   const dashboardTitle = normalizeText(body.dashboardTitle);
+  const searchQuery = normalizeText(body.searchQuery);
   const sourceUrl = normalizeText(body.sourceUrl || body.url);
   const contextSummary = normalizeText(body.contextSummary);
   const rejectedUrls = Array.isArray(body.rejectedUrls)
@@ -169,6 +171,7 @@ const normalizeRequest = (body: unknown): DashboardSourceRequest | null => {
   return {
     question: question || sourceUrl,
     dashboardTitle,
+    ...(searchQuery ? { searchQuery } : {}),
     ...(sourceUrl ? { sourceUrl } : {}),
     ...(contextSummary ? { contextSummary } : {}),
     ...(rejectedUrls.length ? { rejectedUrls } : {}),
@@ -280,6 +283,12 @@ const getDefinitionFocusTerms = (question: string): string[] | null => {
 };
 
 const buildFallbackSearchQuery = (request: DashboardSourceRequest): string => {
+  if (request.searchQuery) {
+    return request.searchQuery.length > MAX_QUERY_CHARS
+      ? request.searchQuery.slice(0, MAX_QUERY_CHARS).trim()
+      : request.searchQuery;
+  }
+
   const definitionFocusTerms = getDefinitionFocusTerms(request.question);
   if (definitionFocusTerms) {
     const query = `What is ${definitionFocusTerms

@@ -14,6 +14,7 @@ import {
   resolveContentLanguage,
   type StudyMeshLanguageCode,
 } from '../language/contentLanguage'
+import type { DashboardChatSourceId } from './sourcePlanner'
 
 interface AskDashboardOptions {
   dashboardTitle: string
@@ -21,6 +22,8 @@ interface AskDashboardOptions {
   question: string
   history: Array<{ role: 'user' | 'assistant'; content: string }>
   sourceChunks: DashboardSourceChunk[]
+  allowedSources?: DashboardChatSourceId[]
+  answerStyleHint?: string
   contentLanguage?: StudyMeshLanguageCode
   signal?: AbortSignal
 }
@@ -108,11 +111,51 @@ ${recentMessages
   return sections.length > 0 ? sections.join('\n\n') : 'None'
 }
 
+const formatAllowedSources = (allowedSources: DashboardChatSourceId[]) => {
+  const hasStudyGuide = allowedSources.includes('study-guide')
+  const hasGeneral = allowedSources.includes('general')
+  const hasWeb = allowedSources.includes('web')
+
+  if (hasStudyGuide && !hasGeneral && !hasWeb) {
+    return 'Use only the Study Guide/dashboard/source context. If the context does not answer the question, say briefly that the Study Guide does not cover it and suggest enabling General knowledge or Web search. Do not answer from memory.'
+  }
+
+  if (!hasStudyGuide && hasGeneral && !hasWeb) {
+    return 'Use general knowledge only. Do not cite or rely on the Study Guide, dashboard context, added sources, or web sources.'
+  }
+
+  if (!hasStudyGuide && !hasGeneral && hasWeb) {
+    return 'Use only fetched web source context. If no web source context answers the question, say briefly that the web search did not provide a usable source. Do not answer from general knowledge or the Study Guide.'
+  }
+
+  const allowedLabels = [
+    hasStudyGuide ? 'Study Guide/dashboard context' : '',
+    hasGeneral ? 'general knowledge' : '',
+    hasWeb ? 'fetched web sources' : '',
+  ].filter(Boolean)
+
+  return `Allowed answer sources: ${allowedLabels.join(
+    ', ',
+  )}. Do not use sources outside this list. Prefer cited context when it directly helps; use uncited general knowledge only if general knowledge is allowed.`
+}
+
+const formatCoverageFallbackRule = (
+  allowedSources: DashboardChatSourceId[],
+) => {
+  if (allowedSources.includes('general')) {
+    return 'If the provided context only partially answers the question, answer the rest from general knowledge and make that transition clear with phrasing such as "In general". If the provided context does not help, still answer from general knowledge.'
+  }
+
+  return 'If the allowed cited context only partially answers the question, answer only the supported part and briefly say what is not covered by the allowed sources.'
+}
+
 const buildPrompt = ({
   dashboardTitle,
   contextText,
   question,
   memory,
+  allowedSources = ['study-guide', 'general'],
+  answerStyleHint,
   outputLanguage,
 }: Omit<AskDashboardOptions, 'history'> & {
   memory: ChatMemory
@@ -122,8 +165,10 @@ const buildPrompt = ({
 Rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
 - Prefer the provided dashboard, study, and source context when it helps.
-- If the provided context only partially answers the question, answer the rest from general knowledge and make that transition clear with phrasing such as "In general".
-- If the provided context does not help, still answer from general knowledge.
+- ${formatAllowedSources(allowedSources)}
+- Respect the student's requested answer shape and verbosity. If they ask for a plain list, exact count, table, or no explanation, follow that format without extra teaching sections.
+${answerStyleHint ? `- Extra answer style instruction: ${answerStyleHint}` : ''}
+- ${formatCoverageFallbackRule(allowedSources)}
 - If the student message is conversational smalltalk, a greeting, thanks, a casual acknowledgement, or a minor typo of those, answer briefly and naturally. Do not cite sources for smalltalk.
 - Do not invent citations, links, source names, or claims about what a source says.
 - When you use a specific source, cite it inline with its source number like [1] or [2].
@@ -238,6 +283,7 @@ const isGeneralKnowledgeCue = (answer: string): boolean =>
 const deriveAnswerBasis = (
   sourceRefs: DashboardAnswerSourceRef[],
   answer: string,
+  allowedSources: DashboardChatSourceId[],
 ): DashboardAnswerBasis[] => {
   const basis = new Set<DashboardAnswerBasis>()
 
@@ -255,7 +301,14 @@ const deriveAnswerBasis = (
     basis.add('study-guide')
   })
 
-  if (basis.size === 0 || isGeneralKnowledgeCue(answer)) {
+  if (basis.size === 0 && !allowedSources.includes('general')) {
+    basis.add(allowedSources.includes('web') ? 'web' : 'study-guide')
+  }
+
+  if (
+    allowedSources.includes('general') &&
+    (basis.size === 0 || isGeneralKnowledgeCue(answer))
+  ) {
     basis.add('general')
   }
 
@@ -343,7 +396,11 @@ export const askDashboardSources = async (
         ) === index
       )
     })
-  const answerBasis = deriveAnswerBasis(sourceRefs, cleanedAnswer)
+  const answerBasis = deriveAnswerBasis(
+    sourceRefs,
+    cleanedAnswer,
+    options.allowedSources || ['study-guide', 'general'],
+  )
 
   return {
     answer: cleanedAnswer,

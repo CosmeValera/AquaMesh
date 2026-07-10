@@ -3,6 +3,7 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   Divider,
   Dialog,
   DialogActions,
@@ -70,6 +71,12 @@ import {
   type DashboardExternalSourceOriginType,
 } from '../../dashboardChat/externalSources'
 import { prepareDashboardExternalSourcePageDraft } from '../../dashboardChat/sourcePageDrafts'
+import {
+  fallbackDashboardChatSourcePlan,
+  planDashboardChatSources,
+  type DashboardChatSourceId,
+  type DashboardChatSourcePlan,
+} from '../../dashboardChat/sourcePlanner'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
 import { getHostedAiCreditCost } from '../../quickCreate/ai/hostedCredits'
 import {
@@ -95,6 +102,13 @@ const MAX_USER_SOURCE_TEXT_CHARS = 12_000
 const MAX_USER_SOURCE_CONTEXT_CHARS = 18_000
 const MAX_USER_SOURCES_PER_ANSWER = 3
 const MAX_USER_SOURCE_FILE_BYTES = 1_000_000
+const DASHBOARD_CHAT_SOURCE_SELECTION_STORAGE_KEY =
+  'studymesh-dashboard-chat-source-selection'
+const DASHBOARD_CHAT_SOURCE_OPTIONS: DashboardChatSourceId[] = [
+  'study-guide',
+  'general',
+  'web',
+]
 
 export interface DashboardChatMessage {
   id: string
@@ -193,6 +207,54 @@ const isUserAddedSourceOriginType = (
 
 const isUserAddedSource = (source: DashboardExternalSource) =>
   isUserAddedSourceOriginType(source.originType)
+
+const isDashboardChatSourceId = (
+  value: string,
+): value is DashboardChatSourceId =>
+  DASHBOARD_CHAT_SOURCE_OPTIONS.includes(value as DashboardChatSourceId)
+
+const normalizeDashboardChatSourceSelection = (
+  value: unknown,
+): DashboardChatSourceId[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return Array.from(
+    new Set(
+      value.filter(
+        (item): item is DashboardChatSourceId =>
+          typeof item === 'string' && isDashboardChatSourceId(item),
+      ),
+    ),
+  )
+}
+
+const readStoredDashboardChatSourceSelection = (): DashboardChatSourceId[] => {
+  try {
+    const stored = window.localStorage.getItem(
+      DASHBOARD_CHAT_SOURCE_SELECTION_STORAGE_KEY,
+    )
+    return normalizeDashboardChatSourceSelection(
+      stored ? JSON.parse(stored) : [],
+    )
+  } catch {
+    return []
+  }
+}
+
+const persistDashboardChatSourceSelection = (
+  selectedSources: DashboardChatSourceId[],
+) => {
+  try {
+    window.localStorage.setItem(
+      DASHBOARD_CHAT_SOURCE_SELECTION_STORAGE_KEY,
+      JSON.stringify(selectedSources),
+    )
+  } catch {
+    // Local source preference is non-critical.
+  }
+}
 
 const normalizeUserSourceText = (value: string) =>
   value.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim()
@@ -366,12 +428,32 @@ const getQuickCreateActionDescriptionKey = (actionId: QuickCreateActionId) => {
   }
 }
 
+const getDashboardChatSourceLabelKey = (source: DashboardChatSourceId) => {
+  switch (source) {
+    case 'study-guide':
+      return 'chat.sourceStudyGuide'
+    case 'general':
+      return 'chat.sourceGeneral'
+    case 'web':
+      return 'chat.sourceWeb'
+  }
+}
+
+const getDashboardChatSourceShortLabel = (source: DashboardChatSourceId) => {
+  switch (source) {
+    case 'study-guide':
+      return 'SG'
+    case 'general':
+      return 'GK'
+    case 'web':
+      return 'WS'
+  }
+}
+
 const SOURCE_REJECTION_PATTERN =
   /\b(?:don't|dont|do not|stop)\s+use\b|\btry another\b|\banother source\b|\bwrong source\b|\bbad source\b|\bnot that source\b/i
 const SOURCE_SUPPORT_FOLLOWUP_PATTERN =
   /\b(?:what(?:'s| is)? your source|what source|cite|citation|where did you get|what(?:'s| is)? your basis|what(?:'s| is)? your base|base to say|source to say)\b/i
-const WEB_LOOKUP_REQUEST_PATTERN =
-  /\b(?:search|look up|lookup|internet|web|online|latest|current|up[- ]?to[- ]?date|source|sources|citation|cite)\b/i
 const SMALLTALK_PATTERN =
   /^(?:hi|hello|hey|thanks?|thank you|thx|ty|ok|okay|cool|nice|great|what can you do\??)$/i
 const SMALLTALK_HINT_PATTERN =
@@ -584,6 +666,12 @@ const DashboardChatPanel = ({
     useState<HTMLElement | null>(null)
   const [chatMenuAnchor, setChatMenuAnchor] = useState<HTMLElement | null>(null)
   const [petMenuAnchor, setPetMenuAnchor] = useState<HTMLElement | null>(null)
+  const [sourceMenuAnchor, setSourceMenuAnchor] = useState<HTMLElement | null>(
+    null,
+  )
+  const [sourceSelection, setSourceSelection] = useState<
+    DashboardChatSourceId[]
+  >(() => readStoredDashboardChatSourceSelection())
   const [chatSessions, setChatSessions] = useState<DashboardChatSession[]>([])
   const [activeChatId, setActiveChatId] = useState('')
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
@@ -652,6 +740,9 @@ const DashboardChatPanel = ({
   const hasContext = context.chunks.length > 0
   const activePet =
     aiChatPets.find((pet) => pet.id === activePetId) || aiChatPets[0]
+  useEffect(() => {
+    persistDashboardChatSourceSelection(sourceSelection)
+  }, [sourceSelection])
   const dismissibleAlertSx = {
     '& .MuiAlert-action': {
       alignItems: 'flex-start',
@@ -695,6 +786,26 @@ const DashboardChatPanel = ({
   const displayChatTitle = (title: string) =>
     title === 'New chat' ? t('chat.newChat') : title
   const displayedActiveChatTitle = displayChatTitle(activeChatTitle)
+  const sourceMenuOpen = Boolean(sourceMenuAnchor)
+  const sourceSelectionLabel =
+    sourceSelection.length === 0
+      ? t('chat.sourceAuto')
+      : sourceSelection
+          .map((source) => t(getDashboardChatSourceLabelKey(source)))
+          .join(', ')
+  const sourceSelectionButtonLabel =
+    sourceSelection.length === 0
+      ? t('chat.sourceAuto')
+      : sourceSelection.length === 1
+        ? t(getDashboardChatSourceLabelKey(sourceSelection[0]))
+        : sourceSelection.map(getDashboardChatSourceShortLabel).join(', ')
+  const toggleSourceSelection = (source: DashboardChatSourceId) => {
+    setSourceSelection((current) =>
+      current.includes(source)
+        ? current.filter((item) => item !== source)
+        : [...current, source],
+    )
+  }
   const userActionIconButtonSx = {
     width: 24,
     height: 24,
@@ -1249,15 +1360,26 @@ const DashboardChatPanel = ({
   const selectAnswerSourceChunks = (
     question: string,
     externalSourceIds: string[] = [],
+    allowedSources: DashboardChatSourceId[] = ['study-guide', 'general'],
   ): {
     sourceChunks: DashboardSourceChunk[]
     selectedExternalSourceIds: string[]
   } => {
-    const dashboardChunks = selectDashboardChatChunks(context, question)
+    const allowStudyGuide = allowedSources.includes('study-guide')
+    const allowWeb = allowedSources.includes('web')
+    const dashboardChunks = allowStudyGuide
+      ? selectDashboardChatChunks(context, question)
+      : []
     const selectedExternalSources = selectStoredExternalSources(
       question,
       externalSourceIds,
-    )
+    ).filter((source) => {
+      if (isUserAddedSource(source)) {
+        return allowStudyGuide
+      }
+
+      return allowWeb
+    })
     let remainingUserSourceChars = MAX_USER_SOURCE_CONTEXT_CHARS
     const externalChunks = selectedExternalSources
       .map((source): DashboardExternalSource | null => {
@@ -2038,6 +2160,7 @@ const DashboardChatPanel = ({
     question: string,
     messageId: string,
     historyMessages: DashboardChatMessage[],
+    searchQuery?: string,
   ): Promise<string[]> => {
     const messageIndex = messagesRef.current.findIndex(
       (message) => message.id === messageId,
@@ -2063,6 +2186,7 @@ const DashboardChatPanel = ({
         await fetchDashboardExternalSource({
           question: lookupQuestion,
           dashboardTitle: context.dashboardTitle,
+          ...(searchQuery?.trim() ? { searchQuery: searchQuery.trim() } : {}),
           contextSummary: buildExternalLookupContextSummary(),
           ...getRejectedSourceFilters(),
         }),
@@ -2134,13 +2258,48 @@ const DashboardChatPanel = ({
     }))
   }
 
+  const resolveSourcePlan = async (
+    question: string,
+    historyMessages: DashboardChatMessage[],
+    selectedSources: DashboardChatSourceId[],
+    signal?: AbortSignal,
+  ): Promise<DashboardChatSourcePlan> => {
+    const fallbackPlan = fallbackDashboardChatSourcePlan(
+      question,
+      selectedSources,
+    )
+
+    if (selectedSources.length > 0 && !selectedSources.includes('web')) {
+      return fallbackPlan
+    }
+
+    try {
+      const plan = await planDashboardChatSources({
+        question,
+        dashboardTitle: context.dashboardTitle,
+        contextSummary: buildExternalLookupContextSummary(),
+        history: usefulHistoryForPrompt(historyMessages),
+        selectedSources,
+        contentLanguage:
+          dashboard?.contentLanguage || dashboard?.studyPath?.contentLanguage,
+        signal,
+      })
+      return {
+        ...plan,
+        shouldSearchWeb: plan.selectedSources.includes('web'),
+      }
+    } catch {
+      return fallbackPlan
+    }
+  }
+
   const answerQuestion = async (
     question: string,
     pendingMessageId: string,
     historyMessages: DashboardChatMessage[],
     externalSourceIds: string[] = [],
     signal?: AbortSignal,
-    options: { searchWebFirst?: boolean } = {},
+    options: { selectedSources?: DashboardChatSourceId[] } = {},
   ) => {
     const pendingMessageIndex = messagesRef.current.findIndex(
       (message) => message.id === pendingMessageId,
@@ -2151,16 +2310,27 @@ const DashboardChatPanel = ({
         : messagesRef.current
     const effectiveHistoryMessages =
       historyMessages.length > 0 ? historyMessages : liveHistoryMessages
+    const sourcePlan = await resolveSourcePlan(
+      question,
+      effectiveHistoryMessages,
+      options.selectedSources ?? sourceSelection,
+      signal,
+    )
     const lookupSourceIds =
-      options.searchWebFirst && externalSourceIds.length === 0
+      sourcePlan.shouldSearchWeb && externalSourceIds.length === 0
         ? await runExternalSourceLookup(
             question,
             pendingMessageId,
             effectiveHistoryMessages,
+            sourcePlan.searchQuery,
           )
         : externalSourceIds
     const { sourceChunks, selectedExternalSourceIds } =
-      selectAnswerSourceChunks(question, lookupSourceIds)
+      selectAnswerSourceChunks(
+        question,
+        lookupSourceIds,
+        sourcePlan.selectedSources,
+      )
 
     try {
       const result = await askDashboardSources({
@@ -2169,6 +2339,8 @@ const DashboardChatPanel = ({
         question,
         history: usefulHistoryForPrompt(effectiveHistoryMessages),
         sourceChunks,
+        allowedSources: sourcePlan.selectedSources,
+        answerStyleHint: sourcePlan.answerStyleHint,
         contentLanguage:
           dashboard?.contentLanguage || dashboard?.studyPath?.contentLanguage,
         signal,
@@ -2227,7 +2399,7 @@ const DashboardChatPanel = ({
 
   const sendQuestion = (
     question: string,
-    options: { searchWebFirst?: boolean } = {},
+    options: { selectedSources?: DashboardChatSourceId[] } = {},
   ) => {
     const trimmed = question.trim()
     if (!trimmed) {
@@ -2297,20 +2469,13 @@ const DashboardChatPanel = ({
       }
     }
 
-    const searchWebFirst =
-      Boolean(options.searchWebFirst) && intent !== 'conversational_smalltalk'
-    const shouldSearchWeb =
-      searchWebFirst ||
-      (WEB_LOOKUP_REQUEST_PATTERN.test(trimmed) &&
-        intent !== 'conversational_smalltalk')
-
     void answerQuestion(
       trimmed,
       pendingMessage.id,
       previousMessages,
       [],
       undefined,
-      { searchWebFirst: shouldSearchWeb },
+      { selectedSources: options.selectedSources ?? sourceSelection },
     )
   }
 
@@ -2415,7 +2580,14 @@ const DashboardChatPanel = ({
       previousMessages,
       [],
       undefined,
-      { searchWebFirst: true },
+      {
+        selectedSources: Array.from(
+          new Set<DashboardChatSourceId>([
+            ...(sourceSelection.length ? sourceSelection : ['study-guide']),
+            'web',
+          ]),
+        ),
+      },
     )
     return true
   }
@@ -3126,6 +3298,16 @@ const DashboardChatPanel = ({
     )
       .map(findExternalSourceById)
       .filter((source): source is DashboardExternalSource => Boolean(source))
+    const citedWebSourceIds = new Set(
+      (message.sourceRefs || [])
+        .filter(
+          (sourceRef) =>
+            sourceRef.origin === 'web' &&
+            !isUserAddedSourceOriginType(sourceRef.originType),
+        )
+        .map((sourceRef) => sourceRef.chunkId),
+    )
+    const hasCitedWebSource = citedWebSourceIds.size > 0
 
     const sourceDomain = (source: DashboardExternalSource) => {
       try {
@@ -3140,7 +3322,7 @@ const DashboardChatPanel = ({
       }
 
       if (source.guidePageDraftStatus === 'failed') {
-        return t('chat.couldNotPreparePage')
+        return t('chat.retryPreparingPage')
       }
 
       return t('chat.preparingPage')
@@ -3174,9 +3356,11 @@ const DashboardChatPanel = ({
           <Stack spacing={0.75}>
             <Box>
               <Typography variant="caption" fontWeight={700}>
-                {sources.length === 1
-                  ? t('chat.foundSource')
-                  : t('chat.foundSources')}
+                {!hasCitedWebSource
+                  ? t('chat.webSearchedNoCitedSource')
+                  : sources.length === 1
+                    ? t('chat.foundSource')
+                    : t('chat.foundSources')}
               </Typography>
               <Stack spacing={0.5} sx={{ mt: 0.25 }}>
                 {sources.map((source) => (
@@ -3223,7 +3407,8 @@ const DashboardChatPanel = ({
                     >
                       {sourceDomain(source)}
                     </Typography>
-                    {onAddExternalSourceToGuide ? (
+                    {onAddExternalSourceToGuide &&
+                    citedWebSourceIds.has(source.id) ? (
                       <Button
                         size="small"
                         variant="outlined"
@@ -3241,10 +3426,19 @@ const DashboardChatPanel = ({
                             )
                           }
                         }}
-                        disabled={source.guidePageDraftStatus !== 'ready'}
+                        disabled={source.guidePageDraftStatus === 'pending'}
                         onClick={() => {
                           if (source.guidePageDraftStatus === 'ready') {
                             onAddExternalSourceToGuide(source)
+                            return
+                          }
+
+                          if (source.guidePageDraftStatus === 'failed') {
+                            prepareGuidePageDraftsForSources(
+                              [source.id],
+                              source.searchQuery,
+                              message.content,
+                            )
                           }
                         }}
                         sx={{
@@ -3257,6 +3451,26 @@ const DashboardChatPanel = ({
                       >
                         {addSourceLabel(source)}
                       </Button>
+                    ) : null}
+                    {source.guidePageDraftStatus === 'failed' &&
+                    source.guidePageDraftError ? (
+                      <Typography
+                        variant="caption"
+                        color="error.main"
+                        sx={{ display: 'block', mt: 0.5 }}
+                      >
+                        {source.guidePageDraftError}
+                      </Typography>
+                    ) : null}
+                    {!citedWebSourceIds.has(source.id) &&
+                    message.webLookup?.status === 'found' ? (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', mt: 0.5 }}
+                      >
+                        {t('chat.sourceNotUsedInAnswer')}
+                      </Typography>
                     ) : null}
                   </Box>
                 ))}
@@ -3438,6 +3652,30 @@ const DashboardChatPanel = ({
       fontSize: 21,
     },
   }
+
+  const sourceSelectorButtonSx = {
+    height: 32,
+    minHeight: 32,
+    minWidth: 0,
+    flex: '0 1 auto',
+    px: 0.75,
+    borderRadius: 1,
+    border: 0,
+    textTransform: 'none',
+    color: 'text.secondary',
+    bgcolor: 'transparent',
+    '&:hover': {
+      color: 'primary.main',
+      bgcolor: alpha(theme.palette.primary.main, 0.08),
+    },
+    '& .MuiButton-endIcon': {
+      ml: 0.5,
+      mr: 0,
+      '& svg': {
+        fontSize: 21,
+      },
+    },
+  } satisfies SxProps<Theme>
 
   const sendComposerButtonSx = {
     width: 34,
@@ -4933,21 +5171,88 @@ const DashboardChatPanel = ({
                 </Tooltip>
               </Stack>
               <Stack direction="row" spacing={0.25} alignItems="center">
-                <Tooltip title={t('chat.searchWebAndAnswer')}>
+                <Tooltip
+                  title={`${t('chat.answerSources')}: ${sourceSelectionLabel}`}
+                >
                   <span style={{ display: 'inline-flex' }}>
-                    <IconButton
+                    <Button
                       size="small"
-                      onClick={() =>
-                        sendQuestion(draft, { searchWebFirst: true })
+                      onClick={(event) =>
+                        setSourceMenuAnchor(event.currentTarget)
                       }
-                      disabled={!draft.trim()}
-                      aria-label={t('chat.searchWebAndAnswer')}
-                      sx={composerActionButtonSx}
+                      aria-label={`${t('chat.answerSources')}: ${sourceSelectionLabel}`}
+                      aria-haspopup="menu"
+                      aria-expanded={sourceMenuOpen ? 'true' : undefined}
+                      endIcon={<SearchIcon fontSize="small" />}
+                      sx={sourceSelectorButtonSx}
                     >
-                      <SearchIcon fontSize="small" />
-                    </IconButton>
+                      <Typography
+                        component="span"
+                        variant="caption"
+                        noWrap
+                        sx={{
+                          maxWidth: {
+                            xs: 104,
+                            sm: 132,
+                          },
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        {sourceSelectionButtonLabel}
+                      </Typography>
+                    </Button>
                   </span>
                 </Tooltip>
+                <Menu
+                  anchorEl={sourceMenuAnchor}
+                  open={sourceMenuOpen}
+                  onClose={() => setSourceMenuAnchor(null)}
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  PaperProps={{
+                    sx: {
+                      minWidth: 204,
+                      mt: -0.5,
+                      borderRadius: 1.5,
+                      border: 1,
+                      borderColor: 'divider',
+                      boxShadow: `0 12px 32px ${alpha(
+                        theme.palette.common.black,
+                        0.16,
+                      )}`,
+                    },
+                  }}
+                  MenuListProps={{
+                    dense: true,
+                    sx: { py: 0.35 },
+                  }}
+                  keepMounted
+                >
+                  {DASHBOARD_CHAT_SOURCE_OPTIONS.map((source) => (
+                    <MenuItem
+                      key={source}
+                      onClick={() => toggleSourceSelection(source)}
+                      sx={{
+                        minHeight: 36,
+                        gap: 0.75,
+                        px: 1,
+                        py: 0.25,
+                        fontSize: '0.9rem',
+                      }}
+                    >
+                      <Checkbox
+                        size="small"
+                        checked={sourceSelection.includes(source)}
+                        tabIndex={-1}
+                        disableRipple
+                        sx={{ p: 0.25 }}
+                      />
+                      {t(getDashboardChatSourceLabelKey(source))}
+                    </MenuItem>
+                  ))}
+                </Menu>
                 <Tooltip
                   title={
                     isHostedAi ? (

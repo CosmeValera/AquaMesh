@@ -68,6 +68,11 @@ const MAX_EXTRACT_URLS = 3;
 const OFFICIAL_DOMAIN_HINTS = ["docs", "developer", "learn", "help", "support"];
 const LOW_QUALITY_TITLE_PATTERNS =
   /alternative|alternatives|market share|reviews?|pricing|competitors?|software comparison|top \d+/i;
+const NON_TEXT_SOURCE_DOMAINS = [
+  "instagram.com",
+  "pinterest.com",
+  "tiktok.com",
+];
 const QUERY_STOPWORDS = new Set([
   "about",
   "and",
@@ -80,7 +85,10 @@ const QUERY_STOPWORDS = new Set([
   "from",
   "guide",
   "into",
+  "is",
   "lesson",
+  "official",
+  "overview",
   "or",
   "similar",
   "source",
@@ -385,11 +393,29 @@ const isRejectedSource = (
   );
 
   return (
+    NON_TEXT_SOURCE_DOMAINS.some(
+      (blocked) => domain === blocked || domain.endsWith(`.${blocked}`),
+    ) ||
     rejectedUrls.includes(normalizedUrl) ||
     rejectedDomains.some(
       (rejected) => domain === rejected || domain.endsWith(`.${rejected}`),
     )
   );
+};
+
+const extractedTextCoversQuestion = (
+  text: string,
+  questionTerms: string[],
+): boolean => {
+  if (questionTerms.length === 0) {
+    return true;
+  }
+
+  const normalizedText = text.toLowerCase();
+  const coveredTerms = questionTerms.filter((term) =>
+    normalizedText.includes(term),
+  );
+  return coveredTerms.length >= Math.min(2, questionTerms.length);
 };
 
 const qualityScoreCandidate = (
@@ -621,6 +647,9 @@ const searchDashboardSource = async (
   }
 
   const missingTerms = selectMissingTerms(request);
+  const questionTerms = extractQuestionTerms(
+    request.searchQuery || request.question,
+  ).slice(0, 8);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), SEARCH_TIMEOUT_MS);
 
@@ -656,7 +685,13 @@ const searchDashboardSource = async (
     const sources = selectedCandidates
       .map((candidate): DashboardSource | null => {
         const extracted = extractedByUrl.get(normalizeUrl(candidate.url));
-        if (!extracted) {
+        if (
+          !extracted ||
+          !extractedTextCoversQuestion(
+            `${candidate.title} ${candidate.snippet} ${extracted.text}`,
+            questionTerms,
+          )
+        ) {
           return null;
         }
 

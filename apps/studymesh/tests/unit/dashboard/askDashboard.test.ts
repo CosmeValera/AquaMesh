@@ -68,4 +68,30 @@ describe('askDashboardSources', () => {
     expect(result.answerBasis).toEqual(['web'])
     expect(result.contextSupport).toBe('direct')
   })
+
+  it('does not claim a web basis when the answer cites no web source', async () => {
+    vi.mocked(callStrongAiModel).mockResolvedValue('An uncited answer.')
+
+    const result = await askDashboardSources({
+      dashboardTitle: 'Anatomy',
+      contextText: '[1] Anatomy source\nRelevant anatomy content.',
+      question: 'List the bones.',
+      history: [],
+      sourceChunks: [
+        {
+          id: 'web-source-1',
+          title: 'Anatomy source',
+          type: 'web source',
+          text: 'Relevant anatomy content.',
+          origin: 'web',
+          url: 'https://example.com/anatomy',
+        },
+      ],
+      allowedSources: ['web'],
+    })
+
+    expect(result.sourceRefs).toEqual([])
+    expect(result.answerBasis).toEqual([])
+    expect(result.contextSupport).toBe('none')
+  })
 })

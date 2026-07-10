@@ -43,6 +43,11 @@ const VALID_SOURCE_IDS: DashboardChatSourceId[] = [
 const WEB_LOOKUP_CUE_PATTERN =
   /\b(?:search|look up|lookup|internet|web|online|latest|current|up[- ]?to[- ]?date|source|sources|citation|cite)\b/i
 
+const STUDY_GUIDE_SCOPE_PATTERN =
+  /\b(?:(?:in|from|according to|mentioned in|covered in|inside) (?:the |this )?(?:study )?(?:guide|dashboard|notes|material|context)|(?:guide|dashboard|notes|material|context) (?:mentions?|says?|covers?|lists?|includes?)|(?:en|segun|según|de|mencionad[oa]s? en) (?:la |el |esta |este )?(?:guia|guía|material|contexto|panel|apuntes))\b/i
+const MIXED_CONTEXT_CUE_PATTERN =
+  /\b(?:compare|comparison|difference|missing|omits?|outside|beyond|standard|complete|full|compara|comparación|diferencia|faltan?|omite|fuera|complet[oa]s?)\b/i
+
 const extractJsonObject = (value: string): string => {
   const fenced = value.match(/```(?:json)?\s*([\s\S]*?)```/i)
   const candidate = fenced ? fenced[1] : value
@@ -105,6 +110,41 @@ export const fallbackDashboardChatSourcePlan = (
     answerStyleHint:
       'Respect the student requested format and avoid unnecessary extra sections.',
   }
+}
+
+export const applyDashboardChatSourcePolicy = (
+  question: string,
+  selectedSources: DashboardChatSourceId[],
+  plan: DashboardChatSourcePlan,
+): DashboardChatSourcePlan => {
+  if (selectedSources.length > 0) {
+    return plan
+  }
+
+  if (STUDY_GUIDE_SCOPE_PATTERN.test(question)) {
+    const needsGeneral = MIXED_CONTEXT_CUE_PATTERN.test(question)
+    const needsWeb = WEB_LOOKUP_CUE_PATTERN.test(question)
+    return {
+      ...plan,
+      selectedSources: [
+        'study-guide',
+        ...(needsGeneral ? (['general'] as const) : []),
+        ...(needsWeb ? (['web'] as const) : []),
+      ],
+      shouldSearchWeb: needsWeb,
+    }
+  }
+
+  if (plan.selectedSources.includes('web')) {
+    return {
+      ...plan,
+      selectedSources: Array.from(
+        new Set<DashboardChatSourceId>([...plan.selectedSources, 'general']),
+      ),
+    }
+  }
+
+  return plan
 }
 
 const buildPlannerPrompt = ({
@@ -253,18 +293,22 @@ export const planDashboardChatSources = async (
     .replace(/\s+/g, ' ')
     .trim()
 
-  return {
-    selectedSources: selectedSources.length
-      ? selectedSources
-      : fallback.selectedSources,
-    shouldSearchWeb:
-      Boolean(parsed.shouldSearchWeb) &&
-      (selectedSources.length
-        ? selectedSources.includes('web')
-        : fallback.selectedSources.includes('web')),
-    searchQuery: searchQuery || fallback.searchQuery,
-    answerStyleHint: String(
-      parsed.answerStyleHint || fallback.answerStyleHint,
-    ).trim(),
-  }
+  return applyDashboardChatSourcePolicy(
+    options.question,
+    options.selectedSources,
+    {
+      selectedSources: selectedSources.length
+        ? selectedSources
+        : fallback.selectedSources,
+      shouldSearchWeb:
+        Boolean(parsed.shouldSearchWeb) &&
+        (selectedSources.length
+          ? selectedSources.includes('web')
+          : fallback.selectedSources.includes('web')),
+      searchQuery: searchQuery || fallback.searchQuery,
+      answerStyleHint: String(
+        parsed.answerStyleHint || fallback.answerStyleHint,
+      ).trim(),
+    },
+  )
 }

@@ -301,10 +301,6 @@ const deriveAnswerBasis = (
     basis.add('study-guide')
   })
 
-  if (basis.size === 0 && !allowedSources.includes('general')) {
-    basis.add(allowedSources.includes('web') ? 'web' : 'study-guide')
-  }
-
   if (
     allowedSources.includes('general') &&
     (basis.size === 0 || isGeneralKnowledgeCue(answer))

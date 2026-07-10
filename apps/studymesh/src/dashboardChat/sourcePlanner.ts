@@ -135,6 +135,20 @@ export const applyDashboardChatSourcePolicy = (
     }
   }
 
+  if (WEB_LOOKUP_CUE_PATTERN.test(question)) {
+    return {
+      ...plan,
+      selectedSources: Array.from(
+        new Set<DashboardChatSourceId>([
+          ...plan.selectedSources,
+          'general',
+          'web',
+        ]),
+      ),
+      shouldSearchWeb: true,
+    }
+  }
+
   if (plan.selectedSources.includes('web')) {
     return {
       ...plan,

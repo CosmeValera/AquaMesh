@@ -67,8 +67,9 @@ const SEARCH_CANDIDATE_COUNT = 12;
 const MAX_EXTRACT_URLS = 3;
 const OFFICIAL_DOMAIN_HINTS = ["docs", "developer", "learn", "help", "support"];
 const LOW_QUALITY_TITLE_PATTERNS =
-  /alternative|alternatives|market share|reviews?|pricing|competitors?|software comparison|top \d+/i;
+  /alternative|alternatives|market share|reviews?|pricing|competitors?|software comparison/i;
 const NON_TEXT_SOURCE_DOMAINS = [
+  "facebook.com",
   "instagram.com",
   "pinterest.com",
   "tiktok.com",

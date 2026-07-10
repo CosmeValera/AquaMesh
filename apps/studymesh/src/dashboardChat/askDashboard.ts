@@ -59,6 +59,7 @@ export interface DashboardAnswerSourceRef {
 
 const STRONG_MODEL_CHAT_TIMEOUT_MS = 45000
 const STRONG_CHAT_RECENT_HISTORY_MESSAGES = 4
+const MAX_EXACT_LIST_COUNT = 200
 
 type ChatMemoryProvider = 'hosted' | 'local' | 'gemini' | 'cerebras' | string
 
@@ -121,7 +122,7 @@ const formatAllowedSources = (allowedSources: DashboardChatSourceId[]) => {
   }
 
   if (!hasStudyGuide && hasGeneral && !hasWeb) {
-    return 'Use general knowledge only. Do not cite or rely on the Study Guide, dashboard context, added sources, or web sources.'
+    return 'Use general knowledge only. Answer the student directly. Do not cite or rely on the Study Guide, dashboard context, added sources, web sources, or previous chat. Do not describe the dashboard, guide, source selection, or prior questions unless the student asks about them.'
   }
 
   if (!hasStudyGuide && !hasGeneral && hasWeb) {
@@ -167,6 +168,7 @@ Rules:
 - Prefer the provided dashboard, study, and source context when it helps.
 - ${formatAllowedSources(allowedSources)}
 - Respect the student's requested answer shape and verbosity. If they ask for a plain list, exact count, table, or no explanation, follow that format without extra teaching sections.
+- For a request for exactly N entries, return exactly N distinct entries in a numbered list. Do not use headings, category totals, ranges, duplicate entries, or follow-up questions. Identify otherwise identical entries with their standard number, position, or side.
 ${answerStyleHint ? `- Extra answer style instruction: ${answerStyleHint}` : ''}
 - ${formatCoverageFallbackRule(allowedSources)}
 - If the student message is conversational smalltalk, a greeting, thanks, a casual acknowledgement, or a minor typo of those, answer briefly and naturally. Do not cite sources for smalltalk.
@@ -214,6 +216,62 @@ const cleanAnswer = (answer: string): AskDashboardResult['answer'] => {
   return stripLeakedSourcesJson(answer).trim()
 }
 
+const getExactListCount = (question: string): number | null => {
+  const countMatch = question.match(
+    /\b(?:list|name|names|give|tell|provide|write|enumerate)\b[\s\S]{0,80}?\b(\d{1,3})\b|\b(\d{1,3})\b[\s\S]{0,80}?\b(?:name|names|items|examples|bones?|muscles?|systems?|terms?)\b/i,
+  )
+  const count = Number(countMatch?.[1] || countMatch?.[2])
+
+  return Number.isInteger(count) && count >= 2 && count <= MAX_EXACT_LIST_COUNT
+    ? count
+    : null
+}
+
+const isValidExactListAnswer = (answer: string, expectedCount: number) => {
+  const entries = answer
+    .split('\n')
+    .map((line) => line.match(/^\s*(\d{1,3})[.)]\s+(.+?)\s*$/))
+
+  if (entries.length !== expectedCount || entries.some((entry) => !entry)) {
+    return false
+  }
+
+  const names = new Set<string>()
+  return entries.every((entry, index) => {
+    const [, position, value] = entry as RegExpMatchArray
+    const normalized = value
+      .replace(/\s*\[\d{1,3}]\s*/g, ' ')
+      .replace(/[.,;:]+$/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase()
+
+    if (
+      Number(position) !== index + 1 ||
+      !normalized ||
+      names.has(normalized)
+    ) {
+      return false
+    }
+
+    names.add(normalized)
+    return true
+  })
+}
+
+const buildExactListRepairPrompt = (
+  prompt: string,
+  expectedCount: number,
+): string => `${prompt}
+
+Your previous response failed the exact-list requirement. Replace it now.
+- Return only a numbered list from 1 to ${expectedCount}.
+- Every line must contain one distinct, unambiguous entry.
+- No headings, grouping, totals, explanations, caveats, duplicate entries, or follow-up question.
+- Keep every original source restriction. Do not fill gaps from unallowed sources.
+
+Replacement answer:`
+
 const callStrongModelText = async (
   provider: 'gemini' | 'cerebras',
   apiToken: string,
@@ -242,6 +300,62 @@ const callStrongModelText = async (
 
     throw error
   }
+}
+
+const callDashboardChatModel = async ({
+  prompt,
+  outputLanguage,
+  signal,
+}: {
+  prompt: string
+  outputLanguage: StudyMeshLanguageCode
+  signal?: AbortSignal
+}): Promise<string> => {
+  const settings = readQuickCreateAiSettings()
+  const provider = settings.provider || 'hosted'
+
+  if (provider === 'hosted') {
+    return callHostedAiModel({
+      surface: 'chat',
+      model: STRONG_AI_PROVIDERS.cerebras.defaultModel,
+      outputLanguage,
+      parts: [{ text: prompt }],
+      timeoutMs: STRONG_MODEL_CHAT_TIMEOUT_MS,
+      signal,
+    })
+  }
+
+  if (provider === 'local') {
+    if (!isLocalAiContentLanguageSupported(outputLanguage)) {
+      throw new Error(
+        'Google Local AI only supports English, Spanish, and Japanese output in StudyMesh. Choose one of those languages, or switch to Hosted AI or your own provider key.',
+      )
+    }
+    return callLocalLanguageModel(prompt, {
+      outputLanguage,
+      promptType: 'notes',
+      stepLabel: 'Ask dashboard sources',
+      signal,
+    })
+  }
+
+  if (isStrongAiProvider(provider)) {
+    const credentials = resolveQuickCreateAiCredentials(provider)
+    if (!credentials.apiToken) {
+      throw new Error(
+        `${STRONG_AI_PROVIDERS[provider].modeLabel} mode needs a configured API key.`,
+      )
+    }
+    return callStrongModelText(
+      provider,
+      credentials.apiToken,
+      credentials.model,
+      prompt,
+      signal,
+    )
+  }
+
+  throw new Error('Choose a supported AI mode before asking the dashboard.')
 }
 
 const extractUsedCitationNumbers = (answer: string): Set<number> => {
@@ -325,8 +439,7 @@ const deriveContextSupport = (
 export const askDashboardSources = async (
   options: AskDashboardOptions,
 ): Promise<AskDashboardResult> => {
-  const settings = readQuickCreateAiSettings()
-  const provider = settings.provider || 'hosted'
+  const provider = readQuickCreateAiSettings().provider || 'hosted'
   const resolvedLanguage = resolveContentLanguage({
     text: options.question,
     inheritedLanguage: options.contentLanguage,
@@ -336,48 +449,26 @@ export const askDashboardSources = async (
     memory: selectChatMemory(options.history, provider),
     outputLanguage: resolvedLanguage.language,
   })
-  let answer: string
-
-  if (provider === 'hosted') {
-    answer = await callHostedAiModel({
-      surface: 'chat',
-      model: STRONG_AI_PROVIDERS.cerebras.defaultModel,
-      outputLanguage: resolvedLanguage.language,
-      parts: [{ text: prompt }],
-      timeoutMs: STRONG_MODEL_CHAT_TIMEOUT_MS,
-      signal: options.signal,
-    })
-  } else if (provider === 'local') {
-    if (!isLocalAiContentLanguageSupported(resolvedLanguage.language)) {
-      throw new Error(
-        'Google Local AI only supports English, Spanish, and Japanese output in StudyMesh. Choose one of those languages, or switch to Hosted AI or your own provider key.',
-      )
-    }
-    answer = await callLocalLanguageModel(prompt, {
-      outputLanguage: resolvedLanguage.language,
-      promptType: 'notes',
-      stepLabel: 'Ask dashboard sources',
-      signal: options.signal,
-    })
-  } else if (isStrongAiProvider(provider)) {
-    const credentials = resolveQuickCreateAiCredentials(provider)
-    if (!credentials.apiToken) {
-      throw new Error(
-        `${STRONG_AI_PROVIDERS[provider].modeLabel} mode needs a configured API key.`,
-      )
-    }
-    answer = await callStrongModelText(
-      provider,
-      credentials.apiToken,
-      credentials.model,
+  let cleanedAnswer = cleanAnswer(
+    await callDashboardChatModel({
       prompt,
-      options.signal,
+      outputLanguage: resolvedLanguage.language,
+      signal: options.signal,
+    }),
+  )
+  const exactListCount = getExactListCount(options.question)
+  if (
+    exactListCount &&
+    !isValidExactListAnswer(cleanedAnswer, exactListCount)
+  ) {
+    cleanedAnswer = cleanAnswer(
+      await callDashboardChatModel({
+        prompt: buildExactListRepairPrompt(prompt, exactListCount),
+        outputLanguage: resolvedLanguage.language,
+        signal: options.signal,
+      }),
     )
-  } else {
-    throw new Error('Choose a supported AI mode before asking the dashboard.')
   }
-
-  const cleanedAnswer = cleanAnswer(answer)
   const usedCitationNumbers = extractUsedCitationNumbers(cleanedAnswer)
   const sourceRefs = options.sourceChunks
     .map(sourceRefFromChunk)

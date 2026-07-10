@@ -94,4 +94,22 @@ describe('askDashboardSources', () => {
     expect(result.answerBasis).toEqual([])
     expect(result.contextSupport).toBe('none')
   })
+
+  it('repairs invalid exact lists once before showing them', async () => {
+    vi.mocked(callStrongAiModel)
+      .mockResolvedValueOnce('1. Humerus\n1. Humerus')
+      .mockResolvedValueOnce('1. Humerus\n2. Radius')
+
+    const result = await askDashboardSources({
+      dashboardTitle: 'Anatomy',
+      contextText: '',
+      question: 'Tell me the names of 2 bones.',
+      history: [],
+      sourceChunks: [],
+      allowedSources: ['general'],
+    })
+
+    expect(result.answer).toBe('1. Humerus\n2. Radius')
+    expect(callStrongAiModel).toHaveBeenCalledTimes(2)
+  })
 })

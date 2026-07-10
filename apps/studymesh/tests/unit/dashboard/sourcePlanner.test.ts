@@ -38,6 +38,19 @@ describe('dashboard chat source policy', () => {
     ).toEqual(['web', 'general'])
   })
 
+  it('uses Web Search in Auto when the student explicitly asks to search online', () => {
+    expect(
+      applyDashboardChatSourcePolicy(
+        'Search online for 100 skeletal muscle names.',
+        [],
+        plan(['general']),
+      ),
+    ).toMatchObject({
+      selectedSources: ['general', 'web'],
+      shouldSearchWeb: true,
+    })
+  })
+
   it('combines guide and general knowledge for comparisons beyond the guide', () => {
     expect(
       applyDashboardChatSourcePolicy(

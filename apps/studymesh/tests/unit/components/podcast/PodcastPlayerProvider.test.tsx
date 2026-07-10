@@ -152,6 +152,39 @@ describe('PodcastPlayerProvider', () => {
     expect(window.HTMLMediaElement.prototype.pause).not.toHaveBeenCalled()
   })
 
+  it('auto-claims a new podcast page when no mini-player is pinned', async () => {
+    const firstPodcast = createPodcast('Podcast: Biology')
+    const secondPodcast = createPodcast('Podcast: Algebra')
+    const { rerender } = renderPodcastBlock(firstPodcast)
+
+    await waitFor(() => {
+      expect(getHostedAiPodcastAudioUrl).toHaveBeenCalledWith(
+        'user-1/guide-1/podcast-biology.mp3',
+      )
+    })
+
+    rerender(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <PodcastPlayerProvider>
+          <StudyBlockView type="PodcastBlock" props={{ podcast: secondPodcast }} />
+        </PodcastPlayerProvider>
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect(getHostedAiPodcastAudioUrl).toHaveBeenCalledWith(
+        'user-1/guide-1/podcast-algebra.mp3',
+      )
+    })
+    expect(screen.queryByTestId('floating-podcast-player')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Switch to this podcast' }),
+    ).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open player' })).toBeEnabled()
+    })
+  })
+
   it('lets the mini-player move around the viewport', async () => {
     const rectSpy = vi.spyOn(
       window.HTMLElement.prototype,
@@ -236,7 +269,7 @@ describe('PodcastPlayerProvider', () => {
     expect(screen.queryByTestId('floating-podcast-player')).not.toBeInTheDocument()
   })
 
-  it('preserves the current mini-player when a different podcast page opens', async () => {
+  it('preserves the current mini-player and prepares a different podcast page', async () => {
     const firstPodcast = createPodcast('Podcast: Biology')
     const secondPodcast = createPodcast('Podcast: Algebra')
     const { rerender } = renderPodcastBlock(firstPodcast)
@@ -261,6 +294,10 @@ describe('PodcastPlayerProvider', () => {
     expect(
       screen.getByRole('button', { name: 'Switch to this podcast' }),
     ).toBeVisible()
-    expect(getHostedAiPodcastAudioUrl).toHaveBeenCalledTimes(1)
+    await waitFor(() => {
+      expect(getHostedAiPodcastAudioUrl).toHaveBeenCalledWith(
+        'user-1/guide-1/podcast-algebra.mp3',
+      )
+    })
   })
 })

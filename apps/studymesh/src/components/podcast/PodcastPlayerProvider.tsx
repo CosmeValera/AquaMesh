@@ -41,6 +41,15 @@ interface OpenPodcastOptions {
   audioUrl?: string
 }
 
+interface PodcastSessionSnapshot {
+  podcast: HostedAiPodcast
+  audioUrl: string
+  status: PodcastPlayerStatus
+  currentTime: number
+  duration: number
+  error: string
+}
+
 interface MiniPlayerPosition {
   x: number
   y: number
@@ -54,6 +63,7 @@ interface PodcastPlayerContextValue {
   duration: number
   error: string
   miniPlayerVisible: boolean
+  getPodcastSession: (podcast: HostedAiPodcast) => PodcastSessionSnapshot
   preparePodcast: (options: OpenPodcastOptions) => boolean
   playPodcast: (options: OpenPodcastOptions) => void
   switchPodcast: (options: OpenPodcastOptions) => void
@@ -70,6 +80,17 @@ interface PodcastPlayerContextValue {
 const PodcastPlayerContext = createContext<PodcastPlayerContextValue | null>(
   null,
 )
+
+const createIdlePodcastSession = (
+  podcast: HostedAiPodcast,
+): PodcastSessionSnapshot => ({
+  podcast,
+  audioUrl: '',
+  status: 'idle',
+  currentTime: 0,
+  duration: 0,
+  error: '',
+})
 
 const formatTime = (value: number): string => {
   if (!Number.isFinite(value) || value <= 0) {
@@ -503,11 +524,15 @@ export const PodcastPagePlayer = ({
   const activePodcast = podcastPlayer?.activePodcast ?? null
   const isActive = activePodcast?.audioPath === podcast.audioPath
   const hasDifferentActive = Boolean(activePodcast && !isActive)
-  const status = isActive ? podcastPlayer?.status ?? 'idle' : 'idle'
-  const currentTime = isActive ? podcastPlayer?.currentTime ?? 0 : 0
-  const duration = isActive ? podcastPlayer?.duration ?? 0 : 0
-  const error = isActive ? podcastPlayer?.error ?? '' : ''
-  const canControl = Boolean(podcastPlayer && isActive && status === 'ready')
+  const pageSession =
+    podcastPlayer?.getPodcastSession(podcast) ?? createIdlePodcastSession(podcast)
+  const status = isActive ? podcastPlayer?.status ?? 'idle' : pageSession.status
+  const currentTime = isActive
+    ? podcastPlayer?.currentTime ?? 0
+    : pageSession.currentTime
+  const duration = isActive ? podcastPlayer?.duration ?? 0 : pageSession.duration
+  const error = isActive ? podcastPlayer?.error ?? '' : pageSession.error
+  const canControl = Boolean(podcastPlayer && status === 'ready')
 
   const compactAction = hasDifferentActive ? (
     <Button
@@ -662,9 +687,129 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [miniPlayerVisible, setMiniPlayerVisible] = useState(false)
   const [miniPlayerPosition, setMiniPlayerPosition] =
     useState<MiniPlayerPosition | null>(null)
+  const [podcastSessions, setPodcastSessions] = useState<
+    Record<string, PodcastSessionSnapshot>
+  >({})
+  const activePodcastRef = useRef<HostedAiPodcast | null>(null)
+  const podcastSessionsRef = useRef<Record<string, PodcastSessionSnapshot>>({})
+  const podcastSessionRequestsRef = useRef(new Set<string>())
   const pagePodcastCountsRef = useRef(new Map<string, number>())
   const [pagePodcastAudioPaths, setPagePodcastAudioPaths] = useState<string[]>(
     [],
+  )
+
+  useEffect(() => {
+    activePodcastRef.current = activePodcast
+  }, [activePodcast])
+
+  useEffect(() => {
+    podcastSessionsRef.current = podcastSessions
+  }, [podcastSessions])
+
+  const updatePodcastSession = useCallback(
+    (
+      podcast: HostedAiPodcast,
+      updater: (
+        session: PodcastSessionSnapshot,
+      ) => PodcastSessionSnapshot,
+    ) => {
+      const audioPath = podcast.audioPath
+      setPodcastSessions((sessions) => {
+        const current = sessions[audioPath] ?? createIdlePodcastSession(podcast)
+        const next = updater({ ...current, podcast })
+        if (
+          current.podcast === next.podcast &&
+          current.audioUrl === next.audioUrl &&
+          current.status === next.status &&
+          current.currentTime === next.currentTime &&
+          current.duration === next.duration &&
+          current.error === next.error
+        ) {
+          return sessions
+        }
+
+        return { ...sessions, [audioPath]: next }
+      })
+    },
+    [],
+  )
+
+  const getPodcastSession = useCallback(
+    (podcast: HostedAiPodcast): PodcastSessionSnapshot =>
+      podcastSessions[podcast.audioPath] ?? createIdlePodcastSession(podcast),
+    [podcastSessions],
+  )
+
+  const preparePodcastAudio = useCallback(
+    (podcast: HostedAiPodcast, providedAudioUrl?: string) => {
+      const audioPath = podcast.audioPath
+      const currentSession = podcastSessionsRef.current[audioPath]
+      if (providedAudioUrl) {
+        updatePodcastSession(podcast, (session) => ({
+          ...session,
+          audioUrl: providedAudioUrl,
+          status: 'ready',
+          error: '',
+        }))
+        if (activePodcastRef.current?.audioPath === audioPath) {
+          setAudioUrl(providedAudioUrl)
+          setStatus('ready')
+          setError('')
+        }
+        return
+      }
+
+      if (
+        currentSession?.status === 'loading' ||
+        (currentSession?.status === 'ready' && currentSession.audioUrl)
+      ) {
+        return
+      }
+
+      if (podcastSessionRequestsRef.current.has(audioPath)) {
+        return
+      }
+
+      podcastSessionRequestsRef.current.add(audioPath)
+      updatePodcastSession(podcast, (session) => ({
+        ...session,
+        status: 'loading',
+        error: '',
+      }))
+
+      getHostedAiPodcastAudioUrl(audioPath)
+        .then((signedUrl) => {
+          podcastSessionRequestsRef.current.delete(audioPath)
+          updatePodcastSession(podcast, (session) => ({
+            ...session,
+            audioUrl: signedUrl,
+            status: 'ready',
+            error: '',
+          }))
+          if (activePodcastRef.current?.audioPath === audioPath) {
+            setAudioUrl(signedUrl)
+            setStatus('ready')
+            setError('')
+          }
+        })
+        .catch((loadError) => {
+          podcastSessionRequestsRef.current.delete(audioPath)
+          const nextError =
+            loadError instanceof Error
+              ? loadError.message
+              : t('podcastPlayer.loadError')
+          updatePodcastSession(podcast, (session) => ({
+            ...session,
+            status: 'error',
+            error: nextError,
+          }))
+          if (activePodcastRef.current?.audioPath === audioPath) {
+            setStatus('error')
+            setError(nextError)
+          }
+        })
+    },
+    [t, updatePodcastSession],
   )
 
   const stopPodcast = useCallback(() => {
@@ -678,6 +823,9 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     setError('')
     setRequestedPlayback(false)
     setMiniPlayerVisible(false)
+    setPodcastSessions({})
+    podcastSessionsRef.current = {}
+    podcastSessionRequestsRef.current.clear()
   }, [])
 
   const startPodcast = useCallback(
@@ -686,13 +834,26 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       options: { autoplay: boolean; showMini: boolean; force: boolean },
     ): boolean => {
       const samePodcast = activePodcast?.audioPath === podcast.audioPath
-      if (activePodcast && !samePodcast && !options.force) {
+      const activePageMounted = activePodcast
+        ? pagePodcastCountsRef.current.has(activePodcast.audioPath)
+        : false
+      const canClaimActiveSlot =
+        !activePodcast ||
+        samePodcast ||
+        options.force ||
+        (!miniPlayerVisible && !activePageMounted)
+
+      preparePodcastAudio(podcast, providedAudioUrl)
+
+      if (activePodcast && !samePodcast && !canClaimActiveSlot) {
         return false
       }
 
       if (samePodcast) {
-        if (providedAudioUrl && !audioUrl) {
-          setAudioUrl(providedAudioUrl)
+        const session = podcastSessionsRef.current[podcast.audioPath]
+        if ((providedAudioUrl || session?.audioUrl) && !audioUrl) {
+          const nextAudioUrl = providedAudioUrl || session?.audioUrl || ''
+          setAudioUrl(nextAudioUrl)
           setStatus('ready')
         }
         setError('')
@@ -706,18 +867,25 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       audioRef.current?.pause()
+      const nextSession = podcastSessionsRef.current[podcast.audioPath]
+      const nextAudioUrl = providedAudioUrl || nextSession?.audioUrl || ''
+      const nextStatus: PodcastPlayerStatus = nextAudioUrl
+        ? 'ready'
+        : nextSession?.status === 'error'
+          ? 'error'
+          : 'loading'
       setActivePodcast(podcast)
-      setAudioUrl(providedAudioUrl || '')
-      setStatus(providedAudioUrl ? 'ready' : 'loading')
+      setAudioUrl(nextAudioUrl)
+      setStatus(nextStatus)
       setIsPlaying(false)
-      setCurrentTime(0)
-      setDuration(0)
-      setError('')
+      setCurrentTime(nextSession?.currentTime ?? 0)
+      setDuration(nextSession?.duration ?? 0)
+      setError(nextSession?.error ?? '')
       setRequestedPlayback(options.autoplay)
       setMiniPlayerVisible(options.showMini)
       return true
     },
-    [activePodcast, audioUrl],
+    [activePodcast, audioUrl, miniPlayerVisible, preparePodcastAudio],
   )
 
   const preparePodcast = useCallback(
@@ -782,15 +950,23 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     audio.pause()
   }, [status, t])
 
-  const seek = useCallback((deltaSeconds: number) => {
-    const audio = audioRef.current
-    if (!audio) {
-      return
-    }
+  const seek = useCallback(
+    (deltaSeconds: number) => {
+      const audio = audioRef.current
+      const podcast = activePodcastRef.current
+      if (!audio || !podcast) {
+        return
+      }
 
-    audio.currentTime = Math.max(0, audio.currentTime + deltaSeconds)
-    setCurrentTime(audio.currentTime)
-  }, [])
+      audio.currentTime = Math.max(0, audio.currentTime + deltaSeconds)
+      setCurrentTime(audio.currentTime)
+      updatePodcastSession(podcast, (session) => ({
+        ...session,
+        currentTime: audio.currentTime,
+      }))
+    },
+    [updatePodcastSession],
+  )
 
   const registerPagePodcast = useCallback((podcast: HostedAiPodcast) => {
     const audioPath = podcast.audioPath
@@ -815,38 +991,29 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [])
 
   useEffect(() => {
-    if (!activePodcast || audioUrl) {
+    if (!activePodcast) {
       return
     }
 
-    let cancelled = false
-    setStatus('loading')
-    getHostedAiPodcastAudioUrl(activePodcast.audioPath)
-      .then((signedUrl) => {
-        if (cancelled) {
-          return
-        }
-
-        setAudioUrl(signedUrl)
-        setStatus('ready')
-      })
-      .catch((loadError) => {
-        if (cancelled) {
-          return
-        }
-
-        setStatus('error')
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : t('podcastPlayer.loadError'),
-        )
-      })
-
-    return () => {
-      cancelled = true
+    const session = podcastSessions[activePodcast.audioPath]
+    if (session?.audioUrl && !audioUrl) {
+      setAudioUrl(session.audioUrl)
+      setStatus('ready')
+      setError('')
+      return
     }
-  }, [activePodcast, audioUrl, t])
+
+    if (session?.status === 'error') {
+      setStatus('error')
+      setError(session.error)
+      return
+    }
+
+    if (!audioUrl) {
+      setStatus('loading')
+      preparePodcastAudio(activePodcast)
+    }
+  }, [activePodcast, audioUrl, podcastSessions, preparePodcastAudio])
 
   useEffect(() => {
     if (!location.pathname.startsWith('/workspace/')) {
@@ -858,7 +1025,7 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     if (
       activePodcast &&
       !miniPlayerVisible &&
-      !pagePodcastAudioPaths.includes(activePodcast.audioPath)
+      !pagePodcastCountsRef.current.has(activePodcast.audioPath)
     ) {
       stopPodcast()
     }
@@ -884,6 +1051,7 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       duration,
       error,
       miniPlayerVisible,
+      getPodcastSession,
       preparePodcast,
       playPodcast,
       switchPodcast,
@@ -902,6 +1070,7 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       currentTime,
       duration,
       error,
+      getPodcastSession,
       hideMiniPlayer,
       isPlaying,
       miniPlayerVisible,
@@ -927,12 +1096,24 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           ref={audioRef}
           src={audioUrl || undefined}
           onLoadedMetadata={(event) => {
-            setDuration(event.currentTarget.duration || 0)
+            const nextDuration = event.currentTarget.duration || 0
+            setDuration(nextDuration)
             setStatus('ready')
+            updatePodcastSession(activePodcast, (session) => ({
+              ...session,
+              duration: nextDuration,
+              status: 'ready',
+              error: '',
+            }))
           }}
-          onTimeUpdate={(event) =>
-            setCurrentTime(event.currentTarget.currentTime)
-          }
+          onTimeUpdate={(event) => {
+            const nextCurrentTime = event.currentTarget.currentTime
+            setCurrentTime(nextCurrentTime)
+            updatePodcastSession(activePodcast, (session) => ({
+              ...session,
+              currentTime: nextCurrentTime,
+            }))
+          }}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           onEnded={() => setIsPlaying(false)}
@@ -940,6 +1121,11 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
             setStatus('error')
             setError(t('podcastPlayer.audioError'))
             setIsPlaying(false)
+            updatePodcastSession(activePodcast, (session) => ({
+              ...session,
+              status: 'error',
+              error: t('podcastPlayer.audioError'),
+            }))
           }}
           sx={{ display: 'none' }}
         />

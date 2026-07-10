@@ -49,6 +49,8 @@ export interface StudyGuideQuickStart extends StudyGuideQuickStartVariant {
   forcedBridge?: StudyGuideQuickStartVariant
 }
 
+export type StudyGuideQuickStartView = 'default' | 'context'
+
 export interface StudyPathContainerState {
   pathId: string
   title: string
@@ -57,6 +59,7 @@ export interface StudyPathContainerState {
   contentLanguage?: StudyMeshLanguageCode
   contentLanguageSource?: ContentLanguageSource
   quickStart?: StudyGuideQuickStart
+  quickStartView?: StudyGuideQuickStartView
   dashboards: StudyPathDashboardItem[]
   selectedIndex: number
   pinnedDashboardKeys?: string[]

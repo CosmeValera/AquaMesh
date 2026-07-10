@@ -324,14 +324,20 @@ describe('Interactive Study Guide UX', () => {
       },
     }
 
-    render(
-      <MemoryRouter>
-        <StudyPathWorkspaceView
-          studyPath={studyPath}
-          onStudyPathChange={vi.fn()}
-        />
-      </MemoryRouter>,
-    )
+    const ControlledStudyPathView = () => {
+      const [currentStudyPath, setCurrentStudyPath] = React.useState(studyPath)
+
+      return (
+        <MemoryRouter>
+          <StudyPathWorkspaceView
+            studyPath={currentStudyPath}
+            onStudyPathChange={setCurrentStudyPath}
+          />
+        </MemoryRouter>
+      )
+    }
+
+    render(<ControlledStudyPathView />)
 
     expect(screen.getByText('Default key idea')).toBeInTheDocument()
     expect(screen.queryByText('Forced bridge key idea')).not.toBeInTheDocument()
@@ -340,6 +346,11 @@ describe('Interactive Study Guide UX', () => {
 
     expect(screen.getByText('Forced bridge key idea')).toBeInTheDocument()
     expect(screen.getByText('Context summary paragraph.')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Previous page' }))
+
+    expect(screen.getByText('Forced bridge key idea')).toBeInTheDocument()
   })
 
   it('hides learner context toggle when Quick Start has no alternate view', () => {

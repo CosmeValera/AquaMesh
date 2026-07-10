@@ -26,6 +26,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import {
   DashboardLayout,
   StudyGuideQuickStart,
+  StudyGuideQuickStartView,
   StudyPathContainerState,
 } from '../../state/store'
 import {
@@ -104,18 +105,21 @@ const setElementScrollTop = (element: HTMLElement, top: number) => {
 
 const StudyGuideQuickStartCard = ({
   quickStart,
+  selectedView,
+  onViewChange,
   expanded,
   onToggle,
   t,
 }: {
   quickStart: StudyGuideQuickStart
+  selectedView: StudyGuideQuickStartView
+  onViewChange: (view: StudyGuideQuickStartView) => void
   expanded: boolean
   onToggle: () => void
   t: ReturnType<typeof useInterfaceText>['t']
 }) => {
-  const [showForcedBridge, setShowForcedBridge] = useState(false)
   const activeQuickStart =
-    showForcedBridge && quickStart.forcedBridge
+    selectedView === 'context' && quickStart.forcedBridge
       ? quickStart.forcedBridge
       : quickStart
 
@@ -185,15 +189,15 @@ const StudyGuideQuickStartCard = ({
                 <Stack direction="row" spacing={1} flexWrap="wrap">
                   <Button
                     size="small"
-                    variant={showForcedBridge ? 'outlined' : 'contained'}
-                    onClick={() => setShowForcedBridge(false)}
+                    variant={selectedView === 'context' ? 'outlined' : 'contained'}
+                    onClick={() => onViewChange('default')}
                   >
                     {t('workspace.defaultQuickStart')}
                   </Button>
                   <Button
                     size="small"
-                    variant={showForcedBridge ? 'contained' : 'outlined'}
-                    onClick={() => setShowForcedBridge(true)}
+                    variant={selectedView === 'context' ? 'contained' : 'outlined'}
+                    onClick={() => onViewChange('context')}
                   >
                     {t('workspace.forcedBridgeQuickStart')}
                   </Button>
@@ -337,6 +341,8 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
     externalPageScrollPositionsRef || internalPageScrollPositionsRef
   const lastPathIdRef = useRef(studyPath.pathId)
   const [quickStartExpanded, setQuickStartExpanded] = useState(true)
+  const quickStartView =
+    studyPath.quickStartView === 'context' ? 'context' : 'default'
   const selectedIndex = Math.min(
     Math.max(studyPath.selectedIndex || 0, 0),
     Math.max(studyPath.dashboards.length - 1, 0),
@@ -411,6 +417,14 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   const handleStudyPathChange = (nextStudyPath: StudyPathContainerState) => {
     saveCurrentPageScroll()
     onStudyPathChange(nextStudyPath)
+  }
+
+  const setQuickStartView = (view: StudyGuideQuickStartView) => {
+    if (view === quickStartView) {
+      return
+    }
+
+    onStudyPathChange({ ...studyPath, quickStartView: view })
   }
 
   const handleAddPage = () => {
@@ -630,6 +644,8 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               {showQuickStart && studyPath.quickStart ? (
                 <StudyGuideQuickStartCard
                   quickStart={studyPath.quickStart}
+                  selectedView={quickStartView}
+                  onViewChange={setQuickStartView}
                   expanded={quickStartExpanded}
                   onToggle={() => setQuickStartExpanded((current) => !current)}
                   t={t}

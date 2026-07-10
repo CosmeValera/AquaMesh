@@ -55,13 +55,21 @@ vi.mock('../../../../src/components/Main', () => ({
   ),
 }))
 
+type MockStudyPath = {
+  selectedIndex: number
+  dashboards: Array<{ name: string }>
+  quickStartView?: 'default' | 'context'
+}
+
 vi.mock('../../../../src/components/Dasboard/StudyPathWorkspaceView', () => ({
   default: ({
     studyPath,
+    onStudyPathChange,
     onAskAi,
     onAddPage,
   }: {
-    studyPath: { selectedIndex: number; dashboards: Array<{ name: string }> }
+    studyPath: MockStudyPath
+    onStudyPathChange?: (studyPath: MockStudyPath) => void
     onAskAi?: (content: string) => void
     onAddPage?: () => void
   }) => (
@@ -72,6 +80,14 @@ vi.mock('../../../../src/components/Dasboard/StudyPathWorkspaceView', () => ({
       </button>
       <button type="button" onClick={() => onAddPage?.()}>
         Add page from study guide
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onStudyPathChange?.({ ...studyPath, quickStartView: 'context' })
+        }
+      >
+        Use context quick start
       </button>
     </div>
   ),
@@ -900,5 +916,32 @@ describe('GuideWorkspacePage responsive sections', () => {
     expect(
       await screen.findByText(STUDY_GUIDES_STORAGE_FULL_MESSAGE),
     ).toBeInTheDocument()
+  })
+
+  it('stores the selected Quick Start context view with the Study Guide', async () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace/guide-1']}>
+        <Routes>
+          <Route
+            path="/workspace/:studyGuideId"
+            element={<GuideWorkspacePage />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await screen.findByTestId('study-guide-panel')
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Use context quick start' }),
+    )
+
+    await waitFor(() => {
+      const savedPayload = latestStoredStudyGuidesPayload()
+      const savedGuides = JSON.parse(savedPayload || '[]') as Array<{
+        studyPath: { quickStartView?: string }
+      }>
+
+      expect(savedGuides[0]?.studyPath.quickStartView).toBe('context')
+    })
   })
 })

@@ -9,7 +9,9 @@ import hostedAiHandler, {
   DEFAULT_OPENAI_FAST_MODEL,
   DEFAULT_OPENAI_MODEL,
   DEFAULT_OPENAI_STUDY_GUIDE_MODEL,
+  DEFAULT_OPENAI_SUPPORT_MODEL,
   getHostedCerebrasModel,
+  shuffleQuizQuestionOptions,
   getHostedOpenAiModel,
   getHostedOpenAiModelForStage,
   getHostedTextModel,
@@ -617,27 +619,31 @@ describe('API payment and hosted AI hardening', () => {
     vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
     vi.stubEnv('HOSTED_OPENAI_MODEL', '')
     vi.stubEnv('HOSTED_OPENAI_STUDY_GUIDE_MODEL', '')
+    vi.stubEnv('HOSTED_OPENAI_SUPPORT_MODEL', '')
     vi.stubEnv('HOSTED_OPENAI_FAST_MODEL', '')
 
     expect(getHostedTextProvider()).toBe('openai')
     expect(getHostedOpenAiModel()).toBe(DEFAULT_OPENAI_MODEL)
     expect(getHostedOpenAiModelForStage('study_guide_main')).toBe(
+      DEFAULT_OPENAI_SUPPORT_MODEL,
+    )
+    expect(getHostedOpenAiModelForStage('study_guide_blueprint')).toBe(
       DEFAULT_OPENAI_STUDY_GUIDE_MODEL,
     )
     expect(getHostedOpenAiModelForStage('quick_create')).toBe(
       DEFAULT_OPENAI_FAST_MODEL,
     )
     expect(getHostedTextModel(undefined, 'study_guide_main')).toBe(
-      DEFAULT_OPENAI_STUDY_GUIDE_MODEL,
+      DEFAULT_OPENAI_SUPPORT_MODEL,
     )
     expect(getHostedTextModel(undefined, 'study_guide_blueprint')).toBe(
       DEFAULT_OPENAI_STUDY_GUIDE_MODEL,
     )
     expect(getHostedTextModel(undefined, 'quick_start_personalized')).toBe(
-      DEFAULT_OPENAI_STUDY_GUIDE_MODEL,
+      DEFAULT_OPENAI_SUPPORT_MODEL,
     )
     expect(getHostedTextModel(undefined, 'knowledge_bridge_blocks')).toBe(
-      DEFAULT_OPENAI_STUDY_GUIDE_MODEL,
+      DEFAULT_OPENAI_SUPPORT_MODEL,
     )
     expect(getHostedTextModel(undefined, 'study_guide_page_expand')).toBe(
       DEFAULT_OPENAI_FAST_MODEL,
@@ -649,10 +655,17 @@ describe('API payment and hosted AI hardening', () => {
     vi.stubEnv('HOSTED_OPENAI_MODEL', 'gpt-5.4-mini-test')
 
     expect(getHostedTextModel()).toBe('gpt-5.4-mini-test')
+    expect(getHostedTextModel(undefined, 'study_guide_blueprint')).toBe(
+      'gpt-5.4-mini-test',
+    )
 
-    vi.stubEnv('HOSTED_OPENAI_STUDY_GUIDE_MODEL', 'gpt-5.4-mini-stage')
+    vi.stubEnv('HOSTED_OPENAI_STUDY_GUIDE_MODEL', 'gpt-5.6-luna-stage')
+    vi.stubEnv('HOSTED_OPENAI_SUPPORT_MODEL', 'gpt-5.4-mini-stage')
     vi.stubEnv('HOSTED_OPENAI_FAST_MODEL', 'gpt-5.4-nano-stage')
 
+    expect(getHostedTextModel(undefined, 'study_guide_blueprint')).toBe(
+      'gpt-5.6-luna-stage',
+    )
     expect(getHostedTextModel(undefined, 'study_guide_main')).toBe(
       'gpt-5.4-mini-stage',
     )
@@ -665,6 +678,30 @@ describe('API payment and hosted AI hardening', () => {
     expect(getHostedTextModel(undefined, 'study_guide_page_expand')).toBe(
       'gpt-5.4-nano-stage',
     )
+  })
+
+  it('shuffles hosted final quiz options deterministically', () => {
+    const questions = Array.from({ length: 6 }, (_, index) => ({
+      question: `Application question ${index + 1}?`,
+      options: ['Correct option', 'Distractor one', 'Distractor two'],
+      correctIndex: 0,
+      explanation: `Explanation ${index + 1}.`,
+      skillTested: `Skill ${index + 1}`,
+    }))
+
+    const shuffled = questions.map(shuffleQuizQuestionOptions)
+
+    shuffled.forEach((question, index) => {
+      expect(question.options).toHaveLength(3)
+      expect([...question.options].sort()).toEqual(
+        [...questions[index].options].sort(),
+      )
+      expect(question.options[question.correctIndex]).toBe('Correct option')
+      expect(shuffleQuizQuestionOptions(questions[index])).toEqual(question)
+    })
+    expect(
+      new Set(shuffled.map((question) => question.correctIndex)).size,
+    ).toBeGreaterThan(1)
   })
 
   it('returns missing config when hosted OpenAI key is absent', async () => {
@@ -1135,7 +1172,7 @@ describe('API payment and hosted AI hardening', () => {
         )
       }
 
-      if (target.includes('api.openai.com/v1/chat/completions')) {
+      if (target.includes('api.openai.com')) {
         providerBodies.push(JSON.parse(String(init?.body)))
         providerHeaders.push(init?.headers || {})
         return Promise.resolve(
@@ -1260,6 +1297,7 @@ describe('API payment and hosted AI hardening', () => {
     vi.stubEnv('HOSTED_AI_TEXT_PROVIDER', 'openai')
     vi.stubEnv('HOSTED_OPENAI_API_KEY', 'hosted-openai-key')
     vi.stubEnv('HOSTED_OPENAI_STUDY_GUIDE_MODEL', 'gpt-5.4-mini-route')
+    vi.stubEnv('HOSTED_OPENAI_SUPPORT_MODEL', 'gpt-5.4-mini-route')
     vi.stubEnv('HOSTED_OPENAI_FAST_MODEL', 'gpt-5.4-nano-route')
     vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
     vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
@@ -1278,6 +1316,12 @@ describe('API payment and hosted AI hardening', () => {
     ) =>
       jsonResponse({
         choices: [{ message: { content: JSON.stringify(content) } }],
+        output: [
+          {
+            type: 'message',
+            content: [{ type: 'output_text', text: JSON.stringify(content) }],
+          },
+        ],
         usage,
       })
     const blueprint = {
@@ -1343,11 +1387,14 @@ describe('API payment and hosted AI hardening', () => {
         return Promise.resolve(jsonResponse({ status: { studyCredits: 6 } }))
       }
 
-      if (target.includes('api.openai.com/v1/chat/completions')) {
+      if (target.includes('api.openai.com')) {
         const body = JSON.parse(String(init?.body)) as Record<string, unknown>
         providerBodies.push(body)
         const prompt = String(
-          (body.messages as Array<{ content?: string }>)[0]?.content || '',
+          (body.messages as Array<{ content?: string }> | undefined)?.[0]
+            ?.content ||
+            body.input ||
+            '',
         )
 
         if (prompt.includes('Create an enhanced compact factual blueprint')) {
@@ -1590,7 +1637,7 @@ describe('API payment and hosted AI hardening', () => {
         return Promise.resolve(jsonResponse({}))
       }
 
-      if (target.includes('api.openai.com/v1/chat/completions')) {
+      if (target.includes('api.openai.com')) {
         return Promise.resolve(
           jsonResponse(
             {
@@ -2425,6 +2472,12 @@ describe('API payment and hosted AI hardening', () => {
     ) =>
       jsonResponse({
         choices: [{ message: { content: JSON.stringify(content) } }],
+        output: [
+          {
+            type: 'message',
+            content: [{ type: 'output_text', text: JSON.stringify(content) }],
+          },
+        ],
         usage,
       })
     const blueprint = {
@@ -2531,7 +2584,10 @@ describe('API payment and hosted AI hardening', () => {
         const body = JSON.parse(String(init?.body)) as Record<string, unknown>
         providerBodies.push(body)
         const prompt = String(
-          (body.messages as Array<{ content?: string }>)[0]?.content || '',
+          (body.messages as Array<{ content?: string }> | undefined)?.[0]
+            ?.content ||
+            body.input ||
+            '',
         )
 
         if (prompt.includes('Create an enhanced compact factual blueprint')) {
@@ -2652,8 +2708,10 @@ describe('API payment and hosted AI hardening', () => {
     expect(guide.dashboards[2]?.practice?.multipleChoice).toHaveLength(6)
     expect(providerBodies).toHaveLength(8)
     expect(providerBodies[0].model).toBe(DEFAULT_OPENAI_STUDY_GUIDE_MODEL)
+    expect(providerBodies[0].input).toBeDefined()
+    expect(providerBodies[0].reasoning).toMatchObject({ effort: 'none' })
     expect(providerBodies[1].model).toBe(DEFAULT_OPENAI_FAST_MODEL)
-    expect(providerBodies[4].model).toBe(DEFAULT_OPENAI_STUDY_GUIDE_MODEL)
+    expect(providerBodies[4].model).toBe(DEFAULT_OPENAI_SUPPORT_MODEL)
     expect(providerBodies[7].model).toBe(DEFAULT_OPENAI_FAST_MODEL)
     expect(JSON.stringify(providerBodies[0])).toContain(
       'Create an enhanced compact factual blueprint',
@@ -2718,6 +2776,12 @@ describe('API payment and hosted AI hardening', () => {
     const providerResponse = (content: unknown) =>
       jsonResponse({
         choices: [{ message: { content: JSON.stringify(content) } }],
+        output: [
+          {
+            type: 'message',
+            content: [{ type: 'output_text', text: JSON.stringify(content) }],
+          },
+        ],
         usage: {
           prompt_tokens: 500,
           completion_tokens: 200,
@@ -2791,7 +2855,10 @@ describe('API payment and hosted AI hardening', () => {
         const body = JSON.parse(String(init?.body)) as Record<string, unknown>
         providerBodies.push(body)
         const prompt = String(
-          (body.messages as Array<{ content?: string }>)[0]?.content || '',
+          (body.messages as Array<{ content?: string }> | undefined)?.[0]
+            ?.content ||
+            body.input ||
+            '',
         )
 
         if (prompt.includes('Create an enhanced compact factual blueprint')) {
@@ -2904,7 +2971,7 @@ describe('API payment and hosted AI hardening', () => {
       }),
     ).toHaveLength(0)
     expect(JSON.stringify(providerBodies[5])).toContain('Bridge mode: force')
-    expect(providerBodies[5].model).toBe(DEFAULT_OPENAI_STUDY_GUIDE_MODEL)
+    expect(providerBodies[5].model).toBe(DEFAULT_OPENAI_SUPPORT_MODEL)
     expect(providerBodies[6].model).toBe(DEFAULT_OPENAI_FAST_MODEL)
     expect(rpcBodies[1].p_provider_call_count).toBe(7)
     expect(JSON.stringify(rpcBodies[1].p_metadata)).not.toContain(

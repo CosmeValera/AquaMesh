@@ -544,7 +544,7 @@ export const buildStudyGuideQuickStartPrompt = ({
 Return strict JSON only:
 {
   "keyIdea": "one sentence, maximum 35 words, ideally 25-35 words",
-  "quickSummary": "2-3 short paragraphs, 70-105 words target"
+  "quickSummary": "2-3 short paragraphs, 70-100 words total"
 }
 
 Rules:
@@ -553,7 +553,7 @@ Rules:
 - keyIdea must explain the category or mental box the topic belongs to, not internal architecture.
 - keyIdea introduces at most 1 technical term, avoids listing components, and avoids implementation details unless they are the essence of the concept.
 - Prefer "what is this like or for?" over "how does it work internally?".
-- quickSummary: 2-3 short paragraphs separated by blank lines, 70-105 words target.
+- quickSummary: 2-3 short paragraphs separated by blank lines, under 100 words total.
 - Every quickSummary paragraph must end as a complete sentence.
 - If the word target is tight, finish the current sentence cleanly instead of ending mid-thought.
 - Prefer a shorter complete summary over using the full limit.
@@ -715,7 +715,7 @@ Return strict JSON only:
     {
       "dashboardIndex": 0,
       "title": "short note title",
-      "body": "80-140 words"
+      "body": "60-85 words"
     }
   ]
 }
@@ -733,7 +733,8 @@ Rules:
 - Force mode: add 1 block when a safe bridge can help one eligible dashboard; return [] only when every possible bridge would mislead.
 - Use each dashboardIndex at most once. dashboardIndex is zero-based.
 - Each block must connect one freshly taught concept to the selected known topic.
-- Keep body short, concrete, and note-like.
+- Keep body short, concrete, and note-like: under 85 words.
+- End each body with a complete sentence, never mid-thought.
 - Do not repeat the Quick Start.
 - Do not force analogies. If bridge is only weak, use at most one light reference.
 - Include one caveat when the comparison could mislead.

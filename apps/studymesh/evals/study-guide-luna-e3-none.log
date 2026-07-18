@@ -1,0 +1,174 @@
+{
+  "results": [
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "vue-react-context",
+      "prompt": "What is Vue?",
+      "generationCostUsd": 0.01765523,
+      "selectedKnownTopics": [
+        "React"
+      ],
+      "selectedExpectedTopic": true,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 3,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 369.3333333333333
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.6-luna",
+          "costUsd": 0.00711018,
+          "inputTokens": 636,
+          "outputTokens": 1082
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00108375,
+          "inputTokens": 1850,
+          "outputTokens": 571
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0010598,
+          "inputTokens": 1849,
+          "outputTokens": 552
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0010502,
+          "inputTokens": 1876,
+          "outputTokens": 540
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.0024555,
+          "inputTokens": 2608,
+          "outputTokens": 111
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.0026475,
+          "inputTokens": 2516,
+          "outputTokens": 169
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00114225,
+          "inputTokens": 815,
+          "outputTokens": 118
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00110605,
+          "inputTokens": 2074,
+          "outputTokens": 553
+        }
+      ]
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "photography-lightroom-context",
+      "prompt": "Basics of photography",
+      "generationCostUsd": 0.01849838,
+      "selectedKnownTopics": [
+        "Lightroom"
+      ],
+      "selectedExpectedTopic": true,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 0,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 395.6666666666667
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.6-luna",
+          "costUsd": 0.00812663,
+          "inputTokens": 641,
+          "outputTokens": 1251
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00109595,
+          "inputTokens": 2086,
+          "outputTokens": 543
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00100905,
+          "inputTokens": 2064,
+          "outputTokens": 477
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0010409,
+          "inputTokens": 2092,
+          "outputTokens": 498
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00249825,
+          "inputTokens": 2539,
+          "outputTokens": 132
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00246225,
+          "inputTokens": 2437,
+          "outputTokens": 141
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.001101,
+          "inputTokens": 784,
+          "outputTokens": 114
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00116435,
+          "inputTokens": 1953,
+          "outputTokens": 619
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "tupleId": "vue-react-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "photography-lightroom-context",
+      "missingBaseline": true
+    }
+  ],
+  "generationCostUsdTotal": 0.03615361
+}
+Saved enhanced results to C:\Users\cosme\Desktop\Cosme (Local)\Projects\StudyMesh\apps\studymesh\evals\study-guide-luna-e3-none.json

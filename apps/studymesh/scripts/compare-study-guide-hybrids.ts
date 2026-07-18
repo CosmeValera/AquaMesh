@@ -25,10 +25,24 @@ if (!apiKey) {
   throw new Error('Missing HOSTED_OPENAI_API_KEY or OPENAI_API_KEY')
 }
 
-const MINI_MODEL = 'gpt-5.4-mini'
+const DEFAULT_MINI_MODEL = 'gpt-5.4-mini'
+const MINI_MODEL =
+  process.env.STUDY_GUIDE_BLUEPRINT_MODEL?.trim() || DEFAULT_MINI_MODEL
 const NANO_MODEL = 'gpt-5.4-nano'
+const MINI_PRICE_MULTIPLIER = Number(
+  process.env.STUDY_GUIDE_BLUEPRINT_PRICE_MULTIPLIER || '1',
+)
+const MINI_REASONING_EFFORT =
+  process.env.STUDY_GUIDE_BLUEPRINT_REASONING_EFFORT?.trim() || undefined
+const SUPPORT_MODEL =
+  process.env.STUDY_GUIDE_SUPPORT_MODEL?.trim() || MINI_MODEL
+const BLUEPRINT_BREVITY = process.env.STUDY_GUIDE_BLUEPRINT_BREVITY === '1'
+const SUPPORT_BREVITY = process.env.STUDY_GUIDE_SUPPORT_BREVITY === '1'
+const SUPPORT_SOURCE_CHARS = Number(
+  process.env.STUDY_GUIDE_SUPPORT_SOURCE_CHARS || '0',
+)
 
-type ModelName = typeof MINI_MODEL | typeof NANO_MODEL
+type ModelName = string
 
 type EvalOption = '3+2' | '4+2' | '4+2-enhanced'
 
@@ -111,16 +125,24 @@ type PairwiseEval = {
 type Usage = {
   prompt_tokens?: number
   completion_tokens?: number
+  input_tokens?: number
+  output_tokens?: number
   total_tokens?: number
   prompt_tokens_details?: { cached_tokens?: number }
+  input_tokens_details?: { cached_tokens?: number }
 }
 
 const priceByModel: Record<
   ModelName,
   { input: number; cachedInput: number; output: number }
 > = {
-  [MINI_MODEL]: { input: 0.75, cachedInput: 0.075, output: 4.5 },
+  [DEFAULT_MINI_MODEL]: { input: 0.75, cachedInput: 0.075, output: 4.5 },
   [NANO_MODEL]: { input: 0.2, cachedInput: 0.02, output: 1.25 },
+  [MINI_MODEL]: {
+    input: 0.75 * MINI_PRICE_MULTIPLIER,
+    cachedInput: 0.075 * MINI_PRICE_MULTIPLIER,
+    output: 4.5 * MINI_PRICE_MULTIPLIER,
+  },
 }
 
 const tuples = [
@@ -300,8 +322,24 @@ const parseJson = <T>(text: string): T => JSON.parse(text) as T
 
 const textFromPayload = (payload: any): string => {
   const content = payload?.choices?.[0]?.message?.content
+  if (typeof content === 'string') {
+    return content
+  }
 
-  return typeof content === 'string' ? content : ''
+  if (typeof payload?.output_text === 'string') {
+    return payload.output_text
+  }
+
+  if (Array.isArray(payload?.output)) {
+    return payload.output
+      .filter((item: any) => item?.type === 'message')
+      .flatMap((item: any) => (Array.isArray(item.content) ? item.content : []))
+      .filter((part: any) => typeof part?.text === 'string')
+      .map((part: any) => part.text)
+      .join('')
+  }
+
+  return ''
 }
 
 const costFromUsage = (
@@ -309,10 +347,16 @@ const costFromUsage = (
   model: ModelName,
   usage?: Usage,
 ): StageCost => {
-  const inputTokens = usage?.prompt_tokens || 0
-  const cachedInputTokens = usage?.prompt_tokens_details?.cached_tokens || 0
-  const outputTokens = usage?.completion_tokens || 0
+  const inputTokens = usage?.prompt_tokens ?? usage?.input_tokens ?? 0
+  const cachedInputTokens =
+    usage?.prompt_tokens_details?.cached_tokens ??
+    usage?.input_tokens_details?.cached_tokens ??
+    0
+  const outputTokens = usage?.completion_tokens ?? usage?.output_tokens ?? 0
   const prices = priceByModel[model]
+  if (!prices) {
+    throw new Error(`Missing price configuration for ${model}`)
+  }
   const billableInputTokens = Math.max(0, inputTokens - cachedInputTokens)
   const costUsd =
     (billableInputTokens * prices.input +
@@ -342,31 +386,61 @@ const callModel = async ({
   prompt: string
   schema?: Record<string, unknown>
 }): Promise<{ text: string; cost: StageCost }> => {
-  const body: Record<string, unknown> = {
-    model,
-    temperature: model === NANO_MODEL ? 0.15 : 0.2,
-    messages: [{ role: 'user', content: prompt }],
+  const useResponsesApi = model !== DEFAULT_MINI_MODEL && model !== NANO_MODEL
+  const body: Record<string, unknown> = useResponsesApi
+    ? {
+        model,
+        input: prompt,
+      }
+    : {
+        model,
+        messages: [{ role: 'user', content: prompt }],
+      }
+
+  if (!useResponsesApi && model === NANO_MODEL) {
+    body.temperature = 0.15
+  } else if (!useResponsesApi && model === DEFAULT_MINI_MODEL) {
+    body.temperature = 0.2
+  }
+
+  if (useResponsesApi && MINI_REASONING_EFFORT) {
+    body.reasoning = { effort: MINI_REASONING_EFFORT }
   }
 
   if (schema) {
-    body.response_format = {
-      type: 'json_schema',
-      json_schema: {
-        name: 'studymesh_response',
-        schema: toJsonSchema(schema),
-        strict: true,
-      },
-    }
+    const jsonSchema = toJsonSchema(schema)
+    body[useResponsesApi ? 'text' : 'response_format'] = useResponsesApi
+      ? {
+          format: {
+            type: 'json_schema',
+            name: 'studymesh_response',
+            schema: jsonSchema,
+            strict: true,
+          },
+        }
+      : {
+          type: 'json_schema',
+          json_schema: {
+            name: 'studymesh_response',
+            schema: jsonSchema,
+            strict: true,
+          },
+        }
   }
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      'content-type': 'application/json',
+  const response = await fetch(
+    useResponsesApi
+      ? 'https://api.openai.com/v1/responses'
+      : 'https://api.openai.com/v1/chat/completions',
+    {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-  })
+  )
   const payload = await response.json()
 
   if (!response.ok) {
@@ -375,8 +449,17 @@ const callModel = async ({
     )
   }
 
+  const text = textFromPayload(payload)
+  if (!text) {
+    throw new Error(
+      `${stage}/${model} returned empty text. Payload: ${JSON.stringify(
+        payload,
+      ).slice(0, 2000)}`,
+    )
+  }
+
   return {
-    text: textFromPayload(payload),
+    text,
     cost: costFromUsage(stage, model, payload.usage),
   }
 }
@@ -488,7 +571,9 @@ Topic: ${prompt}`
 
 const enhancedBlueprintPrompt = (
   tuple: (typeof tuples)[number],
-): string => `Create an enhanced compact factual blueprint for a full StudyMesh Study Guide about "${tuple.prompt}".
+): string => `Create an enhanced compact factual blueprint for a full StudyMesh Study Guide about "${
+  tuple.prompt
+}".
 
 Return strict JSON only:
 {
@@ -514,7 +599,9 @@ Rules:
 - quickSummary target is 70-105 words. Every paragraph must end with a complete sentence.
 - If close to a word target, finish the current sentence cleanly instead of ending mid-thought.
 - Prefer a shorter complete sentence over using the whole word budget.
-- Use the learner context candidates when they truly help: ${tuple.knownTopics.join(', ')}.
+- Use the learner context candidates when they truly help: ${tuple.knownTopics.join(
+  ', ',
+)}.
 - Best expected context candidate for this eval: ${tuple.expectedKnownTopic}.
 - Include comparison material in keyFacts/conciseNotes when the expected context candidate helps reduce confusion.
 - Do not force irrelevant analogies inside the pages, but prepare the best useful bridge for Quick Start and bridge blocks.
@@ -522,7 +609,19 @@ Rules:
 - Never ask nano for placeholder snippets. Forbidden examples include "example_resource", "arguments would go here", "component logic goes here", "configuration would go here", and "pseudo-code placeholder".
 - For non-code topics, examplesNeeded should request concrete examples, timelines, scenarios, or comparisons instead of code.
 - Include enough final quiz skills for a 6-question application quiz.
-
+${
+  BLUEPRINT_BREVITY
+    ? `
+Brevity rules (mandatory):
+- keyFacts: exactly 8 per page, each one compact sentence with no filler words.
+- conciseNotes: 90-110 words, packed with facts, no restating of keyFacts.
+- examplesNeeded: at most 2 per page.
+- quizSkills: exactly 2 per page.
+- quickSummary: 60-85 words.
+- Maximize factual density per word; never pad or repeat.
+`
+    : ''
+}
 Topic: ${tuple.prompt}`
 
 const pageFromPlanPrompt = ({
@@ -650,6 +749,18 @@ ${sourceFromGuide(prompt, guide).slice(0, 18000)}
 Context bridge notes:
 ${JSON.stringify(guide.bridgeBlocks, null, 2)}`
 
+const QUICK_START_BREVITY_SUFFIX = `
+
+Extra rules:
+- Keep quickSummary under 100 words total.
+- End every paragraph with a complete sentence, never mid-thought.`
+
+const BRIDGE_BREVITY_SUFFIX = `
+
+Extra rules:
+- Keep each bridge block body under 85 words.
+- End the body with a complete sentence, never mid-thought.`
+
 const applyContext = async ({
   option,
   prompt,
@@ -668,10 +779,14 @@ const applyContext = async ({
   costs: StageCost[]
 }> => {
   const costs: StageCost[] = []
-  const source = sourceFromGuide(prompt, guide)
+  const fullSource = sourceFromGuide(prompt, guide)
+  const source =
+    SUPPORT_SOURCE_CHARS > 0
+      ? fullSource.slice(0, SUPPORT_SOURCE_CHARS)
+      : fullSource
   const relevance = await callModel({
     stage: `${option}_quick_start_relevance_auto`,
-    model: MINI_MODEL,
+    model: SUPPORT_MODEL,
     prompt: buildStudyGuideQuickStartRelevancePrompt({
       title: guide.title,
       prompt,
@@ -702,13 +817,14 @@ const applyContext = async ({
   ) {
     const personalized = await callModel({
       stage: `${option}_quick_start_personalized`,
-      model: MINI_MODEL,
-      prompt: buildStudyGuideQuickStartPrompt({
-        title: guide.title,
-        source,
-        relevanceDecision,
-        bridgeMode,
-      }),
+      model: SUPPORT_MODEL,
+      prompt:
+        buildStudyGuideQuickStartPrompt({
+          title: guide.title,
+          source,
+          relevanceDecision,
+          bridgeMode,
+        }) + (SUPPORT_BREVITY ? QUICK_START_BREVITY_SUFFIX : ''),
       schema: STUDY_GUIDE_QUICK_START_SCHEMA,
     })
     costs.push(personalized.cost)
@@ -716,18 +832,19 @@ const applyContext = async ({
 
     const bridge = await callModel({
       stage: `${option}_knowledge_bridge_blocks`,
-      model: MINI_MODEL,
-      prompt: buildStudyGuideKnowledgeBridgeBlocksPrompt({
-        title: guide.title,
-        prompt,
-        dashboards: guide.pages.slice(1, 2).map((page, index) => ({
-          dashboardIndex: index + 1,
-          title: page.title,
-          rawNotes: page.rawNotes,
-        })),
-        relevanceDecision,
-        bridgeMode,
-      }),
+      model: SUPPORT_MODEL,
+      prompt:
+        buildStudyGuideKnowledgeBridgeBlocksPrompt({
+          title: guide.title,
+          prompt,
+          dashboards: guide.pages.slice(1, 2).map((page, index) => ({
+            dashboardIndex: index + 1,
+            title: page.title,
+            rawNotes: page.rawNotes,
+          })),
+          relevanceDecision,
+          bridgeMode,
+        }) + (SUPPORT_BREVITY ? BRIDGE_BREVITY_SUFFIX : ''),
       schema: STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
     })
     costs.push(bridge.cost)
@@ -1134,9 +1251,19 @@ const loadBaselineOption4Results = (): Map<string, GenerationResult> => {
     process.cwd(),
     'apps/studymesh/evals/study-guide-3plus2-vs-4plus2-results.json',
   )
-  const parsed = JSON.parse(readFileSync(baselinePath, 'utf8')) as {
-    results?: GenerationResult[]
+  let parsed: { results?: GenerationResult[] }
+  try {
+    parsed = JSON.parse(readFileSync(baselinePath, 'utf8')) as {
+      results?: GenerationResult[]
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return new Map()
+    }
+
+    throw error
   }
+
   return new Map(
     (parsed.results || [])
       .filter((result) => result.option === '4+2')
@@ -1175,8 +1302,15 @@ const summarizeBaselineComparison = (
 const mainEnhancedOnly = async () => {
   const baselineByTuple = loadBaselineOption4Results()
   const results: GenerationResult[] = []
+  const tupleFilter = (process.env.STUDY_GUIDE_TUPLE_IDS || '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean)
+  const selectedTuples = tupleFilter.length
+    ? tuples.filter((tuple) => tupleFilter.includes(tuple.id))
+    : [...tuples]
 
-  for (const tuple of tuples) {
+  for (const tuple of selectedTuples) {
     const result = await generateEnhancedOption4Plus2(tuple)
     results.push(result)
   }
@@ -1187,8 +1321,17 @@ const mainEnhancedOnly = async () => {
   const payload = {
     createdAt: new Date().toISOString(),
     mode: '4+2-enhanced-only-no-evaluator',
-    models: { mini: MINI_MODEL, nano: NANO_MODEL },
-    tuples,
+    models: {
+      mini: MINI_MODEL,
+      nano: NANO_MODEL,
+      support: SUPPORT_MODEL,
+      miniPriceMultiplier: MINI_PRICE_MULTIPLIER,
+      miniReasoningEffort: MINI_REASONING_EFFORT || null,
+      blueprintBrevity: BLUEPRINT_BREVITY,
+      supportBrevity: SUPPORT_BREVITY,
+      supportSourceChars: SUPPORT_SOURCE_CHARS || null,
+    },
+    tuples: selectedTuples,
     summary: {
       results: results.map(summarizeResult),
       comparisons,
@@ -1201,7 +1344,8 @@ const mainEnhancedOnly = async () => {
   }
   const outputPath = resolve(
     process.cwd(),
-    'apps/studymesh/evals/study-guide-4plus2-enhanced-results.json',
+    process.env.STUDY_GUIDE_EVAL_OUTPUT_PATH ||
+      'apps/studymesh/evals/study-guide-4plus2-enhanced-results.json',
   )
   mkdirSync(dirname(outputPath), { recursive: true })
   writeFileSync(outputPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8')

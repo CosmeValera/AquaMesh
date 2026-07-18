@@ -81,6 +81,10 @@ interface ChatCompletionResponse {
     };
     text?: string;
   }>;
+  output?: Array<{
+    type?: string;
+    content?: Array<{ text?: string; type?: string }>;
+  }>;
   error?: {
     code?: string;
     message?: string;
@@ -142,9 +146,12 @@ const HOSTED_AI_INITIAL_FREE_CREDITS = 30;
 const HOSTED_AI_DAILY_FREE_CREDIT_FLOOR = 7;
 export const DEFAULT_CEREBRAS_MODEL = "gpt-oss-120b";
 export const DEFAULT_OPENAI_MODEL = "gpt-5.4-mini";
-export const DEFAULT_OPENAI_STUDY_GUIDE_MODEL = "gpt-5.4-mini";
+export const DEFAULT_OPENAI_STUDY_GUIDE_MODEL = "gpt-5.6-luna";
+export const DEFAULT_OPENAI_SUPPORT_MODEL = "gpt-5.4-mini";
 export const DEFAULT_OPENAI_FAST_MODEL = "gpt-5.4-nano";
+export const DEFAULT_OPENAI_REASONING_EFFORT = "none";
 const MAX_TEXT_CHARS = 120_000;
+const SUPPORT_STAGE_SOURCE_MAX_CHARS = 4_500;
 const MIN_PODCAST_SOURCE_CHARS = 400;
 const MAX_PODCAST_SOURCE_CHARS = 24_000;
 const MAX_PODCAST_AUDIO_BYTES = 15_000_000;
@@ -180,6 +187,7 @@ const CEREBRAS_CHAT_COMPLETIONS_URL =
   "https://api.cerebras.ai/v1/chat/completions";
 const OPENAI_CHAT_COMPLETIONS_URL =
   "https://api.openai.com/v1/chat/completions";
+const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 
 const VALID_SURFACES = new Set<HostedAiSurface>([
   "study-guide",
@@ -210,9 +218,12 @@ export const getHostedTextProvider = (): HostedTextProvider =>
 export const getHostedOpenAiModel = (): string =>
   getEnv("HOSTED_OPENAI_MODEL") || DEFAULT_OPENAI_MODEL;
 
-const MINI_OPENAI_STAGES = new Set<HostedAiStage>([
-  "study_guide_main",
+const BLUEPRINT_OPENAI_STAGES = new Set<HostedAiStage>([
   "study_guide_blueprint",
+]);
+
+const SUPPORT_OPENAI_STAGES = new Set<HostedAiStage>([
+  "study_guide_main",
   "quick_start_fallback",
   "quick_start_personalized",
   "quick_start_relevance_auto",
@@ -222,11 +233,19 @@ const MINI_OPENAI_STAGES = new Set<HostedAiStage>([
 ]);
 
 export const getHostedOpenAiModelForStage = (stage: HostedAiStage): string => {
-  if (MINI_OPENAI_STAGES.has(stage)) {
+  if (BLUEPRINT_OPENAI_STAGES.has(stage)) {
     return (
       getEnv("HOSTED_OPENAI_STUDY_GUIDE_MODEL") ||
       getEnv("HOSTED_OPENAI_MODEL") ||
       DEFAULT_OPENAI_STUDY_GUIDE_MODEL
+    );
+  }
+
+  if (SUPPORT_OPENAI_STAGES.has(stage)) {
+    return (
+      getEnv("HOSTED_OPENAI_SUPPORT_MODEL") ||
+      getEnv("HOSTED_OPENAI_MODEL") ||
+      DEFAULT_OPENAI_SUPPORT_MODEL
     );
   }
 
@@ -236,6 +255,12 @@ export const getHostedOpenAiModelForStage = (stage: HostedAiStage): string => {
     DEFAULT_OPENAI_FAST_MODEL
   );
 };
+
+export const getHostedOpenAiReasoningEffort = (): string =>
+  getEnv("HOSTED_OPENAI_REASONING_EFFORT") || DEFAULT_OPENAI_REASONING_EFFORT;
+
+export const isOpenAiResponsesModel = (model: string): boolean =>
+  model.includes("luna");
 
 export const getHostedTextModel = (
   provider: HostedTextProvider = getHostedTextProvider(),
@@ -810,6 +835,32 @@ const normalizeEnhancedPage = (
   };
 };
 
+const hashQuizSeed = (value: string): number => {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) | 0;
+  }
+  return hash >>> 0;
+};
+
+export const shuffleQuizQuestionOptions = (
+  question: EnhancedStudyGuideQuizQuestion,
+): EnhancedStudyGuideQuizQuestion => {
+  const order = question.options.map((_, index) => index);
+  let seed = hashQuizSeed(question.question);
+  for (let index = order.length - 1; index > 0; index -= 1) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const swapIndex = seed % (index + 1);
+    [order[index], order[swapIndex]] = [order[swapIndex], order[index]];
+  }
+
+  return {
+    ...question,
+    options: order.map((optionIndex) => question.options[optionIndex]),
+    correctIndex: order.indexOf(question.correctIndex),
+  };
+};
+
 const normalizeEnhancedQuizQuestions = (
   value: unknown,
 ): EnhancedStudyGuideQuizQuestion[] => {
@@ -848,7 +899,7 @@ const normalizeEnhancedQuizQuestions = (
     throw error;
   }
 
-  return normalized;
+  return normalized.map(shuffleQuizQuestionOptions);
 };
 
 const buildEnhancedBlueprintPrompt = ({
@@ -877,7 +928,7 @@ Return strict JSON only:
     {
       "title": "01 - ...",
       "keyFacts": ["fact"],
-      "conciseNotes": "100-140 words",
+      "conciseNotes": "90-110 words",
       "examplesNeeded": ["example"],
       "quizSkills": ["skill"]
     }
@@ -887,11 +938,14 @@ Return strict JSON only:
 Rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
 - Exactly 3 pages.
-- Mini owns facts and structure; a cheaper model will only expand this blueprint.
-- keyFacts must contain 8-10 precise, conservative facts per page.
-- conciseNotes must include enough factual material to anchor expansion.
-- quickStart is mini-owned: explain the concept directly, not the guide structure.
-- quickSummary target is 70-105 words. Every paragraph must end with a complete sentence.
+- The blueprint model owns facts and structure; a cheaper model will only expand this blueprint.
+- keyFacts must contain exactly 8 precise, conservative facts per page, each one compact sentence with no filler words.
+- conciseNotes must be 90-110 words, packed with facts, without restating keyFacts.
+- examplesNeeded must contain at most 2 entries per page.
+- quizSkills must contain exactly 2 entries per page.
+- Maximize factual density per word; never pad or repeat.
+- quickStart is blueprint-owned: explain the concept directly, not the guide structure.
+- quickSummary target is 60-85 words. Every paragraph must end with a complete sentence.
 - If close to a word target, finish the current sentence cleanly instead of ending mid-thought.
 - Prefer a shorter complete sentence over using the whole word budget.
 - Learner context candidates: ${userKnownTopics.length ? userKnownTopics.join(", ") : "none"}.
@@ -1167,14 +1221,21 @@ const extractChatCompletionText = (payload: ChatCompletionResponse): string => {
       : payload.choices?.[0]?.text || "";
 };
 
+const extractResponsesApiText = (payload: ChatCompletionResponse): string =>
+  (payload.output || [])
+    .filter((item) => item?.type === "message")
+    .flatMap((item) => (Array.isArray(item.content) ? item.content : []))
+    .map((part) => (typeof part?.text === "string" ? part.text : ""))
+    .join("");
+
 const getDefaultOpenAiInputPrice = (model: string): number =>
-  model.includes("nano") ? 0.2 : 0.75;
+  model.includes("nano") ? 0.2 : model.includes("luna") ? 0.9975 : 0.75;
 
 const getDefaultOpenAiCachedInputPrice = (model: string): number =>
-  model.includes("nano") ? 0.02 : 0.075;
+  model.includes("nano") ? 0.02 : model.includes("luna") ? 0.09975 : 0.075;
 
 const getDefaultOpenAiOutputPrice = (model: string): number =>
-  model.includes("nano") ? 1.25 : 4.5;
+  model.includes("nano") ? 1.25 : model.includes("luna") ? 5.985 : 4.5;
 
 const getModelPriceEnvSuffix = (model: string): string =>
   model
@@ -1314,42 +1375,56 @@ const callHostedTextModel = async (
     Math.min(Math.max(request.timeoutMs || 60_000, 5_000), 120_000),
   );
   const prompt = buildPrompt(request.parts || []);
+  const useResponsesApi =
+    provider === "openai" && isOpenAiResponsesModel(model);
 
-  const body: JsonObject = {
-    model,
-    messages: [
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    temperature: 0.2,
-    max_completion_tokens: 8192,
-  };
+  const body: JsonObject = useResponsesApi
+    ? {
+        model,
+        input: prompt,
+        reasoning: { effort: getHostedOpenAiReasoningEffort() },
+        max_output_tokens: 8192,
+      }
+    : {
+        model,
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.2,
+        max_completion_tokens: 8192,
+      };
 
   if (request.responseSchema) {
-    body.response_format = {
-      type: "json_schema",
-      json_schema: {
-        name: "studymesh_response",
-        strict: true,
-        schema: toJsonSchema(request.responseSchema, {
-          requireAllObjectProperties: provider === "openai",
-        }),
-      },
+    const jsonSchema = {
+      name: "studymesh_response",
+      strict: true,
+      schema: toJsonSchema(request.responseSchema, {
+        requireAllObjectProperties: provider === "openai",
+      }),
     };
+    if (useResponsesApi) {
+      body.text = { format: { type: "json_schema", ...jsonSchema } };
+    } else {
+      body.response_format = { type: "json_schema", json_schema: jsonSchema };
+    }
   }
 
   try {
-    const response = await fetch(config.url, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        authorization: `Bearer ${config.apiKey}`,
-        "content-type": "application/json",
+    const response = await fetch(
+      useResponsesApi ? OPENAI_RESPONSES_URL : config.url,
+      {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          authorization: `Bearer ${config.apiKey}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(body),
       },
-      body: JSON.stringify(body),
-    });
+    );
     const payload = (await readResponseJson(
       response,
     )) as ChatCompletionResponse;
@@ -1368,7 +1443,9 @@ const callHostedTextModel = async (
       throw error;
     }
 
-    const text = extractChatCompletionText(payload);
+    const text = useResponsesApi
+      ? extractResponsesApiText(payload)
+      : extractChatCompletionText(payload);
 
     if (!text.trim()) {
       const error = new Error(`${config.label} returned an empty response.`);
@@ -2488,6 +2565,7 @@ const generateEnhancedHostedStudyGuide = async ({
     | undefined;
   let relevanceDecisionFailed = false;
   const baseSource = buildEnhancedGuideSource({ topic, blueprint, pages });
+  const supportSource = baseSource.slice(0, SUPPORT_STAGE_SOURCE_MAX_CHARS);
 
   if (knowledgeContextPlan.shouldRunAutoRelevance) {
     try {
@@ -2500,7 +2578,7 @@ const generateEnhancedHostedStudyGuide = async ({
               text: buildStudyGuideQuickStartRelevancePrompt({
                 title: blueprint.title,
                 prompt: topic,
-                source: baseSource,
+                source: supportSource,
                 userKnownTopics: safeKnownTopics,
                 bridgeMode: "auto",
                 outputLanguage: usageRequest.outputLanguage,
@@ -2529,7 +2607,7 @@ const generateEnhancedHostedStudyGuide = async ({
             {
               text: buildStudyGuideQuickStartPrompt({
                 title: blueprint.title,
-                source: baseSource,
+                source: supportSource,
                 relevanceDecision,
                 bridgeMode: "auto",
                 outputLanguage: usageRequest.outputLanguage,
@@ -2596,7 +2674,7 @@ const generateEnhancedHostedStudyGuide = async ({
                       text: buildStudyGuideQuickStartRelevancePrompt({
                         title: blueprint.title,
                         prompt: topic,
-                        source: baseSource,
+                        source: supportSource,
                         userKnownTopics: safeKnownTopics,
                         bridgeMode: "force",
                         outputLanguage: usageRequest.outputLanguage,
@@ -2622,7 +2700,7 @@ const generateEnhancedHostedStudyGuide = async ({
               {
                 text: buildStudyGuideQuickStartPrompt({
                   title: blueprint.title,
-                  source: baseSource,
+                  source: supportSource,
                   relevanceDecision: forcedRelevanceDecision,
                   bridgeMode: "force",
                   outputLanguage: usageRequest.outputLanguage,

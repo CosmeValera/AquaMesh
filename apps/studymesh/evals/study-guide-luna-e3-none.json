@@ -1,0 +1,617 @@
+{
+  "createdAt": "2026-07-17T22:48:49.231Z",
+  "mode": "4+2-enhanced-only-no-evaluator",
+  "models": {
+    "mini": "gpt-5.6-luna",
+    "nano": "gpt-5.4-nano",
+    "support": "gpt-5.4-mini",
+    "miniPriceMultiplier": 1.33,
+    "miniReasoningEffort": "none",
+    "blueprintBrevity": true,
+    "supportBrevity": true,
+    "supportSourceChars": null
+  },
+  "tuples": [
+    {
+      "id": "vue-react-context",
+      "prompt": "What is Vue?",
+      "knownTopics": [
+        "React"
+      ],
+      "expectedKnownTopic": "React"
+    },
+    {
+      "id": "photography-lightroom-context",
+      "prompt": "Basics of photography",
+      "knownTopics": [
+        "Lightroom",
+        "Photoshop",
+        "Figma",
+        "React"
+      ],
+      "expectedKnownTopic": "Lightroom"
+    }
+  ],
+  "summary": {
+    "results": [
+      {
+        "option": "4+2-enhanced",
+        "tupleId": "vue-react-context",
+        "prompt": "What is Vue?",
+        "generationCostUsd": 0.01765523,
+        "selectedKnownTopics": [
+          "React"
+        ],
+        "selectedExpectedTopic": true,
+        "deterministicChecks": {
+          "pageCount": 3,
+          "finalQuizQuestions": 6,
+          "quizBadSmellCount": 0,
+          "bridgeBlockCount": 1,
+          "codeBlockCount": 3,
+          "quickSummaryIncompleteEnding": false,
+          "rawNotesIncompleteEnding": false,
+          "placeholderExampleCount": 0,
+          "averagePageWords": 369.3333333333333
+        },
+        "stageCosts": [
+          {
+            "stage": "4+2-enhanced_mini_blueprint",
+            "model": "gpt-5.6-luna",
+            "costUsd": 0.00711018,
+            "inputTokens": 636,
+            "outputTokens": 1082
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_1",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00108375,
+            "inputTokens": 1850,
+            "outputTokens": 571
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_2",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0010598,
+            "inputTokens": 1849,
+            "outputTokens": 552
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_3",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0010502,
+            "inputTokens": 1876,
+            "outputTokens": 540
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_relevance_auto",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.0024555,
+            "inputTokens": 2608,
+            "outputTokens": 111
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_personalized",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.0026475,
+            "inputTokens": 2516,
+            "outputTokens": 169
+          },
+          {
+            "stage": "4+2-enhanced_knowledge_bridge_blocks",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.00114225,
+            "inputTokens": 815,
+            "outputTokens": 118
+          },
+          {
+            "stage": "4+2-enhanced_nano_final_quiz",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00110605,
+            "inputTokens": 2074,
+            "outputTokens": 553
+          }
+        ]
+      },
+      {
+        "option": "4+2-enhanced",
+        "tupleId": "photography-lightroom-context",
+        "prompt": "Basics of photography",
+        "generationCostUsd": 0.01849838,
+        "selectedKnownTopics": [
+          "Lightroom"
+        ],
+        "selectedExpectedTopic": true,
+        "deterministicChecks": {
+          "pageCount": 3,
+          "finalQuizQuestions": 6,
+          "quizBadSmellCount": 0,
+          "bridgeBlockCount": 1,
+          "codeBlockCount": 0,
+          "quickSummaryIncompleteEnding": false,
+          "rawNotesIncompleteEnding": false,
+          "placeholderExampleCount": 0,
+          "averagePageWords": 395.6666666666667
+        },
+        "stageCosts": [
+          {
+            "stage": "4+2-enhanced_mini_blueprint",
+            "model": "gpt-5.6-luna",
+            "costUsd": 0.00812663,
+            "inputTokens": 641,
+            "outputTokens": 1251
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_1",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00109595,
+            "inputTokens": 2086,
+            "outputTokens": 543
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_2",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00100905,
+            "inputTokens": 2064,
+            "outputTokens": 477
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_3",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0010409,
+            "inputTokens": 2092,
+            "outputTokens": 498
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_relevance_auto",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.00249825,
+            "inputTokens": 2539,
+            "outputTokens": 132
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_personalized",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.00246225,
+            "inputTokens": 2437,
+            "outputTokens": 141
+          },
+          {
+            "stage": "4+2-enhanced_knowledge_bridge_blocks",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.001101,
+            "inputTokens": 784,
+            "outputTokens": 114
+          },
+          {
+            "stage": "4+2-enhanced_nano_final_quiz",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00116435,
+            "inputTokens": 1953,
+            "outputTokens": 619
+          }
+        ]
+      }
+    ],
+    "comparisons": [
+      {
+        "tupleId": "vue-react-context",
+        "missingBaseline": true
+      },
+      {
+        "tupleId": "photography-lightroom-context",
+        "missingBaseline": true
+      }
+    ],
+    "generationCostUsdTotal": 0.03615361
+  },
+  "results": [
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "vue-react-context",
+      "prompt": "What is Vue?",
+      "knownTopics": [
+        "React"
+      ],
+      "expectedKnownTopic": "React",
+      "selectedKnownTopics": [
+        "React"
+      ],
+      "selectedExpectedTopic": true,
+      "guide": {
+        "title": "What Is Vue?",
+        "quickStart": {
+          "keyIdea": "Vue is a React-like way to build user interfaces, but it packages the common patterns into a more integrated framework centered on templates and built-in reactivity.",
+          "quickSummary": "Vue belongs to the same family as React: both build interfaces from components, render declaratively, and keep data flowing one way. The main difference is that Vue’s default style leans on HTML-like templates and built-in reactivity, so state changes update the UI with less setup.\n\nVue is used for anything from small interactive widgets to full single-page apps. Its component model makes UI pieces reusable, while props and events handle parent-child communication. The comparison with React is useful, but it breaks where Vue’s template-first, more integrated framework style differs from React’s JSX and library-first ecosystem."
+        },
+        "pages": [
+          {
+            "title": "01 - Vue’s Core Identity and Architecture",
+            "rawNotes": "## Vue’s core identity\nVue is an open-source JavaScript framework for building user interfaces, and it was created by Evan You with a first public release in 2014. Vue’s main job is to help you connect application state to what users see, so your interface stays consistent as data changes. Vue is maintained by an open-source community led by the Vue core team, which supports ongoing improvements and ecosystem growth.\n\n## Declarative rendering and reactivity\nVue uses declarative rendering, which means you describe what the UI should look like for a given state rather than manually issuing DOM operations. Vue’s reactivity system tracks dependencies between state and the parts of the template that use it, and it triggers relevant updates when state changes. This creates a practical workflow where you update data and let Vue update the visible output efficiently.\n\n## Components as reusable building blocks\nVue interfaces are built from reusable, composable components, which lets you decompose a larger UI into smaller, independently understandable units. A component typically encapsulates structure, behavior, and presentation, so you can reuse it across different parts of an application. Vue commonly uses single-file components, where a single file includes a template section, a script section, and a style section.\n\n## Progressive adoption and where Vue fits\nVue supports progressive adoption, meaning you can start with isolated widgets and later expand toward complete applications. This flexibility is useful when you want to enhance server-rendered pages with embedded interactive areas, or when you want to organize a client-side single-page application. Vue can therefore fit different project sizes and integration styles without forcing an all-or-nothing rewrite.\n\n## Minimal example: reactive greeting in a single-file component\nHere is a minimal Vue single-file component that displays a reactive greeting.\n\n```vue\n<template>\n  <p>{{ greeting }}</p>\n</template>\n\n<script>\nexport default {\n  data() {\n    return {\n      greeting: 'Hello from Vue'\n    };\n  }\n};\n</script>\n\n<style scoped>\n  p { font-family: sans-serif; }\n</style>\n```\n\n## From widget to routed application\nA concrete progression is to begin with one component like the greeting widget, then add more components to build a page, and finally introduce routing so navigation swaps between views without reloading the whole page. Vue’s component model and reactivity make this step-by-step growth manageable.\n\n## Framework, not language\nVue is a framework rather than a programming language, runtime, or browser replacement, so you still write JavaScript and use Vue to structure and update the user interface.",
+            "quizQuestions": []
+          },
+          {
+            "title": "02 - Templates, Reactivity, and Component Communication",
+            "rawNotes": "## Vue templates: HTML with dynamic directives\nVue templates look like familiar HTML, but they add special syntax for dynamic behavior. **Double-mustache interpolation** like `{{ expression }}` renders the evaluated expression as text in the page. **Directives** extend HTML with rules that connect the template to application state and user actions.\n\nTwo of the most common directives are **v-bind** and **v-on**. **v-bind** (often shortened to `:`) binds an attribute to a value, so the DOM reflects current state. **v-on** (often shortened to `@`) listens for events, so user interactions can trigger functions. For conditional and repeated UI, **v-if** renders content only when a condition is true, and **v-for** repeats template content for each item in a list.\n\n## Reactivity in the Composition API\nVue’s Composition API uses reactive primitives to keep the UI in sync with state. **ref** creates a reactive value, and in JavaScript you access it through `.value`. **reactive** creates a reactive object, which you can read and write as normal properties. This reactivity matters because template output updates when the underlying reactive data changes.\n\n## Component communication: props down, events up\nWhen building components, Vue typically uses **one-way data flow**. **Props** pass data from a parent component to a child component. If the child needs to request a change, it uses **emits** to send a named event back to the parent, rather than directly mutating props.\n\n## Minimal example: ref, v-bind, v-on, and a click handler\n```vue\n<template>\n  <button :title=\"greeting\" @click=\"increment\">\n    {{ greeting }} ({{ count }})\n  </button>\n</template>\n\n<script>\nimport { ref } from 'vue'\n\nexport default {\n  setup() {\n    const count = ref(0)\n    const greeting = ref('Hello')\n\n    function increment() {\n      count.value++\n    }\n\n    return { count, greeting, increment }\n  }\n}\n</script>\n```\n\n## Parent-child example: prop plus emitted update event\nA parent can pass a value as a prop, and the child can emit an event like `update` when the user clicks a button. The parent listens for that emitted event and updates its own state, which then flows back down to the child through the prop.",
+            "quizQuestions": []
+          },
+          {
+            "title": "03 - APIs, Tooling, and Vue Compared with React",
+            "rawNotes": "## Vue APIs: Options API vs Composition API\nVue gives you two ways to organize component logic, and choosing between them is mostly about how you want to structure code. The **Options API** groups logic into familiar options such as `data`, `methods`, and `computed`, which can feel approachable because related concerns are placed in recognizable sections. The **Composition API** groups related logic inside **setup-based functions** and **composables**, which helps when you want to keep behavior together, reuse it across components, or work comfortably with TypeScript.\n\nA practical way to think about it is that both APIs support the same overall goal, but they encourage different organization styles. If your component is small, the Options API can be straightforward, while larger components often benefit from the Composition API’s ability to group and reuse related behavior.\n\n## Official tooling: Vite, Router, and Pinia\nFor new Vue projects, the standard modern workflow commonly uses **Vite** as the build tool to scaffold and run the application. For navigation, **Vue Router** is the official routing solution for Vue applications. When you need shared application state across multiple parts of the app, **Pinia** is the officially recommended state-management library for new Vue projects.\n\nThis tooling story matters because it reduces decision fatigue, letting you focus on building features rather than assembling core infrastructure.\n\n## Vue vs React: same ideas, different expression\nVue and React both use components, declarative updates, and one-way data flow, but they differ in how developers express UI. Vue commonly uses **HTML-like templates and directives**, while React commonly expresses markup through **JSX** and relies more on chosen libraries for many defaults. Vue is often described as a more integrated framework experience, whereas React is primarily a UI library.\n\nNeither approach is universally superior, because project constraints determine fit.\n\n## Example: Composition API with a computed value\n```vue\n<template>\n  <button @click=\"count++\">Clicked {{ count }}</button>\n  <p>Double: {{ doubleCount }}</p>\n</template>\n\n<script setup>\nimport { ref, computed } from 'vue'\n\nconst count = ref(0)\nconst doubleCount = computed(() => count.value * 2)\n</script>\n```\n\nThis example shows how the Composition API can keep state (`count`) and derived state (`doubleCount`) together, while the template declaratively renders the current values.",
+            "quizQuestions": [
+              {
+                "question": "You want a Vue component to update a DOM attribute whenever a reactive value changes. Which template feature best matches that goal?",
+                "options": [
+                  "v-bind (or :)",
+                  "v-on (or @)",
+                  "v-for"
+                ],
+                "correctIndex": 0,
+                "explanation": "v-bind links an attribute to a value so the DOM reflects current state.",
+                "skillTested": "Applying Vue template directives to state-driven UI"
+              },
+              {
+                "question": "In Vue’s Composition API, you create a reactive primitive with which construct, and how do you read it in JavaScript?",
+                "options": [
+                  "reactive; access it as a normal property",
+                  "ref; access it via .value",
+                  "computed; access it via .value"
+                ],
+                "correctIndex": 1,
+                "explanation": "ref creates a reactive value that you read/write using .value.",
+                "skillTested": "Using Vue reactivity primitives correctly"
+              },
+              {
+                "question": "A child component needs to request a change to data owned by its parent. What is the recommended communication pattern?",
+                "options": [
+                  "Child directly mutates the prop",
+                  "Child emits a named event; parent updates state",
+                  "Child uses v-bind to overwrite the parent’s state"
+                ],
+                "correctIndex": 1,
+                "explanation": "Vue uses one-way data flow: props down, events up via emits.",
+                "skillTested": "Diagnosing correct parent-child communication in Vue"
+              },
+              {
+                "question": "You start with a single interactive widget and later expand into a full single-page app with navigation that swaps views without reloading. Which Vue capability best supports this growth path?",
+                "options": [
+                  "Progressive adoption with adding routing later",
+                  "Replacing JavaScript with a browser runtime",
+                  "Using only templates without components"
+                ],
+                "correctIndex": 0,
+                "explanation": "Vue supports progressive adoption, letting you grow from widgets to routed apps.",
+                "skillTested": "Predicting how Vue fits different project scales"
+              },
+              {
+                "question": "You’re comparing Vue and React for a project. Which pairing best reflects the guide’s main difference in how UI is expressed?",
+                "options": [
+                  "Vue uses HTML-like templates/directives; React commonly uses JSX",
+                  "Vue uses JSX; React uses HTML-like templates",
+                  "Vue is a language; React is a framework"
+                ],
+                "correctIndex": 0,
+                "explanation": "Both are component-based and declarative, but Vue typically uses templates/directives while React often uses JSX.",
+                "skillTested": "Comparing Vue vs React based on UI expression"
+              },
+              {
+                "question": "You need shared state across multiple parts of a new Vue application. Which official tool from the guide is intended for that purpose?",
+                "options": [
+                  "Pinia",
+                  "Vue Router",
+                  "Vite"
+                ],
+                "correctIndex": 0,
+                "explanation": "Pinia is the officially recommended state-management library for new Vue projects.",
+                "skillTested": "Selecting appropriate Vue ecosystem tooling"
+              }
+            ]
+          }
+        ],
+        "bridgeBlocks": [
+          {
+            "dashboardIndex": 1,
+            "title": "Vue templates vs React JSX",
+            "body": "If you know React, Vue templates play a similar role to JSX: both describe UI from state and re-render when data changes. Vue’s `{{ }}` interpolation and directives like `v-bind` and `v-on` map to the same basic ideas as embedding expressions and attaching handlers in React. Caveat: Vue keeps more logic in the template syntax, while React usually puts more in JavaScript, so the code shape feels different."
+          }
+        ]
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.6-luna",
+          "inputTokens": 636,
+          "cachedInputTokens": 0,
+          "outputTokens": 1082,
+          "totalTokens": 1718,
+          "costUsd": 0.00711018
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1850,
+          "cachedInputTokens": 0,
+          "outputTokens": 571,
+          "totalTokens": 2421,
+          "costUsd": 0.00108375
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1849,
+          "cachedInputTokens": 0,
+          "outputTokens": 552,
+          "totalTokens": 2401,
+          "costUsd": 0.0010598
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1876,
+          "cachedInputTokens": 0,
+          "outputTokens": 540,
+          "totalTokens": 2416,
+          "costUsd": 0.0010502
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2608,
+          "cachedInputTokens": 0,
+          "outputTokens": 111,
+          "totalTokens": 2719,
+          "costUsd": 0.0024555
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2516,
+          "cachedInputTokens": 0,
+          "outputTokens": 169,
+          "totalTokens": 2685,
+          "costUsd": 0.0026475
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 815,
+          "cachedInputTokens": 0,
+          "outputTokens": 118,
+          "totalTokens": 933,
+          "costUsd": 0.00114225
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2074,
+          "cachedInputTokens": 0,
+          "outputTokens": 553,
+          "totalTokens": 2627,
+          "costUsd": 0.00110605
+        }
+      ],
+      "generationCostUsd": 0.01765523,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 3,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 369.3333333333333
+      }
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "photography-lightroom-context",
+      "prompt": "Basics of photography",
+      "knownTopics": [
+        "Lightroom",
+        "Photoshop",
+        "Figma",
+        "React"
+      ],
+      "expectedKnownTopic": "Lightroom",
+      "selectedKnownTopics": [
+        "Lightroom"
+      ],
+      "selectedExpectedTopic": true,
+      "guide": {
+        "title": "Basics of Photography",
+        "quickStart": {
+          "keyIdea": "Photography is the craft of shaping light into a clear image, where exposure, focus, composition, and timing decide how the scene is recorded.",
+          "quickSummary": "Photography is about controlling how light becomes a picture. Exposure balances aperture, shutter speed, and ISO, while focus and white balance help keep the subject sharp and the color believable.\n\nComposition gives the frame purpose by guiding attention with placement, lines, and space. Lightroom can refine a strong capture, but it cannot fully rescue poor exposure or focus, so the camera decisions still matter most. The boundary is simple: editing improves a photo; it does not replace making one well."
+        },
+        "pages": [
+          {
+            "title": "01 - Exposure and Camera Controls",
+            "rawNotes": "## What “exposure” really means\nExposure is the sensor’s received light, and it is determined by aperture, shutter speed, and ISO. These three controls work together, so you can often reach similar brightness with different trade-offs. Think of exposure as a balance you adjust to match the look you want and the motion you must capture.\n\n## Aperture: light and depth of field\nA wider aperture, shown by a smaller f-number, admits more light and reduces depth of field. A narrower aperture, shown by a larger f-number, admits less light and increases depth of field. This means aperture affects both how bright the image is and how much of the scene appears acceptably sharp.\n\n## Shutter speed: motion and light\nA faster shutter speed reduces motion blur but admits less light. A slower shutter speed admits more light, but it can record camera shake or subject movement. If your subject is moving, you typically need a faster shutter speed to keep details crisp.\n\n## ISO: brightness, noise, and dynamic range\nRaising ISO brightens the recorded image, but it generally increases noise and reduces dynamic range. Lower ISO usually preserves more tonal detail, especially in challenging lighting. When you raise ISO, you are trading cleanliness of the image for brightness.\n\n## Exposure compensation and metering\nExposure compensation shifts the camera’s metered exposure when the scene is unusually bright or dark. Metering estimates exposure from scene brightness, but reflective snow, backlit subjects, or dark backgrounds can mislead it. In those cases, the camera may underexpose or overexpose unless you correct it.\n\n## Reading the histogram to protect detail\nThe histogram shows tonal distribution, and clipped highlights or shadows contain lost detail. If the histogram indicates clipping, you should adjust exposure compensation or your manual settings to recover what you can. This is a practical way to confirm whether your exposure preserved useful tones.\n\n## Example trade-offs you can compare\nTry the same subject three times: use a wide aperture for a brighter frame with less depth of field, use a fast shutter speed for sharper motion with less light, and use high ISO for brightness with more noise. You will see that similar brightness can still produce different sharpness, blur, and texture.\n\n## Lightroom histogram correction example\nIn Lightroom, start by checking the histogram for clipped highlights, then reduce exposure and use highlight adjustments to bring the clipped tones back into the visible range. After correction, compare the histogram again to confirm that the tonal distribution is no longer pushed into clipping.",
+            "quizQuestions": []
+          },
+          {
+            "title": "02 - Focus, Color, and Light",
+            "rawNotes": "## Focus: make the right detail sharp\nStart by deciding what must be sharp in your scene, because focus is about placing sharpness where it matters most. In a portrait, that often means focusing on an eye so the viewer’s attention lands immediately. For stationary subjects, autofocus behavior can be simpler, but for continuously moving subjects you typically need autofocus modes that distinguish stationary from moving action.\n\nWhen you want control over exactly what receives focus, use single-point autofocus so the camera focuses on the chosen subject detail rather than guessing. For moving subjects, focus placement and shutter timing work together, since the moment you press the shutter determines whether the subject is in the focus plane. A useful way to think about this is that autofocus selection and tracking behavior help you stay locked, while timing helps you capture the moment that is actually sharp.\n\n## Depth of field: more than background blur\nDepth of field describes the range that appears acceptably sharp, and it changes with aperture, focal length, subject distance, and sensor format. This means the same “background blur” look can come from different setups, so you should judge depth of field based on your framing and distance, not only on the background.\n\n## Color: correct or intentionally preserve\nDifferent light sources have different color temperatures, such as daylight, shade, and tungsten, and mixed lighting can add complexity. White balance compensates for these color temperature differences, which helps preserve accurate color when you want it, or it can be used to intentionally keep a certain mood.\n\n## RAW vs JPEG: flexibility vs speed\nRAW files preserve more adjustable tonal and color data than processed JPEG files, which makes RAW a strong choice when you expect to recover highlights or adjust color significantly. JPEG files are smaller and immediately viewable, but they rely on in-camera processing and compression, which reduces later flexibility.\n\n## Light direction and quality: shape the scene\nBefore changing camera settings, observe light direction, size, and contrast. Front light tends to reveal detail evenly, side light emphasizes texture, and backlight can create silhouettes or rim light. Hard light creates stronger shadows and contrast than soft, diffused light, so the same subject can look dramatically different depending on how the light falls.",
+            "quizQuestions": []
+          },
+          {
+            "title": "03 - Composition, Workflow, and Editing",
+            "rawNotes": "## Composition first, then refine with editing.\nComposition is the plan for how subjects, lines, shapes, space, and visual weight sit inside the frame, so your viewer instantly knows what matters. A helpful starting guide is the rule of thirds, which suggests placing important elements near grid intersections or lines, but it should not override what the scene is actually saying. Look for leading lines that pull attention toward a subject or focal area, and use negative space to isolate the subject and communicate scale, calm, or direction.\n\nBefore you shoot, inspect the edges and the background for clutter, and check whether empty space supports the message you want. If the background distracts, change your viewpoint by moving lower or higher, because that can alter relationships, scale, and what ends up behind your subject. Also remember that focal length changes the angle of view and how the frame feels, while camera position primarily changes perspective, so try moving your body before assuming the lens alone will fix the composition.\n\nWhen you edit, use a non-destructive Lightroom workflow that preserves the original file while applying reversible edits and metadata. A practical flow is import, organize, select, develop, export, and back up, which keeps decisions traceable and reduces accidental loss. Start with profiles and global adjustments, then move to targeted corrections so you do not fight the image with overly specific changes too early.\n\nFinally, apply finishing edits with restraint so they support the subject without creating distracting artifacts. Cropping can remove distractions, but it should not replace better framing decisions, and sharpening should be judged at viewing size so it looks crisp rather than crunchy. Export settings depend on where the image will go, since web delivery needs suitable dimensions and color handling, while prints require output-specific resolution and color management.\n\n### Example: two viewpoints, one subject.\nImagine photographing the same person standing near a path, and try one composition from a low angle that uses the path’s edges as leading lines, then another from a higher angle that leaves more negative space above the head for calm separation.\n\n### Example: a Lightroom workflow you can repeat.\nImport the photos, organize them into a labeled set, select the best candidates, apply non-destructive edits in Develop, export a JPEG for web, and back up the catalog and files so the work remains recoverable.",
+            "quizQuestions": [
+              {
+                "question": "You want the same overall brightness, but you also need more background in focus. Which change best matches that goal based on the guide?",
+                "options": [
+                  "Use a wider aperture (smaller f-number)",
+                  "Use a narrower aperture (larger f-number)",
+                  "Increase ISO to compensate for the aperture change"
+                ],
+                "correctIndex": 1,
+                "explanation": "A narrower aperture (larger f-number) admits less light but increases depth of field, helping more of the scene stay acceptably sharp.",
+                "skillTested": "Applying exposure and depth-of-field trade-offs"
+              },
+              {
+                "question": "A subject is moving quickly and you notice motion blur. What is the most direct camera-control adjustment to reduce blur?",
+                "options": [
+                  "Slow down the shutter speed",
+                  "Use a faster shutter speed",
+                  "Raise ISO to brighten the scene"
+                ],
+                "correctIndex": 1,
+                "explanation": "The guide states that faster shutter speeds reduce motion blur, while slower speeds can record subject movement and camera shake.",
+                "skillTested": "Predicting effects of shutter speed on motion"
+              },
+              {
+                "question": "Your histogram shows clipped highlights after shooting a bright scene. What should you do first to protect detail?",
+                "options": [
+                  "Increase exposure compensation to make the image brighter",
+                  "Reduce exposure (or adjust manual exposure) and use highlight adjustments",
+                  "Switch from RAW to JPEG to limit tonal range"
+                ],
+                "correctIndex": 1,
+                "explanation": "Clipped highlights mean lost detail; the guide recommends adjusting exposure compensation/manual settings and then using highlight adjustments to bring tones back.",
+                "skillTested": "Diagnosing exposure using the histogram"
+              },
+              {
+                "question": "You’re photographing a portrait and want the viewer’s attention to land immediately on the subject’s eye. What is the best in-camera focus approach described?",
+                "options": [
+                  "Rely on autofocus guessing with no focus selection",
+                  "Use single-point autofocus focused on the eye",
+                  "Shoot in JPEG so the camera locks focus automatically"
+                ],
+                "correctIndex": 1,
+                "explanation": "The guide recommends deciding what must be sharp and using single-point autofocus so the camera focuses on the chosen detail (often the eye).",
+                "skillTested": "Transferring focus strategy to a specific scenario"
+              },
+              {
+                "question": "Mixed lighting makes colors look off. What tool from the guide helps correct (or intentionally preserve) the color cast?",
+                "options": [
+                  "White balance",
+                  "Exposure compensation",
+                  "Cropping"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide explains that white balance compensates for different color temperatures from light sources and can also be used intentionally for mood.",
+                "skillTested": "Applying color management concepts"
+              },
+              {
+                "question": "You want to improve a photo without risking the original data. Which workflow choice best matches the guide’s editing approach?",
+                "options": [
+                  "Use a non-destructive Lightroom workflow that preserves the original file",
+                  "Replace the original file with heavy sharpening and cropping",
+                  "Export only and delete the catalog to save space"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide emphasizes non-destructive editing in Lightroom to preserve the original file and keep edits reversible with traceable decisions.",
+                "skillTested": "Selecting an appropriate editing workflow and risk management"
+              }
+            ]
+          }
+        ],
+        "bridgeBlocks": [
+          {
+            "dashboardIndex": 1,
+            "title": "Focus before editing",
+            "body": "Lightroom can refine sharpness after capture, but it cannot truly fix a missed focus point. That makes focus a good in-camera decision first: choose the subject detail that must be sharp, then use editing only for small improvements like clarity or sharpening. This is similar to how Lightroom helps polish a photo rather than replace good technique. Caveat: heavy sharpening can create artifacts, so it is not the same as real optical focus."
+          }
+        ]
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.6-luna",
+          "inputTokens": 641,
+          "cachedInputTokens": 0,
+          "outputTokens": 1251,
+          "totalTokens": 1892,
+          "costUsd": 0.00812663
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2086,
+          "cachedInputTokens": 0,
+          "outputTokens": 543,
+          "totalTokens": 2629,
+          "costUsd": 0.00109595
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2064,
+          "cachedInputTokens": 0,
+          "outputTokens": 477,
+          "totalTokens": 2541,
+          "costUsd": 0.00100905
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2092,
+          "cachedInputTokens": 0,
+          "outputTokens": 498,
+          "totalTokens": 2590,
+          "costUsd": 0.0010409
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2539,
+          "cachedInputTokens": 0,
+          "outputTokens": 132,
+          "totalTokens": 2671,
+          "costUsd": 0.00249825
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2437,
+          "cachedInputTokens": 0,
+          "outputTokens": 141,
+          "totalTokens": 2578,
+          "costUsd": 0.00246225
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 784,
+          "cachedInputTokens": 0,
+          "outputTokens": 114,
+          "totalTokens": 898,
+          "costUsd": 0.001101
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1953,
+          "cachedInputTokens": 0,
+          "outputTokens": 619,
+          "totalTokens": 2572,
+          "costUsd": 0.00116435
+        }
+      ],
+      "generationCostUsd": 0.01849838,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 0,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 395.6666666666667
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "tupleId": "vue-react-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "photography-lightroom-context",
+      "missingBaseline": true
+    }
+  ]
+}

@@ -1,0 +1,340 @@
+{
+  "results": [
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "terraform-hard-context",
+      "prompt": "What is Terraform?",
+      "generationCostUsd": 0.01558955,
+      "selectedKnownTopics": [
+        "Ansible"
+      ],
+      "selectedExpectedTopic": true,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 3,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 346.3333333333333
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00565425,
+          "inputTokens": 561,
+          "outputTokens": 1163
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00101825,
+          "inputTokens": 1960,
+          "outputTokens": 501
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00100845,
+          "inputTokens": 1986,
+          "outputTokens": 489
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00094975,
+          "inputTokens": 2030,
+          "outputTokens": 435
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.002289,
+          "inputTokens": 2428,
+          "outputTokens": 104
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00245925,
+          "inputTokens": 2295,
+          "outputTokens": 164
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.0011145,
+          "inputTokens": 748,
+          "outputTokens": 123
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0010961,
+          "inputTokens": 1868,
+          "outputTokens": 578
+        }
+      ]
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "vue-react-context",
+      "prompt": "What is Vue?",
+      "generationCostUsd": 0.01662675,
+      "selectedKnownTopics": [
+        "React"
+      ],
+      "selectedExpectedTopic": true,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 2,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 347
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00633825,
+          "inputTokens": 549,
+          "outputTokens": 1317
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0009909,
+          "inputTokens": 2217,
+          "outputTokens": 438
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0010639,
+          "inputTokens": 2207,
+          "outputTokens": 498
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0010731,
+          "inputTokens": 2228,
+          "outputTokens": 502
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00229875,
+          "inputTokens": 2447,
+          "outputTokens": 103
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00247725,
+          "inputTokens": 2331,
+          "outputTokens": 162
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00114825,
+          "inputTokens": 769,
+          "outputTokens": 127
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00123635,
+          "inputTokens": 1888,
+          "outputTokens": 687
+        }
+      ]
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "roman-empire-history-context",
+      "prompt": "What was the Roman Empire?",
+      "generationCostUsd": 0.0166759,
+      "selectedKnownTopics": [
+        "Roman Republic"
+      ],
+      "selectedExpectedTopic": true,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 0,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 362
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00618675,
+          "inputTokens": 563,
+          "outputTokens": 1281
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00105895,
+          "inputTokens": 2151,
+          "outputTokens": 503
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0010465,
+          "inputTokens": 2145,
+          "outputTokens": 494
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0009108,
+          "inputTokens": 2129,
+          "outputTokens": 388
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.0023505,
+          "inputTokens": 2462,
+          "outputTokens": 112
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00268875,
+          "inputTokens": 2337,
+          "outputTokens": 208
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.0012045,
+          "inputTokens": 772,
+          "outputTokens": 139
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00122915,
+          "inputTokens": 1927,
+          "outputTokens": 675
+        }
+      ]
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "photography-lightroom-context",
+      "prompt": "Basics of photography",
+      "generationCostUsd": 0.0166131,
+      "selectedKnownTopics": [
+        "Lightroom"
+      ],
+      "selectedExpectedTopic": true,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 0,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 405.3333333333333
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.005973,
+          "inputTokens": 554,
+          "outputTokens": 1235
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0010774,
+          "inputTokens": 2087,
+          "outputTokens": 528
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00104715,
+          "inputTokens": 2092,
+          "outputTokens": 503
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0010491,
+          "inputTokens": 2083,
+          "outputTokens": 506
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.002388,
+          "inputTokens": 2602,
+          "outputTokens": 97
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.0026055,
+          "inputTokens": 2472,
+          "outputTokens": 167
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.0011775,
+          "inputTokens": 772,
+          "outputTokens": 133
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00129545,
+          "inputTokens": 2021,
+          "outputTokens": 713
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "tupleId": "terraform-hard-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "vue-react-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "roman-empire-history-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "photography-lightroom-context",
+      "missingBaseline": true
+    }
+  ],
+  "generationCostUsdTotal": 0.0655053
+}
+Saved enhanced results to C:\Users\cosme\Desktop\Cosme (Local)\Projects\StudyMesh\apps\studymesh\evals\study-guide-luna-benchmark-mini.json

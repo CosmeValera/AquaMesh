@@ -1,0 +1,1209 @@
+{
+  "createdAt": "2026-07-10T17:23:01.061Z",
+  "mode": "4+2-enhanced-only-no-evaluator",
+  "models": {
+    "mini": "gpt-5.4-mini",
+    "nano": "gpt-5.4-nano",
+    "miniPriceMultiplier": 1,
+    "miniReasoningEffort": null
+  },
+  "tuples": [
+    {
+      "id": "terraform-hard-context",
+      "prompt": "What is Terraform?",
+      "knownTopics": [
+        "Rundeck",
+        "Docker",
+        "MinIO/S3",
+        "Ansible"
+      ],
+      "expectedKnownTopic": "Ansible"
+    },
+    {
+      "id": "vue-react-context",
+      "prompt": "What is Vue?",
+      "knownTopics": [
+        "React"
+      ],
+      "expectedKnownTopic": "React"
+    },
+    {
+      "id": "roman-empire-history-context",
+      "prompt": "What was the Roman Empire?",
+      "knownTopics": [
+        "Roman Republic",
+        "Ancient Greece",
+        "Medieval Europe",
+        "React"
+      ],
+      "expectedKnownTopic": "Roman Republic"
+    },
+    {
+      "id": "photography-lightroom-context",
+      "prompt": "Basics of photography",
+      "knownTopics": [
+        "Lightroom",
+        "Photoshop",
+        "Figma",
+        "React"
+      ],
+      "expectedKnownTopic": "Lightroom"
+    }
+  ],
+  "summary": {
+    "results": [
+      {
+        "option": "4+2-enhanced",
+        "tupleId": "terraform-hard-context",
+        "prompt": "What is Terraform?",
+        "generationCostUsd": 0.01558955,
+        "selectedKnownTopics": [
+          "Ansible"
+        ],
+        "selectedExpectedTopic": true,
+        "deterministicChecks": {
+          "pageCount": 3,
+          "finalQuizQuestions": 6,
+          "quizBadSmellCount": 0,
+          "bridgeBlockCount": 1,
+          "codeBlockCount": 3,
+          "quickSummaryIncompleteEnding": false,
+          "rawNotesIncompleteEnding": false,
+          "placeholderExampleCount": 0,
+          "averagePageWords": 346.3333333333333
+        },
+        "stageCosts": [
+          {
+            "stage": "4+2-enhanced_mini_blueprint",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.00565425,
+            "inputTokens": 561,
+            "outputTokens": 1163
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_1",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00101825,
+            "inputTokens": 1960,
+            "outputTokens": 501
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_2",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00100845,
+            "inputTokens": 1986,
+            "outputTokens": 489
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_3",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00094975,
+            "inputTokens": 2030,
+            "outputTokens": 435
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_relevance_auto",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.002289,
+            "inputTokens": 2428,
+            "outputTokens": 104
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_personalized",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.00245925,
+            "inputTokens": 2295,
+            "outputTokens": 164
+          },
+          {
+            "stage": "4+2-enhanced_knowledge_bridge_blocks",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.0011145,
+            "inputTokens": 748,
+            "outputTokens": 123
+          },
+          {
+            "stage": "4+2-enhanced_nano_final_quiz",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0010961,
+            "inputTokens": 1868,
+            "outputTokens": 578
+          }
+        ]
+      },
+      {
+        "option": "4+2-enhanced",
+        "tupleId": "vue-react-context",
+        "prompt": "What is Vue?",
+        "generationCostUsd": 0.01662675,
+        "selectedKnownTopics": [
+          "React"
+        ],
+        "selectedExpectedTopic": true,
+        "deterministicChecks": {
+          "pageCount": 3,
+          "finalQuizQuestions": 6,
+          "quizBadSmellCount": 0,
+          "bridgeBlockCount": 1,
+          "codeBlockCount": 2,
+          "quickSummaryIncompleteEnding": false,
+          "rawNotesIncompleteEnding": false,
+          "placeholderExampleCount": 0,
+          "averagePageWords": 347
+        },
+        "stageCosts": [
+          {
+            "stage": "4+2-enhanced_mini_blueprint",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.00633825,
+            "inputTokens": 549,
+            "outputTokens": 1317
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_1",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0009909,
+            "inputTokens": 2217,
+            "outputTokens": 438
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_2",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0010639,
+            "inputTokens": 2207,
+            "outputTokens": 498
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_3",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0010731,
+            "inputTokens": 2228,
+            "outputTokens": 502
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_relevance_auto",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.00229875,
+            "inputTokens": 2447,
+            "outputTokens": 103
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_personalized",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.00247725,
+            "inputTokens": 2331,
+            "outputTokens": 162
+          },
+          {
+            "stage": "4+2-enhanced_knowledge_bridge_blocks",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.00114825,
+            "inputTokens": 769,
+            "outputTokens": 127
+          },
+          {
+            "stage": "4+2-enhanced_nano_final_quiz",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00123635,
+            "inputTokens": 1888,
+            "outputTokens": 687
+          }
+        ]
+      },
+      {
+        "option": "4+2-enhanced",
+        "tupleId": "roman-empire-history-context",
+        "prompt": "What was the Roman Empire?",
+        "generationCostUsd": 0.0166759,
+        "selectedKnownTopics": [
+          "Roman Republic"
+        ],
+        "selectedExpectedTopic": true,
+        "deterministicChecks": {
+          "pageCount": 3,
+          "finalQuizQuestions": 6,
+          "quizBadSmellCount": 0,
+          "bridgeBlockCount": 1,
+          "codeBlockCount": 0,
+          "quickSummaryIncompleteEnding": false,
+          "rawNotesIncompleteEnding": false,
+          "placeholderExampleCount": 0,
+          "averagePageWords": 362
+        },
+        "stageCosts": [
+          {
+            "stage": "4+2-enhanced_mini_blueprint",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.00618675,
+            "inputTokens": 563,
+            "outputTokens": 1281
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_1",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00105895,
+            "inputTokens": 2151,
+            "outputTokens": 503
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_2",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0010465,
+            "inputTokens": 2145,
+            "outputTokens": 494
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_3",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0009108,
+            "inputTokens": 2129,
+            "outputTokens": 388
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_relevance_auto",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.0023505,
+            "inputTokens": 2462,
+            "outputTokens": 112
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_personalized",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.00268875,
+            "inputTokens": 2337,
+            "outputTokens": 208
+          },
+          {
+            "stage": "4+2-enhanced_knowledge_bridge_blocks",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.0012045,
+            "inputTokens": 772,
+            "outputTokens": 139
+          },
+          {
+            "stage": "4+2-enhanced_nano_final_quiz",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00122915,
+            "inputTokens": 1927,
+            "outputTokens": 675
+          }
+        ]
+      },
+      {
+        "option": "4+2-enhanced",
+        "tupleId": "photography-lightroom-context",
+        "prompt": "Basics of photography",
+        "generationCostUsd": 0.0166131,
+        "selectedKnownTopics": [
+          "Lightroom"
+        ],
+        "selectedExpectedTopic": true,
+        "deterministicChecks": {
+          "pageCount": 3,
+          "finalQuizQuestions": 6,
+          "quizBadSmellCount": 0,
+          "bridgeBlockCount": 1,
+          "codeBlockCount": 0,
+          "quickSummaryIncompleteEnding": false,
+          "rawNotesIncompleteEnding": false,
+          "placeholderExampleCount": 0,
+          "averagePageWords": 405.3333333333333
+        },
+        "stageCosts": [
+          {
+            "stage": "4+2-enhanced_mini_blueprint",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.005973,
+            "inputTokens": 554,
+            "outputTokens": 1235
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_1",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0010774,
+            "inputTokens": 2087,
+            "outputTokens": 528
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_2",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00104715,
+            "inputTokens": 2092,
+            "outputTokens": 503
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_3",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0010491,
+            "inputTokens": 2083,
+            "outputTokens": 506
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_relevance_auto",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.002388,
+            "inputTokens": 2602,
+            "outputTokens": 97
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_personalized",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.0026055,
+            "inputTokens": 2472,
+            "outputTokens": 167
+          },
+          {
+            "stage": "4+2-enhanced_knowledge_bridge_blocks",
+            "model": "gpt-5.4-mini",
+            "costUsd": 0.0011775,
+            "inputTokens": 772,
+            "outputTokens": 133
+          },
+          {
+            "stage": "4+2-enhanced_nano_final_quiz",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00129545,
+            "inputTokens": 2021,
+            "outputTokens": 713
+          }
+        ]
+      }
+    ],
+    "comparisons": [
+      {
+        "tupleId": "terraform-hard-context",
+        "missingBaseline": true
+      },
+      {
+        "tupleId": "vue-react-context",
+        "missingBaseline": true
+      },
+      {
+        "tupleId": "roman-empire-history-context",
+        "missingBaseline": true
+      },
+      {
+        "tupleId": "photography-lightroom-context",
+        "missingBaseline": true
+      }
+    ],
+    "generationCostUsdTotal": 0.0655053
+  },
+  "results": [
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "terraform-hard-context",
+      "prompt": "What is Terraform?",
+      "knownTopics": [
+        "Rundeck",
+        "Docker",
+        "MinIO/S3",
+        "Ansible"
+      ],
+      "expectedKnownTopic": "Ansible",
+      "selectedKnownTopics": [
+        "Ansible"
+      ],
+      "selectedExpectedTopic": true,
+      "guide": {
+        "title": "What is Terraform?",
+        "quickStart": {
+          "keyIdea": "Terraform is the declarative infrastructure tool in the same family as Ansible, but it is the one for creating and changing infrastructure resources rather than configuring existing machines.",
+          "quickSummary": "Terraform is used to define the desired state of infrastructure in code, then compare that desired state with what actually exists and make the needed changes. It is commonly used for cloud resources like servers, networks, databases, and DNS, with plans shown before changes are applied.\n\nCompared with Ansible, Terraform sits on the provisioning side: it creates and manages infrastructure resources, while Ansible usually configures machines after they already exist. The boundary is important because Terraform owns the environment itself, not the software setup inside every host. State helps Terraform notice drift and keep changes consistent."
+        },
+        "pages": [
+          {
+            "title": "01 - Terraform fundamentals",
+            "rawNotes": "## Terraform in one sentence\nTerraform is an Infrastructure as Code tool created and maintained by HashiCorp that uses declarative configuration files to define the desired infrastructure state, then creates and updates that infrastructure consistently.\n\n## Declarative configuration and the .tf files\nWith Terraform, you write configuration that describes what you want, rather than writing an imperative, step-by-step script for how to reach it. Terraform configuration files commonly use the .tf extension, and they focus on infrastructure resources such as compute, networking, storage, and DNS. This declarative approach helps you keep changes repeatable and reviewable, which is especially useful compared to making one-off changes through cloud consoles.\n\n## The core workflow: configuration to apply\nA typical workflow starts by writing your configuration, then initializing providers, then generating an execution plan, and finally applying the approved changes. Terraform can work with multiple providers through a provider plugin model, which is how it connects to external services and APIs. Before Terraform makes changes, it builds an execution plan that shows what will be added, changed, or removed, so you can review the impact.\n\n## Why Terraform state matters\nTerraform tracks managed infrastructure state so it can detect drift and changes, meaning it can notice when real infrastructure no longer matches what your configuration declares. State is central because Terraform uses it to remember what it manages and to compare the declared configuration with the actual infrastructure.\n\n## Minimal example and commands\nHere is a minimal example that creates a simple storage bucket using a provider, which illustrates the idea of declaring a desired resource in configuration.\n\n```hcl\nterraform {\n  required_providers {\n    aws = {\n      source  = \"hashicorp/aws\"\n      version = \"~> 5.0\"\n    }\n  }\n}\n\nprovider \"aws\" {\n  region = \"us-east-1\"\n}\n\nresource \"aws_s3_bucket\" \"example\" {\n  bucket = \"my-example-bucket-12345\"\n}\n```\n\nAfter writing configuration, you can run a short command sequence to initialize providers, view the proposed changes, and then apply them.\n\n```bash\nterraform init\nterraform plan\nterraform apply\n```\n\nThis workflow supports repeatable, version-controlled infrastructure provisioning across many cloud services and providers.",
+            "quizQuestions": []
+          },
+          {
+            "title": "02 - How Terraform works in practice",
+            "rawNotes": "Terraform works by turning configuration into actions through a clear workflow. First, you write Terraform configuration in HCL, which is the HashiCorp Configuration Language. Next, Terraform loads the provider plugins that connect it to external APIs and services, so it knows how to talk to the systems you want to manage.\n\nIn Terraform, resources are the main objects Terraform manages, such as compute, networking, or storage components. You can also use data sources to read existing information without creating new resources, which helps you reference values already present in your environment. Terraform then builds a dependency graph so it can create resources in the right order, rather than guessing the sequence.\n\nA key safety step is the plan, which shows proposed additions, changes, and deletions before anything is applied. This makes it easier to review what Terraform intends to do, and it helps you catch mistakes early. When you approve the plan, the apply step sends the approved changes to provider APIs, and Terraform updates the infrastructure to match the desired configuration.\n\nTerraform can also detect drift, which happens when real infrastructure changes outside Terraform, such as manual edits in a cloud console. In that case, a later plan can reveal differences between what Terraform expects and what actually exists. To keep configurations reusable and understandable, Terraform provides variables, outputs, and locals, and it supports modules that package reusable Terraform configuration.\n\nHere is a minimal HCL example that includes a provider block and one resource block. \n```hcl\nprovider \"aws\" {\n  region = \"us-east-1\"\n}\n\nresource \"aws_s3_bucket\" \"example\" {\n  bucket = \"my-example-bucket\"\n}\n```\n\nModules let you reuse patterns, such as a standard network or application stack, by calling a module from a higher-level configuration. For example, you might call a “network” module to create subnets and routing, then reuse the same module across multiple environments.\n\nA concrete before-and-after scenario is when you previously applied a configuration that expected a certain setting on a resource, but someone changed that setting manually afterward. When you run terraform plan again, Terraform can show a pending change that would update the resource back toward the declared configuration, which is how drift becomes visible before apply.",
+            "quizQuestions": []
+          },
+          {
+            "title": "03 - Terraform compared with Ansible and common use cases",
+            "rawNotes": "Terraform and Ansible are often used together, but they focus on different layers of work. Terraform is primarily for provisioning and managing infrastructure resources, while Ansible is primarily for configuration management and task automation on existing systems. This means Terraform is where you define and change the infrastructure itself, and Ansible is where you install software and configure operating systems after the machines exist.\n\nA helpful way to remember the difference is to compare “desired state” versus “procedural tasks.” Terraform usually models the desired infrastructure state, while Ansible often executes procedural tasks on hosts. For example, Terraform can create virtual machines, networks, load balancers, and managed databases, and then Ansible can configure those machines by installing packages and applying system settings. In practice, Terraform can create infrastructure that Ansible later configures, which makes the two tools complementary rather than interchangeable.\n\nHere is a concrete workflow example that shows the handoff clearly. A team first uses Terraform to provision a small set of servers and the networking they need, such as the network and any required access paths. After Terraform finishes, the team runs Ansible to install and configure the application software on those servers, including operating system configuration and any required runtime setup. This sequence reduces confusion because Terraform owns the “create the environment” step, and Ansible owns the “configure the machines” step.\n\nTerraform state is also important in team settings, especially when multiple people or automation run Terraform. Terraform state can be stored remotely for team collaboration and locking, and remote state helps reduce conflicts by coordinating concurrent runs. A minimal scenario is that one engineer updates infrastructure using Terraform while another engineer works in the same environment, and remote state locking helps ensure changes do not collide.\n\nCommon use cases for Terraform include cloud infrastructure, networking, IAM, and managed services, and it can also manage some non-cloud services through providers that connect to SaaS and platform APIs. A typical pattern is to use Terraform first for provisioning, then use Ansible for software installation and host configuration.",
+            "quizQuestions": [
+              {
+                "question": "You want to manage cloud servers, networks, and DNS in a repeatable way, with changes reviewed before they’re applied. Which approach best matches Terraform’s role?",
+                "options": [
+                  "Write step-by-step scripts to configure already-running machines",
+                  "Declare the desired infrastructure state, generate a plan, then apply approved changes",
+                  "Manually edit resources in the cloud console and skip planning to save time"
+                ],
+                "correctIndex": 1,
+                "explanation": "Terraform defines desired infrastructure in code, shows a plan, then applies approved changes to reach that state.",
+                "skillTested": "Applying tool purpose to a scenario"
+              },
+              {
+                "question": "A team provisions infrastructure with Terraform, then uses Ansible afterward. What is the most accurate division of responsibilities?",
+                "options": [
+                  "Terraform configures operating systems; Ansible provisions cloud resources",
+                  "Terraform creates/manages infrastructure resources; Ansible installs and configures software on existing machines",
+                  "Both tools do the same job, so the order doesn’t matter"
+                ],
+                "correctIndex": 1,
+                "explanation": "Terraform provisions infrastructure; Ansible configures software on the machines Terraform created.",
+                "skillTested": "Comparing workflows and responsibilities"
+              },
+              {
+                "question": "Someone manually changes a setting in the cloud console after Terraform was applied. What should you expect when you run terraform plan later?",
+                "options": [
+                  "Terraform will ignore the change and keep applying the old configuration silently",
+                  "Terraform plan will reveal differences between declared configuration and actual infrastructure (drift)",
+                  "Terraform will automatically revert the change during plan without approval"
+                ],
+                "correctIndex": 1,
+                "explanation": "Terraform uses state to detect drift, and plan shows pending additions/changes/removals before apply.",
+                "skillTested": "Predicting behavior from drift and state"
+              },
+              {
+                "question": "Why does Terraform build a dependency graph before creating resources?",
+                "options": [
+                  "To guess an execution order without needing configuration details",
+                  "To ensure resources are created in the correct order based on relationships",
+                  "To replace the need for providers and API connections"
+                ],
+                "correctIndex": 1,
+                "explanation": "Dependencies let Terraform create resources in the right sequence rather than relying on guesswork.",
+                "skillTested": "Understanding dependency planning"
+              },
+              {
+                "question": "You need to reference existing information in your environment without creating new infrastructure. Which Terraform feature best fits that need?",
+                "options": [
+                  "Data sources",
+                  "Resource blocks",
+                  "Outputs"
+                ],
+                "correctIndex": 0,
+                "explanation": "Data sources read existing values without creating new resources.",
+                "skillTested": "Selecting the right Terraform construct"
+              },
+              {
+                "question": "Two engineers run Terraform against the same environment. What is one benefit of using remote state with locking?",
+                "options": [
+                  "It prevents Terraform from generating plans",
+                  "It helps coordinate concurrent runs so changes don’t collide",
+                  "It removes the need for providers and plugins"
+                ],
+                "correctIndex": 1,
+                "explanation": "Remote state locking reduces conflicts by coordinating concurrent Terraform operations.",
+                "skillTested": "Applying state management concepts to collaboration"
+              }
+            ]
+          }
+        ],
+        "bridgeBlocks": [
+          {
+            "dashboardIndex": 1,
+            "title": "Terraform vs. Ansible workflow",
+            "body": "Terraform’s workflow is declarative: you describe the desired infrastructure, then plan and apply changes through provider APIs. A useful Ansible comparison is that both automate infrastructure tasks, but Ansible is usually better for configuring existing machines step by step, while Terraform is focused on provisioning and tracking resources. Caveat: the boundary is not absolute—Ansible can provision some things, and Terraform can run provisioners—but Terraform’s core strength is infrastructure state and dependency planning."
+          }
+        ]
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 561,
+          "cachedInputTokens": 0,
+          "outputTokens": 1163,
+          "totalTokens": 1724,
+          "costUsd": 0.00565425
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1960,
+          "cachedInputTokens": 0,
+          "outputTokens": 501,
+          "totalTokens": 2461,
+          "costUsd": 0.00101825
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1986,
+          "cachedInputTokens": 0,
+          "outputTokens": 489,
+          "totalTokens": 2475,
+          "costUsd": 0.00100845
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2030,
+          "cachedInputTokens": 0,
+          "outputTokens": 435,
+          "totalTokens": 2465,
+          "costUsd": 0.00094975
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2428,
+          "cachedInputTokens": 0,
+          "outputTokens": 104,
+          "totalTokens": 2532,
+          "costUsd": 0.002289
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2295,
+          "cachedInputTokens": 0,
+          "outputTokens": 164,
+          "totalTokens": 2459,
+          "costUsd": 0.00245925
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 748,
+          "cachedInputTokens": 0,
+          "outputTokens": 123,
+          "totalTokens": 871,
+          "costUsd": 0.0011145
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1868,
+          "cachedInputTokens": 0,
+          "outputTokens": 578,
+          "totalTokens": 2446,
+          "costUsd": 0.0010961
+        }
+      ],
+      "generationCostUsd": 0.01558955,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 3,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 346.3333333333333
+      }
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "vue-react-context",
+      "prompt": "What is Vue?",
+      "knownTopics": [
+        "React"
+      ],
+      "expectedKnownTopic": "React",
+      "selectedKnownTopics": [
+        "React"
+      ],
+      "selectedExpectedTopic": true,
+      "guide": {
+        "title": "What is Vue?",
+        "quickStart": {
+          "keyIdea": "Vue is a component-based framework for state-driven user interfaces, like React, but with a more template-first, integrated approach to building apps.",
+          "quickSummary": "Vue belongs in the same family as React: both build user interfaces from components and update the screen from state changes. The main difference is that Vue feels more opinionated and template-first, so common UI patterns often have a more built-in shape.\n\nVue is useful when you want declarative rendering, reusable components, and reactive updates without manually syncing the DOM. It can start as a small widget or grow into a full single-page app. The comparison with React breaks at syntax and ecosystem style: Vue’s conventions and official tools are more integrated, while React leaves more choices open."
+        },
+        "pages": [
+          {
+            "title": "01 - Vue in one sentence: what it is and why it exists",
+            "rawNotes": "## Vue in one sentence\nVue is a progressive JavaScript framework for building user interfaces.\n\n## Why Vue exists: state-driven UI\nVue emphasizes declarative rendering, where the UI output follows application state. Instead of manually changing the DOM after every data update, you describe what the interface should look like, and Vue keeps the displayed result in sync with the underlying data. This makes Vue a strong fit for interactive web interfaces such as dashboards, forms, and other pages where the user expects the screen to respond immediately to changes.\n\n## The core model: components and reactivity\nVue’s core model centers on components, which are reusable UI building blocks. A component lets you package markup, behavior, and styling into a unit you can reuse across an app. Vue also includes a reactivity system that tracks data changes and updates the UI when state changes, so the interface stays consistent without you writing repetitive DOM update code.\n\n## Templates, and why “progressive” matters\nVue is often used with HTML-like templates, which makes it approachable if you already know HTML. Even so, Vue also supports render functions, so it is not limited to template-only approaches. Vue is progressive, meaning you can adopt it gradually, so it can be added to part of an existing page instead of requiring a full rewrite.\n\n## Minimal scenario: mounting to one div\nImagine you have an existing HTML page and you want a small interactive widget, like a live counter, without rebuilding the whole site. With Vue, you can mount a minimal app to a single div on that page, letting Vue manage only that section while the rest of the page remains unchanged.\n\n## Vue vs React at a high level\nCompared with React, Vue is usually described as more opinionated about structure and templates. The bridge between them is that both are component-based and state-driven, but Vue often feels more template-first and framework-complete, which can reduce the number of decisions you need to make when starting a new UI.",
+            "quizQuestions": []
+          },
+          {
+            "title": "02 - Core ideas: components, templates, and reactivity",
+            "rawNotes": "Vue’s core programming model is component-based, meaning you build your UI from reusable units rather than one large page script. A Vue component combines a template for markup, script logic for state and behavior, and optional styles into a single unit you can reuse across an app. This structure helps you keep UI, behavior, and presentation together so changes stay easier to reason about.\n\nInside a component, the template uses HTML-like syntax with Vue-specific bindings that connect data to the DOM. For example, you can bind text to state so the displayed value follows the current data, and you can use directives to control what appears. Directives such as v-if and v-for let you render conditionally and render lists, which is especially useful for dashboards, menus, and repeated UI elements.\n\nReactivity is the engine that keeps everything in sync, because data changes are reactive and Vue updates the UI when state changes. Computed properties derive values from reactive state and cache results, which means you can express “derived UI data” clearly without manually recalculating it everywhere. Methods handle actions and event responses inside a component, so user interactions can trigger state updates that automatically refresh the rendered output.\n\nVue also standardizes common interaction patterns in templates, including event handling and two-way binding. Event handling is commonly done with v-on or the shorthand @, and two-way binding for form inputs is commonly expressed with v-model. For parent-child communication, props pass data from parent components to child components, and emits let child components communicate events upward to parents.\n\nHere is a minimal single-file component that shows a template, props, a computed property, and reactive rendering. \n```vue\n<template>\n  <div>\n    <p>Greeting: {{ greeting }}</p>\n    <p>Uppercase: {{ upperGreeting }}</p>\n  </div>\n</template>\n\n<script>\nexport default {\n  props: {\n    greeting: String\n  },\n  computed: {\n    upperGreeting() {\n      return this.greeting.toUpperCase();\n    }\n  }\n};\n</script>\n```\nThis example demonstrates how a prop flows into the component and how a computed property updates the UI when the reactive input changes.",
+            "quizQuestions": []
+          },
+          {
+            "title": "03 - Vue ecosystem, tooling, and how it compares to React",
+            "rawNotes": "Vue’s ecosystem is designed to help you build complete applications, not just individual UI screens. In practice, that means you can pair Vue with routing for navigation and state management for shared data, which keeps app structure consistent as projects grow. Vue Router is commonly used for client-side navigation, and Pinia is the modern official state management library for Vue.\n\nTooling also matters because it affects how quickly you can develop and iterate. Vite is a common development tool for fast local builds, and Vue has strong tooling support through developer tools that help you inspect component structure and reactive behavior. Modern Vue development usually means Vue 3, and Vue 3 is the current major version that underpins today’s Vue patterns.\n\nVue code is often organized using single-file components, which use the .vue file format. A single-file component typically groups template markup, logic, and styling into one reusable unit, which aligns well with Vue’s component-based approach. Vue can be written using either the Options API or the Composition API, and the Composition API is often preferred when you need larger or more complex logic reuse across components.\n\nTo see how Vue’s ecosystem fits together, imagine a small app with two pages and shared UI state. Vue Router would handle switching between those pages on the client, while Pinia would store shared state that both pages can read and update. This combination is a common “app-shaped” workflow because it provides official patterns for navigation and shared data.\n\nCompared with React, both frameworks support component-based UIs, but their syntax and conventions differ. Vue often feels more integrated out of the box because it offers official solutions and conventions for common needs like routing and state, while React tends to rely more on external choices for those areas. For a React learner, the key transition is learning Vue’s ecosystem style and how Vue 3 components, templates, and reactivity fit into that workflow.\n\nHere is a minimal Vue 3 setup concept using Vite and a single .vue component, showing what the file structure might look like in a real project. \n\n```text\nsrc/\n  main.js\n  App.vue\n```\n\nIn this setup, App.vue is the single-file component you build your UI with, and main.js is the entry point that mounts the app into the page.",
+            "quizQuestions": [
+              {
+                "question": "You have an existing HTML page and want only a small interactive widget (like a live counter) without rebuilding the whole site. Which Vue approach best matches that goal?",
+                "options": [
+                  "Mount a minimal Vue app to a single div on the existing page",
+                  "Rewrite the entire page into a single Vue component file",
+                  "Use only render functions and avoid mounting to any DOM element"
+                ],
+                "correctIndex": 0,
+                "explanation": "Vue can be added progressively by mounting a small app to one element while leaving the rest of the page unchanged.",
+                "skillTested": "Applying Vue’s progressive adoption and mounting concept"
+              },
+              {
+                "question": "In a Vue component, you want the UI to automatically reflect a value derived from reactive state, and you don’t want to recompute it manually everywhere. Which feature fits best?",
+                "options": [
+                  "Computed properties",
+                  "Direct DOM manipulation in methods",
+                  "Static template text with no bindings"
+                ],
+                "correctIndex": 0,
+                "explanation": "Computed properties derive values from reactive state and cache results, updating the UI when dependencies change.",
+                "skillTested": "Selecting the right reactive feature (computed vs manual updates)"
+              },
+              {
+                "question": "A list should appear only when a condition is true, and you also need to render repeated items from an array. Which directive pair matches those needs?",
+                "options": [
+                  "v-if and v-for",
+                  "v-model and v-on",
+                  "props and emits"
+                ],
+                "correctIndex": 0,
+                "explanation": "v-if supports conditional rendering, and v-for supports rendering lists from data.",
+                "skillTested": "Using Vue template directives for conditional and repeated UI"
+              },
+              {
+                "question": "You need a child component to receive data from its parent, and also to notify the parent when something happens (upward communication). What combination matches Vue’s model?",
+                "options": [
+                  "Props for parent-to-child data, emits for child-to-parent events",
+                  "Methods for both directions, with no props",
+                  "v-model for parent-to-child and v-on for child-to-parent only"
+                ],
+                "correctIndex": 0,
+                "explanation": "Props pass data down to children, while emits let children send events upward to parents.",
+                "skillTested": "Transferring data and events between parent and child components"
+              },
+              {
+                "question": "You’re building a multi-page single-page app where navigation and shared state must stay consistent as the app grows. Which Vue ecosystem pairing best fits that workflow?",
+                "options": [
+                  "Vue Router for navigation and Pinia for shared state",
+                  "Pinia for navigation and Vue Router for shared state",
+                  "Only single-file components with no routing or state management"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide describes Vue Router for client-side navigation and Pinia as the modern official state management library.",
+                "skillTested": "Choosing an ecosystem toolchain for app-shaped development"
+              },
+              {
+                "question": "Compared with React, you want Vue’s “more integrated out of the box” experience, especially around common app needs like routing and state. What is the best way to describe the difference?",
+                "options": [
+                  "Vue is often more opinionated and template-first, with official conventions for common needs",
+                  "React is more opinionated about templates and provides built-in routing and state",
+                  "Both frameworks are identical in ecosystem style, so no transition is needed"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide notes Vue is more integrated/opinionated with official solutions, while React leaves more choices open.",
+                "skillTested": "Comparing Vue vs React at the ecosystem/convention level"
+              }
+            ]
+          }
+        ],
+        "bridgeBlocks": [
+          {
+            "dashboardIndex": 1,
+            "title": "Vue components vs React components",
+            "body": "If you know React, Vue’s component model will feel familiar: both break the UI into reusable pieces with state-driven updates. Vue differs in how it packages a component, often keeping template, logic, and styles together in one file instead of centering everything around JSX. The key idea is the same, though: state changes drive re-rendering. Caveat: don’t assume Vue templates work exactly like React render functions, because Vue’s directives and binding syntax have their own rules."
+          }
+        ]
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 549,
+          "cachedInputTokens": 0,
+          "outputTokens": 1317,
+          "totalTokens": 1866,
+          "costUsd": 0.00633825
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2217,
+          "cachedInputTokens": 0,
+          "outputTokens": 438,
+          "totalTokens": 2655,
+          "costUsd": 0.0009909
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2207,
+          "cachedInputTokens": 0,
+          "outputTokens": 498,
+          "totalTokens": 2705,
+          "costUsd": 0.0010639
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2228,
+          "cachedInputTokens": 0,
+          "outputTokens": 502,
+          "totalTokens": 2730,
+          "costUsd": 0.0010731
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2447,
+          "cachedInputTokens": 0,
+          "outputTokens": 103,
+          "totalTokens": 2550,
+          "costUsd": 0.00229875
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2331,
+          "cachedInputTokens": 0,
+          "outputTokens": 162,
+          "totalTokens": 2493,
+          "costUsd": 0.00247725
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 769,
+          "cachedInputTokens": 0,
+          "outputTokens": 127,
+          "totalTokens": 896,
+          "costUsd": 0.00114825
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1888,
+          "cachedInputTokens": 0,
+          "outputTokens": 687,
+          "totalTokens": 2575,
+          "costUsd": 0.00123635
+        }
+      ],
+      "generationCostUsd": 0.01662675,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 2,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 347
+      }
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "roman-empire-history-context",
+      "prompt": "What was the Roman Empire?",
+      "knownTopics": [
+        "Roman Republic",
+        "Ancient Greece",
+        "Medieval Europe",
+        "React"
+      ],
+      "expectedKnownTopic": "Roman Republic",
+      "selectedKnownTopics": [
+        "Roman Republic"
+      ],
+      "selectedExpectedTopic": true,
+      "guide": {
+        "title": "What was the Roman Empire?",
+        "quickStart": {
+          "keyIdea": "The Roman Empire is the stage of Roman history where one-man imperial rule replaced the Roman Republic’s shared government, creating a vast Mediterranean state held together by conquest and administration.",
+          "quickSummary": "Compared with the Roman Republic, the Roman Empire belongs to the same Roman world but crosses a key boundary: power moved from elected competition and shared offices to the emperor’s central authority. Augustus marked that shift after civil war, and the old republican forms stayed mostly as a public shell. The comparison breaks because the empire was not just a bigger republic; it was a different political order.\n\nAt its height, the empire linked Europe, North Africa, and the Near East through provinces, roads, taxes, armies, and cities. Latin and Greek, local customs, and Roman law all coexisted across a huge territory. It did not end all at once: the western empire fell in 476 CE, while the eastern half continued as the Byzantine Empire and kept Roman identity alive."
+        },
+        "pages": [
+          {
+            "title": "01 - Origins and political structure",
+            "rawNotes": "## How the Roman Empire began\nThe Roman Empire emerged from the Roman Republic after decades of civil war, when conflict over leadership made the old system unstable. Augustus, formerly Octavian, became the first Roman emperor in 27 BCE, marking a major turning point in how Rome was governed. Even though the new regime started after civil conflict, it was presented as a solution that would restore peace, order, and stability.\n\n## What changed in government\nThe empire kept republican offices such as the Senate, so it could still look familiar on the surface. However, the emperor held the main power, and the Senate and magistracies no longer controlled the state as they had in the Republic. This is the key comparison point: the Roman Republic relied on elected competition, while the Roman Empire replaced that with one-man rule.\n\n## The principate and the “republican appearance”\nIn the early imperial system called the principate, emperors preserved a republican appearance even as real authority shifted. Augustus and later emperors controlled the army, directed foreign policy, and managed major appointments, which meant they could shape both security and government decisions. Because the emperor’s authority was personal, military, and political rather than purely constitutional, power depended heavily on the emperor’s position and support.\n\n## Why succession could be unstable\nSuccession was often unstable because emperors were chosen by family ties, adoption, force, or army support. When leadership changed through these routes, rival claimants could compete for control, and that competition could escalate into political crises and civil wars. In other words, the empire’s structure helped concentrate power, but it also made transitions risky.\n\n## Quick timeline and power comparison\nA simple way to remember the shift is to place the late Republic’s civil wars before 27 BCE, then mark Augustus’s rise as the start of one-man rule. In the Roman Republic, power was shared through republican offices and elections, while in the Roman Empire, the emperor became the central figure through command of the army and control of appointments.\n\n## Scenario: gaining power with army support\nImagine a situation where a leading candidate has strong family connections but also needs legitimacy and control, so they secure army support first. Once the army backs that candidate, they can influence major appointments and foreign policy, which strengthens their position as emperor and helps them replace rivals.",
+            "quizQuestions": []
+          },
+          {
+            "title": "02 - Territory, society, and daily life",
+            "rawNotes": "## Big picture: where the Roman Empire reached\nAt its height, the Roman Empire stretched around the Mediterranean Sea, linking many regions into one political system. Roman rule covered parts of Europe, North Africa, and the Near East, so the empire was much larger than the city of Rome itself. To understand daily life and government, it helps to picture the empire as a network of connected places rather than a single capital.\n\n## How the empire held together\nThe empire was divided into provinces, which were governed by imperial officials or senators, depending on the situation. Rome relied on roads, ports, taxation, and a standing army to hold territory together, because these tools helped move people, goods, and authority across long distances. For example, roads made travel and communication easier, ports supported trade and supply, and taxation provided resources for the state. The standing army also mattered because it protected borders and helped maintain internal order.\n\n## Cities as the center of public life\nRoman cities were centers of administration, trade, religion, and public life, so they were where many official and social activities happened. In a city, people could find markets for buying and selling, public buildings for government, and shared spaces for religion and entertainment. This urban focus does not mean rural areas were unimportant, but it does explain why cities often felt like the “heart” of Roman rule.\n\n## People, language, and culture in everyday society\nRoman society included elites, ordinary free people, freedpeople, and enslaved people, and slavery was a major part of the economy and household life. Citizenship expanded over time and eventually became much broader across the empire, which means Roman identity and legal status could reach more people than in earlier periods. Language also varied by region, with Latin as the main language in the western empire while Greek remained important in the east. Finally, Roman culture blended local traditions with Roman law, architecture, and customs, so daily life could look both Roman and local depending on where you lived.\n\n## Quick comparison you can picture\nImagine a Roman city where administration, markets, and public events are concentrated, compared with a rural province where people experience Roman control through roads, taxes, and the presence of imperial authority. This contrast helps you see how the empire connected different communities into one Mediterranean-centered system.",
+            "quizQuestions": []
+          },
+          {
+            "title": "03 - Legacy, change, and decline",
+            "rawNotes": "The Roman Empire did not collapse all at once, so it is helpful to think in stages rather than a single sudden event. Over time, the western half became weaker due to internal political instability and civil wars, which reduced the ability of emperors to maintain consistent control. At the same time, economic strain, military pressure, and administrative problems made it harder to support armies and manage the empire’s needs.\n\nA useful way to picture the timeline is to start with the crisis of the 3rd century, when repeated disruptions began to stress imperial systems. As instability continued, the western empire faced growing challenges, and these pressures built up across later centuries. In 476 CE, the last western emperor was removed, marking the end of the western imperial government.\n\nAfter the west fell, the eastern Roman Empire continued for centuries, with its capital at Constantinople. Modern historians often call this eastern continuation the Byzantine Empire, but it was still Roman in origin and identity. This distinction matters because it shows that “Rome” did not disappear instantly, since imperial institutions and political life continued in the east.\n\nThe fall of the western empire also changed the political map, because Germanic kingdoms formed in former western Roman territories. Even so, Roman influence did not end with the western government, since Roman law, language, architecture, and political ideas survived long after the empire ended. Christianity became increasingly important in the later empire, and that religious shift helped shape later European life.\n\nYou can summarize the overall legacy by noticing that Medieval Europe inherited both practical systems and cultural memory. Roman roads, cities, and imperial ideas continued to matter, and the idea of Rome remained a reference point for later rulers and institutions. This is why the Roman Empire remains central to world history, even after its western end.",
+            "quizQuestions": [
+              {
+                "question": "A candidate gains power by securing army support first, then uses that position to influence major appointments and foreign policy. Which outcome best matches the guide’s explanation of how imperial power could be built?",
+                "options": [
+                  "The Senate and elections would remain the main source of legitimacy",
+                  "The emperor’s personal control over appointments and policy would strengthen",
+                  "The empire would return to shared republican leadership after civil conflict"
+                ],
+                "correctIndex": 1,
+                "explanation": "The guide links army backing to personal authority over appointments and foreign policy, reinforcing the emperor’s position.",
+                "skillTested": "Applying cause-and-effect from political structure"
+              },
+              {
+                "question": "Which comparison best captures the guide’s key difference between the Roman Republic and the Roman Empire?",
+                "options": [
+                  "Power shifted from elected competition and shared offices to one-man central authority",
+                  "The empire eliminated republican offices like the Senate entirely",
+                  "The empire relied mainly on local kings rather than imperial officials"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide emphasizes that republican forms could remain, but real control moved to the emperor.",
+                "skillTested": "Comparing political systems"
+              },
+              {
+                "question": "An empire official wants to hold distant regions together and keep order across long distances. Based on the guide, which combination is most directly tied to how the empire maintained control?",
+                "options": [
+                  "Roads, ports, taxation, and a standing army",
+                  "Only city markets and local religious festivals",
+                  "Elected provincial assemblies with rotating leadership"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide lists roads, ports, taxation, and the standing army as tools that connected and supported imperial rule.",
+                "skillTested": "Transferring information to a new scenario"
+              },
+              {
+                "question": "A Roman city is described as the center of administration, trade, religion, and public life. What does this imply about where many official and social activities were likely concentrated?",
+                "options": [
+                  "In urban centers where markets and public buildings supported daily life",
+                  "Only in rural areas where provinces were governed directly",
+                  "Primarily in the capital city of Rome, regardless of distance"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide states that cities were centers of administration and public life, making them hubs for many activities.",
+                "skillTested": "Inferring implications from descriptions"
+              },
+              {
+                "question": "A historian argues that “Rome” disappeared instantly when the western empire fell in 476 CE. Which response best uses the guide’s evidence to correct that claim?",
+                "options": [
+                  "The eastern empire ended immediately and no Roman identity continued",
+                  "The eastern empire continued for centuries and is often called Byzantine but remained Roman in origin",
+                  "Roman law and political ideas stopped being used after 476 CE"
+                ],
+                "correctIndex": 1,
+                "explanation": "The guide says the east continued for centuries and that Roman identity and institutions persisted.",
+                "skillTested": "Evaluating and correcting a misconception"
+              },
+              {
+                "question": "Which sequence best matches the guide’s explanation of how the empire’s decline unfolded over time?",
+                "options": [
+                  "A sudden collapse of both halves at once, followed by immediate replacement everywhere",
+                  "Western weakness grew through instability and pressures, while the east continued for centuries",
+                  "The empire strengthened after 476 CE and then expanded into new territories"
+                ],
+                "correctIndex": 1,
+                "explanation": "The guide emphasizes staged decline: the west weakened and fell in 476 CE, while the east continued.",
+                "skillTested": "Predicting timeline structure from historical framing"
+              }
+            ]
+          }
+        ],
+        "bridgeBlocks": [
+          {
+            "dashboardIndex": 1,
+            "title": "Empire vs. Republic geography",
+            "body": "A useful bridge from the Roman Republic: the empire kept many republican institutions and Roman control, but it governed a far larger territory than the city-centered republic ever did. Provinces, roads, ports, and taxation became essential because rule now had to reach across Europe, North Africa, and the Near East. That is a key difference from the republic’s earlier, more limited expansion around Italy and the Mediterranean. Caveat: the empire was not just “bigger republic”; its political power was also more centralized, so geography and government changed together."
+          }
+        ]
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 563,
+          "cachedInputTokens": 0,
+          "outputTokens": 1281,
+          "totalTokens": 1844,
+          "costUsd": 0.00618675
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2151,
+          "cachedInputTokens": 0,
+          "outputTokens": 503,
+          "totalTokens": 2654,
+          "costUsd": 0.00105895
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2145,
+          "cachedInputTokens": 0,
+          "outputTokens": 494,
+          "totalTokens": 2639,
+          "costUsd": 0.0010465
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2129,
+          "cachedInputTokens": 0,
+          "outputTokens": 388,
+          "totalTokens": 2517,
+          "costUsd": 0.0009108
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2462,
+          "cachedInputTokens": 0,
+          "outputTokens": 112,
+          "totalTokens": 2574,
+          "costUsd": 0.0023505
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2337,
+          "cachedInputTokens": 0,
+          "outputTokens": 208,
+          "totalTokens": 2545,
+          "costUsd": 0.00268875
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 772,
+          "cachedInputTokens": 0,
+          "outputTokens": 139,
+          "totalTokens": 911,
+          "costUsd": 0.0012045
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1927,
+          "cachedInputTokens": 0,
+          "outputTokens": 675,
+          "totalTokens": 2602,
+          "costUsd": 0.00122915
+        }
+      ],
+      "generationCostUsd": 0.0166759,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 0,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 362
+      }
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "photography-lightroom-context",
+      "prompt": "Basics of photography",
+      "knownTopics": [
+        "Lightroom",
+        "Photoshop",
+        "Figma",
+        "React"
+      ],
+      "expectedKnownTopic": "Lightroom",
+      "selectedKnownTopics": [
+        "Lightroom"
+      ],
+      "selectedExpectedTopic": true,
+      "guide": {
+        "title": "Basics of Photography",
+        "quickStart": {
+          "keyIdea": "Photography is the craft of shaping light, focus, and framing so a camera records a clear image with the intended brightness, sharpness, and mood.",
+          "quickSummary": "Photography is the craft of making deliberate choices before the shutter clicks. Exposure controls brightness, focus controls what looks sharp, and composition controls where attention goes. Aperture, shutter speed, and ISO work together, so changing one often requires adjusting another to keep the image balanced.\n\nLight quality and color also shape the result. Soft light is usually gentler, hard light creates stronger shadows, and white balance keeps colors looking natural. Lightroom is a useful comparison because it adjusts exposure after capture, but that is where the comparison breaks: photography decisions happen first, and some mistakes cannot be fully fixed later."
+        },
+        "pages": [
+          {
+            "title": "01 - Camera and Exposure Fundamentals",
+            "rawNotes": "## Exposure: the foundation of every photo.\nPhotography records light on a sensor or film, so the central question is how much light reaches the recording medium. That amount is called exposure, and it determines whether your image looks too dark, too bright, or just right. A light meter reading can help estimate a correct exposure before you press the shutter.\n\n## The exposure triangle and what each control changes.\nThe exposure triangle links aperture, shutter speed, and ISO, and each one affects the final image in a different way. Aperture is the opening in the lens measured in f-stops, and a wider aperture lets in more light while creating shallower depth of field. Shutter speed is how long the sensor is exposed to light, and faster shutter speeds freeze motion better and reduce blur. ISO controls sensor sensitivity and can increase brightness, but higher ISO usually increases image noise.\n\n## How to think about tradeoffs in practice.\nBecause these three settings interact, changing one often means compensating with another, so it helps to make one deliberate choice at a time. For example, if you open the aperture from f/11 to f/2.8, you admit more light and also reduce depth of field, which can make a subject stand out from the background. If you instead need to stop motion, you would choose a faster shutter speed, accepting that you may need more light from a wider aperture or higher ISO to maintain exposure.\n\n## Examples you can visualize.\nA portrait at f/2.8 versus f/8 will typically show a shallower depth of field at f/2.8, meaning the background appears more blurred while the focused subject looks more isolated. In a dim indoor scene, you often need more exposure, so you may use a wider aperture, a slower shutter speed, or a higher ISO, while in a bright outdoor scene you may need less exposure, so you can use a narrower aperture, a faster shutter speed, or a lower ISO. A fast shutter speed is necessary when photographing moving action, such as a child running, because the shorter exposure time helps freeze motion and reduces blur.\n\n## Using Lightroom without losing the basics.\nLightroom is useful for comparing capture choices with post-processing exposure adjustments, but it cannot fully recover a badly exposed file. That is why understanding the exposure triangle before shooting is so important, because it helps you get the image close to correct at capture rather than relying on editing to fix major exposure problems.",
+            "quizQuestions": []
+          },
+          {
+            "title": "02 - Focus, Lens Choice, and Composition",
+            "rawNotes": "## Focus: where sharpness goes\nFocus determines which part of the image appears sharpest, so your first job is to decide what you want viewers to notice most. In many portraits, that means placing focus on the eyes, because sharp eyes make the whole image feel intentional. Autofocus is common and convenient, but manual focus can be useful in controlled situations where you want to lock sharpness to a specific plane.\n\nDepth of field is the zone that appears acceptably sharp, and it changes with both aperture and distance. Closer focus distance and wider apertures reduce depth of field, which can help you separate a subject from a busy background. For example, if you photograph a person close to the camera at a wide aperture, the background will blur more, while a subject farther away or a narrower aperture will keep more of the scene looking sharp.\n\n## Lens choice: framing and perspective\nFocal length affects field of view and perspective appearance, so changing lenses changes not only how much fits in the frame but also how the scene “feels.” Wide-angle lenses capture more of the scene, which is why they are common for landscapes and interiors. Telephoto lenses magnify distant subjects and compress perspective, which is why they are common for portraits and distant subjects.\n\nA practical comparison is a portrait taken with a wide-angle lens versus a telephoto lens. With a wide-angle lens, you typically include more background and the subject can look more exaggerated in proportions, especially if you stand close. With a telephoto lens, you can fill the frame with the subject while keeping the background compressed and less distracting.\n\n## Composition: arranging attention\nComposition is the arrangement of visual elements in the frame, and it guides where the viewer looks first and what they notice next. The rule of thirds is a common starting guideline, not a rule, so you can use it when it helps and break it when centering creates a stronger effect. For instance, placing a subject along a third-line can add balance in a landscape, while centering a symmetrical subject can feel calm and deliberate.\n\nLeading lines, framing, and negative space can strengthen composition by organizing the scene. An example is a street photo where sidewalk edges or road markings pull the eye toward a focal point, or a landscape where trees and mountains create a natural frame around the main subject.",
+            "quizQuestions": []
+          },
+          {
+            "title": "03 - Light, Color, and Practical Shooting Habits",
+            "rawNotes": "## Light quality and mood\nLight is the raw material of photography, and its direction, quality, and color strongly affect the final image. Hard light creates strong shadows and high contrast, which can make textures look dramatic but can also make faces look less flattering. Soft light reduces shadow edges and is often flattering for portraits, which is why overcast skies or shade can be great for people.\n\nA simple way to notice this difference is to compare the same subject in two conditions. In soft window light, shadows tend to have gentle edges and the scene often looks calmer, while in direct noon sun the shadows become crisp and the contrast increases.\n\n## Natural light changes over time\nNatural light changes with time of day and weather, so your “best” settings may not stay best as the day moves on. If clouds roll in, the light quality can shift toward softer illumination, and if the sun comes out, contrast can jump quickly. This is why it helps to keep an eye on the scene and be ready to reshoot when the light improves.\n\n## White balance and color temperature\nWhite balance controls how neutral colors appear, which matters because different light sources have different color temperatures. Daylight and tungsten indoor light can both be “warm” or “cool” in different ways, and mixed lighting can make colors look inconsistent without correction. When you switch from daylight to tungsten indoors, you should expect the color cast to change, and white balance is the tool that helps keep whites and other neutrals looking correct.\n\n## Lighting direction: front, side, and back\nBacklighting, side lighting, and front lighting create different effects, so you can shape the story of the image by choosing where the light comes from. Backlight can create silhouettes or rim light, which outlines the subject, while side light reveals texture by emphasizing surface detail.\n\n## Stability, file formats, and good habits\nA tripod helps with long exposures and stability, which improves sharpness when the shutter speed needs to be slow in low-light scenes. For capture format, shoot in a common file format such as JPEG or RAW depending on editing needs, and RAW files preserve more editing flexibility than JPEG files. A practical habit is to check exposure, review sharpness, and reshoot when needed so you do not rely on post-processing to fix problems that were created at capture time.",
+            "quizQuestions": [
+              {
+                "question": "You want a portrait subject to stand out from a busy background, but you also need the image to stay sharp on the subject’s eyes. Which change best matches the guide’s tradeoff?",
+                "options": [
+                  "Use a wider aperture to reduce depth of field, then focus on the eyes",
+                  "Use a narrower aperture to blur the background more, then rely on Lightroom to refocus",
+                  "Use a faster shutter speed only, keeping aperture and ISO unchanged"
+                ],
+                "correctIndex": 0,
+                "explanation": "Wider aperture reduces depth of field, and focus on the eyes keeps the intended sharp area crisp.",
+                "skillTested": "Applying exposure triangle and focus concepts together"
+              },
+              {
+                "question": "A child running in bright outdoor light is producing motion blur. What is the most direct adjustment to address blur, based on the guide?",
+                "options": [
+                  "Choose a faster shutter speed to freeze motion, then compensate exposure with aperture or ISO",
+                  "Choose a higher ISO to increase brightness, then keep shutter speed slow",
+                  "Switch to a wide-angle lens to reduce blur by changing perspective"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide links faster shutter speeds with freezing motion; exposure can be maintained by adjusting aperture or ISO.",
+                "skillTested": "Diagnosing motion blur and selecting the correct control"
+              },
+              {
+                "question": "You’re comparing two lenses for the same portrait: one wide-angle and one telephoto. What outcome is most consistent with the guide?",
+                "options": [
+                  "Wide-angle typically includes more background and can exaggerate proportions if you stand close",
+                  "Telephoto typically includes less background and exaggerates proportions more than wide-angle",
+                  "Wide-angle compresses perspective so the subject looks flatter than telephoto"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide notes wide-angle includes more scene and can exaggerate proportions up close, while telephoto compresses perspective.",
+                "skillTested": "Comparing lens effects on framing and perspective"
+              },
+              {
+                "question": "In a street scene, you want the viewer’s attention to move toward a focal point. Which composition approach best matches the guide?",
+                "options": [
+                  "Use leading lines (like road edges or markings) to pull the eye toward the subject",
+                  "Rely only on increasing ISO so the entire frame becomes equally bright",
+                  "Place the subject randomly so negative space is maximized everywhere"
+                ],
+                "correctIndex": 0,
+                "explanation": "Leading lines are specifically described as organizing the scene and guiding where the eye goes.",
+                "skillTested": "Applying composition principles to guide viewer attention"
+              },
+              {
+                "question": "Your indoor photos look too orange compared to what you expected from daylight. What is the most appropriate fix described in the guide?",
+                "options": [
+                  "Adjust white balance to account for different color temperatures",
+                  "Increase shutter speed until colors look neutral",
+                  "Switch to a tripod to prevent color casts"
+                ],
+                "correctIndex": 0,
+                "explanation": "White balance is the tool for keeping neutrals (whites) looking correct under different light sources.",
+                "skillTested": "Using white balance to correct color temperature"
+              },
+              {
+                "question": "You shot a scene too dark and want to recover it later. Which expectation best matches the guide’s warning about post-processing?",
+                "options": [
+                  "Lightroom can help refine exposure, but it cannot fully recover a badly exposed file",
+                  "Lightroom can always restore lost detail regardless of how the file was captured",
+                  "If the file is RAW, focus errors can be fully corrected after capture"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide states Lightroom can’t fully fix major exposure problems created at capture time.",
+                "skillTested": "Predicting limits of post-processing vs. capture decisions"
+              }
+            ]
+          }
+        ],
+        "bridgeBlocks": [
+          {
+            "dashboardIndex": 1,
+            "title": "Focus vs. Lightroom adjustments",
+            "body": "A useful Lightroom bridge is to think of focus as the in-camera decision that decides what is sharp, while Lightroom is where you can refine the look afterward. You can crop, adjust contrast, and use sharpening to emphasize the subject, but those edits do not truly move the focus point or recover detail that was never captured sharply. That caveat matters: Lightroom can support the image, not replace good focus or lens choice. In practice, choose the sharpest subject area first, then use post-processing to guide attention."
+          }
+        ]
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 554,
+          "cachedInputTokens": 0,
+          "outputTokens": 1235,
+          "totalTokens": 1789,
+          "costUsd": 0.005973
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2087,
+          "cachedInputTokens": 0,
+          "outputTokens": 528,
+          "totalTokens": 2615,
+          "costUsd": 0.0010774
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2092,
+          "cachedInputTokens": 0,
+          "outputTokens": 503,
+          "totalTokens": 2595,
+          "costUsd": 0.00104715
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2083,
+          "cachedInputTokens": 0,
+          "outputTokens": 506,
+          "totalTokens": 2589,
+          "costUsd": 0.0010491
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2602,
+          "cachedInputTokens": 0,
+          "outputTokens": 97,
+          "totalTokens": 2699,
+          "costUsd": 0.002388
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 2472,
+          "cachedInputTokens": 0,
+          "outputTokens": 167,
+          "totalTokens": 2639,
+          "costUsd": 0.0026055
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "inputTokens": 772,
+          "cachedInputTokens": 0,
+          "outputTokens": 133,
+          "totalTokens": 905,
+          "costUsd": 0.0011775
+        },
+        {
+          "stage": "4+2-enhanced_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2021,
+          "cachedInputTokens": 0,
+          "outputTokens": 713,
+          "totalTokens": 2734,
+          "costUsd": 0.00129545
+        }
+      ],
+      "generationCostUsd": 0.0166131,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 0,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 405.3333333333333
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "tupleId": "terraform-hard-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "vue-react-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "roman-empire-history-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "photography-lightroom-context",
+      "missingBaseline": true
+    }
+  ]
+}

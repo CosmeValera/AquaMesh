@@ -191,7 +191,7 @@ describe('Study Guide Quick Start helpers', () => {
     expect(prompt).toContain('This guide teaches')
     expect(prompt).toContain('This page explains')
     expect(prompt).toContain('You will learn')
-    expect(prompt).toContain('70-105 words target')
+    expect(prompt).toContain('under 100 words total')
     expect(prompt).toContain('Every quickSummary paragraph must end')
     expect(prompt).toContain('finish the current sentence cleanly')
   })

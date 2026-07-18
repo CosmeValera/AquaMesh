@@ -903,14 +903,12 @@ const normalizeEnhancedQuizQuestions = (
 };
 
 const buildEnhancedBlueprintPrompt = ({
-  requestText,
   topic,
   titleFallback,
   folderNameFallback,
   userKnownTopics,
   outputLanguage,
 }: {
-  requestText: string;
   topic: string;
   titleFallback: string;
   folderNameFallback: string;
@@ -959,10 +957,7 @@ Rules:
 Title fallback: ${titleFallback}
 Folder fallback: ${folderNameFallback}
 Learner request/topic:
-${topic}
-
-Full hosted Study Guide request:
-${requestText.slice(0, 18000)}`;
+${topic}`;
 
 const buildEnhancedPagePrompt = ({
   topic,
@@ -2509,7 +2504,6 @@ const generateEnhancedHostedStudyGuide = async ({
           parts: [
             {
               text: buildEnhancedBlueprintPrompt({
-                requestText,
                 topic,
                 titleFallback,
                 folderNameFallback,
@@ -2663,33 +2657,10 @@ const generateEnhancedHostedStudyGuide = async ({
   } else if (knowledgeContextPlan.topics.length && !relevanceDecisionFailed) {
     try {
       const forcedRelevanceDecision =
-        knowledgeContextPlan.shouldRunForcedRelevanceSelector
-          ? ensureForcedStudyGuideQuickStartRelevanceDecision(
-              parseStudyGuideQuickStartRelevanceDecision(
-                await callStage("quick_start_relevance_force", {
-                  ...usageRequest,
-                  responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
-                  parts: [
-                    {
-                      text: buildStudyGuideQuickStartRelevancePrompt({
-                        title: blueprint.title,
-                        prompt: topic,
-                        source: supportSource,
-                        userKnownTopics: safeKnownTopics,
-                        bridgeMode: "force",
-                        outputLanguage: usageRequest.outputLanguage,
-                      }),
-                    },
-                  ],
-                }),
-                safeKnownTopics,
-              ),
-              safeKnownTopics,
-            )
-          : ensureForcedStudyGuideQuickStartRelevanceDecision(
-              relevanceDecision,
-              safeKnownTopics,
-            );
+        ensureForcedStudyGuideQuickStartRelevanceDecision(
+          relevanceDecision,
+          safeKnownTopics,
+        );
 
       if (forcedRelevanceDecision) {
         const forcedBridge = parseStudyGuideQuickStart(

@@ -12,6 +12,7 @@ import {
   buildStudyGuideKnowledgeBridgeBlocksPrompt,
   buildStudyGuideQuickStartPrompt,
   buildStudyGuideQuickStartRelevancePrompt,
+  ensureForcedStudyGuideQuickStartRelevanceDecision,
   parseStudyGuideKnowledgeBridgeBlocks,
   parseStudyGuideQuickStart,
   parseStudyGuideQuickStartRelevanceDecision,
@@ -194,6 +195,54 @@ describe('Study Guide Quick Start helpers', () => {
     expect(prompt).toContain('under 100 words total')
     expect(prompt).toContain('Every quickSummary paragraph must end')
     expect(prompt).toContain('finish the current sentence cleanly')
+  })
+
+  it('upgrades a declined relevance decision for the forced context path', () => {
+    const declined = {
+      shouldUseKnownTopic: false,
+      knownTopicsForQuickStart: [],
+      knownTopicRelevanceReason: 'No strong bridge.',
+      targetTopicType: 'technical' as const,
+      bridgeStrength: 'none' as const,
+      bridgeStrategy: 'none' as const,
+    }
+
+    expect(
+      ensureForcedStudyGuideQuickStartRelevanceDecision(declined, []),
+    ).toBeUndefined()
+
+    const single = ensureForcedStudyGuideQuickStartRelevanceDecision(declined, [
+      'Rundeck',
+    ])
+    expect(single).toMatchObject({
+      shouldUseKnownTopic: true,
+      knownTopicsForQuickStart: ['Rundeck'],
+      bridgeStrength: 'weak',
+      bridgeStrategy: 'light_reference',
+    })
+
+    const multiple = ensureForcedStudyGuideQuickStartRelevanceDecision(
+      declined,
+      ['Rundeck', 'Docker', 'Ansible'],
+    )
+    expect(multiple?.shouldUseKnownTopic).toBe(true)
+    expect(multiple?.knownTopicsForQuickStart).toEqual([
+      'Rundeck',
+      'Docker',
+      'Ansible',
+    ])
+
+    const accepted = {
+      ...declined,
+      shouldUseKnownTopic: true,
+      knownTopicsForQuickStart: ['Docker'],
+    }
+    expect(
+      ensureForcedStudyGuideQuickStartRelevanceDecision(accepted, [
+        'Rundeck',
+        'Docker',
+      ]),
+    ).toBe(accepted)
   })
 
   it('asks for a neutral Quick Start when no known topic is selected', () => {

@@ -73,6 +73,9 @@ const NON_TEXT_SOURCE_DOMAINS = [
   "instagram.com",
   "pinterest.com",
   "tiktok.com",
+  "twitter.com",
+  "x.com",
+  "youtube.com",
 ];
 const QUERY_STOPWORDS = new Set([
   "about",

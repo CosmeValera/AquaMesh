@@ -21,6 +21,7 @@ export interface DashboardChatSourcePlan {
   shouldSearchWeb: boolean
   searchQuery: string
   answerStyleHint: string
+  exactAnswerCount: number | null
 }
 
 interface PlanDashboardChatSourcesOptions {
@@ -34,6 +35,7 @@ interface PlanDashboardChatSourcesOptions {
 }
 
 const SOURCE_PLANNER_TIMEOUT_MS = 20_000
+const MAX_EXACT_ANSWER_COUNT = 200
 const VALID_SOURCE_IDS: DashboardChatSourceId[] = [
   'study-guide',
   'general',
@@ -69,17 +71,45 @@ const normalizeSelectedSources = (
     return fallback
   }
 
-  const selected = value.filter((item): item is DashboardChatSourceId =>
-    VALID_SOURCE_IDS.includes(item as DashboardChatSourceId),
+  const selected = Array.from(
+    new Set(
+      value.filter((item): item is DashboardChatSourceId =>
+        VALID_SOURCE_IDS.includes(item as DashboardChatSourceId),
+      ),
+    ),
   )
 
-  return Array.from(new Set(selected)).length > 0
-    ? Array.from(new Set(selected))
-    : fallback
+  return selected.length > 0 ? selected : fallback
+}
+
+const normalizeExactAnswerCount = (value: unknown): number | null => {
+  const count = Number(value)
+
+  return Number.isInteger(count) &&
+    count >= 2 &&
+    count <= MAX_EXACT_ANSWER_COUNT
+    ? count
+    : null
 }
 
 const truncate = (value: string, maxLength: number): string =>
   value.length > maxLength ? value.slice(0, maxLength).trim() : value
+
+const EXPLANATION_REQUEST_PATTERN =
+  /\b(?:explain|describe|elaborate|detail|details|why|and tell me (?:why|how)|explica|explícame|describe cada|con explicaci[oó]n|expliqu\w*|d[ée]cri\w*|erkl[aä]r\w*|beschreib\w*)\b/i
+
+const EXACT_LIST_REQUEST_PATTERN =
+  /\b(?:list|name|names|give|tell|provide|write|enumerate|lista|nombra|dime|dame|escribe|enumera|liste|nenne|gib)\b[\s\S]{0,80}?\b(\d{1,3})\b|\b(\d{1,3})\b[\s\S]{0,80}?\b(?:name|names|items|entries|examples|nombres|elementos|ejemplos|noms|exemples|namen|beispiele)\b/i
+
+const fallbackExactAnswerCount = (question: string): number | null => {
+  if (EXPLANATION_REQUEST_PATTERN.test(question)) {
+    return null
+  }
+
+  const countMatch = question.match(EXACT_LIST_REQUEST_PATTERN)
+
+  return normalizeExactAnswerCount(countMatch?.[1] || countMatch?.[2])
+}
 
 const fallbackSearchQuery = (question: string): string =>
   truncate(
@@ -109,6 +139,7 @@ export const fallbackDashboardChatSourcePlan = (
     searchQuery: fallbackSearchQuery(question),
     answerStyleHint:
       'Respect the student requested format and avoid unnecessary extra sections.',
+    exactAnswerCount: fallbackExactAnswerCount(question),
   }
 }
 
@@ -197,13 +228,15 @@ Rules:
 - Rewrite searchQuery for a search engine, not for a chatbot: remove filler, apologies, jokes, false starts, and corrections while preserving the actual information need and constraints.
 - Do not hardcode special cases. Infer the user's real task and requested answer shape.
 - answerStyleHint should briefly preserve format requirements such as list-only, table, concise, exact count, language, or no extra explanation.
+- Set exactAnswerCount to N only when the student asks for exactly N list entries as a bare list, without explanations or descriptions per entry. Otherwise set exactAnswerCount to null.
 
 JSON shape:
 {
   "selectedSources": ["study-guide" | "general" | "web"],
   "shouldSearchWeb": true,
   "searchQuery": "clean search query",
-  "answerStyleHint": "short instruction"
+  "answerStyleHint": "short instruction",
+  "exactAnswerCount": null
 }
 
 Dashboard title: ${dashboardTitle}
@@ -323,6 +356,7 @@ export const planDashboardChatSources = async (
       answerStyleHint: String(
         parsed.answerStyleHint || fallback.answerStyleHint,
       ).trim(),
+      exactAnswerCount: normalizeExactAnswerCount(parsed.exactAnswerCount),
     },
   )
 }

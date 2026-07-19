@@ -57,6 +57,7 @@ vi.mock('../../../../src/dashboardChat/sourcePlanner', () => ({
       shouldSearchWeb: selectedSources.includes('web'),
       searchQuery: question,
       answerStyleHint: 'Respect the prompt.',
+      exactAnswerCount: null,
     }),
   ),
   planDashboardChatSources: vi.fn(),
@@ -169,18 +170,6 @@ const renderPanel = (
   )
 }
 
-const enableWebSourceSelection = () => {
-  fireEvent.click(screen.getByRole('button', { name: /Answer sources/i }))
-  fireEvent.click(screen.getByRole('menuitem', { name: /Web search/i }))
-  fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
-}
-
-const enableGeneralSourceSelection = () => {
-  fireEvent.click(screen.getByRole('button', { name: /Answer sources/i }))
-  fireEvent.click(screen.getByRole('menuitem', { name: /General knowledge/i }))
-  fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
-}
-
 beforeEach(() => {
   HTMLElement.prototype.scrollTo = vi.fn()
   vi.mocked(localStorage.getItem).mockReset()
@@ -193,6 +182,7 @@ beforeEach(() => {
     shouldSearchWeb: false,
     searchQuery: 'default search query',
     answerStyleHint: 'Respect the prompt.',
+    exactAnswerCount: null,
   })
   vi.mocked(askDashboardSources).mockResolvedValue({
     answer: 'Use the dashboard source notes [1].',
@@ -295,39 +285,6 @@ describe('DashboardChatPanel quick create menu', () => {
     expect(
       screen.queryByRole('button', { name: 'More ideas' }),
     ).not.toBeInTheDocument()
-  })
-
-  it('persists answer source selection locally', async () => {
-    renderPanel()
-
-    enableWebSourceSelection()
-
-    await waitFor(() =>
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        'studymesh-dashboard-chat-source-selection',
-        JSON.stringify(['web']),
-      ),
-    )
-  })
-
-  it('honors Study Guide only source selection without web lookup', async () => {
-    renderPanel()
-
-    fireEvent.click(screen.getByRole('button', { name: /Answer sources/i }))
-    fireEvent.click(screen.getByRole('menuitem', { name: /^Study Guide$/i }))
-    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
-    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
-      target: { value: 'What are the biggest muscles?' },
-    })
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Send dashboard question' }),
-    )
-
-    await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
-    expect(fetchDashboardExternalSource).not.toHaveBeenCalled()
-    expect(vi.mocked(askDashboardSources).mock.calls[0][0]).toMatchObject({
-      allowedSources: ['study-guide'],
-    })
   })
 
   it('prefills a queued explain draft without sending it', async () => {
@@ -1421,39 +1378,6 @@ describe('DashboardChatPanel chat management', () => {
     await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
   })
 
-  it('shows a compact source selector label without Auto as a menu option', () => {
-    renderPanel()
-
-    const sourceButton = screen.getByRole('button', {
-      name: 'Answer sources: Auto',
-    })
-    expect(sourceButton).toHaveTextContent('Auto')
-
-    fireEvent.click(sourceButton)
-
-    expect(
-      screen.queryByRole('menuitem', { name: /Auto/i }),
-    ).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('menuitem', { name: /Study Guide/i }))
-    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
-    expect(
-      screen.getByRole('button', { name: 'Answer sources: Study Guide' }),
-    ).toHaveTextContent('Study Guide')
-
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Answer sources: Study Guide' }),
-    )
-    fireEvent.click(
-      screen.getByRole('menuitem', { name: /General knowledge/i }),
-    )
-    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
-    expect(
-      screen.getByRole('button', {
-        name: 'Answer sources: Study Guide, General knowledge',
-      }),
-    ).toHaveTextContent('SG, GK')
-  })
-
   it('searches web before answering when Web search is selected', async () => {
     const onMessagesChange = vi.fn()
     vi.mocked(planDashboardChatSources).mockResolvedValueOnce({
@@ -1461,6 +1385,7 @@ describe('DashboardChatPanel chat management', () => {
       shouldSearchWeb: true,
       searchQuery: 'Ansible comparison',
       answerStyleHint: 'Answer directly.',
+      exactAnswerCount: null,
     })
     vi.mocked(askDashboardSources).mockResolvedValueOnce({
       answer: 'Ansible automates provisioning [2].',
@@ -1504,8 +1429,6 @@ describe('DashboardChatPanel chat management', () => {
     fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
       target: { value: 'How does Ansible compare?' },
     })
-    enableWebSourceSelection()
-    enableGeneralSourceSelection()
     fireEvent.click(
       screen.getByRole('button', { name: 'Send dashboard question' }),
     )
@@ -1565,6 +1488,7 @@ describe('DashboardChatPanel chat management', () => {
       shouldSearchWeb: true,
       searchQuery: 'Ansible comparison',
       answerStyleHint: 'Answer directly.',
+      exactAnswerCount: null,
     })
     vi.mocked(askDashboardSources).mockResolvedValueOnce({
       answer: 'In general, Ansible automates provisioning.',
@@ -1596,7 +1520,6 @@ describe('DashboardChatPanel chat management', () => {
     fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
       target: { value: 'How does Ansible compare?' },
     })
-    enableWebSourceSelection()
     fireEvent.click(
       screen.getByRole('button', { name: 'Send dashboard question' }),
     )
@@ -1616,6 +1539,7 @@ describe('DashboardChatPanel chat management', () => {
       shouldSearchWeb: true,
       searchQuery: 'rundeck n8n terraform ansible comparison',
       answerStyleHint: 'Answer directly.',
+      exactAnswerCount: null,
     })
     vi.mocked(askDashboardSources).mockResolvedValueOnce({
       answer: 'Rundeck provides operations orchestration [2].',
@@ -1669,7 +1593,6 @@ describe('DashboardChatPanel chat management', () => {
           'what about rundeck and n8n? are they similar to terraform and ansible?',
       },
     })
-    enableWebSourceSelection()
     fireEvent.click(
       screen.getByRole('button', { name: 'Send dashboard question' }),
     )
@@ -1687,6 +1610,7 @@ describe('DashboardChatPanel chat management', () => {
       shouldSearchWeb: true,
       searchQuery: 'Vue React JavaScript UI framework comparison sources',
       answerStyleHint: 'Answer directly.',
+      exactAnswerCount: null,
     })
     vi.mocked(askDashboardSources).mockResolvedValueOnce({
       answer: 'Vue and React can be compared using their official docs [2].',
@@ -1896,6 +1820,7 @@ describe('DashboardChatPanel chat management', () => {
       shouldSearchWeb: true,
       searchQuery: 'Ansible official documentation',
       answerStyleHint: 'Answer directly.',
+      exactAnswerCount: null,
     })
     const messages = [
       {

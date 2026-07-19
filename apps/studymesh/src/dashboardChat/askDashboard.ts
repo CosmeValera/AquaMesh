@@ -24,6 +24,7 @@ interface AskDashboardOptions {
   sourceChunks: DashboardSourceChunk[]
   allowedSources?: DashboardChatSourceId[]
   answerStyleHint?: string
+  exactAnswerCount?: number | null
   contentLanguage?: StudyMeshLanguageCode
   signal?: AbortSignal
 }
@@ -59,7 +60,6 @@ export interface DashboardAnswerSourceRef {
 
 const STRONG_MODEL_CHAT_TIMEOUT_MS = 45000
 const STRONG_CHAT_RECENT_HISTORY_MESSAGES = 4
-const MAX_EXACT_LIST_COUNT = 200
 
 type ChatMemoryProvider = 'hosted' | 'local' | 'gemini' | 'cerebras' | string
 
@@ -157,6 +157,7 @@ const buildPrompt = ({
   memory,
   allowedSources = ['study-guide', 'general'],
   answerStyleHint,
+  exactAnswerCount,
   outputLanguage,
 }: Omit<AskDashboardOptions, 'history'> & {
   memory: ChatMemory
@@ -168,7 +169,7 @@ Rules:
 - Prefer the provided dashboard, study, and source context when it helps.
 - ${formatAllowedSources(allowedSources)}
 - Respect the student's requested answer shape and verbosity. If they ask for a plain list, exact count, table, or no explanation, follow that format without extra teaching sections.
-- For a request for exactly N entries, return exactly N distinct entries in a numbered list. Do not use headings, category totals, ranges, duplicate entries, or follow-up questions. Identify otherwise identical entries with their standard number, position, or side.
+${exactAnswerCount ? `- The student asked for exactly ${exactAnswerCount} entries. Return exactly ${exactAnswerCount} distinct entries in a numbered list. Do not use headings, category totals, ranges, duplicate entries, or follow-up questions. Identify otherwise identical entries with their standard number, position, or side.` : ''}
 ${answerStyleHint ? `- Extra answer style instruction: ${answerStyleHint}` : ''}
 - ${formatCoverageFallbackRule(allowedSources)}
 - If the student message is conversational smalltalk, a greeting, thanks, a casual acknowledgement, or a minor typo of those, answer briefly and naturally. Do not cite sources for smalltalk.
@@ -214,17 +215,6 @@ const stripLeakedSourcesJson = (answer: string): string => {
 
 const cleanAnswer = (answer: string): AskDashboardResult['answer'] => {
   return stripLeakedSourcesJson(answer).trim()
-}
-
-const getExactListCount = (question: string): number | null => {
-  const countMatch = question.match(
-    /\b(?:list|name|names|give|tell|provide|write|enumerate)\b[\s\S]{0,80}?\b(\d{1,3})\b|\b(\d{1,3})\b[\s\S]{0,80}?\b(?:name|names|items|examples|bones?|muscles?|systems?|terms?)\b/i,
-  )
-  const count = Number(countMatch?.[1] || countMatch?.[2])
-
-  return Number.isInteger(count) && count >= 2 && count <= MAX_EXACT_LIST_COUNT
-    ? count
-    : null
 }
 
 const isValidExactListAnswer = (answer: string, expectedCount: number) => {
@@ -456,7 +446,7 @@ export const askDashboardSources = async (
       signal: options.signal,
     }),
   )
-  const exactListCount = getExactListCount(options.question)
+  const exactListCount = options.exactAnswerCount ?? null
   if (
     exactListCount &&
     !isValidExactListAnswer(cleanedAnswer, exactListCount)

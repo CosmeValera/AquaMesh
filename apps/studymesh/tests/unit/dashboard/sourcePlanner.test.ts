@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   applyDashboardChatSourcePolicy,
+  fallbackDashboardChatSourcePlan,
   type DashboardChatSourcePlan,
 } from '../../../src/dashboardChat/sourcePlanner'
 
@@ -12,6 +13,7 @@ const plan = (
   shouldSearchWeb: selectedSources.includes('web'),
   searchQuery: 'anatomy systems',
   answerStyleHint: 'Be concise.',
+  exactAnswerCount: null,
 })
 
 describe('dashboard chat source policy', () => {
@@ -69,5 +71,36 @@ describe('dashboard chat source policy', () => {
         plan(['general']),
       ).selectedSources,
     ).toEqual(['general'])
+  })
+})
+
+describe('fallback exact answer count', () => {
+  it('detects a bare exact-list request', () => {
+    expect(
+      fallbackDashboardChatSourcePlan('Tell me the names of 10 bones.', [])
+        .exactAnswerCount,
+    ).toBe(10)
+  })
+
+  it('detects a Spanish exact-list request', () => {
+    expect(
+      fallbackDashboardChatSourcePlan('Dame los nombres de 5 huesos.', [])
+        .exactAnswerCount,
+    ).toBe(5)
+  })
+
+  it('skips exact-list mode when explanations are requested', () => {
+    expect(
+      fallbackDashboardChatSourcePlan(
+        'Give me 3 examples and explain each one.',
+        [],
+      ).exactAnswerCount,
+    ).toBeNull()
+  })
+
+  it('ignores counts outside the supported range', () => {
+    expect(
+      fallbackDashboardChatSourcePlan('List 999 facts.', []).exactAnswerCount,
+    ).toBeNull()
   })
 })

@@ -107,9 +107,28 @@ describe('askDashboardSources', () => {
       history: [],
       sourceChunks: [],
       allowedSources: ['general'],
+      exactAnswerCount: 2,
     })
 
     expect(result.answer).toBe('1. Humerus\n2. Radius')
     expect(callStrongAiModel).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not run exact-list repair without a planned exact count', async () => {
+    vi.mocked(callStrongAiModel).mockResolvedValue(
+      'The 3 main bones of the arm are the humerus, radius, and ulna, and each has a distinct role.',
+    )
+
+    const result = await askDashboardSources({
+      dashboardTitle: 'Anatomy',
+      contextText: '',
+      question: 'Give me 3 examples of arm bones and explain each one.',
+      history: [],
+      sourceChunks: [],
+      allowedSources: ['general'],
+    })
+
+    expect(result.answer).toContain('humerus')
+    expect(callStrongAiModel).toHaveBeenCalledTimes(1)
   })
 })

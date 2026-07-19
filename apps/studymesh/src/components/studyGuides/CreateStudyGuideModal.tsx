@@ -668,7 +668,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
         provider: effectiveAiProvider,
         apiToken: credentials.apiToken,
         model: credentials.model,
-        title: 'Study Guide',
+        title: 'Quick Guide',
         folderName: '',
         prompt: effectivePrompt,
         outputLanguage: resolvedLanguage.language,
@@ -804,7 +804,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
       reviewFolderName.trim() ||
       pathDraft.folderName ||
       pathDraft.title ||
-      'Study Guide'
+      'Quick Guide'
     const studyPathId = makeStudyPathId(pathDraft.title || effectiveFolder)
     const dashboardCount = pathDraft.dashboards.length
     const fallbackLanguage = resolveContentLanguage({ text: prompt })

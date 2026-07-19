@@ -11,11 +11,7 @@ import GoogleIcon from '@mui/icons-material/Google'
 import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded'
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom'
 
-import {
-  signInWithGoogle,
-  signUpWithEmail,
-  useAuth,
-} from './AuthProvider'
+import { signInWithGoogle, signUpWithEmail, useAuth } from './AuthProvider'
 import {
   AuthPageFrame,
   PASSWORD_MIN_LENGTH,
@@ -55,7 +51,9 @@ const SignupPage = () => {
 
     if (password.length < PASSWORD_MIN_LENGTH) {
       setSubmitting(false)
-      setErrorMessage(`Password must be at least ${PASSWORD_MIN_LENGTH} characters.`)
+      setErrorMessage(
+        `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`,
+      )
       return
     }
 
@@ -76,9 +74,7 @@ const SignupPage = () => {
         'Account created. Check your email if confirmation is enabled.',
       )
     } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, 'Could not create your account.'),
-      )
+      setErrorMessage(getErrorMessage(error, 'Could not create your account.'))
     } finally {
       setSubmitting(false)
     }
@@ -95,9 +91,7 @@ const SignupPage = () => {
         ),
       )
     } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, 'Could not start Google sign in.'),
-      )
+      setErrorMessage(getErrorMessage(error, 'Could not start Google sign in.'))
       setGoogleSubmitting(false)
     }
   }
@@ -105,7 +99,7 @@ const SignupPage = () => {
   return (
     <AuthPageFrame
       title="Create account"
-      subtitle="Save Study Guides, pages, and study progress to your cloud workspace."
+      subtitle="Save Quick Guides, pages, and study progress to your cloud workspace."
       footer={
         <Typography variant="body2" color="text.secondary" align="center">
           Already have an account?{' '}

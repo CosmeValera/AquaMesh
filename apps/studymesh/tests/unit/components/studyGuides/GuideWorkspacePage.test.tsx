@@ -265,11 +265,11 @@ describe('GuideWorkspacePage responsive sections', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('Loading Study Guide...')).toBeInTheDocument()
+    expect(screen.getByText('Loading Quick Guide...')).toBeInTheDocument()
     expect(await screen.findByTestId('study-guide-panel')).toHaveTextContent(
       'Core lesson',
     )
-    expect(screen.queryByText('Loading Study Guide...')).not.toBeInTheDocument()
+    expect(screen.queryByText('Loading Quick Guide...')).not.toBeInTheDocument()
     expect(guideWorkspaceCloudMocks.getStudyGuide).toHaveBeenCalledWith(
       'user-1',
       'guide-1',
@@ -291,7 +291,7 @@ describe('GuideWorkspacePage responsive sections', () => {
     expect(await screen.findByTestId('study-guide-panel')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Pages' })).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Study Guide' }),
+      screen.getByRole('button', { name: 'Quick Guide' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'AI Chat' })).toBeInTheDocument()
 

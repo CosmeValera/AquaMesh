@@ -966,7 +966,8 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
   {
     id: 'template-math-derivatives-chart',
     name: 'Mathematics Derivatives Progress Template',
-    description: 'A compact progress widget for tracking derivative confidence.',
+    description:
+      'A compact progress widget for tracking derivative confidence.',
     category: 'Knowledge Workspace',
     components: [
       {
@@ -1095,8 +1096,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
                 id: 'template-math-worked-example-text',
                 type: 'Label',
                 props: {
-                  text:
-                    'f(x) = 3x⁴ − 2x² + 7\n\nf′(x) = 12x³ − 4x\n\nReason: apply the power rule term by term. The constant becomes 0.',
+                  text: 'f(x) = 3x⁴ − 2x² + 7\n\nf′(x) = 12x³ − 4x\n\nReason: apply the power rule term by term. The constant becomes 0.',
                   variant: 'body1',
                   whiteSpace: 'pre-line',
                 },
@@ -1135,7 +1135,8 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
                   type: 'number',
                   fullWidth: true,
                   margin: 'normal',
-                  helperText: 'This value is what the button adds to the chart.',
+                  helperText:
+                    'This value is what the button adds to the chart.',
                 },
               },
               {
@@ -1175,7 +1176,8 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
   {
     id: 'template-math-derivatives-theory',
     name: 'Mathematics Derivatives Theory Template',
-    description: 'A cleaner theory widget with rules, meaning, and review checklist.',
+    description:
+      'A cleaner theory widget with rules, meaning, and review checklist.',
     category: 'Knowledge Workspace',
     components: [
       {
@@ -1773,7 +1775,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
     id: 'template-knowledge-tutorial',
     name: 'StudyMesh Tutorial Template',
     description:
-      'A visual guide that explains Study Guides, pages, notes, exercises, and the normal StudyMesh workflow.',
+      'A visual guide that explains Quick Guides, pages, notes, exercises, and the normal StudyMesh workflow.',
     category: 'Knowledge Workspace',
     components: [
       {

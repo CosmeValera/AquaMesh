@@ -15,11 +15,13 @@ export interface WorkspaceCreationStatusDetail {
 export const WORKSPACE_CREATION_STATUS_EVENT =
   'studymesh-workspace-creation-status'
 
-export const workspaceCreationTaskLabels: Record<WorkspaceCreationTask, string> =
-  {
-    'study-path': 'Create Study Guide',
-    'quick-create': 'Quick Create',
-  }
+export const workspaceCreationTaskLabels: Record<
+  WorkspaceCreationTask,
+  string
+> = {
+  'study-path': 'Create Quick Guide',
+  'quick-create': 'Quick Create',
+}
 
 export const dispatchWorkspaceCreationStatus = (
   detail: WorkspaceCreationStatusDetail,

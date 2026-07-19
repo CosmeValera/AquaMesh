@@ -57,12 +57,12 @@ const readMetaFromCustomProps = (
 
   return {
     studyPathId,
-    studyPathTitle: String(customProps.studyPathTitle || 'Study Guide'),
+    studyPathTitle: String(customProps.studyPathTitle || 'Quick Guide'),
     dashboardKey,
     dashboardName: String(customProps.studyPathDashboardName || 'Lesson'),
     dashboardIndex: Number(customProps.studyPathDashboardIndex || 1),
     dashboardCount: Number(customProps.studyPathDashboardCount || 1),
-    folderName: String(customProps.studyPathFolderName || 'Study Guide'),
+    folderName: String(customProps.studyPathFolderName || 'Quick Guide'),
     dashboardPurpose:
       typeof customProps.studyPathDashboardPurpose === 'string'
         ? (customProps.studyPathDashboardPurpose as StudyPathDashboardPurpose)
@@ -147,7 +147,9 @@ export const getStudyPathMetaFromLayout = (
   return null
 }
 
-export const getDashboardCreatedTime = (dashboard: SavedDashboardLike): number => {
+export const getDashboardCreatedTime = (
+  dashboard: SavedDashboardLike,
+): number => {
   const timestamp = Date.parse(dashboard.createdAt || dashboard.updatedAt || '')
   return Number.isNaN(timestamp) ? 0 : timestamp
 }
@@ -161,7 +163,9 @@ export const createStudyPathContainerState = (
       meta: getStudyPathMetaFromLayout(dashboard.layout),
     }))
     .filter(
-      (entry): entry is { dashboard: SavedDashboardLike; meta: StudyPathMeta } =>
+      (
+        entry,
+      ): entry is { dashboard: SavedDashboardLike; meta: StudyPathMeta } =>
         Boolean(entry.meta),
     )
 
@@ -193,7 +197,7 @@ export const createStudyPathContainerState = (
       dashboardKey: meta.dashboardKey,
       dashboardIndex: meta.dashboardIndex,
       dashboardCount: meta.dashboardCount,
-      folderName: meta.folderName || dashboard.folder || 'Study Guide',
+      folderName: meta.folderName || dashboard.folder || 'Quick Guide',
       dashboardPurpose: meta.dashboardPurpose,
       practiceType: meta.practiceType,
       layoutReason: meta.layoutReason,
@@ -210,7 +214,7 @@ export const createStudyPathContainerState = (
     folderName:
       studyPathDashboards[0].meta.folderName ||
       studyPathDashboards[0].dashboard.folder ||
-      'Study Guide',
+      'Quick Guide',
     dashboards: orderedDashboards,
     selectedIndex: 0,
     pinnedDashboardKeys: [],

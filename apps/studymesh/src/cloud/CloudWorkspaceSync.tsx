@@ -117,8 +117,8 @@ const getUserDisplayName = (user: {
   return typeof displayName === 'string'
     ? displayName
     : typeof fullName === 'string'
-    ? fullName
-    : user.email || 'Student'
+      ? fullName
+      : user.email || 'Student'
 }
 
 const isStudyPathDashboard = (dashboard: {
@@ -452,7 +452,7 @@ const CloudWorkspaceSync = () => {
         await repository.deleteStudyGuide(ownerId, studyGuideId)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
-        console.error('StudyMesh cloud Study Guide delete failed', error)
+        console.error('StudyMesh cloud Quick Guide delete failed', error)
         dispatchCloudSyncStatus(
           'error',
           error instanceof Error ? error.message : 'Cloud delete failed.',
@@ -475,7 +475,7 @@ const CloudWorkspaceSync = () => {
         await repository.upsertStudyGuide(ownerId, studyGuide)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
-        console.error('StudyMesh cloud Study Guide save failed', error)
+        console.error('StudyMesh cloud Quick Guide save failed', error)
         dispatchCloudSyncStatus(
           'error',
           error instanceof Error ? error.message : 'Cloud save failed.',
@@ -498,7 +498,7 @@ const CloudWorkspaceSync = () => {
         await repository.updateStudyGuideSummary(ownerId, summary)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
-        console.error('StudyMesh cloud Study Guide metadata save failed', error)
+        console.error('StudyMesh cloud Quick Guide metadata save failed', error)
         dispatchCloudSyncStatus(
           'error',
           error instanceof Error ? error.message : 'Cloud save failed.',

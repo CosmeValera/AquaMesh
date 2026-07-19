@@ -2507,7 +2507,7 @@ ${isLeanStudyGuide ? '- Lean hosted profile: create exactly 3 dashboards. Do not
   } support concepts across the whole path. Do not pad with quiz/flashcard items.
 Path title fallback: ${title}
 Folder name fallback if you cannot infer a better one: ${
-    folderName || 'Study Guide'
+    folderName || 'Quick Guide'
   }
 User request/topic:
 ${prompt}`
@@ -2558,7 +2558,7 @@ ${originalJson}`
         strongProvider,
         title,
         prompt,
-        folderName: folderName || 'Study Guide',
+        folderName: folderName || 'Quick Guide',
         dashboardCount,
         autoDashboardCount: true,
         outputLanguage,

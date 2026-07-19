@@ -179,7 +179,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
         setExpandedStudyPathFolders(JSON.parse(storedExpandedFolders))
       }
     } catch (error) {
-      console.error('Failed to load Study Guide menu state', error)
+      console.error('Failed to load Quick Guide menu state', error)
     }
   }, [])
 
@@ -190,7 +190,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
         JSON.stringify(expandedStudyPathFolders),
       )
     } catch (error) {
-      console.error('Failed to save Study Guide menu state', error)
+      console.error('Failed to save Quick Guide menu state', error)
     }
   }, [expandedStudyPathFolders])
 
@@ -303,8 +303,8 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
         (folderName === 'Mathematics'
           ? '#1976D2'
           : folderName === 'Tutorial'
-          ? DEFAULT_FOLDER_COLOR
-          : undefined),
+            ? DEFAULT_FOLDER_COLOR
+            : undefined),
     )
 
   // Handle opening and closing dropdown
@@ -1040,7 +1040,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
               textAlign: 'center',
             }}
           >
-            No study guides or dashboards yet
+            No quick guides or dashboards yet
           </MenuItem>
         )}
         {!isPhone && !hasVisibleLibraryItems && (
@@ -1054,7 +1054,7 @@ const DashboardOptionsMenu: React.FC<DashboardOptionsMenuProps> = ({
               textAlign: 'center',
             }}
           >
-            No study guides or dashboards yet
+            No quick guides or dashboards yet
           </MenuItem>
         )}
       </Menu>

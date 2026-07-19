@@ -139,7 +139,7 @@ const generatePath = async () => {
       target: { value: 'Teach French subjunctive' },
     },
   )
-  fireEvent.click(screen.getByRole('button', { name: /generate study guide/i }))
+  fireEvent.click(screen.getByRole('button', { name: /generate quick guide/i }))
 }
 
 describe('CreateStudyGuideModal Study Guide generation', () => {
@@ -250,7 +250,7 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
       },
     )
     fireEvent.click(
-      screen.getByRole('button', { name: /generate study guide/i }),
+      screen.getByRole('button', { name: /generate quick guide/i }),
     )
 
     await waitFor(() => {
@@ -333,7 +333,7 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
       },
     )
     fireEvent.click(
-      screen.getByRole('button', { name: /generate study guide/i }),
+      screen.getByRole('button', { name: /generate quick guide/i }),
     )
 
     expect(screen.getByText(/estimated total 45s/i)).toBeInTheDocument()
@@ -463,7 +463,7 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
       },
     )
     fireEvent.click(
-      screen.getByRole('button', { name: /generate study guide/i }),
+      screen.getByRole('button', { name: /generate quick guide/i }),
     )
 
     expect(
@@ -648,7 +648,7 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
       },
     )
     fireEvent.click(
-      screen.getByRole('button', { name: /generate study guide/i }),
+      screen.getByRole('button', { name: /generate quick guide/i }),
     )
 
     await waitFor(() => {

@@ -17,6 +17,7 @@ export type HostedAiSurface =
   | 'podcast'
 export type HostedAiStage =
   | 'study_guide_main'
+  | 'study_guide_monolith'
   | 'study_guide_blueprint'
   | 'study_guide_page_expand'
   | 'study_guide_final_quiz'

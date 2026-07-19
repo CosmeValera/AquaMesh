@@ -127,7 +127,9 @@ describe('Study Guide Quick Start helpers', () => {
         'Quick summary: First paragraph explains the core model.\n\nSecond paragraph keeps a caveat about where the comparison breaks.',
     })
 
-    expect(quickStart?.keyIdea.split(/\s+/)).toHaveLength(35)
+    // An unbroken overrun is kept whole rather than chopped mid-sentence.
+    expect(quickStart?.keyIdea.split(/\s+/)).toHaveLength(45)
+    expect(quickStart?.keyIdea).toMatch(/word44$/)
     expect(quickStart?.keyIdea).not.toMatch(/Key idea/i)
     expect(quickStart?.quickSummary.split('\n\n')).toHaveLength(2)
   })
@@ -147,6 +149,30 @@ describe('Study Guide Quick Start helpers', () => {
         'A data lake is raw object storage plus tools that organize and analyze files later.',
     })
     expect(quickStart?.quickSummary).toContain('\n\n')
+  })
+
+  it('never cuts the key idea mid-sentence when the model overruns the word cap', () => {
+    const quickStart = sanitizeStudyGuideQuickStart({
+      keyIdea:
+        'Photosynthesis is the process by which plants, algae, and some bacteria use light energy to convert carbon dioxide and water into glucose, releasing oxygen as a by-product. In plants, it occurs mainly in chloroplasts, where pigments absorb light.',
+      quickSummary: 'Light drives the reaction.\n\nThe Calvin cycle follows.',
+    })
+
+    expect(quickStart?.keyIdea).toMatch(/by-product\.$/)
+    expect(quickStart?.keyIdea).not.toMatch(/where$/)
+  })
+
+  it('completes a slightly-over-cap single-sentence key idea instead of clipping it', () => {
+    const words = Array.from(
+      { length: 38 },
+      (_value, index) => `word${index}`,
+    ).join(' ')
+    const quickStart = sanitizeStudyGuideQuickStart({
+      keyIdea: `${words} end.`,
+      quickSummary: 'Light drives the reaction.\n\nThe Calvin cycle follows.',
+    })
+
+    expect(quickStart?.keyIdea).toMatch(/end\.$/)
   })
 
   it('preserves a complete Quick Start sentence when summary is slightly long', () => {
@@ -474,6 +500,26 @@ describe('Study Guide Quick Start helpers', () => {
         body: 'Kafka topics are event streams, but they also retain ordered records so consumers can replay from offsets.',
       },
     ])
+  })
+
+  it('never ends an over-long bridge body mid-word', () => {
+    const sentence =
+      'Kafka topics retain ordered records so consumers can replay them later. '
+    const [block] = parseStudyGuideKnowledgeBridgeBlocks(
+      JSON.stringify({
+        blocks: [
+          {
+            dashboardIndex: 0,
+            title: 'Events you already know',
+            body: `${sentence.repeat(12)}A trailing caveat closes the note.`,
+          },
+        ],
+      }),
+      1,
+    )
+
+    expect(block.body.length).toBeGreaterThan(0)
+    expect(block.body).toMatch(/[.!?]$/)
   })
 
   it('filters parsed bridge blocks to eligible dashboard indexes', () => {

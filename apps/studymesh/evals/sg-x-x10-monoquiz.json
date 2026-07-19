@@ -1,0 +1,405 @@
+{
+  "createdAt": "2026-07-18T19:03:11.477Z",
+  "mode": "4+2-enhanced-only-no-evaluator",
+  "models": {
+    "mini": "gpt-5.6-luna",
+    "nano": "gpt-5.4-nano",
+    "support": "gpt-5.4-mini",
+    "quiz": "gpt-5.4-nano",
+    "mode": "monolith",
+    "miniPriceMultiplier": 1.33,
+    "miniReasoningEffort": "none",
+    "blueprintBrevity": true,
+    "blueprintCompress": false,
+    "batchExpand": false,
+    "monolithQuiz": true,
+    "promptCacheKey": false,
+    "supportBrevity": true,
+    "supportSourceChars": 4500
+  },
+  "tuples": [
+    {
+      "id": "terraform-hard-context",
+      "prompt": "What is Terraform?",
+      "knownTopics": [
+        "Rundeck",
+        "Docker",
+        "MinIO/S3",
+        "Ansible"
+      ],
+      "expectedKnownTopic": "Ansible"
+    },
+    {
+      "id": "roman-empire-history-context",
+      "prompt": "What was the Roman Empire?",
+      "knownTopics": [
+        "Roman Republic",
+        "Ancient Greece",
+        "Medieval Europe",
+        "React"
+      ],
+      "expectedKnownTopic": "Roman Republic"
+    }
+  ],
+  "summary": {
+    "results": [
+      {
+        "option": "4+2-enhanced",
+        "tupleId": "terraform-hard-context",
+        "prompt": "What is Terraform?",
+        "generationCostUsd": 0.01522684,
+        "selectedKnownTopics": [
+          "Ansible"
+        ],
+        "selectedExpectedTopic": true,
+        "deterministicChecks": {
+          "pageCount": 3,
+          "finalQuizQuestions": 6,
+          "quizBadSmellCount": 0,
+          "bridgeBlockCount": 1,
+          "codeBlockCount": 3,
+          "quickSummaryIncompleteEnding": false,
+          "rawNotesIncompleteEnding": false,
+          "placeholderExampleCount": 0,
+          "averagePageWords": 336.3333333333333
+        },
+        "stageCosts": [
+          {
+            "stage": "monolith_full_guide_with_quiz",
+            "model": "gpt-5.6-luna",
+            "costUsd": 0.01522684,
+            "inputTokens": 841,
+            "outputTokens": 2404
+          }
+        ]
+      },
+      {
+        "option": "4+2-enhanced",
+        "tupleId": "roman-empire-history-context",
+        "prompt": "What was the Roman Empire?",
+        "generationCostUsd": 0.01358894,
+        "selectedKnownTopics": [
+          "Roman Republic"
+        ],
+        "selectedExpectedTopic": true,
+        "deterministicChecks": {
+          "pageCount": 3,
+          "finalQuizQuestions": 6,
+          "quizBadSmellCount": 0,
+          "bridgeBlockCount": 1,
+          "codeBlockCount": 0,
+          "quickSummaryIncompleteEnding": false,
+          "rawNotesIncompleteEnding": false,
+          "placeholderExampleCount": 0,
+          "averagePageWords": 299.6666666666667
+        },
+        "stageCosts": [
+          {
+            "stage": "monolith_full_guide_with_quiz",
+            "model": "gpt-5.6-luna",
+            "costUsd": 0.01358894,
+            "inputTokens": 843,
+            "outputTokens": 2130
+          }
+        ]
+      }
+    ],
+    "comparisons": [
+      {
+        "tupleId": "terraform-hard-context",
+        "missingBaseline": true
+      },
+      {
+        "tupleId": "roman-empire-history-context",
+        "missingBaseline": true
+      }
+    ],
+    "generationCostUsdTotal": 0.02881578
+  },
+  "results": [
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "terraform-hard-context",
+      "prompt": "What is Terraform?",
+      "knownTopics": [
+        "Rundeck",
+        "Docker",
+        "MinIO/S3",
+        "Ansible"
+      ],
+      "expectedKnownTopic": "Ansible",
+      "selectedKnownTopics": [
+        "Ansible"
+      ],
+      "selectedExpectedTopic": true,
+      "guide": {
+        "title": "What Is Terraform?",
+        "quickStart": {
+          "keyIdea": "If you know Ansible, think of Terraform as a tool for declaring and provisioning infrastructure resources, not primarily for running configuration tasks on existing machines.",
+          "quickSummary": "Ansible commonly describes tasks to execute on hosts, such as installing packages or changing files. Terraform instead describes resources and relationships, such as a network, server, or database, and uses a plan to propose changes that make actual infrastructure match that description.\n\nThe comparison is useful but incomplete: Terraform is not a replacement for every Ansible workflow, and Ansible is not simply a Terraform alternative. Terraform relies on providers and state to manage resource lifecycles, while Ansible usually focuses on procedural configuration and operations."
+        },
+        "pages": [
+          {
+            "title": "01 - The Core Idea: Infrastructure as Code",
+            "rawNotes": "## Terraform in one sentence\n\nTerraform is an infrastructure-as-code tool from HashiCorp. It lets you describe infrastructure in configuration files and use that description to provision and manage resources through provider APIs. Resources can include cloud networks, virtual machines, databases, DNS records, and many other services.\n\nTerraform is declarative. You describe the desired result rather than writing a complete script of imperative steps. Terraform compares the desired configuration with information about existing managed resources, builds an execution plan, and attempts to perform the required changes.\n\n## A small example\n\nThe following configuration declares an AWS provider and a small compute resource. The exact arguments supported by a resource depend on the provider and its documentation.\n\n```hcl\nterraform {\n  required_providers {\n    aws = {\n      source  = \"hashicorp/aws\"\n      version = \"~> 5.0\"\n    }\n  }\n}\n\nprovider \"aws\" {\n  region = \"us-east-1\"\n}\n\nresource \"aws_instance\" \"web\" {\n  ami           = \"ami-0c55b159cbfafe1f0\"\n  instance_type = \"t3.micro\"\n}\n```\n\nThis file is a request for an instance, not a guarantee that the example AMI is valid in every account or region. A real deployment must use an appropriate image and supply credentials safely.\n\n## Why teams use it\n\nConfiguration can be reviewed in version control, reused across environments, and changed through an explicit workflow. A plan gives operators a chance to inspect proposed additions, modifications, and deletions before applying them.\n\nTerraform does not make infrastructure automatically safe or universally reproducible. Provider versions, permissions, quotas, regional differences, secrets, and external changes can affect results. Its value comes from making intended infrastructure and proposed changes more visible and repeatable.\n\n## Key distinction\n\nTerraform mainly manages infrastructure resources and their relationships. It is not primarily a general-purpose shell script, a server login tool, or a configuration-management playbook.",
+            "quizQuestions": []
+          },
+          {
+            "title": "02 - How Terraform Works: Configuration, Providers, State, and Plans",
+            "rawNotes": "## The main workflow\n\nA common Terraform workflow has three central commands:\n\n```bash\nterraform init\nterraform plan\nterraform apply\n```\n\n`terraform init` prepares a working directory, including downloading required providers and setting up modules or backend configuration. `terraform plan` reads configuration and relevant state, refreshes or queries provider information as appropriate, and proposes actions. `terraform apply` executes an approved plan or creates a new plan and asks for approval.\n\n## Providers and resources\n\nTerraform itself does not contain every cloud or service API. Providers are plugins that translate Terraform configuration into API operations for a platform. A resource block represents an object Terraform can create, read, update, or delete through a provider. Data sources read information that already exists without necessarily managing its lifecycle.\n\nProvider versions matter because schemas and behavior can change. Teams commonly constrain versions and commit the dependency lock file so that initialization is more predictable across machines.\n\n## State\n\nTerraform state is a record that helps Terraform associate configuration addresses with real remote objects and remember relevant attributes. By default, state is stored locally, but teams can configure a remote backend for shared work and locking where supported.\n\nState can contain sensitive values, even when configuration does not visibly include a secret. It should therefore be protected with appropriate access controls, encryption, backup, and a safe workflow. Editing state manually is risky; state commands and documented recovery procedures are safer approaches.\n\n## Plans are proposals\n\nA plan is not a permanent transaction guarantee. Someone or another system may change infrastructure after the plan is generated, and a provider may have side effects or incomplete information. Review plans carefully, especially when they include replacement or destruction.\n\nA change can require replacement when an attribute cannot be updated in place. Terraform may show this as destroying an old object and creating a new one, which can affect availability, names, data, and dependencies.\n\n## Dependency ordering\n\nTerraform infers dependencies from references between resources. It can then order operations so prerequisites are handled first, although explicit dependencies are available when an indirect relationship is not visible.",
+            "quizQuestions": []
+          },
+          {
+            "title": "03 - Safe, Repeatable Terraform Use",
+            "rawNotes": "## Organize changes deliberately\n\nKeep Terraform configuration in version control and separate environments or workspaces according to a clear team policy. Reusable modules can package related resources behind input variables and outputs, but modules should be kept understandable and tested like other code.\n\nUse variables for values that differ by environment and outputs for values that other configurations or operators need. Avoid placing credentials directly in configuration or committing sensitive state to a public repository. Provider and module versions should be reviewed rather than upgraded blindly.\n\n## Inspect before changing\n\nA practical local sequence can look like this:\n\n```bash\nterraform fmt -check\nterraform validate\nterraform plan -out=tfplan\nterraform apply tfplan\n```\n\n`terraform fmt -check` checks formatting without rewriting files. `terraform validate` checks whether the configuration is internally valid for the initialized working directory; it does not prove that an apply will succeed. Saving a plan and applying that saved plan can reduce the gap between reviewed and executed actions, though it does not eliminate changes outside Terraform or every provider limitation.\n\n## Drift and ownership\n\nDrift occurs when real infrastructure differs from what Terraform expects, for example because an operator changes a setting in a console. A later plan may detect that difference and propose changing the resource back, accepting the external value, or replacing the resource, depending on configuration and provider behavior.\n\nAvoid having multiple systems independently manage the same resource attributes. Terraform, a cloud console, scripts, and another automation tool can otherwise overwrite one another or produce confusing plans. Define ownership boundaries and document intentional external changes.\n\n## Destruction and recovery\n\nA destroy plan deserves the same seriousness as a production code change. Check dependencies, backups, retention policies, and whether a resource is safe to recreate. Lifecycle settings can influence replacement and deletion behavior, but they do not replace operational planning.\n\nRemote state improves collaboration when configured correctly, especially through locking and shared access controls. It does not automatically provide disaster recovery; state and infrastructure recovery procedures still need testing.\n\n## Final mental model\n\nTerraform is a declarative resource manager: configuration expresses intent, providers connect that intent to APIs, state helps track ownership, plans expose proposed changes, and apply performs them. Reliable use depends on review, secure state handling, controlled versions, and clear ownership.",
+            "quizQuestions": [
+              {
+                "question": "A team wants a reviewed description of a network and database that can be reused in several environments. Which Terraform capability best fits this goal?",
+                "options": [
+                  "Declarative configuration for infrastructure resources",
+                  "Interactive shell access to each server",
+                  "Automatic installation of every application package"
+                ],
+                "correctIndex": 0,
+                "explanation": "Terraform configuration describes desired infrastructure resources and can be versioned and reused.",
+                "skillTested": "Selecting an appropriate tool capability"
+              },
+              {
+                "question": "A Terraform configuration is valid, but the chosen machine image does not exist in the selected region. What is the most accurate expectation?",
+                "options": [
+                  "Terraform will always create the machine by choosing a valid image automatically",
+                  "Planning or applying may fail because provider and regional constraints still matter",
+                  "Terraform will ignore the image because declarative tools do not use provider arguments"
+                ],
+                "correctIndex": 1,
+                "explanation": "Valid syntax does not guarantee that provider arguments, permissions, quotas, or regional resources are usable.",
+                "skillTested": "Distinguishing configuration validity from deployment success"
+              },
+              {
+                "question": "Why should a team protect its Terraform state even if its configuration contains no obvious passwords?",
+                "options": [
+                  "State can contain sensitive values and resource details",
+                  "State is only a formatting cache and has no operational value",
+                  "Protecting state is unnecessary when a remote backend is used"
+                ],
+                "correctIndex": 0,
+                "explanation": "State can contain sensitive values and information about managed infrastructure, so access and storage require protection.",
+                "skillTested": "Applying state-security principles"
+              },
+              {
+                "question": "A plan shows that a production database will be destroyed and recreated because one attribute cannot be updated in place. What should the team do first?",
+                "options": [
+                  "Apply immediately because replacement is always harmless",
+                  "Review availability, data, dependencies, and recovery implications before approval",
+                  "Delete the state file so Terraform stops proposing the replacement"
+                ],
+                "correctIndex": 1,
+                "explanation": "Replacement can affect availability and data, so the plan requires careful operational review.",
+                "skillTested": "Diagnosing replacement risk"
+              },
+              {
+                "question": "An operator changes a resource in a cloud console, and the next Terraform plan proposes changing it back. What concept best explains this result?",
+                "options": [
+                  "Drift between real infrastructure and Terraform’s expected configuration",
+                  "Provider initialization permanently disabling the resource",
+                  "Terraform formatting the resource into a new type"
+                ],
+                "correctIndex": 0,
+                "explanation": "An external change can create drift, which a later plan may detect and reconcile according to configuration and provider behavior.",
+                "skillTested": "Explaining drift"
+              },
+              {
+                "question": "Which statement best distinguishes Terraform from a typical Ansible configuration task?",
+                "options": [
+                  "Terraform mainly manages declared resource lifecycles, while Ansible commonly runs tasks on hosts",
+                  "Terraform cannot use APIs, while Ansible can use only APIs",
+                  "Terraform is an imperative shell interpreter, while Ansible only stores state"
+                ],
+                "correctIndex": 0,
+                "explanation": "Terraform focuses on resource management through providers and state; Ansible commonly focuses on executing configuration tasks on hosts.",
+                "skillTested": "Comparing infrastructure tools"
+              }
+            ]
+          }
+        ],
+        "bridgeBlocks": [
+          {
+            "dashboardIndex": 1,
+            "title": "Bridge from Ansible to Terraform",
+            "body": "Terraform’s plan is a useful contrast with an Ansible playbook: it previews resource-level changes before applying them. The caveat is that Terraform’s plan depends on provider behavior and stored state, so it is not a universal preview of every effect a provider or external system might produce."
+          }
+        ]
+      },
+      "stageCosts": [
+        {
+          "stage": "monolith_full_guide_with_quiz",
+          "model": "gpt-5.6-luna",
+          "inputTokens": 841,
+          "cachedInputTokens": 0,
+          "outputTokens": 2404,
+          "totalTokens": 3245,
+          "costUsd": 0.01522684
+        }
+      ],
+      "generationCostUsd": 0.01522684,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 3,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 336.3333333333333
+      }
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "roman-empire-history-context",
+      "prompt": "What was the Roman Empire?",
+      "knownTopics": [
+        "Roman Republic",
+        "Ancient Greece",
+        "Medieval Europe",
+        "React"
+      ],
+      "expectedKnownTopic": "Roman Republic",
+      "selectedKnownTopics": [
+        "Roman Republic"
+      ],
+      "selectedExpectedTopic": true,
+      "guide": {
+        "title": "What Was the Roman Empire?",
+        "quickStart": {
+          "keyIdea": "The Roman Empire grew out of the Roman Republic when competition among powerful leaders and armies broke the republic’s political balance, allowing Augustus to build durable one-man rule.",
+          "quickSummary": "The Republic already provided Rome with elections, magistrates, a Senate, law, citizenship, and an expanding military network. Its late crises—especially civil wars and rival commanders—made the old system unstable. Augustus used victory and careful political language to become the first emperor while keeping many republican forms.\n\nThe empire then extended Roman rule through provinces, armies, taxes, cities, and agreements with local elites. The comparison breaks down if it suggests a simple replacement: imperial government preserved and reshaped republican institutions rather than erasing them overnight."
+        },
+        "pages": [
+          {
+            "title": "01 - From Republic to Empire",
+            "rawNotes": "## Rome Before the Empire\n\nRome’s empire was not created from nothing. For centuries, Rome was a republic in which elected magistrates, the Senate, assemblies, and written law shared political roles. Roman expansion brought wealth, enslaved people, land, and new provinces, but it also increased inequality and competition among leading families.\n\n## The Crisis of the Republic\n\nBy the first century BCE, ambitious commanders could use loyal armies and personal popularity to challenge traditional political limits. Rivalries involving figures such as Julius Caesar, Pompey, and the Senate produced civil wars. Caesar became dictator, but his assassination in 44 BCE did not restore stability. More conflict followed between competing leaders.\n\n## Augustus and a New Arrangement\n\nOctavian, Caesar’s adopted heir, defeated Mark Antony and Cleopatra at Actium in 31 BCE. In 27 BCE, Octavian received the name Augustus and presented himself as restoring the republic. In practice, he concentrated decisive authority over the army, major provinces, and political appointments. He became the first Roman emperor.\n\nAugustus did not usually describe his system as a monarchy. He kept republican offices and allowed the Senate to continue meeting, but the emperor’s control of military resources made his position dominant. This arrangement helped avoid the appearance of a foreign-style kingship while creating a durable imperial government.\n\n## What Changed?\n\nThe key change was not that Rome stopped using laws or offices. Instead, ultimate power became centered on the emperor and the imperial court. Later emperors varied greatly, but succession, military loyalty, palace politics, and provincial administration remained central problems.\n\nThe empire therefore grew from republican institutions under pressure. Understanding that transition prevents a common mistake: treating “republic” and “empire” as completely separate civilizations rather than connected phases of Roman history.",
+            "quizQuestions": []
+          },
+          {
+            "title": "02 - Governing a Diverse Empire",
+            "rawNotes": "## A Large and Uneven Territory\n\nAt its greatest extent in the early second century CE, Roman rule reached around the Mediterranean and included parts of Europe, North Africa, and western Asia. The empire contained farmers, merchants, soldiers, enslaved people, city residents, and many local cultures. Latin was important in the west, while Greek was widely used in the eastern Mediterranean.\n\n## Provinces, Cities, and Local Elites\n\nRome divided conquered territories into provinces governed by officials responsible for justice, taxation, and order. The central government could not manage every village directly, so it relied heavily on cities and local elites. Local leaders collected taxes, sponsored public buildings, and negotiated with Roman authorities while preserving many regional customs.\n\n## Army and Infrastructure\n\nThe army defended frontiers, suppressed major revolts, and supported imperial authority. Soldiers also built roads, bridges, forts, and walls. These systems helped move troops, officials, messages, and goods, but they did not make the empire uniformly peaceful or equally prosperous.\n\n## Law, Citizenship, and Belonging\n\nRoman law provided shared procedures and categories, although people’s rights differed by status and citizenship. Citizenship expanded over time. In 212 CE, the emperor Caracalla extended Roman citizenship to nearly all free inhabitants of the empire, though social inequality and legal distinctions remained.\n\nRomanization was not a complete replacement of local identity. People could adopt Roman names, laws, buildings, clothing, or religious practices while continuing regional languages and traditions. Roman rule worked through a mixture of coercion, advantage, adaptation, and cooperation.\n\n## A Useful Model\n\nThink of the empire as a network rather than a uniformly controlled block. The emperor and army supplied overarching power, while provinces and cities handled much everyday life. This model explains why Rome could govern a vast territory without making every community identical, and why local resistance or negotiation remained possible.",
+            "quizQuestions": []
+          },
+          {
+            "title": "03 - Society, Change, and the Western Collapse",
+            "rawNotes": "## Daily Life and Inequality\n\nRoman society was deeply unequal. Wealthy landowners and senators possessed influence, while many free people worked as farmers, laborers, artisans, or soldiers. Enslaved people performed household, agricultural, mining, and skilled work without freedom. Conditions differed widely across regions and social positions.\n\n## Economy and Culture\n\nAgriculture supported most people, while trade moved grain, wine, olive oil, metals, pottery, and luxury goods across sea and land routes. Cities displayed baths, forums, temples, theaters, and public monuments. These features communicated Roman power, but they did not mean every resident enjoyed the same standard of living.\n\nReligious life was diverse. Traditional Roman practices existed alongside local cults, Judaism, and later Christianity. Christianity began within the Roman world and was persecuted at some times and in some places, but imperial policy changed under Constantine in the fourth century. By the late fourth century, Christianity had become closely connected with imperial authority.\n\n## Why Did the Empire Change?\n\nThe empire faced recurring civil wars, succession disputes, economic pressures, frontier attacks, and administrative challenges. These were not a single, sudden cause of decline. Emperors responded by reforming taxation, reorganizing armies, and sharing or relocating imperial power. In the late third and fourth centuries, government became more formally divided between eastern and western centers.\n\n## The Western End\n\nIn 476 CE, the Germanic military leader Odoacer removed the western emperor Romulus Augustulus. This date is often used as a marker for the end of the Western Roman Empire, but change was gradual. Roman laws, Christianity, cities, languages, and political traditions continued in many regions.\n\nThe eastern empire, centered on Constantinople, survived for nearly a thousand more years and is often called the Byzantine Empire by modern historians. Thus, “the fall of Rome” describes the end of western imperial government, not the disappearance of all Roman institutions or the immediate end of Roman influence.",
+            "quizQuestions": [
+              {
+                "question": "Why did Augustus retain republican offices after gaining decisive power?",
+                "options": [
+                  "To preserve a familiar political appearance while concentrating real authority",
+                  "To give every province equal voting power",
+                  "To abolish the Roman army’s role in government"
+                ],
+                "correctIndex": 0,
+                "explanation": "Augustus kept republican forms, but control of armies and key provinces made his authority dominant.",
+                "skillTested": "Causal interpretation"
+              },
+              {
+                "question": "A province keeps its local language and customs while its elites collect taxes and build Roman-style public works. Which concept best explains this situation?",
+                "options": [
+                  "Uniform cultural replacement",
+                  "Negotiated imperial rule",
+                  "The immediate collapse of Roman authority"
+                ],
+                "correctIndex": 1,
+                "explanation": "Roman rule often combined central power with local cooperation and cultural continuity.",
+                "skillTested": "Concept application"
+              },
+              {
+                "question": "Why were roads and forts important beyond transportation?",
+                "options": [
+                  "They helped move troops, officials, messages, and goods across the empire",
+                  "They guaranteed that all inhabitants became Roman citizens",
+                  "They eliminated all frontier conflicts"
+                ],
+                "correctIndex": 0,
+                "explanation": "Infrastructure supported military defense and administration, but it did not create equality or permanent peace.",
+                "skillTested": "Functional reasoning"
+              },
+              {
+                "question": "What would be the safest conclusion about Romanization?",
+                "options": [
+                  "It always erased local identities within one generation",
+                  "It involved selective adoption alongside continuing regional traditions",
+                  "It occurred only in the city of Rome"
+                ],
+                "correctIndex": 1,
+                "explanation": "People could adopt Roman practices while retaining local languages, customs, and identities.",
+                "skillTested": "Evidence-based comparison"
+              },
+              {
+                "question": "Why does 476 CE provide an incomplete description of Rome’s end?",
+                "options": [
+                  "The eastern empire survived, and Roman institutions continued after the western emperor was removed",
+                  "Rome had never governed outside Italy",
+                  "The Roman Republic was restored across Europe"
+                ],
+                "correctIndex": 0,
+                "explanation": "476 marks a western political transition, while eastern imperial rule and Roman legacies continued.",
+                "skillTested": "Chronological qualification"
+              },
+              {
+                "question": "Which explanation best accounts for the Roman Empire’s transformation in the third and fourth centuries?",
+                "options": [
+                  "One isolated invasion caused every institution to disappear immediately",
+                  "Several pressures led emperors to reform administration, taxation, and armies",
+                  "Roman society stopped using cities and trade altogether"
+                ],
+                "correctIndex": 1,
+                "explanation": "Political conflict, economic pressures, frontier attacks, and administrative challenges interacted over time.",
+                "skillTested": "Multi-causal reasoning"
+              }
+            ]
+          }
+        ],
+        "bridgeBlocks": [
+          {
+            "dashboardIndex": 1,
+            "title": "From Republican Competition to Imperial Administration",
+            "body": "The Republic’s competitive politics helped produce powerful commanders, while the empire turned military success into a more permanent administrative structure. Provinces were governed through officials, armies, taxes, and local cities. The caveat is that the Republic also had provinces and armies, so administration was not invented by emperors; imperial rule changed who ultimately controlled them."
+          }
+        ]
+      },
+      "stageCosts": [
+        {
+          "stage": "monolith_full_guide_with_quiz",
+          "model": "gpt-5.6-luna",
+          "inputTokens": 843,
+          "cachedInputTokens": 0,
+          "outputTokens": 2130,
+          "totalTokens": 2973,
+          "costUsd": 0.01358894
+        }
+      ],
+      "generationCostUsd": 0.01358894,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 0,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 299.6666666666667
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "tupleId": "terraform-hard-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "roman-empire-history-context",
+      "missingBaseline": true
+    }
+  ]
+}

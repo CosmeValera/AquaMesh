@@ -1,0 +1,174 @@
+{
+  "results": [
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "terraform-hard-context",
+      "prompt": "What is Terraform?",
+      "generationCostUsd": 0.01405012,
+      "selectedKnownTopics": [
+        "Ansible"
+      ],
+      "selectedExpectedTopic": true,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 2,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 274.6666666666667
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.6-luna",
+          "costUsd": 0.00581742,
+          "inputTokens": 648,
+          "outputTokens": 864
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00089785,
+          "inputTokens": 1558,
+          "outputTokens": 469
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00074895,
+          "inputTokens": 1551,
+          "outputTokens": 351
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00072225,
+          "inputTokens": 1555,
+          "outputTokens": 329
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.001827,
+          "inputTokens": 1764,
+          "outputTokens": 112
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00188025,
+          "inputTokens": 1661,
+          "outputTokens": 141
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00108825,
+          "inputTokens": 785,
+          "outputTokens": 111
+        },
+        {
+          "stage": "4+2-enhanced_final_quiz",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00106815,
+          "inputTokens": 1572,
+          "outputTokens": 603
+        }
+      ]
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "roman-empire-history-context",
+      "prompt": "What was the Roman Empire?",
+      "generationCostUsd": 0.01533656,
+      "selectedKnownTopics": [
+        "Roman Republic"
+      ],
+      "selectedExpectedTopic": true,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 0,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 312
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.6-luna",
+          "costUsd": 0.00675906,
+          "inputTokens": 650,
+          "outputTokens": 1021
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00088535,
+          "inputTokens": 1758,
+          "outputTokens": 427
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00087325,
+          "inputTokens": 1760,
+          "outputTokens": 417
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00088485,
+          "inputTokens": 1768,
+          "outputTokens": 425
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.00177225,
+          "inputTokens": 1775,
+          "outputTokens": 98
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.001926,
+          "inputTokens": 1674,
+          "outputTokens": 149
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-mini",
+          "costUsd": 0.0010695,
+          "inputTokens": 802,
+          "outputTokens": 104
+        },
+        {
+          "stage": "4+2-enhanced_final_quiz",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0011663,
+          "inputTokens": 1719,
+          "outputTokens": 658
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "tupleId": "terraform-hard-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "roman-empire-history-context",
+      "missingBaseline": true
+    }
+  ],
+  "generationCostUsdTotal": 0.02938668
+}
+Saved enhanced results to C:\Users\cosme\Desktop\Cosme (Local)\Projects\StudyMesh\apps\studymesh\evals\sg-x-x5-compress.json

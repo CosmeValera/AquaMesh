@@ -15,17 +15,9 @@ import type {
   HostedAiSurface,
 } from "../apps/studymesh/src/quickCreate/ai/hostedCredits";
 import {
-  buildStudyGuideKnowledgeBridgeBlocksPrompt,
-  buildStudyGuideQuickStartPrompt,
-  buildStudyGuideQuickStartRelevancePrompt,
-  ensureForcedStudyGuideQuickStartRelevanceDecision,
-  parseStudyGuideKnowledgeBridgeBlocks,
   parseStudyGuideQuickStart,
-  parseStudyGuideQuickStartRelevanceDecision,
-  resolveStudyGuideKnowledgeContextPlan,
-  STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
-  STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
-  STUDY_GUIDE_QUICK_START_SCHEMA,
+  trimTitleToWordBoundary,
+  trimToCompleteSentenceWithinChars,
 } from "../apps/studymesh/src/studyGuides/quickStart";
 import {
   createAiOutputLanguageInstruction,
@@ -151,7 +143,6 @@ export const DEFAULT_OPENAI_SUPPORT_MODEL = "gpt-5.4-mini";
 export const DEFAULT_OPENAI_FAST_MODEL = "gpt-5.4-nano";
 export const DEFAULT_OPENAI_REASONING_EFFORT = "none";
 const MAX_TEXT_CHARS = 120_000;
-const SUPPORT_STAGE_SOURCE_MAX_CHARS = 4_500;
 const MIN_PODCAST_SOURCE_CHARS = 400;
 const MAX_PODCAST_SOURCE_CHARS = 24_000;
 const MAX_PODCAST_AUDIO_BYTES = 15_000_000;
@@ -220,6 +211,7 @@ export const getHostedOpenAiModel = (): string =>
 
 const BLUEPRINT_OPENAI_STAGES = new Set<HostedAiStage>([
   "study_guide_blueprint",
+  "study_guide_monolith",
 ]);
 
 const SUPPORT_OPENAI_STAGES = new Set<HostedAiStage>([
@@ -468,16 +460,16 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
     typeof statusSource.studyCredits === "number"
       ? statusSource.studyCredits
       : typeof statusSource.study_credits === "number"
-        ? statusSource.study_credits
-        : typeof statusSource.study_credit_balance === "number"
-          ? statusSource.study_credit_balance
-          : 0;
+      ? statusSource.study_credits
+      : typeof statusSource.study_credit_balance === "number"
+      ? statusSource.study_credit_balance
+      : 0;
   const nextDailyRefillAt =
     typeof statusSource.nextDailyRefillAt === "string"
       ? statusSource.nextDailyRefillAt
       : typeof statusSource.next_daily_refill_at === "string"
-        ? statusSource.next_daily_refill_at
-        : undefined;
+      ? statusSource.next_daily_refill_at
+      : undefined;
 
   return {
     available:
@@ -488,14 +480,14 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
       typeof statusSource.accountReady === "boolean"
         ? statusSource.accountReady
         : typeof statusSource.account_ready === "boolean"
-          ? statusSource.account_ready
-          : true,
+        ? statusSource.account_ready
+        : true,
     introSeen:
       typeof statusSource.introSeen === "boolean"
         ? statusSource.introSeen
         : typeof statusSource.intro_seen === "boolean"
-          ? statusSource.intro_seen
-          : false,
+        ? statusSource.intro_seen
+        : false,
     studyCredits,
     initialFreeCredits:
       typeof statusSource.initialFreeCredits === "number"
@@ -505,8 +497,8 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
       typeof statusSource.dailyFreeCreditFloor === "number"
         ? statusSource.dailyFreeCreditFloor
         : typeof statusSource.daily_free_credit_floor === "number"
-          ? statusSource.daily_free_credit_floor
-          : HOSTED_AI_DAILY_FREE_CREDIT_FLOOR,
+        ? statusSource.daily_free_credit_floor
+        : HOSTED_AI_DAILY_FREE_CREDIT_FLOOR,
     nextDailyRefillAt,
     costs: HOSTED_AI_CREDIT_COSTS,
     message:
@@ -684,54 +676,6 @@ const buildPrompt = (parts: HostedAiGatewayPart[]): string =>
 
 const textArraySchema = { type: "ARRAY", items: { type: "STRING" } };
 
-const ENHANCED_STUDY_GUIDE_BLUEPRINT_SCHEMA = {
-  type: "OBJECT",
-  properties: {
-    title: { type: "STRING" },
-    folderName: { type: "STRING" },
-    emoji: { type: "STRING" },
-    quickStart: {
-      type: "OBJECT",
-      properties: {
-        keyIdea: { type: "STRING" },
-        quickSummary: { type: "STRING" },
-      },
-      required: ["keyIdea", "quickSummary"],
-    },
-    pages: {
-      type: "ARRAY",
-      items: {
-        type: "OBJECT",
-        properties: {
-          title: { type: "STRING" },
-          keyFacts: textArraySchema,
-          conciseNotes: { type: "STRING" },
-          examplesNeeded: textArraySchema,
-          quizSkills: textArraySchema,
-        },
-        required: [
-          "title",
-          "keyFacts",
-          "conciseNotes",
-          "examplesNeeded",
-          "quizSkills",
-        ],
-      },
-    },
-  },
-  required: ["title", "folderName", "emoji", "quickStart", "pages"],
-};
-
-const ENHANCED_STUDY_GUIDE_PAGE_SCHEMA = {
-  type: "OBJECT",
-  properties: {
-    title: { type: "STRING" },
-    summary: { type: "STRING" },
-    rawNotes: { type: "STRING" },
-  },
-  required: ["title", "summary", "rawNotes"],
-};
-
 const ENHANCED_STUDY_GUIDE_QUIZ_SCHEMA = {
   type: "OBJECT",
   properties: {
@@ -768,52 +712,6 @@ const extractPromptField = (prompt: string, label: string): string => {
 const extractHostedStudyGuideTopic = (requestText: string): string => {
   const match = requestText.match(/User request\/topic:\s*([\s\S]+)$/i);
   return (match?.[1] || requestText).trim().slice(0, 4000);
-};
-
-const normalizeEnhancedBlueprint = (
-  value: unknown,
-  fallbackTitle: string,
-  fallbackFolderName: string,
-): EnhancedStudyGuideBlueprint => {
-  const record = isObject(value) ? value : {};
-  const pages = Array.isArray(record.pages) ? record.pages : [];
-  const normalizedPages = pages.slice(0, 3).map((page, index) => {
-    const pageRecord = isObject(page) ? page : {};
-    return {
-      title:
-        stringValue(pageRecord.title) ||
-        `${String(index + 1).padStart(2, "0")} - Lesson ${index + 1}`,
-      keyFacts: Array.isArray(pageRecord.keyFacts)
-        ? pageRecord.keyFacts.map(stringValue).filter(Boolean).slice(0, 12)
-        : [],
-      conciseNotes: stringValue(pageRecord.conciseNotes),
-      examplesNeeded: Array.isArray(pageRecord.examplesNeeded)
-        ? pageRecord.examplesNeeded.map(stringValue).filter(Boolean).slice(0, 6)
-        : [],
-      quizSkills: Array.isArray(pageRecord.quizSkills)
-        ? pageRecord.quizSkills.map(stringValue).filter(Boolean).slice(0, 6)
-        : [],
-    };
-  });
-  const quickStart = parseStudyGuideQuickStart(
-    JSON.stringify(isObject(record.quickStart) ? record.quickStart : {}),
-  );
-
-  if (normalizedPages.length !== 3 || !quickStart) {
-    const error = new Error(
-      "Hosted AI returned an unusable Study Guide blueprint.",
-    );
-    error.name = "provider_error";
-    throw error;
-  }
-
-  return {
-    title: stringValue(record.title) || fallbackTitle,
-    folderName: stringValue(record.folderName) || fallbackFolderName,
-    emoji: stringValue(record.emoji).slice(0, 8) || "📘",
-    quickStart,
-    pages: normalizedPages,
-  };
 };
 
 const normalizeEnhancedPage = (
@@ -901,99 +799,6 @@ const normalizeEnhancedQuizQuestions = (
 
   return normalized.map(shuffleQuizQuestionOptions);
 };
-
-const buildEnhancedBlueprintPrompt = ({
-  topic,
-  titleFallback,
-  folderNameFallback,
-  userKnownTopics,
-  outputLanguage,
-}: {
-  topic: string;
-  titleFallback: string;
-  folderNameFallback: string;
-  userKnownTopics: string[];
-  outputLanguage?: StudyMeshLanguageCode;
-}): string => `Create an enhanced compact factual blueprint for a StudyMesh Study Guide.
-
-Return strict JSON only:
-{
-  "title": "...",
-  "folderName": "...",
-  "emoji": "one emoji",
-  "quickStart": { "keyIdea": "...", "quickSummary": "two short paragraphs" },
-  "pages": [
-    {
-      "title": "01 - ...",
-      "keyFacts": ["fact"],
-      "conciseNotes": "90-110 words",
-      "examplesNeeded": ["example"],
-      "quizSkills": ["skill"]
-    }
-  ]
-}
-
-Rules:
-- ${createAiOutputLanguageInstruction(outputLanguage)}
-- Exactly 3 pages.
-- The blueprint model owns facts and structure; a cheaper model will only expand this blueprint.
-- keyFacts must contain exactly 8 precise, conservative facts per page, each one compact sentence with no filler words.
-- conciseNotes must be 90-110 words, packed with facts, without restating keyFacts.
-- examplesNeeded must contain at most 2 entries per page.
-- quizSkills must contain exactly 2 entries per page.
-- Maximize factual density per word; never pad or repeat.
-- quickStart is blueprint-owned: explain the concept directly, not the guide structure.
-- quickSummary target is 60-85 words. Every paragraph must end with a complete sentence.
-- If close to a word target, finish the current sentence cleanly instead of ending mid-thought.
-- Prefer a shorter complete sentence over using the whole word budget.
-- Learner context candidates: ${userKnownTopics.length ? userKnownTopics.join(", ") : "none"}.
-- Include comparison material in keyFacts/conciseNotes when a learner context candidate clearly reduces confusion.
-- Do not force irrelevant analogies inside the pages, but prepare useful bridge material when there is a good context match.
-- For programming, framework, DevOps, IaC, config, or command-line topics, examplesNeeded must request at least one real minimal code/config/command snippet.
-- Never ask for placeholder snippets. Forbidden examples include "example_resource", "arguments would go here", "component logic goes here", "configuration would go here", and "pseudo-code placeholder".
-- For non-code topics, examplesNeeded should request concrete examples, timelines, scenarios, or comparisons instead of code.
-- Include enough final quiz skills for a 6-question application quiz.
-
-Title fallback: ${titleFallback}
-Folder fallback: ${folderNameFallback}
-Learner request/topic:
-${topic}`;
-
-const buildEnhancedPagePrompt = ({
-  topic,
-  blueprint,
-  page,
-  outputLanguage,
-}: {
-  topic: string;
-  blueprint: EnhancedStudyGuideBlueprint;
-  page: EnhancedStudyGuideBlueprintPage;
-  outputLanguage?: StudyMeshLanguageCode;
-}): string => `Expand one Study Guide page using only this enhanced mini-authored blueprint.
-
-Return strict JSON only:
-{ "title": "...", "summary": "one preview sentence", "rawNotes": "Markdown lesson notes" }
-
-Rules:
-- ${createAiOutputLanguageInstruction(outputLanguage)}
-- Write 280-360 words.
-- Finish every paragraph and the final line as a complete sentence.
-- If close to the word target, finish the current sentence cleanly instead of ending mid-thought.
-- Do not end rawNotes with a comma, colon, "and", "or", "but", "because", "while", or an unfinished list.
-- Do not add facts not present or directly implied by keyFacts/conciseNotes/examplesNeeded.
-- Add connective explanation, examples, and learner-friendly structure.
-- If examplesNeeded requests code/config/commands, include a real fenced snippet with a language tag.
-- Never write placeholder snippets or placeholder comments like "arguments would go here", "component logic goes here", or "configuration would go here".
-- If the blueprint does not provide enough detail for a real snippet, use a concrete prose example instead of fake code.
-- Do not include quiz questions in rawNotes.
-
-Topic: ${topic}
-
-Full blueprint:
-${JSON.stringify(blueprint, null, 2)}
-
-Page blueprint:
-${JSON.stringify(page, null, 2)}`;
 
 const buildEnhancedGuideSource = ({
   topic,
@@ -1212,8 +1017,8 @@ const extractChatCompletionText = (payload: ChatCompletionResponse): string => {
   return typeof content === "string"
     ? content
     : Array.isArray(content)
-      ? content.map((part) => part.text || "").join("")
-      : payload.choices?.[0]?.text || "";
+    ? content.map((part) => part.text || "").join("")
+    : payload.choices?.[0]?.text || "";
 };
 
 const extractResponsesApiText = (payload: ChatCompletionResponse): string =>
@@ -1682,7 +1487,9 @@ const buildPodcastLanguageRetryPrompt = ({
 }): string =>
   [
     buildPodcastScriptPrompt({ sourceTitle, sourceText, outputLanguage }),
-    `The previous podcast script was rejected because it was not in ${getContentLanguagePromptName(outputLanguage)}.`,
+    `The previous podcast script was rejected because it was not in ${getContentLanguagePromptName(
+      outputLanguage,
+    )}.`,
     `Rewrite it now in ${getContentLanguagePromptName(outputLanguage)} only.`,
     "Keep the same JSON schema and keep only facts present in the source.",
     "Rejected transcript:",
@@ -1701,7 +1508,9 @@ const buildPodcastScriptPrompt = ({
   const languageInstruction = outputLanguage
     ? [
         createAiOutputLanguageInstruction(outputLanguage),
-        `Hard rule for this podcast: title, description, chapters, and every transcript turn must be in ${getContentLanguagePromptName(outputLanguage)}.`,
+        `Hard rule for this podcast: title, description, chapters, and every transcript turn must be in ${getContentLanguagePromptName(
+          outputLanguage,
+        )}.`,
         "If the source contains another language or mixed languages, explain it in the required output language; never switch to Portuguese, English, or any third language unless that is the required output language.",
       ].join(" ")
     : "Write the podcast in the same language as the source.";
@@ -2375,7 +2184,9 @@ const ensureConfigured = (): HostedAiGatewayResponse | null => {
   if (missing.length > 0) {
     return errorResponse(
       "not_configured",
-      `Hosted AI gateway is missing server configuration: ${missing.join(", ")}.`,
+      `Hosted AI gateway is missing server configuration: ${missing.join(
+        ", ",
+      )}.`,
     );
   }
 
@@ -2461,7 +2272,243 @@ const mapFailure = (
   };
 };
 
-const generateEnhancedHostedStudyGuide = async ({
+interface NormalizedMonolithGuide {
+  title: string;
+  folderName: string;
+  emoji: string;
+  quickStart: NonNullable<HostedAiGatewayResponse["quickStart"]>;
+  pages: EnhancedStudyGuidePage[];
+  contextPlan?: {
+    useForDefault: boolean;
+    selectedTopics: string[];
+    personalizedQuickStart?: NonNullable<HostedAiGatewayResponse["quickStart"]>;
+    bridgeBlock?: { title: string; body: string };
+  };
+}
+
+const createMonolithGuideSchema = (includeContext: boolean) => ({
+  type: "OBJECT",
+  properties: {
+    title: { type: "STRING" },
+    folderName: { type: "STRING" },
+    emoji: { type: "STRING" },
+    quickStart: {
+      type: "OBJECT",
+      properties: {
+        keyIdea: { type: "STRING" },
+        quickSummary: { type: "STRING" },
+      },
+      required: ["keyIdea", "quickSummary"],
+    },
+    ...(includeContext
+      ? {
+          contextPlan: {
+            type: "OBJECT",
+            properties: {
+              useForDefault: { type: "BOOLEAN" },
+              selectedTopics: textArraySchema,
+              reason: { type: "STRING" },
+              personalizedQuickStart: {
+                type: "OBJECT",
+                properties: {
+                  keyIdea: { type: "STRING" },
+                  quickSummary: { type: "STRING" },
+                },
+                required: ["keyIdea", "quickSummary"],
+              },
+              bridgeBlock: {
+                type: "OBJECT",
+                properties: {
+                  title: { type: "STRING" },
+                  body: { type: "STRING" },
+                },
+                required: ["title", "body"],
+              },
+            },
+            required: [
+              "useForDefault",
+              "selectedTopics",
+              "reason",
+              "personalizedQuickStart",
+              "bridgeBlock",
+            ],
+          },
+        }
+      : {}),
+    pages: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          title: { type: "STRING" },
+          summary: { type: "STRING" },
+          rawNotes: { type: "STRING" },
+        },
+        required: ["title", "summary", "rawNotes"],
+      },
+    },
+  },
+  required: [
+    "title",
+    "folderName",
+    "emoji",
+    "quickStart",
+    ...(includeContext ? ["contextPlan"] : []),
+    "pages",
+  ],
+});
+
+const buildMonolithGuidePrompt = ({
+  topic,
+  titleFallback,
+  folderNameFallback,
+  userKnownTopics,
+  outputLanguage,
+}: {
+  topic: string;
+  titleFallback: string;
+  folderNameFallback: string;
+  userKnownTopics: string[];
+  outputLanguage?: StudyMeshLanguageCode;
+}): string => `Write a complete, final StudyMesh Study Guide. This is shipped learner-facing content, not a draft or outline.
+
+Return strict JSON only:
+{
+  "title": "...",
+  "folderName": "...",
+  "emoji": "one emoji",
+  "quickStart": { "keyIdea": "one sentence, max 35 words", "quickSummary": "two short paragraphs" },${
+    userKnownTopics.length
+      ? `
+  "contextPlan": {
+    "useForDefault": true,
+    "selectedTopics": ["..."],
+    "reason": "...",
+    "personalizedQuickStart": { "keyIdea": "...", "quickSummary": "..." },
+    "bridgeBlock": { "title": "...", "body": "..." }
+  },`
+      : ""
+  }
+  "pages": [
+    { "title": "01 - ...", "summary": "one preview sentence", "rawNotes": "Markdown lesson notes" }
+  ]
+}
+
+Rules:
+- ${createAiOutputLanguageInstruction(outputLanguage)}
+- Exactly 3 pages, each 280-360 words of rawNotes in readable Markdown with short topic-specific sections.
+- Precise, conservative facts only, with a beginner-friendly progression across the pages.
+- Finish every paragraph and the final line of each page as a complete sentence. Never end rawNotes mid-thought.
+- For programming, framework, DevOps, IaC, config, or command-line topics, include at least one real minimal fenced code/config/command snippet with a language tag.
+- Never write placeholder snippets or placeholder comments like "arguments would go here", "component logic goes here", or "configuration would go here".
+- For non-code topics, use concrete examples, timelines, scenarios, or comparisons instead of code.
+- quickStart explains the concept itself directly and neutrally, not the guide structure. Do not write "This guide teaches...", "You will learn...", or similar framing.
+- keyIdea: exactly one complete sentence, 20-35 words, ending in a period. Never write a second sentence and never run past 35 words, because keyIdea is hard-capped at 35 words downstream.
+- quickSummary: 60-85 words, 2 short paragraphs, every paragraph ends with a complete sentence.
+- Choose a concise, topic-specific folderName and exactly one topic-matching emoji.
+- Do not include quiz questions inside rawNotes.${
+  userKnownTopics.length
+    ? `
+- The learner already knows these candidate topics: ${userKnownTopics.join(
+        ", ",
+      )}.
+- contextPlan.selectedTopics: always rank the candidates and choose the 1 that best reduces confusion for this topic (2 only if both are clearly relevant and same-domain). Never invent topics. Do not return [] merely because every candidate is a weak or cross-domain match; return [] only if every candidate would actively mislead, be unsafe, or be dehumanizing.
+- contextPlan.useForDefault: true only when the selected candidate genuinely reduces cognitive effort through a precise, same-domain comparison; otherwise false. A weak but honest bridge still gets a selected topic with useForDefault false.
+- contextPlan.personalizedQuickStart: always write this variant. It is an opt-in view the learner opens themselves, so write it even when useForDefault is false; it never replaces the neutral Quick Start unless useForDefault is true. Build it through the selected topic. If the bridge is strong, the selected topic must lead. If it is weak or cross-domain, explain the topic neutrally first, use the selected topic as one short honest contrast, and say plainly where the comparison breaks. quickSummary 60-85 words, complete sentences.
+- If selectedTopics is [], still write personalizedQuickStart as a neutral beginner-friendly Quick Start with one caveat or common misconception, and invent no bridge.
+- contextPlan.bridgeBlock: one short study note connecting a concept from page 2 to the selected topic, with one caveat. body under 85 words, ending with a complete sentence.
+- contextPlan.reason: one sentence on why the selected topic was chosen.
+- For topics involving identity, history, politics, culture, or people, keep the bridge factual and avoid reductive claims. For human or management topics, do not compare people to infrastructure, tools, or machines.`
+    : ""
+}
+
+Title fallback: ${titleFallback}
+Folder fallback: ${folderNameFallback}
+Learner request/topic:
+${topic}`;
+
+const normalizeMonolithGuide = (
+  value: unknown,
+  titleFallback: string,
+  folderNameFallback: string,
+  safeKnownTopics: string[],
+): NormalizedMonolithGuide => {
+  const record = isObject(value) ? value : {};
+  const pages = (Array.isArray(record.pages) ? record.pages : [])
+    .slice(0, 3)
+    .map((page, index) =>
+      normalizeEnhancedPage(
+        page,
+        `${String(index + 1).padStart(2, "0")} - Lesson ${index + 1}`,
+      ),
+    );
+  const quickStart = parseStudyGuideQuickStart(
+    JSON.stringify(isObject(record.quickStart) ? record.quickStart : {}),
+  );
+
+  if (pages.length !== 3 || !quickStart) {
+    const error = new Error(
+      "Hosted AI returned an unusable Study Guide draft.",
+    );
+    error.name = "provider_error";
+    throw error;
+  }
+
+  let contextPlan: NormalizedMonolithGuide["contextPlan"];
+  const planRecord = isObject(record.contextPlan) ? record.contextPlan : null;
+  if (planRecord && safeKnownTopics.length) {
+    const knownByLower = new Map(
+      safeKnownTopics.map((candidate) => [candidate.toLowerCase(), candidate]),
+    );
+    const selectedTopics = (
+      Array.isArray(planRecord.selectedTopics) ? planRecord.selectedTopics : []
+    )
+      .map((candidate) =>
+        knownByLower.get(stringValue(candidate).toLowerCase()),
+      )
+      .filter((candidate): candidate is string => Boolean(candidate))
+      .slice(0, 2);
+    const personalizedQuickStart =
+      parseStudyGuideQuickStart(
+        JSON.stringify(
+          isObject(planRecord.personalizedQuickStart)
+            ? planRecord.personalizedQuickStart
+            : {},
+        ),
+      ) || undefined;
+    const bridgeRecord = isObject(planRecord.bridgeBlock)
+      ? planRecord.bridgeBlock
+      : null;
+    const bridgeTitle = trimTitleToWordBoundary(
+      stringValue(bridgeRecord?.title),
+      80,
+    );
+    const bridgeBody = trimToCompleteSentenceWithinChars(
+      stringValue(bridgeRecord?.body),
+      700,
+    );
+    contextPlan = {
+      useForDefault: planRecord.useForDefault === true,
+      selectedTopics,
+      personalizedQuickStart,
+      bridgeBlock:
+        bridgeTitle && bridgeBody
+          ? { title: bridgeTitle, body: bridgeBody }
+          : undefined,
+    };
+  }
+
+  return {
+    title: stringValue(record.title) || titleFallback,
+    folderName: stringValue(record.folderName) || folderNameFallback,
+    emoji: stringValue(record.emoji).slice(0, 8) || "📘",
+    quickStart,
+    pages,
+    contextPlan,
+  };
+};
+
+const generateMonolithHostedStudyGuide = async ({
   usageRequest,
   callStage,
   metadataFlags,
@@ -2477,7 +2524,7 @@ const generateEnhancedHostedStudyGuide = async ({
   quickStart: HostedAiGatewayResponse["quickStart"];
   bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"];
 }> => {
-  metadataFlags.generationStrategy = "enhanced_4_plus_2_v1";
+  metadataFlags.generationStrategy = "monolith_v1";
 
   const requestText = getHostedRequestText(usageRequest);
   const topic = extractHostedStudyGuideTopic(requestText);
@@ -2491,208 +2538,82 @@ const generateEnhancedHostedStudyGuide = async ({
   const safeKnownTopics = sanitizeUserKnownTopics(
     usageRequest.quickStartOptions?.userKnownTopics,
   );
-  const knowledgeContextPlan =
-    resolveStudyGuideKnowledgeContextPlan(safeKnownTopics);
 
-  let blueprint: EnhancedStudyGuideBlueprint;
-  try {
-    blueprint = normalizeEnhancedBlueprint(
-      parseJsonRecord(
-        await callStage("study_guide_blueprint", {
-          ...usageRequest,
-          responseSchema: ENHANCED_STUDY_GUIDE_BLUEPRINT_SCHEMA,
-          parts: [
-            {
-              text: buildEnhancedBlueprintPrompt({
-                topic,
-                titleFallback,
-                folderNameFallback,
-                userKnownTopics: safeKnownTopics,
-                outputLanguage: usageRequest.outputLanguage,
-              }),
-            },
-          ],
+  const monolithRequest: HostedAiGatewayRequest = {
+    ...usageRequest,
+    responseSchema: createMonolithGuideSchema(safeKnownTopics.length > 0),
+    parts: [
+      {
+        text: buildMonolithGuidePrompt({
+          topic,
+          titleFallback,
+          folderNameFallback,
+          userKnownTopics: safeKnownTopics,
+          outputLanguage: usageRequest.outputLanguage,
         }),
-      ),
+      },
+    ],
+  };
+  const callMonolith = async (): Promise<NormalizedMonolithGuide> =>
+    normalizeMonolithGuide(
+      parseJsonRecord(await callStage("study_guide_monolith", monolithRequest)),
       titleFallback,
       folderNameFallback,
+      safeKnownTopics,
     );
-  } catch (error) {
-    metadataFlags.blueprintUnusable = true;
-    throw error;
-  }
 
-  const pages: EnhancedStudyGuidePage[] = [];
-  for (const page of blueprint.pages) {
+  let guide: NormalizedMonolithGuide;
+  try {
+    guide = await callMonolith();
+  } catch (firstError) {
+    metadataFlags.monolithRetryUsed = true;
     try {
-      pages.push(
-        normalizeEnhancedPage(
-          parseJsonRecord(
-            await callStage("study_guide_page_expand", {
-              ...usageRequest,
-              responseSchema: ENHANCED_STUDY_GUIDE_PAGE_SCHEMA,
-              parts: [
-                {
-                  text: buildEnhancedPagePrompt({
-                    topic,
-                    blueprint,
-                    page,
-                    outputLanguage: usageRequest.outputLanguage,
-                  }),
-                },
-              ],
-            }),
-          ),
-          page.title,
-        ),
-      );
-    } catch (error) {
-      metadataFlags.pageExpansionUnusable = true;
-      throw error;
+      guide = await callMonolith();
+    } catch {
+      metadataFlags.monolithUnusable = true;
+      throw firstError;
     }
   }
 
-  let quickStart = blueprint.quickStart;
+  let quickStart: NonNullable<HostedAiGatewayResponse["quickStart"]> =
+    guide.quickStart;
   let bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"] = [];
-  let relevanceDecision:
-    | ReturnType<typeof parseStudyGuideQuickStartRelevanceDecision>
-    | undefined;
-  let relevanceDecisionFailed = false;
-  const baseSource = buildEnhancedGuideSource({ topic, blueprint, pages });
-  const supportSource = baseSource.slice(0, SUPPORT_STAGE_SOURCE_MAX_CHARS);
-
-  if (knowledgeContextPlan.shouldRunAutoRelevance) {
-    try {
-      relevanceDecision = parseStudyGuideQuickStartRelevanceDecision(
-        await callStage("quick_start_relevance_auto", {
-          ...usageRequest,
-          responseSchema: STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
-          parts: [
-            {
-              text: buildStudyGuideQuickStartRelevancePrompt({
-                title: blueprint.title,
-                prompt: topic,
-                source: supportSource,
-                userKnownTopics: safeKnownTopics,
-                bridgeMode: "auto",
-                outputLanguage: usageRequest.outputLanguage,
-              }),
-            },
-          ],
-        }),
-        safeKnownTopics,
-      );
-    } catch {
-      metadataFlags.quickStartRelevanceSkipped = true;
-      relevanceDecisionFailed = true;
+  const contextPlan = guide.contextPlan;
+  if (contextPlan?.personalizedQuickStart) {
+    if (contextPlan.useForDefault && contextPlan.selectedTopics.length) {
+      metadataFlags.quickStartPersonalizedRewriteUsed = true;
+      quickStart = contextPlan.personalizedQuickStart;
+      if (contextPlan.bridgeBlock) {
+        bridgeBlocks = [{ dashboardIndex: 1, ...contextPlan.bridgeBlock }];
+      }
+    } else {
+      // "Use my context" stays available even when the model rates every
+      // candidate topic as a weak bridge; the learner decides, not the model.
+      metadataFlags.forcedBridgeAvailable = true;
+      quickStart = {
+        ...quickStart,
+        forcedBridge: contextPlan.personalizedQuickStart,
+      };
     }
   }
 
-  if (
-    relevanceDecision?.shouldUseKnownTopic &&
-    relevanceDecision.knownTopicsForQuickStart.length
-  ) {
-    try {
-      const personalizedQuickStart = parseStudyGuideQuickStart(
-        await callStage("quick_start_personalized", {
-          ...usageRequest,
-          responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
-          parts: [
-            {
-              text: buildStudyGuideQuickStartPrompt({
-                title: blueprint.title,
-                source: supportSource,
-                relevanceDecision,
-                bridgeMode: "auto",
-                outputLanguage: usageRequest.outputLanguage,
-              }),
-            },
-          ],
-        }),
-      );
-
-      if (personalizedQuickStart) {
-        metadataFlags.quickStartPersonalizedRewriteUsed = true;
-        quickStart = personalizedQuickStart;
-      }
-    } catch {
-      metadataFlags.quickStartPersonalizedRewriteSkipped = true;
-    }
-
-    const eligibleDashboard = pages[1];
-    if (eligibleDashboard) {
-      try {
-        bridgeBlocks = parseStudyGuideKnowledgeBridgeBlocks(
-          await callStage("knowledge_bridge_blocks", {
-            ...usageRequest,
-            responseSchema: STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
-            parts: [
-              {
-                text: buildStudyGuideKnowledgeBridgeBlocksPrompt({
-                  title: blueprint.title,
-                  prompt: topic,
-                  dashboards: [
-                    {
-                      dashboardIndex: 1,
-                      title: eligibleDashboard.title,
-                      summary: eligibleDashboard.summary,
-                      rawNotes: eligibleDashboard.rawNotes,
-                    },
-                  ],
-                  relevanceDecision,
-                  bridgeMode: "auto",
-                  outputLanguage: usageRequest.outputLanguage,
-                }),
-              },
-            ],
-          }),
-          pages.length,
-          [1],
-        );
-      } catch {
-        bridgeBlocks = [];
-        metadataFlags.knowledgeBridgeSkipped = true;
-      }
-    }
-  } else if (knowledgeContextPlan.topics.length && !relevanceDecisionFailed) {
-    try {
-      const forcedRelevanceDecision =
-        ensureForcedStudyGuideQuickStartRelevanceDecision(
-          relevanceDecision,
-          safeKnownTopics,
-        );
-
-      if (forcedRelevanceDecision) {
-        const forcedBridge = parseStudyGuideQuickStart(
-          await callStage("quick_start_forced_bridge", {
-            ...usageRequest,
-            responseSchema: STUDY_GUIDE_QUICK_START_SCHEMA,
-            parts: [
-              {
-                text: buildStudyGuideQuickStartPrompt({
-                  title: blueprint.title,
-                  source: supportSource,
-                  relevanceDecision: forcedRelevanceDecision,
-                  bridgeMode: "force",
-                  outputLanguage: usageRequest.outputLanguage,
-                }),
-              },
-            ],
-          }),
-        );
-
-        if (forcedBridge) {
-          quickStart = { ...quickStart, forcedBridge };
-        }
-      }
-    } catch {
-      metadataFlags.forcedBridgeSkipped = true;
-    }
-  }
-
+  const blueprint: EnhancedStudyGuideBlueprint = {
+    title: guide.title,
+    folderName: guide.folderName,
+    emoji: guide.emoji,
+    quickStart,
+    pages: guide.pages.map((page) => ({
+      title: page.title,
+      keyFacts: [],
+      conciseNotes: "",
+      examplesNeeded: [],
+      quizSkills: [],
+    })),
+  };
+  const pages = guide.pages;
   const sourceWithQuickStart = buildEnhancedGuideSource({
     topic,
-    blueprint: { ...blueprint, quickStart },
+    blueprint,
     pages,
   });
   let questions: EnhancedStudyGuideQuizQuestion[];
@@ -2749,7 +2670,7 @@ const handleGenerate = async (
 
   const provider = getHostedTextProvider();
   const mainStage: HostedAiStage = includeQuickStart
-    ? "study_guide_blueprint"
+    ? "study_guide_monolith"
     : request.stage || getStageForSurface(request.surface as HostedAiSurface);
   const model = getHostedTextModelForStage(provider, mainStage);
   const usageModel = getHostedUsageModelLabel(provider, model);
@@ -2787,7 +2708,7 @@ const handleGenerate = async (
 
   try {
     if (includeQuickStart) {
-      const enhanced = await generateEnhancedHostedStudyGuide({
+      const enhanced = await generateMonolithHostedStudyGuide({
         usageRequest,
         callStage,
         metadataFlags,
@@ -2966,7 +2887,9 @@ const handleGeneratePodcast = async (
 
       if (!podcastScriptMatchesOutputLanguage(script, request.outputLanguage)) {
         const error = new Error(
-          `Hosted AI returned a podcast outside ${getContentLanguagePromptName(request.outputLanguage)}.`,
+          `Hosted AI returned a podcast outside ${getContentLanguagePromptName(
+            request.outputLanguage,
+          )}.`,
         );
         error.name = "provider_error";
         throw error;

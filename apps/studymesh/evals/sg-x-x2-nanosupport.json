@@ -1,0 +1,629 @@
+{
+  "createdAt": "2026-07-18T18:55:35.749Z",
+  "mode": "4+2-enhanced-only-no-evaluator",
+  "models": {
+    "mini": "gpt-5.6-luna",
+    "nano": "gpt-5.4-nano",
+    "support": "gpt-5.4-nano",
+    "quiz": "gpt-5.4-nano",
+    "mode": "enhanced",
+    "miniPriceMultiplier": 1.33,
+    "miniReasoningEffort": "none",
+    "blueprintBrevity": true,
+    "blueprintCompress": false,
+    "batchExpand": false,
+    "monolithQuiz": false,
+    "promptCacheKey": false,
+    "supportBrevity": true,
+    "supportSourceChars": 4500
+  },
+  "tuples": [
+    {
+      "id": "terraform-hard-context",
+      "prompt": "What is Terraform?",
+      "knownTopics": [
+        "Rundeck",
+        "Docker",
+        "MinIO/S3",
+        "Ansible"
+      ],
+      "expectedKnownTopic": "Ansible"
+    },
+    {
+      "id": "roman-empire-history-context",
+      "prompt": "What was the Roman Empire?",
+      "knownTopics": [
+        "Roman Republic",
+        "Ancient Greece",
+        "Medieval Europe",
+        "React"
+      ],
+      "expectedKnownTopic": "Roman Republic"
+    }
+  ],
+  "summary": {
+    "results": [
+      {
+        "option": "4+2-enhanced",
+        "tupleId": "terraform-hard-context",
+        "prompt": "What is Terraform?",
+        "generationCostUsd": 0.01237202,
+        "selectedKnownTopics": [
+          "Ansible"
+        ],
+        "selectedExpectedTopic": true,
+        "deterministicChecks": {
+          "pageCount": 3,
+          "finalQuizQuestions": 6,
+          "quizBadSmellCount": 0,
+          "bridgeBlockCount": 1,
+          "codeBlockCount": 4,
+          "quickSummaryIncompleteEnding": false,
+          "rawNotesIncompleteEnding": false,
+          "placeholderExampleCount": 0,
+          "averagePageWords": 323.6666666666667
+        },
+        "stageCosts": [
+          {
+            "stage": "4+2-enhanced_mini_blueprint",
+            "model": "gpt-5.6-luna",
+            "costUsd": 0.00711617,
+            "inputTokens": 648,
+            "outputTokens": 1081
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_1",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00096055,
+            "inputTokens": 1859,
+            "outputTokens": 471
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_2",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00085975,
+            "inputTokens": 1830,
+            "outputTokens": 395
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_3",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0009924,
+            "inputTokens": 1862,
+            "outputTokens": 496
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_relevance_auto",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00049075,
+            "inputTokens": 1760,
+            "outputTokens": 111
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_personalized",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0005039,
+            "inputTokens": 1657,
+            "outputTokens": 138
+          },
+          {
+            "stage": "4+2-enhanced_knowledge_bridge_blocks",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0003102,
+            "inputTokens": 776,
+            "outputTokens": 124
+          },
+          {
+            "stage": "4+2-enhanced_final_quiz",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0011383,
+            "inputTokens": 1779,
+            "outputTokens": 626
+          }
+        ]
+      },
+      {
+        "option": "4+2-enhanced",
+        "tupleId": "roman-empire-history-context",
+        "prompt": "What was the Roman Empire?",
+        "generationCostUsd": 0.01395622,
+        "selectedKnownTopics": [
+          "Roman Republic"
+        ],
+        "selectedExpectedTopic": true,
+        "deterministicChecks": {
+          "pageCount": 3,
+          "finalQuizQuestions": 6,
+          "quizBadSmellCount": 1,
+          "bridgeBlockCount": 1,
+          "codeBlockCount": 0,
+          "quickSummaryIncompleteEnding": false,
+          "rawNotesIncompleteEnding": false,
+          "placeholderExampleCount": 0,
+          "averagePageWords": 358
+        },
+        "stageCosts": [
+          {
+            "stage": "4+2-enhanced_mini_blueprint",
+            "model": "gpt-5.6-luna",
+            "costUsd": 0.00823137,
+            "inputTokens": 650,
+            "outputTokens": 1267
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_1",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.001013,
+            "inputTokens": 2065,
+            "outputTokens": 480
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_2",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00104475,
+            "inputTokens": 2105,
+            "outputTokens": 499
+          },
+          {
+            "stage": "4+2-enhanced_nano_expand_page_3",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00100065,
+            "inputTokens": 2122,
+            "outputTokens": 461
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_relevance_auto",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0004997,
+            "inputTokens": 1761,
+            "outputTokens": 118
+          },
+          {
+            "stage": "4+2-enhanced_quick_start_personalized",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.00055055,
+            "inputTokens": 1659,
+            "outputTokens": 175
+          },
+          {
+            "stage": "4+2-enhanced_knowledge_bridge_blocks",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.0003152,
+            "inputTokens": 801,
+            "outputTokens": 124
+          },
+          {
+            "stage": "4+2-enhanced_final_quiz",
+            "model": "gpt-5.4-nano",
+            "costUsd": 0.001301,
+            "inputTokens": 1930,
+            "outputTokens": 732
+          }
+        ]
+      }
+    ],
+    "comparisons": [
+      {
+        "tupleId": "terraform-hard-context",
+        "missingBaseline": true
+      },
+      {
+        "tupleId": "roman-empire-history-context",
+        "missingBaseline": true
+      }
+    ],
+    "generationCostUsdTotal": 0.02632824
+  },
+  "results": [
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "terraform-hard-context",
+      "prompt": "What is Terraform?",
+      "knownTopics": [
+        "Rundeck",
+        "Docker",
+        "MinIO/S3",
+        "Ansible"
+      ],
+      "expectedKnownTopic": "Ansible",
+      "selectedKnownTopics": [
+        "Ansible"
+      ],
+      "selectedExpectedTopic": true,
+      "guide": {
+        "title": "What is Terraform?",
+        "quickStart": {
+          "keyIdea": "Terraform is an infrastructure-as-code workflow for declaring the desired state of cloud resources, using providers to create, update, and remove them safely and predictably.",
+          "quickSummary": "Terraform is an infrastructure-as-code tool that declares what infrastructure should exist in configuration files, then uses providers to create, change, or delete those resources via APIs.\n\nCompared with Ansible, Terraform is in the same automation family but focuses on provisioning infrastructure rather than configuring software on already-running systems, and the comparison breaks around day-to-day application setup. Terraform also uses a plan step and recorded state to make changes reviewable before they are applied."
+        },
+        "pages": [
+          {
+            "title": "01 - Terraform’s Core Model",
+            "rawNotes": "Terraform is an infrastructure-as-code tool that provisions and manages infrastructure by describing what you want, not by scripting every step. In Terraform, you write a configuration that declares desired resources such as networks, instances, buckets, and databases, and Terraform works out how to reach that end state.\n\nMost Terraform configurations are written in HashiCorp Configuration Language (HCL), which focuses on declarations rather than step-by-step commands. A key building block is the resource, which represents an infrastructure object you want Terraform to manage. Terraform also uses providers, which translate Terraform resource operations into platform or service API calls, so the same Terraform workflow can manage different platforms as long as the appropriate provider is available.\n\nTerraform’s dependency graph is what makes the workflow reliable. When one resource references another, Terraform records that relationship and uses it to determine the correct operation order. For example, if a compute instance depends on a network, Terraform can ensure the network is created before the instance, and it can also order updates and deletions safely.\n\nTerraform supports reusable structure and clearer configuration through variables, locals, outputs, expressions, and modules. Variables parameterize configurations so you can reuse the same pattern with different values. Locals simplify repeated expressions, outputs expose useful values from a deployment, and modules package related resources so teams can share and reuse infrastructure building blocks.\n\nHere is a minimal HCL example that shows a required provider, creates one real resource, and defines an output.\n\n```hcl\nterraform {\n  required_providers {\n    aws = {\n      source  = \"hashicorp/aws\"\n      version = \"~> 5.0\"\n    }\n  }\n}\n\nprovider \"aws\" {\n  region = \"us-east-1\"\n}\n\nresource \"aws_s3_bucket\" \"example\" {\n  bucket = \"my-unique-bucket-name-12345\"\n}\n\noutput \"bucket_name\" {\n  value = aws_s3_bucket.example.bucket\n}\n```\n\nIn this example, the output depends on the resource attribute, which is a concrete reference that helps Terraform build the dependency graph and plan changes correctly.",
+            "quizQuestions": []
+          },
+          {
+            "title": "02 - Plan, State, and Workflow",
+            "rawNotes": "Terraform’s workflow is designed to make infrastructure changes predictable and reviewable. You start by initializing your working directory, then you validate and format your configuration, and you preview changes before you execute them. This sequence helps teams catch mistakes early and reduces the risk of unintended modifications.\n\nThe core commands begin with terraform init, which installs providers and initializes the working directory. Next, you typically run terraform fmt or terraform validate to ensure the configuration is consistent and ready to evaluate. Then terraform plan previews proposed changes without applying them, calculating additions, changes, and deletions by comparing the configuration, the current Terraform state, and what the provider reports about real infrastructure. After you review the plan output, terraform apply executes the approved or generated plan to make the changes real.\n\nIf you need to remove infrastructure that Terraform manages, terraform destroy proposes removal of managed resources. This command is especially important to review carefully because it targets resources tracked by the configuration and state. Terraform refreshes information from providers while planning and applying, so the plan reflects the latest provider-reported reality.\n\nTerraform state is the key link between configuration and real remote objects. It maps configuration resource addresses to remote object identifiers and retains attributes needed for future plans. Because state may contain sensitive values, it requires controlled access, and teams often use remote backends to store state centrally with collaboration features and state locking.\n\nHere is a minimal CLI workflow that follows the safe order of operations. \n\n```bash\nterraform init\nterraform fmt\nterraform validate\nterraform plan\nterraform apply\n```\n\nFor collaboration, imagine two engineers working on the same infrastructure from different machines. With a remote backend that supports locking, Terraform prevents both from editing the same state at the same time, which reduces the chance of conflicting updates and helps protect sensitive state data through centralized access controls.",
+            "quizQuestions": []
+          },
+          {
+            "title": "03 - Terraform in Practice and Compared with Ansible",
+            "rawNotes": "Terraform in practice is about turning infrastructure intent into safe, reviewable changes. Teams typically keep Terraform configurations in version control, standardize formatting, and check correctness before making changes. For example, terraform fmt standardizes configuration formatting, and terraform validate checks configuration syntax and internal consistency so issues are caught early.\n\nWhen you manage existing infrastructure, Terraform uses an import workflow to connect a real remote object to a Terraform resource address. A resource address is the identifier Terraform uses in both configuration and state, including for instances created with count or for_each. After import, Terraform still needs configuration that accurately describes the imported object, because Terraform will use that configuration to plan future changes and keep state aligned with provider-reported reality.\n\nTerraform also supports careful control of how changes affect resources through lifecycle settings. Lifecycle meta-arguments can influence replacement and destruction behavior, such as requesting that a replacement be created before an old object is destroyed. This helps reduce downtime risk, but it does not remove provider or platform constraints, so the underlying service may still impose limits on what can be replaced and when.\n\nTerraform and Ansible often complement each other because they focus on different parts of the workflow. Terraform primarily provisions and changes infrastructure such as networks, instances, and managed services, while Ansible primarily automates configuration and operational tasks on hosts or services. A common pattern is to let Terraform create a virtual machine, then use Ansible to install packages, edit files, and configure applications on that machine.\n\nHere is a concrete example of the handoff from Terraform to Ansible using a Terraform output for the host address. Terraform provisions a host, and Ansible uses that value to run configuration tasks.\n\n```hcl\noutput \"vm_ip\" {\n  value = aws_instance.example.public_ip\n}\n```\n\n```yaml\n- name: Configure the provisioned host\n  hosts: all\n  tasks:\n    - name: Install a package\n      apt:\n        name: nginx\n        state: present\n        update_cache: true\n```\n\nFinally, modules help you reuse infrastructure patterns by packaging related resources, and they can be sourced locally, from registries, or from version-controlled repositories. This makes it easier to apply consistent design across environments while still using Terraform’s plan-oriented workflow.",
+            "quizQuestions": [
+              {
+                "question": "You want to manage a cloud resource safely and review what will change before making it real. Which sequence best matches Terraform’s workflow described in the guide?",
+                "options": [
+                  "terraform init → terraform fmt/validate → terraform plan → terraform apply",
+                  "terraform apply → terraform plan → terraform validate → terraform init",
+                  "terraform validate → terraform apply → terraform init → terraform destroy"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide emphasizes init/format/validate, then plan for a preview, then apply to execute the approved changes.",
+                "skillTested": "Workflow application"
+              },
+              {
+                "question": "A compute instance must be created only after its network exists, and you also want Terraform to order updates/deletions safely. What mechanism in Terraform supports this?",
+                "options": [
+                  "The dependency graph created from resource references",
+                  "A lifecycle setting that always forces creation order",
+                  "A provider setting that serializes all operations globally"
+                ],
+                "correctIndex": 0,
+                "explanation": "Terraform records relationships when one resource references another, using the dependency graph to determine operation order.",
+                "skillTested": "Concept application (dependency graph)"
+              },
+              {
+                "question": "You imported an existing remote object into Terraform, but future plans keep showing differences. What is the most likely missing piece?",
+                "options": [
+                  "A configuration that accurately describes the imported object",
+                  "A different provider version than the one used for import",
+                  "Removing the output block so state no longer tracks attributes"
+                ],
+                "correctIndex": 0,
+                "explanation": "After import, Terraform still relies on configuration to match the imported object so plans can stay aligned with provider-reported reality.",
+                "skillTested": "Error diagnosis (import alignment)"
+              },
+              {
+                "question": "Two engineers are working on the same Terraform project from different machines using a shared remote backend. What feature helps prevent conflicting edits to the same state?",
+                "options": [
+                  "State locking support in the remote backend",
+                  "Automatic merging of state changes without coordination",
+                  "Running terraform apply concurrently to speed up updates"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide notes that remote backends with locking prevent simultaneous state edits and reduce conflicts.",
+                "skillTested": "Prediction (collaboration behavior)"
+              },
+              {
+                "question": "You need to reuse the same infrastructure pattern across environments while only changing values like region or instance size. Which Terraform feature best fits that goal?",
+                "options": [
+                  "Variables",
+                  "Outputs",
+                  "Providers"
+                ],
+                "correctIndex": 0,
+                "explanation": "Variables parameterize configurations so the same pattern can be reused with different inputs.",
+                "skillTested": "Transfer (choosing the right construct)"
+              },
+              {
+                "question": "You provision a VM with Terraform, then need to install and configure software on that VM. Which division of responsibilities matches the guide’s Terraform vs Ansible comparison?",
+                "options": [
+                  "Terraform provisions infrastructure; Ansible configures software on the provisioned host",
+                  "Ansible provisions infrastructure; Terraform configures software on running hosts",
+                  "Terraform and Ansible both only run step-by-step commands on existing hosts"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide describes Terraform as provisioning infrastructure and Ansible as automating configuration tasks on hosts/services.",
+                "skillTested": "Comparison and application (Terraform vs Ansible)"
+              }
+            ]
+          }
+        ],
+        "bridgeBlocks": [
+          {
+            "dashboardIndex": 1,
+            "title": "Terraform workflow vs Ansible execution",
+            "body": "Terraform’s workflow (init → validate/fmt → plan → apply) is about producing a reviewable change set from configuration plus state, then executing it. Ansible typically runs tasks directly against targets to converge configuration. Caveat: Terraform’s plan/apply model doesn’t replace Ansible’s imperative, step-by-step configuration style, so don’t assume one-to-one command equivalence. Use terraform plan to preview additions, changes, and deletions before you execute."
+          }
+        ]
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.6-luna",
+          "inputTokens": 648,
+          "cachedInputTokens": 0,
+          "outputTokens": 1081,
+          "totalTokens": 1729,
+          "costUsd": 0.00711617
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1859,
+          "cachedInputTokens": 0,
+          "outputTokens": 471,
+          "totalTokens": 2330,
+          "costUsd": 0.00096055
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1830,
+          "cachedInputTokens": 0,
+          "outputTokens": 395,
+          "totalTokens": 2225,
+          "costUsd": 0.00085975
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1862,
+          "cachedInputTokens": 0,
+          "outputTokens": 496,
+          "totalTokens": 2358,
+          "costUsd": 0.0009924
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1760,
+          "cachedInputTokens": 0,
+          "outputTokens": 111,
+          "totalTokens": 1871,
+          "costUsd": 0.00049075
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1657,
+          "cachedInputTokens": 0,
+          "outputTokens": 138,
+          "totalTokens": 1795,
+          "costUsd": 0.0005039
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 776,
+          "cachedInputTokens": 0,
+          "outputTokens": 124,
+          "totalTokens": 900,
+          "costUsd": 0.0003102
+        },
+        {
+          "stage": "4+2-enhanced_final_quiz",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1779,
+          "cachedInputTokens": 0,
+          "outputTokens": 626,
+          "totalTokens": 2405,
+          "costUsd": 0.0011383
+        }
+      ],
+      "generationCostUsd": 0.01237202,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 4,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 323.6666666666667
+      }
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "roman-empire-history-context",
+      "prompt": "What was the Roman Empire?",
+      "knownTopics": [
+        "Roman Republic",
+        "Ancient Greece",
+        "Medieval Europe",
+        "React"
+      ],
+      "expectedKnownTopic": "Roman Republic",
+      "selectedKnownTopics": [
+        "Roman Republic"
+      ],
+      "selectedExpectedTopic": true,
+      "guide": {
+        "title": "What Was the Roman Empire?",
+        "quickStart": {
+          "keyIdea": "The Roman Empire was a Mediterranean-centered state that replaced shared-power republican rule with emperor-led authority, using law, citizenship, administration, and military force to govern a vast, diverse world.",
+          "quickSummary": "The Roman Empire grew out of the Roman Republic, but it crossed a key boundary: power became centralized in an emperor rather than shared among elected magistrates and the Senate.\n\nFrom 27 BCE onward, emperors used armies, provinces, taxation, and legal institutions to extend Roman law and citizenship, shaping daily life across many regions. The empire expanded to its greatest extent in the second century CE, then later faced instability, economic strain, and outside pressures.\n\nThe comparison breaks because the Republic’s politics were still formally competitive, while imperial rule increasingly depended on control of the military and succession."
+        },
+        "pages": [
+          {
+            "title": "01 - Origins and Imperial Government",
+            "rawNotes": "Rome’s empire grew out of the Roman Republic rather than appearing all at once through a single constitutional change. The Republic had expanded through conquest, but repeated struggles among ambitious commanders created instability that made older shared-power politics harder to sustain. This background matters because it explains why the shift toward one-man rule felt like a solution to crisis rather than a sudden replacement of everything Roman.\n\nA key turning point came after Julius Caesar’s dictatorship, his assassination, and renewed civil wars. Octavian, who later took the name Augustus, emerged victorious over Antony and Cleopatra, and in 27 BCE he became Augustus, which is conventionally used to mark the beginning of the empire. Under Augustus, republican titles and institutions were not simply erased, but decisive authority was concentrated in the emperor’s hands, especially over armies, provinces, finances, and major appointments. This combination of continuity in names and centralization in power helps explain how the empire could look familiar while operating differently.\n\nEmperors held supreme military authority, which gave them leverage over political appointments and helped them maintain control across a large territory. The Senate survived, yet it gradually lost power relative to the emperor, showing how imperial rule shifted the balance of influence. Provinces were governed by officials responsible for administration, taxation, and order, and the empire used a mix of direct administration and alliances with local elites. Roman citizenship also expanded gradually, reaching nearly all free inhabitants in 212 CE, which tied more people to imperial governance.\n\nSuccession in the imperial system was not always straightforward, because later emperors varied in competence and legitimacy. Leadership could depend on adoption, dynastic claims, army support, or civil war, so political outcomes were often shaped by power struggles rather than only by formal elections.\n\nHere is a concise timeline to anchor the sequence of change. Late Republic civil conflicts and Caesar’s dictatorship lead to his assassination and renewed wars, then Octavian’s victory over Antony and Cleopatra culminates in 27 BCE when Octavian becomes Augustus, followed by early emperors who rule with centralized authority.\n\nTo compare systems clearly, remember that the Republic relied on elected magistrates and shared offices, while the empire centralized decisive power in the emperor even though older institutions like the Senate and assemblies continued to exist.",
+            "quizQuestions": []
+          },
+          {
+            "title": "02 - Expansion, Society, and Daily Life",
+            "rawNotes": "At its height under Trajan around 117 CE, Rome controlled territory from Britain to Mesopotamia and North Africa, which made the empire feel like one large Mediterranean world. This reach was not just about ruling from a distance, because the empire depended on movement of people, goods, and authority across many provinces. The Mediterranean served as the empire’s central transport and commercial network, linking distant regions through regular sea routes and coordinated trade.\n\nRoman expansion relied on military power and practical infrastructure working together. Legions and auxiliary troops helped conquer new areas and defend frontiers, while forts, roads, and fleets supported both control and rapid response. Roads helped move supplies and officials inland, and fleets helped protect shipping and keep commerce flowing. This combination mattered because it connected the empire’s wealth sources to its ability to maintain order.\n\nInside the provinces, society was connected but unequal, with different groups experiencing Roman rule in different ways. Provinces included diverse peoples, languages, religions, and levels of Romanization, so Roman influence did not look the same everywhere. Roman cities provided visible centers of life and government, with forums, baths, temples, amphitheaters, markets, and administrative buildings. Roman identity blended with local traditions rather than replacing them uniformly, and Greek culture remained especially powerful in the eastern Mediterranean.\n\nImperial wealth came from agriculture, taxation, mining, trade, and slavery, which shaped daily opportunities and risks. Enslaved people lacked legal freedom, while citizens, noncitizens, women, and elites held unequal rights. For example, a person’s legal status could affect what they could own, where they could work, and how secure they felt in local society. Latin dominated the western provinces, while Greek remained influential in the East, which also affected administration and communication.\n\nProvincial communities did not simply submit and disappear, because they negotiated Roman rule through local councils, religious practices, and cooperation with officials. A useful way to picture this is to compare a western province such as Britannia with an eastern province such as Egypt, since both were Roman yet differed in language influence, cultural traditions, and how people experienced city life. Another way is to compare daily life across an elite household, a soldier, a merchant, and an enslaved worker, since each group interacted with the empire through different institutions and legal realities.",
+            "quizQuestions": []
+          },
+          {
+            "title": "03 - Culture, Crisis, and Legacy",
+            "rawNotes": "Rome’s legacy is visible in institutions and ideas that outlasted the empire’s political unity. Roman law, citizenship concepts, government practices, engineering, and urban institutions influenced later societies. Even when the empire changed internally, it continued to shape how states organized authority, built cities, and defined rights.\n\nThe empire also faced major strain, especially in the third century. The third-century crisis involved civil wars, rapid changes in emperors, invasions, and economic strain, which weakened central authority. When rival generals competed for power and frontiers were attacked, the empire struggled to maintain stability and consistent governance.\n\nTo respond, Diocletian reorganized administration and created the Tetrarchy to manage the empire more effectively. This meant expanding administrative structures, using multiple rulers, and strengthening imperial ceremony, along with taxation reforms that aimed to support the state. These changes show how crisis could lead to new systems rather than simply collapse.\n\nConstantine later reunited the empire temporarily, supported Christianity, and founded Constantinople in 330 CE as a major eastern imperial capital. Under Theodosius I, Nicene Christianity became the empire’s official religion in 380 CE, which further reshaped imperial identity and public life. After Theodosius’s death in 395, a lasting administrative division emerged between eastern and western courts.\n\nThe western empire’s authority ended conventionally in 476 CE, while the Eastern Roman Empire survived until 1453. Germanic kingdoms took control of western territories as imperial institutions weakened, but the eastern empire preserved Roman state traditions, Greek-speaking culture, and Christian imperial government for almost a millennium after 476.\n\nTimeline example: the third-century crisis leads to Diocletian’s reforms, then Constantine’s reunification and Constantinople’s founding, followed by the 395 eastern-western division, the 476 western endpoint, and finally the 1453 fall of the eastern empire.\n\nWhy 476 is conventional: it marks the end of western imperial authority, not the instant disappearance of Roman law, culture, or institutions, since the eastern empire continued and many Roman practices persisted in later European developments.",
+            "quizQuestions": [
+              {
+                "question": "A historian says the empire “appeared all at once” due to a single constitutional change. Which response best matches the guide’s explanation?",
+                "options": [
+                  "The empire formed gradually from Republic expansion, and instability made centralized one-man rule seem like a solution",
+                  "The empire began when the Senate abolished republican titles and replaced them immediately with new offices",
+                  "The empire was created only by religious reforms, which replaced military control with church authority"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide emphasizes gradual growth from the Republic and a shift toward centralized authority after repeated civil conflicts.",
+                "skillTested": "Applying guide-based reasoning to evaluate a claim"
+              },
+              {
+                "question": "Which scenario most directly reflects how imperial authority differed from the Republic, according to the guide?",
+                "options": [
+                  "Political influence depended mainly on elected magistrates and Senate competition",
+                  "Decisive power concentrated in the emperor, especially over armies, provinces, finances, and major appointments",
+                  "Provincial governance relied primarily on local councils without imperial administration"
+                ],
+                "correctIndex": 1,
+                "explanation": "The guide contrasts shared-power republican politics with emperor-centered control of key levers of government.",
+                "skillTested": "Comparing political systems"
+              },
+              {
+                "question": "A new governor is appointed and can quickly mobilize troops, manage provincial finances, and enforce major legal decisions. What does this suggest about where real leverage in the imperial system likely sat?",
+                "options": [
+                  "With the emperor’s control of armies and provincial administration",
+                  "With the provincial assembly’s ability to override imperial policy",
+                  "With the idea that citizenship expansion was unrelated to governance"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide links imperial leverage to supreme military authority and centralized control over provinces and appointments.",
+                "skillTested": "Inferring institutional power from described functions"
+              },
+              {
+                "question": "To explain how the empire maintained control across distant regions, which combination best fits the guide’s “expansion relied on” model?",
+                "options": [
+                  "Sea routes plus roads, forts, and fleets to move people, goods, and authority",
+                  "Only local alliances with no need for military defense or infrastructure",
+                  "A focus on cultural uniformity as the main tool for stability"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide highlights Mediterranean transport and coordinated infrastructure (roads, forts, fleets) supporting conquest and defense.",
+                "skillTested": "Connecting causes to mechanisms"
+              },
+              {
+                "question": "A city in the eastern Mediterranean keeps strong Greek cultural influence while still participating in Roman provincial life. Which comparison best matches the guide’s approach to regional differences?",
+                "options": [
+                  "Eastern provinces experienced Roman rule without any blending of identities",
+                  "Roman influence looked different across provinces due to language and cultural traditions",
+                  "All provinces experienced identical daily life because citizenship was uniform everywhere"
+                ],
+                "correctIndex": 1,
+                "explanation": "The guide stresses unequal experiences of Roman rule and ongoing local traditions, especially Greek influence in the East.",
+                "skillTested": "Applying comparison to a new example"
+              },
+              {
+                "question": "Which sequence best reflects the guide’s account of how the third-century crisis led to later changes?",
+                "options": [
+                  "Civil wars and invasions weaken central authority → Diocletian reorganizes administration and creates the Tetrarchy → later Constantine reunites and founds Constantinople",
+                  "A single emperor’s election ends civil wars → the Senate gains power permanently → no further administrative changes occur",
+                  "Economic strain is solved mainly by expanding citizenship to all people immediately → the empire avoids later religious transformation"
+                ],
+                "correctIndex": 0,
+                "explanation": "The guide links the third-century crisis to Diocletian’s reforms, then to Constantine’s reunification and Constantinople’s founding.",
+                "skillTested": "Predicting outcomes from a historical chain of events"
+              }
+            ]
+          }
+        ],
+        "bridgeBlocks": [
+          {
+            "dashboardIndex": 1,
+            "title": "From Republic control to imperial networks",
+            "body": "The Roman Republic expanded through conquest and alliances, but the Empire’s reach under emperors depended on sustained administration across provinces. The Mediterranean transport network, plus roads, forts, and fleets, helped move troops, officials, and supplies—turning distant territories into a connected system. In the Republic, power was more shared among elected magistrates and the Senate, so control was less centralized. Caveat: infrastructure existed earlier, but the imperial scale and coordination were stronger."
+          }
+        ]
+      },
+      "stageCosts": [
+        {
+          "stage": "4+2-enhanced_mini_blueprint",
+          "model": "gpt-5.6-luna",
+          "inputTokens": 650,
+          "cachedInputTokens": 0,
+          "outputTokens": 1267,
+          "totalTokens": 1917,
+          "costUsd": 0.00823137
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_1",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2065,
+          "cachedInputTokens": 0,
+          "outputTokens": 480,
+          "totalTokens": 2545,
+          "costUsd": 0.001013
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_2",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2105,
+          "cachedInputTokens": 0,
+          "outputTokens": 499,
+          "totalTokens": 2604,
+          "costUsd": 0.00104475
+        },
+        {
+          "stage": "4+2-enhanced_nano_expand_page_3",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 2122,
+          "cachedInputTokens": 0,
+          "outputTokens": 461,
+          "totalTokens": 2583,
+          "costUsd": 0.00100065
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_relevance_auto",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1761,
+          "cachedInputTokens": 0,
+          "outputTokens": 118,
+          "totalTokens": 1879,
+          "costUsd": 0.0004997
+        },
+        {
+          "stage": "4+2-enhanced_quick_start_personalized",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1659,
+          "cachedInputTokens": 0,
+          "outputTokens": 175,
+          "totalTokens": 1834,
+          "costUsd": 0.00055055
+        },
+        {
+          "stage": "4+2-enhanced_knowledge_bridge_blocks",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 801,
+          "cachedInputTokens": 0,
+          "outputTokens": 124,
+          "totalTokens": 925,
+          "costUsd": 0.0003152
+        },
+        {
+          "stage": "4+2-enhanced_final_quiz",
+          "model": "gpt-5.4-nano",
+          "inputTokens": 1930,
+          "cachedInputTokens": 0,
+          "outputTokens": 732,
+          "totalTokens": 2662,
+          "costUsd": 0.001301
+        }
+      ],
+      "generationCostUsd": 0.01395622,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 1,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 0,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 358
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "tupleId": "terraform-hard-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "roman-empire-history-context",
+      "missingBaseline": true
+    }
+  ]
+}

@@ -41,6 +41,12 @@ const SUPPORT_BREVITY = process.env.STUDY_GUIDE_SUPPORT_BREVITY === '1'
 const SUPPORT_SOURCE_CHARS = Number(
   process.env.STUDY_GUIDE_SUPPORT_SOURCE_CHARS || '0',
 )
+const QUIZ_MODEL = process.env.STUDY_GUIDE_QUIZ_MODEL?.trim() || NANO_MODEL
+const BLUEPRINT_COMPRESS = process.env.STUDY_GUIDE_BLUEPRINT_COMPRESS === '1'
+const BATCH_EXPAND = process.env.STUDY_GUIDE_BATCH_EXPAND === '1'
+const GENERATION_MODE = process.env.STUDY_GUIDE_MODE?.trim() || 'enhanced'
+const MONOLITH_QUIZ = process.env.STUDY_GUIDE_MONOLITH_QUIZ === '1'
+const PROMPT_CACHE_KEY = process.env.STUDY_GUIDE_PROMPT_CACHE_KEY === '1'
 
 type ModelName = string
 
@@ -380,11 +386,13 @@ const callModel = async ({
   model,
   prompt,
   schema,
+  cacheKey,
 }: {
   stage: string
   model: ModelName
   prompt: string
   schema?: Record<string, unknown>
+  cacheKey?: string
 }): Promise<{ text: string; cost: StageCost }> => {
   const useResponsesApi = model !== DEFAULT_MINI_MODEL && model !== NANO_MODEL
   const body: Record<string, unknown> = useResponsesApi
@@ -405,6 +413,10 @@ const callModel = async ({
 
   if (useResponsesApi && MINI_REASONING_EFFORT) {
     body.reasoning = { effort: MINI_REASONING_EFFORT }
+  }
+
+  if (PROMPT_CACHE_KEY && cacheKey) {
+    body.prompt_cache_key = cacheKey
   }
 
   if (schema) {
@@ -610,8 +622,18 @@ Rules:
 - For non-code topics, examplesNeeded should request concrete examples, timelines, scenarios, or comparisons instead of code.
 - Include enough final quiz skills for a 6-question application quiz.
 ${
-  BLUEPRINT_BREVITY
+  BLUEPRINT_COMPRESS
     ? `
+Brevity rules (mandatory):
+- keyFacts: exactly 7 per page, each a compact sentence of at most 14 words.
+- conciseNotes: 60-80 words, facts only, no restating of keyFacts.
+- examplesNeeded: exactly 1 per page.
+- quizSkills: exactly 2 per page.
+- quickSummary: 50-70 words.
+- Maximize factual density per word; never pad or repeat.
+`
+    : BLUEPRINT_BREVITY
+      ? `
 Brevity rules (mandatory):
 - keyFacts: exactly 8 per page, each one compact sentence with no filler words.
 - conciseNotes: 90-110 words, packed with facts, no restating of keyFacts.
@@ -620,7 +642,7 @@ Brevity rules (mandatory):
 - quickSummary: 60-85 words.
 - Maximize factual density per word; never pad or repeat.
 `
-    : ''
+      : ''
 }
 Topic: ${tuple.prompt}`
 
@@ -712,6 +734,220 @@ ${JSON.stringify(blueprint, null, 2)}
 
 Page blueprint:
 ${JSON.stringify(page, null, 2)}`
+
+const batchedPagesSchema = {
+  type: 'object',
+  properties: {
+    pages: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          rawNotes: { type: 'string' },
+        },
+      },
+    },
+  },
+}
+
+const batchedPagesFromBlueprintPrompt = ({
+  prompt,
+  blueprint,
+}: {
+  prompt: string
+  blueprint: Record<string, unknown>
+}): string => `Expand all three Study Guide pages using only this enhanced blueprint.
+
+Return strict JSON only:
+{ "pages": [ { "title": "...", "rawNotes": "Markdown lesson notes" } ] }
+
+Rules:
+- Return exactly 3 pages, in blueprint order.
+- Each page: 280-360 words of rawNotes.
+- Finish every paragraph and the final line as a complete sentence.
+- Do not add facts not present or directly implied by keyFacts/conciseNotes/examplesNeeded.
+- Add connective explanation, examples, and learner-friendly structure.
+- If examplesNeeded requests code/config/commands, include a real fenced snippet with a language tag.
+- Never write placeholder snippets or placeholder comments.
+- Do not include quiz questions in rawNotes.
+
+Topic: ${prompt}
+
+Full blueprint:
+${JSON.stringify(blueprint, null, 2)}`
+
+const contextPlanSchema = {
+  type: 'object',
+  properties: {
+    selectedTopics: { type: 'array', items: { type: 'string' } },
+    reason: { type: 'string' },
+    personalizedQuickStart: {
+      type: 'object',
+      properties: {
+        keyIdea: { type: 'string' },
+        quickSummary: { type: 'string' },
+      },
+    },
+    bridgeBlock: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        body: { type: 'string' },
+      },
+    },
+  },
+}
+
+const megaBlueprintSchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    quickStart: {
+      type: 'object',
+      properties: {
+        keyIdea: { type: 'string' },
+        quickSummary: { type: 'string' },
+      },
+    },
+    contextPlan: contextPlanSchema,
+    pages: (blueprintSchema.properties as Record<string, unknown>).pages,
+  },
+}
+
+const CONTEXT_PLAN_RULES = (
+  tuple: (typeof tuples)[number],
+): string => `- contextPlan: the learner already knows these candidate topics: ${tuple.knownTopics.join(
+  ', ',
+)}.
+- contextPlan.selectedTopics: choose the 1 candidate that best reduces confusion for this topic (2 only if both clearly same-domain); never invent topics. Use [] only if every candidate would actively mislead.
+- contextPlan.personalizedQuickStart: rewrite the Quick Start through the selected topic. If the bridge is strong, the selected topic must lead. If weak, explain the topic neutrally first and use the selected topic as a short contrast. State where the comparison breaks.
+- contextPlan.personalizedQuickStart.quickSummary: 60-85 words, 2 short paragraphs, every paragraph a complete sentence.
+- contextPlan.bridgeBlock: one short study note connecting a concept from page 2 to the selected topic, with one caveat. body under 85 words, ending with a complete sentence.
+- contextPlan.reason: one sentence on why the selected topic was chosen.`
+
+const megaBlueprintPrompt = (
+  tuple: (typeof tuples)[number],
+): string => `Create an enhanced compact factual blueprint for a full StudyMesh Study Guide about "${
+  tuple.prompt
+}", including learner-context personalization.
+
+Return strict JSON only:
+{
+  "title": "...",
+  "quickStart": { "keyIdea": "...", "quickSummary": "two short paragraphs" },
+  "contextPlan": {
+    "selectedTopics": ["..."],
+    "reason": "...",
+    "personalizedQuickStart": { "keyIdea": "...", "quickSummary": "..." },
+    "bridgeBlock": { "title": "...", "body": "..." }
+  },
+  "pages": [
+    {
+      "title": "01 - ...",
+      "keyFacts": ["fact"],
+      "conciseNotes": "90-110 words",
+      "examplesNeeded": ["example"],
+      "quizSkills": ["skill"]
+    }
+  ]
+}
+
+Rules:
+- Exactly 3 pages.
+- You own facts and structure; a cheaper model will only expand this blueprint.
+- keyFacts: exactly 8 precise, conservative facts per page, each one compact sentence with no filler words.
+- conciseNotes: 90-110 words, packed with facts, no restating of keyFacts.
+- examplesNeeded: at most 2 per page.
+- quizSkills: exactly 2 per page.
+- quickStart: explain the concept directly and neutrally, not the guide structure. quickSummary 60-85 words, complete sentences.
+${CONTEXT_PLAN_RULES(tuple)}
+- For programming, framework, DevOps, IaC, config, or command-line topics, examplesNeeded must request at least one real minimal code/config/command snippet.
+- Never ask for placeholder snippets.
+- For non-code topics, examplesNeeded should request concrete examples, timelines, scenarios, or comparisons instead of code.
+- Include enough final quiz skills for a 6-question application quiz.
+
+Topic: ${tuple.prompt}`
+
+const monolithQuizFragment = `,
+  "questions": [
+    {
+      "question": "...",
+      "options": ["...", "...", "..."],
+      "correctIndex": 0,
+      "explanation": "...",
+      "skillTested": "..."
+    }
+  ]`
+
+const monolithSchema = (includeQuiz: boolean) => ({
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    quickStart: {
+      type: 'object',
+      properties: {
+        keyIdea: { type: 'string' },
+        quickSummary: { type: 'string' },
+      },
+    },
+    contextPlan: contextPlanSchema,
+    pages: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          rawNotes: { type: 'string' },
+        },
+      },
+    },
+    ...(includeQuiz
+      ? { questions: (quizSchema.properties as Record<string, unknown>).questions }
+      : {}),
+  },
+})
+
+const monolithPrompt = (
+  tuple: (typeof tuples)[number],
+  includeQuiz: boolean,
+): string => `Write a complete, final StudyMesh Study Guide about "${
+  tuple.prompt
+}" with learner-context personalization. This is the shipped content, not a draft or outline.
+
+Return strict JSON only:
+{
+  "title": "...",
+  "quickStart": { "keyIdea": "...", "quickSummary": "two short paragraphs" },
+  "contextPlan": {
+    "selectedTopics": ["..."],
+    "reason": "...",
+    "personalizedQuickStart": { "keyIdea": "...", "quickSummary": "..." },
+    "bridgeBlock": { "title": "...", "body": "..." }
+  },
+  "pages": [ { "title": "01 - ...", "rawNotes": "Markdown lesson notes" } ]${
+    includeQuiz ? monolithQuizFragment : ''
+  }
+}
+
+Rules:
+- Exactly 3 pages, each 280-360 words of rawNotes in readable Markdown with short topic-specific sections.
+- Precise, conservative facts only. Beginner-friendly progression across the pages.
+- Finish every paragraph and the final line of each page as a complete sentence.
+- For programming, framework, DevOps, IaC, config, or command-line topics, include at least one real minimal fenced code/config/command snippet with a language tag. Never placeholder snippets.
+- For non-code topics, use concrete examples, timelines, scenarios, or comparisons instead of code.
+- quickStart: explain the concept directly and neutrally. quickSummary 60-85 words, 2 short paragraphs, complete sentences.
+${CONTEXT_PLAN_RULES(tuple)}
+- Do not include quiz questions inside rawNotes.${
+  includeQuiz
+    ? `
+- questions: exactly 6 multiple-choice questions with exactly 3 options each, answerable from the pages.
+- Prefer application, comparison, error diagnosis, prediction, or transfer. No literal recall of copied sentences.
+- Keep explanations short and specific.`
+    : ''
+}
+
+Topic: ${tuple.prompt}`
 
 const quizPrompt = (
   prompt: string,
@@ -1022,22 +1258,41 @@ const generateEnhancedOption4Plus2 = async (
     bridgeBlocks: [],
   }
 
-  for (const [index, page] of blueprint.pages.entries()) {
-    const pageResult = await callModel({
-      stage: `4+2-enhanced_nano_expand_page_${index + 1}`,
+  if (BATCH_EXPAND) {
+    const batchResult = await callModel({
+      stage: '4+2-enhanced_nano_expand_batch',
       model: NANO_MODEL,
-      prompt: enhancedPageFromBlueprintPrompt({
+      prompt: batchedPagesFromBlueprintPrompt({
         prompt: tuple.prompt,
         blueprint,
-        page,
       }),
-      schema: pageSchema,
+      schema: batchedPagesSchema,
+      cacheKey: `sg-${tuple.id}`,
     })
-    costs.push(pageResult.cost)
-    guide.pages.push({
-      ...parseJson<EvalPage>(pageResult.text),
-      quizQuestions: [],
-    })
+    costs.push(batchResult.cost)
+    const batch = parseJson<{ pages: EvalPage[] }>(batchResult.text)
+    guide.pages = batch.pages
+      .slice(0, 3)
+      .map((page) => ({ ...page, quizQuestions: [] }))
+  } else {
+    for (const [index, page] of blueprint.pages.entries()) {
+      const pageResult = await callModel({
+        stage: `4+2-enhanced_nano_expand_page_${index + 1}`,
+        model: NANO_MODEL,
+        prompt: enhancedPageFromBlueprintPrompt({
+          prompt: tuple.prompt,
+          blueprint,
+          page,
+        }),
+        schema: pageSchema,
+        cacheKey: `sg-${tuple.id}`,
+      })
+      costs.push(pageResult.cost)
+      guide.pages.push({
+        ...parseJson<EvalPage>(pageResult.text),
+        quizQuestions: [],
+      })
+    }
   }
 
   const context = await applyContext({
@@ -1051,15 +1306,175 @@ const generateEnhancedOption4Plus2 = async (
   costs.push(...context.costs)
 
   const quiz = await callModel({
-    stage: '4+2-enhanced_nano_final_quiz',
-    model: NANO_MODEL,
+    stage: '4+2-enhanced_final_quiz',
+    model: QUIZ_MODEL,
     prompt: quizPrompt(tuple.prompt, guide),
     schema: quizSchema,
+    cacheKey: `sg-${tuple.id}`,
   })
   costs.push(quiz.cost)
   const questions = parseJson<{ questions: QuizQuestion[] }>(
     quiz.text,
   ).questions
+  guide.pages = guide.pages.map((page, index) =>
+    index === guide.pages.length - 1
+      ? { ...page, quizQuestions: questions }
+      : page,
+  )
+
+  return buildResult(option, tuple, guide, context.selectedKnownTopics, costs)
+}
+
+type ContextPlan = {
+  selectedTopics?: string[]
+  reason?: string
+  personalizedQuickStart?: QuickStart
+  bridgeBlock?: { title?: string; body?: string }
+}
+
+const applyContextPlan = (
+  guide: EvalGuide,
+  contextPlan: ContextPlan | undefined,
+): { guide: EvalGuide; selectedKnownTopics: string[] } => {
+  const selectedKnownTopics = (contextPlan?.selectedTopics || []).filter(
+    (topic) => typeof topic === 'string' && topic.trim(),
+  )
+  const personalized = contextPlan?.personalizedQuickStart
+  const quickStart =
+    selectedKnownTopics.length &&
+    personalized?.keyIdea &&
+    personalized?.quickSummary
+      ? personalized
+      : guide.quickStart
+  const bridgeBody = contextPlan?.bridgeBlock?.body?.trim() || ''
+  const bridgeBlocks =
+    selectedKnownTopics.length && bridgeBody
+      ? [
+          {
+            dashboardIndex: 1,
+            title: contextPlan?.bridgeBlock?.title?.trim() || 'Context bridge',
+            body: bridgeBody.slice(0, 700),
+          },
+        ]
+      : []
+
+  return {
+    guide: { ...guide, quickStart, bridgeBlocks },
+    selectedKnownTopics,
+  }
+}
+
+const generateMegaBlueprint = async (
+  tuple: (typeof tuples)[number],
+): Promise<GenerationResult> => {
+  const option = '4+2-enhanced' as const
+  const costs: StageCost[] = []
+  const blueprintResult = await callModel({
+    stage: 'mega_blueprint',
+    model: MINI_MODEL,
+    prompt: megaBlueprintPrompt(tuple),
+    schema: megaBlueprintSchema,
+  })
+  costs.push(blueprintResult.cost)
+  const blueprint = parseJson<{
+    title: string
+    quickStart: QuickStart
+    contextPlan?: ContextPlan
+    pages: Record<string, unknown>[]
+  }>(blueprintResult.text)
+  let guide: EvalGuide = {
+    title: blueprint.title,
+    quickStart: blueprint.quickStart,
+    pages: [],
+    bridgeBlocks: [],
+  }
+
+  for (const [index, page] of blueprint.pages.entries()) {
+    const pageResult = await callModel({
+      stage: `mega_nano_expand_page_${index + 1}`,
+      model: NANO_MODEL,
+      prompt: enhancedPageFromBlueprintPrompt({
+        prompt: tuple.prompt,
+        blueprint: { title: blueprint.title, pages: blueprint.pages },
+        page,
+      }),
+      schema: pageSchema,
+      cacheKey: `sg-${tuple.id}`,
+    })
+    costs.push(pageResult.cost)
+    guide.pages.push({
+      ...parseJson<EvalPage>(pageResult.text),
+      quizQuestions: [],
+    })
+  }
+
+  const context = applyContextPlan(guide, blueprint.contextPlan)
+  guide = context.guide
+
+  const quiz = await callModel({
+    stage: 'mega_final_quiz',
+    model: QUIZ_MODEL,
+    prompt: quizPrompt(tuple.prompt, guide),
+    schema: quizSchema,
+    cacheKey: `sg-${tuple.id}`,
+  })
+  costs.push(quiz.cost)
+  const questions = parseJson<{ questions: QuizQuestion[] }>(
+    quiz.text,
+  ).questions
+  guide.pages = guide.pages.map((page, index) =>
+    index === guide.pages.length - 1
+      ? { ...page, quizQuestions: questions }
+      : page,
+  )
+
+  return buildResult(option, tuple, guide, context.selectedKnownTopics, costs)
+}
+
+const generateMonolith = async (
+  tuple: (typeof tuples)[number],
+): Promise<GenerationResult> => {
+  const option = '4+2-enhanced' as const
+  const costs: StageCost[] = []
+  const monolithResult = await callModel({
+    stage: MONOLITH_QUIZ ? 'monolith_full_guide_with_quiz' : 'monolith_full_guide',
+    model: MINI_MODEL,
+    prompt: monolithPrompt(tuple, MONOLITH_QUIZ),
+    schema: monolithSchema(MONOLITH_QUIZ),
+  })
+  costs.push(monolithResult.cost)
+  const parsed = parseJson<{
+    title: string
+    quickStart: QuickStart
+    contextPlan?: ContextPlan
+    pages: Array<{ title: string; rawNotes: string }>
+    questions?: QuizQuestion[]
+  }>(monolithResult.text)
+  let guide: EvalGuide = {
+    title: parsed.title,
+    quickStart: parsed.quickStart,
+    pages: parsed.pages
+      .slice(0, 3)
+      .map((page) => ({ ...page, quizQuestions: [] })),
+    bridgeBlocks: [],
+  }
+
+  const context = applyContextPlan(guide, parsed.contextPlan)
+  guide = context.guide
+
+  let questions = parsed.questions || []
+  if (!MONOLITH_QUIZ) {
+    const quiz = await callModel({
+      stage: 'monolith_nano_final_quiz',
+      model: QUIZ_MODEL,
+      prompt: quizPrompt(tuple.prompt, guide),
+      schema: quizSchema,
+      cacheKey: `sg-${tuple.id}`,
+    })
+    costs.push(quiz.cost)
+    questions = parseJson<{ questions: QuizQuestion[] }>(quiz.text).questions
+  }
+
   guide.pages = guide.pages.map((page, index) =>
     index === guide.pages.length - 1
       ? { ...page, quizQuestions: questions }
@@ -1310,8 +1725,15 @@ const mainEnhancedOnly = async () => {
     ? tuples.filter((tuple) => tupleFilter.includes(tuple.id))
     : [...tuples]
 
+  const generateForMode =
+    GENERATION_MODE === 'mega'
+      ? generateMegaBlueprint
+      : GENERATION_MODE === 'monolith'
+        ? generateMonolith
+        : generateEnhancedOption4Plus2
+
   for (const tuple of selectedTuples) {
-    const result = await generateEnhancedOption4Plus2(tuple)
+    const result = await generateForMode(tuple)
     results.push(result)
   }
 
@@ -1325,9 +1747,15 @@ const mainEnhancedOnly = async () => {
       mini: MINI_MODEL,
       nano: NANO_MODEL,
       support: SUPPORT_MODEL,
+      quiz: QUIZ_MODEL,
+      mode: GENERATION_MODE,
       miniPriceMultiplier: MINI_PRICE_MULTIPLIER,
       miniReasoningEffort: MINI_REASONING_EFFORT || null,
       blueprintBrevity: BLUEPRINT_BREVITY,
+      blueprintCompress: BLUEPRINT_COMPRESS,
+      batchExpand: BATCH_EXPAND,
+      monolithQuiz: MONOLITH_QUIZ,
+      promptCacheKey: PROMPT_CACHE_KEY,
       supportBrevity: SUPPORT_BREVITY,
       supportSourceChars: SUPPORT_SOURCE_CHARS || null,
     },

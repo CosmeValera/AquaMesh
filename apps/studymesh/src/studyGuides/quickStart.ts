@@ -11,6 +11,8 @@ import { sanitizeUserKnownTopics } from '../profileContext'
 export const STUDY_GUIDE_KEY_IDEA_MAX_WORDS = 35
 export const STUDY_GUIDE_QUICK_SUMMARY_MAX_WORDS = 120
 const STUDY_GUIDE_QUICK_SUMMARY_SENTENCE_OVERFLOW_WORDS = 24
+const STUDY_GUIDE_BRIDGE_BODY_SOFT_MAX_CHARS = 700
+const STUDY_GUIDE_BRIDGE_TITLE_MAX_CHARS = 80
 
 const markdownFencePattern = /^```(?:\w+)?\s*|\s*```$/g
 const completeSentenceEndPattern = /[.!?]["')\]]?$/
@@ -224,9 +226,6 @@ const stripTextLabels = (value: string): string =>
 const wordsFromText = (value: string): string[] =>
   value.split(/\s+/).filter(Boolean)
 
-const clampWords = (value: string, maxWords: number): string =>
-  wordsFromText(value).slice(0, maxWords).join(' ')
-
 const findCompleteSentenceWordCount = (
   words: string[],
   minWords: number,
@@ -271,7 +270,67 @@ const clampParagraphToCompleteSentence = (
     return words.slice(0, priorSentenceWordCount).join(' ')
   }
 
-  return words.slice(0, maxWords).join(' ')
+  // Word budgets are enforced in the prompts. When a model still overruns with
+  // one unbroken sentence, keeping the overrun reads better than clipping it.
+  return words.join(' ')
+}
+
+// keyIdea is one sentence, so prefer a sentence that ends inside the cap and
+// otherwise keep the model's sentence whole rather than cutting it mid-thought.
+const clampKeyIdeaToCompleteSentence = (value: string): string => {
+  const words = wordsFromText(value)
+  if (words.length <= STUDY_GUIDE_KEY_IDEA_MAX_WORDS) {
+    return words.join(' ')
+  }
+
+  const withinCapWordCount = findCompleteSentenceWordCount(
+    words.slice(0, STUDY_GUIDE_KEY_IDEA_MAX_WORDS),
+    1,
+  )
+  if (withinCapWordCount) {
+    return words.slice(0, withinCapWordCount).join(' ')
+  }
+
+  const overflowWordCount = findCompleteSentenceWordCount(
+    words,
+    STUDY_GUIDE_KEY_IDEA_MAX_WORDS,
+  )
+  return overflowWordCount
+    ? words.slice(0, overflowWordCount).join(' ')
+    : words.join(' ')
+}
+
+// Trims to the last sentence that ends within the budget. When the text has no
+// sentence break in range it is kept whole, so bodies never end mid-word.
+export const trimToCompleteSentenceWithinChars = (
+  value: string,
+  maxChars: number,
+): string => {
+  if (value.length <= maxChars) {
+    return value
+  }
+
+  const sentenceEnd = value
+    .slice(0, maxChars)
+    .match(/^[\s\S]*[.!?]["')\]]?(?=\s|$)/)
+
+  return sentenceEnd ? sentenceEnd[0].trim() : value
+}
+
+export const trimTitleToWordBoundary = (
+  value: string,
+  maxChars: number,
+): string => {
+  if (value.length <= maxChars) {
+    return value
+  }
+
+  return (
+    value
+      .slice(0, maxChars)
+      .replace(/\s+\S*$/, '')
+      .trim() || value
+  )
 }
 
 const normalizeParagraphs = (value: string): string[] =>
@@ -380,11 +439,10 @@ export const parseStudyGuideQuickStartRelevanceDecision = (
 const sanitizeStudyGuideQuickStartVariant = (
   value: Partial<StudyGuideQuickStartVariant> | null | undefined,
 ): StudyGuideQuickStartVariant | null => {
-  const keyIdea = clampWords(
+  const keyIdea = clampKeyIdeaToCompleteSentence(
     stripTextLabels(String(value?.keyIdea || ''))
       .replace(/\s+/g, ' ')
       .trim(),
-    STUDY_GUIDE_KEY_IDEA_MAX_WORDS,
   )
   const quickSummary = normalizeParagraphs(String(value?.quickSummary || ''))
     .reduce<{ paragraphs: string[]; remainingWords: number }>(
@@ -486,14 +544,16 @@ export const parseStudyGuideKnowledgeBridgeBlocks = (
         typeof record.dashboardIndex === 'number'
           ? Math.trunc(record.dashboardIndex)
           : -1
-      const title = stripTextLabels(stringValue(record.title))
-        .replace(/\s+/g, ' ')
-        .slice(0, 80)
-        .trim()
-      const body = stripTextLabels(stringValue(record.body))
-        .replace(/\n{3,}/g, '\n\n')
-        .slice(0, 700)
-        .trim()
+      const title = trimTitleToWordBoundary(
+        stripTextLabels(stringValue(record.title)).replace(/\s+/g, ' ').trim(),
+        STUDY_GUIDE_BRIDGE_TITLE_MAX_CHARS,
+      )
+      const body = trimToCompleteSentenceWithinChars(
+        stripTextLabels(stringValue(record.body))
+          .replace(/\n{3,}/g, '\n\n')
+          .trim(),
+        STUDY_GUIDE_BRIDGE_BODY_SOFT_MAX_CHARS,
+      )
 
       if (
         dashboardIndex < 0 ||
@@ -577,9 +637,9 @@ ${
 - If bridge strategy is light_reference, use a normal explanation and mention the known topic at most once.
 - Include one brief caveat about where the comparison breaks in quickSummary.`
     : forcedBridge
-      ? `- Force bridge was requested, but no safe known topic was selected. Use a neutral beginner-friendly explanation.
+    ? `- Force bridge was requested, but no safe known topic was selected. Use a neutral beginner-friendly explanation.
 - Do not invent a bridge. Include one brief caveat, boundary, or common misconception in quickSummary.`
-      : `- No known topic was selected as clearly useful. Do not force a personalized analogy.
+    : `- No known topic was selected as clearly useful. Do not force a personalized analogy.
 - Use a neutral beginner-friendly explanation and include one brief caveat, boundary, or common misconception in quickSummary.`
 }
 - Target topic type: ${decision.targetTopicType}.
@@ -654,7 +714,9 @@ Generic examples:
 
 Study Guide title: ${title}
 Learner prompt: ${prompt || title}
-Known topics, strongest first: ${safeTopics.length ? safeTopics.join(', ') : 'none'}
+Known topics, strongest first: ${
+    safeTopics.length ? safeTopics.join(', ') : 'none'
+  }
 
 Study Guide content excerpt:
 ${source.slice(0, 12000)}`

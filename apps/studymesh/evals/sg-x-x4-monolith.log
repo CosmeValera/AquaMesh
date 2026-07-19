@@ -1,0 +1,90 @@
+{
+  "results": [
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "terraform-hard-context",
+      "prompt": "What is Terraform?",
+      "generationCostUsd": 0.01117511,
+      "selectedKnownTopics": [
+        "Ansible"
+      ],
+      "selectedExpectedTopic": true,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 2,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 284
+      },
+      "stageCosts": [
+        {
+          "stage": "monolith_full_guide",
+          "model": "gpt-5.6-luna",
+          "costUsd": 0.00995006,
+          "inputTokens": 681,
+          "outputTokens": 1549
+        },
+        {
+          "stage": "monolith_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.00122505,
+          "inputTokens": 1569,
+          "outputTokens": 729
+        }
+      ]
+    },
+    {
+      "option": "4+2-enhanced",
+      "tupleId": "roman-empire-history-context",
+      "prompt": "What was the Roman Empire?",
+      "generationCostUsd": 0.01214398,
+      "selectedKnownTopics": [
+        "Roman Republic"
+      ],
+      "selectedExpectedTopic": true,
+      "deterministicChecks": {
+        "pageCount": 3,
+        "finalQuizQuestions": 6,
+        "quizBadSmellCount": 0,
+        "bridgeBlockCount": 1,
+        "codeBlockCount": 0,
+        "quickSummaryIncompleteEnding": false,
+        "rawNotesIncompleteEnding": false,
+        "placeholderExampleCount": 0,
+        "averagePageWords": 323
+      },
+      "stageCosts": [
+        {
+          "stage": "monolith_full_guide",
+          "model": "gpt-5.6-luna",
+          "costUsd": 0.01086178,
+          "inputTokens": 683,
+          "outputTokens": 1701
+        },
+        {
+          "stage": "monolith_nano_final_quiz",
+          "model": "gpt-5.4-nano",
+          "costUsd": 0.0012822,
+          "inputTokens": 1736,
+          "outputTokens": 748
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "tupleId": "terraform-hard-context",
+      "missingBaseline": true
+    },
+    {
+      "tupleId": "roman-empire-history-context",
+      "missingBaseline": true
+    }
+  ],
+  "generationCostUsdTotal": 0.02331909
+}
+Saved enhanced results to C:\Users\cosme\Desktop\Cosme (Local)\Projects\StudyMesh\apps\studymesh\evals\sg-x-x4-monolith.json

@@ -1324,7 +1324,7 @@ describe('API payment and hosted AI hardening', () => {
         ],
         usage,
       })
-    const blueprint = {
+    const monolithGuide = {
       title: 'Guide',
       folderName: 'Guide',
       emoji: 'G',
@@ -1333,35 +1333,39 @@ describe('API payment and hosted AI hardening', () => {
         quickSummary:
           'Start with the main idea.\n\nThen use the pages in order.',
       },
+      contextPlan: {
+        useForDefault: true,
+        selectedTopics: ['Algebra'],
+        reason: 'Algebra is the closest same-domain bridge.',
+        personalizedQuickStart: {
+          keyIdea: 'Algebra gives the guide a personalized start.',
+          quickSummary:
+            'Algebra helps frame the first idea.\n\nThe guide still teaches the new topic directly.',
+        },
+        bridgeBlock: {
+          title: 'Algebra bridge',
+          body: 'Algebraic structure helps organize the new idea.',
+        },
+      },
       pages: [
         {
           title: '01 - Map',
-          keyFacts: ['First page introduces the map.'],
-          conciseNotes: 'First page notes teach the map.',
-          examplesNeeded: ['Use a concrete map example.'],
-          quizSkills: ['Trace the map.'],
+          summary: '01 - Map preview.',
+          rawNotes: '01 - Map\n\nComplete lesson notes for the map.',
         },
         {
           title: '02 - Apply',
-          keyFacts: ['Second page applies the idea.'],
-          conciseNotes: 'Second page notes apply the idea.',
-          examplesNeeded: ['Use a concrete application example.'],
-          quizSkills: ['Apply the idea.'],
+          summary: '02 - Apply preview.',
+          rawNotes:
+            '02 - Apply\n\nComplete lesson notes for applying the idea.',
         },
         {
           title: '03 - Review',
-          keyFacts: ['Third page reviews the tradeoff.'],
-          conciseNotes: 'Third page notes review the tradeoff.',
-          examplesNeeded: ['Use a synthesis example.'],
-          quizSkills: ['Evaluate the tradeoff.'],
+          summary: '03 - Review preview.',
+          rawNotes: '03 - Review\n\nComplete lesson notes for the tradeoff.',
         },
       ],
     }
-    const expandedPages = blueprint.pages.map((page) => ({
-      title: page.title,
-      summary: `${page.title} preview.`,
-      rawNotes: `${page.title}\n\nExpanded notes grounded in the blueprint.`,
-    }))
     const quizQuestions = Array.from({ length: 6 }, (_, index) => ({
       question: `Application question ${index + 1}?`,
       options: ['Correct option', 'Distractor one', 'Distractor two'],
@@ -1369,7 +1373,6 @@ describe('API payment and hosted AI hardening', () => {
       explanation: `Explanation ${index + 1}.`,
       skillTested: `Skill ${index + 1}`,
     }))
-    let pageIndex = 0
     const fetchMock = vi.fn((url: string, init?: RequestInit) => {
       const target = String(url)
 
@@ -1397,89 +1400,14 @@ describe('API payment and hosted AI hardening', () => {
             '',
         )
 
-        if (prompt.includes('Create an enhanced compact factual blueprint')) {
+        if (prompt.includes('Write a complete, final StudyMesh Study Guide')) {
           return Promise.resolve(
-            providerResponse(blueprint, {
+            providerResponse(monolithGuide, {
               prompt_tokens: 1000,
               completion_tokens: 500,
               total_tokens: 1500,
               prompt_tokens_details: { cached_tokens: 100 },
             }),
-          )
-        }
-
-        if (prompt.includes('Expand one Study Guide page')) {
-          const page = expandedPages[pageIndex] || expandedPages[0]
-          pageIndex += 1
-          return Promise.resolve(
-            providerResponse(page, {
-              prompt_tokens: 400,
-              completion_tokens: 300,
-              total_tokens: 700,
-            }),
-          )
-        }
-
-        if (prompt.includes('Choose whether any known topic')) {
-          return Promise.resolve(
-            providerResponse(
-              {
-                shouldUseKnownTopic: true,
-                knownTopicsForQuickStart: ['Algebra'],
-                knownTopicRelevanceReason: 'Algebra helps.',
-                targetTopicType: 'general',
-                bridgeStrength: 'strong',
-                bridgeStrategy: 'direct_comparison',
-              },
-              {
-                prompt_tokens: 200,
-                completion_tokens: 50,
-                total_tokens: 250,
-              },
-            ),
-          )
-        }
-
-        if (prompt.includes('Create one Quick Start object')) {
-          return Promise.resolve(
-            providerResponse(
-              {
-                keyIdea: 'Algebra gives the guide a personalized start.',
-                quickSummary:
-                  'Algebra helps frame the first idea.\n\nThe guide still teaches the new topic directly.',
-              },
-              {
-                prompt_tokens: 150,
-                completion_tokens: 60,
-                total_tokens: 210,
-              },
-            ),
-          )
-        }
-
-        if (
-          prompt.includes(
-            'Create optional knowledge-context bridge note blocks',
-          )
-        ) {
-          return Promise.resolve(
-            providerResponse(
-              {
-                blocks: [
-                  {
-                    dashboardIndex: 1,
-                    title: 'Algebra bridge',
-                    body: 'Algebraic structure helps organize the new idea.',
-                  },
-                ],
-              },
-              {
-                prompt_tokens: 300,
-                completion_tokens: 100,
-                total_tokens: 400,
-                prompt_tokens_details: { cached_tokens: 25 },
-              },
-            ),
           )
         }
 
@@ -1525,67 +1453,25 @@ describe('API payment and hosted AI hardening', () => {
     expect(providerBodies.map((body) => body.model)).toEqual([
       'gpt-5.4-mini-route',
       'gpt-5.4-nano-route',
-      'gpt-5.4-nano-route',
-      'gpt-5.4-nano-route',
-      'gpt-5.4-mini-route',
-      'gpt-5.4-mini-route',
-      'gpt-5.4-mini-route',
-      'gpt-5.4-nano-route',
     ])
     expect(rpcBodies[0]).toMatchObject({
       p_provider: 'openai',
       p_model: 'openai:gpt-5.4-mini-route',
     })
-    expect(rpcBodies[1].p_provider_call_count).toBe(8)
+    expect(rpcBodies[1].p_provider_call_count).toBe(2)
     expect(rpcBodies[1].p_metadata).toMatchObject({
-      generationStrategy: 'enhanced_4_plus_2_v1',
+      generationStrategy: 'monolith_v1',
       estimatedCostUsdTotal: expect.any(Number),
       finalQuizQuestionCount: 6,
       contextBridgeBlockCount: 1,
+      quickStartPersonalizedRewriteUsed: true,
       stageCosts: [
         expect.objectContaining({
-          stage: 'study_guide_blueprint',
+          stage: 'study_guide_monolith',
           model: 'gpt-5.4-mini-route',
           inputTokens: 1000,
           cachedInputTokens: 100,
           outputTokens: 500,
-        }),
-        expect.objectContaining({
-          stage: 'study_guide_page_expand',
-          model: 'gpt-5.4-nano-route',
-          inputTokens: 400,
-          outputTokens: 300,
-        }),
-        expect.objectContaining({
-          stage: 'study_guide_page_expand',
-          model: 'gpt-5.4-nano-route',
-          inputTokens: 400,
-          outputTokens: 300,
-        }),
-        expect.objectContaining({
-          stage: 'study_guide_page_expand',
-          model: 'gpt-5.4-nano-route',
-          inputTokens: 400,
-          outputTokens: 300,
-        }),
-        expect.objectContaining({
-          stage: 'quick_start_relevance_auto',
-          model: 'gpt-5.4-mini-route',
-          inputTokens: 200,
-          outputTokens: 50,
-        }),
-        expect.objectContaining({
-          stage: 'quick_start_personalized',
-          model: 'gpt-5.4-mini-route',
-          inputTokens: 150,
-          outputTokens: 60,
-        }),
-        expect.objectContaining({
-          stage: 'knowledge_bridge_blocks',
-          model: 'gpt-5.4-mini-route',
-          inputTokens: 300,
-          cachedInputTokens: 25,
-          outputTokens: 100,
         }),
         expect.objectContaining({
           stage: 'study_guide_final_quiz',
@@ -1593,6 +1479,19 @@ describe('API payment and hosted AI hardening', () => {
           inputTokens: 450,
           outputTokens: 200,
         }),
+      ],
+    })
+    expect(response.body).toMatchObject({
+      ok: true,
+      quickStart: {
+        keyIdea: 'Algebra gives the guide a personalized start.',
+      },
+      bridgeBlocks: [
+        {
+          dashboardIndex: 1,
+          title: 'Algebra bridge',
+          body: 'Algebraic structure helps organize the new idea.',
+        },
       ],
     })
     expect(
@@ -2480,7 +2379,7 @@ describe('API payment and hosted AI hardening', () => {
         ],
         usage,
       })
-    const blueprint = {
+    const monolithGuide = {
       title: 'Backend Systems',
       folderName: 'Backend Systems',
       emoji: 'B',
@@ -2490,57 +2389,30 @@ describe('API payment and hosted AI hardening', () => {
         quickSummary:
           'Backend systems receive requests and decide what work must happen.\n\nThey coordinate data, services, and reliability boundaries so user-facing apps can stay predictable.',
       },
-      pages: [
-        {
-          title: '01 - Request Flow',
-          keyFacts: [
-            'A backend accepts client requests through an API boundary.',
-            'Handlers validate input before running core work.',
-            'Responses should reflect durable state, not hidden guesses.',
-            'Errors need clear ownership and recovery behavior.',
-          ],
-          conciseNotes:
-            'A backend request flow connects an API boundary, validation, business logic, persistence, and response shaping. The important mental model is that each step owns a narrow responsibility.',
-          examplesNeeded: ['Use one concrete request lifecycle example.'],
-          quizSkills: ['Trace a request through backend layers.'],
+      contextPlan: {
+        useForDefault: true,
+        selectedTopics: ['Backend'],
+        reason: 'Backend is the closest same-domain bridge.',
+        personalizedQuickStart: {
+          keyIdea: 'Backend gives a useful short mental model.',
+          quickSummary:
+            'First short paragraph.\n\nSecond short paragraph with one caveat.',
         },
-        {
-          title: '02 - Durability',
-          keyFacts: [
-            'Durable work survives process restarts.',
-            'Queues decouple request acceptance from later processing.',
-            'Databases provide a source of truth for recovered state.',
-            'Retries must avoid duplicating completed work.',
-          ],
-          conciseNotes:
-            'Durability means the backend records enough information to recover or continue work later. The learner should understand when a queue or database boundary matters.',
-          examplesNeeded: ['Compare synchronous and queued work.'],
-          quizSkills: ['Choose a durability boundary for a scenario.'],
+        bridgeBlock: {
+          title: 'Backend bridge',
+          body: 'Backend request flow is a useful comparison, but Kafka-style durability changes the shape.',
         },
-        {
-          title: '03 - Tradeoffs',
-          keyFacts: [
-            'Backend designs trade speed, consistency, cost, and complexity.',
-            'A simple synchronous path is easier to debug.',
-            'Asynchronous work can improve resilience but adds observability needs.',
-            'The best design follows user-facing failure tolerance.',
-          ],
-          conciseNotes:
-            'Backend architecture is a set of tradeoffs. The final page should prepare the learner to select a simpler or more durable design based on the problem.',
-          examplesNeeded: [
-            'Use a scenario comparing simple and durable designs.',
-          ],
-          quizSkills: ['Evaluate architecture tradeoffs.'],
-        },
-      ],
+      },
+      pages: ['01 - Request Flow', '02 - Durability', '03 - Tradeoffs'].map(
+        (title, index) => ({
+          title,
+          summary: `${title} preview.`,
+          rawNotes: `${title}\n\nThis is complete shipped lesson content for page ${
+            index + 1
+          }. It keeps the facts grounded and finishes each paragraph cleanly.`,
+        }),
+      ),
     }
-    const expandedPages = blueprint.pages.map((page, index) => ({
-      title: page.title,
-      summary: `${page.title} preview.`,
-      rawNotes: `${page.title}\n\nThis lesson expands the mini blueprint with a complete explanation for page ${
-        index + 1
-      }. It keeps the facts grounded and finishes each paragraph cleanly.`,
-    }))
     const quizQuestions = Array.from({ length: 6 }, (_, index) => ({
       question: `Application question ${index + 1}?`,
       options: ['Correct option', 'Distractor one', 'Distractor two'],
@@ -2548,7 +2420,6 @@ describe('API payment and hosted AI hardening', () => {
       explanation: `Explanation ${index + 1}.`,
       skillTested: `Skill ${index + 1}`,
     }))
-    let pageIndex = 0
     const fetchMock = vi.fn((url: string, init?: RequestInit) => {
       const target = String(url)
 
@@ -2590,58 +2461,8 @@ describe('API payment and hosted AI hardening', () => {
             '',
         )
 
-        if (prompt.includes('Create an enhanced compact factual blueprint')) {
-          return Promise.resolve(providerResponse(blueprint))
-        }
-
-        if (prompt.includes('Expand one Study Guide page')) {
-          const page = expandedPages[pageIndex] || expandedPages[0]
-          pageIndex += 1
-          return Promise.resolve(providerResponse(page))
-        }
-
-        if (
-          prompt.includes('Choose whether any known topic') &&
-          prompt.includes('Bridge mode: auto')
-        ) {
-          return Promise.resolve(
-            providerResponse({
-              shouldUseKnownTopic: true,
-              knownTopicsForQuickStart: ['Backend'],
-              knownTopicRelevanceReason: 'Backend is the useful bridge.',
-              targetTopicType: 'technical',
-              bridgeStrength: 'strong',
-              bridgeStrategy: 'direct_comparison',
-            }),
-          )
-        }
-
-        if (prompt.includes('Create one Quick Start object')) {
-          return Promise.resolve(
-            providerResponse({
-              keyIdea: 'Backend gives a useful short mental model.',
-              quickSummary:
-                'First short paragraph.\n\nSecond short paragraph with one caveat.',
-            }),
-          )
-        }
-
-        if (
-          prompt.includes(
-            'Create optional knowledge-context bridge note blocks',
-          )
-        ) {
-          return Promise.resolve(
-            providerResponse({
-              blocks: [
-                {
-                  dashboardIndex: 1,
-                  title: 'Backend bridge',
-                  body: 'Backend request flow is a useful comparison, but Kafka-style durability changes the shape.',
-                },
-              ],
-            }),
-          )
+        if (prompt.includes('Write a complete, final StudyMesh Study Guide')) {
+          return Promise.resolve(providerResponse(monolithGuide))
         }
 
         if (prompt.includes('Create 6 strong multiple-choice questions')) {
@@ -2706,60 +2527,36 @@ describe('API payment and hosted AI hardening', () => {
     expect(guide.dashboards).toHaveLength(3)
     expect(guide.dashboards[0]?.flashcards).toEqual([])
     expect(guide.dashboards[2]?.practice?.multipleChoice).toHaveLength(6)
-    expect(providerBodies).toHaveLength(8)
+    expect(providerBodies).toHaveLength(2)
     expect(providerBodies[0].model).toBe(DEFAULT_OPENAI_STUDY_GUIDE_MODEL)
     expect(providerBodies[0].input).toBeDefined()
     expect(providerBodies[0].reasoning).toMatchObject({ effort: 'none' })
     expect(providerBodies[1].model).toBe(DEFAULT_OPENAI_FAST_MODEL)
-    expect(providerBodies[4].model).toBe(DEFAULT_OPENAI_SUPPORT_MODEL)
-    expect(providerBodies[7].model).toBe(DEFAULT_OPENAI_FAST_MODEL)
     expect(JSON.stringify(providerBodies[0])).toContain(
-      'Create an enhanced compact factual blueprint',
+      'Write a complete, final StudyMesh Study Guide',
+    )
+    expect(JSON.stringify(providerBodies[0])).toContain(
+      'The learner already knows these candidate topics: Backend, Databases',
     )
     expect(JSON.stringify(providerBodies[1])).toContain(
-      'Expand one Study Guide page',
-    )
-    expect(JSON.stringify(providerBodies[4])).toContain(
-      'Known topics, strongest first: Backend, Databases',
-    )
-    expect(JSON.stringify(providerBodies[4])).toContain('Bridge mode: auto')
-    expect(JSON.stringify(providerBodies[5])).not.toContain(
-      'Candidate known topic bridge(s): Backend, Databases',
-    )
-    expect(JSON.stringify(providerBodies[5])).toContain(
-      'Candidate known topic bridge(s): Backend',
-    )
-    expect(JSON.stringify(providerBodies[5])).toContain(
-      'Create one Quick Start object',
-    )
-    expect(JSON.stringify(providerBodies)).not.toContain('Bridge mode: force')
-    expect(JSON.stringify(providerBodies[6])).toContain(
-      'Create optional knowledge-context bridge note blocks',
-    )
-    expect(JSON.stringify(providerBodies[6])).toContain('dashboardIndex: 1')
-    expect(JSON.stringify(providerBodies[6])).not.toContain('dashboardIndex: 0')
-    expect(JSON.stringify(providerBodies[7])).toContain(
       'Create 6 strong multiple-choice questions',
     )
     expect(rpcBodies).toHaveLength(2)
     expect(rpcBodies[0].p_metadata).toMatchObject({ requestedCredits: 3 })
-    expect(rpcBodies[1].p_provider_call_count).toBe(8)
+    expect(rpcBodies[1].p_provider_call_count).toBe(2)
     expect(rpcBodies[1].p_metadata).toMatchObject({
-      generationStrategy: 'enhanced_4_plus_2_v1',
+      generationStrategy: 'monolith_v1',
       quickStartPersonalizedRewriteUsed: true,
       finalQuizQuestionCount: 6,
       contextBridgeBlockCount: 1,
       stageCosts: expect.arrayContaining([
-        expect.objectContaining({ stage: 'study_guide_blueprint' }),
-        expect.objectContaining({ stage: 'study_guide_page_expand' }),
-        expect.objectContaining({ stage: 'quick_start_personalized' }),
-        expect.objectContaining({ stage: 'knowledge_bridge_blocks' }),
+        expect.objectContaining({ stage: 'study_guide_monolith' }),
         expect.objectContaining({ stage: 'study_guide_final_quiz' }),
       ]),
     })
   })
 
-  it('keeps hosted forced Quick Start bridge when enhanced auto relevance finds no useful topic', async () => {
+  it('keeps the hosted forced Quick Start bridge when the monolith selects no useful topic', async () => {
     vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
     vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
     vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
@@ -2788,7 +2585,9 @@ describe('API payment and hosted AI hardening', () => {
           total_tokens: 700,
         },
       })
-    const blueprint = {
+    // The model rated every learner topic as a non-bridge, so selectedTopics is
+    // empty. "Use my context" must still be offered from personalizedQuickStart.
+    const monolithGuide = {
       title: 'Storage Guide',
       folderName: 'Storage Guide',
       emoji: 'S',
@@ -2797,35 +2596,26 @@ describe('API payment and hosted AI hardening', () => {
         quickSummary:
           'Object storage stores data as named objects.\n\nIt is useful when applications need durable files without managing local disks.',
       },
-      pages: [
-        {
-          title: '01 - Buckets',
-          keyFacts: ['Buckets group stored objects.'],
-          conciseNotes: 'Buckets organize object storage names and access.',
-          examplesNeeded: ['Use a bucket naming scenario.'],
-          quizSkills: ['Identify bucket responsibility.'],
+      contextPlan: {
+        useForDefault: false,
+        selectedTopics: [],
+        reason: 'No candidate topic is a precise same-domain bridge.',
+        personalizedQuickStart: {
+          keyIdea: 'Use Kubernetes as a loose mental bridge.',
+          quickSummary:
+            'Kubernetes organizes running systems.\n\nThis topic uses a different layer, but the control idea helps.',
         },
-        {
-          title: '02 - Objects',
-          keyFacts: ['Objects combine bytes, keys, and metadata.'],
-          conciseNotes: 'Objects are retrieved through keys and metadata.',
-          examplesNeeded: ['Use a concrete upload example.'],
-          quizSkills: ['Explain object lookup.'],
+        bridgeBlock: {
+          title: 'Kubernetes bridge',
+          body: 'Kubernetes controls workloads, while object storage only stores bytes.',
         },
-        {
-          title: '03 - Access',
-          keyFacts: ['Policies define who can read or write objects.'],
-          conciseNotes: 'Access control protects buckets and object actions.',
-          examplesNeeded: ['Use a policy scenario.'],
-          quizSkills: ['Choose a safe access rule.'],
-        },
-      ],
+      },
+      pages: ['01 - Buckets', '02 - Objects', '03 - Access'].map((title) => ({
+        title,
+        summary: `${title} preview.`,
+        rawNotes: `${title}\n\nThis complete lesson explains the page and finishes cleanly.`,
+      })),
     }
-    const expandedPages = blueprint.pages.map((page) => ({
-      title: page.title,
-      summary: `${page.title} preview.`,
-      rawNotes: `${page.title}\n\nThis complete lesson explains the page using only the blueprint facts and finishes cleanly.`,
-    }))
     const quizQuestions = Array.from({ length: 6 }, (_, index) => ({
       question: `Storage application question ${index + 1}?`,
       options: ['Correct option', 'Distractor one', 'Distractor two'],
@@ -2833,7 +2623,6 @@ describe('API payment and hosted AI hardening', () => {
       explanation: `Storage explanation ${index + 1}.`,
       skillTested: `Storage skill ${index + 1}`,
     }))
-    let pageIndex = 0
     const fetchMock = vi.fn((url: string, init?: RequestInit) => {
       const target = String(url)
 
@@ -2861,59 +2650,8 @@ describe('API payment and hosted AI hardening', () => {
             '',
         )
 
-        if (prompt.includes('Create an enhanced compact factual blueprint')) {
-          return Promise.resolve(providerResponse(blueprint))
-        }
-
-        if (prompt.includes('Expand one Study Guide page')) {
-          const page = expandedPages[pageIndex] || expandedPages[0]
-          pageIndex += 1
-          return Promise.resolve(providerResponse(page))
-        }
-
-        if (
-          prompt.includes('Choose whether any known topic') &&
-          prompt.includes('Bridge mode: auto')
-        ) {
-          return Promise.resolve(
-            providerResponse({
-              shouldUseKnownTopic: false,
-              knownTopicsForQuickStart: [],
-              knownTopicRelevanceReason: 'No strong bridge.',
-              targetTopicType: 'technical',
-              bridgeStrength: 'none',
-              bridgeStrategy: 'none',
-            }),
-          )
-        }
-
-        if (
-          prompt.includes('Choose whether any known topic') &&
-          prompt.includes('Bridge mode: force')
-        ) {
-          return Promise.resolve(
-            providerResponse({
-              shouldUseKnownTopic: true,
-              knownTopicsForQuickStart: ['Kubernetes'],
-              knownTopicRelevanceReason: 'Closest useful bridge.',
-              targetTopicType: 'technical',
-              bridgeStrength: 'weak',
-              bridgeStrategy: 'light_reference',
-            }),
-          )
-        }
-
-        if (
-          prompt.includes('Create one Quick Start object') &&
-          prompt.includes('Bridge mode: force')
-        ) {
-          return Promise.resolve(
-            providerResponse({
-              keyIdea: 'Use Kubernetes as a loose mental bridge.',
-              quickSummary:
-                'Kubernetes organizes running systems.\n\nThis topic uses a different layer, but the control idea helps.',
-            }),
-          )
+        if (prompt.includes('Write a complete, final StudyMesh Study Guide')) {
+          return Promise.resolve(providerResponse(monolithGuide))
         }
 
         if (prompt.includes('Create 6 strong multiple-choice questions')) {
@@ -2959,32 +2697,26 @@ describe('API payment and hosted AI hardening', () => {
     }
     expect(guide.dashboards).toHaveLength(3)
     expect(guide.dashboards[2]?.practice?.multipleChoice).toHaveLength(6)
-    expect(providerBodies).toHaveLength(7)
-    expect(JSON.stringify(providerBodies[4])).toContain('Bridge mode: auto')
-    expect(
-      providerBodies.filter((body) => {
-        const prompt = JSON.stringify(body)
-        return (
-          prompt.includes('Choose whether any known topic') &&
-          prompt.includes('Bridge mode: force')
-        )
-      }),
-    ).toHaveLength(0)
-    expect(JSON.stringify(providerBodies[5])).toContain('Bridge mode: force')
-    expect(providerBodies[5].model).toBe(DEFAULT_OPENAI_SUPPORT_MODEL)
-    expect(providerBodies[6].model).toBe(DEFAULT_OPENAI_FAST_MODEL)
-    expect(rpcBodies[1].p_provider_call_count).toBe(7)
+    // The opt-in view costs no extra provider call under the monolith.
+    expect(providerBodies).toHaveLength(2)
+    expect(providerBodies[0].model).toBe(DEFAULT_OPENAI_STUDY_GUIDE_MODEL)
+    expect(providerBodies[1].model).toBe(DEFAULT_OPENAI_FAST_MODEL)
+    expect(response.body.bridgeBlocks).toEqual([])
+    expect(rpcBodies[1].p_provider_call_count).toBe(2)
     expect(JSON.stringify(rpcBodies[1].p_metadata)).not.toContain(
       'quick_start_relevance_force',
     )
     expect(rpcBodies[1].p_metadata).toMatchObject({
-      generationStrategy: 'enhanced_4_plus_2_v1',
+      generationStrategy: 'monolith_v1',
+      forcedBridgeAvailable: true,
       finalQuizQuestionCount: 6,
       stageCosts: expect.arrayContaining([
-        expect.objectContaining({ stage: 'study_guide_blueprint' }),
-        expect.objectContaining({ stage: 'quick_start_forced_bridge' }),
+        expect.objectContaining({ stage: 'study_guide_monolith' }),
         expect.objectContaining({ stage: 'study_guide_final_quiz' }),
       ]),
+    })
+    expect(rpcBodies[1].p_metadata).not.toMatchObject({
+      quickStartPersonalizedRewriteUsed: true,
     })
   })
 

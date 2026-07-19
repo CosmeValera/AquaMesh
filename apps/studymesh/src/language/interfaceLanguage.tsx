@@ -353,10 +353,11 @@ const translations = {
     'chat.searchingWeb':
       'The Study Guide does not contain enough info, searching web...',
     'chat.searchingWebShort': 'Searching web...',
-    'chat.searchWebAndAnswer': 'Search web and answer',
     'chat.webSearchFailed': 'Web search failed.',
     'chat.foundSource': 'Found source',
     'chat.foundSources': 'Found sources',
+    'chat.webSearchedNoCitedSource': 'Web searched; no cited source used',
+    'chat.sourceNotUsedInAnswer': 'Not used in this answer',
     'chat.basisStudyGuide': 'Study Guide',
     'chat.basisAddedSource': 'Added source',
     'chat.basisWeb': 'Web',
@@ -364,6 +365,7 @@ const translations = {
     'chat.addThisSource': 'Add this source',
     'chat.preparingPage': 'Preparing page...',
     'chat.couldNotPreparePage': 'Could not prepare page',
+    'chat.retryPreparingPage': 'Retry preparing page',
     'chat.openExternalSourceTitle': 'Open external source?',
     'chat.openExternalSourceBody':
       'StudyMesh will open this source in a new tab.',
@@ -816,10 +818,12 @@ const translations = {
     'chat.searchingWeb':
       'La guía de estudio no contiene suficiente información, buscando en la web...',
     'chat.searchingWebShort': 'Buscando en la web...',
-    'chat.searchWebAndAnswer': 'Buscar en la web y responder',
     'chat.webSearchFailed': 'La búsqueda web falló.',
     'chat.foundSource': 'Fuente encontrada',
     'chat.foundSources': 'Fuentes encontradas',
+    'chat.webSearchedNoCitedSource':
+      'Búsqueda web hecha; no se usó ninguna fuente citada',
+    'chat.sourceNotUsedInAnswer': 'No usada en esta respuesta',
     'chat.basisStudyGuide': 'Guía',
     'chat.basisAddedSource': 'Fuente añadida',
     'chat.basisWeb': 'Web',
@@ -827,6 +831,7 @@ const translations = {
     'chat.addThisSource': 'Añadir esta fuente',
     'chat.preparingPage': 'Preparando página...',
     'chat.couldNotPreparePage': 'No se pudo preparar la página',
+    'chat.retryPreparingPage': 'Reintentar preparar página',
     'chat.openExternalSourceTitle': '¿Abrir fuente externa?',
     'chat.openExternalSourceBody':
       'StudyMesh abrirá esta fuente en una nueva pestaña.',
@@ -1293,10 +1298,12 @@ const translationOverrides: Record<
     'chat.searchingWeb':
       'Le guide ne contient pas assez d’informations, recherche sur le web...',
     'chat.searchingWebShort': 'Recherche sur le web...',
-    'chat.searchWebAndAnswer': 'Chercher sur le web et répondre',
     'chat.webSearchFailed': 'La recherche web a échoué.',
     'chat.foundSource': 'Source trouvée',
     'chat.foundSources': 'Sources trouvées',
+    'chat.webSearchedNoCitedSource':
+      'Recherche web effectuée ; aucune source citée utilisée',
+    'chat.sourceNotUsedInAnswer': 'Non utilisée dans cette réponse',
     'chat.basisStudyGuide': 'Guide',
     'chat.basisAddedSource': 'Source ajoutée',
     'chat.basisWeb': 'Web',
@@ -1304,6 +1311,7 @@ const translationOverrides: Record<
     'chat.addThisSource': 'Ajouter cette source',
     'chat.preparingPage': 'Préparation de la page...',
     'chat.couldNotPreparePage': 'Impossible de préparer la page',
+    'chat.retryPreparingPage': 'Réessayer de préparer la page',
     'chat.openExternalSourceTitle': 'Ouvrir la source externe ?',
     'chat.openExternalSourceBody':
       'StudyMesh ouvrira cette source dans un nouvel onglet.',
@@ -1761,10 +1769,12 @@ const translationOverrides: Record<
     'chat.searchingWeb':
       'Der Study Guide enthält nicht genug Informationen, suche im Web...',
     'chat.searchingWebShort': 'Suche im Web...',
-    'chat.searchWebAndAnswer': 'Im Web suchen und antworten',
     'chat.webSearchFailed': 'Websuche fehlgeschlagen.',
     'chat.foundSource': 'Quelle gefunden',
     'chat.foundSources': 'Quellen gefunden',
+    'chat.webSearchedNoCitedSource':
+      'Websuche abgeschlossen; keine zitierte Quelle verwendet',
+    'chat.sourceNotUsedInAnswer': 'In dieser Antwort nicht verwendet',
     'chat.basisStudyGuide': 'Study Guide',
     'chat.basisAddedSource': 'Hinzugefügte Quelle',
     'chat.basisWeb': 'Web',
@@ -1772,6 +1782,7 @@ const translationOverrides: Record<
     'chat.addThisSource': 'Diese Quelle hinzufügen',
     'chat.preparingPage': 'Seite wird vorbereitet...',
     'chat.couldNotPreparePage': 'Seite konnte nicht vorbereitet werden',
+    'chat.retryPreparingPage': 'Seitenvorbereitung wiederholen',
     'chat.openExternalSourceTitle': 'Externe Quelle öffnen?',
     'chat.openExternalSourceBody':
       'StudyMesh öffnet diese Quelle in einem neuen Tab.',

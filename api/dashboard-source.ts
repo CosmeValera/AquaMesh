@@ -50,6 +50,7 @@ interface DashboardSourceResponse {
 interface DashboardSourceRequest {
   question: string;
   dashboardTitle: string;
+  searchQuery?: string;
   sourceUrl?: string;
   contextSummary?: string;
   rejectedUrls?: string[];
@@ -66,7 +67,16 @@ const SEARCH_CANDIDATE_COUNT = 12;
 const MAX_EXTRACT_URLS = 3;
 const OFFICIAL_DOMAIN_HINTS = ["docs", "developer", "learn", "help", "support"];
 const LOW_QUALITY_TITLE_PATTERNS =
-  /alternative|alternatives|market share|reviews?|pricing|competitors?|software comparison|top \d+/i;
+  /alternative|alternatives|market share|reviews?|pricing|competitors?|software comparison/i;
+const NON_TEXT_SOURCE_DOMAINS = [
+  "facebook.com",
+  "instagram.com",
+  "pinterest.com",
+  "tiktok.com",
+  "twitter.com",
+  "x.com",
+  "youtube.com",
+];
 const QUERY_STOPWORDS = new Set([
   "about",
   "and",
@@ -79,7 +89,10 @@ const QUERY_STOPWORDS = new Set([
   "from",
   "guide",
   "into",
+  "is",
   "lesson",
+  "official",
+  "overview",
   "or",
   "similar",
   "source",
@@ -153,6 +166,7 @@ const normalizeRequest = (body: unknown): DashboardSourceRequest | null => {
 
   const question = normalizeText(body.question);
   const dashboardTitle = normalizeText(body.dashboardTitle);
+  const searchQuery = normalizeText(body.searchQuery);
   const sourceUrl = normalizeText(body.sourceUrl || body.url);
   const contextSummary = normalizeText(body.contextSummary);
   const rejectedUrls = Array.isArray(body.rejectedUrls)
@@ -169,6 +183,7 @@ const normalizeRequest = (body: unknown): DashboardSourceRequest | null => {
   return {
     question: question || sourceUrl,
     dashboardTitle,
+    ...(searchQuery ? { searchQuery } : {}),
     ...(sourceUrl ? { sourceUrl } : {}),
     ...(contextSummary ? { contextSummary } : {}),
     ...(rejectedUrls.length ? { rejectedUrls } : {}),
@@ -280,6 +295,12 @@ const getDefinitionFocusTerms = (question: string): string[] | null => {
 };
 
 const buildFallbackSearchQuery = (request: DashboardSourceRequest): string => {
+  if (request.searchQuery) {
+    return request.searchQuery.length > MAX_QUERY_CHARS
+      ? request.searchQuery.slice(0, MAX_QUERY_CHARS).trim()
+      : request.searchQuery;
+  }
+
   const definitionFocusTerms = getDefinitionFocusTerms(request.question);
   if (definitionFocusTerms) {
     const query = `What is ${definitionFocusTerms
@@ -376,11 +397,29 @@ const isRejectedSource = (
   );
 
   return (
+    NON_TEXT_SOURCE_DOMAINS.some(
+      (blocked) => domain === blocked || domain.endsWith(`.${blocked}`),
+    ) ||
     rejectedUrls.includes(normalizedUrl) ||
     rejectedDomains.some(
       (rejected) => domain === rejected || domain.endsWith(`.${rejected}`),
     )
   );
+};
+
+const extractedTextCoversQuestion = (
+  text: string,
+  questionTerms: string[],
+): boolean => {
+  if (questionTerms.length === 0) {
+    return true;
+  }
+
+  const normalizedText = text.toLowerCase();
+  const coveredTerms = questionTerms.filter((term) =>
+    normalizedText.includes(term),
+  );
+  return coveredTerms.length >= Math.min(2, questionTerms.length);
 };
 
 const qualityScoreCandidate = (
@@ -612,6 +651,9 @@ const searchDashboardSource = async (
   }
 
   const missingTerms = selectMissingTerms(request);
+  const questionTerms = extractQuestionTerms(
+    request.searchQuery || request.question,
+  ).slice(0, 8);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), SEARCH_TIMEOUT_MS);
 
@@ -647,7 +689,13 @@ const searchDashboardSource = async (
     const sources = selectedCandidates
       .map((candidate): DashboardSource | null => {
         const extracted = extractedByUrl.get(normalizeUrl(candidate.url));
-        if (!extracted) {
+        if (
+          !extracted ||
+          !extractedTextCoversQuestion(
+            `${candidate.title} ${candidate.snippet} ${extracted.text}`,
+            questionTerms,
+          )
+        ) {
           return null;
         }
 

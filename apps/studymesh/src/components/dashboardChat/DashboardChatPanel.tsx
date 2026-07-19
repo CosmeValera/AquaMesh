@@ -70,6 +70,12 @@ import {
   type DashboardExternalSourceOriginType,
 } from '../../dashboardChat/externalSources'
 import { prepareDashboardExternalSourcePageDraft } from '../../dashboardChat/sourcePageDrafts'
+import {
+  fallbackDashboardChatSourcePlan,
+  planDashboardChatSources,
+  type DashboardChatSourceId,
+  type DashboardChatSourcePlan,
+} from '../../dashboardChat/sourcePlanner'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
 import { getHostedAiCreditCost } from '../../quickCreate/ai/hostedCredits'
 import {
@@ -95,7 +101,6 @@ const MAX_USER_SOURCE_TEXT_CHARS = 12_000
 const MAX_USER_SOURCE_CONTEXT_CHARS = 18_000
 const MAX_USER_SOURCES_PER_ANSWER = 3
 const MAX_USER_SOURCE_FILE_BYTES = 1_000_000
-
 export interface DashboardChatMessage {
   id: string
   role: 'user' | 'assistant'
@@ -370,8 +375,6 @@ const SOURCE_REJECTION_PATTERN =
   /\b(?:don't|dont|do not|stop)\s+use\b|\btry another\b|\banother source\b|\bwrong source\b|\bbad source\b|\bnot that source\b/i
 const SOURCE_SUPPORT_FOLLOWUP_PATTERN =
   /\b(?:what(?:'s| is)? your source|what source|cite|citation|where did you get|what(?:'s| is)? your basis|what(?:'s| is)? your base|base to say|source to say)\b/i
-const WEB_LOOKUP_REQUEST_PATTERN =
-  /\b(?:search|look up|lookup|internet|web|online|latest|current|up[- ]?to[- ]?date|source|sources|citation|cite)\b/i
 const SMALLTALK_PATTERN =
   /^(?:hi|hello|hey|thanks?|thank you|thx|ty|ok|okay|cool|nice|great|what can you do\??)$/i
 const SMALLTALK_HINT_PATTERN =
@@ -1249,15 +1252,26 @@ const DashboardChatPanel = ({
   const selectAnswerSourceChunks = (
     question: string,
     externalSourceIds: string[] = [],
+    allowedSources: DashboardChatSourceId[] = ['study-guide', 'general'],
   ): {
     sourceChunks: DashboardSourceChunk[]
     selectedExternalSourceIds: string[]
   } => {
-    const dashboardChunks = selectDashboardChatChunks(context, question)
+    const allowStudyGuide = allowedSources.includes('study-guide')
+    const allowWeb = allowedSources.includes('web')
+    const dashboardChunks = allowStudyGuide
+      ? selectDashboardChatChunks(context, question)
+      : []
     const selectedExternalSources = selectStoredExternalSources(
       question,
       externalSourceIds,
-    )
+    ).filter((source) => {
+      if (isUserAddedSource(source)) {
+        return allowStudyGuide
+      }
+
+      return allowWeb
+    })
     let remainingUserSourceChars = MAX_USER_SOURCE_CONTEXT_CHARS
     const externalChunks = selectedExternalSources
       .map((source): DashboardExternalSource | null => {
@@ -2038,6 +2052,7 @@ const DashboardChatPanel = ({
     question: string,
     messageId: string,
     historyMessages: DashboardChatMessage[],
+    searchQuery?: string,
   ): Promise<string[]> => {
     const messageIndex = messagesRef.current.findIndex(
       (message) => message.id === messageId,
@@ -2063,6 +2078,7 @@ const DashboardChatPanel = ({
         await fetchDashboardExternalSource({
           question: lookupQuestion,
           dashboardTitle: context.dashboardTitle,
+          ...(searchQuery?.trim() ? { searchQuery: searchQuery.trim() } : {}),
           contextSummary: buildExternalLookupContextSummary(),
           ...getRejectedSourceFilters(),
         }),
@@ -2134,13 +2150,54 @@ const DashboardChatPanel = ({
     }))
   }
 
+  const resolveSourcePlan = async (
+    question: string,
+    historyMessages: DashboardChatMessage[],
+    selectedSources: DashboardChatSourceId[],
+    signal?: AbortSignal,
+  ): Promise<DashboardChatSourcePlan> => {
+    const fallbackPlan = fallbackDashboardChatSourcePlan(
+      question,
+      selectedSources,
+    )
+
+    if (selectedSources.length > 0 && !selectedSources.includes('web')) {
+      return fallbackPlan
+    }
+
+    try {
+      const plan = await planDashboardChatSources({
+        question,
+        dashboardTitle: context.dashboardTitle,
+        contextSummary: buildExternalLookupContextSummary(),
+        history: usefulHistoryForPrompt(historyMessages),
+        selectedSources,
+        contentLanguage:
+          dashboard?.contentLanguage || dashboard?.studyPath?.contentLanguage,
+        signal,
+      })
+      return {
+        ...plan,
+        shouldSearchWeb: selectedSources.includes('web')
+          ? plan.selectedSources.includes('web')
+          : plan.shouldSearchWeb && plan.selectedSources.includes('web'),
+      }
+    } catch (error) {
+      if (isAbortError(error) || signal?.aborted) {
+        throw error
+      }
+
+      return fallbackPlan
+    }
+  }
+
   const answerQuestion = async (
     question: string,
     pendingMessageId: string,
     historyMessages: DashboardChatMessage[],
     externalSourceIds: string[] = [],
     signal?: AbortSignal,
-    options: { searchWebFirst?: boolean } = {},
+    options: { selectedSources?: DashboardChatSourceId[] } = {},
   ) => {
     const pendingMessageIndex = messagesRef.current.findIndex(
       (message) => message.id === pendingMessageId,
@@ -2151,24 +2208,38 @@ const DashboardChatPanel = ({
         : messagesRef.current
     const effectiveHistoryMessages =
       historyMessages.length > 0 ? historyMessages : liveHistoryMessages
-    const lookupSourceIds =
-      options.searchWebFirst && externalSourceIds.length === 0
-        ? await runExternalSourceLookup(
-            question,
-            pendingMessageId,
-            effectiveHistoryMessages,
-          )
-        : externalSourceIds
-    const { sourceChunks, selectedExternalSourceIds } =
-      selectAnswerSourceChunks(question, lookupSourceIds)
 
     try {
+      const sourcePlan = await resolveSourcePlan(
+        question,
+        effectiveHistoryMessages,
+        options.selectedSources ?? [],
+        signal,
+      )
+      const lookupSourceIds =
+        sourcePlan.shouldSearchWeb && externalSourceIds.length === 0
+          ? await runExternalSourceLookup(
+              question,
+              pendingMessageId,
+              effectiveHistoryMessages,
+              sourcePlan.searchQuery,
+            )
+          : externalSourceIds
+      const { sourceChunks, selectedExternalSourceIds } =
+        selectAnswerSourceChunks(
+          question,
+          lookupSourceIds,
+          sourcePlan.selectedSources,
+        )
       const result = await askDashboardSources({
         dashboardTitle: context.dashboardTitle,
         contextText: formatDashboardChatContext(context, sourceChunks),
         question,
         history: usefulHistoryForPrompt(effectiveHistoryMessages),
         sourceChunks,
+        allowedSources: sourcePlan.selectedSources,
+        answerStyleHint: sourcePlan.answerStyleHint,
+        exactAnswerCount: sourcePlan.exactAnswerCount,
         contentLanguage:
           dashboard?.contentLanguage || dashboard?.studyPath?.contentLanguage,
         signal,
@@ -2225,10 +2296,7 @@ const DashboardChatPanel = ({
     }
   }
 
-  const sendQuestion = (
-    question: string,
-    options: { searchWebFirst?: boolean } = {},
-  ) => {
+  const sendQuestion = (question: string) => {
     const trimmed = question.trim()
     if (!trimmed) {
       return
@@ -2297,21 +2365,7 @@ const DashboardChatPanel = ({
       }
     }
 
-    const searchWebFirst =
-      Boolean(options.searchWebFirst) && intent !== 'conversational_smalltalk'
-    const shouldSearchWeb =
-      searchWebFirst ||
-      (WEB_LOOKUP_REQUEST_PATTERN.test(trimmed) &&
-        intent !== 'conversational_smalltalk')
-
-    void answerQuestion(
-      trimmed,
-      pendingMessage.id,
-      previousMessages,
-      [],
-      undefined,
-      { searchWebFirst: shouldSearchWeb },
-    )
+    void answerQuestion(trimmed, pendingMessage.id, previousMessages)
   }
 
   const prefillDraft = (content: string) => {
@@ -2415,7 +2469,9 @@ const DashboardChatPanel = ({
       previousMessages,
       [],
       undefined,
-      { searchWebFirst: true },
+      {
+        selectedSources: ['study-guide', 'web'],
+      },
     )
     return true
   }
@@ -3126,6 +3182,16 @@ const DashboardChatPanel = ({
     )
       .map(findExternalSourceById)
       .filter((source): source is DashboardExternalSource => Boolean(source))
+    const citedWebSourceIds = new Set(
+      (message.sourceRefs || [])
+        .filter(
+          (sourceRef) =>
+            sourceRef.origin === 'web' &&
+            !isUserAddedSourceOriginType(sourceRef.originType),
+        )
+        .map((sourceRef) => sourceRef.chunkId),
+    )
+    const hasCitedWebSource = citedWebSourceIds.size > 0
 
     const sourceDomain = (source: DashboardExternalSource) => {
       try {
@@ -3140,7 +3206,7 @@ const DashboardChatPanel = ({
       }
 
       if (source.guidePageDraftStatus === 'failed') {
-        return t('chat.couldNotPreparePage')
+        return t('chat.retryPreparingPage')
       }
 
       return t('chat.preparingPage')
@@ -3174,9 +3240,11 @@ const DashboardChatPanel = ({
           <Stack spacing={0.75}>
             <Box>
               <Typography variant="caption" fontWeight={700}>
-                {sources.length === 1
-                  ? t('chat.foundSource')
-                  : t('chat.foundSources')}
+                {!hasCitedWebSource
+                  ? t('chat.webSearchedNoCitedSource')
+                  : sources.length === 1
+                    ? t('chat.foundSource')
+                    : t('chat.foundSources')}
               </Typography>
               <Stack spacing={0.5} sx={{ mt: 0.25 }}>
                 {sources.map((source) => (
@@ -3223,7 +3291,8 @@ const DashboardChatPanel = ({
                     >
                       {sourceDomain(source)}
                     </Typography>
-                    {onAddExternalSourceToGuide ? (
+                    {onAddExternalSourceToGuide &&
+                    citedWebSourceIds.has(source.id) ? (
                       <Button
                         size="small"
                         variant="outlined"
@@ -3241,10 +3310,19 @@ const DashboardChatPanel = ({
                             )
                           }
                         }}
-                        disabled={source.guidePageDraftStatus !== 'ready'}
+                        disabled={source.guidePageDraftStatus === 'pending'}
                         onClick={() => {
                           if (source.guidePageDraftStatus === 'ready') {
                             onAddExternalSourceToGuide(source)
+                            return
+                          }
+
+                          if (source.guidePageDraftStatus === 'failed') {
+                            prepareGuidePageDraftsForSources(
+                              [source.id],
+                              source.searchQuery,
+                              message.content,
+                            )
                           }
                         }}
                         sx={{
@@ -3257,6 +3335,26 @@ const DashboardChatPanel = ({
                       >
                         {addSourceLabel(source)}
                       </Button>
+                    ) : null}
+                    {source.guidePageDraftStatus === 'failed' &&
+                    source.guidePageDraftError ? (
+                      <Typography
+                        variant="caption"
+                        color="error.main"
+                        sx={{ display: 'block', mt: 0.5 }}
+                      >
+                        {source.guidePageDraftError}
+                      </Typography>
+                    ) : null}
+                    {!citedWebSourceIds.has(source.id) &&
+                    message.webLookup?.status === 'found' ? (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', mt: 0.5 }}
+                      >
+                        {t('chat.sourceNotUsedInAnswer')}
+                      </Typography>
                     ) : null}
                   </Box>
                 ))}
@@ -4933,21 +5031,6 @@ const DashboardChatPanel = ({
                 </Tooltip>
               </Stack>
               <Stack direction="row" spacing={0.25} alignItems="center">
-                <Tooltip title={t('chat.searchWebAndAnswer')}>
-                  <span style={{ display: 'inline-flex' }}>
-                    <IconButton
-                      size="small"
-                      onClick={() =>
-                        sendQuestion(draft, { searchWebFirst: true })
-                      }
-                      disabled={!draft.trim()}
-                      aria-label={t('chat.searchWebAndAnswer')}
-                      sx={composerActionButtonSx}
-                    >
-                      <SearchIcon fontSize="small" />
-                    </IconButton>
-                  </span>
-                </Tooltip>
                 <Tooltip
                   title={
                     isHostedAi ? (

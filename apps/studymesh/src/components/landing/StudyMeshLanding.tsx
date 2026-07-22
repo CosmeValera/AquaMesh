@@ -538,6 +538,12 @@ const StudyMeshLanding = () => {
                   </Button>
                   <Button
                     href="#knowledge-context"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      if (scrollToLandingSection('#knowledge-context')) {
+                        window.history.pushState(null, '', '#knowledge-context')
+                      }
+                    }}
                     variant="text"
                     endIcon={<ArrowForwardIcon />}
                     sx={{

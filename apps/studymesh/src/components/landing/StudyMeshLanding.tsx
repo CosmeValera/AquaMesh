@@ -5,10 +5,19 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { Box, Button, Container, Stack, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  Container,
+  IconButton,
+  Stack,
+  Typography,
+} from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import BoltIcon from '@mui/icons-material/Bolt'
 import CameraAltOutlinedIcon from '@mui/icons-material/CameraAltOutlined'
@@ -1283,97 +1292,38 @@ const GrowingGuideSparkle = ({
 const ContextComparisonSection = () => {
   const [activeIndex, setActiveIndex] = useState(0)
   const topicsRowRef = useRef<HTMLDivElement | null>(null)
-  const edgeScrollFrameRef = useRef<number | null>(null)
-  const edgeScrollDirectionRef = useRef(0)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
   const activeTopic = contextTopics[activeIndex]
 
-  const stopEdgeScroll = useCallback(() => {
-    if (edgeScrollFrameRef.current !== null) {
-      window.cancelAnimationFrame(edgeScrollFrameRef.current)
-      edgeScrollFrameRef.current = null
+  const updateTopicRowScrollState = useCallback(() => {
+    const row = topicsRowRef.current
+
+    if (!row) {
+      return
     }
 
-    edgeScrollDirectionRef.current = 0
+    const maxScrollLeft = row.scrollWidth - row.clientWidth
+    setCanScrollLeft(row.scrollLeft > 0)
+    setCanScrollRight(row.scrollLeft < maxScrollLeft - 1)
   }, [])
 
-  const scrollTopicRowByEdge = useCallback(
+  useEffect(() => {
+    updateTopicRowScrollState()
+  }, [updateTopicRowScrollState])
+
+  const scrollTopicRowByArrow = useCallback(
     (direction: -1 | 1) => {
       const row = topicsRowRef.current
 
       if (!row) {
-        stopEdgeScroll()
         return
       }
 
-      const maxScrollLeft = row.scrollWidth - row.clientWidth
-      const canScrollRight = direction > 0 && row.scrollLeft < maxScrollLeft
-      const canScrollLeft = direction < 0 && row.scrollLeft > 0
-
-      if (!canScrollRight && !canScrollLeft) {
-        stopEdgeScroll()
-        return
-      }
-
-      row.scrollBy({ left: direction * 6, behavior: 'auto' })
+      row.scrollBy({ left: direction * row.clientWidth * 0.8, behavior: 'smooth' })
     },
-    [stopEdgeScroll],
+    [],
   )
-
-  const startEdgeScroll = useCallback(
-    (direction: -1 | 1) => {
-      if (
-        edgeScrollFrameRef.current !== null &&
-        edgeScrollDirectionRef.current === direction
-      ) {
-        return
-      }
-
-      stopEdgeScroll()
-      edgeScrollDirectionRef.current = direction
-
-      const tick = () => {
-        scrollTopicRowByEdge(direction)
-
-        if (edgeScrollDirectionRef.current === direction) {
-          edgeScrollFrameRef.current = window.requestAnimationFrame(tick)
-        }
-      }
-
-      tick()
-    },
-    [scrollTopicRowByEdge, stopEdgeScroll],
-  )
-
-  const handleTopicRowPointerMove = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const row = topicsRowRef.current
-
-      if (!row || row.scrollWidth <= row.clientWidth) {
-        stopEdgeScroll()
-        return
-      }
-
-      const rect = row.getBoundingClientRect()
-      const edgeSize = Math.min(92, rect.width * 0.22)
-      const nearLeftEdge = event.clientX - rect.left <= edgeSize
-      const nearRightEdge = rect.right - event.clientX <= edgeSize
-
-      if (nearRightEdge) {
-        startEdgeScroll(1)
-        return
-      }
-
-      if (nearLeftEdge) {
-        startEdgeScroll(-1)
-        return
-      }
-
-      stopEdgeScroll()
-    },
-    [startEdgeScroll, stopEdgeScroll],
-  )
-
-  useEffect(() => stopEdgeScroll, [stopEdgeScroll])
 
   const selectTopic = (index: number) => {
     setActiveIndex(index)
@@ -1437,19 +1387,85 @@ const ContextComparisonSection = () => {
 
           <Box
             sx={{
+              position: 'relative',
               width: '100%',
               maxWidth: 850,
               mx: 'auto',
               overflow: 'visible',
             }}
           >
+            <IconButton
+              aria-label="Scroll knowledge context topics left"
+              onClick={() => scrollTopicRowByArrow(-1)}
+              disabled={!canScrollLeft}
+              disableRipple
+              size="small"
+              sx={{
+                display: 'inline-flex',
+                position: 'absolute',
+                left: { xs: 2, sm: -20, md: -44 },
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 2,
+                overflow: 'hidden',
+                bgcolor: '#FFFFFF',
+                border: `1px solid ${alpha(brand.line, 0.82)}`,
+                boxShadow: `0 10px 24px ${alpha(brand.ink, 0.08)}`,
+                color: brand.ink,
+                transition:
+                  'background-color 150ms ease, border-color 150ms ease, transform 100ms ease',
+                '&:hover': {
+                  bgcolor: alpha(brand.blue, 0.06),
+                  borderColor: alpha(brand.blue, 0.38),
+                },
+                '&:active': {
+                  bgcolor: alpha(brand.blue, 0.12),
+                  transform: 'translateY(-50%) scale(0.92)',
+                },
+                '&.Mui-disabled': { opacity: 0, pointerEvents: 'none' },
+              }}
+            >
+              <ChevronLeftIcon fontSize="small" />
+            </IconButton>
+
+            <IconButton
+              aria-label="Scroll knowledge context topics right"
+              onClick={() => scrollTopicRowByArrow(1)}
+              disabled={!canScrollRight}
+              disableRipple
+              size="small"
+              sx={{
+                display: 'inline-flex',
+                position: 'absolute',
+                right: { xs: 2, sm: -20, md: -44 },
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 2,
+                overflow: 'hidden',
+                bgcolor: '#FFFFFF',
+                border: `1px solid ${alpha(brand.line, 0.82)}`,
+                boxShadow: `0 10px 24px ${alpha(brand.ink, 0.08)}`,
+                color: brand.ink,
+                transition:
+                  'background-color 150ms ease, border-color 150ms ease, transform 100ms ease',
+                '&:hover': {
+                  bgcolor: alpha(brand.blue, 0.06),
+                  borderColor: alpha(brand.blue, 0.38),
+                },
+                '&:active': {
+                  bgcolor: alpha(brand.blue, 0.12),
+                  transform: 'translateY(-50%) scale(0.92)',
+                },
+                '&.Mui-disabled': { opacity: 0, pointerEvents: 'none' },
+              }}
+            >
+              <ChevronRightIcon fontSize="small" />
+            </IconButton>
+
             <Box
               ref={topicsRowRef}
               aria-label="Knowledge context topics"
-              onPointerCancel={stopEdgeScroll}
-              onPointerLeave={stopEdgeScroll}
-              onPointerMove={handleTopicRowPointerMove}
-              onPointerUp={stopEdgeScroll}
+              onScroll={updateTopicRowScrollState}
               sx={{
                 display: 'grid',
                 gridTemplateColumns: {
@@ -1459,7 +1475,7 @@ const ContextComparisonSection = () => {
                 width: '100%',
                 overflowX: 'auto',
                 py: 0.8,
-                px: 0,
+                px: { xs: 4.5, sm: 0 },
                 scrollbarWidth: 'none',
                 '&::-webkit-scrollbar': { display: 'none' },
               }}

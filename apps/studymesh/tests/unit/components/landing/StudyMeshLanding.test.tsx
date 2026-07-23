@@ -68,12 +68,6 @@ const mockHeroWrapProbeLines = (lineTops: number[]) => {
   )
 }
 
-const firePointerMoveAt = (target: HTMLElement, clientX: number) => {
-  const event = new Event('pointermove', { bubbles: true })
-  Object.defineProperty(event, 'clientX', { value: clientX })
-  fireEvent(target, event)
-}
-
 describe('StudyMeshLanding', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -195,10 +189,12 @@ describe('StudyMeshLanding', () => {
     ).toBeInTheDocument()
   })
 
-  it('auto-scrolls the knowledge context topic row near either edge', () => {
+  it('scrolls the knowledge context topic row via the left/right arrow buttons', () => {
     renderLanding()
 
-    const topicsRow = screen.getByLabelText(/knowledge context topics/i)
+    const topicsRow = screen.getByLabelText('Knowledge context topics', {
+      exact: true,
+    })
     const scrollBy = vi.fn()
 
     Object.defineProperties(topicsRow, {
@@ -207,26 +203,31 @@ describe('StudyMeshLanding', () => {
       scrollLeft: { configurable: true, value: 240, writable: true },
       scrollWidth: { configurable: true, value: 1200 },
     })
-    vi.spyOn(topicsRow, 'getBoundingClientRect').mockReturnValue({
-      bottom: 120,
-      height: 120,
-      left: 100,
-      right: 700,
-      toJSON: () => ({}),
-      top: 0,
-      width: 600,
-      x: 100,
-      y: 0,
+    fireEvent.scroll(topicsRow)
+
+    const scrollRightButton = screen.getByRole('button', {
+      name: /scroll knowledge context topics right/i,
     })
-    vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(1)
+    const scrollLeftButton = screen.getByRole('button', {
+      name: /scroll knowledge context topics left/i,
+    })
 
-    firePointerMoveAt(topicsRow, 690)
+    expect(scrollRightButton).toBeEnabled()
+    expect(scrollLeftButton).toBeEnabled()
 
-    expect(scrollBy).toHaveBeenLastCalledWith({ behavior: 'auto', left: 6 })
+    fireEvent.click(scrollRightButton)
 
-    firePointerMoveAt(topicsRow, 110)
+    expect(scrollBy).toHaveBeenLastCalledWith({
+      behavior: 'smooth',
+      left: 480,
+    })
 
-    expect(scrollBy).toHaveBeenLastCalledWith({ behavior: 'auto', left: -6 })
+    fireEvent.click(scrollLeftButton)
+
+    expect(scrollBy).toHaveBeenLastCalledWith({
+      behavior: 'smooth',
+      left: -480,
+    })
   })
 
   it('keeps the full hero underline when the second headline phrase fits on one line', async () => {

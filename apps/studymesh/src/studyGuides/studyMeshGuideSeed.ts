@@ -94,7 +94,7 @@ const guideLessons: GuideDashboard[] = [
     title: '01 - StudyMesh Basics',
     widgetTitle: 'Key Concepts',
     markdown:
-      '## What is StudyMesh?\nStudyMesh is a student knowledge wiki. It helps you turn a learning goal and your current workspace context into Study Guides, pages, markdown notes, quizzes, flashcards, podcasts, and AI chat support.\n\n## Key concepts\n### Study Guide\nA Study Guide is a step-by-step learning workspace for a topic. It can contain lessons, practice widgets, references, and AI-assisted notes.\n\n### Page\nA page is one focused part of a Study Guide. Pages can hold markdown, explanations, quizzes, flashcards, podcasts, and practice material.\n\n### Quick Create\nQuick Create uses the active Study Guide or page context to generate focused practice, such as a quiz, flashcards or podcasts.\n\n### AI Chat\nAI Chat helps you ask follow-up questions while studying. It can use the current page context and, when needed, web sources from the chat source tools.\n\n### Markdown notes\nMarkdown notes are editable pages for explanations, summaries, examples, references, and checklists.\n\n---\n## What to do next?\nMove through this guide, try the mini quiz below, then use the practice checklist on the next page.',
+      '## What is StudyMesh?\nStudyMesh is a student knowledge wiki. It helps you turn a learning goal and your current workspace context into Quick Guides, pages, markdown notes, quizzes, flashcards, podcasts, and AI chat support.\n\n## Key concepts\n### Quick Guide\nA Quick Guide is a step-by-step learning workspace for a topic. It can contain lessons, practice widgets, references, and AI-assisted notes.\n\n### Page\nA page is one focused part of a Quick Guide. Pages can hold markdown, explanations, quizzes, flashcards, podcasts, and practice material.\n\n### Quick Create\nQuick Create uses the active Quick Guide or page context to generate focused practice, such as a quiz, flashcards or podcasts.\n\n### AI Chat\nAI Chat helps you ask follow-up questions while studying. It can use the current page context and, when needed, web sources from the chat source tools.\n\n### Markdown notes\nMarkdown notes are editable pages for explanations, summaries, examples, references, and checklists.\n\n---\n## What to do next?\nMove through this guide, try the mini quiz below, then use the practice checklist on the next page.',
     quizzes: [
       {
         question: 'What is the main purpose of StudyMesh?',
@@ -108,19 +108,19 @@ const guideLessons: GuideDashboard[] = [
         answer:
           'To act as a student knowledge wiki for creating and studying learning material',
         explanation:
-          'StudyMesh centers Study Guides, pages, practice widgets, markdown notes, and AI chat around student knowledge.',
+          'StudyMesh centers Quick Guides, pages, practice widgets, markdown notes, and AI chat around student knowledge.',
         hint: 'Think about the phrase used at the start of this page.',
       },
       {
         question: 'What does Quick Create use by default?',
         options: [
-          'The active Study Guide or page context',
+          'The active Quick Guide or page context',
           'A mandatory file upload',
           'Only a pasted PDF',
           'A blank workspace with no context',
         ],
         correctIndex: 0,
-        answer: 'The active Study Guide or page context',
+        answer: 'The active Quick Guide or page context',
         explanation:
           'Quick Create is meant for fast generation from the context the user is already studying.',
         hint: 'Look at the Quick Create section.',
@@ -147,9 +147,9 @@ const guideLessons: GuideDashboard[] = [
     widgetTitle: 'Starter Checklist',
     checklistTitle: 'Try these actions',
     checklistItems: [
-      'Create your first Study Guide.',
-      'Use Quick Create to make a quiz from the current Study Guide.',
-      'Use Quick Create to make flashcards from the current Study Guide.',
+      'Create your first Quick Guide.',
+      'Use Quick Create to make a quiz from the current Quick Guide.',
+      'Use Quick Create to make flashcards from the current Quick Guide.',
       'Generate a podcast for a topic you want to review while listening.',
       'Add your own markdown page.',
       'Use AI chat while studying a page.',
@@ -160,10 +160,10 @@ const guideLessons: GuideDashboard[] = [
     id: 'studymesh-guide-ai-modes',
     title: '03 - StudyMesh AI Generation Modes',
     sourceMarkdown:
-      '## StudyMesh AI Generation Modes\n### Hosted AI\nHosted AI uses Study Credits stored in your StudyMesh account, so your balance follows you across devices.\n\n### Google Local AI\nGoogle Local AI runs on the local Chrome built-in AI model. It is free and can work offline, but it is usually slower and weaker than hosted or own-key strong models.\n\n### Own Gemini API token\nOwn Gemini API token mode uses your Gemini API key for rich Study Guides and study dashboards.\n\n### Own Cerebras API key\nOwn Cerebras API key mode uses your Cerebras API key for fast hosted text generation.',
+      '## StudyMesh AI Generation Modes\n### Hosted AI\nHosted AI uses Study Credits stored in your StudyMesh account, so your balance follows you across devices.\n\n### Google Local AI\nGoogle Local AI runs on the local Chrome built-in AI model. It is free and can work offline, but it is usually slower and weaker than hosted or own-key strong models.\n\n### Own Gemini API token\nOwn Gemini API token mode uses your Gemini API key for rich Quick Guides and study dashboards.\n\n### Own Cerebras API key\nOwn Cerebras API key mode uses your Cerebras API key for fast hosted text generation.',
     summaryTitle: 'AI Mode Summary',
     summaryItems: [
-      'Hosted AI uses Study Credits. Study Guides cost 3 credits, and quick creations, podcasts, or dashboard chat cost 1 credit.',
+      'Hosted AI uses Study Credits. Quick Guides cost 3 credits, and quick creations, podcasts, or dashboard chat cost 1 credit.',
       'Google Local AI runs locally, but is slower and weaker than hosted or own-key strong models.',
       'Own Gemini API token is the preferred high-quality generation mode.',
       'Own Cerebras API key is useful for fast hosted text generation.',
@@ -327,7 +327,7 @@ export const createStudyMeshGuideStudyGuide = (
   )
 
   if (!studyPath) {
-    throw new Error('StudyMesh Guide Study Guide seed is invalid')
+    throw new Error('StudyMesh Guide Quick Guide seed is invalid')
   }
 
   return {

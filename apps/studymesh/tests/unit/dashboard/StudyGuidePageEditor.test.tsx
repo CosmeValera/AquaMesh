@@ -261,7 +261,7 @@ describe('StudyGuidePageEditor', () => {
     )
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Link Study Guide page' }),
+      screen.getByRole('button', { name: 'Link Quick Guide page' }),
     )
     fireEvent.click(screen.getByRole('menuitem', { name: 'Review page' }))
 

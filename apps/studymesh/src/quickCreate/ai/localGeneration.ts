@@ -2221,7 +2221,7 @@ const specificFolderName = (
     return fallbackCandidate
   }
 
-  return 'Local AI Study Guide'
+  return 'Local AI Quick Guide'
 }
 
 const fallbackPlannerItem = (
@@ -2373,7 +2373,7 @@ const normalizeLocalStudyPathPlan = (
 
   return {
     plan: {
-      title: stringValue(record.title) || options.title || 'Study Guide',
+      title: stringValue(record.title) || options.title || 'Quick Guide',
       folderName: specificFolderName(
         stringValue(record.folderName),
         options.folderName || options.title,
@@ -2532,7 +2532,7 @@ const createLocalStudyPathPlan = async (
         studyPathStep: 'planner',
         signal: localOptions.signal,
         promptType: 'planner',
-        stepLabel: 'Study Guide planner',
+        stepLabel: 'Quick Guide planner',
       })
       debug.rawResponse = text
 
@@ -2966,7 +2966,7 @@ const createLocalStudyPathPipelineTracker = (
       studyPathPipeline: {
         percent,
         estimatedRemainingMs: remainingBudget,
-        label: 'Study Guide pipeline',
+        label: 'Quick Guide pipeline',
         steps: steps.map((step) => ({
           id: step.id,
           label: step.label,

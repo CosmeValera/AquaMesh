@@ -33,7 +33,9 @@ describe('KnowledgeContextDialog', () => {
       autoDetectAiLanguage: true,
     })
 
-    return render(<InterfaceLanguageProvider>{element}</InterfaceLanguageProvider>)
+    return render(
+      <InterfaceLanguageProvider>{element}</InterfaceLanguageProvider>,
+    )
   }
 
   it('explains the purpose and invites relevant examples without a wizard', () => {
@@ -47,17 +49,23 @@ describe('KnowledgeContextDialog', () => {
     )
 
     expect(
-      screen.getByText(/explain new topics using things you already understand/i),
+      screen.getByText(
+        /explain new topics using things you already understand/i,
+      ),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/relevant to the Study Guides you create/i),
+      screen.getByText(/relevant to the Quick Guides you create/i),
     ).toBeInTheDocument()
-    expect(screen.getByLabelText(/helpful things you know/i)).toBeInTheDocument()
+    expect(
+      screen.getByLabelText(/helpful things you know/i),
+    ).toBeInTheDocument()
     expect(
       screen.getByText(/Math, biology, football, cooking, music/i),
     ).toBeInTheDocument()
     expect(screen.queryByText(/Valencian|Docker|LEGO/i)).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /next/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /next/i }),
+    ).not.toBeInTheDocument()
     expect(screen.queryByText(/step 1 of 3/i)).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /accept/i })).toBeDisabled()
   })
@@ -136,7 +144,9 @@ describe('KnowledgeContextDialog', () => {
       />,
     )
 
-    expect(screen.queryByText(/suggested familiar areas/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/suggested familiar areas/i),
+    ).not.toBeInTheDocument()
     expect(screen.getByText(/optional: show suggestions/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('Software / IT'))
@@ -259,7 +269,9 @@ describe('KnowledgeContextDialog', () => {
     )
 
     expect(
-      screen.getAllByText(/^(Backend|MinIO|S3)$/).map((item) => item.textContent),
+      screen
+        .getAllByText(/^(Backend|MinIO|S3)$/)
+        .map((item) => item.textContent),
     ).toEqual(['S3', 'MinIO', 'Backend', 'Backend'])
     fireEvent.click(screen.getAllByTestId('CancelIcon')[0])
     expect(JSON.parse(storage['studymesh-profile-context-v1'])).toMatchObject({

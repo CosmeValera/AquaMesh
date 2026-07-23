@@ -63,33 +63,21 @@ const landingSurfaceBackground = [
 
 const timelineItems = [
   {
-    label: (
-      <>
-        20 sec {'\u00b7'} Key idea
-      </>
-    ),
+    label: <>20 sec {'\u00b7'} Key idea</>,
     body: 'The essence, in a glance.',
     icon: <BoltIcon />,
     tone: brand.mintSoft,
     color: '#008A78',
   },
   {
-    label: (
-      <>
-        60 sec {'\u00b7'} Idea summary
-      </>
-    ),
+    label: <>60 sec {'\u00b7'} Idea summary</>,
     body: 'The details, made simple.',
     icon: <DescriptionOutlinedIcon />,
     tone: brand.skySoft,
     color: brand.blue,
   },
   {
-    label: (
-      <>
-        5 pages {'\u00b7'} Full guide
-      </>
-    ),
+    label: <>5 pages {'\u00b7'} Full guide</>,
     body: "Go deep when you're ready.",
     icon: <MenuBookOutlinedIcon />,
     tone: brand.lavender,
@@ -436,7 +424,7 @@ const StudyMeshLanding = () => {
                       WebkitTextFillColor: 'transparent',
                     }}
                   >
-                    Study guides
+                    Quick guides
                   </Box>
                   <Box component="span" sx={{ display: 'block' }}>
                     <Box
@@ -445,7 +433,7 @@ const StudyMeshLanding = () => {
                       data-testid="hero-headline-wrap-probe"
                       sx={{ display: 'inline' }}
                     >
-                      that grow{' '}
+                      that adapt{' '}
                       <Box
                         component="span"
                         data-testid="hero-headline-with-you"
@@ -473,7 +461,7 @@ const StudyMeshLanding = () => {
                           },
                         }}
                       >
-                        with you.
+                        to you.
                       </Box>
                     </Box>
                   </Box>
@@ -512,8 +500,8 @@ const StudyMeshLanding = () => {
                   letterSpacing: 0,
                 }}
               >
-                StudyMesh builds adaptive study guides by connecting new
-                concepts to the ideas you already understand.
+                StudyMesh builds quick guides by connecting new concepts to the
+                ideas you already understand.
               </Typography>
 
               <Stack spacing={2.3} alignItems="center" sx={{ pt: 1 }}>
@@ -546,10 +534,16 @@ const StudyMeshLanding = () => {
                       '& .MuiButton-endIcon': { ml: 1.1 },
                     }}
                   >
-                    Create a Study Guide
+                    Create a Quick Guide
                   </Button>
                   <Button
                     href="#knowledge-context"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      if (scrollToLandingSection('#knowledge-context')) {
+                        window.history.pushState(null, '', '#knowledge-context')
+                      }
+                    }}
                     variant="text"
                     endIcon={<ArrowForwardIcon />}
                     sx={{
@@ -621,10 +615,11 @@ const StudyMeshLanding = () => {
                   lineHeight: 1.08,
                 }}
               >
-                Ready to build your Study Guide?
+                Ready to build your Quick Guide?
               </Typography>
               <Typography sx={{ color: brand.muted, fontSize: '1.08rem' }}>
-                Start with a topic. Let StudyMesh create a guide tailored for you and see it grow.
+                Start with a topic. Let StudyMesh create a guide tailored for
+                you and see it grow.
               </Typography>
               <Button
                 variant="contained"
@@ -642,7 +637,7 @@ const StudyMeshLanding = () => {
                   '&:hover': { bgcolor: brand.blueDark },
                 }}
               >
-                Create a Study Guide
+                Create a Quick Guide
               </Button>
             </Stack>
           </Container>
@@ -667,10 +662,7 @@ const HeroTimeline = () => {
       }}
     >
       {timelineItems.map((item, index) => (
-        <Box
-          key={`timeline-${index}`}
-          sx={{ position: 'relative' }}
-        >
+        <Box key={`timeline-${index}`} sx={{ position: 'relative' }}>
           {index < timelineItems.length - 1 && (
             <Box
               aria-hidden="true"
@@ -718,10 +710,10 @@ const HeroTimeline = () => {
                 '&:hover': {
                   transform: 'translateY(-3px)',
                   borderColor: alpha(item.color, 0.28),
-                  boxShadow: `0 0 0 8px ${alpha(item.color, 0.09)}, 0 18px 40px ${alpha(
+                  boxShadow: `0 0 0 8px ${alpha(
                     item.color,
-                    0.26,
-                  )}`,
+                    0.09,
+                  )}, 0 18px 40px ${alpha(item.color, 0.26)}`,
                 },
                 '&:hover svg': {
                   filter: `drop-shadow(0 0 8px ${alpha(item.color, 0.48)})`,
@@ -807,8 +799,8 @@ const GrowingGuidesSection = () => (
                 lineHeight: 1.06,
                 letterSpacing: 0,
                 textWrap: 'balance',
-            }}
-          >
+              }}
+            >
               Your guide doesn't stop at page{' '}
               <Box
                 component="span"
@@ -832,8 +824,7 @@ const GrowingGuidesSection = () => (
               }}
             >
               Every guide starts with 5 focused pages. Ask for more depth,
-              examples or exercises, and StudyMesh adds new content
-              instantly.
+              examples or exercises, and StudyMesh adds new content instantly.
             </Typography>
           </Stack>
 
@@ -908,7 +899,7 @@ const GrowingGuidesLabel = () => (
 
 const GrowingGuidesMockup = () => (
   <Box
-    aria-label="Growing study guide product preview"
+    aria-label="Growing quick guide product preview"
     sx={{
       position: 'relative',
       minHeight: { xs: 610, lg: 630 },
@@ -1004,10 +995,10 @@ const GrowingGuideLayerCard = ({
             brand.mint,
             0.17,
           )}`
-        : `18px 18px 0 ${alpha(brand.blue, 0.026 + index * 0.006)}, 0 18px 52px ${alpha(
-            brand.blueDark,
-            0.055,
-          )}`,
+        : `18px 18px 0 ${alpha(
+            brand.blue,
+            0.026 + index * 0.006,
+          )}, 0 18px 52px ${alpha(brand.blueDark, 0.055)}`,
       transform: {
         xs: 'none',
         lg: `rotate(${isNewPage ? 1.2 : 1.65 - index * 0.44}deg)`,
@@ -1125,7 +1116,7 @@ const GrowingGuideLayerCard = ({
                 fontWeight: 900,
               }}
             >
-              { itemIndex + 1}
+              {itemIndex + 1}
             </Box>
             {item}
           </Box>
@@ -1217,7 +1208,10 @@ const GrowingGuideConversation = () => (
             lineHeight: 1.48,
           }}
         >
-          Done! I added <Box component="span" sx={{ color: '#008A78' }}>06 Review Pack</Box>{' '}
+          Done! I added{' '}
+          <Box component="span" sx={{ color: '#008A78' }}>
+            06 Review Pack
+          </Box>{' '}
           with quizzes, flashcards, and practice.
         </Typography>
       </Stack>
@@ -1488,7 +1482,9 @@ const ContextComparisonSection = () => {
                       color: selected ? topic.color : brand.ink,
                       bgcolor: selected ? alpha(topic.color, 0.08) : '#FFFFFF',
                       border: `1px solid ${
-                        selected ? alpha(topic.color, 0.82) : alpha(brand.line, 0.82)
+                        selected
+                          ? alpha(topic.color, 0.82)
+                          : alpha(brand.line, 0.82)
                       }`,
                       borderRadius: 2,
                       boxShadow: selected
@@ -1502,7 +1498,9 @@ const ContextComparisonSection = () => {
                       transition:
                         'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
                       '&:hover': {
-                        bgcolor: selected ? alpha(topic.color, 0.11) : '#FFFFFF',
+                        bgcolor: selected
+                          ? alpha(topic.color, 0.11)
+                          : '#FFFFFF',
                         borderColor: alpha(topic.color, 0.42),
                         transform: 'translateY(-2px)',
                         boxShadow: selected
@@ -1544,9 +1542,7 @@ const ContextComparisonSection = () => {
               mt: 0.6,
             }}
           >
-            <FeaturedContextCard
-              topic={activeTopic}
-            />
+            <FeaturedContextCard topic={activeTopic} />
           </Box>
 
           <KnowledgeContextEvidence />
@@ -1578,7 +1574,8 @@ const KnowledgeContextEvidence = () => (
       overflow: 'hidden',
       textAlign: 'left',
       textDecoration: 'none',
-      transition: 'border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease',
+      transition:
+        'border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease',
       '&:hover': {
         borderColor: alpha(brand.blueDark, 0.28),
         boxShadow: `0 28px 72px ${alpha(brand.blueDark, 0.15)}`,
@@ -1617,7 +1614,8 @@ const KnowledgeContextEvidence = () => (
           lineHeight: 1.5,
         }}
       >
-        A meta-analysis in Educational Psychologist found that prior knowledge shapes how learners understand new information.
+        A meta-analysis in Educational Psychologist found that prior knowledge
+        shapes how learners understand new information.
       </Typography>
       <Typography
         sx={{
@@ -1627,17 +1625,14 @@ const KnowledgeContextEvidence = () => (
           lineHeight: 1.45,
         }}
       >
-        Bianca A. Simonsmeier, Maja Flaig, Anne Deiglmayr, Lennart Schalk & Michael Schneider, 2021
+        Bianca A. Simonsmeier, Maja Flaig, Anne Deiglmayr, Lennart Schalk &
+        Michael Schneider, 2021
       </Typography>
     </Box>
   </Box>
 )
 
-const FeaturedContextCard = ({
-  topic,
-}: {
-  topic: ContextTopic
-}) => (
+const FeaturedContextCard = ({ topic }: { topic: ContextTopic }) => (
   <Box
     sx={{
       position: 'relative',
@@ -1750,7 +1745,9 @@ const ContextAnswerPanel = ({
       >
         {label}
       </Typography>
-      <Typography sx={{ color: brand.ink, fontSize: '0.98rem', lineHeight: 1.62 }}>
+      <Typography
+        sx={{ color: brand.ink, fontSize: '0.98rem', lineHeight: 1.62 }}
+      >
         {answer}
       </Typography>
     </Box>

@@ -43,9 +43,7 @@ import {
   StudyMaterialResourceType,
   QuickCreateAiProvider,
 } from '../../quickCreate/ai'
-import {
-  getHostedAiCreditCost,
-} from '../../quickCreate/ai/hostedCredits'
+import { getHostedAiCreditCost } from '../../quickCreate/ai/hostedCredits'
 import { useDashboards } from '../Dasboard/DashboardProvider'
 import { createStudyPathContainerState } from '../Dasboard/studyPathContainer'
 import {
@@ -231,7 +229,7 @@ const resourceTypeTitle = (resourceType?: string | null) => {
 
 const generationMaterialLabel = (draft: GenerationDraft) => {
   if (draft.flow === 'study-path') {
-    return 'study guide'
+    return 'quick guide'
   }
 
   if (draft.selectedResourceType === 'quiz') {
@@ -315,10 +313,10 @@ const sanitizePersistedGenerationDraft = (
     draft.status === 'generating'
       ? 'failed'
       : draft.status === 'ready' ||
-          draft.status === 'failed' ||
-          draft.status === 'cancelled'
-        ? draft.status
-        : null
+        draft.status === 'failed' ||
+        draft.status === 'cancelled'
+      ? draft.status
+      : null
 
   if (!status) {
     return null
@@ -432,7 +430,7 @@ const formatDraftTitle = (draft: GenerationDraft) => {
   const shortTitle = base.length > 46 ? `${base.slice(0, 45).trim()}...` : base
 
   if (draft.flow === 'study-path') {
-    return `Study Guide: ${shortTitle || 'Untitled'}`
+    return `Quick Guide: ${shortTitle || 'Untitled'}`
   }
 
   return `${resourceTypeTitle(draft.selectedResourceType)} from ${
@@ -822,10 +820,10 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
             state === 'running'
               ? 'generating'
               : state === 'complete'
-                ? 'ready'
-                : state === 'error'
-                  ? 'failed'
-                  : 'editing'
+              ? 'ready'
+              : state === 'error'
+              ? 'failed'
+              : 'editing'
 
           return {
             ...draft,
@@ -892,14 +890,14 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
           queueReadyCount === 1 ? '' : 's'
         } ready`
       : queueGeneratingCount > 0
-        ? `${queueGeneratingCount} generation${
-            queueGeneratingCount === 1 ? '' : 's'
-          } running`
-        : queueFailedCount > 0
-          ? `${queueFailedCount} generation${
-              queueFailedCount === 1 ? '' : 's'
-            } failed`
-          : 'Creation queue'
+      ? `${queueGeneratingCount} generation${
+          queueGeneratingCount === 1 ? '' : 's'
+        } running`
+      : queueFailedCount > 0
+      ? `${queueFailedCount} generation${
+          queueFailedCount === 1 ? '' : 's'
+        } failed`
+      : 'Creation queue'
 
   useEffect(() => {
     if (
@@ -1179,22 +1177,21 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       storedSnapshot?.flow === 'quick-create'
         ? storedSnapshot
         : draft.flow === 'quick-create' &&
-            draft.retryResourceType &&
-            draft.retrySourceText &&
-            draft.retryTitle
-          ? {
-              flow: 'quick-create' as const,
-              resourceType: draft.retryResourceType,
-              sourceText: draft.retrySourceText,
-              title: draft.retryTitle,
-              detailLevel:
-                (draft.detailLevel as StudyMaterialDetailLevel) ||
-                quickDetailLevel,
-              difficulty: draft.retryDifficulty || quickDifficulty,
-              provider:
-                (draft.aiProvider as QuickCreateAiProvider) || aiProvider,
-            }
-          : null
+          draft.retryResourceType &&
+          draft.retrySourceText &&
+          draft.retryTitle
+        ? {
+            flow: 'quick-create' as const,
+            resourceType: draft.retryResourceType,
+            sourceText: draft.retrySourceText,
+            title: draft.retryTitle,
+            detailLevel:
+              (draft.detailLevel as StudyMaterialDetailLevel) ||
+              quickDetailLevel,
+            difficulty: draft.retryDifficulty || quickDifficulty,
+            provider: (draft.aiProvider as QuickCreateAiProvider) || aiProvider,
+          }
+        : null
 
     if (draft.flow === 'quick-create' && quickCreateRetry) {
       void runDirectQuickCreateCreate(
@@ -1923,7 +1920,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
               </Box>
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="subtitle1" fontWeight={950}>
-                  Study Guide
+                  Quick Guide
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Structured lessons from a learning goal
@@ -1972,7 +1969,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                 spacing={1}
                 alignItems="center"
               >
-                <span>Create Study Guide</span>
+                <span>Create Quick Guide</span>
                 {aiProvider === 'hosted' ? (
                   <StudyCreditCostLabel
                     amount={studyGuideCreditCost}
@@ -2126,10 +2123,10 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                     : ''
                   const label =
                     isGenerating && draft.flow === 'study-path'
-                      ? 'Creating study guide...'
+                      ? 'Creating quick guide...'
                       : isGenerating
-                        ? `Generating ${materialLabel}...`
-                        : formatDraftTitle(draft)
+                      ? `Generating ${materialLabel}...`
+                      : formatDraftTitle(draft)
                   const generatingDetail =
                     draft.flow === 'study-path'
                       ? [
@@ -2149,12 +2146,12 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   const detail = isCancelled
                     ? draft.error || 'Stopped - Retry'
                     : isFailed
-                      ? draft.error || 'Retry'
-                      : isReady
-                        ? opened
-                          ? 'Opened'
-                          : 'Ready - Open'
-                        : generatingDetail
+                    ? draft.error || 'Retry'
+                    : isReady
+                    ? opened
+                      ? 'Opened'
+                      : 'Ready - Open'
+                    : generatingDetail
                   const statusIcon =
                     isFailed || isCancelled ? (
                       <ErrorOutlineIcon fontSize="small" color="error" />
@@ -2205,16 +2202,16 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                         borderColor: showAcknowledgedPulse
                           ? 'warning.main'
                           : isReady
-                            ? alpha(theme.palette.success.main, 0.45)
-                            : isFailed || isCancelled
-                              ? alpha(theme.palette.error.main, 0.35)
-                              : alpha(theme.palette.warning.main, 0.36),
+                          ? alpha(theme.palette.success.main, 0.45)
+                          : isFailed || isCancelled
+                          ? alpha(theme.palette.error.main, 0.35)
+                          : alpha(theme.palette.warning.main, 0.36),
                         borderRadius: 2,
                         bgcolor: isReady
                           ? alpha(theme.palette.success.main, 0.075)
                           : isFailed || isCancelled
-                            ? alpha(theme.palette.error.main, 0.055)
-                            : alpha(theme.palette.warning.main, 0.07),
+                          ? alpha(theme.palette.error.main, 0.055)
+                          : alpha(theme.palette.warning.main, 0.07),
                         color: 'text.primary',
                         cursor: isReady ? 'pointer' : 'default',
                         textAlign: 'left',
@@ -2264,10 +2261,10 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                                 1,
                               )} generation failed`
                             : isCancelled
-                              ? `${materialLabel[0].toUpperCase()}${materialLabel.slice(
-                                  1,
-                                )} generation stopped`
-                              : label}
+                            ? `${materialLabel[0].toUpperCase()}${materialLabel.slice(
+                                1,
+                              )} generation stopped`
+                            : label}
                         </Typography>
                         <Typography
                           variant="caption"
@@ -2439,7 +2436,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   !draft.isPlaceholder &&
                   draft.status !== 'ready' &&
                   draft.title &&
-                  draft.title !== 'Study Guide'
+                  draft.title !== 'Quick Guide'
                     ? draft.title
                     : undefined
                 }
@@ -2463,7 +2460,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                     studyPath?.title ||
                     payload.folderName ||
                     dashboards[0]?.name ||
-                    'Study Guide'
+                    'Quick Guide'
                   updateDraft(draft.id, {
                     title: nextTitle,
                     inputSummary: nextTitle || draft.inputSummary,
@@ -2552,17 +2549,17 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
         <Tooltip
           key={resourceType}
           title={
-            aiProvider === 'hosted'
-              ? (
-                  <Stack direction="row" spacing={0.75} alignItems="center">
-                    <span>{quickCreateLabels[resourceType]} -</span>
-                    <StudyCreditCostLabel
-                      amount={quickCreateCreditCost}
-                      variant="tooltip"
-                    />
-                  </Stack>
-                )
-              : quickCreateLabels[resourceType]
+            aiProvider === 'hosted' ? (
+              <Stack direction="row" spacing={0.75} alignItems="center">
+                <span>{quickCreateLabels[resourceType]} -</span>
+                <StudyCreditCostLabel
+                  amount={quickCreateCreditCost}
+                  variant="tooltip"
+                />
+              </Stack>
+            ) : (
+              quickCreateLabels[resourceType]
+            )
           }
           placement="right"
         >
@@ -2670,8 +2667,8 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
               queueReadyCount > 0
                 ? 'success.main'
                 : queueFailedCount > 0 && queueGeneratingCount === 0
-                  ? 'error.main'
-                  : 'warning.main',
+                ? 'error.main'
+                : 'warning.main',
             flex: '0 0 auto',
             '&::after':
               queueGeneratingCount > 0
@@ -2839,14 +2836,14 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   queueReadyCount > 0
                     ? 'success.main'
                     : queueFailedCount > 0 && queueGeneratingCount === 0
-                      ? 'error.main'
-                      : 'warning.main',
+                    ? 'error.main'
+                    : 'warning.main',
                 boxShadow:
                   queueReadyCount > 0
                     ? statusMarkerGlow.complete
                     : queueFailedCount > 0 && queueGeneratingCount === 0
-                      ? statusMarkerGlow.error
-                      : statusMarkerGlow.running,
+                    ? statusMarkerGlow.error
+                    : statusMarkerGlow.running,
                 color:
                   queueReadyCount > 0
                     ? 'success.contrastText'

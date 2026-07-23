@@ -254,7 +254,7 @@ const DashboardProvider: React.FC<DashboardProviderProps> = (props) => {
     const id = nanoid()
     const containerDashboard: StateDashboard = {
       id,
-      name: studyPath.title || studyPath.folderName || 'Study Guide',
+      name: studyPath.title || studyPath.folderName || 'Quick Guide',
       kind: 'studyPathContainer',
       studyPath: {
         ...studyPath,

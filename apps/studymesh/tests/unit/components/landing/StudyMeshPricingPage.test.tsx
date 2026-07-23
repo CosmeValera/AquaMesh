@@ -29,9 +29,9 @@ describe('StudyMeshPricingPage', () => {
         name: /free without a subscription/i,
       }),
     ).toBeInTheDocument()
-    expect(screen.getAllByText(/no credit card required/i).length).toBeGreaterThan(
-      0,
-    )
+    expect(
+      screen.getAllByText(/no credit card required/i).length,
+    ).toBeGreaterThan(0)
     expect(screen.getByText('Free product')).toBeInTheDocument()
     expect(screen.getByText('0€')).toBeInTheDocument()
 
@@ -58,7 +58,7 @@ describe('StudyMeshPricingPage', () => {
     expect(screen.getByText('Popular')).toBeInTheDocument()
     expect(screen.getByText('Best value')).toBeInTheDocument()
     expect(screen.getAllByText('No API key to manage')).toHaveLength(3)
-    expect(screen.getAllByText('Use for Study Guides')).toHaveLength(3)
+    expect(screen.getAllByText('Use for Quick Guides')).toHaveLength(3)
     expect(
       screen.getAllByText('Use for Quiz, Flashcards, Podcast, and chat'),
     ).toHaveLength(3)
@@ -67,9 +67,9 @@ describe('StudyMeshPricingPage', () => {
     expect(screen.getByLabelText('3 Study Credits')).toBeInTheDocument()
     expect(screen.getByLabelText('1 Study Credits')).toBeInTheDocument()
     expect(
-      screen.getByText(/2 Study Guides \+ 1 more creation/i),
+      screen.getByText(/2 Quick Guides \+ 1 more creation/i),
     ).toBeInTheDocument()
-    expect(screen.getByText(/study guides cost/i)).toBeInTheDocument()
+    expect(screen.getByText(/quick guides cost/i)).toBeInTheDocument()
     expect(screen.queryByText(/\bSC\b/)).not.toBeInTheDocument()
 
     const signupButtons = screen.getAllByRole('link', { name: /^sign up$/i })
@@ -100,7 +100,7 @@ describe('StudyMeshPricingPage', () => {
       within(footer).getByRole('link', { name: /growing guides/i }),
     ).toHaveAttribute('href', '/#growing-guide')
     expect(
-      within(footer).getByRole('link', { name: /create a study guide/i }),
+      within(footer).getByRole('link', { name: /create a quick guide/i }),
     ).toHaveAttribute('href', '/study-guides?create=1')
   })
 

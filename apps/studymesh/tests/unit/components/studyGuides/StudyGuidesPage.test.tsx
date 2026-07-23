@@ -158,9 +158,9 @@ const makeGeneratedStudyPath = (id: string, title: string) => ({
 
 const createGuideFromPrompt = async (prompt: string) => {
   fireEvent.click(
-    screen.getAllByRole('button', { name: /new study guide/i })[0],
+    screen.getAllByRole('button', { name: /new quick guide/i })[0],
   )
-  const promptInput = await screen.findByLabelText(/study guide prompt/i)
+  const promptInput = await screen.findByLabelText(/quick guide prompt/i)
   fireEvent.change(promptInput, { target: { value: prompt } })
   fireEvent.click(screen.getByRole('button', { name: /create guide/i }))
   await waitFor(() => {
@@ -234,12 +234,12 @@ describe('StudyGuidesPage create flow', () => {
     renderStudyGuidesPage('/study-guides')
 
     fireEvent.click(
-      screen.getAllByRole('button', { name: /new study guide/i })[0],
+      screen.getAllByRole('button', { name: /new quick guide/i })[0],
     )
 
     expect(await screen.findByRole('dialog')).toBeInTheDocument()
     expect(screen.queryByLabelText(/guide name/i)).not.toBeInTheDocument()
-    const promptInput = screen.getByLabelText(/study guide prompt/i)
+    const promptInput = screen.getByLabelText(/quick guide prompt/i)
     expect(promptInput).toBeRequired()
     expect(screen.getByRole('button', { name: /create guide/i })).toBeDisabled()
 
@@ -289,9 +289,9 @@ describe('StudyGuidesPage create flow', () => {
     renderStudyGuidesPage('/study-guides')
 
     fireEvent.click(
-      screen.getAllByRole('button', { name: /new study guide/i })[0],
+      screen.getAllByRole('button', { name: /new quick guide/i })[0],
     )
-    fireEvent.change(await screen.findByLabelText(/study guide prompt/i), {
+    fireEvent.change(await screen.findByLabelText(/quick guide prompt/i), {
       target: { value: 'Teach me organic chemistry.' },
     })
     fireEvent.click(screen.getByRole('button', { name: /create guide/i }))
@@ -337,9 +337,9 @@ describe('StudyGuidesPage create flow', () => {
     renderStudyGuidesPage('/study-guides')
 
     fireEvent.click(
-      screen.getAllByRole('button', { name: /new study guide/i })[0],
+      screen.getAllByRole('button', { name: /new quick guide/i })[0],
     )
-    await screen.findByLabelText(/study guide prompt/i)
+    await screen.findByLabelText(/quick guide prompt/i)
     fireEvent.click(screen.getByRole('button', { name: /human anatomy/i }))
     fireEvent.click(screen.getByRole('button', { name: /create guide/i }))
 
@@ -548,9 +548,9 @@ describe('StudyGuidesPage create flow', () => {
     renderStudyGuidesPage('/study-guides')
 
     const progress = await screen.findByRole('progressbar', { name: /%/ })
-    expect(Number(progress.getAttribute('aria-valuenow'))).toBeGreaterThanOrEqual(
-      0,
-    )
+    expect(
+      Number(progress.getAttribute('aria-valuenow')),
+    ).toBeGreaterThanOrEqual(0)
     expect(Number(progress.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(
       100,
     )
@@ -679,7 +679,7 @@ describe('StudyGuidesPage create flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /search guides/i }))
     expect(screen.getByPlaceholderText(/search guides/i)).toBeInTheDocument()
     expect(
-      screen.getAllByRole('button', { name: /new study guide/i }),
+      screen.getAllByRole('button', { name: /new quick guide/i }),
     ).toHaveLength(2)
     fireEvent.click(screen.getByRole('button', { name: /list view/i }))
     await waitFor(() => {
@@ -688,11 +688,11 @@ describe('StudyGuidesPage create flow', () => {
       ).toBe('list')
     })
     expect(
-      screen.getAllByRole('button', { name: /new study guide/i }),
+      screen.getAllByRole('button', { name: /new quick guide/i }),
     ).toHaveLength(1)
 
     expect(
-      screen.getByRole('table', { name: /study guides list/i }),
+      screen.getByRole('table', { name: /quick guides list/i }),
     ).toBeInTheDocument()
     expect(screen.getByText('Title')).toBeInTheDocument()
     expect(screen.getByText(/pages/i)).toBeInTheDocument()
@@ -768,7 +768,7 @@ describe('StudyGuidesPage create flow', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /list view/i }))
     expect(
-      await screen.findByRole('table', { name: /study guides list/i }),
+      await screen.findByRole('table', { name: /quick guides list/i }),
     ).toBeInTheDocument()
     fireEvent.click(
       screen.getByRole('button', { name: /open options.*music theory/i }),

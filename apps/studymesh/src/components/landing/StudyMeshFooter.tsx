@@ -26,7 +26,7 @@ const footerLinks = [
 ] as const
 
 const startLinks = [
-  ['Study Guides', '/study-guides'],
+  ['Quick Guides', '/study-guides'],
   ['Sign in', '/login'],
 ] as const
 
@@ -135,8 +135,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 lineHeight: 1.55,
               }}
             >
-              Adaptive study guides that connect new ideas to what you already
-              know.
+              Quick guides that connect new ideas to what you already know.
             </Typography>
             <Stack
               direction="row"
@@ -158,7 +157,10 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 }}
               />
               <Box component="span">Free to start</Box>
-              <Box component="span" sx={{ color: alpha(footerBrand.muted, 0.6) }}>
+              <Box
+                component="span"
+                sx={{ color: alpha(footerBrand.muted, 0.6) }}
+              >
                 ·
               </Box>
               <Box component="span">No credit card required</Box>
@@ -303,7 +305,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 },
               }}
             >
-              Create a Study Guide
+              Create a Quick Guide
             </Button>
           </Stack>
         </Box>

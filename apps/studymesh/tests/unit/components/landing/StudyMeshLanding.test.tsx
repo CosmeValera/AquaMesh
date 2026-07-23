@@ -59,9 +59,7 @@ const makeRectList = (...rects: DOMRect[]): DOMRectList =>
 const mockHeroWrapProbeLines = (lineTops: number[]) => {
   vi.spyOn(HTMLElement.prototype, 'getClientRects').mockImplementation(
     function getClientRects() {
-      if (
-        this.getAttribute('data-testid') === 'hero-headline-wrap-probe'
-      ) {
+      if (this.getAttribute('data-testid') === 'hero-headline-wrap-probe') {
         return makeRectList(...lineTops.map(makeRect))
       }
 
@@ -86,12 +84,12 @@ describe('StudyMeshLanding', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /study guides that grow with you/i,
+        name: /quick guides that adapt to you/i,
       }),
     ).toBeInTheDocument()
     expect(
       screen.getByText(
-        /studymesh builds adaptive study guides by connecting new concepts/i,
+        /studymesh builds quick guides by connecting new concepts/i,
       ),
     ).toBeInTheDocument()
     expect(screen.getAllByText(/20 sec/i).length).toBeGreaterThan(0)
@@ -106,16 +104,22 @@ describe('StudyMeshLanding', () => {
       }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/choose what you already know, watch the explanation change/i),
+      screen.getByText(
+        /choose what you already know, watch the explanation change/i,
+      ),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: /photography/i }),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: /gaming/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /tech/i })).toBeInTheDocument()
-    expect(screen.getAllByText(/what is a trade-off/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/what is a trade-off/i).length).toBeGreaterThan(
+      0,
+    )
     expect(
-      screen.getByText(/improving one thing usually means giving up something else/i),
+      screen.getByText(
+        /improving one thing usually means giving up something else/i,
+      ),
     ).toBeInTheDocument()
     expect(screen.getByText(/think of exposure settings/i)).toBeInTheDocument()
     expect(screen.getByText(/with photography context/i)).toBeInTheDocument()
@@ -147,18 +151,16 @@ describe('StudyMeshLanding', () => {
     expect(
       screen.getByText(/can you add more practice exercises on this topic/i),
     ).toBeInTheDocument()
-    expect(
-      screen.getByText(/done! i added/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/done! i added/i)).toBeInTheDocument()
 
-    expect(getComputedStyle(screen.getByTestId('studymesh-landing')).color).toBe(
-      'rgb(7, 17, 39)',
-    )
+    expect(
+      getComputedStyle(screen.getByTestId('studymesh-landing')).color,
+    ).toBe('rgb(7, 17, 39)')
 
     const footer = screen.getByTestId('studymesh-footer')
     expect(footer).toBeInTheDocument()
     expect(
-      within(footer).getByText(/adaptive study guides that connect new ideas/i),
+      within(footer).getByText(/quick guides that connect new ideas/i),
     ).toBeInTheDocument()
     expect(
       within(footer).getByRole('link', { name: /knowledge bridge/i }),
@@ -167,7 +169,7 @@ describe('StudyMeshLanding', () => {
       within(footer).getByRole('link', { name: /growing guides/i }),
     ).toHaveAttribute('href', '#growing-guide')
     expect(
-      within(footer).getByRole('link', { name: /create a study guide/i }),
+      within(footer).getByRole('link', { name: /create a quick guide/i }),
     ).toHaveAttribute('href', '/study-guides?create=1')
   })
 
@@ -175,7 +177,9 @@ describe('StudyMeshLanding', () => {
     renderLanding()
 
     expect(screen.getByText(/think of exposure settings/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/what is a trade-off/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/what is a trade-off/i).length).toBeGreaterThan(
+      0,
+    )
 
     fireEvent.click(screen.getByRole('button', { name: /gaming/i }))
 
@@ -185,7 +189,9 @@ describe('StudyMeshLanding', () => {
     )
     expect(screen.getByText(/think of a character build/i)).toBeInTheDocument()
     expect(
-      screen.getByText(/improving one thing usually means giving up something else/i),
+      screen.getByText(
+        /improving one thing usually means giving up something else/i,
+      ),
     ).toBeInTheDocument()
   })
 
@@ -228,33 +234,31 @@ describe('StudyMeshLanding', () => {
     renderLanding()
 
     await waitFor(() => {
-      expect(screen.getByTestId('hero-headline-underline-host')).toHaveAttribute(
-        'data-underline-mode',
-        'full',
-      )
+      expect(
+        screen.getByTestId('hero-headline-underline-host'),
+      ).toHaveAttribute('data-underline-mode', 'full')
     })
   })
 
-  it('moves the hero underline to with you when the second headline phrase wraps', async () => {
+  it('moves the hero underline to to you when the second headline phrase wraps', async () => {
     mockHeroWrapProbeLines([100, 158])
     renderLanding()
 
     await waitFor(() => {
-      expect(screen.getByTestId('hero-headline-underline-host')).toHaveAttribute(
-        'data-underline-mode',
-        'wrapped',
-      )
+      expect(
+        screen.getByTestId('hero-headline-underline-host'),
+      ).toHaveAttribute('data-underline-mode', 'wrapped')
     })
     expect(screen.getByTestId('hero-headline-with-you')).toHaveTextContent(
-      'with you.',
+      'to you.',
     )
   })
 
-  it('keeps the study guide CTA target unchanged', () => {
+  it('keeps the quick guide CTA target unchanged', () => {
     renderLanding()
 
     fireEvent.click(
-      screen.getAllByRole('button', { name: /create a study guide/i })[0],
+      screen.getAllByRole('button', { name: /create a quick guide/i })[0],
     )
 
     expect(screen.getByTestId('location')).toHaveTextContent(

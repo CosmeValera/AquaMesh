@@ -205,7 +205,7 @@ describe('TopNavBar Component', () => {
       screen.queryByRole('button', { name: /quick create/i }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /create study guide/i }),
+      screen.queryByRole('button', { name: /create quick guide/i }),
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /advanced/i }),
@@ -393,7 +393,7 @@ describe('TopNavBar Component', () => {
     expect(
       await screen.findByRole('dialog', { name: /AI Mode/i }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/study guide.*3/i)).toBeInTheDocument()
+    expect(screen.getByText(/quick guide.*3/i)).toBeInTheDocument()
     expect(screen.getByText(/quick create.*1/i)).toBeInTheDocument()
     expect(screen.getByText(/chat.*1/i)).toBeInTheDocument()
     expect(screen.getByText(/podcast.*1/i)).toBeInTheDocument()
@@ -633,7 +633,7 @@ describe('TopNavBar Component', () => {
         name: /delete studymesh account data/i,
       }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/synced study guides/i)).toBeInTheDocument()
+    expect(screen.getByText(/synced quick guides/i)).toBeInTheDocument()
 
     fireEvent.click(
       screen.getByRole('button', {

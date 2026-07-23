@@ -96,7 +96,7 @@ const freeOptions = [
   {
     title: 'Bring your own key',
     label: 'Use your own key',
-    body: 'Connect Gemini or Cerebras and use your own provider quota for Study Guides, Quick Create, and chat.',
+    body: 'Connect Gemini or Cerebras and use your own provider quota for Quick Guides, Quick Create, and chat.',
     icon: <KeyIcon />,
     features: ['Your provider quota', 'Gemini or Cerebras', 'Direct control'],
   },
@@ -199,7 +199,7 @@ const StudyMeshPricingPage = () => {
                       0€
                     </Typography>
                     <Typography sx={{ color: pricingBrand.muted }}>
-                      Create Study Guides, Quick Create results, and chat with
+                      Create Quick Guides, Quick Create results, and chat with
                       your study workspace without a StudyMesh subscription.
                     </Typography>
                     <Button
@@ -476,7 +476,7 @@ const StudyMeshPricingPage = () => {
                             >
                               {[
                                 'No API key to manage',
-                                'Use for Study Guides',
+                                'Use for Quick Guides',
                                 'Use for Quiz, Flashcards, Podcast, and chat',
                               ].map((feature) => (
                                 <Stack
@@ -541,13 +541,13 @@ const StudyMeshPricingPage = () => {
                 <Typography variant="body2" sx={{ color: pricingBrand.muted }}>
                   New accounts start with{' '}
                   <CreditAmount amount={HOSTED_AI_INITIAL_FREE_CREDITS} />.
-                  Study Guides cost{' '}
+                  Quick Guides cost{' '}
                   <CreditAmount amount={getHostedAiCreditCost('study-guide')} />
                   ; Quiz, Flashcards, Podcast, and AI Chat cost{' '}
                   <CreditAmount
                     amount={getHostedAiCreditCost('quick-create')}
                   />
-                  . Every day, your free refill covers 2 Study Guides + 1 more
+                  . Every day, your free refill covers 2 Quick Guides + 1 more
                   creation.
                 </Typography>
               </Paper>

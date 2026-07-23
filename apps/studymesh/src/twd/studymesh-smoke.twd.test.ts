@@ -141,13 +141,13 @@ describe('StudyMesh TWD landing smoke', () => {
   it('landing sends guests to login', async () => {
     await twd.visit('/', true)
 
-    expect(await screenDom.findByText(/study guides that grow with you/i)).to
+    expect(await screenDom.findByText(/quick guides that adapt to you/i)).to
       .exist
 
     await userEvent.click(
       (
         await screenDom.findAllByRole('button', {
-          name: /create a study guide/i,
+          name: /create a quick guide/i,
         })
       )[0],
     )

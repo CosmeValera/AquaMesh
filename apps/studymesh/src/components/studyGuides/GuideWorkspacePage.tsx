@@ -229,7 +229,7 @@ const GuideWorkspacePage = () => {
       })
       .catch((error) => {
         if (!cancelled) {
-          console.error('Failed to load Study Guide from cloud', error)
+          console.error('Failed to load Quick Guide from cloud', error)
           setLoadingRemoteRecord(false)
           setNotFound(true)
         }
@@ -1040,7 +1040,7 @@ const GuideWorkspacePage = () => {
             >
               <CircularProgress size={28} />
               <Typography color="text.secondary" sx={{ mt: 2 }}>
-                Loading Study Guide...
+                Loading Quick Guide...
               </Typography>
             </Paper>
           </Box>

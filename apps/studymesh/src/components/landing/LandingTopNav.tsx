@@ -202,7 +202,7 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
           }}
         >
           <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-            Create a Study Guide
+            Create a Quick Guide
           </Box>
           <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
             Create

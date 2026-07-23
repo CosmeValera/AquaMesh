@@ -9,7 +9,7 @@ export const STUDY_GUIDES_SUMMARY_STORAGE_KEY =
   'studymesh_study_guides_summaries'
 export const STUDY_GUIDES_PINNED_KEY = 'studymesh.studyGuides.pinned'
 export const STUDY_GUIDES_STORAGE_FULL_MESSAGE =
-  'Your Study Guide library is full. Delete a few old or unused Study Guides, then try again.'
+  'Your Quick Guide library is full. Delete a few old or unused Quick Guides, then try again.'
 
 export type StudyGuideChangeAction =
   | 'save'
@@ -41,9 +41,7 @@ export const getStudyGuideEmoji = (title: string): string => {
   return match?.[1] || '\u2728'
 }
 
-const dispatchStudyGuidesChanged = (
-  detail: StudyGuideChangeDetail = {},
-) => {
+const dispatchStudyGuidesChanged = (detail: StudyGuideChangeDetail = {}) => {
   if (typeof window === 'undefined') {
     return
   }
@@ -59,9 +57,7 @@ type StudyGuideLike = Partial<StudyGuideRecord & StudyGuideSummary> & {
 const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 
-const hasStudyGuideSummaryFields = (
-  value: unknown,
-): value is StudyGuideLike =>
+const hasStudyGuideSummaryFields = (value: unknown): value is StudyGuideLike =>
   isObjectRecord(value) &&
   typeof value.id === 'string' &&
   typeof value.title === 'string'
@@ -69,15 +65,12 @@ const hasStudyGuideSummaryFields = (
 const hasStudyGuideRecordFields = (
   value: StudyGuideLike,
 ): value is StudyGuideRecord =>
-  isObjectRecord(value.studyPath) &&
-  Array.isArray(value.studyPath.dashboards)
+  isObjectRecord(value.studyPath) && Array.isArray(value.studyPath.dashboards)
 
 const readStoredStudyGuideLikeItems = (): StudyGuideLike[] => {
   const stored = window.localStorage.getItem(STUDY_GUIDES_STORAGE_KEY)
   const parsed = stored ? JSON.parse(stored) : []
-  return Array.isArray(parsed)
-    ? parsed.filter(hasStudyGuideSummaryFields)
-    : []
+  return Array.isArray(parsed) ? parsed.filter(hasStudyGuideSummaryFields) : []
 }
 
 const toStudyGuideSummary = (studyGuide: StudyGuideLike): StudyGuideSummary => {
@@ -92,7 +85,8 @@ const toStudyGuideSummary = (studyGuide: StudyGuideLike): StudyGuideSummary => {
   return {
     id: studyGuide.id,
     title: studyGuide.title,
-    folderName: studyGuide.folderName || studyPath?.folderName || studyGuide.title,
+    folderName:
+      studyGuide.folderName || studyPath?.folderName || studyGuide.title,
     description: studyGuide.description,
     emoji:
       studyGuide.emoji ||
@@ -118,7 +112,7 @@ const readStoredStudyGuides = (): StudyGuideRecord[] => {
       pinnedAt: pinnedGuides[studyGuide.id] ?? studyGuide.pinnedAt ?? null,
     }))
   } catch (error) {
-    console.error('Failed to read Study Guides', error)
+    console.error('Failed to read Quick Guides', error)
     return []
   }
 }
@@ -174,7 +168,7 @@ const readStoredStudyGuideSummaries = (): StudyGuideSummary[] => {
 
     return readStoredStudyGuideLikeItems().map(toStudyGuideSummary)
   } catch (error) {
-    console.error('Failed to read Study Guide summaries', error)
+    console.error('Failed to read Quick Guide summaries', error)
     return readStoredStudyGuides().map(toStudyGuideSummary)
   }
 }
@@ -209,7 +203,8 @@ const writeStoredStudyGuideSummaries = (summaries: StudyGuideSummary[]) => {
 const upsertStoredStudyGuideSummary = (summary: StudyGuideSummary) => {
   const current = readStoredStudyGuideSummaries()
   const existingIndex = current.findIndex((item) => item.id === summary.id)
-  const pinnedAt = readPinnedStudyGuides()[summary.id] ?? summary.pinnedAt ?? null
+  const pinnedAt =
+    readPinnedStudyGuides()[summary.id] ?? summary.pinnedAt ?? null
   const nextSummary = { ...summary, pinnedAt }
   const next =
     existingIndex >= 0
@@ -246,8 +241,8 @@ export const createStudyGuideRecord = (
 
   return {
     id,
-    title: studyPath.title || studyPath.folderName || 'Study Guide',
-    folderName: studyPath.folderName || 'Study Guide',
+    title: studyPath.title || studyPath.folderName || 'Quick Guide',
+    folderName: studyPath.folderName || 'Quick Guide',
     emoji:
       options.emoji ||
       studyPath.emoji ||
@@ -429,9 +424,8 @@ export const StudyGuideStorage = {
       return null
     }
 
-    const nextPinnedAt = (existing?.pinnedAt || summary?.pinnedAt)
-      ? null
-      : nowIso()
+    const nextPinnedAt =
+      existing?.pinnedAt || summary?.pinnedAt ? null : nowIso()
     setStoredPinnedStudyGuide(id, nextPinnedAt)
 
     if (existing) {

@@ -1363,7 +1363,7 @@ describe('DashboardChatPanel chat management', () => {
     onMessagesChange.mockClear()
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Add answer to Study Guide' }),
+      screen.getByRole('button', { name: 'Add answer to Quick Guide' }),
     )
     fireEvent.click(screen.getByRole('button', { name: 'Retry answer' }))
 

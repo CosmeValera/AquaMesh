@@ -131,6 +131,9 @@ const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
   "study-guide": 3,
   "quick-create": 1,
   chat: 1,
+  // Follow-up model calls inside one chat message (answer, list repair).
+  // The single chat credit is charged upfront by the planner call.
+  "chat-followup": 0,
   podcast: 1,
 };
 
@@ -184,6 +187,7 @@ const VALID_SURFACES = new Set<HostedAiSurface>([
   "study-guide",
   "quick-create",
   "chat",
+  "chat-followup",
   "podcast",
 ]);
 
@@ -577,7 +581,7 @@ const finishHostedUsage = async (
 };
 
 const getStageForSurface = (surface: HostedAiSurface): HostedAiStage => {
-  if (surface === "chat") {
+  if (surface === "chat" || surface === "chat-followup") {
     return "chat";
   }
 
@@ -2668,20 +2672,23 @@ const handleGenerate = async (
     return invalid;
   }
 
+  const surface = request.surface as HostedAiSurface;
+  // Zero-cost surfaces are follow-up calls whose credit was already charged
+  // by the first call of the same user action, so they skip usage billing.
+  const isFreeSurface = HOSTED_AI_CREDIT_COSTS[surface] === 0;
   const provider = getHostedTextProvider();
   const mainStage: HostedAiStage = includeQuickStart
     ? "study_guide_monolith"
-    : request.stage || getStageForSurface(request.surface as HostedAiSurface);
+    : isFreeSurface
+    ? getStageForSurface(surface)
+    : request.stage || getStageForSurface(surface);
   const model = getHostedTextModelForStage(provider, mainStage);
   const usageModel = getHostedUsageModelLabel(provider, model);
   const requestId = randomUUID();
   const usageRequest = { ...request, requestId };
-  const started = await startHostedUsage(
-    userId,
-    usageRequest,
-    provider,
-    usageModel,
-  );
+  const started = isFreeSurface
+    ? { status: undefined, usageId: undefined }
+    : await startHostedUsage(userId, usageRequest, provider, usageModel);
   let providerCallCount = includeQuickStart ? 0 : 1;
   const stageCosts: HostedAiStageCost[] = [];
   const metadataFlags: JsonObject = {};
@@ -2730,35 +2737,38 @@ const handleGenerate = async (
 
     const text = await callStage(mainStage, usageRequest);
 
-    const status =
-      (await finishHostedUsage(
-        userId,
-        requestId,
-        "succeeded",
-        undefined,
-        undefined,
-        providerCallCount,
-        createUsageMetadata(stageCosts, metadataFlags),
-      ).catch(() => undefined)) || started.status;
+    const status = isFreeSurface
+      ? started.status
+      : (await finishHostedUsage(
+          userId,
+          requestId,
+          "succeeded",
+          undefined,
+          undefined,
+          providerCallCount,
+          createUsageMetadata(stageCosts, metadataFlags),
+        ).catch(() => undefined)) || started.status;
 
     return { ok: true, text, status };
   } catch (error) {
     const mapped = mapFailure(error);
     metadataFlags.providerCallCount = providerCallCount;
 
-    await finishHostedUsage(
-      userId,
-      requestId,
-      "failed",
-      mapped.response.error?.code,
-      mapped.response.error?.message,
-      providerCallCount,
-      createUsageMetadata(stageCosts, {
-        ...metadataFlags,
-        failed: true,
-        failureCode: mapped.response.error?.code,
-      }),
-    ).catch(() => undefined);
+    if (!isFreeSurface) {
+      await finishHostedUsage(
+        userId,
+        requestId,
+        "failed",
+        mapped.response.error?.code,
+        mapped.response.error?.message,
+        providerCallCount,
+        createUsageMetadata(stageCosts, {
+          ...metadataFlags,
+          failed: true,
+          failureCode: mapped.response.error?.code,
+        }),
+      ).catch(() => undefined);
+    }
 
     throw error;
   }

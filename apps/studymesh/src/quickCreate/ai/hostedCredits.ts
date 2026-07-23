@@ -14,6 +14,7 @@ export type HostedAiSurface =
   | 'study-guide'
   | 'quick-create'
   | 'chat'
+  | 'chat-followup'
   | 'podcast'
 export type HostedAiStage =
   | 'study_guide_main'
@@ -35,6 +36,9 @@ export const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
   'study-guide': 3,
   'quick-create': 1,
   chat: 1,
+  // Follow-up model calls inside one chat message (answer, list repair).
+  // The single chat credit is charged upfront by the planner call.
+  'chat-followup': 0,
   podcast: 1,
 }
 

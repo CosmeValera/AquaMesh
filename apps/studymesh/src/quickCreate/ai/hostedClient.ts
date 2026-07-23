@@ -230,6 +230,11 @@ const callHostedAiModelUnchecked = async ({
   }
 }
 
+export const isHostedAiInsufficientCreditsError = (
+  error: unknown,
+): boolean =>
+  error instanceof Error && /\bstudy credits\b/i.test(error.message)
+
 export const callHostedAiModel = async (
   options: HostedAiModelOptions,
 ): Promise<string> => {

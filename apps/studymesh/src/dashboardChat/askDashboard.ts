@@ -26,6 +26,9 @@ interface AskDashboardOptions {
   answerStyleHint?: string
   exactAnswerCount?: number | null
   contentLanguage?: StudyMeshLanguageCode
+  // 'chat-followup' when the message's single credit was already charged by
+  // an earlier hosted call in the same flow (the source planner).
+  hostedSurface?: 'chat' | 'chat-followup'
   signal?: AbortSignal
 }
 
@@ -140,6 +143,11 @@ const formatAllowedSources = (allowedSources: DashboardChatSourceId[]) => {
   )}. Do not use sources outside this list. Prefer cited context when it directly helps; use uncited general knowledge only if general knowledge is allowed.`
 }
 
+const hasFetchedWebSources = (sourceChunks: DashboardSourceChunk[]) =>
+  sourceChunks.some(
+    (chunk) => chunk.origin === 'web' && chunk.originType !== 'user-text',
+  )
+
 const formatCoverageFallbackRule = (
   allowedSources: DashboardChatSourceId[],
 ) => {
@@ -155,6 +163,7 @@ const buildPrompt = ({
   contextText,
   question,
   memory,
+  sourceChunks,
   allowedSources = ['study-guide', 'general'],
   answerStyleHint,
   exactAnswerCount,
@@ -167,7 +176,9 @@ const buildPrompt = ({
 Rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
 - Prefer the provided dashboard, study, and source context when it helps.
+- Use only the parts of the context that answer the asked question. The context can contain checklists, exam methods, or steps written for another topic; leave them out unless they are about the topic asked. Never append a method or checklist just because the student mentioned an exam.
 - ${formatAllowedSources(allowedSources)}
+${hasFetchedWebSources(sourceChunks) ? '- Web sources were fetched for this question. Base the answer on them and cite them inline. Use general knowledge only for the parts those sources do not cover, and mark that with phrasing such as "In general".' : ''}
 - Respect the student's requested answer shape and verbosity. If they ask for a plain list, exact count, table, or no explanation, follow that format without extra teaching sections.
 ${exactAnswerCount ? `- The student asked for exactly ${exactAnswerCount} entries. Return exactly ${exactAnswerCount} distinct entries in a numbered list. Do not use headings, category totals, ranges, duplicate entries, or follow-up questions. Identify otherwise identical entries with their standard number, position, or side.` : ''}
 ${answerStyleHint ? `- Extra answer style instruction: ${answerStyleHint}` : ''}
@@ -295,10 +306,12 @@ const callStrongModelText = async (
 const callDashboardChatModel = async ({
   prompt,
   outputLanguage,
+  hostedSurface = 'chat',
   signal,
 }: {
   prompt: string
   outputLanguage: StudyMeshLanguageCode
+  hostedSurface?: 'chat' | 'chat-followup'
   signal?: AbortSignal
 }): Promise<string> => {
   const settings = readQuickCreateAiSettings()
@@ -306,7 +319,7 @@ const callDashboardChatModel = async ({
 
   if (provider === 'hosted') {
     return callHostedAiModel({
-      surface: 'chat',
+      surface: hostedSurface,
       model: STRONG_AI_PROVIDERS.cerebras.defaultModel,
       outputLanguage,
       parts: [{ text: prompt }],
@@ -412,6 +425,15 @@ const deriveAnswerBasis = (
     basis.add('general')
   }
 
+  if (basis.size === 0) {
+    // Every answer states what it rests on. Without citations the answer came
+    // from the guide context when that is the only allowed source, and from
+    // model knowledge otherwise.
+    basis.add(
+      allowedSources.includes('study-guide') ? 'study-guide' : 'general',
+    )
+  }
+
   return Array.from(basis)
 }
 
@@ -443,6 +465,7 @@ export const askDashboardSources = async (
     await callDashboardChatModel({
       prompt,
       outputLanguage: resolvedLanguage.language,
+      hostedSurface: options.hostedSurface,
       signal: options.signal,
     }),
   )
@@ -455,6 +478,9 @@ export const askDashboardSources = async (
       await callDashboardChatModel({
         prompt: buildExactListRepairPrompt(prompt, exactListCount),
         outputLanguage: resolvedLanguage.language,
+        // The repair retry never charges again: the first call in this
+        // message already carried the credit.
+        hostedSurface: 'chat-followup',
         signal: options.signal,
       }),
     )

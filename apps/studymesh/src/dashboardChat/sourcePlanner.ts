@@ -224,7 +224,8 @@ Rules:
 - Valid selectedSources values: "study-guide", "general", "web".
 - If the user explicitly selected sources, keep selectedSources inside that set.
 - If the source selection is Auto, choose sources that best answer the question.
-- shouldSearchWeb must be true only when "web" is selectedSources and the answer needs a fresh web lookup.
+- Decide web search in three tiers. Tier 1: the student explicitly asks to search online, find sources, or cite something - always include "web" and set shouldSearchWeb true. Tier 2: the dashboard context does not cover the answer AND the answer depends on recent, changing, or verifiable outside facts (news, prices, versions, statistics, specific products, places, or people) - include "web" and set shouldSearchWeb true. Tier 3: timeless concepts, definitions, explanations, or anything the dashboard context covers - no web search.
+- shouldSearchWeb must be true only when "web" is in selectedSources.
 - Rewrite searchQuery for a search engine, not for a chatbot: remove filler, apologies, jokes, false starts, and corrections while preserving the actual information need and constraints.
 - Do not hardcode special cases. Infer the user's real task and requested answer shape.
 - answerStyleHint should briefly preserve format requirements such as list-only, table, concise, exact count, language, or no extra explanation.
@@ -324,10 +325,20 @@ export const planDashboardChatSources = async (
     resolvedLanguage.language,
     options.signal,
   )
-  const parsed = JSON.parse(extractJsonObject(response)) as Record<
-    string,
-    unknown
-  >
+
+  // The model call succeeded (and was billed on hosted AI); an unusable
+  // response falls back to the regex plan instead of failing the message.
+  let parsed: Record<string, unknown>
+  try {
+    parsed = JSON.parse(extractJsonObject(response)) as Record<string, unknown>
+  } catch {
+    return applyDashboardChatSourcePolicy(
+      options.question,
+      options.selectedSources,
+      fallback,
+    )
+  }
+
   const selectedSources = normalizeSelectedSources(
     parsed.selectedSources,
     fallback.selectedSources,

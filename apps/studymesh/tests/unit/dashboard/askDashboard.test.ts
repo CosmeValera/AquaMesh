@@ -91,8 +91,67 @@ describe('askDashboardSources', () => {
     })
 
     expect(result.sourceRefs).toEqual([])
-    expect(result.answerBasis).toEqual([])
+    expect(result.answerBasis).toEqual(['general'])
     expect(result.contextSupport).toBe('none')
+  })
+
+  it('always reports a basis, falling back to the guide when it is the only source', async () => {
+    vi.mocked(callStrongAiModel).mockResolvedValue(
+      'The guide covers nine organ systems.',
+    )
+
+    const result = await askDashboardSources({
+      dashboardTitle: 'Anatomy',
+      contextText: '[1] Organ systems\nNine systems are listed.',
+      question: 'What organ systems are covered in this guide?',
+      history: [],
+      sourceChunks: [],
+      allowedSources: ['study-guide'],
+    })
+
+    expect(result.sourceRefs).toEqual([])
+    expect(result.answerBasis).toEqual(['study-guide'])
+  })
+
+  it('tells the model to ground the answer in fetched web sources', async () => {
+    vi.mocked(callStrongAiModel).mockResolvedValue('Lentils simmer 20 minutes.')
+
+    await askDashboardSources({
+      dashboardTitle: 'Anatomy',
+      contextText: '[1] Lentil recipe\nSimmer lentils for 20 minutes.',
+      question: 'search in internet the best way to cook lentils',
+      history: [],
+      sourceChunks: [
+        {
+          id: 'web-source-1',
+          title: 'Lentil recipe',
+          type: 'web source',
+          text: 'Simmer lentils for 20 minutes.',
+          origin: 'web',
+          url: 'https://example.com/lentils',
+        },
+      ],
+      allowedSources: ['web', 'general'],
+    })
+
+    const prompt = vi.mocked(callStrongAiModel).mock.calls[0][0].parts[0].text
+    expect(prompt).toContain('Web sources were fetched for this question')
+  })
+
+  it('does not add the web grounding rule without fetched web sources', async () => {
+    vi.mocked(callStrongAiModel).mockResolvedValue('An answer.')
+
+    await askDashboardSources({
+      dashboardTitle: 'Anatomy',
+      contextText: '',
+      question: 'What is homeostasis?',
+      history: [],
+      sourceChunks: [],
+      allowedSources: ['study-guide', 'general'],
+    })
+
+    const prompt = vi.mocked(callStrongAiModel).mock.calls[0][0].parts[0].text
+    expect(prompt).not.toContain('Web sources were fetched for this question')
   })
 
   it('repairs invalid exact lists once before showing them', async () => {

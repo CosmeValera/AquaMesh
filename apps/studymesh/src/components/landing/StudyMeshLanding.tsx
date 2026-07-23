@@ -375,7 +375,6 @@ const StudyMeshLanding = () => {
         <Box
           sx={{
             position: 'relative',
-            minHeight: { xs: 'auto', lg: 'calc(100dvh - 88px)' },
             pt: { xs: 6.5, sm: 6.5, md: 9.5 },
             pb: { xs: 7, md: 8 },
             overflow: 'visible',

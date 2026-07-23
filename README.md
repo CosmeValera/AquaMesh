@@ -1,63 +1,52 @@
-# 🌊 StudyMesh
+# StudyMesh
 
-🌊 StudyMesh is a no-code custom widget builder for dashboards. It helps people create reusable dashboard widgets from visual blocks, save them locally, and place them into dashboards without writing React, configuration files, or layout code.
+> **Quick guides that adapt to you.**
 
-Many dashboards begin as a developer request: someone needs a form, chart, controls, status view, or operational workspace, and engineering has to wire the interface together. StudyMesh turns that workflow into a visual product where non-programmers can build the widget they need first, then reuse it inside a dashboard.
+StudyMesh turns a one-line prompt into a full, multi-page **Quick Guide** that explains new ideas
+by connecting them to what you already understand. Say what you're curious about (a hobby, a
+skill, a subject you're studying) and get clear lessons, quizzes, and exercises.
 
-## 🤔 What you can do
+**[Try StudyMesh →](https://studymesh.cosmevalera.dev/)**
 
-- **Create widgets without code:** Design reusable dashboard blocks from text, forms, buttons, charts, controls, and layout containers.
-- **Build dashboards visually:** Add, drag, resize, and arrange saved widgets in flexible layouts.
-- **Reuse saved work:** Save widgets and dashboards so they can be added to future dashboard projects.
-- **Share and back up widgets:** Import and export widget definitions between environments.
-- **Recover earlier versions:** Use widget version history when you need to restore previous work.
+<!-- HERO GIF: the flagship flow in one clip — type a prompt → a Quick Guide generates → study it in the workspace -->
+![Create a Quick Guide and study it in the workspace](readme_docs/media/hero-quick-guide.gif)
 
-## ✨ Key Features
+## What you can do
 
-- **No-Code Widget Editor:** Build custom widgets without programming knowledge
-- **Rich Component Library:** Pre-built UI elements, containers, and visualization tools
-- **Dynamic Dashboard System:** Drag, resize, and position widgets in flexible layouts
-- **React-based Turborepo Structure:** Optimized monorepo for efficient development
-- **Module Federation Architecture:** Load widgets as independent micro-frontends
+- **Create a Quick Guide:** write a prompt, get a full multi-page guide with lessons and exercises.
+- **Adapts to what you know:** select the fields you already understand and new Quick Guides will be re-explained through your current knowledge.
+- **Grows on demand:** guides start at ~3 pages; ask AI Chat for more depth, examples, or practice and it adds pages.
+- **Turn a guide into study material:** one click makes a quiz, a set of flashcards, or a short podcast recap.
+- **AI Chat:** ask questions about a guide; it can pull in web sources when the material doesn't cover something.
+- **Workspace:** arrange guides and widgets on a drag-and-resize dashboard canvas.
 
-## 🎬 Demo
+## See it in action
 
-<a href="https://aqua-mesh.vercel.app/" target="_blank" rel="noopener noreferrer">Try StudyMesh</a> on Vercel! Ready to use with zero setup.
+<!-- Small thumbnails, one row. Keep each ~200px wide so this stays compact. Podcast is a static image (audio). -->
+| Quiz | Flashcards | Podcast | AI Chat |
+|:---:|:---:|:---:|:---:|
+| <img src="readme_docs/media/quiz.gif" width="200" alt="Generate a quiz" /> | <img src="readme_docs/media/flashcards.gif" width="200" alt="Generate flashcards" /> | <img src="readme_docs/media/podcast.png" width="200" alt="Generate a podcast recap" /> | <img src="readme_docs/media/ai-chat.gif" width="200" alt="Ask AI Chat" /> |
 
-![Live Demo](readme_docs/live_demo.gif)
+## Bring your own AI
 
-## 🚀 Quickstart
+Choose how guides are generated in **Settings › AI Mode**: **Hosted AI** (uses Study Credits),
+your **own API key**, or **Google's on-device Local AI** (free, runs in the browser).
+
+## Run it locally
 
 ```sh
-# Clone the repository
-git clone https://github.com/CosmeValera/AquaMesh.git
-
-# Install dependencies for the full monorepo
+git clone https://github.com/CosmeValera/StudyMesh.git
+cd StudyMesh
 npm install
-
-# Launch StudyMesh
 npm start
 ```
 
-That's it! The StudyMesh application and all its components will be up and running.
+`npm start` runs the app with its serverless API routes; open http://localhost:3000.
 
-## ⚙️ Technology Stack
+## Built with
 
-- **React:** Frontend framework for building user interfaces
-- **flexlayout-react:** Layout system for resizable and repositionable widgets
-- **react-tabs:** Tab management for multiple dashboard views
-- **Turborepo:** For the monorepo setup
-- **Testing Suite:**
-  - **Playwright:** End-to-end testing framework
-  - **Vitest:** Unit testing framework
-  - **Vendored bashunit:** Bash script tests via `tools/git-hooks/lib/bashunit`
-
-The most rewarding aspect was solving the technical challenges for designing an intuitive way for users to customize widgets while keeping everything working smoothly.
-
----
-
-### 📚 Additional Resources
-
-- Check out the [TUTORIAL.md](./readme_docs/TUTORIAL.md) for more information and images
-
-🌊 Start creating powerful dashboards with StudyMesh today!
+- React + TypeScript 
+- Turborepo monorepo 
+- `flexlayout-react` dashboard canvas 
+- PrimeReact
+- Vitest + Playwright.

@@ -710,22 +710,8 @@ const HeroTimeline = () => {
                 color: item.color,
                 border: `1px solid ${alpha(item.color, 0.12)}`,
                 boxShadow: `0 10px 28px ${alpha(item.color, 0.12)}`,
-                transition:
-                  'transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease',
                 '& svg': {
                   fontSize: 33,
-                  transition: 'filter 180ms ease',
-                },
-                '&:hover': {
-                  transform: 'translateY(-3px)',
-                  borderColor: alpha(item.color, 0.28),
-                  boxShadow: `0 0 0 8px ${alpha(
-                    item.color,
-                    0.09,
-                  )}, 0 18px 40px ${alpha(item.color, 0.26)}`,
-                },
-                '&:hover svg': {
-                  filter: `drop-shadow(0 0 8px ${alpha(item.color, 0.48)})`,
                 },
                 '&:focus-visible': {
                   outline: `3px solid ${alpha(item.color, 0.34)}`,

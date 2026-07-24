@@ -22,10 +22,12 @@ skill, a subject you're studying) and get clear lessons, quizzes, and exercises.
 
 ## See it in action
 
-<!-- Small thumbnails, one row. Keep each ~200px wide so this stays compact. Podcast is a static image (audio). -->
-| Quiz | Flashcards | Podcast | AI Chat |
-|:---:|:---:|:---:|:---:|
-| <img src="readme_docs/media/quiz.gif" width="200" alt="Generate a quiz" /> | <img src="readme_docs/media/flashcards.gif" width="200" alt="Generate flashcards" /> | <img src="readme_docs/media/podcast.png" width="200" alt="Generate a podcast recap" /> | <img src="readme_docs/media/ai-chat.gif" width="200" alt="Ask AI Chat" /> |
+<!-- 2x2 grid, ~400px each. Below ~400px the on-screen text stops being readable. -->
+| Quiz | Flashcards |
+|:---:|:---:|
+| <img src="readme_docs/media/quiz.gif" width="400" alt="Generate a quiz" /> | <img src="readme_docs/media/flashcards.gif" width="400" alt="Generate flashcards" /> |
+| **Podcast** | **AI Chat** |
+| <img src="readme_docs/media/podcast.gif" width="400" alt="Generate a podcast recap" /> | <img src="readme_docs/media/ai-chat.gif" width="400" alt="Ask AI Chat" /> |
 
 ## Bring your own AI
 

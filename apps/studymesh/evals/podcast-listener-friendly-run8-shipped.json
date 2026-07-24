@@ -1,0 +1,648 @@
+{
+  "runAt": "2026-07-24T21:50:42.285Z",
+  "models": {
+    "guide": "gpt-5.4-mini",
+    "podcast": "gpt-5.4-nano"
+  },
+  "outputLanguage": "en",
+  "detectorStatus": [
+    {
+      "category": "emoji",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "arrows",
+      "baseline": 3,
+      "updated": 0,
+      "status": "fixed"
+    },
+    {
+      "category": "ampersand",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "mathSymbols",
+      "baseline": 9,
+      "updated": 0,
+      "status": "fixed"
+    },
+    {
+      "category": "percentSign",
+      "baseline": 1,
+      "updated": 0,
+      "status": "fixed"
+    },
+    {
+      "category": "complexNumbers",
+      "baseline": 2,
+      "updated": 0,
+      "status": "fixed"
+    },
+    {
+      "category": "parens",
+      "baseline": 40,
+      "updated": 0,
+      "status": "fixed"
+    },
+    {
+      "category": "dottedAbbrev",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "identifiers",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "slugEcho",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "sourceRef",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "spelledLongDecimal",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "ambiguousExponent",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "ungroupedFunctionArg",
+      "baseline": 0,
+      "updated": 2,
+      "status": "LEAKING"
+    }
+  ],
+  "guide": {
+    "title": "Derivatives in Calculus",
+    "podcastSourceTitle": "derivatives-calculus",
+    "text": "## Derivatives: Big Idea\n\nA **derivative** measures how fast a function changes. It is the **slope of the tangent line** to a curve at a point, and it tells us the **instantaneous rate of change**.\n\nFor a function \\(y=f(x)\\), the derivative is written as:\n\n\\[\n\\frac{dy}{dx} \\quad \\text{or} \\quad f'(x)\n\\]\n\nThe formal definition is:\n\n\\[\nf'(x)=\\lim_{h\\to 0}\\frac{f(x+h)-f(x)}{h}\n\\]\n\nThis means we look at the average rate of change over a tiny interval, then let that interval shrink to 0.\n\n### Common Rules\n\n- **Power rule:** \\(\\frac{d}{dx}(x^n)=nx^{n-1}\\)\n- **Constant rule:** \\(\\frac{d}{dx}(c)=0\\)\n- **Constant multiple rule:** \\(\\frac{d}{dx}[cf(x)]=c f'(x)\\)\n- **Sum rule:** \\(\\frac{d}{dx}[f(x)+g(x)]=f'(x)+g'(x)\\)\n\nThese rules make derivatives much faster to compute than using the limit definition every time.\n\n## Worked Example\n\nFind the derivative of \\(f(x)=x^2+3x\\).\n\nUsing the rules:\n\n\\[\n\\frac{d}{dx}(x^2+3x)=\\frac{d}{dx}(x^2)+\\frac{d}{dx}(3x)\n\\]\n\n\\[\n=2x+3\n\\]\n\nSo,\n\n\\[\nf'(x)=2x+3\n\\]\n\nIf \\(x=4\\), then the slope is \\(2(4)+3=11\\).\n\n## Why Derivatives Matter\n\nDerivatives are used in physics, economics, and biology. For example, if a population grows by 5% per year, the derivative helps describe the growth rate at a specific moment.\n\nThey also connect to approximation. Near a point, a function can be estimated by its tangent line, which is useful for values like \\(e \\approx 2.71828\\) and \\(\\pi \\approx 3.14159\\).\n\nIn short: derivative -> slope -> rate of change -> powerful tool for understanding motion and change.",
+    "scan": {
+      "total": 125,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 3,
+          "samples": [
+            "In short: derivative -> slope -> rate of chan",
+            ": derivative -> slope -> rate of change -> pow",
+            "ope -> rate of change -> powerful tool for und"
+          ]
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 5,
+          "samples": [
+            "le:** \\(\\frac{d}{dx}(x^n)=nx^{n-1}\\) - **Cons",
+            "\\(\\frac{d}{dx}(x^n)=nx^{n-1}\\) - **Constant r",
+            "derivative of \\(f(x)=x^2+3x\\). Using the rul",
+            "es: \\[ \\frac{d}{dx}(x^2+3x)=\\frac{d}{dx}(x^2",
+            "x^2+3x)=\\frac{d}{dx}(x^2)+\\frac{d}{dx}(3x) \\]"
+          ]
+        },
+        "percentSign": {
+          "count": 1,
+          "samples": [
+            "population grows by 5% per year, the derivat"
+          ]
+        },
+        "complexNumbers": {
+          "count": 2,
+          "samples": [
+            "lues like \\(e \\approx 2.71828\\) and \\(\\pi \\approx 3",
+            "8\\) and \\(\\pi \\approx 3.14159\\). In short: derivat"
+          ]
+        },
+        "parens": {
+          "count": 114,
+          "samples": [
+            "e**. For a function \\(y=f(x)\\), the derivati",
+            "For a function \\(y=f(x)\\), the derivative i",
+            "For a function \\(y=f(x)\\), the derivative is",
+            "r a function \\(y=f(x)\\), the derivative is wr",
+            "tive is written as: \\[ \\frac{dy}{dx} \\quad \\",
+            "written as: \\[ \\frac{dy}{dx} \\quad \\text{or"
+          ]
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    }
+  },
+  "baseline": {
+    "script": {
+      "title": "Derivatives: Slope, Rate of Change, and Instantaneous Change",
+      "description": "A short StudyMesh-style recap of what derivatives are, how they’re defined, the main rules, and a worked example—plus why derivatives matter.",
+      "transcriptTurns": [
+        {
+          "speaker": "hostA",
+          "text": "Welcome back! Today’s StudyMesh topic is derivatives—one of calculus’s biggest ideas."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Right. The big idea is simple: a derivative measures how fast a function changes."
+        },
+        {
+          "speaker": "hostA",
+          "text": "And more specifically, it’s the slope of the tangent line to a curve at a point, which gives the instantaneous rate of change."
+        },
+        {
+          "speaker": "hostB",
+          "text": "For a function y = f(x), we write the derivative as dy/dx or f'(x)."
+        },
+        {
+          "speaker": "hostA",
+          "text": "There’s also a formal definition: f'(x) equals the limit as h goes to 0 of [f(x+h) − f(x)] divided by h."
+        },
+        {
+          "speaker": "hostB",
+          "text": "So we start with an average rate of change over a tiny interval, then shrink that interval until it becomes zero."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Now, in practice we usually don’t compute that limit every time. We use common rules."
+        },
+        {
+          "speaker": "hostB",
+          "text": "First, the power rule: d/dx of x^n is n x^(n−1)."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Then the constant rule: d/dx of c is 0. And the constant multiple rule: d/dx of c f(x) is c times f'(x)."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Don’t forget the sum rule: d/dx of [f(x) + g(x)] is f'(x) + g'(x). These rules make derivatives much faster to compute."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Let’s do a worked example. Find the derivative of f(x) = x^2 + 3x."
+        },
+        {
+          "speaker": "hostB",
+          "text": "We split it using the sum rule: d/dx(x^2 + 3x) equals d/dx(x^2) plus d/dx(3x)."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Now apply the power rule to x^2: that gives 2x. For 3x, treat 3 as a constant multiple: the derivative is 3 times the derivative of x, which is 3."
+        },
+        {
+          "speaker": "hostB",
+          "text": "So f'(x) = 2x + 3. And if x = 4, the slope is 2(4) + 3 = 11."
+        },
+        {
+          "speaker": "hostA",
+          "text": "So far we’ve talked about slope and rate of change. Why do derivatives matter?"
+        },
+        {
+          "speaker": "hostB",
+          "text": "They show up in physics, economics, and biology. For instance, if a population grows by 5% per year, the derivative helps describe the growth rate at a specific moment."
+        },
+        {
+          "speaker": "hostA",
+          "text": "They also connect to approximation: near a point, a function can be estimated by its tangent line. That’s useful for values like e ≈ 2.71828 and π ≈ 3.14159."
+        },
+        {
+          "speaker": "hostB",
+          "text": "In short: derivative → slope → instantaneous rate of change → a powerful tool for understanding motion and change."
+        }
+      ],
+      "chapters": [
+        {
+          "title": "Big Idea: Derivatives as Instantaneous Rate of Change",
+          "startTurn": 0
+        },
+        {
+          "title": "Formal Definition via a Limit",
+          "startTurn": 4
+        },
+        {
+          "title": "Common Derivative Rules",
+          "startTurn": 7
+        },
+        {
+          "title": "Worked Example: f(x)=x^2+3x",
+          "startTurn": 10
+        },
+        {
+          "title": "Why Derivatives Matter",
+          "startTurn": 14
+        }
+      ]
+    },
+    "scan": {
+      "total": 55,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 3,
+          "samples": [
+            "In short: derivative → slope → instantaneous",
+            "t: derivative → slope → instantaneous rate of",
+            "aneous rate of change → a powerful tool for u"
+          ]
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 9,
+          "samples": [
+            "power rule: d/dx of x^n is n x^(n−1). Then t",
+            "le: d/dx of x^n is n x^(n−1). Then the consta",
+            "derivative of f(x) = x^2 + 3x. We split it us",
+            "g the sum rule: d/dx(x^2 + 3x) equals d/dx(x^",
+            "^2 + 3x) equals d/dx(x^2) plus d/dx(3x). Now",
+            "ly the power rule to x^2: that gives 2x. For"
+          ]
+        },
+        "percentSign": {
+          "count": 1,
+          "samples": [
+            "population grows by 5% per year, the derivat"
+          ]
+        },
+        "complexNumbers": {
+          "count": 2,
+          "samples": [
+            "l for values like e ≈ 2.71828 and π ≈ 3.14159. In s",
+            "e e ≈ 2.71828 and π ≈ 3.14159. In short: derivative"
+          ]
+        },
+        "parens": {
+          "count": 40,
+          "samples": [
+            ". For a function y = f(x), we write the deriv",
+            "For a function y = f(x), we write the derivat",
+            "ivative as dy/dx or f'(x). There’s also a for",
+            "ative as dy/dx or f'(x). There’s also a forma",
+            "formal definition: f'(x) equals the limit as",
+            "ormal definition: f'(x) equals the limit as h"
+          ]
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "metrics": {
+      "turnCount": 18,
+      "atTurnCountCap": true,
+      "englishLeaks": 0,
+      "spokenWords": 341,
+      "inWordTarget": false,
+      "maxTurnChars": 168,
+      "minTurnChars": 48,
+      "overHardCap": 0,
+      "overSoftCap": 0,
+      "questionTurns": 1,
+      "turnChars": [
+        85,
+        81,
+        126,
+        67,
+        104,
+        113,
+        85,
+        48,
+        104,
+        119,
+        66,
+        78,
+        146,
+        60,
+        78,
+        168,
+        157,
+        114
+      ]
+    },
+    "tokens": {
+      "in": 722,
+      "out": 799
+    }
+  },
+  "updated": {
+    "script": {
+      "title": "Derivatives: Big Idea and Core Rules",
+      "description": "Derivatives measure how fast a function changes. In this episode, we connect derivatives to the slope of a tangent line, learn the power, constant, constant multiple, and sum rules, and work through a quick example to see how derivatives give instantaneous rate of change.",
+      "transcriptTurns": [
+        {
+          "speaker": "hostA",
+          "text": "Welcome back. Today we are talking about derivatives, the tool that measures how fast a function changes. The big idea is simple: a derivative is the slope of the tangent line to a curve at a point."
+        },
+        {
+          "speaker": "hostB",
+          "text": "And that slope becomes an instantaneous rate of change. So instead of asking how much the function changes over a whole interval, we zoom in until the interval is tiny, then think about what happens at that exact moment."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Right. If we have a function y equals f of x, the derivative is written as dy over dx or f prime of x. The formal definition uses a limit: f prime of x equals the limit as h goes to zero of f of x plus h minus f of x, all over h."
+        },
+        {
+          "speaker": "hostB",
+          "text": "So we start with an average rate of change over a small step h. Then we shrink h toward zero. That is how the derivative captures the instantaneous behavior."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Now, we do not want to use that limit every time. That is why we have common rules. First is the power rule: the derivative of x to the power of n is n times x to the power of n minus one."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Second is the constant rule: the derivative of a constant c is zero. Third is the constant multiple rule: the derivative of c times f of x is c times f prime of x. Quick question for you: why does the constant multiple rule make sense intuitively?"
+        },
+        {
+          "speaker": "hostA",
+          "text": "Because multiplying the function by c scales the tangent line slope by the same factor. If the graph stretches vertically, the slope stretches vertically too. Next is the sum rule: the derivative of f of x plus g of x is f prime of x plus g prime of x."
+        },
+        {
+          "speaker": "hostB",
+          "text": "And that is a huge speedup. Let us do a worked example. Find the derivative of f of x equals x squared plus three x. We split it using the sum rule into the derivative of x squared plus the derivative of three x."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Using the power rule, the derivative of x squared is two x. For three x, we treat three as a constant multiple of x. The derivative of three x is three times the derivative of x, which is three times one, so it is three. Add them: f prime of x equals two x plus three."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Then if x equals four, the slope is two times four plus three, which is eleven. So at that point, the tangent line slope is eleven, meaning the instantaneous rate of change is eleven in the units of the problem."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Now let us connect back to why derivatives matter. They show up in physics, economics, and biology. For example, if a population grows by five percent per year, derivatives help describe the growth rate at a specific moment."
+        },
+        {
+          "speaker": "hostB",
+          "text": "And derivatives also connect to approximation. Near a point, a function can be estimated by its tangent line. That is why tangent-line thinking helps with approximations like e, roughly two point seven, and pi, roughly three point one four."
+        },
+        {
+          "speaker": "hostA",
+          "text": "So we can summarize the chain: derivative leads to slope leads to rate of change, and that becomes a powerful tool for understanding motion and change. Before we wrap, what is the one rule you would reach for first when you see x squared plus three x?"
+        },
+        {
+          "speaker": "hostB",
+          "text": "I would use the sum rule to split it, then the power rule for x squared, and the constant multiple idea for three x. That combination turns the limit definition into a quick computation."
+        }
+      ],
+      "chapters": [
+        {
+          "title": "Big idea: derivative as tangent slope and instantaneous rate of change",
+          "startTurn": 0
+        },
+        {
+          "title": "Core rules and why they speed up computation",
+          "startTurn": 4
+        },
+        {
+          "title": "Worked example: derivative of x squared plus three x",
+          "startTurn": 7
+        },
+        {
+          "title": "Why derivatives matter and how they support approximation",
+          "startTurn": 10
+        }
+      ]
+    },
+    "scan": {
+      "total": 2,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 0,
+          "samples": []
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 0,
+          "samples": []
+        },
+        "parens": {
+          "count": 0,
+          "samples": []
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 2,
+          "samples": [
+            "as h goes to zero of f of x plus h minus f of x, all ove",
+            "le: the derivative of f of x plus g of x is f prime of x"
+          ]
+        }
+      }
+    },
+    "fullScan": {
+      "total": 2,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 0,
+          "samples": []
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 0,
+          "samples": []
+        },
+        "parens": {
+          "count": 0,
+          "samples": []
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 2,
+          "samples": [
+            "as h goes to zero of f of x plus h minus f of x, all ove",
+            "le: the derivative of f of x plus g of x is f prime of x"
+          ]
+        }
+      }
+    },
+    "metrics": {
+      "turnCount": 14,
+      "atTurnCountCap": false,
+      "englishLeaks": 0,
+      "spokenWords": 598,
+      "inWordTarget": true,
+      "maxTurnChars": 268,
+      "minTurnChars": 157,
+      "overHardCap": 0,
+      "overSoftCap": 0,
+      "questionTurns": 2,
+      "turnChars": [
+        198,
+        220,
+        229,
+        157,
+        188,
+        247,
+        252,
+        212,
+        268,
+        211,
+        224,
+        240,
+        251,
+        186
+      ]
+    },
+    "tokens": {
+      "in": 1637,
+      "out": 946
+    }
+  },
+  "verdict": "PARTIAL (updated cleaner than baseline but not spotless)",
+  "craftVerdict": "SHORTFALL (2 question turns for 4 chapters)"
+}

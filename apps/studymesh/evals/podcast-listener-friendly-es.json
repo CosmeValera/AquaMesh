@@ -1,0 +1,608 @@
+{
+  "runAt": "2026-07-24T21:35:33.170Z",
+  "models": {
+    "guide": "gpt-5.4-mini",
+    "podcast": "gpt-5.4-nano"
+  },
+  "outputLanguage": "es",
+  "detectorStatus": [
+    {
+      "category": "emoji",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "arrows",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "ampersand",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "mathSymbols",
+      "baseline": 4,
+      "updated": 0,
+      "status": "fixed"
+    },
+    {
+      "category": "percentSign",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "complexNumbers",
+      "baseline": 2,
+      "updated": 0,
+      "status": "fixed"
+    },
+    {
+      "category": "parens",
+      "baseline": 24,
+      "updated": 0,
+      "status": "fixed"
+    },
+    {
+      "category": "dottedAbbrev",
+      "baseline": 0,
+      "updated": 0,
+      "status": "n/a (english-only detector)"
+    },
+    {
+      "category": "identifiers",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "slugEcho",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "sourceRef",
+      "baseline": 3,
+      "updated": 0,
+      "status": "n/a (english-only detector)"
+    },
+    {
+      "category": "spelledLongDecimal",
+      "baseline": 0,
+      "updated": 0,
+      "status": "n/a (english-only detector)"
+    },
+    {
+      "category": "ambiguousExponent",
+      "baseline": 0,
+      "updated": 0,
+      "status": "n/a (english-only detector)"
+    },
+    {
+      "category": "ungroupedFunctionArg",
+      "baseline": 0,
+      "updated": 0,
+      "status": "n/a (english-only detector)"
+    }
+  ],
+  "guide": {
+    "title": "Derivatives in Calculus",
+    "podcastSourceTitle": "derivatives-calculus",
+    "text": "# Derivatives in Calculus\n\n## What a Derivative Means\nA **derivative** measures how fast a function is changing. It is the **slope of the tangent line** to a curve at a point, and it tells us the **instantaneous rate of change**.\n\nFor a function \\(y=f(x)\\), the derivative is written as:\n\n\\[\n\\frac{dy}{dx} \\quad \\text{or} \\quad f'(x)\n\\]\n\nThe basic limit definition is:\n\n\\[\nf'(x)=\\lim_{h\\to 0}\\frac{f(x+h)-f(x)}{h}\n\\]\n\nThis means: take the slope of a secant line, then let \\(h\\) get very small -> the secant slope becomes the tangent slope.\n\n### Common Rules\n- **Power rule:** \\(\\frac{d}{dx}(x^n)=nx^{n-1}\\)\n- **Constant rule:** \\(\\frac{d}{dx}(c)=0\\)\n- **Constant multiple rule:** \\(\\frac{d}{dx}(cf)=c f'\\)\n- **Sum rule:** \\((f+g)'=f'+g'\\)\n\nThese rules make derivatives much faster to compute than using the limit every time.\n\n## Worked Example\nFind the derivative of \\(f(x)=x^2+3x\\).\n\nUsing the power rule:\n\n\\[\n\\frac{d}{dx}(x^2)=2x,\\qquad \\frac{d}{dx}(3x)=3\n\\]\n\nSo,\n\n\\[\nf'(x)=2x+3\n\\]\n\nIf \\(x=2\\), then the slope is:\n\n\\[\nf'(2)=2(2)+3=7\n\\]\n\nSo the graph is rising at a rate of 7 units of \\(y\\) per 1 unit of \\(x\\).\n\n## Why Derivatives Matter\nDerivatives are used in physics, economics, and engineering. For example, if position changes with time, the derivative gives **velocity**. In real life, many quantities change by a few percent, and derivatives help describe that change precisely.\n\nUseful constants: \\(e \\approx 2.71828\\), \\(\\pi \\approx 3.14159\\).",
+    "scan": {
+      "total": 105,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 1,
+          "samples": [
+            "\\(h\\) get very small -> the secant slope beco"
+          ]
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 4,
+          "samples": [
+            "le:** \\(\\frac{d}{dx}(x^n)=nx^{n-1}\\) - **Cons",
+            "\\(\\frac{d}{dx}(x^n)=nx^{n-1}\\) - **Constant r",
+            "derivative of \\(f(x)=x^2+3x\\). Using the pow",
+            "le: \\[ \\frac{d}{dx}(x^2)=2x,\\qquad \\frac{d}{"
+          ]
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 2,
+          "samples": [
+            "onstants: \\(e \\approx 2.71828\\), \\(\\pi \\approx 3.14",
+            "1828\\), \\(\\pi \\approx 3.14159\\)."
+          ]
+        },
+        "parens": {
+          "count": 98,
+          "samples": [
+            "e**. For a function \\(y=f(x)\\), the derivati",
+            "For a function \\(y=f(x)\\), the derivative i",
+            "For a function \\(y=f(x)\\), the derivative is",
+            "r a function \\(y=f(x)\\), the derivative is wr",
+            "tive is written as: \\[ \\frac{dy}{dx} \\quad \\",
+            "written as: \\[ \\frac{dy}{dx} \\quad \\text{or"
+          ]
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    }
+  },
+  "baseline": {
+    "script": {
+      "title": "StudyMesh: Derivatives in Calculus",
+      "description": "A short, focused recap of what derivatives mean, how to compute them using key rules, and why they matter—based only on the provided Study Guide.",
+      "transcriptTurns": [
+        {
+          "speaker": "hostA",
+          "text": "Welcome back to StudyMesh. Today we’re talking about derivatives in calculus—what they mean and how to use them."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Right. The core idea is that a derivative measures how fast a function is changing. Geometrically, it’s the slope of the tangent line to a curve at a point."
+        },
+        {
+          "speaker": "hostA",
+          "text": "And that slope becomes the instantaneous rate of change. So if we have a function y = f(x), the derivative is written as dy/dx or f'(x)."
+        },
+        {
+          "speaker": "hostB",
+          "text": "There’s also the limit definition. It says f'(x) equals the limit as h goes to 0 of [f(x+h) − f(x)] divided by h."
+        },
+        {
+          "speaker": "hostA",
+          "text": "In words: start with the slope of a secant line, then let h get very small. As h approaches 0, the secant slope turns into the tangent slope."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Now, computing derivatives from that limit every time would be slow. That’s why we use common rules."
+        },
+        {
+          "speaker": "hostA",
+          "text": "First is the power rule: d/dx of x^n equals n x^(n−1)."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Then the constant rule: d/dx of a constant c is 0. And the constant multiple rule: d/dx of c f equals c times f'."
+        },
+        {
+          "speaker": "hostA",
+          "text": "We also have the sum rule: (f+g)' equals f' plus g'. These rules make derivatives much faster to compute than using the limit each time."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Let’s do the worked example from the guide. Find the derivative of f(x) = x^2 + 3x."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Using the power rule: d/dx of x^2 is 2x. And d/dx of 3x is 3, since 3x is a constant multiple of x."
+        },
+        {
+          "speaker": "hostB",
+          "text": "So f'(x) = 2x + 3. If x = 2, then f'(2) = 2(2) + 3 = 7."
+        },
+        {
+          "speaker": "hostA",
+          "text": "That means the graph is rising at a rate of 7 units of y per 1 unit of x—so it’s the instantaneous slope at that point."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Finally, why derivatives matter. The guide says derivatives are used in physics, economics, and engineering."
+        },
+        {
+          "speaker": "hostA",
+          "text": "For example, if position changes with time, the derivative gives velocity. And in real life, quantities often change by a few percent—derivatives help describe that change precisely."
+        },
+        {
+          "speaker": "hostB",
+          "text": "And just as a useful note, the guide lists constants: e is approximately 2.71828, and pi is approximately 3.14159."
+        }
+      ],
+      "chapters": [
+        {
+          "title": "What a Derivative Means",
+          "startTurn": 0
+        },
+        {
+          "title": "Limit Definition and Instantaneous Rate of Change",
+          "startTurn": 3
+        },
+        {
+          "title": "Common Derivative Rules",
+          "startTurn": 5
+        },
+        {
+          "title": "Worked Example: f(x)=x^2+3x",
+          "startTurn": 9
+        },
+        {
+          "title": "Why Derivatives Matter",
+          "startTurn": 13
+        }
+      ]
+    },
+    "scan": {
+      "total": 33,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 4,
+          "samples": [
+            "power rule: d/dx of x^n equals n x^(n−1). Th",
+            "d/dx of x^n equals n x^(n−1). Then the consta",
+            "derivative of f(x) = x^2 + 3x. Using the powe",
+            "power rule: d/dx of x^2 is 2x. And d/dx of 3"
+          ]
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 2,
+          "samples": [
+            "s: e is approximately 2.71828, and pi is approximat",
+            "d pi is approximately 3.14159."
+          ]
+        },
+        "parens": {
+          "count": 24,
+          "samples": [
+            "have a function y = f(x), the derivative is",
+            "ave a function y = f(x), the derivative is wr",
+            "written as dy/dx or f'(x). There’s also the l",
+            "itten as dy/dx or f'(x). There’s also the lim",
+            "definition. It says f'(x) equals the limit as",
+            "finition. It says f'(x) equals the limit as h"
+          ]
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 3,
+          "samples": [
+            "e worked example from the guide. Find the derivative",
+            "y derivatives matter. The guide says derivatives are",
+            "ust as a useful note, the guide lists constants: e is"
+          ]
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "metrics": {
+      "turnCount": 16,
+      "atTurnCountCap": false,
+      "englishLeaks": 0,
+      "spokenWords": 346,
+      "inWordTarget": false,
+      "maxTurnChars": 182,
+      "minTurnChars": 54,
+      "overHardCap": 0,
+      "overSoftCap": 0,
+      "questionTurns": 0,
+      "turnChars": [
+        112,
+        156,
+        136,
+        113,
+        141,
+        100,
+        54,
+        113,
+        136,
+        83,
+        99,
+        55,
+        119,
+        108,
+        182,
+        114
+      ]
+    },
+    "tokens": {
+      "in": 705,
+      "out": 761
+    }
+  },
+  "updated": {
+    "script": {
+      "title": "Derivadas en cálculo: qué significan y cómo se calculan",
+      "description": "En este episodio hablamos de qué es una derivada, cómo se interpreta como la pendiente de la recta tangente y cómo se calcula con la definición de límite y con reglas prácticas como la regla de la potencia, la constante y la suma. Cerramos con un ejemplo y por qué las derivadas importan en ciencias y en la vida real.",
+      "transcriptTurns": [
+        {
+          "speaker": "hostA",
+          "text": "Hoy vamos a aterrizar una idea central del cálculo: qué significa una derivada. Para mí, una derivada mide qué tan rápido cambia una función. Es como la velocidad instantánea de cambio en un punto."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Sí, y la imagen mental clave es la pendiente de la recta tangente a la curva en ese punto. Si la curva sube más empinada, la derivada es mayor. Si baja, la derivada es negativa. Y si la curva es plana, la derivada es cero."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Ahora, la definición formal usa un límite. Para una función y igual a f de x, la derivada se escribe como f prima de x. Y la definición dice: f prime of x equals the limit as h goes to zero of, f of the quantity x plus h, minus f of x, all over h."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Exacto. Lo que estás haciendo es tomar la pendiente de una recta secante entre x y x más h, y luego dejar que h se haga tan pequeño que la secante se vuelve tangente. Esa es la intuición detrás del límite."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Pero en la práctica no quieres repetir ese límite cada vez. Por eso existen reglas comunes. Por ejemplo, la regla de la potencia: la derivada de x a la n es n por x a la n menos uno. Y la regla de la constante: la derivada de c es cero."
+        },
+        {
+          "speaker": "hostB",
+          "text": "También está la regla del múltiplo constante: la derivada de c por f es c por f prima. Y la regla de la suma: la derivada de f más g es f prima más g prima. Esto hace que calcular derivadas sea mucho más rápido."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Vamos con un ejemplo trabajado para fijarlo. Queremos la derivada de f de x igual a x al cuadrado más tres por x. Primero, derivamos x al cuadrado. Con la regla de la potencia, eso da dos por x. Luego derivamos tres por x, y como tres es constante, queda tres."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Entonces f prima de x es dos por x más tres. Y si evaluamos en x igual a dos, la pendiente instantánea es f prima de dos igual a dos por dos más tres, que da siete. O sea, la gráfica está subiendo a una tasa de siete unidades de y por cada una unidad de x."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Me gusta cómo ese número siete se interpreta como una tasa. No es solo una cuenta. Es la velocidad instantánea de cambio en ese punto, en el sentido de pendiente. Por cierto, ¿por qué crees que esto es tan útil fuera del aula?"
+        },
+        {
+          "speaker": "hostB",
+          "text": "Porque las derivadas aparecen cuando algo cambia con el tiempo. Por ejemplo, si la posición cambia con el tiempo, la derivada da la velocidad. Y en economía e ingeniería también se usan para describir cambios precisos, incluso cuando las cantidades cambian por porcentajes pequeños."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Entonces, resumiendo: una derivada es la pendiente de la recta tangente y representa la tasa instantánea de cambio. Y aunque la definición por límite es la base, las reglas como potencia, constante, múltiplo constante y suma te permiten calcular rápido."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Sí. Y como nota final, en muchos contextos aparecen constantes matemáticas como e, aproximadamente dos punto siete, y pi, aproximadamente tres punto uno cuatro. No las usamos en el ejemplo de hoy, pero suelen aparecer en funciones más avanzadas."
+        }
+      ],
+      "chapters": [
+        {
+          "title": "Qué significa una derivada y su definición por límite",
+          "startTurn": 0
+        },
+        {
+          "title": "Reglas para calcular derivadas y ejemplo con f de x igual a x al cuadrado más tres por x",
+          "startTurn": 4
+        },
+        {
+          "title": "Por qué importan las derivadas en ciencias y en la vida real",
+          "startTurn": 9
+        }
+      ]
+    },
+    "scan": {
+      "total": 0,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 0,
+          "samples": []
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 0,
+          "samples": []
+        },
+        "parens": {
+          "count": 0,
+          "samples": []
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "fullScan": {
+      "total": 0,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 0,
+          "samples": []
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 0,
+          "samples": []
+        },
+        "parens": {
+          "count": 0,
+          "samples": []
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "metrics": {
+      "turnCount": 12,
+      "atTurnCountCap": false,
+      "englishLeaks": 4,
+      "spokenWords": 546,
+      "inWordTarget": true,
+      "maxTurnChars": 282,
+      "minTurnChars": 197,
+      "overHardCap": 0,
+      "overSoftCap": 0,
+      "questionTurns": 1,
+      "turnChars": [
+        197,
+        222,
+        247,
+        205,
+        236,
+        211,
+        260,
+        256,
+        226,
+        282,
+        253,
+        245
+      ]
+    },
+    "tokens": {
+      "in": 1590,
+      "out": 957
+    }
+  },
+  "verdict": "PARTIAL (updated cleaner than baseline but not spotless)"
+}

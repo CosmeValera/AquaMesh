@@ -1,0 +1,603 @@
+{
+  "runAt": "2026-07-24T21:36:27.756Z",
+  "models": {
+    "guide": "gpt-5.4-mini",
+    "podcast": "gpt-5.4-nano"
+  },
+  "outputLanguage": "es",
+  "detectorStatus": [
+    {
+      "category": "emoji",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "arrows",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "ampersand",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "mathSymbols",
+      "baseline": 13,
+      "updated": 0,
+      "status": "fixed"
+    },
+    {
+      "category": "percentSign",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "complexNumbers",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "parens",
+      "baseline": 37,
+      "updated": 0,
+      "status": "fixed"
+    },
+    {
+      "category": "dottedAbbrev",
+      "baseline": 0,
+      "updated": 0,
+      "status": "n/a (english-only detector)"
+    },
+    {
+      "category": "identifiers",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "slugEcho",
+      "baseline": 0,
+      "updated": 0,
+      "status": "untested (baseline clean too)"
+    },
+    {
+      "category": "sourceRef",
+      "baseline": 1,
+      "updated": 0,
+      "status": "n/a (english-only detector)"
+    },
+    {
+      "category": "spelledLongDecimal",
+      "baseline": 0,
+      "updated": 0,
+      "status": "n/a (english-only detector)"
+    },
+    {
+      "category": "ambiguousExponent",
+      "baseline": 0,
+      "updated": 0,
+      "status": "n/a (english-only detector)"
+    },
+    {
+      "category": "ungroupedFunctionArg",
+      "baseline": 0,
+      "updated": 0,
+      "status": "n/a (english-only detector)"
+    }
+  ],
+  "guide": {
+    "title": "Derivatives in Calculus",
+    "podcastSourceTitle": "derivatives-calculus",
+    "text": "# Derivatives in Calculus\n\n## What a Derivative Means\nA **derivative** measures how fast a function is changing. It is the **slope of the tangent line** to a graph at a point, and it tells us the **instantaneous rate of change**.\n\nFor a function \\(f(x)\\), the derivative is written as:\n\n\\[\nf'(x) \\quad \\text{or} \\quad \\frac{dy}{dx}\n\\]\n\nThe formal definition uses a limit:\n\n\\[\nf'(x)=\\lim_{h\\to 0}\\frac{f(x+h)-f(x)}{h}\n\\]\n\nThis means we look at the average rate of change over a tiny interval and let that interval shrink to 0.\n\n## Basic Rules\nThe most common rule is the **power rule**:\n\n\\[\n\\frac{d}{dx}(x^n)=nx^{n-1}\n\\]\n\nExamples:\n- \\(\\frac{d}{dx}(x^2)=2x\\)\n- \\(\\frac{d}{dx}(x^5)=5x^4\\)\n- \\(\\frac{d}{dx}(7)=0\\)\n\nOther useful facts:\n- Constant multiple rule: \\(\\frac{d}{dx}[cf(x)] = c f'(x)\\)\n- Sum rule: \\(\\frac{d}{dx}[f(x)+g(x)] = f'(x)+g'(x)\\)\n\nDerivatives are used in physics, economics, and biology. For example, if a population grows by 3% per year, a derivative can describe the growth rate at a specific moment.\n\n## Worked Example\nFind the derivative of \\(f(x)=x^3-4x+1\\).\n\n\\[\nf'(x)=\\frac{d}{dx}(x^3)-\\frac{d}{dx}(4x)+\\frac{d}{dx}(1)\n\\]\n\n\\[\nf'(x)=3x^2-4+0\n\\]\n\nSo,\n\n\\[\n\\boxed{f'(x)=3x^2-4}\n\\]\n\nIf \\(x=2\\), then \\(f'(2)=3(2^2)-4=8\\). This means the slope of the tangent line at \\(x=2\\) is 8.\n\n## Quick Reminder\nDerivatives help us answer: **How fast is something changing right now?**  \nThey connect motion, slopes, and rates of change in one powerful idea.",
+    "scan": {
+      "total": 147,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 10,
+          "samples": [
+            "**: \\[ \\frac{d}{dx}(x^n)=nx^{n-1} \\] Exampl",
+            "[ \\frac{d}{dx}(x^n)=nx^{n-1} \\] Examples: -",
+            "es: - \\(\\frac{d}{dx}(x^2)=2x\\) - \\(\\frac{d}{d",
+            "x\\) - \\(\\frac{d}{dx}(x^5)=5x^4\\) - \\(\\frac{d}",
+            "\\(\\frac{d}{dx}(x^5)=5x^4\\) - \\(\\frac{d}{dx}(7",
+            "derivative of \\(f(x)=x^3-4x+1\\). \\[ f'(x)=\\f"
+          ]
+        },
+        "percentSign": {
+          "count": 1,
+          "samples": [
+            "population grows by 3% per year, a derivativ"
+          ]
+        },
+        "complexNumbers": {
+          "count": 0,
+          "samples": []
+        },
+        "parens": {
+          "count": 136,
+          "samples": [
+            "e**. For a function \\(f(x)\\), the derivative",
+            "*. For a function \\(f(x)\\), the derivative i",
+            "For a function \\(f(x)\\), the derivative is",
+            "For a function \\(f(x)\\), the derivative is wr",
+            "tive is written as: \\[ f'(x) \\quad \\text{or}",
+            "is written as: \\[ f'(x) \\quad \\text{or} \\qu"
+          ]
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    }
+  },
+  "baseline": {
+    "script": {
+      "title": "Derivatives in Calculus: Instantaneous Change",
+      "description": "A short, warm recap of what derivatives mean, the key rules (power, constant multiple, sum), and a worked example—focused on slope of the tangent line and instantaneous rate of change.",
+      "transcriptTurns": [
+        {
+          "speaker": "hostA",
+          "text": "Welcome back to StudyMesh! Today we’re talking about derivatives in calculus—what they mean and how to compute them."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Right. The core idea is simple: a derivative measures how fast a function is changing. Geometrically, it’s the slope of the tangent line to a graph at a point."
+        },
+        {
+          "speaker": "hostA",
+          "text": "And that slope corresponds to the instantaneous rate of change—so not an average over a big interval, but “right now,” at that specific point."
+        },
+        {
+          "speaker": "hostB",
+          "text": "We write the derivative of a function f(x) as f'(x) or as dy/dx. Formally, it’s defined using a limit: f'(x) equals the limit as h goes to 0 of [f(x+h) minus f(x)] over h."
+        },
+        {
+          "speaker": "hostA",
+          "text": "That limit language is really about shrinking the interval. We start with an average rate of change over a tiny interval, then let that interval shrink to zero."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Once you have the meaning, the next step is the rules. The most common one is the power rule: d/dx of x^n equals n x^(n-1)."
+        },
+        {
+          "speaker": "hostA",
+          "text": "For example, d/dx of x^2 is 2x, and d/dx of x^5 is 5x^4. And if you differentiate a constant like 7, you get 0."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Two more useful rules are the constant multiple rule and the sum rule. The constant multiple rule says d/dx of c f(x) equals c times f'(x)."
+        },
+        {
+          "speaker": "hostA",
+          "text": "And the sum rule says d/dx of f(x) plus g(x equals f'(x) plus g'(x). So derivatives play nicely with adding functions."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Let’s do a worked example from the guide. Find the derivative of f(x) = x^3 - 4x + 1."
+        },
+        {
+          "speaker": "hostA",
+          "text": "We differentiate term by term: f'(x) equals d/dx of x^3 minus d/dx of 4x plus d/dx of 1."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Using the power rule, d/dx of x^3 is 3x^2. For 4x, think of it as 4 times x, so the derivative is 4 times 1, which is 4. And d/dx of 1 is 0."
+        },
+        {
+          "speaker": "hostA",
+          "text": "So f'(x) = 3x^2 - 4 + 0, which simplifies to f'(x) = 3x^2 - 4."
+        },
+        {
+          "speaker": "hostB",
+          "text": "If we plug in x = 2, then f'(2) = 3(2^2) - 4. Since 2^2 is 4, that becomes 3·4 - 4 = 12 - 4 = 8."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Meaning: at x = 2, the slope of the tangent line is 8. That’s the instantaneous rate of change at that point."
+        },
+        {
+          "speaker": "hostB",
+          "text": "To wrap up, derivatives help us answer one question: how fast is something changing right now? They connect motion, slopes, and rates of change into one powerful idea."
+        }
+      ],
+      "chapters": [
+        {
+          "title": "What a Derivative Means",
+          "startTurn": 0
+        },
+        {
+          "title": "Limit Definition of f'(x)",
+          "startTurn": 3
+        },
+        {
+          "title": "Basic Rules: Power, Constant Multiple, Sum",
+          "startTurn": 5
+        },
+        {
+          "title": "Worked Example: f(x)=x^3-4x+1",
+          "startTurn": 9
+        },
+        {
+          "title": "Interpreting the Result",
+          "startTurn": 13
+        }
+      ]
+    },
+    "scan": {
+      "total": 51,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 13,
+          "samples": [
+            "power rule: d/dx of x^n equals n x^(n-1). Fo",
+            "d/dx of x^n equals n x^(n-1). For example, d/",
+            "For example, d/dx of x^2 is 2x, and d/dx of x",
+            "2 is 2x, and d/dx of x^5 is 5x^4. And if you",
+            "and d/dx of x^5 is 5x^4. And if you differen",
+            "derivative of f(x) = x^3 - 4x + 1. We differe"
+          ]
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 0,
+          "samples": []
+        },
+        "parens": {
+          "count": 37,
+          "samples": [
+            "vative of a function f(x) as f'(x) or as dy/d",
+            "tive of a function f(x) as f'(x) or as dy/dx.",
+            "a function f(x) as f'(x) or as dy/dx. Formal",
+            "function f(x) as f'(x) or as dy/dx. Formally",
+            "ined using a limit: f'(x) equals the limit as",
+            "ed using a limit: f'(x) equals the limit as h"
+          ]
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 1,
+          "samples": [
+            "a worked example from the guide. Find the derivative"
+          ]
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "metrics": {
+      "turnCount": 16,
+      "atTurnCountCap": false,
+      "englishLeaks": 0,
+      "spokenWords": 394,
+      "inWordTarget": false,
+      "maxTurnChars": 171,
+      "minTurnChars": 62,
+      "overHardCap": 0,
+      "overSoftCap": 0,
+      "questionTurns": 1,
+      "turnChars": [
+        116,
+        159,
+        142,
+        171,
+        160,
+        123,
+        111,
+        139,
+        118,
+        85,
+        88,
+        140,
+        62,
+        96,
+        109,
+        167
+      ]
+    },
+    "tokens": {
+      "in": 750,
+      "out": 883
+    }
+  },
+  "updated": {
+    "script": {
+      "title": "Derivadas en cálculo: qué significan y cómo se calculan",
+      "description": "En este episodio hablamos de qué mide una derivada, por qué es la pendiente de la recta tangente y cómo usar reglas básicas como la regla de la potencia para derivar funciones. Cerramos con un ejemplo completo y una idea clave para recordar.",
+      "transcriptTurns": [
+        {
+          "speaker": "hostA",
+          "text": "Hoy conectamos una idea central del cálculo: la derivada. Para mí, una derivada mide qué tan rápido cambia una función. Y además, es la pendiente de la recta tangente al gráfico en un punto específico. ¿Tú lo ves más como velocidad o más como geometría?"
+        },
+        {
+          "speaker": "hostB",
+          "text": "Yo lo siento como ambas cosas. Geométricamente, la pendiente de la tangente es un número que describe el “cambio instantáneo”. Y eso se traduce en tasa instantánea de cambio. Si una función cambia, la derivada te dice el ritmo justo en ese momento. ¿Recuerdas cómo entra el límite en la definición formal?"
+        },
+        {
+          "speaker": "hostA",
+          "text": "Sí. La definición formal dice que la derivada en x es el límite cuando h se acerca a cero de la razón: la función en x más h menos la función en x, todo dividido entre h. La idea es mirar el cambio promedio en un intervalo pequeñísimo y luego hacer que ese intervalo se vuelva cero. ¿Por qué crees que eso importa tanto?"
+        },
+        {
+          "speaker": "hostB",
+          "text": "Porque así evitamos quedarnos con un promedio. Si el intervalo no se hace cero, solo tienes una aproximación. Con el límite obtienes el cambio instantáneo. Y por eso la derivada se escribe como f prima de x, o como dy sobre dx. Ahora, para calcular, usamos reglas. La más famosa es la regla de la potencia. ¿La tienes clara?"
+        },
+        {
+          "speaker": "hostA",
+          "text": "La regla de la potencia dice que la derivada de x a la n es n por x a la n menos uno. Por ejemplo, derivar x al cuadrado da dos por x. Derivar x a la quinta da cinco por x a la cuarta. Y derivar una constante, como siete, da cero. ¿Te parece sorprendente que una constante tenga derivada cero?"
+        },
+        {
+          "speaker": "hostB",
+          "text": "No sorprende cuando lo piensas: si no cambia, su tasa de cambio instantánea es cero. También hay reglas útiles: la regla del múltiplo constante dice que la derivada de c por f de x es c por f prima de x. Y la regla de la suma dice que la derivada de f de x más g de x es f prima de x más g prima de x. ¿Quieres que hagamos un ejemplo para ver todo junto?"
+        },
+        {
+          "speaker": "hostA",
+          "text": "Perfecto. Tomemos la función f de x igual a x al cubo menos cuatro por x más uno. Para derivar, derivamos término por término. Primero, la derivada de x al cubo usando la regla de la potencia: tres por x al cuadrado. Luego, la derivada de cuatro por x: como cuatro es constante, queda cuatro por la derivada de x, que es uno, así que sale cuatro. Pero como en la función era menos cuatro por x, queda menos cuatro. Y la derivada de uno es cero. ¿Te sigue el signo negativo?"
+        },
+        {
+          "speaker": "hostB",
+          "text": "Sí, el negativo se mantiene. Entonces la derivada queda tres por x al cuadrado menos cuatro más cero. O sea, f prima de x igual a tres por x al cuadrado menos cuatro. Ahora, si evaluamos en x igual a dos, calculamos tres por dos al cuadrado menos cuatro. Dos al cuadrado es cuatro, entonces tres por cuatro es doce, y doce menos cuatro es ocho. ¿Qué significa ese ocho en palabras?"
+        },
+        {
+          "speaker": "hostA",
+          "text": "Significa que la pendiente de la recta tangente al gráfico en x igual a dos es ocho. También significa que la tasa instantánea de cambio en ese punto es ocho unidades de salida por unidad de entrada, según cómo esté definida la función. Es una forma concreta de conectar la geometría con el cambio. ¿Te gusta cómo la derivada une movimiento, pendientes y tasas?"
+        },
+        {
+          "speaker": "hostB",
+          "text": "Mucho. Y además, se usa en áreas como física, economía y biología. Por ejemplo, si una población crece a tres por ciento por año, una derivada puede describir la tasa de crecimiento en un momento específico. Antes de cerrar, quiero resumir la idea clave: una derivada responde “qué tan rápido cambia algo ahora mismo”. ¿Listo para el recordatorio final?"
+        },
+        {
+          "speaker": "hostA",
+          "text": "Listo. Derivar es medir el cambio instantáneo. La derivada es la pendiente de la tangente y se puede definir con un límite que convierte un cambio promedio en un cambio exacto en el punto. Y con reglas como la regla de la potencia, la suma y el múltiplo constante, calculas derivadas de forma directa. Si te quedas con una sola frase, que sea esa: cómo de rápido cambia una función justo en ese punto."
+        }
+      ],
+      "chapters": [
+        {
+          "title": "Qué significa una derivada y la idea del límite",
+          "startTurn": 0
+        },
+        {
+          "title": "Reglas básicas para derivar",
+          "startTurn": 3
+        },
+        {
+          "title": "Ejemplo completo y evaluación en un punto",
+          "startTurn": 6
+        },
+        {
+          "title": "Recordatorio final: cambio instantáneo",
+          "startTurn": 9
+        }
+      ]
+    },
+    "scan": {
+      "total": 0,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 0,
+          "samples": []
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 0,
+          "samples": []
+        },
+        "parens": {
+          "count": 0,
+          "samples": []
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "fullScan": {
+      "total": 0,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 0,
+          "samples": []
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 0,
+          "samples": []
+        },
+        "parens": {
+          "count": 0,
+          "samples": []
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "metrics": {
+      "turnCount": 11,
+      "atTurnCountCap": false,
+      "englishLeaks": 0,
+      "spokenWords": 721,
+      "inWordTarget": true,
+      "maxTurnChars": 473,
+      "minTurnChars": 253,
+      "overHardCap": 0,
+      "overSoftCap": 0,
+      "questionTurns": 10,
+      "turnChars": [
+        253,
+        305,
+        320,
+        324,
+        293,
+        354,
+        473,
+        381,
+        361,
+        353,
+        401
+      ]
+    },
+    "tokens": {
+      "in": 1665,
+      "out": 1161
+    }
+  },
+  "verdict": "PASS (updated transcript is clean)"
+}

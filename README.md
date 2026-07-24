@@ -22,12 +22,31 @@ skill, a subject you're studying) and get clear lessons, quizzes, and exercises.
 
 ## See it in action
 
-<!-- 2x2 grid, ~400px each. Below ~400px the on-screen text stops being readable. -->
-| Quiz | Flashcards |
-|:---:|:---:|
-| <img src="readme_docs/media/quiz.gif" width="400" alt="Generate a quiz" /> | <img src="readme_docs/media/flashcards.gif" width="400" alt="Generate flashcards" /> |
-| **Podcast** | **AI Chat** |
-| <img src="readme_docs/media/podcast.gif" width="400" alt="Generate a podcast recap" /> | <img src="readme_docs/media/ai-chat.gif" width="400" alt="Ask AI Chat" /> |
+From any Quick Guide, one click turns the material into something you can practice with.
+
+### Quiz
+
+Multiple-choice questions written from the guide, added as a new page you can retake.
+
+![Generate a quiz](readme_docs/media/quiz.gif)
+
+### Flashcards
+
+The key ideas as flip cards, for quick repetition.
+
+![Generate flashcards](readme_docs/media/flashcards.gif)
+
+### Podcast
+
+A short two-voice conversation recapping the guide, with a player and a transcript.
+
+![Generate a podcast recap](readme_docs/media/podcast.gif)
+
+### AI Chat
+
+Ask anything about the guide. It can pull in web sources when the material doesn't cover something.
+
+![Ask AI Chat](readme_docs/media/ai-chat.gif)
 
 ## Bring your own AI
 

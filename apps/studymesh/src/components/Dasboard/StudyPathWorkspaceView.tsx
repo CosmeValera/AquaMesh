@@ -40,6 +40,7 @@ import { useNavigate } from 'react-router-dom'
 import StudyGuidePagesPanel from './StudyGuidePagesPanel'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 import { renderMarkdownInline } from '../study/StudyBlockView'
+import TextSelectionActionBar from '../workspace/TextSelectionActionBar'
 
 type PageIconTone = 'primary' | 'error'
 
@@ -660,6 +661,15 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
           )}
         </Box>
       </Box>
+      <TextSelectionActionBar
+        containerRef={pageScrollContainerRef}
+        scopeKey={
+          currentPageKey ? `${studyPath.pathId}:${currentPageKey}` : null
+        }
+        enabled={!isEditingCurrentPage}
+        contextLabel={currentLesson.name}
+        onAskAi={onAskAi}
+      />
     </Box>
   )
 }

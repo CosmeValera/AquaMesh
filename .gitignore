@@ -44,7 +44,7 @@ tmp/*.log
 .vscode/settings.json
 
 # Worktrees
-workspace
-workspaces
-worktree
-worktrees
+/workspace/
+/workspaces/
+/worktree/
+/worktrees/

@@ -1,0 +1,429 @@
+{
+  "runAt": "2026-07-24T22:26:19.198Z",
+  "models": {
+    "guide": "gpt-5.4-mini",
+    "podcast": "gpt-5.4-nano"
+  },
+  "topic": "compound",
+  "skippedBaseline": true,
+  "outputLanguage": "en",
+  "detectorStatus": [
+    {
+      "category": "emoji",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "arrows",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "ampersand",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "mathSymbols",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "percentSign",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "complexNumbers",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "parens",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "dottedAbbrev",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "identifiers",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "slugEcho",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "sourceRef",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "spelledLongDecimal",
+      "baseline": 0,
+      "updated": 4,
+      "status": "LEAKING"
+    },
+    {
+      "category": "ambiguousExponent",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "ungroupedFunctionArg",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    }
+  ],
+  "guide": {
+    "title": "Compound Interest and Exponential Growth",
+    "podcastSourceTitle": "compound_interest-growth",
+    "text": "## Compound Interest\n\nCompound interest means you earn interest on both the original amount **P** and the interest already added. This makes the balance grow faster than simple interest.\n\n**Formula:**\n\\[\nA = P\\left(1+\\frac{r}{n}\\right)^{nt}\n\\]\n\n- **A** = final amount  \n- **P** = principal (starting amount)  \n- **r** = annual interest rate as a decimal  \n- **n** = number of compounding periods per year  \n- **t** = time in years  \n\nIf interest is compounded yearly, then \\(n=1\\). If it is compounded monthly, then \\(n=12\\).\n\n### Worked Example\nSuppose you invest **$1,000** at **7.25%** interest, compounded monthly, for **3 years**.\n\n\\[\nA = 1000\\left(1+\\frac{0.0725}{12}\\right)^{12\\cdot 3}\n\\]\n\n\\[\nA \\approx 1000(1.0060417)^{36} \\approx 1240.90\n\\]\n\nSo the investment grows to about **$1,240.90**.\n\n---\n\n## Exponential Growth\n\nCompound interest is a type of **exponential growth**: the amount increases by a constant percentage over equal time intervals. The key idea is:\n\n**start amount -> multiply by growth factor -> repeat**\n\nA general growth model is:\n\n\\[\nA = P(1+r)^t\n\\]\n\nwhen growth happens once per time period.\n\nFor continuous growth, use:\n\n\\[\nA = Pe^{rt}\n\\]\n\nwhere **e ≈ 2.71828**.\n\n### Important Ideas\n- A higher rate causes faster growth.\n- More frequent compounding increases the final amount.\n- Exponential growth can become very large very quickly:  \n  \\(2^{20} = 1,048,576\\)\n\n### Quick Check\nIf a population grows by **5%** per year, the growth factor is **1.05**. After 4 years:\n\n\\[\nA = P(1.05)^4\n\\]\n\nThis means each year’s increase is based on the new total, not just the original value.",
+    "scan": {
+      "total": 66,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 2,
+          "samples": [
+            "a is: **start amount -> multiply by growth fa",
+            "iply by growth factor -> repeat** A general g"
+          ]
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 8,
+          "samples": [
+            "t(1+\\frac{r}{n}\\right)^{nt} \\] - **A** = fin",
+            "rac{0.0725}{12}\\right)^{12\\cdot 3} \\] \\[ A \\",
+            "approx 1000(1.0060417)^{36} \\approx 1240.90 \\",
+            "del is: \\[ A = P(1+r)^t \\] when growth happ",
+            "rowth, use: \\[ A = Pe^{rt} \\] where **e ≈ 2",
+            "Pe^{rt} \\] where **e ≈ 2.71828**. ### Impor"
+          ]
+        },
+        "percentSign": {
+          "count": 2,
+          "samples": [
+            "t **$1,000** at **7.25%** interest, compounde",
+            "opulation grows by **5%** per year, the growt"
+          ]
+        },
+        "complexNumbers": {
+          "count": 6,
+          "samples": [
+            "Suppose you invest **$1,000** at **7.25%** intere",
+            "A = 1000\\left(1+\\frac{0.0725}{12}\\right)^{12\\cdot",
+            "\\] \\[ A \\approx 1000(1.0060417)^{36} \\approx 1240.90",
+            "ent grows to about **$1,240.90**. --- ## Expone",
+            "^{rt} \\] where **e ≈ 2.71828**. ### Important Ide",
+            "ickly: \\(2^{20} = 1,048,576\\) ### Quick Check If"
+          ]
+        },
+        "parens": {
+          "count": 48,
+          "samples": [
+            "erest. **Formula:** \\[ A = P\\left(1+\\frac{r}",
+            "rmula:** \\[ A = P\\left(1+\\frac{r}{n}\\right)^{",
+            "\\[ A = P\\left(1+\\frac{r}{n}\\right)^{nt} \\]",
+            "[ A = P\\left(1+\\frac{r}{n}\\right)^{nt} \\] -",
+            "A = P\\left(1+\\frac{r}{n}\\right)^{nt} \\] - *",
+            "= P\\left(1+\\frac{r}{n}\\right)^{nt} \\] - **A"
+          ]
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    }
+  },
+  "baseline": null,
+  "updated": {
+    "script": {
+      "title": "StudyMesh: Compound Interest and Exponential Growth",
+      "description": "Learn how compound interest grows faster than simple interest, and how it connects to exponential growth models, including a worked example and key ideas about rates and compounding frequency.",
+      "transcriptTurns": [
+        {
+          "speaker": "hostA",
+          "text": "Let’s talk about compound interest and why it feels like the money is “working harder” over time. Compound interest means you earn interest on the original principal and also on the interest that has already been added. That makes the balance grow faster than simple interest."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Right, and the core formula for compound interest is A equals P times one plus r over n, raised to the power of n times t. Here A is the final amount, P is the starting amount, r is the annual interest rate as a decimal, n is how many compounding periods per year, and t is time in years."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Let’s ground it with the worked example. Suppose you invest one thousand dollars at seven point two five percent interest, compounded monthly, for three years. Seven point two five percent becomes zero point zero seven two five as a decimal. Monthly compounding means n equals twelve."
+        },
+        {
+          "speaker": "hostB",
+          "text": "So we plug in: A equals one thousand times one plus zero point zero seven two five over twelve, raised to the power of twelve times three. That exponent is thirty six. Numerically, the inside term is about one point zero zero six zero four one seven, and raising to the thirty six gives about one thousand two hundred forty point nine zero."
+        },
+        {
+          "speaker": "hostA",
+          "text": "So the investment grows to about one thousand two hundred forty dollars and ninety cents. The big takeaway is that the interest keeps getting calculated on a larger and larger base, not just on the original one thousand."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Now let’s connect this to exponential growth. Compound interest is a type of exponential growth because the amount increases by a constant percentage over equal time intervals. The pattern is start amount, then multiply by a growth factor, then repeat."
+        },
+        {
+          "speaker": "hostA",
+          "text": "There are two common growth models mentioned. One is A equals P times one plus r, raised to the power of t, when growth happens once per time period. Another is continuous growth: A equals P e raised to the power of r t, where e is roughly two point seven one eight, or more simply about two point seven."
+        },
+        {
+          "speaker": "hostB",
+          "text": "And the important ideas are pretty intuitive. A higher rate causes faster growth. More frequent compounding increases the final amount. Also, exponential growth can become very large very quickly, like two raised to the power of twenty equals about one million forty eight thousand five hundred seventy six."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Quick check example: if a population grows by five percent per year, the growth factor is one point zero five. After four years, A equals P times one point zero five raised to the power of four. That means each year’s increase is based on the new total, not just the original value."
+        },
+        {
+          "speaker": "hostB",
+          "text": "So if I summarize in plain language, compound interest is exponential growth in disguise: you keep multiplying by a factor that reflects the interest rate and compounding frequency. The result is that the final amount can rise much faster than you’d expect from a straight, one-time interest calculation."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Exactly. And we can restate the key result: compound interest uses A equals P times one plus r over n, raised to n t, and it grows faster because interest is earned on both principal and accumulated interest. That’s the main takeaway for today."
+        }
+      ],
+      "chapters": [
+        {
+          "title": "Compound Interest Basics and Formula",
+          "startTurn": 0
+        },
+        {
+          "title": "Worked Example: Monthly Compounding",
+          "startTurn": 2
+        },
+        {
+          "title": "Exponential Growth Connection",
+          "startTurn": 5
+        },
+        {
+          "title": "Growth Models and Key Ideas",
+          "startTurn": 7
+        }
+      ]
+    },
+    "scan": {
+      "total": 4,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 0,
+          "samples": []
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 0,
+          "samples": []
+        },
+        "parens": {
+          "count": 0,
+          "samples": []
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 4,
+          "samples": [
+            "percent becomes zero point zero seven two five as a decimal. Monthly",
+            "d times one plus zero point zero seven two five over twelve, raised t",
+            "ide term is about one point zero zero six zero four one seven, and raising to the t",
+            "here e is roughly two point seven one eight, or more simply about"
+          ]
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "fullScan": {
+      "total": 4,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 0,
+          "samples": []
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 0,
+          "samples": []
+        },
+        "parens": {
+          "count": 0,
+          "samples": []
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 0,
+          "samples": []
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 4,
+          "samples": [
+            "percent becomes zero point zero seven two five as a decimal. Monthly",
+            "d times one plus zero point zero seven two five over twelve, raised t",
+            "ide term is about one point zero zero six zero four one seven, and raising to the t",
+            "here e is roughly two point seven one eight, or more simply about"
+          ]
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "metrics": {
+      "turnCount": 11,
+      "atTurnCountCap": false,
+      "overTurnBudget": false,
+      "endsOnQuestion": false,
+      "lastTurn": "Exactly. And we can restate the key result: compound interest uses A equals P times one plus r over n, raised to n t, and it grows faster because interest is earned on both principal and accumulated interest. That’s the main takeaway for today.",
+      "englishLeaks": 0,
+      "spokenWords": 546,
+      "inWordTarget": true,
+      "maxTurnChars": 340,
+      "minTurnChars": 220,
+      "overHardCap": 0,
+      "overSoftCap": 0,
+      "questionTurns": 0,
+      "turnChars": [
+        276,
+        288,
+        284,
+        340,
+        220,
+        252,
+        304,
+        307,
+        282,
+        304,
+        244
+      ]
+    },
+    "tokens": {
+      "in": 1678,
+      "out": 832
+    }
+  },
+  "verdict": "FAIL (4 artifacts; no baseline arm to compare against)",
+  "craftVerdict": "SHORTFALL (0 question turns for 4 chapters)",
+  "closingVerdict": "PASS (landed the ending inside the turn budget)",
+  "closingSurvived": true,
+  "shippedTurnCount": 11
+}

@@ -23,7 +23,11 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { buildPodcastScriptPrompt } from '../../../api/hosted-ai'
+import {
+  alternatePodcastSpeakers,
+  buildPodcastScriptPrompt,
+  capPodcastTurns,
+} from '../../../api/hosted-ai'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(__dirname, '../../..')
@@ -219,13 +223,57 @@ const podcastSchema = {
   required: ['title', 'description', 'transcriptTurns', 'chapters'],
 }
 
-const GUIDE_TITLE = 'Derivatives in Calculus'
+// Two live runs need two genuinely different prompts, so the topic is a
+// parameter now rather than a hardcoded calculus constant. Each entry carries
+// its own slug-shaped source title, because slug echo is one of the things under
+// test and the slug has to look plausible for the topic.
+const TOPICS = {
+  derivatives: {
+    title: 'Derivatives in Calculus',
+    // sourceTitle comes straight from the page/guide title
+    // (GuideWorkspacePage.tsx:576-578) and a real run echoed this slug verbatim
+    // into spoken dialogue, so the eval feeds a slug-shaped one on purpose.
+    sourceTitle: 'derivatives-calculus',
+    notation:
+      'Write like real math notes: use standard notation where it is natural, for example x^2, dy/dx, the power rule, a limit, and approximations like e ≈ 2.71828 and pi ≈ 3.14159.',
+  },
+  compound: {
+    title: 'Compound Interest and Exponential Growth',
+    sourceTitle: 'compound_interest-growth',
+    notation:
+      'Write like real finance/math notes: use standard notation where it is natural, for example A = P(1 + r/n)^(nt), a growth rate like 7.25%, a long figure like 1,048,576, and the constant e ≈ 2.71828.',
+  },
+  http: {
+    title: 'How HTTP Requests Work on the Web',
+    sourceTitle: 'http-requests_basics',
+    notation:
+      'Write like real technical notes: use identifiers and notation where natural, for example GET/POST, status codes, a URL such as https://api.example.com/v1/users, header names like Content-Type, a figure like 1,048,576 bytes, a latency figure like 99.9% uptime, and abbreviations such as e.g. and etc.',
+  },
+} as const
 
-// The podcast is asked to speak a slug-shaped title on purpose. A real run
-// reproduced this: sourceTitle comes straight from the page/guide title
-// (GuideWorkspacePage.tsx:576-578) and the model echoed "derivatives-calculus"
-// verbatim into spoken dialogue.
-const PODCAST_SOURCE_TITLE = 'derivatives-calculus'
+type TopicKey = keyof typeof TOPICS
+
+const TOPIC_KEY = (process.env.PODCAST_EVAL_TOPIC?.trim() ||
+  'derivatives') as TopicKey
+const TOPIC = TOPICS[TOPIC_KEY]
+if (!TOPIC) {
+  throw new Error(
+    `Unknown PODCAST_EVAL_TOPIC "${TOPIC_KEY}". Known: ${Object.keys(TOPICS).join(', ')}`,
+  )
+}
+
+const GUIDE_TITLE = TOPIC.title
+const PODCAST_SOURCE_TITLE = TOPIC.sourceTitle
+
+// The baseline arm is a pre-change comparator, and it costs a full billed
+// generation. When the question is "does the shipped prompt behave", that spend
+// buys nothing, so it can be skipped.
+const SKIP_BASELINE = process.env.PODCAST_EVAL_SKIP_BASELINE === '1'
+
+// Path to a previous results JSON whose guide.text should be reused as the podcast
+// source, instead of generating a fresh guide. Pins the source text so a prompt
+// change is the only variable between two runs.
+const REUSE_GUIDE_FILE = process.env.PODCAST_EVAL_GUIDE_FILE?.trim() || ''
 
 const buildGuidePrompt = () =>
   `Write concise Study Guide lesson notes for a beginner on "${GUIDE_TITLE}".
@@ -233,10 +281,9 @@ const buildGuidePrompt = () =>
 Rules:
 - Return Markdown lesson notes only (no JSON, no preamble).
 - 220-320 words, with a couple of short sections.
-- Write like real math notes: use standard notation where it is natural, for
-  example x^2, dy/dx, the power rule, a limit, an approximation like e ≈ 2.71828
-  and pi ≈ 3.14159, at least one percent figure, and an arrow (->) to show that
-  one step leads to another.
+- ${TOPIC.notation}
+- Include at least one percent figure and an arrow (->) to show that one step
+  leads to another.
 - Include one small worked example.`
 
 // Mirror of the PRE-CHANGE api/hosted-ai.ts buildPodcastScriptPrompt (no
@@ -274,6 +321,11 @@ const transcriptText = (script: PodcastScript): string =>
 // displayed but never spoken, so the verdict scores this text, not the above.
 const spokenText = (script: PodcastScript): string =>
   (script.transcriptTurns || []).map((turn) => turn.text || '').join('\n')
+
+// Mirrors the shipped prompt rule: "at least three turns before the closing turn
+// must end with a question mark". Kept next to the detectors so the two move
+// together when the rule changes again.
+const REQUIRED_QUESTION_TURNS = 3
 
 const DETECTORS: { label: string; regex: RegExp }[] = [
   { label: 'emoji', regex: /\p{Extended_Pictographic}/gu },
@@ -390,10 +442,29 @@ const measureTurns = (script: PodcastScript) => {
   const englishLeaks = NON_ENGLISH_EVAL
     ? turns.join('\n').match(ENGLISH_LEAK)?.length || 0
     : 0
+  // The failure that started this: the episode ended on a question the other
+  // host never got to answer. The prompt now forbids it, so score it directly.
+  const lastTurn = turns.at(-1) || ''
+  const endsOnQuestion = lastTurn.trim().endsWith('?')
+  // Two turns in a row from one host share a TTS voice, so the listener hears
+  // one block instead of an exchange. The model's raw labels are scored here and
+  // again after the shipped repair, because only the second number is audible.
+  const countSeams = (scored: { speaker: string }[]) =>
+    scored.filter(
+      (turn, index) => index > 0 && turn.speaker === scored[index - 1].speaker,
+    ).length
+  const rawTurns = script.transcriptTurns || []
+  const sameSpeakerSeams = countSeams(rawTurns)
+  const seamsAfterRepair = countSeams(alternatePodcastSpeakers(rawTurns))
 
   return {
+    sameSpeakerSeams,
+    seamsAfterRepair,
     turnCount: turns.length,
     atTurnCountCap: turns.length >= TURN_COUNT_CAP,
+    overTurnBudget: turns.length > TURN_COUNT_CAP,
+    endsOnQuestion,
+    lastTurn,
     englishLeaks,
     spokenWords,
     inWordTarget: spokenWords >= 520 && spokenWords <= 850,
@@ -411,14 +482,31 @@ const main = async () => {
   console.log(`Guide model:   ${GUIDE_MODEL}`)
   console.log(`Podcast model: ${PODCAST_MODEL}`)
 
-  // Stage 1: generate the Quick Guide.
-  console.log('\n[1/3] Generating Quick Guide...')
-  const guide = await callOpenAi({
-    model: GUIDE_MODEL,
-    prompt: buildGuidePrompt(),
-    maxTokens: 1200,
-  })
-  const guideText = guide.text.trim()
+  // Stage 1: generate the Quick Guide, or reuse a previous run's.
+  //
+  // Regenerating the guide changes the source text under the podcast, which
+  // confounds any before/after comparison of the podcast prompt itself. Pointing
+  // at an earlier results file pins the source so the prompt is the only variable
+  // — and it makes the run a pure podcast generation, not two billed calls.
+  const guideText = REUSE_GUIDE_FILE
+    ? (() => {
+        const previous = JSON.parse(readFileSync(REUSE_GUIDE_FILE, 'utf8'))
+        const text = previous?.guide?.text
+        if (typeof text !== 'string' || !text.trim()) {
+          throw new Error(`No guide.text found in ${REUSE_GUIDE_FILE}`)
+        }
+        console.log(`\n[1/3] Reusing guide from ${REUSE_GUIDE_FILE} (no guide call).`)
+        return text.trim()
+      })()
+    : await (async () => {
+        console.log('\n[1/3] Generating Quick Guide...')
+        const guide = await callOpenAi({
+          model: GUIDE_MODEL,
+          prompt: buildGuidePrompt(),
+          maxTokens: 1200,
+        })
+        return guide.text.trim()
+      })()
   const guideScan = scanArtifacts(guideText)
   console.log(
     `Guide words: ${wordCount(guideText)} | disruptive tokens in guide: ${guideScan.total}`,
@@ -448,18 +536,28 @@ const main = async () => {
     maxTokens: 5000,
   })
 
-  console.log('[2/3] Generating podcast (baseline = pre-change prompt)...')
-  const baseline = await callOpenAi({
-    model: PODCAST_MODEL,
-    prompt: buildBaselinePodcastPrompt(PODCAST_SOURCE_TITLE, guideText),
-    schema: podcastSchema,
-    maxTokens: 5000,
-  })
+  const baseline = SKIP_BASELINE
+    ? null
+    : await (async () => {
+        console.log('[2/3] Generating podcast (baseline = pre-change prompt)...')
+        return callOpenAi({
+          model: PODCAST_MODEL,
+          prompt: buildBaselinePodcastPrompt(PODCAST_SOURCE_TITLE, guideText),
+          schema: podcastSchema,
+          maxTokens: 5000,
+        })
+      })()
+  if (SKIP_BASELINE) {
+    console.log('[2/3] Baseline arm skipped (PODCAST_EVAL_SKIP_BASELINE=1).')
+  }
 
   // Stage 3: evaluate.
   console.log('\n[3/3] Scanning transcripts...\n')
   const updatedScript = updated.parsed as PodcastScript
-  const baselineScript = baseline.parsed as PodcastScript
+  const baselineScript = (baseline?.parsed ?? {
+    transcriptTurns: [],
+    chapters: [],
+  }) as PodcastScript
   const updatedScan = scanArtifacts(spokenText(updatedScript))
   const baselineScan = scanArtifacts(spokenText(baselineScript))
   const updatedFullScan = scanArtifacts(transcriptText(updatedScript))
@@ -476,11 +574,15 @@ const main = async () => {
       status:
         NON_ENGLISH_EVAL && ENGLISH_ONLY_DETECTORS.has(label)
           ? 'n/a (english-only detector)'
-          : baselineCount === 0 && updatedCount === 0
-            ? 'untested (baseline clean too)'
-            : updatedCount === 0
-              ? 'fixed'
-              : 'LEAKING',
+          : SKIP_BASELINE
+            ? updatedCount === 0
+              ? 'clean (no baseline arm)'
+              : 'LEAKING'
+            : baselineCount === 0 && updatedCount === 0
+              ? 'untested (baseline clean too)'
+              : updatedCount === 0
+                ? 'fixed'
+                : 'LEAKING',
     }
   })
   console.table(table)
@@ -503,6 +605,8 @@ const main = async () => {
     { metric: `turnsOver${TURN_SOFT_CAP}`, baseline: baselineMetrics.overSoftCap, updated: updatedMetrics.overSoftCap },
     { metric: `truncatedOver${TURN_HARD_CAP}`, baseline: baselineMetrics.overHardCap, updated: updatedMetrics.overHardCap },
     { metric: 'turnsWithQuestion', baseline: baselineMetrics.questionTurns, updated: updatedMetrics.questionTurns },
+    { metric: 'sameSpeakerSeams(raw)', baseline: baselineMetrics.sameSpeakerSeams, updated: updatedMetrics.sameSpeakerSeams },
+    { metric: 'seamsAfterRepair', baseline: baselineMetrics.seamsAfterRepair, updated: updatedMetrics.seamsAfterRepair },
   ])
   if (updatedMetrics.overHardCap > 0) {
     console.warn(
@@ -546,20 +650,56 @@ const main = async () => {
     updatedMetrics.overHardCap === 0 &&
     updatedMetrics.englishLeaks === 0
       ? 'PASS (updated transcript is clean)'
-      : updatedScan.total < baselineScan.total
-        ? 'PARTIAL (updated cleaner than baseline but not spotless)'
-        : 'FAIL (updated not cleaner than baseline)'
+      : SKIP_BASELINE
+        ? `FAIL (${updatedScan.total} artifacts; no baseline arm to compare against)`
+        : updatedScan.total < baselineScan.total
+          ? 'PARTIAL (updated cleaner than baseline but not spotless)'
+          : 'FAIL (updated not cleaner than baseline)'
   console.log(`TTS-SAFETY VERDICT: ${verdict}`)
 
+  // The closing-turn fix has two halves and they fail differently: the prompt
+  // half asks the model to land an ending inside the budget, the code half
+  // (capPodcastTurns) guarantees the closing survives if it overruns anyway.
+  // Score both, and run the real shipped cap over the live turns to prove it.
+  const rawTurns = (updatedScript.transcriptTurns || []).map((turn) => ({
+    speaker: turn.speaker === 'hostB' ? ('hostB' as const) : ('hostA' as const),
+    text: turn.text || '',
+  }))
+  const shippedTurns = capPodcastTurns(rawTurns)
+  const closingSurvived =
+    shippedTurns.at(-1)?.text === rawTurns.at(-1)?.text && shippedTurns.length > 0
+  const closingVerdict = updatedMetrics.endsOnQuestion
+    ? 'FAIL (episode ends on a question)'
+    : updatedMetrics.overTurnBudget
+      ? `PASS-VIA-CAP (model wrote ${updatedMetrics.turnCount} turns; cap kept the closing: ${closingSurvived})`
+      : 'PASS (landed the ending inside the turn budget)'
+  console.log(`CLOSING VERDICT: ${closingVerdict}`)
+  console.log(
+    `  turns: ${updatedMetrics.turnCount}/${TURN_COUNT_CAP} | after shipped cap: ${shippedTurns.length} | closing preserved: ${closingSurvived}`,
+  )
+  console.log(`  last turn: ${updatedMetrics.lastTurn}`)
+
   // Scored separately: TTS safety and podcast craft trade off against each other
-  // across model tiers, and a single verdict hid that. The prompt requires a
-  // genuine question at least once per chapter, so anything less is a real miss.
-  const chapterCount = (updatedScript.chapters || []).length
-  const craftVerdict =
-    updatedMetrics.questionTurns >= Math.max(1, chapterCount)
-      ? 'PASS (dialogue has a question per chapter)'
-      : `SHORTFALL (${updatedMetrics.questionTurns} question turns for ${chapterCount} chapters)`
+  // across model tiers, and a single verdict hid that. This tracked the old
+  // "one question per chapter" rule and kept printing SHORTFALL after the prompt
+  // moved to a flat three, which read as a regression when it was a pass.
+  // Speaker seams are folded in because the fix for question counts is what
+  // caused them, so scoring one without the other hides the trade.
+  const craftShortfalls = [
+    updatedMetrics.questionTurns >= REQUIRED_QUESTION_TURNS
+      ? ''
+      : `${updatedMetrics.questionTurns} question turns, needs ${REQUIRED_QUESTION_TURNS}`,
+    updatedMetrics.seamsAfterRepair === 0
+      ? ''
+      : `${updatedMetrics.seamsAfterRepair} same-speaker seams survived the repair`,
+  ].filter(Boolean)
+  const craftVerdict = craftShortfalls.length
+    ? `SHORTFALL (${craftShortfalls.join('; ')})`
+    : `PASS (${updatedMetrics.questionTurns} question turns, no same-speaker seams after repair)`
   console.log(`CRAFT VERDICT: ${craftVerdict}`)
+  console.log(
+    `  raw seams from the model: ${updatedMetrics.sameSpeakerSeams} | after alternatePodcastSpeakers: ${updatedMetrics.seamsAfterRepair}`,
+  )
 
   // Show offending snippets from each arm.
   const showSnippets = (label: string, scan: ReturnType<typeof scanArtifacts>) => {
@@ -599,6 +739,8 @@ const main = async () => {
   const results = {
     runAt: new Date().toISOString(),
     models: { guide: GUIDE_MODEL, podcast: PODCAST_MODEL },
+    topic: TOPIC_KEY,
+    skippedBaseline: SKIP_BASELINE,
     outputLanguage: EVAL_LANGUAGE,
     detectorStatus: table,
     guide: {
@@ -607,12 +749,14 @@ const main = async () => {
       text: guideText,
       scan: guideScan,
     },
-    baseline: {
-      script: baselineScript,
-      scan: baselineScan,
-      metrics: baselineMetrics,
-      tokens: { in: baseline.inputTokens, out: baseline.outputTokens },
-    },
+    baseline: SKIP_BASELINE
+      ? null
+      : {
+          script: baselineScript,
+          scan: baselineScan,
+          metrics: baselineMetrics,
+          tokens: { in: baseline?.inputTokens ?? 0, out: baseline?.outputTokens ?? 0 },
+        },
     updated: {
       script: updatedScript,
       scan: updatedScan,
@@ -622,6 +766,9 @@ const main = async () => {
     },
     verdict,
     craftVerdict,
+    closingVerdict,
+    closingSurvived,
+    shippedTurnCount: shippedTurns.length,
   }
   writeFileSync(jsonPath, `${JSON.stringify(results, null, 2)}\n`)
   console.log(`\nWrote ${path.relative(repoRoot, jsonPath)}`)

@@ -148,6 +148,7 @@ export const DEFAULT_OPENAI_REASONING_EFFORT = "none";
 const MAX_TEXT_CHARS = 120_000;
 const MIN_PODCAST_SOURCE_CHARS = 400;
 const MAX_PODCAST_SOURCE_CHARS = 24_000;
+const MAX_PODCAST_TURNS = 18;
 const MAX_PODCAST_AUDIO_BYTES = 15_000_000;
 const PODCAST_TTS_MONTHLY_CHARACTER_CAP = 225_000;
 const PODCAST_RETAINED_AUDIO_COUNT = 5;
@@ -1337,7 +1338,6 @@ const parseJsonFromText = (value: string): JsonObject | null => {
 
 const normalizePodcastTurn = (
   value: unknown,
-  index: number,
 ): HostedAiPodcastTranscriptTurn | null => {
   if (!isObject(value)) {
     return null;
@@ -1349,10 +1349,7 @@ const normalizePodcastTurn = (
     return null;
   }
 
-  return {
-    speaker: index % 2 === 0 ? speaker : speaker,
-    text,
-  };
+  return { speaker, text };
 };
 
 const normalizePodcastChapter = (
@@ -1375,6 +1372,50 @@ const normalizePodcastChapter = (
   return title ? { title, startTurn } : null;
 };
 
+// Overflow used to be `.slice(0, MAX_PODCAST_TURNS)`, which dropped the tail. A
+// real episode came back ending mid-thought on a question the other host never
+// answered, because the closing turns were cut. Keep the closing turn and shed
+// from the middle instead, where a listener is least likely to notice the seam.
+export const capPodcastTurns = (
+  turns: HostedAiPodcastTranscriptTurn[],
+): HostedAiPodcastTranscriptTurn[] => {
+  if (turns.length <= MAX_PODCAST_TURNS) {
+    return turns;
+  }
+
+  const closing = turns[turns.length - 1];
+  const head = turns.slice(0, MAX_PODCAST_TURNS - 1);
+  // Cutting the middle can land the same voice on both sides of the seam, so
+  // shed one more turn rather than have a host answer themselves.
+  if (head.length > 0 && head[head.length - 1].speaker === closing.speaker) {
+    head.pop();
+  }
+
+  return [...head, closing];
+};
+
+// Each speaker gets its own TTS voice, so two consecutive turns from the same
+// host are heard as one continuous block and the turn-taking cue disappears. A
+// live episode came back with three such seams once the prompt asked for short
+// question turns: the model parks a question next to the turn that just answered
+// the previous one, and the same voice ends up answering itself and then asking.
+//
+// Asking the prompt for alternation is what already failed, and the labels carry
+// no meaning of their own — they only pick a voice — so re-anchoring them on the
+// opening speaker fixes the audio without changing a word anyone says. Adjacency
+// is what makes "the other host" resolve correctly, and this preserves it.
+export const alternatePodcastSpeakers = (
+  turns: HostedAiPodcastTranscriptTurn[],
+): HostedAiPodcastTranscriptTurn[] => {
+  const opening = turns[0]?.speaker === "hostB" ? "hostB" : "hostA";
+  const other = opening === "hostA" ? "hostB" : "hostA";
+
+  return turns.map((turn, index) => {
+    const speaker = index % 2 === 0 ? opening : other;
+    return speaker === turn.speaker ? turn : { ...turn, speaker };
+  });
+};
+
 const normalizePodcastScript = (
   text: string,
   fallbackTitle: string,
@@ -1387,10 +1428,17 @@ const normalizePodcastScript = (
   }
 
   const transcriptTurns = Array.isArray(parsed.transcriptTurns)
-    ? parsed.transcriptTurns
-        .map(normalizePodcastTurn)
-        .filter((turn): turn is HostedAiPodcastTranscriptTurn => Boolean(turn))
-        .slice(0, 18)
+    ? // After the cap, not before: shedding turns from the middle would otherwise
+      // put two of the same voice back together at the seam.
+      alternatePodcastSpeakers(
+        capPodcastTurns(
+          parsed.transcriptTurns
+            .map((turn) => normalizePodcastTurn(turn))
+            .filter((turn): turn is HostedAiPodcastTranscriptTurn =>
+              Boolean(turn),
+            ),
+        ),
+      )
     : [];
 
   if (transcriptTurns.length < 4) {
@@ -1500,6 +1548,75 @@ const buildPodcastLanguageRetryPrompt = ({
     getPodcastTranscriptText(script),
   ].join("\n\n");
 
+// Trim a rounded figure back down: 1.00 reads as 1, 1.10 as 1.1.
+const trimTrailingZeros = (value: string): string =>
+  value.includes(".") ? value.replace(/0+$/, "").replace(/\.$/, "") : value;
+
+const roundForSpeech = (value: number, decimals = 2): string =>
+  trimTrailingZeros(value.toFixed(decimals));
+
+const GROUPED_NUMERAL_PATTERN = /\d{1,3}(?:,\d{3})+/g;
+const URL_PATTERN = /https?:\/\/[^\s<>()[\]"'`]+/gi;
+
+/**
+ * Rewrite the listening hazards out of the podcast source before the model sees
+ * them.
+ *
+ * Measured over four live generations (two topics, before and after a prompt
+ * change, the last pair pinned to identical source text): the fast model applies
+ * rules that *substitute* one token for another — an arrow becomes "leads to",
+ * "x^2" becomes "x squared" — with no misses. It does not apply rules that
+ * require *transforming* a value before speaking it. Asked to round, it instead
+ * read 1.0060417 out digit by digit; asked to speak addresses as words, it read
+ * a URL verbatim. Every residual artifact was a literal copied straight out of
+ * the source, and the same literals leaked again from the same source on a
+ * second pass, so more prompt wording is not the lever.
+ *
+ * Doing the transformation here leaves nothing to copy.
+ *
+ * Deliberately limited to URLs and comma-grouped numerals. Rounding long decimals
+ * was tried and removed: run over the real guide sources it rewrote
+ * `\frac{0.0725}{12}` and `1000(1.0060417)^{36}` into `about 0.07` and
+ * `about 1.01`, which puts English inside a LaTeX command and, worse, is false —
+ * 1.01^36 is about 1.43, not the 1240.90 the same paragraph states. A figure a
+ * formula depends on cannot be rounded without changing the claim, so those stay
+ * verbatim and the prompt handles them.
+ */
+export const normalizePodcastSourceText = (sourceText: string): string =>
+  sourceText
+    .replace(URL_PATTERN, (url) => {
+      // A host is sayable once the dots are words; a scheme and path never are.
+      const host = url.replace(/^https?:\/\//i, "").split(/[/?#]/)[0];
+      return host.replace(/\./g, " dot ").replace(/[-_]+/g, " ").trim();
+    })
+    .replace(GROUPED_NUMERAL_PATTERN, (numeral) => {
+      const value = Number(numeral.replace(/,/g, ""));
+      if (!Number.isFinite(value)) {
+        return numeral;
+      }
+      if (value >= 1_000_000_000) {
+        return `about ${roundForSpeech(value / 1_000_000_000)} billion`;
+      }
+      if (value >= 1_000_000) {
+        return `about ${roundForSpeech(value / 1_000_000)} million`;
+      }
+      if (value >= 10_000) {
+        return `about ${roundForSpeech(value / 1_000, 0)} thousand`;
+      }
+      // Under ten thousand the digits are already easy to say; only the
+      // separator has to go, since it is what the model echoes.
+      return String(value);
+    })
+    // The source often already hedges the figure it states. Rounding it a second
+    // time must not produce "roughly about" or "≈ about".
+    .replace(/\b(about|roughly|approximately|around)\s+about\b/gi, "$1")
+    // Only signs that already mean "approximately". A plain "=" must keep the
+    // hedge, or rounding would restate an equation as an exact one.
+    .replace(/(≈|~)\s*about\b/g, "$1")
+    // LaTeX spells the same idea as a command, so the character-class rule above
+    // misses it and the source reads "approximately about 1.05 million".
+    .replace(/\\(approx|sim)\s*about\b/g, "\\$1");
+
 export const buildPodcastScriptPrompt = ({
   sourceTitle,
   sourceText,
@@ -1523,7 +1640,9 @@ export const buildPodcastScriptPrompt = ({
     "Create a short StudyMesh educational podcast script from ONLY the provided Study Guide source.",
     languageInstruction,
     "Return strict JSON with: title, description, transcriptTurns, chapters.",
-    "transcriptTurns must use speakers hostA and hostB only.",
+    // A live episode opened a turn with "Quick question for you, hostA", so the
+    // schema line has to say the labels are metadata, not names the hosts use.
+    "transcriptTurns must use speakers hostA and hostB only. Those labels are metadata; never speak them inside a turn.",
     "Target 520-850 spoken words across 10-18 turns, warm but focused two-host dialogue. 520 words is a hard minimum; keep going until the script reaches it. Alternate hostA and hostB when natural.",
     "Do not invent facts. Do not mention web lookup. Do not cite sources unless the source text already contains them.",
     "If the source is thin, still create the best concise recap from available content without adding outside facts.",
@@ -1538,13 +1657,29 @@ export const buildPodcastScriptPrompt = ({
     "Write abbreviations out as words instead of dotted forms, in the podcast's language, for example \"in the afternoon\" instead of \"p.m.\", \"for example\" instead of \"e.g.\", and \"and so on\" instead of \"etc.\".",
     "Speak every title, term, file name, and address as ordinary words. Never read a slug or identifier literally: say \"derivatives in calculus\" instead of \"derivatives-calculus\", and expand hyphenated, underscored, or camelCase names into natural speech.",
     "Keep each turn under about 600 characters. If a spoken-out explanation runs long, split it across turns instead of packing one turn.",
-    "The hosts are explaining what they already know, not reading from a handout. Never say \"the guide\", \"the source\", \"the document\", \"the notes\", or any equivalent phrase in the podcast's language; state the idea directly as their own explanation.",
-    "Make it a real conversation, not alternating lectures. At least once per chapter a host asks the other a genuine question, and hosts react to what was just said. Vary turn lengths instead of trading near-identical blocks.",
+    // The enumerated ban below was already in place when a live turn said "The
+    // notes mention that ...", so listing more nouns is not what was missing. The
+    // added sentence names the construction instead: attributing a fact to
+    // anything at all is what has to stop, whatever the thing is called.
+    "The hosts are explaining what they already know, not reading from a handout. Never say \"the guide\", \"the source\", \"the document\", \"the notes\", or any equivalent phrase in the podcast's language; state the idea directly as their own explanation. Never attribute a fact to any written thing at all: no \"it says\", \"they mention\", \"according to\", or similar. Every statement is simply what the host knows.",
+    // Three wordings have now asked for questions by describing what a question
+    // does — "one per chapter", "a genuine question answered in the next turn",
+    // "at least three exchanges" — and live runs landed at 2, 1, and 0. The last
+    // run showed why: turns opened "I want to check the model" and "Quick check
+    // time", the shape of a question beat rendered as a statement. The model can
+    // produce the beat but not judge whether it asked something. So this asks for
+    // the one property it can check on its own output, a trailing question mark,
+    // and says outright that the turn costs no material, since the word floor
+    // above is what makes a question feel expensive.
+    "Make it a real conversation, not alternating lectures. At least three turns before the closing turn must end with a question mark, each one asking the other host something specific about what was just said, and the very next turn must answer it. A question turn can be a single short sentence and does not have to add new material. Hosts react to each other, and turn lengths vary instead of trading near-identical blocks.",
+    "Never write more than 18 turns; the episode is cut there. Land the ending inside that budget and finish on a closing turn that restates the main takeaway. Do not end on a question.",
     "Restate each key result once in different words later in the script, because a listener cannot re-read a line.",
     "Prefer natural spoken phrasing and avoid anything that would feel disruptive to a listener.",
     `Source title: ${sourceTitle}`,
     "Source:",
-    sourceText,
+    // Normalized here rather than at the call site so the language retry, which
+    // rebuilds this prompt, gets the same treated source.
+    normalizePodcastSourceText(sourceText),
   ].join("\n\n");
 };
 

@@ -1,0 +1,439 @@
+{
+  "runAt": "2026-07-24T22:26:38.914Z",
+  "models": {
+    "guide": "gpt-5.4-mini",
+    "podcast": "gpt-5.4-nano"
+  },
+  "topic": "http",
+  "skippedBaseline": true,
+  "outputLanguage": "en",
+  "detectorStatus": [
+    {
+      "category": "emoji",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "arrows",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "ampersand",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "mathSymbols",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "percentSign",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "complexNumbers",
+      "baseline": 0,
+      "updated": 1,
+      "status": "LEAKING"
+    },
+    {
+      "category": "parens",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "dottedAbbrev",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "identifiers",
+      "baseline": 0,
+      "updated": 1,
+      "status": "LEAKING"
+    },
+    {
+      "category": "slugEcho",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "sourceRef",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "spelledLongDecimal",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "ambiguousExponent",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    },
+    {
+      "category": "ungroupedFunctionArg",
+      "baseline": 0,
+      "updated": 0,
+      "status": "clean (no baseline arm)"
+    }
+  ],
+  "guide": {
+    "title": "How HTTP Requests Work on the Web",
+    "podcastSourceTitle": "http-requests_basics",
+    "text": "## How HTTP Requests Work on the Web\n\nHTTP (Hypertext Transfer Protocol) is the basic way browsers and servers exchange data. A client, e.g. a browser or mobile app, sends an **HTTP request** to a server, and the server returns an **HTTP response**. This usually happens over **HTTPS** (HTTP + TLS), which encrypts the traffic.\n\n### Request Basics\n\nA request has a few main parts:\n\n- **Method**: what action to perform  \n  - `GET` = fetch data  \n  - `POST` = send new data  \n  - `PUT`, `PATCH`, `DELETE` = update or remove data\n- **URL**: the resource location, e.g. `https://api.example.com/v1/users`\n- **Headers**: metadata like `Content-Type: application/json`, `Authorization: Bearer <token>`\n- **Body**: optional data sent with `POST`, `PUT`, etc.\n\nA typical flow is:\n\n`browser -> DNS lookup -> connect to server -> send request -> receive response`\n\n### Response Basics\n\nThe server replies with:\n\n- **Status code**\n  - `200 OK` = success\n  - `201 Created` = new resource made\n  - `400 Bad Request` = client error\n  - `401 Unauthorized` = missing/invalid auth\n  - `404 Not Found` = resource does not exist\n  - `500 Internal Server Error` = server problem\n- **Headers**: e.g. `Content-Type: application/json`\n- **Body**: the data, often JSON or HTML\n\n### Worked Example\n\nRequest:\n\n```http\nGET /v1/users/42 HTTP/1.1\nHost: api.example.com\nAccept: application/json\n```\n\nResponse:\n\n```http\nHTTP/1.1 200 OK\nContent-Type: application/json\n\n{\"id\":42,\"name\":\"Ava\"}\n```\n\nThis means the client asked for user `42`, and the server returned JSON successfully.\n\n### Quick Notes\n\n- HTTP is stateless: each request is independent.\n- Performance matters: a site with 99.9% uptime can still feel slow if latency is high.\n- Large responses may be split into chunks; 1,048,576 bytes = 1 MiB.",
+    "scan": {
+      "total": 17,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 4,
+          "samples": [
+            "al flow is: `browser -> DNS lookup -> connect",
+            "browser -> DNS lookup -> connect to server ->",
+            "-> connect to server -> send request -> recei",
+            "erver -> send request -> receive response` ##"
+          ]
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 0,
+          "samples": []
+        },
+        "percentSign": {
+          "count": 1,
+          "samples": [
+            "ters: a site with 99.9% uptime can still feel"
+          ]
+        },
+        "complexNumbers": {
+          "count": 1,
+          "samples": [
+            "be split into chunks; 1,048,576 bytes = 1 MiB."
+          ]
+        },
+        "parens": {
+          "count": 6,
+          "samples": [
+            "Work on the Web HTTP (Hypertext Transfer Pro",
+            "text Transfer Protocol) is the basic way brow",
+            "appens over **HTTPS** (HTTP + TLS), which enc",
+            "**HTTPS** (HTTP + TLS), which encrypts the t",
+            "pe: application/json {\"id\":42,\"name\":\"Ava\"}",
+            "{\"id\":42,\"name\":\"Ava\"} ``` This means the c"
+          ]
+        },
+        "dottedAbbrev": {
+          "count": 4,
+          "samples": [
+            "hange data. A client, e.g. a browser or mobile a",
+            "he resource location, e.g. `https://api.example.",
+            "t with `POST`, `PUT`, etc. A typical flow is:",
+            "roblem - **Headers**: e.g. `Content-Type: applic"
+          ]
+        },
+        "identifiers": {
+          "count": 1,
+          "samples": [
+            "ource location, e.g. `https://api.example.com/v1/users` - **Headers**: metada"
+          ]
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    }
+  },
+  "baseline": null,
+  "updated": {
+    "script": {
+      "title": "HTTP Requests Basics: Methods, URLs, Headers, and Responses",
+      "description": "Learn how a browser or app sends an HTTP request and how a server answers with an HTTP response, including the key parts of requests and the meaning of common status codes.",
+      "transcriptTurns": [
+        {
+          "speaker": "hostA",
+          "text": "Let’s talk about how HTTP requests work on the web. In plain terms, a client like a browser sends an HTTP request to a server, and the server returns an HTTP response. Usually this is done over HTTPS, which is HTTP plus TLS, so the traffic is encrypted."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Right, and it helps to picture the whole journey. A typical flow is browser to DNS lookup, then connect to the server, then send the request, then receive the response. Each request is independent, because HTTP is stateless."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Now the request itself has a few main parts. First is the method, which is the action to perform. GET fetches data. POST sends new data. PUT, PATCH, and DELETE update or remove data."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Second is the URL, which is the resource location, like https://api.example.com/v1/users. Third are headers, which are metadata. For example, Content-Type can be application/json, and Authorization can be Bearer plus a token."
+        },
+        {
+          "speaker": "hostA",
+          "text": "And fourth is the body, which is optional data sent with methods like POST or PUT. So if you’re sending new information, the body is where it goes. If you’re just fetching, you often have no body."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Let’s ground it with the worked example. The request is a GET for a specific user path, and it includes a Host header and an Accept header asking for application/json."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Then the response comes back with a status line, headers, and a body. The status code is the big signal. For example, 200 OK means success, 201 Created means a new resource was made, 400 Bad Request is a client error, 401 Unauthorized means missing or invalid auth, 404 Not Found means the resource does not exist, and 500 Internal Server Error means the server had a problem."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Quick question: if the status code is 404, what should we conclude? Is it the client’s fault or the server’s fault?"
+        },
+        {
+          "speaker": "hostA",
+          "text": "Based on the meanings we have, 404 Not Found means the resource does not exist. So it’s not really about authentication or a generic server crash. It’s about the requested resource not being found."
+        },
+        {
+          "speaker": "hostB",
+          "text": "Exactly. And the response headers can include Content-Type like application/json. Then the body often contains JSON or HTML. In the example, the client asked for user 42, and the server returned JSON successfully."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Let me restate that example in words. The client requested user 42, and the server responded with a success status, and a JSON body containing the id and name. That’s what “200 OK” plus a JSON body is telling you."
+        },
+        {
+          "speaker": "hostB",
+          "text": "One more practical note: performance matters. Even if a site has 99.9 percent uptime, it can still feel slow if latency is high. Also, large responses may be split into chunks, and one MiB is 1,048,576 bytes."
+        },
+        {
+          "speaker": "hostA",
+          "text": "So if we summarize the key pieces: an HTTP request includes a method, a URL, headers, and sometimes a body. Then the server replies with a status code, headers, and a body. And because HTTP is stateless, each request stands on its own."
+        },
+        {
+          "speaker": "hostB",
+          "text": "And the status code is your first checkpoint. 200 OK for success, 201 Created for a new resource, 400 for bad request, 401 for missing or invalid auth, 404 for not found, and 500 for server errors. That’s the fastest way to interpret what happened."
+        },
+        {
+          "speaker": "hostA",
+          "text": "Main takeaway: understand the request parts, then read the response status code and body. Once you can do that, you can reason about what a client asked for and what the server actually returned."
+        }
+      ],
+      "chapters": [
+        {
+          "title": "Request flow and request parts",
+          "startTurn": 0
+        },
+        {
+          "title": "Response basics and status codes",
+          "startTurn": 6
+        },
+        {
+          "title": "Worked example and practical notes",
+          "startTurn": 9
+        }
+      ]
+    },
+    "scan": {
+      "total": 2,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 0,
+          "samples": []
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 1,
+          "samples": [
+            "hunks, and one MiB is 1,048,576 bytes. So if we summa"
+          ]
+        },
+        "parens": {
+          "count": 0,
+          "samples": []
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 1,
+          "samples": [
+            "source location, like https://api.example.com/v1/users. Third are headers, wh"
+          ]
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "fullScan": {
+      "total": 2,
+      "perCategory": {
+        "emoji": {
+          "count": 0,
+          "samples": []
+        },
+        "arrows": {
+          "count": 0,
+          "samples": []
+        },
+        "ampersand": {
+          "count": 0,
+          "samples": []
+        },
+        "mathSymbols": {
+          "count": 0,
+          "samples": []
+        },
+        "percentSign": {
+          "count": 0,
+          "samples": []
+        },
+        "complexNumbers": {
+          "count": 1,
+          "samples": [
+            "hunks, and one MiB is 1,048,576 bytes. So if we summa"
+          ]
+        },
+        "parens": {
+          "count": 0,
+          "samples": []
+        },
+        "dottedAbbrev": {
+          "count": 0,
+          "samples": []
+        },
+        "identifiers": {
+          "count": 1,
+          "samples": [
+            "source location, like https://api.example.com/v1/users. Third are headers, wh"
+          ]
+        },
+        "slugEcho": {
+          "count": 0,
+          "samples": []
+        },
+        "sourceRef": {
+          "count": 0,
+          "samples": []
+        },
+        "spelledLongDecimal": {
+          "count": 0,
+          "samples": []
+        },
+        "ambiguousExponent": {
+          "count": 0,
+          "samples": []
+        },
+        "ungroupedFunctionArg": {
+          "count": 0,
+          "samples": []
+        }
+      }
+    },
+    "metrics": {
+      "turnCount": 15,
+      "atTurnCountCap": false,
+      "overTurnBudget": false,
+      "endsOnQuestion": false,
+      "lastTurn": "Main takeaway: understand the request parts, then read the response status code and body. Once you can do that, you can reason about what a client asked for and what the server actually returned.",
+      "englishLeaks": 0,
+      "spokenWords": 573,
+      "inWordTarget": true,
+      "maxTurnChars": 376,
+      "minTurnChars": 115,
+      "overHardCap": 0,
+      "overSoftCap": 0,
+      "questionTurns": 1,
+      "turnChars": [
+        253,
+        224,
+        182,
+        225,
+        196,
+        167,
+        376,
+        115,
+        197,
+        213,
+        213,
+        208,
+        235,
+        248,
+        195
+      ]
+    },
+    "tokens": {
+      "in": 1687,
+      "out": 957
+    }
+  },
+  "verdict": "FAIL (2 artifacts; no baseline arm to compare against)",
+  "craftVerdict": "SHORTFALL (1 question turns for 3 chapters)",
+  "closingVerdict": "PASS (landed the ending inside the turn budget)",
+  "closingSurvived": true,
+  "shippedTurnCount": 15
+}

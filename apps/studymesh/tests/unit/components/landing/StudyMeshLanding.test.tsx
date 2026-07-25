@@ -83,7 +83,7 @@ describe('StudyMeshLanding', () => {
     ).toBeInTheDocument()
     expect(
       screen.getByText(
-        /studymesh builds quick guides by connecting new concepts/i,
+        /rabbithole builds quick guides by connecting new concepts/i,
       ),
     ).toBeInTheDocument()
     expect(screen.getAllByText(/20 sec/i).length).toBeGreaterThan(0)

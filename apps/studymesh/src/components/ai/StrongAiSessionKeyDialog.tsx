@@ -67,7 +67,7 @@ const StrongAiSessionKeyDialog: React.FC<StrongAiSessionKeyDialogProps> = ({
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 0.5 }}>
           <Typography variant="body2" color="text.secondary">
-            Enter your API key for this browser session. StudyMesh will not save
+            Enter your API key for this browser session. RabbitHole will not save
             it in local storage.
           </Typography>
           {error ? <Alert severity="warning">{error}</Alert> : null}

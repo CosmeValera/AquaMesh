@@ -50,7 +50,7 @@ const getLocalAiOutputLanguage = (
 
   throw new LocalAiGenerationError(
     'unsupported',
-    'Google Local AI only supports English, Spanish, and Japanese output in StudyMesh. Choose one of those languages, or switch to Hosted AI or your own provider key.',
+    'Google Local AI only supports English, Spanish, and Japanese output in RabbitHole. Choose one of those languages, or switch to Hosted AI or your own provider key.',
   )
 }
 
@@ -118,7 +118,7 @@ const LOCAL_STUDY_PATH_TIMEOUT_MESSAGE =
 const LOCAL_STUDY_PATH_INVALID_JSON_MESSAGE =
   'Local AI returned malformed JSON. Try again, choose a smaller path, or use Own Gemini token.'
 const LOCAL_STUDY_PATH_NO_USABLE_OBJECTS_MESSAGE =
-  'Local AI returned JSON, but StudyMesh could not map it into widgets.'
+  'Local AI returned JSON, but RabbitHole could not map it into widgets.'
 
 interface LocalConceptContract {
   concept: string
@@ -2367,7 +2367,7 @@ const normalizeLocalStudyPathPlan = (
 
   if (rawDashboards.length > 0 && rawDashboards.length < expectedCount) {
     warnings.push(
-      'Local AI planner returned too few dashboards; StudyMesh filled the missing lesson outlines.',
+      'Local AI planner returned too few dashboards; RabbitHole filled the missing lesson outlines.',
     )
   }
 
@@ -2681,7 +2681,7 @@ const logLocalDashboardError = (
   debug: LocalAiGenerationFailureDebug,
   error: unknown,
 ): void => {
-  console.debug('[StudyMesh Local AI] dashboard:error', {
+  console.debug('[RabbitHole Local AI] dashboard:error', {
     dashboardIndex: debug.dashboardIndex,
     dashboardCount: debug.dashboardCount,
     attempt: debug.attempt,

@@ -58,7 +58,7 @@ const packBadgeLabel = (packId: string): string => {
 }
 
 const packValueLabel = (credits: number, priceCents: number): string =>
-  `${Math.round(credits / (priceCents / 100))} credits / EUR`
+  `${Math.round(credits / (priceCents / 100))} carrots / EUR`
 
 const CreditAmount = ({
   amount,
@@ -71,7 +71,7 @@ const CreditAmount = ({
 }) => (
   <Box
     component="span"
-    aria-label={`${amount} Study Credits`}
+    aria-label={`${amount} Carrots`}
     sx={{
       display: 'inline-flex',
       alignItems: 'center',
@@ -105,7 +105,7 @@ const freeOptions = [
     label: 'Private on-device AI',
     body: 'Run compatible browser-local AI when available, with generation kept on your device.',
     icon: <MemoryIcon />,
-    features: ['No hosted credits', 'Works locally', 'Private by design'],
+    features: ['No hosted Carrots', 'Works locally', 'Private by design'],
   },
 ]
 
@@ -163,7 +163,7 @@ const StudyMeshPricingPage = () => {
                 variant="body1"
                 sx={{ maxWidth: 720, color: pricingBrand.muted, pt: 2 }}
               >
-                No credit card required to start. Use StudyMesh for free with
+                No credit card required to start. Use RabbitHole for free with
                 your own API key or local AI. Hosted AI is optional when you
                 want setup-free generation.
               </Typography>
@@ -200,7 +200,7 @@ const StudyMeshPricingPage = () => {
                     </Typography>
                     <Typography sx={{ color: pricingBrand.muted }}>
                       Create Quick Guides, Quick Create results, and chat with
-                      your study workspace without a StudyMesh subscription.
+                      your study workspace without a RabbitHole subscription.
                     </Typography>
                     <Button
                       variant="contained"
@@ -327,7 +327,7 @@ const StudyMeshPricingPage = () => {
                   fontWeight={900}
                   sx={{ color: pricingBrand.ink }}
                 >
-                  Buy Study Credits for setup-free AI.
+                  Buy Carrots for setup-free AI.
                 </Typography>
                 <Typography
                   variant="body2"
@@ -432,7 +432,7 @@ const StudyMeshPricingPage = () => {
                               direction="row"
                               spacing={0.85}
                               alignItems="center"
-                              aria-label={`${pack.credits} Study Credits`}
+                              aria-label={`${pack.credits} Carrots`}
                             >
                               <Typography
                                 variant="h4"

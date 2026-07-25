@@ -153,7 +153,7 @@ export const useWorkspaceActions = () => {
           tags: widget.tags || ['quick-create', 'embedded-generated'],
           description: widget.description || 'Generated from student notes.',
           version: widget.version || '1.0',
-          author: widget.author || 'StudyMesh',
+          author: widget.author || 'RabbitHole',
           createdAt: now,
           updatedAt: now,
         }))

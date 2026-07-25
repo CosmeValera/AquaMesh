@@ -90,7 +90,7 @@ const getRequestedPack = (body: unknown): (typeof CREDIT_PACKS)[number] => {
   const pack = CREDIT_PACKS.find((candidate) => candidate.id === packId)
 
   if (!pack) {
-    throw new Error('Invalid Study Credits pack.')
+    throw new Error('Invalid Carrots pack.')
   }
 
   return pack
@@ -226,11 +226,11 @@ const validatePaidSession = (
   const pack = getPackForSession(session)
 
   if (!pack) {
-    throw new Error('Checkout Session price does not match Study Credits refill.')
+    throw new Error('Checkout Session price does not match Carrots refill.')
   }
 
   if (!session.metadata?.owner_id) {
-    throw new Error('Checkout Session is missing StudyMesh owner metadata.')
+    throw new Error('Checkout Session is missing RabbitHole owner metadata.')
   }
 
   if (session.metadata.owner_id !== ownerId) {
@@ -249,7 +249,7 @@ const validatePaidSession = (
     session.metadata?.credits &&
     Number(session.metadata.credits) !== pack.credits
   ) {
-    throw new Error('Checkout Session credits do not match Study Credits refill.')
+    throw new Error('Checkout Session credits do not match Carrots refill.')
   }
 
   if (
@@ -257,17 +257,17 @@ const validatePaidSession = (
     Number(session.metadata.expected_amount) !== pack.priceCents
   ) {
     throw new Error(
-      'Checkout Session metadata amount does not match Study Credits refill.',
+      'Checkout Session metadata amount does not match Carrots refill.',
     )
   }
 
   if (session.amount_total !== pack.priceCents) {
-    throw new Error('Checkout Session amount does not match Study Credits refill.')
+    throw new Error('Checkout Session amount does not match Carrots refill.')
   }
 
   if ((session.currency || '').toLowerCase() !== REFILL_CURRENCY) {
     throw new Error(
-      'Checkout Session currency does not match Study Credits refill.',
+      'Checkout Session currency does not match Carrots refill.',
     )
   }
 
@@ -324,7 +324,7 @@ export default async function handler(
       500,
       errorResponse(
         'not_configured',
-        `Study Credits billing is missing server configuration: ${missing.join(', ')}.`,
+        `Carrots billing is missing server configuration: ${missing.join(', ')}.`,
       ),
     )
     return
@@ -335,7 +335,7 @@ export default async function handler(
     json(
       res,
       401,
-      errorResponse('not_authenticated', 'Sign in to buy Study Credits.'),
+      errorResponse('not_authenticated', 'Sign in to buy Carrots.'),
     )
     return
   }
@@ -446,14 +446,14 @@ export default async function handler(
       json(
         res,
         401,
-        errorResponse('not_authenticated', 'Sign in to buy Study Credits.'),
+        errorResponse('not_authenticated', 'Sign in to buy Carrots.'),
       )
       return
     }
 
     if (
       error instanceof Error &&
-      error.message === 'Invalid Study Credits pack.'
+      error.message === 'Invalid Carrots pack.'
     ) {
       json(res, 400, errorResponse('invalid_request', error.message))
       return

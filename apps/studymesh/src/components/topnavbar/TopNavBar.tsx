@@ -208,7 +208,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   } = useDashboards()
   const currentDashboard = openDashboards[selectedDashboard]
   const currentDashboardTitle =
-    currentDashboard?.studyPath?.title || currentDashboard?.name || 'StudyMesh'
+    currentDashboard?.studyPath?.title || currentDashboard?.name || 'RabbitHole'
   const navigate = useNavigate()
 
   const {
@@ -285,7 +285,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       setAiModeNotice(
         detail?.showNotice === false
           ? ''
-          : 'You do not have enough Study Credits for that action. Buy a credit pack, switch to your own API key, or use local AI.',
+          : 'You do not have enough Carrots for that action. Buy a carrot pack, switch to your own API key, or use local AI.',
       )
       setIsAiModeOpen(true)
     }
@@ -505,7 +505,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
             <>
               {creationHost === 'external' ? (
                 <Box
-                  aria-label="StudyMesh logo"
+                  aria-label="RabbitHole logo"
                   role="button"
                   tabIndex={0}
                   onClick={() => navigate('/study-guides')}
@@ -533,7 +533,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                     sx={{ width: 30, height: 30, display: 'block' }}
                   />
                   <Typography variant="subtitle2" fontWeight={600} noWrap>
-                    StudyMesh
+                    RabbitHole
                   </Typography>
                 </Box>
               ) : (
@@ -612,7 +612,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
               >
                 {/* Logo and Brand */}
                 <Box
-                  aria-label="StudyMesh logo"
+                  aria-label="RabbitHole logo"
                   role="button"
                   tabIndex={0}
                   onClick={() => navigate('/study-guides')}
@@ -645,7 +645,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                       mr: isDesktop ? 1 : 0,
                     }}
                   />
-                  {isDesktop && 'StudyMesh'}
+                  {isDesktop && 'RabbitHole'}
                 </Box>
 
                 {creationHost !== 'external' ? <DashboardOptionsMenu /> : null}

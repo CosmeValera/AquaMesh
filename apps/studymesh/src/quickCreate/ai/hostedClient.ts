@@ -5,6 +5,7 @@ import {
   HOSTED_AI_USAGE_CHANGED_EVENT,
   HOSTED_AI_VISUAL_SPEND_EVENT,
   getHostedAiCreditCost,
+  isCurrencyShortageMessage,
 } from './hostedCredits'
 import type {
   HostedAiGatewayRequest,
@@ -47,7 +48,7 @@ const getHostedAiAccessToken = async (): Promise<string> => {
 
   const accessToken = data.session?.access_token
   if (!accessToken) {
-    throw new Error('Sign in to use hosted Study Credits.')
+    throw new Error('Sign in to use hosted Carrots.')
   }
 
   return accessToken
@@ -80,7 +81,7 @@ const formatHostedAiError = (
     dispatchInsufficientCredits()
     return new Error(
       message ||
-        'Not enough Study Credits. Buy a credit pack, switch provider, or bring your own key.',
+        'Not enough Carrots. Buy a carrot pack, switch provider, or bring your own key.',
     )
   }
 
@@ -157,7 +158,7 @@ const assertHostedAiCreditsAvailable = async (
   if (status.studyCredits < requiredCredits) {
     dispatchInsufficientCredits()
     throw new Error(
-      `Not enough Study Credits. This action needs ${requiredCredits} SC and you have ${status.studyCredits} SC.`,
+      `Not enough Carrots. This action needs ${requiredCredits} and you have ${status.studyCredits}.`,
     )
   }
 }
@@ -233,7 +234,7 @@ const callHostedAiModelUnchecked = async ({
 export const isHostedAiInsufficientCreditsError = (
   error: unknown,
 ): boolean =>
-  error instanceof Error && /\bstudy credits\b/i.test(error.message)
+  error instanceof Error && isCurrencyShortageMessage(error.message)
 
 export const callHostedAiModel = async (
   options: HostedAiModelOptions,

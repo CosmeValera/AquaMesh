@@ -265,11 +265,11 @@ describe('GuideWorkspacePage responsive sections', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('Loading Quick Guide...')).toBeInTheDocument()
+    expect(screen.getByText('Hopping to your Quick Guide...')).toBeInTheDocument()
     expect(await screen.findByTestId('study-guide-panel')).toHaveTextContent(
       'Core lesson',
     )
-    expect(screen.queryByText('Loading Quick Guide...')).not.toBeInTheDocument()
+    expect(screen.queryByText('Hopping to your Quick Guide...')).not.toBeInTheDocument()
     expect(guideWorkspaceCloudMocks.getStudyGuide).toHaveBeenCalledWith(
       'user-1',
       'guide-1',

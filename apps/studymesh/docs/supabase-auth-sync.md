@@ -1,4 +1,4 @@
-# StudyMesh Supabase Auth + Cloud Sync Setup
+# RabbitHole Supabase Auth + Cloud Sync Setup
 
 This document supports the real-login/cloud-sync implementation. It covers the database setup owned by Supabase, plus the localStorage migration contract the app should follow.
 
@@ -9,7 +9,7 @@ This document supports the real-login/cloud-sync implementation. It covers the d
 3. In Auth providers, enable Google OAuth if desired.
 4. Configure redirect URLs:
    - Local: `http://localhost:3000/**`
-   - Production: the deployed StudyMesh URL
+   - Production: the deployed RabbitHole URL
    - Preview: Vercel preview wildcard, if used
 5. Add browser-safe env vars to the app and deployment:
    - `SUPABASE_URL`
@@ -18,11 +18,11 @@ This document supports the real-login/cloud-sync implementation. It covers the d
 
 ## Database Install
 
-Run `apps/StudyMesh/docs/supabase-auth-sync.sql` in the Supabase SQL editor.
+Run `apps/studymesh/docs/supabase-auth-sync.sql` in the Supabase SQL editor.
 
 If you already had these tables before the cascade constraints existed, run
-`apps/StudyMesh/docs/supabase-repair-delete-cascade.sql` once. Deleting a user
-from Supabase Auth should then remove their StudyMesh rows automatically.
+`apps/studymesh/docs/supabase-repair-delete-cascade.sql` once. Deleting a user
+from Supabase Auth should then remove their RabbitHole rows automatically.
 
 The SQL creates:
 
@@ -31,7 +31,7 @@ The SQL creates:
 - `user_widgets`: per-user custom widget JSON.
 - `user_widget_versions`: per-user widget snapshots.
 - `user_workspace_state`: selected/open dashboards, study progress, and workspace settings.
-- `hosted_ai_account_history`: auth-user-backed hosted credit history that survives StudyMesh profile deletion, so recreated profiles do not receive another first-login Study Credits grant.
+- `hosted_ai_account_history`: auth-user-backed hosted credit history that survives RabbitHole profile deletion, so recreated profiles do not receive another first-login Carrots grant.
 - `podcast_tts_monthly_usage`: per-user monthly podcast TTS character usage for the app-side Unreal Speech free-tier cap.
 - `podcast_audio_objects`: private podcast MP3 lifecycle metadata. The latest 5
   podcast audio files per user are kept; older audio becomes a deletion
@@ -97,7 +97,7 @@ curl -X GET "https://YOUR_DOMAIN/api/podcast-audio-cleanup" \
 
 ## Local Storage Migration Contract
 
-On first login, app should inspect current local-only StudyMesh data and offer migration to the signed-in account.
+On first login, app should inspect current local-only RabbitHole data and offer migration to the signed-in account.
 
 Known local keys:
 
@@ -125,10 +125,10 @@ Recommended migration flow:
 - Dashboards should sync referenced widgets before dashboard rows.
 - Deleting a dashboard should hard-delete only the dashboard row. It must not delete referenced widgets, because widgets can be reused by multiple dashboards.
 - Deleting a widget should hard-delete the widget row and its related `user_widget_versions` rows.
-- Deleting the signed-in StudyMesh profile row should be allowed from the app and should cascade-delete that profile's StudyMesh rows.
-- Recreating a StudyMesh profile for the same Supabase Auth user should start hosted Study Credits at 0 if that profile was deleted before. First-time Auth users still get the normal initial Study Credits grant.
-- Hosted Study Credits have a daily floor allowance: once per day, active accounts below 7 Study Credits are restored up to 7. Failed hosted generations do not refund credits.
-- Deleting an auth user should cascade-delete all StudyMesh rows owned by that user.
+- Deleting the signed-in RabbitHole profile row should be allowed from the app and should cascade-delete that profile's RabbitHole rows.
+- Recreating a RabbitHole profile for the same Supabase Auth user should start hosted Carrots at 0 if that profile was deleted before. First-time Auth users still get the normal initial Carrots grant.
+- Hosted Carrots have a daily floor allowance: once per day, active accounts below 7 Carrots are restored up to 7. Failed hosted generations do not refund credits.
+- Deleting an auth user should cascade-delete all RabbitHole rows owned by that user.
 - Conflict default: last-write-wins by `updated_at`, except migration duplicates newer cloud conflicts as described above.
 - User logout should clear in-memory workspace state. Local cache may remain, but should not hydrate into another account without session/user match.
 

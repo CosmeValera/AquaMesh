@@ -48,7 +48,7 @@ const LoadingMessage: React.FC<LoadingMessageProps> = ({
   <div className={`centered loader ${height}`}>
     <img
       src="/logo.png"
-      alt="StudyMesh logo"
+      alt="RabbitHole logo"
       style={{
         height: componentLine ? '5vw' : '20dvh',
         width: componentLine ? '5vw' : '20vw',

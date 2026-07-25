@@ -52,7 +52,7 @@ const UpdatePasswordPage = () => {
   return (
     <AuthPageFrame
       title="Choose new password"
-      subtitle="Set a new password for your StudyMesh account."
+      subtitle="Set a new password for your RabbitHole account."
       footer={
         <Typography variant="body2" color="text.secondary" align="center">
           Already updated?{' '}

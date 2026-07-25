@@ -45,7 +45,7 @@ describe('HostedAiCheckoutReturn', () => {
       expect(confirmHostedAiCreditCheckout).toHaveBeenCalledWith('cs_test_123')
     })
     expect(
-      await screen.findByText('Payment confirmed. Study Credits added.'),
+      await screen.findByText('Payment confirmed. Carrots added.'),
     ).toBeInTheDocument()
     expect(document.querySelectorAll('.studymesh-confetti-piece')).toHaveLength(
       72,
@@ -64,7 +64,7 @@ describe('HostedAiCheckoutReturn', () => {
     )
 
     expect(
-      await screen.findByText('Study Credits checkout was cancelled.'),
+      await screen.findByText('Carrots checkout was cancelled.'),
     ).toBeInTheDocument()
     expect(confirmHostedAiCreditCheckout).not.toHaveBeenCalled()
     await waitFor(() => {

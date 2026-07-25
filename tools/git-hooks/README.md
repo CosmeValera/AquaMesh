@@ -14,7 +14,7 @@ In this case we are changing the `prepare-commit-msg` hook, to add the boilerpla
 
 #### It transforms into:
 
-- StudyMesh:DEV My commit message
+- RabbitHole:DEV My commit message
 
 ## 🚀 Getting Started
 

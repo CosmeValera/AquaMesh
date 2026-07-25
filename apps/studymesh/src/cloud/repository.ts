@@ -483,7 +483,7 @@ export const createCloudRepository = (client: StudyMeshSupabaseClient) => ({
     const deletedCount = typeof data === 'number' ? data : Number(data)
     if (!Number.isFinite(deletedCount) || deletedCount < 1) {
       throw new Error(
-        'StudyMesh profile was not deleted. Apply the delete_own_profile Supabase RPC, then try again.',
+        'RabbitHole profile was not deleted. Apply the delete_own_profile Supabase RPC, then try again.',
       )
     }
   },

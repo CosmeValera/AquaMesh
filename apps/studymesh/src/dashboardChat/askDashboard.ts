@@ -171,7 +171,7 @@ const buildPrompt = ({
 }: Omit<AskDashboardOptions, 'history'> & {
   memory: ChatMemory
   outputLanguage: StudyMeshLanguageCode
-}) => `You are StudyMesh's dashboard assistant. Help the student understand the current dashboard.
+}) => `You are RabbitHole's dashboard assistant. Help the student understand the current dashboard.
 
 Rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
@@ -331,7 +331,7 @@ const callDashboardChatModel = async ({
   if (provider === 'local') {
     if (!isLocalAiContentLanguageSupported(outputLanguage)) {
       throw new Error(
-        'Google Local AI only supports English, Spanish, and Japanese output in StudyMesh. Choose one of those languages, or switch to Hosted AI or your own provider key.',
+        'Google Local AI only supports English, Spanish, and Japanese output in RabbitHole. Choose one of those languages, or switch to Hosted AI or your own provider key.',
       )
     }
     return callLocalLanguageModel(prompt, {

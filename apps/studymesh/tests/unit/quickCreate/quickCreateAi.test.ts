@@ -232,8 +232,8 @@ describe('quick create AI settings', () => {
     })
   })
 
-  it('keeps hosted Study Credits costs in the shared contract', () => {
-    expect(STUDY_CREDITS_LABEL).toBe('Study Credits')
+  it('keeps hosted Carrots costs in the shared contract', () => {
+    expect(STUDY_CREDITS_LABEL).toBe('Carrots')
     expect(HOSTED_AI_INITIAL_FREE_CREDITS).toBe(30)
     expect(HOSTED_AI_DAILY_FREE_CREDIT_FLOOR).toBe(7)
     expect(HOSTED_AI_REFILL_CURRENCY).toBe('eur')
@@ -268,6 +268,7 @@ describe('quick create AI settings', () => {
       'study-guide': 3,
       'quick-create': 1,
       chat: 1,
+      'chat-followup': 0,
       podcast: 1,
     })
     expect(getHostedAiCreditCost('study-guide')).toBe(3)
@@ -3345,16 +3346,16 @@ describe('Gemini quick create client', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(7)
     expect(fetchMock.mock.calls[0][1].body).toContain(
-      'Plan a high-quality StudyMesh Study Guide',
+      'Plan a high-quality RabbitHole Study Guide',
     )
     expect(fetchMock.mock.calls[0][1].body).toContain(
       'Choose dashboardCount between 3 and 7',
     )
     expect(fetchMock.mock.calls[1][1].body).toContain(
-      'Create one StudyMesh Study Guide dashboard',
+      'Create one RabbitHole Study Guide dashboard',
     )
     expect(fetchMock.mock.calls[2][1].body).toContain(
-      'Evaluate this StudyMesh Study Guide dashboard',
+      'Evaluate this RabbitHole Study Guide dashboard',
     )
     expect(draft.blueprint?.learningObjectives).toContain('Use for loops')
     expect(draft.dashboards[0]).toMatchObject({

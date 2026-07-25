@@ -508,7 +508,7 @@ const StudyMeshLanding = () => {
                   letterSpacing: 0,
                 }}
               >
-                StudyMesh builds quick guides by connecting new concepts to the
+                RabbitHole builds quick guides by connecting new concepts to the
                 ideas you already understand.
               </Typography>
 
@@ -626,8 +626,7 @@ const StudyMeshLanding = () => {
                 Ready to build your Quick Guide?
               </Typography>
               <Typography sx={{ color: brand.muted, fontSize: '1.08rem' }}>
-                Start with a topic. Let StudyMesh create a guide tailored for
-                you and see it grow.
+                Start anywhere. Go as deep as you want.
               </Typography>
               <Button
                 variant="contained"
@@ -818,7 +817,7 @@ const GrowingGuidesSection = () => (
               }}
             >
               Every guide starts with 5 focused pages. Ask for more depth,
-              examples or exercises, and StudyMesh adds new content instantly.
+              examples or exercises, and RabbitHole adds new content instantly.
             </Typography>
           </Stack>
 

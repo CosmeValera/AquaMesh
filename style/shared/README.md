@@ -1,4 +1,4 @@
-# StudyMesh Container Query System
+# RabbitHole Container Query System
 
 This system provides container-based responsive utilities for microfrontends, allowing them to adapt based on their container width rather than viewport width.
 
@@ -12,7 +12,7 @@ In a microfrontend architecture where multiple applications can be displayed sim
 
 ## Installation
 
-The container query system is already included in the StudyMesh theme. To use it in any microfrontend:
+The container query system is already included in the RabbitHole theme. To use it in any microfrontend:
 
 1. Import the theme in your microfrontend
 2. Import the React components from the shared directory
@@ -25,7 +25,7 @@ import {
   CQ,
 } from "style/shared";
 
-// The SCSS styles are automatically included when using the StudyMesh theme
+// The SCSS styles are automatically included when using the RabbitHole theme
 ```
 
 ## Usage

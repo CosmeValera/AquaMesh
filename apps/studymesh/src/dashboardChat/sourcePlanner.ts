@@ -216,7 +216,7 @@ const buildPlannerPrompt = ({
     )
     .join('\n')
 
-  return `Plan how StudyMesh AI Chat should answer the student's next message.
+  return `Plan how RabbitHole AI Chat should answer the student's next message.
 
 Rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}

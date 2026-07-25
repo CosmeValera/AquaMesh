@@ -116,7 +116,7 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
             <Box
               component="img"
               src="/logo.png"
-              alt="StudyMesh logo"
+              alt="RabbitHole logo"
               sx={{
                 width: { xs: 36, sm: 43 },
                 height: { xs: 36, sm: 43 },
@@ -133,7 +133,7 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
                 letterSpacing: 0,
               }}
             >
-              StudyMesh
+              RabbitHole
             </Typography>
           </Stack>
         </Button>

@@ -16,7 +16,7 @@ import {
   createHostedAiCreditCheckout,
 } from '../../../src/quickCreate/ai/hostedBilling'
 
-describe('hosted Study Credits billing client', () => {
+describe('hosted Carrots billing client', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     getSessionMock.mockResolvedValue({
@@ -65,7 +65,7 @@ describe('hosted Study Credits billing client', () => {
     })
 
     await expect(createHostedAiCreditCheckout()).rejects.toThrow(
-      'Sign in to buy Study Credits.',
+      'Sign in to buy Carrots.',
     )
   })
 

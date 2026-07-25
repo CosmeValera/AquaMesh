@@ -31,27 +31,27 @@ const translations = {
     'settings.avatarUpdateFailed': 'Could not update profile picture.',
     'settings.avatarRemoved': 'Profile picture removed.',
     'settings.noSignedInProfile':
-      'No signed-in StudyMesh profile is available.',
+      'No signed-in RabbitHole profile is available.',
     'settings.language': 'Language',
     'settings.interfaceLanguage': 'Interface language',
     'settings.explanationContext': 'Explanation Context',
     'settings.explanationContextHelp':
-      'StudyMesh uses this to choose useful Quick Start comparisons in new Quick Guides.',
+      'RabbitHole uses this to choose useful Quick Start comparisons in new Quick Guides.',
     'settings.role': 'Role',
     'settings.notSet': 'Not set',
     'settings.noKnownTopics': 'No known topics saved.',
     'settings.editContext': 'Edit context',
     'settings.welcomeGuide': 'Welcome Guide',
     'settings.welcomeGuideHelp':
-      'Restore the built-in StudyMesh guide in the Quick Guides library.',
+      'Restore the built-in RabbitHole guide in the Quick Guides library.',
     'settings.addWelcomeGuide': 'Add welcome guide',
     'settings.welcomeGuideAdded': 'Welcome guide added.',
     'settings.dangerZone': 'Danger Zone',
-    'settings.deleteAccountData': 'Delete StudyMesh Account Data',
-    'settings.deleteAccountHelp': 'Permanently delete your StudyMesh account.',
-    'settings.deleteProfileFailed': 'Could not delete the StudyMesh profile.',
+    'settings.deleteAccountData': 'Delete RabbitHole Account Data',
+    'settings.deleteAccountHelp': 'Permanently delete your RabbitHole account.',
+    'settings.deleteProfileFailed': 'Could not delete the RabbitHole profile.',
     'settings.typeDelete': 'Type DELETE to confirm',
-    'settings.deleteAccount': 'Delete StudyMesh account',
+    'settings.deleteAccount': 'Delete RabbitHole account',
     'settings.deletingProfile': 'Deleting profile...',
     'settings.close': 'Close',
     'settings.cancel': 'Cancel',
@@ -77,9 +77,9 @@ const translations = {
     'podcastPlayer.loadError': 'Could not open podcast audio.',
     'knowledgeContext.title': 'Personal explanation context',
     'knowledgeContext.introTitle':
-      'Help StudyMesh explain new topics using things you already understand.',
+      'Help RabbitHole explain new topics using things you already understand.',
     'knowledgeContext.introBody':
-      'Add a few examples that are relevant to the Quick Guides you create. These can be school subjects, tools, languages, places, hobbies, books, sports, or daily routines. StudyMesh only uses them when they make an explanation easier.',
+      'Add a few examples that are relevant to the Quick Guides you create. These can be school subjects, tools, languages, places, hobbies, books, sports, or daily routines. RabbitHole only uses them when they make an explanation easier.',
     'knowledgeContext.inputLabel': 'Helpful things you know',
     'knowledgeContext.inputExamples': 'Math, biology, football, cooking, music',
     'knowledgeContext.inputHelper':
@@ -97,9 +97,9 @@ const translations = {
     'knowledgeContext.close': 'Close',
     'appearance.themeMode': 'Light / dark mode',
     'appearance.accentColor': 'Accent color',
-    'settings.deleteConfirmTitle': 'Delete StudyMesh Account Data?',
+    'settings.deleteConfirmTitle': 'Delete RabbitHole Account Data?',
     'settings.deleteConfirmBody':
-      'This permanently deletes your StudyMesh account data, including synced quick guides and profile details. You will be signed out when deletion finishes.',
+      'This permanently deletes your RabbitHole account data, including synced quick guides and profile details. You will be signed out when deletion finishes.',
     'settings.deleteConfirmAction': 'I understand, delete my account data',
     'studyGuides.title': 'My Quick Guides',
     'studyGuides.subtitle': 'Open a guide or create a new learning workspace.',
@@ -132,7 +132,7 @@ const translations = {
     'studyGuides.waiting': 'Waiting',
     'studyGuides.estimate': 'Estimate',
     'studyGuides.retry': 'Retry',
-    'studyGuides.buyCreditPack': 'Buy a Credit Pack',
+    'studyGuides.buyCreditPack': 'Buy a Carrot Pack',
     'studyGuides.cancel': 'Cancel',
     'studyGuides.delete': 'Delete',
     'studyGuides.rename': 'Rename',
@@ -144,7 +144,7 @@ const translations = {
     'studyGuides.save': 'Save',
     'studyGuides.newTitle': 'New Quick Guide',
     'studyGuides.promptField': 'Quick Guide prompt',
-    'studyGuides.promptPlaceholder': 'What should StudyMesh teach?',
+    'studyGuides.promptPlaceholder': 'What should RabbitHole teach?',
     'studyGuides.createGuide': 'Create Guide',
     'studyGuides.defaultPrompt':
       'Study basic human anatomy focusing on organs and systems (cardiovascular, respiratory, digestive)',
@@ -166,23 +166,23 @@ const translations = {
     'studyGuides.localAiEstimate':
       'Local AI runs on your device and can be slow. For faster, richer results, use a Gemini or Cerebras API key.',
     'studyGuides.hostedCreditsNotice':
-      'Hosted AI uses Study Credits. Creating a Quick Guide costs 3 credits.',
+      'Hosted AI uses Carrots. Creating a Quick Guide costs 3 carrots.',
     'studyGuides.generatingWithLocalAi':
       'Generating dashboards with Google Local AI...',
     'studyGuides.generatingWithProvider': 'Generating ordered dashboards with',
     'studyGuides.generatingWithHosted':
       'Generating ordered dashboards with Hosted AI...',
     'studyGuides.localProviderDescription':
-      'Local AI is running on your device. StudyMesh plans the path first, then generates each lesson dashboard with its own estimated timer.',
+      'Local AI is running on your device. RabbitHole plans the path first, then generates each lesson dashboard with its own estimated timer.',
     'studyGuides.strongProviderDescriptionPrefix':
-      'StudyMesh is sending the request to',
+      'RabbitHole is sending the request to',
     'studyGuides.strongProviderDescriptionSuffix':
       'and converting the response into dashboards.',
     'studyGuides.hostedProviderDescription':
-      'Hosted AI uses Study Credits and the app-hosted Cerebras model.',
+      'Hosted AI uses Carrots and the app-hosted Cerebras model.',
     'studyGuides.generationRunning': 'Quick Guide generation running',
     'studyGuides.keepTabOpenNotice':
-      'Keep this tab open while StudyMesh creates your guide.',
+      'Keep this tab open while RabbitHole creates your guide.',
     'studyGuides.continueCreating': 'Continue Creating',
     'studyGuides.continueInBackground': 'Continue in Background',
     'studyGuides.folderName': 'Folder name',
@@ -199,7 +199,7 @@ const translations = {
     'studyGuides.createWorking': 'Create Quick Guide is working',
     'studyGuides.createReady': 'Create Quick Guide is ready to review',
     'studyGuides.needsApiKey':
-      'needs an API key before StudyMesh can create a Quick Guide.',
+      'needs an API key before RabbitHole can create a Quick Guide.',
     'studyGuides.dashboardFallbackTitle': 'Quick Guide dashboard',
     'studyGuides.generateFailed': 'Could not generate this Quick Guide.',
     'studyGuides.estimatedTotal': 'Estimated total',
@@ -207,6 +207,7 @@ const translations = {
     'studyGuides.thread': 'Thread',
     'studyGuides.doneLower': 'done',
     'studyGuides.failedLower': 'failed',
+    'workspace.loadingGuide': 'Hopping to your Quick Guide...',
     'workspace.notFoundTitle': 'Quick Guide not found',
     'workspace.notFoundBody': 'This guide does not exist on this device.',
     'workspace.backToGuides': 'Back to My Quick Guides',
@@ -368,7 +369,7 @@ const translations = {
     'chat.retryPreparingPage': 'Retry preparing page',
     'chat.openExternalSourceTitle': 'Open external source?',
     'chat.openExternalSourceBody':
-      'StudyMesh will open this source in a new tab.',
+      'RabbitHole will open this source in a new tab.',
     'chat.openSource': 'Open source',
     'chat.addSource': 'Add source',
     'chat.addSourceTitle': 'Add source to AI Chat',
@@ -389,11 +390,11 @@ const translations = {
     'chat.copiedText': 'Copied text',
     'chat.pasteCopiedTextTitle': 'Paste copied text',
     'chat.pasteCopiedTextHelp':
-      'Paste your copied text below to upload it as a source in StudyMesh.',
+      'Paste your copied text below to upload it as a source in RabbitHole.',
     'chat.pasteTextHere': 'Paste text here',
     'chat.insertSource': 'Insert',
     'ai.mode': 'AI Mode',
-    'ai.modeHelp': 'Choose how StudyMesh generates study materials.',
+    'ai.modeHelp': 'Choose how RabbitHole generates study materials.',
     'ai.closeMode': 'Close AI mode',
     'ai.provider': 'AI Provider',
     'ai.providerHelp':
@@ -417,20 +418,20 @@ const translations = {
     'ai.studyGuide': 'Quick Guide',
     'ai.quickCreate': 'Quick Create',
     'ai.chatMessage': 'AI Chat message',
-    'ai.credit': 'credit',
-    'ai.credits': 'credits',
-    'ai.studyCredits': 'Study Credits',
-    'ai.loadingStudyCredits': 'Loading Study Credits...',
-    'ai.studyCreditsUnavailable': 'Study Credits unavailable.',
+    'ai.credit': 'carrot',
+    'ai.credits': 'carrots',
+    'ai.studyCredits': 'Carrots',
+    'ai.loadingStudyCredits': 'Loading Carrots...',
+    'ai.studyCreditsUnavailable': 'Carrots unavailable.',
     'ai.yourBalance': 'Your balance',
     'ai.creditBalance': 'Free daily refill',
     'ai.creditBalanceHelp':
-      'You can create 2 Quick Guides + 1 more creation every day for free. If you need more, you can buy a credit pack.',
-    'ai.chooseCreditPack': 'Choose a credit pack',
+      'You can create 2 Quick Guides + 1 more creation every day for free. If you need more, you can buy a carrot pack.',
+    'ai.chooseCreditPack': 'Choose a carrot pack',
     'ai.creditPackHelp':
-      'One-time purchases. Credits stay in your StudyMesh account.',
-    'ai.buyCredits': 'Buy credits',
-    'ai.buyCreditsFor': 'Buy credits for',
+      'One-time purchases. Carrots stay in your RabbitHole account.',
+    'ai.buyCredits': 'Buy Carrots',
+    'ai.buyCreditsFor': 'Buy Carrots for',
     'ai.openingCheckout': 'Opening checkout...',
     'practice.answer': 'Answer',
     'practice.prompt': 'Prompt',
@@ -491,29 +492,29 @@ const translations = {
     'settings.avatarUpdateFailed': 'No se pudo actualizar la foto de perfil.',
     'settings.avatarRemoved': 'Foto de perfil eliminada.',
     'settings.noSignedInProfile':
-      'No hay un perfil de StudyMesh con sesión iniciada.',
+      'No hay un perfil de RabbitHole con sesión iniciada.',
     'settings.language': 'Idioma',
     'settings.interfaceLanguage': 'Idioma de la interfaz',
     'settings.explanationContext': 'Contexto de explicación',
     'settings.explanationContextHelp':
-      'StudyMesh lo usa para elegir comparaciones útiles en el Quick Start de nuevos Quick Guides.',
+      'RabbitHole lo usa para elegir comparaciones útiles en el Quick Start de nuevos Quick Guides.',
     'settings.role': 'Rol',
     'settings.notSet': 'Sin configurar',
     'settings.noKnownTopics': 'No hay temas conocidos guardados.',
     'settings.editContext': 'Editar contexto',
     'settings.welcomeGuide': 'Guía de bienvenida',
     'settings.welcomeGuideHelp':
-      'Restaura la guía integrada de StudyMesh en la biblioteca de Quick Guides.',
+      'Restaura la guía integrada de RabbitHole en la biblioteca de Quick Guides.',
     'settings.addWelcomeGuide': 'Añadir guía de bienvenida',
     'settings.welcomeGuideAdded': 'Guía de bienvenida añadida.',
     'settings.dangerZone': 'Zona peligrosa',
-    'settings.deleteAccountData': 'Eliminar datos de cuenta StudyMesh',
+    'settings.deleteAccountData': 'Eliminar datos de cuenta RabbitHole',
     'settings.deleteAccountHelp':
-      'Elimina permanentemente tu cuenta de StudyMesh.',
+      'Elimina permanentemente tu cuenta de RabbitHole.',
     'settings.deleteProfileFailed':
-      'No se pudo eliminar el perfil de StudyMesh.',
+      'No se pudo eliminar el perfil de RabbitHole.',
     'settings.typeDelete': 'Escribe DELETE para confirmar',
-    'settings.deleteAccount': 'Eliminar cuenta StudyMesh',
+    'settings.deleteAccount': 'Eliminar cuenta RabbitHole',
     'settings.deletingProfile': 'Eliminando perfil...',
     'settings.close': 'Cerrar',
     'settings.cancel': 'Cancelar',
@@ -539,9 +540,9 @@ const translations = {
     'podcastPlayer.loadError': 'No se pudo abrir el audio del podcast.',
     'knowledgeContext.title': 'Contexto personal de explicación',
     'knowledgeContext.introTitle':
-      'Ayuda a StudyMesh a explicar temas nuevos usando cosas que ya entiendes.',
+      'Ayuda a RabbitHole a explicar temas nuevos usando cosas que ya entiendes.',
     'knowledgeContext.introBody':
-      'Añade algunos ejemplos relevantes para las guías rápidas que creas. Pueden ser asignaturas, herramientas, idiomas, lugares, hobbies, libros, deportes o rutinas diarias. StudyMesh solo los usa cuando facilitan una explicación.',
+      'Añade algunos ejemplos relevantes para las guías rápidas que creas. Pueden ser asignaturas, herramientas, idiomas, lugares, hobbies, libros, deportes o rutinas diarias. RabbitHole solo los usa cuando facilitan una explicación.',
     'knowledgeContext.inputLabel': 'Cosas útiles que conoces',
     'knowledgeContext.inputExamples':
       'Matemáticas, biología, fútbol, cocina, música',
@@ -560,9 +561,9 @@ const translations = {
     'knowledgeContext.close': 'Cerrar',
     'appearance.themeMode': 'Modo claro / oscuro',
     'appearance.accentColor': 'Color de acento',
-    'settings.deleteConfirmTitle': '¿Eliminar datos de cuenta StudyMesh?',
+    'settings.deleteConfirmTitle': '¿Eliminar datos de cuenta RabbitHole?',
     'settings.deleteConfirmBody':
-      'Esto elimina permanentemente tus datos de cuenta de StudyMesh, incluyendo Quick Guides sincronizadas y detalles del perfil. Se cerrará tu sesión al terminar.',
+      'Esto elimina permanentemente tus datos de cuenta de RabbitHole, incluyendo Quick Guides sincronizadas y detalles del perfil. Se cerrará tu sesión al terminar.',
     'settings.deleteConfirmAction': 'Entiendo, eliminar mis datos',
     'studyGuides.title': 'Mis guías rápidas',
     'studyGuides.subtitle': 'Abre una guía o crea un nuevo espacio de estudio.',
@@ -595,7 +596,7 @@ const translations = {
     'studyGuides.waiting': 'Esperando',
     'studyGuides.estimate': 'Estimado',
     'studyGuides.retry': 'Reintentar',
-    'studyGuides.buyCreditPack': 'Comprar un paquete de créditos',
+    'studyGuides.buyCreditPack': 'Comprar un paquete de zanahorias',
     'studyGuides.cancel': 'Cancelar',
     'studyGuides.delete': 'Eliminar',
     'studyGuides.rename': 'Renombrar',
@@ -607,7 +608,7 @@ const translations = {
     'studyGuides.save': 'Guardar',
     'studyGuides.newTitle': 'Nueva guía rápida',
     'studyGuides.promptField': 'Prompt de la guía rápida',
-    'studyGuides.promptPlaceholder': '¿Qué debería enseñar StudyMesh?',
+    'studyGuides.promptPlaceholder': '¿Qué debería enseñar RabbitHole?',
     'studyGuides.createGuide': 'Crear guía',
     'studyGuides.defaultPrompt':
       'Estudia anatomía humana básica, centrándote en órganos y sistemas (cardiovascular, respiratorio, digestivo)',
@@ -630,23 +631,23 @@ const translations = {
     'studyGuides.localAiEstimate':
       'La IA local se ejecuta en tu dispositivo y puede ser lenta. Para obtener resultados más rápidos y completos, usa una clave API de Gemini o Cerebras.',
     'studyGuides.hostedCreditsNotice':
-      'La IA alojada usa créditos de estudio. Crear una guía rápida cuesta 3 créditos.',
+      'La IA alojada usa zanahorias. Crear una guía rápida cuesta 3 zanahorias.',
     'studyGuides.generatingWithLocalAi':
       'Generando dashboards con IA Local de Google...',
     'studyGuides.generatingWithProvider': 'Generando dashboards ordenados con',
     'studyGuides.generatingWithHosted':
       'Generando dashboards ordenados con IA alojada...',
     'studyGuides.localProviderDescription':
-      'La IA local se ejecuta en tu dispositivo. StudyMesh planifica la ruta primero y después genera cada dashboard de lección con su propio tiempo estimado.',
+      'La IA local se ejecuta en tu dispositivo. RabbitHole planifica la ruta primero y después genera cada dashboard de lección con su propio tiempo estimado.',
     'studyGuides.strongProviderDescriptionPrefix':
-      'StudyMesh está enviando la solicitud a',
+      'RabbitHole está enviando la solicitud a',
     'studyGuides.strongProviderDescriptionSuffix':
       'y convirtiendo la respuesta en dashboards.',
     'studyGuides.hostedProviderDescription':
-      'La IA alojada usa créditos de estudio y el modelo Cerebras alojado por la app.',
+      'La IA alojada usa zanahorias y el modelo Cerebras alojado por la app.',
     'studyGuides.generationRunning': 'Generación de guía rápida en curso',
     'studyGuides.keepTabOpenNotice':
-      'Mantén esta pestaña abierta mientras StudyMesh crea tu guía.',
+      'Mantén esta pestaña abierta mientras RabbitHole crea tu guía.',
     'studyGuides.continueCreating': 'Continuar creando',
     'studyGuides.continueInBackground': 'Continuar en segundo plano',
     'studyGuides.folderName': 'Nombre de carpeta',
@@ -663,7 +664,7 @@ const translations = {
     'studyGuides.createWorking': 'Creando guía rápida',
     'studyGuides.createReady': 'Guía rápida lista para revisar',
     'studyGuides.needsApiKey':
-      'necesita una clave API antes de que StudyMesh pueda crear una guía rápida.',
+      'necesita una clave API antes de que RabbitHole pueda crear una guía rápida.',
     'studyGuides.dashboardFallbackTitle': 'Dashboard de guía rápida',
     'studyGuides.generateFailed': 'No se pudo generar esta guía rápida.',
     'studyGuides.estimatedTotal': 'Total estimado',
@@ -671,6 +672,7 @@ const translations = {
     'studyGuides.thread': 'Hilo',
     'studyGuides.doneLower': 'terminados',
     'studyGuides.failedLower': 'fallidos',
+    'workspace.loadingGuide': 'Saltando hacia tu guía rápida...',
     'workspace.notFoundTitle': 'Guía rápida no encontrada',
     'workspace.notFoundBody': 'Esta guía no existe en este dispositivo.',
     'workspace.backToGuides': 'Volver a Mis guías rápidas',
@@ -834,7 +836,7 @@ const translations = {
     'chat.retryPreparingPage': 'Reintentar preparar página',
     'chat.openExternalSourceTitle': '¿Abrir fuente externa?',
     'chat.openExternalSourceBody':
-      'StudyMesh abrirá esta fuente en una nueva pestaña.',
+      'RabbitHole abrirá esta fuente en una nueva pestaña.',
     'chat.openSource': 'Abrir fuente',
     'chat.addSource': 'Añadir fuente',
     'chat.addSourceTitle': 'Añadir fuente al chat IA',
@@ -856,11 +858,11 @@ const translations = {
     'chat.copiedText': 'Texto copiado',
     'chat.pasteCopiedTextTitle': 'Pegar texto copiado',
     'chat.pasteCopiedTextHelp':
-      'Pega el texto copiado abajo para subirlo como fuente en StudyMesh.',
+      'Pega el texto copiado abajo para subirlo como fuente en RabbitHole.',
     'chat.pasteTextHere': 'Pega texto aquí',
     'chat.insertSource': 'Insertar',
     'ai.mode': 'Modo IA',
-    'ai.modeHelp': 'Elige cómo StudyMesh genera tus materiales de estudio.',
+    'ai.modeHelp': 'Elige cómo RabbitHole genera tus materiales de estudio.',
     'ai.closeMode': 'Cerrar modo IA',
     'ai.provider': 'Proveedor de IA',
     'ai.providerHelp':
@@ -884,20 +886,20 @@ const translations = {
     'ai.studyGuide': 'Guía rápida',
     'ai.quickCreate': 'Creación rápida',
     'ai.chatMessage': 'Mensaje de chat IA',
-    'ai.credit': 'crédito',
-    'ai.credits': 'créditos',
-    'ai.studyCredits': 'Créditos de estudio',
-    'ai.loadingStudyCredits': 'Cargando créditos de estudio...',
-    'ai.studyCreditsUnavailable': 'Créditos de estudio no disponibles.',
+    'ai.credit': 'zanahoria',
+    'ai.credits': 'zanahorias',
+    'ai.studyCredits': 'Zanahorias',
+    'ai.loadingStudyCredits': 'Cargando zanahorias...',
+    'ai.studyCreditsUnavailable': 'Zanahorias no disponibles.',
     'ai.yourBalance': 'Tu saldo',
     'ai.creditBalance': 'Recarga diaria gratuita',
     'ai.creditBalanceHelp':
-      'Puedes crear 2 guías rápidas + 1 creación más gratis cada día. Si necesitas más, puedes comprar un paquete de créditos.',
-    'ai.chooseCreditPack': 'Elige un paquete de créditos',
+      'Puedes crear 2 guías rápidas + 1 creación más gratis cada día. Si necesitas más, puedes comprar un paquete de zanahorias.',
+    'ai.chooseCreditPack': 'Elige un paquete de zanahorias',
     'ai.creditPackHelp':
-      'Compras únicas. Los créditos permanecen en tu cuenta de StudyMesh.',
-    'ai.buyCredits': 'Comprar créditos',
-    'ai.buyCreditsFor': 'Comprar créditos por',
+      'Compras únicas. Las zanahorias permanecen en tu cuenta de RabbitHole.',
+    'ai.buyCredits': 'Comprar zanahorias',
+    'ai.buyCreditsFor': 'Comprar zanahorias por',
     'ai.openingCheckout': 'Abriendo checkout...',
     'practice.answer': 'Respuesta',
     'practice.prompt': 'Pregunta',
@@ -968,29 +970,29 @@ const translationOverrides: Record<
       'Impossible de mettre à jour la photo de profil.',
     'settings.avatarRemoved': 'Photo de profil supprimée.',
     'settings.noSignedInProfile':
-      'Aucun profil StudyMesh connecté n’est disponible.',
+      'Aucun profil RabbitHole connecté n’est disponible.',
     'settings.language': 'Langue',
     'settings.interfaceLanguage': "Langue de l'interface",
     'settings.explanationContext': "Contexte d'explication",
     'settings.explanationContextHelp':
-      'StudyMesh l’utilise pour choisir des comparaisons utiles dans le Quick Start des nouveaux guides.',
+      'RabbitHole l’utilise pour choisir des comparaisons utiles dans le Quick Start des nouveaux guides.',
     'settings.role': 'Rôle',
     'settings.notSet': 'Non défini',
     'settings.noKnownTopics': 'Aucun sujet connu enregistré.',
     'settings.editContext': 'Modifier le contexte',
     'settings.welcomeGuide': 'Guide de bienvenue',
     'settings.welcomeGuideHelp':
-      'Restaure le guide StudyMesh intégré dans la bibliothèque de guides.',
+      'Restaure le guide RabbitHole intégré dans la bibliothèque de guides.',
     'settings.addWelcomeGuide': 'Ajouter le guide de bienvenue',
     'settings.welcomeGuideAdded': 'Guide de bienvenue ajouté.',
     'settings.dangerZone': 'Zone dangereuse',
-    'settings.deleteAccountData': 'Supprimer les données du compte StudyMesh',
+    'settings.deleteAccountData': 'Supprimer les données du compte RabbitHole',
     'settings.deleteAccountHelp':
-      'Supprimer définitivement votre compte StudyMesh.',
+      'Supprimer définitivement votre compte RabbitHole.',
     'settings.deleteProfileFailed':
-      'Impossible de supprimer le profil StudyMesh.',
+      'Impossible de supprimer le profil RabbitHole.',
     'settings.typeDelete': 'Tapez DELETE pour confirmer',
-    'settings.deleteAccount': 'Supprimer le compte StudyMesh',
+    'settings.deleteAccount': 'Supprimer le compte RabbitHole',
     'settings.deletingProfile': 'Suppression du profil...',
     'settings.close': 'Fermer',
     'settings.cancel': 'Annuler',
@@ -1016,9 +1018,9 @@ const translationOverrides: Record<
     'podcastPlayer.loadError': 'Impossible d’ouvrir l’audio du podcast.',
     'knowledgeContext.title': "Contexte personnel d'explication",
     'knowledgeContext.introTitle':
-      'Aidez StudyMesh à expliquer de nouveaux sujets avec ce que vous comprenez déjà.',
+      'Aidez RabbitHole à expliquer de nouveaux sujets avec ce que vous comprenez déjà.',
     'knowledgeContext.introBody':
-      'Ajoutez quelques exemples pertinents pour les guides que vous créez. Il peut s’agir de matières scolaires, outils, langues, lieux, loisirs, livres, sports ou routines quotidiennes. StudyMesh ne les utilise que lorsqu’ils rendent une explication plus simple.',
+      'Ajoutez quelques exemples pertinents pour les guides que vous créez. Il peut s’agir de matières scolaires, outils, langues, lieux, loisirs, livres, sports ou routines quotidiennes. RabbitHole ne les utilise que lorsqu’ils rendent une explication plus simple.',
     'knowledgeContext.inputLabel': 'Choses utiles que vous connaissez',
     'knowledgeContext.inputExamples':
       'Maths, biologie, football, cuisine, musique',
@@ -1038,9 +1040,9 @@ const translationOverrides: Record<
     'appearance.themeMode': 'Mode clair / sombre',
     'appearance.accentColor': "Couleur d'accent",
     'settings.deleteConfirmTitle':
-      'Supprimer les données du compte StudyMesh ?',
+      'Supprimer les données du compte RabbitHole ?',
     'settings.deleteConfirmBody':
-      'Cela supprime définitivement les données de votre compte StudyMesh, y compris les guides synchronisés et les détails du profil. Vous serez déconnecté à la fin.',
+      'Cela supprime définitivement les données de votre compte RabbitHole, y compris les guides synchronisés et les détails du profil. Vous serez déconnecté à la fin.',
     'settings.deleteConfirmAction': 'Je comprends, supprimer mes données',
     'studyGuides.title': 'Mes guides rapides',
     'studyGuides.subtitle':
@@ -1074,7 +1076,7 @@ const translationOverrides: Record<
     'studyGuides.waiting': 'En attente',
     'studyGuides.estimate': 'Estimation',
     'studyGuides.retry': 'Réessayer',
-    'studyGuides.buyCreditPack': 'Acheter un pack de crédits',
+    'studyGuides.buyCreditPack': 'Acheter un pack de carottes',
     'studyGuides.cancel': 'Annuler',
     'studyGuides.delete': 'Supprimer',
     'studyGuides.rename': 'Renommer',
@@ -1086,7 +1088,7 @@ const translationOverrides: Record<
     'studyGuides.save': 'Enregistrer',
     'studyGuides.newTitle': 'Nouveau guide rapide',
     'studyGuides.promptField': 'Prompt du guide rapide',
-    'studyGuides.promptPlaceholder': 'Que doit enseigner StudyMesh ?',
+    'studyGuides.promptPlaceholder': 'Que doit enseigner RabbitHole ?',
     'studyGuides.createGuide': 'Créer le guide',
     'studyGuides.defaultPrompt':
       'Étudie les bases de l’anatomie humaine en te concentrant sur les organes et systèmes (cardiovasculaire, respiratoire, digestif)',
@@ -1109,7 +1111,7 @@ const translationOverrides: Record<
     'studyGuides.localAiEstimate':
       'L’IA locale s’exécute sur votre appareil et peut être lente. Pour des guides plus rapides et plus riches, utilisez une clé API Gemini ou Cerebras.',
     'studyGuides.hostedCreditsNotice':
-      'L’IA hébergée utilise des crédits d’étude. Créer un guide coûte 3 crédits.',
+      'L’IA hébergée utilise des carottes. Créer un guide coûte 3 carottes.',
     'studyGuides.generatingWithLocalAi':
       'Génération des dashboards avec l’IA locale Google...',
     'studyGuides.generatingWithProvider':
@@ -1117,16 +1119,16 @@ const translationOverrides: Record<
     'studyGuides.generatingWithHosted':
       'Génération de dashboards ordonnés avec l’IA hébergée...',
     'studyGuides.localProviderDescription':
-      'L’IA locale s’exécute sur votre appareil. StudyMesh planifie d’abord le parcours, puis génère chaque dashboard de leçon avec son propre temps estimé.',
+      'L’IA locale s’exécute sur votre appareil. RabbitHole planifie d’abord le parcours, puis génère chaque dashboard de leçon avec son propre temps estimé.',
     'studyGuides.strongProviderDescriptionPrefix':
-      'StudyMesh envoie la demande à',
+      'RabbitHole envoie la demande à',
     'studyGuides.strongProviderDescriptionSuffix':
       'et convertit la réponse en dashboards.',
     'studyGuides.hostedProviderDescription':
-      'L’IA hébergée utilise des crédits d’étude et le modèle Cerebras hébergé par l’app.',
+      'L’IA hébergée utilise des carottes et le modèle Cerebras hébergé par l’app.',
     'studyGuides.generationRunning': 'Génération du guide en cours',
     'studyGuides.keepTabOpenNotice':
-      'Gardez cet onglet ouvert pendant que StudyMesh crée votre guide.',
+      'Gardez cet onglet ouvert pendant que RabbitHole crée votre guide.',
     'studyGuides.continueCreating': 'Continuer la création',
     'studyGuides.continueInBackground': 'Continuer en arrière-plan',
     'studyGuides.folderName': 'Nom du dossier',
@@ -1143,7 +1145,7 @@ const translationOverrides: Record<
     'studyGuides.createWorking': 'Création du guide en cours',
     'studyGuides.createReady': 'Guide prêt à être vérifié',
     'studyGuides.needsApiKey':
-      'nécessite une clé API avant que StudyMesh puisse créer un guide.',
+      'nécessite une clé API avant que RabbitHole puisse créer un guide.',
     'studyGuides.dashboardFallbackTitle': 'Dashboard de guide',
     'studyGuides.generateFailed': 'Impossible de générer ce guide.',
     'studyGuides.estimatedTotal': 'Total estimé',
@@ -1151,6 +1153,7 @@ const translationOverrides: Record<
     'studyGuides.thread': 'Fil',
     'studyGuides.doneLower': 'terminés',
     'studyGuides.failedLower': 'échoués',
+    'workspace.loadingGuide': 'Un saut vers votre guide rapide...',
     'workspace.notFoundTitle': 'Guide rapide introuvable',
     'workspace.notFoundBody': 'Ce guide n’existe pas sur cet appareil.',
     'workspace.backToGuides': 'Retour à mes guides rapides',
@@ -1314,7 +1317,7 @@ const translationOverrides: Record<
     'chat.retryPreparingPage': 'Réessayer de préparer la page',
     'chat.openExternalSourceTitle': 'Ouvrir la source externe ?',
     'chat.openExternalSourceBody':
-      'StudyMesh ouvrira cette source dans un nouvel onglet.',
+      'RabbitHole ouvrira cette source dans un nouvel onglet.',
     'chat.openSource': 'Ouvrir la source',
     'chat.addSource': 'Ajouter une source',
     'chat.addSourceTitle': 'Ajouter une source au chat IA',
@@ -1336,11 +1339,11 @@ const translationOverrides: Record<
     'chat.copiedText': 'Texte copié',
     'chat.pasteCopiedTextTitle': 'Coller le texte copié',
     'chat.pasteCopiedTextHelp':
-      'Collez votre texte copié ci-dessous pour l’ajouter comme source dans StudyMesh.',
+      'Collez votre texte copié ci-dessous pour l’ajouter comme source dans RabbitHole.',
     'chat.pasteTextHere': 'Collez le texte ici',
     'chat.insertSource': 'Insérer',
     'ai.mode': 'Mode IA',
-    'ai.modeHelp': 'Choisissez comment StudyMesh génère vos supports d’étude.',
+    'ai.modeHelp': 'Choisissez comment RabbitHole génère vos supports d’étude.',
     'ai.closeMode': 'Fermer le mode IA',
     'ai.provider': 'Fournisseur IA',
     'ai.providerHelp':
@@ -1364,20 +1367,20 @@ const translationOverrides: Record<
     'ai.studyGuide': 'Guide rapide',
     'ai.quickCreate': 'Quick Create',
     'ai.chatMessage': 'Message de chat IA',
-    'ai.credit': 'crédit',
-    'ai.credits': 'crédits',
-    'ai.studyCredits': 'Crédits d’étude',
-    'ai.loadingStudyCredits': 'Chargement des crédits d’étude...',
-    'ai.studyCreditsUnavailable': 'Crédits d’étude indisponibles.',
+    'ai.credit': 'carotte',
+    'ai.credits': 'carottes',
+    'ai.studyCredits': 'Carottes',
+    'ai.loadingStudyCredits': 'Chargement des carottes...',
+    'ai.studyCreditsUnavailable': 'Carottes indisponibles.',
     'ai.yourBalance': 'Votre solde',
     'ai.creditBalance': 'Recharge quotidienne gratuite',
     'ai.creditBalanceHelp':
-      'Vous pouvez créer 2 guides rapides + 1 création de plus gratuitement chaque jour. Si vous avez besoin de plus, vous pouvez acheter un pack de crédits.',
-    'ai.chooseCreditPack': 'Choisir un pack de crédits',
+      'Vous pouvez créer 2 guides rapides + 1 création de plus gratuitement chaque jour. Si vous avez besoin de plus, vous pouvez acheter un pack de carottes.',
+    'ai.chooseCreditPack': 'Choisir un pack de carottes',
     'ai.creditPackHelp':
-      'Achats uniques. Les crédits restent dans votre compte StudyMesh.',
-    'ai.buyCredits': 'Acheter des crédits',
-    'ai.buyCreditsFor': 'Acheter des crédits pour',
+      'Achats uniques. Les carottes restent dans votre compte RabbitHole.',
+    'ai.buyCredits': 'Acheter des carottes',
+    'ai.buyCreditsFor': 'Acheter des carottes pour',
     'ai.openingCheckout': 'Ouverture du paiement...',
     'practice.answer': 'Réponse',
     'practice.prompt': 'Prompt',
@@ -1440,28 +1443,28 @@ const translationOverrides: Record<
       'Profilbild konnte nicht aktualisiert werden.',
     'settings.avatarRemoved': 'Profilbild entfernt.',
     'settings.noSignedInProfile':
-      'Kein angemeldetes StudyMesh-Profil verfügbar.',
+      'Kein angemeldetes RabbitHole-Profil verfügbar.',
     'settings.language': 'Sprache',
     'settings.interfaceLanguage': 'Sprache der Oberfläche',
     'settings.explanationContext': 'Erklärungskontext',
     'settings.explanationContextHelp':
-      'StudyMesh nutzt dies, um hilfreiche Vergleiche im Quick Start neuer Guides auszuwählen.',
+      'RabbitHole nutzt dies, um hilfreiche Vergleiche im Quick Start neuer Guides auszuwählen.',
     'settings.role': 'Rolle',
     'settings.notSet': 'Nicht festgelegt',
     'settings.noKnownTopics': 'Keine bekannten Themen gespeichert.',
     'settings.editContext': 'Kontext bearbeiten',
     'settings.welcomeGuide': 'Willkommensleitfaden',
     'settings.welcomeGuideHelp':
-      'Stellt den integrierten StudyMesh-Guide in der Guide-Bibliothek wieder her.',
+      'Stellt den integrierten RabbitHole-Guide in der Guide-Bibliothek wieder her.',
     'settings.addWelcomeGuide': 'Willkommensguide hinzufügen',
     'settings.welcomeGuideAdded': 'Willkommensleitfaden hinzugefügt.',
     'settings.dangerZone': 'Gefahrenbereich',
-    'settings.deleteAccountData': 'StudyMesh-Kontodaten löschen',
-    'settings.deleteAccountHelp': 'Löscht dein StudyMesh-Konto dauerhaft.',
+    'settings.deleteAccountData': 'RabbitHole-Kontodaten löschen',
+    'settings.deleteAccountHelp': 'Löscht dein RabbitHole-Konto dauerhaft.',
     'settings.deleteProfileFailed':
-      'StudyMesh-Profil konnte nicht gelöscht werden.',
+      'RabbitHole-Profil konnte nicht gelöscht werden.',
     'settings.typeDelete': 'Zum Bestätigen DELETE eingeben',
-    'settings.deleteAccount': 'StudyMesh-Konto löschen',
+    'settings.deleteAccount': 'RabbitHole-Konto löschen',
     'settings.deletingProfile': 'Profil wird gelöscht...',
     'settings.close': 'Schließen',
     'settings.cancel': 'Abbrechen',
@@ -1487,9 +1490,9 @@ const translationOverrides: Record<
     'podcastPlayer.loadError': 'Podcast-Audio konnte nicht geöffnet werden.',
     'knowledgeContext.title': 'Persönlicher Erklärungskontext',
     'knowledgeContext.introTitle':
-      'Hilf StudyMesh, neue Themen mit Dingen zu erklären, die du schon verstehst.',
+      'Hilf RabbitHole, neue Themen mit Dingen zu erklären, die du schon verstehst.',
     'knowledgeContext.introBody':
-      'Füge ein paar Beispiele hinzu, die zu deinen Quick Guides passen. Das können Schulfächer, Tools, Sprachen, Orte, Hobbys, Bücher, Sportarten oder Alltagsroutinen sein. StudyMesh nutzt sie nur, wenn sie eine Erklärung einfacher machen.',
+      'Füge ein paar Beispiele hinzu, die zu deinen Quick Guides passen. Das können Schulfächer, Tools, Sprachen, Orte, Hobbys, Bücher, Sportarten oder Alltagsroutinen sein. RabbitHole nutzt sie nur, wenn sie eine Erklärung einfacher machen.',
     'knowledgeContext.inputLabel': 'Hilfreiche Dinge, die du kennst',
     'knowledgeContext.inputExamples': 'Mathe, Biologie, Fußball, Kochen, Musik',
     'knowledgeContext.inputHelper':
@@ -1507,9 +1510,9 @@ const translationOverrides: Record<
     'knowledgeContext.close': 'Schließen',
     'appearance.themeMode': 'Hell- / Dunkelmodus',
     'appearance.accentColor': 'Akzentfarbe',
-    'settings.deleteConfirmTitle': 'StudyMesh-Kontodaten löschen?',
+    'settings.deleteConfirmTitle': 'RabbitHole-Kontodaten löschen?',
     'settings.deleteConfirmBody':
-      'Dies löscht deine StudyMesh-Kontodaten dauerhaft, einschließlich synchronisierter Guides und Profildetails. Du wirst danach abgemeldet.',
+      'Dies löscht deine RabbitHole-Kontodaten dauerhaft, einschließlich synchronisierter Guides und Profildetails. Du wirst danach abgemeldet.',
     'settings.deleteConfirmAction': 'Ich verstehe, meine Daten löschen',
     'studyGuides.title': 'Meine Quick Guides',
     'studyGuides.subtitle':
@@ -1543,7 +1546,7 @@ const translationOverrides: Record<
     'studyGuides.waiting': 'Warten',
     'studyGuides.estimate': 'Schätzung',
     'studyGuides.retry': 'Erneut versuchen',
-    'studyGuides.buyCreditPack': 'Credit-Paket kaufen',
+    'studyGuides.buyCreditPack': 'Karotten-Paket kaufen',
     'studyGuides.cancel': 'Abbrechen',
     'studyGuides.delete': 'Löschen',
     'studyGuides.rename': 'Umbenennen',
@@ -1555,7 +1558,7 @@ const translationOverrides: Record<
     'studyGuides.save': 'Speichern',
     'studyGuides.newTitle': 'Neuer Quick Guide',
     'studyGuides.promptField': 'Prompt des Quick Guides',
-    'studyGuides.promptPlaceholder': 'Was soll StudyMesh erklären?',
+    'studyGuides.promptPlaceholder': 'Was soll RabbitHole erklären?',
     'studyGuides.createGuide': 'Guide erstellen',
     'studyGuides.defaultPrompt':
       'Lerne die Grundlagen der menschlichen Anatomie mit Fokus auf Organe und Systeme (Herz-Kreislauf, Atmung, Verdauung)',
@@ -1578,7 +1581,7 @@ const translationOverrides: Record<
     'studyGuides.localAiEstimate':
       'Lokale KI läuft auf deinem Gerät und kann langsam sein. Für schnellere und bessere Quick Guides nutze einen Gemini- oder Cerebras-API-Schlüssel.',
     'studyGuides.hostedCreditsNotice':
-      'Gehostete KI nutzt Lerncredits. Einen Quick Guide zu erstellen kostet 3 Credits.',
+      'Gehostete KI nutzt Karotten. Einen Quick Guide zu erstellen kostet 3 Karotten.',
     'studyGuides.generatingWithLocalAi':
       'Dashboards werden mit Google Local AI generiert...',
     'studyGuides.generatingWithProvider':
@@ -1586,16 +1589,16 @@ const translationOverrides: Record<
     'studyGuides.generatingWithHosted':
       'Geordnete Dashboards werden mit gehosteter KI generiert...',
     'studyGuides.localProviderDescription':
-      'Lokale KI läuft auf deinem Gerät. StudyMesh plant zuerst den Pfad und generiert dann jedes Lektionsdashboard mit eigener Zeitschätzung.',
+      'Lokale KI läuft auf deinem Gerät. RabbitHole plant zuerst den Pfad und generiert dann jedes Lektionsdashboard mit eigener Zeitschätzung.',
     'studyGuides.strongProviderDescriptionPrefix':
-      'StudyMesh sendet die Anfrage an',
+      'RabbitHole sendet die Anfrage an',
     'studyGuides.strongProviderDescriptionSuffix':
       'und wandelt die Antwort in Dashboards um.',
     'studyGuides.hostedProviderDescription':
-      'Gehostete KI nutzt Lerncredits und das von der App gehostete Cerebras-Modell.',
+      'Gehostete KI nutzt Karotten und das von der App gehostete Cerebras-Modell.',
     'studyGuides.generationRunning': 'Study-Guide-Generierung läuft',
     'studyGuides.keepTabOpenNotice':
-      'Lass diesen Tab offen, während StudyMesh deinen Guide erstellt.',
+      'Lass diesen Tab offen, während RabbitHole deinen Guide erstellt.',
     'studyGuides.continueCreating': 'Weiter erstellen',
     'studyGuides.continueInBackground': 'Im Hintergrund fortsetzen',
     'studyGuides.folderName': 'Ordnername',
@@ -1612,7 +1615,7 @@ const translationOverrides: Record<
     'studyGuides.createWorking': 'Quick Guide wird erstellt',
     'studyGuides.createReady': 'Quick Guide bereit zur Prüfung',
     'studyGuides.needsApiKey':
-      'benötigt einen API-Schlüssel, bevor StudyMesh einen Quick Guide erstellen kann.',
+      'benötigt einen API-Schlüssel, bevor RabbitHole einen Quick Guide erstellen kann.',
     'studyGuides.dashboardFallbackTitle': 'Study-Guide-Dashboard',
     'studyGuides.generateFailed':
       'Dieser Quick Guide konnte nicht generiert werden.',
@@ -1621,6 +1624,7 @@ const translationOverrides: Record<
     'studyGuides.thread': 'Thread',
     'studyGuides.doneLower': 'erledigt',
     'studyGuides.failedLower': 'fehlgeschlagen',
+    'workspace.loadingGuide': 'Wir hüpfen zu deinem Quick Guide...',
     'workspace.notFoundTitle': 'Quick Guide nicht gefunden',
     'workspace.notFoundBody': 'Dieser Guide existiert auf diesem Gerät nicht.',
     'workspace.backToGuides': 'Zurück zu meinen Quick Guides',
@@ -1785,7 +1789,7 @@ const translationOverrides: Record<
     'chat.retryPreparingPage': 'Seitenvorbereitung wiederholen',
     'chat.openExternalSourceTitle': 'Externe Quelle öffnen?',
     'chat.openExternalSourceBody':
-      'StudyMesh öffnet diese Quelle in einem neuen Tab.',
+      'RabbitHole öffnet diese Quelle in einem neuen Tab.',
     'chat.openSource': 'Quelle öffnen',
     'chat.addSource': 'Quelle hinzufügen',
     'chat.addSourceTitle': 'Quelle zum KI-Chat hinzufügen',
@@ -1807,11 +1811,11 @@ const translationOverrides: Record<
     'chat.copiedText': 'Kopierter Text',
     'chat.pasteCopiedTextTitle': 'Kopierten Text einfügen',
     'chat.pasteCopiedTextHelp':
-      'Füge deinen kopierten Text unten ein, um ihn als Quelle in StudyMesh hochzuladen.',
+      'Füge deinen kopierten Text unten ein, um ihn als Quelle in RabbitHole hochzuladen.',
     'chat.pasteTextHere': 'Text hier einfügen',
     'chat.insertSource': 'Einfügen',
     'ai.mode': 'KI-Modus',
-    'ai.modeHelp': 'Wähle, wie StudyMesh Lernmaterialien generiert.',
+    'ai.modeHelp': 'Wähle, wie RabbitHole Lernmaterialien generiert.',
     'ai.closeMode': 'KI-Modus schließen',
     'ai.provider': 'KI-Anbieter',
     'ai.providerHelp':
@@ -1835,20 +1839,20 @@ const translationOverrides: Record<
     'ai.studyGuide': 'Quick Guide',
     'ai.quickCreate': 'Quick Create',
     'ai.chatMessage': 'KI-Chat-Nachricht',
-    'ai.credit': 'Credit',
-    'ai.credits': 'Credits',
-    'ai.studyCredits': 'Study Credits',
-    'ai.loadingStudyCredits': 'Study Credits werden geladen...',
-    'ai.studyCreditsUnavailable': 'Study Credits nicht verfügbar.',
+    'ai.credit': 'Karotte',
+    'ai.credits': 'Karotten',
+    'ai.studyCredits': 'Karotten',
+    'ai.loadingStudyCredits': 'Karotten werden geladen...',
+    'ai.studyCreditsUnavailable': 'Karotten nicht verfügbar.',
     'ai.yourBalance': 'Dein Guthaben',
     'ai.creditBalance': 'Kostenlose tägliche Auffüllung',
     'ai.creditBalanceHelp':
-      'Du kannst jeden Tag 2 Quick Guides + 1 weitere Erstellung kostenlos erstellen. Wenn du mehr brauchst, kannst du ein Credit-Paket kaufen.',
-    'ai.chooseCreditPack': 'Credit-Paket auswählen',
+      'Du kannst jeden Tag 2 Quick Guides + 1 weitere Erstellung kostenlos erstellen. Wenn du mehr brauchst, kannst du ein Karotten-Paket kaufen.',
+    'ai.chooseCreditPack': 'Karotten-Paket auswählen',
     'ai.creditPackHelp':
-      'Einmalkäufe. Credits bleiben in deinem StudyMesh-Konto.',
-    'ai.buyCredits': 'Credits kaufen',
-    'ai.buyCreditsFor': 'Credits kaufen für',
+      'Einmalkäufe. Karotten bleiben in deinem RabbitHole-Konto.',
+    'ai.buyCredits': 'Karotten kaufen',
+    'ai.buyCreditsFor': 'Karotten kaufen für',
     'ai.openingCheckout': 'Checkout wird geöffnet...',
     'practice.answer': 'Antwort',
     'practice.prompt': 'Prompt',

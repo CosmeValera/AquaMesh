@@ -35,7 +35,7 @@ const AuthCallbackPage = () => {
   return (
     <AuthPageFrame
       title="Finishing sign in"
-      subtitle="StudyMesh is connecting your account."
+      subtitle="RabbitHole is connecting your account."
       showBackLink={false}
     >
       <Stack spacing={2} alignItems="center" sx={{ py: 2 }}>

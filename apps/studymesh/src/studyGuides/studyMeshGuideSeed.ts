@@ -6,8 +6,8 @@ import type { StudyGuideRecord } from '../cloud/types'
 
 export const STUDYMESH_GUIDE_STUDY_PATH_ID =
   'studymesh-student-knowledge-wiki-a-beginner-s-guide'
-export const STUDYMESH_GUIDE_TITLE = 'Welcome to StudyMesh'
-export const STUDYMESH_GUIDE_FOLDER_NAME = 'StudyMesh Guide'
+export const STUDYMESH_GUIDE_TITLE = 'Welcome to RabbitHole'
+export const STUDYMESH_GUIDE_FOLDER_NAME = 'RabbitHole Guide'
 export const STUDYMESH_GUIDE_FOLDER_COLOR = '#007C66'
 
 const DASHBOARD_STORAGE_KEY = 'customDashboards'
@@ -16,6 +16,8 @@ const LEGACY_WIDGET_STORAGE_KEY = 'aquamesh_custom_widgets'
 const STUDYMESH_GUIDE_SEEDED_KEY = 'studymesh-guide-study-path-seeded-v1'
 const OLD_STARTER_REMOVAL_KEY = 'studymesh-old-starter-dashboards-removed-v1'
 
+// These two sets match names already sitting in existing users' localStorage, so the
+// AquaMesh and StudyMesh entries must stay verbatim through any rebrand.
 const OLD_STARTER_DASHBOARD_NAMES = new Set([
   'AquaMesh Starter 1 - Learn the Workspace',
   'AquaMesh Starter 2 - Practice Interactivity',
@@ -91,24 +93,24 @@ interface GuideDashboard {
 const guideLessons: GuideDashboard[] = [
   {
     id: 'studymesh-guide-basics',
-    title: '01 - StudyMesh Basics',
+    title: '01 - RabbitHole Basics',
     widgetTitle: 'Key Concepts',
     markdown:
-      '## What is StudyMesh?\nStudyMesh is a student knowledge wiki. It helps you turn a learning goal and your current workspace context into Quick Guides, pages, markdown notes, quizzes, flashcards, podcasts, and AI chat support.\n\n## Key concepts\n### Quick Guide\nA Quick Guide is a step-by-step learning workspace for a topic. It can contain lessons, practice widgets, references, and AI-assisted notes.\n\n### Page\nA page is one focused part of a Quick Guide. Pages can hold markdown, explanations, quizzes, flashcards, podcasts, and practice material.\n\n### Quick Create\nQuick Create uses the active Quick Guide or page context to generate focused practice, such as a quiz, flashcards or podcasts.\n\n### AI Chat\nAI Chat helps you ask follow-up questions while studying. It can use the current page context and, when needed, web sources from the chat source tools.\n\n### Markdown notes\nMarkdown notes are editable pages for explanations, summaries, examples, references, and checklists.\n\n---\n## What to do next?\nMove through this guide, try the mini quiz below, then use the practice checklist on the next page.',
+      '## What is RabbitHole?\nRabbitHole explains new ideas through what you already know. Start from something you are curious about and it builds Quick Guides, pages, markdown notes, quizzes, flashcards, podcasts, and AI chat support around it.\n\n## Key concepts\n### Quick Guide\nA Quick Guide is a step-by-step learning workspace for a topic. It can contain lessons, practice widgets, references, and AI-assisted notes.\n\n### Page\nA page is one focused part of a Quick Guide. Pages can hold markdown, explanations, quizzes, flashcards, podcasts, and practice material.\n\n### Quick Create\nQuick Create uses the active Quick Guide or page context to generate focused practice, such as a quiz, flashcards or podcasts.\n\n### AI Chat\nAI Chat helps you ask follow-up questions while you read. It can use the current page context and, when needed, web sources from the chat source tools.\n\n### Markdown notes\nMarkdown notes are editable pages for explanations, summaries, examples, references, and checklists.\n\n### Going further\nEvery Quick Guide starts short. Use Add Page to write a new page yourself, or Quick Create to generate more material from what is already there.\n\n---\n## What to do next?\nMove through this guide, try the mini quiz below, then use the practice checklist on the next page.',
     quizzes: [
       {
-        question: 'What is the main purpose of StudyMesh?',
+        question: 'What is the main purpose of RabbitHole?',
         options: [
-          'To act as a student knowledge wiki for creating and studying learning material',
+          'To explain new ideas through what you already know and turn them into study material',
           'To replace every external productivity app',
           'To store only plain text notes',
           'To generate content without any workspace context',
         ],
         correctIndex: 0,
         answer:
-          'To act as a student knowledge wiki for creating and studying learning material',
+          'To explain new ideas through what you already know and turn them into study material',
         explanation:
-          'StudyMesh centers Quick Guides, pages, practice widgets, markdown notes, and AI chat around student knowledge.',
+          'RabbitHole centers Quick Guides, pages, practice widgets, markdown notes, and AI chat around whatever you are curious about.',
         hint: 'Think about the phrase used at the start of this page.',
       },
       {
@@ -143,7 +145,7 @@ const guideLessons: GuideDashboard[] = [
   },
   {
     id: 'studymesh-guide-practice',
-    title: '02 - First StudyMesh Practice',
+    title: '02 - First RabbitHole Practice',
     widgetTitle: 'Starter Checklist',
     checklistTitle: 'Try these actions',
     checklistItems: [
@@ -158,12 +160,12 @@ const guideLessons: GuideDashboard[] = [
   },
   {
     id: 'studymesh-guide-ai-modes',
-    title: '03 - StudyMesh AI Generation Modes',
+    title: '03 - RabbitHole AI Generation Modes',
     sourceMarkdown:
-      '## StudyMesh AI Generation Modes\n### Hosted AI\nHosted AI uses Study Credits stored in your StudyMesh account, so your balance follows you across devices.\n\n### Google Local AI\nGoogle Local AI runs on the local Chrome built-in AI model. It is free and can work offline, but it is usually slower and weaker than hosted or own-key strong models.\n\n### Own Gemini API token\nOwn Gemini API token mode uses your Gemini API key for rich Quick Guides and study dashboards.\n\n### Own Cerebras API key\nOwn Cerebras API key mode uses your Cerebras API key for fast hosted text generation.',
+      '## RabbitHole AI Generation Modes\n### Hosted AI\nHosted AI uses Carrots stored in your RabbitHole account, so your balance follows you across devices.\n\n### Google Local AI\nGoogle Local AI runs on the local Chrome built-in AI model. It is free and can work offline, but it is usually slower and weaker than hosted or own-key strong models.\n\n### Own Gemini API token\nOwn Gemini API token mode uses your Gemini API key for rich Quick Guides and study dashboards.\n\n### Own Cerebras API key\nOwn Cerebras API key mode uses your Cerebras API key for fast hosted text generation.',
     summaryTitle: 'AI Mode Summary',
     summaryItems: [
-      'Hosted AI uses Study Credits. Quick Guides cost 3 credits, and quick creations, podcasts, or dashboard chat cost 1 credit.',
+      'Hosted AI uses Carrots. Quick Guides cost 3 Carrots, and quick creations, podcasts, or dashboard chat cost 1 Carrot.',
       'Google Local AI runs locally, but is slower and weaker than hosted or own-key strong models.',
       'Own Gemini API token is the preferred high-quality generation mode.',
       'Own Cerebras API key is useful for fast hosted text generation.',
@@ -178,8 +180,8 @@ const guideLessons: GuideDashboard[] = [
         back: 'The high-quality mode that uses the user’s Gemini API key.',
       },
       {
-        front: 'How do Hosted AI Study Credits work?',
-        back: 'They are account-based credits for hosted AI generation.',
+        front: 'How do Hosted AI Carrots work?',
+        back: 'They are account-based Carrots for hosted AI generation.',
       },
     ],
   },
@@ -310,7 +312,7 @@ export const createStudyMeshGuideDashboards = (
       folder: STUDYMESH_GUIDE_FOLDER_NAME,
       folderColor: STUDYMESH_GUIDE_FOLDER_COLOR,
       layout: createGuideLayout(lesson, index),
-      description: 'Quick StudyMesh tutorial.',
+      description: 'Quick RabbitHole tutorial.',
       tags: ['quick-create', 'study-path', 'starter', 'guide'],
       isPublic: false,
       createdAt: now,
@@ -327,14 +329,14 @@ export const createStudyMeshGuideStudyGuide = (
   )
 
   if (!studyPath) {
-    throw new Error('StudyMesh Guide Quick Guide seed is invalid')
+    throw new Error('RabbitHole starter guide seed is invalid')
   }
 
   return {
     id: STUDYMESH_GUIDE_STUDY_PATH_ID,
     title: STUDYMESH_GUIDE_TITLE,
     folderName: STUDYMESH_GUIDE_FOLDER_NAME,
-    description: 'Quick StudyMesh tutorial.',
+    description: 'Quick RabbitHole tutorial.',
     studyPath,
     createdAt: now,
     updatedAt: now,

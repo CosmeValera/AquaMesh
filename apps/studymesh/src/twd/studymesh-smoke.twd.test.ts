@@ -8,7 +8,7 @@ const TWD_NAME_KEY = 'studymeshTwdName'
 const defaultCredentials = {
   email: 'studymesh-twd@example.com',
   password: 'StudyMeshTwd123!',
-  name: 'StudyMesh TWD',
+  name: 'RabbitHole TWD',
 }
 
 const getCredentials = () => ({
@@ -133,7 +133,7 @@ const openApplicationSettings = async () => {
   ).to.exist
 }
 
-describe('StudyMesh TWD landing smoke', () => {
+describe('RabbitHole TWD landing smoke', () => {
   beforeEach(() => {
     setLocalStorageEmailAndPassword()
   })
@@ -161,7 +161,7 @@ describe('StudyMesh TWD landing smoke', () => {
   })
 })
 
-describe('StudyMesh TWD auth form smoke', () => {
+describe('RabbitHole TWD auth form smoke', () => {
   beforeEach(() => {
     setLocalStorageEmailAndPassword()
   })
@@ -186,27 +186,27 @@ describe('StudyMesh TWD auth form smoke', () => {
   })
 })
 
-describe('StudyMesh TWD signup smoke', () => {
+describe('RabbitHole TWD signup smoke', () => {
   beforeEach(() => {
     setLocalStorageEmailAndPassword()
   })
 
-  it('creates a toy StudyMesh profile and opens the workspace', async () => {
+  it('creates a toy RabbitHole profile and opens the workspace', async () => {
     await signupToyProfile()
   })
 })
 
-describe('StudyMesh TWD login smoke', () => {
+describe('RabbitHole TWD login smoke', () => {
   beforeEach(() => {
     setLocalStorageEmailAndPassword()
   })
 
-  it('logs into the toy StudyMesh profile and opens the workspace', async () => {
+  it('logs into the toy RabbitHole profile and opens the workspace', async () => {
     await loginToyProfile()
   })
 })
 
-describe('StudyMesh TWD settings smoke', () => {
+describe('RabbitHole TWD settings smoke', () => {
   beforeEach(() => {
     setLocalStorageEmailAndPassword()
   })
@@ -227,12 +227,12 @@ describe('StudyMesh TWD settings smoke', () => {
   })
 })
 
-describe('StudyMesh TWD profile cleanup smoke', () => {
+describe('RabbitHole TWD profile cleanup smoke', () => {
   beforeEach(() => {
     setLocalStorageEmailAndPassword()
   })
 
-  it('deletes the toy StudyMesh profile row and returns to login', async () => {
+  it('deletes the toy RabbitHole profile row and returns to login', async () => {
     await loginToyProfile()
     await openApplicationSettings()
 
@@ -243,7 +243,7 @@ describe('StudyMesh TWD profile cleanup smoke', () => {
     )
     await user.click(
       await screenDomGlobal.findByRole('button', {
-        name: /^delete studymesh account$/i,
+        name: /^delete rabbithole account$/i,
       }),
     )
     await user.click(

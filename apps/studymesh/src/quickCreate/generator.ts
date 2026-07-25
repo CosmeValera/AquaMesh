@@ -19,7 +19,7 @@ import {
 
 const DEFAULT_CREATED_AT = '1970-01-01T00:00:00.000Z'
 const STUDY_PACK_CATEGORY = 'Quick Create'
-const STUDY_PACK_AUTHOR = 'StudyMesh'
+const STUDY_PACK_AUTHOR = 'RabbitHole'
 
 const createStudyPathProps = (
   studyPath?: StudyPathDashboardContext,

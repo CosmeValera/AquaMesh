@@ -6,7 +6,7 @@ import {
   seedStudyMeshGuideStudyPath,
 } from '../../../src/studyGuides/studyMeshGuideSeed'
 
-describe('StudyMesh guide seed', () => {
+describe('RabbitHole guide seed', () => {
   const storage = new Map<string, string>()
 
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('StudyMesh guide seed', () => {
     vi.useRealTimers()
   })
 
-  it('seeds the StudyMesh Guide only once so users can delete it', () => {
+  it('seeds the RabbitHole Guide only once so users can delete it', () => {
     expect(seedStudyMeshGuideStudyPath()).toBe(true)
 
     const dashboards = JSON.parse(
@@ -44,20 +44,20 @@ describe('StudyMesh guide seed', () => {
     expect(studyGuides).toHaveLength(1)
     expect(studyGuides[0]).toMatchObject({
       id: STUDYMESH_GUIDE_STUDY_PATH_ID,
-      title: 'Welcome to StudyMesh',
+      title: 'Welcome to RabbitHole',
     })
     expect(studyGuides[0].createdAt).toBe('2026-07-08T10:20:30.000Z')
     expect(studyGuides[0].updatedAt).toBe('2026-07-08T10:20:30.000Z')
     expect(studyGuides[0].pinnedAt).toBeNull()
     expect(studyGuides[0].studyPath.dashboards).toHaveLength(3)
     expect(studyGuides[0].studyPath.dashboards[0].name).toBe(
-      '01 - StudyMesh Basics',
+      '01 - RabbitHole Basics',
     )
     expect(studyGuides[0].studyPath.dashboards[1].name).toBe(
-      '02 - First StudyMesh Practice',
+      '02 - First RabbitHole Practice',
     )
     expect(studyGuides[0].studyPath.dashboards[2].name).toBe(
-      '03 - StudyMesh AI Generation Modes',
+      '03 - RabbitHole AI Generation Modes',
     )
 
     const firstLayout =

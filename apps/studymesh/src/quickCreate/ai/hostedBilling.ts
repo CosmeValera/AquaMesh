@@ -18,7 +18,7 @@ const HOSTED_AI_BILLING_ENDPOINT = '/api/hosted-ai-billing'
 
 const getAccessToken = async (): Promise<string> => {
   if (!isSupabaseConfigured) {
-    throw new Error('Study Credits billing needs Supabase to be configured.')
+    throw new Error('Carrots billing needs Supabase to be configured.')
   }
 
   const { data, error } = await supabase.auth.getSession()
@@ -28,7 +28,7 @@ const getAccessToken = async (): Promise<string> => {
 
   const accessToken = data.session?.access_token
   if (!accessToken) {
-    throw new Error('Sign in to buy Study Credits.')
+    throw new Error('Sign in to buy Carrots.')
   }
 
   return accessToken
@@ -44,7 +44,7 @@ const parseBillingResponse = async (
       ok: false,
       error: {
         code: 'server_error',
-        message: `Study Credits billing returned an unreadable response (${response.status}).`,
+        message: `Carrots billing returned an unreadable response (${response.status}).`,
       },
     }
   }
@@ -58,13 +58,13 @@ const formatBillingError = (
   const message = payload.error?.message
 
   if (code === 'not_authenticated') {
-    return new Error(message || 'Sign in to buy Study Credits.')
+    return new Error(message || 'Sign in to buy Carrots.')
   }
 
   if (code === 'not_configured') {
     return new Error(
       message ||
-        'Study Credits payments are not configured on this deployment.',
+        'Carrots payments are not configured on this deployment.',
     )
   }
 
@@ -73,7 +73,7 @@ const formatBillingError = (
   }
 
   return new Error(
-    message || `Study Credits checkout failed (${response.status}).`,
+    message || `Carrots checkout failed (${response.status}).`,
   )
 }
 

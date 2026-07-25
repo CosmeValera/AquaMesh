@@ -106,7 +106,7 @@ const HostedAiCheckoutReturn = () => {
     if (result === 'cancel') {
       setNotice({
         severity: 'info',
-        message: 'Study Credits checkout was cancelled.',
+        message: 'Carrots checkout was cancelled.',
       })
       clearCheckoutParams()
       return
@@ -121,7 +121,7 @@ const HostedAiCheckoutReturn = () => {
       .then(() => {
         setNotice({
           severity: 'success',
-          message: 'Payment confirmed. Study Credits added.',
+          message: 'Payment confirmed. Carrots added.',
         })
         setCelebrating(true)
         window.setTimeout(() => setCelebrating(false), 5000)
@@ -132,7 +132,7 @@ const HostedAiCheckoutReturn = () => {
           message:
             error instanceof Error
               ? error.message
-              : 'Payment succeeded, but Study Credits could not be confirmed.',
+              : 'Payment succeeded, but Carrots could not be confirmed.',
         })
       })
       .finally(clearCheckoutParams)

@@ -107,7 +107,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 <Box
                   component="img"
                   src="/logo.png"
-                  alt="StudyMesh logo"
+                  alt="RabbitHole logo"
                   sx={{
                     width: 34,
                     height: 34,
@@ -123,7 +123,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                     letterSpacing: 0,
                   }}
                 >
-                  StudyMesh
+                  RabbitHole
                 </Typography>
               </Stack>
             </Button>
@@ -279,7 +279,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 lineHeight: 1.5,
               }}
             >
-              Start from a learning goal and let StudyMesh shape the guide.
+              Start from a learning goal and let RabbitHole shape the guide.
             </Typography>
             <Button
               component={RouterLink}
@@ -322,10 +322,10 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
           }}
         >
           <Typography sx={{ color: footerBrand.muted, fontSize: '0.88rem' }}>
-            © {year} StudyMesh. Built for focused learning.
+            © {year} RabbitHole. Built for curious minds.
           </Typography>
           <Typography sx={{ color: footerBrand.muted, fontSize: '0.88rem' }}>
-            Study guides · Quick Create · AI Chat
+            Quick Guides · Quick Create · AI Chat
           </Typography>
         </Box>
       </Container>

@@ -1,4 +1,4 @@
--- StudyMesh Supabase Auth + Cloud Sync schema
+-- RabbitHole Supabase Auth + Cloud Sync schema
 -- Run in Supabase SQL editor after creating the project.
 -- Browser clients must use the anon key only. Never expose the service role key.
 
@@ -120,7 +120,7 @@ create table if not exists public.user_workspace_state (
   updated_at timestamptz not null default now()
 );
 
--- Hosted AI Study Credits. One account per signed-in user so quota follows
+-- Hosted AI Carrots. One account per signed-in user so quota follows
 -- the Supabase account across devices.
 create table if not exists public.hosted_ai_accounts (
   owner_id uuid primary key references public.profiles(id) on delete cascade,
@@ -136,7 +136,7 @@ create table if not exists public.hosted_ai_accounts (
 alter table public.hosted_ai_accounts
   alter column study_credit_balance set default 30;
 
--- Auth-user-backed history. This survives StudyMesh profile deletion so
+-- Auth-user-backed history. This survives RabbitHole profile deletion so
 -- recreating the profile cannot mint another first-login credit grant. It still
 -- cascades if the underlying Supabase Auth user is removed.
 create table if not exists public.hosted_ai_account_history (
@@ -148,7 +148,7 @@ create table if not exists public.hosted_ai_account_history (
 );
 
 -- Auth-user lifecycle onboarding. Rows are created only when the Supabase Auth
--- user is first created, so deleting/recreating the StudyMesh profile does not
+-- user is first created, so deleting/recreating the RabbitHole profile does not
 -- re-arm first-run onboarding.
 create table if not exists public.account_onboarding_state (
   owner_id uuid primary key references auth.users(id) on delete cascade,
@@ -474,7 +474,7 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
 
--- Frontend-safe profile deletion. This deletes only the signed-in StudyMesh
+-- Frontend-safe profile deletion. This deletes only the signed-in RabbitHole
 -- profile row and returns the real row count so the app can verify cleanup.
 create or replace function public.delete_own_profile()
 returns integer
@@ -586,7 +586,7 @@ begin
     guide_id,
     current_owner,
     study_guide ->> 'title',
-    coalesce(study_guide ->> 'folderName', 'StudyMesh Guide'),
+    coalesce(study_guide ->> 'folderName', 'RabbitHole Guide'),
     nullif(study_guide ->> 'description', ''),
     nullif(study_guide ->> 'emoji', ''),
     dashboard_count,

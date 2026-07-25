@@ -36,7 +36,7 @@ const ResetPasswordPage = () => {
   return (
     <AuthPageFrame
       title="Reset password"
-      subtitle="Enter your email and StudyMesh will send a secure reset link."
+      subtitle="Enter your email and RabbitHole will send a secure reset link."
       footer={
         <Typography variant="body2" color="text.secondary" align="center">
           Remembered it?{' '}

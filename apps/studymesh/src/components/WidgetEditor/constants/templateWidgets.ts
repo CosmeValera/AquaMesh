@@ -264,7 +264,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
     id: 'template-operations-dashboard',
     name: 'Daily Operations Example Template',
     description:
-      'One concrete starter example for tracking orders, delayed tasks, support tickets, system status, team notes, and handoff actions. Use it as inspiration, then adapt StudyMesh to your own domain.',
+      'One concrete starter example for tracking orders, delayed tasks, support tickets, system status, team notes, and handoff actions. Use it as inspiration, then adapt it to your own domain.',
     category: 'Dashboard',
     components: [
       {
@@ -870,7 +870,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
             id: 'template-physics-overview-label',
             type: 'Label',
             props: {
-              text: 'This example shows how StudyMesh can behave like a visual wiki: formulas, notes, questions, and charts live in the same dashboard.',
+              text: 'This example shows how RabbitHole can behave like a visual wiki: formulas, notes, questions, and charts live in the same dashboard.',
               variant: 'body1',
             },
           },
@@ -1259,7 +1259,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
 
   {
     id: 'template-aquamesh-interactivity',
-    name: 'StudyMesh Interactivity Template',
+    name: 'RabbitHole Interactivity Template',
     description:
       'A hands-on tutorial widget showing buttons, answer boxes, checkable lists, and chart updates.',
     category: 'Knowledge Workspace',
@@ -1268,7 +1268,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
         id: 'template-interactivity-title',
         type: 'Label',
         props: {
-          text: 'StudyMesh Interactivity',
+          text: 'RabbitHole Interactivity',
           variant: 'h4',
           gutterBottom: true,
           useCustomColor: true,
@@ -1773,16 +1773,16 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
   },
   {
     id: 'template-knowledge-tutorial',
-    name: 'StudyMesh Tutorial Template',
+    name: 'RabbitHole Tutorial Template',
     description:
-      'A visual guide that explains Quick Guides, pages, notes, exercises, and the normal StudyMesh workflow.',
+      'A visual guide that explains Quick Guides, pages, notes, exercises, and the normal RabbitHole workflow.',
     category: 'Knowledge Workspace',
     components: [
       {
         id: 'template-tutorial-title',
         type: 'Label',
         props: {
-          text: 'StudyMesh Tutorial',
+          text: 'RabbitHole Tutorial',
           variant: 'h4',
           gutterBottom: true,
           useCustomColor: true,
@@ -1801,7 +1801,7 @@ export const WIDGET_TEMPLATES: CustomWidget[] = [
             props: {
               __blockType: 'LongText',
               title: 'The mental model',
-              text: 'StudyMesh has three layers:\n\n1. Blocks are the small pieces: text, lists, images, PDFs, inputs, buttons, charts, and layout groups.\n2. Widgets are reusable knowledge objects made from blocks.\n3. Dashboards are pages where widgets live together and can be arranged into a useful workspace.',
+              text: 'RabbitHole has three layers:\n\n1. Blocks are the small pieces: text, lists, images, PDFs, inputs, buttons, charts, and layout groups.\n2. Widgets are reusable knowledge objects made from blocks.\n3. Dashboards are pages where widgets live together and can be arranged into a useful workspace.',
               callout: true,
             },
           },

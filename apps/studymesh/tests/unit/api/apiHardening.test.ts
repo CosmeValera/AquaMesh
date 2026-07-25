@@ -865,7 +865,7 @@ describe('API payment and hosted AI hardening', () => {
     })
   })
 
-  it('returns a friendly Study Credits message for hosted AI credit failures', async () => {
+  it('returns a friendly Carrots message for hosted AI credit failures', async () => {
     vi.stubEnv('SUPABASE_URL', 'https://supabase.test')
     vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
     vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
@@ -927,7 +927,7 @@ describe('API payment and hosted AI hardening', () => {
       error: {
         code: 'insufficient_credits',
         message:
-          "You don't have enough Study Credits for this action. Add more credits or switch AI provider, then try again.",
+          "You don't have enough Carrots for this action. Add more Carrots or switch AI provider, then try again.",
       },
     })
   })
@@ -1468,7 +1468,7 @@ describe('API payment and hosted AI hardening', () => {
             '',
         )
 
-        if (prompt.includes('Write a complete, final StudyMesh Study Guide')) {
+        if (prompt.includes('Write a complete, final RabbitHole Study Guide')) {
           return Promise.resolve(
             providerResponse(monolithGuide, {
               prompt_tokens: 1000,
@@ -2529,7 +2529,7 @@ describe('API payment and hosted AI hardening', () => {
             '',
         )
 
-        if (prompt.includes('Write a complete, final StudyMesh Study Guide')) {
+        if (prompt.includes('Write a complete, final RabbitHole Study Guide')) {
           return Promise.resolve(providerResponse(monolithGuide))
         }
 
@@ -2601,7 +2601,7 @@ describe('API payment and hosted AI hardening', () => {
     expect(providerBodies[0].reasoning).toMatchObject({ effort: 'none' })
     expect(providerBodies[1].model).toBe(DEFAULT_OPENAI_FAST_MODEL)
     expect(JSON.stringify(providerBodies[0])).toContain(
-      'Write a complete, final StudyMesh Study Guide',
+      'Write a complete, final RabbitHole Study Guide',
     )
     expect(JSON.stringify(providerBodies[0])).toContain(
       'The learner already knows these candidate topics: Backend, Databases',
@@ -2718,7 +2718,7 @@ describe('API payment and hosted AI hardening', () => {
             '',
         )
 
-        if (prompt.includes('Write a complete, final StudyMesh Study Guide')) {
+        if (prompt.includes('Write a complete, final RabbitHole Study Guide')) {
           return Promise.resolve(providerResponse(monolithGuide))
         }
 

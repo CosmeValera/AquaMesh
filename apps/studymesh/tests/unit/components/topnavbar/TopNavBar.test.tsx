@@ -267,7 +267,7 @@ describe('TopNavBar Component', () => {
     expect(screen.getByText('AI: Local')).toBeInTheDocument()
   })
 
-  it('keeps Study Guide and Quick Create entry points available in hosted Study Credits mode', async () => {
+  it('keeps Study Guide and Quick Create entry points available in hosted Carrots mode', async () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -301,7 +301,7 @@ describe('TopNavBar Component', () => {
     expect(await screen.findByText('Study Guide Modal')).toBeInTheDocument()
   })
 
-  it('shows compact hosted Study Credits balance when hosted mode is selected', async () => {
+  it('shows compact hosted Carrots balance when hosted mode is selected', async () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -357,7 +357,7 @@ describe('TopNavBar Component', () => {
     ).toBeInTheDocument()
   })
 
-  it('opens Study Credits details from the top bar balance pill', async () => {
+  it('opens Carrots details from the top bar balance pill', async () => {
     localStorage.getItem.mockImplementation((key: string) => {
       if (key === 'userData') {
         return JSON.stringify({
@@ -399,16 +399,16 @@ describe('TopNavBar Component', () => {
     expect(screen.getByText(/podcast.*1/i)).toBeInTheDocument()
     expect(
       screen.getByRole('button', {
-        name: /buy credits for 5 eur/i,
+        name: /buy carrots for 5 eur/i,
       }),
     ).toBeEnabled()
     expect(
       screen.getByRole('button', {
-        name: /buy credits for 10 eur/i,
+        name: /buy carrots for 10 eur/i,
       }),
     ).toBeEnabled()
     expect(
-      screen.queryByRole('button', { name: /buy .* credits for 20 eur/i }),
+      screen.queryByRole('button', { name: /buy carrots for 20 eur/i }),
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /refresh credits/i }),
@@ -422,9 +422,9 @@ describe('TopNavBar Component', () => {
       await screen.findByRole('option', { name: /google local ai/i }),
     )
 
-    expect(screen.queryByText('Study Credits')).not.toBeInTheDocument()
+    expect(screen.queryByText('Carrots')).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /buy .* credits/i }),
+      screen.queryByRole('button', { name: /buy carrots/i }),
     ).not.toBeInTheDocument()
   })
 
@@ -445,7 +445,7 @@ describe('TopNavBar Component', () => {
       await screen.findByRole('dialog', { name: /AI Mode/i }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/you do not have enough study credits/i),
+      screen.getByText(/you do not have enough carrots/i),
     ).toBeInTheDocument()
   })
 
@@ -468,7 +468,7 @@ describe('TopNavBar Component', () => {
       await screen.findByRole('dialog', { name: /AI Mode/i }),
     ).toBeInTheDocument()
     expect(
-      screen.queryByText(/you do not have enough study credits/i),
+      screen.queryByText(/you do not have enough carrots/i),
     ).not.toBeInTheDocument()
   })
 
@@ -505,7 +505,7 @@ describe('TopNavBar Component', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders the StudyMesh logo', () => {
+  it('renders the RabbitHole logo', () => {
     render(
       <BrowserRouter>
         <TopNavBar />
@@ -578,7 +578,7 @@ describe('TopNavBar Component', () => {
     ).not.toBeInTheDocument()
     expect(screen.getByText(/danger zone/i)).toBeInTheDocument()
     expect(
-      screen.getByText(/permanently delete your studymesh account/i),
+      screen.getByText(/permanently delete your rabbithole account/i),
     ).toBeInTheDocument()
     expect(screen.queryByText(/profile row/i)).not.toBeInTheDocument()
   })
@@ -610,7 +610,7 @@ describe('TopNavBar Component', () => {
     expect(screen.getByText('Profile saved.')).toBeInTheDocument()
   })
 
-  it('requires a second confirmation before deleting StudyMesh account data', async () => {
+  it('requires a second confirmation before deleting RabbitHole account data', async () => {
     render(
       <BrowserRouter>
         <TopNavBar />
@@ -625,12 +625,12 @@ describe('TopNavBar Component', () => {
       target: { value: 'DELETE' },
     })
     fireEvent.click(
-      screen.getByRole('button', { name: /delete studymesh account/i }),
+      screen.getByRole('button', { name: /delete rabbithole account/i }),
     )
 
     expect(
       await screen.findByRole('dialog', {
-        name: /delete studymesh account data/i,
+        name: /delete rabbithole account data/i,
       }),
     ).toBeInTheDocument()
     expect(screen.getByText(/synced quick guides/i)).toBeInTheDocument()

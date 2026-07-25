@@ -1,25 +1,25 @@
-# StudyMesh app
+# RabbitHole app
 
-StudyMesh is the main no-code custom widget builder in this monorepo. It gives non-programmers a visual workspace for creating reusable widgets from text, inputs, buttons, charts, images, and layout blocks, then arranging them into dashboards or focused workspaces without writing UI code.
+RabbitHole is the main app in this monorepo. It turns a one-line prompt into a multi-page **Quick Guide** that explains a new idea through what the reader already understands, then keeps the guide usable: quizzes, flashcards, podcast recaps, AI Chat, and a dashboard workspace to arrange it all.
 
 ## Product workflow
 
-1. Create a custom widget visually from text, inputs, buttons, charts, controls, and layout containers.
-2. Preview and save the widget to the local widget library.
-3. Add the saved widget to a dashboard.
-4. Save dashboard layouts for reuse.
-5. Import, export, or restore widget versions when work needs to move or be recovered.
+1. Write a prompt in the Creation panel saying what you are curious about.
+2. RabbitHole generates a Quick Guide: several pages of lessons plus study widgets and exercises.
+3. Use Quick Create for one-click material from the dashboard you already have open (quiz, flashcards, podcast).
+4. Ask AI Chat about the guide; it can fetch web sources when the material does not cover something, and add a page from a source.
+5. Arrange guides and widgets on the dashboard canvas and reopen them later from the workspace.
 
-For demo and portfolio use, **Daily Operations** remains one concrete example: orders today, delayed tasks, support ticket mix, system status, team notes, and a handoff action. StudyMesh is broader than that single dashboard: architects can organize site-review notes, biologists can collect observation logs, and teams can build task or research workspaces without waiting for custom code.
+Guides start short (~3 pages) and grow on demand, so a topic can stay a five-minute read or turn into a long session.
 
 ## User-facing capabilities
 
-- **Visual dashboard builder:** Arrange dashboard widgets with drag, resize, and tabbed layout tools.
-- **No-code widget editor:** Create reusable dashboard blocks without programming.
-- **Reusable widget library:** Save widgets and add them to future dashboards.
-- **Dashboard library:** Save layouts with names, descriptions, tags, and visibility settings.
-- **Import/export:** Share widget packs or back up dashboard-building work.
-- **Version history:** Recover an earlier version of a widget.
+- **Prompt to Quick Guide:** a learning goal in, a full tutorial-style multi-dashboard guide out.
+- **Adapts to what you know:** pick the fields you already understand and new guides are re-explained through them.
+- **Quick Create:** one click turns the active dashboard into a quiz, flashcards, or a two-voice podcast recap.
+- **AI Chat:** questions about a guide, with optional web-grounded sources.
+- **Workspace:** drag, resize, and tab guides and widgets on a dashboard canvas.
+- **Choice of AI:** Hosted AI with Carrots, your own API key, Google on-device Local AI, or the no-AI Basic fallback.
 
 ## Available scripts
 
@@ -28,12 +28,12 @@ From the repository root, run:
 ```sh
 npm start
 npm test
-npm --workspace StudyMesh run test:unit
-npm --workspace StudyMesh run test:e2e
-npm --workspace StudyMesh run test:snapshot
+npm --workspace studymesh run test:unit
+npm --workspace studymesh run test:e2e
+npm --workspace studymesh run test:snapshot
 ```
 
-From `apps/StudyMesh`, the local app scripts are:
+From `apps/studymesh`, the local app scripts are:
 
 ### `npm start`
 
@@ -42,7 +42,7 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
 ### `npm test`
 
-Runs both unit and end-to-end tests for the StudyMesh app.
+Runs both unit and end-to-end tests for the RabbitHole app.
 
 More specific test commands:
 
@@ -62,4 +62,6 @@ More specific test commands:
 
 ## Architecture
 
-StudyMesh is the application for the widget builder and dashboard workspace. Widgets and dashboards are stored locally for demo use. The workspace supports reusable widgets, dashboard templates, import/export, and version history.
+RabbitHole is the application for guide generation and the dashboard workspace. Guides, widgets, and dashboards are stored locally, with optional cloud sync for signed-in accounts. The workspace supports reusable widgets, dashboard templates, import/export, and version history.
+
+The workspace directory, the npm workspace name, and the module-federation name all stay lowercase `studymesh`. Those are internal identifiers and are deliberately not part of the rebrand — renaming them would orphan existing users' stored guides, widgets, and settings.

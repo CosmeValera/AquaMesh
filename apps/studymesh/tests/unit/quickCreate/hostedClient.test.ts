@@ -75,7 +75,7 @@ describe('hosted AI client credit failures', () => {
         surface: 'chat',
         parts: [{ text: 'Question' }],
       }),
-    ).rejects.toThrow(/not enough study credits/i)
+    ).rejects.toThrow(/not enough carrots/i)
     expect(listener).toHaveBeenCalledTimes(1)
 
     window.removeEventListener(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT, listener)

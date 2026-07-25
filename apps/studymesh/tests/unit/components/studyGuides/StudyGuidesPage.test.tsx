@@ -309,7 +309,7 @@ describe('StudyGuidesPage create flow', () => {
     vi.mocked(generateStudyPathStateFromPrompt)
       .mockRejectedValueOnce(
         new Error(
-          'Gemini could not follow the requested output format. StudyMesh retried with a simpler JSON prompt.',
+          'Gemini could not follow the requested output format. RabbitHole retried with a simpler JSON prompt.',
         ),
       )
       .mockImplementationOnce(async ({ id }) => ({
@@ -472,7 +472,7 @@ describe('StudyGuidesPage create flow', () => {
       startedAt: null,
       finishedAt: new Date().toISOString(),
       errorMessage:
-        'Not enough Study Credits. This action needs 3 SC and you have 2 SC.',
+        'Not enough Carrots. This action needs 3 and you have 2.',
       resultStudyGuideId: null,
     })
     const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
@@ -480,7 +480,7 @@ describe('StudyGuidesPage create flow', () => {
     renderStudyGuidesPage('/study-guides')
 
     const buyButton = await screen.findByRole('button', {
-      name: /buy a credit pack/i,
+      name: /buy a carrot pack/i,
     })
     expect(buyButton).toBeInTheDocument()
     expect(
@@ -514,7 +514,7 @@ describe('StudyGuidesPage create flow', () => {
       startedAt: null,
       finishedAt: new Date().toISOString(),
       errorMessage:
-        'Not enough Study Credits. This action needs 3 SC and you have 2 SC.',
+        'Not enough Carrots. This action needs 3 and you have 2.',
       resultStudyGuideId: null,
     })
 
@@ -524,7 +524,7 @@ describe('StudyGuidesPage create flow', () => {
       await screen.findByRole('button', { name: /^retry/i }),
     ).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /buy a credit pack/i }),
+      screen.queryByRole('button', { name: /buy a carrot pack/i }),
     ).not.toBeInTheDocument()
   })
 

@@ -351,7 +351,7 @@ const CloudWorkspaceSync = () => {
         setHasHydrated(true)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
-        console.error('StudyMesh cloud hydration failed', error)
+        console.error('RabbitHole cloud hydration failed', error)
         setHasHydrated(true)
         dispatchCloudSyncStatus(
           'error',
@@ -397,7 +397,7 @@ const CloudWorkspaceSync = () => {
         writeWorkspaceCacheOwner(ownerId)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
-        console.error('StudyMesh cloud sync failed', error)
+        console.error('RabbitHole cloud sync failed', error)
         dispatchCloudSyncStatus(
           'error',
           error instanceof Error ? error.message : 'Cloud sync failed.',
@@ -416,7 +416,7 @@ const CloudWorkspaceSync = () => {
         await repository.deleteWidget(ownerId, widgetId)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
-        console.error('StudyMesh cloud widget delete failed', error)
+        console.error('RabbitHole cloud widget delete failed', error)
         dispatchCloudSyncStatus(
           'error',
           error instanceof Error ? error.message : 'Cloud delete failed.',
@@ -434,7 +434,7 @@ const CloudWorkspaceSync = () => {
         await repository.deleteDashboard(ownerId, dashboardId)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
-        console.error('StudyMesh cloud dashboard delete failed', error)
+        console.error('RabbitHole cloud dashboard delete failed', error)
         dispatchCloudSyncStatus(
           'error',
           error instanceof Error ? error.message : 'Cloud delete failed.',
@@ -452,7 +452,7 @@ const CloudWorkspaceSync = () => {
         await repository.deleteStudyGuide(ownerId, studyGuideId)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
-        console.error('StudyMesh cloud Quick Guide delete failed', error)
+        console.error('RabbitHole cloud Quick Guide delete failed', error)
         dispatchCloudSyncStatus(
           'error',
           error instanceof Error ? error.message : 'Cloud delete failed.',
@@ -475,7 +475,7 @@ const CloudWorkspaceSync = () => {
         await repository.upsertStudyGuide(ownerId, studyGuide)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
-        console.error('StudyMesh cloud Quick Guide save failed', error)
+        console.error('RabbitHole cloud Quick Guide save failed', error)
         dispatchCloudSyncStatus(
           'error',
           error instanceof Error ? error.message : 'Cloud save failed.',
@@ -498,7 +498,7 @@ const CloudWorkspaceSync = () => {
         await repository.updateStudyGuideSummary(ownerId, summary)
         dispatchCloudSyncStatus('synced')
       } catch (error) {
-        console.error('StudyMesh cloud Quick Guide metadata save failed', error)
+        console.error('RabbitHole cloud Quick Guide metadata save failed', error)
         dispatchCloudSyncStatus(
           'error',
           error instanceof Error ? error.message : 'Cloud save failed.',

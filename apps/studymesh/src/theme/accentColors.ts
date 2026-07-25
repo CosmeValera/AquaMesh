@@ -34,7 +34,7 @@ export const accentColorOptions: AccentColorOption[] = [
   },
   {
     id: 'studymesh',
-    name: 'Study green',
+    name: 'Meadow green',
     main: '#007C66',
     light: '#00C49A',
     dark: '#005A49',

@@ -1,4 +1,4 @@
--- StudyMesh Supabase cascade repair
+-- RabbitHole Supabase cascade repair
 -- Run once if deleting an Auth user did not remove their dashboards/widgets.
 --
 -- Why this exists:

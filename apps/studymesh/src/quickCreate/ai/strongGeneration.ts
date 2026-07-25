@@ -43,9 +43,9 @@ interface GeminiPart {
 
 const GEMINI_REQUEST_TIMEOUT_MS = 5 * 60 * 1000
 const STRONG_MODEL_TIMEOUT_MESSAGE =
-  'The AI model took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or another AI mode.'
+  'The AI model took longer than 5 minutes, so RabbitHole stopped the request. Try again with shorter notes, fewer generated blocks, or another AI mode.'
 const STRONG_MODEL_OUTPUT_FORMAT_MESSAGE =
-  'The AI model could not follow the requested output format. StudyMesh retried with a simpler JSON prompt, but the response was still unusable.'
+  'The AI model could not follow the requested output format. RabbitHole retried with a simpler JSON prompt, but the response was still unusable.'
 const QUIZ_OPTION_FEEDBACK_INSTRUCTION =
   'For every multiple-choice quiz, include optionFeedback with exactly one item per option and matching option text. Correct option: explain why it matches the core rule. Wrong options: name the exact part that conflicts with the core rule. Use the selected output language, 6-16 words each, no repeated explanations, no generic phrases, and never start with Correct/Incorrect/Right/Wrong.'
 
@@ -1505,7 +1505,7 @@ Do not wrap the JSON in markdown fences. Do not add commentary outside JSON.
 Rules:
 - Return strict valid JSON only: double-quoted property names and strings, comma-separated array/object entries, matching { } and [ ], no trailing commas, no comments, no Markdown fences, no prose before or after the JSON.
 - ${languageInstruction}
-- Do not output "objects", "kind", "quizMode", internal block names, widget names, or any StudyMesh renderer fields. StudyMesh decides widget types.
+- Do not output "objects", "kind", "quizMode", internal block names, widget names, or any RabbitHole renderer fields. RabbitHole decides widget types.
 - Fill only sourceSummary, conceptRecap, practice.multipleChoice, and flashcards.
 - practice only supports multiple-choice questions. Never output typed-answer, single-input, quizSingle, or free-response quiz fields.
 - When selected resource type is Quiz, every question must be in practice.multipleChoice with 3-4 real answer options.
@@ -1826,7 +1826,7 @@ const normalizeStudyPathBlueprint = (
     dashboardCount: effectiveDashboardCount,
     dashboardCountReason:
       requestedDashboardCount !== rawDashboardCount
-        ? `Planner requested ${requestedDashboardCount} dashboards, so StudyMesh normalized the path to ${effectiveDashboardCount}.`
+        ? `Planner requested ${requestedDashboardCount} dashboards, so RabbitHole normalized the path to ${effectiveDashboardCount}.`
         : stringFromUnknown(record.dashboardCountReason) ||
           `${effectiveDashboardCount} dashboards are enough for a focused learning sprint.`,
     learnerProfile:
@@ -1870,7 +1870,7 @@ const createStudyPathBlueprintPrompt = ({
   dashboardCount: number
   autoDashboardCount: boolean
   outputLanguage?: StudyMeshLanguageCode
-}): string => `Plan a high-quality StudyMesh Study Guide before writing dashboards.
+}): string => `Plan a high-quality RabbitHole Study Guide before writing dashboards.
 
 Return strict JSON only. ${
   autoDashboardCount
@@ -1919,7 +1919,7 @@ const createStudyPathDashboardPrompt = ({
   blueprint: AiStudyPathBlueprint
   isLeanStudyGuide?: boolean
   outputLanguage?: StudyMeshLanguageCode
-}): string => `Create one StudyMesh Study Guide dashboard as strict JSON.
+}): string => `Create one RabbitHole Study Guide dashboard as strict JSON.
 
 Return exactly one dashboard object. No Markdown fences. No extra prose.
 
@@ -2011,7 +2011,7 @@ ${prompt}`
 const createStudyPathQualityPrompt = (
   dashboard: Record<string, unknown>,
   pathIssues: string[] = [],
-): string => `Evaluate this StudyMesh Study Guide dashboard for student learning quality.
+): string => `Evaluate this RabbitHole Study Guide dashboard for student learning quality.
 
 Return strict JSON only:
 {
@@ -2047,7 +2047,7 @@ const createStudyPathDashboardRepairPrompt = ({
   dashboard: Record<string, unknown>
   repairInstructions: string[]
   outputLanguage?: StudyMeshLanguageCode
-}): string => `Repair this StudyMesh Study Guide dashboard. Return the same one-dashboard JSON shape only.
+}): string => `Repair this RabbitHole Study Guide dashboard. Return the same one-dashboard JSON shape only.
 
 Repair instructions:
 ${repairInstructions.map((item) => `- ${item}`).join('\n')}
@@ -2489,7 +2489,7 @@ ${isLeanStudyGuide ? '- Lean hosted profile: create exactly 3 dashboards. Do not
 - Format rawNotes as readable Markdown, not one long paragraph. Use short topic-specific sections chosen from that dashboard's teaching purpose. Do not reuse the same heading scaffold across dashboards.
 - sourceSummary and conceptRecap should match the selected layout. Only 1-2 dashboards in the full guide should include a focused multiple-choice practice set. Flashcards should usually be empty.
 - conceptRecap is used internally to structure the lesson.
-- Do not output "objects", "kind", "quizMode", internal block names, widget names, or any StudyMesh renderer fields. StudyMesh decides widget types.
+- Do not output "objects", "kind", "quizMode", internal block names, widget names, or any RabbitHole renderer fields. RabbitHole decides widget types.
 - Use concrete rule labels in conceptRecap sections, such as "Subjunctive trigger: il faut que", not headings or sentence fragments.
 - Generate summaries, flashcards, and quizzes from structured concepts, not from first sentences, headings, copied examples, or instructions.
 - Practice questions must be specific to the lesson content. Never create generic questions like "What do the notes say about <dashboard title>?", "Which statement matches the notes about <dashboard title>?", "What does X help you understand or do?", or "What is the core idea behind X?".

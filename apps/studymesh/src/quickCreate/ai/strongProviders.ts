@@ -134,7 +134,7 @@ const withTimeout = async (
       }
 
       throw new Error(
-        'Strong model request took longer than 5 minutes, so StudyMesh stopped the request. Try again with shorter notes, fewer generated blocks, or another AI mode.',
+        'Strong model request took longer than 5 minutes, so RabbitHole stopped the request. Try again with shorter notes, fewer generated blocks, or another AI mode.',
       )
     }
 

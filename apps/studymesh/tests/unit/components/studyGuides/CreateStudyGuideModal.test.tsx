@@ -134,7 +134,7 @@ const generatePath = async () => {
   )
 
   fireEvent.change(
-    screen.getByRole('textbox', { name: /what should StudyMesh teach/i }),
+    screen.getByRole('textbox', { name: /what should RabbitHole teach/i }),
     {
       target: { value: 'Teach French subjunctive' },
     },
@@ -171,7 +171,7 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
       screen.queryByRole('button', { name: /prompt only/i }),
     ).not.toBeInTheDocument()
     expect(
-      screen.getByRole('textbox', { name: /what should StudyMesh teach/i }),
+      screen.getByRole('textbox', { name: /what should RabbitHole teach/i }),
     ).toBeRequired()
   })
 
@@ -244,7 +244,7 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
     )
 
     fireEvent.change(
-      screen.getByRole('textbox', { name: /what should StudyMesh teach/i }),
+      screen.getByRole('textbox', { name: /what should RabbitHole teach/i }),
       {
         target: { value: 'Teach French subjunctive' },
       },
@@ -327,7 +327,7 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
     )
 
     fireEvent.change(
-      screen.getByRole('textbox', { name: /what should StudyMesh teach/i }),
+      screen.getByRole('textbox', { name: /what should RabbitHole teach/i }),
       {
         target: { value: 'Teach French subjunctive' },
       },
@@ -457,7 +457,7 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
     )
 
     fireEvent.change(
-      screen.getByRole('textbox', { name: /what should StudyMesh teach/i }),
+      screen.getByRole('textbox', { name: /what should RabbitHole teach/i }),
       {
         target: { value: 'Teach Italian B1 modal verbs' },
       },
@@ -642,7 +642,7 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
     )
 
     fireEvent.change(
-      screen.getByRole('textbox', { name: /what should StudyMesh teach/i }),
+      screen.getByRole('textbox', { name: /what should RabbitHole teach/i }),
       {
         target: { value: 'German A2' },
       },

@@ -116,7 +116,7 @@ describe('RequireAuth route guard', () => {
 
     renderProtectedWorkspace()
 
-    expect(screen.getByText(/loading studymesh/i)).toBeInTheDocument()
+    expect(screen.getByText(/loading rabbithole/i)).toBeInTheDocument()
     expect(screen.queryByText('Workspace loaded')).not.toBeInTheDocument()
     expect(screen.queryByText('Login page')).not.toBeInTheDocument()
     await waitFor(() => {

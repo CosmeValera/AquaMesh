@@ -272,7 +272,7 @@ export const RequireAuth = ({ children }: { children: React.ReactNode }) => {
         <Box sx={{ textAlign: 'center' }}>
           <CircularProgress size={34} />
           <Typography sx={{ mt: 2 }} color="text.secondary">
-            Loading StudyMesh...
+            Loading RabbitHole...
           </Typography>
         </Box>
       </Box>

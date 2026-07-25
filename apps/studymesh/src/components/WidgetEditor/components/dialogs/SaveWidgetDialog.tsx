@@ -132,7 +132,7 @@ const SaveWidgetDialog: React.FC<SaveWidgetDialogProps> = ({
             fontSize: isMobile ? '0.875rem' : undefined,
           }}
         >
-          Name your widget. If that name already exists, StudyMesh will add a
+          Name your widget. If that name already exists, RabbitHole will add a
           number automatically.
         </Typography>
 

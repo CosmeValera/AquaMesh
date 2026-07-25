@@ -57,7 +57,10 @@ import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   readQuickCreateAiSettings,
 } from '../../quickCreate/ai'
-import { getHostedAiCreditCost } from '../../quickCreate/ai/hostedCredits'
+import {
+  getHostedAiCreditCost,
+  isCurrencyShortageMessage,
+} from '../../quickCreate/ai/hostedCredits'
 import { collectPodcastAudioPathsFromStudyPath } from '../../studyGuides/podcasts'
 import {
   HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT,
@@ -175,12 +178,7 @@ const canAutoRetryPendingGuide = (guide: PendingGuide): boolean =>
   guide.autoRetryCount < HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT
 
 const isStudyCreditShortageMessage = (message?: string | null): boolean =>
-  Boolean(
-    message &&
-      /(?:not enough|insufficient|don't have enough|do not have enough).*Study Credits|Study Credits.*(?:not enough|insufficient)/i.test(
-        message,
-      ),
-  )
+  isCurrencyShortageMessage(message)
 
 const shouldShowBuyCreditPack = (
   guide: PendingGuide,

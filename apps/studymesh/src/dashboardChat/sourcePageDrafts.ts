@@ -149,7 +149,7 @@ const buildDraftPrompt = ({
     SOURCE_PAGE_DRAFT_TEXT_LIMIT,
   )
 
-  return `Create a concise StudyMesh Study Guide page from an already fetched web source.
+  return `Create a concise RabbitHole Study Guide page from an already fetched web source.
 
 Rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
@@ -203,7 +203,7 @@ const callDraftModel = async (
   if (provider === 'local') {
     if (!isLocalAiContentLanguageSupported(outputLanguage)) {
       throw new Error(
-        'Google Local AI only supports English, Spanish, and Japanese output in StudyMesh.',
+        'Google Local AI only supports English, Spanish, and Japanese output in RabbitHole.',
       )
     }
 

@@ -6,7 +6,7 @@ Always prefix shell commands with `rtk`. For PowerShell built-ins or syntax that
 
 ## LeanCTX Context Cache
 
-Use LeanCTX MCP tools when available for cached repo exploration, repeated file reads, broad search, tree views, and context retrieval in this large repository. For normal StudyMesh app work, scope LeanCTX calls to `apps/studymesh` first instead of the repository root.
+Use LeanCTX MCP tools when available for cached repo exploration, repeated file reads, broad search, tree views, and context retrieval in this large repository. For normal RabbitHole app work, scope LeanCTX calls to `apps/studymesh` first instead of the repository root.
 
 Default LeanCTX workflow:
 
@@ -21,15 +21,17 @@ If LeanCTX is unavailable, fall back to normal `rg`, file reads, and `rtk`-wrapp
 
 ## Project Structure & Module Organization
 
-StudyMesh is an npm/Turborepo monorepo. Root npm workspaces currently include only `apps/studymesh`; treat `apps/control-flow`, `apps/system-lens`, and `packages/` as legacy/not wired into the active workspace unless a task explicitly targets them. Theme and PrimeReact SCSS sources are under `style/`. Documentation images and tutorials are in `readme_docs/`. Git hook utilities are in `tools/git-hooks/`.
+RabbitHole is an npm/Turborepo monorepo. Root npm workspaces currently include only `apps/studymesh`; treat `apps/control-flow`, `apps/system-lens`, and `packages/` as legacy/not wired into the active workspace unless a task explicitly targets them. Theme and PrimeReact SCSS sources are under `style/`. Documentation images and tutorials are in `readme_docs/`. Git hook utilities are in `tools/git-hooks/`.
 
-Within each app, source files are in `src/`, public assets are in `public/`, and build output goes to `dist/`. StudyMesh tests are split into `apps/studymesh/tests/unit` and `apps/studymesh/tests/e2e`.
+Within each app, source files are in `src/`, public assets are in `public/`, and build output goes to `dist/`. RabbitHole tests are split into `apps/studymesh/tests/unit` and `apps/studymesh/tests/e2e`.
+
+The app was renamed from StudyMesh to RabbitHole as user-visible copy and assets only. Internal `studymesh` identifiers deliberately stay: the `apps/studymesh` directory, the `studymesh` npm workspace and module-federation name, the ~40 `studymesh-*`/`studymesh_*` localStorage keys, Supabase columns/RPCs, CSS classes, event names, component filenames such as `StudyMeshLanding.tsx`, and the seed guide id. Renaming a storage key would orphan existing users' guides, widgets, theme, and credit cache. When sweeping for brand leftovers, filter out those prefixed identifiers instead of replacing them. Hosted credits are called **Carrots** in copy while the code constants keep names like `STUDY_CREDITS_LABEL` and `study_credit_balance`.
 
 ## Product Direction & Core Workflows
 
-StudyMesh is a student knowledge wiki. The main product goal is helping students turn prompts and current dashboard context into useful tutorials, study dashboards, widgets, exercises, and reusable workspace views without forcing them to manually design dashboards or widgets first.
+RabbitHole is a curiosity wiki. The main product goal is helping curious people turn prompts and current dashboard context into useful tutorials, study dashboards, widgets, exercises, and reusable workspace views without forcing them to manually design dashboards or widgets first. New ideas are explained through what the reader already understands, and a guide can stay a short read or be followed as deep as the reader wants.
 
-Keep the main StudyMesh experience clear about the current primary workflows:
+Keep the main RabbitHole experience clear about the current primary workflows:
 
 - Creation panel: Create Study Guide and Quick Create live in one Creation section in the workspace shell. This is the main creation entry point future work should preserve. In code, the workflow branches are `study-path` for prompt-based Study Guides and Quick Create for fast dashboard-context generation.
 - Fast creations: the Quick Create actions in the Creation panel default to one-click generation from the currently active dashboard context and produce focused widgets/dashboards such as quizzes, flashcards, or podcasts. Do not reintroduce pasted-note, file-upload, OCR, PDF, PowerPoint, or general external-source ingestion flows; users who want source-driven material generation should use NotebookLM. The allowed exception is dashboard chat's web-source lookup and its "add source to Study Guide" page flow.
@@ -49,7 +51,7 @@ Generation modes:
 - Basic fallback: does not use AI. It parses dashboard-context text programmatically from keywords and obvious structure. It is instantaneous, but usually produces weak results. This mode only supports Quick Create flows, not Study Guide.
 - Gemini API token: bring-your-own Gemini token/key. This is the preferred high-quality path for users who already have an API key and want richer AI-generated study materials.
 - Google local AI: runs free and locally, with no internet connection required. Results are usually worse than hosted/BYO strong providers, but better than Basic fallback. Local AI failures should surface errors/debug output; do not silently fall back to Basic for Study Guide generation.
-- Hosted AI / Study Credits: implemented as `provider: 'hosted'` with app-owned hosted calls and Study Credits. Costs, initial credits, and refill packs live in `apps/studymesh/src/quickCreate/ai/hostedCredits.ts`; do not hardcode credit economics in UI copy or prompts.
+- Hosted AI / Carrots: implemented as `provider: 'hosted'` with app-owned hosted calls and Carrots. Costs, initial credits, and refill packs live in `apps/studymesh/src/quickCreate/ai/hostedCredits.ts`; do not hardcode credit economics in UI copy or prompts.
 
 Generation flows are currently embedded in the Creation panel. Opening an existing Study Guide tutorial, Quick Create result, or custom dashboard should take the user into the main workspace rather than sharing the same creation setup flow.
 
@@ -68,9 +70,9 @@ Strong AI provider model:
 
 ## AI Generation File Map
 
-Most current AI-mode work is in the StudyMesh app under `apps/studymesh/src/quickCreate/ai/`, the unified workspace creation shell, and the Study Guide creation component under `apps/studymesh/src/components/studyGuides/`.
+Most current AI-mode work is in the RabbitHole app under `apps/studymesh/src/quickCreate/ai/`, the unified workspace creation shell, and the Study Guide creation component under `apps/studymesh/src/components/studyGuides/`.
 
-- Provider selection and routing: `apps/studymesh/src/quickCreate/ai/provider.ts` chooses Basic fallback, Google local AI, Hosted AI/Study Credits, or BYO strong providers for Quick Create and Study Guide generation. Start here when changing mode behavior or fallback rules.
+- Provider selection and routing: `apps/studymesh/src/quickCreate/ai/provider.ts` chooses Basic fallback, Google local AI, Hosted AI/Carrots, or BYO strong providers for Quick Create and Study Guide generation. Start here when changing mode behavior or fallback rules.
 - Provider settings: `apps/studymesh/src/quickCreate/ai/settings.ts` stores the selected provider, session provider tokens, models, and environment fallback. Settings UI lives in `apps/studymesh/src/components/settings/SettingsDialog.tsx`.
 - Public AI exports: `apps/studymesh/src/quickCreate/ai/index.ts` re-exports the AI helpers used by UI and tests.
 - Unified Creation panel and workspace responsive shell: `apps/studymesh/src/components/workspace/WorkspaceStudioShell.tsx` and `WorkspaceStudioLayouts.tsx` own the left Creation panel, mobile/tablet Creation/Dashboards/AI Chat switcher, Quick Create actions, creation drafts/status markers, and embedded Study Guide creation. Preserve the Creation, Dashboards, AI Chat mobile tab labels/order unless product direction changes.
@@ -82,7 +84,7 @@ Most current AI-mode work is in the StudyMesh app under `apps/studymesh/src/quic
 - Basic fallback mode: `apps/studymesh/src/quickCreate/generator.ts`, `apps/studymesh/src/quickCreate/practice.ts`, and the Basic branches in `apps/studymesh/src/quickCreate/ai/provider.ts` provide non-AI parsing and exercise generation from dashboard context.
 - Normalization and contracts: `apps/studymesh/src/quickCreate/ai/normalizer.ts` maps strict AI output into study objects and enforces Study Guide dashboard role constraints.
 - Shared Quick Create types and exports: `apps/studymesh/src/quickCreate/types.ts` and `apps/studymesh/src/quickCreate/index.ts` define and expose the study object model used by all generation modes.
-- Study Guide seed content: `apps/studymesh/src/studyGuides/studyMeshGuideSeed.ts` owns the built-in StudyMesh guide seed.
+- Study Guide seed content: `apps/studymesh/src/studyGuides/studyMeshGuideSeed.ts` owns the built-in RabbitHole guide seed.
 - Strong AI session key dialog: `apps/studymesh/src/components/ai/StrongAiSessionKeyDialog.tsx`.
 
 Tests for these flows are mainly in `apps/studymesh/tests/unit/quickCreate/quickCreateAi.test.ts`, `apps/studymesh/tests/unit/quickCreate/studyPathContainer.test.ts`, `apps/studymesh/tests/unit/quickCreate/localAiSessionManager.test.ts`, `apps/studymesh/tests/unit/components/studyGuides/CreateStudyGuideModal.test.tsx`, `apps/studymesh/tests/unit/components/workspace/workspaceStudioModel.test.ts`, `apps/studymesh/tests/unit/components/settings/SettingsDialog.test.tsx`, `apps/studymesh/tests/unit/components/dashboardChat/DashboardChatPanel.test.tsx`, `apps/studymesh/tests/unit/dashboard/sourcePageDrafts.test.ts`, `apps/studymesh/tests/unit/api/apiHardening.test.ts`, and `apps/studymesh/tests/unit/studyGuides/studyMeshGuideSeed.test.ts`.
@@ -94,25 +96,25 @@ Run commands from the repository root unless noted:
 - `npm install` installs workspace dependencies.
 - `npm start` runs Vercel dev for the app plus serverless API routes.
 - `npm run start-dev` runs Turbo `start` tasks for app dev servers.
-- `npm --workspace studymesh run start` runs the StudyMesh webpack dev server directly.
+- `npm --workspace studymesh run start` runs the RabbitHole webpack dev server directly.
 - `npm run build` runs production builds through Turbo.
 - `npm test` runs package test tasks.
 - `npm run lint` runs Turbo lint tasks.
 - `npm run format` formats `ts`, `tsx`, and `md` files with Prettier.
-- `npm --workspace studymesh run test:unit` runs StudyMesh Vitest unit tests.
-- `npm --workspace studymesh run test:e2e` runs StudyMesh Playwright tests.
+- `npm --workspace studymesh run test:unit` runs RabbitHole Vitest unit tests.
+- `npm --workspace studymesh run test:e2e` runs RabbitHole Playwright tests.
 - `npm --workspace studymesh run test:snapshot` updates Playwright snapshots.
 - `npm --workspace studymesh run twd:relay` starts the TWD relay for cheap in-browser smoke tests.
-- `npm --workspace studymesh run test:twd` runs the StudyMesh TWD smoke tests against the active dev app.
+- `npm --workspace studymesh run test:twd` runs the RabbitHole TWD smoke tests against the active dev app.
 - `npm --workspace studymesh run test:twd:one -- <test>` runs one TWD smoke test through the relay.
 
 For hook tests, run `npm run bashunit`.
 
 ## Coding Style & Naming Conventions
 
-Use TypeScript/React patterns already present in each app. Components use PascalCase filenames such as `WidgetEditor.tsx`; hooks use `useX.ts`; SCSS modules use `*.module.scss`. StudyMesh ESLint requires 2-space indentation, no semicolons, `eqeqeq`, and braces for all control blocks. Prefer named exports for reusable shared code and keep app-specific code inside its app boundary.
+Use TypeScript/React patterns already present in each app. Components use PascalCase filenames such as `WidgetEditor.tsx`; hooks use `useX.ts`; SCSS modules use `*.module.scss`. RabbitHole ESLint requires 2-space indentation, no semicolons, `eqeqeq`, and braces for all control blocks. Prefer named exports for reusable shared code and keep app-specific code inside its app boundary.
 
-StudyMesh workspace/settings UI should prefer MUI components and `@mui/icons-material`. PrimeReact styles remain globally loaded for legacy areas; do not introduce a second icon/UI system unless replacing a pattern globally.
+RabbitHole workspace/settings UI should prefer MUI components and `@mui/icons-material`. PrimeReact styles remain globally loaded for legacy areas; do not introduce a second icon/UI system unless replacing a pattern globally.
 
 ## UI Contrast Requirements
 
@@ -124,11 +126,11 @@ Creation cards and compact controls need stable dimensions, explicit hover/disab
 
 Use Vitest with React Testing Library for unit tests and Playwright for end-to-end coverage. Name unit tests `*.test.ts`, `*.test.tsx`, `*.spec.ts`, or `*.spec.tsx`; name e2e specs `*.spec.ts`. Keep snapshots in the existing `*-snapshots` folders and update them only when the visual change is intentional. Playwright e2e expects the dev app/server to be managed externally unless its config is explicitly changed.
 
-StudyMesh also has TWD smoke tests in `apps/studymesh/src/twd/`. Use TWD when a fast browser check is enough for happy paths such as landing to login, signup/login to `/workspace`, opening Application Settings, or deleting the toy `profiles` row. Keep these tests short and workflow-level. Do not replace Vitest unit tests or Playwright e2e/visual coverage with TWD; use TWD to avoid expensive full-browser runs while developing narrow UI/auth flows.
+RabbitHole also has TWD smoke tests in `apps/studymesh/src/twd/`. Use TWD when a fast browser check is enough for happy paths such as landing to login, signup/login to `/workspace`, opening Application Settings, or deleting the toy `profiles` row. Keep these tests short and workflow-level. Do not replace Vitest unit tests or Playwright e2e/visual coverage with TWD; use TWD to avoid expensive full-browser runs while developing narrow UI/auth flows.
 
 ## Commit & Pull Request Guidelines
 
-Commit history uses prefixed subjects, for example `StudyMesh:DEV Make admin the default user` or `StudyMesh:MAIN Make admin the default user` depending on branch/environment. Install the hook with `tools/git-hooks/init.sh` to auto-prefix commit messages. Keep subjects imperative and specific.
+Commit history uses prefixed subjects, for example `RabbitHole:DEV Make admin the default user` or `RabbitHole:MAIN Make admin the default user` depending on branch/environment. Install the hook with `tools/git-hooks/init.sh` to auto-prefix commit messages. Keep subjects imperative and specific.
 
 Pull requests should describe the change, list tested commands, link related issues, and include screenshots or snapshot notes for UI changes. Mention affected apps or packages, especially for module federation, shared UI, or theme changes.
 

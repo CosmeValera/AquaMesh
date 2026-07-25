@@ -144,7 +144,7 @@ const debugLocalAi = (
     return
   }
 
-  console.debug('[StudyMesh Local AI]', stage, {
+  console.debug('[RabbitHole Local AI]', stage, {
     at: new Date().toISOString(),
     ...details,
   })

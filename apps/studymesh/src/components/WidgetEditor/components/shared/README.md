@@ -1,6 +1,6 @@
 # Shared Widget Editor Components
 
-This directory contains shared UI components used across the different widget editors in the StudyMesh application. These components help maintain consistency in the UI and reduce code duplication.
+This directory contains shared UI components used across the different widget editors in the RabbitHole application. These components help maintain consistency in the UI and reduce code duplication.
 
 ## Available Components
 

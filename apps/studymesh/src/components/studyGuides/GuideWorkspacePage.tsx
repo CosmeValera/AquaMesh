@@ -1040,7 +1040,7 @@ const GuideWorkspacePage = () => {
             >
               <CircularProgress size={28} />
               <Typography color="text.secondary" sx={{ mt: 2 }}>
-                Loading Quick Guide...
+                {t('workspace.loadingGuide')}
               </Typography>
             </Paper>
           </Box>

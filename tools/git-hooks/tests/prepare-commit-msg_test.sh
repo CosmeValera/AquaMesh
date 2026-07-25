@@ -12,22 +12,22 @@ function tear_down_after_script() {
   unset SCRIPT
 }
 
-function test_StudyMesh_lazy_approach() {
+function test_RabbitHole_lazy_approach() {
   export TEST_BRANCH="feature/feature-1"
-  assert_equals "StudyMesh:FEATURE-1 My commit message" "$($SCRIPT "My commit message")"
+  assert_equals "RabbitHole:FEATURE-1 My commit message" "$($SCRIPT "My commit message")"
 }
 
-function test_ignore_all_when_using_StudyMesh_full_approach() {
+function test_ignore_all_when_using_RabbitHole_full_approach() {
   export TEST_BRANCH="feature/feature-2"
-  assert_equals "" "$($SCRIPT "StudyMesh:FEATURE-2 My commit message")"
+  assert_equals "" "$($SCRIPT "RabbitHole:FEATURE-2 My commit message")"
 }
 
-function test_StudyMesh_lazy_approach_dev_branch() {
+function test_RabbitHole_lazy_approach_dev_branch() {
   export TEST_BRANCH="dev"
-  assert_equals "StudyMesh:DEV My commit message" "$($SCRIPT "My commit message")"
+  assert_equals "RabbitHole:DEV My commit message" "$($SCRIPT "My commit message")"
 }
 
-function test_StudyMesh_lazy_approach_main_branch() {
+function test_RabbitHole_lazy_approach_main_branch() {
   export TEST_BRANCH="main"
-  assert_equals "StudyMesh:MAIN My commit message" "$($SCRIPT "My commit message")"
+  assert_equals "RabbitHole:MAIN My commit message" "$($SCRIPT "My commit message")"
 }

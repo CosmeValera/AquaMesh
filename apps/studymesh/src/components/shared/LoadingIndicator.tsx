@@ -108,7 +108,7 @@ const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   const renderLoadingIcon = () => {
     if (icon) return icon
 
-    // Use StudyMesh logo for fullscreen and component variants
+    // Use RabbitHole logo for fullscreen and component variants
     if (variant === 'fullscreen' || variant === 'component') {
       return (
         <Box sx={{ position: 'relative', mb: 3 }}>

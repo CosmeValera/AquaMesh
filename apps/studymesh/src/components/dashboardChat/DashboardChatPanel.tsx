@@ -427,7 +427,7 @@ const QUESTION_TERM_STOPWORDS = new Set([
   'you',
   'your',
 ])
-type AiChatPetId = 'dolphin' | 'bee' | 'parrot'
+type AiChatPetId = 'dolphin' | 'rabbit' | 'parrot'
 
 interface AiChatPetDefinition {
   id: AiChatPetId
@@ -441,10 +441,10 @@ export const AI_CHAT_PET_CHANGED_EVENT = 'studymesh-ai-chat-pet-changed'
 
 export const aiChatPets: AiChatPetDefinition[] = [
   {
-    id: 'bee',
-    label: 'Bee',
-    src: '/images/studymesh-ai-pet-bee.png',
-    faceSrc: '/images/studymesh-ai-pet-bee-face.png',
+    id: 'rabbit',
+    label: 'Rabbit',
+    src: '/images/studymesh-ai-pet-rabbit.png',
+    faceSrc: '/images/studymesh-ai-pet-rabbit-face.png',
   },
   {
     id: 'dolphin',
@@ -462,6 +462,20 @@ export const aiChatPets: AiChatPetDefinition[] = [
 
 export const isAiChatPetId = (value: string | null): value is AiChatPetId =>
   aiChatPets.some((pet) => pet.id === value)
+
+export const DEFAULT_AI_CHAT_PET_ID: AiChatPetId = 'rabbit'
+
+// 'bee' held the first companion slot before the rabbit replaced it. Existing users still
+// have that id in localStorage, and isAiChatPetId now rejects it, so map it across instead
+// of letting those users silently fall through to the default.
+const LEGACY_AI_CHAT_PET_IDS: Record<string, AiChatPetId> = { bee: 'rabbit' }
+
+// Every read of AI_CHAT_PET_STORAGE_KEY has to go through this so the legacy mapping and
+// the default cannot drift apart between the state initializer and the storage-sync effect.
+export const resolveAiChatPetId = (value: string | null): AiChatPetId => {
+  const normalized = (value && LEGACY_AI_CHAT_PET_IDS[value]) || value
+  return isAiChatPetId(normalized) ? normalized : DEFAULT_AI_CHAT_PET_ID
+}
 
 export const getAiChatPetSrc = (
   pet: AiChatPetDefinition,
@@ -593,10 +607,11 @@ const DashboardChatPanel = ({
   const [editingPromptDraft, setEditingPromptDraft] = useState('')
   const [activePetId, setActivePetId] = useState<AiChatPetId>(() => {
     try {
-      const stored = window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY)
-      return isAiChatPetId(stored) ? stored : 'dolphin'
+      return resolveAiChatPetId(
+        window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY),
+      )
     } catch {
-      return 'dolphin'
+      return DEFAULT_AI_CHAT_PET_ID
     }
   })
   const [quickCreateSearch, setQuickCreateSearch] = useState('')
@@ -1452,10 +1467,13 @@ const DashboardChatPanel = ({
   useEffect(() => {
     const refreshPet = () => {
       try {
-        const stored = window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY)
-        setActivePetId(isAiChatPetId(stored) ? stored : 'dolphin')
+        setActivePetId(
+          resolveAiChatPetId(
+            window.localStorage.getItem(AI_CHAT_PET_STORAGE_KEY),
+          ),
+        )
       } catch {
-        setActivePetId('dolphin')
+        setActivePetId(DEFAULT_AI_CHAT_PET_ID)
       }
     }
 

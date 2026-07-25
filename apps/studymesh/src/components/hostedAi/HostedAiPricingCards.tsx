@@ -53,7 +53,7 @@ const HostedAiPricingCards: React.FC = () => {
       setError(
         checkoutError instanceof Error
           ? checkoutError.message
-          : 'Could not start Study Credits checkout.',
+          : 'Could not start Carrots checkout.',
       )
       setBuyingPackId(null)
     }

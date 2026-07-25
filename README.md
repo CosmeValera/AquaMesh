@@ -1,12 +1,14 @@
-# StudyMesh
+# RabbitHole
 
-> **Quick guides that adapt to you.**
+> **Start anywhere. Go as deep as you want.**
 
-StudyMesh turns a one-line prompt into a full, multi-page **Quick Guide** that explains new ideas
+RabbitHole turns a one-line prompt into a full, multi-page **Quick Guide** that explains new ideas
 by connecting them to what you already understand. Say what you're curious about (a hobby, a
 skill, a subject you're studying) and get clear lessons, quizzes, and exercises.
 
-**[Try StudyMesh →](https://studymesh.cosmevalera.dev/)**
+<!-- URL pending the domain move to rabbithole.cosmevalera.dev -->
+
+**[Try RabbitHole →](https://studymesh.cosmevalera.dev/)**
 
 <!-- HERO GIF: the flagship flow in one clip — type a prompt → a Quick Guide generates → study it in the workspace -->
 ![Create a Quick Guide and study it in the workspace](readme_docs/media/hero-quick-guide.gif)
@@ -50,10 +52,12 @@ Ask anything about the guide. It can pull in web sources when the material doesn
 
 ## Bring your own AI
 
-Choose how guides are generated in **Settings › AI Mode**: **Hosted AI** (uses Study Credits),
+Choose how guides are generated in **Settings › AI Mode**: **Hosted AI** (uses Carrots),
 your **own API key**, or **Google's on-device Local AI** (free, runs in the browser).
 
 ## Run it locally
+
+<!-- Clone URL and directory pending the repo rename to CosmeValera/RabbitHole -->
 
 ```sh
 git clone https://github.com/CosmeValera/StudyMesh.git

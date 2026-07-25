@@ -2,8 +2,24 @@ import type { StudyGuideQuickStart } from '../../state/store'
 import type { StudyMeshLanguageCode } from '../../language/contentLanguage'
 import type { StudyGuideKnowledgeBridgeBlock } from '../../studyGuides/quickStart'
 
-export const STUDY_CREDITS_LABEL = 'Study Credits'
+export const STUDY_CREDITS_LABEL = 'Carrots'
 export const STUDY_CREDITS_SYMBOL = 'SC'
+
+// Shortage detection has to stay two-part: a shortage phrase AND the currency name.
+// Matching the currency name alone would classify any message that merely mentions
+// Carrots as a shortage, including billing-config errors.
+// Both wordings are accepted so the server-side SQL raise and any message cached from
+// an earlier session still resolve after the Study Credits to Carrots rename.
+const CURRENCY_NAME_SOURCE = '(?:study credits|carrots)'
+const SHORTAGE_PHRASE_SOURCE =
+  "(?:not enough|insufficient|don't have enough|do not have enough)"
+const CURRENCY_SHORTAGE_PATTERN = new RegExp(
+  `${SHORTAGE_PHRASE_SOURCE}.*${CURRENCY_NAME_SOURCE}|${CURRENCY_NAME_SOURCE}.*${SHORTAGE_PHRASE_SOURCE}`,
+  'i',
+)
+
+export const isCurrencyShortageMessage = (message?: string | null): boolean =>
+  Boolean(message && CURRENCY_SHORTAGE_PATTERN.test(message))
 
 export const HOSTED_AI_USAGE_CHANGED_EVENT = 'studymesh-hosted-ai-usage-changed'
 export const HOSTED_AI_VISUAL_SPEND_EVENT = 'studymesh-hosted-ai-visual-spend'

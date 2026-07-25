@@ -1,7 +1,7 @@
 import { SxProps, Theme } from '@mui/material'
 
 /**
- * Standardized dialog styles for StudyMesh application
+ * Standardized dialog styles for RabbitHole application
  * This ensures visual consistency across all modal dialogs
  */
 export const dialogStyles = {

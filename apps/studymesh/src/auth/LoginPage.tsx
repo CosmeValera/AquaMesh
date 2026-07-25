@@ -81,10 +81,10 @@ const LoginPage = () => {
   return (
     <AuthPageFrame
       title="Sign in"
-      subtitle="Open your StudyMesh workspace from any device."
+      subtitle="Open your RabbitHole workspace from any device."
       footer={
         <Typography variant="body2" color="text.secondary" align="center">
-          New to StudyMesh?{' '}
+          New to RabbitHole?{' '}
           <Link
             component={RouterLink}
             to={`/signup?redirect=${encodeURIComponent(redirectPath)}`}

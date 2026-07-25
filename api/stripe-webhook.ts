@@ -198,7 +198,7 @@ const validatePaidSession = (session: CheckoutSession) => {
 
   if (!pack) {
     throw new Error(
-      'Checkout Session price does not match Study Credits refill.',
+      'Checkout Session price does not match Carrots refill.',
     )
   }
 
@@ -214,7 +214,7 @@ const validatePaidSession = (session: CheckoutSession) => {
     session.metadata?.credits &&
     Number(session.metadata.credits) !== pack.credits
   ) {
-    throw new Error('Checkout Session credits do not match Study Credits refill.')
+    throw new Error('Checkout Session credits do not match Carrots refill.')
   }
 
   if (
@@ -222,19 +222,19 @@ const validatePaidSession = (session: CheckoutSession) => {
     Number(session.metadata.expected_amount) !== pack.priceCents
   ) {
     throw new Error(
-      'Checkout Session metadata amount does not match Study Credits refill.',
+      'Checkout Session metadata amount does not match Carrots refill.',
     )
   }
 
   if (session.amount_total !== pack.priceCents) {
     throw new Error(
-      'Checkout Session amount does not match Study Credits refill.',
+      'Checkout Session amount does not match Carrots refill.',
     )
   }
 
   if ((session.currency || '').toLowerCase() !== REFILL_CURRENCY) {
     throw new Error(
-      'Checkout Session currency does not match Study Credits refill.',
+      'Checkout Session currency does not match Carrots refill.',
     )
   }
 

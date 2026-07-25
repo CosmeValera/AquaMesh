@@ -88,7 +88,7 @@ export const useHostedAiStatus = (): UseHostedAiStatusResult => {
       setError(
         refreshError instanceof Error
           ? refreshError.message
-          : 'Could not load Study Credits.',
+          : 'Could not load Carrots.',
       )
     } finally {
       setLoading(false)

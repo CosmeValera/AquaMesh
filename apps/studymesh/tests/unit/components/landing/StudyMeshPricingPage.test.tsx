@@ -43,17 +43,17 @@ describe('StudyMeshPricingPage', () => {
     expect(screen.queryByText(/good privacy path/i)).not.toBeInTheDocument()
 
     expect(
-      screen.getByText(/Study Credits pay for hosted generation/i),
+      screen.getByText(/Carrots pay for hosted generation/i),
     ).toBeInTheDocument()
-    expect(screen.getByLabelText('150 Study Credits')).toBeInTheDocument()
+    expect(screen.getByLabelText('150 Carrots')).toBeInTheDocument()
     expect(screen.getByText('2 EUR')).toBeInTheDocument()
-    expect(screen.getByText('75 credits / EUR')).toBeInTheDocument()
-    expect(screen.getByLabelText('450 Study Credits')).toBeInTheDocument()
+    expect(screen.getByText('75 carrots / EUR')).toBeInTheDocument()
+    expect(screen.getByLabelText('450 Carrots')).toBeInTheDocument()
     expect(screen.getByText('5 EUR')).toBeInTheDocument()
-    expect(screen.getByText('90 credits / EUR')).toBeInTheDocument()
-    expect(screen.getByLabelText('1000 Study Credits')).toBeInTheDocument()
+    expect(screen.getByText('90 carrots / EUR')).toBeInTheDocument()
+    expect(screen.getByLabelText('1000 Carrots')).toBeInTheDocument()
     expect(screen.getByText('10 EUR')).toBeInTheDocument()
-    expect(screen.getByText('100 credits / EUR')).toBeInTheDocument()
+    expect(screen.getByText('100 carrots / EUR')).toBeInTheDocument()
     expect(screen.getByText('Starter')).toBeInTheDocument()
     expect(screen.getByText('Popular')).toBeInTheDocument()
     expect(screen.getByText('Best value')).toBeInTheDocument()
@@ -63,9 +63,9 @@ describe('StudyMeshPricingPage', () => {
       screen.getAllByText('Use for Quiz, Flashcards, Podcast, and chat'),
     ).toHaveLength(3)
 
-    expect(screen.getByLabelText('30 Study Credits')).toBeInTheDocument()
-    expect(screen.getByLabelText('3 Study Credits')).toBeInTheDocument()
-    expect(screen.getByLabelText('1 Study Credits')).toBeInTheDocument()
+    expect(screen.getByLabelText('30 Carrots')).toBeInTheDocument()
+    expect(screen.getByLabelText('3 Carrots')).toBeInTheDocument()
+    expect(screen.getByLabelText('1 Carrots')).toBeInTheDocument()
     expect(
       screen.getByText(/2 Quick Guides \+ 1 more creation/i),
     ).toBeInTheDocument()

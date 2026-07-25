@@ -33,7 +33,7 @@ export interface StudyGuideCreationJob {
 export const HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT = 1
 export const HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE = `Creation was interrupted again. Retry will spend ${getHostedAiCreditCost(
   'study-guide',
-)} Study Credits.`
+)} Carrots.`
 export const isRetryableStudyGuideCreationError = (
   message?: string | null,
 ): boolean =>

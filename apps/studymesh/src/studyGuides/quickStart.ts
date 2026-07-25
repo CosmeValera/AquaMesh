@@ -769,7 +769,7 @@ export const buildStudyGuideKnowledgeBridgeBlocksPrompt = ({
     )
     .join('\n\n---\n\n')
 
-  return `Create optional knowledge-context bridge note blocks for a StudyMesh Study Guide.
+  return `Create optional knowledge-context bridge note blocks for a RabbitHole Study Guide.
 
 Return strict JSON only:
 {

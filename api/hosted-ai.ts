@@ -288,7 +288,7 @@ const errorResponse = (
   error: { code, message },
 });
 const INSUFFICIENT_STUDY_CREDITS_MESSAGE =
-  "You don't have enough Study Credits for this action. Add more credits or switch AI provider, then try again.";
+  "You don't have enough Carrots for this action. Add more Carrots or switch AI provider, then try again.";
 
 const isObject = (value: unknown): value is JsonObject =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -1637,7 +1637,7 @@ export const buildPodcastScriptPrompt = ({
     : "Write the podcast in the same language as the source.";
 
   return [
-    "Create a short StudyMesh educational podcast script from ONLY the provided Study Guide source.",
+    "Create a short RabbitHole educational podcast script from ONLY the provided Study Guide source.",
     languageInstruction,
     "Return strict JSON with: title, description, transcriptTurns, chapters.",
     // A live episode opened a turn with "Quick question for you, hostA", so the
@@ -2370,7 +2370,9 @@ const mapFailure = (
       };
     }
 
-    if (/insufficient|credit|quota/i.test(message)) {
+    // Matches the message raised by the DB, which still says "insufficient Study Credits".
+    // "carrots" is accepted too so the branch survives if that raise is ever reworded.
+    if (/insufficient|credit|carrots|quota/i.test(message)) {
       return {
         statusCode: 402,
         response: errorResponse(
@@ -2524,7 +2526,7 @@ const buildMonolithGuidePrompt = ({
   folderNameFallback: string;
   userKnownTopics: string[];
   outputLanguage?: StudyMeshLanguageCode;
-}): string => `Write a complete, final StudyMesh Study Guide. This is shipped learner-facing content, not a draft or outline.
+}): string => `Write a complete, final RabbitHole Study Guide. This is shipped learner-facing content, not a draft or outline.
 
 Return strict JSON only:
 {

@@ -6,9 +6,7 @@ RabbitHole turns a one-line prompt into a full, multi-page **Quick Guide** that 
 by connecting them to what you already understand. Say what you're curious about (a hobby, a
 skill, a subject you're studying) and get clear lessons, quizzes, and exercises.
 
-<!-- URL pending the domain move to rabbithole.cosmevalera.dev -->
-
-**[Try RabbitHole →](https://studymesh.cosmevalera.dev/)**
+**[Try RabbitHole →](https://rabbithole.cosmevalera.dev/)**
 
 <!-- HERO GIF: the flagship flow in one clip — type a prompt → a Quick Guide generates → study it in the workspace -->
 ![Create a Quick Guide and study it in the workspace](readme_docs/media/hero-quick-guide.gif)

@@ -112,7 +112,7 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
             },
           }}
         >
-          <Stack direction="row" spacing={1.35} alignItems="center">
+          <Stack direction="row" spacing={1.75} alignItems="center">
             <Box
               component="img"
               src="/logo.png"

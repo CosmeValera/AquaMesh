@@ -518,7 +518,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 0.75,
+                    gap: 1.1,
                     flex: 1,
                     minWidth: 0,
                     color: 'foreground.contrastPrimary',
@@ -642,7 +642,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                       width: isDesktop ? 30 : 28,
                       height: isDesktop ? 30 : 28,
                       display: 'block',
-                      mr: isDesktop ? 1 : 0,
+                      mr: isDesktop ? 1.35 : 0,
                     }}
                   />
                   {isDesktop && 'RabbitHole'}

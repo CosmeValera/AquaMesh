@@ -103,7 +103,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 },
               }}
             >
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1.4} alignItems="center">
                 <Box
                   component="img"
                   src="/logo.png"

@@ -236,11 +236,11 @@ describe('DashboardChatPanel quick create menu', () => {
       ).toBeInTheDocument()
     }
 
-    fireEvent.click(screen.getByRole('option', { name: 'Choose Parrot' }))
+    fireEvent.click(screen.getByRole('option', { name: 'Choose Hazel' }))
 
     expect(localStorage.setItem).toHaveBeenCalledWith(
       AI_CHAT_PET_STORAGE_KEY,
-      'parrot',
+      'hazel',
     )
     expect(
       screen.getByRole('listbox', { name: 'AI companions' }),
@@ -249,7 +249,7 @@ describe('DashboardChatPanel quick create menu', () => {
 
   it('refreshes the active companion face when the shared pet event fires', () => {
     vi.mocked(localStorage.getItem).mockImplementation((key) =>
-      key === AI_CHAT_PET_STORAGE_KEY ? 'parrot' : null,
+      key === AI_CHAT_PET_STORAGE_KEY ? 'hazel' : null,
     )
 
     const { container } = renderPanel()
@@ -261,6 +261,19 @@ describe('DashboardChatPanel quick create menu', () => {
     expect(container.querySelector('img')).toHaveAttribute(
       'src',
       getAiChatPetSrc(aiChatPets[2], 'face'),
+    )
+  })
+
+  it('keeps a stored legacy companion id on the slot that replaced it', () => {
+    vi.mocked(localStorage.getItem).mockImplementation((key) =>
+      key === AI_CHAT_PET_STORAGE_KEY ? 'dolphin' : null,
+    )
+
+    const { container } = renderPanel()
+
+    expect(container.querySelector('img')).toHaveAttribute(
+      'src',
+      getAiChatPetSrc(aiChatPets[1], 'face'),
     )
   })
 

@@ -427,7 +427,7 @@ const QUESTION_TERM_STOPWORDS = new Set([
   'you',
   'your',
 ])
-type AiChatPetId = 'dolphin' | 'rabbit' | 'parrot'
+type AiChatPetId = 'cotton' | 'clover' | 'hazel'
 
 interface AiChatPetDefinition {
   id: AiChatPetId
@@ -441,34 +441,40 @@ export const AI_CHAT_PET_CHANGED_EVENT = 'studymesh-ai-chat-pet-changed'
 
 export const aiChatPets: AiChatPetDefinition[] = [
   {
-    id: 'rabbit',
-    label: 'Rabbit',
-    src: '/images/studymesh-ai-pet-rabbit.png',
-    faceSrc: '/images/studymesh-ai-pet-rabbit-face.png',
+    id: 'cotton',
+    label: 'Cotton',
+    src: '/images/studymesh-ai-pet-cotton.png',
+    faceSrc: '/images/studymesh-ai-pet-cotton-face.png',
   },
   {
-    id: 'dolphin',
-    label: 'Dolphin',
-    src: '/images/studymesh-ai-pet-dolphin.png',
-    faceSrc: '/images/studymesh-ai-pet-dolphin-face.png',
+    id: 'clover',
+    label: 'Clover',
+    src: '/images/studymesh-ai-pet-clover.png',
+    faceSrc: '/images/studymesh-ai-pet-clover-face.png',
   },
   {
-    id: 'parrot',
-    label: 'Parrot',
-    src: '/images/studymesh-ai-pet-parrot.png',
-    faceSrc: '/images/studymesh-ai-pet-parrot-face.png',
+    id: 'hazel',
+    label: 'Hazel',
+    src: '/images/studymesh-ai-pet-hazel.png',
+    faceSrc: '/images/studymesh-ai-pet-hazel-face.png',
   },
 ]
 
 export const isAiChatPetId = (value: string | null): value is AiChatPetId =>
   aiChatPets.some((pet) => pet.id === value)
 
-export const DEFAULT_AI_CHAT_PET_ID: AiChatPetId = 'rabbit'
+export const DEFAULT_AI_CHAT_PET_ID: AiChatPetId = 'cotton'
 
-// 'bee' held the first companion slot before the rabbit replaced it. Existing users still
-// have that id in localStorage, and isAiChatPetId now rejects it, so map it across instead
-// of letting those users silently fall through to the default.
-const LEGACY_AI_CHAT_PET_IDS: Record<string, AiChatPetId> = { bee: 'rabbit' }
+// The three slots used to hold a bee, a dolphin and a parrot, then a generic 'rabbit' took
+// the first one. All three are named rabbits now. Existing users still have the old ids in
+// localStorage and isAiChatPetId rejects them, so map each one onto the rabbit that took
+// its slot instead of letting those users silently fall through to the default.
+const LEGACY_AI_CHAT_PET_IDS: Record<string, AiChatPetId> = {
+  bee: 'cotton',
+  rabbit: 'cotton',
+  dolphin: 'clover',
+  parrot: 'hazel',
+}
 
 // Every read of AI_CHAT_PET_STORAGE_KEY has to go through this so the legacy mapping and
 // the default cannot drift apart between the state initializer and the storage-sync effect.

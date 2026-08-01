@@ -14,6 +14,11 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 
 import StudyMeshLanding from '../../../../src/components/landing/StudyMeshLanding'
 import { createStudyMeshTheme } from '../../../../src/theme'
+import {
+  HOSTED_AI_CREDIT_PACKS,
+  HOSTED_AI_INITIAL_FREE_CREDITS,
+  STUDY_CREDITS_LABEL,
+} from '../../../../src/quickCreate/ai'
 
 const LocationProbe = () => {
   const location = useLocation()
@@ -87,6 +92,12 @@ describe('StudyMeshLanding', () => {
     expect(
       screen.getByText(/tell rabbithole what you already know/i),
     ).toHaveTextContent(/quizzes and exercises you can actually practice on/i)
+    expect(
+      screen.getByText(/not a chat thread\. a guide you keep\./i),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('hero-differentiator')).toHaveTextContent(
+      /a chat gives you an answer\. rabbithole gives you a guide/i,
+    )
     expect(screen.getByText(/no account needed to try/i)).toHaveTextContent(
       /free to start/i,
     )
@@ -163,11 +174,21 @@ describe('StudyMeshLanding', () => {
       ),
     ).toBeInTheDocument()
     expect(
+      within(footer).getByRole('link', { name: /why rabbithole/i }),
+    ).toHaveAttribute('href', '#why')
+    expect(
+      within(footer).getByRole('link', { name: /what you get/i }),
+    ).toHaveAttribute('href', '#what')
+    expect(
+      within(footer).getByRole('link', { name: /how it works/i }),
+    ).toHaveAttribute('href', '#how')
+    expect(
       within(footer).getByRole('link', { name: /knowledge bridge/i }),
     ).toHaveAttribute('href', '#knowledge-context')
-    expect(
-      within(footer).getByRole('link', { name: /growing guides/i }),
-    ).toHaveAttribute('href', '#growing-guide')
+    expect(within(footer).getByRole('link', { name: /faq/i })).toHaveAttribute(
+      'href',
+      '#faq',
+    )
     expect(
       within(footer).getByRole('link', { name: /try it free/i }),
     ).toHaveAttribute('href', '/try')
@@ -212,9 +233,134 @@ describe('StudyMeshLanding', () => {
       ),
     ).toBeInTheDocument()
 
+    expect(within(comparison).getByText(/what it costs/i)).toBeInTheDocument()
+    expect(
+      within(comparison).getByText(/no subscription\./i),
+    ).toBeInTheDocument()
+
     expect(screen.getByTestId('landing-trigger-line')).toHaveTextContent(
       /use rabbithole for the one you keep looking up/i,
     )
+  })
+
+  it('walks the visitor through the why, what and how stages in order', () => {
+    renderLanding()
+
+    const stageOrder = ['01', '02', '03', '04', '05']
+    stageOrder.forEach((step) => {
+      expect(screen.getAllByText(step).length).toBeGreaterThan(0)
+    })
+
+    const headings = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent ?? '')
+
+    const whyIndex = headings.findIndex((text) =>
+      /you already have chatgpt/i.test(text),
+    )
+    const whatIndex = headings.findIndex((text) =>
+      /a whole study workspace out/i.test(text),
+    )
+    const howIndex = headings.findIndex((text) => /three steps/i.test(text))
+    const accessIndex = headings.findIndex((text) =>
+      /you can start without an account/i.test(text),
+    )
+    const faqIndex = headings.findIndex((text) =>
+      /the questions people actually ask/i.test(text),
+    )
+
+    expect(whyIndex).toBeGreaterThanOrEqual(0)
+    expect(whatIndex).toBeGreaterThan(whyIndex)
+    expect(howIndex).toBeGreaterThan(whatIndex)
+    expect(accessIndex).toBeGreaterThan(howIndex)
+    expect(faqIndex).toBeGreaterThan(accessIndex)
+  })
+
+  it('lists what a single prompt actually produces', () => {
+    renderLanding()
+
+    const outputs = screen.getByTestId('landing-study-outputs')
+    expect(
+      within(outputs).getByText(/a guide with real pages/i),
+    ).toBeInTheDocument()
+    expect(within(outputs).getByText(/^quizzes$/i)).toBeInTheDocument()
+    expect(within(outputs).getByText(/^flashcards$/i)).toBeInTheDocument()
+    expect(within(outputs).getByText(/^exercises$/i)).toBeInTheDocument()
+    expect(within(outputs).getByText(/podcast episodes/i)).toBeInTheDocument()
+    expect(
+      within(outputs).getByText(/dashboards you can rearrange/i),
+    ).toBeInTheDocument()
+  })
+
+  it('explains the three creation steps, starting with the known-topics list', () => {
+    renderLanding()
+
+    const steps = screen.getByTestId('landing-how-it-works')
+    expect(
+      within(steps).getByText(/say what you already know/i),
+    ).toBeInTheDocument()
+    expect(
+      within(steps).getByText(/ask for what you want to learn/i),
+    ).toBeInTheDocument()
+    expect(
+      within(steps).getByText(/practise it, then push it further/i),
+    ).toBeInTheDocument()
+  })
+
+  it('answers why to register and what it costs without hardcoding the economics', () => {
+    renderLanding()
+
+    const access = screen.getByTestId('landing-access')
+    expect(within(access).getByText(/^no account$/i)).toBeInTheDocument()
+    expect(within(access).getByText(/^free account$/i)).toBeInTheDocument()
+    expect(within(access).getByText(/^your own ai$/i)).toBeInTheDocument()
+    expect(
+      within(access).getByText(
+        new RegExp(
+          `${HOSTED_AI_INITIAL_FREE_CREDITS} ${STUDY_CREDITS_LABEL} to start`,
+          'i',
+        ),
+      ),
+    ).toBeInTheDocument()
+
+    expect(
+      within(access).getByRole('link', { name: /try it now/i }),
+    ).toHaveAttribute('href', '/try')
+    expect(
+      within(access).getByRole('link', { name: /create a free account/i }),
+    ).toHaveAttribute('href', '/signup')
+    expect(
+      within(access).getByRole('link', { name: /see the full pricing/i }),
+    ).toHaveAttribute('href', '/pricing')
+
+    expect(screen.getByTestId('landing-access-footnote')).toHaveTextContent(
+      new RegExp(`packs start at ${HOSTED_AI_CREDIT_PACKS[0].label}`, 'i'),
+    )
+  })
+
+  it('answers the differentiation objections in the FAQ and publishes them as structured data', () => {
+    renderLanding()
+
+    const faq = screen.getByTestId('landing-faq')
+    expect(
+      within(faq).getByText(/what is actually different here/i),
+    ).toBeInTheDocument()
+    expect(within(faq).getByText(/why should i register/i)).toBeInTheDocument()
+    expect(
+      within(faq).getByText(/why would i pay for this/i),
+    ).toBeInTheDocument()
+    expect(
+      within(faq).getByText(/could i not just prompt a chat/i),
+    ).toBeInTheDocument()
+
+    const structuredData = document.head.querySelector(
+      'script[data-landing-faq="true"]',
+    )
+    expect(structuredData).not.toBeNull()
+
+    const parsed = JSON.parse(structuredData?.textContent ?? '{}')
+    expect(parsed['@type']).toBe('FAQPage')
+    expect(parsed.mainEntity.length).toBeGreaterThan(3)
   })
 
   it('shows the finished topic being suggested for the known-topics lens', () => {
@@ -334,7 +480,7 @@ describe('StudyMeshLanding', () => {
   it('sends the guest trial CTA to the no-account try page', () => {
     renderLanding()
 
-    fireEvent.click(screen.getAllByRole('button', { name: /no account/i })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: /^try it$/i })[0])
 
     expect(screen.getByTestId('location')).toHaveTextContent('/try')
   })

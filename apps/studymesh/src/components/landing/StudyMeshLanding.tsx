@@ -6,6 +6,9 @@ import React, {
   useState,
 } from 'react'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   Container,
@@ -14,10 +17,11 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import BoltIcon from '@mui/icons-material/Bolt'
 import CameraAltOutlinedIcon from '@mui/icons-material/CameraAltOutlined'
@@ -33,9 +37,24 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import CheckIcon from '@mui/icons-material/Check'
 import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
+import QuizOutlinedIcon from '@mui/icons-material/QuizOutlined'
+import StyleOutlinedIcon from '@mui/icons-material/StyleOutlined'
+import ExtensionOutlinedIcon from '@mui/icons-material/ExtensionOutlined'
+import HeadphonesOutlinedIcon from '@mui/icons-material/HeadphonesOutlined'
+import SpaceDashboardOutlinedIcon from '@mui/icons-material/SpaceDashboardOutlined'
+import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined'
+import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined'
+import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined'
+import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined'
+import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined'
 
 import StudyMeshFooter from './StudyMeshFooter'
 import LandingTopNav, { scrollToLandingSection } from './LandingTopNav'
+import {
+  HOSTED_AI_CREDIT_PACKS,
+  HOSTED_AI_INITIAL_FREE_CREDITS,
+  STUDY_CREDITS_LABEL,
+} from '../../quickCreate/ai'
 
 const brand = {
   canvas: '#FBFDFE',
@@ -148,6 +167,223 @@ const comparisonRows: ComparisonRow[] = [
     label: 'Going deeper',
     chat: 'Ask again. Get a new answer that may contradict the last one.',
     rabbithole: 'Ask for more and the guide grows. Page 06 appears and stays.',
+  },
+  {
+    id: 'what-it-costs',
+    label: 'What it costs',
+    chat: 'A free tier, then a monthly subscription for the strong models.',
+    rabbithole:
+      'No subscription. Free with your own API key or on-device AI, or pay per generation only when you use the hosted one.',
+  },
+]
+
+const heroDifferentiator =
+  'A chat gives you an answer. RabbitHole gives you a guide: skim it in 20 seconds, or follow it for 5 pages.'
+
+type StudyOutputItem = {
+  id: string
+  title: string
+  body: string
+  icon: React.ReactNode
+  color: string
+  tone: string
+}
+
+const studyOutputItems: StudyOutputItem[] = [
+  {
+    id: 'pages',
+    title: 'A guide with real pages',
+    body: 'Five ordered pages, each one building on the last, numbered so page 03 is still page 03 next week.',
+    icon: <MenuBookOutlinedIcon />,
+    color: '#3444C8',
+    tone: brand.lavender,
+  },
+  {
+    id: 'quizzes',
+    title: 'Quizzes',
+    body: 'Questions written against your pages, not generic trivia scraped from the topic name.',
+    icon: <QuizOutlinedIcon />,
+    color: brand.blue,
+    tone: brand.skySoft,
+  },
+  {
+    id: 'flashcards',
+    title: 'Flashcards',
+    body: 'The terms that actually appear in your guide, ready to drill until they stick.',
+    icon: <StyleOutlinedIcon />,
+    color: '#008A78',
+    tone: brand.mintSoft,
+  },
+  {
+    id: 'exercises',
+    title: 'Exercises',
+    body: 'Practice tasks you work through yourself, so the guide is something you do, not only something you read.',
+    icon: <ExtensionOutlinedIcon />,
+    color: '#7A4BC2',
+    tone: '#F1ECFF',
+  },
+  {
+    id: 'podcast',
+    title: 'Podcast episodes',
+    body: 'Turn a guide into a two-host audio episode and take the topic with you on the commute.',
+    icon: <HeadphonesOutlinedIcon />,
+    color: '#E68000',
+    tone: '#FFF4E2',
+  },
+  {
+    id: 'dashboards',
+    title: 'Dashboards you can rearrange',
+    body: 'Everything lands on a canvas you can move, edit, and reuse. Your workspace, not a chat log.',
+    icon: <SpaceDashboardOutlinedIcon />,
+    color: '#154397',
+    tone: '#EAF1FF',
+  },
+]
+
+type HowItWorksStep = {
+  id: string
+  step: string
+  title: string
+  body: string
+  icon: React.ReactNode
+}
+
+const howItWorksSteps: HowItWorksStep[] = [
+  {
+    id: 'declare',
+    step: '01',
+    title: 'Say what you already know',
+    body: 'A short list of your worlds: gaming, cooking, code, whatever they are. You write it once, you can read it, and you can edit it any time.',
+    icon: <PsychologyOutlinedIcon />,
+  },
+  {
+    id: 'ask',
+    step: '02',
+    title: 'Ask for what you want to learn',
+    body: 'One prompt. RabbitHole plans the pages, writes them through your list, and generates the quizzes, flashcards and exercises for that exact topic.',
+    icon: <EditNoteOutlinedIcon />,
+  },
+  {
+    id: 'practise',
+    step: '03',
+    title: 'Practise it, then push it further',
+    body: 'Take the quiz. Ask the chat for more depth, more examples, more practice, and new pages get added to the same guide instead of scrolling away.',
+    icon: <FitnessCenterOutlinedIcon />,
+  },
+]
+
+const starterPack = HOSTED_AI_CREDIT_PACKS[0]
+
+type AccessOption = {
+  id: string
+  eyebrow: string
+  title: string
+  body: string
+  points: string[]
+  ctaLabel: string
+  ctaTo: string
+  icon: React.ReactNode
+  highlighted?: boolean
+}
+
+const accessOptions: AccessOption[] = [
+  {
+    id: 'guest',
+    eyebrow: 'No account',
+    title: 'Free',
+    body: 'Three Quick Guides straight away. Nothing to install, no card, no e-mail.',
+    points: [
+      '3 free Quick Guides',
+      'Nothing to configure',
+      'Sign up later to keep them',
+    ],
+    ctaLabel: 'Try it now',
+    ctaTo: '/try',
+    icon: <RocketLaunchOutlinedIcon />,
+  },
+  {
+    id: 'account',
+    eyebrow: 'Free account',
+    title: 'Still free',
+    body: `This is what signing up actually buys you: your guides are saved and synced instead of lost when you close the tab, plus ${HOSTED_AI_INITIAL_FREE_CREDITS} ${STUDY_CREDITS_LABEL} and a free daily refill.`,
+    points: [
+      'Your library, kept and synced',
+      `${HOSTED_AI_INITIAL_FREE_CREDITS} ${STUDY_CREDITS_LABEL} to start`,
+      'Free daily refill, no card',
+    ],
+    ctaLabel: 'Create a free account',
+    ctaTo: '/signup',
+    icon: <PersonAddAltOutlinedIcon />,
+    highlighted: true,
+  },
+  {
+    id: 'own-ai',
+    eyebrow: 'Your own AI',
+    title: '0€ forever',
+    body: 'Plug in your own Gemini or Cerebras key and RabbitHole never charges you for generation. On-device AI runs free and stays in your browser.',
+    points: [
+      'Bring your own API key',
+      'Or run on-device AI, offline',
+      'Keys stay in session storage',
+    ],
+    ctaLabel: 'See the full pricing',
+    ctaTo: '/pricing',
+    icon: <KeyOutlinedIcon />,
+  },
+]
+
+const accessFootnote = `No subscription anywhere. If you would rather not manage a key, hosted generation runs on ${STUDY_CREDITS_LABEL} and packs start at ${starterPack.label}.`
+
+type FaqItem = {
+  id: string
+  question: string
+  answer: string
+}
+
+const faqItems: FaqItem[] = [
+  {
+    id: 'difference',
+    question: 'I already use ChatGPT. What is actually different here?',
+    answer:
+      'A chat hands you an answer inside a thread. RabbitHole hands you a guide: numbered pages that stay where you left them, quizzes and exercises generated for that exact topic, and an explicit list of what you already know that every page is written through. Ask for more and the guide grows instead of scrolling out of reach.',
+  },
+  {
+    id: 'why-account',
+    question: 'Why should I register?',
+    answer:
+      'You do not have to, to try it: three Quick Guides run with no account at all. Registering is what turns a one-off answer into a library. Your guides, dashboards and known-topics list are saved and synced across devices, and a free account starts with ' +
+      `${HOSTED_AI_INITIAL_FREE_CREDITS} ${STUDY_CREDITS_LABEL} plus a free daily refill.`,
+  },
+  {
+    id: 'why-pay',
+    question: 'Why would I pay for this if I already pay for a chat assistant?',
+    answer:
+      'There is no RabbitHole subscription to stack on top of one. Bring your own Gemini or Cerebras key, or run on-device AI, and generation costs you nothing here. Hosted generation is there only if you do not want to manage a key, and it is pay-as-you-go: ' +
+      `packs start at ${starterPack.label} for ${starterPack.credits} ${STUDY_CREDITS_LABEL}.`,
+  },
+  {
+    id: 'known-topics',
+    question: 'What does "explained through what I already know" really mean?',
+    answer:
+      'You keep a short, editable list of familiar domains. Every page, example and quiz question is written against that list, so a bottleneck becomes your slow kit lens if you shoot photos and a DPS check if you play games. It is a list you can read and change, not invisible memory guessing at you.',
+  },
+  {
+    id: 'just-prompting',
+    question: 'Could I not just prompt a chat to do all of this?',
+    answer:
+      'For one answer, yes. Then you retype your context next session, ask separately for a quiz, and hope the follow-up answer does not contradict the first one. RabbitHole makes that the default: the context is stored, the practice material is generated with the pages, and the result is kept as a guide you can reopen.',
+  },
+  {
+    id: 'trust',
+    question: 'It is AI-generated. Can I trust it?',
+    answer:
+      'It is generated, and you choose the model: hosted, your own API key, or on-device. Pages stay editable, so you can fix or extend anything. When an answer needs a real source, the dashboard chat can look one up on the web and add that source into your guide as its own page.',
+  },
+  {
+    id: 'privacy',
+    question: 'What happens to my API key and my data?',
+    answer:
+      'API keys are kept in session storage, never in localStorage, and are sent only to the provider you picked. On-device AI never leaves your browser at all. Your guides are yours to delete.',
   },
 ]
 
@@ -284,23 +520,64 @@ const contextTopics: ContextTopic[] = [
   },
 ]
 
-const preloadedContextImages: HTMLImageElement[] = []
+// Every context topic carries its own illustration. Fetching all ten up front
+// used to put ~270 KB on the critical path and competed with the hero for
+// bandwidth, so the first card is the only one loaded eagerly. The rest are
+// warmed on hover/focus (the user is about to click) and, failing that, once
+// the browser reports it is idle.
+const prefetchedContextImages = new Set<string>()
+const retainedContextImages: HTMLImageElement[] = []
 
-const preloadContextImages = () => {
-  if (preloadedContextImages.length > 0 || typeof Image === 'undefined') {
+const prefetchContextImage = (src: string) => {
+  if (typeof Image === 'undefined' || prefetchedContextImages.has(src)) {
     return
   }
 
-  contextTopics.forEach((topic) => {
-    const image = new Image()
-    image.decoding = 'async'
-    image.src = topic.visualSrc
-    preloadedContextImages.push(image)
+  prefetchedContextImages.add(src)
 
-    if (typeof image.decode === 'function') {
-      void image.decode().catch(() => undefined)
-    }
-  })
+  const image = new Image()
+  image.decoding = 'async'
+  image.setAttribute('fetchpriority', 'low')
+  image.src = src
+  // Held until the browser cache takes over; dropping the reference straight
+  // away can cancel the in-flight request in some browsers.
+  retainedContextImages.push(image)
+}
+
+type IdleWindow = Window & {
+  requestIdleCallback?: (
+    callback: () => void,
+    options?: { timeout: number },
+  ) => number
+  cancelIdleCallback?: (handle: number) => void
+}
+
+const scheduleIdleWork = (task: () => void) => {
+  if (typeof window === 'undefined') {
+    return () => undefined
+  }
+
+  const idleWindow = window as IdleWindow
+
+  if (typeof idleWindow.requestIdleCallback === 'function') {
+    const handle = idleWindow.requestIdleCallback(task, { timeout: 4000 })
+    return () => idleWindow.cancelIdleCallback?.(handle)
+  }
+
+  const handle = window.setTimeout(task, 2500)
+  return () => window.clearTimeout(handle)
+}
+
+// Runs once the browser is idle, so none of it competes with the hero paint:
+// the remaining topic illustrations, plus the guest-trial route chunk that the
+// primary CTA navigates to (App.tsx lazy-loads it).
+const useLandingIdlePrefetch = () => {
+  useEffect(() => {
+    return scheduleIdleWork(() => {
+      contextTopics.forEach((topic) => prefetchContextImage(topic.visualSrc))
+      void import('../guest/GuestQuickGuidePage').catch(() => undefined)
+    })
+  }, [])
 }
 
 const countInlineLines = (element: HTMLElement) => {
@@ -376,6 +653,35 @@ const useHeroHeadlineWrapMode = () => {
   return { phraseRef, phraseWraps }
 }
 
+// Search engines read the FAQ answers as rich results, which is where a lot of
+// "how is this different from ChatGPT" traffic starts. Injected from the same
+// faqItems the section renders so the two can never drift apart.
+const useFaqStructuredData = () => {
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return
+    }
+
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.dataset.landingFaq = 'true'
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      })),
+    })
+    document.head.appendChild(script)
+
+    return () => {
+      script.remove()
+    }
+  }, [])
+}
+
 const StudyMeshLanding = () => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -385,9 +691,8 @@ const StudyMeshLanding = () => {
     navigate('/try')
   }
 
-  useEffect(() => {
-    preloadContextImages()
-  }, [])
+  useLandingIdlePrefetch()
+  useFaqStructuredData()
 
   useEffect(() => {
     if (!location.hash) {
@@ -568,7 +873,7 @@ const StudyMeshLanding = () => {
                 variant="h5"
                 component="p"
                 sx={{
-                  maxWidth: 760,
+                  maxWidth: 780,
                   color: brand.muted,
                   lineHeight: 1.48,
                   fontWeight: 400,
@@ -576,9 +881,16 @@ const StudyMeshLanding = () => {
                   letterSpacing: 0,
                 }}
               >
+                <Box
+                  component="span"
+                  sx={{ color: brand.ink, fontWeight: 700 }}
+                >
+                  Not a chat thread. A guide you keep.
+                </Box>{' '}
                 Tell RabbitHole what you already know (gaming, cooking, code,
-                whatever). Every new topic comes back as a guide built on top of
-                it, with quizzes and exercises you can actually practice on.
+                whatever). Every new topic comes back as a multi-page guide
+                built on top of it, with quizzes and exercises you can actually
+                practice on.
               </Typography>
 
               <Stack spacing={2.3} alignItems="center" sx={{ pt: 1 }}>
@@ -614,11 +926,11 @@ const StudyMeshLanding = () => {
                     Try it
                   </Button>
                   <Button
-                    href="#knowledge-context"
+                    href="#why"
                     onClick={(event) => {
                       event.preventDefault()
-                      if (scrollToLandingSection('#knowledge-context')) {
-                        window.history.pushState(null, '', '#knowledge-context')
+                      if (scrollToLandingSection('#why')) {
+                        window.history.pushState(null, '', '#why')
                       }
                     }}
                     variant="text"
@@ -648,7 +960,7 @@ const StudyMeshLanding = () => {
                       },
                     }}
                   >
-                    See how it works
+                    Why not just ChatGPT?
                   </Button>
                 </Stack>
 
@@ -668,18 +980,28 @@ const StudyMeshLanding = () => {
                 </Typography>
               </Stack>
 
+              <HeroDifferentiator />
+
               <HeroTimeline />
             </Stack>
           </Container>
         </Box>
 
-        <ContextComparisonSection />
-
         <HonestComparisonSection />
+
+        <StudyOutputSection />
 
         <GrowingGuidesSection />
 
+        <HowItWorksSection />
+
+        <ContextComparisonSection />
+
         <CompoundingSection />
+
+        <AccessSection />
+
+        <FaqSection />
 
         <Box
           sx={{
@@ -702,7 +1024,8 @@ const StudyMeshLanding = () => {
                 Try it on the thing that keeps bouncing off you.
               </Typography>
               <Typography sx={{ color: brand.muted, fontSize: '1.08rem' }}>
-                Three guides free, no account. Sign up afterwards to keep them.
+                Three guides free, no account, no card. Sign up afterwards to
+                keep them.
               </Typography>
               <Button
                 variant="contained"
@@ -730,6 +1053,120 @@ const StudyMeshLanding = () => {
     </Box>
   )
 }
+
+// The single line a first-time visitor has to read to understand what this is
+// and why it is not the chat they already have. It doubles as the caption for
+// the depth timeline underneath it.
+const HeroDifferentiator = () => (
+  <Box
+    data-testid="hero-differentiator"
+    sx={{
+      width: 'min(100%, 780px)',
+      mt: { xs: 0.5, md: 1 },
+      px: { xs: 2, md: 3 },
+      py: { xs: 1.4, md: 1.6 },
+      borderRadius: 2,
+      border: `1px solid ${alpha(brand.mint, 0.34)}`,
+      bgcolor: alpha(brand.mint, 0.07),
+      color: brand.ink,
+      fontSize: { xs: '1rem', md: '1.1rem' },
+      fontWeight: 700,
+      lineHeight: 1.55,
+    }}
+  >
+    {heroDifferentiator}
+  </Box>
+)
+
+const StageEyebrow = ({
+  step,
+  label,
+  icon,
+}: {
+  step: string
+  label: string
+  icon?: React.ReactNode
+}) => (
+  <Stack
+    direction="row"
+    spacing={1}
+    alignItems="center"
+    sx={{
+      px: 1.5,
+      py: 0.65,
+      borderRadius: 999,
+      border: `1px solid ${alpha(brand.blue, 0.16)}`,
+      bgcolor: alpha(brand.sky, 0.08),
+      color: brand.blueDark,
+      fontWeight: 800,
+      fontSize: '0.82rem',
+      lineHeight: 1,
+      letterSpacing: 0,
+    }}
+  >
+    <Box
+      component="span"
+      sx={{
+        px: 0.85,
+        py: 0.3,
+        borderRadius: 999,
+        bgcolor: alpha(brand.blue, 0.12),
+        color: brand.blueDark,
+        fontWeight: 900,
+        fontSize: '0.74rem',
+        lineHeight: 1.1,
+      }}
+    >
+      {step}
+    </Box>
+    {icon}
+    <Box component="span" sx={{ textTransform: 'uppercase' }}>
+      {label}
+    </Box>
+  </Stack>
+)
+
+const SectionHeading = ({
+  eyebrow,
+  title,
+  body,
+  maxWidth = 820,
+}: {
+  eyebrow: React.ReactNode
+  title: React.ReactNode
+  body?: React.ReactNode
+  maxWidth?: number
+}) => (
+  <Stack spacing={1.15} alignItems="center" textAlign="center">
+    {eyebrow}
+    <Typography
+      variant="h2"
+      sx={{
+        maxWidth,
+        color: brand.ink,
+        fontWeight: 800,
+        fontSize: { xs: '2rem', md: '3.05rem' },
+        lineHeight: 1.08,
+        letterSpacing: 0,
+        textWrap: 'balance',
+      }}
+    >
+      {title}
+    </Typography>
+    {body && (
+      <Typography
+        sx={{
+          maxWidth: 760,
+          color: '#64719B',
+          fontSize: { xs: '1rem', md: '1.18rem' },
+          lineHeight: 1.58,
+        }}
+      >
+        {body}
+      </Typography>
+    )}
+  </Stack>
+)
 
 const HeroTimeline = () => {
   return (
@@ -954,51 +1391,24 @@ const HonestComparisonSection = () => (
     }}
   >
     <Container
-      id="honest-comparison"
+      id="why"
       maxWidth="lg"
       sx={{ position: 'relative', scrollMarginTop: { xs: 88, md: 104 } }}
     >
+      <Box id="honest-comparison" sx={{ position: 'absolute', top: 0 }} />
       <Stack spacing={{ xs: 3, md: 4 }} alignItems="center">
-        <Stack spacing={1.15} alignItems="center" textAlign="center">
-          <Box
-            sx={{
-              px: 2,
-              py: 0.65,
-              borderRadius: 999,
-              color: brand.blueDark,
-              bgcolor: alpha(brand.sky, 0.1),
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              lineHeight: 1,
-              letterSpacing: 0,
-            }}
-          >
-            THE HONEST VERSION
-          </Box>
-          <Typography
-            variant="h2"
-            sx={{
-              maxWidth: 880,
-              color: brand.ink,
-              fontWeight: 800,
-              fontSize: { xs: '2rem', md: '3.05rem' },
-              lineHeight: 1.08,
-              letterSpacing: 0,
-            }}
-          >
-            You already have ChatGPT.
-          </Typography>
-          <Typography
-            sx={{
-              maxWidth: 760,
-              color: '#64719B',
-              fontSize: { xs: '1rem', md: '1.18rem' },
-              lineHeight: 1.58,
-            }}
-          >
-            It wins on speed. RabbitHole wins on everything that comes after.
-          </Typography>
-        </Stack>
+        <SectionHeading
+          eyebrow={<StageEyebrow step="01" label="Why · the honest version" />}
+          title={
+            <>
+              You already have ChatGPT.
+              <br />
+              So why this?
+            </>
+          }
+          body="It wins on speed. RabbitHole wins on everything that comes after the answer."
+          maxWidth={880}
+        />
 
         <Box
           data-testid="landing-comparison"
@@ -1157,6 +1567,490 @@ const ComparisonCell = ({
     >
       {text}
     </Typography>
+  </Box>
+)
+
+const StudyOutputSection = () => (
+  <Box
+    sx={{
+      position: 'relative',
+      bgcolor: 'transparent',
+      pt: { xs: 5.5, md: 8 },
+      pb: { xs: 2, md: 3 },
+      overflow: 'hidden',
+    }}
+  >
+    <Container
+      id="what"
+      maxWidth="lg"
+      sx={{ position: 'relative', scrollMarginTop: { xs: 88, md: 104 } }}
+    >
+      <Stack spacing={{ xs: 3, md: 4.2 }} alignItems="center">
+        <SectionHeading
+          eyebrow={<StageEyebrow step="02" label="What you get" />}
+          title="One prompt in. A whole study workspace out."
+          body="Not a wall of text you scroll once. Everything below is generated for your topic, in one go, and it stays in your library."
+        />
+
+        <Box
+          data-testid="landing-study-outputs"
+          sx={{
+            width: '100%',
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(3, 1fr)',
+            },
+            gap: { xs: 1.6, md: 2.2 },
+          }}
+        >
+          {studyOutputItems.map((item) => (
+            <Stack
+              key={item.id}
+              spacing={1.4}
+              sx={{
+                height: '100%',
+                p: { xs: 2, md: 2.4 },
+                borderRadius: 2,
+                border: `1px solid ${alpha(brand.line, 0.9)}`,
+                bgcolor: alpha('#FFFFFF', 0.94),
+                boxShadow: `0 16px 44px ${alpha(brand.blueDark, 0.06)}`,
+                textAlign: 'left',
+                transition:
+                  'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  borderColor: alpha(item.color, 0.42),
+                  boxShadow: `0 22px 54px ${alpha(item.color, 0.14)}`,
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 1.6,
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: item.color,
+                  bgcolor: item.tone,
+                  '& svg': { fontSize: 25 },
+                }}
+              >
+                {item.icon}
+              </Box>
+              <Typography
+                sx={{
+                  color: brand.ink,
+                  fontWeight: 850,
+                  fontSize: '1.08rem',
+                  lineHeight: 1.3,
+                }}
+              >
+                {item.title}
+              </Typography>
+              <Typography
+                sx={{
+                  color: '#64719B',
+                  fontSize: '0.96rem',
+                  lineHeight: 1.58,
+                }}
+              >
+                {item.body}
+              </Typography>
+            </Stack>
+          ))}
+        </Box>
+      </Stack>
+    </Container>
+  </Box>
+)
+
+const HowItWorksSection = () => (
+  <Box
+    sx={{
+      position: 'relative',
+      bgcolor: 'transparent',
+      pt: { xs: 5.5, md: 8 },
+      pb: { xs: 1, md: 2 },
+      overflow: 'hidden',
+    }}
+  >
+    <Container
+      id="how"
+      maxWidth="lg"
+      sx={{ position: 'relative', scrollMarginTop: { xs: 88, md: 104 } }}
+    >
+      <Stack spacing={{ xs: 3, md: 4.2 }} alignItems="center">
+        <SectionHeading
+          eyebrow={<StageEyebrow step="03" label="How it works" />}
+          title="Three steps. The first one is the one nobody else asks for."
+          body="No dashboards to design, no widgets to wire up before you can learn anything."
+        />
+
+        <Box
+          data-testid="landing-how-it-works"
+          sx={{
+            width: '100%',
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+            gap: { xs: 1.8, md: 2.4 },
+          }}
+        >
+          {howItWorksSteps.map((step) => (
+            <Stack
+              key={step.id}
+              spacing={1.4}
+              sx={{
+                height: '100%',
+                p: { xs: 2.2, md: 2.6 },
+                borderRadius: 2,
+                border: `1px solid ${alpha(brand.line, 0.9)}`,
+                bgcolor: alpha('#FFFFFF', 0.94),
+                boxShadow: `0 16px 44px ${alpha(brand.blueDark, 0.06)}`,
+                textAlign: 'left',
+              }}
+            >
+              <Stack direction="row" spacing={1.3} alignItems="center">
+                <Box
+                  sx={{
+                    width: 46,
+                    height: 46,
+                    flex: '0 0 auto',
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: '#008A78',
+                    bgcolor: alpha(brand.mint, 0.13),
+                    '& svg': { fontSize: 25 },
+                  }}
+                >
+                  {step.icon}
+                </Box>
+                <Typography
+                  aria-hidden="true"
+                  sx={{
+                    color: alpha(brand.blue, 0.28),
+                    fontWeight: 900,
+                    fontSize: '1.9rem',
+                    lineHeight: 1,
+                  }}
+                >
+                  {step.step}
+                </Typography>
+              </Stack>
+              <Typography
+                sx={{
+                  color: brand.ink,
+                  fontWeight: 850,
+                  fontSize: '1.12rem',
+                  lineHeight: 1.3,
+                }}
+              >
+                {step.title}
+              </Typography>
+              <Typography
+                sx={{
+                  color: '#64719B',
+                  fontSize: '0.96rem',
+                  lineHeight: 1.58,
+                }}
+              >
+                {step.body}
+              </Typography>
+            </Stack>
+          ))}
+        </Box>
+      </Stack>
+    </Container>
+  </Box>
+)
+
+const accessCtaTone = (highlighted?: boolean) => {
+  if (highlighted) {
+    return {
+      bgcolor: brand.blue,
+      color: '#FFFFFF',
+      boxShadow: `0 14px 32px ${alpha(brand.blue, 0.22)}`,
+      '&:hover': {
+        bgcolor: brand.blueDark,
+        boxShadow: `0 16px 36px ${alpha(brand.blue, 0.28)}`,
+      },
+    }
+  }
+
+  return {
+    color: brand.blueDark,
+    borderColor: alpha(brand.blue, 0.4),
+    bgcolor: alpha('#FFFFFF', 0.86),
+    '&:hover': {
+      borderColor: brand.blue,
+      bgcolor: alpha(brand.sky, 0.06),
+    },
+  }
+}
+
+const AccessSection = () => (
+  <Box
+    sx={{
+      position: 'relative',
+      bgcolor: 'transparent',
+      pt: { xs: 5.5, md: 8 },
+      pb: { xs: 3, md: 4 },
+      overflow: 'hidden',
+    }}
+  >
+    <Container
+      id="access"
+      maxWidth="lg"
+      sx={{ position: 'relative', scrollMarginTop: { xs: 88, md: 104 } }}
+    >
+      <Stack spacing={{ xs: 3, md: 4.2 }} alignItems="center">
+        <SectionHeading
+          eyebrow={<StageEyebrow step="04" label="Why sign up" />}
+          title="You can start without an account. Here is what one changes."
+          body="There is no RabbitHole subscription. An account is what turns a one-off answer into a library that is still there next month."
+        />
+
+        <Box
+          data-testid="landing-access"
+          sx={{
+            width: '100%',
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+            gap: { xs: 1.8, md: 2.4 },
+            alignItems: 'stretch',
+          }}
+        >
+          {accessOptions.map((option) => (
+            // A flex column with gap rather than a Stack: Stack spaces children
+            // with margin-top, which cancels the `mt: 'auto'` that pins every
+            // card's CTA to the same baseline regardless of body length.
+            <Box
+              key={option.id}
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1.5,
+                p: { xs: 2.2, md: 2.6 },
+                borderRadius: 2,
+                border: `1px solid ${alpha(
+                  option.highlighted ? brand.mint : brand.line,
+                  option.highlighted ? 0.5 : 0.9,
+                )}`,
+                bgcolor: option.highlighted
+                  ? alpha(brand.mint, 0.06)
+                  : alpha('#FFFFFF', 0.94),
+                boxShadow: option.highlighted
+                  ? `0 22px 56px ${alpha(brand.mint, 0.16)}`
+                  : `0 16px 44px ${alpha(brand.blueDark, 0.06)}`,
+                textAlign: 'left',
+              }}
+            >
+              <Stack direction="row" spacing={1.2} alignItems="center">
+                <Box
+                  sx={{
+                    width: 42,
+                    height: 42,
+                    flex: '0 0 auto',
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: option.highlighted ? '#008A78' : brand.blue,
+                    bgcolor: option.highlighted
+                      ? alpha(brand.mint, 0.14)
+                      : alpha(brand.sky, 0.09),
+                    '& svg': { fontSize: 23 },
+                  }}
+                >
+                  {option.icon}
+                </Box>
+                <Typography
+                  sx={{
+                    color: option.highlighted ? '#008A78' : '#64719B',
+                    fontWeight: 900,
+                    fontSize: '0.78rem',
+                    lineHeight: 1,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {option.eyebrow}
+                </Typography>
+              </Stack>
+
+              <Typography
+                sx={{
+                  color: brand.ink,
+                  fontWeight: 900,
+                  fontSize: '1.8rem',
+                  lineHeight: 1.05,
+                }}
+              >
+                {option.title}
+              </Typography>
+
+              <Typography
+                sx={{
+                  color: '#64719B',
+                  fontSize: '0.96rem',
+                  lineHeight: 1.58,
+                }}
+              >
+                {option.body}
+              </Typography>
+
+              <Stack spacing={0.75}>
+                {option.points.map((point) => (
+                  <Stack
+                    key={point}
+                    direction="row"
+                    spacing={1}
+                    alignItems="flex-start"
+                  >
+                    <CheckIcon
+                      sx={{ fontSize: 18, mt: '2px', color: '#008A78' }}
+                    />
+                    <Typography
+                      sx={{
+                        color: brand.ink,
+                        fontSize: '0.94rem',
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      {point}
+                    </Typography>
+                  </Stack>
+                ))}
+              </Stack>
+
+              <Button
+                component={RouterLink}
+                to={option.ctaTo}
+                variant={option.highlighted ? 'contained' : 'outlined'}
+                endIcon={<ArrowForwardIcon />}
+                sx={{
+                  mt: 'auto',
+                  minHeight: 46,
+                  borderRadius: 999,
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  ...accessCtaTone(option.highlighted),
+                }}
+              >
+                {option.ctaLabel}
+              </Button>
+            </Box>
+          ))}
+        </Box>
+
+        <Typography
+          data-testid="landing-access-footnote"
+          sx={{
+            maxWidth: 760,
+            px: { xs: 2, md: 3 },
+            py: { xs: 1.4, md: 1.6 },
+            borderRadius: 2,
+            border: `1px solid ${alpha(brand.line, 0.9)}`,
+            bgcolor: alpha('#FFFFFF', 0.86),
+            color: brand.ink,
+            fontSize: { xs: '0.96rem', md: '1.02rem' },
+            fontWeight: 600,
+            lineHeight: 1.55,
+            textAlign: 'center',
+          }}
+        >
+          {accessFootnote}
+        </Typography>
+      </Stack>
+    </Container>
+  </Box>
+)
+
+const FaqSection = () => (
+  <Box
+    sx={{
+      position: 'relative',
+      bgcolor: 'transparent',
+      pt: { xs: 5, md: 7 },
+      pb: { xs: 2, md: 3 },
+      overflow: 'hidden',
+    }}
+  >
+    <Container
+      id="faq"
+      maxWidth="md"
+      sx={{ position: 'relative', scrollMarginTop: { xs: 88, md: 104 } }}
+    >
+      <Stack spacing={{ xs: 2.6, md: 3.4 }} alignItems="center">
+        <SectionHeading
+          eyebrow={<StageEyebrow step="05" label="Straight answers" />}
+          title="The questions people actually ask."
+        />
+
+        <Box data-testid="landing-faq" sx={{ width: '100%' }}>
+          {faqItems.map((item, index) => (
+            <Accordion
+              key={item.id}
+              // The differentiation question is the one the whole page exists to
+              // answer, so it is open on arrival instead of hidden behind a click.
+              defaultExpanded={index === 0}
+              disableGutters
+              elevation={0}
+              square={false}
+              sx={{
+                mb: 1.2,
+                borderRadius: 2,
+                border: `1px solid ${alpha(brand.line, 0.9)}`,
+                bgcolor: alpha('#FFFFFF', 0.94),
+                '&::before': { display: 'none' },
+                '&.Mui-expanded': {
+                  borderColor: alpha(brand.mint, 0.42),
+                  boxShadow: `0 18px 48px ${alpha(brand.blueDark, 0.07)}`,
+                },
+              }}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon sx={{ color: brand.blueDark }} />}
+                sx={{
+                  px: { xs: 1.8, md: 2.4 },
+                  py: { xs: 0.6, md: 0.9 },
+                  '& .MuiAccordionSummary-content': { my: 1.2 },
+                }}
+              >
+                <Typography
+                  component="h3"
+                  sx={{
+                    color: brand.ink,
+                    fontWeight: 800,
+                    fontSize: { xs: '1rem', md: '1.06rem' },
+                    lineHeight: 1.4,
+                    textAlign: 'left',
+                  }}
+                >
+                  {item.question}
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails
+                sx={{ px: { xs: 1.8, md: 2.4 }, pt: 0, pb: 2.2 }}
+              >
+                <Typography
+                  sx={{
+                    color: '#5B6680',
+                    fontSize: '0.98rem',
+                    lineHeight: 1.62,
+                    textAlign: 'left',
+                  }}
+                >
+                  {item.answer}
+                </Typography>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </Box>
+      </Stack>
+    </Container>
   </Box>
 )
 
@@ -1842,7 +2736,7 @@ const ContextComparisonSection = () => {
                 letterSpacing: 0,
               }}
             >
-              KNOWLEDGE BRIDGE
+              KNOWLEDGE BRIDGE {'·'} STEP 01, IN ACTION
             </Box>
             <Typography
               variant="h2"
@@ -1865,7 +2759,8 @@ const ContextComparisonSection = () => {
                 lineHeight: 1.58,
               }}
             >
-              Choose what you already know, watch the explanation change.
+              Choose what you already know, watch the explanation change. This
+              is the list every page of your guide gets written through.
             </Typography>
           </Stack>
 
@@ -1972,6 +2867,8 @@ const ContextComparisonSection = () => {
                     key={topic.id}
                     aria-pressed={selected}
                     onClick={() => selectTopic(index)}
+                    onPointerEnter={() => prefetchContextImage(topic.visualSrc)}
+                    onFocus={() => prefetchContextImage(topic.visualSrc)}
                     sx={{
                       minWidth: 0,
                       height: { xs: 102, md: 118 },
@@ -2284,8 +3181,13 @@ const ContextVisual = ({ topic }: { topic: ContextTopic }) => (
     component="img"
     src={topic.visualSrc}
     alt=""
-    loading="eager"
-    decoding="sync"
+    // Below the fold and swapped on click, so it must never block the hero:
+    // lazy fetch, async decode, and fixed box dimensions so the swap between
+    // topics cannot shift the card layout.
+    loading="lazy"
+    decoding="async"
+    width={420}
+    height={252}
     sx={{
       minHeight: { xs: 180, md: 226 },
       width: '100%',

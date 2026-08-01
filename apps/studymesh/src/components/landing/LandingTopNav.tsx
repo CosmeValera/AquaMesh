@@ -15,8 +15,10 @@ const navBrand = {
 }
 
 const navItems = [
-  ['Knowledge bridge', '#knowledge-context'],
-  ['Growing guides', '#growing-guide'],
+  ['Why RabbitHole', '#why'],
+  ['What you get', '#what'],
+  ['How it works', '#how'],
+  ['FAQ', '#faq'],
   ['Pricing', '/pricing'],
 ]
 
@@ -141,7 +143,7 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
         <Stack
           component="nav"
           direction="row"
-          spacing={{ xs: 2, md: 4.6 }}
+          spacing={{ xs: 2, md: 2.6, lg: 3.4 }}
           alignItems="center"
           justifyContent="center"
         >
@@ -154,14 +156,17 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
               sx={{
                 display: {
                   xs: label === 'Pricing' ? 'inline-flex' : 'none',
-                  md: 'inline-flex',
+                  // FAQ only appears once there is room for the full rail.
+                  md: label === 'FAQ' ? 'none' : 'inline-flex',
+                  lg: 'inline-flex',
                 },
                 minWidth: 'auto',
                 px: 0,
+                whiteSpace: 'nowrap',
                 color: navBrand.ink,
                 textTransform: 'none',
                 fontWeight: 700,
-                fontSize: '1rem',
+                fontSize: { md: '0.95rem', lg: '1rem' },
                 '&:hover': {
                   bgcolor: 'transparent',
                   color: navBrand.blue,

@@ -20,8 +20,12 @@ const footerBrand = {
 }
 
 const footerLinks = [
+  ['Why RabbitHole', '#why'],
+  ['What you get', '#what'],
+  ['How it works', '#how'],
   ['Knowledge bridge', '#knowledge-context'],
   ['Growing guides', '#growing-guide'],
+  ['FAQ', '#faq'],
   ['Pricing', '/pricing'],
 ] as const
 

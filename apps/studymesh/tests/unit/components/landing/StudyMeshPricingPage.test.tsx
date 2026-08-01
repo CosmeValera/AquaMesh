@@ -85,11 +85,18 @@ describe('StudyMeshPricingPage', () => {
 
     const header = screen.getByRole('banner')
     expect(
-      within(header).getByRole('link', { name: /knowledge bridge/i }),
-    ).toHaveAttribute('href', '/#knowledge-context')
+      within(header).getByRole('link', { name: /why rabbithole/i }),
+    ).toHaveAttribute('href', '/#why')
     expect(
-      within(header).getByRole('link', { name: /growing guides/i }),
-    ).toHaveAttribute('href', '/#growing-guide')
+      within(header).getByRole('link', { name: /what you get/i }),
+    ).toHaveAttribute('href', '/#what')
+    expect(
+      within(header).getByRole('link', { name: /how it works/i }),
+    ).toHaveAttribute('href', '/#how')
+    expect(within(header).getByRole('link', { name: /faq/i })).toHaveAttribute(
+      'href',
+      '/#faq',
+    )
 
     const footer = screen.getByTestId('studymesh-footer')
     expect(footer).toBeInTheDocument()

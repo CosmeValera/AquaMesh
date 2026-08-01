@@ -1,5 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { CssBaseline } from '@mui/material'
+import React, {
+  Suspense,
+  lazy,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { Box, CircularProgress, CssBaseline } from '@mui/material'
 import { ThemeProvider } from '@mui/material/styles'
 import {
   BrowserRouter,
@@ -12,21 +19,10 @@ import {
 import DashboardProvider from './components/Dasboard/DashboardProvider'
 import LayoutProvider from './components/Layout/LayoutProvider'
 import StudyMeshLanding from './components/landing/StudyMeshLanding'
-import StudyMeshPricingPage from './components/landing/StudyMeshPricingPage'
 import LocalAiDebugPanel from './components/debug/LocalAiDebugPanel'
 import { cancelAllLocalAiSessions } from './quickCreate/ai'
-import {
-  AuthCallbackPage,
-  LoginPage,
-  ResetPasswordPage,
-  SignupPage,
-  UpdatePasswordPage,
-} from './auth'
 import { AuthProvider, RequireAuth } from './auth/AuthProvider'
 import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
-import GuestQuickGuidePage from './components/guest/GuestQuickGuidePage'
-import StudyGuidesPage from './components/studyGuides/StudyGuidesPage'
-import GuideWorkspacePage from './components/studyGuides/GuideWorkspacePage'
 import HostedAiCheckoutReturn from './components/hostedAi/HostedAiCheckoutReturn'
 import { PodcastPlayerProvider } from './components/podcast/PodcastPlayerProvider'
 import KnowledgeContextOnboarding from './components/profile/KnowledgeContextOnboarding'
@@ -52,6 +48,50 @@ import '../../../style/themes/studymesh-theme/theme.scss'
 
 import './variables.scss'
 import './hide-overlay.scss'
+
+// The landing page is the only route a first-time visitor sees, so everything
+// behind it (workspace, guide editor, auth, pricing, guest trial) is split out
+// of the initial bundle instead of being downloaded before the hero paints.
+const StudyMeshPricingPage = lazy(
+  () => import('./components/landing/StudyMeshPricingPage'),
+)
+const GuestQuickGuidePage = lazy(
+  () => import('./components/guest/GuestQuickGuidePage'),
+)
+const StudyGuidesPage = lazy(
+  () => import('./components/studyGuides/StudyGuidesPage'),
+)
+const GuideWorkspacePage = lazy(
+  () => import('./components/studyGuides/GuideWorkspacePage'),
+)
+const LoginPage = lazy(() =>
+  import('./auth').then((module) => ({ default: module.LoginPage })),
+)
+const SignupPage = lazy(() =>
+  import('./auth').then((module) => ({ default: module.SignupPage })),
+)
+const ResetPasswordPage = lazy(() =>
+  import('./auth').then((module) => ({ default: module.ResetPasswordPage })),
+)
+const AuthCallbackPage = lazy(() =>
+  import('./auth').then((module) => ({ default: module.AuthCallbackPage })),
+)
+const UpdatePasswordPage = lazy(() =>
+  import('./auth').then((module) => ({ default: module.UpdatePasswordPage })),
+)
+
+const RouteChunkFallback = () => (
+  <Box
+    aria-busy="true"
+    sx={{
+      minHeight: '100dvh',
+      display: 'grid',
+      placeItems: 'center',
+    }}
+  >
+    <CircularProgress aria-label="Loading page" size={34} />
+  </Box>
+)
 
 const AppShell = () => {
   const { mode } = useThemeMode()
@@ -102,57 +142,59 @@ const AppShell = () => {
             <DashboardProvider>
               <LayoutProvider>
                 <PodcastPlayerProvider>
-                  <Routes>
-                    <Route path="/" element={<StudyMeshLanding />} />
-                    <Route
-                      path="/pricing"
-                      element={<StudyMeshPricingPage />}
-                    />
-                    <Route path="/try" element={<GuestQuickGuidePage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
-                    <Route
-                      path="/reset-password"
-                      element={<ResetPasswordPage />}
-                    />
-                    <Route
-                      path="/auth/callback"
-                      element={<AuthCallbackPage />}
-                    />
-                    <Route
-                      path="/account/update-password"
-                      element={<UpdatePasswordPage />}
-                    />
-                    <Route
-                      path="/study-guides"
-                      element={
-                        <RequireAuth>
-                          <StudyGuidesPage />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route
-                      path="/workspace"
-                      element={
-                        <Navigate
-                          to={{
-                            pathname: '/study-guides',
-                            search: location.search,
-                          }}
-                          replace
-                        />
-                      }
-                    />
-                    <Route
-                      path="/workspace/:studyGuideId"
-                      element={
-                        <RequireAuth allowAnonymous>
-                          <GuideWorkspacePage />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
+                  <Suspense fallback={<RouteChunkFallback />}>
+                    <Routes>
+                      <Route path="/" element={<StudyMeshLanding />} />
+                      <Route
+                        path="/pricing"
+                        element={<StudyMeshPricingPage />}
+                      />
+                      <Route path="/try" element={<GuestQuickGuidePage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/signup" element={<SignupPage />} />
+                      <Route
+                        path="/reset-password"
+                        element={<ResetPasswordPage />}
+                      />
+                      <Route
+                        path="/auth/callback"
+                        element={<AuthCallbackPage />}
+                      />
+                      <Route
+                        path="/account/update-password"
+                        element={<UpdatePasswordPage />}
+                      />
+                      <Route
+                        path="/study-guides"
+                        element={
+                          <RequireAuth>
+                            <StudyGuidesPage />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/workspace"
+                        element={
+                          <Navigate
+                            to={{
+                              pathname: '/study-guides',
+                              search: location.search,
+                            }}
+                            replace
+                          />
+                        }
+                      />
+                      <Route
+                        path="/workspace/:studyGuideId"
+                        element={
+                          <RequireAuth allowAnonymous>
+                            <GuideWorkspacePage />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </Suspense>
                 </PodcastPlayerProvider>
               </LayoutProvider>
             </DashboardProvider>

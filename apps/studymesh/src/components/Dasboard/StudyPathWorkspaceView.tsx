@@ -87,6 +87,8 @@ interface StudyPathWorkspaceViewProps {
   onEditingPageKeyChange?: (pageKey: string | null) => void
   onAddPage?: () => void
   onAskAi?: (question: string) => void
+  /** Overrides the default "My guides" crumb, e.g. for the public /try demo. */
+  breadcrumb?: { label: string; onClick: () => void }
 }
 
 const quickSummaryParagraphs = (value: string): string[] =>
@@ -331,6 +333,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   onEditingPageKeyChange,
   onAddPage,
   onAskAi,
+  breadcrumb,
 }) => {
   const { t } = useInterfaceText()
   const theme = useTheme()
@@ -511,10 +514,14 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               <Typography
                 variant="body2"
                 color="text.secondary"
-                onClick={() => navigate('/study-guides')}
+                onClick={
+                  breadcrumb
+                    ? breadcrumb.onClick
+                    : () => navigate('/study-guides')
+                }
                 sx={{ cursor: 'pointer' }}
               >
-                {t('workspace.myGuides')}
+                {breadcrumb ? breadcrumb.label : t('workspace.myGuides')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 /

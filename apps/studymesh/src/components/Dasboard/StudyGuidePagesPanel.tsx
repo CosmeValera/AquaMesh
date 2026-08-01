@@ -22,6 +22,7 @@ import {
 } from '../../studyGuides/pages'
 import { collectPodcastAudioPathsFromPage } from '../../studyGuides/podcasts'
 import { deleteHostedAiPodcastAudio } from '../../quickCreate/ai'
+import { isStaticPodcastAudioPath } from '../podcast/PodcastPlayerProvider'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 
 type StudyGuidePagesPanelVariant = 'desktop' | 'mobile'
@@ -106,9 +107,13 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
       (dashboard) => dashboard.dashboardKey === pageKey,
     )
     if (page) {
-      collectPodcastAudioPathsFromPage(page).forEach((audioPath) => {
-        void deleteHostedAiPodcastAudio(audioPath).catch(() => undefined)
-      })
+      collectPodcastAudioPathsFromPage(page)
+        // Static demo audio lives in public/, so there is nothing to delete and
+        // no signed-in user to delete it as.
+        .filter((audioPath) => !isStaticPodcastAudioPath(audioPath))
+        .forEach((audioPath) => {
+          void deleteHostedAiPodcastAudio(audioPath).catch(() => undefined)
+        })
     }
 
     onStudyPathChange(deleteStudyGuidePage(studyPath, pageKey))

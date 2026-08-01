@@ -1964,3 +1964,182 @@ describe('DashboardChatPanel chat management', () => {
     expect(screen.getByText('0 replies')).toBeInTheDocument()
   })
 })
+
+describe('DashboardChatPanel demo props', () => {
+  const renderDemoPanel = (
+    props: Partial<React.ComponentProps<typeof DashboardChatPanel>> = {},
+  ) => {
+    const Harness = () => {
+      const [panelMessages, setPanelMessages] = React.useState<
+        React.ComponentProps<typeof DashboardChatPanel>['messages']
+      >([])
+
+      return (
+        <DashboardChatPanel
+          dashboard={dashboardWithContext}
+          messages={panelMessages}
+          onMessagesChange={setPanelMessages}
+          onClose={vi.fn()}
+          onQuickCreatePage={vi.fn()}
+          {...props}
+        />
+      )
+    }
+
+    return render(<Harness />)
+  }
+
+  it('behaves exactly as before when no demo prop is passed', async () => {
+    renderDemoPanel()
+
+    expect(
+      screen.getByRole('button', { name: 'Summarize the key ideas' }),
+    ).toBeInTheDocument()
+    const input = screen.getByPlaceholderText('Ask anything')
+    expect(input).toBeEnabled()
+    expect(screen.getByRole('button', { name: /^Add source$/i })).toBeEnabled()
+
+    fireEvent.change(input, { target: { value: 'What is photosynthesis?' } })
+    const sendButton = screen.getByRole('button', {
+      name: 'Send dashboard question',
+    })
+    expect(sendButton).toBeEnabled()
+    fireEvent.click(sendButton)
+
+    expect(
+      await screen.findByText(/Use the dashboard source notes/i),
+    ).toBeInTheDocument()
+    expect(askDashboardSources).toHaveBeenCalledTimes(1)
+  })
+
+  it('locks the composer while leaving Quick Create usable', () => {
+    const onComposerReadOnlyClick = vi.fn()
+    renderDemoPanel({
+      composerReadOnly: true,
+      composerReadOnlyHint: 'Sign up to ask your own questions',
+      onComposerReadOnlyClick,
+    })
+
+    expect(
+      screen.getByPlaceholderText('Sign up to ask your own questions'),
+    ).toBeDisabled()
+    expect(screen.queryByPlaceholderText('Ask anything')).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    ).toBeDisabled()
+    expect(screen.getByRole('button', { name: /^Add source$/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /^Create$/i })).toBeEnabled()
+
+    fireEvent.click(screen.getByTestId('dashboard-chat-composer'))
+    expect(onComposerReadOnlyClick).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
+    expect(onComposerReadOnlyClick).toHaveBeenCalledTimes(1)
+  })
+
+  it('replaces the empty-state suggestions with the prepared questions', async () => {
+    const resolveCannedAnswer = vi.fn().mockResolvedValue('Prepared answer.')
+    renderDemoPanel({
+      suggestionOverrides: [
+        {
+          id: 'chip-1',
+          label: 'How does this apply to guitar?',
+          question: 'How does spaced repetition apply to practising guitar?',
+        },
+      ],
+      resolveCannedAnswer,
+    })
+
+    expect(
+      screen.queryByRole('button', { name: 'Summarize the key ideas' }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'How does this apply to guitar?' }),
+    )
+
+    await waitFor(() =>
+      expect(resolveCannedAnswer).toHaveBeenCalledWith(
+        'How does spaced repetition apply to practising guitar?',
+      ),
+    )
+    expect(await screen.findByText('Prepared answer.')).toBeInTheDocument()
+    expect(askDashboardSources).not.toHaveBeenCalled()
+  })
+
+  it('shows the pending bubble before a canned answer lands, with no network call', async () => {
+    let releaseAnswer: (answer: string | null) => void = () => undefined
+    const resolveCannedAnswer = vi.fn(
+      () =>
+        new Promise<string | null>((resolve) => {
+          releaseAnswer = resolve
+        }),
+    )
+    renderDemoPanel({ resolveCannedAnswer })
+
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: 'Why do I forget?' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    expect(await screen.findByText(/Replying/)).toBeInTheDocument()
+    expect(askDashboardSources).not.toHaveBeenCalled()
+
+    await act(async () => {
+      releaseAnswer('You forget because retrieval strength decays.')
+    })
+
+    expect(
+      await screen.findByText('You forget because retrieval strength decays.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Replying/)).not.toBeInTheDocument()
+    expect(askDashboardSources).not.toHaveBeenCalled()
+    expect(planDashboardChatSources).not.toHaveBeenCalled()
+  })
+
+  it('falls through to the normal pipeline when no canned answer matches', async () => {
+    const resolveCannedAnswer = vi.fn().mockResolvedValue(null)
+    renderDemoPanel({ resolveCannedAnswer })
+
+    fireEvent.change(screen.getByPlaceholderText('Ask anything'), {
+      target: { value: 'What is photosynthesis?' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() => expect(askDashboardSources).toHaveBeenCalledTimes(1))
+    expect(
+      await screen.findByText(/Use the dashboard source notes/i),
+    ).toBeInTheDocument()
+  })
+
+  it('keeps a locked transcript out of localStorage', async () => {
+    renderDemoPanel({
+      composerReadOnly: true,
+      suggestionOverrides: [
+        {
+          id: 'chip-1',
+          label: 'Ask the prepared question',
+          question: 'Prepared question?',
+        },
+      ],
+      resolveCannedAnswer: vi.fn().mockResolvedValue('Prepared answer.'),
+    })
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Ask the prepared question' }),
+    )
+
+    expect(await screen.findByText('Prepared answer.')).toBeInTheDocument()
+    expect(
+      vi
+        .mocked(localStorage.setItem)
+        .mock.calls.filter(([key]) =>
+          String(key).startsWith('studymesh-dashboard-chat-sessions'),
+        ),
+    ).toHaveLength(0)
+  })
+})
+

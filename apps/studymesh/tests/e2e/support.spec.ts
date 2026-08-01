@@ -1,8 +1,19 @@
 import { test, expect } from '@playwright/test'
 
-// The guest trial renders its copy through the interface language layer, which
-// follows the browser locale, so pin it for the /try assertions below.
+// The demo renders its copy through the interface language layer, which follows
+// the browser locale, so pin it for the /try assertions below.
 test.use({ locale: 'en-US' })
+
+// Mirrors the chip labels of DEMO_GUIDES in src/demo/demoGuides.ts. Importing
+// the registry here would make Playwright resolve the per-guide data chunks it
+// lazily imports, so the two lists are kept in sync by hand.
+const demoChipLabels = [
+  'Why you forget',
+  'Deliberate practice',
+  'Bottlenecks in your learning',
+  'Compound interest',
+  'How your immune system works',
+]
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 })
@@ -11,11 +22,12 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Landing tutorial page', () => {
   test('should show the RabbitHole landing hero', async ({ page }) => {
-    await expect(
-      page.getByRole('heading', {
-        name: /something i already get/i,
-      }),
-    ).toBeVisible()
+    const hero = page.getByRole('heading', {
+      name: /something i already get/i,
+    })
+
+    await expect(hero).toBeVisible()
+    await expect(hero).toContainText(/explain it with/i)
     await expect(
       page.getByText(/Tell RabbitHole what you already know/i),
     ).toBeVisible()
@@ -24,7 +36,7 @@ test.describe('Landing tutorial page', () => {
     await expect(page.getByText(/5 pages/)).toBeVisible()
   })
 
-  test('should send guests to the free trial from the landing CTA', async ({
+  test('should send visitors to the prepared demo from the landing CTA', async ({
     page,
   }) => {
     await page
@@ -34,10 +46,19 @@ test.describe('Landing tutorial page', () => {
 
     await page.waitForURL('http://localhost:3000/try')
 
-    // Stops at the prompt surface on purpose: typing and submitting here would
-    // burn a real guest allowance and a real hosted generation.
-    await expect(
-      page.getByRole('textbox', { name: /what do you want to learn/i }),
-    ).toBeVisible()
+    // The prompt is locked on purpose: the demo runs on five prepared prompts,
+    // so a visitor picks a topic instead of writing one. Opening a guide from
+    // here is demo.spec.ts's job.
+    const promptField = page.getByRole('textbox', {
+      name: /quick guide prompt/i,
+    })
+    await expect(promptField).toBeVisible()
+    await expect(promptField).toBeDisabled()
+
+    for (const label of demoChipLabels) {
+      await expect(
+        page.getByRole('button', { name: label, exact: true }),
+      ).toBeVisible()
+    }
   })
 })

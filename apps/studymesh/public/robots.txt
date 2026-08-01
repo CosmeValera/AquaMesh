@@ -1,3 +1,6 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+# /try itself is a marketing page and stays crawlable. The sample guides under
+# it are client-rendered and thin, and indexing prepared sample content ahead of
+# the product is a net loss.
+Disallow: /try/

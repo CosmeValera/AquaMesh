@@ -2,7 +2,10 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { PodcastPlayerProvider } from '../../../../src/components/podcast/PodcastPlayerProvider'
+import {
+  PodcastPlayerProvider,
+  isStaticPodcastAudioPath,
+} from '../../../../src/components/podcast/PodcastPlayerProvider'
 import StudyBlockView from '../../../../src/components/study/StudyBlockView'
 import { getHostedAiPodcastAudioUrl } from '../../../../src/quickCreate/ai'
 
@@ -299,5 +302,70 @@ describe('PodcastPlayerProvider', () => {
         'user-1/guide-1/podcast-algebra.mp3',
       )
     })
+  })
+})
+
+describe('static demo podcast audio', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(getHostedAiPodcastAudioUrl).mockResolvedValue(
+      'https://audio.test/podcast.mp3',
+    )
+    vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockResolvedValue()
+    vi.spyOn(window.HTMLMediaElement.prototype, 'pause').mockImplementation(
+      () => undefined,
+    )
+  })
+
+  it('matches only the demo audio prefix', () => {
+    expect(isStaticPodcastAudioPath('/demo/audio/why-you-forget.mp3')).toBe(true)
+    expect(
+      isStaticPodcastAudioPath(
+        '2f1b8a6c-1c2f-4c6e-9a1d-0b7d6f3e5a11/guide-1/podcast-1.mp3',
+      ),
+    ).toBe(false)
+    expect(isStaticPodcastAudioPath('/')).toBe(false)
+    expect(isStaticPodcastAudioPath('/demo/audio')).toBe(false)
+    expect(isStaticPodcastAudioPath('demo/audio/why-you-forget.mp3')).toBe(false)
+    expect(
+      isStaticPodcastAudioPath('http://example.com/demo/audio/clip.mp3'),
+    ).toBe(false)
+    expect(isStaticPodcastAudioPath('blob:/demo/audio/clip.mp3')).toBe(false)
+    expect(isStaticPodcastAudioPath('data:audio/mpeg;base64,AAAA')).toBe(false)
+  })
+
+  it('plays a static demo path without asking the gateway to sign it', async () => {
+    const podcast = {
+      ...createPodcast('Podcast: Why you forget'),
+      audioPath: '/demo/audio/why-you-forget.mp3',
+    }
+    const { container } = renderPodcastBlock(podcast)
+
+    await waitFor(() => {
+      expect(container.querySelector('audio')).toHaveAttribute(
+        'src',
+        '/demo/audio/why-you-forget.mp3',
+      )
+    })
+    expect(getHostedAiPodcastAudioUrl).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(
+        within(screen.getByTestId('podcast-page-player')).getByRole('button', {
+          name: 'Play',
+        }),
+      ).toBeEnabled()
+    })
+    expect(getHostedAiPodcastAudioUrl).not.toHaveBeenCalled()
+  })
+
+  it('still signs a real podcast audio path exactly once', async () => {
+    renderPodcastBlock(createPodcast('Podcast: Biology'))
+
+    await waitFor(() => {
+      expect(getHostedAiPodcastAudioUrl).toHaveBeenCalledTimes(1)
+    })
+    expect(getHostedAiPodcastAudioUrl).toHaveBeenCalledWith(
+      'user-1/guide-1/podcast-biology.mp3',
+    )
   })
 })

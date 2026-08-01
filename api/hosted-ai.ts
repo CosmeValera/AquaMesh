@@ -581,7 +581,7 @@ const finishHostedUsage = async (
   return normalizeStatus(payload);
 };
 
-const getStageForSurface = (surface: HostedAiSurface): HostedAiStage => {
+export const getStageForSurface = (surface: HostedAiSurface): HostedAiStage => {
   if (surface === "chat" || surface === "chat-followup") {
     return "chat";
   }
@@ -597,7 +597,7 @@ const getStageForSurface = (surface: HostedAiSurface): HostedAiStage => {
   return "study_guide_main";
 };
 
-const getHostedTextModelForStage = (
+export const getHostedTextModelForStage = (
   provider: HostedTextProvider,
   stage: HostedAiStage,
 ): string => getHostedTextModel(provider, stage);
@@ -1167,7 +1167,7 @@ interface HostedTextModelResult {
   stageCost: HostedAiStageCost;
 }
 
-const callHostedTextModel = async (
+export const callHostedTextModel = async (
   request: HostedAiGatewayRequest,
   provider: HostedTextProvider,
   model: string,
@@ -1281,7 +1281,7 @@ interface PodcastScript {
   chapters: HostedAiPodcastChapter[];
 }
 
-const PODCAST_SCRIPT_SCHEMA = {
+export const PODCAST_SCRIPT_SCHEMA = {
   type: "object",
   properties: {
     title: { type: "string" },
@@ -1416,7 +1416,7 @@ export const alternatePodcastSpeakers = (
   });
 };
 
-const normalizePodcastScript = (
+export const normalizePodcastScript = (
   text: string,
   fallbackTitle: string,
 ): PodcastScript => {
@@ -2102,7 +2102,7 @@ const synthesizePodcastSegments = async (
   return audioSegments;
 };
 
-const generatePodcastAudioFromScript = async (
+export const generatePodcastAudioFromScript = async (
   script: PodcastScript,
   language: StudyMeshLanguageCode | undefined,
 ): Promise<PodcastAudioGenerationResult> => {
@@ -2664,7 +2664,7 @@ const normalizeMonolithGuide = (
   };
 };
 
-const generateMonolithHostedStudyGuide = async ({
+export const generateMonolithHostedStudyGuide = async ({
   usageRequest,
   callStage,
   metadataFlags,

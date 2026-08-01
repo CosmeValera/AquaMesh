@@ -26,6 +26,8 @@ import { AuthProvider, RequireAuth } from './auth/AuthProvider'
 import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
 import StudyGuidesPage from './components/studyGuides/StudyGuidesPage'
 import GuideWorkspacePage from './components/studyGuides/GuideWorkspacePage'
+import DemoCreatePage from './components/demo/DemoCreatePage'
+import DemoGuidePage from './components/demo/DemoGuidePage'
 import HostedAiCheckoutReturn from './components/hostedAi/HostedAiCheckoutReturn'
 import { PodcastPlayerProvider } from './components/podcast/PodcastPlayerProvider'
 import KnowledgeContextOnboarding from './components/profile/KnowledgeContextOnboarding'
@@ -106,6 +108,11 @@ const AppShell = () => {
                     <Route
                       path="/pricing"
                       element={<StudyMeshPricingPage />}
+                    />
+                    <Route path="/try" element={<DemoCreatePage />} />
+                    <Route
+                      path="/try/:demoSlug"
+                      element={<DemoGuidePage />}
                     />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />

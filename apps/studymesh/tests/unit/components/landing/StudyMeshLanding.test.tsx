@@ -169,7 +169,7 @@ describe('StudyMeshLanding', () => {
       within(footer).getByRole('link', { name: /growing guides/i }),
     ).toHaveAttribute('href', '#growing-guide')
     expect(
-      within(footer).getByRole('link', { name: /try it free/i }),
+      within(footer).getByRole('link', { name: /see a guide/i }),
     ).toHaveAttribute('href', '/try')
     expect(
       within(footer).getByRole('link', { name: /no account/i }),
@@ -331,10 +331,10 @@ describe('StudyMeshLanding', () => {
     ).toHaveTextContent('already get.')
   })
 
-  it('sends the guest trial CTA to the no-account try page', () => {
+  it('sends the hero CTA to the no-account demo page', () => {
     renderLanding()
 
-    fireEvent.click(screen.getAllByRole('button', { name: /no account/i })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: /^try it$/i })[0])
 
     expect(screen.getByTestId('location')).toHaveTextContent('/try')
   })

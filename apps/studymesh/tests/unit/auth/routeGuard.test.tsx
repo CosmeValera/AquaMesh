@@ -36,7 +36,6 @@ const LocationProbe = ({ onChange }: { onChange: (path: string) => void }) => {
 const renderProtectedWorkspace = (
   initialPath = '/workspace',
   onLocationChange: (path: string) => void = () => {},
-  guardProps: { allowAnonymous?: boolean } = {},
 ) =>
   render(
     <MemoryRouter initialEntries={[initialPath]}>
@@ -46,33 +45,16 @@ const renderProtectedWorkspace = (
           <Route
             path="/workspace"
             element={
-              <RequireAuth {...guardProps}>
+              <RequireAuth>
                 <div>Workspace loaded</div>
               </RequireAuth>
             }
           />
           <Route path="/login" element={<div>Login page</div>} />
-          <Route path="/try" element={<div>Guest page</div>} />
         </Routes>
       </AuthProvider>
     </MemoryRouter>,
   )
-
-const mockAnonymousSession = () => {
-  authMocks.getSession.mockResolvedValue({
-    data: {
-      session: {
-        access_token: 'guest-token',
-        user: {
-          id: 'guest-1',
-          is_anonymous: true,
-          user_metadata: {},
-        },
-      },
-    },
-    error: null,
-  })
-}
 
 describe('RequireAuth route guard', () => {
   beforeEach(() => {
@@ -127,30 +109,6 @@ describe('RequireAuth route guard', () => {
       'userData',
       expect.any(String),
     )
-  })
-
-  it('redirects anonymous guests away from routes that do not opt in', async () => {
-    let currentPath = ''
-
-    mockAnonymousSession()
-
-    renderProtectedWorkspace('/workspace', (path) => {
-      currentPath = path
-    })
-
-    expect(await screen.findByText('Guest page')).toBeInTheDocument()
-    expect(currentPath).toBe('/try')
-    expect(screen.queryByText('Workspace loaded')).not.toBeInTheDocument()
-    expect(screen.queryByText('Login page')).not.toBeInTheDocument()
-  })
-
-  it('renders protected content for anonymous guests when allowAnonymous is set', async () => {
-    mockAnonymousSession()
-
-    renderProtectedWorkspace('/workspace', () => {}, { allowAnonymous: true })
-
-    expect(await screen.findByText('Workspace loaded')).toBeInTheDocument()
-    expect(screen.queryByText('Guest page')).not.toBeInTheDocument()
   })
 
   it('shows an auth loading state before deciding whether to redirect', async () => {

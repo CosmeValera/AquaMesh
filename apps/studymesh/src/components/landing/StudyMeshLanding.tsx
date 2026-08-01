@@ -702,7 +702,8 @@ const StudyMeshLanding = () => {
                 Try it on the thing that keeps bouncing off you.
               </Typography>
               <Typography sx={{ color: brand.muted, fontSize: '1.08rem' }}>
-                Three guides free, no account. Sign up afterwards to keep them.
+                Walk through a finished guide first. No account, nothing to
+                install.
               </Typography>
               <Button
                 variant="contained"

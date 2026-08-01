@@ -25,6 +25,11 @@ export const HOSTED_AI_USAGE_CHANGED_EVENT = 'studymesh-hosted-ai-usage-changed'
 export const HOSTED_AI_VISUAL_SPEND_EVENT = 'studymesh-hosted-ai-visual-spend'
 export const HOSTED_AI_INSUFFICIENT_CREDITS_EVENT =
   'studymesh-hosted-ai-insufficient-credits'
+// Guests run on a free Quick Guide allowance, never on Carrots, so the exhausted
+// case must open the sign-up panel instead of the carrot pack dialog.
+export const HOSTED_AI_GUEST_LIMIT_EVENT = 'studymesh-hosted-ai-guest-limit'
+export const GUEST_LIMIT_MESSAGE =
+  "You've used your 3 free Quick Guides. Create a free account to keep them and get 30 Carrots."
 
 export type HostedAiSurface =
   | 'study-guide'
@@ -101,6 +106,12 @@ export const HOSTED_AI_CREDIT_PACKS: HostedAiCreditPack[] = [
 
 export const DEFAULT_HOSTED_AI_CREDIT_PACK_ID: HostedAiCreditPackId = 'popular'
 
+export interface HostedAiGuestAllowance {
+  allowed: number
+  used: number
+  remaining: number
+}
+
 export interface HostedAiStatus {
   available: boolean
   accountReady: boolean
@@ -111,6 +122,9 @@ export interface HostedAiStatus {
   nextDailyRefillAt?: string
   costs: Record<HostedAiSurface, number>
   message?: string
+  // Only present for anonymous guest sessions, which spend the free Quick Guide
+  // allowance instead of Carrots.
+  guest?: HostedAiGuestAllowance
 }
 
 export interface HostedAiGatewayPart {
@@ -193,6 +207,7 @@ export interface HostedAiGatewayResponse {
       | 'not_authenticated'
       | 'not_configured'
       | 'insufficient_credits'
+      | 'guest_limit_reached'
       | 'invalid_request'
       | 'output_format'
       | 'provider_auth'

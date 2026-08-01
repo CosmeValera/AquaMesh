@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 
+import { getClientIp, hashClientIp } from "./client-ip";
 import { applyCors, getHeader } from "./cors";
 import { loadLocalApiEnv } from "./local-env";
 import type {
   HostedAiGatewayPart,
   HostedAiGatewayRequest,
   HostedAiGatewayResponse,
+  HostedAiGuestAllowance,
   HostedAiPodcast,
   HostedAiPodcastChapter,
   HostedAiPodcastTranscriptTurn,
@@ -45,6 +47,13 @@ interface VercelResponse {
 
 interface SupabaseUser {
   id: string;
+  isAnonymous: boolean;
+}
+
+// A guest is an anonymous Supabase session. The hashed address is the only
+// network-level identity we keep; raw addresses never leave this process.
+interface GuestContext {
+  ipHash: string;
 }
 
 interface HostedAiUsageStart {
@@ -202,6 +211,37 @@ const numberEnv = (name: string): number | undefined => {
   const value = Number(raw);
   return Number.isFinite(value) && value >= 0 ? value : undefined;
 };
+
+// Guest trial ceilings. An anonymous JWT is mintable straight against Supabase,
+// so nothing the caller sends can be trusted and every cap has to be applied
+// here or in the database.
+const DEFAULT_GUEST_STUDY_GUIDES_PER_IP_PER_DAY = 12;
+const DEFAULT_GUEST_ACCOUNTS_PER_IP_PER_DAY = 5;
+const DEFAULT_GUEST_STUDY_GUIDES_GLOBAL_PER_DAY = 300;
+const DEFAULT_GUEST_MAX_PROMPT_CHARS = 4_000;
+const DEFAULT_GUEST_MAX_TIMEOUT_MS = 60_000;
+
+const GUEST_LIMIT_MESSAGE =
+  "You've used your 3 free Quick Guides. Create a free account to keep them and get 30 Carrots.";
+const GUEST_SURFACE_MESSAGE =
+  "Guest accounts can only create Quick Guides. Create a free account to unlock this.";
+const GUEST_PROMPT_TOO_LONG_MESSAGE =
+  "Guest Quick Guide prompts are limited. Create a free account for longer prompts.";
+const GUEST_TRIAL_DISABLED_MESSAGE =
+  "Guest Quick Guides are turned off right now. Create a free account to keep going.";
+const GUEST_NETWORK_UNAVAILABLE_MESSAGE =
+  "Guest Quick Guides are unavailable from this connection. Create a free account to keep going.";
+
+// The DB raises these two verbatim. They are the only messages that may map to
+// guest_limit_reached; the network ceilings deliberately stay rate_limited.
+const GUEST_LIMIT_RAISE_PATTERN =
+  /guest quick guide limit reached|guest accounts can only create/i;
+
+const guestLimit = (name: string, fallback: number): number =>
+  numberEnv(name) ?? fallback;
+
+const isGuestTrialEnabled = (): boolean =>
+  !/^(false|0|off|no)$/i.test(getEnv("GUEST_TRIAL_ENABLED"));
 
 export const getHostedCerebrasModel = (): string =>
   getEnv("HOSTED_CEREBRAS_MODEL") || DEFAULT_CEREBRAS_MODEL;
@@ -410,7 +450,7 @@ const verifyUser = async (accessToken: string): Promise<SupabaseUser> => {
     throw new Error("not_authenticated");
   }
 
-  return { id: payload.id };
+  return { id: payload.id, isAnonymous: payload.is_anonymous === true };
 };
 
 const callSupabaseRpc = async <T>(
@@ -431,13 +471,18 @@ const callSupabaseRpc = async <T>(
   if (!response.ok) {
     const message = getSupabaseErrorMessage(payload);
     const error = new Error(message);
-    error.name =
-      response.status === 429 ||
-      /retry limit|rate limit|too many|monthly free podcast audio limit reached/i.test(
-        message,
-      )
-        ? "rate_limited"
-        : "rpc_error";
+    // The guest check runs first on purpose: the allowance raise says "Quick
+    // Guide limit reached", which the rate-limit pattern below would swallow.
+    // The IP ceilings start with "Too many " and are meant to fall through to
+    // rate_limited, so an abuser cannot tell which cap they hit.
+    error.name = GUEST_LIMIT_RAISE_PATTERN.test(message)
+      ? "guest_limit_reached"
+      : response.status === 429 ||
+        /retry limit|rate limit|too many|monthly free podcast audio limit reached/i.test(
+          message,
+        )
+      ? "rate_limited"
+      : "rpc_error";
     throw error;
   }
 
@@ -513,15 +558,114 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
   };
 };
 
-const getHostedStatus = async (userId: string): Promise<HostedAiStatus> => {
+const readNumberField = (
+  source: JsonObject,
+  ...keys: string[]
+): number | undefined => {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+  }
+
+  return undefined;
+};
+
+const normalizeGuestAllowance = (
+  value: unknown,
+): HostedAiGuestAllowance | undefined => {
+  const source = Array.isArray(value) ? value[0] : value;
+
+  if (!isObject(source)) {
+    return undefined;
+  }
+
+  const allowed = readNumberField(
+    source,
+    "study_guides_allowed",
+    "studyGuidesAllowed",
+  );
+  const used = readNumberField(source, "study_guides_used", "studyGuidesUsed");
+
+  if (allowed === undefined) {
+    return undefined;
+  }
+
+  return {
+    allowed,
+    used: used || 0,
+    remaining: Math.max(allowed - (used || 0), 0),
+  };
+};
+
+const readGuestAllowance = async (
+  userId: string,
+): Promise<HostedAiGuestAllowance | undefined> =>
+  normalizeGuestAllowance(
+    await callSupabaseRpc<unknown>("guest_get_allowance", {
+      p_owner_id: userId,
+    }),
+  );
+
+// Read-only, and deliberately first: an exhausted guest must fail before the
+// network budget is spent. hosted_ai_begin_usage stays the only writer of the
+// counter, so this check can never charge a guide on its own.
+const assertGuestAllowanceAvailable = async (userId: string): Promise<void> => {
+  const allowance = await readGuestAllowance(userId);
+
+  if (allowance && allowance.remaining <= 0) {
+    const error = new Error(GUEST_LIMIT_MESSAGE);
+    error.name = "guest_limit_reached";
+    throw error;
+  }
+};
+
+const reserveGuestIpBudget = async (
+  ipHash: string,
+  userId: string,
+): Promise<void> => {
+  if (!ipHash) {
+    return;
+  }
+
+  await callSupabaseRpc<unknown>("guest_ip_reserve_study_guide", {
+    p_ip_hash: ipHash,
+    p_owner_id: userId,
+    p_daily_guide_limit: guestLimit(
+      "GUEST_STUDY_GUIDES_PER_IP_PER_DAY",
+      DEFAULT_GUEST_STUDY_GUIDES_PER_IP_PER_DAY,
+    ),
+    p_daily_guest_limit: guestLimit(
+      "GUEST_ACCOUNTS_PER_IP_PER_DAY",
+      DEFAULT_GUEST_ACCOUNTS_PER_IP_PER_DAY,
+    ),
+    p_global_daily_guide_limit: guestLimit(
+      "GUEST_STUDY_GUIDES_GLOBAL_PER_DAY",
+      DEFAULT_GUEST_STUDY_GUIDES_GLOBAL_PER_DAY,
+    ),
+  });
+};
+
+const getHostedStatus = async (
+  userId: string,
+  isAnonymous = false,
+): Promise<HostedAiStatus> => {
   const payload = await callSupabaseRpc<unknown>(
     "hosted_ai_get_or_create_account",
     {
       p_owner_id: userId,
     },
   );
+  const status = normalizeStatus(payload);
 
-  return normalizeStatus(payload);
+  if (!isAnonymous) {
+    return status;
+  }
+
+  const guest = await readGuestAllowance(userId);
+
+  return guest ? { ...status, guest } : status;
 };
 
 const markIntroSeen = async (userId: string): Promise<HostedAiStatus> => {
@@ -664,6 +808,42 @@ const validateGenerateRequest = (
 
   if (textLength > MAX_TEXT_CHARS) {
     return errorResponse("invalid_request", "Hosted AI prompt is too large.");
+  }
+
+  return null;
+};
+
+// Guests get exactly one door: the Study Guide quick-start flow, whose schema
+// and page count are chosen server side. Plain `generate` passes the caller's
+// responseSchema straight to the provider, which would hand out a free
+// structured-output oracle, so it stays closed no matter what the surface says.
+const validateGuestRequest = (
+  request: HostedAiGatewayRequest,
+): { statusCode: number; response: HostedAiGatewayResponse } | null => {
+  if (
+    request.action !== "generateWithQuickStart" ||
+    request.surface !== "study-guide"
+  ) {
+    return {
+      statusCode: 403,
+      response: errorResponse("invalid_request", GUEST_SURFACE_MESSAGE),
+    };
+  }
+
+  const promptCharacters = (request.parts || []).reduce(
+    (total, part) =>
+      total + (typeof part.text === "string" ? part.text.length : 0),
+    0,
+  );
+
+  if (
+    promptCharacters >
+    guestLimit("GUEST_MAX_PROMPT_CHARS", DEFAULT_GUEST_MAX_PROMPT_CHARS)
+  ) {
+    return {
+      statusCode: 400,
+      response: errorResponse("invalid_request", GUEST_PROMPT_TOO_LONG_MESSAGE),
+    };
   }
 
   return null;
@@ -2370,6 +2550,16 @@ const mapFailure = (
       };
     }
 
+    // Must stay above the credits branch: GUEST_LIMIT_MESSAGE mentions Carrots,
+    // so a guest out of free Quick Guides would otherwise be answered with 402
+    // and the Carrot pack dialog instead of the sign-up panel.
+    if (error.name === "guest_limit_reached") {
+      return {
+        statusCode: 403,
+        response: errorResponse("guest_limit_reached", GUEST_LIMIT_MESSAGE),
+      };
+    }
+
     // Matches the message raised by the DB, which still says "insufficient Study Credits".
     // "carrots" is accepted too so the branch survives if that raise is ever reworded.
     if (/insufficient|credit|carrots|quota/i.test(message)) {
@@ -2817,6 +3007,7 @@ const handleGenerate = async (
   userId: string,
   request: HostedAiGatewayRequest,
   includeQuickStart = false,
+  guest: GuestContext | null = null,
 ): Promise<HostedAiGatewayResponse> => {
   const invalid = validateGenerateRequest(request);
 
@@ -2837,7 +3028,30 @@ const handleGenerate = async (
   const model = getHostedTextModelForStage(provider, mainStage);
   const usageModel = getHostedUsageModelLabel(provider, model);
   const requestId = randomUUID();
-  const usageRequest = { ...request, requestId };
+  const guestTimeoutMs = guestLimit(
+    "GUEST_MAX_TIMEOUT_MS",
+    DEFAULT_GUEST_MAX_TIMEOUT_MS,
+  );
+  const usageRequest = {
+    ...request,
+    requestId,
+    // Every stage request spreads this one, so clamping here caps the whole
+    // generation rather than one call of it.
+    ...(guest
+      ? {
+          timeoutMs: Math.min(
+            request.timeoutMs || guestTimeoutMs,
+            guestTimeoutMs,
+          ),
+        }
+      : {}),
+  };
+
+  if (guest) {
+    await assertGuestAllowanceAvailable(userId);
+    await reserveGuestIpBudget(guest.ipHash, userId);
+  }
+
   const started = isFreeSurface
     ? { status: undefined, usageId: undefined }
     : await startHostedUsage(userId, usageRequest, provider, usageModel);
@@ -3179,9 +3393,53 @@ export default async function handler(
 
   try {
     const user = await verifyUser(accessToken);
+    // Everything guest related sits after the CORS, method, config, JSON and
+    // bearer chain above, and a real user never reaches any of it.
+    const guest: GuestContext | null = user.isAnonymous
+      ? { ipHash: hashClientIp(getClientIp(req.headers)) }
+      : null;
+
+    if (guest) {
+      if (!isGuestTrialEnabled()) {
+        json(
+          res,
+          403,
+          errorResponse("invalid_request", GUEST_TRIAL_DISABLED_MESSAGE),
+        );
+        return;
+      }
+
+      // Without a trusted address the per-network ceiling cannot be enforced,
+      // and an uncapped guest funnel is worse than a refused one. Local dev and
+      // the webpack proxy forward no address, so only production insists.
+      if (!guest.ipHash && getEnv("NODE_ENV") === "production") {
+        json(
+          res,
+          429,
+          errorResponse("rate_limited", GUEST_NETWORK_UNAVAILABLE_MESSAGE),
+        );
+        return;
+      }
+
+      if (request.action !== "status") {
+        const invalidGuestRequest = validateGuestRequest(request);
+
+        if (invalidGuestRequest) {
+          json(
+            res,
+            invalidGuestRequest.statusCode,
+            invalidGuestRequest.response,
+          );
+          return;
+        }
+      }
+    }
 
     if (request.action === "status") {
-      json(res, 200, { ok: true, status: await getHostedStatus(user.id) });
+      json(res, 200, {
+        ok: true,
+        status: await getHostedStatus(user.id, user.isAnonymous),
+      });
       return;
     }
 
@@ -3191,13 +3449,13 @@ export default async function handler(
     }
 
     if (request.action === "generate") {
-      const response = await handleGenerate(user.id, request);
+      const response = await handleGenerate(user.id, request, false, guest);
       json(res, 200, response);
       return;
     }
 
     if (request.action === "generateWithQuickStart") {
-      const response = await handleGenerate(user.id, request, true);
+      const response = await handleGenerate(user.id, request, true, guest);
       json(res, 200, response);
       return;
     }

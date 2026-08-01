@@ -217,6 +217,7 @@ const CloudWorkspaceSync = () => {
   const isProfileDeleteInProgressRef = useRef(false)
   const setDashboards = useStore((state) => state.setDashboards)
   const setSelectedDashboard = useStore((state) => state.setSelectedDashboard)
+  const isGuest = user?.is_anonymous === true
 
   useEffect(() => {
     const handleProfileDeleteStarted = () => {
@@ -255,6 +256,16 @@ const CloudWorkspaceSync = () => {
   useEffect(() => {
     if (loading || !user || !isSupabaseConfigured) {
       setHasHydrated(false)
+      return
+    }
+
+    // A guest account is throwaway. Hydrating it would upload the visitor's
+    // pre-existing local library into it and move the workspace cache owner to
+    // the anonymous id, so signing into their real account afterwards would
+    // drop those guide bodies. Guests own no bundle at all.
+    if (isGuest) {
+      setHasHydrated(true)
+      dispatchCloudSyncStatus('synced')
       return
     }
 
@@ -365,7 +376,7 @@ const CloudWorkspaceSync = () => {
     return () => {
       cancelled = true
     }
-  }, [loading, repository, setDashboards, setSelectedDashboard, user])
+  }, [isGuest, loading, repository, setDashboards, setSelectedDashboard, user])
 
   useEffect(() => {
     if (!user || !hasHydrated || !isSupabaseConfigured) {
@@ -571,6 +582,36 @@ const CloudWorkspaceSync = () => {
       scheduleSync()
     }
 
+    // Guests get the per-guide listener only: their generated guide still
+    // reaches user_study_guides under the anonymous owner id, but nothing
+    // writes a workspace bundle, dashboards, widgets or profile context.
+    const handleGuestStudyGuidesUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<StudyGuideChangeDetail>).detail
+
+      if (detail?.action === 'delete' && detail.studyGuideId) {
+        void runCloudStudyGuideDelete(detail.studyGuideId)
+        return
+      }
+
+      if (detail?.action === 'save' && detail.studyGuideId) {
+        void runCloudStudyGuideSave(detail.studyGuideId)
+      }
+    }
+
+    if (isGuest) {
+      window.addEventListener(
+        STUDY_GUIDES_CHANGED_EVENT,
+        handleGuestStudyGuidesUpdated,
+      )
+
+      return () => {
+        window.removeEventListener(
+          STUDY_GUIDES_CHANGED_EVENT,
+          handleGuestStudyGuidesUpdated,
+        )
+      }
+    }
+
     const unsubscribeStore = useStore.subscribe(scheduleSync)
 
     window.addEventListener(
@@ -608,7 +649,7 @@ const CloudWorkspaceSync = () => {
       )
       window.removeEventListener(PROFILE_CONTEXT_CHANGED_EVENT, scheduleSync)
     }
-  }, [hasHydrated, repository, user])
+  }, [hasHydrated, isGuest, repository, user])
 
   return null
 }

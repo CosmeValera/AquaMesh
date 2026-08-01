@@ -15,11 +15,11 @@ Guides start short (~3 pages) and grow on demand, so a topic can stay a five-min
 ## User-facing capabilities
 
 - **Prompt to Quick Guide:** a learning goal in, a full tutorial-style multi-dashboard guide out.
-- **Adapts to what you know:** pick the fields you already understand and new guides are re-explained through them.
+- **Adapts to what you know:** declare the fields you already understand and new guides are re-explained through them. Finishing a guide offers to add that topic to the list, so the lens keeps growing.
 - **Quick Create:** one click turns the active dashboard into a quiz, flashcards, or a two-voice podcast recap.
 - **AI Chat:** questions about a guide, with optional web-grounded sources.
 - **Workspace:** drag, resize, and tab guides and widgets on a dashboard canvas.
-- **Choice of AI:** Hosted AI with Carrots, your own API key, Google on-device Local AI, or the no-AI Basic fallback.
+- **Choice of AI:** Hosted AI paid with Carrots, your own Gemini or Cerebras API key, or Google on-device Local AI.
 
 ## Available scripts
 

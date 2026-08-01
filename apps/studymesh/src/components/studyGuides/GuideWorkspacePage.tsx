@@ -57,6 +57,12 @@ import {
   OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
   type OpenStudyGuidePageLinkDetail,
 } from '../../studyGuides/pageLinks'
+import {
+  addLearnedTopicToProfileContext,
+  isLearnedTopicPromptResolved,
+  isUserKnownTopic,
+  resolveLearnedTopicPrompt,
+} from '../../profileContext'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 
 export const AI_CHAT_MIN_WIDTH = 310
@@ -124,6 +130,26 @@ const isAbortError = (error: unknown): boolean =>
     ? error.name === 'AbortError'
     : error instanceof Error && error.name === 'AbortError'
 
+// A guide "finishes" when every page has been opened at least once. Single-page
+// guides are excluded so the suggestion never fires the moment one is opened.
+const hasReadEveryPage = (record: StudyGuideRecord): boolean => {
+  const pageKeys = record.studyPath.dashboards
+    .map((dashboard) => dashboard.dashboardKey)
+    .filter(Boolean)
+  if (pageKeys.length < 2) {
+    return false
+  }
+
+  const visitedPageKeys = new Set(record.visitedPageKeys || [])
+  return pageKeys.every((pageKey) => visitedPageKeys.has(pageKey))
+}
+
+interface LearnedTopicPromptState {
+  studyGuideId: string
+  topic: string
+  status: 'offered' | 'added'
+}
+
 const GuideWorkspacePage = () => {
   const { t } = useInterfaceText()
   const { user } = useAuth()
@@ -146,6 +172,8 @@ const GuideWorkspacePage = () => {
   } | null>(null)
   const [aiChatOpen, setAiChatOpen] = useState(true)
   const [aiChatWidth, setAiChatWidth] = useState(AI_CHAT_MIN_WIDTH)
+  const [learnedTopicPrompt, setLearnedTopicPrompt] =
+    useState<LearnedTopicPromptState | null>(null)
   const pageScrollPositionsRef = useRef<Record<string, number>>({})
   const [mobileSection, setMobileSection] = useState<
     'pages' | 'study-guide' | 'ai-chat'
@@ -247,6 +275,7 @@ const GuideWorkspacePage = () => {
 
   useEffect(() => {
     pageScrollPositionsRef.current = {}
+    setLearnedTopicPrompt(null)
   }, [studyGuideId])
 
   const dashboard = useMemo<StateDashboard | undefined>(() => {
@@ -293,6 +322,43 @@ const GuideWorkspacePage = () => {
       }
     }
   }, [record?.id, record?.studyPath.selectedIndex])
+
+  useEffect(() => {
+    const topic = record?.title?.trim() || ''
+    if (
+      !record ||
+      !topic ||
+      !hasReadEveryPage(record) ||
+      isLearnedTopicPromptResolved(record.id) ||
+      isUserKnownTopic(topic)
+    ) {
+      return
+    }
+
+    setLearnedTopicPrompt((current) =>
+      current?.studyGuideId === record.id
+        ? current
+        : { studyGuideId: record.id, topic, status: 'offered' },
+    )
+  }, [record])
+
+  const addLearnedTopicToKnownTopics = () => {
+    if (!learnedTopicPrompt) {
+      return
+    }
+
+    addLearnedTopicToProfileContext(learnedTopicPrompt.topic)
+    resolveLearnedTopicPrompt(learnedTopicPrompt.studyGuideId, 'added')
+    setLearnedTopicPrompt({ ...learnedTopicPrompt, status: 'added' })
+  }
+
+  const dismissLearnedTopicPrompt = () => {
+    if (learnedTopicPrompt?.status === 'offered') {
+      resolveLearnedTopicPrompt(learnedTopicPrompt.studyGuideId, 'dismissed')
+    }
+
+    setLearnedTopicPrompt(null)
+  }
 
   const persistStudyPath = (
     studyPath: StudyPathContainerState,
@@ -612,6 +678,82 @@ const GuideWorkspacePage = () => {
     }
   }
 
+  const learnedTopicPalette =
+    learnedTopicPrompt?.status === 'added'
+      ? theme.palette.success
+      : theme.palette.info
+  const learnedTopicPromptAlert = learnedTopicPrompt ? (
+    <Alert
+      severity={learnedTopicPrompt.status === 'added' ? 'success' : 'info'}
+      action={
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {learnedTopicPrompt.status === 'offered' ? (
+            <Button
+              color="inherit"
+              size="small"
+              variant="outlined"
+              onClick={addLearnedTopicToKnownTopics}
+              sx={{
+                textTransform: 'none',
+                whiteSpace: 'nowrap',
+                fontWeight: 650,
+              }}
+            >
+              Add to what I know
+            </Button>
+          ) : null}
+          <IconButton
+            aria-label={
+              learnedTopicPrompt.status === 'added' ? 'Close' : 'Not now'
+            }
+            size="small"
+            onClick={dismissLearnedTopicPrompt}
+            sx={{
+              flexShrink: 0,
+              color:
+                theme.palette.mode === 'dark'
+                  ? learnedTopicPalette.light
+                  : learnedTopicPalette.dark,
+              bgcolor: alpha(learnedTopicPalette.main, 0.08),
+              border: 1,
+              borderColor: alpha(learnedTopicPalette.main, 0.32),
+              '&:hover': {
+                bgcolor: alpha(learnedTopicPalette.main, 0.2),
+                borderColor: alpha(learnedTopicPalette.main, 0.48),
+              },
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      }
+      sx={{
+        flex: '0 0 auto',
+        m: isMobile ? 0 : 1,
+        mb: isMobile ? 1 : 0,
+        alignItems: 'center',
+      }}
+    >
+      {learnedTopicPrompt.status === 'added' ? (
+        <Typography variant="body2">
+          <Box component="span" sx={{ fontWeight: 700 }}>
+            {learnedTopicPrompt.topic}
+          </Box>{' '}
+          is part of what you know now. New guides will explain things through
+          it.
+        </Typography>
+      ) : (
+        <Typography variant="body2">
+          You just went through{' '}
+          <Box component="span" sx={{ fontWeight: 700 }}>
+            {learnedTopicPrompt.topic}
+          </Box>
+          . Add it to what you know?
+        </Typography>
+      )}
+    </Alert>
+  ) : null
+
   const startAiChatResize = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault()
     const startX = event.clientX
@@ -872,6 +1014,7 @@ const GuideWorkspacePage = () => {
                 {t('studyGuides.storageFullMessage')}
               </Alert>
             ) : null}
+            {learnedTopicPromptAlert}
             {isMobile ? (
               <>
                 <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>

@@ -17,11 +17,16 @@ import {
   createHostedStudyGuideTransportWithQuickStart,
 } from '../../../src/quickCreate/ai/hostedClient'
 import {
+  GUEST_LIMIT_MESSAGE,
+  HOSTED_AI_GUEST_LIMIT_EVENT,
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   HOSTED_AI_VISUAL_SPEND_EVENT,
 } from '../../../src/quickCreate/ai/hostedCredits'
 
-const statusPayload = (studyCredits: number) => ({
+const statusPayload = (
+  studyCredits: number,
+  guest?: { allowed: number; used: number; remaining: number },
+) => ({
   ok: true,
   status: {
     available: true,
@@ -36,6 +41,7 @@ const statusPayload = (studyCredits: number) => ({
       chat: 1,
       podcast: 1,
     },
+    ...(guest ? { guest } : {}),
   },
 })
 
@@ -272,5 +278,147 @@ describe('hosted AI client credit failures', () => {
     })
 
     window.removeEventListener(HOSTED_AI_VISUAL_SPEND_EVENT, spendListener)
+  })
+
+  it('keeps the Carrot shortage flow for accounts without a guest allowance', async () => {
+    const guestListener = vi.fn()
+    const creditsListener = vi.fn()
+    window.addEventListener(HOSTED_AI_GUEST_LIMIT_EVENT, guestListener)
+    window.addEventListener(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT, creditsListener)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(gatewayResponse(statusPayload(1))),
+    )
+
+    const transport = createHostedAiTransport({ surface: 'study-guide' })
+    await expect(
+      transport({ parts: [{ text: 'Create guide' }] }),
+    ).rejects.toThrow('This action needs 3 and you have 1.')
+    expect(creditsListener).toHaveBeenCalledTimes(1)
+    expect(guestListener).not.toHaveBeenCalled()
+
+    window.removeEventListener(HOSTED_AI_GUEST_LIMIT_EVENT, guestListener)
+    window.removeEventListener(
+      HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
+      creditsListener,
+    )
+  })
+})
+
+describe('hosted AI client guest allowance', () => {
+  beforeEach(() => {
+    getSessionMock.mockResolvedValue({
+      data: { session: { access_token: 'guest-token' } },
+      error: null,
+    })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+  })
+
+  it('generates for a guest with free Quick Guides left even at zero Carrots', async () => {
+    const guestListener = vi.fn()
+    const creditsListener = vi.fn()
+    window.addEventListener(HOSTED_AI_GUEST_LIMIT_EVENT, guestListener)
+    window.addEventListener(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT, creditsListener)
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        gatewayResponse(
+          statusPayload(0, { allowed: 3, used: 1, remaining: 2 }),
+        ),
+      )
+      .mockResolvedValueOnce(gatewayResponse({ ok: true, text: 'Guide' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const transport = createHostedAiTransport({ surface: 'study-guide' })
+    await expect(transport({ parts: [{ text: 'Create guide' }] })).resolves.toBe(
+      'Guide',
+    )
+    expect(creditsListener).not.toHaveBeenCalled()
+    expect(guestListener).not.toHaveBeenCalled()
+
+    window.removeEventListener(HOSTED_AI_GUEST_LIMIT_EVENT, guestListener)
+    window.removeEventListener(
+      HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
+      creditsListener,
+    )
+  })
+
+  it('asks an exhausted guest to sign up instead of buying Carrots', async () => {
+    const guestListener = vi.fn()
+    const creditsListener = vi.fn()
+    window.addEventListener(HOSTED_AI_GUEST_LIMIT_EVENT, guestListener)
+    window.addEventListener(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT, creditsListener)
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        gatewayResponse(
+          statusPayload(0, { allowed: 3, used: 3, remaining: 0 }),
+        ),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(
+      callHostedAiModel({
+        surface: 'study-guide',
+        parts: [{ text: 'Create guide' }],
+      }),
+    ).rejects.toThrow(GUEST_LIMIT_MESSAGE)
+    expect(guestListener).toHaveBeenCalledTimes(1)
+    expect(creditsListener).not.toHaveBeenCalled()
+    // Only the status probe ran: the generation request never left the client.
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    window.removeEventListener(HOSTED_AI_GUEST_LIMIT_EVENT, guestListener)
+    window.removeEventListener(
+      HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
+      creditsListener,
+    )
+  })
+
+  it('announces the guest limit returned by the generation gateway', async () => {
+    const guestListener = vi.fn()
+    const creditsListener = vi.fn()
+    window.addEventListener(HOSTED_AI_GUEST_LIMIT_EVENT, guestListener)
+    window.addEventListener(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT, creditsListener)
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          gatewayResponse(
+            statusPayload(0, { allowed: 3, used: 2, remaining: 1 }),
+          ),
+        )
+        .mockResolvedValueOnce(
+          gatewayResponse(
+            {
+              ok: false,
+              error: {
+                code: 'guest_limit_reached',
+                message: GUEST_LIMIT_MESSAGE,
+              },
+            },
+            false,
+            403,
+          ),
+        ),
+    )
+
+    const transport = createHostedAiTransport({ surface: 'study-guide' })
+    await expect(
+      transport({ parts: [{ text: 'Create guide' }] }),
+    ).rejects.toThrow(GUEST_LIMIT_MESSAGE)
+    expect(guestListener).toHaveBeenCalledTimes(1)
+    expect(creditsListener).not.toHaveBeenCalled()
+
+    window.removeEventListener(HOSTED_AI_GUEST_LIMIT_EVENT, guestListener)
+    window.removeEventListener(
+      HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
+      creditsListener,
+    )
   })
 })

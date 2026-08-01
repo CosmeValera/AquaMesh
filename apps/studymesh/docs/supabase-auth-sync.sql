@@ -158,6 +158,47 @@ create table if not exists public.account_onboarding_state (
   updated_at timestamptz not null default now()
 );
 
+-- Guest trial allowance. A row exists only for auth users created through
+-- Supabase anonymous sign-in. It is keyed to auth.users so clearing browser
+-- storage or deleting the RabbitHole profile cannot mint a fresh allowance for
+-- the same auth identity.
+create table if not exists public.guest_allowances (
+  owner_id uuid primary key references auth.users(id) on delete cascade,
+  study_guides_allowed integer not null default 3,
+  study_guides_used integer not null default 0,
+  upgraded_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint guest_allowances_used_nonnegative_check
+    check (study_guides_used >= 0),
+  constraint guest_allowances_allowed_range_check
+    check (study_guides_allowed between 0 and 10)
+);
+
+-- Per-network guest spend ceiling. Only anonymous callers are counted: signed-in
+-- accounts are never IP limited because CGNAT and campus NAT share one address
+-- between many innocent users. `ip_hash` is an HMAC computed in the gateway, so
+-- raw addresses never reach Postgres or its logs.
+create table if not exists public.guest_ip_usage (
+  ip_hash text not null,
+  usage_date date not null default current_date,
+  study_guides_used integer not null default 0,
+  first_seen_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (ip_hash, usage_date),
+  constraint guest_ip_usage_nonnegative_check check (study_guides_used >= 0)
+);
+
+-- Distinct guests seen per network per day, so one address cannot farm unlimited
+-- 3-guide allowances by cycling private windows.
+create table if not exists public.guest_ip_owners (
+  ip_hash text not null,
+  usage_date date not null default current_date,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (ip_hash, usage_date, owner_id)
+);
+
 -- Audit trail for hosted AI gateway usage. The browser may read its own
 -- events, but writes are reserved for the Vercel gateway through service role
 -- RPCs so users cannot mint or spend credits directly from the client.
@@ -420,6 +461,16 @@ create index if not exists podcast_audio_objects_expired_candidates_idx
   on public.podcast_audio_objects(owner_id, candidate_at, created_at)
   where deleted_at is null and candidate_at is not null;
 
+create index if not exists guest_allowances_unconverted_idx
+  on public.guest_allowances(created_at)
+  where upgraded_at is null;
+
+create index if not exists guest_ip_usage_date_idx
+  on public.guest_ip_usage(usage_date);
+
+create index if not exists guest_ip_owners_date_idx
+  on public.guest_ip_owners(usage_date);
+
 -- Optional profile bootstrap. Safe if app also upserts profile on login.
 create or replace function public.handle_new_user()
 returns trigger
@@ -427,6 +478,8 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  is_guest boolean := coalesce(new.is_anonymous, false);
 begin
   insert into public.profiles (id, email, display_name, avatar_path)
   values (
@@ -444,6 +497,7 @@ begin
   values (
     new.id,
     case
+      when is_guest then 0
       when exists (
         select 1
         from public.hosted_ai_account_history history
@@ -455,6 +509,18 @@ begin
     end
   )
   on conflict on constraint hosted_ai_accounts_pkey do nothing;
+
+  if is_guest then
+    -- Guests get a fixed trial instead of Carrots, and no welcome-guide
+    -- onboarding. Skipping account_onboarding_state is load bearing: it makes
+    -- seed_own_welcome_guide return 'not-eligible', which keeps the guest cloud
+    -- workspace empty and out of the client hydration race.
+    insert into public.guest_allowances (owner_id)
+    values (new.id)
+    on conflict on constraint guest_allowances_pkey do nothing;
+
+    return new;
+  end if;
 
   insert into public.hosted_ai_account_history (owner_id)
   values (new.id)
@@ -473,6 +539,115 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
+
+-- The welcome Carrot grant fires on auth.users insert. A guest who upgrades
+-- keeps the same auth.users row, so no insert ever happens and the grant has to
+-- be applied explicitly here. guest_allowances.upgraded_at is the single latch,
+-- so this can never mint a second grant.
+create or replace function public.grant_guest_upgrade_rewards(
+  p_owner_id uuid,
+  p_email text default null
+)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  new_balance integer;
+begin
+  update public.guest_allowances
+  set upgraded_at = now(),
+      updated_at = now()
+  where owner_id = p_owner_id
+    and upgraded_at is null;
+
+  if not found then
+    select account.study_credit_balance
+    into new_balance
+    from public.hosted_ai_accounts account
+    where account.owner_id = p_owner_id;
+
+    return coalesce(new_balance, 0);
+  end if;
+
+  update public.profiles
+  set email = coalesce(p_email, email)
+  where id = p_owner_id;
+
+  update public.hosted_ai_accounts account
+  set study_credit_balance = account.study_credit_balance + case
+        when exists (
+          select 1
+          from public.hosted_ai_account_history history
+          where history.owner_id = p_owner_id
+            and history.last_profile_deleted_at is not null
+        )
+        then 0
+        else 30
+      end
+  where account.owner_id = p_owner_id
+  returning account.study_credit_balance into new_balance;
+
+  insert into public.hosted_ai_account_history (owner_id)
+  values (p_owner_id)
+  on conflict on constraint hosted_ai_account_history_pkey do nothing;
+
+  insert into public.account_onboarding_state (owner_id)
+  values (p_owner_id)
+  on conflict on constraint account_onboarding_state_pkey do nothing;
+
+  return coalesce(new_balance, 0);
+end;
+$$;
+
+create or replace function public.handle_guest_upgrade()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if coalesce(old.is_anonymous, false) is not true
+     or coalesce(new.is_anonymous, false) is not false then
+    return new;
+  end if;
+
+  perform public.grant_guest_upgrade_rewards(new.id, new.email);
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_upgraded on auth.users;
+create trigger on_auth_user_upgraded
+after update of is_anonymous on auth.users
+for each row execute function public.handle_guest_upgrade();
+
+-- Client-side self heal. Email confirmation can flip is_anonymous in a session
+-- where the app is not running, so the app claims the grant once after upgrade.
+create or replace function public.claim_guest_upgrade_grant()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if exists (
+    select 1
+    from auth.users u
+    where u.id = auth.uid()
+      and coalesce(u.is_anonymous, false)
+  ) then
+    raise exception 'Guest account has not been upgraded yet';
+  end if;
+
+  return public.grant_guest_upgrade_rewards(auth.uid(), null);
+end;
+$$;
 
 -- Frontend-safe profile deletion. This deletes only the signed-in RabbitHole
 -- profile row and returns the real row count so the app can verify cleanup.
@@ -686,7 +861,14 @@ begin
       end,
       last_daily_refill_date = current_date
   where account.owner_id = p_owner_id
-    and account.last_daily_refill_date < current_date;
+    and account.last_daily_refill_date < current_date
+    -- Guests spend a fixed trial, never a daily Carrot refill.
+    and not exists (
+      select 1
+      from public.guest_allowances guest
+      where guest.owner_id = p_owner_id
+        and guest.upgraded_at is null
+    );
 
   return query
   select account.owner_id,
@@ -755,6 +937,9 @@ declare
   credit_cost integer;
   current_balance integer;
   recent_risky_attempt_count integer := 0;
+  is_guest boolean := false;
+  guest_allowed integer;
+  guest_used integer;
 begin
   if p_request_id is null or btrim(p_request_id) = '' then
     raise exception 'request_id is required';
@@ -799,20 +984,62 @@ begin
     end if;
   end if;
 
-  select account.study_credit_balance
-  into current_balance
-  from public.hosted_ai_accounts account
-  where account.owner_id = p_owner_id
-  for update;
+  -- Read the live auth flag instead of trusting a denormalized copy. An
+  -- anonymous JWT can be minted by anyone straight against Supabase, so this
+  -- branch is the only unbypassable enforcement point for the guest trial.
+  select coalesce(u.is_anonymous, false)
+  into is_guest
+  from auth.users u
+  where u.id = p_owner_id;
 
-  if current_balance < credit_cost then
-    raise exception 'insufficient Study Credits';
+  if is_guest then
+    if p_surface <> 'study-guide' then
+      raise exception 'Guest accounts can only create Quick Guides. Create a free account to unlock this.';
+    end if;
+
+    insert into public.guest_allowances (owner_id)
+    values (p_owner_id)
+    on conflict on constraint guest_allowances_pkey do nothing;
+
+    select guest.study_guides_allowed, guest.study_guides_used
+    into guest_allowed, guest_used
+    from public.guest_allowances guest
+    where guest.owner_id = p_owner_id
+    for update;
+
+    if guest_used >= guest_allowed then
+      raise exception 'Guest Quick Guide limit reached. Create a free account to keep your guides.';
+    end if;
+
+    update public.guest_allowances guest
+    set study_guides_used = guest.study_guides_used + 1,
+        updated_at = now()
+    where guest.owner_id = p_owner_id;
+
+    -- Guests spend allowance, not Carrots. Charging 0 keeps both the
+    -- nonnegative-credits and refund constraints satisfied on the event row.
+    credit_cost := 0;
+
+    select account.study_credit_balance
+    into current_balance
+    from public.hosted_ai_accounts account
+    where account.owner_id = p_owner_id;
+  else
+    select account.study_credit_balance
+    into current_balance
+    from public.hosted_ai_accounts account
+    where account.owner_id = p_owner_id
+    for update;
+
+    if current_balance < credit_cost then
+      raise exception 'insufficient Study Credits';
+    end if;
+
+    update public.hosted_ai_accounts account
+    set study_credit_balance = account.study_credit_balance - credit_cost
+    where account.owner_id = p_owner_id
+    returning account.study_credit_balance into current_balance;
   end if;
-
-  update public.hosted_ai_accounts account
-  set study_credit_balance = account.study_credit_balance - credit_cost
-  where account.owner_id = p_owner_id
-  returning account.study_credit_balance into current_balance;
 
   with inserted_event as (
     insert into public.hosted_ai_usage_events (
@@ -946,6 +1173,134 @@ begin
        status;
 
   return next;
+end;
+$$;
+
+create or replace function public.guest_get_allowance(p_owner_id uuid)
+returns table (
+  study_guides_allowed integer,
+  study_guides_used integer,
+  upgraded_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select guest.study_guides_allowed,
+         guest.study_guides_used,
+         guest.upgraded_at
+  from public.guest_allowances guest
+  where guest.owner_id = p_owner_id
+$$;
+
+-- Scalar return rather than `returns table`: PL/pgSQL OUT parameters named after
+-- the counter columns would shadow them inside the ON CONFLICT DO UPDATE
+-- expressions below. Every limit raises, which aborts the transaction, so a
+-- rejected request never leaves a counter incremented.
+create or replace function public.guest_ip_reserve_study_guide(
+  p_ip_hash text,
+  p_owner_id uuid,
+  p_daily_guide_limit integer,
+  p_daily_guest_limit integer,
+  p_global_daily_guide_limit integer default null
+)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  guest_count integer;
+  network_used integer;
+  global_used integer;
+begin
+  if p_ip_hash is null or btrim(p_ip_hash) = '' then
+    raise exception 'guest network hash is required';
+  end if;
+
+  -- Global circuit breaker. Bounds worst-case daily spend even against a
+  -- rotating residential proxy pool that defeats per-network counting.
+  if p_global_daily_guide_limit is not null and p_global_daily_guide_limit > 0 then
+    insert into public.guest_ip_usage (ip_hash, usage_date, study_guides_used)
+    values ('__global__', current_date, 1)
+    on conflict on constraint guest_ip_usage_pkey do update
+      set study_guides_used = public.guest_ip_usage.study_guides_used + 1,
+          updated_at = now()
+    returning public.guest_ip_usage.study_guides_used into global_used;
+
+    if global_used > p_global_daily_guide_limit then
+      raise exception 'Too many free Quick Guides are running right now. Create a free account to keep going.';
+    end if;
+  end if;
+
+  insert into public.guest_ip_owners (ip_hash, usage_date, owner_id)
+  values (p_ip_hash, current_date, p_owner_id)
+  on conflict on constraint guest_ip_owners_pkey do nothing;
+
+  select count(*)::integer
+  into guest_count
+  from public.guest_ip_owners owner
+  where owner.ip_hash = p_ip_hash
+    and owner.usage_date = current_date;
+
+  if p_daily_guest_limit > 0 and guest_count > p_daily_guest_limit then
+    raise exception 'Too many free trials from this network today. Create a free account to keep going.';
+  end if;
+
+  insert into public.guest_ip_usage (ip_hash, usage_date, study_guides_used)
+  values (p_ip_hash, current_date, 1)
+  on conflict on constraint guest_ip_usage_pkey do update
+    set study_guides_used = public.guest_ip_usage.study_guides_used + 1,
+        updated_at = now()
+  returning public.guest_ip_usage.study_guides_used into network_used;
+
+  if p_daily_guide_limit > 0 and network_used > p_daily_guide_limit then
+    raise exception 'Too many free Quick Guides from this network today. Create a free account to keep going.';
+  end if;
+
+  return network_used;
+end;
+$$;
+
+-- Daily cleanup for guests who never converted. Deleting the auth user cascades
+-- to profiles, guides, hosted AI accounts and the allowance row.
+create or replace function public.guest_purge_stale_accounts(
+  p_max integer default 200,
+  p_retention_days integer default 30
+)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  purged_count integer := 0;
+begin
+  with stale as (
+    select guest.owner_id
+    from public.guest_allowances guest
+    join auth.users u on u.id = guest.owner_id
+    where guest.upgraded_at is null
+      and coalesce(u.is_anonymous, false)
+      and guest.created_at < now() - make_interval(days => greatest(p_retention_days, 1))
+    order by guest.created_at
+    limit greatest(p_max, 0)
+  ),
+  deleted as (
+    delete from auth.users u
+    using stale
+    where u.id = stale.owner_id
+    returning u.id
+  )
+  select count(*)::integer into purged_count from deleted;
+
+  delete from public.guest_ip_usage
+  where usage_date < current_date - greatest(p_retention_days, 1);
+
+  delete from public.guest_ip_owners
+  where usage_date < current_date - greatest(p_retention_days, 1);
+
+  return purged_count;
 end;
 $$;
 
@@ -1447,6 +1802,11 @@ revoke all on function public.hosted_ai_create_credit_purchase(uuid, integer, in
 revoke all on function public.hosted_ai_attach_checkout_session(uuid, uuid, text, jsonb) from public;
 revoke all on function public.hosted_ai_mark_credit_purchase_paid(uuid, text, text, integer, integer, text, jsonb) from public;
 revoke all on function public.hosted_ai_mark_credit_purchase_terminal(uuid, text, text, jsonb) from public;
+revoke all on function public.grant_guest_upgrade_rewards(uuid, text) from public;
+revoke all on function public.claim_guest_upgrade_grant() from public;
+revoke all on function public.guest_get_allowance(uuid) from public;
+revoke all on function public.guest_ip_reserve_study_guide(text, uuid, integer, integer, integer) from public;
+revoke all on function public.guest_purge_stale_accounts(integer, integer) from public;
 
 grant execute on function public.hosted_ai_credit_cost(text) to service_role;
 grant execute on function public.hosted_ai_get_or_create_account(uuid) to service_role;
@@ -1462,6 +1822,11 @@ grant execute on function public.hosted_ai_create_credit_purchase(uuid, integer,
 grant execute on function public.hosted_ai_attach_checkout_session(uuid, uuid, text, jsonb) to service_role;
 grant execute on function public.hosted_ai_mark_credit_purchase_paid(uuid, text, text, integer, integer, text, jsonb) to service_role;
 grant execute on function public.hosted_ai_mark_credit_purchase_terminal(uuid, text, text, jsonb) to service_role;
+grant execute on function public.grant_guest_upgrade_rewards(uuid, text) to service_role;
+grant execute on function public.guest_get_allowance(uuid) to service_role;
+grant execute on function public.guest_ip_reserve_study_guide(text, uuid, integer, integer, integer) to service_role;
+grant execute on function public.guest_purge_stale_accounts(integer, integer) to service_role;
+grant execute on function public.claim_guest_upgrade_grant() to authenticated;
 
 -- Row level security
 alter table public.profiles enable row level security;
@@ -1477,6 +1842,11 @@ alter table public.hosted_ai_usage_events enable row level security;
 alter table public.hosted_ai_credit_purchases enable row level security;
 alter table public.podcast_tts_monthly_usage enable row level security;
 alter table public.podcast_audio_objects enable row level security;
+alter table public.guest_allowances enable row level security;
+-- guest_ip_usage and guest_ip_owners intentionally get no policies: RLS on with
+-- zero policies means service role only, matching podcast_tts_monthly_usage.
+alter table public.guest_ip_usage enable row level security;
+alter table public.guest_ip_owners enable row level security;
 
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own"
@@ -1649,6 +2019,12 @@ using (owner_id = auth.uid());
 drop policy if exists "hosted_ai_credit_purchases_select_own" on public.hosted_ai_credit_purchases;
 create policy "hosted_ai_credit_purchases_select_own"
 on public.hosted_ai_credit_purchases for select
+to authenticated
+using (owner_id = auth.uid());
+
+drop policy if exists "guest_allowances_select_own" on public.guest_allowances;
+create policy "guest_allowances_select_own"
+on public.guest_allowances for select
 to authenticated
 using (owner_id = auth.uid());
 

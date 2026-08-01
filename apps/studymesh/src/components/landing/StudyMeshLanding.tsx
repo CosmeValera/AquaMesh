@@ -109,6 +109,52 @@ const growingGuidePages = [
   '06 Review Pack',
 ]
 
+type ComparisonRow = {
+  id: string
+  label: string
+  chat: string
+  rabbithole: string
+}
+
+const comparisonRows: ComparisonRow[] = [
+  {
+    id: 'one-answer',
+    label: 'One answer, right now',
+    chat: 'Faster. Ask, done.',
+    rabbithole: 'Slower. It builds a full guide.',
+  },
+  {
+    id: 'next-week',
+    label: 'Finding it again next week',
+    chat: 'Scroll the thread, or ask again and get a different answer.',
+    rabbithole: 'Page 03 is still page 03. Sitting in your library, unchanged.',
+  },
+  {
+    id: 'practising',
+    label: 'Practising it',
+    chat: 'You have to ask for a quiz, and it drowns in the thread by Thursday.',
+    rabbithole:
+      'Quizzes, flashcards and exercises generated for that exact topic, sitting next to the pages.',
+  },
+  {
+    id: 'angle',
+    label: 'Who picks the angle',
+    chat: 'It guesses from memory you cannot see. Or you retype "explain it with photography" every single time.',
+    rabbithole:
+      'You declare it once, in a list you can read and edit. Every page and every quiz uses it.',
+  },
+  {
+    id: 'going-deeper',
+    label: 'Going deeper',
+    chat: 'Ask again. Get a new answer that may contradict the last one.',
+    rabbithole: 'Ask for more and the guide grows. Page 06 appears and stays.',
+  },
+]
+
+const compoundingKnownTopics = ['Gaming', 'Cooking', 'Code']
+
+const compoundingSuggestedTopic = 'Bottlenecks'
+
 type ContextTopic = {
   id: string
   label: string
@@ -120,10 +166,10 @@ type ContextTopic = {
   visualSrc: string
 }
 
-const contextQuestion = 'What is a trade-off?'
+const contextQuestion = 'What is a bottleneck?'
 
-const noContextTradeoffAnswer =
-  'A trade-off is when improving one thing usually means giving up something else.'
+const noContextAnswer =
+  'A bottleneck is the one step that limits the whole system, so everything else ends up waiting on it.'
 
 const contextTopics: ContextTopic[] = [
   {
@@ -131,7 +177,7 @@ const contextTopics: ContextTopic[] = [
     label: 'Photography',
     contextLabel: 'Photography',
     contextAnswer:
-      'Think of exposure settings: a wider aperture gives more light and blurrier backgrounds, but less of the scene stays sharp.',
+      'Indoors, your slow kit lens is the bottleneck. A newer body changes nothing while f/5.6 is what keeps starving every shot of light.',
     icon: <CameraAltOutlinedIcon />,
     color: '#008A78',
     tone: brand.mintSoft,
@@ -142,7 +188,7 @@ const contextTopics: ContextTopic[] = [
     label: 'Gaming',
     contextLabel: 'Gaming',
     contextAnswer:
-      'Think of a character build: more damage may mean less defense, less speed, or fewer healing options.',
+      'Your damage is the bottleneck on that boss. Every defence stat you stack is wasted while the fight is a DPS check you cannot clear in time.',
     icon: <SportsEsportsOutlinedIcon />,
     color: '#356BF6',
     tone: '#EAF0FF',
@@ -153,7 +199,7 @@ const contextTopics: ContextTopic[] = [
     label: 'Fitness',
     contextLabel: 'Fitness',
     contextAnswer:
-      'Think of training volume: doing more sets can build more muscle, but it also increases fatigue and recovery needs.',
+      'Your grip gives out before your back does, so your deadlift is capped by your hands. More back volume moves nothing until grip catches up.',
     icon: <FitnessCenterOutlinedIcon />,
     color: '#7A4BC2',
     tone: '#F1ECFF',
@@ -164,7 +210,7 @@ const contextTopics: ContextTopic[] = [
     label: 'Cooking',
     contextLabel: 'Cooking',
     contextAnswer:
-      'Think of heat: higher heat can brown food faster, but it also makes it easier to burn the outside before the inside cooks.',
+      'One pan on one burner is the bottleneck of a dinner for six. Chopping faster just means more bowls queueing for the same burner.',
     icon: <RestaurantOutlinedIcon />,
     color: '#E05AD8',
     tone: '#FFF0FC',
@@ -175,7 +221,7 @@ const contextTopics: ContextTopic[] = [
     label: 'Books',
     contextLabel: 'Books',
     contextAnswer:
-      'Think of pacing: adding more detail can make a world richer, but it can also slow the story down.',
+      'The saggy middle is the bottleneck of the draft. Readers stall there, so polishing the ending does nothing until that stretch moves.',
     icon: <MenuBookOutlinedIcon />,
     color: '#E68000',
     tone: '#FFF4E2',
@@ -186,7 +232,7 @@ const contextTopics: ContextTopic[] = [
     label: 'Investing',
     contextLabel: 'Investing',
     contextAnswer:
-      'Think of risk and return: chasing higher potential gains usually means accepting more uncertainty.',
+      'Early on, how much you can put in each month is the bottleneck. An extra point of return on a small balance is noise next to it.',
     icon: <TrendingUpOutlinedIcon />,
     color: '#7B45C8',
     tone: '#F2ECFF',
@@ -197,7 +243,7 @@ const contextTopics: ContextTopic[] = [
     label: 'Law',
     contextLabel: 'Law',
     contextAnswer:
-      'Think of rights and safety: stronger enforcement may improve security, but it can also limit personal freedom.',
+      'One judge and one courtroom is the bottleneck of the docket. Hiring more clerks does not shorten the queue while every case waits for that room.',
     icon: <AccountBalanceOutlinedIcon />,
     color: '#CC202A',
     tone: '#FFF0F1',
@@ -208,7 +254,7 @@ const contextTopics: ContextTopic[] = [
     label: 'Physics',
     contextLabel: 'Physics',
     contextAnswer:
-      'Think of energy and precision: pushing a system harder can increase output, but it may also create more heat, waste, or instability.',
+      'In a series circuit the largest resistance is the bottleneck. The current everywhere in the loop is set by that single component.',
     icon: <ScienceOutlinedIcon />,
     color: '#D82E2E',
     tone: '#FFF0F0',
@@ -219,7 +265,7 @@ const contextTopics: ContextTopic[] = [
     label: 'Music',
     contextLabel: 'Music',
     contextAnswer:
-      'Think of song arrangement: adding more layers can make the track richer, but too many can make it feel crowded.',
+      'A flat vocal take is the bottleneck of the mix. Tighter drums and a wider reverb cannot rescue a track that the lead is holding back.',
     icon: <MusicNoteOutlinedIcon />,
     color: '#A8790B',
     tone: '#FFF7E1',
@@ -230,7 +276,7 @@ const contextTopics: ContextTopic[] = [
     label: 'Tech',
     contextLabel: 'Tech',
     contextAnswer:
-      'Think of software design: optimizing for speed can make code harder to read, test, or maintain.',
+      'One slow database query is the bottleneck of the page. Adding servers only gives you more machines waiting on the same query.',
     icon: <CodeOutlinedIcon />,
     color: '#154397',
     tone: '#EAF1FF',
@@ -335,8 +381,8 @@ const StudyMeshLanding = () => {
   const navigate = useNavigate()
   const { phraseRef, phraseWraps } = useHeroHeadlineWrapMode()
 
-  const openCreateStudyGuide = () => {
-    navigate('/study-guides?create=1')
+  const openGuestTrial = () => {
+    navigate('/try')
   }
 
   useEffect(() => {
@@ -397,6 +443,28 @@ const StudyMeshLanding = () => {
               textAlign="center"
               sx={{ mx: 'auto' }}
             >
+              <Stack
+                direction="row"
+                spacing={0.9}
+                alignItems="center"
+                sx={{
+                  px: 1.8,
+                  py: 0.7,
+                  borderRadius: 999,
+                  color: '#008A78',
+                  bgcolor: alpha(brand.mint, 0.13),
+                  fontWeight: 800,
+                  fontSize: { xs: '0.78rem', md: '0.84rem' },
+                  lineHeight: 1.25,
+                  textAlign: 'left',
+                }}
+              >
+                <AutoAwesomeIcon sx={{ fontSize: 16, flex: '0 0 auto' }} />
+                <Box component="span">
+                  For people learning five unrelated things at once
+                </Box>
+              </Stack>
+
               <Box
                 data-testid="hero-headline-underline-host"
                 data-underline-mode={phraseWraps ? 'wrapped' : 'full'}
@@ -409,9 +477,9 @@ const StudyMeshLanding = () => {
                     color: brand.ink,
                     fontWeight: 700,
                     fontSize: {
-                      xs: '3.45rem',
-                      sm: '4.55rem',
-                      md: '6.6rem',
+                      xs: '2.9rem',
+                      sm: '3.9rem',
+                      md: '5.3rem',
                     },
                     lineHeight: { xs: 1.04, md: 0.98 },
                     letterSpacing: 0,
@@ -432,7 +500,7 @@ const StudyMeshLanding = () => {
                       WebkitTextFillColor: 'transparent',
                     }}
                   >
-                    Quick guides
+                    {'Explain it with '}
                   </Box>
                   <Box component="span" sx={{ display: 'block' }}>
                     <Box
@@ -441,10 +509,10 @@ const StudyMeshLanding = () => {
                       data-testid="hero-headline-wrap-probe"
                       sx={{ display: 'inline' }}
                     >
-                      that adapt{' '}
+                      something I{' '}
                       <Box
                         component="span"
-                        data-testid="hero-headline-with-you"
+                        data-testid="hero-headline-underline-phrase"
                         sx={{
                           position: 'relative',
                           display: 'inline-block',
@@ -469,7 +537,7 @@ const StudyMeshLanding = () => {
                           },
                         }}
                       >
-                        to you.
+                        already get.
                       </Box>
                     </Box>
                   </Box>
@@ -508,8 +576,9 @@ const StudyMeshLanding = () => {
                   letterSpacing: 0,
                 }}
               >
-                RabbitHole builds quick guides by connecting new concepts to the
-                ideas you already understand.
+                Tell RabbitHole what you already know (gaming, cooking, code,
+                whatever). Every new topic comes back as a guide built on top of
+                it, with quizzes and exercises you can actually practice on.
               </Typography>
 
               <Stack spacing={2.3} alignItems="center" sx={{ pt: 1 }}>
@@ -523,7 +592,7 @@ const StudyMeshLanding = () => {
                     variant="contained"
                     size="large"
                     endIcon={<ArrowForwardIcon />}
-                    onClick={openCreateStudyGuide}
+                    onClick={openGuestTrial}
                     sx={{
                       minHeight: 70,
                       minWidth: { xs: 276, sm: 386 },
@@ -542,7 +611,7 @@ const StudyMeshLanding = () => {
                       '& .MuiButton-endIcon': { ml: 1.1 },
                     }}
                   >
-                    Create a Quick Guide
+                    Try it
                   </Button>
                   <Button
                     href="#knowledge-context"
@@ -586,13 +655,16 @@ const StudyMeshLanding = () => {
                 <Typography
                   variant="overline"
                   sx={{
+                    maxWidth: 640,
                     color: '#7E8AA1',
                     fontWeight: 400,
-                    letterSpacing: '0.28em',
+                    letterSpacing: '0.2em',
+                    lineHeight: 1.8,
                     fontSize: { xs: '0.68rem', sm: '0.78rem' },
                   }}
                 >
-                  Free to start {'\u00b7'} No credit card required
+                  Free to start {'\u00b7'} No credit card required {'\u00b7'} No
+                  account needed to try
                 </Typography>
               </Stack>
 
@@ -603,7 +675,11 @@ const StudyMeshLanding = () => {
 
         <ContextComparisonSection />
 
+        <HonestComparisonSection />
+
         <GrowingGuidesSection />
+
+        <CompoundingSection />
 
         <Box
           sx={{
@@ -623,16 +699,16 @@ const StudyMeshLanding = () => {
                   lineHeight: 1.08,
                 }}
               >
-                Ready to build your Quick Guide?
+                Try it on the thing that keeps bouncing off you.
               </Typography>
               <Typography sx={{ color: brand.muted, fontSize: '1.08rem' }}>
-                Start anywhere. Go as deep as you want.
+                Three guides free, no account. Sign up afterwards to keep them.
               </Typography>
               <Button
                 variant="contained"
                 size="large"
                 endIcon={<ArrowForwardIcon />}
-                onClick={openCreateStudyGuide}
+                onClick={openGuestTrial}
                 sx={{
                   minHeight: 54,
                   px: 4,
@@ -644,7 +720,7 @@ const StudyMeshLanding = () => {
                   '&:hover': { bgcolor: brand.blueDark },
                 }}
               >
-                Create a Quick Guide
+                Try it
               </Button>
             </Stack>
           </Container>
@@ -865,6 +941,430 @@ const GrowingGuidesSection = () => (
         <GrowingGuidesMockup />
       </Box>
     </Container>
+  </Box>
+)
+
+const HonestComparisonSection = () => (
+  <Box
+    sx={{
+      position: 'relative',
+      bgcolor: 'transparent',
+      py: { xs: 5.5, md: 8 },
+      overflow: 'hidden',
+    }}
+  >
+    <Container
+      id="honest-comparison"
+      maxWidth="lg"
+      sx={{ position: 'relative', scrollMarginTop: { xs: 88, md: 104 } }}
+    >
+      <Stack spacing={{ xs: 3, md: 4 }} alignItems="center">
+        <Stack spacing={1.15} alignItems="center" textAlign="center">
+          <Box
+            sx={{
+              px: 2,
+              py: 0.65,
+              borderRadius: 999,
+              color: brand.blueDark,
+              bgcolor: alpha(brand.sky, 0.1),
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              lineHeight: 1,
+              letterSpacing: 0,
+            }}
+          >
+            THE HONEST VERSION
+          </Box>
+          <Typography
+            variant="h2"
+            sx={{
+              maxWidth: 880,
+              color: brand.ink,
+              fontWeight: 800,
+              fontSize: { xs: '2rem', md: '3.05rem' },
+              lineHeight: 1.08,
+              letterSpacing: 0,
+            }}
+          >
+            You already have ChatGPT.
+          </Typography>
+          <Typography
+            sx={{
+              maxWidth: 760,
+              color: '#64719B',
+              fontSize: { xs: '1rem', md: '1.18rem' },
+              lineHeight: 1.58,
+            }}
+          >
+            It wins on speed. RabbitHole wins on everything that comes after.
+          </Typography>
+        </Stack>
+
+        <Box
+          data-testid="landing-comparison"
+          sx={{
+            width: '100%',
+            maxWidth: 1000,
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1.05fr 1fr 1fr' },
+            columnGap: { md: 2 },
+            rowGap: { xs: 2, md: 0 },
+            alignItems: 'stretch',
+            textAlign: 'left',
+          }}
+        >
+          <Box sx={{ display: { xs: 'none', md: 'block' } }} />
+          <ComparisonColumnHeader label="ChatGPT" />
+          <ComparisonColumnHeader label="RabbitHole" highlighted />
+
+          {comparisonRows.map((row) => (
+            <React.Fragment key={row.id}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  pt: { xs: 0, md: 2.2 },
+                  pb: { xs: 1.2, md: 2.2 },
+                  pr: { md: 1.5 },
+                  borderTop: {
+                    xs: 'none',
+                    md: `1px solid ${alpha(brand.line, 0.9)}`,
+                  },
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: brand.ink,
+                    fontWeight: 850,
+                    fontSize: { xs: '1.02rem', md: '1rem' },
+                    lineHeight: 1.35,
+                  }}
+                >
+                  {row.label}
+                </Typography>
+              </Box>
+              <ComparisonCell label="ChatGPT" text={row.chat} />
+              <ComparisonCell
+                label="RabbitHole"
+                text={row.rabbithole}
+                highlighted
+              />
+            </React.Fragment>
+          ))}
+        </Box>
+
+        <Typography
+          data-testid="landing-trigger-line"
+          sx={{
+            maxWidth: 720,
+            px: { xs: 2, md: 3 },
+            py: { xs: 1.6, md: 1.9 },
+            borderRadius: 2,
+            border: `1px solid ${alpha(brand.mint, 0.34)}`,
+            bgcolor: alpha(brand.mint, 0.07),
+            color: brand.ink,
+            fontSize: { xs: '1rem', md: '1.12rem' },
+            fontWeight: 700,
+            lineHeight: 1.55,
+            textAlign: 'center',
+          }}
+        >
+          Use ChatGPT for the thing you'll never look up again. Use RabbitHole
+          for the one you keep looking up.
+        </Typography>
+      </Stack>
+    </Container>
+  </Box>
+)
+
+const ComparisonColumnHeader = ({
+  label,
+  highlighted = false,
+}: {
+  label: string
+  highlighted?: boolean
+}) => (
+  <Box
+    sx={{
+      display: { xs: 'none', md: 'block' },
+      px: 1.8,
+      pb: 1.1,
+    }}
+  >
+    <Typography
+      sx={{
+        color: highlighted ? '#008A78' : '#64719B',
+        fontWeight: 900,
+        fontSize: '0.8rem',
+        lineHeight: 1,
+        letterSpacing: 0,
+        textTransform: 'uppercase',
+      }}
+    >
+      {label}
+    </Typography>
+  </Box>
+)
+
+const ComparisonCell = ({
+  label,
+  text,
+  highlighted = false,
+}: {
+  label: string
+  text: string
+  highlighted?: boolean
+}) => (
+  <Box
+    sx={{
+      px: { xs: 1.6, md: 1.8 },
+      py: { xs: 1.4, md: 2.2 },
+      borderRadius: { xs: 1.6, md: 0 },
+      border: {
+        xs: `1px solid ${alpha(
+          highlighted ? brand.mint : brand.line,
+          highlighted ? 0.42 : 0.9,
+        )}`,
+        md: 'none',
+      },
+      borderTop: {
+        md: `1px solid ${alpha(brand.line, 0.9)}`,
+      },
+      bgcolor: highlighted ? alpha(brand.mint, 0.06) : 'transparent',
+      mb: { xs: 1, md: 0 },
+    }}
+  >
+    <Typography
+      sx={{
+        display: { xs: 'block', md: 'none' },
+        mb: 0.6,
+        color: highlighted ? '#008A78' : '#64719B',
+        fontWeight: 900,
+        fontSize: '0.72rem',
+        lineHeight: 1,
+        letterSpacing: 0,
+        textTransform: 'uppercase',
+      }}
+    >
+      {label}
+    </Typography>
+    <Typography
+      sx={{
+        color: highlighted ? brand.ink : '#5B6680',
+        fontSize: '0.96rem',
+        lineHeight: 1.6,
+      }}
+    >
+      {text}
+    </Typography>
+  </Box>
+)
+
+const CompoundingSection = () => (
+  <Box
+    sx={{
+      position: 'relative',
+      bgcolor: 'transparent',
+      pt: { xs: 5.5, md: 7 },
+      pb: { xs: 4, md: 5 },
+      overflow: 'hidden',
+    }}
+  >
+    <Container
+      id="compounding"
+      maxWidth="lg"
+      sx={{ position: 'relative', scrollMarginTop: { xs: 88, md: 104 } }}
+    >
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+          gap: { xs: 3, md: 5 },
+          alignItems: 'center',
+        }}
+      >
+        <Stack
+          spacing={1.6}
+          alignItems={{ xs: 'center', md: 'flex-start' }}
+          textAlign={{ xs: 'center', md: 'left' }}
+        >
+          <Box
+            sx={{
+              px: 2,
+              py: 0.65,
+              borderRadius: 999,
+              color: '#008A78',
+              bgcolor: alpha(brand.mint, 0.13),
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              lineHeight: 1,
+              letterSpacing: 0,
+            }}
+          >
+            COMPOUNDING
+          </Box>
+          <Typography
+            variant="h2"
+            sx={{
+              maxWidth: 520,
+              color: brand.ink,
+              fontWeight: 800,
+              fontSize: { xs: '2rem', md: '2.6rem' },
+              lineHeight: 1.08,
+              letterSpacing: 0,
+              textWrap: 'balance',
+            }}
+          >
+            What you learn here becomes part of the lens.
+          </Typography>
+          <Typography
+            sx={{
+              maxWidth: 520,
+              color: '#64719B',
+              fontSize: { xs: '1rem', md: '1.14rem' },
+              lineHeight: 1.62,
+            }}
+          >
+            Finish a guide and RabbitHole offers to add that topic to what you
+            already know. Say yes and the next thing you learn gets explained
+            through it too. It is only ever a suggestion. The list stays yours
+            to edit, and nothing is added behind your back.
+          </Typography>
+        </Stack>
+
+        <CompoundingLensPreview />
+      </Box>
+    </Container>
+  </Box>
+)
+
+const CompoundingLensPreview = () => (
+  <Box
+    aria-label="Known topics lens preview"
+    sx={{
+      width: '100%',
+      maxWidth: 460,
+      mx: { xs: 'auto', md: 0 },
+      p: { xs: 2, md: 2.6 },
+      borderRadius: 2,
+      border: `1px solid ${alpha(brand.line, 0.95)}`,
+      bgcolor: alpha('#FFFFFF', 0.96),
+      boxShadow: `0 24px 64px ${alpha(brand.blueDark, 0.1)}`,
+      textAlign: 'left',
+    }}
+  >
+    <Typography
+      sx={{
+        color: '#64719B',
+        fontWeight: 900,
+        fontSize: '0.74rem',
+        lineHeight: 1,
+        letterSpacing: 0,
+        textTransform: 'uppercase',
+        mb: 1.3,
+      }}
+    >
+      What you already know
+    </Typography>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.9 }}>
+      {compoundingKnownTopics.map((topic) => (
+        <Box
+          key={topic}
+          sx={{
+            px: 1.4,
+            py: 0.6,
+            borderRadius: 999,
+            border: `1px solid ${alpha(brand.line, 0.9)}`,
+            bgcolor: alpha(brand.sky, 0.06),
+            color: brand.blueDark,
+            fontWeight: 800,
+            fontSize: '0.88rem',
+          }}
+        >
+          {topic}
+        </Box>
+      ))}
+    </Box>
+
+    <Box
+      sx={{
+        mt: 2,
+        p: { xs: 1.5, md: 1.7 },
+        borderRadius: 1.6,
+        border: `1px solid ${alpha(brand.mint, 0.42)}`,
+        bgcolor: alpha(brand.mint, 0.07),
+      }}
+    >
+      <Stack direction="row" spacing={1.2} alignItems="flex-start">
+        <Box
+          sx={{
+            width: 30,
+            height: 30,
+            flex: '0 0 auto',
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            color: '#008A78',
+            bgcolor: alpha(brand.mint, 0.16),
+            '& svg': { fontSize: 17 },
+          }}
+        >
+          <AutoAwesomeIcon />
+        </Box>
+        <Typography
+          sx={{
+            color: brand.ink,
+            fontWeight: 800,
+            fontSize: '0.95rem',
+            lineHeight: 1.5,
+          }}
+        >
+          You just went through{' '}
+          <Box component="span" sx={{ color: '#008A78' }}>
+            {compoundingSuggestedTopic}
+          </Box>
+          . Add it to what you know?
+        </Typography>
+      </Stack>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 1,
+          mt: 1.3,
+          pl: { xs: 0, sm: 5.4 },
+        }}
+      >
+        <Box
+          aria-hidden="true"
+          sx={{
+            px: 1.6,
+            py: 0.55,
+            borderRadius: 999,
+            bgcolor: '#0BB894',
+            color: '#FFFFFF',
+            fontWeight: 850,
+            fontSize: '0.84rem',
+          }}
+        >
+          Add to what I know
+        </Box>
+        <Box
+          aria-hidden="true"
+          sx={{
+            px: 1.6,
+            py: 0.55,
+            borderRadius: 999,
+            border: `1px solid ${alpha(brand.line, 0.95)}`,
+            color: '#64719B',
+            fontWeight: 850,
+            fontSize: '0.84rem',
+          }}
+        >
+          Not now
+        </Box>
+      </Box>
+    </Box>
   </Box>
 )
 
@@ -1296,18 +1796,18 @@ const ContextComparisonSection = () => {
     updateTopicRowScrollState()
   }, [updateTopicRowScrollState])
 
-  const scrollTopicRowByArrow = useCallback(
-    (direction: -1 | 1) => {
-      const row = topicsRowRef.current
+  const scrollTopicRowByArrow = useCallback((direction: -1 | 1) => {
+    const row = topicsRowRef.current
 
-      if (!row) {
-        return
-      }
+    if (!row) {
+      return
+    }
 
-      row.scrollBy({ left: direction * row.clientWidth * 0.8, behavior: 'smooth' })
-    },
-    [],
-  )
+    row.scrollBy({
+      left: direction * row.clientWidth * 0.8,
+      behavior: 'smooth',
+    })
+  }, [])
 
   const selectTopic = (index: number) => {
     setActiveIndex(index)
@@ -1696,7 +2196,7 @@ const FeaturedContextCard = ({ topic }: { topic: ContextTopic }) => (
         >
           <ContextAnswerPanel
             label="Without context"
-            answer={noContextTradeoffAnswer}
+            answer={noContextAnswer}
           />
           <ContextAnswerPanel
             label={`With ${topic.contextLabel} context`}

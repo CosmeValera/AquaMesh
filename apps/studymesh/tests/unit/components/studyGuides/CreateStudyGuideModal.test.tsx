@@ -481,6 +481,117 @@ describe('CreateStudyGuideModal Study Guide generation', () => {
     ).toHaveTextContent('Broken')
   })
 
+  it('waits for onBeforeGenerate before starting generation', async () => {
+    mockGeminiDashboards(3)
+    let releaseBeforeGenerate: () => void = () => undefined
+    const onBeforeGenerate = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          releaseBeforeGenerate = resolve
+        }),
+    )
+
+    render(
+      <CreateStudyGuideModal
+        open
+        onClose={vi.fn()}
+        onCreatePath={vi.fn()}
+        onBeforeGenerate={onBeforeGenerate}
+      />,
+    )
+
+    fireEvent.change(
+      screen.getByRole('textbox', { name: /what should RabbitHole teach/i }),
+      {
+        target: { value: 'Teach French subjunctive' },
+      },
+    )
+    fireEvent.click(
+      screen.getByRole('button', { name: /generate quick guide/i }),
+    )
+
+    await waitFor(() => expect(onBeforeGenerate).toHaveBeenCalledTimes(1))
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled()
+
+    await act(async () => {
+      releaseBeforeGenerate()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('03 - Lesson 3')).toBeInTheDocument()
+    })
+    expect(vi.mocked(fetch)).toHaveBeenCalled()
+  })
+
+  it('shows a rejected onBeforeGenerate as the modal error and skips generation', async () => {
+    mockGeminiDashboards(3)
+    const onBeforeGenerate = vi
+      .fn()
+      .mockRejectedValue(new Error('Guest session unavailable'))
+
+    render(
+      <CreateStudyGuideModal
+        open
+        onClose={vi.fn()}
+        onCreatePath={vi.fn()}
+        onBeforeGenerate={onBeforeGenerate}
+      />,
+    )
+
+    fireEvent.change(
+      screen.getByRole('textbox', { name: /what should RabbitHole teach/i }),
+      {
+        target: { value: 'Teach French subjunctive' },
+      },
+    )
+    fireEvent.click(
+      screen.getByRole('button', { name: /generate quick guide/i }),
+    )
+
+    expect(
+      await screen.findByText('Guest session unavailable'),
+    ).toBeInTheDocument()
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled()
+  })
+
+  it('reports a rejected onBeforeGenerate through onStatusChange when auto-creating', async () => {
+    mockGeminiDashboards(3)
+    const onStatusChange = vi.fn()
+    const onBeforeGenerate = vi
+      .fn()
+      .mockRejectedValue(new Error('Guest session unavailable'))
+
+    render(
+      <CreateStudyGuideModal
+        open
+        onClose={vi.fn()}
+        onCreatePath={vi.fn()}
+        autoCreateOnGenerate
+        onStatusChange={onStatusChange}
+        onBeforeGenerate={onBeforeGenerate}
+        autoGenerateRequest={{ id: 1, prompt: 'Teach French subjunctive' }}
+      />,
+    )
+
+    await waitFor(() =>
+      expect(onStatusChange).toHaveBeenCalledWith(
+        'error',
+        'Guest session unavailable',
+      ),
+    )
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled()
+  })
+
+  it('generates without an onBeforeGenerate hook', async () => {
+    mockGeminiDashboards(3)
+    await generatePath()
+
+    await waitFor(() => {
+      expect(screen.getByText('03 - Lesson 3')).toBeInTheDocument()
+    })
+    expect(vi.mocked(fetch)).toHaveBeenCalled()
+  })
+
   it('creates Local AI Study Guide dashboards with visible lesson widgets', async () => {
     vi.mocked(readQuickCreateAiSettings).mockReturnValue({
       provider: 'local',

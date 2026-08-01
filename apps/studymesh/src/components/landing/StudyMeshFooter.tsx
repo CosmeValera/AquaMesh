@@ -26,6 +26,7 @@ const footerLinks = [
 ] as const
 
 const startLinks = [
+  ['Try it free', '/try'],
   ['Quick Guides', '/study-guides'],
   ['Sign in', '/login'],
 ] as const
@@ -135,7 +136,8 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 lineHeight: 1.55,
               }}
             >
-              Quick guides that connect new ideas to what you already know.
+              New topics explained through what you already know, kept as guides
+              you can practice on.
             </Typography>
             <Stack
               direction="row"
@@ -269,7 +271,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 lineHeight: 1.25,
               }}
             >
-              Build first, refine with chat.
+              Try it before you sign up.
             </Typography>
             <Typography
               sx={{
@@ -279,11 +281,12 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 lineHeight: 1.5,
               }}
             >
-              Start from a learning goal and let RabbitHole shape the guide.
+              Three free Quick Guides, no account. Create one afterwards to keep
+              them.
             </Typography>
             <Button
               component={RouterLink}
-              to="/study-guides?create=1"
+              to="/try"
               variant="contained"
               endIcon={<ArrowForwardIcon />}
               sx={{
@@ -305,7 +308,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 },
               }}
             >
-              Create a Quick Guide
+              Try it {'—'} no account
             </Button>
           </Stack>
         </Box>

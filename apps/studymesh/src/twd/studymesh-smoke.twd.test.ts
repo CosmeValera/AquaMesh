@@ -138,26 +138,27 @@ describe('RabbitHole TWD landing smoke', () => {
     setLocalStorageEmailAndPassword()
   })
 
-  it('landing sends guests to login', async () => {
+  it('landing sends guests to the free trial', async () => {
     await twd.visit('/', true)
 
-    expect(await screenDom.findByText(/quick guides that adapt to you/i)).to
-      .exist
+    expect(await screenDom.findByText(/explain it with/i)).to.exist
 
     await userEvent.click(
       (
         await screenDom.findAllByRole('button', {
-          name: /create a quick guide/i,
+          name: /try it/i,
         })
       )[0],
     )
 
     await twd.waitFor(() => {
-      expect(window.location.pathname).to.equal('/login')
-      expect(new URLSearchParams(window.location.search).get('redirect')).to.eq(
-        '/study-guides?create=1',
-      )
+      expect(window.location.pathname).to.equal('/try')
     })
+
+    // Stops at the prompt surface: submitting would burn a guest allowance and
+    // run a real hosted generation.
+    expect(await screenDom.findByLabelText(/what do you want to learn/i)).to
+      .exist
   })
 })
 

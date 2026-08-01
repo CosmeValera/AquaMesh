@@ -77,15 +77,19 @@ describe('StudyMeshLanding', () => {
     renderLanding()
 
     expect(
+      screen.getByText(/for people learning five unrelated things at once/i),
+    ).toBeInTheDocument()
+    expect(
       screen.getByRole('heading', {
-        name: /quick guides that adapt to you/i,
+        name: /explain it with something i already get/i,
       }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(
-        /rabbithole builds quick guides by connecting new concepts/i,
-      ),
-    ).toBeInTheDocument()
+      screen.getByText(/tell rabbithole what you already know/i),
+    ).toHaveTextContent(/quizzes and exercises you can actually practice on/i)
+    expect(screen.getByText(/no account needed to try/i)).toHaveTextContent(
+      /free to start/i,
+    )
     expect(screen.getAllByText(/20 sec/i).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/key idea/i).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/60 sec/i).length).toBeGreaterThan(0)
@@ -107,15 +111,15 @@ describe('StudyMeshLanding', () => {
     ).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: /gaming/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /tech/i })).toBeInTheDocument()
-    expect(screen.getAllByText(/what is a trade-off/i).length).toBeGreaterThan(
+    expect(screen.getAllByText(/what is a bottleneck/i).length).toBeGreaterThan(
       0,
     )
     expect(
-      screen.getByText(
-        /improving one thing usually means giving up something else/i,
-      ),
+      screen.getByText(/the one step that limits the whole system/i),
     ).toBeInTheDocument()
-    expect(screen.getByText(/think of exposure settings/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/indoors, your slow kit lens is the bottleneck/i),
+    ).toBeInTheDocument()
     expect(screen.getByText(/with photography context/i)).toBeInTheDocument()
     expect(
       screen.getByRole('link', {
@@ -154,7 +158,9 @@ describe('StudyMeshLanding', () => {
     const footer = screen.getByTestId('studymesh-footer')
     expect(footer).toBeInTheDocument()
     expect(
-      within(footer).getByText(/quick guides that connect new ideas/i),
+      within(footer).getByText(
+        /new topics explained through what you already know/i,
+      ),
     ).toBeInTheDocument()
     expect(
       within(footer).getByRole('link', { name: /knowledge bridge/i }),
@@ -163,15 +169,84 @@ describe('StudyMeshLanding', () => {
       within(footer).getByRole('link', { name: /growing guides/i }),
     ).toHaveAttribute('href', '#growing-guide')
     expect(
-      within(footer).getByRole('link', { name: /create a quick guide/i }),
-    ).toHaveAttribute('href', '/study-guides?create=1')
+      within(footer).getByRole('link', { name: /try it free/i }),
+    ).toHaveAttribute('href', '/try')
+    expect(
+      within(footer).getByRole('link', { name: /no account/i }),
+    ).toHaveAttribute('href', '/try')
+  })
+
+  it('states honestly where a chat assistant wins and when to open RabbitHole', () => {
+    renderLanding()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /you already have chatgpt/i,
+      }),
+    ).toBeInTheDocument()
+
+    const comparison = screen.getByTestId('landing-comparison')
+    expect(
+      within(comparison).getByText(/one answer, right now/i),
+    ).toBeInTheDocument()
+    expect(
+      within(comparison).getByText(/finding it again next week/i),
+    ).toBeInTheDocument()
+    expect(within(comparison).getByText(/practising it/i)).toBeInTheDocument()
+    expect(
+      within(comparison).getByText(/who picks the angle/i),
+    ).toBeInTheDocument()
+    expect(within(comparison).getByText(/going deeper/i)).toBeInTheDocument()
+    expect(
+      within(comparison).getAllByText(/^chatgpt$/i).length,
+    ).toBeGreaterThan(0)
+    expect(
+      within(comparison).getAllByText(/^rabbithole$/i).length,
+    ).toBeGreaterThan(0)
+    expect(
+      within(comparison).getByText(/page 03 is still page 03/i),
+    ).toBeInTheDocument()
+    expect(
+      within(comparison).getByText(
+        /ask for more and the guide grows\. page 06 appears and stays/i,
+      ),
+    ).toBeInTheDocument()
+
+    expect(screen.getByTestId('landing-trigger-line')).toHaveTextContent(
+      /use rabbithole for the one you keep looking up/i,
+    )
+  })
+
+  it('shows the finished topic being suggested for the known-topics lens', () => {
+    renderLanding()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /what you learn here becomes part of the lens/i,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/offers to add that topic to what you already know/i),
+    ).toBeInTheDocument()
+
+    const lens = screen.getByLabelText('Known topics lens preview', {
+      exact: true,
+    })
+    expect(within(lens).getByText(/what you already know/i)).toBeInTheDocument()
+    expect(within(lens).getByText('Cooking')).toBeInTheDocument()
+    expect(within(lens).getByText('Bottlenecks')).toBeInTheDocument()
+    expect(
+      within(lens).getByText(/add it to what you know\?/i),
+    ).toBeInTheDocument()
   })
 
   it('switches knowledge context examples from the landing carousel', () => {
     renderLanding()
 
-    expect(screen.getByText(/think of exposure settings/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/what is a trade-off/i).length).toBeGreaterThan(
+    expect(
+      screen.getByText(/indoors, your slow kit lens is the bottleneck/i),
+    ).toBeInTheDocument()
+    expect(screen.getAllByText(/what is a bottleneck/i).length).toBeGreaterThan(
       0,
     )
 
@@ -181,11 +256,11 @@ describe('StudyMeshLanding', () => {
       'aria-pressed',
       'true',
     )
-    expect(screen.getByText(/think of a character build/i)).toBeInTheDocument()
     expect(
-      screen.getByText(
-        /improving one thing usually means giving up something else/i,
-      ),
+      screen.getByText(/your damage is the bottleneck on that boss/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/the one step that limits the whole system/i),
     ).toBeInTheDocument()
   })
 
@@ -239,9 +314,10 @@ describe('StudyMeshLanding', () => {
         screen.getByTestId('hero-headline-underline-host'),
       ).toHaveAttribute('data-underline-mode', 'full')
     })
+    expect(screen.getByTestId('hero-full-underline')).toBeInTheDocument()
   })
 
-  it('moves the hero underline to to you when the second headline phrase wraps', async () => {
+  it('moves the hero underline to the closing phrase when the second headline phrase wraps', async () => {
     mockHeroWrapProbeLines([100, 158])
     renderLanding()
 
@@ -250,20 +326,16 @@ describe('StudyMeshLanding', () => {
         screen.getByTestId('hero-headline-underline-host'),
       ).toHaveAttribute('data-underline-mode', 'wrapped')
     })
-    expect(screen.getByTestId('hero-headline-with-you')).toHaveTextContent(
-      'to you.',
-    )
+    expect(
+      screen.getByTestId('hero-headline-underline-phrase'),
+    ).toHaveTextContent('already get.')
   })
 
-  it('keeps the quick guide CTA target unchanged', () => {
+  it('sends the guest trial CTA to the no-account try page', () => {
     renderLanding()
 
-    fireEvent.click(
-      screen.getAllByRole('button', { name: /create a quick guide/i })[0],
-    )
+    fireEvent.click(screen.getAllByRole('button', { name: /no account/i })[0])
 
-    expect(screen.getByTestId('location')).toHaveTextContent(
-      '/study-guides?create=1',
-    )
+    expect(screen.getByTestId('location')).toHaveTextContent('/try')
   })
 })

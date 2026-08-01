@@ -53,8 +53,8 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
     return href.startsWith('#') ? `${sectionHrefPrefix}${href}` : href
   }
 
-  const openCreateStudyGuide = () => {
-    navigate('/study-guides?create=1')
+  const openGuestTrial = () => {
+    navigate('/try')
   }
 
   const handleNavClick = (
@@ -176,7 +176,7 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
         <Button
           variant="outlined"
           endIcon={<ArrowForwardIcon />}
-          onClick={openCreateStudyGuide}
+          onClick={openGuestTrial}
           sx={{
             justifySelf: 'end',
             minHeight: { xs: 44, sm: 52 },
@@ -202,10 +202,10 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
           }}
         >
           <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-            Create a Quick Guide
+            Try it
           </Box>
           <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-            Create
+            Try it
           </Box>
         </Button>
       </Container>

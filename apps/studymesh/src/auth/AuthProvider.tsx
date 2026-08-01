@@ -12,6 +12,7 @@ import type { Session, User } from '@supabase/supabase-js'
 import {
   createCloudRepository,
   clearLocalWorkspaceCache,
+  writeWorkspaceCacheOwner,
 } from '../cloud'
 import {
   removeUserAvatar,
@@ -26,6 +27,7 @@ export interface AuthContextValue {
   user: User | null
   session: Session | null
   loading: boolean
+  isAnonymous: boolean
   error?: string
   signInWithGoogle: (redirectTo?: string) => Promise<void>
   signInWithPassword: (email: string, password: string) => Promise<void>
@@ -33,6 +35,12 @@ export interface AuthContextValue {
     email: string,
     password: string,
     options?: { displayName?: string; redirectTo?: string },
+  ) => Promise<void>
+  signInAnonymously: () => Promise<Session>
+  upgradeGuestAccount: (
+    email: string,
+    password: string,
+    displayName?: string,
   ) => Promise<void>
   sendPasswordReset: (email: string, redirectTo?: string) => Promise<void>
   updatePassword: (password: string) => Promise<void>
@@ -68,6 +76,9 @@ const getDisplayName = (user: User) => {
   return metadataName || user.email || 'Student'
 }
 
+export const isAnonymousUser = (user?: User | null) =>
+  user?.is_anonymous === true
+
 const writeLegacyUserData = (user: User | null) => {
   try {
     if (!user) {
@@ -76,11 +87,12 @@ const writeLegacyUserData = (user: User | null) => {
       return
     }
 
+    const guest = isAnonymousUser(user)
     const userData = {
       id: user.id,
-      name: getDisplayName(user),
-      email: user.email,
-      role: 'ADMIN_ROLE',
+      name: guest ? 'Guest' : getDisplayName(user),
+      email: guest ? undefined : user.email,
+      role: guest ? 'GUEST_ROLE' : 'ADMIN_ROLE',
     }
 
     localStorage.setItem('userData', JSON.stringify(userData))
@@ -115,6 +127,63 @@ export const signUpWithEmail = async (
     },
   })
   mapAuthError(error)
+}
+
+export const signInAnonymouslyOnce = async (): Promise<Session> => {
+  requireSupabaseConfig()
+  const { data: current, error: sessionError } =
+    await supabase.auth.getSession()
+  mapAuthError(sessionError)
+
+  if (current?.session) {
+    return current.session
+  }
+
+  const { data, error } = await supabase.auth.signInAnonymously()
+  mapAuthError(error)
+
+  if (!data?.session) {
+    throw new Error('Could not start a guest session.')
+  }
+
+  return data.session
+}
+
+export const upgradeGuestAccount = async (
+  email: string,
+  password: string,
+  displayName?: string,
+) => {
+  requireSupabaseConfig()
+  const { data, error: sessionError } = await supabase.auth.getSession()
+  mapAuthError(sessionError)
+
+  const guestUser = data?.session?.user
+  if (!guestUser || !isAnonymousUser(guestUser)) {
+    throw new Error('Only a guest session can be upgraded to an account.')
+  }
+
+  // Claim the local workspace cache for this id before the account exists, so
+  // the first hydration after the upgrade keeps the guest guide bodies instead
+  // of collapsing them to summaries.
+  writeWorkspaceCacheOwner(guestUser.id)
+
+  const { error } = await supabase.auth.updateUser({
+    email,
+    password,
+    ...(displayName ? { data: { display_name: displayName } } : {}),
+  })
+  mapAuthError(error)
+
+  const { error: refreshError } = await supabase.auth.refreshSession()
+  mapAuthError(refreshError)
+
+  try {
+    // Self-heal only: the database trigger is the primary grant path.
+    await supabase.rpc('claim_guest_upgrade_grant')
+  } catch (grantError) {
+    console.error('Failed to claim guest upgrade rewards', grantError)
+  }
 }
 
 export const signInWithGoogle = async (redirectTo?: string) => {
@@ -227,10 +296,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       user: session?.user || null,
       session,
       loading,
+      isAnonymous: isAnonymousUser(session?.user),
       error,
       signInWithGoogle,
       signInWithPassword: signInWithEmail,
       signUpWithPassword: signUpWithEmail,
+      signInAnonymously: signInAnonymouslyOnce,
+      upgradeGuestAccount,
       sendPasswordReset: resetPassword,
       updatePassword,
       signOut: async () => {
@@ -255,8 +327,14 @@ export const useAuth = () => {
   return context
 }
 
-export const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth()
+export const RequireAuth = ({
+  children,
+  allowAnonymous = false,
+}: {
+  children: React.ReactNode
+  allowAnonymous?: boolean
+}) => {
+  const { user, loading, isAnonymous } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -287,6 +365,10 @@ export const RequireAuth = ({ children }: { children: React.ReactNode }) => {
         replace
       />
     )
+  }
+
+  if (isAnonymous && !allowAnonymous) {
+    return <Navigate to="/try" replace />
   }
 
   return <>{children}</>

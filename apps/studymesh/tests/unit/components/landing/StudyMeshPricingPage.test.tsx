@@ -100,8 +100,8 @@ describe('StudyMeshPricingPage', () => {
       within(footer).getByRole('link', { name: /growing guides/i }),
     ).toHaveAttribute('href', '/#growing-guide')
     expect(
-      within(footer).getByRole('link', { name: /create a quick guide/i }),
-    ).toHaveAttribute('href', '/study-guides?create=1')
+      within(footer).getByRole('link', { name: /try it .* no account/i }),
+    ).toHaveAttribute('href', '/try')
   })
 
   it('keeps fixed pricing colors under dark mode and custom accent', () => {

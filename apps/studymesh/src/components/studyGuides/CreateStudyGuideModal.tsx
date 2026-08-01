@@ -82,6 +82,13 @@ interface CreateStudyGuideModalProps {
     inputSummary: string
   }) => void
   initialPrompt?: string
+  /**
+   * Runs before any generation work starts, so a caller can set up what the
+   * generation depends on (a guest session, for example). Generation is
+   * skipped and the rejection is shown as the modal error when it throws.
+   * Called again on every generate attempt, so it must be idempotent.
+   */
+  onBeforeGenerate?: () => void | Promise<void>
 }
 
 const GEMINI_STUDY_PATH_ESTIMATE_MS = 45 * 1000
@@ -421,6 +428,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
   onStatusChange,
   onDraftMetaChange,
   initialPrompt,
+  onBeforeGenerate,
 }) => {
   const { t } = useInterfaceText()
   const defaultStudyPathPrompt = t('studyGuides.defaultPrompt')
@@ -624,6 +632,21 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
     if (!basePrompt) {
       setError(t('studyGuides.promptPlaceholder'))
       return
+    }
+
+    if (onBeforeGenerate) {
+      try {
+        await onBeforeGenerate()
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : t('studyGuides.generateFailed')
+        setError(message)
+        if (autoCreateOnGenerate) {
+          onStatusChange?.('error', message)
+        }
+
+        return
+      }
     }
 
     const credentials = isStrongAiProvider(effectiveAiProvider)

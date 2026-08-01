@@ -2,18 +2,12 @@ import { useCallback } from 'react'
 
 import { useDashboards } from '../components/Dasboard/DashboardProvider'
 import { DashboardLayout } from '../state/store'
-import { createStudyPathContainerState } from '../components/Dasboard/studyPathContainer'
 import { SAVED_DASHBOARDS_CHANGED_EVENT } from '../components/Dasboard/dashboardStorage'
+import { StudyGuideStorage } from '../studyGuides/storage'
 import {
-  StudyGuideStorage,
-  createStudyGuideRecord,
-} from '../studyGuides/storage'
-import {
-  createQuickCreateDashboardLayout,
-  QuickCreateDashboardLayoutMode,
-} from '../quickCreate'
-import type { StudyGuideQuickStart } from '../state/store'
-import { ComponentData } from '../components/WidgetEditor/types/types'
+  createStudyGuideFromModalPayload,
+  StudyGuideModalPayload,
+} from '../studyGuides/createFromModalPayload'
 import {
   STUDYMESH_GUIDE_STUDY_PATH_ID,
   STUDYMESH_GUIDE_FOLDER_NAME,
@@ -124,66 +118,16 @@ export const useWorkspaceActions = () => {
       folderName = 'Quick Creates',
       openInWorkspace = true,
       quickStart,
-    }: {
-      folderName?: string
-      openInWorkspace?: boolean
-      quickStart?: StudyGuideQuickStart
-      dashboards: Array<{
-        name: string
-        widgets: Array<{
-          name: string
-          components: ComponentData[]
-          category?: string
-          tags?: string[]
-          description?: string
-          version?: string
-          author?: string
-        }>
-        layoutMode?: QuickCreateDashboardLayoutMode
-        folderName?: string
-      }>
-    }) => {
-      const generatedDashboards = dashboards.map((dashboard) => {
-        const now = new Date().toISOString()
-        const embeddedWidgets = dashboard.widgets.map((widget) => ({
-          id: `embedded-widget-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-          name: widget.name,
-          components: widget.components,
-          category: widget.category || 'Quick Create',
-          tags: widget.tags || ['quick-create', 'embedded-generated'],
-          description: widget.description || 'Generated from student notes.',
-          version: widget.version || '1.0',
-          author: widget.author || 'RabbitHole',
-          createdAt: now,
-          updatedAt: now,
-        }))
-        const layout = createQuickCreateDashboardLayout(embeddedWidgets, {
-          mode: dashboard.layoutMode || 'smart',
-        })
-
-        return {
-          id: `quick-create-dashboard-${Date.now()}-${Math.floor(
-            Math.random() * 1000000,
-          )}`,
-          name: dashboard.name,
-          folder:
-            (dashboard.folderName || folderName).trim() || 'Quick Creates',
-          folderColor: '#007C66',
-          layout,
-          description: 'Generated from student notes.',
-          tags: ['quick-create', 'notes'],
-          isPublic: false,
-          createdAt: now,
-          updatedAt: now,
-        }
+    }: StudyGuideModalPayload & { openInWorkspace?: boolean }) => {
+      const {
+        dashboards: generatedDashboards,
+        studyPath,
+        record,
+      } = createStudyGuideFromModalPayload({
+        dashboards,
+        folderName,
+        quickStart,
       })
-      const parsedStudyPath = createStudyPathContainerState(generatedDashboards)
-      const studyPath = parsedStudyPath
-        ? {
-            ...parsedStudyPath,
-            quickStart,
-          }
-        : null
       const savedDashboards = studyPath
         ? generatedDashboards
         : generatedDashboards.map((dashboard) =>
@@ -194,8 +138,8 @@ export const useWorkspaceActions = () => {
             ),
           )
 
-      if (studyPath) {
-        StudyGuideStorage.save(createStudyGuideRecord(studyPath))
+      if (record) {
+        StudyGuideStorage.save(record)
       }
 
       if (openInWorkspace) {

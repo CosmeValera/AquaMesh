@@ -26,7 +26,7 @@ import {
 const LoginPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, loading } = useAuth()
+  const { user, loading, isAnonymous } = useAuth()
   const redirectPath = useMemo(
     () => getRedirectPath(location.search),
     [location.search],
@@ -38,10 +38,12 @@ const LoginPage = () => {
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
-    if (!loading && user) {
+    // A guest keeps the form: bouncing an anonymous session away from it would
+    // make converting to a real account impossible.
+    if (!loading && user && !isAnonymous) {
       navigate(redirectPath, { replace: true })
     }
-  }, [loading, navigate, redirectPath, user])
+  }, [isAnonymous, loading, navigate, redirectPath, user])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()

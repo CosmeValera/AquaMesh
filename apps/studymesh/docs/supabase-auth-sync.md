@@ -7,6 +7,14 @@ This document supports the real-login/cloud-sync implementation. It covers the d
 1. Create a Supabase project on the free tier.
 2. In Auth, enable email/password.
 3. In Auth providers, enable Google OAuth if desired.
+   - Also enable **Allow anonymous sign-ins** under Sign In/Up. The guest trial
+     on `/try` depends on it. Verify the GoTrue version exposes the flag with
+     `select is_anonymous from auth.users limit 1;`.
+   - If **Confirm email** is on, upgrading a guest with
+     `updateUser({ email, password })` sets the password immediately but leaves
+     `is_anonymous` true until the emailed link is clicked. The guest's guides
+     stay safe in the cloud meanwhile, and the grant lands through
+     `on_auth_user_upgraded` or the app's `claim_guest_upgrade_grant()` call.
 4. Configure redirect URLs:
    - Local: `http://localhost:3000/**`
    - Production: the deployed RabbitHole URL
@@ -39,6 +47,14 @@ The SQL creates:
 - `user_study_guides.pinned_at` and `retention_candidate_at`: Study Guide
   retention metadata. The newest pinned guides are kept first, then newest
   unpinned guides, up to 50 total per user.
+- `guest_allowances`: the 3-Quick-Guide trial for anonymous sign-in users, keyed
+  to `auth.users` so clearing browser storage cannot mint a fresh allowance.
+  `upgraded_at` is the single latch that grants the welcome Carrots exactly once
+  when a guest converts to a real account.
+- `guest_ip_usage` and `guest_ip_owners`: per-network daily guest ceilings plus a
+  `__global__` circuit-breaker row. Both are service-role only. The gateway
+  stores an HMAC of the client address, never the address itself. Signed-in
+  accounts are never IP limited.
 - Owner indexes for sync reads.
 - `on delete cascade` constraints from `auth.users` to `profiles`, and from `profiles` to app-owned rows, so deleting an auth user removes that user's profile, dashboards, widgets, widget versions, and workspace state.
 - `on delete cascade` from `user_widgets` to `user_widget_versions`, so deleting a widget removes its version history.
@@ -84,6 +100,40 @@ Required server env vars:
 - `CRON_SECRET` or `PODCAST_CLEANUP_SECRET` for `/api/podcast-audio-cleanup`
   daily cleanup auth
 
+## Guest Trial
+
+Logged-out visitors can create Quick Guides from `/try` without an account. The
+app calls `signInAnonymously()` only when a visitor actually generates, so the
+landing page itself never creates auth users.
+
+Server env vars for `/api/hosted-ai`:
+
+- `GUEST_TRIAL_ENABLED` optional kill switch, defaults to enabled
+- `GUEST_IP_HASH_SECRET` HMAC secret for network hashing. Rotating it resets the
+  per-network daily counters.
+- `GUEST_STUDY_GUIDES_PER_IP_PER_DAY` optional, defaults to `12`
+- `GUEST_ACCOUNTS_PER_IP_PER_DAY` optional, defaults to `5`
+- `GUEST_STUDY_GUIDES_GLOBAL_PER_DAY` optional, defaults to `300`
+- `GUEST_MAX_PROMPT_CHARS` optional, defaults to `4000`
+- `GUEST_MAX_TIMEOUT_MS` optional, defaults to `60000`
+
+Guests may only call `generateWithQuickStart` on the `study-guide` surface. The
+allowance decrement lives in `hosted_ai_begin_usage`, which reads
+`auth.users.is_anonymous` live, so a self-minted anonymous JWT cannot bypass it.
+
+Rollback:
+
+```sql
+drop trigger if exists on_auth_user_upgraded on auth.users;
+drop function if exists public.handle_guest_upgrade();
+drop function if exists public.claim_guest_upgrade_grant();
+drop function if exists public.grant_guest_upgrade_rewards(uuid, text);
+drop function if exists public.guest_ip_reserve_study_guide(text, uuid, integer, integer, integer);
+drop function if exists public.guest_get_allowance(uuid);
+drop function if exists public.guest_purge_stale_accounts(integer, integer);
+-- then restore the pre-guest public.handle_new_user() body
+```
+
 Vercel runs `/api/podcast-audio-cleanup` daily. It refreshes Study Guide
 retention candidates first, deletes expired Study Guide candidates after 30
 days, deletes any MP3s embedded in those guides, then recomputes podcast MP3
@@ -94,6 +144,17 @@ deploy:
 curl -X GET "https://YOUR_DOMAIN/api/podcast-audio-cleanup" \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
 ```
+
+The same run then purges guests who never converted by calling
+`guest_purge_stale_accounts`. It deletes anonymous `auth.users` rows older than
+the retention window whose `guest_allowances.upgraded_at` is still null, so the
+cascade takes their profile, guides, hosted AI account and allowance with them,
+and prunes `guest_ip_usage` and `guest_ip_owners` rows past the same window.
+This stage runs last and its failures are isolated, so a purge error never
+discards the Study Guide or podcast counts from the stages before it. Optional
+env vars: `GUEST_PURGE_BATCH_SIZE` (accounts per run, defaults to `200`) and
+`GUEST_PURGE_RETENTION_DAYS` (defaults to `30`). Anonymous users count toward
+Supabase MAU until they are purged, so keep an eye on the retention window.
 
 ## Local Storage Migration Contract
 
@@ -139,6 +200,10 @@ After install, verify from Supabase SQL editor or app tests:
 - Signed-in user can insert/select/update/delete own `user_dashboards`.
 - Signed-in user can delete own `profiles` row.
 - Signed-in user cannot read or mutate another user's rows.
-- Anonymous user cannot read or write any sync table.
+- The Postgres `anon` role cannot read or write any sync table. Note that
+  Supabase anonymous *sign-in* users are `authenticated`, so they pass the
+  owner-scoped policies for their own rows by design.
+- A guest can select only its own `guest_allowances` row, and neither
+  `guest_ip_usage` nor `guest_ip_owners` from the client.
 - `profiles` row is created on new auth user insert.
 - Avatar object policies only allow paths beginning with the current user id.

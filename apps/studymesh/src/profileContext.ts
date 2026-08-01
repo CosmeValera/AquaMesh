@@ -313,3 +313,103 @@ export const getAllUserKnownTopics = (
     ...(profileContext?.specificKnowledge || []),
     ...(profileContext?.broadKnowledge || []),
   ])
+
+export const isUserKnownTopic = (
+  topic: string,
+  profileContext = readProfileContext(),
+): boolean => {
+  const key = normalizeTopic(topic, USER_KNOWN_TOPIC_MAX_CHARS).toLowerCase()
+  if (!key) {
+    return false
+  }
+
+  return getAllUserKnownTopics(profileContext).some(
+    (known) => known.toLowerCase() === key,
+  )
+}
+
+export const addLearnedTopicToProfileContext = (
+  topic: string,
+  profileContext = readProfileContext(),
+): ProfileContext | null => {
+  const nextTopic = normalizeTopic(topic, USER_KNOWN_TOPIC_MAX_CHARS)
+  if (!nextTopic) {
+    return null
+  }
+
+  const key = nextTopic.toLowerCase()
+  // Newest first: getUserKnownTopics keeps only the leading
+  // USER_KNOWN_TOPICS_MAX_FOR_AI entries, so a topic the user just accepted has
+  // to lead specificKnowledge or a full list would silently drop it.
+  const specificKnowledge = [
+    nextTopic,
+    ...(profileContext?.specificKnowledge || []).filter(
+      (existing) =>
+        normalizeTopic(existing, USER_KNOWN_TOPIC_MAX_CHARS).toLowerCase() !==
+        key,
+    ),
+  ]
+
+  return saveProfileContext({
+    roles: profileContext?.roles || [],
+    broadKnowledge: profileContext?.broadKnowledge || [],
+    specificKnowledge,
+  })
+}
+
+export const LEARNED_TOPIC_PROMPTS_STORAGE_KEY =
+  'studymesh-learned-topic-prompts-v1'
+
+export type LearnedTopicPromptOutcome = 'added' | 'dismissed'
+
+const readLearnedTopicPrompts = (): Record<
+  string,
+  LearnedTopicPromptOutcome
+> => {
+  if (typeof window === 'undefined') {
+    return {}
+  }
+
+  try {
+    const stored = window.localStorage.getItem(
+      LEARNED_TOPIC_PROMPTS_STORAGE_KEY,
+    )
+    const parsed = stored ? JSON.parse(stored) : {}
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {}
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        (entry): entry is [string, LearnedTopicPromptOutcome] =>
+          entry[1] === 'added' || entry[1] === 'dismissed',
+      ),
+    )
+  } catch {
+    return {}
+  }
+}
+
+export const isLearnedTopicPromptResolved = (studyGuideId: string): boolean =>
+  Boolean(studyGuideId) && Boolean(readLearnedTopicPrompts()[studyGuideId])
+
+export const resolveLearnedTopicPrompt = (
+  studyGuideId: string,
+  outcome: LearnedTopicPromptOutcome,
+): void => {
+  if (typeof window === 'undefined' || !studyGuideId) {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(
+      LEARNED_TOPIC_PROMPTS_STORAGE_KEY,
+      JSON.stringify({
+        ...readLearnedTopicPrompts(),
+        [studyGuideId]: outcome,
+      }),
+    )
+  } catch {
+    // Best-effort: a failed write only means the suggestion can be offered again.
+  }
+}

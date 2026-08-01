@@ -24,6 +24,7 @@ import {
 } from './auth'
 import { AuthProvider, RequireAuth } from './auth/AuthProvider'
 import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
+import GuestQuickGuidePage from './components/guest/GuestQuickGuidePage'
 import StudyGuidesPage from './components/studyGuides/StudyGuidesPage'
 import GuideWorkspacePage from './components/studyGuides/GuideWorkspacePage'
 import HostedAiCheckoutReturn from './components/hostedAi/HostedAiCheckoutReturn'
@@ -107,6 +108,7 @@ const AppShell = () => {
                       path="/pricing"
                       element={<StudyMeshPricingPage />}
                     />
+                    <Route path="/try" element={<GuestQuickGuidePage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />
                     <Route
@@ -144,7 +146,7 @@ const AppShell = () => {
                     <Route
                       path="/workspace/:studyGuideId"
                       element={
-                        <RequireAuth>
+                        <RequireAuth allowAnonymous>
                           <GuideWorkspacePage />
                         </RequireAuth>
                       }

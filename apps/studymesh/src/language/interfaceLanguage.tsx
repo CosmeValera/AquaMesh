@@ -477,20 +477,30 @@ const translations = {
     'practice.didntKnowIt': "I didn't know it",
     'demo.pageTitle': 'See a real guide before you sign up',
     'demo.pageSubtitle':
-      'Pick one of five prepared topics. RabbitHole opens the same workspace your own guides use, with no account and nothing to install.',
+      'Pick one of five prepared topics. RabbitHole opens the same workspace your own guides use, including the part that quietly does the work: matching your prompt to something you already understand.',
+    'demo.liveBadge': 'Live demo · no account, nothing to install',
     'demo.promptField': 'Quick Guide prompt',
     'demo.promptPlaceholder':
-      'Pick a topic below to see the prompt that produced its guide.',
-    'demo.promptHelper': 'Prepared sample prompt. Sign up to write your own.',
+      'Pick a topic above to see the prompt that produced its guide.',
+    'demo.promptHelper':
+      'Prepared sample prompt. Sign up to write your own, and your own contexts.',
     'demo.promptLockedLabel': 'Why is this prompt locked?',
-    'demo.chooseTopic': 'Pick a topic',
+    'demo.chooseTopic': 'Pick what you want to learn',
     'demo.chooseTopicHelper':
-      'Five prepared topics. Pick one to see how it gets built.',
-    'demo.skillsTitle': 'What you already know',
+      'Five prepared prompts. Your choice is the only input: everything below reacts to it.',
+    'demo.skillsTitle': 'Your knowledge contexts',
     'demo.skillsHelper':
-      'The sample reader declared these. RabbitHole picks whichever one fits the topic.',
+      'These five are a sample library. In your own account you write them yourself, one line each, for things you genuinely know well. You never pick one per guide.',
+    'demo.autoMatched': 'Auto-matched',
+    'demo.matchedLabel': 'Matched:',
+    'demo.matchPending':
+      'Pick a topic above. RabbitHole matches one of these contexts to it before it writes a single page.',
+    'demo.matchMechanism':
+      'This is the real mechanism, not a demo shortcut: RabbitHole reads your prompt, ranks every context in your library by how well its structure explains the concept, and uses the winner to build the analogies and links inside the guide.',
     'demo.pathTitle': 'What happens when you press create',
-    'demo.lensUsed': 'This guide is explained through:',
+    'demo.pathHelper':
+      'The prompt goes in as written. The matched context rides along as the explanatory frame.',
+    'demo.explainedThrough': 'explained through',
     'demo.createGuide': 'Create guide',
     'demo.generating': 'Generating your guide...',
     'demo.loadingGuide': 'Opening the sample guide...',
@@ -1002,21 +1012,30 @@ const translations = {
     'practice.didntKnowIt': 'No me la sabía',
     'demo.pageTitle': 'Mira una guía real antes de registrarte',
     'demo.pageSubtitle':
-      'Elige uno de los cinco temas preparados. RabbitHole abre el mismo espacio de trabajo que usan tus propias guías, sin cuenta y sin instalar nada.',
+      'Elige uno de los cinco temas preparados. RabbitHole abre el mismo espacio de trabajo que usan tus propias guías, incluida la parte que hace el trabajo en silencio: conectar tu prompt con algo que ya entiendes.',
+    'demo.liveBadge': 'Demo en vivo · sin cuenta, sin instalar nada',
     'demo.promptField': 'Prompt de la guía rápida',
     'demo.promptPlaceholder':
-      'Elige un tema abajo para ver el prompt que generó su guía.',
+      'Elige un tema arriba para ver el prompt que generó su guía.',
     'demo.promptHelper':
-      'Prompt de muestra preparado. Regístrate para escribir el tuyo.',
+      'Prompt de muestra preparado. Regístrate para escribir el tuyo y tus propios contextos.',
     'demo.promptLockedLabel': '¿Por qué está bloqueado este prompt?',
-    'demo.chooseTopic': 'Elige un tema',
+    'demo.chooseTopic': 'Elige qué quieres aprender',
     'demo.chooseTopicHelper':
-      'Cinco temas preparados. Elige uno para ver cómo se construye.',
-    'demo.skillsTitle': 'Lo que ya sabes',
+      'Cinco prompts preparados. Tu elección es la única entrada: todo lo de abajo reacciona a ella.',
+    'demo.skillsTitle': 'Tus contextos de conocimiento',
     'demo.skillsHelper':
-      'El lector de muestra declaró esto. RabbitHole elige el que encaje con el tema.',
+      'Estos cinco son una biblioteca de muestra. En tu cuenta los escribes tú, una línea cada uno, sobre cosas que de verdad conoces bien. Nunca eliges uno por guía.',
+    'demo.autoMatched': 'Emparejado solo',
+    'demo.matchedLabel': 'Emparejado:',
+    'demo.matchPending':
+      'Elige un tema arriba. RabbitHole le empareja uno de estos contextos antes de escribir una sola página.',
+    'demo.matchMechanism':
+      'Este es el mecanismo real, no un atajo de la demo: RabbitHole lee tu prompt, ordena todos los contextos de tu biblioteca según lo bien que su estructura explica el concepto y usa el ganador para construir las analogías y los enlaces dentro de la guía.',
     'demo.pathTitle': 'Qué pasa cuando pulsas crear',
-    'demo.lensUsed': 'Esta guía se explica a través de:',
+    'demo.pathHelper':
+      'El prompt entra tal cual está escrito. El contexto emparejado viaja con él como marco explicativo.',
+    'demo.explainedThrough': 'explicado a través de',
     'demo.createGuide': 'Crear guía',
     'demo.generating': 'Generando tu guía...',
     'demo.loadingGuide': 'Abriendo la guía de muestra...',
@@ -1541,21 +1560,30 @@ const translationOverrides: Record<
     'practice.didntKnowIt': 'Je ne le savais pas',
     'demo.pageTitle': 'Voyez un vrai guide avant de créer un compte',
     'demo.pageSubtitle':
-      'Choisissez un des cinq sujets préparés. RabbitHole ouvre le même espace de travail que vos propres guides, sans compte et sans rien installer.',
+      'Choisissez un des cinq sujets préparés. RabbitHole ouvre le même espace de travail que vos propres guides, y compris la partie qui fait discrètement le travail : relier votre prompt à quelque chose que vous comprenez déjà.',
+    'demo.liveBadge': 'Démo en direct · sans compte, rien à installer',
     'demo.promptField': 'Prompt du guide rapide',
     'demo.promptPlaceholder':
-      'Choisissez un sujet ci-dessous pour voir le prompt qui a produit son guide.',
+      'Choisissez un sujet ci-dessus pour voir le prompt qui a produit son guide.',
     'demo.promptHelper':
-      'Prompt d’exemple préparé. Créez un compte pour écrire le vôtre.',
+      'Prompt d’exemple préparé. Créez un compte pour écrire le vôtre, et vos propres contextes.',
     'demo.promptLockedLabel': 'Pourquoi ce prompt est-il verrouillé ?',
-    'demo.chooseTopic': 'Choisissez un sujet',
+    'demo.chooseTopic': 'Choisissez ce que vous voulez apprendre',
     'demo.chooseTopicHelper':
-      'Cinq sujets préparés. Choisissez-en un pour voir comment il se construit.',
-    'demo.skillsTitle': 'Ce que vous savez déjà',
+      'Cinq prompts préparés. Votre choix est la seule entrée : tout ce qui suit y réagit.',
+    'demo.skillsTitle': 'Vos contextes de connaissance',
     'demo.skillsHelper':
-      'Le lecteur d’exemple a déclaré ceci. RabbitHole choisit celui qui correspond au sujet.',
+      'Ces cinq-là sont une bibliothèque d’exemple. Dans votre compte, c’est vous qui les écrivez, une ligne chacun, pour des choses que vous connaissez vraiment bien. Vous n’en choisissez jamais un par guide.',
+    'demo.autoMatched': 'Relié automatiquement',
+    'demo.matchedLabel': 'Relié à :',
+    'demo.matchPending':
+      'Choisissez un sujet ci-dessus. RabbitHole lui relie un de ces contextes avant d’écrire la moindre page.',
+    'demo.matchMechanism':
+      'C’est le mécanisme réel, pas un raccourci de démo : RabbitHole lit votre prompt, classe chaque contexte de votre bibliothèque selon la façon dont sa structure explique le concept, et utilise le gagnant pour construire les analogies et les liens à l’intérieur du guide.',
     'demo.pathTitle': 'Ce qui se passe quand vous lancez la création',
-    'demo.lensUsed': 'Ce guide est expliqué à partir de :',
+    'demo.pathHelper':
+      'Le prompt part tel quel. Le contexte relié l’accompagne comme cadre d’explication.',
+    'demo.explainedThrough': 'expliqué à partir de',
     'demo.createGuide': 'Créer le guide',
     'demo.generating': 'Création de votre guide...',
     'demo.loadingGuide': 'Ouverture du guide d’exemple...',
@@ -2072,21 +2100,30 @@ const translationOverrides: Record<
     'demo.pageTitle':
       'Sieh dir einen echten Leitfaden an, bevor du dich anmeldest',
     'demo.pageSubtitle':
-      'Wähle eines von fünf vorbereiteten Themen. RabbitHole öffnet denselben Arbeitsbereich wie deine eigenen Leitfäden, ohne Konto und ohne Installation.',
+      'Wähle eines von fünf vorbereiteten Themen. RabbitHole öffnet denselben Arbeitsbereich wie deine eigenen Leitfäden, inklusive dem Teil, der die eigentliche Arbeit still erledigt: deinen Prompt mit etwas zu verbinden, das du schon verstehst.',
+    'demo.liveBadge': 'Live-Demo · kein Konto, nichts zu installieren',
     'demo.promptField': 'Prompt für den Quick Guide',
     'demo.promptPlaceholder':
-      'Wähle unten ein Thema, um den Prompt zu sehen, der seinen Leitfaden erzeugt hat.',
+      'Wähle oben ein Thema, um den Prompt zu sehen, der seinen Leitfaden erzeugt hat.',
     'demo.promptHelper':
-      'Vorbereiteter Beispiel-Prompt. Melde dich an, um deinen eigenen zu schreiben.',
+      'Vorbereiteter Beispiel-Prompt. Melde dich an, um deinen eigenen zu schreiben, und deine eigenen Kontexte.',
     'demo.promptLockedLabel': 'Warum ist dieser Prompt gesperrt?',
-    'demo.chooseTopic': 'Thema wählen',
+    'demo.chooseTopic': 'Wähle, was du lernen willst',
     'demo.chooseTopicHelper':
-      'Fünf vorbereitete Themen. Wähle eines, um zu sehen, wie es entsteht.',
-    'demo.skillsTitle': 'Was du schon kannst',
+      'Fünf vorbereitete Prompts. Deine Wahl ist die einzige Eingabe: alles darunter reagiert darauf.',
+    'demo.skillsTitle': 'Deine Wissenskontexte',
     'demo.skillsHelper':
-      'Der Beispielleser hat das angegeben. RabbitHole wählt das passende aus.',
+      'Diese fünf sind eine Beispielbibliothek. In deinem eigenen Konto schreibst du sie selbst, je eine Zeile, für Dinge, die du wirklich gut kennst. Du wählst nie einen pro Leitfaden aus.',
+    'demo.autoMatched': 'Automatisch zugeordnet',
+    'demo.matchedLabel': 'Zugeordnet:',
+    'demo.matchPending':
+      'Wähle oben ein Thema. RabbitHole ordnet ihm einen dieser Kontexte zu, bevor eine einzige Seite geschrieben wird.',
+    'demo.matchMechanism':
+      'Das ist der echte Mechanismus, keine Demo-Abkürzung: RabbitHole liest deinen Prompt, sortiert jeden Kontext in deiner Bibliothek danach, wie gut seine Struktur das Konzept erklärt, und baut mit dem Gewinner die Analogien und Verknüpfungen im Leitfaden.',
     'demo.pathTitle': 'Was beim Erstellen passiert',
-    'demo.lensUsed': 'Dieser Leitfaden wird erklärt über:',
+    'demo.pathHelper':
+      'Der Prompt geht so ein, wie er dasteht. Der zugeordnete Kontext fährt als Erklärungsrahmen mit.',
+    'demo.explainedThrough': 'erklärt über',
     'demo.createGuide': 'Leitfaden erstellen',
     'demo.generating': 'Dein Leitfaden wird erstellt...',
     'demo.loadingGuide': 'Beispiel-Leitfaden wird geöffnet...',

@@ -15,6 +15,8 @@ const demoGuideFixtures = vi.hoisted(() =>
     slug: `sample-${name}`,
     chipLabel: `Sample ${name}`,
     prompt: `Teach me sample ${name}.`,
+    lensSkill: `Context ${name}`,
+    lensExplanation: `Context ${name} explains sample ${name}.`,
     title: `Sample ${name}`,
     emoji: '🐇',
     load: vi.fn(async () => ({
@@ -25,12 +27,20 @@ const demoGuideFixtures = vi.hoisted(() =>
   })),
 )
 
+const demoSkillFixtures = vi.hoisted(() =>
+  ['one', 'two', 'three', 'four', 'five'].map((name) => ({
+    name: `Context ${name}`,
+    keywords: `Keywords ${name}`,
+  })),
+)
+
 const authState = vi.hoisted(() => ({
   current: { user: null as { is_anonymous?: boolean } | null, loading: false },
 }))
 
 vi.mock('../../../../src/demo/demoGuides', () => ({
   DEMO_GUIDES: demoGuideFixtures,
+  DEMO_PROFILE_SKILLS: demoSkillFixtures,
   findDemoGuide: (slug?: string) =>
     demoGuideFixtures.find((guide) => guide.slug === slug) || null,
 }))
@@ -59,8 +69,8 @@ const renderDemoCreatePage = () =>
     </MemoryRouter>,
   )
 
-const getPromptField = () =>
-  screen.getByLabelText(/quick guide prompt/i) as HTMLTextAreaElement
+const getPromptPanel = () =>
+  screen.getByRole('button', { name: /why is this prompt locked/i })
 
 describe('DemoCreatePage', () => {
   beforeEach(() => {
@@ -71,10 +81,10 @@ describe('DemoCreatePage', () => {
     vi.useRealTimers()
   })
 
-  it('locks the prompt field and offers every prepared topic', () => {
+  it('shows the whole context library and every prepared topic upfront', () => {
     renderDemoCreatePage()
 
-    expect(getPromptField()).toBeDisabled()
+    expect(getPromptPanel()).toHaveTextContent(/pick a topic above/i)
 
     const chipLabels = demoGuideFixtures.map((guide) => guide.chipLabel)
     const chips = screen
@@ -82,9 +92,12 @@ describe('DemoCreatePage', () => {
       .filter((button) => chipLabels.includes(button.textContent || ''))
 
     expect(chips).toHaveLength(5)
-    expect(
-      screen.getByRole('button', { name: /create guide/i }),
-    ).toBeDisabled()
+    demoSkillFixtures.forEach((skill) => {
+      expect(screen.getByText(skill.name)).toBeInTheDocument()
+      expect(screen.getByText(skill.keywords)).toBeInTheDocument()
+    })
+    expect(screen.queryByText(/auto-matched/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /create guide/i })).toBeDisabled()
   })
 
   it('fills the locked prompt and enables Create when a topic is picked', () => {
@@ -92,10 +105,23 @@ describe('DemoCreatePage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Sample two' }))
 
-    expect(getPromptField()).toHaveValue(demoGuideFixtures[1].prompt)
+    expect(getPromptPanel()).toHaveTextContent(demoGuideFixtures[1].prompt)
+    expect(screen.getByRole('button', { name: /create guide/i })).toBeEnabled()
+  })
+
+  it('marks the matched context and explains why it was picked', () => {
+    renderDemoCreatePage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sample four' }))
+
+    expect(screen.getByText(/auto-matched/i)).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /create guide/i }),
-    ).toBeEnabled()
+      screen.getByText(`Matched: ${demoGuideFixtures[3].lensSkill}`),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(demoGuideFixtures[3].lensExplanation),
+    ).toBeInTheDocument()
+    expect(getPromptPanel()).toHaveTextContent(/explained through/i)
   })
 
   it('runs the fake generation and then opens the sample guide', () => {

@@ -68,6 +68,12 @@ export interface DemoGuideSummary {
    * this records the choice so /try can point at it.
    */
   lensSkill: string
+  /**
+   * Why that context explains this topic, in the reader's own terms. Shown on
+   * /try next to the matched context so the bridge is visible before the guide
+   * is even generated.
+   */
+  lensExplanation: string
   title: string
   emoji: string
 }

@@ -81,13 +81,13 @@ test.describe('Landing tutorial page', () => {
     await page.waitForURL('http://localhost:3000/try')
 
     // The prompt is locked on purpose: the demo runs on five prepared prompts,
-    // so a visitor picks a topic instead of writing one. Opening a guide from
-    // here is demo.spec.ts's job.
-    const promptField = page.getByRole('textbox', {
-      name: /quick guide prompt/i,
+    // so a visitor picks a topic instead of writing one, and the prompt shows
+    // as a read-only panel. Opening a guide from here is demo.spec.ts's job.
+    const promptPanel = page.getByRole('button', {
+      name: /why is this prompt locked/i,
     })
-    await expect(promptField).toBeVisible()
-    await expect(promptField).toBeDisabled()
+    await expect(promptPanel).toBeVisible()
+    await expect(promptPanel).toContainText(/pick a topic above/i)
 
     for (const label of demoChipLabels) {
       await expect(

@@ -15,6 +15,7 @@ import {
   USER_KNOWN_TOPICS_MAX_FOR_AI,
 } from '../../../../src/profileContext'
 import { GUIDE_QUIZ_COMPLETED_EVENT } from '../../../../src/studyGuides/mastery'
+import { PENDING_CREATION_PROMPT_KEY } from '../../../../src/studyGuides/nextGuideIdeas'
 
 vi.mock('../../../../src/auth/AuthProvider', () => ({
   useAuth: () => ({ user: null }),
@@ -285,6 +286,28 @@ describe('learned topic lens prompt', () => {
       await screen.findByRole('button', { name: 'Add to what I know' }),
     ).toBeInTheDocument()
     expect(screen.queryByText(/but a narrow one/i)).not.toBeInTheDocument()
+  })
+
+  it('hands a next-guide prompt to the creation panel once the skill is added', async () => {
+    window.sessionStorage.clear()
+    renderWorkspace()
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Add to what I know' }),
+    )
+
+    const deeper = await screen.findByRole('button', {
+      name: /go deeper: review page/i,
+    })
+    expect(
+      screen.getByRole('button', { name: 'Expand on this' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(deeper)
+
+    expect(window.sessionStorage.getItem(PENDING_CREATION_PROMPT_KEY)).toBe(
+      'I already know Bottlenecks. Take me deeper into Review page.',
+    )
   })
 
   it('stays quiet when the topic is already declared knowledge', async () => {

@@ -73,6 +73,11 @@ import {
   type GuideMasteryRecord,
   type GuideQuizCompletedDetail,
 } from '../../studyGuides/mastery'
+import {
+  buildNextGuideIdeas,
+  setPendingCreationPrompt,
+  type NextGuideIdea,
+} from '../../studyGuides/nextGuideIdeas'
 import ExplainItYourWayDialog from './ExplainItYourWayDialog'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 
@@ -737,6 +742,48 @@ const GuideWorkspacePage = () => {
     learnedTopicPrompt?.status === 'added'
       ? theme.palette.success
       : theme.palette.info
+  const nextGuideIdeas = useMemo(
+    () => (record ? buildNextGuideIdeas(record) : []),
+    [record],
+  )
+  const nextStepButtonSx = {
+    textTransform: 'none',
+    fontWeight: 650,
+    borderRadius: 1.5,
+    color: theme.palette.mode === 'dark' ? 'success.light' : 'success.dark',
+    borderColor: alpha(theme.palette.success.main, 0.5),
+    bgcolor: alpha(theme.palette.success.main, 0.08),
+    '&:hover': {
+      bgcolor: alpha(theme.palette.success.main, 0.2),
+      borderColor: alpha(theme.palette.success.main, 0.7),
+    },
+  } as const
+  const nextGuideIdeaLabel = (idea: NextGuideIdea): string =>
+    idea.kind === 'apply'
+      ? t('nextGuides.apply')
+      : `${
+          idea.kind === 'deeper' ? t('nextGuides.deeper') : t('nextGuides.next')
+        }${idea.focus ? `: ${idea.focus}` : ''}`
+
+  /**
+   * The creation panel lives on the workspace route, so the prompt is handed
+   * over rather than generated here. It stays editable, and nothing is spent
+   * until the learner presses generate.
+   */
+  const startNextGuide = (idea: NextGuideIdea) => {
+    const topic = learnedTopicPrompt?.topic || record?.title || ''
+    const known = `${t('nextGuides.alreadyKnow')} ${topic}.`
+    const focus = idea.focus || topic
+    const ask =
+      idea.kind === 'deeper'
+        ? `${t('nextGuides.deeperPrompt')} ${focus}.`
+        : idea.kind === 'apply'
+          ? t('nextGuides.applyPrompt')
+          : `${t('nextGuides.nextPrompt')} ${focus}.`
+
+    setPendingCreationPrompt(`${known} ${ask}`)
+    navigate('/workspace')
+  }
   const learnedTopicPromptAlert = learnedTopicPrompt ? (
     <Alert
       severity={learnedTopicPrompt.status === 'added' ? 'success' : 'info'}
@@ -807,12 +854,49 @@ const GuideWorkspacePage = () => {
       }}
     >
       {learnedTopicPrompt.status === 'added' ? (
-        <Typography variant="body2">
-          <Box component="span" sx={{ fontWeight: 700 }}>
-            {learnedTopicPrompt.topic}
-          </Box>{' '}
-          {t('mastery.added')}
-        </Typography>
+        <Box>
+          <Typography variant="body2">
+            <Box component="span" sx={{ fontWeight: 700 }}>
+              {learnedTopicPrompt.topic}
+            </Box>{' '}
+            {t('mastery.added')}
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', mt: 1 }}
+          >
+            {t('nextGuides.title')}
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 0.75,
+              mt: 0.75,
+            }}
+          >
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => quickCreatePage('improvedNotes')}
+              sx={nextStepButtonSx}
+            >
+              {t('nextGuides.expandOnThis')}
+            </Button>
+            {nextGuideIdeas.map((idea) => (
+              <Button
+                key={idea.id}
+                size="small"
+                variant="outlined"
+                onClick={() => startNextGuide(idea)}
+                sx={nextStepButtonSx}
+              >
+                {nextGuideIdeaLabel(idea)}
+              </Button>
+            ))}
+          </Box>
+        </Box>
       ) : (
         <Typography variant="body2">
           {t('mastery.wentThrough')}{' '}

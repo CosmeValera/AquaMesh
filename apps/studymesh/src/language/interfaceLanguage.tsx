@@ -534,6 +534,18 @@ const translations = {
       'Expand on this turns any idea into its own page, explained through what you already understand. Available on your own guides.',
     'demo.nudgeAlreadyCreated':
       'The sample includes one quiz, one deck and one podcast. Sign up to create as many as you like, on any page.',
+    'mastery.wentThrough': 'You just went through',
+    'mastery.scored': 'You scored',
+    'mastery.onTheQuiz': 'on the guide quiz.',
+    'mastery.addQuestion': 'Add it to what you know?',
+    'mastery.reviewFirst':
+      'That is a pass, but a narrow one. We suggest reviewing a bit more and retaking the quiz first. You can still add it now.',
+    'mastery.notAPassYet':
+      'Not a pass yet. Review the pages and retake the quiz to add it to what you know.',
+    'mastery.added':
+      'is part of what you know now. New guides will explain things through it.',
+    'mastery.addSkill': 'Add to what I know',
+    'mastery.notNow': 'Not now',
   },
   es: {
     'topnav.user': 'Usuario',
@@ -1067,6 +1079,18 @@ const translations = {
       'Ampliar convierte cualquier idea en su propia página, explicada a partir de lo que ya entiendes. Disponible en tus propias guías.',
     'demo.nudgeAlreadyCreated':
       'La muestra incluye un quiz, un mazo y un pódcast. Regístrate para crear todos los que quieras, en cualquier página.',
+    'mastery.wentThrough': 'Acabas de recorrer',
+    'mastery.scored': 'Has sacado un',
+    'mastery.onTheQuiz': 'en el quiz de la guía.',
+    'mastery.addQuestion': '¿Lo añades a lo que ya sabes?',
+    'mastery.reviewFirst':
+      'Está aprobado, pero justo. Te recomendamos repasar un poco más y repetir el quiz antes. Aun así puedes añadirlo ya.',
+    'mastery.notAPassYet':
+      'Todavía no está aprobado. Repasa las páginas y repite el quiz para añadirlo a lo que sabes.',
+    'mastery.added':
+      'ya forma parte de lo que sabes. Las guías nuevas explicarán las cosas a partir de ello.',
+    'mastery.addSkill': 'Añadir a lo que sé',
+    'mastery.notNow': 'Ahora no',
   },
 } as const
 
@@ -1613,6 +1637,18 @@ const translationOverrides: Record<
       'Développer transforme n’importe quelle idée en sa propre page, expliquée à partir de ce que vous comprenez déjà. Disponible sur vos propres guides.',
     'demo.nudgeAlreadyCreated':
       'L’exemple contient un quiz, un jeu de cartes et un podcast. Créez un compte pour en générer autant que vous voulez, sur n’importe quelle page.',
+    'mastery.wentThrough': 'Vous venez de parcourir',
+    'mastery.scored': 'Vous avez obtenu',
+    'mastery.onTheQuiz': 'au quiz du guide.',
+    'mastery.addQuestion': 'L’ajouter à ce que vous connaissez ?',
+    'mastery.reviewFirst':
+      'C’est validé, mais de justesse. Nous conseillons de réviser un peu et de refaire le quiz avant. Vous pouvez quand même l’ajouter maintenant.',
+    'mastery.notAPassYet':
+      'Pas encore validé. Revoyez les pages et refaites le quiz pour l’ajouter à ce que vous connaissez.',
+    'mastery.added':
+      'fait maintenant partie de ce que vous connaissez. Les nouveaux guides expliqueront les choses à partir de là.',
+    'mastery.addSkill': 'Ajouter à ce que je connais',
+    'mastery.notNow': 'Pas maintenant',
   },
   de: {
     'topnav.user': 'Benutzer',
@@ -2151,6 +2187,18 @@ const translationOverrides: Record<
       'Vertiefen macht aus jeder Idee eine eigene Seite, erklärt über das, was du schon verstehst. In deinen eigenen Leitfäden verfügbar.',
     'demo.nudgeAlreadyCreated':
       'Das Beispiel enthält ein Quiz, ein Kartenset und einen Podcast. Registriere dich, um beliebig viele davon zu erstellen, auf jeder Seite.',
+    'mastery.wentThrough': 'Du hast gerade durchgearbeitet:',
+    'mastery.scored': 'Du hast',
+    'mastery.onTheQuiz': 'im Quiz des Leitfadens erreicht.',
+    'mastery.addQuestion': 'Zu deinem Wissen hinzufügen?',
+    'mastery.reviewFirst':
+      'Bestanden, aber knapp. Wir empfehlen, noch etwas zu wiederholen und das Quiz zu wiederholen. Hinzufügen kannst du es trotzdem jetzt.',
+    'mastery.notAPassYet':
+      'Noch nicht bestanden. Geh die Seiten noch einmal durch und wiederhole das Quiz, um es zu deinem Wissen hinzuzufügen.',
+    'mastery.added':
+      'gehört jetzt zu deinem Wissen. Neue Leitfäden erklären Dinge darüber.',
+    'mastery.addSkill': 'Zu meinem Wissen hinzufügen',
+    'mastery.notNow': 'Nicht jetzt',
   },
 }
 

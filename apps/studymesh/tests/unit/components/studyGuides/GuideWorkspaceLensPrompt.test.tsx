@@ -14,6 +14,7 @@ import {
   saveProfileContext,
   USER_KNOWN_TOPICS_MAX_FOR_AI,
 } from '../../../../src/profileContext'
+import { GUIDE_QUIZ_COMPLETED_EVENT } from '../../../../src/studyGuides/mastery'
 
 vi.mock('../../../../src/auth/AuthProvider', () => ({
   useAuth: () => ({ user: null }),
@@ -50,7 +51,24 @@ vi.mock('../../../../src/components/dashboardChat/DashboardChatPanel', () => ({
   default: () => <div data-testid="chat-panel" />,
 }))
 
-const createStoredGuide = (visitedPageKeys: string[]) => ({
+const quizLayout = {
+  type: 'row',
+  children: [{ type: 'tabset', components: [{ type: 'QuizCarouselBlock' }] }],
+}
+
+const completeQuizWith = (scorePercent: number) => {
+  fireEvent(
+    window,
+    new CustomEvent(GUIDE_QUIZ_COMPLETED_EVENT, {
+      detail: { correct: scorePercent, total: 100, scorePercent },
+    }),
+  )
+}
+
+const createStoredGuide = (
+  visitedPageKeys: string[],
+  reviewLayout: Record<string, unknown> = { type: 'row' },
+) => ({
   id: 'guide-1',
   title: 'Bottlenecks',
   folderName: 'Bottlenecks',
@@ -77,7 +95,7 @@ const createStoredGuide = (visitedPageKeys: string[]) => ({
         dashboardIndex: 2,
         dashboardCount: 2,
         folderName: 'Bottlenecks',
-        layout: { type: 'row' },
+        layout: reviewLayout,
         createdBy: 'generator',
         deletable: false,
       },
@@ -215,6 +233,58 @@ describe('learned topic lens prompt', () => {
 
     expect(await screen.findByTestId('study-guide-panel')).toBeInTheDocument()
     expect(screen.queryByText(/you just went through/i)).not.toBeInTheDocument()
+  })
+
+  it('withholds the skill until the guide quiz is passed', async () => {
+    storage[STUDY_GUIDES_STORAGE_KEY] = JSON.stringify([
+      createStoredGuide(['core', 'review'], quizLayout),
+    ])
+
+    renderWorkspace()
+
+    expect(await screen.findByText(/not a pass yet/i)).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Add to what I know' }),
+    ).not.toBeInTheDocument()
+
+    completeQuizWith(40)
+
+    expect(await screen.findByText(/40%/)).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Add to what I know' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('offers the skill from half the quiz, with a review suggestion', async () => {
+    storage[STUDY_GUIDES_STORAGE_KEY] = JSON.stringify([
+      createStoredGuide(['core', 'review'], quizLayout),
+    ])
+
+    renderWorkspace()
+    await screen.findByText(/not a pass yet/i)
+
+    completeQuizWith(55)
+
+    expect(
+      await screen.findByRole('button', { name: 'Add to what I know' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/but a narrow one/i)).toBeInTheDocument()
+  })
+
+  it('drops the review suggestion on a comfortable pass', async () => {
+    storage[STUDY_GUIDES_STORAGE_KEY] = JSON.stringify([
+      createStoredGuide(['core', 'review'], quizLayout),
+    ])
+
+    renderWorkspace()
+    await screen.findByText(/not a pass yet/i)
+
+    completeQuizWith(80)
+
+    expect(
+      await screen.findByRole('button', { name: 'Add to what I know' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/but a narrow one/i)).not.toBeInTheDocument()
   })
 
   it('stays quiet when the topic is already declared knowledge', async () => {

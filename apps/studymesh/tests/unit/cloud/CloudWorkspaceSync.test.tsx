@@ -26,15 +26,6 @@ const cloudSyncMocks = vi.hoisted(() => {
   }
   const useStore = vi.fn((selector) => selector(storeState))
   const subscribe = vi.fn()
-  const authState: {
-    loading: boolean
-    user: {
-      id: string
-      email?: string
-      user_metadata?: Record<string, unknown>
-      is_anonymous?: boolean
-    } | null
-  } = { loading: false, user: null }
 
   return {
     repository,
@@ -42,7 +33,6 @@ const cloudSyncMocks = vi.hoisted(() => {
     storeState,
     useStore,
     subscribe,
-    authState,
     readLocalWorkspaceSnapshot: vi.fn(),
     readWorkspaceCacheOwner: vi.fn(),
     writeLocalWorkspaceSnapshot: vi.fn(),
@@ -64,7 +54,14 @@ vi.mock('../../../src/auth/AuthProvider', () => ({
   STUDYMESH_PROFILE_DELETE_CANCELLED_EVENT:
     'studymesh-profile-delete-cancelled',
   STUDYMESH_PROFILE_DELETE_STARTED_EVENT: 'studymesh-profile-delete-started',
-  useAuth: () => cloudSyncMocks.authState,
+  useAuth: () => ({
+    loading: false,
+    user: {
+      id: 'user-1',
+      email: 'student@example.com',
+      user_metadata: { display_name: 'Student' },
+    },
+  }),
 }))
 
 vi.mock('../../../src/auth/supabaseClient', () => ({
@@ -126,12 +123,6 @@ const emptyLocalSnapshot = {
 describe('CloudWorkspaceSync profile deletion guard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    cloudSyncMocks.authState.loading = false
-    cloudSyncMocks.authState.user = {
-      id: 'user-1',
-      email: 'student@example.com',
-      user_metadata: { display_name: 'Student' },
-    }
     cloudSyncMocks.repository.loadWorkspaceBundle.mockResolvedValue(
       emptyCloudBundle,
     )
@@ -256,75 +247,6 @@ describe('CloudWorkspaceSync profile deletion guard', () => {
           pinnedAt: '2026-07-03T10:00:00.000Z',
         }),
       )
-    })
-  })
-
-  describe('guest sessions', () => {
-    const guestGuide = {
-      id: 'guest-guide-1',
-      title: 'What is a bottleneck?',
-      folderName: 'What is a bottleneck?',
-      studyPath: { dashboards: [] },
-      createdAt: '2026-07-08T00:00:00.000Z',
-      updatedAt: '2026-07-08T00:00:00.000Z',
-    }
-
-    beforeEach(() => {
-      cloudSyncMocks.authState.user = {
-        id: 'guest-1',
-        user_metadata: {},
-        is_anonymous: true,
-      }
-      cloudSyncMocks.readLocalWorkspaceSnapshot.mockReturnValue({
-        ...emptyLocalSnapshot,
-        studyGuides: [guestGuide],
-      })
-    })
-
-    it('never hydrates or uploads a workspace bundle for a guest', async () => {
-      render(<CloudWorkspaceSync />)
-
-      await new Promise((resolve) => window.setTimeout(resolve, 20))
-
-      expect(cloudSyncMocks.subscribe).not.toHaveBeenCalled()
-      expect(
-        cloudSyncMocks.repository.loadWorkspaceBundle,
-      ).not.toHaveBeenCalled()
-      expect(
-        cloudSyncMocks.repository.saveWorkspaceBundle,
-      ).not.toHaveBeenCalled()
-      expect(cloudSyncMocks.repository.upsertProfile).not.toHaveBeenCalled()
-      expect(
-        cloudSyncMocks.repository.seedWelcomeGuideForNewAccount,
-      ).not.toHaveBeenCalled()
-      expect(cloudSyncMocks.writeWorkspaceCacheOwner).not.toHaveBeenCalled()
-      expect(cloudSyncMocks.writeLocalWorkspaceSnapshot).not.toHaveBeenCalled()
-    })
-
-    it('still saves a guest Quick Guide under the anonymous owner', async () => {
-      cloudSyncMocks.studyGuideStorage.getById.mockReturnValue(guestGuide)
-
-      render(<CloudWorkspaceSync />)
-
-      await new Promise((resolve) => window.setTimeout(resolve, 20))
-
-      window.dispatchEvent(
-        new CustomEvent('studyGuidesChanged', {
-          detail: { action: 'save', studyGuideId: guestGuide.id },
-        }),
-      )
-
-      await waitFor(() => {
-        expect(cloudSyncMocks.repository.upsertStudyGuide).toHaveBeenCalledWith(
-          'guest-1',
-          expect.objectContaining({ id: guestGuide.id }),
-        )
-      })
-
-      expect(
-        cloudSyncMocks.repository.saveWorkspaceBundle,
-      ).not.toHaveBeenCalled()
-      expect(cloudSyncMocks.writeWorkspaceCacheOwner).not.toHaveBeenCalled()
     })
   })
 })

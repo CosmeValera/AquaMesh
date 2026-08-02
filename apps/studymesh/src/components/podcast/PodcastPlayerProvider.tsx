@@ -81,6 +81,22 @@ const PodcastPlayerContext = createContext<PodcastPlayerContextValue | null>(
   null,
 )
 
+/** Prefix of the canned demo podcasts shipped as static files under public/. */
+const STATIC_PODCAST_AUDIO_PREFIX = '/demo/audio/'
+
+/**
+ * True only for the demo MP3s, which are already playable URLs and must never
+ * reach the authenticated audio gateway.
+ *
+ * This cannot capture a real podcast: the gateway rejects any audioPath
+ * starting with '/' (api/study-guide-podcast-audio.ts), every real path is
+ * minted as `${userId}/${guideId}/${podcastId}.mp3` (api/hosted-ai.ts), and
+ * this is a literal prefix match, so it also excludes 'http://', 'blob:',
+ * 'data:' and a bare '/'.
+ */
+export const isStaticPodcastAudioPath = (audioPath: string): boolean =>
+  audioPath.startsWith(STATIC_PODCAST_AUDIO_PREFIX)
+
 const createIdlePodcastSession = (
   podcast: HostedAiPodcast,
 ): PodcastSessionSnapshot => ({
@@ -744,15 +760,19 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     (podcast: HostedAiPodcast, providedAudioUrl?: string) => {
       const audioPath = podcast.audioPath
       const currentSession = podcastSessionsRef.current[audioPath]
-      if (providedAudioUrl) {
+      // PodcastPagePlayer never passes providedAudioUrl, so a static demo path
+      // has to short-circuit here or it would ask the gateway to sign a file
+      // that is already served from public/ - and fail, with no session.
+      if (providedAudioUrl || isStaticPodcastAudioPath(audioPath)) {
+        const readyAudioUrl = providedAudioUrl || audioPath
         updatePodcastSession(podcast, (session) => ({
           ...session,
-          audioUrl: providedAudioUrl,
+          audioUrl: readyAudioUrl,
           status: 'ready',
           error: '',
         }))
         if (activePodcastRef.current?.audioPath === audioPath) {
-          setAudioUrl(providedAudioUrl)
+          setAudioUrl(readyAudioUrl)
           setStatus('ready')
           setError('')
         }
@@ -1016,7 +1036,13 @@ export const PodcastPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [activePodcast, audioUrl, podcastSessions, preparePodcastAudio])
 
   useEffect(() => {
-    if (!location.pathname.startsWith('/workspace/')) {
+    // The prepared demo plays podcasts from /try/<slug>, so it has to be on the
+    // same side of this guard as the real workspace.
+    const isGuideRoute =
+      location.pathname.startsWith('/workspace/') ||
+      location.pathname.startsWith('/try/')
+
+    if (!isGuideRoute) {
       stopPodcast()
     }
   }, [location.pathname, stopPodcast])

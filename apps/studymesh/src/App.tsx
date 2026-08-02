@@ -50,14 +50,13 @@ import './variables.scss'
 import './hide-overlay.scss'
 
 // The landing page is the only route a first-time visitor sees, so everything
-// behind it (workspace, guide editor, auth, pricing, guest trial) is split out
-// of the initial bundle instead of being downloaded before the hero paints.
+// behind it (workspace, guide editor, auth, pricing, demo) is split out of the
+// initial bundle instead of being downloaded before the hero paints.
 const StudyMeshPricingPage = lazy(
   () => import('./components/landing/StudyMeshPricingPage'),
 )
-const GuestQuickGuidePage = lazy(
-  () => import('./components/guest/GuestQuickGuidePage'),
-)
+const DemoCreatePage = lazy(() => import('./components/demo/DemoCreatePage'))
+const DemoGuidePage = lazy(() => import('./components/demo/DemoGuidePage'))
 const StudyGuidesPage = lazy(
   () => import('./components/studyGuides/StudyGuidesPage'),
 )
@@ -149,7 +148,11 @@ const AppShell = () => {
                         path="/pricing"
                         element={<StudyMeshPricingPage />}
                       />
-                      <Route path="/try" element={<GuestQuickGuidePage />} />
+                      <Route path="/try" element={<DemoCreatePage />} />
+                      <Route
+                        path="/try/:demoSlug"
+                        element={<DemoGuidePage />}
+                      />
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/signup" element={<SignupPage />} />
                       <Route
@@ -187,7 +190,7 @@ const AppShell = () => {
                       <Route
                         path="/workspace/:studyGuideId"
                         element={
-                          <RequireAuth allowAnonymous>
+                          <RequireAuth>
                             <GuideWorkspacePage />
                           </RequireAuth>
                         }

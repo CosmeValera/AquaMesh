@@ -1,0 +1,1549 @@
+{
+  "bonusPages": [
+    {
+      "actionId": "quiz",
+      "durationMs": 9000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 4,
+        "dashboardIndex": 4,
+        "dashboardKey": "demo-why-you-forget-page-4",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Spaced Repetition",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "The material remains supported by working memory and visible page cues.",
+                                "correctIndex": 0,
+                                "explanation": "Immediate repetition feels fluent because temporary supports are still present, but later recall may be weak.",
+                                "hint": "Consider what supports are available during the original study session.",
+                                "id": "quiz-spaced-repetition-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Temporary supports make recognition feel fluent without proving independent recall.",
+                                    "option": "The material remains supported by working memory and visible page cues."
+                                  },
+                                  {
+                                    "explanation": "Future retrieval remains necessary because memory access can weaken over time.",
+                                    "option": "Reading permanently removes the need for future retrieval."
+                                  },
+                                  {
+                                    "explanation": "Reading can produce learning, but exposure alone may not ensure reliable access.",
+                                    "option": "Repeated reading prevents the brain from forming any memory."
+                                  },
+                                  {
+                                    "explanation": "Repeated exposure usually increases familiarity rather than reducing recognition.",
+                                    "option": "The information becomes harder to recognize while it is being read."
+                                  }
+                                ],
+                                "options": [
+                                  "The material remains supported by working memory and visible page cues.",
+                                  "Reading permanently removes the need for future retrieval.",
+                                  "Repeated reading prevents the brain from forming any memory.",
+                                  "The information becomes harder to recognize while it is being read."
+                                ],
+                                "question": "Why can repeated reading in one study session create misleading confidence?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "Explaining the definition without viewing the source",
+                                "correctIndex": 1,
+                                "explanation": "Recall requires generating or using information without relying on the source or its cues.",
+                                "hint": "Choose the action that requires producing the answer independently.",
+                                "id": "quiz-spaced-repetition-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Highlighting increases exposure but does not require generating the information.",
+                                    "option": "Highlighting the definition again"
+                                  },
+                                  {
+                                    "explanation": "Producing an explanation independently directly tests access to memory.",
+                                    "option": "Explaining the definition without viewing the source"
+                                  },
+                                  {
+                                    "explanation": "Immediate rereading leaves the material active and mainly measures fluency.",
+                                    "option": "Rereading the same paragraph immediately"
+                                  },
+                                  {
+                                    "explanation": "Recognition supplies cues and does not require recalling the answer unaided.",
+                                    "option": "Recognizing the definition when shown among examples"
+                                  }
+                                ],
+                                "options": [
+                                  "Highlighting the definition again",
+                                  "Explaining the definition without viewing the source",
+                                  "Rereading the same paragraph immediately",
+                                  "Recognizing the definition when shown among examples"
+                                ],
+                                "question": "Which activity most directly tests recall rather than familiarity?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "Increase the next review interval",
+                                "correctIndex": 2,
+                                "explanation": "Successful, easy recall supports extending the delay before the next retrieval attempt.",
+                                "hint": "Intervals should respond to performance.",
+                                "id": "quiz-spaced-repetition-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "No method guarantees perfect recall, so future checks remain useful.",
+                                    "option": "Remove the item permanently"
+                                  },
+                                  {
+                                    "explanation": "Immediate repetition adds temporary fluency rather than useful spacing.",
+                                    "option": "Repeat it immediately several times"
+                                  },
+                                  {
+                                    "explanation": "Easy successful retrieval indicates that a longer delay is appropriate.",
+                                    "option": "Increase the next review interval"
+                                  },
+                                  {
+                                    "explanation": "Clear prompts should remain specific so each retrieval has a defined target.",
+                                    "option": "Replace it with a vague prompt"
+                                  }
+                                ],
+                                "options": [
+                                  "Remove the item permanently",
+                                  "Repeat it immediately several times",
+                                  "Increase the next review interval",
+                                  "Replace it with a vague prompt"
+                                ],
+                                "question": "What should happen after a learner recalls an item easily?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "Shorten the interval, review feedback, and try again",
+                                "correctIndex": 1,
+                                "explanation": "An error signals a retrieval gap, so targeted feedback and an earlier retry are appropriate.",
+                                "hint": "Errors call for a shorter return and corrective information.",
+                                "id": "quiz-spaced-repetition-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Skipping leaves the identified retrieval gap unresolved.",
+                                    "option": "Skip the item forever"
+                                  },
+                                  {
+                                    "explanation": "Earlier corrective retrieval helps repair access while the error is still informative.",
+                                    "option": "Shorten the interval, review feedback, and try again"
+                                  },
+                                  {
+                                    "explanation": "Longer delays after failure make access less likely rather than repairing it.",
+                                    "option": "Increase the interval to create more challenge"
+                                  },
+                                  {
+                                    "explanation": "Seeing the answer is weaker evidence than generating it independently.",
+                                    "option": "Count recognition of the answer as successful recall"
+                                  }
+                                ],
+                                "options": [
+                                  "Skip the item forever",
+                                  "Shorten the interval, review feedback, and try again",
+                                  "Increase the interval to create more challenge",
+                                  "Count recognition of the answer as successful recall"
+                                ],
+                                "question": "A learner answers incorrectly. What is the best next step?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "It gives memory repeated opportunities to become more flexible.",
+                                "correctIndex": 2,
+                                "explanation": "Delayed attempts in varied contexts help memory remain accessible beyond one study situation.",
+                                "hint": "Think about what later, changed conditions add to retrieval.",
+                                "id": "quiz-spaced-repetition-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Spacing is valuable partly because later attempts occur under changing conditions.",
+                                    "option": "It keeps every review identical and fully predictable."
+                                  },
+                                  {
+                                    "explanation": "Spacing supports access but cannot replace attention or understanding.",
+                                    "option": "It removes the need to understand the material."
+                                  },
+                                  {
+                                    "explanation": "Varied delayed retrieval strengthens access across more than one context.",
+                                    "option": "It gives memory repeated opportunities to become more flexible."
+                                  },
+                                  {
+                                    "explanation": "Spaced practice improves reliability but cannot eliminate forgetting completely.",
+                                    "option": "It guarantees that forgetting will never occur."
+                                  }
+                                ],
+                                "options": [
+                                  "It keeps every review identical and fully predictable.",
+                                  "It removes the need to understand the material.",
+                                  "It gives memory repeated opportunities to become more flexible.",
+                                  "It guarantees that forgetting will never occur."
+                                ],
+                                "question": "Why does spacing practice across different contexts help memory?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              },
+                              {
+                                "answer": "What is the main role of chlorophyll?",
+                                "correctIndex": 2,
+                                "explanation": "A focused question asks for one identifiable answer instead of an undefined review activity.",
+                                "hint": "Choose the prompt with one specific answer.",
+                                "id": "quiz-spaced-repetition-multiple-choice-6",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The scope is too broad to define one manageable retrieval target.",
+                                    "option": "Review everything about biology"
+                                  },
+                                  {
+                                    "explanation": "This gives an instruction rather than a question requiring a specific response.",
+                                    "option": "Study this chapter carefully"
+                                  },
+                                  {
+                                    "explanation": "The prompt targets one concrete piece of knowledge for retrieval.",
+                                    "option": "What is the main role of chlorophyll?"
+                                  },
+                                  {
+                                    "explanation": "Reviewing notes encourages exposure without requiring independent recall.",
+                                    "option": "Look over the notes again"
+                                  }
+                                ],
+                                "options": [
+                                  "Review everything about biology",
+                                  "Study this chapter carefully",
+                                  "What is the main role of chlorophyll?",
+                                  "Look over the notes again"
+                                ],
+                                "question": "Which prompt best follows the guideline to create a clear retrieval target?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 6"
+                              },
+                              {
+                                "answer": "Isolate and correct the transition, then retest the whole phrase",
+                                "correctIndex": 1,
+                                "explanation": "Specific errors should be isolated, corrected, and then checked in the broader performance.",
+                                "hint": "Use feedback to target the exact weak point.",
+                                "id": "quiz-spaced-repetition-multiple-choice-7",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Untargeted repetition may reinforce the same error without addressing its cause.",
+                                    "option": "Ignore the transition and repeat the entire piece unchanged"
+                                  },
+                                  {
+                                    "explanation": "Focused correction followed by full testing checks both repair and transfer.",
+                                    "option": "Isolate and correct the transition, then retest the whole phrase"
+                                  },
+                                  {
+                                    "explanation": "Constant visual support prevents an honest test of independent access.",
+                                    "option": "Only play the passage while looking at the music"
+                                  },
+                                  {
+                                    "explanation": "A failure provides useful information for targeted improvement rather than abandonment.",
+                                    "option": "Stop practicing the phrase after one failed attempt"
+                                  }
+                                ],
+                                "options": [
+                                  "Ignore the transition and repeat the entire piece unchanged",
+                                  "Isolate and correct the transition, then retest the whole phrase",
+                                  "Only play the passage while looking at the music",
+                                  "Stop practicing the phrase after one failed attempt"
+                                ],
+                                "question": "A musical passage repeatedly fails at the transition into bar three. How should practice respond?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 7"
+                              },
+                              {
+                                "answer": "Expand intervals after success and shorten them after errors.",
+                                "correctIndex": 2,
+                                "explanation": "Effective scheduling adapts the delay to whether access was reliable or fragile.",
+                                "hint": "The schedule should respond to the quality of retrieval.",
+                                "id": "quiz-spaced-repetition-multiple-choice-8",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "A universal fixed schedule ignores differences in retrieval performance.",
+                                    "option": "Use the same fixed interval for every item regardless of results."
+                                  },
+                                  {
+                                    "explanation": "A long unsupported delay can allow access to disappear before correction.",
+                                    "option": "Review each item only once at the end of the month."
+                                  },
+                                  {
+                                    "explanation": "Performance-responsive spacing balances challenge with recoverability.",
+                                    "option": "Expand intervals after success and shorten them after errors."
+                                  },
+                                  {
+                                    "explanation": "Immediate familiarity does not reliably demonstrate durable recall.",
+                                    "option": "Keep all items in immediate repetition until they feel familiar."
+                                  }
+                                ],
+                                "options": [
+                                  "Use the same fixed interval for every item regardless of results.",
+                                  "Review each item only once at the end of the month.",
+                                  "Expand intervals after success and shorten them after errors.",
+                                  "Keep all items in immediate repetition until they feel familiar."
+                                ],
+                                "question": "Which review plan best reflects performance-based scheduling?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 8"
+                              }
+                            ],
+                            "title": "Quiz: Spaced Repetition"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Quiz: Spaced Repetition Quizzes",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Quiz: Spaced Repetition"
+      }
+    },
+    {
+      "actionId": "flashcards",
+      "durationMs": 6000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 5,
+        "dashboardIndex": 5,
+        "dashboardKey": "demo-why-you-forget-page-5",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Spaced Repetition",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "FlashcardCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "Rereading supplies page cues and keeps information active in working memory, creating familiarity rather than proving that you can generate the answer independently.",
+                                "id": "flashcards-spaced-repetition-flashcard-1",
+                                "kind": "qa",
+                                "question": "Why can repeated rereading feel successful even when later recall is weak?",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 1"
+                              },
+                              {
+                                "answer": "Recognition is stronger than recall in that moment; the information looks familiar, but independent access is not yet reliable.",
+                                "id": "flashcards-spaced-repetition-flashcard-2",
+                                "kind": "qa",
+                                "question": "You recognize a definition immediately but cannot explain it with the source closed. What does this reveal?",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 2"
+                              },
+                              {
+                                "answer": "This is massed practice: repeated study concentrated in one sitting, which can produce temporary fluency without stable later retrieval.",
+                                "id": "flashcards-spaced-repetition-flashcard-3",
+                                "kind": "qa",
+                                "question": "A student reviews the same chapter for an hour without testing themselves. What practice pattern is this?",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 3"
+                              },
+                              {
+                                "answer": "Delay removes some temporary study supports, so the result better measures whether the information can be accessed independently.",
+                                "id": "flashcards-spaced-repetition-flashcard-4",
+                                "kind": "qa",
+                                "question": "Why does a delayed test provide more honest evidence than checking an answer immediately?",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 4"
+                              },
+                              {
+                                "answer": "It identifies a retrieval gap and shows that the item needs targeted review; forgetting is useful information rather than proof that study had no effect.",
+                                "id": "flashcards-spaced-repetition-flashcard-5",
+                                "kind": "qa",
+                                "question": "A learner forgets a fact after several days. How should that lapse be interpreted?",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 5"
+                              },
+                              {
+                                "answer": "Manageable effort strengthens access because the learner successfully reconstructs the information after temporary support has faded.",
+                                "id": "flashcards-spaced-repetition-flashcard-6",
+                                "kind": "qa",
+                                "question": "What makes a difficult successful retrieval valuable for future learning?",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 6"
+                              },
+                              {
+                                "answer": "An impossible prompt mainly causes guessing or frustration, while an achievable challenge creates productive retrieval effort and feedback.",
+                                "id": "flashcards-spaced-repetition-flashcard-7",
+                                "kind": "qa",
+                                "question": "Why is a completely impossible prompt less useful than a challenging but solvable one?",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 7"
+                              },
+                              {
+                                "answer": "Wait between reviews, retrieve before checking the answer, and use feedback to correct or refine the memory.",
+                                "id": "flashcards-spaced-repetition-flashcard-8",
+                                "kind": "qa",
+                                "question": "What three actions form the central spaced-repetition loop?",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 8"
+                              },
+                              {
+                                "answer": "Close the source and attempt to answer from memory; checking first measures recognition instead of retrieval.",
+                                "id": "flashcards-spaced-repetition-flashcard-9",
+                                "kind": "qa",
+                                "question": "After studying a small item, what should you do before looking at the answer?",
+                                "sourceLine": 9,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 9"
+                              },
+                              {
+                                "answer": "The interval can grow because successful, reliable recall supports spacing the next attempt farther out.",
+                                "id": "flashcards-spaced-repetition-flashcard-10",
+                                "kind": "qa",
+                                "question": "An item is recalled easily several times. How should its next review generally change?",
+                                "sourceLine": 10,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 10"
+                              },
+                              {
+                                "answer": "Shorten the interval, review the explanation, and try again; persistent errors indicate that access needs more immediate support.",
+                                "id": "flashcards-spaced-repetition-flashcard-11",
+                                "kind": "qa",
+                                "question": "An item is repeatedly missed. What adjustment does the method recommend?",
+                                "sourceLine": 11,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 11"
+                              },
+                              {
+                                "answer": "Later attempts occur in somewhat different contexts, giving memory repeated opportunities to retrieve information beyond the original study setting.",
+                                "id": "flashcards-spaced-repetition-flashcard-12",
+                                "kind": "qa",
+                                "question": "Why does spacing practice across different days help memory become more flexible?",
+                                "sourceLine": 12,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 12"
+                              },
+                              {
+                                "answer": "No. Paper lists, calendars, or flashcard systems can work if they record items, test recall, and schedule meaningful future delays.",
+                                "id": "flashcards-spaced-repetition-flashcard-13",
+                                "kind": "qa",
+                                "question": "Does spaced repetition require a particular application?",
+                                "sourceLine": 13,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 13"
+                              },
+                              {
+                                "answer": "Actual performance should guide timing: successful recall supports longer intervals, while errors call for earlier returns.",
+                                "id": "flashcards-spaced-repetition-flashcard-14",
+                                "kind": "qa",
+                                "question": "What should determine review timing instead of a supposedly perfect universal schedule?",
+                                "sourceLine": 14,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 14"
+                              },
+                              {
+                                "answer": "Immediate performance may reflect temporary fluency and recent cues rather than durable access when starting cold later.",
+                                "id": "flashcards-spaced-repetition-flashcard-15",
+                                "kind": "qa",
+                                "question": "A learner tests a phrase immediately after playing it correctly several times. What limitation does this test have?",
+                                "sourceLine": 15,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 15"
+                              },
+                              {
+                                "answer": "Isolate the transition at bar three, correct it, and then test the whole phrase again to check whether the repair transfers.",
+                                "id": "flashcards-spaced-repetition-flashcard-16",
+                                "kind": "qa",
+                                "question": "In the musical example, a passage fails at bar three during a delayed attempt. What should happen next?",
+                                "sourceLine": 16,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 16"
+                              },
+                              {
+                                "answer": "Changing context exposes whether the skill remains accessible rather than depending on one rehearsed sequence or familiar setup.",
+                                "id": "flashcards-spaced-repetition-flashcard-17",
+                                "kind": "qa",
+                                "question": "Why should a later musical attempt sometimes use a different tempo or follow another phrase?",
+                                "sourceLine": 17,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 17"
+                              },
+                              {
+                                "answer": "Instrument learning includes motor and expressive skills, whereas a factual flashcard usually tests a smaller verbal or conceptual response.",
+                                "id": "flashcards-spaced-repetition-flashcard-18",
+                                "kind": "qa",
+                                "question": "What important difference separates instrument practice from ordinary factual flashcards?",
+                                "sourceLine": 18,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 18"
+                              },
+                              {
+                                "answer": "It asks for one answer or one small action with a specific target, rather than requesting a broad topic review.",
+                                "id": "flashcards-spaced-repetition-flashcard-19",
+                                "kind": "qa",
+                                "question": "What makes a retrieval prompt clear and effective?",
+                                "sourceLine": 19,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 19"
+                              },
+                              {
+                                "answer": "The broad instruction has no single target, while a focused question directs retrieval toward one concrete piece of knowledge.",
+                                "id": "flashcards-spaced-repetition-flashcard-20",
+                                "kind": "qa",
+                                "question": "Why is “Review photosynthesis” a weaker prompt than a focused role question?",
+                                "sourceLine": 20,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 20"
+                              },
+                              {
+                                "answer": "Answer before checking the back by speaking, writing, or briefly explaining the response.",
+                                "id": "flashcards-spaced-repetition-flashcard-21",
+                                "kind": "qa",
+                                "question": "What should a learner do after seeing a flashcard prompt?",
+                                "sourceLine": 21,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 21"
+                              },
+                              {
+                                "answer": "Recognition can occur because the displayed solution looks familiar; it does not show that the learner could produce or use it independently.",
+                                "id": "flashcards-spaced-repetition-flashcard-22",
+                                "kind": "qa",
+                                "question": "Why is merely recognizing the answer on the back weak evidence of learning?",
+                                "sourceLine": 22,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 22"
+                              },
+                              {
+                                "answer": "Include an example when it helps connect the abstract idea to a concrete situation and makes application easier.",
+                                "id": "flashcards-spaced-repetition-flashcard-23",
+                                "kind": "qa",
+                                "question": "When should an abstract definition include an example?",
+                                "sourceLine": 23,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 23"
+                              },
+                              {
+                                "answer": "Add a contrast when two ideas are easily confused, so the learner practices distinguishing their different conditions or uses.",
+                                "id": "flashcards-spaced-repetition-flashcard-24",
+                                "kind": "qa",
+                                "question": "When is a contrast useful in a flashcard?",
+                                "sourceLine": 24,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 24"
+                              },
+                              {
+                                "answer": "Simplify the prompt, repair the explanation, or divide the idea into smaller parts so the retrieval target becomes manageable.",
+                                "id": "flashcards-spaced-repetition-flashcard-25",
+                                "kind": "qa",
+                                "question": "A card is repeatedly missed even after several reviews. What could improve it?",
+                                "sourceLine": 25,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 25"
+                              },
+                              {
+                                "answer": "Review soon enough that the item remains recoverable, but not so soon that the answer is automatic from immediate repetition.",
+                                "id": "flashcards-spaced-repetition-flashcard-26",
+                                "kind": "qa",
+                                "question": "What is the general interval principle for a new item?",
+                                "sourceLine": 26,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 26"
+                              },
+                              {
+                                "answer": "A beginner might review later the same day, the next day, several days later, and then after a longer interval; these are starting points, not fixed rules.",
+                                "id": "flashcards-spaced-repetition-flashcard-27",
+                                "kind": "qa",
+                                "question": "What kind of schedule might a beginner use for a new item?",
+                                "sourceLine": 27,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 27"
+                              },
+                              {
+                                "answer": "Success indicates that access is becoming more reliable, so additional spacing can test and strengthen retention without unnecessary immediate repetition.",
+                                "id": "flashcards-spaced-repetition-flashcard-28",
+                                "kind": "qa",
+                                "question": "Why should successful recall lead to longer intervals?",
+                                "sourceLine": 28,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 28"
+                              },
+                              {
+                                "answer": "The error shows that access is fragile, so an earlier retrieval opportunity can reinforce the corrected memory before it fades further.",
+                                "id": "flashcards-spaced-repetition-flashcard-29",
+                                "kind": "qa",
+                                "question": "Why should an error lead to a shorter return interval?",
+                                "sourceLine": 29,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 29"
+                              },
+                              {
+                                "answer": "Mix new and older passages, begin some attempts without a warm-up, and record the exact transition that breaks.",
+                                "id": "flashcards-spaced-repetition-flashcard-30",
+                                "kind": "qa",
+                                "question": "How can instrument practice apply the same spacing logic?",
+                                "sourceLine": 30,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 30"
+                              },
+                              {
+                                "answer": "It tests whether the skill is accessible from a cold start rather than dependent on immediate preparation.",
+                                "id": "flashcards-spaced-repetition-flashcard-31",
+                                "kind": "qa",
+                                "question": "What does starting a musical passage without a warm-up test?",
+                                "sourceLine": 31,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 31"
+                              },
+                              {
+                                "answer": "They help establish a correct performance, but they should be supplemented with delayed attempts to test whether the skill lasts.",
+                                "id": "flashcards-spaced-repetition-flashcard-32",
+                                "kind": "qa",
+                                "question": "What is the value of slow, accurate musical repetitions?",
+                                "sourceLine": 32,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 32"
+                              },
+                              {
+                                "answer": "Delayed performances reveal whether improvement survives outside the immediate practice moment.",
+                                "id": "flashcards-spaced-repetition-flashcard-33",
+                                "kind": "qa",
+                                "question": "Why should a practice session include occasional delayed performances?",
+                                "sourceLine": 33,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 33"
+                              },
+                              {
+                                "answer": "The learner may lose access entirely, making the next attempt less productive and requiring more reconstruction.",
+                                "id": "flashcards-spaced-repetition-flashcard-34",
+                                "kind": "qa",
+                                "question": "What is one danger of postponing review until forgetting is complete?",
+                                "sourceLine": 34,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 34"
+                              },
+                              {
+                                "answer": "Not every lapse is failure; a lapse identifies where retrieval needs support and can guide the next review.",
+                                "id": "flashcards-spaced-repetition-flashcard-35",
+                                "kind": "qa",
+                                "question": "How should a learner interpret every lapse during spaced practice?",
+                                "sourceLine": 35,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 35"
+                              },
+                              {
+                                "answer": "A large queue may leave too little time to answer carefully and use accurate feedback, making review unsustainable.",
+                                "id": "flashcards-spaced-repetition-flashcard-36",
+                                "kind": "qa",
+                                "question": "Why can adding hundreds of cards reduce study quality?",
+                                "sourceLine": 36,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 36"
+                              },
+                              {
+                                "answer": "Clear cards focus attention on precise retrieval targets and make high-quality feedback more manageable over time.",
+                                "id": "flashcards-spaced-repetition-flashcard-37",
+                                "kind": "qa",
+                                "question": "Why is a smaller collection of clear cards often preferable to many vague cards?",
+                                "sourceLine": 37,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 37"
+                              },
+                              {
+                                "answer": "Note what felt secure, what remained fragile, and when the next retrieval attempt will occur.",
+                                "id": "flashcards-spaced-repetition-flashcard-38",
+                                "kind": "qa",
+                                "question": "What should you record at the end of a spaced-repetition session?",
+                                "sourceLine": 38,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 38"
+                              },
+                              {
+                                "answer": "Scheduling creates opportunities to revisit knowledge, but learning still depends on meaningful use, accurate feedback, and thoughtful practice.",
+                                "id": "flashcards-spaced-repetition-flashcard-39",
+                                "kind": "qa",
+                                "question": "Why does a schedule not replace understanding or attention?",
+                                "sourceLine": 39,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 39"
+                              },
+                              {
+                                "answer": "The learner is skipping retrieval before checking; the attempt must come first so practice measures and strengthens independent access.",
+                                "id": "flashcards-spaced-repetition-flashcard-40",
+                                "kind": "qa",
+                                "question": "A learner checks the back after every prompt without attempting an answer. What core rule is being violated?",
+                                "sourceLine": 40,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 40"
+                              },
+                              {
+                                "answer": "It lacks a single clear target; separating the facts would make each retrieval attempt more focused and interpretable.",
+                                "id": "flashcards-spaced-repetition-flashcard-41",
+                                "kind": "qa",
+                                "question": "A card asks for several unrelated facts at once. What design problem does it have?",
+                                "sourceLine": 41,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 41"
+                              },
+                              {
+                                "answer": "Immediate fluency may improve while flexible access and retention outside that exact practice sequence remain untested.",
+                                "id": "flashcards-spaced-repetition-flashcard-42",
+                                "kind": "qa",
+                                "question": "A student practices only one passage repeatedly and never mixes older material. What weakness might remain hidden?",
+                                "sourceLine": 42,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 42"
+                              },
+                              {
+                                "answer": "They can make future access more reliable by strengthening the route to the information and correcting errors, although perfect recall is never guaranteed.",
+                                "id": "flashcards-spaced-repetition-flashcard-43",
+                                "kind": "qa",
+                                "question": "How do retrieval, feedback, and meaningful use affect later access?",
+                                "sourceLine": 43,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 43"
+                              }
+                            ],
+                            "title": "Flashcards: Spaced Repetition"
+                          },
+                          "type": "FlashcardCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Flashcards: Spaced Repetition Flashcards",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Flashcards: Spaced Repetition"
+      }
+    },
+    {
+      "actionId": "podcast",
+      "durationMs": 13000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 6,
+        "dashboardIndex": 6,
+        "dashboardKey": "demo-why-you-forget-page-6",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Spaced Repetition",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "demo-why-you-forget-podcast-player",
+                          "props": {
+                            "podcast": {
+                              "audioPath": "/demo/audio/why-you-forget.mp3",
+                              "chapters": [
+                                {
+                                  "startTurn": 0,
+                                  "title": "Why Forgetting Happens"
+                                },
+                                {
+                                  "startTurn": 5,
+                                  "title": "What Spaced Repetition Changes"
+                                },
+                                {
+                                  "startTurn": 11,
+                                  "title": "How to Use It Well"
+                                }
+                              ],
+                              "createdAt": "2026-08-02T10:00:00.000Z",
+                              "description": "A focused conversation about why rereading can mislead us, how retrieval and spacing strengthen access, and how to build practical review habits for study and musical practice.",
+                              "id": "demo-why-you-forget-podcast",
+                              "mimeType": "audio/mpeg",
+                              "sourceScope": "studyGuide",
+                              "sourceTitle": "Spaced Repetition",
+                              "title": "Spaced Repetition: Turning Forgetting Into Better Learning",
+                              "transcriptTurns": [
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Welcome to RabbitHole. Today we’re exploring spaced repetition, beginning with a simple truth: forgetting does not mean studying had no effect. It means information becomes harder to retrieve when we do not revisit it. Memory helps only when knowledge is available at the moment we need it."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "That distinction matters because studying can feel successful while recall is weak. When we reread the same material in one sitting, the words remain active in working memory, and the page supplies helpful cues. The material feels fluent, but that fluency may disappear after time passes."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Exactly. Familiarity asks, “Does this look known?” Recall asks, “Can I produce or use it now?” A definition can look obvious during rereading, yet an exam, conversation, or real task may require generating it without the source. Why is that difference so easy to miss?"
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Because recognition feels smooth and effortless. The same issue appears in instrument practice. Playing a passage correctly several times at the end of a session may show immediate fluency, not stable learning. The stronger test comes later, perhaps when starting cold or after a different section."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "A useful mental model is that memory strength changes over time. It is not permanently switched from unknown to known. Without retrieval, access usually becomes less likely. Retrieval, feedback, and meaningful use can make later access more reliable, although no method guarantees perfect recall."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "And forgetting provides useful information. A failed attempt identifies a retrieval gap. A difficult but successful attempt can strengthen future access. The goal is not to remove every struggle; it is to create manageable chances to retrieve before knowledge disappears completely. How does spaced repetition organize those chances?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "It combines three actions: wait between reviews, retrieve before checking the answer, and use feedback to correct the memory. A basic cycle is simple: study a small item, close the source, answer from memory, check the result, and schedule another attempt."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "The interval should respond to performance. If recall is easy, the next interval can grow. If recall is difficult or wrong, shorten the interval and review the explanation before trying again. Spacing also places attempts in different contexts, helping memory become more flexible. Why shouldn’t every learner follow one perfect schedule?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Because performance differs from item to item and person to person. A paper list, calendar, or flashcard system can work if it records items, tests recall, and places future reviews after meaningful delays. The exact schedule should adapt to what you can retrieve, not replace attention or understanding."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Let’s make that concrete with music. Imagine learning a four-bar phrase. On Monday, play it slowly, then perform it without looking at the music. On Tuesday, begin from silence and test it. If it breaks at bar three, isolate that transition, correct it, and test the whole phrase again."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Then on Thursday, try it at a different tempo or after the preceding phrase. Delayed attempts expose weak access, feedback targets errors, and later returns show whether improvement lasts. But the analogy has limits: a musical performance includes motor and expressive skills, while a factual flashcard usually asks for a smaller response."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Good prompts make retrieval clear. Instead of asking, “Review photosynthesis,” ask one focused question, such as, “What is the main role of chlorophyll?” Answer before checking the back. Say it aloud, write it, or explain it briefly, because merely recognizing the solution is weaker evidence. What should happen when an item keeps being missed?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Simplify the prompt, repair the explanation, or divide the idea into smaller parts. Include an example when a definition is abstract, and add a contrast when confusion is likely. Keep related material separate enough that every item has a clear target."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Intervals should also be practical. A beginner might try a new item later the same day, then the next day, several days later, and again after a longer interval. Those are starting points, not rules. Successful recall supports expansion, while errors call for a shorter return."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Avoid two opposite traps: postponing review until forgetting is complete, and treating every lapse as failure. Also avoid adding hundreds of cards without enough time to answer them well. A smaller collection of clear prompts with accurate feedback is often more sustainable than a large queue of vague prompts."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "So end each session with a brief plan: what felt secure, what was fragile, and when the next retrieval will happen. The central takeaway is that learning becomes stronger when you space your attempts, retrieve before checking, respond to performance, and revisit knowledge over time."
+                                }
+                              ]
+                            }
+                          },
+                          "type": "PodcastBlock"
+                        }
+                      ],
+                      "widgetId": "demo-why-you-forget-podcast-widget"
+                    }
+                  },
+                  "name": "Spaced Repetition: Turning Forgetting Into Better Learning",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Spaced Repetition: Turning Forgetting Into Better Learning"
+      }
+    }
+  ],
+  "studyPath": {
+    "contentLanguage": "en",
+    "contentLanguageSource": "detected",
+    "dashboards": [
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 1,
+        "dashboardKey": "demo-why-you-forget-page-1",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Spaced Repetition",
+        "id": "demo-why-you-forget-dashboard-1",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "01-why-forgetting-happens-1-01-why-forgetting-happens-1-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "01 - Why Forgetting Happens",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "01-why-forgetting-happens-1-01-why-forgetting-happens-1-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## The basic problem\n\nForgetting does not mean that studying had no effect. It means that the information becomes harder to retrieve when it is not revisited. Memory is useful only when knowledge can be accessed at the moment it is needed, so recognition during study can create a misleading sense of mastery.\n\nA common pattern is **massed practice**: reading or reviewing the same material repeatedly in one sitting. The material feels fluent because it is still active in working memory and because the page supplies cues. After time passes, those supports disappear, and recall may be surprisingly poor.\n\n## Familiarity is not recall\n\nRereading can make a definition look obvious, but an exam, conversation, or real task may require producing it without the source. This difference explains why highlighting and repeated exposure often feel productive while producing limited long-term access. Familiarity answers, “Does this look known?” Recall answers, “Can I generate or use it now?”\n\nThe same distinction appears in instrument practice. Playing a passage correctly several times at the end of a session may reflect immediate fluency rather than stable learning. The real test comes later, perhaps when the passage begins cold or follows a different section.\n\n## A useful mental model\n\nThink of memory strength as changing over time rather than switching permanently from unknown to known. Without retrieval, access usually becomes less likely. Retrieval, feedback, and meaningful use can make later access more reliable, although no method guarantees perfect recall.\n\nForgetting is therefore information. A failed attempt identifies a retrieval gap, while a difficult but successful attempt can strengthen future access. The goal is not to eliminate every struggle; it is to create manageable opportunities to retrieve before knowledge disappears completely.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 1,
+                            "studyPathDashboardKey": "demo-why-you-forget-page-1",
+                            "studyPathDashboardName": "01 - Why Forgetting Happens",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Spaced Repetition",
+                            "studyPathId": "demo-why-you-forget",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Spaced Repetition",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "01-why-forgetting-happens-1-01-why-forgetting-happens-1-source"
+                    }
+                  },
+                  "name": "01 - Why Forgetting Happens Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "01 - Why Forgetting Happens",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 2,
+        "dashboardKey": "demo-why-you-forget-page-2",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Spaced Repetition",
+        "id": "demo-why-you-forget-dashboard-2",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "02-what-spaced-repetition-changes-2-02-what-spaced-repetition-changes-2-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "02 - What Spaced Repetition Changes",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "02-what-spaced-repetition-changes-2-02-what-spaced-repetition-changes-2-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## The central loop\n\nSpaced repetition combines three actions: wait between reviews, retrieve before checking the answer, and use feedback to correct the memory. The delay matters because it removes some of the temporary support from the original study session. The attempt therefore measures access more honestly and can strengthen the route to the information.\n\nA simple cycle is: study a small item, close the source, answer from memory, check the result, and schedule another attempt. If recall is easy, the next interval can grow. If recall is difficult or wrong, shorten the interval and review the explanation before trying again.\n\n## Why spacing helps\n\nSpacing prevents one long session from concentrating all practice at the same time. Each later attempt occurs in a slightly different context, which gives memory more chances to become flexible. The effort involved in retrieval is useful when it remains achievable; a completely impossible prompt mainly produces guessing or frustration.\n\nSpaced repetition does not require a particular app. A paper list, calendar, or flashcard system can work if it records items, tests recall, and places future reviews after meaningful delays. The exact schedule should respond to performance rather than follow a supposedly perfect universal formula.\n\n## A musical example\n\nSuppose you are learning a four-bar phrase. On Monday, play it slowly, then perform it without looking at the music. On Tuesday, begin from silence and test the phrase. If it breaks at bar three, isolate that transition, correct it, and test the whole phrase again. On Thursday, try it in a different tempo or after the preceding phrase.\n\nThe musical analogy captures the logic: delayed attempts expose weak access, feedback targets errors, and later returns confirm whether improvement lasts. However, factual flashcards usually test a smaller response than a full performance, so instrument practice is a helpful analogy rather than an identical process.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 2,
+                            "studyPathDashboardKey": "demo-why-you-forget-page-2",
+                            "studyPathDashboardName": "02 - What Spaced Repetition Changes",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Spaced Repetition",
+                            "studyPathId": "demo-why-you-forget",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Spaced Repetition",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "02-what-spaced-repetition-changes-2-02-what-spaced-repetition-changes-2-source"
+                    }
+                  },
+                  "name": "02 - What Spaced Repetition Changes Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            },
+            {
+              "active": false,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "02-what-spaced-repetition-changes-2-02-what-spaced-repetition-changes-2-1-knowledge-bridge-2-a-practice-room-bridge-note",
+                          "props": {
+                            "__blockType": "StudyNoteBlock",
+                            "contextBridge": true,
+                            "suggestedTypes": [],
+                            "text": "A difficult musical passage often improves when you practise it briefly, wait, and then attempt it again without looking at the notes. That delayed attempt is retrieval practice. The caveat is that instrument learning includes motor and expressive skills, so a flashcard cannot represent every part of performance.",
+                            "title": "A practice-room bridge"
+                          },
+                          "type": "StudyNoteBlock"
+                        }
+                      ],
+                      "widgetId": "02-what-spaced-repetition-changes-2-02-what-spaced-repetition-changes-2-1"
+                    }
+                  },
+                  "name": "A practice-room bridge",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "02 - What Spaced Repetition Changes",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 3,
+        "dashboardKey": "demo-why-you-forget-page-3",
+        "dashboardPurpose": "finalReview",
+        "deletable": false,
+        "folderName": "Spaced Repetition",
+        "id": "demo-why-you-forget-dashboard-3",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-how-to-use-it-well-3-03-how-to-use-it-well-3-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "03 - How to Use It Well",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "03-how-to-use-it-well-3-03-how-to-use-it-well-3-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## Make retrieval clear\n\nCreate prompts that ask for one answer or one small action. Instead of “Review photosynthesis,” ask, “What is the main role of chlorophyll?” After seeing the prompt, answer before checking the back. Say the answer aloud, write it, or explain it briefly; merely recognizing the solution is weaker evidence.\n\nKeep related material separate enough that each item has a clear target. Include an example when a definition is abstract, and add a contrast when confusion is likely. If an answer is repeatedly missed, simplify the prompt, repair the explanation, or divide the idea into smaller parts.\n\n## Choose intervals by performance\n\nReview soon enough that an item is still recoverable, but not so soon that the answer is automatic from immediate repetition. A beginner might try a new item later the same day, then the next day, several days later, and again after a longer interval. These are starting points, not rules; successful recall supports expansion, while errors call for a shorter return.\n\nInstrument practice can follow the same pattern. Mix a new passage with older passages, start some attempts without a warm-up, and record the exact transition that fails. Slow, accurate repetitions are useful, but occasional delayed performances show whether the skill survives outside the practice moment.\n\n## Avoid common traps\n\nDo not postpone all review until forgetting is complete, and do not treat every lapse as failure. Do not add hundreds of cards without time to answer them well. A smaller collection of clear prompts with accurate feedback is usually more sustainable than a large queue of vague prompts.\n\nEnd each session with a brief plan: what was secure, what was fragile, and when the next retrieval will occur. Spaced repetition works because learning is revisited over time, not because a schedule replaces attention, understanding, or practice quality.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 3,
+                            "studyPathDashboardKey": "demo-why-you-forget-page-3",
+                            "studyPathDashboardName": "03 - How to Use It Well",
+                            "studyPathDashboardPurpose": "finalReview",
+                            "studyPathFolderName": "Spaced Repetition",
+                            "studyPathId": "demo-why-you-forget",
+                            "studyPathLayoutReason": "Final Study Guide page includes one source-grounded quiz.",
+                            "studyPathPracticeType": "quiz",
+                            "studyPathTitle": "Spaced Repetition",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "03-how-to-use-it-well-3-03-how-to-use-it-well-3-source"
+                    }
+                  },
+                  "name": "03 - How to Use It Well Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            },
+            {
+              "active": false,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-how-to-use-it-well-3-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "Isolate the transition, correct it, then retest the whole phrase later",
+                                "correctIndex": 1,
+                                "explanation": "Spaced practice uses errors as information: target the weak transition, then check whether the correction transfers to the complete phrase.",
+                                "hint": "Applying feedback to target a retrieval gap",
+                                "id": "study-guide-3-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Spaced practice uses errors as information: target the weak transition, then check whether the correction transfers to the complete phrase.",
+                                    "option": "Isolate the transition, correct it, then retest the whole phrase later"
+                                  },
+                                  {
+                                    "explanation": "This says \"Play the entire phrase repeatedly at full speed without stopping\", but the answer should focus on \"Isolate the transition, correct it, then retest the whole phrase la...",
+                                    "option": "Play the entire phrase repeatedly at full speed without stopping"
+                                  },
+                                  {
+                                    "explanation": "This says \"Stop practising the phrase because the failure shows it cannot be l...\", but the answer should focus on \"Isolate the transition, correct it, then retest the whole phr...",
+                                    "option": "Stop practising the phrase because the failure shows it cannot be learned"
+                                  }
+                                ],
+                                "options": [
+                                  "Play the entire phrase repeatedly at full speed without stopping",
+                                  "Isolate the transition, correct it, then retest the whole phrase later",
+                                  "Stop practising the phrase because the failure shows it cannot be learned"
+                                ],
+                                "question": "A four-bar phrase consistently breaks at the transition into bar three during delayed practice. What is the best next step?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "Study a small item, answer without looking, check feedback, and schedule a later attempt",
+                                "correctIndex": 2,
+                                "explanation": "The loop requires a delay, active retrieval before checking, corrective feedback, and another planned retrieval.",
+                                "hint": "Selecting an effective spaced-repetition procedure",
+                                "id": "study-guide-3-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The loop requires a delay, active retrieval before checking, corrective feedback, and another planned retrieval.",
+                                    "option": "Study a small item, answer without looking, check feedback, and schedule a later attempt"
+                                  },
+                                  {
+                                    "explanation": "This says \"Wait until every detail is completely forgotten before trying to re...\", but the answer should focus on \"Study a small item, answer without looking, check feedback, a...",
+                                    "option": "Wait until every detail is completely forgotten before trying to recall it"
+                                  },
+                                  {
+                                    "explanation": "This says \"Read a chapter repeatedly in one sitting and move on once it feels...\", but the answer should focus on \"Study a small item, answer without looking, check feedback, an...",
+                                    "option": "Read a chapter repeatedly in one sitting and move on once it feels familiar"
+                                  }
+                                ],
+                                "options": [
+                                  "Wait until every detail is completely forgotten before trying to recall it",
+                                  "Read a chapter repeatedly in one sitting and move on once it feels familiar",
+                                  "Study a small item, answer without looking, check feedback, and schedule a later attempt"
+                                ],
+                                "question": "Which study plan best applies the central spaced-repetition loop?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "Increase the interval because successful, achievable retrieval supports expansion",
+                                "correctIndex": 0,
+                                "explanation": "A difficult but successful retrieval can strengthen access, so the interval can usually grow while remaining responsive to future performance.",
+                                "hint": "Adjusting review intervals based on performance",
+                                "id": "study-guide-3-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Delete the item because one successful answer proves it is permanen...\", but the answer should focus on \"Increase the interval because successful, achievable retrieva...",
+                                    "option": "Delete the item because one successful answer proves it is permanently mastered"
+                                  },
+                                  {
+                                    "explanation": "A difficult but successful retrieval can strengthen access, so the interval can usually grow while remaining responsive to future performance.",
+                                    "option": "Increase the interval because successful, achievable retrieval supports expansion"
+                                  },
+                                  {
+                                    "explanation": "This says \"Reset the item to immediate repetition because effort means learnin...\", but the answer should focus on \"Increase the interval because successful, achievable retrieva...",
+                                    "option": "Reset the item to immediate repetition because effort means learning failed"
+                                  }
+                                ],
+                                "options": [
+                                  "Increase the interval because successful, achievable retrieval supports expansion",
+                                  "Delete the item because one successful answer proves it is permanently mastered",
+                                  "Reset the item to immediate repetition because effort means learning failed"
+                                ],
+                                "question": "You answer a flashcard correctly after a meaningful delay with some effort. How should the next review usually change?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "Keep a smaller set of clear prompts with accurate feedback and sustainable reviews",
+                                "correctIndex": 2,
+                                "explanation": "Clear, manageable prompts support meaningful retrieval; an oversized or vague queue undermines feedback and consistency.",
+                                "hint": "Evaluating sustainable study-system design",
+                                "id": "study-guide-3-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Replace recall with highlighting so the queue can be completed faster\", but the answer should focus on \"Keep a smaller set of clear prompts with accurate feedback and...",
+                                    "option": "Replace recall with highlighting so the queue can be completed faster"
+                                  },
+                                  {
+                                    "explanation": "This says \"Add even more cards so every possible detail is represented\", but the answer should focus on \"Keep a smaller set of clear prompts with accurate feedback and sust...\".",
+                                    "option": "Add even more cards so every possible detail is represented"
+                                  },
+                                  {
+                                    "explanation": "Clear, manageable prompts support meaningful retrieval; an oversized or vague queue undermines feedback and consistency.",
+                                    "option": "Keep a smaller set of clear prompts with accurate feedback and sustainable reviews"
+                                  }
+                                ],
+                                "options": [
+                                  "Replace recall with highlighting so the queue can be completed faster",
+                                  "Add even more cards so every possible detail is represented",
+                                  "Keep a smaller set of clear prompts with accurate feedback and sustainable reviews"
+                                ],
+                                "question": "A learner creates 500 vague cards but rarely has enough time to answer them carefully. Which improvement is most consistent with the guide?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "Both involve delayed retrieval and feedback, but musical performance also includes coordination, timing, and expression",
+                                "correctIndex": 2,
+                                "explanation": "The shared logic is delayed testing, error correction, and repeated access, but musical performance includes motor and expressive components that a flashcard may not capture.",
+                                "hint": "Transferring a principle while recognizing limits of an analogy",
+                                "id": "study-guide-3-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The shared logic is delayed testing, error correction, and repeated access, but musical performance includes motor and expressive components that a flashcard may not capture.",
+                                    "option": "Both involve delayed retrieval and feedback, but musical performance also includes coordination, timing, and expression"
+                                  },
+                                  {
+                                    "explanation": "This says \"The analogy is exact because every fact is stored and retrieved thr...\", but the answer should focus on \"Both involve delayed retrieval and feedback, but musical perf...",
+                                    "option": "The analogy is exact because every fact is stored and retrieved through the same motor process as a passage"
+                                  },
+                                  {
+                                    "explanation": "This says \"Musical practice depends only on recognition, whereas factual study...\", but the answer should focus on \"Both involve delayed retrieval and feedback, but musical perf...",
+                                    "option": "Musical practice depends only on recognition, whereas factual study always requires physical movement"
+                                  }
+                                ],
+                                "options": [
+                                  "The analogy is exact because every fact is stored and retrieved through the same motor process as a passage",
+                                  "Musical practice depends only on recognition, whereas factual study always requires physical movement",
+                                  "Both involve delayed retrieval and feedback, but musical performance also includes coordination, timing, and expression"
+                                ],
+                                "question": "Why is instrument practice a useful but incomplete analogy for studying factual material?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              }
+                            ],
+                            "title": "03 - How to Use It Well"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "03-how-to-use-it-well-3-1"
+                    }
+                  },
+                  "name": "03 - How to Use It Well Quiz",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Final Study Guide page includes one source-grounded quiz.",
+        "name": "03 - How to Use It Well",
+        "practiceType": "quiz"
+      }
+    ],
+    "emoji": "🧠",
+    "folderName": "Spaced Repetition",
+    "pathId": "demo-why-you-forget",
+    "quickStart": {
+      "keyIdea": "Spaced repetition works like instrument practice: recall a skill after a delay, notice errors, correct them, and return later so memory becomes easier to access.",
+      "quickSummary": "When you practise an instrument, a passage may sound fluent immediately but weaken after a day. Returning after a delay tests whether the movements and decisions are still available, rather than merely familiar.\n\nSpaced repetition applies that pattern to facts and ideas. The comparison is useful, but not perfect: musical performance also depends on physical coordination, timing, and expressive choices, while many study items rely mainly on verbal or conceptual recall."
+    },
+    "selectedIndex": 0,
+    "title": "Spaced Repetition"
+  }
+}

@@ -1,8 +1,6 @@
 import { isSupabaseConfigured, supabase } from '../../auth/supabaseClient'
 import type { StrongAiCallOptions } from './strongProviders'
 import {
-  GUEST_LIMIT_MESSAGE,
-  HOSTED_AI_GUEST_LIMIT_EVENT,
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   HOSTED_AI_USAGE_CHANGED_EVENT,
   HOSTED_AI_VISUAL_SPEND_EVENT,
@@ -35,12 +33,6 @@ const PODCAST_AUDIO_ENDPOINT = '/api/study-guide-podcast-audio'
 const dispatchInsufficientCredits = (): void => {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(HOSTED_AI_INSUFFICIENT_CREDITS_EVENT))
-  }
-}
-
-const dispatchGuestLimitReached = (): void => {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(HOSTED_AI_GUEST_LIMIT_EVENT))
   }
 }
 
@@ -84,13 +76,6 @@ const formatHostedAiError = (
 ): Error => {
   const code = payload.error?.code
   const message = payload.error?.message
-
-  // Must stay ahead of the credits branch: guest limit copy mentions Carrots but
-  // the right call to action is signing up, not buying a carrot pack.
-  if (code === 'guest_limit_reached') {
-    dispatchGuestLimitReached()
-    return new Error(message || GUEST_LIMIT_MESSAGE)
-  }
 
   if (code === 'insufficient_credits') {
     dispatchInsufficientCredits()
@@ -169,17 +154,6 @@ const assertHostedAiCreditsAvailable = async (
 ): Promise<void> => {
   const status = await getHostedAiStatus()
   const requiredCredits = getHostedAiCreditCost(surface)
-
-  // Guests hold 0 Carrots by design, so their free Quick Guide allowance replaces
-  // the balance check entirely. The gateway still enforces both.
-  if (status.guest) {
-    if (status.guest.remaining <= 0) {
-      dispatchGuestLimitReached()
-      throw new Error(GUEST_LIMIT_MESSAGE)
-    }
-
-    return
-  }
 
   if (status.studyCredits < requiredCredits) {
     dispatchInsufficientCredits()

@@ -143,7 +143,7 @@ export const createMarkdownStudyGuidePageLayout = ({
   }
 }
 
-const refreshPageNumbers = (
+export const refreshPageNumbers = (
   studyPath: StudyPathContainerState,
 ): StudyPathContainerState => {
   const count = studyPath.dashboards.length

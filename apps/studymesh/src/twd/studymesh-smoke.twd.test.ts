@@ -11,6 +11,15 @@ const defaultCredentials = {
   name: 'RabbitHole TWD',
 }
 
+// Mirrors the chip labels of DEMO_GUIDES in src/demo/demoGuides.ts.
+const demoChipLabels = [
+  'Why you forget',
+  'Deliberate practice',
+  'Bottlenecks in your learning',
+  'Compound interest',
+  'How your immune system works',
+]
+
 const getCredentials = () => ({
   email: window.localStorage.getItem(TWD_EMAIL_KEY) || defaultCredentials.email,
   password:
@@ -138,7 +147,7 @@ describe('RabbitHole TWD landing smoke', () => {
     setLocalStorageEmailAndPassword()
   })
 
-  it('landing sends guests to the free trial', async () => {
+  it('landing sends visitors to the prepared demo', async () => {
     await twd.visit('/', true)
 
     expect(await screenDom.findByText(/explain it with/i)).to.exist
@@ -155,10 +164,17 @@ describe('RabbitHole TWD landing smoke', () => {
       expect(window.location.pathname).to.equal('/try')
     })
 
-    // Stops at the prompt surface: submitting would burn a guest allowance and
-    // run a real hosted generation.
-    expect(await screenDom.findByLabelText(/what do you want to learn/i)).to
-      .exist
+    // Stops at the topic picker: the prompt is locked because the demo runs on
+    // prepared prompts, and opening a guide costs a 5s fake generation that
+    // belongs in the Playwright spec, not in a smoke test.
+    const promptField = (await screenDom.findByLabelText(
+      /quick guide prompt/i,
+    )) as HTMLTextAreaElement
+    expect(promptField.disabled).to.equal(true)
+
+    for (const label of demoChipLabels) {
+      expect(await screenDom.findByRole('button', { name: label })).to.exist
+    }
   })
 })
 

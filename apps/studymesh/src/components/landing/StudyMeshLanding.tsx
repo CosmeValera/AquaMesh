@@ -569,13 +569,13 @@ const scheduleIdleWork = (task: () => void) => {
 }
 
 // Runs once the browser is idle, so none of it competes with the hero paint:
-// the remaining topic illustrations, plus the guest-trial route chunk that the
-// primary CTA navigates to (App.tsx lazy-loads it).
+// the remaining topic illustrations, plus the demo route chunk that the primary
+// CTA navigates to (App.tsx lazy-loads it).
 const useLandingIdlePrefetch = () => {
   useEffect(() => {
     return scheduleIdleWork(() => {
       contextTopics.forEach((topic) => prefetchContextImage(topic.visualSrc))
-      void import('../guest/GuestQuickGuidePage').catch(() => undefined)
+      void import('../demo/DemoCreatePage').catch(() => undefined)
     })
   }, [])
 }
@@ -1024,8 +1024,8 @@ const StudyMeshLanding = () => {
                 Try it on the thing that keeps bouncing off you.
               </Typography>
               <Typography sx={{ color: brand.muted, fontSize: '1.08rem' }}>
-                Three guides free, no account, no card. Sign up afterwards to
-                keep them.
+                Walk through a finished guide first. No account, nothing to
+                install.
               </Typography>
               <Button
                 variant="contained"

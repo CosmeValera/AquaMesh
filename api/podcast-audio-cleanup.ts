@@ -33,7 +33,6 @@ interface PodcastAudioCleanupResponse {
   deletedStudyGuideCount?: number;
   deletedStudyGuidePodcastAudioCount?: number;
   deletedPodcastAudioCount?: number;
-  purgedGuestAccountCount?: number;
   error?: {
     code: "not_authorized" | "not_configured" | "invalid_request" | "server_error";
     message: string;
@@ -50,20 +49,8 @@ const PODCAST_AUDIO_RETAINED_COUNT = 5;
 const RETENTION_CANDIDATE_DAYS = 30;
 const CLEANUP_BATCH_SIZE = 100;
 const CLEANUP_MAX_BATCHES = 10;
-const GUEST_PURGE_BATCH_SIZE = 200;
-const GUEST_PURGE_RETENTION_DAYS = 30;
 
 const getEnv = (name: string): string => process.env[name]?.trim() || "";
-
-const numberEnv = (name: string): number | undefined => {
-  const raw = getEnv(name);
-  if (!raw) {
-    return undefined;
-  }
-
-  const value = Number(raw);
-  return Number.isFinite(value) && value >= 0 ? value : undefined;
-};
 
 const normalizeSupabaseUrl = (url: string): string => url.replace(/\/+$/, "");
 
@@ -125,7 +112,7 @@ const getSupabaseConfig = (): { supabaseUrl: string; serviceKey: string } => {
 const callSupabaseRpc = async (
   name: string,
   body: Record<string, unknown>,
-): Promise<unknown> => {
+): Promise<void> => {
   const { supabaseUrl, serviceKey } = getSupabaseConfig();
   const response = await fetch(`${supabaseUrl}/rest/v1/rpc/${name}`, {
     method: "POST",
@@ -139,8 +126,6 @@ const callSupabaseRpc = async (
   if (!response.ok) {
     throw new Error("server_error");
   }
-
-  return readResponseJson(response);
 };
 
 const retentionCutoff = (): string =>
@@ -392,20 +377,6 @@ const cleanupExpiredPodcastAudio = async (): Promise<number> => {
   return deletedCount;
 };
 
-// Guests who never created an account are deleted with their whole cascade
-// (profile, guides, hosted AI account, allowance) once they age out, and the
-// hashed per-network counters are pruned over the same window.
-const purgeStaleGuestAccounts = async (): Promise<number> => {
-  const purged = await callSupabaseRpc("guest_purge_stale_accounts", {
-    p_max: numberEnv("GUEST_PURGE_BATCH_SIZE") ?? GUEST_PURGE_BATCH_SIZE,
-    p_retention_days:
-      numberEnv("GUEST_PURGE_RETENTION_DAYS") ?? GUEST_PURGE_RETENTION_DAYS,
-  });
-  const count = typeof purged === "number" ? purged : Number(purged);
-
-  return Number.isFinite(count) && count > 0 ? Math.trunc(count) : 0;
-};
-
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
@@ -444,18 +415,6 @@ export default async function handler(
     const studyGuideCleanup = await cleanupExpiredStudyGuides();
     await refreshPodcastAudioRetentionCandidates();
     const deletedPodcastAudioCount = await cleanupExpiredPodcastAudio();
-
-    // Runs after the podcast stages so an aged-out guest's guides and MP3s go
-    // through the normal cleanup path instead of being cascaded away with the
-    // auth user, and stays isolated so a purge failure never discards the
-    // counts the stages above already earned.
-    let purgedGuestAccountCount = 0;
-    try {
-      purgedGuestAccountCount = await purgeStaleGuestAccounts();
-    } catch {
-      purgedGuestAccountCount = 0;
-    }
-
     res.status(200).json({
       ok: true,
       deletedCount:
@@ -466,7 +425,6 @@ export default async function handler(
       deletedStudyGuidePodcastAudioCount:
         studyGuideCleanup.deletedStudyGuidePodcastAudioCount,
       deletedPodcastAudioCount,
-      purgedGuestAccountCount,
     });
   } catch (error) {
     if (error instanceof Error && error.message === "not_configured") {

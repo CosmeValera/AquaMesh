@@ -31,8 +31,7 @@ const KnowledgeContextOnboarding = () => {
   }, [])
 
   React.useEffect(() => {
-    // Guests always have an empty topic list, so this would pop on every trial.
-    if (loading || !user || !cloudReady || user.is_anonymous === true) {
+    if (loading || !user || !cloudReady) {
       setOpen(false)
       return
     }

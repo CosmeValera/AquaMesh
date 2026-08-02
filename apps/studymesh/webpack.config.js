@@ -60,7 +60,9 @@ module.exports = (_, argv) => ({
   module: {
     rules: [
       {
-        test: /\.m?js/,
+        // Anchored on purpose: an unanchored /\.m?js/ also matches ".json",
+        // which made webpack parse JSON imports as JavaScript and fail.
+        test: /\.m?js$/,
         type: 'javascript/auto',
         resolve: {
           fullySpecified: false,

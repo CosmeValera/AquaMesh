@@ -20,6 +20,20 @@ Guides start short (~3 pages) and grow on demand, so a topic can stay a five-min
 - **AI Chat:** questions about a guide, with optional web-grounded sources.
 - **Workspace:** drag, resize, and tab guides and widgets on a dashboard canvas.
 - **Choice of AI:** Hosted AI paid with Carrots, your own Gemini or Cerebras API key, or Google on-device Local AI.
+- **Prepared demo at `/try`:** five sample guides a logged-out visitor can walk through — real pages, quizzes, flashcards, podcast and chat — with no account, no sign-up and no API call.
+
+## The `/try` demo
+
+`/try` lets a visitor pick one of five prepared topics and open it in the real workspace. It renders the actual components (`StudyPathWorkspaceView`, `StudyGuidePagesPanel`, `DashboardChatPanel`, `StudyBlockView`) against frozen data, so it is the app rather than a mockup — but nothing about it is live. The generation wait, the Quick Create runs and the chat answers are all canned, and a demo session must never reach a serverless route. `tests/e2e/demo.spec.ts` asserts that contract by collecting every request of a full run.
+
+Where the pieces live:
+
+- `src/demo/` — the data contract (`types.ts`), the guide registry (`demoGuides.ts`), session state (`demoSession.ts`) and the page-append logic (`demoStudyPath.ts`).
+- `src/demo/guides/<name>.ts` + `<name>.data.json` — one machine-generated capture per guide, plus a hand-written wrapper that colocates its three chat exchanges. One webpack chunk each, loaded only when that guide is opened.
+- `src/components/demo/` — the `/try` topic picker, the guide page, the guest top bar, the conversion banner and the signup nudge.
+- `public/demo/audio/<slug>.mp3` — the podcast audio, served as static files.
+
+Content is captured with `scripts/build-demo-guide.mjs`, which runs a real generation plus the quiz, flashcard and podcast Quick Creates, then normalises and leak-scans the result. **Guide prose is never hand-edited** — a weak guide is regenerated, because the whole point is that this is genuinely what the app produces. See [`docs/demo-guide-capture.md`](./docs/demo-guide-capture.md).
 
 ## Available scripts
 

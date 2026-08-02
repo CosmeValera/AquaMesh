@@ -149,6 +149,12 @@ interface ExternalSourcePrompt {
   url: string
 }
 
+export interface DashboardChatSuggestionOverride {
+  id: string
+  label: string
+  question: string
+}
+
 interface DashboardChatPanelProps {
   dashboard?: StateDashboard
   messages: DashboardChatMessage[]
@@ -166,6 +172,16 @@ interface DashboardChatPanelProps {
   supportsStudyGuideCreateScope?: boolean
   queuedDraft?: { id: string; content: string } | null
   onQueuedDraftConsumed?: (id: string) => void
+  /**
+   * Demo hooks. Each one is optional and inert when absent, so the real chat
+   * path behaves identically whether or not a caller knows they exist.
+   */
+  composerReadOnly?: boolean
+  composerReadOnlyHint?: string
+  onComposerReadOnlyClick?: () => void
+  suggestionOverrides?: DashboardChatSuggestionOverride[]
+  /** Resolves to an answer the panel shows without any network call, or null to fall through. */
+  resolveCannedAnswer?: (question: string) => Promise<string | null>
 }
 
 const suggestions = [
@@ -591,6 +607,11 @@ const DashboardChatPanel = ({
   supportsStudyGuideCreateScope = false,
   queuedDraft,
   onQueuedDraftConsumed,
+  composerReadOnly = false,
+  composerReadOnlyHint,
+  onComposerReadOnlyClick,
+  suggestionOverrides,
+  resolveCannedAnswer,
 }: DashboardChatPanelProps) => {
   const { t } = useInterfaceText()
   const { accentColor } = useAccentColor()
@@ -790,10 +811,28 @@ const DashboardChatPanel = ({
     draftInputRef.current?.focus()
   }
 
+  const handleComposerReadOnlyClick = (
+    event: React.MouseEvent<HTMLDivElement>,
+  ) => {
+    const target = event.target as HTMLElement | null
+    if (target?.closest('button, a, [role="button"]')) {
+      return
+    }
+
+    onComposerReadOnlyClick?.()
+  }
+
   const persistChatSessions = (nextSessions: DashboardChatSession[]) => {
     const normalizedSessions = normalizeChatSessions(nextSessions)
     chatSessionsRef.current = normalizedSessions
     setChatSessions(normalizedSessions)
+    // A locked composer means the transcript is prepared content the visitor
+    // did not write, so it stays in memory only and never lands in the browser
+    // storage a real account later shares.
+    if (composerReadOnly) {
+      return
+    }
+
     try {
       window.localStorage.setItem(
         getChatSessionStorageKey(dashboard?.id),
@@ -2320,6 +2359,49 @@ const DashboardChatPanel = ({
     }
   }
 
+  const routeQuestion = (
+    trimmed: string,
+    pendingMessageId: string,
+    previousMessages: DashboardChatMessage[],
+  ) => {
+    const intent = classifyQuestionIntent(trimmed)
+    if (intent === 'conversational_smalltalk') {
+      const answer = answerSmalltalk(trimmed)
+      updateMessage(pendingMessageId, (message) => ({
+        ...message,
+        content: answer,
+        pending: false,
+      }))
+      rememberFinalAnswer({
+        userQuestion: trimmed,
+        finalAssistantAnswer: answer,
+        usedSourceIds: [],
+      })
+      setReplyScrollBufferActive(false)
+      return
+    }
+
+    if (intent === 'recall_previous_chat') {
+      const recalledAnswer = findRecallAnswer(trimmed, previousMessages)
+      if (recalledAnswer) {
+        updateMessage(pendingMessageId, (message) => ({
+          ...message,
+          content: recalledAnswer,
+          pending: false,
+        }))
+        rememberFinalAnswer({
+          userQuestion: trimmed,
+          finalAssistantAnswer: recalledAnswer,
+          usedSourceIds: [],
+        })
+        setReplyScrollBufferActive(false)
+        return
+      }
+    }
+
+    void answerQuestion(trimmed, pendingMessageId, previousMessages)
+  }
+
   const sendQuestion = (question: string) => {
     const trimmed = question.trim()
     if (!trimmed) {
@@ -2354,42 +2436,31 @@ const DashboardChatPanel = ({
     setDraft('')
     setError('')
 
-    const intent = classifyQuestionIntent(trimmed)
-    if (intent === 'conversational_smalltalk') {
-      const answer = answerSmalltalk(trimmed)
-      updateMessage(pendingMessage.id, (message) => ({
-        ...message,
-        content: answer,
-        pending: false,
-      }))
-      rememberFinalAnswer({
-        userQuestion: trimmed,
-        finalAssistantAnswer: answer,
-        usedSourceIds: [],
-      })
-      setReplyScrollBufferActive(false)
+    // Resolved here, alongside the smalltalk short-circuit below: the pending
+    // bubble already exists, so a canned answer gets the real typing
+    // affordance, and nothing has reached the network yet.
+    if (resolveCannedAnswer) {
+      void resolveCannedAnswer(trimmed)
+        .then((cannedAnswer) => {
+          if (typeof cannedAnswer !== 'string') {
+            routeQuestion(trimmed, pendingMessage.id, previousMessages)
+            return
+          }
+
+          updateMessage(pendingMessage.id, (message) => ({
+            ...message,
+            content: cannedAnswer,
+            pending: false,
+          }))
+          setReplyScrollBufferActive(false)
+        })
+        .catch(() => {
+          routeQuestion(trimmed, pendingMessage.id, previousMessages)
+        })
       return
     }
 
-    if (intent === 'recall_previous_chat') {
-      const recalledAnswer = findRecallAnswer(trimmed, previousMessages)
-      if (recalledAnswer) {
-        updateMessage(pendingMessage.id, (message) => ({
-          ...message,
-          content: recalledAnswer,
-          pending: false,
-        }))
-        rememberFinalAnswer({
-          userQuestion: trimmed,
-          finalAssistantAnswer: recalledAnswer,
-          usedSourceIds: [],
-        })
-        setReplyScrollBufferActive(false)
-        return
-      }
-    }
-
-    void answerQuestion(trimmed, pendingMessage.id, previousMessages)
+    routeQuestion(trimmed, pendingMessage.id, previousMessages)
   }
 
   const prefillDraft = (content: string) => {
@@ -3511,6 +3582,9 @@ const DashboardChatPanel = ({
 
   const composerInputSx = useMemo<SxProps<Theme>>(
     () => ({
+      // A disabled field swallows its own clicks, so a locked composer lets
+      // them through to the surface handler that opens the signup nudge.
+      pointerEvents: composerReadOnly ? 'none' : undefined,
       flex:
         draftHasMultipleLines && chatComposerResized ? '1 1 auto' : '0 1 auto',
       minWidth: 0,
@@ -3536,7 +3610,7 @@ const DashboardChatPanel = ({
         lineHeight: 1.5,
       },
     }),
-    [chatComposerResized, draftHasMultipleLines],
+    [chatComposerResized, composerReadOnly, draftHasMultipleLines],
   )
 
   const composerActionButtonSx = {
@@ -3581,6 +3655,20 @@ const DashboardChatPanel = ({
       fontSize: 24,
     },
   }
+
+  const emptyChatSuggestions = suggestionOverrides?.length
+    ? suggestionOverrides.map((suggestion) => ({
+        key: suggestion.id,
+        label: suggestion.label,
+        question: suggestion.question,
+        icon: <ChatBubbleOutlineIcon fontSize="small" />,
+      }))
+    : suggestions.map((suggestion) => ({
+        key: suggestion.labelKey,
+        label: t(suggestion.labelKey),
+        question: t(suggestion.labelKey),
+        icon: suggestion.icon,
+      }))
 
   const composerResizeSx = {
     height:
@@ -4242,11 +4330,11 @@ const DashboardChatPanel = ({
                 maxWidth: 380,
               }}
             >
-              {suggestions.map((suggestion) => (
+              {emptyChatSuggestions.map((suggestion) => (
                 <Button
-                  key={suggestion.labelKey}
+                  key={suggestion.key}
                   variant="outlined"
-                  onClick={() => sendQuestion(t(suggestion.labelKey))}
+                  onClick={() => sendQuestion(suggestion.question)}
                   sx={{
                     minHeight: 36,
                     justifyContent: 'flex-start',
@@ -4265,7 +4353,7 @@ const DashboardChatPanel = ({
                   <Box sx={{ color: 'text.secondary', display: 'flex' }}>
                     {suggestion.icon}
                   </Box>
-                  {t(suggestion.labelKey)}
+                  {suggestion.label}
                 </Button>
               ))}
             </Stack>
@@ -4993,13 +5081,24 @@ const DashboardChatPanel = ({
           <Box
             data-testid="dashboard-chat-composer"
             onMouseDown={focusComposerFromSurface}
-            sx={[composerSurfaceSx, composerResizeSx]}
+            onClick={
+              composerReadOnly ? handleComposerReadOnlyClick : undefined
+            }
+            sx={[
+              composerSurfaceSx,
+              composerResizeSx,
+              composerReadOnly && { cursor: 'pointer' },
+            ]}
           >
             <InputBase
               inputRef={draftInputRef}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
-              placeholder={t('chat.askAnything')}
+              placeholder={
+                (composerReadOnly && composerReadOnlyHint) ||
+                t('chat.askAnything')
+              }
+              disabled={composerReadOnly}
               fullWidth
               multiline
               minRows={1}
@@ -5008,6 +5107,10 @@ const DashboardChatPanel = ({
               }
               sx={composerInputSx}
               onKeyDown={(event) => {
+                if (composerReadOnly) {
+                  return
+                }
+
                 if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault()
                   sendQuestion(draft)
@@ -5046,6 +5149,7 @@ const DashboardChatPanel = ({
                     <IconButton
                       size="small"
                       aria-label={t('chat.addSource')}
+                      disabled={composerReadOnly}
                       onClick={openAddSourceDialog}
                       sx={composerActionButtonSx}
                     >
@@ -5074,7 +5178,7 @@ const DashboardChatPanel = ({
                     <IconButton
                       color="primary"
                       onClick={() => sendQuestion(draft)}
-                      disabled={!draft.trim()}
+                      disabled={composerReadOnly || !draft.trim()}
                       aria-label="Send dashboard question"
                       sx={sendComposerButtonSx}
                     >

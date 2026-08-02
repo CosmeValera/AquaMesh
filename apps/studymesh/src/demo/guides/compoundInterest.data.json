@@ -1,0 +1,1537 @@
+{
+  "bonusPages": [
+    {
+      "actionId": "quiz",
+      "durationMs": 9000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 4,
+        "dashboardIndex": 4,
+        "dashboardKey": "demo-compound-interest-page-4",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Compound Interest",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "$1,050",
+                                "correctIndex": 2,
+                                "explanation": "Compound growth applies the second year's rate to the balance after the first year's growth, which is $1,050.",
+                                "hint": "Include the first year's return in the balance before calculating year two.",
+                                "id": "quiz-compound-interest-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This ignores the first year's retained growth, which compound interest includes.",
+                                    "option": "$1,000"
+                                  },
+                                  {
+                                    "explanation": "This is the first year's return, not the balance receiving the second return.",
+                                    "option": "$50"
+                                  },
+                                  {
+                                    "explanation": "The first year's return remains invested, increasing the base for year two.",
+                                    "option": "$1,050"
+                                  },
+                                  {
+                                    "explanation": "The second-year base is the existing balance, not twice the principal.",
+                                    "option": "$2,000"
+                                  }
+                                ],
+                                "options": [
+                                  "$1,000",
+                                  "$50",
+                                  "$1,050",
+                                  "$2,000"
+                                ],
+                                "question": "An account starts with $1,000 and earns 5% in the first year. If the same rate applies the next year, what amount is used to calculate the second year's growth?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "The number of compounding periods per year",
+                                "correctIndex": 2,
+                                "explanation": "In the formula, n specifies how many times growth is compounded during each year.",
+                                "hint": "Look for the variable connected to how often compounding occurs.",
+                                "id": "quiz-compound-interest-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Time in years is represented by t, not n, in this formula.",
+                                    "option": "The number of years invested"
+                                  },
+                                  {
+                                    "explanation": "The annual rate is represented by r after converting it to decimal form.",
+                                    "option": "The annual rate as a decimal"
+                                  },
+                                  {
+                                    "explanation": "n controls the frequency of compounding within each year.",
+                                    "option": "The number of compounding periods per year"
+                                  },
+                                  {
+                                    "explanation": "The ending amount is A, while n describes compounding frequency.",
+                                    "option": "The ending account balance"
+                                  }
+                                ],
+                                "options": [
+                                  "The number of years invested",
+                                  "The annual rate as a decimal",
+                                  "The number of compounding periods per year",
+                                  "The ending account balance"
+                                ],
+                                "question": "In A = P(1 + r/n)^(nt), what does n represent?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "Earlier deposits have more periods in which both deposits and returns can grow.",
+                                "correctIndex": 0,
+                                "explanation": "Earlier deposits have additional time for their original growth to remain invested and generate further growth.",
+                                "hint": "Focus on the number of compounding periods available to each deposit.",
+                                "id": "quiz-compound-interest-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "More invested time allows initial deposits and retained growth to participate longer.",
+                                    "option": "Earlier deposits have more periods in which both deposits and returns can grow."
+                                  },
+                                  {
+                                    "explanation": "Starting earlier does not guarantee a better rate or positive investment results.",
+                                    "option": "Earlier deposits are guaranteed to earn higher annual rates."
+                                  },
+                                  {
+                                    "explanation": "Later deposits can compound, but they have fewer periods available.",
+                                    "option": "Later deposits are excluded from compound-interest calculations."
+                                  },
+                                  {
+                                    "explanation": "Fees and taxes depend on circumstances, not simply the investment start date.",
+                                    "option": "The earlier investor automatically avoids fees and taxes."
+                                  }
+                                ],
+                                "options": [
+                                  "Earlier deposits have more periods in which both deposits and returns can grow.",
+                                  "Earlier deposits are guaranteed to earn higher annual rates.",
+                                  "Later deposits are excluded from compound-interest calculations.",
+                                  "The earlier investor automatically avoids fees and taxes."
+                                ],
+                                "question": "Why might an earlier $200 monthly contribution outperform a later contribution schedule despite involving less total deposited money?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "It is the difference between deposits and the final balance, whose meaning can be affected by fees, taxes, inflation, and timing.",
+                                "correctIndex": 2,
+                                "explanation": "The numerical difference is $3,000, but its economic meaning depends on fees, taxes, inflation, and deposit timing.",
+                                "hint": "Separate the arithmetic difference from the interpretation of investment performance.",
+                                "id": "quiz-compound-interest-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Costs, taxes, inflation, and contribution timing can change what the difference represents.",
+                                    "option": "It is automatically pure profit."
+                                  },
+                                  {
+                                    "explanation": "The difference compares total deposits with the ending balance.",
+                                    "option": "It is the final balance before any deposits were made."
+                                  },
+                                  {
+                                    "explanation": "This distinguishes the measured balance difference from its broader financial interpretation.",
+                                    "option": "It is the difference between deposits and the final balance, whose meaning can be affected by fees, taxes, inflation, and timing."
+                                  },
+                                  {
+                                    "explanation": "A total balance difference does not reveal a constant annual return.",
+                                    "option": "It proves the account earned exactly 25% every year."
+                                  }
+                                ],
+                                "options": [
+                                  "It is automatically pure profit.",
+                                  "It is the final balance before any deposits were made.",
+                                  "It is the difference between deposits and the final balance, whose meaning can be affected by fees, taxes, inflation, and timing.",
+                                  "It proves the account earned exactly 25% every year."
+                                ],
+                                "question": "A person deposits $12,000 over time and finishes with $15,000. What is the safest interpretation of the $3,000 difference?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "The rate is a stated-period assumption or result, and actual years may differ, including being negative.",
+                                "correctIndex": 1,
+                                "explanation": "Investment returns can vary from year to year, so an annual rate is not a guaranteed identical increase.",
+                                "hint": "Consider whether the notes describe investment returns as certain or variable.",
+                                "id": "quiz-compound-interest-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The notes explicitly warn that real returns can be uneven and negative.",
+                                    "option": "The investment must increase by exactly 6% every year."
+                                  },
+                                  {
+                                    "explanation": "This reflects variable returns and avoids treating an assumption as a promise.",
+                                    "option": "The rate is a stated-period assumption or result, and actual years may differ, including being negative."
+                                  },
+                                  {
+                                    "explanation": "Continuing contributions do not prevent investment losses or negative performance.",
+                                    "option": "The account cannot lose value if contributions continue."
+                                  },
+                                  {
+                                    "explanation": "Fees, taxes, and inflation must be considered separately where relevant.",
+                                    "option": "The rate already accounts for every fee, tax, and inflation effect."
+                                  }
+                                ],
+                                "options": [
+                                  "The investment must increase by exactly 6% every year.",
+                                  "The rate is a stated-period assumption or result, and actual years may differ, including being negative.",
+                                  "The account cannot lose value if contributions continue.",
+                                  "The rate already accounts for every fee, tax, and inflation effect."
+                                ],
+                                "question": "Which statement correctly describes a 6% annual investment return?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              },
+                              {
+                                "answer": "Choose an affordable recurring contribution, define a horizon, consider costs, and compare varied scenarios.",
+                                "correctIndex": 0,
+                                "explanation": "The recommended routine emphasizes affordability, a defined horizon, relevant costs, conservative scenarios, and periodic review.",
+                                "hint": "Look for the plan that combines sustainability with realistic assumptions.",
+                                "id": "quiz-compound-interest-multiple-choice-6",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "These steps directly reflect the practical routine described in the notes.",
+                                    "option": "Choose an affordable recurring contribution, define a horizon, consider costs, and compare varied scenarios."
+                                  },
+                                  {
+                                    "explanation": "The notes favor sustainable contributions and varied scenarios rather than certainty.",
+                                    "option": "Invest an uncomfortable amount immediately and assume one fixed return."
+                                  },
+                                  {
+                                    "explanation": "Waiting can sacrifice valuable compounding periods that smaller contributions could receive.",
+                                    "option": "Wait until the perfect contribution amount is available before starting."
+                                  },
+                                  {
+                                    "explanation": "The suggested approach recommends periodic review without reacting to every fluctuation.",
+                                    "option": "React to every short-term market movement by changing the plan."
+                                  }
+                                ],
+                                "options": [
+                                  "Choose an affordable recurring contribution, define a horizon, consider costs, and compare varied scenarios.",
+                                  "Invest an uncomfortable amount immediately and assume one fixed return.",
+                                  "Wait until the perfect contribution amount is available before starting.",
+                                  "React to every short-term market movement by changing the plan."
+                                ],
+                                "question": "Which plan best follows the notes' suggested routine for investing?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 6"
+                              },
+                              {
+                                "answer": "A term representing repeated contributions each compounding period",
+                                "correctIndex": 0,
+                                "explanation": "The added term models the future value of regular contributions made during the investment period.",
+                                "hint": "Compare the part involving C with the original one-deposit model.",
+                                "id": "quiz-compound-interest-multiple-choice-7",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The C-based term models contributions made regularly throughout the period.",
+                                    "option": "A term representing repeated contributions each compounding period"
+                                  },
+                                  {
+                                    "explanation": "The formula assumes a constant rate for illustration but cannot guarantee it.",
+                                    "option": "A guarantee that the annual rate stays constant"
+                                  },
+                                  {
+                                    "explanation": "The formula does not automatically model every possible loss or uneven return.",
+                                    "option": "A subtraction for every possible investment loss"
+                                  },
+                                  {
+                                    "explanation": "The initial-deposit component remains in the formula as P.",
+                                    "option": "A term that removes the initial deposit"
+                                  }
+                                ],
+                                "options": [
+                                  "A term representing repeated contributions each compounding period",
+                                  "A guarantee that the annual rate stays constant",
+                                  "A subtraction for every possible investment loss",
+                                  "A term that removes the initial deposit"
+                                ],
+                                "question": "What additional term does the regular-contribution formula include compared with the one-deposit formula?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 7"
+                              },
+                              {
+                                "answer": "Financial returns are uncertain, while physical adaptation depends on many individual factors.",
+                                "correctIndex": 1,
+                                "explanation": "The analogy illustrates a growing base, but financial performance and physical adaptation are both subject to different uncertainties.",
+                                "hint": "Identify the difference between financial outcomes and human physical adaptation.",
+                                "id": "quiz-compound-interest-multiple-choice-8",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Neither financial returns nor physical adaptation follows a guaranteed identical schedule.",
+                                    "option": "Training and investing both guarantee identical progress over time."
+                                  },
+                                  {
+                                    "explanation": "This captures the notes' main caveat about applying the analogy carefully.",
+                                    "option": "Financial returns are uncertain, while physical adaptation depends on many individual factors."
+                                  },
+                                  {
+                                    "explanation": "The measurement categories are reversed and do not explain the analogy's limitation.",
+                                    "option": "Physical training is measured in money and investment growth is measured in strength."
+                                  },
+                                  {
+                                    "explanation": "Those factors describe training, not the central distinction between the two systems.",
+                                    "option": "Investment accounts require recovery, nutrition, and technique."
+                                  }
+                                ],
+                                "options": [
+                                  "Training and investing both guarantee identical progress over time.",
+                                  "Financial returns are uncertain, while physical adaptation depends on many individual factors.",
+                                  "Physical training is measured in money and investment growth is measured in strength.",
+                                  "Investment accounts require recovery, nutrition, and technique."
+                                ],
+                                "question": "Why is the gym analogy for compound growth limited?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 8"
+                              }
+                            ],
+                            "title": "Quiz: Compound Interest"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Quiz: Compound Interest Quizzes",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Quiz: Compound Interest"
+      }
+    },
+    {
+      "actionId": "flashcards",
+      "durationMs": 6000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 5,
+        "dashboardIndex": 5,
+        "dashboardKey": "demo-compound-interest-page-5",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Compound Interest",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "FlashcardCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "The next year's return is calculated on $1,050, not only the original $1,000. The retained $50 becomes part of the growth base.",
+                                "id": "flashcards-compound-interest-flashcard-1",
+                                "kind": "qa",
+                                "question": "An account earns 5% on $1,000 in its first year. If the gain remains invested, what amount is used to calculate the next year's return?",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 1"
+                              },
+                              {
+                                "answer": "The second year applies 5% to $1,050, producing $52.50, whereas the first year applies 5% to $1,000 and produces $50.",
+                                "id": "flashcards-compound-interest-flashcard-2",
+                                "kind": "qa",
+                                "question": "Why is the second year's 5% gain larger than the first year's gain in the basic example?",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 2"
+                              },
+                              {
+                                "answer": "The retained return becomes part of the balance on which future percentage returns are calculated.",
+                                "id": "flashcards-compound-interest-flashcard-3",
+                                "kind": "qa",
+                                "question": "A return remains in an account instead of being withdrawn. What feature of compound growth does this create?",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 3"
+                              },
+                              {
+                                "answer": "Yes. Any returns that remain invested can increase the base for future returns, though those returns are not guaranteed.",
+                                "id": "flashcards-compound-interest-flashcard-4",
+                                "kind": "qa",
+                                "question": "An investment grows through dividends and price changes rather than traditional bank interest. Can the growth still compound?",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 4"
+                              },
+                              {
+                                "answer": "The calculation is a model or illustration, not a promise. Actual returns can vary, including negative periods.",
+                                "id": "flashcards-compound-interest-flashcard-5",
+                                "kind": "qa",
+                                "question": "What crucial warning should accompany any example showing compound growth at a fixed annual rate?",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 5"
+                              },
+                              {
+                                "answer": "P is the starting principal, or the initial amount invested before the modeled compounding begins.",
+                                "id": "flashcards-compound-interest-flashcard-6",
+                                "kind": "qa",
+                                "question": "In A = P(1 + r/n)^(nt), what does P represent?",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 6"
+                              },
+                              {
+                                "answer": "Enter 5% as 0.05 because r must be written as a decimal.",
+                                "id": "flashcards-compound-interest-flashcard-7",
+                                "kind": "qa",
+                                "question": "In A = P(1 + r/n)^(nt), how should a 5% annual rate be entered for r?",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 7"
+                              },
+                              {
+                                "answer": "n is the number of compounding periods per year, such as one annual period or multiple periods.",
+                                "id": "flashcards-compound-interest-flashcard-8",
+                                "kind": "qa",
+                                "question": "In the compound-interest formula, what does n control?",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 8"
+                              },
+                              {
+                                "answer": "Use n = 4 because there are four periods per year, and t = 3 because the horizon is three years.",
+                                "id": "flashcards-compound-interest-flashcard-9",
+                                "kind": "qa",
+                                "question": "A model compounds quarterly for three years. What values describe n and t?",
+                                "sourceLine": 9,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 9"
+                              },
+                              {
+                                "answer": "A is the ending amount after the modeled initial principal has compounded for the stated time.",
+                                "id": "flashcards-compound-interest-flashcard-10",
+                                "kind": "qa",
+                                "question": "What does A represent in the basic compound-interest formula?",
+                                "sourceLine": 10,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 10"
+                              },
+                              {
+                                "answer": "Use A = P(1 + r/n)^(nt), which models one initial deposit without recurring contributions.",
+                                "id": "flashcards-compound-interest-flashcard-11",
+                                "kind": "qa",
+                                "question": "A calculation assumes one initial deposit and no later contributions. Which basic formula matches that situation?",
+                                "sourceLine": 11,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 11"
+                              },
+                              {
+                                "answer": "It has more compounding periods in which both the original deposit and retained returns can participate.",
+                                "id": "flashcards-compound-interest-flashcard-12",
+                                "kind": "qa",
+                                "question": "Why does an earlier deposit have more potential growth than an otherwise identical later deposit?",
+                                "sourceLine": 12,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 12"
+                              },
+                              {
+                                "answer": "The earlier deposits have more time to grow and for their growth to remain invested for additional periods.",
+                                "id": "flashcards-compound-interest-flashcard-13",
+                                "kind": "qa",
+                                "question": "Two investors receive the same hypothetical annual return, but one deposits money ten years earlier. What key advantage does the earlier investor have?",
+                                "sourceLine": 13,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 13"
+                              },
+                              {
+                                "answer": "An affordable contribution started earlier may benefit from more compounding periods than a larger contribution started much later.",
+                                "id": "flashcards-compound-interest-flashcard-14",
+                                "kind": "qa",
+                                "question": "A person cannot afford a large investment today. What lesson about timing follows from the notes?",
+                                "sourceLine": 14,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 14"
+                              },
+                              {
+                                "answer": "Later deposits have fewer periods to grow, so additional money may need to compensate for missed time.",
+                                "id": "flashcards-compound-interest-flashcard-15",
+                                "kind": "qa",
+                                "question": "Why can increasing contributions later fail to fully recreate the benefit of starting earlier?",
+                                "sourceLine": 15,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 15"
+                              },
+                              {
+                                "answer": "A's earlier deposits receive substantially more time to compound, even though B contributes three times as much overall.",
+                                "id": "flashcards-compound-interest-flashcard-16",
+                                "kind": "qa",
+                                "question": "Person A invests $200 monthly for ten years and then stops. Person B invests the same amount monthly for thirty years. Why might A still finish with more?",
+                                "sourceLine": 16,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 16"
+                              },
+                              {
+                                "answer": "It is a simplified illustration; actual returns, fees, taxes, inflation, and losses can change the outcome substantially.",
+                                "id": "flashcards-compound-interest-flashcard-17",
+                                "kind": "qa",
+                                "question": "The comparison between early and late investors uses a constant 7% average annual return. What limitation does this create?",
+                                "sourceLine": 17,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 17"
+                              },
+                              {
+                                "answer": "No. More time provides more potential compounding periods, but investments can still experience losses and uncertain returns.",
+                                "id": "flashcards-compound-interest-flashcard-18",
+                                "kind": "qa",
+                                "question": "Does a longer investment period guarantee a positive result?",
+                                "sourceLine": 18,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 18"
+                              },
+                              {
+                                "answer": "Return assumptions, contribution timing and schedule, fees, taxes, inflation, and investment losses can all change it.",
+                                "id": "flashcards-compound-interest-flashcard-19",
+                                "kind": "qa",
+                                "question": "Which factors can change a comparison between early and late investing?",
+                                "sourceLine": 19,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 19"
+                              },
+                              {
+                                "answer": "The person may lose valuable compounding periods that smaller, affordable earlier contributions could have used.",
+                                "id": "flashcards-compound-interest-flashcard-20",
+                                "kind": "qa",
+                                "question": "A person waits years to invest until they can afford a perfect amount. What opportunity might be lost?",
+                                "sourceLine": 20,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 20"
+                              },
+                              {
+                                "answer": "Both can benefit from an accumulated base and repeated effort, but financial returns are uncertain and human adaptation is individual.",
+                                "id": "flashcards-compound-interest-flashcard-21",
+                                "kind": "qa",
+                                "question": "How should the gym analogy be interpreted when comparing training progress with compound growth?",
+                                "sourceLine": 21,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 21"
+                              },
+                              {
+                                "answer": "Training adaptation depends on recovery, nutrition, health, and individual response, while investment returns fluctuate and can be negative.",
+                                "id": "flashcards-compound-interest-flashcard-22",
+                                "kind": "qa",
+                                "question": "Why is the gym analogy not a guarantee about investment performance?",
+                                "sourceLine": 22,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 22"
+                              },
+                              {
+                                "answer": "Track total deposits, account gains or losses, and the final balance.",
+                                "id": "flashcards-compound-interest-flashcard-23",
+                                "kind": "qa",
+                                "question": "An investor wants to understand where a final balance came from. Which three quantities should be tracked separately?",
+                                "sourceLine": 23,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 23"
+                              },
+                              {
+                                "answer": "No. Fees, taxes, inflation, and the timing of deposits affect how that difference should be interpreted.",
+                                "id": "flashcards-compound-interest-flashcard-24",
+                                "kind": "qa",
+                                "question": "You deposit $12,000 and later see a $15,000 balance. Is the $3,000 difference automatically pure profit?",
+                                "sourceLine": 24,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 24"
+                              },
+                              {
+                                "answer": "Deposits made at different times have different opportunities to earn returns, so the final difference is not simply a uniform profit rate.",
+                                "id": "flashcards-compound-interest-flashcard-25",
+                                "kind": "qa",
+                                "question": "Why does the timing of deposits matter when interpreting account growth?",
+                                "sourceLine": 25,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 25"
+                              },
+                              {
+                                "answer": "It describes a return applied to an amount over a specified period, but it does not necessarily guarantee the same increase every year.",
+                                "id": "flashcards-compound-interest-flashcard-26",
+                                "kind": "qa",
+                                "question": "What does a stated annual return percentage describe?",
+                                "sourceLine": 26,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 26"
+                              },
+                              {
+                                "answer": "No. The figure may be an assumption or average; actual annual results can vary and may include negative years.",
+                                "id": "flashcards-compound-interest-flashcard-27",
+                                "kind": "qa",
+                                "question": "An investment is described as having a 6% annual return. Should you assume it gains exactly 6% every year?",
+                                "sourceLine": 27,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 27"
+                              },
+                              {
+                                "answer": "Several scenarios acknowledge that returns are uncertain and help prevent decisions based on unrealistic certainty.",
+                                "id": "flashcards-compound-interest-flashcard-28",
+                                "kind": "qa",
+                                "question": "Why should a planning model use several return scenarios instead of one certain rate?",
+                                "sourceLine": 28,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 28"
+                              },
+                              {
+                                "answer": "It includes both an initial deposit and regular contributions made during each compounding period.",
+                                "id": "flashcards-compound-interest-flashcard-29",
+                                "kind": "qa",
+                                "question": "What does the recurring-contribution formula add to the basic compound-interest model?",
+                                "sourceLine": 29,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 29"
+                              },
+                              {
+                                "answer": "C is the contribution made during each compounding period.",
+                                "id": "flashcards-compound-interest-flashcard-30",
+                                "kind": "qa",
+                                "question": "In FV = P(1 + r/n)^(nt) + C[((1 + r/n)^(nt) - 1) / (r/n)], what does C represent?",
+                                "sourceLine": 30,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 30"
+                              },
+                              {
+                                "answer": "C represents the regular contribution per compounding period, so C would be $500 if deposits match the model's period.",
+                                "id": "flashcards-compound-interest-flashcard-31",
+                                "kind": "qa",
+                                "question": "A model includes $500 deposited every month. Which formula variable represents that recurring amount?",
+                                "sourceLine": 31,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 31"
+                              },
+                              {
+                                "answer": "It assumes a constant rate and regular contributions, so it is an illustration rather than a forecast.",
+                                "id": "flashcards-compound-interest-flashcard-32",
+                                "kind": "qa",
+                                "question": "What assumptions limit the recurring-contribution formula's realism?",
+                                "sourceLine": 32,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 32"
+                              },
+                              {
+                                "answer": "The formula treats C as the amount added each compounding period, so mismatched timing can make the calculation misleading.",
+                                "id": "flashcards-compound-interest-flashcard-33",
+                                "kind": "qa",
+                                "question": "Why must the contribution period match the compounding period in a simple model?",
+                                "sourceLine": 33,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 33"
+                              },
+                              {
+                                "answer": "Choose an affordable recurring contribution that can realistically be maintained.",
+                                "id": "flashcards-compound-interest-flashcard-34",
+                                "kind": "qa",
+                                "question": "What is a practical first step for creating a sustainable saving plan?",
+                                "sourceLine": 34,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 34"
+                              },
+                              {
+                                "answer": "Consistency allows contributions and their potential returns to remain invested over time, while an unsustainable plan loses that continuity.",
+                                "id": "flashcards-compound-interest-flashcard-35",
+                                "kind": "qa",
+                                "question": "Why can a repeatable contribution be better than an ambitious plan that quickly stops?",
+                                "sourceLine": 35,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 35"
+                              },
+                              {
+                                "answer": "Set a time horizon and a specific goal so the plan has a clear purpose and evaluation period.",
+                                "id": "flashcards-compound-interest-flashcard-36",
+                                "kind": "qa",
+                                "question": "What should be defined alongside an affordable recurring contribution?",
+                                "sourceLine": 36,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 36"
+                              },
+                              {
+                                "answer": "They reduce the amount retained or the balance available for growth, affecting the actual outcome.",
+                                "id": "flashcards-compound-interest-flashcard-37",
+                                "kind": "qa",
+                                "question": "Why should fees and taxes be included when evaluating an investment plan?",
+                                "sourceLine": 37,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 37"
+                              },
+                              {
+                                "answer": "Review the plan periodically without reacting to every short-term movement, while still considering goals and risk.",
+                                "id": "flashcards-compound-interest-flashcard-38",
+                                "kind": "qa",
+                                "question": "How should an investor respond to ordinary short-term account movements?",
+                                "sourceLine": 38,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 38"
+                              },
+                              {
+                                "answer": "Consider goals, risk tolerance, emergency cash needs, taxes, and local rules before making investment decisions.",
+                                "id": "flashcards-compound-interest-flashcard-39",
+                                "kind": "qa",
+                                "question": "What personal considerations should accompany a compound-growth calculation?",
+                                "sourceLine": 39,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 39"
+                              },
+                              {
+                                "answer": "Cash reserves help address emergency needs so invested money is not forced to cover unexpected expenses.",
+                                "id": "flashcards-compound-interest-flashcard-40",
+                                "kind": "qa",
+                                "question": "Why should appropriate cash reserves be maintained before investing?",
+                                "sourceLine": 40,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 40"
+                              },
+                              {
+                                "answer": "Sustainability matters: a repeatable contribution may be more useful than a larger plan that causes stress or stops quickly.",
+                                "id": "flashcards-compound-interest-flashcard-41",
+                                "kind": "qa",
+                                "question": "A person compares a dramatic savings plan with a smaller plan they can maintain. Which principle favors the smaller plan?",
+                                "sourceLine": 41,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 41"
+                              },
+                              {
+                                "answer": "Starting early provides more compounding periods; saving more later can still help but may need to offset lost time.",
+                                "id": "flashcards-compound-interest-flashcard-42",
+                                "kind": "qa",
+                                "question": "What is the central trade-off between starting early and saving more later?",
+                                "sourceLine": 42,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 42"
+                              }
+                            ],
+                            "title": "Flashcards: Compound Interest"
+                          },
+                          "type": "FlashcardCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Flashcards: Compound Interest Flashcards",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Flashcards: Compound Interest"
+      }
+    },
+    {
+      "actionId": "podcast",
+      "durationMs": 13000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 6,
+        "dashboardIndex": 6,
+        "dashboardKey": "demo-compound-interest-page-6",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Compound Interest",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "demo-compound-interest-podcast-player",
+                          "props": {
+                            "podcast": {
+                              "audioPath": "/demo/audio/compound-interest.mp3",
+                              "chapters": [
+                                {
+                                  "startTurn": 0,
+                                  "title": "What Compound Interest Means"
+                                },
+                                {
+                                  "startTurn": 4,
+                                  "title": "Why Starting Early Matters"
+                                },
+                                {
+                                  "startTurn": 9,
+                                  "title": "Applying the Idea Carefully"
+                                },
+                                {
+                                  "startTurn": 14,
+                                  "title": "The Main Takeaway"
+                                }
+                              ],
+                              "createdAt": "2026-08-02T10:00:00.000Z",
+                              "description": "A short conversation about how compound interest works, why starting early matters, and how to apply the idea carefully while remembering that returns are uncertain.",
+                              "id": "demo-compound-interest-podcast",
+                              "mimeType": "audio/mpeg",
+                              "sourceScope": "studyGuide",
+                              "sourceTitle": "Compound Interest",
+                              "title": "Compound Interest: How Time Builds Growth",
+                              "transcriptTurns": [
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Let’s begin with the basic idea. Compound interest means growth is calculated not only on the original amount, but also on growth that remains invested. If one thousand dollars earns five percent in the first year, it gains fifty dollars and becomes one thousand fifty dollars before fees, taxes, deposits, or losses."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "And in the second year, another five percent is calculated on one thousand fifty dollars, not just on the original thousand. That produces about one thousand one hundred two dollars and fifty cents after two years. The extra two dollars and fifty cents comes from earning on the earlier return. Why is that extra return the key part?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Because that is the compounding effect. Earlier growth becomes part of the base for later growth. A basic model for one initial deposit is: the ending amount equals the principal multiplied by one plus the annual rate divided by the number of compounding periods, raised to the power of the number of periods multiplied by the years. It is a model, not a promise."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "So the formula describes a constant rate and a particular compounding schedule, but real investments can behave differently. Returns might come from interest, dividends, price changes, or other sources, and none of those returns is guaranteed. Values can fall. How does time change the picture?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Time gives each deposit more opportunities to grow, and then gives that growth more time to remain invested. Consider two people receiving the same hypothetical seven percent average annual return, compounded yearly. One invests two hundred dollars each month from age twenty-five through age thirty-four, then stops. The other invests from age thirty-five through age sixty-four."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "The second person contributes about seventy-two thousand dollars, three times as much as the first person’s roughly twenty-four thousand. Yet in the simplified example, the earlier investor could have roughly three hundred sixteen thousand dollars at age sixty-five, while the later investor could have roughly two hundred forty-four thousand. What explains that surprising result?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "The early deposits have more years to participate. Each deposit can grow, and its growth can keep compounding. The later deposits have fewer periods. So starting early is not only about making a small contribution; it is about giving every contribution more time. These figures are illustrations, not forecasts, because returns, fees, taxes, inflation, and losses can change the outcome."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "That sounds similar to building a training base. A single workout may not visibly change strength, but repeated sessions can create a foundation for later progress. In the same narrow sense, an existing financial base gives future percentage returns a larger amount to act on. What are the limits of that comparison?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Financial growth is measured in money and depends on uncertain returns. Physical adaptation depends on training, recovery, nutrition, health, and individual response. Neither comparison guarantees a schedule of results. The useful point is only that repeated effort and an accumulated base can matter over time."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Let’s make the practical side clearer. What should someone track when reviewing an account?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Track three separate quantities: total deposits, gains or losses, and the final balance. If someone deposits roughly twelve thousand dollars and ends with roughly fifteen thousand, the three-thousand-dollar difference is not automatically pure profit. Fees, taxes, inflation, and the timing of deposits affect the interpretation."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "And an annual return is tied to a stated period. A six percent annual return does not mean a guaranteed six percent increase every year. Results can be uneven, including negative years. So what routine supports a careful plan?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Choose an affordable recurring contribution, define a goal and time horizon, account for relevant fees and taxes, and compare conservative, varied scenarios instead of relying on one certain rate. Review periodically without reacting to every short-term movement. A calculator can model regular deposits, but its assumptions still need attention."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "That connects with sustainable training: a repeatable schedule can beat an ambitious plan that quickly creates stress or stops. Saving can work similarly. A contribution that can continue may matter more than a dramatic plan that cannot last. Still, financial choices depend on goals, risk tolerance, emergency needs, taxes, and local rules."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Exactly. Appropriate cash reserves matter, and qualified professional advice may be useful before investing. The central idea is simple but not guaranteed: starting early gives money more potential compounding periods. Saving more later can still be powerful, but it may need to make up for time that earlier deposits would have had."
+                                }
+                              ]
+                            }
+                          },
+                          "type": "PodcastBlock"
+                        }
+                      ],
+                      "widgetId": "demo-compound-interest-podcast-widget"
+                    }
+                  },
+                  "name": "Compound Interest: How Time Builds Growth",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Compound Interest: How Time Builds Growth"
+      }
+    }
+  ],
+  "studyPath": {
+    "contentLanguage": "en",
+    "contentLanguageSource": "detected",
+    "dashboards": [
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 1,
+        "dashboardKey": "demo-compound-interest-page-1",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Compound Interest",
+        "id": "demo-compound-interest-dashboard-1",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "01-the-basic-mechanism-1-01-the-basic-mechanism-1-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "01 - The Basic Mechanism",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "01-the-basic-mechanism-1-01-the-basic-mechanism-1-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## What compound interest means\n\nCompound interest is growth calculated on an initial amount plus any growth that remains in the account. If you invest $1,000 and it earns 5%, the first year’s return is $50, producing $1,050 before fees, taxes, deposits, or losses. If the next year also earns 5%, the return is calculated on $1,050, not only on the original $1,000.\n\nThe extra return earned on earlier returns is the “compound” part. Interest is a common example, but investments may grow through dividends, price changes, or other returns. Those returns are not guaranteed, and values can fall.\n\n## A simple formula\n\nFor one initial deposit with no additional contributions, a basic model is:\n\n```text\nA = P(1 + r/n)^(nt)\n```\n\nHere, `A` is the ending amount, `P` is the starting principal, `r` is the annual rate written as a decimal, `n` is the number of compounding periods per year, and `t` is the number of years. This formula is a model, not a promise of investment performance.\n\nAt a 5% annual rate compounded once yearly, $1,000 becomes $1,050 after one year and about $1,102.50 after two years. The second year adds $52.50 because the balance includes the first year’s growth.\n\n## Gym connection\n\nA training session may not visibly change your strength immediately, but repeated sessions can build a base for later progress. Compound growth works similarly in one narrow sense: an existing base gives future percentage returns a larger amount to act on.\n\nThe analogy has limits. Financial growth is measured in money and depends on uncertain returns, while physical adaptation depends on training, recovery, nutrition, health, and individual response.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 1,
+                            "studyPathDashboardKey": "demo-compound-interest-page-1",
+                            "studyPathDashboardName": "01 - The Basic Mechanism",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Compound Interest",
+                            "studyPathId": "demo-compound-interest",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Compound Interest",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "01-the-basic-mechanism-1-01-the-basic-mechanism-1-source"
+                    }
+                  },
+                  "name": "01 - The Basic Mechanism Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "01 - The Basic Mechanism",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 2,
+        "dashboardKey": "demo-compound-interest-page-2",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Compound Interest",
+        "id": "demo-compound-interest-dashboard-2",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "02-why-starting-early-matters-2-02-why-starting-early-matters-2-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "02 - Why Starting Early Matters",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "02-why-starting-early-matters-2-02-why-starting-early-matters-2-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## Time is part of the contribution\n\nSuppose two people invest in the same account and receive the same hypothetical 7% average annual return, compounded annually. Person A invests $200 each month from age 25 through age 34, then stops. Person B invests $200 each month from age 35 through age 64. Person B contributes three times as much money, but Person A’s earlier deposits have more years to grow.\n\nUsing a simplified monthly model and ignoring taxes, fees, and changing returns, Person A contributes $24,000 and could have roughly $316,000 at age 65. Person B contributes $72,000 and could have roughly $244,000. These figures are illustrations, not forecasts, and actual results can differ substantially.\n\n## Why the gap can widen\n\nAn early contribution has two opportunities: it can grow, and its growth can remain invested for additional periods. A late contribution has fewer periods to participate. This is why “start early” is not merely about making a small deposit; it is about giving each deposit more time.\n\nThe result depends on assumptions. A higher return, lower return, different contribution schedule, inflation, taxes, fees, and investment losses all change the comparison. A longer period does not guarantee a positive outcome.\n\n## Gym connection\n\nStarting resistance training earlier can provide more time to practice technique, build work capacity, and establish a routine. Someone who begins later may train harder or longer to reach a similar point, but extra effort does not recreate every missed year of practice.\n\nThis comparison is about time and accumulated foundations, not a promise that investing behaves like the human body. Training progress can also be interrupted, and investment returns are especially uncertain.\n\n## Practical interpretation\n\nIf a person cannot invest much, beginning with an affordable amount may still give time a role. Increasing contributions later can help, but waiting for a perfect amount may sacrifice valuable compounding periods.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 2,
+                            "studyPathDashboardKey": "demo-compound-interest-page-2",
+                            "studyPathDashboardName": "02 - Why Starting Early Matters",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Compound Interest",
+                            "studyPathId": "demo-compound-interest",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Compound Interest",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "02-why-starting-early-matters-2-02-why-starting-early-matters-2-source"
+                    }
+                  },
+                  "name": "02 - Why Starting Early Matters Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            },
+            {
+              "active": false,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "02-why-starting-early-matters-2-02-why-starting-early-matters-2-1-knowledge-bridge-2-gym-analogy-time-compounds-the-base-note",
+                          "props": {
+                            "__blockType": "StudyNoteBlock",
+                            "contextBridge": true,
+                            "suggestedTypes": [],
+                            "text": "A regular training habit can build capacity that makes later progress easier; compound interest similarly lets earlier money generate returns that remain invested. The caveat is that financial returns are uncertain, while training adaptations are also individual and do not follow a guaranteed schedule.",
+                            "title": "Gym analogy: time compounds the base"
+                          },
+                          "type": "StudyNoteBlock"
+                        }
+                      ],
+                      "widgetId": "02-why-starting-early-matters-2-02-why-starting-early-matters-2-1"
+                    }
+                  },
+                  "name": "Gym analogy: time compounds the base",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "02 - Why Starting Early Matters",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 3,
+        "dashboardKey": "demo-compound-interest-page-3",
+        "dashboardPurpose": "finalReview",
+        "deletable": false,
+        "folderName": "Compound Interest",
+        "id": "demo-compound-interest-dashboard-3",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-applying-the-idea-carefully-3-03-applying-the-idea-carefully-3-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "03 - Applying the Idea Carefully",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "03-applying-the-idea-carefully-3-03-applying-the-idea-carefully-3-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## Separate contributions from growth\n\nTrack three quantities: how much you deposit, how much the account gains or loses, and the final balance. If you deposit $12,000 over time and end with $15,000, the $3,000 difference is not automatically pure profit because fees, taxes, inflation, and the timing of deposits affect the interpretation.\n\nA return percentage applies to an amount over a stated period. A 6% annual return is not the same as a guaranteed 6% increase every year. Real investments can have uneven results, including negative years.\n\n## A useful routine\n\n1. Choose an affordable recurring contribution.\n2. Define a time horizon and a goal.\n3. Account for fees and taxes where relevant.\n4. Use conservative, varied scenarios rather than one certain rate.\n5. Review the plan periodically without reacting to every short-term movement.\n\nA calculator can model regular deposits with a formula such as:\n\n```text\nFV = P(1 + r/n)^(nt) + C[((1 + r/n)^(nt) - 1) / (r/n)]\n```\n\nIn this expression, `P` is the initial deposit, `C` is the contribution each compounding period, `r` is the annual rate, `n` is periods per year, and `t` is years. The formula assumes a constant rate and regular contributions, so it is only an illustration.\n\n## Gym connection\n\nA sustainable training schedule usually beats an ambitious plan that cannot be maintained. Saving follows a similar behavioral principle: a repeatable contribution can matter more than a dramatic plan that causes stress or stops quickly.\n\nStill, do not treat investing as a training prescription. Financial choices depend on goals, risk tolerance, emergency needs, taxes, and local rules. Before investing, keep appropriate cash reserves and consider qualified professional advice.\n\n## Final takeaway\n\nStarting early gives money more potential compounding periods. Saving more later can still be powerful, but it may need to compensate for the time that earlier deposits would have had.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 3,
+                            "studyPathDashboardKey": "demo-compound-interest-page-3",
+                            "studyPathDashboardName": "03 - Applying the Idea Carefully",
+                            "studyPathDashboardPurpose": "finalReview",
+                            "studyPathFolderName": "Compound Interest",
+                            "studyPathId": "demo-compound-interest",
+                            "studyPathLayoutReason": "Final Study Guide page includes one source-grounded quiz.",
+                            "studyPathPracticeType": "quiz",
+                            "studyPathTitle": "Compound Interest",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "03-applying-the-idea-carefully-3-03-applying-the-idea-carefully-3-source"
+                    }
+                  },
+                  "name": "03 - Applying the Idea Carefully Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            },
+            {
+              "active": false,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-applying-the-idea-carefully-3-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "The second year’s return is calculated on the original deposit plus the first year’s growth",
+                                "correctIndex": 0,
+                                "explanation": "Compound growth applies the percentage to the growing balance, so earlier returns can generate additional returns.",
+                                "hint": "Applying the mechanism of compounding",
+                                "id": "study-guide-3-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Compound growth applies the percentage to the growing balance, so earlier returns can generate additional returns.",
+                                    "option": "The second year’s return is calculated on the original deposit plus the first year’s growth"
+                                  },
+                                  {
+                                    "explanation": "This says \"The annual rate increases after the first year\", but the answer should focus on \"The second year’s return is calculated on the original deposit plus...\".",
+                                    "option": "The annual rate increases after the first year"
+                                  },
+                                  {
+                                    "explanation": "This says \"The account automatically receives an extra fixed bonus each year\", but the answer should focus on \"The second year’s return is calculated on the original deposit plu...",
+                                    "option": "The account automatically receives an extra fixed bonus each year"
+                                  }
+                                ],
+                                "options": [
+                                  "The second year’s return is calculated on the original deposit plus the first year’s growth",
+                                  "The annual rate increases after the first year",
+                                  "The account automatically receives an extra fixed bonus each year"
+                                ],
+                                "question": "An investment earns 5% in the first year, and the gains remain invested. If the rate is also 5% in the second year, why is the second year’s dollar gain larger?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "Each early deposit has more time to grow and compound",
+                                "correctIndex": 2,
+                                "explanation": "Time gives early deposits more periods in which both the deposits and their accumulated growth can participate.",
+                                "hint": "Explaining the advantage of starting early",
+                                "id": "study-guide-3-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Later contributions do not earn any returns\", but the answer should focus on \"Each early deposit has more time to grow and compound\".",
+                                    "option": "Later contributions do not earn any returns"
+                                  },
+                                  {
+                                    "explanation": "Time gives early deposits more periods in which both the deposits and their accumulated growth can participate.",
+                                    "option": "Each early deposit has more time to grow and compound"
+                                  },
+                                  {
+                                    "explanation": "This says \"Early deposits are guaranteed to earn higher rates\", but the answer should focus on \"Each early deposit has more time to grow and compound\".",
+                                    "option": "Early deposits are guaranteed to earn higher rates"
+                                  }
+                                ],
+                                "options": [
+                                  "Later contributions do not earn any returns",
+                                  "Early deposits are guaranteed to earn higher rates",
+                                  "Each early deposit has more time to grow and compound"
+                                ],
+                                "question": "Two people receive the same hypothetical average return. One invests a modest amount for ten early years; the other invests three times as much for thirty later years. What best explains why the early investor could still finish with more?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "Waiting may sacrifice compounding periods that a smaller affordable contribution could have used",
+                                "correctIndex": 0,
+                                "explanation": "A sustainable smaller contribution may give money valuable time to grow; waiting can require greater later saving to catch up.",
+                                "hint": "Transferring the time-versus-contribution tradeoff",
+                                "id": "study-guide-3-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "A sustainable smaller contribution may give money valuable time to grow; waiting can require greater later saving to catch up.",
+                                    "option": "Waiting may sacrifice compounding periods that a smaller affordable contribution could have used"
+                                  },
+                                  {
+                                    "explanation": "This says \"Large contributions cannot benefit from compound growth\", but the answer should focus on \"Waiting may sacrifice compounding periods that a smaller affordable...\".",
+                                    "option": "Large contributions cannot benefit from compound growth"
+                                  },
+                                  {
+                                    "explanation": "This says \"Investment returns become guaranteed after ten years\", but the answer should focus on \"Waiting may sacrifice compounding periods that a smaller affordable...\".",
+                                    "option": "Investment returns become guaranteed after ten years"
+                                  }
+                                ],
+                                "options": [
+                                  "Waiting may sacrifice compounding periods that a smaller affordable contribution could have used",
+                                  "Large contributions cannot benefit from compound growth",
+                                  "Investment returns become guaranteed after ten years"
+                                ],
+                                "question": "A person waits ten years to invest because they want to begin only when they can afford a large monthly contribution. Based on the guide, what is the strongest concern with this plan?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "A consistent training base can support later progress, just as an invested balance gives future returns more money to act on",
+                                "correctIndex": 1,
+                                "explanation": "The analogy connects accumulated foundations and consistency, but financial returns are uncertain and can be negative.",
+                                "hint": "Evaluating an analogy and its limits",
+                                "id": "study-guide-3-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Every investment return is like a guaranteed improvement after each...\", but the answer should focus on \"A consistent training base can support later progress, just a...",
+                                    "option": "Every investment return is like a guaranteed improvement after each workout"
+                                  },
+                                  {
+                                    "explanation": "This says \"Investing works exactly like muscle growth because both follow pred...\", but the answer should focus on \"A consistent training base can support later progress, just a...",
+                                    "option": "Investing works exactly like muscle growth because both follow predictable biological processes"
+                                  },
+                                  {
+                                    "explanation": "The analogy connects accumulated foundations and consistency, but financial returns are uncertain and can be negative.",
+                                    "option": "A consistent training base can support later progress, just as an invested balance gives future returns more money to act on"
+                                  }
+                                ],
+                                "options": [
+                                  "Every investment return is like a guaranteed improvement after each workout",
+                                  "A consistent training base can support later progress, just as an invested balance gives future returns more money to act on",
+                                  "Investing works exactly like muscle growth because both follow predictable biological processes"
+                                ],
+                                "question": "Which gym comparison most accurately captures the useful part of compound interest without overstating it?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "The $3,000 difference should be interpreted alongside fees, taxes, inflation, and deposit timing",
+                                "correctIndex": 1,
+                                "explanation": "The balance difference alone does not reveal the true investment return because costs, purchasing power, and timing matter.",
+                                "hint": "Diagnosing misleading interpretations of account growth",
+                                "id": "study-guide-3-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The balance difference alone does not reveal the true investment return because costs, purchasing power, and timing matter.",
+                                    "option": "The $3,000 difference should be interpreted alongside fees, taxes, inflation, and deposit timing"
+                                  },
+                                  {
+                                    "explanation": "This says \"The entire difference is automatically profit after inflation and c...\", but the answer should focus on \"The $3,000 difference should be interpreted alongside fees, t...",
+                                    "option": "The entire difference is automatically profit after inflation and costs"
+                                  },
+                                  {
+                                    "explanation": "This says \"The account earned a guaranteed 25% annual return\", but the answer should focus on \"The $3,000 difference should be interpreted alongside fees, taxes,...\".",
+                                    "option": "The account earned a guaranteed 25% annual return"
+                                  }
+                                ],
+                                "options": [
+                                  "The entire difference is automatically profit after inflation and costs",
+                                  "The $3,000 difference should be interpreted alongside fees, taxes, inflation, and deposit timing",
+                                  "The account earned a guaranteed 25% annual return"
+                                ],
+                                "question": "An investor deposits $12,000 over time and the account ends at $15,000. Which conclusion is safest?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              }
+                            ],
+                            "title": "03 - Applying the Idea Carefully"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "03-applying-the-idea-carefully-3-1"
+                    }
+                  },
+                  "name": "03 - Applying the Idea Carefully Quiz",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Final Study Guide page includes one source-grounded quiz.",
+        "name": "03 - Applying the Idea Carefully",
+        "practiceType": "quiz"
+      }
+    ],
+    "emoji": "📈",
+    "folderName": "Compound Interest",
+    "pathId": "demo-compound-interest",
+    "quickStart": {
+      "keyIdea": "Compound interest resembles progressive training: early contributions create a base that can support more growth, while delaying requires larger later deposits to catch up.",
+      "quickSummary": "Think of an investment contribution as a training session and its return as adaptation from that session. With time, returns can produce additional returns, much as a stronger foundation can support more demanding training.\n\nThe comparison is useful for understanding consistency and time, but it breaks at an important point: gym progress responds to your body and training plan, while investment returns vary and can be negative."
+    },
+    "selectedIndex": 0,
+    "title": "Compound Interest"
+  }
+}

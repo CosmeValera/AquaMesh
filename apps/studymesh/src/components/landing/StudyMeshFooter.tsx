@@ -30,7 +30,7 @@ const footerLinks = [
 ] as const
 
 const startLinks = [
-  ['Try it free', '/try'],
+  ['See a guide', '/try'],
   ['Quick Guides', '/study-guides'],
   ['Sign in', '/login'],
 ] as const
@@ -285,8 +285,8 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 lineHeight: 1.5,
               }}
             >
-              Three free Quick Guides, no account. Create one afterwards to keep
-              them.
+              Walk through a finished guide first. No account, nothing to
+              install.
             </Typography>
             <Button
               component={RouterLink}

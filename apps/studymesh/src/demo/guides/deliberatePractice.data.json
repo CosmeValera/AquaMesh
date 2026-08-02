@@ -1,0 +1,1588 @@
+{
+  "bonusPages": [
+    {
+      "actionId": "quiz",
+      "durationMs": 9000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 4,
+        "dashboardIndex": 4,
+        "dashboardKey": "demo-deliberate-practice-page-4",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Deliberate Practice",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "The unsafe angle may become familiar without becoming correct.",
+                                "correctIndex": 0,
+                                "explanation": "Uncorrected repetition strengthens familiarity with a routine, not necessarily the desired result.",
+                                "hint": "Think about the difference between familiarity and correctness.",
+                                "id": "quiz-deliberate-practice-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the warning that repetition can stabilize an incorrect behavior.",
+                                    "option": "The unsafe angle may become familiar without becoming correct."
+                                  },
+                                  {
+                                    "explanation": "Discovery requires attention or feedback; repetition alone does not provide it.",
+                                    "option": "The player will automatically discover a safer angle."
+                                  },
+                                  {
+                                    "explanation": "More attempts do not guarantee improvement when errors remain uncorrected.",
+                                    "option": "Repetition will guarantee better positioning."
+                                  },
+                                  {
+                                    "explanation": "Repeated exposure does not remove the strategic weakness opponents can exploit.",
+                                    "option": "The opponents will stop punishing the angle."
+                                  }
+                                ],
+                                "options": [
+                                  "The unsafe angle may become familiar without becoming correct.",
+                                  "The player will automatically discover a safer angle.",
+                                  "Repetition will guarantee better positioning.",
+                                  "The opponents will stop punishing the angle."
+                                ],
+                                "question": "A player repeats the same unsafe attack angle for many matches without reviewing it. What is most likely to happen?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "Confirm support before beginning an attack.",
+                                "correctIndex": 2,
+                                "explanation": "Confirming support before attacking describes a specific behavior that can be observed and adjusted.",
+                                "hint": "Choose the option that names one visible decision.",
+                                "id": "quiz-deliberate-practice-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This target is too broad to observe or diagnose during one session.",
+                                    "option": "Become much better at the game."
+                                  },
+                                  {
+                                    "explanation": "Confidence across every situation is vague and difficult to measure directly.",
+                                    "option": "Play confidently in every situation."
+                                  },
+                                  {
+                                    "explanation": "This identifies one concrete behavior with a clear success condition.",
+                                    "option": "Confirm support before beginning an attack."
+                                  },
+                                  {
+                                    "explanation": "Wins combine many variables and do not isolate the targeted decision.",
+                                    "option": "Win more matches than last week."
+                                  }
+                                ],
+                                "options": [
+                                  "Become much better at the game.",
+                                  "Play confidently in every situation.",
+                                  "Confirm support before beginning an attack.",
+                                  "Win more matches than last week."
+                                ],
+                                "question": "Which practice target is narrow and observable enough for a focused session?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "It is difficult enough to reveal errors but not so difficult that success is random.",
+                                "correctIndex": 1,
+                                "explanation": "The task should create useful pressure while keeping feedback interpretable.",
+                                "hint": "The best difficulty lies between comfort and randomness.",
+                                "id": "quiz-deliberate-practice-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Effortless tasks may not create enough pressure to reveal useful weaknesses.",
+                                    "option": "It is effortless and never exposes mistakes."
+                                  },
+                                  {
+                                    "explanation": "This balances challenge with feedback that the learner can interpret.",
+                                    "option": "It is difficult enough to reveal errors but not so difficult that success is random."
+                                  },
+                                  {
+                                    "explanation": "Impossible tasks make results difficult to interpret and discourage adjustment.",
+                                    "option": "It is impossible so that the learner faces maximum pressure."
+                                  },
+                                  {
+                                    "explanation": "Avoiding relevant decisions prevents practice from addressing the target skill.",
+                                    "option": "It avoids realistic decisions in favor of guaranteed success."
+                                  }
+                                ],
+                                "options": [
+                                  "It is effortless and never exposes mistakes.",
+                                  "It is difficult enough to reveal errors but not so difficult that success is random.",
+                                  "It is impossible so that the learner faces maximum pressure.",
+                                  "It avoids realistic decisions in favor of guaranteed success."
+                                ],
+                                "question": "What makes a practice task appropriate for deliberate practice?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "Did I have enough information before committing?",
+                                "correctIndex": 1,
+                                "explanation": "A focused question connects the evidence directly to the behavior being practiced.",
+                                "hint": "Look for the question that tests information before a decision.",
+                                "id": "quiz-deliberate-practice-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Entertainment does not identify the cause of the attacking mistake.",
+                                    "option": "Was the entire match entertaining?"
+                                  },
+                                  {
+                                    "explanation": "This directly examines whether information supported the decision.",
+                                    "option": "Did I have enough information before committing?"
+                                  },
+                                  {
+                                    "explanation": "Mechanical appearance does not diagnose the information-based decision.",
+                                    "option": "Did I look mechanically impressive?"
+                                  },
+                                  {
+                                    "explanation": "Time played does not reveal whether the target behavior improved.",
+                                    "option": "Did I spend enough total hours playing?"
+                                  }
+                                ],
+                                "options": [
+                                  "Was the entire match entertaining?",
+                                  "Did I have enough information before committing?",
+                                  "Did I look mechanically impressive?",
+                                  "Did I spend enough total hours playing?"
+                                ],
+                                "question": "Which question makes replay feedback most useful when reviewing an attacking mistake?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "They preserve concentration on details that normal play may overlook.",
+                                "correctIndex": 1,
+                                "explanation": "Deliberate practice depends on sustained attention, and distraction can reinforce careless decisions.",
+                                "hint": "Focus is important because deliberate practice requires noticing details.",
+                                "id": "quiz-deliberate-practice-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Focused practice still depends on feedback to guide adjustment.",
+                                    "option": "They remove the need for feedback."
+                                  },
+                                  {
+                                    "explanation": "Short blocks can maintain the attention required for deliberate analysis.",
+                                    "option": "They preserve concentration on details that normal play may overlook."
+                                  },
+                                  {
+                                    "explanation": "Practice quality does not guarantee a particular match outcome.",
+                                    "option": "They guarantee a win during every practice attempt."
+                                  },
+                                  {
+                                    "explanation": "Deliberate practice may remain demanding even when organized efficiently.",
+                                    "option": "They make difficult tasks feel effortless."
+                                  }
+                                ],
+                                "options": [
+                                  "They remove the need for feedback.",
+                                  "They preserve concentration on details that normal play may overlook.",
+                                  "They guarantee a win during every practice attempt.",
+                                  "They make difficult tasks feel effortless."
+                                ],
+                                "question": "Why can short focused practice blocks outperform longer distracted sessions?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              },
+                              {
+                                "answer": "The learner may not know which change affected the result.",
+                                "correctIndex": 1,
+                                "explanation": "Changing several variables at once makes it difficult to determine which adjustment helped or hurt.",
+                                "hint": "Consider whether the result can be attributed to one change.",
+                                "id": "quiz-deliberate-practice-multiple-choice-6",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Multiple simultaneous changes make the evidence less clear, not cleaner.",
+                                    "option": "The learner has created cleaner evidence."
+                                  },
+                                  {
+                                    "explanation": "This is the central diagnostic problem caused by changing many variables.",
+                                    "option": "The learner may not know which change affected the result."
+                                  },
+                                  {
+                                    "explanation": "Several changes provide no guarantee and can obscure useful learning.",
+                                    "option": "The learner has guaranteed faster improvement."
+                                  },
+                                  {
+                                    "explanation": "Changing variables does not eliminate them; it increases uncertainty about causes.",
+                                    "option": "The learner has eliminated all performance variables."
+                                  }
+                                ],
+                                "options": [
+                                  "The learner has created cleaner evidence.",
+                                  "The learner may not know which change affected the result.",
+                                  "The learner has guaranteed faster improvement.",
+                                  "The learner has eliminated all performance variables."
+                                ],
+                                "question": "A learner changes strategy, settings, role, and practice goal after one poor session. What is the main problem?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 6"
+                              },
+                              {
+                                "answer": "Judge the decisions and process alongside the final result.",
+                                "correctIndex": 2,
+                                "explanation": "A lucky outcome can hide weak decisions, so process quality must be assessed separately.",
+                                "hint": "Final outcomes can be influenced by luck and many variables.",
+                                "id": "quiz-deliberate-practice-multiple-choice-7",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "A favorable result can occur despite poor choices and should not prove quality.",
+                                    "option": "Treat the win as proof that the decisions were effective."
+                                  },
+                                  {
+                                    "explanation": "The result is useful context, even though it should not be judged alone.",
+                                    "option": "Ignore the result and record nothing."
+                                  },
+                                  {
+                                    "explanation": "This separates decision quality from outcomes affected by luck or other factors.",
+                                    "option": "Judge the decisions and process alongside the final result."
+                                  },
+                                  {
+                                    "explanation": "Uncertainty does not mean every choice lacked quality or useful evidence.",
+                                    "option": "Assume every decision was poor because the match was unpredictable."
+                                  }
+                                ],
+                                "options": [
+                                  "Treat the win as proof that the decisions were effective.",
+                                  "Ignore the result and record nothing.",
+                                  "Judge the decisions and process alongside the final result.",
+                                  "Assume every decision was poor because the match was unpredictable."
+                                ],
+                                "question": "A player wins after making several poor decisions. How should deliberate practice evaluate the session?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 7"
+                              },
+                              {
+                                "answer": "Redesign the exercise so the target decision appears more often.",
+                                "correctIndex": 2,
+                                "explanation": "If the target rarely occurs, the exercise should create more opportunities to observe and adjust it.",
+                                "hint": "Practice requires enough examples of the target behavior to learn from.",
+                                "id": "quiz-deliberate-practice-multiple-choice-8",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "One occurrence provides too little evidence to establish consistent mastery.",
+                                    "option": "Declare the skill mastered."
+                                  },
+                                  {
+                                    "explanation": "More difficulty is premature when the target has barely been observed.",
+                                    "option": "Increase difficulty immediately without reviewing the attempt."
+                                  },
+                                  {
+                                    "explanation": "More relevant repetitions create better evidence for adjustment and learning.",
+                                    "option": "Redesign the exercise so the target decision appears more often."
+                                  },
+                                  {
+                                    "explanation": "Vagueness reduces observability and makes deliberate adjustment more difficult.",
+                                    "option": "Replace the target with a vague goal."
+                                  }
+                                ],
+                                "options": [
+                                  "Declare the skill mastered.",
+                                  "Increase difficulty immediately without reviewing the attempt.",
+                                  "Redesign the exercise so the target decision appears more often.",
+                                  "Replace the target with a vague goal."
+                                ],
+                                "question": "After a session, the target behavior appeared only once. What is the best next step?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 8"
+                              }
+                            ],
+                            "title": "Quiz: Deliberate Practice"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Quiz: Deliberate Practice Quizzes",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Quiz: Deliberate Practice"
+      }
+    },
+    {
+      "actionId": "flashcards",
+      "durationMs": 6000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 5,
+        "dashboardIndex": 5,
+        "dashboardKey": "demo-deliberate-practice-page-5",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Deliberate Practice",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "FlashcardCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "Repetition is occurring without attention to the error, feedback about it, or an adjustment to your response. Attempts alone do not guarantee improvement.",
+                                "id": "flashcards-deliberate-practice-flashcard-1",
+                                "kind": "qa",
+                                "question": "You complete many matches but keep making the same positioning error. What is missing from your practice?",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 1"
+                              },
+                              {
+                                "answer": "Choose one narrow, observable behavior, such as checking enemy locations before pushing or confirming support before attacking.",
+                                "id": "flashcards-deliberate-practice-flashcard-2",
+                                "kind": "qa",
+                                "question": "How would you replace the vague goal “get better at the game” with a usable practice target?",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 2"
+                              },
+                              {
+                                "answer": "Repetition makes the behavior familiar and easier to initiate, but familiarity does not prove correctness.",
+                                "id": "flashcards-deliberate-practice-flashcard-3",
+                                "kind": "qa",
+                                "question": "Why can a repeated unsafe angle begin to feel correct even when opponents punish it?",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 3"
+                              },
+                              {
+                                "answer": "Familiar conditions can conceal gaps because they avoid situations that expose weaknesses or require new decisions.",
+                                "id": "flashcards-deliberate-practice-flashcard-4",
+                                "kind": "qa",
+                                "question": "You always use a strategy you already understand and feel smooth doing so. What weakness might this hide?",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 4"
+                              },
+                              {
+                                "answer": "Use the target: before attacking, confirm support or cancel the attempt. This makes the decision visible and changeable.",
+                                "id": "flashcards-deliberate-practice-flashcard-5",
+                                "kind": "qa",
+                                "question": "Before attacking, you often commit without checking teammate support. What specific target could make this error adjustable?",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 5"
+                              },
+                              {
+                                "answer": "A narrow focus makes one behavior easier to observe, evaluate, and adjust before moving to another limiting factor.",
+                                "id": "flashcards-deliberate-practice-flashcard-6",
+                                "kind": "qa",
+                                "question": "Why should practice focus on one decision instead of trying to eliminate every mistake immediately?",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 6"
+                              },
+                              {
+                                "answer": "It identifies a specific skill that can be observed during practice and connected to particular decisions.",
+                                "id": "flashcards-deliberate-practice-flashcard-7",
+                                "kind": "qa",
+                                "question": "What makes “recognize when an opponent can punish this entry” more useful than “improve at the game”?",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 7"
+                              },
+                              {
+                                "answer": "It may be too easy to expose meaningful errors or create useful pressure, so the task may need greater difficulty.",
+                                "id": "flashcards-deliberate-practice-flashcard-8",
+                                "kind": "qa",
+                                "question": "A task feels effortless throughout the session. What does that suggest about its difficulty?",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 8"
+                              },
+                              {
+                                "answer": "Feedback becomes difficult to interpret because you cannot tell which decisions caused success or failure.",
+                                "id": "flashcards-deliberate-practice-flashcard-9",
+                                "kind": "qa",
+                                "question": "A task is so difficult that success seems random. Why is that a problem?",
+                                "sourceLine": 9,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 9"
+                              },
+                              {
+                                "answer": "Choose a task challenging enough to reveal errors but not so difficult that results become random.",
+                                "id": "flashcards-deliberate-practice-flashcard-10",
+                                "kind": "qa",
+                                "question": "What difficulty level is generally most useful for deliberate practice?",
+                                "sourceLine": 10,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 10"
+                              },
+                              {
+                                "answer": "Use it to inspect the decision, identify what information or timing was missing, and test one adjustment.",
+                                "id": "flashcards-deliberate-practice-flashcard-11",
+                                "kind": "qa",
+                                "question": "An opponent repeatedly punishes your entry. How can that event function as practice feedback?",
+                                "sourceLine": 11,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 11"
+                              },
+                              {
+                                "answer": "Ask a question tied to the target, such as whether you had enough information before committing.",
+                                "id": "flashcards-deliberate-practice-flashcard-12",
+                                "kind": "qa",
+                                "question": "Instead of watching an entire replay passively, what focused question could guide review?",
+                                "sourceLine": 12,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 12"
+                              },
+                              {
+                                "answer": "Choose one behavior to work on before attempting it under a challenging condition.",
+                                "id": "flashcards-deliberate-practice-flashcard-13",
+                                "kind": "qa",
+                                "question": "What is the first step in the deliberate-practice loop?",
+                                "sourceLine": 13,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 13"
+                              },
+                              {
+                                "answer": "Observe the result and name the specific error or success so the adjustment responds to evidence.",
+                                "id": "flashcards-deliberate-practice-flashcard-14",
+                                "kind": "qa",
+                                "question": "After attempting a target behavior, what should you do before changing your approach?",
+                                "sourceLine": 14,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 14"
+                              },
+                              {
+                                "answer": "Changing one variable produces cleaner evidence about what helped, while several simultaneous changes obscure the cause.",
+                                "id": "flashcards-deliberate-practice-flashcard-15",
+                                "kind": "qa",
+                                "question": "Why should an adjustment usually change only one part of the behavior?",
+                                "sourceLine": 15,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 15"
+                              },
+                              {
+                                "answer": "The task is demanding enough to expose errors while remaining interpretable rather than random.",
+                                "id": "flashcards-deliberate-practice-flashcard-16",
+                                "kind": "qa",
+                                "question": "What does it mean for practice to occur at the edge of your ability?",
+                                "sourceLine": 16,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 16"
+                              },
+                              {
+                                "answer": "It requires sustained attention to details that ordinary play often filters out.",
+                                "id": "flashcards-deliberate-practice-flashcard-17",
+                                "kind": "qa",
+                                "question": "Why can deliberate practice feel more mentally demanding than normal play?",
+                                "sourceLine": 17,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 17"
+                              },
+                              {
+                                "answer": "No. Difficulty matters, but effectiveness also requires focused attention, relevant feedback, and useful adjustment.",
+                                "id": "flashcards-deliberate-practice-flashcard-18",
+                                "kind": "qa",
+                                "question": "Is difficulty alone proof that a practice session is effective?",
+                                "sourceLine": 18,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 18"
+                              },
+                              {
+                                "answer": "Concentration supports accurate observation and adjustment, while distraction can rehearse careless decisions.",
+                                "id": "flashcards-deliberate-practice-flashcard-19",
+                                "kind": "qa",
+                                "question": "Why might a short focused block outperform a long distracted session?",
+                                "sourceLine": 19,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 19"
+                              },
+                              {
+                                "answer": "It may mostly rehearse fatigue, reduced attention, and careless decisions rather than the intended skill.",
+                                "id": "flashcards-deliberate-practice-flashcard-20",
+                                "kind": "qa",
+                                "question": "Your performance drops because you are exhausted. What might continued repetition reinforce?",
+                                "sourceLine": 20,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 20"
+                              },
+                              {
+                                "answer": "They help preserve attention and support learning after demanding practice sessions.",
+                                "id": "flashcards-deliberate-practice-flashcard-21",
+                                "kind": "qa",
+                                "question": "How do breaks and sleep support deliberate practice?",
+                                "sourceLine": 21,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 21"
+                              },
+                              {
+                                "answer": "Track one simple measure connected to the target, such as successful support checks before engagements.",
+                                "id": "flashcards-deliberate-practice-flashcard-22",
+                                "kind": "qa",
+                                "question": "What kind of measure should you record during practice?",
+                                "sourceLine": 22,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 22"
+                              },
+                              {
+                                "answer": "It makes change easier to notice without turning every session into burdensome paperwork.",
+                                "id": "flashcards-deliberate-practice-flashcard-23",
+                                "kind": "qa",
+                                "question": "Why is a small practice record preferable to documenting everything?",
+                                "sourceLine": 23,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 23"
+                              },
+                              {
+                                "answer": "Training mode may be useful because it allows focused work on execution without as many unrelated variables.",
+                                "id": "flashcards-deliberate-practice-flashcard-24",
+                                "kind": "qa",
+                                "question": "You want to practice a mechanical execution skill. Which environment may be especially suitable?",
+                                "sourceLine": 24,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 24"
+                              },
+                              {
+                                "answer": "Replay review can help examine positioning and whether available information influenced decisions.",
+                                "id": "flashcards-deliberate-practice-flashcard-25",
+                                "kind": "qa",
+                                "question": "You want to diagnose positioning or information use. Which activity may provide useful evidence?",
+                                "sourceLine": 25,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 25"
+                              },
+                              {
+                                "answer": "They create realistic pressure but combine many variables, making one skill harder to isolate.",
+                                "id": "flashcards-deliberate-practice-flashcard-26",
+                                "kind": "qa",
+                                "question": "Why are ranked games not always the clearest setting for diagnosing one skill?",
+                                "sourceLine": 26,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 26"
+                              },
+                              {
+                                "answer": "It should state an observable action, such as pausing before committing when support is absent.",
+                                "id": "flashcards-deliberate-practice-flashcard-27",
+                                "kind": "qa",
+                                "question": "Before a session, what should a visible success condition describe?",
+                                "sourceLine": 27,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 27"
+                              },
+                              {
+                                "answer": "You can evaluate whether you performed the target behavior independently of the outcome.",
+                                "id": "flashcards-deliberate-practice-flashcard-28",
+                                "kind": "qa",
+                                "question": "Why is a process condition useful even when the final match result is a win or loss?",
+                                "sourceLine": 28,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 28"
+                              },
+                              {
+                                "answer": "Use a brief reminder of the target that supports attention without distracting from the task.",
+                                "id": "flashcards-deliberate-practice-flashcard-29",
+                                "kind": "qa",
+                                "question": "What kind of cue should you use during practice?",
+                                "sourceLine": 29,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 29"
+                              },
+                              {
+                                "answer": "It labels identity rather than describing a changeable behavior, available information, or alternative choice.",
+                                "id": "flashcards-deliberate-practice-flashcard-30",
+                                "kind": "qa",
+                                "question": "After a mistake, why is “I am bad” an unhelpful analysis?",
+                                "sourceLine": 30,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 30"
+                              },
+                              {
+                                "answer": "Ask what information was available, what choice you made, and what alternative you will test next.",
+                                "id": "flashcards-deliberate-practice-flashcard-31",
+                                "kind": "qa",
+                                "question": "What three questions can turn a mistake into an adjustment?",
+                                "sourceLine": 31,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 31"
+                              },
+                              {
+                                "answer": "Multiple changes make it unclear which variable caused improvement or decline.",
+                                "id": "flashcards-deliberate-practice-flashcard-32",
+                                "kind": "qa",
+                                "question": "Why should you avoid changing settings, strategy, role, and practice goal simultaneously?",
+                                "sourceLine": 32,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 32"
+                              },
+                              {
+                                "answer": "Record one successful example, one failed example, and one adjustment for the next session.",
+                                "id": "flashcards-deliberate-practice-flashcard-33",
+                                "kind": "qa",
+                                "question": "After a session, what three notes should you record?",
+                                "sourceLine": 33,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 33"
+                              },
+                              {
+                                "answer": "Redesign the exercise so the relevant decision occurs more often and produces more evidence.",
+                                "id": "flashcards-deliberate-practice-flashcard-34",
+                                "kind": "qa",
+                                "question": "What should you do if the target behavior rarely appears during practice?",
+                                "sourceLine": 34,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 34"
+                              },
+                              {
+                                "answer": "Increase the difficulty or select the next bottleneck that limits performance.",
+                                "id": "flashcards-deliberate-practice-flashcard-35",
+                                "kind": "qa",
+                                "question": "What should you do if the target behavior succeeds consistently?",
+                                "sourceLine": 35,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 35"
+                              },
+                              {
+                                "answer": "Hours performed while distracted or repeating an uncorrected behavior can reinforce the wrong response.",
+                                "id": "flashcards-deliberate-practice-flashcard-36",
+                                "kind": "qa",
+                                "question": "Why are more practice hours not automatically better?",
+                                "sourceLine": 36,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 36"
+                              },
+                              {
+                                "answer": "A lucky win may hide poor decisions, while a loss can contain several strong choices.",
+                                "id": "flashcards-deliberate-practice-flashcard-37",
+                                "kind": "qa",
+                                "question": "Why can judging practice only by wins and losses mislead you?",
+                                "sourceLine": 37,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 37"
+                              },
+                              {
+                                "answer": "Judge the process and decision quality, including whether the target behavior was performed effectively.",
+                                "id": "flashcards-deliberate-practice-flashcard-38",
+                                "kind": "qa",
+                                "question": "What should you evaluate alongside the final result?",
+                                "sourceLine": 38,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 38"
+                              },
+                              {
+                                "answer": "The loss does not erase good process evidence; review decision quality separately from the outcome.",
+                                "id": "flashcards-deliberate-practice-flashcard-39",
+                                "kind": "qa",
+                                "question": "A player loses despite making several strong decisions. How should the session be interpreted?",
+                                "sourceLine": 39,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 39"
+                              },
+                              {
+                                "answer": "Performance is also affected by strategy knowledge, health, communication, equipment, competition, and emotional state.",
+                                "id": "flashcards-deliberate-practice-flashcard-40",
+                                "kind": "qa",
+                                "question": "Why should deliberate practice not become a reason to blame yourself for every result?",
+                                "sourceLine": 40,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 40"
+                              },
+                              {
+                                "answer": "Games often provide faster and clearer feedback, while real-world skills may require more patience and additional evidence.",
+                                "id": "flashcards-deliberate-practice-flashcard-41",
+                                "kind": "qa",
+                                "question": "How does practice transfer from games to real-world skills differ?",
+                                "sourceLine": 41,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 41"
+                              },
+                              {
+                                "answer": "Identify the trigger, test one adjustment, and check the result instead of merely repeating the behavior.",
+                                "id": "flashcards-deliberate-practice-flashcard-42",
+                                "kind": "qa",
+                                "question": "What is the purpose of treating a repeated error as a reviewable decision pattern?",
+                                "sourceLine": 42,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 42"
+                              },
+                              {
+                                "answer": "Move on after the current decision improves consistently, then select the next limiting factor or bottleneck.",
+                                "id": "flashcards-deliberate-practice-flashcard-43",
+                                "kind": "qa",
+                                "question": "When should you move from one target to another?",
+                                "sourceLine": 43,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 43"
+                              }
+                            ],
+                            "title": "Flashcards: Deliberate Practice"
+                          },
+                          "type": "FlashcardCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Flashcards: Deliberate Practice Flashcards",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Flashcards: Deliberate Practice"
+      }
+    },
+    {
+      "actionId": "podcast",
+      "durationMs": 13000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 6,
+        "dashboardIndex": 6,
+        "dashboardKey": "demo-deliberate-practice-page-6",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Deliberate Practice",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "demo-deliberate-practice-podcast-player",
+                          "props": {
+                            "podcast": {
+                              "audioPath": "/demo/audio/deliberate-practice.mp3",
+                              "chapters": [
+                                {
+                                  "startTurn": 0,
+                                  "title": "Repetition Is Not the Same as Practice"
+                                },
+                                {
+                                  "startTurn": 3,
+                                  "title": "What Makes Practice Deliberate"
+                                },
+                                {
+                                  "startTurn": 11,
+                                  "title": "Building a Repeatable Improvement Cycle"
+                                }
+                              ],
+                              "createdAt": "2026-08-02T10:00:00.000Z",
+                              "description": "A focused conversation about why repetition alone is not practice, and how targets, feedback, adjustment, and recovery create a repeatable improvement cycle.",
+                              "id": "demo-deliberate-practice-podcast",
+                              "mimeType": "audio/mpeg",
+                              "sourceScope": "studyGuide",
+                              "sourceTitle": "Deliberate Practice",
+                              "title": "Deliberate Practice: Turning Repetition Into Improvement",
+                              "transcriptTurns": [
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Welcome to a focused conversation about deliberate practice. The central idea is simple: repeating an action gives you more attempts, but attempts alone do not decide what you learn. Improvement depends on what you notice, the feedback you receive, and whether you change your response afterward."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Exactly. Someone can play hundreds of matches and still preserve the same positioning error, poor timing, or unexamined decision rule. Repetition can strengthen a routine without strengthening the result you actually want. Familiarity is not the same as correctness."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "That is why practice needs a narrow target. “I need to get better” is too broad. A better target might be surviving the first engagement, confirming enemy locations before pushing, or executing one movement sequence consistently. What makes a target useful instead of vague?"
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "It needs to be precise enough to observe during the session and important enough to affect performance. It should also sit near the edge of your ability: difficult enough to expose errors, but not so difficult that success becomes random. Effort should reveal something you can adjust."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Consider a player who begins an attack before checking whether a teammate can support them. The same pattern repeats: approach, commit, become isolated, and lose. A deliberate session names the decision: before attacking, confirm support or cancel the attempt. The goal is not instant perfection; it is making one decision visible and adjustable."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "And feedback should answer a question. Instead of watching an entire replay passively, ask, “Did I have information before I committed?” Feedback might come from an opponent’s punishment, a replay, training mode, a teammate, or a recorded statistic. Which loop keeps that feedback useful?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Choose one behavior, attempt it under a challenging condition, observe the result, name the error or success, change one part, and repeat. That loop turns practice into an investigation. The smallest adjustment is often better than changing your settings, strategy, role, and goal all at once."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Why is changing one variable so important?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Because if several things change together, you cannot tell which change helped. One adjustment gives cleaner evidence, even when the evidence is imperfect. Keep the record simple too: track one measure connected to the target, such as successful checks before engagements or avoidable deaths from the named mistake."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "The work can feel mentally demanding because deliberate practice requires attention to details that normal play filters out. Difficulty alone does not prove effectiveness, but sustained concentration matters. Short, focused blocks may help more than long sessions performed while distracted or frustrated."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Recovery matters as well. Breaks, sleep, and stepping away from intense analysis help preserve attention. When exhaustion causes performance to drop, continuing may mostly rehearse fatigue and careless decisions. More hours are not automatically better."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "How should someone structure the cycle before, during, and after a session?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Before the session, choose one skill and define visible success, such as pausing before committing when support is missing during the next five matches. During the session, use a brief cue, describe behavior instead of attacking yourself, and ask what information was available, what choice you made, and what alternative you will test."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Then, after the session, review a small sample. Write one example of the target succeeding, one example of it failing, and one adjustment for next time. If the target rarely appeared, redesign the exercise. If it succeeded consistently, increase difficulty or choose the next limiting factor."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "And judge process alongside results. A lucky win can hide poor decisions, while a loss can contain strong choices. Ranked play creates realistic pressure, but it combines many variables, so training mode or replay review may sometimes diagnose one skill more clearly."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "So the main takeaway is that improvement is not produced by repetition alone. It comes from focused targets, challenging but interpretable tasks, useful feedback, one deliberate adjustment, simple evidence, and enough recovery to keep attention sharp."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Right. Repeat the decision pattern, not the mistake. Make the behavior observable, test one change, review what happened, and then choose the next bottleneck. Deliberate practice turns ordinary attempts into informed adjustments without treating every outcome as a reason for blame."
+                                }
+                              ]
+                            }
+                          },
+                          "type": "PodcastBlock"
+                        }
+                      ],
+                      "widgetId": "demo-deliberate-practice-podcast-widget"
+                    }
+                  },
+                  "name": "Deliberate Practice: Turning Repetition Into Improvement",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Deliberate Practice: Turning Repetition Into Improvement"
+      }
+    }
+  ],
+  "studyPath": {
+    "contentLanguage": "en",
+    "contentLanguageSource": "detected",
+    "dashboards": [
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 1,
+        "dashboardKey": "demo-deliberate-practice-page-1",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Deliberate Practice",
+        "id": "demo-deliberate-practice-dashboard-1",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "01-repetition-is-not-the-same-as-practice-1-01-repetition-is-not-the-same-as-practice-1-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "01 - Repetition Is Not the Same as Practice",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "01-repetition-is-not-the-same-as-practice-1-01-repetition-is-not-the-same-as-practice-1-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "# Repetition Is Not the Same as Practice\n\n## The central distinction\n\nRepeating an action gives you more attempts, but attempts alone do not determine what you learn. Improvement depends on what your attention notices, what feedback you receive, and whether you change your response afterward. A player can complete hundreds of matches while preserving the same positioning error, poor timing, or unexamined decision rule.\n\nPractice is more useful when it has a target. Instead of saying, “I need to get better,” choose a narrow outcome such as surviving the first engagement, confirming enemy locations before pushing, or executing a particular movement sequence consistently. A specific target makes errors visible and gives the session a clear purpose.\n\n## How mistakes become stable\n\nWhen you repeat a behavior without correction, your brain can make that behavior more familiar and easier to initiate. Familiarity is not the same as correctness. In a game, repeatedly taking an unsafe angle may make the angle feel natural even when opponents punish it. The repetition strengthens the routine, not necessarily the result you want.\n\nComfort can also hide weaknesses. If you always use a strategy you already understand, you may feel smooth while avoiding the situations that expose gaps. Playing more under familiar conditions can maintain performance without expanding it.\n\n## A practical example\n\nSuppose you lose several rounds because you begin an attack before checking whether a teammate can support you. Replaying matches without a plan may produce the same sequence: approach, commit, get isolated, and lose. A better session names the behavior: “Before attacking, confirm support or cancel the attempt.”\n\nThe goal is not to eliminate every mistake immediately. It is to make one decision more observable and more adjustable. Once that decision improves, choose the next limiting factor.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 1,
+                            "studyPathDashboardKey": "demo-deliberate-practice-page-1",
+                            "studyPathDashboardName": "01 - Repetition Is Not the Same as Practice",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Deliberate Practice",
+                            "studyPathId": "demo-deliberate-practice",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Deliberate Practice",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "01-repetition-is-not-the-same-as-practice-1-01-repetition-is-not-the-same-as-practice-1-source"
+                    }
+                  },
+                  "name": "01 - Repetition Is Not the Same as Practice Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "01 - Repetition Is Not the Same as Practice",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 2,
+        "dashboardKey": "demo-deliberate-practice-page-2",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Deliberate Practice",
+        "id": "demo-deliberate-practice-dashboard-2",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "02-what-makes-practice-deliberate-2-02-what-makes-practice-deliberate-2-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "02 - What Makes Practice Deliberate",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "02-what-makes-practice-deliberate-2-02-what-makes-practice-deliberate-2-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "# What Makes Practice Deliberate\n\n## A focused target\n\nDeliberate practice begins with a skill that can be described precisely. “Improve at the game” is too broad; “recognize when an opponent can punish this entry” is more workable. The target should be narrow enough to observe during a session and important enough to affect performance.\n\n## A task at the edge of ability\n\nThe exercise should be difficult enough to expose errors but not so difficult that success becomes random. In a competitive game, this might mean practicing a difficult timing against a realistic opponent, reviewing one type of team-fight decision, or limiting yourself to a specific defensive habit. If the task feels effortless, it may not create useful pressure. If it is impossible, feedback becomes hard to interpret.\n\n## Immediate information and adjustment\n\nFeedback can come from an opponent’s punishment, a replay, a training-mode result, a teammate’s observation, or a recorded statistic. Feedback is useful when it answers a question. Instead of watching an entire replay passively, check one issue: “Did I have information before I committed?” Then identify the smallest adjustment that could change the outcome.\n\nA simple loop is:\n\n```text\nChoose one behavior\nAttempt it under a challenging condition\nObserve the result\nName the error or success\nChange one part\nRepeat\n```\n\n## Effort and recovery\n\nDeliberate practice often feels mentally demanding because it requires attention to details that normal play filters out. Difficulty is not proof that the session is effective, but sustained concentration matters. Short, focused blocks can be more useful than long sessions performed while distracted or frustrated.\n\nRecovery also supports learning. Breaks, sleep, and switching away from intense analysis help preserve attention. When performance drops because you are exhausted, continuing to repeat the task may mostly rehearse fatigue and careless decisions.\n\n## Keep evidence simple\n\nRecord one measure connected to the target, such as successful checks before engagements or avoidable deaths from a named mistake. A small record makes change easier to notice without turning every session into paperwork.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 2,
+                            "studyPathDashboardKey": "demo-deliberate-practice-page-2",
+                            "studyPathDashboardName": "02 - What Makes Practice Deliberate",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Deliberate Practice",
+                            "studyPathId": "demo-deliberate-practice",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Deliberate Practice",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "02-what-makes-practice-deliberate-2-02-what-makes-practice-deliberate-2-source"
+                    }
+                  },
+                  "name": "02 - What Makes Practice Deliberate Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            },
+            {
+              "active": false,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "02-what-makes-practice-deliberate-2-02-what-makes-practice-deliberate-2-1-knowledge-bridge-2-game-practice-and-transfer-note",
+                          "props": {
+                            "__blockType": "StudyNoteBlock",
+                            "contextBridge": true,
+                            "suggestedTypes": [],
+                            "text": "A useful game-based bridge is to treat a repeated error like a reviewable decision pattern: identify the trigger, test one adjustment, and check the result. The caveat is that games usually provide faster and clearer feedback than many real-world skills, so outside games you may need patience and additional evidence.",
+                            "title": "Game Practice and Transfer"
+                          },
+                          "type": "StudyNoteBlock"
+                        }
+                      ],
+                      "widgetId": "02-what-makes-practice-deliberate-2-02-what-makes-practice-deliberate-2-1"
+                    }
+                  },
+                  "name": "Game Practice and Transfer",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "02 - What Makes Practice Deliberate",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 3,
+        "dashboardKey": "demo-deliberate-practice-page-3",
+        "dashboardPurpose": "finalReview",
+        "deletable": false,
+        "folderName": "Deliberate Practice",
+        "id": "demo-deliberate-practice-dashboard-3",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-building-a-repeatable-improvement-cycle-3-03-building-a-repeatable-improvement-cycle-3-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "03 - Building a Repeatable Improvement Cycle",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "03-building-a-repeatable-improvement-cycle-3-03-building-a-repeatable-improvement-cycle-3-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "# Building a Repeatable Improvement Cycle\n\n## Before the session\n\nChoose one skill and define a visible success condition. For example: “During the next five matches, I will pause before committing when I lack support.” The condition is better than a vague promise because you can review whether you actually performed the pause, even when the final result was a win or loss.\n\nSelect an exercise that creates relevant decisions. A training mode may help with execution, while a replay review may help with positioning or information use. Ranked games can provide realistic pressure, but they also combine many variables, so they are not always the clearest environment for diagnosing one skill.\n\n## During the session\n\nUse a brief cue that reminds you of the target without distracting you. After a mistake, avoid replacing analysis with a label such as “I am bad.” Ask what information was available, what choice you made, and what alternative you will test next. The aim is a changeable description of behavior.\n\nDo not change several variables at once. If you alter your settings, strategy, role, and practice goal simultaneously, you may not know which change helped. One adjustment produces cleaner evidence, even if the evidence is imperfect.\n\n## After the session\n\nReview a small sample rather than every moment. Write three notes: one example of the target succeeding, one example of it failing, and one adjustment for the next session. If the target rarely occurred, redesign the exercise so it appears more often. If it succeeded consistently, increase difficulty or choose the next bottleneck.\n\n## Avoiding common traps\n\nMore hours are not automatically better. Repeating a task while distracted can reinforce the wrong response. Chasing outcomes alone can also mislead you: a lucky win may hide poor decisions, while a loss may contain several strong choices. Judge the process and the decision quality alongside the result.\n\nFinally, deliberate practice is only one part of improvement. Strategy knowledge, physical health, communication, equipment, competition level, and emotional state can all affect performance. Use practice to create informed adjustments, not as a reason to blame yourself for every outcome.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 3,
+                            "studyPathDashboardKey": "demo-deliberate-practice-page-3",
+                            "studyPathDashboardName": "03 - Building a Repeatable Improvement Cycle",
+                            "studyPathDashboardPurpose": "finalReview",
+                            "studyPathFolderName": "Deliberate Practice",
+                            "studyPathId": "demo-deliberate-practice",
+                            "studyPathLayoutReason": "Final Study Guide page includes one source-grounded quiz.",
+                            "studyPathPracticeType": "quiz",
+                            "studyPathTitle": "Deliberate Practice",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "03-building-a-repeatable-improvement-cycle-3-03-building-a-repeatable-improvement-cycle-3-source"
+                    }
+                  },
+                  "name": "03 - Building a Repeatable Improvement Cycle Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            },
+            {
+              "active": false,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-building-a-repeatable-improvement-cycle-3-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "Focus on checking for support before each attack, review whether the check changed the decision, and adjust",
+                                "correctIndex": 1,
+                                "explanation": "Deliberate practice isolates a specific behavior, observes its result, and uses feedback to guide an adjustment.",
+                                "hint": "Distinguishing deliberate practice from simple repetition",
+                                "id": "study-guide-3-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Play 200 more matches using the same approach\", but the answer should focus on \"Focus on checking for support before each attack, review whether th...\".",
+                                    "option": "Play 200 more matches using the same approach"
+                                  },
+                                  {
+                                    "explanation": "This says \"Avoid attacking entirely so the mistake cannot happen\", but the answer should focus on \"Focus on checking for support before each attack, review whether th...\".",
+                                    "option": "Avoid attacking entirely so the mistake cannot happen"
+                                  },
+                                  {
+                                    "explanation": "Deliberate practice isolates a specific behavior, observes its result, and uses feedback to guide an adjustment.",
+                                    "option": "Focus on checking for support before each attack, review whether the check changed the decision, and adjust"
+                                  }
+                                ],
+                                "options": [
+                                  "Play 200 more matches using the same approach",
+                                  "Focus on checking for support before each attack, review whether the check changed the decision, and adjust",
+                                  "Avoid attacking entirely so the mistake cannot happen"
+                                ],
+                                "question": "A player has played 200 matches but still commits to attacks without checking for teammate support. Which change best turns future sessions into deliberate practice?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "The task is too difficult, so the feedback is hard to interpret",
+                                "correctIndex": 0,
+                                "explanation": "Practice should be challenging enough to expose errors but not so difficult that success and failure become random.",
+                                "hint": "Selecting an appropriate difficulty level",
+                                "id": "study-guide-3-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"The player is collecting too much evidence\", but the answer should focus on \"The task is too difficult, so the feedback is hard to interpret\".",
+                                    "option": "The player is collecting too much evidence"
+                                  },
+                                  {
+                                    "explanation": "Practice should be challenging enough to expose errors but not so difficult that success and failure become random.",
+                                    "option": "The task is too difficult, so the feedback is hard to interpret"
+                                  },
+                                  {
+                                    "explanation": "This says \"The task is too easy to produce useful learning\", but the answer should focus on \"The task is too difficult, so the feedback is hard to interpret\".",
+                                    "option": "The task is too easy to produce useful learning"
+                                  }
+                                ],
+                                "options": [
+                                  "The task is too difficult, so the feedback is hard to interpret",
+                                  "The player is collecting too much evidence",
+                                  "The task is too easy to produce useful learning"
+                                ],
+                                "question": "A player wants to practice recognizing punishable entries but chooses opponents so strong that every attempt fails unpredictably. What is the main problem?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "Did I have enough information before I committed?",
+                                "correctIndex": 2,
+                                "explanation": "A focused question connects the review to the target behavior and identifies an adjustable decision.",
+                                "hint": "Using feedback to diagnose decisions",
+                                "id": "study-guide-3-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Was the match exciting\", but the answer should focus on \"Did I have enough information before I committed\".",
+                                    "option": "Was the match exciting?"
+                                  },
+                                  {
+                                    "explanation": "This says \"Did my teammates make any mistakes\", but the answer should focus on \"Did I have enough information before I committed\".",
+                                    "option": "Did my teammates make any mistakes?"
+                                  },
+                                  {
+                                    "explanation": "A focused question connects the review to the target behavior and identifies an adjustable decision.",
+                                    "option": "Did I have enough information before I committed?"
+                                  }
+                                ],
+                                "options": [
+                                  "Was the match exciting?",
+                                  "Did my teammates make any mistakes?",
+                                  "Did I have enough information before I committed?"
+                                ],
+                                "question": "After reviewing a replay, which question best supports deliberate practice for a player who dies during aggressive pushes?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "Too many variables changed at once",
+                                "correctIndex": 1,
+                                "explanation": "Changing several variables at once makes the evidence harder to interpret because the source of the change is unclear.",
+                                "hint": "Controlling variables during practice",
+                                "id": "study-guide-3-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"The player practiced with a specific target\", but the answer should focus on \"Too many variables changed at once\".",
+                                    "option": "The player practiced with a specific target"
+                                  },
+                                  {
+                                    "explanation": "Changing several variables at once makes the evidence harder to interpret because the source of the change is unclear.",
+                                    "option": "Too many variables changed at once"
+                                  },
+                                  {
+                                    "explanation": "This says \"The player reviewed both successes and failures\", but the answer should focus on \"Too many variables changed at once\".",
+                                    "option": "The player reviewed both successes and failures"
+                                  }
+                                ],
+                                "options": [
+                                  "The player practiced with a specific target",
+                                  "Too many variables changed at once",
+                                  "The player reviewed both successes and failures"
+                                ],
+                                "question": "A player changes their settings, role, strategy, and practice goal in the same week, then improves slightly. Why is it difficult to know what caused the improvement?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "The player showed process improvement even though the outcome was negative",
+                                "correctIndex": 1,
+                                "explanation": "Deliberate practice evaluates decision quality and target behavior, not only the final match result.",
+                                "hint": "Separating process quality from outcomes",
+                                "id": "study-guide-3-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Deliberate practice evaluates decision quality and target behavior, not only the final match result.",
+                                    "option": "The player showed process improvement even though the outcome was negative"
+                                  },
+                                  {
+                                    "explanation": "This says \"The session was unsuccessful because the team lost\", but the answer should focus on \"The player showed process improvement even though the outcome was n...\".",
+                                    "option": "The session was unsuccessful because the team lost"
+                                  },
+                                  {
+                                    "explanation": "This says \"The player should abandon the target because it did not guarantee a...\", but the answer should focus on \"The player showed process improvement even though the outcome...",
+                                    "option": "The player should abandon the target because it did not guarantee a win"
+                                  }
+                                ],
+                                "options": [
+                                  "The session was unsuccessful because the team lost",
+                                  "The player showed process improvement even though the outcome was negative",
+                                  "The player should abandon the target because it did not guarantee a win"
+                                ],
+                                "question": "A player loses a match but pauses before two unsupported attacks and avoids one unnecessary death. What is the best evaluation?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              },
+                              {
+                                "answer": "Take a break and resume when focused, or redesign the session into shorter blocks",
+                                "correctIndex": 2,
+                                "explanation": "Recovery protects attention; continuing while exhausted may rehearse fatigue and the very errors the player wants to change.",
+                                "hint": "Applying effort and recovery principles",
+                                "id": "study-guide-3-multiple-choice-6",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Recovery protects attention; continuing while exhausted may rehearse fatigue and the very errors the player wants to change.",
+                                    "option": "Take a break and resume when focused, or redesign the session into shorter blocks"
+                                  },
+                                  {
+                                    "explanation": "This says \"Add several new goals to force greater concentration\", but the answer should focus on \"Take a break and resume when focused, or redesign the session into...\".",
+                                    "option": "Add several new goals to force greater concentration"
+                                  },
+                                  {
+                                    "explanation": "This says \"Continue playing until the mistakes disappear\", but the answer should focus on \"Take a break and resume when focused, or redesign the session into...\".",
+                                    "option": "Continue playing until the mistakes disappear"
+                                  }
+                                ],
+                                "options": [
+                                  "Add several new goals to force greater concentration",
+                                  "Continue playing until the mistakes disappear",
+                                  "Take a break and resume when focused, or redesign the session into shorter blocks"
+                                ],
+                                "question": "During a long session, a player becomes exhausted and begins repeating careless positioning mistakes. What is the most deliberate response?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 6"
+                              }
+                            ],
+                            "title": "03 - Building a Repeatable Improvement Cycle"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "03-building-a-repeatable-improvement-cycle-3-1"
+                    }
+                  },
+                  "name": "03 - Building a Repeatable Improvement Cycle Quiz",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Final Study Guide page includes one source-grounded quiz.",
+        "name": "03 - Building a Repeatable Improvement Cycle",
+        "practiceType": "quiz"
+      }
+    ],
+    "emoji": "🎮",
+    "folderName": "Deliberate Practice",
+    "pathId": "demo-deliberate-practice",
+    "quickStart": {
+      "keyIdea": "In competitive games, deliberate practice means repeating a specific skill with feedback and adjustment, not merely playing more matches.",
+      "quickSummary": "Playing many matches can improve familiarity, but it can also reinforce predictable mistakes, such as taking the same unsafe fight or missing the same timing. Improvement becomes more deliberate when you isolate one problem and define what success looks like.\n\nFor example, practice checking the minimap before committing to an attack, then review whether the check changed your decision. The comparison is strong because games provide clear feedback, but real-world learning may have slower, less measurable results."
+    },
+    "selectedIndex": 0,
+    "title": "Deliberate Practice"
+  }
+}

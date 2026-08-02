@@ -48,3 +48,8 @@ tmp/*.log
 /workspaces/
 /worktree/
 /worktrees/
+
+# Raw demo-guide captures. The normalised output under src/demo/guides/ is
+# committed; these pre-normalisation dumps and review files are not, because
+# they are large and still carry generation-time ids.
+apps/studymesh/scripts/.capture/

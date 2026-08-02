@@ -193,6 +193,10 @@ describe('DemoGuidePage', () => {
   beforeEach(() => {
     authState.current = { user: null, loading: false }
     window.sessionStorage.clear()
+    // The real chat panel scrolls its transcript on every new message, and
+    // jsdom has no scrollTo: without this the deferred scroll surfaces as an
+    // unhandled error after the test has already passed.
+    HTMLElement.prototype.scrollTo = vi.fn()
     // The page rail, the breadcrumb and the desktop split all key off `lg`.
     vi.mocked(window.matchMedia).mockImplementation((query) => ({
       matches: query.includes('min-width'),

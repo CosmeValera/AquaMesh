@@ -1,0 +1,2785 @@
+{
+  "bonusPages": [
+    {
+      "actionId": "quiz",
+      "durationMs": 9000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 4,
+        "dashboardIndex": 4,
+        "dashboardKey": "demo-compound-interest-page-4",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Compound Interest",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "$1,000 plus the $50 earned in year 1",
+                                "correctIndex": 1,
+                                "explanation": "Year 2 compounds on principal plus previously accumulated interest.",
+                                "hint": "Think: interest becomes part of the next year’s starting balance.",
+                                "id": "quiz-compound-interest-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches simple interest, not compounding.",
+                                    "option": "Only the original $1,000"
+                                  },
+                                  {
+                                    "explanation": "Correct: the new balance includes prior interest.",
+                                    "option": "$1,000 plus the $50 earned in year 1"
+                                  },
+                                  {
+                                    "explanation": "That amount depends on year 2’s growth, not the base.",
+                                    "option": "$1,000 plus the $52.50 earned in year 2"
+                                  },
+                                  {
+                                    "explanation": "Interest alone is not the compounding base.",
+                                    "option": "Only the interest earned in year 1"
+                                  }
+                                ],
+                                "options": [
+                                  "Only the original $1,000",
+                                  "$1,000 plus the $50 earned in year 1",
+                                  "$1,000 plus the $52.50 earned in year 2",
+                                  "Only the interest earned in year 1"
+                                ],
+                                "question": "A $1,000 investment earns 5% in year 1 and stays invested. What base does year 2’s 5% apply to?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "Time measured in years",
+                                "correctIndex": 1,
+                                "explanation": "t is the time horizon expressed in years.",
+                                "hint": "Look for the variable tied to years, not rates or periods.",
+                                "id": "quiz-compound-interest-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "That is n, not t.",
+                                    "option": "Number of compounding periods per year"
+                                  },
+                                  {
+                                    "explanation": "Correct: t counts years in the exponent.",
+                                    "option": "Time measured in years"
+                                  },
+                                  {
+                                    "explanation": "Ending balance is A, not a time variable.",
+                                    "option": "Ending balance"
+                                  },
+                                  {
+                                    "explanation": "That is r, not t.",
+                                    "option": "Annual rate written as a decimal"
+                                  }
+                                ],
+                                "options": [
+                                  "Number of compounding periods per year",
+                                  "Time measured in years",
+                                  "Ending balance",
+                                  "Annual rate written as a decimal"
+                                ],
+                                "question": "Using the compound interest model A = P(1 + r/n)^(nt), what does t represent?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "0.05",
+                                "correctIndex": 0,
+                                "explanation": "The model uses r as a decimal rate.",
+                                "hint": "Convert percent to decimal before substituting.",
+                                "id": "quiz-compound-interest-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: The model uses r as a decimal rate.",
+                                    "option": "0.05"
+                                  },
+                                  {
+                                    "explanation": "Using 5 treats it as 500%, too large.",
+                                    "option": "5"
+                                  },
+                                  {
+                                    "explanation": "0.5 means 50%, not 5%.",
+                                    "option": "0.5"
+                                  },
+                                  {
+                                    "explanation": "50 implies 5,000%, far beyond the stated rate.",
+                                    "option": "50"
+                                  }
+                                ],
+                                "options": [
+                                  "0.05",
+                                  "5",
+                                  "0.5",
+                                  "50"
+                                ],
+                                "question": "If r is given as 5% annually, what should you use for r in the formula?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "$1,050",
+                                "correctIndex": 0,
+                                "explanation": "5% of $1,000 adds $50, giving $1,050.",
+                                "hint": "Compute one-year growth from the starting principal.",
+                                "id": "quiz-compound-interest-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Correct: $1,000 × 1.05 = $1,050.",
+                                    "option": "$1,050"
+                                  },
+                                  {
+                                    "explanation": "This is 2.5% growth, not 5%.",
+                                    "option": "$1,025"
+                                  },
+                                  {
+                                    "explanation": "This implies 10% growth, not 5%.",
+                                    "option": "$1,100"
+                                  },
+                                  {
+                                    "explanation": "That would mean no interest was earned.",
+                                    "option": "$1,000"
+                                  }
+                                ],
+                                "options": [
+                                  "$1,050",
+                                  "$1,025",
+                                  "$1,100",
+                                  "$1,000"
+                                ],
+                                "question": "With annual compounding at 5%, which outcome best matches the notes for $1,000 after one year?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "Because earlier gains remain invested and become part of the base",
+                                "correctIndex": 1,
+                                "explanation": "Earlier interest stays invested, so later growth compounds on it.",
+                                "hint": "Focus on what happens to earned interest after year 1.",
+                                "id": "quiz-compound-interest-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "That describes simple interest, which is smaller here.",
+                                    "option": "Because each year’s growth is calculated only from the original principal"
+                                  },
+                                  {
+                                    "explanation": "Correct: compounding uses a growing base.",
+                                    "option": "Because earlier gains remain invested and become part of the base"
+                                  },
+                                  {
+                                    "explanation": "Fees can reduce compounding; they aren’t inherently ignored.",
+                                    "option": "Because fees are ignored in compound interest"
+                                  },
+                                  {
+                                    "explanation": "The notes say returns can be negative; compounding doesn’t guarantee gains.",
+                                    "option": "Because compounding prevents any losses"
+                                  }
+                                ],
+                                "options": [
+                                  "Because each year’s growth is calculated only from the original principal",
+                                  "Because earlier gains remain invested and become part of the base",
+                                  "Because fees are ignored in compound interest",
+                                  "Because compounding prevents any losses"
+                                ],
+                                "question": "Why does compound interest typically produce a larger total than simple interest over the same period?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              },
+                              {
+                                "answer": "Returns can be negative or uneven, so outcomes may differ",
+                                "correctIndex": 1,
+                                "explanation": "The notes emphasize uncertainty: returns can be negative or lower.",
+                                "hint": "Look for the part about promises versus actual outcomes.",
+                                "id": "quiz-compound-interest-multiple-choice-6",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This contradicts the notes: returns are not promises.",
+                                    "option": "The return is guaranteed to be exactly 7% every year"
+                                  },
+                                  {
+                                    "explanation": "Correct: returns can vary and even be negative.",
+                                    "option": "Returns can be negative or uneven, so outcomes may differ"
+                                  },
+                                  {
+                                    "explanation": "The notes say inflation reduces future spending power.",
+                                    "option": "Inflation never affects spending power"
+                                  },
+                                  {
+                                    "explanation": "The notes say fees and taxes reduce what remains invested.",
+                                    "option": "Fees and taxes do not change the amount that compounds"
+                                  }
+                                ],
+                                "options": [
+                                  "The return is guaranteed to be exactly 7% every year",
+                                  "Returns can be negative or uneven, so outcomes may differ",
+                                  "Inflation never affects spending power",
+                                  "Fees and taxes do not change the amount that compounds"
+                                ],
+                                "question": "A quoted annual return is 7%. Which statement best reflects the notes’ warning?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 6"
+                              },
+                              {
+                                "answer": "They reduce the amount that remains invested",
+                                "correctIndex": 1,
+                                "explanation": "Fees reduce the balance that can keep compounding.",
+                                "hint": "Think: compounding needs money to stay invested.",
+                                "id": "quiz-compound-interest-multiple-choice-7",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "That would help compounding, but fees do the opposite.",
+                                    "option": "They increase the amount that remains invested"
+                                  },
+                                  {
+                                    "explanation": "Correct: fewer dollars remain to earn future returns.",
+                                    "option": "They reduce the amount that remains invested"
+                                  },
+                                  {
+                                    "explanation": "Fees reduce the base repeatedly over time.",
+                                    "option": "They only affect the first year"
+                                  },
+                                  {
+                                    "explanation": "Time still matters; fees just shrink the compounding base.",
+                                    "option": "They eliminate the need for compounding time"
+                                  }
+                                ],
+                                "options": [
+                                  "They increase the amount that remains invested",
+                                  "They reduce the amount that remains invested",
+                                  "They only affect the first year",
+                                  "They eliminate the need for compounding time"
+                                ],
+                                "question": "How do fees typically affect compound interest outcomes?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 7"
+                              },
+                              {
+                                "answer": "Interest is added to unpaid debt, increasing what must be repaid",
+                                "correctIndex": 0,
+                                "explanation": "Adding interest to unpaid debt increases the future debt base.",
+                                "hint": "Borrowing flips the direction of compounding.",
+                                "id": "quiz-compound-interest-multiple-choice-8",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Correct: debt compounding increases the amount owed.",
+                                    "option": "Interest is added to unpaid debt, increasing what must be repaid"
+                                  },
+                                  {
+                                    "explanation": "That’s compounding for saving, not borrowing harm.",
+                                    "option": "A savings account compounds interest on deposits"
+                                  },
+                                  {
+                                    "explanation": "This describes positive compounding, not the borrower case.",
+                                    "option": "A retirement plan grows with consistent contributions"
+                                  },
+                                  {
+                                    "explanation": "The notes discuss uncertainty and risk; this option ignores that.",
+                                    "option": "A bond pays a fixed coupon with no risk"
+                                  }
+                                ],
+                                "options": [
+                                  "Interest is added to unpaid debt, increasing what must be repaid",
+                                  "A savings account compounds interest on deposits",
+                                  "A retirement plan grows with consistent contributions",
+                                  "A bond pays a fixed coupon with no risk"
+                                ],
+                                "question": "Which scenario best illustrates compounding working against borrowers?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 8"
+                              },
+                              {
+                                "answer": "Because early deposits have decades to compound",
+                                "correctIndex": 1,
+                                "explanation": "Early deposits have more time, so compounding has longer to work.",
+                                "hint": "The key advantage is time in the account.",
+                                "id": "quiz-compound-interest-multiple-choice-9",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This reverses the timing advantage described in the notes.",
+                                    "option": "Because later deposits always compound more than earlier ones"
+                                  },
+                                  {
+                                    "explanation": "Correct: first deposits get the longest compounding window.",
+                                    "option": "Because early deposits have decades to compound"
+                                  },
+                                  {
+                                    "explanation": "The notes say money remains invested until age 65.",
+                                    "option": "Because contributions stop compounding after age 34"
+                                  },
+                                  {
+                                    "explanation": "The notes say returns are uncertain; the comparison is illustrative.",
+                                    "option": "Because the return is guaranteed to be the same for both"
+                                  }
+                                ],
+                                "options": [
+                                  "Because later deposits always compound more than earlier ones",
+                                  "Because early deposits have decades to compound",
+                                  "Because contributions stop compounding after age 34",
+                                  "Because the return is guaranteed to be the same for both"
+                                ],
+                                "question": "In the notes’ early-start comparison, why can Person A end with a substantial balance despite contributing less total money?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 9,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 9"
+                              },
+                              {
+                                "answer": "Person A’s early deposits compound for decades",
+                                "correctIndex": 1,
+                                "explanation": "More time for early deposits can outweigh smaller total contributions.",
+                                "hint": "Which variable gives early deposits an edge?",
+                                "id": "quiz-compound-interest-multiple-choice-10",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "That would disadvantage Person A, not match the example.",
+                                    "option": "Person A’s deposits have less time to grow"
+                                  },
+                                  {
+                                    "explanation": "Correct: the notes highlight decades of compounding time.",
+                                    "option": "Person A’s early deposits compound for decades"
+                                  },
+                                  {
+                                    "explanation": "The example assumes returns compound; it doesn’t say B earns nothing.",
+                                    "option": "Person B’s contributions cannot earn returns"
+                                  },
+                                  {
+                                    "explanation": "The notes discuss fees/taxes generally; no automatic avoidance is stated.",
+                                    "option": "Person A avoids all fees and taxes automatically"
+                                  }
+                                ],
+                                "options": [
+                                  "Person A’s deposits have less time to grow",
+                                  "Person A’s early deposits compound for decades",
+                                  "Person B’s contributions cannot earn returns",
+                                  "Person A avoids all fees and taxes automatically"
+                                ],
+                                "question": "Person B contributes three times as much as Person A in the example. Which factor can still let Person A finish with a large balance?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 10,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 10"
+                              },
+                              {
+                                "answer": "Early contributions are like training adaptations with more time",
+                                "correctIndex": 1,
+                                "explanation": "The notes compare early deposits to adaptations that need time.",
+                                "hint": "Think: time builds the effect; skipping can’t always be fixed.",
+                                "id": "quiz-compound-interest-multiple-choice-11",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The notes say skipped years cannot always be repaired.",
+                                    "option": "Skipping early training can always be fully repaired later"
+                                  },
+                                  {
+                                    "explanation": "Correct: early deposits get more time to build.",
+                                    "option": "Early contributions are like training adaptations with more time"
+                                  },
+                                  {
+                                    "explanation": "The notes say returns are not guaranteed like strength gains.",
+                                    "option": "Return is guaranteed like predictable strength increases"
+                                  },
+                                  {
+                                    "explanation": "The notes say later savers can win with enough contributions/time.",
+                                    "option": "Later saving cannot win even with higher returns"
+                                  }
+                                ],
+                                "options": [
+                                  "Skipping early training can always be fully repaired later",
+                                  "Early contributions are like training adaptations with more time",
+                                  "Return is guaranteed like predictable strength increases",
+                                  "Later saving cannot win even with higher returns"
+                                ],
+                                "question": "Which statement best matches the notes’ “gym comparison” idea?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 11,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 11"
+                              },
+                              {
+                                "answer": "Early saving is advantageous but not guaranteed to win",
+                                "correctIndex": 1,
+                                "explanation": "The notes stress that outcomes depend on assumptions and can vary.",
+                                "hint": "Look for the “advantage is not magic” message.",
+                                "id": "quiz-compound-interest-multiple-choice-12",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This contradicts the notes’ caution about comparisons.",
+                                    "option": "Early saving always wins in every comparison"
+                                  },
+                                  {
+                                    "explanation": "Correct: later savers can win under different assumptions.",
+                                    "option": "Early saving is advantageous but not guaranteed to win"
+                                  },
+                                  {
+                                    "explanation": "The notes explicitly allow later saving to accumulate more.",
+                                    "option": "Later saving never beats early saving"
+                                  },
+                                  {
+                                    "explanation": "The notes say comparisons must use the same assumptions.",
+                                    "option": "The comparison does not depend on assumptions"
+                                  }
+                                ],
+                                "options": [
+                                  "Early saving always wins in every comparison",
+                                  "Early saving is advantageous but not guaranteed to win",
+                                  "Later saving never beats early saving",
+                                  "The comparison does not depend on assumptions"
+                                ],
+                                "question": "What does the notes say about whether early saving always wins?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 12,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 12"
+                              },
+                              {
+                                "answer": "Because returns, fees, and time horizons can differ",
+                                "correctIndex": 1,
+                                "explanation": "Testing lower/higher returns and costs gives a more honest estimate.",
+                                "hint": "The notes recommend stress-testing assumptions.",
+                                "id": "quiz-compound-interest-multiple-choice-13",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The notes say returns are uncertain, so one number isn’t enough.",
+                                    "option": "Because one number always matches future reality"
+                                  },
+                                  {
+                                    "explanation": "Correct: the notes advise testing multiple scenarios.",
+                                    "option": "Because returns, fees, and time horizons can differ"
+                                  },
+                                  {
+                                    "explanation": "The notes say inflation affects future purchasing power.",
+                                    "option": "Because inflation never changes spending power"
+                                  },
+                                  {
+                                    "explanation": "Diversification reduces impact but cannot eliminate risk.",
+                                    "option": "Because diversification eliminates all market risk"
+                                  }
+                                ],
+                                "options": [
+                                  "Because one number always matches future reality",
+                                  "Because returns, fees, and time horizons can differ",
+                                  "Because inflation never changes spending power",
+                                  "Because diversification eliminates all market risk"
+                                ],
+                                "question": "Why should you compare scenarios rather than trusting a single projected number?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 13,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 13"
+                              },
+                              {
+                                "answer": "Spending power can be reduced even if the balance changes",
+                                "correctIndex": 1,
+                                "explanation": "The notes say inflation can raise prices while balances may not match.",
+                                "hint": "Separate “account dollars” from “buying power.”",
+                                "id": "quiz-compound-interest-multiple-choice-14",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This ignores the notes’ inflation warning.",
+                                    "option": "Higher balances always mean higher spending power"
+                                  },
+                                  {
+                                    "explanation": "Correct: prices rise and spending power may lag.",
+                                    "option": "Spending power can be reduced even if the balance changes"
+                                  },
+                                  {
+                                    "explanation": "Inflation is described as an average over time, not one-time.",
+                                    "option": "Inflation only affects the first year"
+                                  },
+                                  {
+                                    "explanation": "The notes explicitly connect inflation to spending power.",
+                                    "option": "Inflation has no effect on investment outcomes"
+                                  }
+                                ],
+                                "options": [
+                                  "Higher balances always mean higher spending power",
+                                  "Spending power can be reduced even if the balance changes",
+                                  "Inflation only affects the first year",
+                                  "Inflation has no effect on investment outcomes"
+                                ],
+                                "question": "If inflation averages 3%, what does the notes imply about comparing account balance to future spending?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 14,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 14"
+                              },
+                              {
+                                "answer": "FV = C × [((1 + i)^N − 1) / i]",
+                                "correctIndex": 0,
+                                "explanation": "Ordinary annuity future value uses the bracketed ratio formula.",
+                                "hint": "Look for the expression with ((1 + i)^N − 1) / i.",
+                                "id": "quiz-compound-interest-multiple-choice-15",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Correct: this is the ordinary annuity future value formula.",
+                                    "option": "FV = C × [((1 + i)^N − 1) / i]"
+                                  },
+                                  {
+                                    "explanation": "This is closer to a single-sum compounding form.",
+                                    "option": "FV = C × (1 + i)^N"
+                                  },
+                                  {
+                                    "explanation": "That’s the compound interest single-principal model, not annuity deposits.",
+                                    "option": "FV = P(1 + r/n)^(nt)"
+                                  },
+                                  {
+                                    "explanation": "This is linear growth, not the annuity compounding structure.",
+                                    "option": "FV = C + iN"
+                                  }
+                                ],
+                                "options": [
+                                  "FV = C × [((1 + i)^N − 1) / i]",
+                                  "FV = C × (1 + i)^N",
+                                  "FV = P(1 + r/n)^(nt)",
+                                  "FV = C + iN"
+                                ],
+                                "question": "Which formula matches the future value of an ordinary annuity with end-of-period deposits?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 15,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 15"
+                              },
+                              {
+                                "answer": "Multiply the ordinary annuity result by (1 + i)",
+                                "correctIndex": 0,
+                                "explanation": "Beginning-of-period deposits earn one extra period of growth.",
+                                "hint": "The notes say multiply by (1 + i).",
+                                "id": "quiz-compound-interest-multiple-choice-16",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Correct: beginning deposits get one additional compounding period.",
+                                    "option": "Multiply the ordinary annuity result by (1 + i)"
+                                  },
+                                  {
+                                    "explanation": "That would reduce growth, opposite of earlier deposit timing.",
+                                    "option": "Divide by (1 + i)"
+                                  },
+                                  {
+                                    "explanation": "The notes’ adjustment is about timing, not redefining i.",
+                                    "option": "Replace i with r/n"
+                                  },
+                                  {
+                                    "explanation": "N counts periods; changing it would distort the model.",
+                                    "option": "Set N equal to 1"
+                                  }
+                                ],
+                                "options": [
+                                  "Multiply the ordinary annuity result by (1 + i)",
+                                  "Divide by (1 + i)",
+                                  "Replace i with r/n",
+                                  "Set N equal to 1"
+                                ],
+                                "question": "Deposits are made at the beginning of each period instead of the end. What adjustment does the notes recommend?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 16,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 16"
+                              },
+                              {
+                                "answer": "Modeled growth earned by compounding",
+                                "correctIndex": 1,
+                                "explanation": "The gap represents modeled growth beyond the sum of contributions.",
+                                "hint": "Total deposits are the contributions; the rest is growth.",
+                                "id": "quiz-compound-interest-multiple-choice-17",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Principal is not the sum of monthly deposits here.",
+                                    "option": "Only the principal amount"
+                                  },
+                                  {
+                                    "explanation": "Correct: the notes call the gap modeled growth.",
+                                    "option": "Modeled growth earned by compounding"
+                                  },
+                                  {
+                                    "explanation": "That’s C, not the difference between totals and FV.",
+                                    "option": "The monthly contribution amount"
+                                  },
+                                  {
+                                    "explanation": "N is a count, not the growth gap.",
+                                    "option": "The number of periods N"
+                                  }
+                                ],
+                                "options": [
+                                  "Only the principal amount",
+                                  "Modeled growth earned by compounding",
+                                  "The monthly contribution amount",
+                                  "The number of periods N"
+                                ],
+                                "question": "In the annuity example, what does the “difference” between total deposits and modeled value represent?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 17,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 17"
+                              },
+                              {
+                                "answer": "A constant rate",
+                                "correctIndex": 0,
+                                "explanation": "The formula assumes a constant rate, not guaranteed results.",
+                                "hint": "Check the notes’ wording about assumptions and guarantees.",
+                                "id": "quiz-compound-interest-multiple-choice-18",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Correct: the notes state the rate is constant in the model.",
+                                    "option": "A constant rate"
+                                  },
+                                  {
+                                    "explanation": "The notes say it does not represent guaranteed outcomes.",
+                                    "option": "Guaranteed investment outcomes"
+                                  },
+                                  {
+                                    "explanation": "The formula is built on compounding over periods.",
+                                    "option": "No compounding occurs"
+                                  },
+                                  {
+                                    "explanation": "The formula uses i, implying nonzero return effects.",
+                                    "option": "Returns are always zero"
+                                  }
+                                ],
+                                "options": [
+                                  "A constant rate",
+                                  "Guaranteed investment outcomes",
+                                  "No compounding occurs",
+                                  "Returns are always zero"
+                                ],
+                                "question": "Which assumption is explicitly stated as part of the annuity future value formula?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 18,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 18"
+                              },
+                              {
+                                "answer": "Because it helps manage unexpected needs before investing risk",
+                                "correctIndex": 1,
+                                "explanation": "The notes prioritize stability before taking avoidable investment risk.",
+                                "hint": "Think: avoid being forced to sell investments at bad times.",
+                                "id": "quiz-compound-interest-multiple-choice-19",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Reserves don’t maximize compounding; they manage risk and cash needs.",
+                                    "option": "Because emergency reserves maximize compounding time"
+                                  },
+                                  {
+                                    "explanation": "Correct: the notes say keep an emergency reserve first.",
+                                    "option": "Because it helps manage unexpected needs before investing risk"
+                                  },
+                                  {
+                                    "explanation": "The notes say address high-interest debt next.",
+                                    "option": "Because high-interest debt must be ignored first"
+                                  },
+                                  {
+                                    "explanation": "The notes say consider matches only where appropriate and check rules.",
+                                    "option": "Because employer matches are always available"
+                                  }
+                                ],
+                                "options": [
+                                  "Because emergency reserves maximize compounding time",
+                                  "Because it helps manage unexpected needs before investing risk",
+                                  "Because high-interest debt must be ignored first",
+                                  "Because employer matches are always available"
+                                ],
+                                "question": "Why does the notes’ “order of operations” start with cash flow and an emergency reserve?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 19,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 19"
+                              },
+                              {
+                                "answer": "High-interest debt",
+                                "correctIndex": 0,
+                                "explanation": "High-interest debt is prioritized because its cost may exceed returns.",
+                                "hint": "Look for the step that can cost more than realistic investment returns.",
+                                "id": "quiz-compound-interest-multiple-choice-20",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Correct: the notes place it immediately after the reserve.",
+                                    "option": "High-interest debt"
+                                  },
+                                  {
+                                    "explanation": "The notes specifically call out high-interest debt, not low-interest.",
+                                    "option": "Low-interest debt"
+                                  },
+                                  {
+                                    "explanation": "Diversification is discussed later as risk management, not the next step.",
+                                    "option": "Market diversification only"
+                                  },
+                                  {
+                                    "explanation": "The notes emphasize avoiding avoidable investment risk after reserves.",
+                                    "option": "A higher-risk investment immediately"
+                                  }
+                                ],
+                                "options": [
+                                  "High-interest debt",
+                                  "Low-interest debt",
+                                  "Market diversification only",
+                                  "A higher-risk investment immediately"
+                                ],
+                                "question": "After building an emergency reserve, what does the notes recommend addressing next?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 20,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 20"
+                              },
+                              {
+                                "answer": "Because debt interest can compound on unpaid balances",
+                                "correctIndex": 0,
+                                "explanation": "The notes say compounding can work against borrowers on unpaid debt.",
+                                "hint": "Connect debt compounding to the “cost may exceed returns” idea.",
+                                "id": "quiz-compound-interest-multiple-choice-21",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Correct: compounding increases the debt base over time.",
+                                    "option": "Because debt interest can compound on unpaid balances"
+                                  },
+                                  {
+                                    "explanation": "The notes say returns are uncertain and not guaranteed.",
+                                    "option": "Because investment returns are always guaranteed higher"
+                                  },
+                                  {
+                                    "explanation": "The notes mention taxes can reduce compounding; it doesn’t exempt debt.",
+                                    "option": "Because taxes never apply to debt"
+                                  },
+                                  {
+                                    "explanation": "The notes say fees reduce what remains invested generally.",
+                                    "option": "Because fees only affect savings accounts"
+                                  }
+                                ],
+                                "options": [
+                                  "Because debt interest can compound on unpaid balances",
+                                  "Because investment returns are always guaranteed higher",
+                                  "Because taxes never apply to debt",
+                                  "Because fees only affect savings accounts"
+                                ],
+                                "question": "Why might high-interest debt be more costly than a realistic investment return?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 21,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 21"
+                              },
+                              {
+                                "answer": "Check account rules and fees before deciding",
+                                "correctIndex": 1,
+                                "explanation": "The notes say to check rules and fees when using these options.",
+                                "hint": "Look for the phrase about checking rules and fees.",
+                                "id": "quiz-compound-interest-multiple-choice-22",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This conflicts with the notes’ instruction to check rules and fees.",
+                                    "option": "Ignore rules and fees because matches are free"
+                                  },
+                                  {
+                                    "explanation": "Correct: the notes explicitly recommend checking rules and fees.",
+                                    "option": "Check account rules and fees before deciding"
+                                  },
+                                  {
+                                    "explanation": "The notes stress suitability depends on personal circumstances.",
+                                    "option": "Choose the highest return regardless of suitability"
+                                  },
+                                  {
+                                    "explanation": "The notes recommend reviewing periodically, not avoiding it.",
+                                    "option": "Avoid reviewing contributions periodically"
+                                  }
+                                ],
+                                "options": [
+                                  "Ignore rules and fees because matches are free",
+                                  "Check account rules and fees before deciding",
+                                  "Choose the highest return regardless of suitability",
+                                  "Avoid reviewing contributions periodically"
+                                ],
+                                "question": "When considering employer matches or tax-advantaged accounts, what does the notes emphasize?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 22,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 22"
+                              },
+                              {
+                                "answer": "Choose a sustainable contribution, automate, and review periodically",
+                                "correctIndex": 1,
+                                "explanation": "Consistency plus automation and periodic review reduces reaction to noise.",
+                                "hint": "The notes emphasize automation and periodic review.",
+                                "id": "quiz-compound-interest-multiple-choice-23",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This contradicts the notes’ advice to avoid reacting to market movement.",
+                                    "option": "Change contributions daily based on headlines"
+                                  },
+                                  {
+                                    "explanation": "Correct: this is the notes’ recommended approach.",
+                                    "option": "Choose a sustainable contribution, automate, and review periodically"
+                                  },
+                                  {
+                                    "explanation": "The notes don’t recommend stopping; they stress consistency and time.",
+                                    "option": "Stop investing whenever returns dip"
+                                  },
+                                  {
+                                    "explanation": "The notes recommend comparing scenarios, not trusting one number.",
+                                    "option": "Rely on one projected return number"
+                                  }
+                                ],
+                                "options": [
+                                  "Change contributions daily based on headlines",
+                                  "Choose a sustainable contribution, automate, and review periodically",
+                                  "Stop investing whenever returns dip",
+                                  "Rely on one projected return number"
+                                ],
+                                "question": "What does the notes suggest you do with your contribution plan instead of reacting to every market move?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 23,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 23"
+                              },
+                              {
+                                "answer": "Consistent contributions, low costs, and more time help compounding",
+                                "correctIndex": 1,
+                                "explanation": "The notes conclude that time, consistency, and low costs enable compounding.",
+                                "hint": "Look for the final takeaway sentence in the order-of-operations section.",
+                                "id": "quiz-compound-interest-multiple-choice-24",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The notes explicitly say returns are not guaranteed.",
+                                    "option": "A particular return is guaranteed if you invest consistently"
+                                  },
+                                  {
+                                    "explanation": "Correct: this matches the notes’ durable lesson.",
+                                    "option": "Consistent contributions, low costs, and more time help compounding"
+                                  },
+                                  {
+                                    "explanation": "The notes say diversification cannot eliminate market risk.",
+                                    "option": "Diversification removes all market risk"
+                                  },
+                                  {
+                                    "explanation": "The notes say inflation can reduce spending power.",
+                                    "option": "Inflation never affects future outcomes"
+                                  }
+                                ],
+                                "options": [
+                                  "A particular return is guaranteed if you invest consistently",
+                                  "Consistent contributions, low costs, and more time help compounding",
+                                  "Diversification removes all market risk",
+                                  "Inflation never affects future outcomes"
+                                ],
+                                "question": "Which statement best captures the “durable lesson” from the notes?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 24,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 24"
+                              },
+                              {
+                                "answer": "It provides an estimate under simplifying assumptions",
+                                "correctIndex": 1,
+                                "explanation": "The notes frame formulas as estimates, not guarantees.",
+                                "hint": "Check the notes’ wording about assumptions and uncertainty.",
+                                "id": "quiz-compound-interest-multiple-choice-25",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The notes say the formula does not represent guaranteed outcomes.",
+                                    "option": "It predicts guaranteed investment outcomes"
+                                  },
+                                  {
+                                    "explanation": "Correct: constant-rate assumptions make it an estimate.",
+                                    "option": "It provides an estimate under simplifying assumptions"
+                                  },
+                                  {
+                                    "explanation": "The notes say returns can be uncertain and losses can occur.",
+                                    "option": "It eliminates uncertainty and market risk"
+                                  },
+                                  {
+                                    "explanation": "The example explicitly says values are before fees and taxes.",
+                                    "option": "It automatically includes taxes and fees"
+                                  }
+                                ],
+                                "options": [
+                                  "It predicts guaranteed investment outcomes",
+                                  "It provides an estimate under simplifying assumptions",
+                                  "It eliminates uncertainty and market risk",
+                                  "It automatically includes taxes and fees"
+                                ],
+                                "question": "A modeled future value assumes a constant rate. What is the most accurate interpretation of that model?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 25,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 25"
+                              },
+                              {
+                                "answer": "Because real outcomes may be lower after costs and taxes",
+                                "correctIndex": 1,
+                                "explanation": "Costs and taxes reduce what remains to compound in reality.",
+                                "hint": "The notes warn that fees and taxes can reduce outcomes.",
+                                "id": "quiz-compound-interest-multiple-choice-26",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The model includes compounding; it just omits costs and taxes.",
+                                    "option": "Because it means the model ignores compounding entirely"
+                                  },
+                                  {
+                                    "explanation": "Correct: the notes say the modeled value is before those reductions.",
+                                    "option": "Because real outcomes may be lower after costs and taxes"
+                                  },
+                                  {
+                                    "explanation": "Inflation typically reduces spending power, per the notes.",
+                                    "option": "Because inflation increases spending power automatically"
+                                  },
+                                  {
+                                    "explanation": "Fees and taxes reduce the base over time, not only once.",
+                                    "option": "Because fees and taxes only affect the first deposit"
+                                  }
+                                ],
+                                "options": [
+                                  "Because it means the model ignores compounding entirely",
+                                  "Because real outcomes may be lower after costs and taxes",
+                                  "Because inflation increases spending power automatically",
+                                  "Because fees and taxes only affect the first deposit"
+                                ],
+                                "question": "In the annuity example, the modeled value is “before fees, taxes, and inflation.” Why does that matter?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 26,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 26"
+                              },
+                              {
+                                "answer": "Diversification reduces the effect of one poor holding",
+                                "correctIndex": 1,
+                                "explanation": "Diversification can reduce impact of one holding but not eliminate risk.",
+                                "hint": "Think: reduce effect, don’t eliminate risk.",
+                                "id": "quiz-compound-interest-multiple-choice-27",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The notes say losses can occur; diversification doesn’t guarantee safety.",
+                                    "option": "Diversification guarantees no losses"
+                                  },
+                                  {
+                                    "explanation": "Correct: this is exactly how the notes describe diversification.",
+                                    "option": "Diversification reduces the effect of one poor holding"
+                                  },
+                                  {
+                                    "explanation": "The notes explicitly say it cannot eliminate market risk.",
+                                    "option": "Diversification removes all market risk"
+                                  },
+                                  {
+                                    "explanation": "The notes emphasize time and low costs as durable drivers.",
+                                    "option": "Diversification replaces the need for time and low costs"
+                                  }
+                                ],
+                                "options": [
+                                  "Diversification guarantees no losses",
+                                  "Diversification reduces the effect of one poor holding",
+                                  "Diversification removes all market risk",
+                                  "Diversification replaces the need for time and low costs"
+                                ],
+                                "question": "Which choice best reflects the notes’ view on diversification?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 27,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 27"
+                              },
+                              {
+                                "answer": "Ordinary annuity",
+                                "correctIndex": 0,
+                                "explanation": "End-of-period deposits correspond to the ordinary annuity formula.",
+                                "hint": "The notes call it “ordinary annuity” for end-of-period deposits.",
+                                "id": "quiz-compound-interest-multiple-choice-28",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Correct: ordinary annuity assumes end-of-period contributions.",
+                                    "option": "Ordinary annuity"
+                                  },
+                                  {
+                                    "explanation": "That timing needs the extra (1 + i) multiplier.",
+                                    "option": "Beginning-of-period annuity"
+                                  },
+                                  {
+                                    "explanation": "That’s the P(1 + r/n)^(nt) model, not regular deposits.",
+                                    "option": "Single-sum compounding only"
+                                  },
+                                  {
+                                    "explanation": "The notes provide an annuity model for regular contributions.",
+                                    "option": "No annuity model"
+                                  }
+                                ],
+                                "options": [
+                                  "Ordinary annuity",
+                                  "Beginning-of-period annuity",
+                                  "Single-sum compounding only",
+                                  "No annuity model"
+                                ],
+                                "question": "If deposits occur at the end of each period, which annuity type matches the notes’ formula?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 28,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 28"
+                              },
+                              {
+                                "answer": "Early deposits have more time; missed time may not be fully recovered",
+                                "correctIndex": 1,
+                                "explanation": "Missed years reduce compounding time, which can’t always be fully replaced.",
+                                "hint": "Use the gym analogy: time builds adaptations.",
+                                "id": "quiz-compound-interest-multiple-choice-29",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This contradicts the notes’ “cannot always be repaired” warning.",
+                                    "option": "Adding more later always fully compensates for missed compounding time"
+                                  },
+                                  {
+                                    "explanation": "Correct: the notes say skipped years can’t always be repaired.",
+                                    "option": "Early deposits have more time; missed time may not be fully recovered"
+                                  },
+                                  {
+                                    "explanation": "The notes say returns are uncertain; timing still matters.",
+                                    "option": "Returns are guaranteed so timing doesn’t matter"
+                                  },
+                                  {
+                                    "explanation": "The notes discuss inflation as an average over time.",
+                                    "option": "Inflation only affects the first year of investing"
+                                  }
+                                ],
+                                "options": [
+                                  "Adding more later always fully compensates for missed compounding time",
+                                  "Early deposits have more time; missed time may not be fully recovered",
+                                  "Returns are guaranteed so timing doesn’t matter",
+                                  "Inflation only affects the first year of investing"
+                                ],
+                                "question": "Which situation best matches the notes’ statement that “skipping years cannot always be repaired later”?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 29,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 29"
+                              },
+                              {
+                                "answer": "Automate a manageable contribution",
+                                "correctIndex": 1,
+                                "explanation": "Automating contributions reduces reliance on motivation.",
+                                "hint": "Look for the “useful habit” section.",
+                                "id": "quiz-compound-interest-multiple-choice-30",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The notes suggest automation to reduce motivation dependence.",
+                                    "option": "Rely on willpower to contribute manually"
+                                  },
+                                  {
+                                    "explanation": "Correct: automation is presented as the habit that helps.",
+                                    "option": "Automate a manageable contribution"
+                                  },
+                                  {
+                                    "explanation": "The notes say starting with a sustainable amount is often more practical.",
+                                    "option": "Wait for a perfect contribution amount"
+                                  },
+                                  {
+                                    "explanation": "The notes recommend reviewing periodically, not reacting to market moves.",
+                                    "option": "Change contributions only when markets rise"
+                                  }
+                                ],
+                                "options": [
+                                  "Rely on willpower to contribute manually",
+                                  "Automate a manageable contribution",
+                                  "Wait for a perfect contribution amount",
+                                  "Change contributions only when markets rise"
+                                ],
+                                "question": "A saver wants to reduce dependence on motivation. What does the notes recommend?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 30,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 30"
+                              },
+                              {
+                                "answer": "Increase contributions when income rises, but manage debt and reserves first",
+                                "correctIndex": 0,
+                                "explanation": "The notes suggest increasing with income, but prioritize reserves and debt.",
+                                "hint": "Combine the “useful habit” with the order of operations.",
+                                "id": "quiz-compound-interest-multiple-choice-31",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Correct: the notes mention income increases plus reserve/debt attention.",
+                                    "option": "Increase contributions when income rises, but manage debt and reserves first"
+                                  },
+                                  {
+                                    "explanation": "The notes say returns are not guaranteed.",
+                                    "option": "Increase contributions only after markets guarantee positive returns"
+                                  },
+                                  {
+                                    "explanation": "The notes say keep an emergency reserve appropriate to your situation.",
+                                    "option": "Increase contributions without considering emergency reserves"
+                                  },
+                                  {
+                                    "explanation": "The notes warn fees and taxes reduce compounding outcomes.",
+                                    "option": "Increase contributions while ignoring fees and taxes"
+                                  }
+                                ],
+                                "options": [
+                                  "Increase contributions when income rises, but manage debt and reserves first",
+                                  "Increase contributions only after markets guarantee positive returns",
+                                  "Increase contributions without considering emergency reserves",
+                                  "Increase contributions while ignoring fees and taxes"
+                                ],
+                                "question": "Which action best aligns with the notes’ advice about increasing contributions?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 31,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 31"
+                              },
+                              {
+                                "answer": "Because actual returns, timing, taxes, fees, inflation, and markets can change",
+                                "correctIndex": 1,
+                                "explanation": "The notes list many real-world factors that can materially change results.",
+                                "hint": "Look for the sentence starting with “These figures are illustrations.”",
+                                "id": "quiz-compound-interest-multiple-choice-32",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "The notes’ model assumes fixed rates; it doesn’t guarantee outcomes.",
+                                    "option": "Because the model assumes variable rates and guaranteed outcomes"
+                                  },
+                                  {
+                                    "explanation": "Correct: the notes explicitly cite these changing factors.",
+                                    "option": "Because actual returns, timing, taxes, fees, inflation, and markets can change"
+                                  },
+                                  {
+                                    "explanation": "The notes emphasize time as a multiplier for compounding.",
+                                    "option": "Because compounding never depends on time"
+                                  },
+                                  {
+                                    "explanation": "The notes say compound growth differs from simple interest.",
+                                    "option": "Because simple interest always matches compound interest"
+                                  }
+                                ],
+                                "options": [
+                                  "Because the model assumes variable rates and guaranteed outcomes",
+                                  "Because actual returns, timing, taxes, fees, inflation, and markets can change",
+                                  "Because compounding never depends on time",
+                                  "Because simple interest always matches compound interest"
+                                ],
+                                "question": "Which statement best describes why the comparison between Person A and Person B is “illustrations, not forecasts”?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 32,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 32"
+                              },
+                              {
+                                "answer": "Each contribution amount",
+                                "correctIndex": 1,
+                                "explanation": "C is the contribution made each period.",
+                                "hint": "C is the recurring payment size in the annuity formula.",
+                                "id": "quiz-compound-interest-multiple-choice-33",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "P belongs to the single-principal compound interest model.",
+                                    "option": "The starting principal P"
+                                  },
+                                  {
+                                    "explanation": "Correct: C is defined as each contribution.",
+                                    "option": "Each contribution amount"
+                                  },
+                                  {
+                                    "explanation": "That corresponds to r in the compound interest model.",
+                                    "option": "The annual rate written as a decimal"
+                                  },
+                                  {
+                                    "explanation": "Ending balance is A in the single-principal formula, not C.",
+                                    "option": "The ending balance A"
+                                  }
+                                ],
+                                "options": [
+                                  "The starting principal P",
+                                  "Each contribution amount",
+                                  "The annual rate written as a decimal",
+                                  "The ending balance A"
+                                ],
+                                "question": "If you want to model regular monthly deposits, what does C represent in FV = C × [((1 + i)^N − 1) / i]?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 33,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 33"
+                              },
+                              {
+                                "answer": "Number of periods",
+                                "correctIndex": 1,
+                                "explanation": "N counts the total number of deposit periods.",
+                                "hint": "N is the exponent-related count in the annuity expression.",
+                                "id": "quiz-compound-interest-multiple-choice-34",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "That is i, not N.",
+                                    "option": "Return per period"
+                                  },
+                                  {
+                                    "explanation": "Correct: N is the number of periods in the annuity.",
+                                    "option": "Number of periods"
+                                  },
+                                  {
+                                    "explanation": "Annual rate is r in the compound interest model.",
+                                    "option": "Annual rate"
+                                  },
+                                  {
+                                    "explanation": "Compounding frequency is n in the compound interest model.",
+                                    "option": "Compounding frequency per year"
+                                  }
+                                ],
+                                "options": [
+                                  "Return per period",
+                                  "Number of periods",
+                                  "Annual rate",
+                                  "Compounding frequency per year"
+                                ],
+                                "question": "In the annuity formula, what does N represent?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 34,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 34"
+                              },
+                              {
+                                "answer": "Inflation can raise prices while the account balance may also change",
+                                "correctIndex": 1,
+                                "explanation": "The notes say pre-inflation returns don’t equal spending power later.",
+                                "hint": "Separate nominal returns from real purchasing power.",
+                                "id": "quiz-compound-interest-multiple-choice-35",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This contradicts the notes’ warning about spending power.",
+                                    "option": "A return stated before inflation equals future spending power"
+                                  },
+                                  {
+                                    "explanation": "Correct: the notes connect inflation to future purchasing power.",
+                                    "option": "Inflation can raise prices while the account balance may also change"
+                                  },
+                                  {
+                                    "explanation": "The notes discuss inflation generally, not only for borrowers.",
+                                    "option": "Inflation only affects borrowers, not savers"
+                                  },
+                                  {
+                                    "explanation": "The notes treat inflation separately from the basic model.",
+                                    "option": "Inflation is already included in the compound interest formula"
+                                  }
+                                ],
+                                "options": [
+                                  "A return stated before inflation equals future spending power",
+                                  "Inflation can raise prices while the account balance may also change",
+                                  "Inflation only affects borrowers, not savers",
+                                  "Inflation is already included in the compound interest formula"
+                                ],
+                                "question": "Which statement best matches the notes about return rates and inflation?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 35,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 35"
+                              }
+                            ],
+                            "title": "Quiz: Compound Interest and Smart Investing Timing"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Quiz: Compound Interest and Smart Investing Timing Quizzes",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Quiz: Compound Interest and Smart Investing Timing"
+      }
+    },
+    {
+      "actionId": "flashcards",
+      "durationMs": 6000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 5,
+        "dashboardIndex": 5,
+        "dashboardKey": "demo-compound-interest-page-5",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Compound Interest",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "FlashcardCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "Year 2’s 5% applies to $1,050, so growth is $52.50.",
+                                "id": "flashcards-compound-interest-flashcard-1",
+                                "kind": "qa",
+                                "question": "A $1,000 deposit earns 5% yearly. What happens in year 2?",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 1"
+                              },
+                              {
+                                "answer": "Because the balance changes, each year’s interest is calculated on a new base.",
+                                "id": "flashcards-compound-interest-flashcard-2",
+                                "kind": "qa",
+                                "question": "Why is compound interest’s yearly increase not identical?",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 2"
+                              },
+                              {
+                                "answer": "Simple uses the original $1,000 each year; compound grows on accumulated gains.",
+                                "id": "flashcards-compound-interest-flashcard-3",
+                                "kind": "qa",
+                                "question": "Compare simple vs compound interest for 10 years at 5%.",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 3"
+                              },
+                              {
+                                "answer": "The number of compounding periods per year.",
+                                "id": "flashcards-compound-interest-flashcard-4",
+                                "kind": "qa",
+                                "question": "In the model A = P(1 + r/n)^(nt), what does n represent?",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 4"
+                              },
+                              {
+                                "answer": "Time measured in years.",
+                                "id": "flashcards-compound-interest-flashcard-5",
+                                "kind": "qa",
+                                "question": "In A = P(1 + r/n)^(nt), what does t represent?",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 5"
+                              },
+                              {
+                                "answer": "The annual interest rate written as a decimal.",
+                                "id": "flashcards-compound-interest-flashcard-6",
+                                "kind": "qa",
+                                "question": "In A = P(1 + r/n)^(nt), what does r represent?",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 6"
+                              },
+                              {
+                                "answer": "The starting principal amount.",
+                                "id": "flashcards-compound-interest-flashcard-7",
+                                "kind": "qa",
+                                "question": "In A = P(1 + r/n)^(nt), what does P represent?",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 7"
+                              },
+                              {
+                                "answer": "The ending balance after compounding.",
+                                "id": "flashcards-compound-interest-flashcard-8",
+                                "kind": "qa",
+                                "question": "In A = P(1 + r/n)^(nt), what does A represent?",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 8"
+                              },
+                              {
+                                "answer": "A fixed rate, no additional deposits, and no taxes or fees.",
+                                "id": "flashcards-compound-interest-flashcard-9",
+                                "kind": "qa",
+                                "question": "What assumption is built into A = P(1 + r/n)^(nt)?",
+                                "sourceLine": 9,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 9"
+                              },
+                              {
+                                "answer": "Less money remains invested, so future growth compounds from a smaller base.",
+                                "id": "flashcards-compound-interest-flashcard-10",
+                                "kind": "qa",
+                                "question": "If fees reduce the amount invested, what happens to compounding?",
+                                "sourceLine": 10,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 10"
+                              },
+                              {
+                                "answer": "Taxes can reduce the money available to keep compounding.",
+                                "id": "flashcards-compound-interest-flashcard-11",
+                                "kind": "qa",
+                                "question": "How can taxes affect compound interest outcomes?",
+                                "sourceLine": 11,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 11"
+                              },
+                              {
+                                "answer": "Returns can be negative, uneven, or lower than expected.",
+                                "id": "flashcards-compound-interest-flashcard-12",
+                                "kind": "qa",
+                                "question": "Why is a quoted annual return not a promise?",
+                                "sourceLine": 12,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 12"
+                              },
+                              {
+                                "answer": "Interest added to unpaid debt increases the balance that later interest builds on.",
+                                "id": "flashcards-compound-interest-flashcard-13",
+                                "kind": "qa",
+                                "question": "How can compounding work against borrowers?",
+                                "sourceLine": 13,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 13"
+                              },
+                              {
+                                "answer": "Money that stays invested generates growth, and that growth becomes part of the base.",
+                                "id": "flashcards-compound-interest-flashcard-14",
+                                "kind": "qa",
+                                "question": "What is the central mechanism behind compound interest?",
+                                "sourceLine": 14,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 14"
+                              },
+                              {
+                                "answer": "The earlier saver, because first deposits have more time to compound.",
+                                "id": "flashcards-compound-interest-flashcard-15",
+                                "kind": "qa",
+                                "question": "Two people both invest $200 monthly. Who benefits more from earlier investing?",
+                                "sourceLine": 15,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 15"
+                              },
+                              {
+                                "answer": "Their early deposits have decades to compound until age 65.",
+                                "id": "flashcards-compound-interest-flashcard-16",
+                                "kind": "qa",
+                                "question": "Person A invests $200 monthly from 25–34, then stops. What key advantage do they have?",
+                                "sourceLine": 16,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 16"
+                              },
+                              {
+                                "answer": "They contribute more later, but their money has less time to compound.",
+                                "id": "flashcards-compound-interest-flashcard-17",
+                                "kind": "qa",
+                                "question": "Person B invests $200 monthly from 35–64. Why might they still end lower?",
+                                "sourceLine": 17,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 17"
+                              },
+                              {
+                                "answer": "Early contributions compound for much longer, even with fewer total deposits.",
+                                "id": "flashcards-compound-interest-flashcard-18",
+                                "kind": "qa",
+                                "question": "In the notes’ example, why can the early saver end with a substantial balance?",
+                                "sourceLine": 18,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 18"
+                              },
+                              {
+                                "answer": "No—illustrations only; actual results depend on returns, timing, taxes, fees, and behavior.",
+                                "id": "flashcards-compound-interest-flashcard-19",
+                                "kind": "qa",
+                                "question": "Are the example ending balances forecasts?",
+                                "sourceLine": 19,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 19"
+                              },
+                              {
+                                "answer": "You can’t always “repair” lost time by adding a little later.",
+                                "id": "flashcards-compound-interest-flashcard-20",
+                                "kind": "qa",
+                                "question": "What does the gym comparison suggest about skipping years?",
+                                "sourceLine": 20,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 20"
+                              },
+                              {
+                                "answer": "No; later saving can win with enough contributions, higher returns, or longer time.",
+                                "id": "flashcards-compound-interest-flashcard-21",
+                                "kind": "qa",
+                                "question": "Does starting early guarantee winning in every comparison?",
+                                "sourceLine": 21,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 21"
+                              },
+                              {
+                                "answer": "Use the same assumptions and clearly state when deposits occur.",
+                                "id": "flashcards-compound-interest-flashcard-22",
+                                "kind": "qa",
+                                "question": "What must be true for a fair early-vs-late comparison?",
+                                "sourceLine": 22,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 22"
+                              },
+                              {
+                                "answer": "It reduces dependence on motivation and helps maintain consistent deposits.",
+                                "id": "flashcards-compound-interest-flashcard-23",
+                                "kind": "qa",
+                                "question": "Why is automation recommended for contributions?",
+                                "sourceLine": 23,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 23"
+                              },
+                              {
+                                "answer": "Build an emergency reserve and address high-interest debt first.",
+                                "id": "flashcards-compound-interest-flashcard-24",
+                                "kind": "qa",
+                                "question": "What should you consider before taking avoidable investment risk?",
+                                "sourceLine": 24,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 24"
+                              },
+                              {
+                                "answer": "Money staying invested and costs staying controlled.",
+                                "id": "flashcards-compound-interest-flashcard-25",
+                                "kind": "qa",
+                                "question": "What does “time helps most” depend on?",
+                                "sourceLine": 25,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 25"
+                              },
+                              {
+                                "answer": "Starting with a sustainable contribution you can maintain.",
+                                "id": "flashcards-compound-interest-flashcard-26",
+                                "kind": "qa",
+                                "question": "What is often more practical than waiting for a perfect amount?",
+                                "sourceLine": 26,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 26"
+                              },
+                              {
+                                "answer": "FV = C * [((1 + i)^N − 1) / i].",
+                                "id": "flashcards-compound-interest-flashcard-27",
+                                "kind": "qa",
+                                "question": "For equal deposits at the end of each period, what future value formula is used?",
+                                "sourceLine": 27,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 27"
+                              },
+                              {
+                                "answer": "Each contribution amount.",
+                                "id": "flashcards-compound-interest-flashcard-28",
+                                "kind": "qa",
+                                "question": "In FV = C * [((1 + i)^N − 1) / i], what is C?",
+                                "sourceLine": 28,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 28"
+                              },
+                              {
+                                "answer": "The return per period.",
+                                "id": "flashcards-compound-interest-flashcard-29",
+                                "kind": "qa",
+                                "question": "In FV = C * [((1 + i)^N − 1) / i], what is i?",
+                                "sourceLine": 29,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 29"
+                              },
+                              {
+                                "answer": "The number of periods.",
+                                "id": "flashcards-compound-interest-flashcard-30",
+                                "kind": "qa",
+                                "question": "In FV = C * [((1 + i)^N − 1) / i], what is N?",
+                                "sourceLine": 30,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 30"
+                              },
+                              {
+                                "answer": "Multiply the ordinary-annuity result by (1 + i).",
+                                "id": "flashcards-compound-interest-flashcard-31",
+                                "kind": "qa",
+                                "question": "If deposits occur at the beginning of each period, what adjustment is applied?",
+                                "sourceLine": 31,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 31"
+                              },
+                              {
+                                "answer": "Deposits are made at the end of each period.",
+                                "id": "flashcards-compound-interest-flashcard-32",
+                                "kind": "qa",
+                                "question": "What does the ordinary annuity assumption mean in the notes?",
+                                "sourceLine": 32,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 32"
+                              },
+                              {
+                                "answer": "It assumes a constant rate; real returns are uncertain.",
+                                "id": "flashcards-compound-interest-flashcard-33",
+                                "kind": "qa",
+                                "question": "Why does the notes’ annuity formula not represent a guaranteed outcome?",
+                                "sourceLine": 33,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 33"
+                              },
+                              {
+                                "answer": "A hypothetical estimate before fees, taxes, and inflation.",
+                                "id": "flashcards-compound-interest-flashcard-34",
+                                "kind": "qa",
+                                "question": "In the example, what does the modeled value represent?",
+                                "sourceLine": 34,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 34"
+                              },
+                              {
+                                "answer": "The difference represents modeled growth from compounding.",
+                                "id": "flashcards-compound-interest-flashcard-35",
+                                "kind": "qa",
+                                "question": "In the example, how do total deposits compare to modeled value?",
+                                "sourceLine": 35,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 35"
+                              },
+                              {
+                                "answer": "Because returns, fees, contribution amounts, and time can vary.",
+                                "id": "flashcards-compound-interest-flashcard-36",
+                                "kind": "qa",
+                                "question": "When estimating, why compare multiple scenarios instead of trusting one number?",
+                                "sourceLine": 36,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 36"
+                              },
+                              {
+                                "answer": "It may ignore lower/higher returns and costs that change the outcome.",
+                                "id": "flashcards-compound-interest-flashcard-37",
+                                "kind": "qa",
+                                "question": "What is the risk of using a single return estimate?",
+                                "sourceLine": 37,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 37"
+                              },
+                              {
+                                "answer": "Inflation raises prices even if the account balance changes.",
+                                "id": "flashcards-compound-interest-flashcard-38",
+                                "kind": "qa",
+                                "question": "Why does a return stated before inflation not equal future spending power?",
+                                "sourceLine": 38,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 38"
+                              },
+                              {
+                                "answer": "Prices rise; the account balance may also change, but spending power depends on both.",
+                                "id": "flashcards-compound-interest-flashcard-39",
+                                "kind": "qa",
+                                "question": "If inflation averages 3%, what happens to prices relative to the account balance?",
+                                "sourceLine": 39,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 39"
+                              },
+                              {
+                                "answer": "No; it can’t eliminate uncertainty or losses.",
+                                "id": "flashcards-compound-interest-flashcard-40",
+                                "kind": "qa",
+                                "question": "Can diversification eliminate market risk?",
+                                "sourceLine": 40,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 40"
+                              },
+                              {
+                                "answer": "They affect what is available to compound and what returns you keep.",
+                                "id": "flashcards-compound-interest-flashcard-41",
+                                "kind": "qa",
+                                "question": "Why do account rules and tax treatment matter?",
+                                "sourceLine": 41,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 41"
+                              },
+                              {
+                                "answer": "Emergency reserve first, then high-interest debt, then matches/tax-advantaged accounts.",
+                                "id": "flashcards-compound-interest-flashcard-42",
+                                "kind": "qa",
+                                "question": "What is the recommended order of operations before investing?",
+                                "sourceLine": 42,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 42"
+                              },
+                              {
+                                "answer": "Its cost may exceed a realistic investment return.",
+                                "id": "flashcards-compound-interest-flashcard-43",
+                                "kind": "qa",
+                                "question": "Why address high-interest debt before investing?",
+                                "sourceLine": 43,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 43"
+                              },
+                              {
+                                "answer": "Consider them where appropriate, while checking rules and fees.",
+                                "id": "flashcards-compound-interest-flashcard-44",
+                                "kind": "qa",
+                                "question": "What should you do with employer matches or tax-advantaged accounts?",
+                                "sourceLine": 44,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 44"
+                              },
+                              {
+                                "answer": "Automate it, maintain it, and review periodically.",
+                                "id": "flashcards-compound-interest-flashcard-45",
+                                "kind": "qa",
+                                "question": "What contribution strategy is emphasized after choosing an amount?",
+                                "sourceLine": 45,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 45"
+                              },
+                              {
+                                "answer": "Consistent contributions and low costs matter more than short-term fluctuations.",
+                                "id": "flashcards-compound-interest-flashcard-46",
+                                "kind": "qa",
+                                "question": "Why avoid reacting to every market movement?",
+                                "sourceLine": 46,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 46"
+                              },
+                              {
+                                "answer": "Consistent contributions, low costs, and more time give compounding room to work.",
+                                "id": "flashcards-compound-interest-flashcard-47",
+                                "kind": "qa",
+                                "question": "What is the durable lesson from the notes?",
+                                "sourceLine": 47,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 47"
+                              },
+                              {
+                                "answer": "Scenario testing with different returns, fees, and time horizons.",
+                                "id": "flashcards-compound-interest-flashcard-48",
+                                "kind": "qa",
+                                "question": "If returns are uncertain, what should your planning include?",
+                                "sourceLine": 48,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 48"
+                              },
+                              {
+                                "answer": "Later deposits have less time to compound, so they typically grow less.",
+                                "id": "flashcards-compound-interest-flashcard-49",
+                                "kind": "qa",
+                                "question": "What happens to compounding when you add deposits later instead of earlier?",
+                                "sourceLine": 49,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 49"
+                              },
+                              {
+                                "answer": "You multiply by (1 + i) because deposits earn interest sooner.",
+                                "id": "flashcards-compound-interest-flashcard-50",
+                                "kind": "qa",
+                                "question": "In the annuity formula, what changes when deposits move from end to beginning?",
+                                "sourceLine": 50,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 50"
+                              },
+                              {
+                                "answer": "Assuming the same yearly growth; compound uses a changing base.",
+                                "id": "flashcards-compound-interest-flashcard-51",
+                                "kind": "qa",
+                                "question": "What is a common mistake when comparing simple and compound interest?",
+                                "sourceLine": 51,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 51"
+                              },
+                              {
+                                "answer": "Using the end-of-period formula when deposits actually occur at the beginning.",
+                                "id": "flashcards-compound-interest-flashcard-52",
+                                "kind": "qa",
+                                "question": "What is a common mistake when using the annuity formula?",
+                                "sourceLine": 52,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 52"
+                              },
+                              {
+                                "answer": "Ignoring fees, taxes, and inflation that reduce compounding or spending power.",
+                                "id": "flashcards-compound-interest-flashcard-53",
+                                "kind": "qa",
+                                "question": "What is a common mistake when planning with compound interest?",
+                                "sourceLine": 53,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 53"
+                              },
+                              {
+                                "answer": "Choose a sustainable amount you can automate and keep reviewing.",
+                                "id": "flashcards-compound-interest-flashcard-54",
+                                "kind": "qa",
+                                "question": "If you can’t maintain a contribution, what does the notes imply?",
+                                "sourceLine": 54,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 54"
+                              },
+                              {
+                                "answer": "Understand cash flow and build an emergency reserve appropriate to your situation.",
+                                "id": "flashcards-compound-interest-flashcard-55",
+                                "kind": "qa",
+                                "question": "What should you do first if you lack an emergency reserve?",
+                                "sourceLine": 55,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 55"
+                              }
+                            ],
+                            "title": "Flashcards: Compound Interest"
+                          },
+                          "type": "FlashcardCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Flashcards: Compound Interest Flashcards",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Flashcards: Compound Interest"
+      }
+    },
+    {
+      "actionId": "podcast",
+      "durationMs": 13000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 6,
+        "dashboardIndex": 6,
+        "dashboardKey": "demo-compound-interest-page-6",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Compound Interest",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "demo-compound-interest-podcast-player",
+                          "props": {
+                            "podcast": {
+                              "audioPath": "/demo/audio/compound-interest.mp3",
+                              "chapters": [
+                                {
+                                  "startTurn": 0,
+                                  "title": "The Compounding Engine"
+                                },
+                                {
+                                  "startTurn": 5,
+                                  "title": "Why Starting Early Wins"
+                                },
+                                {
+                                  "startTurn": 9,
+                                  "title": "Applying the Idea Carefully"
+                                }
+                              ],
+                              "createdAt": "2026-08-02T10:00:00.000Z",
+                              "description": "A short, conversational episode on what compound interest means, why starting early can matter, and how to apply the idea carefully with regular contributions, realistic assumptions, and practical next steps.",
+                              "id": "demo-compound-interest-podcast",
+                              "mimeType": "audio/mpeg",
+                              "sourceScope": "studyGuide",
+                              "sourceTitle": "Compound Interest",
+                              "title": "Compound Interest: The Compounding Engine",
+                              "transcriptTurns": [
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Let’s talk about compound interest as a growth engine. The key idea is that your money grows not only on the original amount, but also on interest or returns that have already accumulated."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Right. If you start with one thousand dollars and earn five percent annually, the first year adds fifty dollars. But in the next year, that five percent is calculated on one thousand plus the fifty, so the added amount becomes fifty dollars and change instead of staying the same."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "So the growth rate keeps applying to a changing balance. A basic model captures that with A equals P times one plus r over n raised to the power of n times t. Here P is the starting principal, r is the annual rate as a decimal, n is how many compounding periods per year, t is time in years, and A is the ending balance."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "And that model assumes a fixed rate, no extra deposits, and no taxes or fees. That matters, because real life can add uncertainty. Returns can be negative, uneven, or lower than expected."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Fees reduce what stays invested, and taxes can reduce the money available to compound. Also, compounding can work against borrowers when interest gets added to unpaid debt."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Now, why starting early wins. Time acts like a multiplier because each contribution has more opportunities to grow. Imagine two people with a hypothetical seven percent average annual return, compounded annually, before taxes and fees."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Person A invests two hundred dollars monthly from age twenty five through age thirty four, then stops. Person B invests two hundred dollars monthly from age thirty five through age sixty four. Even though Person B contributes about three times as much, the early saver can end with a substantial balance because the first deposits have decades to compound."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "But it’s not magic. A later saver can still catch up by contributing enough, earning a higher return, or saving for longer. The comparison only makes sense when the assumptions match, including when deposits occur."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "There’s also a practical habit angle. Automating a manageable contribution can reduce dependence on motivation. And before taking avoidable investment risk, it helps to think about an emergency reserve and high interest debt."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "When we apply the idea carefully, we use models for regular contributions. For equal deposits made at the end of each period, the future value of an ordinary annuity is FV equals C times the quantity one plus i raised to the power of N minus one, all over i. C is each contribution, i is the return per period, and N is the number of periods."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "If deposits happen at the beginning of each period, you multiply the result by one plus i. And remember, these formulas assume a constant rate and do not guarantee an investment outcome."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "For example, depositing one hundred fifty dollars monthly for twenty years at a hypothetical six percent annual rate, converted to a half percent monthly rate, gives a modeled value of about sixty nine thousand before fees, taxes, and inflation. Total deposits are about thirty six thousand, so the difference is modeled growth."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "To keep the estimate honest, compare scenarios instead of trusting one number. Test lower and higher returns, different contribution amounts, fees, and shorter time periods. Also, a return stated before inflation does not equal future spending power."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "And investment returns are uncertain. Losses can occur. Diversification can reduce the effect of one holding performing poorly, but it cannot eliminate market risk. Account rules, tax treatment, and suitable investments depend on personal circumstances and location."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "So what’s a practical order of operations? First, understand cash flow and keep an emergency reserve appropriate to your situation. Next, address high interest debt because its cost may exceed a realistic investment return. Then consider employer matches or tax advantaged accounts where appropriate, while checking rules and fees."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Finally, choose a contribution you can maintain, automate it, and review it periodically instead of reacting to every market movement. The durable lesson is not that a particular return is guaranteed, but that consistent contributions, low costs, and more time give compounding room to work."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Quick check: can you summarize the main takeaway in one sentence, especially the part about what compounding needs to work well?"
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Compound interest works best when money stays invested long enough and costs stay controlled, supported by consistent contributions and realistic assumptions about uncertainty."
+                                }
+                              ]
+                            }
+                          },
+                          "type": "PodcastBlock"
+                        }
+                      ],
+                      "widgetId": "demo-compound-interest-podcast-widget"
+                    }
+                  },
+                  "name": "Compound Interest: The Compounding Engine",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Compound Interest: The Compounding Engine"
+      }
+    }
+  ],
+  "studyPath": {
+    "contentLanguage": "en",
+    "contentLanguageSource": "detected",
+    "dashboards": [
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 1,
+        "dashboardKey": "demo-compound-interest-page-1",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Compound Interest",
+        "id": "demo-compound-interest-dashboard-1",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "01-the-compounding-engine-1-01-the-compounding-engine-1-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "01 - The Compounding Engine",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "01-the-compounding-engine-1-01-the-compounding-engine-1-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## What compound interest means\n\nCompound interest is growth calculated on an initial amount plus previously accumulated interest or investment returns. If $1,000 earns 5% annually and all growth remains invested, the first year adds $50. The next year, 5% applies to $1,050, adding $52.50 rather than only $50.\n\nThe basic model is:\n\n`A = P(1 + r/n)^(nt)`\n\nHere, `P` is the starting principal, `r` is the annual rate written as a decimal, `n` is the number of compounding periods per year, `t` is time in years, and `A` is the ending balance. This model assumes a fixed rate, no additional deposits, and no taxes or fees.\n\n## A simple comparison\n\nWith annual compounding at 5%, $1,000 becomes $1,050 after one year, $1,102.50 after two years, and about $1,629 after ten years. The increase in each year is not identical because the balance keeps changing.\n\nSimple interest would calculate every year’s growth from the original $1,000. At 5% for ten years, that would produce $1,500 before taxes and fees. Compound growth produces more because earlier gains remain in the account.\n\n## What can change the outcome\n\nA quoted annual return is not a promise. Investment returns can be negative, uneven, or lower than expected. Savings accounts and certificates may use stated interest rates, while investments often involve risk and uncertain returns.\n\nFees reduce the amount that remains invested. Taxes may also reduce the money available to compound. Compounding can work against borrowers when interest is added to unpaid debt.\n\nThe central mechanism is straightforward: money that stays invested can generate future growth, and that growth can itself become part of the base.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 1,
+                            "studyPathDashboardKey": "demo-compound-interest-page-1",
+                            "studyPathDashboardName": "01 - The Compounding Engine",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Compound Interest",
+                            "studyPathId": "demo-compound-interest",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Compound Interest",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "01-the-compounding-engine-1-01-the-compounding-engine-1-source"
+                    }
+                  },
+                  "name": "01 - The Compounding Engine Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "01 - The Compounding Engine",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 2,
+        "dashboardKey": "demo-compound-interest-page-2",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Compound Interest",
+        "id": "demo-compound-interest-dashboard-2",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "02-why-starting-early-wins-2-02-why-starting-early-wins-2-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "02 - Why Starting Early Wins",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "02-why-starting-early-wins-2-02-why-starting-early-wins-2-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## Time is a multiplier\n\nStarting early gives each contribution more opportunities to grow. Suppose two people invest with a hypothetical 7% average annual return, compounded annually, before taxes and fees. Person A invests $200 monthly from age 25 through age 34, then stops. Person B invests $200 monthly from age 35 through age 64.\n\nPerson A contributes $24,000 over ten years. If the money remains invested until age 65, it could grow to roughly $184,000. Person B contributes $72,000 over thirty years and could reach roughly $244,000. Person B contributes three times as much, yet the early saver ends with a substantial balance because the first deposits have decades to compound.\n\nThese figures are illustrations, not forecasts. Actual returns, contribution timing, taxes, fees, inflation, and market behavior can materially change results.\n\n## A gym comparison\n\nAn early contribution is like a training adaptation that has more time to build. Regular deposits resemble consistent workouts, while the return is not guaranteed like a predictable strength increase. Skipping years cannot always be repaired by simply adding a little more effort later.\n\nThe advantage is not magic and does not mean early saving always wins in every comparison. A later saver can accumulate more by contributing enough, earning a higher return, or saving for longer. The comparison must use the same assumptions and clearly state when deposits occur.\n\n## A useful habit\n\nAutomating a manageable contribution can reduce dependence on motivation. Increasing contributions when income rises may help, but an emergency reserve and high-interest debt deserve attention before taking avoidable investment risk.\n\nTime helps most when money remains invested and costs stay controlled. Starting with a sustainable amount is often more practical than waiting for a perfect amount.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 2,
+                            "studyPathDashboardKey": "demo-compound-interest-page-2",
+                            "studyPathDashboardName": "02 - Why Starting Early Wins",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Compound Interest",
+                            "studyPathId": "demo-compound-interest",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Compound Interest",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "02-why-starting-early-wins-2-02-why-starting-early-wins-2-source"
+                    }
+                  },
+                  "name": "02 - Why Starting Early Wins Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "02 - Why Starting Early Wins",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 3,
+        "dashboardKey": "demo-compound-interest-page-3",
+        "dashboardPurpose": "finalReview",
+        "deletable": false,
+        "folderName": "Compound Interest",
+        "id": "demo-compound-interest-dashboard-3",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-applying-the-idea-carefully-3-03-applying-the-idea-carefully-3-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "03 - Applying the Idea Carefully",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "03-applying-the-idea-carefully-3-03-applying-the-idea-carefully-3-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## Model regular contributions\n\nFor equal deposits made at the end of each period, the future value of an ordinary annuity is:\n\n`FV = C × [((1 + i)^N − 1) / i]`\n\n`C` is each contribution, `i` is the return per period, and `N` is the number of periods. If deposits occur at the beginning of each period, multiply the result by `(1 + i)`. This formula assumes a constant rate and does not represent a guaranteed investment outcome.\n\nFor example, depositing $150 monthly for 20 years at a hypothetical 6% annual rate converted to 0.5% monthly gives a modeled value of about $69,300 before fees, taxes, and inflation. Total deposits are $36,000; the difference is modeled growth.\n\n## Keep the estimate honest\n\nCompare scenarios rather than trusting one number. Test lower and higher returns, different contribution amounts, fees, and shorter time periods. A return stated before inflation does not equal spending power in the future. If inflation averages 3%, prices rise while the account balance may also change.\n\nInvestment returns are uncertain, and losses can occur. Diversification can reduce the effect of one holding performing poorly, but it cannot eliminate market risk. Account rules, tax treatment, and suitable investments depend on personal circumstances and location.\n\n## A practical order of operations\n\nFirst, understand cash flow and keep an emergency reserve appropriate to your situation. Next, address high-interest debt because its cost may exceed a realistic investment return. Then consider available employer matches or tax-advantaged accounts where appropriate, while checking their rules and fees.\n\nChoose a contribution you can maintain, automate it, and review it periodically instead of reacting to every market movement. The durable lesson is not that a particular return is guaranteed; it is that consistent contributions, low costs, and more time can give compounding room to work.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 3,
+                            "studyPathDashboardKey": "demo-compound-interest-page-3",
+                            "studyPathDashboardName": "03 - Applying the Idea Carefully",
+                            "studyPathDashboardPurpose": "finalReview",
+                            "studyPathFolderName": "Compound Interest",
+                            "studyPathId": "demo-compound-interest",
+                            "studyPathLayoutReason": "Final Study Guide page includes one source-grounded quiz.",
+                            "studyPathPracticeType": "quiz",
+                            "studyPathTitle": "Compound Interest",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "03-applying-the-idea-carefully-3-03-applying-the-idea-carefully-3-source"
+                    }
+                  },
+                  "name": "03 - Applying the Idea Carefully Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            },
+            {
+              "active": false,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-applying-the-idea-carefully-3-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "Keeping the 5% rate but ensuring the first year’s interest stays invested (compounding)",
+                                "correctIndex": 0,
+                                "explanation": "With compounding, the second year’s 5% is applied to a larger balance (principal plus prior returns), so the second-year gain grows.",
+                                "hint": "Applying the compounding mechanism to predict how changes affect future growth",
+                                "id": "study-guide-3-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "With compounding, the second year’s 5% is applied to a larger balance (principal plus prior returns), so the second-year gain grows.",
+                                    "option": "Keeping the 5% rate but ensuring the first year’s interest stays invested (compounding)"
+                                  },
+                                  {
+                                    "explanation": "This says \"Switching to simple interest so each year’s growth is calculated on...\", but the answer should focus on \"Keeping the 5% rate but ensuring the first year’s interest st...",
+                                    "option": "Switching to simple interest so each year’s growth is calculated only from the original $1,000"
+                                  },
+                                  {
+                                    "explanation": "This says \"Reducing the number of compounding periods per year while keeping e...\", but the answer should focus on \"Keeping the 5% rate but ensuring the first year’s interest st...",
+                                    "option": "Reducing the number of compounding periods per year while keeping everything else the same"
+                                  }
+                                ],
+                                "options": [
+                                  "Keeping the 5% rate but ensuring the first year’s interest stays invested (compounding)",
+                                  "Switching to simple interest so each year’s growth is calculated only from the original $1,000",
+                                  "Reducing the number of compounding periods per year while keeping everything else the same"
+                                ],
+                                "question": "You invest $1,000 at 5% annually with all growth reinvested. Which change would most directly increase the amount added in the *second* year compared with the first-year gain alone?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "Person A can end with a substantial balance because early deposits have more time to compound",
+                                "correctIndex": 2,
+                                "explanation": "Even with the same monthly amount, the early saver’s first deposits have decades to compound, which can outweigh later higher total contributions.",
+                                "hint": "Comparing scenarios to explain why starting earlier can win",
+                                "id": "study-guide-3-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Even with the same monthly amount, the early saver’s first deposits have decades to compound, which can outweigh later higher total contributions.",
+                                    "option": "Person A can end with a substantial balance because early deposits have more time to compound"
+                                  },
+                                  {
+                                    "explanation": "This says \"Person B must always end with more because they contribute for longer\", but the answer should focus on \"Person A can end with a substantial balance because early depo...",
+                                    "option": "Person B must always end with more because they contribute for longer"
+                                  },
+                                  {
+                                    "explanation": "This says \"The ending balances will be identical because monthly contributions...\", but the answer should focus on \"Person A can end with a substantial balance because early dep...",
+                                    "option": "The ending balances will be identical because monthly contributions are the same"
+                                  }
+                                ],
+                                "options": [
+                                  "Person B must always end with more because they contribute for longer",
+                                  "The ending balances will be identical because monthly contributions are the same",
+                                  "Person A can end with a substantial balance because early deposits have more time to compound"
+                                ],
+                                "question": "Two people both invest $200 monthly and earn the same average return (compounded annually). Person A starts at age 25 and stops at 34; Person B starts at 35 and continues to 64. Assuming the money stays invested until age 65, which outcome best matches the guide’s logic?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "Multiply the ordinary annuity result by (1 + i)",
+                                "correctIndex": 0,
+                                "explanation": "Beginning-of-period deposits get one extra compounding period, so the ordinary annuity result is multiplied by (1 + i).",
+                                "hint": "Transferring the annuity timing adjustment to predict future value changes",
+                                "id": "study-guide-3-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Beginning-of-period deposits get one extra compounding period, so the ordinary annuity result is multiplied by (1 + i).",
+                                    "option": "Multiply the ordinary annuity result by (1 + i)"
+                                  },
+                                  {
+                                    "explanation": "This says \"Divide the ordinary annuity result by (1 + i)\", but the answer should focus on \"Multiply the ordinary annuity result by (1 + i)\".",
+                                    "option": "Divide the ordinary annuity result by (1 + i)"
+                                  },
+                                  {
+                                    "explanation": "This says \"Do not change the formula; beginning vs\", but the answer should focus on \"Multiply the ordinary annuity result by (1 + i)\".",
+                                    "option": "Do not change the formula; beginning vs. end deposits makes no difference"
+                                  }
+                                ],
+                                "options": [
+                                  "Multiply the ordinary annuity result by (1 + i)",
+                                  "Divide the ordinary annuity result by (1 + i)",
+                                  "Do not change the formula; beginning vs. end deposits makes no difference"
+                                ],
+                                "question": "You’re comparing two savings plans using the guide’s annuity idea. Deposits of $C$ occur at the *beginning* of each period rather than the end. What adjustment should you make to the ordinary annuity future value result?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "Fees reducing the amount that remains invested",
+                                "correctIndex": 0,
+                                "explanation": "Fees reduce the invested amount, shrinking the base that future returns can build on.",
+                                "hint": "Diagnosing which real-world factor affects compounding by changing the invested base",
+                                "id": "study-guide-3-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Fees reduce the invested amount, shrinking the base that future returns can build on.",
+                                    "option": "Fees reducing the amount that remains invested"
+                                  },
+                                  {
+                                    "explanation": "This says \"More time passing while the same balance is withdrawn and not reinv...\", but the answer should focus on \"Fees reducing the amount that remains invested\".",
+                                    "option": "More time passing while the same balance is withdrawn and not reinvested"
+                                  },
+                                  {
+                                    "explanation": "This says \"A higher quoted annual return that is guaranteed to be earned\", but the answer should focus on \"Fees reducing the amount that remains invested\".",
+                                    "option": "A higher quoted annual return that is guaranteed to be earned"
+                                  }
+                                ],
+                                "options": [
+                                  "Fees reducing the amount that remains invested",
+                                  "More time passing while the same balance is withdrawn and not reinvested",
+                                  "A higher quoted annual return that is guaranteed to be earned"
+                                ],
+                                "question": "Which factor most directly reduces the amount that can compound over time, according to the guide?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "Compare scenarios using lower/higher returns, different contribution amounts, fees, and time periods",
+                                "correctIndex": 0,
+                                "explanation": "The guide advises comparing scenarios (including return ranges, fees, and time) and not treating one number as certain.",
+                                "hint": "Applying estimation discipline to account for uncertainty and changing assumptions",
+                                "id": "study-guide-3-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Assume the return stated before inflation equals future spending power\", but the answer should focus on \"Compare scenarios using lower/higher returns, different contr...",
+                                    "option": "Assume the return stated before inflation equals future spending power"
+                                  },
+                                  {
+                                    "explanation": "This says \"Rely on a single forecasted return and ignore inflation and fees\", but the answer should focus on \"Compare scenarios using lower/higher returns, different contributio...",
+                                    "option": "Rely on a single forecasted return and ignore inflation and fees"
+                                  },
+                                  {
+                                    "explanation": "The guide advises comparing scenarios (including return ranges, fees, and time) and not treating one number as certain.",
+                                    "option": "Compare scenarios using lower/higher returns, different contribution amounts, fees, and time periods"
+                                  }
+                                ],
+                                "options": [
+                                  "Compare scenarios using lower/higher returns, different contribution amounts, fees, and time periods",
+                                  "Assume the return stated before inflation equals future spending power",
+                                  "Rely on a single forecasted return and ignore inflation and fees"
+                                ],
+                                "question": "You want to estimate outcomes for a retirement plan. What is the guide’s recommended approach to keep your estimate honest?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              },
+                              {
+                                "answer": "That’s not guaranteed; skipping years can’t always be repaired just by adding more later, though later savers can still win under different assumptions",
+                                "correctIndex": 0,
+                                "explanation": "The guide emphasizes that early time helps most, and skipping years cannot always be repaired by simply adding later—though later savers may still end up ahead if they contribute enough, earn higher returns, or save longer.",
+                                "hint": "Evaluating a claim using the guide’s comparison logic and assumptions",
+                                "id": "study-guide-3-multiple-choice-6",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"That’s impossible because compound interest only works when you sta...\", but the answer should focus on \"That’s not guaranteed; skipping years can’t always be repaire...",
+                                    "option": "That’s impossible because compound interest only works when you start at age 25"
+                                  },
+                                  {
+                                    "explanation": "The guide emphasizes that early time helps most, and skipping years cannot always be repaired by simply adding later—though later savers may still end up ahead if they contribut...",
+                                    "option": "That’s not guaranteed; skipping years can’t always be repaired just by adding more later, though later savers can still win under different assumptions"
+                                  },
+                                  {
+                                    "explanation": "This says \"That’s always true because total contributions determine the final...\", but the answer should focus on \"That’s not guaranteed; skipping years can’t always be repaired...",
+                                    "option": "That’s always true because total contributions determine the final balance"
+                                  }
+                                ],
+                                "options": [
+                                  "That’s not guaranteed; skipping years can’t always be repaired just by adding more later, though later savers can still win under different assumptions",
+                                  "That’s impossible because compound interest only works when you start at age 25",
+                                  "That’s always true because total contributions determine the final balance"
+                                ],
+                                "question": "A friend says, “If I start later, I can always catch up by saving the same total amount for the same number of years.” Based on the guide, which response is most accurate?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 6"
+                              }
+                            ],
+                            "title": "03 - Applying the Idea Carefully"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "03-applying-the-idea-carefully-3-1"
+                    }
+                  },
+                  "name": "03 - Applying the Idea Carefully Quiz",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Final Study Guide page includes one source-grounded quiz.",
+        "name": "03 - Applying the Idea Carefully",
+        "practiceType": "quiz"
+      }
+    ],
+    "emoji": "📈",
+    "folderName": "Compound Interest",
+    "pathId": "demo-compound-interest",
+    "quickStart": {
+      "keyIdea": "Compound interest earns returns on both your original money and past returns, so starting earlier can outweigh contributing much more later.",
+      "quickSummary": "Compound growth is a snowball effect: money earns a return, and future returns can build on that larger balance. The growth rate, contribution schedule, fees, taxes, and time all matter.\n\nStarting early gives each deposit more periods to compound. Like progressive training at the gym, consistency and patience often matter more than attempting a dramatic catch-up near the end."
+    },
+    "selectedIndex": 0,
+    "title": "Compound Interest"
+  }
+}

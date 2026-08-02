@@ -139,15 +139,20 @@ const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
 
 const HOSTED_AI_INITIAL_FREE_CREDITS = 30;
 const HOSTED_AI_DAILY_FREE_CREDIT_FLOOR = 7;
+// Luna now costs the same as nano, so the per-stage model split no longer buys
+// anything: the cheaper models only cost quality. Nano failed the Quick Create
+// quiz schema three times out of three on dense source text where luna
+// succeeded on the first attempt. The per-stage env overrides are kept so a
+// stage can still be pinned to a different model without a deploy.
 export const DEFAULT_CEREBRAS_MODEL = "gpt-oss-120b";
-export const DEFAULT_OPENAI_MODEL = "gpt-5.4-mini";
+export const DEFAULT_OPENAI_MODEL = "gpt-5.6-luna";
 export const DEFAULT_OPENAI_STUDY_GUIDE_MODEL = "gpt-5.6-luna";
-export const DEFAULT_OPENAI_SUPPORT_MODEL = "gpt-5.4-mini";
-export const DEFAULT_OPENAI_FAST_MODEL = "gpt-5.4-nano";
+export const DEFAULT_OPENAI_SUPPORT_MODEL = "gpt-5.6-luna";
+export const DEFAULT_OPENAI_FAST_MODEL = "gpt-5.6-luna";
 export const DEFAULT_OPENAI_REASONING_EFFORT = "none";
 const MAX_TEXT_CHARS = 120_000;
 const MIN_PODCAST_SOURCE_CHARS = 400;
-const MAX_PODCAST_SOURCE_CHARS = 24_000;
+export const MAX_PODCAST_SOURCE_CHARS = 24_000;
 const MAX_PODCAST_TURNS = 18;
 const MAX_PODCAST_AUDIO_BYTES = 15_000_000;
 const PODCAST_TTS_MONTHLY_CHARACTER_CAP = 225_000;
@@ -673,7 +678,7 @@ const hasInlineData = (part: HostedAiGatewayPart): boolean =>
   Boolean(part.inline_data) ||
   Object.prototype.hasOwnProperty.call(part, "inlineData");
 
-const buildPrompt = (parts: HostedAiGatewayPart[]): string =>
+export const buildPrompt = (parts: HostedAiGatewayPart[]): string =>
   parts
     .map((part) => (typeof part.text === "string" ? part.text.trim() : ""))
     .filter(Boolean)
@@ -1033,14 +1038,17 @@ const extractResponsesApiText = (payload: ChatCompletionResponse): string =>
     .map((part) => (typeof part?.text === "string" ? part.text : ""))
     .join("");
 
+// Luna is priced level with nano now. These feed
+// hosted_ai_usage_events.metadata.estimatedCostUsdTotal, so a stale entry here
+// silently skews the cost reporting rather than failing.
 const getDefaultOpenAiInputPrice = (model: string): number =>
-  model.includes("nano") ? 0.2 : model.includes("luna") ? 0.9975 : 0.75;
+  model.includes("nano") ? 0.2 : model.includes("luna") ? 0.2 : 0.75;
 
 const getDefaultOpenAiCachedInputPrice = (model: string): number =>
-  model.includes("nano") ? 0.02 : model.includes("luna") ? 0.09975 : 0.075;
+  model.includes("nano") ? 0.02 : model.includes("luna") ? 0.02 : 0.075;
 
 const getDefaultOpenAiOutputPrice = (model: string): number =>
-  model.includes("nano") ? 1.25 : model.includes("luna") ? 5.985 : 4.5;
+  model.includes("nano") ? 1.25 : model.includes("luna") ? 1.2 : 4.5;
 
 const getModelPriceEnvSuffix = (model: string): string =>
   model
@@ -1312,7 +1320,7 @@ export const PODCAST_SCRIPT_SCHEMA = {
   required: ["title", "description", "transcriptTurns", "chapters"],
 };
 
-const safePodcastText = (value: unknown, maxLength: number): string =>
+export const safePodcastText = (value: unknown, maxLength: number): string =>
   stringValue(value).replace(/\s+/g, " ").slice(0, maxLength).trim();
 
 const parseJsonFromText = (value: string): JsonObject | null => {
@@ -1509,7 +1517,7 @@ const detectPodcastScriptLanguage = (
   return best && best[1] >= 4 ? best[0] : undefined;
 };
 
-const podcastScriptMatchesOutputLanguage = (
+export const podcastScriptMatchesOutputLanguage = (
   script: PodcastScript,
   outputLanguage: StudyMeshLanguageCode | undefined,
 ): boolean => {
@@ -1526,7 +1534,7 @@ const podcastScriptMatchesOutputLanguage = (
   return !detected || detected === outputLanguage;
 };
 
-const buildPodcastLanguageRetryPrompt = ({
+export const buildPodcastLanguageRetryPrompt = ({
   script,
   outputLanguage,
   sourceTitle,
@@ -2428,6 +2436,57 @@ const mapFailure = (
   };
 };
 
+/**
+ * The Study Guide model is asked for a human title but regularly answers with a
+ * slug ("spaced-repetition"), which then becomes the library name, the
+ * workspace heading and every derived page name ("Flashcards: spaced-repetition").
+ *
+ * A value only counts as a slug when every one of these holds, so that a real
+ * hyphenated title is never touched:
+ * - it carries no whitespace at all - a human title of several words has spaces,
+ *   so "Cost-Benefit Analysis" is out on this alone;
+ * - it is pure lowercase ASCII plus "-"/"_" separators, so any capital letter
+ *   ("E-Commerce", "Well-Being") or accent keeps the value as written;
+ * - it has at least two separator-delimited segments;
+ * - every alphabetic segment is at least two characters, which is what keeps
+ *   hyphenated single words with a one-letter part alive: "e-commerce",
+ *   "x-ray", "t-test", "u-turn". Digit-only segments are exempt so that
+ *   "python-3-basics" is still recognised as a slug.
+ */
+const isSlugShapedTitle = (value: string): boolean => {
+  if (!value || /\s/.test(value) || !/[-_]/.test(value)) {
+    return false;
+  }
+
+  const segments = value.split(/[-_]/);
+
+  return (
+    segments.length > 1 &&
+    segments.every(
+      (segment) =>
+        /^[a-z0-9]+$/.test(segment) &&
+        (segment.length > 1 || /^[0-9]$/.test(segment)),
+    )
+  );
+};
+
+/**
+ * Turns a slug-shaped guide title into Title Case and returns anything that
+ * already reads like a human title completely unchanged.
+ */
+export const humanizeGuideTitle = (value: unknown): string => {
+  const title = typeof value === "string" ? value.trim() : "";
+
+  if (!isSlugShapedTitle(title)) {
+    return title;
+  }
+
+  return title
+    .split(/[-_]/)
+    .map((segment) => `${segment.charAt(0).toUpperCase()}${segment.slice(1)}`)
+    .join(" ");
+};
+
 interface NormalizedMonolithGuide {
   title: string;
   folderName: string;
@@ -2655,8 +2714,10 @@ const normalizeMonolithGuide = (
   }
 
   return {
-    title: stringValue(record.title) || titleFallback,
-    folderName: stringValue(record.folderName) || folderNameFallback,
+    title: humanizeGuideTitle(stringValue(record.title) || titleFallback),
+    folderName: humanizeGuideTitle(
+      stringValue(record.folderName) || folderNameFallback,
+    ),
     emoji: stringValue(record.emoji).slice(0, 8) || "📘",
     quickStart,
     pages,

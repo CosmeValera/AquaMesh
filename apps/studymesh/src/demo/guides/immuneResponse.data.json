@@ -1,0 +1,1661 @@
+{
+  "bonusPages": [
+    {
+      "actionId": "quiz",
+      "durationMs": 9000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 4,
+        "dashboardIndex": 4,
+        "dashboardKey": "demo-immune-response-page-4",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Immune Defense",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "Cilia move mucus toward the throat for removal",
+                                "correctIndex": 0,
+                                "explanation": "Airway cilia move trapped particles in mucus toward the throat, where coughing or sneezing can remove them.",
+                                "hint": "Think about defenses that act before immune cells identify a specific microbe.",
+                                "id": "quiz-immune-defense-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This is a physical airway barrier that removes trapped particles before deeper infection.",
+                                    "option": "Cilia move mucus toward the throat for removal"
+                                  },
+                                  {
+                                    "explanation": "Memory responses occur after prior adaptive exposure, not as an initial airway barrier.",
+                                    "option": "Memory B cells produce antibodies immediately"
+                                  },
+                                  {
+                                    "explanation": "Cytotoxic T cells act after body cells display abnormal microbial fragments.",
+                                    "option": "Cytotoxic T cells destroy infected tissue"
+                                  },
+                                  {
+                                    "explanation": "Plasma cells release antibodies; dendritic cells present antigens to lymphocytes.",
+                                    "option": "Plasma cells display antigens to lymphocytes"
+                                  }
+                                ],
+                                "options": [
+                                  "Cilia move mucus toward the throat for removal",
+                                  "Memory B cells produce antibodies immediately",
+                                  "Cytotoxic T cells destroy infected tissue",
+                                  "Plasma cells display antigens to lymphocytes"
+                                ],
+                                "question": "Which event most directly helps prevent microbes from entering through the airways?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "They recognize common molecular patterns shared by many microbes",
+                                "correctIndex": 0,
+                                "explanation": "Pattern-recognition receptors detect recurring microbial or damage-associated patterns, so prior exposure is unnecessary.",
+                                "hint": "These receptors detect broad molecular features rather than unique species identities.",
+                                "id": "quiz-immune-defense-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Shared molecular patterns allow innate recognition without previous exposure.",
+                                    "option": "They recognize common molecular patterns shared by many microbes"
+                                  },
+                                  {
+                                    "explanation": "Innate receptors do not obtain their recognition ability from transferred antibodies.",
+                                    "option": "They copy antibodies from previously infected people"
+                                  },
+                                  {
+                                    "explanation": "Pattern recognition is an innate process that operates before adaptive memory develops.",
+                                    "option": "They require memory cells to identify every new species"
+                                  },
+                                  {
+                                    "explanation": "Exact prior exposure is unnecessary because receptors detect broad molecular patterns.",
+                                    "option": "They recognize only the exact strain that caused prior illness"
+                                  }
+                                ],
+                                "options": [
+                                  "They recognize common molecular patterns shared by many microbes",
+                                  "They copy antibodies from previously infected people",
+                                  "They require memory cells to identify every new species",
+                                  "They recognize only the exact strain that caused prior illness"
+                                ],
+                                "question": "Why can pattern-recognition receptors respond to a microbe the body has never encountered before?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "Increased permeability",
+                                "correctIndex": 0,
+                                "explanation": "Inflammation increases vessel permeability, allowing fluid and defensive proteins to move into nearby tissue.",
+                                "hint": "The relevant change makes vessel walls easier for substances to cross.",
+                                "id": "quiz-immune-defense-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "More permeable vessels permit fluid and defensive proteins to enter affected tissue.",
+                                    "option": "Increased permeability"
+                                  },
+                                  {
+                                    "explanation": "Closed vessels would prevent defensive materials from reaching the infected area.",
+                                    "option": "Complete vessel closure"
+                                  },
+                                  {
+                                    "explanation": "Inflammation coordinates delivery rather than permanently shutting down circulation.",
+                                    "option": "Permanent reduction in blood flow"
+                                  },
+                                  {
+                                    "explanation": "Blood vessels do not transform into lymph nodes during inflammation.",
+                                    "option": "Conversion of vessels into lymph nodes"
+                                  }
+                                ],
+                                "options": [
+                                  "Increased permeability",
+                                  "Complete vessel closure",
+                                  "Permanent reduction in blood flow",
+                                  "Conversion of vessels into lymph nodes"
+                                ],
+                                "question": "What change in local blood vessels allows defensive proteins and fluid to enter inflamed tissue?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "Neutrophil",
+                                "correctIndex": 0,
+                                "explanation": "Neutrophils often reach inflamed tissue early and engulf invading microbes.",
+                                "hint": "Choose the early phagocytic cell described in the notes.",
+                                "id": "quiz-immune-defense-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Neutrophils are early-arriving cells that engulf microbes during acute inflammation.",
+                                    "option": "Neutrophil"
+                                  },
+                                  {
+                                    "explanation": "Memory T cells support faster later responses rather than serving as typical early engulfers.",
+                                    "option": "Memory T cell"
+                                  },
+                                  {
+                                    "explanation": "Plasma cells secrete antibodies instead of engulfing microbes.",
+                                    "option": "Plasma cell"
+                                  },
+                                  {
+                                    "explanation": "A regulatory signal is a chemical message, not a phagocytic immune cell.",
+                                    "option": "Regulatory signal"
+                                  }
+                                ],
+                                "options": [
+                                  "Neutrophil",
+                                  "Memory T cell",
+                                  "Plasma cell",
+                                  "Regulatory signal"
+                                ],
+                                "question": "Which immune cell commonly arrives early and engulfs microbes?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "Present antigen fragments to lymphocytes",
+                                "correctIndex": 0,
+                                "explanation": "Dendritic cells present microbial antigen fragments and help activate lymphocytes with matching receptors.",
+                                "hint": "This cell connects local innate sensing with targeted lymphocyte activation.",
+                                "id": "quiz-immune-defense-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Antigen presentation helps lymphocytes recognize and mount a specific adaptive response.",
+                                    "option": "Present antigen fragments to lymphocytes"
+                                  },
+                                  {
+                                    "explanation": "Stomach acid and digestive enzymes handle swallowed microbes, not dendritic cells.",
+                                    "option": "Digest stomach contents"
+                                  },
+                                  {
+                                    "explanation": "Epithelial repair occurs during tissue recovery rather than antigen presentation.",
+                                    "option": "Replace damaged epithelial cells"
+                                  },
+                                  {
+                                    "explanation": "Chemical signals influence systemic responses; dendritic cells do not directly create fever.",
+                                    "option": "Produce fever directly in the bloodstream"
+                                  }
+                                ],
+                                "options": [
+                                  "Present antigen fragments to lymphocytes",
+                                  "Digest stomach contents",
+                                  "Replace damaged epithelial cells",
+                                  "Produce fever directly in the bloodstream"
+                                ],
+                                "question": "A dendritic cell carries microbial material to a lymph node. What is its main adaptive-immune role there?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              },
+                              {
+                                "answer": "Blocking a virus from attaching to a cell",
+                                "correctIndex": 0,
+                                "explanation": "Antibodies can bind viruses or toxins and block attachment, neutralize toxins, or promote engulfment.",
+                                "hint": "Focus on what selective binding can do to microbes or toxins outside cells.",
+                                "id": "quiz-immune-defense-multiple-choice-6",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Antibody binding can prevent viral attachment and reduce entry into host cells.",
+                                    "option": "Blocking a virus from attaching to a cell"
+                                  },
+                                  {
+                                    "explanation": "Antibodies defend against targets but do not directly regenerate all damaged tissue.",
+                                    "option": "Replacing every damaged body cell"
+                                  },
+                                  {
+                                    "explanation": "Cell-mediated responses are needed for many infected cells, especially with intracellular microbes.",
+                                    "option": "Destroying all infected cells without help"
+                                  },
+                                  {
+                                    "explanation": "Adaptive activation normally causes matching lymphocytes to multiply rather than stop.",
+                                    "option": "Preventing lymphocytes from multiplying"
+                                  }
+                                ],
+                                "options": [
+                                  "Blocking a virus from attaching to a cell",
+                                  "Replacing every damaged body cell",
+                                  "Destroying all infected cells without help",
+                                  "Preventing lymphocytes from multiplying"
+                                ],
+                                "question": "Which outcome is a possible function of antibodies outside cells?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 6"
+                              },
+                              {
+                                "answer": "They can trigger infected cells to die",
+                                "correctIndex": 0,
+                                "explanation": "Cytotoxic T cells recognize infected cells displaying abnormal microbial fragments and induce cell death.",
+                                "hint": "This response targets the infected host cell rather than only material outside cells.",
+                                "id": "quiz-immune-defense-multiple-choice-7",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Killing infected cells can limit production and spread of intracellular pathogens.",
+                                    "option": "They can trigger infected cells to die"
+                                  },
+                                  {
+                                    "explanation": "Stomach acid is a barrier defense, not a cytotoxic T-cell function.",
+                                    "option": "They increase stomach acidity"
+                                  },
+                                  {
+                                    "explanation": "Mucus trapping and ciliary movement occur at airway surfaces before targeted T-cell action.",
+                                    "option": "They trap microbes in airway mucus"
+                                  },
+                                  {
+                                    "explanation": "Antibodies come from plasma cells derived from activated B cells.",
+                                    "option": "They turn into antibodies"
+                                  }
+                                ],
+                                "options": [
+                                  "They can trigger infected cells to die",
+                                  "They increase stomach acidity",
+                                  "They trap microbes in airway mucus",
+                                  "They turn into antibodies"
+                                ],
+                                "question": "Why are cytotoxic T cells important when a pathogen is hiding inside body cells?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 7"
+                              },
+                              {
+                                "answer": "Some B and T cells persist and respond more efficiently to later exposure",
+                                "correctIndex": 0,
+                                "explanation": "Long-lived memory B and T cells support faster, more efficient responses to a relevant later exposure.",
+                                "hint": "Memory improves future responses but remains specific and incomplete.",
+                                "id": "quiz-immune-defense-multiple-choice-8",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Long-lived memory cells provide faster, more effective responses to familiar antigens.",
+                                    "option": "Some B and T cells persist and respond more efficiently to later exposure"
+                                  },
+                                  {
+                                    "explanation": "Antibody levels may decline even when immune memory persists.",
+                                    "option": "All antibody levels remain permanently unchanged"
+                                  },
+                                  {
+                                    "explanation": "Changed strains may partly escape earlier recognition, so memory is not universal.",
+                                    "option": "Memory protects equally against every changed microbial strain"
+                                  },
+                                  {
+                                    "explanation": "Vaccination can establish adaptive memory without requiring the full natural disease.",
+                                    "option": "Memory develops only after the body experiences severe disease"
+                                  }
+                                ],
+                                "options": [
+                                  "Some B and T cells persist and respond more efficiently to later exposure",
+                                  "All antibody levels remain permanently unchanged",
+                                  "Memory protects equally against every changed microbial strain",
+                                  "Memory develops only after the body experiences severe disease"
+                                ],
+                                "question": "Which statement best describes immune memory after an adaptive response?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 8"
+                              }
+                            ],
+                            "title": "Quiz: Immune Defense"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Quiz: Immune Defense Quizzes",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Quiz: Immune Defense"
+      }
+    },
+    {
+      "actionId": "flashcards",
+      "durationMs": 6000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 5,
+        "dashboardIndex": 5,
+        "dashboardKey": "demo-immune-response-page-5",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Immune Defense",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "FlashcardCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "Physical and chemical barriers act first: skin blocks entry, mucus traps particles, cilia move mucus, coughing or sneezing removes material, and stomach acid and digestive enzymes damage swallowed microbes.",
+                                "id": "flashcards-immune-defense-flashcard-1",
+                                "kind": "qa",
+                                "question": "A microbe reaches the skin or airway. Which defenses act before immune cells identify its species?",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 1"
+                              },
+                              {
+                                "answer": "The microbe must also reach suitable tissue, avoid removal, and reproduce faster than early defenses can contain it.",
+                                "id": "flashcards-immune-defense-flashcard-2",
+                                "kind": "qa",
+                                "question": "Why does bypassing a body surface not automatically guarantee infection?",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 2"
+                              },
+                              {
+                                "answer": "Cilia move the mucus toward the throat, where coughing or sneezing can help expel the trapped material.",
+                                "id": "flashcards-immune-defense-flashcard-3",
+                                "kind": "qa",
+                                "question": "A person inhales particles that become trapped in airway mucus. How can the body remove them?",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 3"
+                              },
+                              {
+                                "answer": "They damage many microbes before those organisms can establish themselves in the digestive tract.",
+                                "id": "flashcards-immune-defense-flashcard-4",
+                                "kind": "qa",
+                                "question": "How do stomach acid and digestive enzymes protect against swallowed microbes?",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 4"
+                              },
+                              {
+                                "answer": "Each can create an opportunity for microbes to cross a body boundary, but infection still depends on tissue access, survival, and reproduction.",
+                                "id": "flashcards-immune-defense-flashcard-5",
+                                "kind": "qa",
+                                "question": "Compare a cut, inhaled particle, contaminated food, and insect bite as infection risks.",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 5"
+                              },
+                              {
+                                "answer": "Risk rises when microbes reach suitable tissue, evade removal, and reproduce faster than the initial defenses can contain them.",
+                                "id": "flashcards-immune-defense-flashcard-6",
+                                "kind": "qa",
+                                "question": "How can infection become more likely when early defenses are overwhelmed?",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 6"
+                              },
+                              {
+                                "answer": "Pattern-recognition receptors detect shared molecular patterns from microbes or damaged cells without requiring prior exposure to that exact microbe.",
+                                "id": "flashcards-immune-defense-flashcard-7",
+                                "kind": "qa",
+                                "question": "A tissue detects a common microbial molecular pattern. What kind of receptor enables this early recognition?",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 7"
+                              },
+                              {
+                                "answer": "It detects common molecular patterns rather than relying on a receptor specifically trained against that exact species.",
+                                "id": "flashcards-immune-defense-flashcard-8",
+                                "kind": "qa",
+                                "question": "Why can innate recognition respond to a new microbe the body has never encountered?",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 8"
+                              },
+                              {
+                                "answer": "They can detect certain microbial proteins, sugars, genetic material, or molecular signals released by damaged cells.",
+                                "id": "flashcards-immune-defense-flashcard-9",
+                                "kind": "qa",
+                                "question": "What can pattern-recognition receptors detect from microbes or injured cells?",
+                                "sourceLine": 9,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 9"
+                              },
+                              {
+                                "answer": "They alter nearby blood vessels and attract immune cells, coordinating the local response.",
+                                "id": "flashcards-immune-defense-flashcard-10",
+                                "kind": "qa",
+                                "question": "Nearby tissue cells detect danger. What do cytokines and chemokines accomplish?",
+                                "sourceLine": 10,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 10"
+                              },
+                              {
+                                "answer": "It recruits fluid, proteins, and immune cells to contain threats, but excessive or prolonged inflammation can injure healthy tissue.",
+                                "id": "flashcards-immune-defense-flashcard-11",
+                                "kind": "qa",
+                                "question": "Why is inflammation useful but potentially harmful?",
+                                "sourceLine": 11,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 11"
+                              },
+                              {
+                                "answer": "Inflamed blood vessels become more permeable, allowing fluid and defensive proteins to enter the tissue.",
+                                "id": "flashcards-immune-defense-flashcard-12",
+                                "kind": "qa",
+                                "question": "An inflamed area becomes red, warm, swollen, and painful. What vascular change helps produce these signs?",
+                                "sourceLine": 12,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 12"
+                              },
+                              {
+                                "answer": "Neutrophils often arrive early and engulf microbes.",
+                                "id": "flashcards-immune-defense-flashcard-13",
+                                "kind": "qa",
+                                "question": "Which early immune cell commonly arrives and engulfs microbes?",
+                                "sourceLine": 13,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 13"
+                              },
+                              {
+                                "answer": "They engulf microbes and debris, release signals, and help coordinate later immune responses.",
+                                "id": "flashcards-immune-defense-flashcard-14",
+                                "kind": "qa",
+                                "question": "How do macrophages contribute beyond engulfing microbes?",
+                                "sourceLine": 14,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 14"
+                              },
+                              {
+                                "answer": "Complement can coat the microbe, attract immune cells, and damage certain microbial membranes.",
+                                "id": "flashcards-immune-defense-flashcard-15",
+                                "kind": "qa",
+                                "question": "A microbe is coated by complement proteins. What effects may follow?",
+                                "sourceLine": 15,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 15"
+                              },
+                              {
+                                "answer": "Fever can make conditions less favorable for some microbes and support immune activity, although high or persistent fever can be dangerous.",
+                                "id": "flashcards-immune-defense-flashcard-16",
+                                "kind": "qa",
+                                "question": "Why is fever considered a defense rather than only a symptom?",
+                                "sourceLine": 16,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 16"
+                              },
+                              {
+                                "answer": "Although moderate fever may support defense, excessive or prolonged fever can harm the body and requires concern.",
+                                "id": "flashcards-immune-defense-flashcard-17",
+                                "kind": "qa",
+                                "question": "What does a high or persistent fever imply about the balance of fever’s effects?",
+                                "sourceLine": 17,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 17"
+                              },
+                              {
+                                "answer": "Activated dendritic cells collect microbial material, travel to lymph nodes, and display antigen fragments to lymphocytes.",
+                                "id": "flashcards-immune-defense-flashcard-18",
+                                "kind": "qa",
+                                "question": "How do dendritic cells help connect rapid defense with adaptive immunity?",
+                                "sourceLine": 18,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 18"
+                              },
+                              {
+                                "answer": "They travel to nearby lymph nodes, where they display antigen fragments on surface molecules.",
+                                "id": "flashcards-immune-defense-flashcard-19",
+                                "kind": "qa",
+                                "question": "Where do activated dendritic cells commonly present microbial fragments to lymphocytes?",
+                                "sourceLine": 19,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 19"
+                              },
+                              {
+                                "answer": "Its receptor must fit the presented antigen, and appropriate activation signals must also be present.",
+                                "id": "flashcards-immune-defense-flashcard-20",
+                                "kind": "qa",
+                                "question": "What must happen before a lymphocyte becomes activated against an antigen?",
+                                "sourceLine": 20,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 20"
+                              },
+                              {
+                                "answer": "The two requirements help reduce accidental activation against an inappropriate target.",
+                                "id": "flashcards-immune-defense-flashcard-21",
+                                "kind": "qa",
+                                "question": "Why does lymphocyte activation require both receptor fit and activation signals?",
+                                "sourceLine": 21,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 21"
+                              },
+                              {
+                                "answer": "They multiply, producing a larger population of cells directed toward the same target.",
+                                "id": "flashcards-immune-defense-flashcard-22",
+                                "kind": "qa",
+                                "question": "What happens after lymphocytes are properly activated?",
+                                "sourceLine": 22,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 22"
+                              },
+                              {
+                                "answer": "A plasma cell releases antibodies that bind specific structures on an invader or its toxins.",
+                                "id": "flashcards-immune-defense-flashcard-23",
+                                "kind": "qa",
+                                "question": "An activated B cell differentiates into a plasma cell. What does the plasma cell produce?",
+                                "sourceLine": 23,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 23"
+                              },
+                              {
+                                "answer": "They can bind the virus and block its attachment to host cells.",
+                                "id": "flashcards-immune-defense-flashcard-24",
+                                "kind": "qa",
+                                "question": "How can antibodies stop a virus before it enters a cell?",
+                                "sourceLine": 24,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 24"
+                              },
+                              {
+                                "answer": "The antibody binds the toxin and prevents it from producing its harmful effect.",
+                                "id": "flashcards-immune-defense-flashcard-25",
+                                "kind": "qa",
+                                "question": "What does antibody neutralization mean when the target is a toxin?",
+                                "sourceLine": 25,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 25"
+                              },
+                              {
+                                "answer": "They mark the microbe for easier engulfment by immune cells.",
+                                "id": "flashcards-immune-defense-flashcard-26",
+                                "kind": "qa",
+                                "question": "How can antibodies make a microbe easier for other immune cells to remove?",
+                                "sourceLine": 26,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 26"
+                              },
+                              {
+                                "answer": "Antibody binding can activate complement.",
+                                "id": "flashcards-immune-defense-flashcard-27",
+                                "kind": "qa",
+                                "question": "What additional defensive system can antibodies activate?",
+                                "sourceLine": 27,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 27"
+                              },
+                              {
+                                "answer": "They work especially well outside cells, but viruses inside cells and microbes protected within tissues also require cell-mediated responses.",
+                                "id": "flashcards-immune-defense-flashcard-28",
+                                "kind": "qa",
+                                "question": "Why are antibodies not sufficient against every infection?",
+                                "sourceLine": 28,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 28"
+                              },
+                              {
+                                "answer": "Cell-mediated responses, including T-cell activity, are especially important against pathogens inside cells.",
+                                "id": "flashcards-immune-defense-flashcard-29",
+                                "kind": "qa",
+                                "question": "A pathogen is hiding inside a body cell. Which broad type of immune defense becomes especially important?",
+                                "sourceLine": 29,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 29"
+                              },
+                              {
+                                "answer": "Helper T cells release signals that activate and organize other immune cells, support B-cell responses, and strengthen macrophage activity.",
+                                "id": "flashcards-immune-defense-flashcard-30",
+                                "kind": "qa",
+                                "question": "What is the organizing role of helper T cells?",
+                                "sourceLine": 30,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 30"
+                              },
+                              {
+                                "answer": "They recognize infected cells displaying abnormal microbial fragments and trigger those cells to die.",
+                                "id": "flashcards-immune-defense-flashcard-31",
+                                "kind": "qa",
+                                "question": "How do cytotoxic T cells limit production of some intracellular pathogens?",
+                                "sourceLine": 31,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 31"
+                              },
+                              {
+                                "answer": "Natural killer cells detect certain stressed or abnormal cells and can induce their death.",
+                                "id": "flashcards-immune-defense-flashcard-32",
+                                "kind": "qa",
+                                "question": "What additional early defense can natural killer cells provide?",
+                                "sourceLine": 32,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 32"
+                              },
+                              {
+                                "answer": "Natural killer cells provide an innate early defense against certain abnormal cells, while cytotoxic T cells use antigen-specific recognition of infected cells.",
+                                "id": "flashcards-immune-defense-flashcard-33",
+                                "kind": "qa",
+                                "question": "Compare natural killer cells with cytotoxic T cells in timing and recognition.",
+                                "sourceLine": 33,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 33"
+                              },
+                              {
+                                "answer": "They need enough specificity and strength to control microbes while limiting collateral damage to healthy tissue.",
+                                "id": "flashcards-immune-defense-flashcard-34",
+                                "kind": "qa",
+                                "question": "Why must immune responses be strong but regulated?",
+                                "sourceLine": 34,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 34"
+                              },
+                              {
+                                "answer": "Regulatory signals and removal of activated immune cells help bring the response down.",
+                                "id": "flashcards-immune-defense-flashcard-35",
+                                "kind": "qa",
+                                "question": "What helps reduce an immune response after the threat declines?",
+                                "sourceLine": 35,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 35"
+                              },
+                              {
+                                "answer": "It is controlled when microbes are destroyed, neutralized, or reduced below a level that continues causing disease.",
+                                "id": "flashcards-immune-defense-flashcard-36",
+                                "kind": "qa",
+                                "question": "When is an infection considered controlled?",
+                                "sourceLine": 36,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 36"
+                              },
+                              {
+                                "answer": "The useful defenses depend on the pathogen and whether it is located outside cells, inside cells, or in tissues.",
+                                "id": "flashcards-immune-defense-flashcard-37",
+                                "kind": "qa",
+                                "question": "Why do different pathogens require different combinations of immune defenses?",
+                                "sourceLine": 37,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 37"
+                              },
+                              {
+                                "answer": "Many die or are removed, while macrophages clear cellular debris.",
+                                "id": "flashcards-immune-defense-flashcard-38",
+                                "kind": "qa",
+                                "question": "What happens to many short-lived immune cells after danger signals decrease?",
+                                "sourceLine": 38,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 38"
+                              },
+                              {
+                                "answer": "Specialized signals actively shift tissue from defense toward repair after the threat declines.",
+                                "id": "flashcards-immune-defense-flashcard-39",
+                                "kind": "qa",
+                                "question": "Why is resolution more than simply switching inflammation off?",
+                                "sourceLine": 39,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 39"
+                              },
+                              {
+                                "answer": "Recovery can continue after pathogen removal; lingering symptoms do not always mean active infection, though worsening or severe symptoms need assessment.",
+                                "id": "flashcards-immune-defense-flashcard-40",
+                                "kind": "qa",
+                                "question": "A microbe is gone, but fatigue and appetite changes remain. What can this indicate?",
+                                "sourceLine": 40,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 40"
+                              },
+                              {
+                                "answer": "It can damage organs and leave consequences even after the original microbe has declined.",
+                                "id": "flashcards-immune-defense-flashcard-41",
+                                "kind": "qa",
+                                "question": "How can excessive inflammation affect recovery?",
+                                "sourceLine": 41,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 41"
+                              },
+                              {
+                                "answer": "Epithelial surfaces may replace damaged cells, while deeper wounds may form scar tissue.",
+                                "id": "flashcards-immune-defense-flashcard-42",
+                                "kind": "qa",
+                                "question": "What are two possible tissue-repair outcomes after injury?",
+                                "sourceLine": 42,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 42"
+                              },
+                              {
+                                "answer": "Some become long-lived memory cells that can respond more efficiently during later exposure.",
+                                "id": "flashcards-immune-defense-flashcard-43",
+                                "kind": "qa",
+                                "question": "What happens to some B and T cells after an adaptive immune response?",
+                                "sourceLine": 43,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 43"
+                              },
+                              {
+                                "answer": "They can respond rapidly and generate antibodies after re-exposure to the relevant antigen.",
+                                "id": "flashcards-immune-defense-flashcard-44",
+                                "kind": "qa",
+                                "question": "How can memory B cells improve a later response?",
+                                "sourceLine": 44,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 44"
+                              },
+                              {
+                                "answer": "They recognize the relevant antigen and respond more efficiently.",
+                                "id": "flashcards-immune-defense-flashcard-45",
+                                "kind": "qa",
+                                "question": "How do memory T cells support protection after a later exposure?",
+                                "sourceLine": 45,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 45"
+                              },
+                              {
+                                "answer": "It targets particular antigens, but changed strains may partly escape recognition and protection varies with pathogen, person, vaccine, and time.",
+                                "id": "flashcards-immune-defense-flashcard-46",
+                                "kind": "qa",
+                                "question": "Why is immune memory described as specific and incomplete?",
+                                "sourceLine": 46,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 46"
+                              },
+                              {
+                                "answer": "Antibody levels may decline, while immune memory can persist for varying periods.",
+                                "id": "flashcards-immune-defense-flashcard-47",
+                                "kind": "qa",
+                                "question": "What can happen to antibody levels over time, even when memory remains?",
+                                "sourceLine": 47,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 47"
+                              },
+                              {
+                                "answer": "They create adaptive immune memory without requiring the person to undergo the full infection.",
+                                "id": "flashcards-immune-defense-flashcard-48",
+                                "kind": "qa",
+                                "question": "How do vaccines prepare the immune system without requiring natural disease?",
+                                "sourceLine": 48,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 48"
+                              },
+                              {
+                                "answer": "Protection varies among pathogens, people, vaccines, and exposure timing, and no vaccine guarantees complete protection.",
+                                "id": "flashcards-immune-defense-flashcard-49",
+                                "kind": "qa",
+                                "question": "Why does vaccination not guarantee perfect protection?",
+                                "sourceLine": 49,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 49"
+                              },
+                              {
+                                "answer": "Barriers resemble entrances and screening rules that prevent or limit threats before deeper intervention is needed.",
+                                "id": "flashcards-immune-defense-flashcard-50",
+                                "kind": "qa",
+                                "question": "Using the airport-security analogy, what do barriers represent?",
+                                "sourceLine": 50,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 50"
+                              },
+                              {
+                                "answer": "Innate immunity resembles rapid responders handling suspicious activity quickly but with limited specificity.",
+                                "id": "flashcards-immune-defense-flashcard-51",
+                                "kind": "qa",
+                                "question": "Using the same analogy, what does innate immunity represent?",
+                                "sourceLine": 51,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 51"
+                              },
+                              {
+                                "answer": "Adaptive immunity resembles specialists trained for a particular threat, with highly specific recognition and memory.",
+                                "id": "flashcards-immune-defense-flashcard-52",
+                                "kind": "qa",
+                                "question": "What does adaptive immunity represent in the airport-security analogy?",
+                                "sourceLine": 52,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 52"
+                              }
+                            ],
+                            "title": "Flashcards: Immune Defense"
+                          },
+                          "type": "FlashcardCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Flashcards: Immune Defense Flashcards",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Flashcards: Immune Defense"
+      }
+    },
+    {
+      "actionId": "podcast",
+      "durationMs": 13000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 6,
+        "dashboardIndex": 6,
+        "dashboardKey": "demo-immune-response-page-6",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Immune Defense",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "demo-immune-response-podcast-player",
+                          "props": {
+                            "podcast": {
+                              "audioPath": "/demo/audio/immune-response.mp3",
+                              "chapters": [
+                                {
+                                  "startTurn": 0,
+                                  "title": "First Contact and Immediate Defense"
+                                },
+                                {
+                                  "startTurn": 6,
+                                  "title": "Specific Attack and Coordination"
+                                },
+                                {
+                                  "startTurn": 10,
+                                  "title": "Resolution, Recovery, and Memory"
+                                }
+                              ],
+                              "createdAt": "2026-08-02T10:00:00.000Z",
+                              "description": "A short conversation about how the body blocks microbes, detects danger, mounts targeted defenses, repairs damage, and builds immune memory.",
+                              "id": "demo-immune-response-podcast",
+                              "mimeType": "audio/mpeg",
+                              "sourceScope": "studyGuide",
+                              "sourceTitle": "Immune Defense",
+                              "title": "Immune Defense: From First Contact to Memory",
+                              "transcriptTurns": [
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Welcome. Today we are tracing an infection from the first breach of a body barrier through defense, recovery, and memory. The story begins before immune cells identify a particular microbe. What protects us at the boundary?"
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Skin blocks entry, while mucus in the nose and airways traps particles. Cilia move that mucus toward the throat, and coughing or sneezing can remove it. Stomach acid and digestive enzymes damage many swallowed microbes. These are early defenses, working before specific recognition."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "A cut, an inhaled particle, contaminated food, or an insect bite can open an opportunity. Infection becomes more likely when a microbe reaches suitable tissue, avoids removal, and reproduces faster than early defenses can contain it. How does the body notice danger?"
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Tissue cells use pattern-recognition receptors to detect common molecular patterns from microbes or damaged cells. They do not need prior contact with that exact microbe. Nearby cells release cytokines and chemokines, which alter local blood vessels and attract immune cells."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "That local alarm produces inflammation. Blood vessels become more permeable, so fluid and defensive proteins enter the tissue. The area may become red, warm, swollen, and painful. Neutrophils often arrive early to engulf microbes, while macrophages engulf microbes and debris and help coordinate the response."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Complement adds another layer. These proteins can coat microbes, attract immune cells, and damage certain microbial membranes. Together, the actions slow spread and create time for adaptive immunity. But inflammation is not perfectly harmless; if excessive or prolonged, it can injure healthy tissue. What connects this rapid response to a targeted one?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Some activated dendritic cells collect microbial material and travel to nearby lymph nodes. They display small microbial fragments, called antigens, on surface molecules. A lymphocyte responds when its receptor and the needed activation signals fit that antigen. Then the matching lymphocytes multiply, creating a larger population aimed at the same target."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "B cells can become plasma cells that release antibodies. Antibodies bind specific structures on an invader or its toxins. They can block a virus from attaching to cells, neutralize a toxin, mark a microbe for easier engulfment, or activate complement. Their central pattern is selective binding followed by a useful defensive effect."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Antibodies work especially well against microbes and toxins outside cells, but they are not a universal cure. Viruses hiding inside cells and microbes protected within tissues also need cell-mediated responses. Helper T cells organize other immune cells, support B-cell responses, and strengthen macrophage activity."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Cytotoxic T cells recognize infected body cells displaying abnormal microbial fragments and can trigger those cells to die, limiting production of some intracellular pathogens. Natural killer cells provide an additional early defense by detecting certain stressed or abnormal cells and inducing cell death. How does the response end without continuing to damage tissue?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "When danger signals fall, inflammatory recruitment decreases. Many short-lived immune cells die or are removed, and macrophages clear debris. Specialized signals shift tissue from active defense toward repair. Recovery may replace damaged surface cells or form scar tissue in deeper wounds. Lingering fatigue, pain, or appetite changes do not always mean active infection remains, but worsening or severe symptoms need medical assessment."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "The response must control the microbe while limiting collateral damage. Excessive inflammation can harm organs, and symptoms can continue after the original microbe has declined. So recovery means both controlling the pathogen and reducing the damage caused by defense. What lasting advantage can adaptive immunity provide?"
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Some B and T cells become long-lived memory cells. Memory B cells can respond rapidly and generate antibodies after later exposure. Memory T cells can recognize the relevant antigen and respond more efficiently. Antibody levels may decline, while memory can persist for varying periods."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Memory is specific but incomplete. A changed strain may partly escape earlier recognition, and protection differs with the pathogen, the person, vaccination, and time since exposure. Vaccines prepare adaptive memory without requiring natural infection, though no vaccine guarantees perfect protection."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "The whole process resembles airport security. Barriers are entrances and screening rules. Innate immunity is the rapid response to suspicious activity. Adaptive immunity is the specialist response trained for a particular threat, while regulation and repair keep the defense from causing unnecessary harm."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "The main takeaway is a sequence: barriers try to keep microbes out, innate signals detect danger and contain spread, adaptive cells target specific threats, and resolution supports repair. Memory then prepares the body for a later encounter, while balance keeps protection from becoming another source of injury."
+                                }
+                              ]
+                            }
+                          },
+                          "type": "PodcastBlock"
+                        }
+                      ],
+                      "widgetId": "demo-immune-response-podcast-widget"
+                    }
+                  },
+                  "name": "Immune Defense: From First Contact to Memory",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Immune Defense: From First Contact to Memory"
+      }
+    }
+  ],
+  "studyPath": {
+    "contentLanguage": "en",
+    "contentLanguageSource": "detected",
+    "dashboards": [
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 1,
+        "dashboardKey": "demo-immune-response-page-1",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Immune Defense",
+        "id": "demo-immune-response-dashboard-1",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "01-first-contact-and-immediate-defense-1-01-first-contact-and-immediate-defense-1-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "01 - First Contact and Immediate Defense",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "01-first-contact-and-immediate-defense-1-01-first-contact-and-immediate-defense-1-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## 1. Crossing the boundary\n\nMost infections begin when a bacterium, virus, fungus, or parasite reaches a body surface and bypasses a barrier. Skin blocks entry, while mucus in the nose and airways traps particles. Cilia move mucus toward the throat, and coughing or sneezing can remove it. Stomach acid and digestive enzymes damage many swallowed microbes. These defenses act before immune cells identify a particular species.\n\nA cut, inhaled particle, contaminated food, or insect bite can create an opportunity for entry. Infection is more likely when the microbe reaches suitable tissue, avoids removal, and reproduces faster than early defenses can contain it.\n\n## 2. Sensing danger\n\nCells in tissues recognize common molecular patterns found on microbes or released by damaged cells. They use pattern-recognition receptors, including receptors that detect some microbial proteins, sugars, or genetic material. Recognition does not require the body to have encountered that exact microbe before.\n\nNearby cells release chemical signals called cytokines and chemokines. These signals change local blood vessels and attract immune cells. The response is coordinated, but it is not perfectly specific: inflammation can also harm healthy tissue if it becomes excessive or prolonged.\n\n## 3. Inflammation and containment\n\nInflamed blood vessels become more permeable, allowing fluid and defensive proteins to enter tissue. The area may become red, warm, swollen, and painful. Neutrophils often arrive early and engulf microbes. Macrophages can engulf microbes and debris, release signals, and help coordinate later responses.\n\nComplement proteins in blood and tissues can coat microbes, attract immune cells, and damage certain microbial membranes. Together, these actions can slow spread and create time for adaptive immunity to develop.\n\nA fever can make the body less favorable to some microbes and support immune activity, but a high or persistent fever can be dangerous. Symptoms reflect both the infection and the body’s response.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 1,
+                            "studyPathDashboardKey": "demo-immune-response-page-1",
+                            "studyPathDashboardName": "01 - First Contact and Immediate Defense",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Immune Defense",
+                            "studyPathId": "demo-immune-response",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Immune Defense",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "01-first-contact-and-immediate-defense-1-01-first-contact-and-immediate-defense-1-source"
+                    }
+                  },
+                  "name": "01 - First Contact and Immediate Defense Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "01 - First Contact and Immediate Defense",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 2,
+        "dashboardKey": "demo-immune-response-page-2",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Immune Defense",
+        "id": "demo-immune-response-dashboard-2",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "02-specific-attack-and-coordination-2-02-specific-attack-and-coordination-2-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "02 - Specific Attack and Coordination",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "02-specific-attack-and-coordination-2-02-specific-attack-and-coordination-2-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## 1. From local alarm to targeted response\n\nSome activated dendritic cells collect material from microbes and travel to nearby lymph nodes. There, they display small microbial fragments, called antigens, on surface molecules. This process helps connect the rapid innate response with adaptive immunity, which uses highly specific receptors on lymphocytes.\n\nA lymphocyte responds only when its receptor and activation signals fit the presented antigen. This requirement helps reduce accidental activation. Lymphocytes then multiply, producing a larger population aimed at the same target.\n\n## 2. B cells and antibodies\n\nActivated B cells can become plasma cells, which release antibodies. Antibodies bind specific structures on an invader or its toxins. They may block a virus from attaching to cells, neutralize a toxin, mark a microbe for easier engulfment, or activate complement.\n\nAntibodies work especially well against microbes and toxins outside cells. They are not a universal cure: viruses hiding inside cells and microbes protected within tissues also require cell-mediated responses. Antibody classes and their locations differ, but the central idea is selective binding followed by a useful defensive effect.\n\n## 3. T cells and infected cells\n\nHelper T cells release signals that activate and organize other immune cells. They can support B-cell responses and strengthen macrophage activity. Cytotoxic T cells recognize infected body cells displaying abnormal microbial fragments and can trigger those cells to die, limiting production of some intracellular pathogens.\n\nNatural killer cells provide an additional early defense. They can detect certain stressed or abnormal cells, including some cells with reduced normal identification signals, and induce cell death. Their activity is part of innate immunity, although it complements later T-cell responses.\n\n## 4. Balance matters\n\nA strong response must be specific enough to control the microbe but regulated enough to limit collateral damage. Regulatory signals and the removal of activated cells help bring the response down after the threat declines. Vaccination uses this adaptive specificity without requiring the full disease.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 2,
+                            "studyPathDashboardKey": "demo-immune-response-page-2",
+                            "studyPathDashboardName": "02 - Specific Attack and Coordination",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Immune Defense",
+                            "studyPathId": "demo-immune-response",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Immune Defense",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "02-specific-attack-and-coordination-2-02-specific-attack-and-coordination-2-source"
+                    }
+                  },
+                  "name": "02 - Specific Attack and Coordination Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "02 - Specific Attack and Coordination",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 3,
+        "dashboardKey": "demo-immune-response-page-3",
+        "dashboardPurpose": "finalReview",
+        "deletable": false,
+        "folderName": "Immune Defense",
+        "id": "demo-immune-response-dashboard-3",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-resolution-recovery-and-memory-3-03-resolution-recovery-and-memory-3-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "03 - Resolution, Recovery, and Memory",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "03-resolution-recovery-and-memory-3-03-resolution-recovery-and-memory-3-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## 1. Clearing the infection\n\nAn infection is controlled when microbes are destroyed, neutralized, or reduced below a level that causes continuing disease. Neutrophils, macrophages, antibodies, complement, and T cells may all contribute, depending on the pathogen and where it is located. Different microbes require different combinations of defenses.\n\nOnce danger signals fall, the body reduces inflammatory recruitment. Many short-lived immune cells die or are removed, while macrophages clear cellular debris. This change is not simply an “off switch”; specialized signals help shift tissue from active defense toward repair.\n\n## 2. Tissue recovery\n\nRepair depends on the site and severity of injury. Epithelial surfaces may replace damaged cells, while deeper wounds can form scar tissue. Fluid balance, pain, fatigue, and appetite may take time to normalize even after the microbe is gone. Lingering symptoms do not always mean that active infection continues, but worsening or severe symptoms need medical assessment.\n\nThe immune response itself can leave consequences. Excessive inflammation may damage organs, and some infections trigger symptoms after the original microbe has declined. Recovery therefore involves both pathogen control and limiting the body’s defensive collateral damage.\n\n## 3. Building immune memory\n\nAfter an adaptive response, some B and T cells become long-lived memory cells. Memory B cells can respond rapidly and generate antibodies after a later exposure. Memory T cells can recognize the relevant antigen and respond more efficiently. Antibody levels may decline over time, while memory can persist for varying periods.\n\nMemory is specific and incomplete. A changed strain may partly escape earlier recognition, and protection differs by pathogen, person, vaccine, and time since exposure. Vaccines prepare adaptive memory without requiring a natural infection, though no vaccine guarantees perfect protection.\n\n## 4. The airport-security analogy\n\nBarriers resemble entrances and screening rules; innate immunity resembles rapid responders handling suspicious activity; adaptive immunity resembles specialists trained for a particular threat. Unlike an airport, the body must operate inside living tissue, so identification, removal, repair, and restraint happen together.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 3,
+                            "studyPathDashboardKey": "demo-immune-response-page-3",
+                            "studyPathDashboardName": "03 - Resolution, Recovery, and Memory",
+                            "studyPathDashboardPurpose": "finalReview",
+                            "studyPathFolderName": "Immune Defense",
+                            "studyPathId": "demo-immune-response",
+                            "studyPathLayoutReason": "Final Study Guide page includes one source-grounded quiz.",
+                            "studyPathPracticeType": "quiz",
+                            "studyPathTitle": "Immune Defense",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "03-resolution-recovery-and-memory-3-03-resolution-recovery-and-memory-3-source"
+                    }
+                  },
+                  "name": "03 - Resolution, Recovery, and Memory Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            },
+            {
+              "active": false,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-resolution-recovery-and-memory-3-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "Pattern-recognition receptors detect danger, inflammation recruits cells and proteins, and phagocytes help contain it",
+                                "correctIndex": 2,
+                                "explanation": "Innate sensing triggers inflammation, recruitment, and containment before a specific adaptive response develops.",
+                                "hint": "Sequencing innate immune defenses",
+                                "id": "study-guide-3-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Innate sensing triggers inflammation, recruitment, and containment before a specific adaptive response develops.",
+                                    "option": "Pattern-recognition receptors detect danger, inflammation recruits cells and proteins, and phagocytes help contain it"
+                                  },
+                                  {
+                                    "explanation": "This says \"Skin and mucus remove it, then memory cells immediately produce ant...\", but the answer should focus on \"Pattern-recognition receptors detect danger, inflammation rec...",
+                                    "option": "Skin and mucus remove it, then memory cells immediately produce antibodies"
+                                  },
+                                  {
+                                    "explanation": "This says \"Cytotoxic T cells first destroy every nearby cell, followed by tiss...\", but the answer should focus on \"Pattern-recognition receptors detect danger, inflammation rec...",
+                                    "option": "Cytotoxic T cells first destroy every nearby cell, followed by tissue repair"
+                                  }
+                                ],
+                                "options": [
+                                  "Skin and mucus remove it, then memory cells immediately produce antibodies",
+                                  "Cytotoxic T cells first destroy every nearby cell, followed by tissue repair",
+                                  "Pattern-recognition receptors detect danger, inflammation recruits cells and proteins, and phagocytes help contain it"
+                                ],
+                                "question": "A bacterium enters through a small cut and begins multiplying. Which sequence best predicts the body’s early response?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "It brings fluid, proteins, and immune cells into tissue, but excessive or prolonged activity can damage healthy tissue",
+                                "correctIndex": 0,
+                                "explanation": "Inflammation supports defense and containment, but its intensity and duration can produce collateral damage.",
+                                "hint": "Evaluating trade-offs in immune responses",
+                                "id": "study-guide-3-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"It prevents all immune cells from entering tissue, so microbes mult...\", but the answer should focus on \"It brings fluid, proteins, and immune cells into tissue, but...",
+                                    "option": "It prevents all immune cells from entering tissue, so microbes multiply unchecked"
+                                  },
+                                  {
+                                    "explanation": "This says \"It only occurs after antibodies have completely cleared the infection\", but the answer should focus on \"It brings fluid, proteins, and immune cells into tissue, but e...",
+                                    "option": "It only occurs after antibodies have completely cleared the infection"
+                                  },
+                                  {
+                                    "explanation": "Inflammation supports defense and containment, but its intensity and duration can produce collateral damage.",
+                                    "option": "It brings fluid, proteins, and immune cells into tissue, but excessive or prolonged activity can damage healthy tissue"
+                                  }
+                                ],
+                                "options": [
+                                  "It brings fluid, proteins, and immune cells into tissue, but excessive or prolonged activity can damage healthy tissue",
+                                  "It prevents all immune cells from entering tissue, so microbes multiply unchecked",
+                                  "It only occurs after antibodies have completely cleared the infection"
+                                ],
+                                "question": "Why can inflammation cause both protection and injury during an infection?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "Cytotoxic T cells triggering infected cells to die",
+                                "correctIndex": 0,
+                                "explanation": "Cytotoxic T cells recognize infected cells displaying abnormal microbial fragments and can induce their death.",
+                                "hint": "Matching defenses to pathogen location",
+                                "id": "study-guide-3-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Stomach acid breaking down swallowed microbes\", but the answer should focus on \"Cytotoxic T cells triggering infected cells to die\".",
+                                    "option": "Stomach acid breaking down swallowed microbes"
+                                  },
+                                  {
+                                    "explanation": "This says \"Antibodies blocking microbes outside cells\", but the answer should focus on \"Cytotoxic T cells triggering infected cells to die\".",
+                                    "option": "Antibodies blocking microbes outside cells"
+                                  },
+                                  {
+                                    "explanation": "Cytotoxic T cells recognize infected cells displaying abnormal microbial fragments and can induce their death.",
+                                    "option": "Cytotoxic T cells triggering infected cells to die"
+                                  }
+                                ],
+                                "options": [
+                                  "Cytotoxic T cells triggering infected cells to die",
+                                  "Stomach acid breaking down swallowed microbes",
+                                  "Antibodies blocking microbes outside cells"
+                                ],
+                                "question": "A virus is multiplying inside body cells. Which defense is most directly suited to limiting those infected cells?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "It presents antigen and helps activate specific lymphocytes that then multiply",
+                                "correctIndex": 0,
+                                "explanation": "Dendritic cells connect innate detection with adaptive immunity by presenting antigen and providing activation signals.",
+                                "hint": "Connecting innate and adaptive immunity",
+                                "id": "study-guide-3-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"It directly repairs the damaged tissue without activating lymphocytes\", but the answer should focus on \"It presents antigen and helps activate specific lymphocytes th...",
+                                    "option": "It directly repairs the damaged tissue without activating lymphocytes"
+                                  },
+                                  {
+                                    "explanation": "Dendritic cells connect innate detection with adaptive immunity by presenting antigen and providing activation signals.",
+                                    "option": "It presents antigen and helps activate specific lymphocytes that then multiply"
+                                  },
+                                  {
+                                    "explanation": "This says \"It replaces complement as the body’s only early defense\", but the answer should focus on \"It presents antigen and helps activate specific lymphocytes that th...\".",
+                                    "option": "It replaces complement as the body’s only early defense"
+                                  }
+                                ],
+                                "options": [
+                                  "It presents antigen and helps activate specific lymphocytes that then multiply",
+                                  "It directly repairs the damaged tissue without activating lymphocytes",
+                                  "It replaces complement as the body’s only early defense"
+                                ],
+                                "question": "A dendritic cell carries microbial material to a lymph node. What is the main consequence?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "Recovery and repair can continue after pathogen control, so lingering symptoms do not always indicate active infection",
+                                "correctIndex": 2,
+                                "explanation": "Tissue repair, restored fluid balance, and resolution of inflammation can take time after the pathogen declines.",
+                                "hint": "Distinguishing infection clearance from recovery",
+                                "id": "study-guide-3-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Adaptive immunity always causes a second infection after the first...\", but the answer should focus on \"Recovery and repair can continue after pathogen control, so li...",
+                                    "option": "Adaptive immunity always causes a second infection after the first ends"
+                                  },
+                                  {
+                                    "explanation": "Tissue repair, restored fluid balance, and resolution of inflammation can take time after the pathogen declines.",
+                                    "option": "Recovery and repair can continue after pathogen control, so lingering symptoms do not always indicate active infection"
+                                  },
+                                  {
+                                    "explanation": "This says \"Memory cells necessarily maintain high inflammation until the next...\", but the answer should focus on \"Recovery and repair can continue after pathogen control, so li...",
+                                    "option": "Memory cells necessarily maintain high inflammation until the next exposure"
+                                  }
+                                ],
+                                "options": [
+                                  "Adaptive immunity always causes a second infection after the first ends",
+                                  "Memory cells necessarily maintain high inflammation until the next exposure",
+                                  "Recovery and repair can continue after pathogen control, so lingering symptoms do not always indicate active infection"
+                                ],
+                                "question": "Several days after symptoms improve, a person still feels tired, but testing shows the microbe is no longer actively multiplying. Which explanation best fits the guide?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              },
+                              {
+                                "answer": "Memory may produce a faster, stronger response, but protection can be incomplete if the strain differs",
+                                "correctIndex": 0,
+                                "explanation": "Memory is specific and can improve later responses, but changed strains may partly escape earlier recognition.",
+                                "hint": "Applying the limits of immune memory",
+                                "id": "study-guide-3-multiple-choice-6",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Memory affects only innate barriers and cannot involve B or T cells\", but the answer should focus on \"Memory may produce a faster, stronger response, but protection c...",
+                                    "option": "Memory affects only innate barriers and cannot involve B or T cells"
+                                  },
+                                  {
+                                    "explanation": "This says \"Memory guarantees complete protection against every changed strain\", but the answer should focus on \"Memory may produce a faster, stronger response, but protection ca...",
+                                    "option": "Memory guarantees complete protection against every changed strain"
+                                  },
+                                  {
+                                    "explanation": "Memory is specific and can improve later responses, but changed strains may partly escape earlier recognition.",
+                                    "option": "Memory may produce a faster, stronger response, but protection can be incomplete if the strain differs"
+                                  }
+                                ],
+                                "options": [
+                                  "Memory may produce a faster, stronger response, but protection can be incomplete if the strain differs",
+                                  "Memory affects only innate barriers and cannot involve B or T cells",
+                                  "Memory guarantees complete protection against every changed strain"
+                                ],
+                                "question": "A later exposure involves the same pathogen, but a somewhat changed strain. What outcome is most consistent with immune memory?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 6"
+                              }
+                            ],
+                            "title": "03 - Resolution, Recovery, and Memory"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "03-resolution-recovery-and-memory-3-1"
+                    }
+                  },
+                  "name": "03 - Resolution, Recovery, and Memory Quiz",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Final Study Guide page includes one source-grounded quiz.",
+        "name": "03 - Resolution, Recovery, and Memory",
+        "practiceType": "quiz"
+      }
+    ],
+    "emoji": "🛡️",
+    "folderName": "Immune Defense",
+    "pathId": "demo-immune-response",
+    "quickStart": {
+      "keyIdea": "Your immune system detects danger, slows an invader, recruits specialized defenses, remembers some threats, and repairs tissues during recovery.",
+      "quickSummary": "An infection begins when a microbe crosses a barrier and starts multiplying. Fast innate defenses respond broadly through barriers, inflammation, cells, and proteins, buying time while the adaptive response develops.\n\nAdaptive immunity targets specific features of the invader with antibodies and T cells. After the threat is controlled, inflammation resolves, damaged tissue repairs, and memory cells may improve protection against a later encounter."
+    },
+    "selectedIndex": 0,
+    "title": "Immune Defense"
+  }
+}

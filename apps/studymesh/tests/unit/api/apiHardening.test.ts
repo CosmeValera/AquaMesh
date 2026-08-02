@@ -1063,9 +1063,14 @@ describe('API payment and hosted AI hardening', () => {
         }
 
         if (target.includes('api.openai.com')) {
+          // Luna is the default for every stage now, so hosted calls go through
+          // the Responses API and the reply has to carry its envelope. The text
+          // inside is still unparseable, which is what this test is about.
           return Promise.resolve(
             jsonResponse({
-              choices: [{ message: { content: 'not json' } }],
+              output: [
+                { type: 'message', content: [{ text: 'not json' }] },
+              ],
             }),
           )
         }

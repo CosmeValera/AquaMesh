@@ -1,0 +1,2906 @@
+{
+  "bonusPages": [
+    {
+      "actionId": "quiz",
+      "durationMs": 9000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 4,
+        "dashboardIndex": 4,
+        "dashboardKey": "demo-learning-bottlenecks-page-4",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Learning Bottleneck",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "They cannot retrieve ideas without notes",
+                                "correctIndex": 1,
+                                "explanation": "The constraint is retrieval without notes, not rereading effort.",
+                                "hint": "The notes describe a mismatch between effort and the real limit.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"They lack motivation to practice retrieval\", but the answer should focus on \"They cannot retrieve ideas without notes\".",
+                                    "option": "They lack motivation to practice retrieval"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: The constraint is retrieval without notes, not rereading effort.",
+                                    "option": "They cannot retrieve ideas without notes"
+                                  },
+                                  {
+                                    "explanation": "This says \"They misunderstand the goal’s success standard\", but the answer should focus on \"They cannot retrieve ideas without notes\".",
+                                    "option": "They misunderstand the goal’s success standard"
+                                  },
+                                  {
+                                    "explanation": "This says \"They receive feedback that is too slow\", but the answer should focus on \"They cannot retrieve ideas without notes\".",
+                                    "option": "They receive feedback that is too slow"
+                                  }
+                                ],
+                                "options": [
+                                  "They lack motivation to practice retrieval",
+                                  "They cannot retrieve ideas without notes",
+                                  "They misunderstand the goal’s success standard",
+                                  "They receive feedback that is too slow"
+                                ],
+                                "question": "A learner rereads for hours because it feels productive. What is the most likely bottleneck?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "Recall serves the result later",
+                                "correctIndex": 3,
+                                "explanation": "Recall is the stage that applies the skill later.",
+                                "hint": "Think about what happens after the dish is cooked.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Input supplies ingredients\", but the answer should focus on \"Recall serves the result later\".",
+                                    "option": "Input supplies ingredients"
+                                  },
+                                  {
+                                    "explanation": "This says \"Practice prepares the dish\", but the answer should focus on \"Recall serves the result later\".",
+                                    "option": "Practice prepares the dish"
+                                  },
+                                  {
+                                    "explanation": "This says \"Feedback checks quality\", but the answer should focus on \"Recall serves the result later\".",
+                                    "option": "Feedback checks quality"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Recall is the stage that applies the skill later.",
+                                    "option": "Recall serves the result later"
+                                  }
+                                ],
+                                "options": [
+                                  "Input supplies ingredients",
+                                  "Practice prepares the dish",
+                                  "Feedback checks quality",
+                                  "Recall serves the result later"
+                                ],
+                                "question": "In the kitchen analogy, which stage most directly supports later performance after the session?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "The factor whose improvement yields the largest useful gain",
+                                "correctIndex": 1,
+                                "explanation": "A bottleneck is defined by impact on useful performance.",
+                                "hint": "It’s about improvement potential, not preference.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"The part you dislike most\", but the answer should focus on \"The factor whose improvement yields the largest useful gain\".",
+                                    "option": "The part you dislike most"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: A bottleneck is defined by impact on useful performance.",
+                                    "option": "The factor whose improvement yields the largest useful gain"
+                                  },
+                                  {
+                                    "explanation": "This says \"Any stage that feels slow\", but the answer should focus on \"The factor whose improvement yields the largest useful gain\".",
+                                    "option": "Any stage that feels slow"
+                                  },
+                                  {
+                                    "explanation": "This says \"The stage with the most time spent\", but the answer should focus on \"The factor whose improvement yields the largest useful gain\".",
+                                    "option": "The stage with the most time spent"
+                                  }
+                                ],
+                                "options": [
+                                  "The part you dislike most",
+                                  "The factor whose improvement yields the largest useful gain",
+                                  "Any stage that feels slow",
+                                  "The stage with the most time spent"
+                                ],
+                                "question": "Which statement best matches what a bottleneck is?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "List stages from start to demonstration of the outcome",
+                                "correctIndex": 0,
+                                "explanation": "The flow map starts by listing stages between start and outcome.",
+                                "hint": "Use the outcome to define the pipeline you’ll inspect.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: The flow map starts by listing stages between start and outcome.",
+                                    "option": "List stages from start to demonstration of the outcome"
+                                  },
+                                  {
+                                    "explanation": "This says \"Choose the single most basic weakness you see\", but the answer should focus on \"List stages from start to demonstration of the outcome\".",
+                                    "option": "Choose the single most basic weakness you see"
+                                  },
+                                  {
+                                    "explanation": "This says \"Skip feedback because it slows learning\", but the answer should focus on \"List stages from start to demonstration of the outcome\".",
+                                    "option": "Skip feedback because it slows learning"
+                                  },
+                                  {
+                                    "explanation": "This says \"Start with a large workload to be safe\", but the answer should focus on \"List stages from start to demonstration of the outcome\".",
+                                    "option": "Start with a large workload to be safe"
+                                  }
+                                ],
+                                "options": [
+                                  "List stages from start to demonstration of the outcome",
+                                  "Choose the single most basic weakness you see",
+                                  "Skip feedback because it slows learning",
+                                  "Start with a large workload to be safe"
+                                ],
+                                "question": "You want to improve the outcome: “solve a basic equation without prompts.” What should you do first in the flow map?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "Unfinished material accumulates because you can’t complete it",
+                                "correctIndex": 1,
+                                "explanation": "A queue is unfinished material accumulating over time.",
+                                "hint": "Think “backlog” of incomplete work.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"You repeatedly study the same material without improvement\", but the answer should focus on \"Unfinished material accumulates because you can’t complete it\".",
+                                    "option": "You repeatedly study the same material without improvement"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: A queue is unfinished material accumulating over time.",
+                                    "option": "Unfinished material accumulates because you can’t complete it"
+                                  },
+                                  {
+                                    "explanation": "This says \"You cannot continue without external help\", but the answer should focus on \"Unfinished material accumulates because you can’t complete it\".",
+                                    "option": "You cannot continue without external help"
+                                  },
+                                  {
+                                    "explanation": "This says \"You improve only on the exact practice format\", but the answer should focus on \"Unfinished material accumulates because you can’t complete it\".",
+                                    "option": "You improve only on the exact practice format"
+                                  }
+                                ],
+                                "options": [
+                                  "You repeatedly study the same material without improvement",
+                                  "Unfinished material accumulates because you can’t complete it",
+                                  "You cannot continue without external help",
+                                  "You improve only on the exact practice format"
+                                ],
+                                "question": "Which observation most directly indicates a queue in the learning system?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              },
+                              {
+                                "answer": "Rework",
+                                "correctIndex": 1,
+                                "explanation": "Repeatedly studying without stronger performance is rework.",
+                                "hint": "Look for “same material, no stronger results.”",
+                                "id": "quiz-learning-bottleneck-multiple-choice-6",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Esta opcao fala de \"A queue\", mas a resposta deve focar \"Rework\".",
+                                    "option": "A queue"
+                                  },
+                                  {
+                                    "explanation": "Isto corresponde a ideia central: Repeatedly studying without stronger performance is rework.",
+                                    "option": "Rework"
+                                  },
+                                  {
+                                    "explanation": "Esta opcao fala de \"A stoppage\", mas a resposta deve focar \"Rework\".",
+                                    "option": "A stoppage"
+                                  },
+                                  {
+                                    "explanation": "Esta opcao fala de \"A success standard\", mas a resposta deve focar \"Rework\".",
+                                    "option": "A success standard"
+                                  }
+                                ],
+                                "options": [
+                                  "A queue",
+                                  "Rework",
+                                  "A stoppage",
+                                  "A success standard"
+                                ],
+                                "question": "A learner keeps repeating the same practice and gets the same wrong result. What does this most resemble?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 6"
+                              },
+                              {
+                                "answer": "A point where you cannot continue without external help",
+                                "correctIndex": 2,
+                                "explanation": "A stoppage occurs when you can’t continue without help.",
+                                "hint": "It’s about being blocked, not just slow.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-7",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"A delay at the pass after clearing one station\", but the answer should focus on \"A point where you cannot continue without external help\".",
+                                    "option": "A delay at the pass after clearing one station"
+                                  },
+                                  {
+                                    "explanation": "This says \"Unfinished material accumulating\", but the answer should focus on \"A point where you cannot continue without external help\".",
+                                    "option": "Unfinished material accumulating"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: A stoppage occurs when you can’t continue without help.",
+                                    "option": "A point where you cannot continue without external help"
+                                  },
+                                  {
+                                    "explanation": "This says \"A repeated error that improves after review\", but the answer should focus on \"A point where you cannot continue without external help\".",
+                                    "option": "A repeated error that improves after review"
+                                  }
+                                ],
+                                "options": [
+                                  "A delay at the pass after clearing one station",
+                                  "Unfinished material accumulating",
+                                  "A point where you cannot continue without external help",
+                                  "A repeated error that improves after review"
+                                ],
+                                "question": "What is a stoppage in the learning flow?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 7"
+                              },
+                              {
+                                "answer": "It is a symptom, not a diagnosis",
+                                "correctIndex": 1,
+                                "explanation": "“I’m slow” is a symptom; causes must be identified.",
+                                "hint": "The notes ask what happens immediately before difficulty.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-8",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"It is always caused by missing vocabulary\", but the answer should focus on \"It is a symptom, not a diagnosis\".",
+                                    "option": "It is always caused by missing vocabulary"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: “I’m slow” is a symptom; causes must be identified.",
+                                    "option": "It is a symptom, not a diagnosis"
+                                  },
+                                  {
+                                    "explanation": "This says \"It proves the goal is unclear\", but the answer should focus on \"It is a symptom, not a diagnosis\".",
+                                    "option": "It proves the goal is unclear"
+                                  },
+                                  {
+                                    "explanation": "This says \"It means feedback is perfect\", but the answer should focus on \"It is a symptom, not a diagnosis\".",
+                                    "option": "It means feedback is perfect"
+                                  }
+                                ],
+                                "options": [
+                                  "It is always caused by missing vocabulary",
+                                  "It is a symptom, not a diagnosis",
+                                  "It proves the goal is unclear",
+                                  "It means feedback is perfect"
+                                ],
+                                "question": "A learner says, “I’m slow.” Why is this not a useful diagnosis by itself?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 8"
+                              },
+                              {
+                                "answer": "What happens immediately before the difficulty?",
+                                "correctIndex": 1,
+                                "explanation": "The notes recommend checking what happens right before difficulty.",
+                                "hint": "Focus on the immediate trigger for failure.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-9",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"What do you feel about the topic\", but the answer should focus on \"What happens immediately before the difficulty\".",
+                                    "option": "What do you feel about the topic?"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: The notes recommend checking what happens right before difficulty.",
+                                    "option": "What happens immediately before the difficulty?"
+                                  },
+                                  {
+                                    "explanation": "This says \"How many hours did you study overall\", but the answer should focus on \"What happens immediately before the difficulty\".",
+                                    "option": "How many hours did you study overall?"
+                                  },
+                                  {
+                                    "explanation": "This says \"Which resource did you like most\", but the answer should focus on \"What happens immediately before the difficulty\".",
+                                    "option": "Which resource did you like most?"
+                                  }
+                                ],
+                                "options": [
+                                  "What do you feel about the topic?",
+                                  "What happens immediately before the difficulty?",
+                                  "How many hours did you study overall?",
+                                  "Which resource did you like most?"
+                                ],
+                                "question": "Which question best helps separate symptoms from causes?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 9,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 9"
+                              },
+                              {
+                                "answer": "Timed attempts with recall without notes",
+                                "correctIndex": 2,
+                                "explanation": "Timed attempts and recall without notes are observable measures.",
+                                "hint": "Look for evidence that can be recorded and compared.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-10",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Boredom during practice\", but the answer should focus on \"Timed attempts with recall without notes\".",
+                                    "option": "Boredom during practice"
+                                  },
+                                  {
+                                    "explanation": "This says \"Confidence after rereading\", but the answer should focus on \"Timed attempts with recall without notes\".",
+                                    "option": "Confidence after rereading"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Timed attempts and recall without notes are observable measures.",
+                                    "option": "Timed attempts with recall without notes"
+                                  },
+                                  {
+                                    "explanation": "This says \"A general belief about ability\", but the answer should focus on \"Timed attempts with recall without notes\".",
+                                    "option": "A general belief about ability"
+                                  }
+                                ],
+                                "options": [
+                                  "Boredom during practice",
+                                  "Confidence after rereading",
+                                  "Timed attempts with recall without notes",
+                                  "A general belief about ability"
+                                ],
+                                "question": "Which evidence is most aligned with the notes’ “observable evidence” guidance?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 10,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 10"
+                              },
+                              {
+                                "answer": "A specific failure in a specific situation",
+                                "correctIndex": 1,
+                                "explanation": "Useful diagnosis targets a specific failure in a specific situation.",
+                                "hint": "It should describe what fails, where, and when.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-11",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Esta opcao fala de \"A global judgment about ability\", mas a resposta deve focar \"A specific failure in a specific situation\".",
+                                    "option": "A global judgment about ability"
+                                  },
+                                  {
+                                    "explanation": "Isto corresponde a ideia central: Useful diagnosis targets a specific failure in a specific situation.",
+                                    "option": "A specific failure in a specific situation"
+                                  },
+                                  {
+                                    "explanation": "Esta opcao fala de \"A guess based on the most basic weakness\", mas a resposta deve focar \"A specific failure in a specific situation\".",
+                                    "option": "A guess based on the most basic weakness"
+                                  },
+                                  {
+                                    "explanation": "Esta opcao fala de \"A conclusion after one uncomfortable session\", mas a resposta deve focar \"A specific failure in a specific situation\".",
+                                    "option": "A conclusion after one uncomfortable session"
+                                  }
+                                ],
+                                "options": [
+                                  "A global judgment about ability",
+                                  "A specific failure in a specific situation",
+                                  "A guess based on the most basic weakness",
+                                  "A conclusion after one uncomfortable session"
+                                ],
+                                "question": "What does the notes mean by “the first useful diagnosis” should be?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 11,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 11"
+                              },
+                              {
+                                "answer": "List no more than five candidates",
+                                "correctIndex": 1,
+                                "explanation": "The notes recommend listing no more than five candidates.",
+                                "hint": "Keep the candidate set small for interpretability.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-12",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"List exactly one candidate\", but the answer should focus on \"List no more than five candidates\".",
+                                    "option": "List exactly one candidate"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: The notes recommend listing no more than five candidates.",
+                                    "option": "List no more than five candidates"
+                                  },
+                                  {
+                                    "explanation": "This says \"List as many as possible to be thorough\", but the answer should focus on \"List no more than five candidates\".",
+                                    "option": "List as many as possible to be thorough"
+                                  },
+                                  {
+                                    "explanation": "This says \"Only consider feedback delays\", but the answer should focus on \"List no more than five candidates\".",
+                                    "option": "Only consider feedback delays"
+                                  }
+                                ],
+                                "options": [
+                                  "List exactly one candidate",
+                                  "List no more than five candidates",
+                                  "List as many as possible to be thorough",
+                                  "Only consider feedback delays"
+                                ],
+                                "question": "When ranking possible constraints, what limit does the notes recommend?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 12,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 12"
+                              },
+                              {
+                                "answer": "How strongly it appears in evidence and how much fixing helps",
+                                "correctIndex": 1,
+                                "explanation": "Ranking uses evidence strength and expected improvement impact.",
+                                "hint": "Two criteria: evidence and improvement magnitude.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-13",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"How much it costs and how fast it feels\", but the answer should focus on \"How strongly it appears in evidence and how much fixing helps\".",
+                                    "option": "How much it costs and how fast it feels"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Ranking uses evidence strength and expected improvement impact.",
+                                    "option": "How strongly it appears in evidence and how much fixing helps"
+                                  },
+                                  {
+                                    "explanation": "This says \"How often it appears in your notes and how confident you feel\", but the answer should focus on \"How strongly it appears in evidence and how much fixing helps\".",
+                                    "option": "How often it appears in your notes and how confident you feel"
+                                  },
+                                  {
+                                    "explanation": "This says \"How similar it is to the last practice problem\", but the answer should focus on \"How strongly it appears in evidence and how much fixing helps\".",
+                                    "option": "How similar it is to the last practice problem"
+                                  }
+                                ],
+                                "options": [
+                                  "How much it costs and how fast it feels",
+                                  "How strongly it appears in evidence and how much fixing helps",
+                                  "How often it appears in your notes and how confident you feel",
+                                  "How similar it is to the last practice problem"
+                                ],
+                                "question": "Which pair of questions is used to rank each candidate constraint?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 13,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 13"
+                              },
+                              {
+                                "answer": "Because learners can know definitions yet fail to apply them",
+                                "correctIndex": 1,
+                                "explanation": "Knowing definitions doesn’t guarantee performing the target task.",
+                                "hint": "The key distinction is knowledge vs performance.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-14",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Because basic weaknesses never matter\", but the answer should focus on \"Because learners can know definitions yet fail to apply them\".",
+                                    "option": "Because basic weaknesses never matter"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Knowing definitions doesn’t guarantee performing the target task.",
+                                    "option": "Because learners can know definitions yet fail to apply them"
+                                  },
+                                  {
+                                    "explanation": "This says \"Because feedback always fixes the problem\", but the answer should focus on \"Because learners can know definitions yet fail to apply them\".",
+                                    "option": "Because feedback always fixes the problem"
+                                  },
+                                  {
+                                    "explanation": "This says \"Because retrieval is always the bottleneck\", but the answer should focus on \"Because learners can know definitions yet fail to apply them\".",
+                                    "option": "Because retrieval is always the bottleneck"
+                                  }
+                                ],
+                                "options": [
+                                  "Because basic weaknesses never matter",
+                                  "Because learners can know definitions yet fail to apply them",
+                                  "Because feedback always fixes the problem",
+                                  "Because retrieval is always the bottleneck"
+                                ],
+                                "question": "Why does the notes warn against choosing the most basic-looking weakness?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 14,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 14"
+                              },
+                              {
+                                "answer": "To interpret results by changing only the relevant condition",
+                                "correctIndex": 1,
+                                "explanation": "It changes only the relevant condition to interpret the effect.",
+                                "hint": "Narrow change → clearer cause-and-effect.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-15",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"To change many variables at once\", but the answer should focus on \"To interpret results by changing only the relevant condition\".",
+                                    "option": "To change many variables at once"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: It changes only the relevant condition to interpret the effect.",
+                                    "option": "To interpret results by changing only the relevant condition"
+                                  },
+                                  {
+                                    "explanation": "This says \"To prove the diagnosis with certainty\", but the answer should focus on \"To interpret results by changing only the relevant condition\".",
+                                    "option": "To prove the diagnosis with certainty"
+                                  },
+                                  {
+                                    "explanation": "This says \"To avoid recording performance\", but the answer should focus on \"To interpret results by changing only the relevant condition\".",
+                                    "option": "To avoid recording performance"
+                                  }
+                                ],
+                                "options": [
+                                  "To change many variables at once",
+                                  "To interpret results by changing only the relevant condition",
+                                  "To prove the diagnosis with certainty",
+                                  "To avoid recording performance"
+                                ],
+                                "question": "What is the purpose of a small experiment in diagnosing bottlenecks?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 15,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 15"
+                              },
+                              {
+                                "answer": "Close the book and write what you remember before reviewing",
+                                "correctIndex": 1,
+                                "explanation": "Closed-book recall tests whether knowledge is accessible.",
+                                "hint": "The key is retrieving without notes.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-16",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Keep the book open and reread until fluent\", but the answer should focus on \"Close the book and write what you remember before reviewing\".",
+                                    "option": "Keep the book open and reread until fluent"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Closed-book recall tests whether knowledge is accessible.",
+                                    "option": "Close the book and write what you remember before reviewing"
+                                  },
+                                  {
+                                    "explanation": "This says \"Only study definitions for one hour\", but the answer should focus on \"Close the book and write what you remember before reviewing\".",
+                                    "option": "Only study definitions for one hour"
+                                  },
+                                  {
+                                    "explanation": "This says \"Ask a friend to explain the topic first\", but the answer should focus on \"Close the book and write what you remember before reviewing\".",
+                                    "option": "Ask a friend to explain the topic first"
+                                  }
+                                ],
+                                "options": [
+                                  "Keep the book open and reread until fluent",
+                                  "Close the book and write what you remember before reviewing",
+                                  "Only study definitions for one hour",
+                                  "Ask a friend to explain the topic first"
+                                ],
+                                "question": "If retrieval is suspected, what does the notes recommend doing during the experiment?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 16,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 16"
+                              },
+                              {
+                                "answer": "Submit a solution for correction or compare with a reliable worked example",
+                                "correctIndex": 0,
+                                "explanation": "Correction or comparison with a worked example tests feedback impact.",
+                                "hint": "You need accurate feedback to see if it changes performance.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-17",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: Correction or comparison with a worked example tests feedback impact.",
+                                    "option": "Submit a solution for correction or compare with a reliable worked example"
+                                  },
+                                  {
+                                    "explanation": "This says \"Wait longer before checking results\", but the answer should focus on \"Submit a solution for correction or compare with a reliable worked...\".",
+                                    "option": "Wait longer before checking results"
+                                  },
+                                  {
+                                    "explanation": "This says \"Only reread the feedback you already received\", but the answer should focus on \"Submit a solution for correction or compare with a reliable worked...\".",
+                                    "option": "Only reread the feedback you already received"
+                                  },
+                                  {
+                                    "explanation": "This says \"Practice without attempting any solution\", but the answer should focus on \"Submit a solution for correction or compare with a reliable worked...\".",
+                                    "option": "Practice without attempting any solution"
+                                  }
+                                ],
+                                "options": [
+                                  "Submit a solution for correction or compare with a reliable worked example",
+                                  "Wait longer before checking results",
+                                  "Only reread the feedback you already received",
+                                  "Practice without attempting any solution"
+                                ],
+                                "question": "If feedback is suspected, what experiment action best matches the notes?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 17,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 17"
+                              },
+                              {
+                                "answer": "Define a visible success test before studying",
+                                "correctIndex": 0,
+                                "explanation": "A visible success test clarifies what “success” means.",
+                                "hint": "Make the outcome measurable before practice.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-18",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: A visible success test clarifies what “success” means.",
+                                    "option": "Define a visible success test before studying"
+                                  },
+                                  {
+                                    "explanation": "This says \"Study more examples until you feel ready\", but the answer should focus on \"Define a visible success test before studying\".",
+                                    "option": "Study more examples until you feel ready"
+                                  },
+                                  {
+                                    "explanation": "This says \"Ask for a grade without attempting\", but the answer should focus on \"Define a visible success test before studying\".",
+                                    "option": "Ask for a grade without attempting"
+                                  },
+                                  {
+                                    "explanation": "This says \"Ignore success criteria and focus on effort\", but the answer should focus on \"Define a visible success test before studying\".",
+                                    "option": "Ignore success criteria and focus on effort"
+                                  }
+                                ],
+                                "options": [
+                                  "Define a visible success test before studying",
+                                  "Study more examples until you feel ready",
+                                  "Ask for a grade without attempting",
+                                  "Ignore success criteria and focus on effort"
+                                ],
+                                "question": "If the goal is unclear, what should you do before studying in the experiment?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 18,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 18"
+                              },
+                              {
+                                "answer": "Because you need to know which condition caused the result",
+                                "correctIndex": 1,
+                                "explanation": "Narrow experiments isolate cause so you can interpret results.",
+                                "hint": "Interpretability depends on controlling variables.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-19",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Because any change will improve performance\", but the answer should focus on \"Because you need to know which condition caused the result\".",
+                                    "option": "Because any change will improve performance"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Narrow experiments isolate cause so you can interpret results.",
+                                    "option": "Because you need to know which condition caused the result"
+                                  },
+                                  {
+                                    "explanation": "This says \"Because recording makes results irrelevant\", but the answer should focus on \"Because you need to know which condition caused the result\".",
+                                    "option": "Because recording makes results irrelevant"
+                                  },
+                                  {
+                                    "explanation": "This says \"Because bottlenecks are always obvious\", but the answer should focus on \"Because you need to know which condition caused the result\".",
+                                    "option": "Because bottlenecks are always obvious"
+                                  }
+                                ],
+                                "options": [
+                                  "Because any change will improve performance",
+                                  "Because you need to know which condition caused the result",
+                                  "Because recording makes results irrelevant",
+                                  "Because bottlenecks are always obvious"
+                                ],
+                                "question": "Why must the experiment be narrow enough to interpret?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 19,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 19"
+                              },
+                              {
+                                "answer": "Date, task, score/quality rating, main error type, help used",
+                                "correctIndex": 0,
+                                "explanation": "The notes list date, task, score/quality, error type, help used.",
+                                "hint": "Look for the exact log components mentioned.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-20",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: The notes list date, task, score/quality, error type, help used.",
+                                    "option": "Date, task, score/quality rating, main error type, help used"
+                                  },
+                                  {
+                                    "explanation": "This says \"Your mood during the session only\", but the answer should focus on \"Date, task, score/quality rating, main error type, help used\".",
+                                    "option": "Your mood during the session only"
+                                  },
+                                  {
+                                    "explanation": "This says \"Only the final grade without error details\", but the answer should focus on \"Date, task, score/quality rating, main error type, help used\".",
+                                    "option": "Only the final grade without error details"
+                                  },
+                                  {
+                                    "explanation": "This says \"A list of every resource you considered\", but the answer should focus on \"Date, task, score/quality rating, main error type, help used\".",
+                                    "option": "A list of every resource you considered"
+                                  }
+                                ],
+                                "options": [
+                                  "Date, task, score/quality rating, main error type, help used",
+                                  "Your mood during the session only",
+                                  "Only the final grade without error details",
+                                  "A list of every resource you considered"
+                                ],
+                                "question": "Which recording item is explicitly suggested for a simple log?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 20,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 20"
+                              },
+                              {
+                                "answer": "A stable rubric with criteria like clarity and completeness",
+                                "correctIndex": 1,
+                                "explanation": "A stable rubric with criteria supports consistent subjective scoring.",
+                                "hint": "Use criteria that stay consistent across sessions.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-21",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Esta opcao fala de \"A random guess based on feelings\", mas a resposta deve focar \"A stable rubric with criteria like clarity and completeness\".",
+                                    "option": "A random guess based on feelings"
+                                  },
+                                  {
+                                    "explanation": "Isto corresponde a ideia central: A stable rubric with criteria supports consistent subjective scoring.",
+                                    "option": "A stable rubric with criteria like clarity and completeness"
+                                  },
+                                  {
+                                    "explanation": "Esta opcao fala de \"Only the learner’s confidence rating\", mas a resposta deve focar \"A stable rubric with criteria like clarity and completeness\".",
+                                    "option": "Only the learner’s confidence rating"
+                                  },
+                                  {
+                                    "explanation": "Esta opcao fala de \"A single yes/no question about correctness\", mas a resposta deve focar \"A stable rubric with criteria like clarity and completeness\".",
+                                    "option": "A single yes/no question about correctness"
+                                  }
+                                ],
+                                "options": [
+                                  "A random guess based on feelings",
+                                  "A stable rubric with criteria like clarity and completeness",
+                                  "Only the learner’s confidence rating",
+                                  "A single yes/no question about correctness"
+                                ],
+                                "question": "For subjective skills, what does the notes recommend using to score performance?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 21,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 21"
+                              },
+                              {
+                                "answer": "Knowledge isn’t accessible when needed",
+                                "correctIndex": 2,
+                                "explanation": "Retrieval errors mean knowledge can’t be accessed at the moment.",
+                                "hint": "Think: “I know it, but I can’t get it when needed.”",
+                                "id": "quiz-learning-bottleneck-multiple-choice-22",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"The idea is misunderstood\", but the answer should focus on \"Knowledge isn’t accessible when needed\".",
+                                    "option": "The idea is misunderstood"
+                                  },
+                                  {
+                                    "explanation": "This says \"The method is known but misapplied\", but the answer should focus on \"Knowledge isn’t accessible when needed\".",
+                                    "option": "The method is known but misapplied"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Retrieval errors mean knowledge can’t be accessed at the moment.",
+                                    "option": "Knowledge isn’t accessible when needed"
+                                  },
+                                  {
+                                    "explanation": "This says \"You can’t write down answers despite understanding\", but the answer should focus on \"Knowledge isn’t accessible when needed\".",
+                                    "option": "You can’t write down answers despite understanding"
+                                  }
+                                ],
+                                "options": [
+                                  "The idea is misunderstood",
+                                  "The method is known but misapplied",
+                                  "Knowledge isn’t accessible when needed",
+                                  "You can’t write down answers despite understanding"
+                                ],
+                                "question": "When classifying errors, what does a retrieval error indicate?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 22,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 22"
+                              },
+                              {
+                                "answer": "Procedure error",
+                                "correctIndex": 1,
+                                "explanation": "Misapplied method after understanding points to procedure errors.",
+                                "hint": "The method is known, but applied incorrectly.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-23",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Concept error\", but the answer should focus on \"Procedure error\".",
+                                    "option": "Concept error"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Misapplied method after understanding points to procedure errors.",
+                                    "option": "Procedure error"
+                                  },
+                                  {
+                                    "explanation": "This says \"Retrieval error\", but the answer should focus on \"Procedure error\".",
+                                    "option": "Retrieval error"
+                                  },
+                                  {
+                                    "explanation": "This says \"Attention/transcription error\", but the answer should focus on \"Procedure error\".",
+                                    "option": "Attention/transcription error"
+                                  }
+                                ],
+                                "options": [
+                                  "Concept error",
+                                  "Procedure error",
+                                  "Retrieval error",
+                                  "Attention/transcription error"
+                                ],
+                                "question": "A learner understands the concept but repeatedly uses the wrong steps. Which error type fits best?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 23,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 23"
+                              },
+                              {
+                                "answer": "The intervention isn’t addressing the constraint",
+                                "correctIndex": 1,
+                                "explanation": "A repeated error suggests rereading isn’t fixing the constraint.",
+                                "hint": "If nothing changes, revise diagnosis or intervention.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-24",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Rereading is addressing the constraint\", but the answer should focus on \"The intervention isn’t addressing the constraint\".",
+                                    "option": "Rereading is addressing the constraint"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: A repeated error suggests rereading isn’t fixing the constraint.",
+                                    "option": "The intervention isn’t addressing the constraint"
+                                  },
+                                  {
+                                    "explanation": "This says \"The goal is now fully mastered\", but the answer should focus on \"The intervention isn’t addressing the constraint\".",
+                                    "option": "The goal is now fully mastered"
+                                  },
+                                  {
+                                    "explanation": "This says \"The system is always improving\", but the answer should focus on \"The intervention isn’t addressing the constraint\".",
+                                    "option": "The system is always improving"
+                                  }
+                                ],
+                                "options": [
+                                  "Rereading is addressing the constraint",
+                                  "The intervention isn’t addressing the constraint",
+                                  "The goal is now fully mastered",
+                                  "The system is always improving"
+                                ],
+                                "question": "After review, a learner repeats the same error. What does the notes suggest this implies?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 24,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 24"
+                              },
+                              {
+                                "answer": "The changed condition was likely relevant",
+                                "correctIndex": 1,
+                                "explanation": "Sharp improvement suggests the changed condition was relevant.",
+                                "hint": "One result supports diagnosis, not absolute proof.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-25",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Diese Option spricht von \"The diagnosis is certainly perfect forever\", aber die Antwort zielt auf \"The changed condition was likely relevant\".",
+                                    "option": "The diagnosis is certainly perfect forever"
+                                  },
+                                  {
+                                    "explanation": "Das passt zur Kernidee: Sharp improvement suggests the changed condition was relevant.",
+                                    "option": "The changed condition was likely relevant"
+                                  },
+                                  {
+                                    "explanation": "Diese Option spricht von \"The bottleneck was irrelevant\", aber die Antwort zielt auf \"The changed condition was likely relevant\".",
+                                    "option": "The bottleneck was irrelevant"
+                                  },
+                                  {
+                                    "explanation": "Diese Option spricht von \"You should stop measuring\", aber die Antwort zielt auf \"The changed condition was likely relevant\".",
+                                    "option": "You should stop measuring"
+                                  }
+                                ],
+                                "options": [
+                                  "The diagnosis is certainly perfect forever",
+                                  "The changed condition was likely relevant",
+                                  "The bottleneck was irrelevant",
+                                  "You should stop measuring"
+                                ],
+                                "question": "A targeted intervention causes a sharp improvement after one change. What should you conclude?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 25,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 25"
+                              },
+                              {
+                                "answer": "Exercise the constraint directly",
+                                "correctIndex": 0,
+                                "explanation": "The smallest effective fix directly exercises the constraint.",
+                                "hint": "Target the failure mechanism, not just more time.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-26",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: The smallest effective fix directly exercises the constraint.",
+                                    "option": "Exercise the constraint directly"
+                                  },
+                                  {
+                                    "explanation": "This says \"Increase passive study time\", but the answer should focus on \"Exercise the constraint directly\".",
+                                    "option": "Increase passive study time"
+                                  },
+                                  {
+                                    "explanation": "This says \"Avoid feedback to prevent confusion\", but the answer should focus on \"Exercise the constraint directly\".",
+                                    "option": "Avoid feedback to prevent confusion"
+                                  },
+                                  {
+                                    "explanation": "This says \"Only practice the exact same example repeatedly\", but the answer should focus on \"Exercise the constraint directly\".",
+                                    "option": "Only practice the exact same example repeatedly"
+                                  }
+                                ],
+                                "options": [
+                                  "Exercise the constraint directly",
+                                  "Increase passive study time",
+                                  "Avoid feedback to prevent confusion",
+                                  "Only practice the exact same example repeatedly"
+                                ],
+                                "question": "Once a constraint is plausible, what should practice be designed to do?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 26,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 26"
+                              },
+                              {
+                                "answer": "Closed-book recall followed by correction",
+                                "correctIndex": 0,
+                                "explanation": "Weak retrieval is addressed by closed-book recall then correction.",
+                                "hint": "The notes specify a retrieval-focused sequence.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-27",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: Weak retrieval is addressed by closed-book recall then correction.",
+                                    "option": "Closed-book recall followed by correction"
+                                  },
+                                  {
+                                    "explanation": "This says \"Only rereading the material\", but the answer should focus on \"Closed-book recall followed by correction\".",
+                                    "option": "Only rereading the material"
+                                  },
+                                  {
+                                    "explanation": "This says \"Studying prerequisites but not using them\", but the answer should focus on \"Closed-book recall followed by correction\".",
+                                    "option": "Studying prerequisites but not using them"
+                                  },
+                                  {
+                                    "explanation": "This says \"Waiting longer before checking answers\", but the answer should focus on \"Closed-book recall followed by correction\".",
+                                    "option": "Waiting longer before checking answers"
+                                  }
+                                ],
+                                "options": [
+                                  "Closed-book recall followed by correction",
+                                  "Only rereading the material",
+                                  "Studying prerequisites but not using them",
+                                  "Waiting longer before checking answers"
+                                ],
+                                "question": "Which practice design best matches weak retrieval?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 27,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 27"
+                              },
+                              {
+                                "answer": "Vary examples and solve unfamiliar cases",
+                                "correctIndex": 0,
+                                "explanation": "Poor transfer improves by varying examples and using unfamiliar cases.",
+                                "hint": "Transfer needs exposure to differences.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-28",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: Poor transfer improves by varying examples and using unfamiliar cases.",
+                                    "option": "Vary examples and solve unfamiliar cases"
+                                  },
+                                  {
+                                    "explanation": "This says \"Practice only the exact same problem type\", but the answer should focus on \"Vary examples and solve unfamiliar cases\".",
+                                    "option": "Practice only the exact same problem type"
+                                  },
+                                  {
+                                    "explanation": "This says \"Avoid feedback to reduce confusion\", but the answer should focus on \"Vary examples and solve unfamiliar cases\".",
+                                    "option": "Avoid feedback to reduce confusion"
+                                  },
+                                  {
+                                    "explanation": "This says \"Reread until the examples feel easy\", but the answer should focus on \"Vary examples and solve unfamiliar cases\".",
+                                    "option": "Reread until the examples feel easy"
+                                  }
+                                ],
+                                "options": [
+                                  "Vary examples and solve unfamiliar cases",
+                                  "Practice only the exact same problem type",
+                                  "Avoid feedback to reduce confusion",
+                                  "Reread until the examples feel easy"
+                                ],
+                                "question": "If poor transfer is suspected, what practice change is recommended?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 28,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 28"
+                              },
+                              {
+                                "answer": "Study the prerequisite and immediately use it in the target task",
+                                "correctIndex": 0,
+                                "explanation": "The notes recommend studying prerequisites and immediately applying them.",
+                                "hint": "Foundation study should connect directly to the target task.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-29",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: The notes recommend studying prerequisites and immediately applying....",
+                                    "option": "Study the prerequisite and immediately use it in the target task"
+                                  },
+                                  {
+                                    "explanation": "This says \"Only watch an explanation video\", but the answer should focus on \"Study the prerequisite and immediately use it in the target task\".",
+                                    "option": "Only watch an explanation video"
+                                  },
+                                  {
+                                    "explanation": "This says \"Practice the target task without prerequisites\", but the answer should focus on \"Study the prerequisite and immediately use it in the target task\".",
+                                    "option": "Practice the target task without prerequisites"
+                                  },
+                                  {
+                                    "explanation": "This says \"Increase the number of unrelated topics\", but the answer should focus on \"Study the prerequisite and immediately use it in the target task\".",
+                                    "option": "Increase the number of unrelated topics"
+                                  }
+                                ],
+                                "options": [
+                                  "Study the prerequisite and immediately use it in the target task",
+                                  "Only watch an explanation video",
+                                  "Practice the target task without prerequisites",
+                                  "Increase the number of unrelated topics"
+                                ],
+                                "question": "If missing foundations are the bottleneck, what is the smallest effective fix?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 29,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 29"
+                              },
+                              {
+                                "answer": "Shorten the time between attempt and correction",
+                                "correctIndex": 0,
+                                "explanation": "Weak feedback is fixed by reducing the attempt-to-correction delay.",
+                                "hint": "Make correction happen sooner after attempts.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-30",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: Weak feedback is fixed by reducing the attempt-to-correction delay.",
+                                    "option": "Shorten the time between attempt and correction"
+                                  },
+                                  {
+                                    "explanation": "This says \"Extend the time before checking answers\", but the answer should focus on \"Shorten the time between attempt and correction\".",
+                                    "option": "Extend the time before checking answers"
+                                  },
+                                  {
+                                    "explanation": "This says \"Use only self-grading with no correction\", but the answer should focus on \"Shorten the time between attempt and correction\".",
+                                    "option": "Use only self-grading with no correction"
+                                  },
+                                  {
+                                    "explanation": "This says \"Avoid attempting until you feel confident\", but the answer should focus on \"Shorten the time between attempt and correction\".",
+                                    "option": "Avoid attempting until you feel confident"
+                                  }
+                                ],
+                                "options": [
+                                  "Shorten the time between attempt and correction",
+                                  "Extend the time before checking answers",
+                                  "Use only self-grading with no correction",
+                                  "Avoid attempting until you feel confident"
+                                ],
+                                "question": "For weak feedback, what practice adjustment is recommended?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 30,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 30"
+                              },
+                              {
+                                "answer": "A test resembling the real goal but not identical",
+                                "correctIndex": 1,
+                                "explanation": "Verification should resemble the goal but differ from practice example.",
+                                "hint": "It’s a transfer-like check, not a copy.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-31",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Esta opcao fala de \"A test identical to the practice example\", mas a resposta deve focar \"A test resembling the real goal but not identical\".",
+                                    "option": "A test identical to the practice example"
+                                  },
+                                  {
+                                    "explanation": "Isto corresponde a ideia central: Verification should resemble the goal but differ from practice example.",
+                                    "option": "A test resembling the real goal but not identical"
+                                  },
+                                  {
+                                    "explanation": "Esta opcao fala de \"A test that ignores speed and retention\", mas a resposta deve focar \"A test resembling the real goal but not identical\".",
+                                    "option": "A test that ignores speed and retention"
+                                  },
+                                  {
+                                    "explanation": "Esta opcao fala de \"A test that only measures feelings\", mas a resposta deve focar \"A test resembling the real goal but not identical\".",
+                                    "option": "A test that only measures feelings"
+                                  }
+                                ],
+                                "options": [
+                                  "A test identical to the practice example",
+                                  "A test resembling the real goal but not identical",
+                                  "A test that ignores speed and retention",
+                                  "A test that only measures feelings"
+                                ],
+                                "question": "What should verification performance resemble?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 31,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 31"
+                              },
+                              {
+                                "answer": "Because a skill isn’t fully improved just from familiar ease",
+                                "correctIndex": 1,
+                                "explanation": "Familiar ease doesn’t guarantee independent improvement or retention.",
+                                "hint": "Verification needs goal-like testing and delay checks.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-32",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Because feelings never matter\", but the answer should focus on \"Because a skill isn’t fully improved just from familiar ease\".",
+                                    "option": "Because feelings never matter"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Familiar ease doesn’t guarantee independent improvement or retention.",
+                                    "option": "Because a skill isn’t fully improved just from familiar ease"
+                                  },
+                                  {
+                                    "explanation": "This says \"Because speed is always irrelevant\", but the answer should focus on \"Because a skill isn’t fully improved just from familiar ease\".",
+                                    "option": "Because speed is always irrelevant"
+                                  },
+                                  {
+                                    "explanation": "This says \"Because feedback is always perfect\", but the answer should focus on \"Because a skill isn’t fully improved just from familiar ease\".",
+                                    "option": "Because feedback is always perfect"
+                                  }
+                                ],
+                                "options": [
+                                  "Because feelings never matter",
+                                  "Because a skill isn’t fully improved just from familiar ease",
+                                  "Because speed is always irrelevant",
+                                  "Because feedback is always perfect"
+                                ],
+                                "question": "Why isn’t it enough that yesterday’s practice felt easier?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 32,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 32"
+                              },
+                              {
+                                "answer": "To track independent performance and error patterns over time",
+                                "correctIndex": 1,
+                                "explanation": "Baseline and follow-up track changes in performance and errors.",
+                                "hint": "It supports measuring improvement over time.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-33",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"To replace evidence with intuition\", but the answer should focus on \"To track independent performance and error patterns over time\".",
+                                    "option": "To replace evidence with intuition"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Baseline and follow-up track changes in performance and errors.",
+                                    "option": "To track independent performance and error patterns over time"
+                                  },
+                                  {
+                                    "explanation": "This says \"To avoid reassessment\", but the answer should focus on \"To track independent performance and error patterns over time\".",
+                                    "option": "To avoid reassessment"
+                                  },
+                                  {
+                                    "explanation": "This says \"To ensure one session proves everything\", but the answer should focus on \"To track independent performance and error patterns over time\".",
+                                    "option": "To ensure one session proves everything"
+                                  }
+                                ],
+                                "options": [
+                                  "To replace evidence with intuition",
+                                  "To track independent performance and error patterns over time",
+                                  "To avoid reassessment",
+                                  "To ensure one session proves everything"
+                                ],
+                                "question": "What is the purpose of recording a baseline and follow-up?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 33,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 33"
+                              },
+                              {
+                                "answer": "Another constraint may become visible",
+                                "correctIndex": 0,
+                                "explanation": "Improving one bottleneck can reveal the next limiting factor.",
+                                "hint": "Kitchen stations can expose delays at the pass.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-34",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: Improving one bottleneck can reveal the next limiting factor.",
+                                    "option": "Another constraint may become visible"
+                                  },
+                                  {
+                                    "explanation": "This says \"The system stops changing permanently\", but the answer should focus on \"Another constraint may become visible\".",
+                                    "option": "The system stops changing permanently"
+                                  },
+                                  {
+                                    "explanation": "This says \"The first diagnosis is always useless\", but the answer should focus on \"Another constraint may become visible\".",
+                                    "option": "The first diagnosis is always useless"
+                                  },
+                                  {
+                                    "explanation": "This says \"Verification becomes unnecessary\", but the answer should focus on \"Another constraint may become visible\".",
+                                    "option": "Verification becomes unnecessary"
+                                  }
+                                ],
+                                "options": [
+                                  "Another constraint may become visible",
+                                  "The system stops changing permanently",
+                                  "The first diagnosis is always useless",
+                                  "Verification becomes unnecessary"
+                                ],
+                                "question": "When the constraint improves, what might happen next?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 34,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 34"
+                              },
+                              {
+                                "answer": "Because you need enough repetitions to see a consistent pattern",
+                                "correctIndex": 1,
+                                "explanation": "Patterns require enough repetitions; single sessions can mislead.",
+                                "hint": "The notes emphasize repetition to see a trend.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-35",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Because discomfort always means the diagnosis is wrong\", but the answer should focus on \"Because you need enough repetitions to see a consistent pattern\".",
+                                    "option": "Because discomfort always means the diagnosis is wrong"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Patterns require enough repetitions; single sessions can mislead.",
+                                    "option": "Because you need enough repetitions to see a consistent pattern"
+                                  },
+                                  {
+                                    "explanation": "This says \"Because experiments must be skipped\", but the answer should focus on \"Because you need enough repetitions to see a consistent pattern\".",
+                                    "option": "Because experiments must be skipped"
+                                  },
+                                  {
+                                    "explanation": "This says \"Because retention can’t be measured\", but the answer should focus on \"Because you need enough repetitions to see a consistent pattern\".",
+                                    "option": "Because retention can’t be measured"
+                                  }
+                                ],
+                                "options": [
+                                  "Because discomfort always means the diagnosis is wrong",
+                                  "Because you need enough repetitions to see a consistent pattern",
+                                  "Because experiments must be skipped",
+                                  "Because retention can’t be measured"
+                                ],
+                                "question": "Why should reassessment wait for patterns rather than every uncomfortable session?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 35,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 35"
+                              },
+                              {
+                                "answer": "Keep it if independent performance improves and retention is reasonable",
+                                "correctIndex": 0,
+                                "explanation": "Keep changes that improve independent performance and reasonable retention.",
+                                "hint": "Look for independent performance, not just practice comfort.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-36",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: Keep changes that improve independent performance and reasonable re....",
+                                    "option": "Keep it if independent performance improves and retention is reasonable"
+                                  },
+                                  {
+                                    "explanation": "This says \"Keep it if it feels easier during practice\", but the answer should focus on \"Keep it if independent performance improves and retention is reason...\".",
+                                    "option": "Keep it if it feels easier during practice"
+                                  },
+                                  {
+                                    "explanation": "This says \"Replace it if it improves one narrow task\", but the answer should focus on \"Keep it if independent performance improves and retention is reason...\".",
+                                    "option": "Replace it if it improves one narrow task"
+                                  },
+                                  {
+                                    "explanation": "This says \"Replace it if the first diagnosis was uncertain\", but the answer should focus on \"Keep it if independent performance improves and retention is reason...\".",
+                                    "option": "Replace it if the first diagnosis was uncertain"
+                                  }
+                                ],
+                                "options": [
+                                  "Keep it if independent performance improves and retention is reasonable",
+                                  "Keep it if it feels easier during practice",
+                                  "Replace it if it improves one narrow task",
+                                  "Replace it if the first diagnosis was uncertain"
+                                ],
+                                "question": "Which decision rule best matches “keep a change” in the notes?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 36,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 36"
+                              },
+                              {
+                                "answer": "Results remain flat despite faithful use",
+                                "correctIndex": 1,
+                                "explanation": "Flat results despite faithful use indicate the change isn’t working.",
+                                "hint": "If nothing moves, revise diagnosis or intervention.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-37",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Independent performance improves and retention stays reasonable\", but the answer should focus on \"Results remain flat despite faithful use\".",
+                                    "option": "Independent performance improves and retention stays reasonable"
+                                  },
+                                  {
+                                    "explanation": "This matches the key idea: Flat results despite faithful use indicate the change isn’t working.",
+                                    "option": "Results remain flat despite faithful use"
+                                  },
+                                  {
+                                    "explanation": "This says \"The change reveals a new constraint\", but the answer should focus on \"Results remain flat despite faithful use\".",
+                                    "option": "The change reveals a new constraint"
+                                  },
+                                  {
+                                    "explanation": "This says \"The change helps only the narrow task but not the goal\", but the answer should focus on \"Results remain flat despite faithful use\".",
+                                    "option": "The change helps only the narrow task but not the goal"
+                                  }
+                                ],
+                                "options": [
+                                  "Independent performance improves and retention stays reasonable",
+                                  "Results remain flat despite faithful use",
+                                  "The change reveals a new constraint",
+                                  "The change helps only the narrow task but not the goal"
+                                ],
+                                "question": "Which outcome suggests you should replace the change?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 37,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 37"
+                              },
+                              {
+                                "answer": "Define the outcome → observe failure → name constraint → test change → measure independent performance → repeat",
+                                "correctIndex": 0,
+                                "explanation": "The notes list a specific evidence-based cycle for learning decisions.",
+                                "hint": "It’s an outcome-to-repeat loop grounded in measurement.",
+                                "id": "quiz-learning-bottleneck-multiple-choice-38",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This matches the key idea: The notes list a specific evidence-based cycle for learning decisions.",
+                                    "option": "Define the outcome → observe failure → name constraint → test change → measure independent performance → repeat"
+                                  },
+                                  {
+                                    "explanation": "This says \"Practice more hours → reread everything → wait for confidence → sto...\", but the answer should focus on \"Define the outcome → observe failure → name constraint → test...",
+                                    "option": "Practice more hours → reread everything → wait for confidence → stop measuring"
+                                  },
+                                  {
+                                    "explanation": "This says \"Pick the most obvious weakness → change many variables → hope it works\", but the answer should focus on \"Define the outcome → observe failure → name constraint → test...",
+                                    "option": "Pick the most obvious weakness → change many variables → hope it works"
+                                  },
+                                  {
+                                    "explanation": "This says \"Only test after the final exam → then reassess once\", but the answer should focus on \"Define the outcome → observe failure → name constraint → test chang...\".",
+                                    "option": "Only test after the final exam → then reassess once"
+                                  }
+                                ],
+                                "options": [
+                                  "Define the outcome → observe failure → name constraint → test change → measure independent performance → repeat",
+                                  "Practice more hours → reread everything → wait for confidence → stop measuring",
+                                  "Pick the most obvious weakness → change many variables → hope it works",
+                                  "Only test after the final exam → then reassess once"
+                                ],
+                                "question": "Which cycle best matches the practical cycle described in the notes?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 38,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 38"
+                              }
+                            ],
+                            "title": "Quiz: learning bottlenecks as a system"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Quiz: learning bottlenecks as a system Quizzes",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Quiz: learning bottlenecks as a system"
+      }
+    },
+    {
+      "actionId": "flashcards",
+      "durationMs": 6000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 5,
+        "dashboardIndex": 5,
+        "dashboardKey": "demo-learning-bottlenecks-page-5",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Learning Bottleneck",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "study-widget-1-focused-session",
+                          "props": {
+                            "__blockType": "FlashcardCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "Retrieval is constrained: you can’t access ideas without notes.",
+                                "id": "flashcards-learning-bottleneck-flashcard-1",
+                                "kind": "qa",
+                                "question": "You reread for hours, but recall stays weak. What likely bottleneck?",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 1"
+                              },
+                              {
+                                "answer": "A symptom, not a diagnosis; identify what happens right before difficulty.",
+                                "id": "flashcards-learning-bottleneck-flashcard-2",
+                                "kind": "qa",
+                                "question": "A learner “feels slow.” What should you treat it as first?",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 2"
+                              },
+                              {
+                                "answer": "The factor whose improvement would create the largest useful performance increase.",
+                                "id": "flashcards-learning-bottleneck-flashcard-3",
+                                "kind": "qa",
+                                "question": "What is the key definition of a learning bottleneck?",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 3"
+                              },
+                              {
+                                "answer": "Because the disliked part may not limit overall useful performance.",
+                                "id": "flashcards-learning-bottleneck-flashcard-4",
+                                "kind": "qa",
+                                "question": "Why isn’t “the part I dislike most” a reliable bottleneck definition?",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 4"
+                              },
+                              {
+                                "answer": "Quality checking: accurate feedback that verifies whether the output is correct.",
+                                "id": "flashcards-learning-bottleneck-flashcard-5",
+                                "kind": "qa",
+                                "question": "In the kitchen analogy, what stage corresponds to feedback?",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 5"
+                              },
+                              {
+                                "answer": "Unfinished material accumulating, indicating a stage can’t keep up.",
+                                "id": "flashcards-learning-bottleneck-flashcard-6",
+                                "kind": "qa",
+                                "question": "If a queue builds up, what system issue does it suggest?",
+                                "sourceLine": 6,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 6"
+                              },
+                              {
+                                "answer": "Repeatedly studying the same material without stronger performance.",
+                                "id": "flashcards-learning-bottleneck-flashcard-7",
+                                "kind": "qa",
+                                "question": "What does rework look like in a learning system?",
+                                "sourceLine": 7,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 7"
+                              },
+                              {
+                                "answer": "You can’t continue without external help.",
+                                "id": "flashcards-learning-bottleneck-flashcard-8",
+                                "kind": "qa",
+                                "question": "What is a stoppage in this framework?",
+                                "sourceLine": 8,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 8"
+                              },
+                              {
+                                "answer": "The stages between starting and demonstrating that outcome.",
+                                "id": "flashcards-learning-bottleneck-flashcard-9",
+                                "kind": "qa",
+                                "question": "You want to “solve a basic equation without prompts.” What should you list next?",
+                                "sourceLine": 9,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 9"
+                              },
+                              {
+                                "answer": "Understand success standard; get essential info; practice producing skill; receive accurate feedback; retrieve and apply later.",
+                                "id": "flashcards-learning-bottleneck-flashcard-10",
+                                "kind": "qa",
+                                "question": "Name the five stages in the flow map between start and success.",
+                                "sourceLine": 10,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 10"
+                              },
+                              {
+                                "answer": "Timed attempts and recall without notes reveal whether access fails or knowledge is absent.",
+                                "id": "flashcards-learning-bottleneck-flashcard-11",
+                                "kind": "qa",
+                                "question": "What evidence helps distinguish missing vocabulary from weak retrieval?",
+                                "sourceLine": 11,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 11"
+                              },
+                              {
+                                "answer": "They don’t specify the specific failure in a specific situation.",
+                                "id": "flashcards-learning-bottleneck-flashcard-12",
+                                "kind": "qa",
+                                "question": "Why do feelings like boredom not identify the constraint by themselves?",
+                                "sourceLine": 12,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 12"
+                              },
+                              {
+                                "answer": "It describes a specific failure in a specific situation, not a global label.",
+                                "id": "flashcards-learning-bottleneck-flashcard-13",
+                                "kind": "qa",
+                                "question": "What makes a diagnosis “useful” in this approach?",
+                                "sourceLine": 13,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 13"
+                              },
+                              {
+                                "answer": "List no more than five candidates.",
+                                "id": "flashcards-learning-bottleneck-flashcard-14",
+                                "kind": "qa",
+                                "question": "You suspect five constraints. What limit should you follow when listing candidates?",
+                                "sourceLine": 14,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 14"
+                              },
+                              {
+                                "answer": "By evidence strength and how much fixing each would improve the target outcome.",
+                                "id": "flashcards-learning-bottleneck-flashcard-15",
+                                "kind": "qa",
+                                "question": "How should you rank candidate constraints?",
+                                "sourceLine": 15,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 15"
+                              },
+                              {
+                                "answer": "Knowing definitions doesn’t guarantee applying them; practice may repeat uncorrected errors.",
+                                "id": "flashcards-learning-bottleneck-flashcard-16",
+                                "kind": "qa",
+                                "question": "Why shouldn’t you assume the most basic-looking weakness is the bottleneck?",
+                                "sourceLine": 16,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 16"
+                              },
+                              {
+                                "answer": "The bottleneck is about performing the target task, not just understanding content.",
+                                "id": "flashcards-learning-bottleneck-flashcard-17",
+                                "kind": "qa",
+                                "question": "What distinction matters most: knowing vs performing?",
+                                "sourceLine": 17,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 17"
+                              },
+                              {
+                                "answer": "Define a visible success test before studying, then measure performance.",
+                                "id": "flashcards-learning-bottleneck-flashcard-18",
+                                "kind": "qa",
+                                "question": "You suspect unclear success criteria. What small experiment can test it?",
+                                "sourceLine": 18,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 18"
+                              },
+                              {
+                                "answer": "Close the book, write what you remember, then review and compare.",
+                                "id": "flashcards-learning-bottleneck-flashcard-19",
+                                "kind": "qa",
+                                "question": "You suspect weak retrieval. What narrow experiment tests that directly?",
+                                "sourceLine": 19,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 19"
+                              },
+                              {
+                                "answer": "Shorten the time between attempt and correction.",
+                                "id": "flashcards-learning-bottleneck-flashcard-20",
+                                "kind": "qa",
+                                "question": "You suspect delayed feedback. What intervention tests it?",
+                                "sourceLine": 20,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 20"
+                              },
+                              {
+                                "answer": "Submit for correction or compare your work with a reliable worked example.",
+                                "id": "flashcards-learning-bottleneck-flashcard-21",
+                                "kind": "qa",
+                                "question": "You suspect feedback is the issue. What experiment should you run?",
+                                "sourceLine": 21,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 21"
+                              },
+                              {
+                                "answer": "So you can attribute changes to the single relevant condition you altered.",
+                                "id": "flashcards-learning-bottleneck-flashcard-22",
+                                "kind": "qa",
+                                "question": "Why must the experiment be narrow enough to interpret?",
+                                "sourceLine": 22,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 22"
+                              },
+                              {
+                                "answer": "Task, initial performance, intervention, and result.",
+                                "id": "flashcards-learning-bottleneck-flashcard-23",
+                                "kind": "qa",
+                                "question": "What should you record during a small experiment?",
+                                "sourceLine": 23,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 23"
+                              },
+                              {
+                                "answer": "One outcome can be temporary; you need patterns across repetitions.",
+                                "id": "flashcards-learning-bottleneck-flashcard-24",
+                                "kind": "qa",
+                                "question": "If one result improves performance, why isn’t it automatically proof?",
+                                "sourceLine": 24,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 24"
+                              },
+                              {
+                                "answer": "It identifies whether the failure is conceptual, procedural, retrieval, or attention/transcription.",
+                                "id": "flashcards-learning-bottleneck-flashcard-25",
+                                "kind": "qa",
+                                "question": "What does error-pattern classification add beyond counting errors?",
+                                "sourceLine": 25,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 25"
+                              },
+                              {
+                                "answer": "An idea is misunderstood.",
+                                "id": "flashcards-learning-bottleneck-flashcard-26",
+                                "kind": "qa",
+                                "question": "What does a concept error indicate?",
+                                "sourceLine": 26,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 26"
+                              },
+                              {
+                                "answer": "The method is known but misapplied.",
+                                "id": "flashcards-learning-bottleneck-flashcard-27",
+                                "kind": "qa",
+                                "question": "What does a procedure error indicate?",
+                                "sourceLine": 27,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 27"
+                              },
+                              {
+                                "answer": "Knowledge isn’t accessible when needed.",
+                                "id": "flashcards-learning-bottleneck-flashcard-28",
+                                "kind": "qa",
+                                "question": "What does a retrieval error indicate?",
+                                "sourceLine": 28,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 28"
+                              },
+                              {
+                                "answer": "Errors despite understanding, caused by attention lapses or copying mistakes.",
+                                "id": "flashcards-learning-bottleneck-flashcard-29",
+                                "kind": "qa",
+                                "question": "What might attention or transcription errors look like?",
+                                "sourceLine": 29,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 29"
+                              },
+                              {
+                                "answer": "Rereading isn’t addressing the constraint.",
+                                "id": "flashcards-learning-bottleneck-flashcard-30",
+                                "kind": "qa",
+                                "question": "A repeated error persists after review. What does that suggest?",
+                                "sourceLine": 30,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 30"
+                              },
+                              {
+                                "answer": "The changed condition was relevant to the bottleneck.",
+                                "id": "flashcards-learning-bottleneck-flashcard-31",
+                                "kind": "qa",
+                                "question": "A sharp improvement after one targeted intervention suggests what?",
+                                "sourceLine": 31,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 31"
+                              },
+                              {
+                                "answer": "Revise the diagnosis or make the intervention more precise.",
+                                "id": "flashcards-learning-bottleneck-flashcard-32",
+                                "kind": "qa",
+                                "question": "If nothing changes after your intervention, what should you do?",
+                                "sourceLine": 32,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 32"
+                              },
+                              {
+                                "answer": "Otherwise you may improve without knowing why, or misread a temporary boost.",
+                                "id": "flashcards-learning-bottleneck-flashcard-33",
+                                "kind": "qa",
+                                "question": "Why change one major variable at a time when possible?",
+                                "sourceLine": 33,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 33"
+                              },
+                              {
+                                "answer": "Exercise the constraint itself, not just increase study time.",
+                                "id": "flashcards-learning-bottleneck-flashcard-34",
+                                "kind": "qa",
+                                "question": "Once a constraint is plausible, what should practice directly do?",
+                                "sourceLine": 34,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 34"
+                              },
+                              {
+                                "answer": "Closed-book recall followed by correction.",
+                                "id": "flashcards-learning-bottleneck-flashcard-35",
+                                "kind": "qa",
+                                "question": "If retrieval is weak, what practice design is recommended?",
+                                "sourceLine": 35,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 35"
+                              },
+                              {
+                                "answer": "Vary examples and solve unfamiliar cases.",
+                                "id": "flashcards-learning-bottleneck-flashcard-36",
+                                "kind": "qa",
+                                "question": "If transfer is poor, what practice change helps?",
+                                "sourceLine": 36,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 36"
+                              },
+                              {
+                                "answer": "Study the prerequisite and immediately apply it in the target task.",
+                                "id": "flashcards-learning-bottleneck-flashcard-37",
+                                "kind": "qa",
+                                "question": "If foundations are missing, what should you do next?",
+                                "sourceLine": 37,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 37"
+                              },
+                              {
+                                "answer": "Shorten the time between attempt and correction.",
+                                "id": "flashcards-learning-bottleneck-flashcard-38",
+                                "kind": "qa",
+                                "question": "If feedback is weak, what adjustment is recommended?",
+                                "sourceLine": 38,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 38"
+                              },
+                              {
+                                "answer": "Added time may be passive and not change the practice design.",
+                                "id": "flashcards-learning-bottleneck-flashcard-39",
+                                "kind": "qa",
+                                "question": "Why might “more hours” fail to help?",
+                                "sourceLine": 39,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 39"
+                              },
+                              {
+                                "answer": "It can introduce competing changes that distract from the bottleneck fix.",
+                                "id": "flashcards-learning-bottleneck-flashcard-40",
+                                "kind": "qa",
+                                "question": "Why can adding a new resource sometimes increase confusion?",
+                                "sourceLine": 40,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 40"
+                              },
+                              {
+                                "answer": "Design the minimal practice change that directly targets the constraint.",
+                                "id": "flashcards-learning-bottleneck-flashcard-41",
+                                "kind": "qa",
+                                "question": "What is the “smallest effective fix” principle?",
+                                "sourceLine": 41,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 41"
+                              },
+                              {
+                                "answer": "Resemble the real goal but not be identical to the practice example.",
+                                "id": "flashcards-learning-bottleneck-flashcard-42",
+                                "kind": "qa",
+                                "question": "How should verification tests relate to practice?",
+                                "sourceLine": 42,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 42"
+                              },
+                              {
+                                "answer": "Accuracy, independence, speed when relevant, and retention after a delay.",
+                                "id": "flashcards-learning-bottleneck-flashcard-43",
+                                "kind": "qa",
+                                "question": "What should you check during verification?",
+                                "sourceLine": 43,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 43"
+                              },
+                              {
+                                "answer": "A skill isn’t fully improved just because familiar practice feels easier.",
+                                "id": "flashcards-learning-bottleneck-flashcard-44",
+                                "kind": "qa",
+                                "question": "Why isn’t “yesterday’s exercise felt easier” enough proof?",
+                                "sourceLine": 44,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 44"
+                              },
+                              {
+                                "answer": "Record a baseline and a follow-up.",
+                                "id": "flashcards-learning-bottleneck-flashcard-45",
+                                "kind": "qa",
+                                "question": "What should you do before and after the fix to track progress?",
+                                "sourceLine": 45,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 45"
+                              },
+                              {
+                                "answer": "Date, task, score/quality rating, main error type, help used, next adjustment.",
+                                "id": "flashcards-learning-bottleneck-flashcard-46",
+                                "kind": "qa",
+                                "question": "Give examples of what a simple log can include.",
+                                "sourceLine": 46,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 46"
+                              },
+                              {
+                                "answer": "A stable rubric with criteria like clarity, completeness, accuracy, evidence.",
+                                "id": "flashcards-learning-bottleneck-flashcard-47",
+                                "kind": "qa",
+                                "question": "For subjective skills, what should you use instead of vibes?",
+                                "sourceLine": 47,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 47"
+                              },
+                              {
+                                "answer": "Another constraint may become visible.",
+                                "id": "flashcards-learning-bottleneck-flashcard-48",
+                                "kind": "qa",
+                                "question": "After the constraint improves, what can happen next?",
+                                "sourceLine": 48,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 48"
+                              },
+                              {
+                                "answer": "System behavior can reveal the next bottleneck once the first is cleared.",
+                                "id": "flashcards-learning-bottleneck-flashcard-49",
+                                "kind": "qa",
+                                "question": "Why is a new limitation after improvement not evidence the first diagnosis was useless?",
+                                "sourceLine": 49,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 49"
+                              },
+                              {
+                                "answer": "After enough repetitions to see a pattern, not after every uncomfortable session.",
+                                "id": "flashcards-learning-bottleneck-flashcard-50",
+                                "kind": "qa",
+                                "question": "When should you reassess?",
+                                "sourceLine": 50,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 50"
+                              },
+                              {
+                                "answer": "If it produces better independent performance and reasonable retention.",
+                                "id": "flashcards-learning-bottleneck-flashcard-51",
+                                "kind": "qa",
+                                "question": "When should you keep a change?",
+                                "sourceLine": 51,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 51"
+                              },
+                              {
+                                "answer": "If results remain flat despite faithful use, or it harms the actual goal.",
+                                "id": "flashcards-learning-bottleneck-flashcard-52",
+                                "kind": "qa",
+                                "question": "When should you replace a change?",
+                                "sourceLine": 52,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 52"
+                              },
+                              {
+                                "answer": "Define outcome; observe failure; name constraint; test change; measure independent performance; repeat.",
+                                "id": "flashcards-learning-bottleneck-flashcard-53",
+                                "kind": "qa",
+                                "question": "What is the practical cycle for efficient learning decisions?",
+                                "sourceLine": 53,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 53"
+                              },
+                              {
+                                "answer": "Replace the change because it harms the real goal.",
+                                "id": "flashcards-learning-bottleneck-flashcard-54",
+                                "kind": "qa",
+                                "question": "A learner improves one narrow task but the actual goal worsens. What should you do?",
+                                "sourceLine": 54,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 54"
+                              },
+                              {
+                                "answer": "Define the outcome you want to demonstrate.",
+                                "id": "flashcards-learning-bottleneck-flashcard-55",
+                                "kind": "qa",
+                                "question": "You want to diagnose quickly. What is the first step in the cycle?",
+                                "sourceLine": 55,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 55"
+                              },
+                              {
+                                "answer": "Name one likely constraint.",
+                                "id": "flashcards-learning-bottleneck-flashcard-56",
+                                "kind": "qa",
+                                "question": "After observing failure, what comes next in the cycle?",
+                                "sourceLine": 56,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 56"
+                              },
+                              {
+                                "answer": "Independent performance (and check retention as part of verification).",
+                                "id": "flashcards-learning-bottleneck-flashcard-57",
+                                "kind": "qa",
+                                "question": "After testing one change, what must you measure?",
+                                "sourceLine": 57,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 57"
+                              },
+                              {
+                                "answer": "Efficient learning decisions grounded in evidence, not perfect diagnosis.",
+                                "id": "flashcards-learning-bottleneck-flashcard-58",
+                                "kind": "qa",
+                                "question": "What is the main aim of this approach?",
+                                "sourceLine": 58,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Flashcard 58"
+                              }
+                            ],
+                            "title": "Flashcards: Learning Bottleneck"
+                          },
+                          "type": "FlashcardCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "study-widget-1"
+                    }
+                  },
+                  "name": "Flashcards: Learning Bottleneck Flashcards",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Flashcards: Learning Bottleneck"
+      }
+    },
+    {
+      "actionId": "podcast",
+      "durationMs": 13000,
+      "page": {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "quickCreate",
+        "dashboardCount": 6,
+        "dashboardIndex": 6,
+        "dashboardKey": "demo-learning-bottlenecks-page-6",
+        "dashboardPurpose": "practice",
+        "deletable": true,
+        "folderName": "Learning Bottleneck",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "demo-learning-bottlenecks-podcast-player",
+                          "props": {
+                            "podcast": {
+                              "audioPath": "/demo/audio/learning-bottlenecks.mp3",
+                              "chapters": [
+                                {
+                                  "startTurn": 0,
+                                  "title": "See Learning as a System"
+                                },
+                                {
+                                  "startTurn": 4,
+                                  "title": "Test the Narrowest Point"
+                                },
+                                {
+                                  "startTurn": 12,
+                                  "title": "Fix, Verify, and Reassess"
+                                }
+                              ],
+                              "createdAt": "2026-08-02T10:00:00.000Z",
+                              "description": "A short, practical conversation on how to treat learning like a system: map the stages, find the bottleneck that limits useful performance, run small experiments, then apply the smallest effective fix and verify results.",
+                              "id": "demo-learning-bottlenecks-podcast",
+                              "mimeType": "audio/mpeg",
+                              "sourceScope": "studyGuide",
+                              "sourceTitle": "Learning Bottleneck",
+                              "title": "Learning Bottlenecks: See the System, Test the Narrowest Point, Fix and Verify",
+                              "transcriptTurns": [
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Let’s treat learning like a restaurant kitchen. A goal defines the order. Inputs bring ingredients. Practice cooks the dish. Feedback checks quality. Recall serves the result later. If one station is much slower or weaker, the whole kitchen moves at that pace."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "And a bottleneck is not just the part you dislike most. It’s the factor whose improvement would create the largest increase in useful performance. For example, someone rereads for hours because it feels productive, but the real constraint is that they can’t retrieve ideas without notes."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "So first we map the flow. Pick one specific outcome, like explaining photosynthesis in plain language, or solving a basic equation without prompts. Then list the stages between starting and demonstrating that outcome: understand the task and success standard, obtain or comprehend essential information, practice producing the skill, receive accurate feedback, and retrieve and apply it later."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "While you map it, look for queues, rework, and stoppages. A queue is unfinished material piling up. Rework is repeatedly studying the same material without stronger performance. A stoppage is when you can’t continue without external help."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Next, separate symptoms from causes. “I’m slow” is a symptom, not a diagnosis. Slowness might come from missing vocabulary, uncertainty about the next step, weak memory, or excessive switching between resources. Ask what happens immediately before the difficulty, and what happens when support is removed."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Use observable evidence, not just feelings. Timed attempts, recall without notes, error patterns, completed practice, and feedback from a knowledgeable source. Boredom or confidence can matter, but they don’t identify the constraint by themselves."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Now we test the narrowest point. Rank no more than five possible constraints. Candidates include unclear success criteria, missing prerequisite knowledge, passive study, insufficient retrieval, delayed feedback, weak transfer to new problems, and an environment that makes practice unreliable."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "For each candidate, ask two questions: how strongly does it appear in evidence, and how much would fixing it improve the target outcome? Don’t assume the most basic-looking weakness is the main one. Knowing definitions is different from performing the target task."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Then run a small experiment. Choose one suspected bottleneck and change only the relevant condition for a short period. If retrieval is suspected, close the book and write what you remember before reviewing. If feedback is suspected, submit for correction or compare with a reliable worked example. If the goal is unclear, define a visible success test before studying."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Keep it narrow enough to interpret. Record the task, initial performance, the intervention, and the result. One result isn’t proof, but improvement supports the diagnosis. If nothing changes, revise the diagnosis or make the intervention more precise. Also, change one major variable at a time when possible."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Use error patterns to guide the fix. Classify errors instead of only counting them. Concept errors mean an idea is misunderstood. Procedure errors mean the method is known but misapplied. Retrieval errors mean knowledge isn’t accessible when needed. Attention or transcription errors can happen even when understanding is there."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "A repeated error after review suggests rereading isn’t addressing the constraint. A sharp improvement after one targeted intervention suggests the changed condition was relevant. If you improve one narrow task but the actual goal doesn’t move, you may need a different constraint."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Once a constraint is plausible, apply the smallest effective fix. For weak retrieval, use closed-book recall followed by correction. For poor transfer, vary examples and solve unfamiliar cases. For missing foundations, study the prerequisite and immediately use it in the target task. For weak feedback, shorten the time between attempt and correction."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Verify performance with a test that resembles the real goal but isn’t identical to the practice example. Check accuracy, independence, speed when relevant, and retention after a delay. A skill isn’t fully improved just because yesterday’s familiar exercise felt easier. Keep a baseline and a follow-up log, like date, task, score or quality rating, main error type, help used, and next adjustment."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Then reassess the system. When one constraint improves, another may become visible. That’s normal system behavior, like clearing one station in a kitchen reveals a delay at the pass. Reassess after enough repetitions to see a pattern, not after every uncomfortable session."
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Keep a change if it produces better independent performance and reasonable retention. Replace it if results stay flat despite faithful use, or if it improves a narrow task while harming the actual goal. The practical cycle is: define the outcome, observe the failure, name one likely constraint, test one change, measure independent performance, and repeat."
+                                },
+                                {
+                                  "speaker": "hostA",
+                                  "text": "Quick check: when we say bottleneck, we mean the factor that would most increase useful performance, not the part we dislike. Did I capture that right?"
+                                },
+                                {
+                                  "speaker": "hostB",
+                                  "text": "Exactly. See learning as a system, find the narrowest constraint with evidence, fix it with targeted practice, verify real performance, and repeat until the whole system speeds up."
+                                }
+                              ]
+                            }
+                          },
+                          "type": "PodcastBlock"
+                        }
+                      ],
+                      "widgetId": "demo-learning-bottlenecks-podcast-widget"
+                    }
+                  },
+                  "name": "Learning Bottlenecks: See the System, Test the Narrowest Point, Fix and Verify",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "name": "Learning Bottlenecks: See the System, Test the Narrowest Point, Fix and Verify"
+      }
+    }
+  ],
+  "studyPath": {
+    "contentLanguage": "en",
+    "contentLanguageSource": "detected",
+    "dashboards": [
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 1,
+        "dashboardKey": "demo-learning-bottlenecks-page-1",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Learning Bottleneck",
+        "id": "demo-learning-bottlenecks-dashboard-1",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "01-see-learning-as-a-system-1-01-see-learning-as-a-system-1-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "01 - See Learning as a System",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "01-see-learning-as-a-system-1-01-see-learning-as-a-system-1-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## The kitchen analogy\n\nA learning process has connected stages, much like a restaurant kitchen: a goal defines the order, input supplies ingredients, practice prepares the dish, feedback checks quality, and recall serves the result. If one stage is much slower or weaker than the others, it can limit the whole system.\n\nA bottleneck is not simply the part you dislike most. It is the factor whose improvement would create the largest increase in useful performance. For example, a learner may spend hours rereading because it feels productive, while the real constraint is an inability to retrieve ideas without notes.\n\n## Map the flow\n\nWrite one specific outcome, such as “explain photosynthesis in plain language” or “solve a basic equation without prompts.” Then list the stages between starting and demonstrating that outcome:\n\n1. Understand the task and success standard.\n2. Obtain or comprehend the essential information.\n3. Practice producing the skill.\n4. Receive accurate feedback.\n5. Retrieve and apply the skill later.\n\nLook for queues, rework, and stoppages. A queue is unfinished material accumulating. Rework is repeatedly studying the same material without stronger performance. A stoppage occurs when you cannot continue without external help.\n\n## Separate symptoms from causes\n\n“I'm slow” is a symptom, not a diagnosis. Slowness might come from missing vocabulary, uncertainty about the next step, weak memory, or excessive switching between resources. Ask what happens immediately before the difficulty and what happens when support is removed.\n\nUse observable evidence: timed attempts, recall without notes, error patterns, completed practice, and feedback from a knowledgeable source. Feelings such as boredom or confidence matter, but they do not identify the constraint by themselves.\n\nThe first useful diagnosis describes a specific failure in a specific situation, not a global judgment about ability.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 1,
+                            "studyPathDashboardKey": "demo-learning-bottlenecks-page-1",
+                            "studyPathDashboardName": "01 - See Learning as a System",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Learning Bottleneck",
+                            "studyPathId": "demo-learning-bottlenecks",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Learning Bottleneck",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "01-see-learning-as-a-system-1-01-see-learning-as-a-system-1-source"
+                    }
+                  },
+                  "name": "01 - See Learning as a System Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "01 - See Learning as a System",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 2,
+        "dashboardKey": "demo-learning-bottlenecks-page-2",
+        "dashboardPurpose": "lesson",
+        "deletable": false,
+        "folderName": "Learning Bottleneck",
+        "id": "demo-learning-bottlenecks-dashboard-2",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "02-test-the-narrowest-point-2-02-test-the-narrowest-point-2-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "02 - Test the Narrowest Point",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "02-test-the-narrowest-point-2-02-test-the-narrowest-point-2-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## Rank possible constraints\n\nList no more than five candidates. Common candidates include unclear success criteria, missing prerequisite knowledge, passive study, insufficient retrieval, delayed feedback, weak transfer to new problems, and an environment that makes practice unreliable. Rank each by two questions: how strongly does it appear in evidence, and how much would fixing it improve the target outcome?\n\nDo not assume the most basic-looking weakness is the main one. A learner can know definitions yet fail to apply them, or practice often yet repeat the same uncorrected error. The important distinction is between knowing about a subject and performing the target task.\n\n## Run a small experiment\n\nChoose one suspected bottleneck and change only the relevant condition for a short period. If retrieval is the suspect, close the book and write what you remember before reviewing. If feedback is the suspect, submit a solution for correction or compare it with a reliable worked example. If the goal is unclear, define a visible success test before studying.\n\nKeep the experiment narrow enough to interpret. Record the task, your initial performance, the intervention, and the result. For example, complete five problems without notes, study only the error pattern, then complete five similar problems later. Improvement supports the diagnosis, although one result is not proof.\n\n## Use error patterns\n\nClassify errors instead of counting them only. Concept errors show that an idea is misunderstood. Procedure errors show that the method is known but misapplied. Retrieval errors show that knowledge is not accessible when needed. Attention or transcription errors may occur despite understanding.\n\nA repeated error after review suggests that rereading is not addressing the constraint. A sharp improvement after one targeted intervention suggests the changed condition was relevant. If nothing changes, revise the diagnosis or make the intervention more precise.\n\nChange one major variable at a time when possible. Otherwise, you may improve without knowing why, or mistake a temporary boost for a durable solution.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 2,
+                            "studyPathDashboardKey": "demo-learning-bottlenecks-page-2",
+                            "studyPathDashboardName": "02 - Test the Narrowest Point",
+                            "studyPathDashboardPurpose": "lesson",
+                            "studyPathFolderName": "Learning Bottleneck",
+                            "studyPathId": "demo-learning-bottlenecks",
+                            "studyPathLayoutReason": "Lean Study Guide lesson page.",
+                            "studyPathPracticeType": "none",
+                            "studyPathTitle": "Learning Bottleneck",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "02-test-the-narrowest-point-2-02-test-the-narrowest-point-2-source"
+                    }
+                  },
+                  "name": "02 - Test the Narrowest Point Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 100
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Lean Study Guide lesson page.",
+        "name": "02 - Test the Narrowest Point",
+        "practiceType": "none"
+      },
+      {
+        "contentLanguage": "en",
+        "contentLanguageSource": "detected",
+        "createdBy": "generator",
+        "dashboardCount": 3,
+        "dashboardIndex": 3,
+        "dashboardKey": "demo-learning-bottlenecks-page-3",
+        "dashboardPurpose": "finalReview",
+        "deletable": false,
+        "folderName": "Learning Bottleneck",
+        "id": "demo-learning-bottlenecks-dashboard-3",
+        "layout": {
+          "children": [
+            {
+              "active": true,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-fix-verify-and-reassess-3-03-fix-verify-and-reassess-3-source-title",
+                          "props": {
+                            "fontWeight": 700,
+                            "gutterBottom": true,
+                            "text": "03 - Fix, Verify, and Reassess",
+                            "variant": "h6"
+                          },
+                          "type": "Label"
+                        },
+                        {
+                          "id": "03-fix-verify-and-reassess-3-03-fix-verify-and-reassess-3-source-markdown",
+                          "props": {
+                            "__blockType": "MarkdownBlock",
+                            "markdown": "## Apply the smallest effective fix\n\nOnce a constraint is plausible, design practice that directly exercises it. For weak retrieval, use closed-book recall followed by correction. For poor transfer, vary examples and solve unfamiliar cases. For missing foundations, study the prerequisite and immediately use it in the target task. For weak feedback, shorten the time between attempt and correction.\n\nProtect the target from competing changes. More hours may not help if the added time is passive, and a new resource may increase confusion. The best first fix is often a change in practice design rather than a larger workload.\n\n## Verify performance\n\nUse a test that resembles the real goal but is not identical to the practice example. Check accuracy, independence, speed when relevant, and retention after a delay. A skill is not fully improved merely because yesterday’s familiar exercise felt easier.\n\nRecord a baseline and a follow-up. A simple log can include date, task, score or quality rating, main error type, help used, and next adjustment. For subjective skills, use a stable rubric with criteria such as clarity, completeness, accuracy, and appropriate evidence.\n\n## Reassess the system\n\nWhen the constraint improves, another constraint may become visible. In a kitchen, clearing one station can expose a delay at the pass; similarly, stronger knowledge may reveal that application or feedback is now limiting progress. This is normal system behavior, not evidence that the first diagnosis was useless.\n\nReassess after enough repetitions to see a pattern, not after every uncomfortable session. Keep a change if it produces better independent performance and reasonable retention. Replace it if results remain flat despite faithful use, or if it improves one narrow task while harming the actual goal.\n\nA practical cycle is: define the outcome, observe the failure, name one likely constraint, test one change, measure independent performance, and repeat. The aim is not perfect diagnosis but efficient learning decisions grounded in evidence.",
+                            "studyPathContentLanguage": "en",
+                            "studyPathContentLanguageSource": "detected",
+                            "studyPathDashboardCount": 3,
+                            "studyPathDashboardIndex": 3,
+                            "studyPathDashboardKey": "demo-learning-bottlenecks-page-3",
+                            "studyPathDashboardName": "03 - Fix, Verify, and Reassess",
+                            "studyPathDashboardPurpose": "finalReview",
+                            "studyPathFolderName": "Learning Bottleneck",
+                            "studyPathId": "demo-learning-bottlenecks",
+                            "studyPathLayoutReason": "Final Study Guide page includes one source-grounded quiz.",
+                            "studyPathPracticeType": "quiz",
+                            "studyPathTitle": "Learning Bottleneck",
+                            "title": "Lesson"
+                          },
+                          "type": "MarkdownBlock"
+                        }
+                      ],
+                      "widgetId": "03-fix-verify-and-reassess-3-03-fix-verify-and-reassess-3-source"
+                    }
+                  },
+                  "name": "03 - Fix, Verify, and Reassess Lesson",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            },
+            {
+              "active": false,
+              "children": [
+                {
+                  "component": "CustomWidget",
+                  "config": {
+                    "customProps": {
+                      "components": [
+                        {
+                          "id": "03-fix-verify-and-reassess-3-1-focused-session",
+                          "props": {
+                            "__blockType": "QuizCarouselBlock",
+                            "items": [
+                              {
+                                "answer": "Your retrieval is weak (you can’t access ideas without notes)",
+                                "correctIndex": 2,
+                                "explanation": "Rereading can feel like progress while the real issue is inability to retrieve ideas later without notes.",
+                                "hint": "Diagnosing bottlenecks from symptoms and evidence",
+                                "id": "study-guide-3-multiple-choice-1",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Rereading can feel like progress while the real issue is inability to retrieve ideas later without notes.",
+                                    "option": "Your retrieval is weak (you can’t access ideas without notes)"
+                                  },
+                                  {
+                                    "explanation": "This says \"Your environment creates too much friction\", but the answer should focus on \"Your retrieval is weak (you can’t access ideas without notes)\".",
+                                    "option": "Your environment creates too much friction"
+                                  },
+                                  {
+                                    "explanation": "This says \"Your goals are unclear\", but the answer should focus on \"Your retrieval is weak (you can’t access ideas without notes)\".",
+                                    "option": "Your goals are unclear"
+                                  }
+                                ],
+                                "options": [
+                                  "Your environment creates too much friction",
+                                  "Your goals are unclear",
+                                  "Your retrieval is weak (you can’t access ideas without notes)"
+                                ],
+                                "question": "You keep rereading notes because it feels productive, but later you still can’t explain the topic without looking. Which bottleneck is the best match to this pattern?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 1,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 1"
+                              },
+                              {
+                                "answer": "Submit a solution for correction or compare it to a reliable worked example, then retry soon",
+                                "correctIndex": 0,
+                                "explanation": "If feedback timing is the constraint, the experiment should change only the feedback condition and measure the result.",
+                                "hint": "Designing a narrow, targeted experiment",
+                                "id": "study-guide-3-multiple-choice-2",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "If feedback timing is the constraint, the experiment should change only the feedback condition and measure the result.",
+                                    "option": "Submit a solution for correction or compare it to a reliable worked example, then retry soon"
+                                  },
+                                  {
+                                    "explanation": "This says \"Close the book and write what you remember, then review\", but the answer should focus on \"Submit a solution for correction or compare it to a reliable worked...\".",
+                                    "option": "Close the book and write what you remember, then review"
+                                  },
+                                  {
+                                    "explanation": "This says \"Define a visible success test before studying and then practice once\", but the answer should focus on \"Submit a solution for correction or compare it to a reliable wo...",
+                                    "option": "Define a visible success test before studying and then practice once"
+                                  }
+                                ],
+                                "options": [
+                                  "Submit a solution for correction or compare it to a reliable worked example, then retry soon",
+                                  "Close the book and write what you remember, then review",
+                                  "Define a visible success test before studying and then practice once"
+                                ],
+                                "question": "You suspect delayed feedback is limiting progress. What is the most appropriate small experiment to test that constraint?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 2,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 2"
+                              },
+                              {
+                                "answer": "Procedure errors",
+                                "correctIndex": 0,
+                                "explanation": "Procedure errors occur when the method is known but misapplied in practice.",
+                                "hint": "Using error patterns to identify the constraint",
+                                "id": "study-guide-3-multiple-choice-3",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"Retrieval errors\", but the answer should focus on \"Procedure errors\".",
+                                    "option": "Retrieval errors"
+                                  },
+                                  {
+                                    "explanation": "Procedure errors occur when the method is known but misapplied in practice.",
+                                    "option": "Procedure errors"
+                                  },
+                                  {
+                                    "explanation": "This says \"Concept errors\", but the answer should focus on \"Procedure errors\".",
+                                    "option": "Concept errors"
+                                  }
+                                ],
+                                "options": [
+                                  "Procedure errors",
+                                  "Retrieval errors",
+                                  "Concept errors"
+                                ],
+                                "question": "Which error classification best fits: you understand the concept, but you repeatedly use the wrong procedure step when solving problems?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 3,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 3"
+                              },
+                              {
+                                "answer": "You might improve without knowing why",
+                                "correctIndex": 1,
+                                "explanation": "Changing multiple variables can produce improvement that you can’t attribute, making diagnosis unreliable.",
+                                "hint": "Controlling variables in diagnosis",
+                                "id": "study-guide-3-multiple-choice-4",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "Changing multiple variables can produce improvement that you can’t attribute, making diagnosis unreliable.",
+                                    "option": "You might improve without knowing why"
+                                  },
+                                  {
+                                    "explanation": "This says \"You might confuse feelings with evidence\", but the answer should focus on \"You might improve without knowing why\".",
+                                    "option": "You might confuse feelings with evidence"
+                                  },
+                                  {
+                                    "explanation": "This says \"You might fail to record a baseline\", but the answer should focus on \"You might improve without knowing why\".",
+                                    "option": "You might fail to record a baseline"
+                                  }
+                                ],
+                                "options": [
+                                  "You might confuse feelings with evidence",
+                                  "You might improve without knowing why",
+                                  "You might fail to record a baseline"
+                                ],
+                                "question": "You want to improve a skill, but your practice keeps changing multiple things at once (new resources, different task types, and different timing). What risk does the guide warn about?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 4,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 4"
+                              },
+                              {
+                                "answer": "To make efficient learning decisions grounded in evidence",
+                                "correctIndex": 2,
+                                "explanation": "The guide emphasizes efficient decisions based on evidence, not perfect diagnosis or blanket optimization.",
+                                "hint": "Applying the overall bottleneck-finding process",
+                                "id": "study-guide-3-multiple-choice-5",
+                                "kind": "quiz",
+                                "optionFeedback": [
+                                  {
+                                    "explanation": "This says \"To achieve perfect diagnosis in one attempt\", but the answer should focus on \"To make efficient learning decisions grounded in evidence\".",
+                                    "option": "To achieve perfect diagnosis in one attempt"
+                                  },
+                                  {
+                                    "explanation": "This says \"To optimize everything at once for faster results\", but the answer should focus on \"To make efficient learning decisions grounded in evidence\".",
+                                    "option": "To optimize everything at once for faster results"
+                                  },
+                                  {
+                                    "explanation": "The guide emphasizes efficient decisions based on evidence, not perfect diagnosis or blanket optimization.",
+                                    "option": "To make efficient learning decisions grounded in evidence"
+                                  }
+                                ],
+                                "options": [
+                                  "To achieve perfect diagnosis in one attempt",
+                                  "To optimize everything at once for faster results",
+                                  "To make efficient learning decisions grounded in evidence"
+                                ],
+                                "question": "You run a cycle: define the outcome, observe failure, name a likely constraint, test one change, and measure independent performance. What is the main purpose of this cycle?",
+                                "quizMode": "multipleChoice",
+                                "sourceLine": 5,
+                                "tags": [
+                                  "quick-create",
+                                  "ai-generated"
+                                ],
+                                "title": "Multiple choice 5"
+                              }
+                            ],
+                            "title": "03 - Fix, Verify, and Reassess"
+                          },
+                          "type": "QuizCarouselBlock"
+                        }
+                      ],
+                      "widgetId": "03-fix-verify-and-reassess-3-1"
+                    }
+                  },
+                  "name": "03 - Fix, Verify, and Reassess Quiz",
+                  "type": "tab"
+                }
+              ],
+              "selected": 0,
+              "type": "tabset",
+              "weight": 50
+            }
+          ],
+          "type": "row",
+          "weight": 100
+        },
+        "layoutReason": "Final Study Guide page includes one source-grounded quiz.",
+        "name": "03 - Fix, Verify, and Reassess",
+        "practiceType": "quiz"
+      }
+    ],
+    "emoji": "🔍",
+    "folderName": "Learning Bottleneck",
+    "pathId": "demo-learning-bottlenecks",
+    "quickStart": {
+      "keyIdea": "Learning improves fastest when you identify the single constraint limiting progress, then deliberately change that constraint before optimizing anything else.",
+      "quickSummary": "A learning bottleneck is the narrowest point in your learning system: the weakness that most limits improvement right now. It might be unclear goals, missing foundations, weak recall, poor feedback, inconsistent practice, or an environment that creates too much friction.\n\nThink like a busy restaurant kitchen: improving the fastest station does little if orders pile up at the one slow station. Diagnose the constraint with evidence, test one targeted change, and check whether results improve before choosing a new target."
+    },
+    "selectedIndex": 0,
+    "title": "Learning Bottleneck"
+  }
+}

@@ -4,6 +4,16 @@
 
 Always prefix shell commands with `rtk`. For PowerShell built-ins or syntax that are not standalone executables, run them through PowerShell under the wrapper, for example `rtk powershell -NoProfile -Command "Get-ChildItem -Force"`.
 
+## Subagent & Workflow Cost Policy
+
+Subagents dominate token spend in this repo. Follow these rules unless the user explicitly overrides them.
+
+- For "where is X / what calls Y / map this flow", use the project `rabbithole-explorer` agent (Haiku) instead of the built-in `Explore` agent. It is the cheapest option and returns `file:line` lines rather than excerpts.
+- Project agents and their models: `rabbithole-explorer` (haiku), `rabbithole-debugger`, `rabbithole-test-reviewer`, `rabbithole-debt-pruner`, `rabbithole-product-ux` (sonnet). Do not raise an agent to Opus without a stated reason.
+- Implementation work has no dedicated agent on purpose. Write code from the main thread, which already holds the context.
+- When the user does ask for a `Workflow`, every `agent()` call must pass an explicit `opts.model` and `opts.effort`. Workflow agents otherwise inherit the session model and effort, which is Opus at `xhigh`. Use `model: 'haiku'` + `effort: 'low'` for mechanical search/extract stages, `model: 'sonnet'` for normal analysis, and reserve the session default for the final synthesis or adversarial-verify stage only.
+- Keep workflows small. Prefer one scoped fan-out per turn over multi-phase fleets.
+
 ## LeanCTX Context Cache
 
 Use LeanCTX MCP tools when available for cached repo exploration, repeated file reads, broad search, tree views, and context retrieval in this large repository. For normal RabbitHole app work, scope LeanCTX calls to `apps/studymesh` first instead of the repository root.

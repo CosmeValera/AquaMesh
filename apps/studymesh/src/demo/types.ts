@@ -49,8 +49,25 @@ export interface DemoGuideSummary {
   slug: string
   /** Chip label on /try. */
   chipLabel: string
-  /** Written into the locked prompt field, and the prompt the capture used. */
+  /**
+   * Shown in the locked prompt field on /try. Deliberately says nothing about
+   * the lens: the point of the demo is that the declared skill does that work,
+   * so naming it in the request would undercut what the page is showing.
+   */
   prompt: string
+  /**
+   * What the capture actually sent. It pins the lens explicitly because the
+   * generator does not reliably pick a declared skill on its own yet, and the
+   * record has to say what really produced the guide rather than what we would
+   * like to have produced it.
+   */
+  capturePrompt?: string
+  /**
+   * Which of `DEMO_PROFILE_SKILLS` this guide's generation leaned on. The whole
+   * profile is seeded at capture time and the generator chooses for itself;
+   * this records the choice so /try can point at it.
+   */
+  lensSkill: string
   title: string
   emoji: string
 }

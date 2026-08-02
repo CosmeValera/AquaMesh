@@ -484,6 +484,13 @@ const translations = {
     'demo.promptHelper': 'Prepared sample prompt. Sign up to write your own.',
     'demo.promptLockedLabel': 'Why is this prompt locked?',
     'demo.chooseTopic': 'Pick a topic',
+    'demo.chooseTopicHelper':
+      'Five prepared topics. Pick one to see how it gets built.',
+    'demo.skillsTitle': 'What you already know',
+    'demo.skillsHelper':
+      'The sample reader declared these. RabbitHole picks whichever one fits the topic.',
+    'demo.pathTitle': 'What happens when you press create',
+    'demo.lensUsed': 'This guide is explained through:',
     'demo.createGuide': 'Create guide',
     'demo.generating': 'Generating your guide...',
     'demo.loadingGuide': 'Opening the sample guide...',
@@ -1003,6 +1010,13 @@ const translations = {
       'Prompt de muestra preparado. Regístrate para escribir el tuyo.',
     'demo.promptLockedLabel': '¿Por qué está bloqueado este prompt?',
     'demo.chooseTopic': 'Elige un tema',
+    'demo.chooseTopicHelper':
+      'Cinco temas preparados. Elige uno para ver cómo se construye.',
+    'demo.skillsTitle': 'Lo que ya sabes',
+    'demo.skillsHelper':
+      'El lector de muestra declaró esto. RabbitHole elige el que encaje con el tema.',
+    'demo.pathTitle': 'Qué pasa cuando pulsas crear',
+    'demo.lensUsed': 'Esta guía se explica a través de:',
     'demo.createGuide': 'Crear guía',
     'demo.generating': 'Generando tu guía...',
     'demo.loadingGuide': 'Abriendo la guía de muestra...',
@@ -1535,6 +1549,13 @@ const translationOverrides: Record<
       'Prompt d’exemple préparé. Créez un compte pour écrire le vôtre.',
     'demo.promptLockedLabel': 'Pourquoi ce prompt est-il verrouillé ?',
     'demo.chooseTopic': 'Choisissez un sujet',
+    'demo.chooseTopicHelper':
+      'Cinq sujets préparés. Choisissez-en un pour voir comment il se construit.',
+    'demo.skillsTitle': 'Ce que vous savez déjà',
+    'demo.skillsHelper':
+      'Le lecteur d’exemple a déclaré ceci. RabbitHole choisit celui qui correspond au sujet.',
+    'demo.pathTitle': 'Ce qui se passe quand vous lancez la création',
+    'demo.lensUsed': 'Ce guide est expliqué à partir de :',
     'demo.createGuide': 'Créer le guide',
     'demo.generating': 'Création de votre guide...',
     'demo.loadingGuide': 'Ouverture du guide d’exemple...',
@@ -2059,6 +2080,13 @@ const translationOverrides: Record<
       'Vorbereiteter Beispiel-Prompt. Melde dich an, um deinen eigenen zu schreiben.',
     'demo.promptLockedLabel': 'Warum ist dieser Prompt gesperrt?',
     'demo.chooseTopic': 'Thema wählen',
+    'demo.chooseTopicHelper':
+      'Fünf vorbereitete Themen. Wähle eines, um zu sehen, wie es entsteht.',
+    'demo.skillsTitle': 'Was du schon kannst',
+    'demo.skillsHelper':
+      'Der Beispielleser hat das angegeben. RabbitHole wählt das passende aus.',
+    'demo.pathTitle': 'Was beim Erstellen passiert',
+    'demo.lensUsed': 'Dieser Leitfaden wird erklärt über:',
     'demo.createGuide': 'Leitfaden erstellen',
     'demo.generating': 'Dein Leitfaden wird erstellt...',
     'demo.loadingGuide': 'Beispiel-Leitfaden wird geöffnet...',

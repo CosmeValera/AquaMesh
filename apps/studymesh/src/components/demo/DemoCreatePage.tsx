@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Button,
+  Chip,
+  Divider,
   LinearProgress,
   Paper,
   Stack,
@@ -10,10 +12,11 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../auth/AuthProvider'
-import { DEMO_GUIDES } from '../../demo/demoGuides'
+import { DEMO_GUIDES, DEMO_PROFILE_SKILLS } from '../../demo/demoGuides'
 import { DEMO_GENERATION_MS } from '../../demo/types'
 import { prefetchDemoGuide } from '../../demo/useDemoGuide'
 import { useInterfaceText } from '../../language/interfaceLanguage'
@@ -125,12 +128,119 @@ const DemoCreatePage = () => {
           })}
         >
           <Stack spacing={2}>
+            <Box>
+              <Typography
+                variant="subtitle2"
+                fontWeight={700}
+                color="text.primary"
+                sx={{ mb: 0.5 }}
+              >
+                {t('demo.chooseTopic')}
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mb: 1.25 }}
+              >
+                {t('demo.chooseTopicHelper')}
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                {DEMO_GUIDES.map((guide) => (
+                  <Button
+                    key={guide.slug}
+                    size="small"
+                    variant={
+                      guide.slug === selectedSlug ? 'contained' : 'outlined'
+                    }
+                    disabled={generating}
+                    onClick={() => setSelectedSlug(guide.slug)}
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      mb: 1,
+                    }}
+                  >
+                    {guide.chipLabel}
+                  </Button>
+                ))}
+              </Stack>
+            </Box>
+
+            <Divider flexItem />
+
+            {/* The declared profile is the mechanism the demo exists to show,
+                so it stays visible whether or not a topic is picked, and the
+                skill the chosen guide leaned on is called out by name. */}
+            <Box>
+              <Typography
+                variant="subtitle2"
+                fontWeight={700}
+                color="text.primary"
+                sx={{ mb: 0.5 }}
+              >
+                {t('demo.skillsTitle')}
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mb: 1.25 }}
+              >
+                {t('demo.skillsHelper')}
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                {DEMO_PROFILE_SKILLS.map((skill) => {
+                  const used = selectedGuide?.lensSkill === skill
+
+                  return (
+                    <Chip
+                      key={skill}
+                      label={skill}
+                      icon={used ? <CheckCircleIcon /> : undefined}
+                      variant={used ? 'filled' : 'outlined'}
+                      sx={(theme) => ({
+                        mb: 1,
+                        borderRadius: 2,
+                        fontWeight: used ? 700 : 500,
+                        color: used
+                          ? theme.palette.success.contrastText
+                          : 'text.secondary',
+                        bgcolor: used ? 'success.main' : 'transparent',
+                        borderColor: used
+                          ? 'success.main'
+                          : alpha(theme.palette.text.primary, 0.24),
+                        '& .MuiChip-icon': {
+                          color: used
+                            ? theme.palette.success.contrastText
+                            : 'inherit',
+                        },
+                      })}
+                    />
+                  )
+                })}
+              </Stack>
+              {selectedGuide ? (
+                <Typography
+                  variant="caption"
+                  color="success.main"
+                  sx={{ display: 'block', mt: 0.5, fontWeight: 650 }}
+                >
+                  {t('demo.lensUsed')} {selectedGuide.lensSkill}
+                </Typography>
+              ) : null}
+            </Box>
+
+            <Divider flexItem />
+
+            <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+              {t('demo.pathTitle')}
+            </Typography>
+
             <Box sx={{ position: 'relative' }}>
               <TextField
                 fullWidth
                 disabled
                 multiline
-                minRows={4}
+                minRows={3}
                 label={t('demo.promptField')}
                 placeholder={t('demo.promptPlaceholder')}
                 value={selectedGuide ? selectedGuide.prompt : ''}
@@ -172,36 +282,6 @@ const DemoCreatePage = () => {
             <Typography variant="caption" color="text.secondary">
               {t('demo.promptHelper')}
             </Typography>
-            <Box>
-              <Typography
-                variant="subtitle2"
-                fontWeight={700}
-                color="text.primary"
-                sx={{ mb: 1 }}
-              >
-                {t('demo.chooseTopic')}
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                {DEMO_GUIDES.map((guide) => (
-                  <Button
-                    key={guide.slug}
-                    size="small"
-                    variant={
-                      guide.slug === selectedSlug ? 'contained' : 'outlined'
-                    }
-                    disabled={generating}
-                    onClick={() => setSelectedSlug(guide.slug)}
-                    sx={{
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      mb: 1,
-                    }}
-                  >
-                    {guide.chipLabel}
-                  </Button>
-                ))}
-              </Stack>
-            </Box>
             <Box>
               <Button
                 variant="contained"

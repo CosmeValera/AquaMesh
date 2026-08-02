@@ -442,7 +442,7 @@ const captureRawGuide = async (definition, app) => {
   log(`generating the Study Guide for ${definition.slug}`)
   const lessonPath = await app.generateStudyPathStateFromPrompt({
     id: pathId,
-    prompt: definition.prompt,
+    prompt: definition.capturePrompt || definition.prompt,
     provider: 'hosted',
   })
 
@@ -932,7 +932,7 @@ const markdownForReview = (definition, content) => {
     `# ${definition.title}`,
     '',
     `Slug: ${definition.slug}`,
-    `Prompt: ${definition.prompt}`,
+    `Prompt: ${definition.capturePrompt || definition.prompt}`,
     `Guide title in the workspace: ${studyPath.title}`,
     `Emoji: ${studyPath.emoji}`,
     '',
@@ -1059,9 +1059,31 @@ const main = async () => {
     createStudyGuideRecord: storage.createStudyGuideRecord,
   }
 
+  const { PROFILE_CONTEXT_STORAGE_KEY } = await import('../src/profileContext.ts')
+
+  // The generator builds the knowledge bridge from the reader's declared
+  // topics, so capture each guide against the one skill it is meant to lean on.
+  // Seeding the whole profile was tried and the model either ignored it or
+  // picked the wrong skill, which is a product gap worth closing separately;
+  // the demo pins the skill instead of waiting on it.
+  const seedProfileContext = (definition) => {
+    localStorage.setItem(
+      PROFILE_CONTEXT_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        roles: [],
+        broadKnowledge: [],
+        specificKnowledge: [definition.lensSkill],
+        confidence: 'self_reported',
+        updatedAt: FIXED_TIMESTAMP,
+      }),
+    )
+  }
+
   const definitions = resolveDefinitions()
 
   for (const definition of definitions) {
+    seedProfileContext(definition)
     await captureSlug(definition, app)
   }
 

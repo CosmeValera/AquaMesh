@@ -63,6 +63,22 @@ import {
   isUserKnownTopic,
   resolveLearnedTopicPrompt,
 } from '../../profileContext'
+import {
+  getGuideMasteryProof,
+  guideHasQuiz,
+  GUIDE_QUIZ_COMPLETED_EVENT,
+  readGuideMastery,
+  recordGuideExplainResult,
+  recordGuideQuizScore,
+  type GuideMasteryRecord,
+  type GuideQuizCompletedDetail,
+} from '../../studyGuides/mastery'
+import {
+  buildNextGuideIdeas,
+  setPendingCreationPrompt,
+  type NextGuideIdea,
+} from '../../studyGuides/nextGuideIdeas'
+import ExplainItYourWayDialog from './ExplainItYourWayDialog'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 
 export const AI_CHAT_MIN_WIDTH = 310
@@ -150,6 +166,13 @@ interface LearnedTopicPromptState {
   status: 'offered' | 'added'
 }
 
+/**
+ * Guides generated without practice have no quiz to pass, so finishing every
+ * page stays the proof for those. Where a quiz exists, the score decides.
+ */
+const isGuideProvenByReading = (record: StudyGuideRecord): boolean =>
+  !guideHasQuiz(record)
+
 const GuideWorkspacePage = () => {
   const { t } = useInterfaceText()
   const { user } = useAuth()
@@ -174,6 +197,11 @@ const GuideWorkspacePage = () => {
   const [aiChatWidth, setAiChatWidth] = useState(AI_CHAT_MIN_WIDTH)
   const [learnedTopicPrompt, setLearnedTopicPrompt] =
     useState<LearnedTopicPromptState | null>(null)
+  const [mastery, setMastery] = useState<GuideMasteryRecord>({})
+  const [explainCheckOpen, setExplainCheckOpen] = useState(false)
+  // Hiding an offer the learner cannot accept yet must not be permanent: the
+  // banner comes back on its own once the quiz is passed.
+  const unprovenDismissedRef = useRef<string | null>(null)
   const pageScrollPositionsRef = useRef<Record<string, number>>({})
   const [mobileSection, setMobileSection] = useState<
     'pages' | 'study-guide' | 'ai-chat'
@@ -275,8 +303,32 @@ const GuideWorkspacePage = () => {
 
   useEffect(() => {
     pageScrollPositionsRef.current = {}
+    unprovenDismissedRef.current = null
     setLearnedTopicPrompt(null)
+    setExplainCheckOpen(false)
+    setMastery(readGuideMastery(studyGuideId))
   }, [studyGuideId])
+
+  useEffect(() => {
+    const handleQuizCompleted = (event: Event) => {
+      const detail = (event as CustomEvent<GuideQuizCompletedDetail>).detail
+      const currentId = recordRef.current?.id
+      if (!currentId || !detail || !Number.isFinite(detail.scorePercent)) {
+        return
+      }
+
+      setMastery(recordGuideQuizScore(currentId, detail.scorePercent))
+    }
+
+    window.addEventListener(GUIDE_QUIZ_COMPLETED_EVENT, handleQuizCompleted)
+
+    return () => {
+      window.removeEventListener(
+        GUIDE_QUIZ_COMPLETED_EVENT,
+        handleQuizCompleted,
+      )
+    }
+  }, [])
 
   const dashboard = useMemo<StateDashboard | undefined>(() => {
     if (!record) {
@@ -323,12 +375,18 @@ const GuideWorkspacePage = () => {
     }
   }, [record?.id, record?.studyPath.selectedIndex])
 
+  const masteryProof = useMemo(() => getGuideMasteryProof(mastery), [mastery])
+  const canClaimSkill = Boolean(
+    record && (masteryProof.proven || isGuideProvenByReading(record)),
+  )
+
   useEffect(() => {
     const topic = record?.title?.trim() || ''
     if (
       !record ||
       !topic ||
-      !hasReadEveryPage(record) ||
+      (!hasReadEveryPage(record) && !masteryProof.proven) ||
+      (unprovenDismissedRef.current === record.id && !canClaimSkill) ||
       isLearnedTopicPromptResolved(record.id) ||
       isUserKnownTopic(topic)
     ) {
@@ -340,10 +398,10 @@ const GuideWorkspacePage = () => {
         ? current
         : { studyGuideId: record.id, topic, status: 'offered' },
     )
-  }, [record])
+  }, [canClaimSkill, masteryProof.proven, record])
 
   const addLearnedTopicToKnownTopics = () => {
-    if (!learnedTopicPrompt) {
+    if (!learnedTopicPrompt || !canClaimSkill) {
       return
     }
 
@@ -353,8 +411,10 @@ const GuideWorkspacePage = () => {
   }
 
   const dismissLearnedTopicPrompt = () => {
-    if (learnedTopicPrompt?.status === 'offered') {
+    if (learnedTopicPrompt?.status === 'offered' && canClaimSkill) {
       resolveLearnedTopicPrompt(learnedTopicPrompt.studyGuideId, 'dismissed')
+    } else if (learnedTopicPrompt) {
+      unprovenDismissedRef.current = learnedTopicPrompt.studyGuideId
     }
 
     setLearnedTopicPrompt(null)
@@ -682,12 +742,69 @@ const GuideWorkspacePage = () => {
     learnedTopicPrompt?.status === 'added'
       ? theme.palette.success
       : theme.palette.info
+  const nextGuideIdeas = useMemo(
+    () => (record ? buildNextGuideIdeas(record) : []),
+    [record],
+  )
+  const nextStepButtonSx = {
+    textTransform: 'none',
+    fontWeight: 650,
+    borderRadius: 1.5,
+    color: theme.palette.mode === 'dark' ? 'success.light' : 'success.dark',
+    borderColor: alpha(theme.palette.success.main, 0.5),
+    bgcolor: alpha(theme.palette.success.main, 0.08),
+    '&:hover': {
+      bgcolor: alpha(theme.palette.success.main, 0.2),
+      borderColor: alpha(theme.palette.success.main, 0.7),
+    },
+  } as const
+  const nextGuideIdeaLabel = (idea: NextGuideIdea): string =>
+    idea.kind === 'apply'
+      ? t('nextGuides.apply')
+      : `${
+          idea.kind === 'deeper' ? t('nextGuides.deeper') : t('nextGuides.next')
+        }${idea.focus ? `: ${idea.focus}` : ''}`
+
+  /**
+   * The creation panel lives on the workspace route, so the prompt is handed
+   * over rather than generated here. It stays editable, and nothing is spent
+   * until the learner presses generate.
+   */
+  const startNextGuide = (idea: NextGuideIdea) => {
+    const topic = learnedTopicPrompt?.topic || record?.title || ''
+    const known = `${t('nextGuides.alreadyKnow')} ${topic}.`
+    const focus = idea.focus || topic
+    const ask =
+      idea.kind === 'deeper'
+        ? `${t('nextGuides.deeperPrompt')} ${focus}.`
+        : idea.kind === 'apply'
+          ? t('nextGuides.applyPrompt')
+          : `${t('nextGuides.nextPrompt')} ${focus}.`
+
+    setPendingCreationPrompt(`${known} ${ask}`)
+    navigate('/workspace')
+  }
   const learnedTopicPromptAlert = learnedTopicPrompt ? (
     <Alert
       severity={learnedTopicPrompt.status === 'added' ? 'success' : 'info'}
       action={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {learnedTopicPrompt.status === 'offered' ? (
+          {learnedTopicPrompt.status === 'offered' && !canClaimSkill ? (
+            <Button
+              color="inherit"
+              size="small"
+              variant="outlined"
+              onClick={() => setExplainCheckOpen(true)}
+              sx={{
+                textTransform: 'none',
+                whiteSpace: 'nowrap',
+                fontWeight: 650,
+              }}
+            >
+              {t('mastery.explainInstead')}
+            </Button>
+          ) : null}
+          {learnedTopicPrompt.status === 'offered' && canClaimSkill ? (
             <Button
               color="inherit"
               size="small"
@@ -699,12 +816,14 @@ const GuideWorkspacePage = () => {
                 fontWeight: 650,
               }}
             >
-              Add to what I know
+              {t('mastery.addSkill')}
             </Button>
           ) : null}
           <IconButton
             aria-label={
-              learnedTopicPrompt.status === 'added' ? 'Close' : 'Not now'
+              learnedTopicPrompt.status === 'added'
+                ? t('common.close')
+                : t('mastery.notNow')
             }
             size="small"
             onClick={dismissLearnedTopicPrompt}
@@ -735,20 +854,67 @@ const GuideWorkspacePage = () => {
       }}
     >
       {learnedTopicPrompt.status === 'added' ? (
-        <Typography variant="body2">
-          <Box component="span" sx={{ fontWeight: 700 }}>
-            {learnedTopicPrompt.topic}
-          </Box>{' '}
-          is part of what you know now. New guides will explain things through
-          it.
-        </Typography>
+        <Box>
+          <Typography variant="body2">
+            <Box component="span" sx={{ fontWeight: 700 }}>
+              {learnedTopicPrompt.topic}
+            </Box>{' '}
+            {t('mastery.added')}
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', mt: 1 }}
+          >
+            {t('nextGuides.title')}
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 0.75,
+              mt: 0.75,
+            }}
+          >
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => quickCreatePage('improvedNotes')}
+              sx={nextStepButtonSx}
+            >
+              {t('nextGuides.expandOnThis')}
+            </Button>
+            {nextGuideIdeas.map((idea) => (
+              <Button
+                key={idea.id}
+                size="small"
+                variant="outlined"
+                onClick={() => startNextGuide(idea)}
+                sx={nextStepButtonSx}
+              >
+                {nextGuideIdeaLabel(idea)}
+              </Button>
+            ))}
+          </Box>
+        </Box>
       ) : (
         <Typography variant="body2">
-          You just went through{' '}
+          {t('mastery.wentThrough')}{' '}
           <Box component="span" sx={{ fontWeight: 700 }}>
             {learnedTopicPrompt.topic}
           </Box>
-          . Add it to what you know?
+          .{' '}
+          {masteryProof.quizScorePercent !== undefined ? (
+            <Box component="span">
+              {t('mastery.scored')} {masteryProof.quizScorePercent}%{' '}
+              {t('mastery.onTheQuiz')}{' '}
+            </Box>
+          ) : null}
+          {!canClaimSkill
+            ? t('mastery.notAPassYet')
+            : masteryProof.band === 'borderline'
+              ? t('mastery.reviewFirst')
+              : t('mastery.addQuestion')}
         </Typography>
       )}
     </Alert>
@@ -1189,6 +1355,17 @@ const GuideWorkspacePage = () => {
           </Box>
         ) : null}
       </Main>
+      {record && learnedTopicPrompt ? (
+        <ExplainItYourWayDialog
+          open={explainCheckOpen}
+          studyGuideId={record.id}
+          topic={learnedTopicPrompt.topic}
+          sourceText={getStudyGuideCreationSourceText(record.studyPath)}
+          onClose={() => setExplainCheckOpen(false)}
+          onPassed={() => setMastery(recordGuideExplainResult(record.id, true))}
+          onAddSkill={addLearnedTopicToKnownTopics}
+        />
+      ) : null}
     </Box>
   )
 }

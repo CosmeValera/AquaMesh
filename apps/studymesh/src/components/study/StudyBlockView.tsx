@@ -33,6 +33,10 @@ import {
   readStudyGuidePageHref,
 } from '../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
+import {
+  GUIDE_QUIZ_COMPLETED_EVENT,
+  type GuideQuizCompletedDetail,
+} from '../../studyGuides/mastery'
 import { PREFILL_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 import { type HostedAiPodcast } from '../../quickCreate/ai'
 import type { DashboardLayout } from '../../state/store'
@@ -195,6 +199,22 @@ const defaultFocusedQuizSession = (): StoredFocusedQuizSession => ({
   answers: {},
   resultsOpen: false,
 })
+
+/**
+ * The quiz widget has no idea which guide it belongs to, so it announces the
+ * finished attempt and the workspace that owns the guide records it.
+ */
+const announceQuizCompleted = (detail: GuideQuizCompletedDetail): void => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.dispatchEvent(
+    new CustomEvent<GuideQuizCompletedDetail>(GUIDE_QUIZ_COMPLETED_EVENT, {
+      detail,
+    }),
+  )
+}
 
 const defaultFocusedFlashcardSession = (): StoredFocusedFlashcardSession => ({
   cardIndex: 0,
@@ -2951,6 +2971,11 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                     questionIndex: safeIndex,
                     answers: focusedQuizAnswers,
                     resultsOpen: true,
+                  })
+                  announceQuizCompleted({
+                    correct,
+                    total: questions.length,
+                    scorePercent,
                   })
                   setQuizResultsOpen(true)
                   return

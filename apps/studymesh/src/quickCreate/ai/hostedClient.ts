@@ -11,15 +11,19 @@ import type {
   HostedAiGatewayRequest,
   HostedAiGatewayResponse,
   HostedAiPodcast,
+  HostedAiStage,
   HostedAiStatus,
   HostedAiSurface,
 } from './hostedCredits'
 
 export type HostedAiModelOptions = Pick<
   StrongAiCallOptions,
-  'model' | 'parts' | 'responseSchema' | 'timeoutMs' | 'signal'
+  'parts' | 'responseSchema' | 'timeoutMs' | 'signal'
 > & {
   surface: HostedAiSurface
+  stage?: HostedAiStage
+  /** Optional: the gateway picks the model for the stage it runs. */
+  model?: StrongAiCallOptions['model']
   outputLanguage?: StrongAiCallOptions['outputLanguage']
 }
 
@@ -197,6 +201,7 @@ export const getHostedAiStatus = async (): Promise<HostedAiStatus> => {
 
 const callHostedAiModelUnchecked = async ({
   surface,
+  stage,
   model,
   outputLanguage,
   parts,
@@ -211,6 +216,7 @@ const callHostedAiModelUnchecked = async ({
       {
         action: 'generate',
         surface,
+        ...(stage ? { stage } : {}),
         model,
         outputLanguage,
         parts,

@@ -534,6 +534,45 @@ const translations = {
       'Expand on this turns any idea into its own page, explained through what you already understand. Available on your own guides.',
     'demo.nudgeAlreadyCreated':
       'The sample includes one quiz, one deck and one podcast. Sign up to create as many as you like, on any page.',
+    'mastery.wentThrough': 'You just went through',
+    'mastery.scored': 'You scored',
+    'mastery.onTheQuiz': 'on the guide quiz.',
+    'mastery.addQuestion': 'Add it to what you know?',
+    'mastery.reviewFirst':
+      'That is a pass, but a narrow one. We suggest reviewing a bit more and retaking the quiz first. You can still add it now.',
+    'mastery.notAPassYet':
+      'Not a pass yet. Retake the quiz, or explain it in your own words.',
+    'mastery.explainInstead': 'Explain it in your own words',
+    'explainCheck.title': 'Explain it in your own words',
+    'explainCheck.prompt': 'In your own words, what is',
+    'explainCheck.placeholder': 'Say it the way you would say it to a friend.',
+    'explainCheck.words': 'words',
+    'explainCheck.minimum': 'minimum',
+    'explainCheck.tooLong': 'too long, trim it',
+    'explainCheck.freeAttempt': 'The first check on this guide is free.',
+    'explainCheck.paidAttempt':
+      'The free check for this guide is used. This one costs Carrots, like a Quick Create.',
+    'explainCheck.submit': 'Check my explanation',
+    'explainCheck.checking': 'Checking...',
+    'explainCheck.passed': 'That works',
+    'explainCheck.retry': 'Close, try again',
+    'explainCheck.suggestion': 'A sharper way to say it',
+    'explainCheck.added': 'Added',
+    'explainCheck.failed': 'Could not check the explanation.',
+    'nextGuides.title': 'Where to go from here',
+    'nextGuides.expandOnThis': 'Expand on this',
+    'nextGuides.deeper': 'Go deeper',
+    'nextGuides.apply': 'Put it to work',
+    'nextGuides.next': 'What comes next',
+    'nextGuides.alreadyKnow': 'I already know',
+    'nextGuides.deeperPrompt': 'Take me deeper into',
+    'nextGuides.applyPrompt':
+      'Show me how to use it in practice, with worked examples and exercises.',
+    'nextGuides.nextPrompt': 'Teach me what usually comes after',
+    'mastery.added':
+      'is part of what you know now. New guides will explain things through it.',
+    'mastery.addSkill': 'Add to what I know',
+    'mastery.notNow': 'Not now',
   },
   es: {
     'topnav.user': 'Usuario',
@@ -1067,6 +1106,45 @@ const translations = {
       'Ampliar convierte cualquier idea en su propia página, explicada a partir de lo que ya entiendes. Disponible en tus propias guías.',
     'demo.nudgeAlreadyCreated':
       'La muestra incluye un quiz, un mazo y un pódcast. Regístrate para crear todos los que quieras, en cualquier página.',
+    'mastery.wentThrough': 'Acabas de recorrer',
+    'mastery.scored': 'Has sacado un',
+    'mastery.onTheQuiz': 'en el quiz de la guía.',
+    'mastery.addQuestion': '¿Lo añades a lo que ya sabes?',
+    'mastery.reviewFirst':
+      'Está aprobado, pero justo. Te recomendamos repasar un poco más y repetir el quiz antes. Aun así puedes añadirlo ya.',
+    'mastery.notAPassYet':
+      'Todavía no está aprobado. Repite el quiz o explícalo con tus palabras.',
+    'mastery.explainInstead': 'Explícalo con tus palabras',
+    'explainCheck.title': 'Explícalo con tus palabras',
+    'explainCheck.prompt': 'Con tus palabras, ¿qué es',
+    'explainCheck.placeholder': 'Dilo como se lo dirías a un amigo.',
+    'explainCheck.words': 'palabras',
+    'explainCheck.minimum': 'mínimo',
+    'explainCheck.tooLong': 'demasiado largo, acórtalo',
+    'explainCheck.freeAttempt': 'La primera revisión de esta guía es gratis.',
+    'explainCheck.paidAttempt':
+      'Ya has usado la revisión gratuita de esta guía. Esta cuesta Carrots, como una creación rápida.',
+    'explainCheck.submit': 'Revisar mi explicación',
+    'explainCheck.checking': 'Revisando...',
+    'explainCheck.passed': 'Está bien explicado',
+    'explainCheck.retry': 'Casi, inténtalo otra vez',
+    'explainCheck.suggestion': 'Una forma más precisa de decirlo',
+    'explainCheck.added': 'Añadido',
+    'explainCheck.failed': 'No se pudo revisar la explicación.',
+    'nextGuides.title': 'Por dónde seguir',
+    'nextGuides.expandOnThis': 'Ampliar esto',
+    'nextGuides.deeper': 'Profundizar',
+    'nextGuides.apply': 'Ponerlo en práctica',
+    'nextGuides.next': 'Qué viene después',
+    'nextGuides.alreadyKnow': 'Ya conozco',
+    'nextGuides.deeperPrompt': 'Profundiza conmigo en',
+    'nextGuides.applyPrompt':
+      'Enséñame a usarlo en la práctica, con ejemplos resueltos y ejercicios.',
+    'nextGuides.nextPrompt': 'Enséñame lo que suele venir después de',
+    'mastery.added':
+      'ya forma parte de lo que sabes. Las guías nuevas explicarán las cosas a partir de ello.',
+    'mastery.addSkill': 'Añadir a lo que sé',
+    'mastery.notNow': 'Ahora no',
   },
 } as const
 
@@ -1613,6 +1691,46 @@ const translationOverrides: Record<
       'Développer transforme n’importe quelle idée en sa propre page, expliquée à partir de ce que vous comprenez déjà. Disponible sur vos propres guides.',
     'demo.nudgeAlreadyCreated':
       'L’exemple contient un quiz, un jeu de cartes et un podcast. Créez un compte pour en générer autant que vous voulez, sur n’importe quelle page.',
+    'mastery.wentThrough': 'Vous venez de parcourir',
+    'mastery.scored': 'Vous avez obtenu',
+    'mastery.onTheQuiz': 'au quiz du guide.',
+    'mastery.addQuestion': 'L’ajouter à ce que vous connaissez ?',
+    'mastery.reviewFirst':
+      'C’est validé, mais de justesse. Nous conseillons de réviser un peu et de refaire le quiz avant. Vous pouvez quand même l’ajouter maintenant.',
+    'mastery.notAPassYet':
+      'Pas encore validé. Refaites le quiz, ou expliquez-le avec vos mots.',
+    'mastery.explainInstead': 'Expliquez-le avec vos mots',
+    'explainCheck.title': 'Expliquez-le avec vos mots',
+    'explainCheck.prompt': 'Avec vos mots, qu’est-ce que',
+    'explainCheck.placeholder': 'Dites-le comme à un ami.',
+    'explainCheck.words': 'mots',
+    'explainCheck.minimum': 'minimum',
+    'explainCheck.tooLong': 'trop long, raccourcissez',
+    'explainCheck.freeAttempt':
+      'La première vérification de ce guide est offerte.',
+    'explainCheck.paidAttempt':
+      'La vérification offerte de ce guide est déjà utilisée. Celle-ci coûte des Carrots, comme une création rapide.',
+    'explainCheck.submit': 'Vérifier mon explication',
+    'explainCheck.checking': 'Vérification...',
+    'explainCheck.passed': 'C’est bon',
+    'explainCheck.retry': 'Presque, réessayez',
+    'explainCheck.suggestion': 'Une façon plus précise de le dire',
+    'explainCheck.added': 'Ajouté',
+    'explainCheck.failed': 'Impossible de vérifier l’explication.',
+    'nextGuides.title': 'Par où continuer',
+    'nextGuides.expandOnThis': 'Approfondir ceci',
+    'nextGuides.deeper': 'Aller plus loin',
+    'nextGuides.apply': 'Le mettre en pratique',
+    'nextGuides.next': 'La suite logique',
+    'nextGuides.alreadyKnow': 'Je connais déjà',
+    'nextGuides.deeperPrompt': 'Approfondis avec moi',
+    'nextGuides.applyPrompt':
+      'Montre-moi comment l’utiliser en pratique, avec des exemples résolus et des exercices.',
+    'nextGuides.nextPrompt': 'Apprends-moi ce qui vient généralement après',
+    'mastery.added':
+      'fait maintenant partie de ce que vous connaissez. Les nouveaux guides expliqueront les choses à partir de là.',
+    'mastery.addSkill': 'Ajouter à ce que je connais',
+    'mastery.notNow': 'Pas maintenant',
   },
   de: {
     'topnav.user': 'Benutzer',
@@ -2151,6 +2269,47 @@ const translationOverrides: Record<
       'Vertiefen macht aus jeder Idee eine eigene Seite, erklärt über das, was du schon verstehst. In deinen eigenen Leitfäden verfügbar.',
     'demo.nudgeAlreadyCreated':
       'Das Beispiel enthält ein Quiz, ein Kartenset und einen Podcast. Registriere dich, um beliebig viele davon zu erstellen, auf jeder Seite.',
+    'mastery.wentThrough': 'Du hast gerade durchgearbeitet:',
+    'mastery.scored': 'Du hast',
+    'mastery.onTheQuiz': 'im Quiz des Leitfadens erreicht.',
+    'mastery.addQuestion': 'Zu deinem Wissen hinzufügen?',
+    'mastery.reviewFirst':
+      'Bestanden, aber knapp. Wir empfehlen, noch etwas zu wiederholen und das Quiz zu wiederholen. Hinzufügen kannst du es trotzdem jetzt.',
+    'mastery.notAPassYet':
+      'Noch nicht bestanden. Wiederhole das Quiz oder erkläre es in eigenen Worten.',
+    'mastery.explainInstead': 'In eigenen Worten erklären',
+    'explainCheck.title': 'In eigenen Worten erklären',
+    'explainCheck.prompt': 'Was ist, in deinen eigenen Worten,',
+    'explainCheck.placeholder':
+      'Sag es so, wie du es einer Freundin sagen würdest.',
+    'explainCheck.words': 'Wörter',
+    'explainCheck.minimum': 'mindestens',
+    'explainCheck.tooLong': 'zu lang, kürze es',
+    'explainCheck.freeAttempt':
+      'Die erste Prüfung für diesen Leitfaden ist gratis.',
+    'explainCheck.paidAttempt':
+      'Die gratis Prüfung für diesen Leitfaden ist verbraucht. Diese kostet Carrots, wie eine Schnellerstellung.',
+    'explainCheck.submit': 'Erklärung prüfen',
+    'explainCheck.checking': 'Wird geprüft...',
+    'explainCheck.passed': 'Das passt',
+    'explainCheck.retry': 'Fast, versuch es nochmal',
+    'explainCheck.suggestion': 'Präziser gesagt',
+    'explainCheck.added': 'Hinzugefügt',
+    'explainCheck.failed': 'Die Erklärung konnte nicht geprüft werden.',
+    'nextGuides.title': 'Wie es weitergeht',
+    'nextGuides.expandOnThis': 'Das vertiefen',
+    'nextGuides.deeper': 'Tiefer einsteigen',
+    'nextGuides.apply': 'In die Praxis bringen',
+    'nextGuides.next': 'Was als Nächstes kommt',
+    'nextGuides.alreadyKnow': 'Ich kenne bereits',
+    'nextGuides.deeperPrompt': 'Geh mit mir tiefer in',
+    'nextGuides.applyPrompt':
+      'Zeig mir, wie ich es in der Praxis anwende, mit durchgerechneten Beispielen und Übungen.',
+    'nextGuides.nextPrompt': 'Bring mir bei, was üblicherweise kommt nach',
+    'mastery.added':
+      'gehört jetzt zu deinem Wissen. Neue Leitfäden erklären Dinge darüber.',
+    'mastery.addSkill': 'Zu meinem Wissen hinzufügen',
+    'mastery.notNow': 'Nicht jetzt',
   },
 }
 

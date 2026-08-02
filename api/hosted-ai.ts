@@ -195,6 +195,7 @@ const VALID_SURFACES = new Set<HostedAiSurface>([
   "chat",
   "chat-followup",
   "podcast",
+  "mastery-check",
 ]);
 
 const getEnv = (name: string): string => process.env[name]?.trim() || "";
@@ -226,6 +227,7 @@ const BLUEPRINT_OPENAI_STAGES = new Set<HostedAiStage>([
 
 const SUPPORT_OPENAI_STAGES = new Set<HostedAiStage>([
   "study_guide_main",
+  "study_guide_mastery_check",
   "quick_start_fallback",
   "quick_start_personalized",
   "quick_start_relevance_auto",
@@ -597,6 +599,10 @@ export const getStageForSurface = (surface: HostedAiSurface): HostedAiStage => {
 
   if (surface === "podcast") {
     return "podcast_script";
+  }
+
+  if (surface === "mastery-check") {
+    return "study_guide_mastery_check";
   }
 
   return "study_guide_main";

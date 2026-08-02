@@ -31,6 +31,7 @@ import {
   useWorkspaceActions,
 } from '../../customHooks/useWorkspaceActions'
 import CreateStudyGuideModal from '../studyGuides/CreateStudyGuideModal'
+import { takePendingCreationPrompt } from '../../studyGuides/nextGuideIdeas'
 import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
 import {
   generateQuickCreateWithAi,
@@ -459,6 +460,9 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const [mobileSection, setMobileSection] = useState<
     'creation' | 'dashboard' | 'ai-chat'
   >('dashboard')
+  // A next-guide idea from a finished guide lands as a prefilled prompt, so the
+  // Creation panel has to be the thing the learner sees on arrival.
+  const [handoffPrompt] = useState(() => takePendingCreationPrompt())
   const [activeFlow, setActiveFlow] = useState<StudioFlow>('hub')
   const [generationDrafts, setGenerationDrafts] =
     useState<GenerationDraft[]>(initialDrafts)
@@ -478,7 +482,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
   const [aiProvider, setAiProvider] = useState(
     () => readQuickCreateAiSettings().provider || 'hosted',
   )
-  const [studyPathPrompt, setStudyPathPrompt] = useState('')
+  const [studyPathPrompt, setStudyPathPrompt] = useState(handoffPrompt)
   const [studyPathPromptError, setStudyPathPromptError] = useState('')
   const [studyPathAutoGenerateRequest, setStudyPathAutoGenerateRequest] =
     useState<{ id: number; draftId: string; prompt: string } | undefined>(
@@ -599,6 +603,18 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       )
     }
   }, [isMobile])
+
+  useEffect(() => {
+    if (!handoffPrompt) {
+      return
+    }
+
+    setActiveFlow('hub')
+    setIsStudioOpen(true)
+    if (isMobile) {
+      setMobileSection('creation')
+    }
+  }, [handoffPrompt, isMobile])
 
   useEffect(() => {
     const refreshAiProvider = () => {

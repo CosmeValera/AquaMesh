@@ -8,6 +8,7 @@
     "start-worktree": "vercel dev --listen 3003",
     "start-dev": "turbo start",
     "vercel-env-pull": "vercel env pull",
+    "vercel-link": "vercel link",
     "test": "turbo test",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""

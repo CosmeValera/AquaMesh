@@ -32,11 +32,6 @@ import {
   buildDemoStudyPath,
 } from '../../demo/demoStudyPath'
 import {
-  clearDemoSession,
-  readDemoSession,
-  writeDemoSession,
-} from '../../demo/demoSession'
-import {
   DEMO_CHAT_ANSWER_DELAY_MS,
   type DemoBonusActionId,
 } from '../../demo/types'
@@ -113,23 +108,9 @@ const DemoGuidePage = () => {
       return
     }
 
-    const session = readDemoSession(guide.slug)
-    setUnlocked(session.unlocked)
-    setStudyPath(
-      buildDemoStudyPath(content, session.unlocked, session.selectedIndex),
-    )
+    setUnlocked([])
+    setStudyPath(buildDemoStudyPath(content))
   }, [content, guide])
-
-  useEffect(() => {
-    if (!guide || !studyPath) {
-      return
-    }
-
-    writeDemoSession(guide.slug, {
-      unlocked,
-      selectedIndex: studyPath.selectedIndex,
-    })
-  }, [guide, studyPath, unlocked])
 
   const openStudyGuidePageKey = (dashboardKey: string) => {
     setStudyPath((current) => {
@@ -169,17 +150,6 @@ const DemoGuidePage = () => {
       )
     }
   }, [])
-
-  const clearDemoProgress = () => {
-    if (!guide || !content) {
-      return
-    }
-
-    clearDemoSession(guide.slug)
-    runningActionsRef.current.clear()
-    setUnlocked([])
-    setStudyPath(buildDemoStudyPath(content, [], 0))
-  }
 
   const runDemoQuickCreate = async (
     request: QuickCreateActionRequest,
@@ -252,11 +222,11 @@ const DemoGuidePage = () => {
     () =>
       studyPath
         ? {
-            id: studyPath.pathId,
-            name: studyPath.title,
-            kind: 'studyPathContainer',
-            studyPath,
-          }
+          id: studyPath.pathId,
+          name: studyPath.title,
+          kind: 'studyPathContainer',
+          studyPath,
+        }
         : undefined,
     [studyPath],
   )
@@ -432,10 +402,7 @@ const DemoGuidePage = () => {
               overflow: 'hidden',
             }}
           >
-            <DemoConversionBanner
-              isLastPage={isLastPage}
-              onClearProgress={clearDemoProgress}
-            />
+            <DemoConversionBanner isLastPage={isLastPage} />
             {isMobile ? (
               <>
                 <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>

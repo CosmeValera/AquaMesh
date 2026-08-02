@@ -28,7 +28,7 @@ Guides start short (~3 pages) and grow on demand, so a topic can stay a five-min
 
 Where the pieces live:
 
-- `src/demo/` — the data contract (`types.ts`), the guide registry (`demoGuides.ts`), session state (`demoSession.ts`) and the page-append logic (`demoStudyPath.ts`).
+- `src/demo/` — the data contract (`types.ts`), the guide registry (`demoGuides.ts`) and the page-append logic (`demoStudyPath.ts`).
 - `src/demo/guides/<name>.ts` + `<name>.data.json` — one machine-generated capture per guide, plus a hand-written wrapper that colocates its three chat exchanges. One webpack chunk each, loaded only when that guide is opened.
 - `src/components/demo/` — the `/try` topic picker, the guide page, the guest top bar, the conversion banner and the signup nudge.
 - `public/demo/audio/<slug>.mp3` — the podcast audio, served as static files.

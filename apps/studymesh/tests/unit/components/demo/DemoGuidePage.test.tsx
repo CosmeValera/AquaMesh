@@ -192,7 +192,6 @@ const findFirstLesson = () =>
 describe('DemoGuidePage', () => {
   beforeEach(() => {
     authState.current = { user: null, loading: false }
-    window.sessionStorage.clear()
     // The real chat panel scrolls its transcript on every new message, and
     // jsdom has no scrollTo: without this the deferred scroll surfaces as an
     // unhandled error after the test has already passed.
@@ -304,9 +303,8 @@ describe('DemoGuidePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
     fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
 
-    expect(screen.getByTestId('demo-banner-end')).toBeInTheDocument()
-    expect(screen.getByTestId('demo-banner-cta')).toHaveTextContent(
-      'Create my first guide',
+    expect(screen.getByTestId('demo-banner-end')).toHaveTextContent(
+      "That's the whole sample.",
     )
     expect(screen.queryByTestId('demo-banner-sample')).not.toBeInTheDocument()
   })

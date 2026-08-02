@@ -1,6 +1,6 @@
 import type { StudyPathContainerState } from '../state/store'
 import { refreshPageNumbers } from '../studyGuides/pages'
-import type { DemoBonusActionId, DemoBonusPage, DemoGuideContent } from './types'
+import type { DemoBonusPage, DemoGuideContent } from './types'
 
 /**
  * Appends a prepared page the same way a real Quick Create does, so page
@@ -27,20 +27,10 @@ export const appendDemoBonusPage = (
 }
 
 /**
- * Rebuilds the study path for a returning visitor by replaying the bonus pages
- * they already created, in the order the guide declares them.
+ * The study path for a freshly opened demo guide, always starting on its
+ * first page: the demo does not persist progress across visits.
  */
 export const buildDemoStudyPath = (
   content: DemoGuideContent,
-  unlocked: DemoBonusActionId[],
-  selectedIndex = 0,
-): StudyPathContainerState => {
-  const restored = content.bonusPages
-    .filter((bonus) => unlocked.includes(bonus.actionId))
-    .reduce(
-      (studyPath, bonus) => appendDemoBonusPage(studyPath, bonus.page),
-      content.studyPath,
-    )
-
-  return refreshPageNumbers({ ...restored, selectedIndex })
-}
+): StudyPathContainerState =>
+  refreshPageNumbers({ ...content.studyPath, selectedIndex: 0 })

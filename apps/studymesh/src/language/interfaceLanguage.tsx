@@ -512,13 +512,10 @@ const translations = {
     'demo.signUpFree': 'Sign up free',
     'demo.bannerBody':
       'A prepared sample, built by RabbitHole from this one sample prompt. Your own guides come from whatever you ask for.',
-    'demo.bannerCta': 'Sign up',
     'demo.endTitle': "That's the whole sample.",
     'demo.endBody':
       'Your own guides work exactly like this one, on whatever you want to learn.',
-    'demo.endCta': 'Create my first guide',
     'demo.dismissBanner': 'Dismiss',
-    'demo.clearProgress': 'Clear demo progress',
     'demo.composerLockedHint':
       'The composer is locked in this sample. Pick a prepared question, or sign up to ask your own.',
     'demo.chatUnknownQuestion':
@@ -1048,13 +1045,10 @@ const translations = {
     'demo.signUpFree': 'Regístrate gratis',
     'demo.bannerBody':
       'Una muestra preparada, creada por RabbitHole a partir de este único prompt de ejemplo. Tus propias guías salen de lo que tú pidas.',
-    'demo.bannerCta': 'Regístrate',
     'demo.endTitle': 'Esto es toda la muestra.',
     'demo.endBody':
       'Tus propias guías funcionan igual que esta, con lo que quieras aprender.',
-    'demo.endCta': 'Crear mi primera guía',
     'demo.dismissBanner': 'Descartar',
-    'demo.clearProgress': 'Borrar el progreso de la demo',
     'demo.composerLockedHint':
       'El campo de mensaje está bloqueado en esta muestra. Elige una pregunta preparada o regístrate para hacer la tuya.',
     'demo.chatUnknownQuestion':
@@ -1597,13 +1591,10 @@ const translationOverrides: Record<
     'demo.signUpFree': 'Créer un compte gratuit',
     'demo.bannerBody':
       'Un exemple préparé, construit par RabbitHole à partir de ce seul prompt d’exemple. Vos propres guides viennent de ce que vous demandez.',
-    'demo.bannerCta': 'Créer un compte',
     'demo.endTitle': 'Voilà tout l’exemple.',
     'demo.endBody':
       'Vos propres guides fonctionnent exactement comme celui-ci, sur ce que vous voulez apprendre.',
-    'demo.endCta': 'Créer mon premier guide',
     'demo.dismissBanner': 'Masquer',
-    'demo.clearProgress': 'Effacer la progression de la démo',
     'demo.composerLockedHint':
       'Le champ de message est verrouillé dans cet exemple. Choisissez une question préparée, ou créez un compte pour poser la vôtre.',
     'demo.chatUnknownQuestion':
@@ -2138,13 +2129,10 @@ const translationOverrides: Record<
     'demo.signUpFree': 'Kostenlos registrieren',
     'demo.bannerBody':
       'Ein vorbereitetes Beispiel, von RabbitHole aus diesem einen Beispiel-Prompt gebaut. Deine eigenen Leitfäden entstehen aus dem, wonach du fragst.',
-    'demo.bannerCta': 'Registrieren',
     'demo.endTitle': 'Das war das ganze Beispiel.',
     'demo.endBody':
       'Deine eigenen Leitfäden funktionieren genau so, zu allem, was du lernen willst.',
-    'demo.endCta': 'Meinen ersten Leitfaden erstellen',
     'demo.dismissBanner': 'Ausblenden',
-    'demo.clearProgress': 'Demo-Fortschritt löschen',
     'demo.composerLockedHint':
       'Das Eingabefeld ist in diesem Beispiel gesperrt. Wähle eine vorbereitete Frage oder registriere dich, um eigene zu stellen.',
     'demo.chatUnknownQuestion':

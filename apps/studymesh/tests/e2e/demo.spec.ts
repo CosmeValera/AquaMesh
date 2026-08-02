@@ -147,15 +147,15 @@ test.describe('Prepared demo', () => {
     await runDemoQuickCreate(page, 'quiz', 'Quiz')
     await expect(pageRows(page)).toHaveCount(LESSON_PAGE_COUNT + 1)
 
-    // Unlocked actions live in sessionStorage, so the created page survives a
-    // reload of the same tab.
+    // The demo does not persist progress: a reload replays the guide fresh,
+    // with none of the created bonus pages carried over.
     await page.reload()
-    await expect(pageRows(page)).toHaveCount(LESSON_PAGE_COUNT + 1, {
+    await expect(pageRows(page)).toHaveCount(LESSON_PAGE_COUNT, {
       timeout: 20_000,
     })
 
     await runDemoQuickCreate(page, 'podcast', 'Podcast')
-    await expect(pageRows(page)).toHaveCount(LESSON_PAGE_COUNT + 2)
+    await expect(pageRows(page)).toHaveCount(LESSON_PAGE_COUNT + 1)
 
     // The audio is a static file under public/, so preparePodcastAudio must
     // have skipped the signed-URL call entirely.

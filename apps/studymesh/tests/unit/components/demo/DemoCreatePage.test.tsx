@@ -49,7 +49,9 @@ vi.mock('../../../../src/auth/AuthProvider', () => ({
   useAuth: () => authState.current,
 }))
 
-import DemoCreatePage from '../../../../src/components/demo/DemoCreatePage'
+import DemoCreatePage, {
+  DEMO_MATCH_MS,
+} from '../../../../src/components/demo/DemoCreatePage'
 
 const LocationProbe = () => {
   const location = useLocation()
@@ -101,19 +103,38 @@ describe('DemoCreatePage', () => {
   })
 
   it('fills the locked prompt and enables Create when a topic is picked', () => {
+    vi.useFakeTimers()
     renderDemoCreatePage()
 
     fireEvent.click(screen.getByRole('button', { name: 'Sample two' }))
 
     expect(getPromptPanel()).toHaveTextContent(demoGuideFixtures[1].prompt)
+    // Create waits for the match to settle, so the guide can never open before
+    // the context it is explained through has been shown.
+    expect(screen.getByRole('button', { name: /create guide/i })).toBeDisabled()
+
+    act(() => {
+      vi.advanceTimersByTime(DEMO_MATCH_MS)
+    })
+
     expect(screen.getByRole('button', { name: /create guide/i })).toBeEnabled()
   })
 
-  it('marks the matched context and explains why it was picked', () => {
+  it('runs the context match before it reveals the matched context', () => {
+    vi.useFakeTimers()
     renderDemoCreatePage()
 
     fireEvent.click(screen.getByRole('button', { name: 'Sample four' }))
 
+    expect(screen.getByText(/ranking your contexts/i)).toBeInTheDocument()
+    expect(screen.queryByText(/auto-matched/i)).not.toBeInTheDocument()
+    expect(getPromptPanel()).not.toHaveTextContent(/explained through/i)
+
+    act(() => {
+      vi.advanceTimersByTime(DEMO_MATCH_MS)
+    })
+
+    expect(screen.queryByText(/ranking your contexts/i)).not.toBeInTheDocument()
     expect(screen.getByText(/auto-matched/i)).toBeInTheDocument()
     expect(
       screen.getByText(`Matched: ${demoGuideFixtures[3].lensSkill}`),
@@ -124,11 +145,38 @@ describe('DemoCreatePage', () => {
     expect(getPromptPanel()).toHaveTextContent(/explained through/i)
   })
 
+  it('restarts the match when the visitor switches topic', () => {
+    vi.useFakeTimers()
+    renderDemoCreatePage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sample four' }))
+    act(() => {
+      vi.advanceTimersByTime(DEMO_MATCH_MS)
+    })
+    expect(screen.getByText(/auto-matched/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sample one' }))
+
+    expect(screen.getByText(/ranking your contexts/i)).toBeInTheDocument()
+    expect(screen.queryByText(/auto-matched/i)).not.toBeInTheDocument()
+
+    act(() => {
+      vi.advanceTimersByTime(DEMO_MATCH_MS)
+    })
+
+    expect(
+      screen.getByText(`Matched: ${demoGuideFixtures[0].lensSkill}`),
+    ).toBeInTheDocument()
+  })
+
   it('runs the fake generation and then opens the sample guide', () => {
     vi.useFakeTimers()
     renderDemoCreatePage()
 
     fireEvent.click(screen.getByRole('button', { name: 'Sample three' }))
+    act(() => {
+      vi.advanceTimersByTime(DEMO_MATCH_MS)
+    })
     fireEvent.click(screen.getByRole('button', { name: /create guide/i }))
 
     expect(screen.getByText(/generating your guide/i)).toBeInTheDocument()
@@ -151,6 +199,9 @@ describe('DemoCreatePage', () => {
     const view = renderDemoCreatePage()
 
     fireEvent.click(screen.getByRole('button', { name: 'Sample one' }))
+    act(() => {
+      vi.advanceTimersByTime(DEMO_MATCH_MS)
+    })
     fireEvent.click(screen.getByRole('button', { name: /create guide/i }))
     view.unmount()
 

@@ -24,6 +24,12 @@ import DemoSignupNudge from './DemoSignupNudge'
 
 const DEMO_ESTIMATE_SECONDS = Math.round(DEMO_GENERATION_MS / 1000)
 
+/** How long the context library reads as "ranking" after a topic is picked. */
+export const DEMO_MATCH_MS = 600
+
+/** One sweep of the scan light. Almost two fit inside the match. */
+const DEMO_SCAN_MS = 450
+
 const formatDuration = (seconds: number): string => {
   const safeSeconds = Math.max(0, Math.floor(seconds))
   const minutes = Math.floor(safeSeconds / 60)
@@ -86,6 +92,7 @@ const DemoCreatePage = () => {
   const { t } = useInterfaceText()
   const { user, loading } = useAuth()
   const [selectedSlug, setSelectedSlug] = useState('')
+  const [matching, setMatching] = useState(false)
   const [startedAt, setStartedAt] = useState(0)
   const [now, setNow] = useState(0)
   const [nudgeOpen, setNudgeOpen] = useState(false)
@@ -95,12 +102,37 @@ const DemoCreatePage = () => {
     [selectedSlug],
   )
   const generating = startedAt > 0
+  // The match is prepared data, so it would otherwise land instantly. The
+  // ranking pass is the mechanism this page is about, so it gets shown running.
+  const matchedGuide = matching ? null : selectedGuide
+
+  const pickTopic = (slug: string) => {
+    if (slug === selectedSlug) {
+      return
+    }
+
+    setSelectedSlug(slug)
+    setMatching(true)
+  }
 
   useEffect(() => {
     if (!loading && user && !user.is_anonymous) {
       navigate('/study-guides', { replace: true })
     }
   }, [loading, navigate, user])
+
+  useEffect(() => {
+    if (!matching) {
+      return undefined
+    }
+
+    const timeout = window.setTimeout(
+      () => setMatching(false),
+      DEMO_MATCH_MS,
+    )
+
+    return () => window.clearTimeout(timeout)
+  }, [matching, selectedSlug])
 
   useEffect(() => {
     if (!generating) {
@@ -126,7 +158,7 @@ const DemoCreatePage = () => {
   }, [generating, navigate, selectedSlug])
 
   const startGeneration = () => {
-    if (!selectedGuide || generating) {
+    if (!selectedGuide || matching || generating) {
       return
     }
 
@@ -225,7 +257,7 @@ const DemoCreatePage = () => {
                     disableElevation
                     variant={active ? 'contained' : 'outlined'}
                     disabled={generating}
-                    onClick={() => setSelectedSlug(guide.slug)}
+                    onClick={() => pickTopic(guide.slug)}
                     sx={(theme) => ({
                       px: 2,
                       py: 0.85,
@@ -280,13 +312,16 @@ const DemoCreatePage = () => {
               }}
             >
               {DEMO_PROFILE_SKILLS.map((skill) => {
-                const matched = selectedGuide?.lensSkill === skill.name
+                const matched = matchedGuide?.lensSkill === skill.name
 
                 return (
                   <Paper
                     key={skill.name}
                     elevation={0}
+                    data-scanning={matching ? 'true' : undefined}
                     sx={(theme) => ({
+                      position: 'relative',
+                      overflow: 'hidden',
                       p: 1.75,
                       borderRadius: 2.5,
                       border: 1,
@@ -295,11 +330,38 @@ const DemoCreatePage = () => {
                         : alpha(theme.palette.text.primary, 0.14),
                       bgcolor: matched
                         ? alpha(
-                            theme.palette.success.main,
-                            theme.palette.mode === 'dark' ? 0.18 : 0.1,
-                          )
+                          theme.palette.success.main,
+                          theme.palette.mode === 'dark' ? 0.18 : 0.1,
+                        )
                         : 'background.paper',
                       transition: 'border-color 160ms, background-color 160ms',
+                      '@keyframes studymesh-demo-context-scan': {
+                        '0%': { transform: 'translateX(-100%)' },
+                        '100%': { transform: 'translateX(200%)' },
+                      },
+                      // The ranking pass sweeps every card, so the light runs
+                      // on all five and only then does one of them settle.
+                      '&[data-scanning="true"]': {
+                        borderColor: alpha(theme.palette.primary.main, 0.28),
+                        bgcolor: alpha(theme.palette.primary.main, 0.07),
+                        '&::after': {
+                          content: '""',
+                          position: 'absolute',
+                          inset: 0,
+                          width: '55%',
+                          background: `linear-gradient(90deg, transparent, ${alpha(
+                            theme.palette.primary.main,
+                            theme.palette.mode === 'dark' ? 0.28 : 0.2,
+                          )}, transparent)`,
+                          // No per-card delay: the five sweeps have to start on
+                          // the same frame or the pass reads as a stagger.
+                          animation: `studymesh-demo-context-scan ${DEMO_SCAN_MS}ms linear infinite`,
+                          pointerEvents: 'none',
+                        },
+                        '@media (prefers-reduced-motion: reduce)': {
+                          '&::after': { animation: 'none', opacity: 0.35 },
+                        },
+                      },
                     })}
                   >
                     <Stack
@@ -360,16 +422,16 @@ const DemoCreatePage = () => {
                 p: 2,
                 borderRadius: 2.5,
                 border: 1,
-                borderStyle: selectedGuide ? 'solid' : 'dashed',
-                borderColor: selectedGuide
+                borderStyle: matchedGuide ? 'solid' : 'dashed',
+                borderColor: matchedGuide
                   ? alpha(theme.palette.success.main, 0.5)
                   : alpha(theme.palette.text.primary, 0.2),
-                bgcolor: selectedGuide
+                bgcolor: matchedGuide
                   ? alpha(theme.palette.success.main, 0.05)
                   : 'transparent',
               })}
             >
-              {selectedGuide ? (
+              {matchedGuide ? (
                 <>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <LinkIcon
@@ -391,7 +453,7 @@ const DemoCreatePage = () => {
                             : theme.palette.success.dark,
                       })}
                     >
-                      {t('demo.matchedLabel')} {selectedGuide.lensSkill}
+                      {t('demo.matchedLabel')} {matchedGuide.lensSkill}
                     </Typography>
                   </Stack>
                   <Typography
@@ -399,12 +461,16 @@ const DemoCreatePage = () => {
                     color="text.primary"
                     sx={{ mt: 1, lineHeight: 1.6 }}
                   >
-                    {selectedGuide.lensExplanation}
+                    {matchedGuide.lensExplanation}
                   </Typography>
                 </>
               ) : (
-                <Typography variant="body2" color="text.secondary">
-                  {t('demo.matchPending')}
+                <Typography
+                  variant="body2"
+                  color={matching ? 'primary.main' : 'text.secondary'}
+                  fontWeight={matching ? 650 : 400}
+                >
+                  {matching ? t('demo.matching') : t('demo.matchPending')}
                 </Typography>
               )}
               <Divider
@@ -494,7 +560,7 @@ const DemoCreatePage = () => {
                   ? selectedGuide.prompt
                   : t('demo.promptPlaceholder')}
               </Typography>
-              {selectedGuide ? (
+              {matchedGuide ? (
                 <Stack
                   direction="row"
                   spacing={1}
@@ -506,7 +572,7 @@ const DemoCreatePage = () => {
                   </Typography>
                   <Chip
                     size="small"
-                    label={selectedGuide.lensSkill}
+                    label={matchedGuide.lensSkill}
                     sx={(theme) => ({
                       height: 24,
                       borderRadius: 999,
@@ -531,7 +597,7 @@ const DemoCreatePage = () => {
                 size="large"
                 disableElevation
                 startIcon={<AutoAwesomeIcon />}
-                disabled={!selectedGuide || generating}
+                disabled={!selectedGuide || matching || generating}
                 onClick={startGeneration}
                 sx={(theme) => ({
                   px: 3,

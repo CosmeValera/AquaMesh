@@ -495,6 +495,7 @@ const translations = {
     'demo.matchedLabel': 'Matched:',
     'demo.matchPending':
       'Pick a topic above. RabbitHole matches one of these contexts to it before it writes a single page.',
+    'demo.matching': 'Ranking your contexts against this prompt...',
     'demo.matchMechanism':
       'This is the real mechanism, not a demo shortcut: RabbitHole reads your prompt, ranks every context in your library by how well its structure explains the concept, and uses the winner to build the analogies and links inside the guide.',
     'demo.pathTitle': 'This is the prompt you would write yourself',
@@ -1030,6 +1031,7 @@ const translations = {
     'demo.matchedLabel': 'Emparejado:',
     'demo.matchPending':
       'Elige un tema arriba. RabbitHole le empareja uno de estos contextos antes de escribir una sola página.',
+    'demo.matching': 'Ordenando tus contextos según este prompt...',
     'demo.matchMechanism':
       'Este es el mecanismo real, no un atajo de la demo: RabbitHole lee tu prompt, ordena todos los contextos de tu biblioteca según lo bien que su estructura explica el concepto y usa el ganador para construir las analogías y los enlaces dentro de la guía.',
     'demo.pathTitle': 'Este es el prompt que escribirías tú',
@@ -1578,6 +1580,7 @@ const translationOverrides: Record<
     'demo.matchedLabel': 'Relié à :',
     'demo.matchPending':
       'Choisissez un sujet ci-dessus. RabbitHole lui relie un de ces contextes avant d’écrire la moindre page.',
+    'demo.matching': 'Classement de vos contextes pour ce prompt...',
     'demo.matchMechanism':
       'C’est le mécanisme réel, pas un raccourci de démo : RabbitHole lit votre prompt, classe chaque contexte de votre bibliothèque selon la façon dont sa structure explique le concept, et utilise le gagnant pour construire les analogies et les liens à l’intérieur du guide.',
     'demo.pathTitle': 'Voici le prompt que vous écririez vous-même',
@@ -2118,6 +2121,7 @@ const translationOverrides: Record<
     'demo.matchedLabel': 'Zugeordnet:',
     'demo.matchPending':
       'Wähle oben ein Thema. RabbitHole ordnet ihm einen dieser Kontexte zu, bevor eine einzige Seite geschrieben wird.',
+    'demo.matching': 'Deine Kontexte werden für diesen Prompt sortiert...',
     'demo.matchMechanism':
       'Das ist der echte Mechanismus, keine Demo-Abkürzung: RabbitHole liest deinen Prompt, sortiert jeden Kontext in deiner Bibliothek danach, wie gut seine Struktur das Konzept erklärt, und baut mit dem Gewinner die Analogien und Verknüpfungen im Leitfaden.',
     'demo.pathTitle': 'Das ist der Prompt, den du selbst schreiben würdest',

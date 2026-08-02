@@ -193,7 +193,7 @@ describe('StudyMeshLanding', () => {
       within(footer).getByRole('link', { name: /see a guide/i }),
     ).toHaveAttribute('href', '/try')
     expect(
-      within(footer).getByRole('link', { name: /no account/i }),
+      within(footer).getByRole('link', { name: /^try it$/i }),
     ).toHaveAttribute('href', '/try')
   })
 
@@ -477,11 +477,13 @@ describe('StudyMeshLanding', () => {
     ).toHaveTextContent('already get.')
   })
 
+  // A link, not an in-app route change: /try is its own page, so it loads
+  // fresh at the top instead of swapping in at the current scroll position.
   it('sends the hero CTA to the no-account demo page', () => {
     renderLanding()
 
-    fireEvent.click(screen.getAllByRole('button', { name: /^try it$/i })[0])
-
-    expect(screen.getByTestId('location')).toHaveTextContent('/try')
+    expect(
+      screen.getAllByRole('link', { name: /^try it$/i })[0],
+    ).toHaveAttribute('href', '/try')
   })
 })

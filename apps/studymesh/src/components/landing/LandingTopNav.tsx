@@ -55,10 +55,6 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
     return href.startsWith('#') ? `${sectionHrefPrefix}${href}` : href
   }
 
-  const openGuestTrial = () => {
-    navigate('/try')
-  }
-
   const handleNavClick = (
     event: React.MouseEvent<HTMLElement>,
     href: string,
@@ -178,10 +174,13 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
           ))}
         </Stack>
 
+        {/* A plain href like the other nav entries: /try is its own page, so
+            it loads fresh at the top rather than swapping in at the current
+            scroll position. */}
         <Button
           variant="outlined"
           endIcon={<ArrowForwardIcon />}
-          onClick={openGuestTrial}
+          href="/try"
           sx={{
             justifySelf: 'end',
             minHeight: { xs: 44, sm: 52 },

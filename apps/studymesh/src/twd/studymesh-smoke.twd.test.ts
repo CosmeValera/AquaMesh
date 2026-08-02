@@ -147,22 +147,23 @@ describe('RabbitHole TWD landing smoke', () => {
     setLocalStorageEmailAndPassword()
   })
 
-  it('landing sends visitors to the prepared demo', async () => {
+  it('landing points visitors at the prepared demo', async () => {
     await twd.visit('/', true)
 
     expect(await screenDom.findByText(/explain it with/i)).to.exist
 
-    await userEvent.click(
-      (
-        await screenDom.findAllByRole('button', {
-          name: /try it/i,
-        })
-      )[0],
-    )
+    // The CTA is a real link, not an in-app route change: /try is its own page
+    // load. Following it here would reload the document out from under this
+    // in-page runner, so the click-through lives in the Playwright spec and
+    // this only checks where the CTA points.
+    const tryCta = (
+      await screenDom.findAllByRole('link', {
+        name: /try it/i,
+      })
+    )[0]
+    expect(tryCta.getAttribute('href')).to.equal('/try')
 
-    await twd.waitFor(() => {
-      expect(window.location.pathname).to.equal('/try')
-    })
+    await twd.visit('/try', true)
 
     // Stops at the topic picker: the prompt is locked because the demo runs on
     // prepared prompts, and opening a guide costs a 5s fake generation that

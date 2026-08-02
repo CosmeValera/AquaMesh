@@ -477,20 +477,20 @@ const translations = {
     'practice.didntKnowIt': "I didn't know it",
     'demo.pageTitle': 'See a real guide before you sign up',
     'demo.pageSubtitle':
-      'Pick one of five prepared topics to get a feel for how RabbitHole works. In the real app, you write your own prompt about anything you want to learn — and the app matches it to the knowledge contexts you have already defined.',
-    'demo.liveBadge': 'Live demo · no account, nothing to install',
+      'Pick one of five prepared topics to get a feel for how RabbitHole works. In the real app, you write your own prompt about anything you want to learn and the app matches it to the knowledge contexts you have already defined.',
+    'demo.liveBadge': 'Live demo (no account, nothing to install)',
     'demo.promptField': 'Quick Guide prompt',
     'demo.promptPlaceholder':
       'Pick a topic above to see the prompt that produced its guide.',
     'demo.promptHelper':
-      'Sample prompt only. When you sign up, you write your own prompt about anything — and you define your own knowledge contexts.',
+      'Sample prompt only. When you sign up, you write your own prompt about anything and you define your own knowledge contexts.',
     'demo.promptLockedLabel': 'Why is this prompt locked?',
     'demo.chooseTopic': 'Pick what you want to learn',
     'demo.chooseTopicHelper':
       'Five prepared prompts to show you how it works. In the app, you type your own prompt about anything you want to learn.',
     'demo.skillsTitle': 'Your knowledge contexts',
     'demo.skillsHelper':
-      'These five are a sample library — in your own account you write them yourself, one line each, for things you genuinely know well. You never pick one per guide.',
+      'These five are a sample library, in your own account you write them yourself, one line each, for things you genuinely know well. You never pick one per guide.',
     'demo.autoMatched': 'Auto-matched',
     'demo.matchedLabel': 'Matched:',
     'demo.matchPending':
@@ -500,7 +500,7 @@ const translations = {
       'This is the real mechanism, not a demo shortcut: RabbitHole reads your prompt, ranks every context in your library by how well its structure explains the concept, and uses the winner to build the analogies and links inside the guide.',
     'demo.pathTitle': 'This is the prompt you would write yourself',
     'demo.pathHelper':
-      'In the real app, you type your own question or topic here. These five prompts are just examples so you can see how it feels — you could ask anything you want to understand.',
+      'In the real app, you type your own question or topic here. These five prompts are just examples so you can see how it feels, you could ask anything you want to understand.',
     'demo.explainedThrough': 'explained through',
     'demo.createGuide': 'Create guide',
     'demo.generating': 'Generating your guide...',

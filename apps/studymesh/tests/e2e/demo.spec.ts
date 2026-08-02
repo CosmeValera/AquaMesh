@@ -51,8 +51,9 @@ const chatSuggestions = (page: Page) =>
 const openDemoGuide = async (page: Page) => {
   await page.goto(`${APP_URL}/`)
 
+  // The CTA is a link: /try is its own page load, not an in-app route change.
   await page
-    .getByRole('button', { name: /try it/i })
+    .getByRole('link', { name: /try it/i })
     .first()
     .click()
   await page.waitForURL(`${APP_URL}/try`)

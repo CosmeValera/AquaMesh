@@ -17,7 +17,7 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link as RouterLink, useLocation } from 'react-router-dom'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
@@ -568,14 +568,13 @@ const scheduleIdleWork = (task: () => void) => {
   return () => window.clearTimeout(handle)
 }
 
-// Runs once the browser is idle, so none of it competes with the hero paint:
-// the remaining topic illustrations, plus the demo route chunk that the primary
-// CTA navigates to (App.tsx lazy-loads it).
+// Runs once the browser is idle, so it does not compete with the hero paint.
+// The demo route is not prefetched: /try is a separate page load, so warming
+// its chunk here would only pay for a navigation this document never makes.
 const useLandingIdlePrefetch = () => {
   useEffect(() => {
     return scheduleIdleWork(() => {
       contextTopics.forEach((topic) => prefetchContextImage(topic.visualSrc))
-      void import('../demo/DemoCreatePage').catch(() => undefined)
     })
   }, [])
 }
@@ -684,12 +683,7 @@ const useFaqStructuredData = () => {
 
 const StudyMeshLanding = () => {
   const location = useLocation()
-  const navigate = useNavigate()
   const { phraseRef, phraseWraps } = useHeroHeadlineWrapMode()
-
-  const openGuestTrial = () => {
-    navigate('/try')
-  }
 
   useLandingIdlePrefetch()
   useFaqStructuredData()
@@ -904,7 +898,7 @@ const StudyMeshLanding = () => {
                     variant="contained"
                     size="large"
                     endIcon={<ArrowForwardIcon />}
-                    onClick={openGuestTrial}
+                    href="/try"
                     sx={{
                       minHeight: 70,
                       minWidth: { xs: 276, sm: 386 },
@@ -1031,7 +1025,7 @@ const StudyMeshLanding = () => {
                 variant="contained"
                 size="large"
                 endIcon={<ArrowForwardIcon />}
-                onClick={openGuestTrial}
+                href="/try"
                 sx={{
                   minHeight: 54,
                   px: 4,
@@ -1926,8 +1920,10 @@ const AccessSection = () => (
               </Stack>
 
               <Button
-                component={RouterLink}
-                to={option.ctaTo}
+                // /try is a separate page, so it loads rather than swapping in.
+                {...(option.ctaTo === '/try'
+                  ? { href: option.ctaTo }
+                  : { component: RouterLink, to: option.ctaTo })}
                 variant={option.highlighted ? 'contained' : 'outlined'}
                 endIcon={<ArrowForwardIcon />}
                 sx={{

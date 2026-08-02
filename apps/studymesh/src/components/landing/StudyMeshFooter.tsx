@@ -233,8 +233,10 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
               {startLinks.map(([label, href]) => (
                 <Button
                   key={label}
-                  component={RouterLink}
-                  to={href}
+                  // /try is a separate page, so it loads rather than swapping in.
+                  {...(href === '/try'
+                    ? { href }
+                    : { component: RouterLink, to: href })}
                   variant="text"
                   sx={{
                     minWidth: 'auto',
@@ -288,9 +290,9 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
               Walk through a finished guide first. No account, nothing to
               install.
             </Typography>
+            {/* href, not a router link: /try is its own page load. */}
             <Button
-              component={RouterLink}
-              to="/try"
+              href="/try"
               variant="contained"
               endIcon={<ArrowForwardIcon />}
               sx={{
@@ -312,7 +314,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 },
               }}
             >
-              Try it {'—'} no account
+              Try it
             </Button>
           </Stack>
         </Box>

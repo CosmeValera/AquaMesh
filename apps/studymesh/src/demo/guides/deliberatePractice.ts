@@ -13,25 +13,25 @@ const deliberatePractice: DemoGuideContent = {
         'When I die in a fight, how do I tell whether that was a decision error or an execution error? It usually feels like both.',
       answer: `Both can show up in the same death, so separate them by where the failure was, not by how the death felt.
 
-Ask the question the guide uses to judge any decision: did the choice match the information available at that moment? If entering the fight was reasonable given what you could see, and the action itself failed — a missed required input — that is an execution error. If the input landed as intended and the fight was still lost, the plan was the problem, and that is a decision error.
+Ask the question the guide uses to judge any decision: did the choice match the information available at that moment? If entering the fight was reasonable given what you could see, and the action itself failed, a missed required input, that is an execution error. If the input landed as intended and the fight was still lost, the plan was the problem, and that is a decision error.
 
 The review format settles most cases. Write down the situation, the information you had, your choice, the immediate result, and a better candidate decision. If you cannot name a better decision, the plan was fine and the failure was execution. If you can name one, it was a decision error, even if you also missed a shot.
 
-The distinction matters because the practice differs: repetition and precision for execution, comparison and scenario analysis for decisions. Classify it wrong and you drill the wrong thing — which is the early-deaths trap from the first page, where the deaths look mechanical but the cause is positioning or missing information.`,
+The distinction matters because the practice differs: repetition and precision for execution, comparison and scenario analysis for decisions. Classify it wrong and you drill the wrong thing, which is the early-deaths trap from the first page, where the deaths look mechanical but the cause is positioning or missing information.`,
     },
     {
       id: 'q2',
       chip: 'My rank dropped while practising',
       question:
         "I've been running one target for a few sessions and my rank has gone down. Should I drop the target?",
-      answer: `Not on that evidence. The guide expects this: a new habit may reduce speed or confidence before it becomes reliable. That is exactly why competition and training are kept separate — otherwise a temporary experiment ends up judged only by short-term rank.
+      answer: `Not on that evidence. The guide expects this: a new habit may reduce speed or confidence before it becomes reliable. That is exactly why competition and training are kept separate, otherwise a temporary experiment ends up judged only by short-term rank.
 
 Judge the sessions instead. A successful session is one where you noticed the target, attempted the adjustment, gathered feedback, and chose a clear next step. Whether that is working is a question for several sessions, not one result.
 
 Two things would justify dropping the target, and neither of them is the rank number:
 
-- it is rarely relevant, so you barely get to attempt it — move it to a more frequent situation
-- it overwhelms you, so you cannot tell whether you met it — simplify it
+- it is rarely relevant, so you barely get to attempt it, move it to a more frequent situation
+- it overwhelms you, so you cannot tell whether you met it, simplify it
 
 If it is neither, keep it and take the experiment somewhere cheaper first: lower-pressure modes, drills, or replay review. Then bring it back to ranked for realistic application.`,
     },
@@ -40,13 +40,13 @@ If it is neither, keep it and take the experiment somewhere cheaper first: lower
       chip: 'What if I have no replays?',
       question:
         'My game has no replay system. Can I still get feedback that is actually usable?',
-      answer: `Yes. A replay is only one of the sources listed — a statistics screen, a coach, a teammate, and your own observation all count. What makes feedback usable is not where it comes from, but whether it answers what happened, why it happened, and what you will try next time.
+      answer: `Yes. A replay is only one of the sources listed: a statistics screen, a coach, a teammate, and your own observation all count. What makes feedback usable is not where it comes from, but whether it answers what happened, why it happened, and what you will try next time.
 
 Without a replay you cannot look back, so the observation has to be set up in advance. That is the job of the cue: one target and one cue written before you play, so you notice the moment while it is happening instead of reconstructing it afterwards.
 
-Then write the note straight after the match, while the sample is still small and fresh — goal, cue, result, next adjustment. "Two of three deaths followed an unchecked missing threat" is a usable result. "I played badly" is not, and it is also the wording the guide warns against, because it names no behaviour you can change.
+Then write the note straight after the match, while the sample is still small and fresh: goal, cue, result, next adjustment. "Two of three deaths followed an unchecked missing threat" is a usable result. "I played badly" is not, and it is also the wording the guide warns against, because it names no behaviour you can change.
 
-Your own memory is weaker evidence than a replay, so keep the sample small — three deaths, or one recurring transition — and ask a teammate to watch for the same target when you can.`,
+Your own memory is weaker evidence than a replay, so keep the sample small: three deaths, or one recurring transition, and ask a teammate to watch for the same target when you can.`,
     },
   ],
 }

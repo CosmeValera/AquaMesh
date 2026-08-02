@@ -73,8 +73,9 @@ test.describe('Landing tutorial page', () => {
   test('should send visitors to the prepared demo from the landing CTA', async ({
     page,
   }) => {
+    // The CTA is a link: /try is its own page load, not an in-app route change.
     await page
-      .getByRole('button', { name: /try it/i })
+      .getByRole('link', { name: /try it/i })
       .first()
       .click()
 

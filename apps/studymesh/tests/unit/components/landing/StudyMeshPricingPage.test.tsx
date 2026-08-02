@@ -107,7 +107,7 @@ describe('StudyMeshPricingPage', () => {
       within(footer).getByRole('link', { name: /growing guides/i }),
     ).toHaveAttribute('href', '/#growing-guide')
     expect(
-      within(footer).getByRole('link', { name: /try it .* no account/i }),
+      within(footer).getByRole('link', { name: /^try it$/i }),
     ).toHaveAttribute('href', '/try')
   })
 

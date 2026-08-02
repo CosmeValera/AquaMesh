@@ -32,12 +32,14 @@ export type HostedAiSurface =
   | 'chat'
   | 'chat-followup'
   | 'podcast'
+  | 'mastery-check'
 export type HostedAiStage =
   | 'study_guide_main'
   | 'study_guide_monolith'
   | 'study_guide_blueprint'
   | 'study_guide_page_expand'
   | 'study_guide_final_quiz'
+  | 'study_guide_mastery_check'
   | 'quick_start_fallback'
   | 'quick_start_personalized'
   | 'quick_start_relevance_auto'
@@ -56,6 +58,10 @@ export const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
   // The single chat credit is charged upfront by the planner call.
   'chat-followup': 0,
   podcast: 1,
+  // The one explanation check a guide is entitled to. Its cost is already
+  // covered by generating the guide, and the client hands out exactly one per
+  // guide; later attempts are charged through the quick-create surface.
+  'mastery-check': 0,
 }
 
 export const HOSTED_AI_INITIAL_FREE_CREDITS = 30

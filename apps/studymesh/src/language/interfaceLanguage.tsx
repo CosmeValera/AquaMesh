@@ -541,7 +541,24 @@ const translations = {
     'mastery.reviewFirst':
       'That is a pass, but a narrow one. We suggest reviewing a bit more and retaking the quiz first. You can still add it now.',
     'mastery.notAPassYet':
-      'Not a pass yet. Review the pages and retake the quiz to add it to what you know.',
+      'Not a pass yet. Retake the quiz, or explain it in your own words.',
+    'mastery.explainInstead': 'Explain it in your own words',
+    'explainCheck.title': 'Explain it in your own words',
+    'explainCheck.prompt': 'In your own words, what is',
+    'explainCheck.placeholder': 'Say it the way you would say it to a friend.',
+    'explainCheck.words': 'words',
+    'explainCheck.minimum': 'minimum',
+    'explainCheck.tooLong': 'too long, trim it',
+    'explainCheck.freeAttempt': 'The first check on this guide is free.',
+    'explainCheck.paidAttempt':
+      'The free check for this guide is used. This one costs Carrots, like a Quick Create.',
+    'explainCheck.submit': 'Check my explanation',
+    'explainCheck.checking': 'Checking...',
+    'explainCheck.passed': 'That works',
+    'explainCheck.retry': 'Close, try again',
+    'explainCheck.suggestion': 'A sharper way to say it',
+    'explainCheck.added': 'Added',
+    'explainCheck.failed': 'Could not check the explanation.',
     'mastery.added':
       'is part of what you know now. New guides will explain things through it.',
     'mastery.addSkill': 'Add to what I know',
@@ -1086,7 +1103,24 @@ const translations = {
     'mastery.reviewFirst':
       'Está aprobado, pero justo. Te recomendamos repasar un poco más y repetir el quiz antes. Aun así puedes añadirlo ya.',
     'mastery.notAPassYet':
-      'Todavía no está aprobado. Repasa las páginas y repite el quiz para añadirlo a lo que sabes.',
+      'Todavía no está aprobado. Repite el quiz o explícalo con tus palabras.',
+    'mastery.explainInstead': 'Explícalo con tus palabras',
+    'explainCheck.title': 'Explícalo con tus palabras',
+    'explainCheck.prompt': 'Con tus palabras, ¿qué es',
+    'explainCheck.placeholder': 'Dilo como se lo dirías a un amigo.',
+    'explainCheck.words': 'palabras',
+    'explainCheck.minimum': 'mínimo',
+    'explainCheck.tooLong': 'demasiado largo, acórtalo',
+    'explainCheck.freeAttempt': 'La primera revisión de esta guía es gratis.',
+    'explainCheck.paidAttempt':
+      'Ya has usado la revisión gratuita de esta guía. Esta cuesta Carrots, como una creación rápida.',
+    'explainCheck.submit': 'Revisar mi explicación',
+    'explainCheck.checking': 'Revisando...',
+    'explainCheck.passed': 'Está bien explicado',
+    'explainCheck.retry': 'Casi, inténtalo otra vez',
+    'explainCheck.suggestion': 'Una forma más precisa de decirlo',
+    'explainCheck.added': 'Añadido',
+    'explainCheck.failed': 'No se pudo revisar la explicación.',
     'mastery.added':
       'ya forma parte de lo que sabes. Las guías nuevas explicarán las cosas a partir de ello.',
     'mastery.addSkill': 'Añadir a lo que sé',
@@ -1644,7 +1678,25 @@ const translationOverrides: Record<
     'mastery.reviewFirst':
       'C’est validé, mais de justesse. Nous conseillons de réviser un peu et de refaire le quiz avant. Vous pouvez quand même l’ajouter maintenant.',
     'mastery.notAPassYet':
-      'Pas encore validé. Revoyez les pages et refaites le quiz pour l’ajouter à ce que vous connaissez.',
+      'Pas encore validé. Refaites le quiz, ou expliquez-le avec vos mots.',
+    'mastery.explainInstead': 'Expliquez-le avec vos mots',
+    'explainCheck.title': 'Expliquez-le avec vos mots',
+    'explainCheck.prompt': 'Avec vos mots, qu’est-ce que',
+    'explainCheck.placeholder': 'Dites-le comme à un ami.',
+    'explainCheck.words': 'mots',
+    'explainCheck.minimum': 'minimum',
+    'explainCheck.tooLong': 'trop long, raccourcissez',
+    'explainCheck.freeAttempt':
+      'La première vérification de ce guide est offerte.',
+    'explainCheck.paidAttempt':
+      'La vérification offerte de ce guide est déjà utilisée. Celle-ci coûte des Carrots, comme une création rapide.',
+    'explainCheck.submit': 'Vérifier mon explication',
+    'explainCheck.checking': 'Vérification...',
+    'explainCheck.passed': 'C’est bon',
+    'explainCheck.retry': 'Presque, réessayez',
+    'explainCheck.suggestion': 'Une façon plus précise de le dire',
+    'explainCheck.added': 'Ajouté',
+    'explainCheck.failed': 'Impossible de vérifier l’explication.',
     'mastery.added':
       'fait maintenant partie de ce que vous connaissez. Les nouveaux guides expliqueront les choses à partir de là.',
     'mastery.addSkill': 'Ajouter à ce que je connais',
@@ -2194,7 +2246,26 @@ const translationOverrides: Record<
     'mastery.reviewFirst':
       'Bestanden, aber knapp. Wir empfehlen, noch etwas zu wiederholen und das Quiz zu wiederholen. Hinzufügen kannst du es trotzdem jetzt.',
     'mastery.notAPassYet':
-      'Noch nicht bestanden. Geh die Seiten noch einmal durch und wiederhole das Quiz, um es zu deinem Wissen hinzuzufügen.',
+      'Noch nicht bestanden. Wiederhole das Quiz oder erkläre es in eigenen Worten.',
+    'mastery.explainInstead': 'In eigenen Worten erklären',
+    'explainCheck.title': 'In eigenen Worten erklären',
+    'explainCheck.prompt': 'Was ist, in deinen eigenen Worten,',
+    'explainCheck.placeholder':
+      'Sag es so, wie du es einer Freundin sagen würdest.',
+    'explainCheck.words': 'Wörter',
+    'explainCheck.minimum': 'mindestens',
+    'explainCheck.tooLong': 'zu lang, kürze es',
+    'explainCheck.freeAttempt':
+      'Die erste Prüfung für diesen Leitfaden ist gratis.',
+    'explainCheck.paidAttempt':
+      'Die gratis Prüfung für diesen Leitfaden ist verbraucht. Diese kostet Carrots, wie eine Schnellerstellung.',
+    'explainCheck.submit': 'Erklärung prüfen',
+    'explainCheck.checking': 'Wird geprüft...',
+    'explainCheck.passed': 'Das passt',
+    'explainCheck.retry': 'Fast, versuch es nochmal',
+    'explainCheck.suggestion': 'Präziser gesagt',
+    'explainCheck.added': 'Hinzugefügt',
+    'explainCheck.failed': 'Die Erklärung konnte nicht geprüft werden.',
     'mastery.added':
       'gehört jetzt zu deinem Wissen. Neue Leitfäden erklären Dinge darüber.',
     'mastery.addSkill': 'Zu meinem Wissen hinzufügen',

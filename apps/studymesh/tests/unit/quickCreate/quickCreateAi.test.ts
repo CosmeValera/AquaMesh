@@ -270,9 +270,11 @@ describe('quick create AI settings', () => {
       chat: 1,
       'chat-followup': 0,
       podcast: 1,
+      'mastery-check': 0,
     })
     expect(getHostedAiCreditCost('study-guide')).toBe(3)
     expect(getHostedAiCreditCost('podcast')).toBe(1)
+    expect(getHostedAiCreditCost('mastery-check')).toBe(0)
   })
 
   it('routes hosted Quick Create through the hosted gateway without a browser API key', async () => {

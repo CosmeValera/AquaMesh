@@ -68,10 +68,12 @@ import {
   guideHasQuiz,
   GUIDE_QUIZ_COMPLETED_EVENT,
   readGuideMastery,
+  recordGuideExplainResult,
   recordGuideQuizScore,
   type GuideMasteryRecord,
   type GuideQuizCompletedDetail,
 } from '../../studyGuides/mastery'
+import ExplainItYourWayDialog from './ExplainItYourWayDialog'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 
 export const AI_CHAT_MIN_WIDTH = 310
@@ -191,6 +193,7 @@ const GuideWorkspacePage = () => {
   const [learnedTopicPrompt, setLearnedTopicPrompt] =
     useState<LearnedTopicPromptState | null>(null)
   const [mastery, setMastery] = useState<GuideMasteryRecord>({})
+  const [explainCheckOpen, setExplainCheckOpen] = useState(false)
   // Hiding an offer the learner cannot accept yet must not be permanent: the
   // banner comes back on its own once the quiz is passed.
   const unprovenDismissedRef = useRef<string | null>(null)
@@ -297,6 +300,7 @@ const GuideWorkspacePage = () => {
     pageScrollPositionsRef.current = {}
     unprovenDismissedRef.current = null
     setLearnedTopicPrompt(null)
+    setExplainCheckOpen(false)
     setMastery(readGuideMastery(studyGuideId))
   }, [studyGuideId])
 
@@ -738,6 +742,21 @@ const GuideWorkspacePage = () => {
       severity={learnedTopicPrompt.status === 'added' ? 'success' : 'info'}
       action={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {learnedTopicPrompt.status === 'offered' && !canClaimSkill ? (
+            <Button
+              color="inherit"
+              size="small"
+              variant="outlined"
+              onClick={() => setExplainCheckOpen(true)}
+              sx={{
+                textTransform: 'none',
+                whiteSpace: 'nowrap',
+                fontWeight: 650,
+              }}
+            >
+              {t('mastery.explainInstead')}
+            </Button>
+          ) : null}
           {learnedTopicPrompt.status === 'offered' && canClaimSkill ? (
             <Button
               color="inherit"
@@ -1252,6 +1271,17 @@ const GuideWorkspacePage = () => {
           </Box>
         ) : null}
       </Main>
+      {record && learnedTopicPrompt ? (
+        <ExplainItYourWayDialog
+          open={explainCheckOpen}
+          studyGuideId={record.id}
+          topic={learnedTopicPrompt.topic}
+          sourceText={getStudyGuideCreationSourceText(record.studyPath)}
+          onClose={() => setExplainCheckOpen(false)}
+          onPassed={() => setMastery(recordGuideExplainResult(record.id, true))}
+          onAddSkill={addLearnedTopicToKnownTopics}
+        />
+      ) : null}
     </Box>
   )
 }

@@ -16,7 +16,7 @@ import {
   ListItemText,
   Snackbar,
 } from '@mui/material'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import LogoutIcon from '@mui/icons-material/Logout'
@@ -60,7 +60,32 @@ import { useResponsiveWorkspaceMode } from '../workspace/useResponsiveWorkspaceM
 import { deleteStudyMeshProfile, useAuth } from '../../auth/AuthProvider'
 import AiModePill from '../hostedAi/AiModePill'
 import AiModeDialog from '../hostedAi/AiModeDialog'
+import {
+  getAllUserKnownTopics,
+  PROFILE_CONTEXT_CHANGED_EVENT,
+} from '../../profileContext'
+import { CLOUD_SYNC_STATUS_EVENT } from '../../cloud/CloudWorkspaceSync'
+import KnownTopicsPanel from '../profile/KnownTopicsPanel'
+import KnownTopicsPill from '../profile/KnownTopicsPill'
 import { useInterfaceText } from '../../language/interfaceLanguage'
+
+const KNOWN_TOPICS_PANEL_SEEN_KEY = 'studymesh-known-topics-panel-seen-v1'
+
+const hasSeenKnownTopicsPanel = (): boolean => {
+  try {
+    return Boolean(window.localStorage.getItem(KNOWN_TOPICS_PANEL_SEEN_KEY))
+  } catch {
+    return true
+  }
+}
+
+const markKnownTopicsPanelSeen = () => {
+  try {
+    window.localStorage.setItem(KNOWN_TOPICS_PANEL_SEEN_KEY, '1')
+  } catch {
+    // Best-effort: a failed write only means the panel may auto-open again.
+  }
+}
 
 // Define user data type
 interface UserData {
@@ -185,6 +210,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const [userData, setUserData] = useState<UserData>(adminUser)
   const [avatarSrc, setAvatarSrc] = useState(() => readUserAvatar(adminUser.id))
   const [dashboardSelectorOpen, setDashboardSelectorOpen] = useState(false)
+  const [knownTopicsOpen, setKnownTopicsOpen] = useState(false)
+  const [knownTopicsCount, setKnownTopicsCount] = useState(
+    () => getAllUserKnownTopics().length,
+  )
   const userModeLabel = React.useMemo(() => {
     switch (quickCreateAiProvider) {
       case 'local':
@@ -210,6 +239,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const currentDashboardTitle =
     currentDashboard?.studyPath?.title || currentDashboard?.name || 'RabbitHole'
   const navigate = useNavigate()
+  const location = useLocation()
 
   const {
     isPhone,
@@ -372,6 +402,61 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       window.removeEventListener(OPEN_STUDY_PATH_EVENT, handleOpenStudyPath)
     }
   }, [creationHost, userData])
+
+  useEffect(() => {
+    const syncKnownTopics = () =>
+      setKnownTopicsCount(getAllUserKnownTopics().length)
+
+    window.addEventListener(PROFILE_CONTEXT_CHANGED_EVENT, syncKnownTopics)
+    window.addEventListener('storage', syncKnownTopics)
+
+    return () => {
+      window.removeEventListener(PROFILE_CONTEXT_CHANGED_EVENT, syncKnownTopics)
+      window.removeEventListener('storage', syncKnownTopics)
+    }
+  }, [])
+
+  // Cloud sync writes the profile context into localStorage asynchronously after
+  // login, so deciding on a synchronous read would auto-open the panel for users
+  // who already have topics and burn the one-shot flag on them. Only auto-open on
+  // the guide library, not on a deep link straight into a workspace canvas.
+  useEffect(() => {
+    if (location.pathname !== '/study-guides' || hasSeenKnownTopicsPanel()) {
+      return undefined
+    }
+
+    let settled = false
+    let isMounted = true
+    const decide = () => {
+      if (settled || !isMounted) {
+        return
+      }
+
+      settled = true
+      const topics = getAllUserKnownTopics()
+      setKnownTopicsCount(topics.length)
+      markKnownTopicsPanelSeen()
+      if (topics.length === 0) {
+        setKnownTopicsOpen(true)
+      }
+    }
+
+    const handleCloudStatus = (event: Event) => {
+      const detail = (event as CustomEvent<{ status?: string }>).detail
+      if (detail?.status === 'synced' || detail?.status === 'error') {
+        decide()
+      }
+    }
+    const fallback = window.setTimeout(decide, 1500)
+
+    window.addEventListener(CLOUD_SYNC_STATUS_EVENT, handleCloudStatus)
+
+    return () => {
+      isMounted = false
+      window.clearTimeout(fallback)
+      window.removeEventListener(CLOUD_SYNC_STATUS_EVENT, handleCloudStatus)
+    }
+  }, [location.pathname])
 
   // Handle opening and closing dropdowns
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -569,6 +654,11 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   </Button>
                 </>
               )}
+              <KnownTopicsPill
+                compact
+                count={knownTopicsCount}
+                onClick={() => setKnownTopicsOpen(true)}
+              />
               <AiModePill
                 compact
                 provider={quickCreateAiProvider}
@@ -673,6 +763,11 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   flex: '0 0 auto',
                 }}
               >
+                <KnownTopicsPill
+                  compact={isPhone || isTablet}
+                  count={knownTopicsCount}
+                  onClick={() => setKnownTopicsOpen(true)}
+                />
                 <AiModePill
                   compact={isPhone || isTablet}
                   provider={quickCreateAiProvider}
@@ -984,6 +1079,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         </Drawer>
       ) : null}
 
+      <KnownTopicsPanel
+        open={knownTopicsOpen}
+        onClose={() => setKnownTopicsOpen(false)}
+      />
       <AppearanceDialog
         open={isAppearanceOpen}
         onClose={() => setIsAppearanceOpen(false)}

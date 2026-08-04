@@ -7,7 +7,6 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import StudyGuidesPage from '../../../../src/components/studyGuides/StudyGuidesPage'
 import {
   STUDY_GUIDES_STORAGE_FULL_MESSAGE,
-  STUDY_GUIDES_STORAGE_KEY,
   StudyGuideStorage,
 } from '../../../../src/studyGuides/storage'
 import { generateStudyPathStateFromPrompt } from '../../../../src/studyGuides/generation'
@@ -16,7 +15,6 @@ import {
   STUDY_GUIDE_CREATION_QUEUE_KEY,
   StudyGuideCreationQueueStorage,
 } from '../../../../src/studyGuides/creationQueue'
-
 const deleteHostedAiPodcastAudioMock = vi.hoisted(() => vi.fn())
 const useHostedAiStatusMock = vi.hoisted(() => vi.fn())
 
@@ -848,4 +846,5 @@ describe('StudyGuidesPage create flow', () => {
       ),
     ).toThrow(STUDY_GUIDES_STORAGE_FULL_MESSAGE)
   })
+
 })

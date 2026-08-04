@@ -34,13 +34,6 @@ const translations = {
       'No signed-in RabbitHole profile is available.',
     'settings.language': 'Language',
     'settings.interfaceLanguage': 'Interface language',
-    'settings.explanationContext': 'Explanation Context',
-    'settings.explanationContextHelp':
-      'RabbitHole uses this to choose useful Quick Start comparisons in new Quick Guides.',
-    'settings.role': 'Role',
-    'settings.notSet': 'Not set',
-    'settings.noKnownTopics': 'No known topics saved.',
-    'settings.editContext': 'Edit context',
     'settings.welcomeGuide': 'Welcome Guide',
     'settings.welcomeGuideHelp':
       'Restore the built-in RabbitHole guide in the Quick Guides library.',
@@ -75,26 +68,25 @@ const translations = {
     'podcastPlayer.audioError':
       'Podcast audio is not available yet. Try regenerating the podcast.',
     'podcastPlayer.loadError': 'Could not open podcast audio.',
-    'knowledgeContext.title': 'Personal explanation context',
     'knowledgeContext.introTitle':
-      'Help RabbitHole explain new topics using things you already understand.',
-    'knowledgeContext.introBody':
-      'Add a few examples that are relevant to the Quick Guides you create. These can be school subjects, tools, languages, places, hobbies, books, sports, or daily routines. RabbitHole only uses them when they make an explanation easier.',
+      'RabbitHole explains new topics using these: school subjects, tools, languages, hobbies, anything.',
     'knowledgeContext.inputLabel': 'Helpful things you know',
-    'knowledgeContext.inputExamples': 'Math, biology, football, cooking, music',
+    'knowledgeContext.inputPlaceholder': 'Something you know...',
     'knowledgeContext.inputHelper':
-      'Use commas or Enter. Examples: Math, biology, football, cooking, music.',
+      'Separate with commas or press Enter. Examples: Math, biology, football, cooking, music.',
     'knowledgeContext.add': 'Add',
-    'knowledgeContext.yourContext': 'Your context',
-    'knowledgeContext.rolePickerTitle':
-      'Optional: show suggestions for a study/work area',
-    'knowledgeContext.suggestedAreas': 'Suggested familiar areas',
-    'knowledgeContext.selectedCount': '{count} selected.',
-    'knowledgeContext.recommendedOnboarding': 'Recommended: 3-5.',
-    'knowledgeContext.recommendedSettings': 'Recommended: 5 or more.',
-    'knowledgeContext.skip': 'Skip',
-    'knowledgeContext.accept': 'Accept',
-    'knowledgeContext.close': 'Close',
+    'knowledgeContext.rolePickerTitle': 'Need ideas? Pick your area',
+    'knownTopics.buttonLabel': 'What you already know',
+    'knownTopics.panelTitle': 'What you already know',
+    'knownTopics.closePanel': 'Close what you already know',
+    'knownTopics.autoSaved': 'Saved automatically.',
+    'knownTopics.yourList': 'Your list · {count}',
+    'knownTopics.emptyListHint':
+      'Nothing here yet. Type something below or pick a suggestion.',
+    'knownTopics.progressEnough': 'Enough to work with',
+    'knownTopics.progressAddMore': 'Add {count} more for better explanations',
+    'knownTopics.footerNote': 'Used in every new guide you create.',
+    'knownTopics.done': 'Done',
     'appearance.themeMode': 'Light / dark mode',
     'appearance.accentColor': 'Accent color',
     'settings.deleteConfirmTitle': 'Delete RabbitHole Account Data?',
@@ -560,13 +552,6 @@ const translations = {
       'No hay un perfil de RabbitHole con sesión iniciada.',
     'settings.language': 'Idioma',
     'settings.interfaceLanguage': 'Idioma de la interfaz',
-    'settings.explanationContext': 'Contexto de explicación',
-    'settings.explanationContextHelp':
-      'RabbitHole lo usa para elegir comparaciones útiles en el Quick Start de nuevos Quick Guides.',
-    'settings.role': 'Rol',
-    'settings.notSet': 'Sin configurar',
-    'settings.noKnownTopics': 'No hay temas conocidos guardados.',
-    'settings.editContext': 'Editar contexto',
     'settings.welcomeGuide': 'Guía de bienvenida',
     'settings.welcomeGuideHelp':
       'Restaura la guía integrada de RabbitHole en la biblioteca de Quick Guides.',
@@ -603,27 +588,25 @@ const translations = {
     'podcastPlayer.audioError':
       'El audio del podcast aún no está disponible. Prueba a regenerarlo.',
     'podcastPlayer.loadError': 'No se pudo abrir el audio del podcast.',
-    'knowledgeContext.title': 'Contexto personal de explicación',
     'knowledgeContext.introTitle':
-      'Ayuda a RabbitHole a explicar temas nuevos usando cosas que ya entiendes.',
-    'knowledgeContext.introBody':
-      'Añade algunos ejemplos relevantes para las guías rápidas que creas. Pueden ser asignaturas, herramientas, idiomas, lugares, hobbies, libros, deportes o rutinas diarias. RabbitHole solo los usa cuando facilitan una explicación.',
+      'RabbitHole explica temas nuevos usando esto: asignaturas, herramientas, idiomas, aficiones, lo que sea.',
     'knowledgeContext.inputLabel': 'Cosas útiles que conoces',
-    'knowledgeContext.inputExamples':
-      'Matemáticas, biología, fútbol, cocina, música',
+    'knowledgeContext.inputPlaceholder': 'Algo que sepas...',
     'knowledgeContext.inputHelper':
-      'Usa comas o Enter. Ejemplos: matemáticas, biología, fútbol, cocina, música.',
+      'Sepáralos con comas o pulsa Intro. Ejemplos: matemáticas, biología, fútbol, cocina, música.',
     'knowledgeContext.add': 'Añadir',
-    'knowledgeContext.yourContext': 'Tu contexto',
-    'knowledgeContext.rolePickerTitle':
-      'Opcional: mostrar sugerencias por área de estudio/trabajo',
-    'knowledgeContext.suggestedAreas': 'Áreas familiares sugeridas',
-    'knowledgeContext.selectedCount': '{count} seleccionados.',
-    'knowledgeContext.recommendedOnboarding': 'Recomendado: 3-5.',
-    'knowledgeContext.recommendedSettings': 'Recomendado: 5 o más.',
-    'knowledgeContext.skip': 'Omitir',
-    'knowledgeContext.accept': 'Aceptar',
-    'knowledgeContext.close': 'Cerrar',
+    'knowledgeContext.rolePickerTitle': '¿Necesitas ideas? Elige tu área',
+    'knownTopics.buttonLabel': 'Lo que ya sabes',
+    'knownTopics.panelTitle': 'Lo que ya sabes',
+    'knownTopics.closePanel': 'Cerrar lo que ya sabes',
+    'knownTopics.autoSaved': 'Se guarda automáticamente.',
+    'knownTopics.yourList': 'Tu lista · {count}',
+    'knownTopics.emptyListHint':
+      'Aún no hay nada. Escribe algo abajo o elige una sugerencia.',
+    'knownTopics.progressEnough': 'Suficiente para trabajar',
+    'knownTopics.progressAddMore': 'Añade {count} más para mejores explicaciones',
+    'knownTopics.footerNote': 'Se usa en cada guía nueva que crees.',
+    'knownTopics.done': 'Hecho',
     'appearance.themeMode': 'Modo claro / oscuro',
     'appearance.accentColor': 'Color de acento',
     'settings.deleteConfirmTitle': '¿Eliminar datos de cuenta RabbitHole?',
@@ -1103,13 +1086,6 @@ const translationOverrides: Record<
       'Aucun profil RabbitHole connecté n’est disponible.',
     'settings.language': 'Langue',
     'settings.interfaceLanguage': "Langue de l'interface",
-    'settings.explanationContext': "Contexte d'explication",
-    'settings.explanationContextHelp':
-      'RabbitHole l’utilise pour choisir des comparaisons utiles dans le Quick Start des nouveaux guides.',
-    'settings.role': 'Rôle',
-    'settings.notSet': 'Non défini',
-    'settings.noKnownTopics': 'Aucun sujet connu enregistré.',
-    'settings.editContext': 'Modifier le contexte',
     'settings.welcomeGuide': 'Guide de bienvenue',
     'settings.welcomeGuideHelp':
       'Restaure le guide RabbitHole intégré dans la bibliothèque de guides.',
@@ -1146,27 +1122,26 @@ const translationOverrides: Record<
     'podcastPlayer.audioError':
       'L’audio du podcast n’est pas encore disponible. Essayez de le régénérer.',
     'podcastPlayer.loadError': 'Impossible d’ouvrir l’audio du podcast.',
-    'knowledgeContext.title': "Contexte personnel d'explication",
     'knowledgeContext.introTitle':
-      'Aidez RabbitHole à expliquer de nouveaux sujets avec ce que vous comprenez déjà.',
-    'knowledgeContext.introBody':
-      'Ajoutez quelques exemples pertinents pour les guides que vous créez. Il peut s’agir de matières scolaires, outils, langues, lieux, loisirs, livres, sports ou routines quotidiennes. RabbitHole ne les utilise que lorsqu’ils rendent une explication plus simple.',
+      'RabbitHole explique les nouveaux sujets avec cela : matières, outils, langues, loisirs, tout compte.',
     'knowledgeContext.inputLabel': 'Choses utiles que vous connaissez',
-    'knowledgeContext.inputExamples':
-      'Maths, biologie, football, cuisine, musique',
+    'knowledgeContext.inputPlaceholder': 'Quelque chose que vous savez...',
     'knowledgeContext.inputHelper':
-      'Utilisez des virgules ou Entrée. Exemples : maths, biologie, football, cuisine, musique.',
+      'Séparez avec des virgules ou appuyez sur Entrée. Exemples : maths, biologie, football, cuisine, musique.',
     'knowledgeContext.add': 'Ajouter',
-    'knowledgeContext.yourContext': 'Votre contexte',
-    'knowledgeContext.rolePickerTitle':
-      'Optionnel : afficher des suggestions par domaine d’étude/travail',
-    'knowledgeContext.suggestedAreas': 'Domaines familiers suggérés',
-    'knowledgeContext.selectedCount': '{count} sélectionnés.',
-    'knowledgeContext.recommendedOnboarding': 'Recommandé : 3-5.',
-    'knowledgeContext.recommendedSettings': 'Recommandé : 5 ou plus.',
-    'knowledgeContext.skip': 'Ignorer',
-    'knowledgeContext.accept': 'Accepter',
-    'knowledgeContext.close': 'Fermer',
+    'knowledgeContext.rolePickerTitle': "Besoin d'idées ? Choisissez votre domaine",
+    'knownTopics.buttonLabel': 'Ce que vous savez déjà',
+    'knownTopics.panelTitle': 'Ce que vous savez déjà',
+    'knownTopics.closePanel': 'Fermer ce que vous savez déjà',
+    'knownTopics.autoSaved': 'Enregistré automatiquement.',
+    'knownTopics.yourList': 'Votre liste · {count}',
+    'knownTopics.emptyListHint':
+      "Rien pour l'instant. Écrivez quelque chose ci-dessous ou choisissez une suggestion.",
+    'knownTopics.progressEnough': 'Suffisant pour travailler',
+    'knownTopics.progressAddMore':
+      'Ajoutez {count} de plus pour de meilleures explications',
+    'knownTopics.footerNote': 'Utilisé dans chaque nouveau guide que vous créez.',
+    'knownTopics.done': 'Terminé',
     'appearance.themeMode': 'Mode clair / sombre',
     'appearance.accentColor': "Couleur d'accent",
     'settings.deleteConfirmTitle':
@@ -1641,13 +1616,6 @@ const translationOverrides: Record<
       'Kein angemeldetes RabbitHole-Profil verfügbar.',
     'settings.language': 'Sprache',
     'settings.interfaceLanguage': 'Sprache der Oberfläche',
-    'settings.explanationContext': 'Erklärungskontext',
-    'settings.explanationContextHelp':
-      'RabbitHole nutzt dies, um hilfreiche Vergleiche im Quick Start neuer Guides auszuwählen.',
-    'settings.role': 'Rolle',
-    'settings.notSet': 'Nicht festgelegt',
-    'settings.noKnownTopics': 'Keine bekannten Themen gespeichert.',
-    'settings.editContext': 'Kontext bearbeiten',
     'settings.welcomeGuide': 'Willkommensleitfaden',
     'settings.welcomeGuideHelp':
       'Stellt den integrierten RabbitHole-Guide in der Guide-Bibliothek wieder her.',
@@ -1683,26 +1651,27 @@ const translationOverrides: Record<
     'podcastPlayer.audioError':
       'Podcast-Audio ist noch nicht verfügbar. Generiere den Podcast erneut.',
     'podcastPlayer.loadError': 'Podcast-Audio konnte nicht geöffnet werden.',
-    'knowledgeContext.title': 'Persönlicher Erklärungskontext',
     'knowledgeContext.introTitle':
-      'Hilf RabbitHole, neue Themen mit Dingen zu erklären, die du schon verstehst.',
-    'knowledgeContext.introBody':
-      'Füge ein paar Beispiele hinzu, die zu deinen Quick Guides passen. Das können Schulfächer, Tools, Sprachen, Orte, Hobbys, Bücher, Sportarten oder Alltagsroutinen sein. RabbitHole nutzt sie nur, wenn sie eine Erklärung einfacher machen.',
+      'RabbitHole erklärt neue Themen damit: Schulfächer, Tools, Sprachen, Hobbys, alles zählt.',
     'knowledgeContext.inputLabel': 'Hilfreiche Dinge, die du kennst',
-    'knowledgeContext.inputExamples': 'Mathe, Biologie, Fußball, Kochen, Musik',
+    'knowledgeContext.inputPlaceholder': 'Etwas, das du weißt...',
     'knowledgeContext.inputHelper':
-      'Nutze Kommas oder Enter. Beispiele: Mathe, Biologie, Fußball, Kochen, Musik.',
+      'Mit Kommas trennen oder Enter drücken. Beispiele: Mathe, Biologie, Fußball, Kochen, Musik.',
     'knowledgeContext.add': 'Hinzufügen',
-    'knowledgeContext.yourContext': 'Dein Kontext',
-    'knowledgeContext.rolePickerTitle':
-      'Optional: Vorschläge für einen Lern-/Arbeitsbereich anzeigen',
-    'knowledgeContext.suggestedAreas': 'Vorgeschlagene vertraute Bereiche',
-    'knowledgeContext.selectedCount': '{count} ausgewählt.',
-    'knowledgeContext.recommendedOnboarding': 'Empfohlen: 3-5.',
-    'knowledgeContext.recommendedSettings': 'Empfohlen: 5 oder mehr.',
-    'knowledgeContext.skip': 'Überspringen',
-    'knowledgeContext.accept': 'Akzeptieren',
-    'knowledgeContext.close': 'Schließen',
+    'knowledgeContext.rolePickerTitle': 'Brauchst du Ideen? Wähle deinen Bereich',
+    'knownTopics.buttonLabel': 'Was du schon weißt',
+    'knownTopics.panelTitle': 'Was du schon weißt',
+    'knownTopics.closePanel': 'Was du schon weißt schließen',
+    'knownTopics.autoSaved': 'Automatisch gespeichert.',
+    'knownTopics.yourList': 'Deine Liste · {count}',
+    'knownTopics.emptyListHint':
+      'Noch nichts hier. Schreib unten etwas oder wähle einen Vorschlag.',
+    'knownTopics.progressEnough': 'Genug zum Arbeiten',
+    'knownTopics.progressAddMore':
+      'Füge {count} weitere für bessere Erklärungen hinzu',
+    'knownTopics.footerNote':
+      'Wird in jedem neuen Guide verwendet, den du erstellst.',
+    'knownTopics.done': 'Fertig',
     'appearance.themeMode': 'Hell- / Dunkelmodus',
     'appearance.accentColor': 'Akzentfarbe',
     'settings.deleteConfirmTitle': 'RabbitHole-Kontodaten löschen?',

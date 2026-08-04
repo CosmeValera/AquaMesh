@@ -11,6 +11,10 @@ import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   QUICK_CREATE_AI_SETTINGS_KEY,
 } from '../../../../src/quickCreate/ai'
+import { PROFILE_CONTEXT_STORAGE_KEY } from '../../../../src/profileContext'
+import { CLOUD_SYNC_STATUS_EVENT } from '../../../../src/cloud/CloudWorkspaceSync'
+
+const KNOWN_TOPICS_PANEL_SEEN_KEY = 'studymesh-known-topics-panel-seen-v1'
 
 const hostedAiStatus = vi.hoisted(() => ({
   available: true,
@@ -668,5 +672,121 @@ describe('TopNavBar Component', () => {
     await waitFor(() =>
       expect(navigateMock).toHaveBeenCalledWith('/login', { replace: true }),
     )
+  })
+
+  describe('known-topics pill and panel', () => {
+    let storage: Record<string, string>
+
+    beforeEach(() => {
+      storage = {
+        userData: JSON.stringify({
+          id: 'admin',
+          name: 'Admin User',
+          role: 'ADMIN_ROLE',
+        }),
+      }
+      localStorage.getItem.mockImplementation(
+        (key: string) => storage[key] ?? null,
+      )
+      localStorage.setItem.mockImplementation(
+        (key: string, value: string) => {
+          storage[key] = value
+        },
+      )
+    })
+
+    afterEach(() => {
+      window.history.pushState({}, '', '/')
+    })
+
+    const renderAtStudyGuides = () => {
+      window.history.pushState({}, '', '/study-guides')
+      return render(
+        <BrowserRouter>
+          <TopNavBar />
+        </BrowserRouter>,
+      )
+    }
+
+    const dispatchCloudSynced = () => {
+      act(() => {
+        window.dispatchEvent(
+          new CustomEvent(CLOUD_SYNC_STATUS_EVENT, {
+            detail: { status: 'synced' },
+          }),
+        )
+      })
+    }
+
+    it('shows the current known-topics count and opens the panel from the pill', async () => {
+      storage[PROFILE_CONTEXT_STORAGE_KEY] = JSON.stringify({
+        version: 1,
+        roles: [],
+        broadKnowledge: [],
+        specificKnowledge: ['Cooking', 'Docker'],
+        confidence: 'self_reported',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      })
+      renderAtStudyGuides()
+
+      const pillButton = screen.getByRole('button', {
+        name: /what you already know/i,
+      })
+      expect(pillButton).toHaveTextContent('2')
+
+      fireEvent.click(pillButton)
+
+      expect(
+        await screen.findByRole('heading', {
+          name: /what you already know/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByLabelText(/helpful things you know/i),
+      ).toBeInTheDocument()
+    })
+
+    it('auto-opens the panel once on the guide library when the user has no topics', async () => {
+      renderAtStudyGuides()
+
+      dispatchCloudSynced()
+
+      expect(
+        await screen.findByRole('heading', {
+          name: /what you already know/i,
+        }),
+      ).toBeInTheDocument()
+      await waitFor(() => {
+        expect(storage[KNOWN_TOPICS_PANEL_SEEN_KEY]).toBe('1')
+      })
+    })
+
+    it('does not auto-open once the panel has already been seen', async () => {
+      storage[KNOWN_TOPICS_PANEL_SEEN_KEY] = '1'
+      renderAtStudyGuides()
+
+      dispatchCloudSynced()
+
+      await waitFor(() => {
+        expect(
+          screen.queryByRole('heading', { name: /what you already know/i }),
+        ).not.toBeInTheDocument()
+      })
+    })
+
+    it('does not auto-open outside the guide library even with zero topics', () => {
+      render(
+        <BrowserRouter>
+          <TopNavBar />
+        </BrowserRouter>,
+      )
+
+      dispatchCloudSynced()
+
+      expect(
+        screen.queryByRole('heading', { name: /what you already know/i }),
+      ).not.toBeInTheDocument()
+      expect(storage[KNOWN_TOPICS_PANEL_SEEN_KEY]).toBeUndefined()
+    })
   })
 })

@@ -25,7 +25,6 @@ import { AuthProvider, RequireAuth } from './auth/AuthProvider'
 import CloudWorkspaceSync from './cloud/CloudWorkspaceSync'
 import HostedAiCheckoutReturn from './components/hostedAi/HostedAiCheckoutReturn'
 import { PodcastPlayerProvider } from './components/podcast/PodcastPlayerProvider'
-import KnowledgeContextOnboarding from './components/profile/KnowledgeContextOnboarding'
 import { InterfaceLanguageProvider } from './language/interfaceLanguage'
 
 import { createStudyMeshTheme } from './theme'
@@ -137,7 +136,6 @@ const AppShell = () => {
             <LocalAiDebugPanel />
             <CloudWorkspaceSync />
             <HostedAiCheckoutReturn />
-            <KnowledgeContextOnboarding />
             <DashboardProvider>
               <LayoutProvider>
                 <PodcastPlayerProvider>

@@ -180,6 +180,7 @@ Rules:
 - ${formatAllowedSources(allowedSources)}
 ${hasFetchedWebSources(sourceChunks) ? '- Web sources were fetched for this question. Base the answer on them and cite them inline. Use general knowledge only for the parts those sources do not cover, and mark that with phrasing such as "In general".' : ''}
 - Respect the student's requested answer shape and verbosity. If they ask for a plain list, exact count, table, or no explanation, follow that format without extra teaching sections.
+- Match answer length to the question. A short, direct, or yes/no question gets a short, direct answer — one or two sentences, no headers or extra sections. Only write a longer, structured explanation when the student is actually asking to understand or learn something in depth.
 ${exactAnswerCount ? `- The student asked for exactly ${exactAnswerCount} entries. Return exactly ${exactAnswerCount} distinct entries in a numbered list. Do not use headings, category totals, ranges, duplicate entries, or follow-up questions. Identify otherwise identical entries with their standard number, position, or side.` : ''}
 ${answerStyleHint ? `- Extra answer style instruction: ${answerStyleHint}` : ''}
 - ${formatCoverageFallbackRule(allowedSources)}
@@ -194,7 +195,7 @@ ${answerStyleHint ? `- Extra answer style instruction: ${answerStyleHint}` : ''}
 - Do not add a final Sources, References, or Based on section. Use inline citations only.
 - Do not say "as I said earlier" unless the student explicitly asks you to repeat or recall a prior answer.
 - Be concise, clear, student-friendly, and practical.
-- Use bullets, examples, and study tips when helpful.
+- Use bullets, examples, and study tips only when the question actually calls for explanation — not on every answer.
 
 Dashboard title: ${dashboardTitle}
 

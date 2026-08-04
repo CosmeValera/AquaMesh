@@ -3,7 +3,6 @@ import {
   Avatar,
   Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -18,12 +17,6 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 
-import {
-  getAllUserKnownTopics,
-  getUserKnowledgeRoleLabel,
-  readProfileContext,
-} from '../../profileContext'
-import { KnowledgeContextSettingsDialog } from '../profile/KnowledgeContextDialog'
 import { seedStudyMeshGuideStudyPath } from '../../studyGuides/studyMeshGuideSeed'
 import { STUDY_GUIDES_CHANGED_EVENT } from '../../studyGuides/storage'
 import {
@@ -69,10 +62,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   const [isDeletingProfile, setIsDeletingProfile] = React.useState(false)
   const [isProfileDeleteConfirmOpen, setIsProfileDeleteConfirmOpen] =
     React.useState(false)
-  const [isKnowledgeContextOpen, setIsKnowledgeContextOpen] =
-    React.useState(false)
-  const [knowledgeContextVersion, setKnowledgeContextVersion] =
-    React.useState(0)
 
   React.useEffect(() => {
     if (!open) {
@@ -83,7 +72,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     setProfileDeleteConfirmation('')
     setProfileDeleteStatus('')
     setIsProfileDeleteConfirmOpen(false)
-    setIsKnowledgeContextOpen(false)
     setLanguageSettings(readContentLanguageSettings())
   }, [open])
 
@@ -97,14 +85,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     window.dispatchEvent(new CustomEvent(STUDY_GUIDES_CHANGED_EVENT))
     setStatus(t('settings.welcomeGuideAdded'))
   }
-
-  const profileContext = readProfileContext()
-  const knownTopics = [...getAllUserKnownTopics(profileContext)].reverse()
-  const roleLabel = profileContext?.roles?.length
-    ? profileContext.roles
-        .map((role) => getUserKnowledgeRoleLabel(role))
-        .join(', ')
-    : t('settings.notSet')
 
   const handleDeleteStudyMeshProfile = async () => {
     if (!onDeleteStudyMeshProfile || profileDeleteConfirmation !== 'DELETE') {
@@ -217,51 +197,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 </Stack>
               </Paper>
             ) : null}
-
-            <Paper
-              elevation={0}
-              sx={{ p: 2, border: 1, borderColor: 'divider' }}
-            >
-              <Typography fontWeight={700} sx={{ mb: 1 }}>
-                {t('settings.explanationContext')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {t('settings.explanationContextHelp')}
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                {t('settings.role')}: {roleLabel}
-              </Typography>
-              {knownTopics.length ? (
-                <Stack
-                  direction="row"
-                  gap={1}
-                  flexWrap="wrap"
-                  useFlexGap
-                  sx={{ mb: 2 }}
-                >
-                  {knownTopics.map((topic) => (
-                    <Chip key={topic} label={topic} size="small" />
-                  ))}
-                </Stack>
-              ) : (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 2 }}
-                >
-                  {t('settings.noKnownTopics')}
-                </Typography>
-              )}
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={() => setIsKnowledgeContextOpen(true)}
-                >
-                  {t('settings.editContext')}
-                </Button>
-              </Stack>
-            </Paper>
 
             <Paper
               elevation={0}
@@ -402,16 +337,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
           <Button onClick={onClose}>{t('settings.close')}</Button>
         </DialogActions>
       </Dialog>
-
-      <KnowledgeContextSettingsDialog
-        key={knowledgeContextVersion}
-        open={isKnowledgeContextOpen}
-        initialContext={profileContext}
-        onClose={() => {
-          setIsKnowledgeContextOpen(false)
-          setKnowledgeContextVersion((value) => value + 1)
-        }}
-      />
 
       <Dialog
         open={isProfileDeleteConfirmOpen}

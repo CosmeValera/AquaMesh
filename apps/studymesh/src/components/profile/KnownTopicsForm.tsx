@@ -3,21 +3,20 @@ import {
   Box,
   Button,
   Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Paper,
+  Divider,
+  LinearProgress,
   Stack,
   TextField,
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import type { Theme } from '@mui/material/styles'
+import AddIcon from '@mui/icons-material/Add'
 
 import {
-  getBroadKnowledgeGroups,
+  getBroadKnowledgeOptions,
   parseSpecificKnowledgeInput,
+  PROFILE_CONTEXT_RECOMMENDED_MAX_TOPICS,
   ProfileContext,
   saveProfileContext,
   USER_KNOWN_TOPICS_STORAGE_MAX,
@@ -27,54 +26,60 @@ import {
 import { useInterfaceText } from '../../language/interfaceLanguage'
 import type { InterfaceLanguageCode } from '../../language/contentLanguage'
 
-type KnowledgeContextSurface = 'onboarding' | 'settings'
-
-interface KnowledgeContextDialogProps {
-  open: boolean
-  initialContext?: ProfileContext | null
-  surface?: KnowledgeContextSurface
-  onClose: () => void
-}
-
-interface KnowledgeContextDraft {
+interface KnownTopicsDraft {
   roles: UserKnowledgeRoleId[]
   broadKnowledge: string[]
   specificKnowledge: string[]
 }
 
-const getRecommendationText = (
-  surface: KnowledgeContextSurface,
-  t: ReturnType<typeof useInterfaceText>['t'],
-): string =>
-  surface === 'onboarding'
-    ? t('knowledgeContext.recommendedOnboarding')
-    : t('knowledgeContext.recommendedSettings')
+const listChipSx = (theme: Theme) => ({
+  bgcolor: theme.palette.mode === 'dark' ? 'action.selected' : 'grey.100',
+  borderColor: 'divider',
+  color: 'text.primary',
+  fontWeight: 600,
+  '&:hover': {
+    bgcolor: theme.palette.mode === 'dark' ? 'action.hover' : 'grey.200',
+  },
+  '& .MuiChip-deleteIcon': {
+    color: alpha(theme.palette.text.primary, 0.4),
+    '&:hover': {
+      color: theme.palette.error.main,
+    },
+  },
+})
 
-const selectedChipSx = (selected: boolean) =>
+const suggestionChipSx = (theme: Theme) => ({
+  borderStyle: 'dashed',
+  borderColor: alpha(theme.palette.primary.main, 0.4),
+  color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.dark,
+  fontWeight: 600,
+  '&:hover': {
+    borderColor: theme.palette.primary.main,
+    bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.14 : 0.06),
+  },
+  '& .MuiChip-icon': {
+    color: 'inherit',
+  },
+})
+
+const selectedRoleChipSx = (selected: boolean) =>
   selected
     ? (theme: Theme) => ({
-        borderColor: alpha(theme.palette.primary.main, 0.85),
-        bgcolor: alpha(theme.palette.primary.main, 0.16),
-        color:
+      borderColor: alpha(theme.palette.primary.main, 0.85),
+      bgcolor: alpha(theme.palette.primary.main, 0.16),
+      color:
           theme.palette.mode === 'dark'
             ? theme.palette.primary.light
             : theme.palette.primary.dark,
-        fontWeight: 700,
-        '&:hover': {
-          bgcolor: alpha(theme.palette.primary.main, 0.24),
-        },
-        '& .MuiChip-deleteIcon': {
-          color: alpha(theme.palette.primary.main, 0.75),
-          '&:hover': {
-            color: theme.palette.primary.main,
-          },
-        },
-      })
+      fontWeight: 700,
+      '&:hover': {
+        bgcolor: alpha(theme.palette.primary.main, 0.24),
+      },
+    })
     : undefined
 
 const toTopicKey = (topic: string): string => topic.toLowerCase()
-const specificKnowledgeInputDraftKeyPrefix =
-  'studymesh-profile-context-input-draft'
+const specificKnowledgeInputDraftKey = 'studymesh-profile-context-input-draft'
 
 const roleLabels: Record<
   InterfaceLanguageCode,
@@ -393,44 +398,30 @@ const getBroadKnowledgeTopicLabel = (
   language: InterfaceLanguageCode,
 ): string => broadKnowledgeTopicLabels[language]?.[topic] || topic
 
-const getSpecificKnowledgeInputDraftKey = (
-  surface: KnowledgeContextSurface,
-): string => `${specificKnowledgeInputDraftKeyPrefix}-${surface}`
-
-const readSpecificKnowledgeInputDraft = (
-  surface: KnowledgeContextSurface,
-): string => {
+const readSpecificKnowledgeInputDraft = (): string => {
   if (typeof window === 'undefined') {
     return ''
   }
 
   try {
-    return (
-      window.sessionStorage.getItem(
-        getSpecificKnowledgeInputDraftKey(surface),
-      ) || ''
-    )
+    return window.sessionStorage.getItem(specificKnowledgeInputDraftKey) || ''
   } catch {
     return ''
   }
 }
 
-const writeSpecificKnowledgeInputDraft = (
-  surface: KnowledgeContextSurface,
-  value: string,
-) => {
+const writeSpecificKnowledgeInputDraft = (value: string) => {
   if (typeof window === 'undefined') {
     return
   }
 
   try {
-    const key = getSpecificKnowledgeInputDraftKey(surface)
     if (value.trim()) {
-      window.sessionStorage.setItem(key, value)
+      window.sessionStorage.setItem(specificKnowledgeInputDraftKey, value)
       return
     }
 
-    window.sessionStorage.removeItem(key)
+    window.sessionStorage.removeItem(specificKnowledgeInputDraftKey)
   } catch {
     // Draft persistence should never block context editing.
   }
@@ -469,18 +460,18 @@ const getNewestSelectedKnowledge = (topics: string[]): string[] => [
 ].reverse()
 
 const KnowledgeRolePicker: React.FC<{
-  roles: UserKnowledgeRoleId[]
+  activeRole: UserKnowledgeRoleId | null
   language: InterfaceLanguageCode
   t: ReturnType<typeof useInterfaceText>['t']
-  onToggleRole: (role: UserKnowledgeRoleId) => void
-}> = ({ roles, language, t, onToggleRole }) => (
+  onSelectRole: (role: UserKnowledgeRoleId) => void
+}> = ({ activeRole, language, t, onSelectRole }) => (
   <Box>
     <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
       {t('knowledgeContext.rolePickerTitle')}
     </Typography>
     <Stack direction="row" gap={1} flexWrap="wrap">
       {userKnowledgeRoles.map((item) => {
-        const selected = roles.includes(item.id)
+        const selected = activeRole === item.id
         return (
           <Chip
             key={item.id}
@@ -488,8 +479,8 @@ const KnowledgeRolePicker: React.FC<{
             clickable
             color={selected ? 'primary' : 'default'}
             variant={selected ? 'filled' : 'outlined'}
-            sx={selectedChipSx(selected)}
-            onClick={() => onToggleRole(item.id)}
+            sx={selectedRoleChipSx(selected)}
+            onClick={() => onSelectRole(item.id)}
           />
         )
       })}
@@ -497,68 +488,49 @@ const KnowledgeRolePicker: React.FC<{
   </Box>
 )
 
-const KnowledgeAreaGroups: React.FC<{
-  roles: UserKnowledgeRoleId[]
-  broadKnowledge: string[]
+const KnowledgeSuggestions: React.FC<{
+  activeRole: UserKnowledgeRoleId | null
+  selectedKnowledge: string[]
   language: InterfaceLanguageCode
-  t: ReturnType<typeof useInterfaceText>['t']
-  onToggleBroadKnowledge: (topic: string) => void
-}> = ({ roles, broadKnowledge, language, t, onToggleBroadKnowledge }) => {
-  const groups = getBroadKnowledgeGroups(roles)
+  onAddTopic: (topic: string) => void
+}> = ({ activeRole, selectedKnowledge, language, onAddTopic }) => {
+  const selectedKeys = React.useMemo(
+    () => new Set(selectedKnowledge.map(toTopicKey)),
+    [selectedKnowledge],
+  )
+  const suggestions = React.useMemo(
+    () =>
+      mergeUniqueTopics(activeRole ? getBroadKnowledgeOptions(activeRole) : []).filter(
+        (topic) => !selectedKeys.has(toTopicKey(topic)),
+      ),
+    [activeRole, selectedKeys],
+  )
 
-  if (!groups.length) {
+  if (!suggestions.length) {
     return null
   }
 
   return (
-    <Box>
-      <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
-        {t('knowledgeContext.suggestedAreas')}
-      </Typography>
-      <Stack spacing={1.75}>
-        {groups.map((group) => (
-          <Box key={group.role}>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={800}
-              sx={{
-                display: 'block',
-                mb: 0.75,
-                textTransform: 'uppercase',
-                letterSpacing: 0,
-              }}
-            >
-              {getRoleLabel(group.role, language)}
-            </Typography>
-            <Stack direction="row" gap={1} flexWrap="wrap">
-              {group.topics.map((topic) => {
-                const selected = broadKnowledge.includes(topic)
-                return (
-                  <Chip
-                    key={`${group.role}-${topic}`}
-                    label={getBroadKnowledgeTopicLabel(topic, language)}
-                    clickable
-                    color={selected ? 'primary' : 'default'}
-                    variant={selected ? 'filled' : 'outlined'}
-                    sx={selectedChipSx(selected)}
-                    onClick={() => onToggleBroadKnowledge(topic)}
-                  />
-                )
-              })}
-            </Stack>
-          </Box>
-        ))}
-      </Stack>
-    </Box>
+    <Stack direction="row" gap={1} flexWrap="wrap">
+      {suggestions.map((topic) => (
+        <Chip
+          key={topic}
+          icon={<AddIcon fontSize="small" />}
+          label={getBroadKnowledgeTopicLabel(topic, language)}
+          clickable
+          variant="outlined"
+          sx={suggestionChipSx}
+          onClick={() => onAddTopic(topic)}
+        />
+      ))}
+    </Stack>
   )
 }
 
-const KnowledgeContextForm: React.FC<{
-  surface: KnowledgeContextSurface
+export const KnownTopicsForm: React.FC<{
   initialContext?: ProfileContext | null
   onSelectedCountChange: (count: number) => void
-}> = ({ surface, initialContext, onSelectedCountChange }) => {
+}> = ({ initialContext, onSelectedCountChange }) => {
   const { language, t } = useInterfaceText()
   const [roles, setRoles] = React.useState<UserKnowledgeRoleId[]>([])
   const [broadKnowledge, setBroadKnowledge] = React.useState<string[]>([])
@@ -572,14 +544,14 @@ const KnowledgeContextForm: React.FC<{
     setRoles(initialContext?.roles || [])
     setBroadKnowledge(nextBroadKnowledge)
     setSpecificKnowledge(nextSpecificKnowledge)
-    setSpecificKnowledgeInput(readSpecificKnowledgeInputDraft(surface))
+    setSpecificKnowledgeInput(readSpecificKnowledgeInputDraft())
     onSelectedCountChange(
       getSelectedKnowledgeCount({
         broadKnowledge: nextBroadKnowledge,
         specificKnowledge: nextSpecificKnowledge,
       }),
     )
-  }, [initialContext, onSelectedCountChange, surface])
+  }, [initialContext, onSelectedCountChange])
 
   const selectedKnowledge = getSelectedKnowledge({
     broadKnowledge,
@@ -588,22 +560,25 @@ const KnowledgeContextForm: React.FC<{
   const newestSelectedKnowledge = getNewestSelectedKnowledge(selectedKnowledge)
   const selectedCount = selectedKnowledge.length
   const atStorageLimit = selectedCount >= USER_KNOWN_TOPICS_STORAGE_MAX
-  const recommendationText = getRecommendationText(surface, t)
-  const specificKnowledgeInputExample = t('knowledgeContext.inputExamples')
-
-  const persist = React.useCallback(
-    (draft: KnowledgeContextDraft) => {
-      saveProfileContext({
-        roles: draft.roles,
-        broadKnowledge: draft.broadKnowledge,
-        specificKnowledge: draft.specificKnowledge,
-      })
-    },
-    [],
+  const remainingForRecommended = Math.max(
+    PROFILE_CONTEXT_RECOMMENDED_MAX_TOPICS - selectedCount,
+    0,
   )
+  const progressValue =
+    (Math.min(selectedCount, PROFILE_CONTEXT_RECOMMENDED_MAX_TOPICS) /
+      PROFILE_CONTEXT_RECOMMENDED_MAX_TOPICS) *
+    100
+
+  const persist = React.useCallback((draft: KnownTopicsDraft) => {
+    saveProfileContext({
+      roles: draft.roles,
+      broadKnowledge: draft.broadKnowledge,
+      specificKnowledge: draft.specificKnowledge,
+    })
+  }, [])
 
   const updateDraft = React.useCallback(
-    (createNext: (current: KnowledgeContextDraft) => KnowledgeContextDraft) => {
+    (createNext: (current: KnownTopicsDraft) => KnownTopicsDraft) => {
       const current = { roles, broadKnowledge, specificKnowledge }
       const next = createNext(current)
 
@@ -616,11 +591,10 @@ const KnowledgeContextForm: React.FC<{
     [broadKnowledge, onSelectedCountChange, persist, roles, specificKnowledge],
   )
 
-  const toggleBroadKnowledge = (topic: string) => {
+  const addBroadKnowledge = (topic: string) => {
     updateDraft((current) => {
-      const isSelected = current.broadKnowledge.includes(topic)
       if (
-        !isSelected &&
+        !current.broadKnowledge.includes(topic) &&
         getSelectedKnowledgeCount(current) >= USER_KNOWN_TOPICS_STORAGE_MAX
       ) {
         return current
@@ -628,24 +602,18 @@ const KnowledgeContextForm: React.FC<{
 
       return {
         ...current,
-        broadKnowledge: isSelected
-          ? current.broadKnowledge.filter((item) => item !== topic)
+        broadKnowledge: current.broadKnowledge.includes(topic)
+          ? current.broadKnowledge
           : [...current.broadKnowledge, topic],
       }
     })
   }
 
-  const toggleRole = (role: UserKnowledgeRoleId) => {
-    updateDraft((current) => {
-      const nextRoles = current.roles.includes(role)
-        ? current.roles.filter((item) => item !== role)
-        : [...current.roles, role]
-
-      return {
-        ...current,
-        roles: nextRoles,
-      }
-    })
+  const selectRole = (role: UserKnowledgeRoleId) => {
+    updateDraft((current) => ({
+      ...current,
+      roles: current.roles.length === 1 && current.roles[0] === role ? [] : [role],
+    }))
   }
 
   const removeKnowledge = (topic: string) => {
@@ -672,41 +640,20 @@ const KnowledgeContextForm: React.FC<{
       ]).slice(0, USER_KNOWN_TOPICS_STORAGE_MAX - current.broadKnowledge.length),
     }))
     setSpecificKnowledgeInput('')
-    writeSpecificKnowledgeInputDraft(surface, '')
+    writeSpecificKnowledgeInputDraft('')
   }
 
   const updateSpecificKnowledgeInput = (value: string) => {
     setSpecificKnowledgeInput(value)
-    writeSpecificKnowledgeInputDraft(surface, value)
+    writeSpecificKnowledgeInputDraft(value)
   }
 
   return (
-    <Stack spacing={2.25}>
-      <Paper
-        elevation={0}
-        sx={(theme) => ({
-          p: 2,
-          border: 1,
-          borderColor: alpha(theme.palette.primary.main, 0.2),
-          background:
-            theme.palette.mode === 'dark'
-              ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.28)} 0%, ${alpha(theme.palette.secondary.main, 0.18)} 48%, ${alpha(theme.palette.background.paper, 0.86)} 100%)`
-              : `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.32)} 0%, ${alpha(theme.palette.secondary.light, 0.22)} 52%, ${alpha(theme.palette.background.paper, 0.94)} 100%)`,
-        })}
-      >
-        <Typography fontWeight={800} sx={{ mb: 0.75 }}>
-          {t('knowledgeContext.introTitle')}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t('knowledgeContext.introBody')}
-        </Typography>
-      </Paper>
-
-      <Stack spacing={1}>
+    <Stack spacing={2.5}>
+      <Stack spacing={0.75}>
         <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
           <TextField
-            label={t('knowledgeContext.inputLabel')}
-            helperText={t('knowledgeContext.inputHelper')}
+            placeholder={t('knowledgeContext.inputPlaceholder')}
             value={specificKnowledgeInput}
             onChange={(event) =>
               updateSpecificKnowledgeInput(event.target.value)
@@ -717,12 +664,13 @@ const KnowledgeContextForm: React.FC<{
                 addSpecificKnowledge()
               }
             }}
-              placeholder={specificKnowledgeInputExample}
+            inputProps={{ 'aria-label': t('knowledgeContext.inputLabel') }}
             fullWidth
             size="small"
           />
           <Button
-            variant="outlined"
+            variant="contained"
+            disableElevation
             onClick={addSpecificKnowledge}
             disabled={atStorageLimit}
             sx={{ minWidth: { sm: 88 }, alignSelf: { sm: 'flex-start' } }}
@@ -737,15 +685,40 @@ const KnowledgeContextForm: React.FC<{
               String(USER_KNOWN_TOPICS_STORAGE_MAX),
             )}
           </Typography>
-        ) : null}
+        ) : (
+          <Typography variant="caption" color="text.secondary">
+            {t('knowledgeContext.inputHelper')}
+          </Typography>
+        )}
       </Stack>
 
-      {selectedCount ? (
-        <Box>
-          <Typography variant="subtitle2" fontWeight={750} sx={{ mb: 1 }}>
-            {t('knowledgeContext.yourContext')}
+      <Box>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ mb: 1 }}
+        >
+          <Typography variant="subtitle2" fontWeight={750}>
+            {t('knownTopics.yourList').replace('{count}', String(selectedCount))}
           </Typography>
-          <Stack direction="row" gap={1} flexWrap="wrap">
+          <Stack direction="row" alignItems="center" gap={0.6}>
+            <Box
+              sx={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                bgcolor: 'success.main',
+              }}
+            />
+            <Typography variant="caption" color="success.main" fontWeight={600}>
+              {t('knownTopics.autoSaved')}
+            </Typography>
+          </Stack>
+        </Stack>
+
+        {selectedCount ? (
+          <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mb: 1.5 }}>
             {newestSelectedKnowledge.map((topic) => (
               <Chip
                 key={topic}
@@ -754,84 +727,64 @@ const KnowledgeContextForm: React.FC<{
                     ? getBroadKnowledgeTopicLabel(topic, language)
                     : topic
                 }
-                color="primary"
-                variant="filled"
-                sx={selectedChipSx(true)}
+                variant="outlined"
+                sx={listChipSx}
                 onDelete={() => removeKnowledge(topic)}
               />
             ))}
           </Stack>
-        </Box>
-      ) : null}
+        ) : (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mb: 1.5, fontStyle: 'italic' }}
+          >
+            {t('knownTopics.emptyListHint')}
+          </Typography>
+        )}
+
+        <LinearProgress
+          variant="determinate"
+          value={progressValue}
+          color="success"
+          sx={(theme) => ({
+            height: 6,
+            borderRadius: 999,
+            bgcolor: alpha(theme.palette.success.main, 0.15),
+          })}
+        />
+        <Typography
+          variant="caption"
+          color={remainingForRecommended === 0 ? 'success.main' : 'text.secondary'}
+          fontWeight={remainingForRecommended === 0 ? 700 : 400}
+          sx={{ mt: 0.5, display: 'block' }}
+        >
+          {remainingForRecommended === 0
+            ? t('knownTopics.progressEnough')
+            : t('knownTopics.progressAddMore').replace(
+              '{count}',
+              String(remainingForRecommended),
+            )}
+        </Typography>
+      </Box>
+
+      <Divider />
 
       <KnowledgeRolePicker
-        roles={roles}
+        activeRole={roles[0] ?? null}
         language={language}
         t={t}
-        onToggleRole={toggleRole}
+        onSelectRole={selectRole}
       />
 
-      <KnowledgeAreaGroups
-        roles={roles}
-        broadKnowledge={broadKnowledge}
+      <KnowledgeSuggestions
+        activeRole={roles[0] ?? null}
+        selectedKnowledge={selectedKnowledge}
         language={language}
-        t={t}
-        onToggleBroadKnowledge={toggleBroadKnowledge}
+        onAddTopic={addBroadKnowledge}
       />
-
-      <Typography variant="caption" color="text.secondary">
-        {t('knowledgeContext.selectedCount')
-          .replace('{count}', String(selectedCount))}
-        {' '}
-        {recommendationText}
-      </Typography>
     </Stack>
   )
 }
 
-const KnowledgeContextDialog: React.FC<KnowledgeContextDialogProps> = ({
-  open,
-  initialContext,
-  surface = 'settings',
-  onClose,
-}) => {
-  const { t } = useInterfaceText()
-  const [selectedCount, setSelectedCount] = React.useState(0)
-
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{t('knowledgeContext.title')}</DialogTitle>
-      <DialogContent dividers>
-        <KnowledgeContextForm
-          surface={surface}
-          initialContext={initialContext}
-          onSelectedCountChange={setSelectedCount}
-        />
-      </DialogContent>
-      <DialogActions>
-        {surface === 'onboarding' ? (
-          <Button onClick={onClose}>{t('knowledgeContext.skip')}</Button>
-        ) : (
-          <Button onClick={onClose}>{t('knowledgeContext.close')}</Button>
-        )}
-        <Button
-          variant="contained"
-          onClick={onClose}
-          disabled={selectedCount === 0}
-        >
-          {t('knowledgeContext.accept')}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
-}
-
-export const KnowledgeContextOnboardingDialog: React.FC<
-  Omit<KnowledgeContextDialogProps, 'surface'>
-> = (props) => <KnowledgeContextDialog {...props} surface="onboarding" />
-
-export const KnowledgeContextSettingsDialog: React.FC<
-  Omit<KnowledgeContextDialogProps, 'surface'>
-> = (props) => <KnowledgeContextDialog {...props} surface="settings" />
-
-export default KnowledgeContextDialog
+export default KnownTopicsForm

@@ -7,10 +7,12 @@ import React, {
 } from 'react'
 import {
   Box,
-  Button,
+  Chip,
   IconButton,
   Paper,
   Stack,
+  Tab,
+  Tabs,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -121,10 +123,36 @@ const StudyGuideQuickStartCard = ({
   onToggle: () => void
   t: ReturnType<typeof useInterfaceText>['t']
 }) => {
+  const forcedBridge = quickStart.forcedBridge
   const activeQuickStart =
-    selectedView === 'context' && quickStart.forcedBridge
-      ? quickStart.forcedBridge
-      : quickStart
+    selectedView === 'context' && forcedBridge ? forcedBridge : quickStart
+
+  const plainLabel = t('workspace.plainQuickStart')
+  const viaLabel = (topics: string[]) =>
+    t('workspace.viaTopics').replace('{topics}', topics.join(', '))
+  const defaultSegmentLabel = quickStart.bridgeTopics?.length
+    ? viaLabel(quickStart.bridgeTopics)
+    : plainLabel
+  const contextSegmentLabel = forcedBridge?.bridgeTopics?.length
+    ? viaLabel(forcedBridge.bridgeTopics)
+    : plainLabel
+  const renderTabLabel = (label: string, weakFitReason?: string) =>
+    weakFitReason ? (
+      <Stack direction="row" spacing={0.75} alignItems="center">
+        <span>{label}</span>
+        <Tooltip title={weakFitReason}>
+          <Chip
+            label={t('workspace.weakBadge')}
+            size="small"
+            color="warning"
+            variant="outlined"
+            sx={{ height: 18, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 } }}
+          />
+        </Tooltip>
+      </Stack>
+    ) : (
+      label
+    )
 
   return (
     <Box
@@ -188,23 +216,47 @@ const StudyGuideQuickStartCard = ({
           </Stack>
           {expanded ? (
             <Stack spacing={1.75}>
-              {quickStart.forcedBridge && (
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  <Button
-                    size="small"
-                    variant={selectedView === 'context' ? 'outlined' : 'contained'}
-                    onClick={() => onViewChange('default')}
-                  >
-                    {t('workspace.defaultQuickStart')}
-                  </Button>
-                  <Button
-                    size="small"
-                    variant={selectedView === 'context' ? 'contained' : 'outlined'}
-                    onClick={() => onViewChange('context')}
-                  >
-                    {t('workspace.forcedBridgeQuickStart')}
-                  </Button>
-                </Stack>
+              {forcedBridge && (
+                <Tabs
+                  value={selectedView}
+                  onChange={(_event, value: StudyGuideQuickStartView) =>
+                    onViewChange(value)
+                  }
+                  sx={{
+                    minHeight: 0,
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    '& .MuiTab-root': {
+                      minHeight: 0,
+                      minWidth: 'auto',
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.875rem',
+                      py: 0.75,
+                      px: 1,
+                      mr: 2,
+                      color: 'text.secondary',
+                    },
+                    '& .Mui-selected': {
+                      color: 'primary.main',
+                    },
+                  }}
+                >
+                  <Tab
+                    value="default"
+                    label={renderTabLabel(
+                      defaultSegmentLabel,
+                      quickStart.weakFitReason,
+                    )}
+                  />
+                  <Tab
+                    value="context"
+                    label={renderTabLabel(
+                      contextSegmentLabel,
+                      forcedBridge.weakFitReason,
+                    )}
+                  />
+                </Tabs>
               )}
               <Box>
                 <Typography

@@ -48,7 +48,10 @@ import type {
   StudyGuideKnowledgeBridgeBlock,
   StudyGuideQuickStartRelevanceDecision,
 } from '../../studyGuides/quickStart'
-import type { StudyGuideQuickStart } from '../../state/store'
+import type {
+  StudyGuideQuickStart,
+  StudyGuideQuickStartVariant,
+} from '../../state/store'
 import type { StudyMeshLanguageCode } from '../../language/contentLanguage'
 import type { StudyObject } from '../types'
 
@@ -283,6 +286,20 @@ const generateStudyGuideKnowledgeBridgeBlocksWithAi = async ({
   }
 }
 
+const withBridgeTopics = (
+  variant: StudyGuideQuickStartVariant,
+  decision: StudyGuideQuickStartRelevanceDecision | undefined,
+): StudyGuideQuickStartVariant =>
+  decision?.shouldUseKnownTopic && decision.knownTopicsForQuickStart.length
+    ? {
+        ...variant,
+        bridgeTopics: decision.knownTopicsForQuickStart,
+        ...(decision.bridgeStrength === 'weak' && decision.weakFitReason
+          ? { weakFitReason: decision.weakFitReason }
+          : {}),
+      }
+    : variant
+
 export const generateStudyGuideQuickStartWithAi = async ({
   provider,
   apiToken,
@@ -418,38 +435,60 @@ export const generateStudyGuideQuickStartWithAi = async ({
   }
   onRelevanceDecision?.(relevanceDecision)
 
-  const quickStart = await generateQuickStartVariant(relevanceDecision, 'auto')
-  if (!quickStart) {
-    throw new Error('AI did not return a Study Guide Quick Start.')
+  const generatePlainOnly = async () => {
+    const plain = await generateQuickStartVariant(undefined, 'auto')
+    if (!plain) {
+      throw new Error('AI did not return a Study Guide Quick Start.')
+    }
+    return plain
   }
 
-  if (
-    !safeKnownTopics.length ||
-    relevanceDecisionFailed ||
-    (relevanceDecision?.shouldUseKnownTopic &&
-      relevanceDecision.knownTopicsForQuickStart.length)
-  ) {
-    return quickStart
+  if (!safeKnownTopics.length || relevanceDecisionFailed) {
+    return await generatePlainOnly()
   }
+
+  // Auto mode already picked a confident bridge, or we still need to force
+  // one so the learner has a Via-X view to toggle to even on a weak match.
+  const autoAlreadyBridged =
+    relevanceDecision?.shouldUseKnownTopic &&
+    relevanceDecision.knownTopicsForQuickStart.length > 0
+  const bridgeDecision = autoAlreadyBridged
+    ? relevanceDecision
+    : ensureForcedStudyGuideQuickStartRelevanceDecision(
+        knowledgeContextPlan.shouldRunForcedRelevanceSelector
+          ? await getRelevanceDecision('force').catch(() => undefined)
+          : relevanceDecision,
+        safeKnownTopics,
+      )
+
+  if (!bridgeDecision) {
+    return await generatePlainOnly()
+  }
+
+  const bridgeMode: StudyGuideBridgeMode = autoAlreadyBridged
+    ? 'auto'
+    : 'force'
 
   try {
-    const forcedRelevanceDecision =
-      knowledgeContextPlan.shouldRunForcedRelevanceSelector
-        ? ensureForcedStudyGuideQuickStartRelevanceDecision(
-            await getRelevanceDecision('force'),
-            safeKnownTopics,
-          )
-        : ensureForcedStudyGuideQuickStartRelevanceDecision(
-            relevanceDecision,
-            safeKnownTopics,
-          )
-    const forcedBridge = forcedRelevanceDecision
-      ? await generateQuickStartVariant(forcedRelevanceDecision, 'force')
-      : null
+    const [rawPlain, rawBridge] = await Promise.all([
+      generateQuickStartVariant(undefined, 'auto'),
+      generateQuickStartVariant(bridgeDecision, bridgeMode),
+    ])
+    const bridge = rawBridge ? withBridgeTopics(rawBridge, bridgeDecision) : null
 
-    return forcedBridge ? { ...quickStart, forcedBridge } : quickStart
+    if (!rawPlain || !bridge) {
+      // One half of the pair failed to parse; show whichever variant we do
+      // have rather than duplicating or dropping content silently.
+      return bridge ?? rawPlain ?? (await generatePlainOnly())
+    }
+
+    // Whichever variant is the stronger match leads by default; the other
+    // stays one tap away as forcedBridge, never hidden entirely.
+    return autoAlreadyBridged
+      ? { ...bridge, forcedBridge: rawPlain }
+      : { ...rawPlain, forcedBridge: bridge }
   } catch {
-    return quickStart
+    return await generatePlainOnly()
   }
 }
 

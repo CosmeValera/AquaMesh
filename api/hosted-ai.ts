@@ -2504,6 +2504,7 @@ interface NormalizedMonolithGuide {
     useForDefault: boolean;
     selectedTopics: string[];
     personalizedQuickStart?: NonNullable<HostedAiGatewayResponse["quickStart"]>;
+    reason?: string;
     bridgeBlock?: { title: string; body: string };
   };
 }
@@ -2639,7 +2640,7 @@ Rules:
 - contextPlan.personalizedQuickStart: always write this variant. It is an opt-in view the learner opens themselves, so write it even when useForDefault is false; it never replaces the neutral Quick Start unless useForDefault is true. Build it through the selected topic. If the bridge is strong, the selected topic must lead. If it is weak or cross-domain, explain the topic neutrally first, use the selected topic as one short honest contrast, and say plainly where the comparison breaks. quickSummary 60-85 words, complete sentences.
 - If selectedTopics is [], still write personalizedQuickStart as a neutral beginner-friendly Quick Start with one caveat or common misconception, and invent no bridge.
 - contextPlan.bridgeBlock: one short study note connecting a concept from page 2 to the selected topic, with one caveat. body under 85 words, ending with a complete sentence.
-- contextPlan.reason: one sentence on why the selected topic was chosen.
+- contextPlan.reason: if useForDefault is false (a weak bridge), 6-12 words stating specifically why this topic is not the best fit for the learner's prompt (e.g. "different domain — only shares vocabulary, not underlying mechanics"). If useForDefault is true, one short sentence on why the selected topic was chosen.
 - For topics involving identity, history, politics, culture, or people, keep the bridge factual and avoid reductive claims. For human or management topics, do not compare people to infrastructure, tools, or machines.`
     : ""
 }
@@ -2709,10 +2710,12 @@ const normalizeMonolithGuide = (
       stringValue(bridgeRecord?.body),
       700,
     );
+    const reason = trimTitleToWordBoundary(stringValue(planRecord.reason), 90);
     contextPlan = {
       useForDefault: planRecord.useForDefault === true,
       selectedTopics,
       personalizedQuickStart,
+      reason: reason || undefined,
       bridgeBlock:
         bridgeTitle && bridgeBody
           ? { title: bridgeTitle, body: bridgeBody }
@@ -2831,10 +2834,18 @@ export const generateMonolithHostedStudyGuide = async ({
     guide.quickStart;
   let bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"] = [];
   const contextPlan = guide.contextPlan;
-  if (contextPlan?.personalizedQuickStart) {
-    if (contextPlan.useForDefault && contextPlan.selectedTopics.length) {
+  if (contextPlan?.personalizedQuickStart && contextPlan.selectedTopics.length) {
+    // Both a plain and a bridged Quick Start always exist together (they come
+    // from the same monolith call), so the learner can toggle either way
+    // regardless of which one leads by default.
+    const plainQuickStart = quickStart;
+    const bridgeQuickStart = {
+      ...contextPlan.personalizedQuickStart,
+      bridgeTopics: contextPlan.selectedTopics,
+    };
+    if (contextPlan.useForDefault) {
       metadataFlags.quickStartPersonalizedRewriteUsed = true;
-      quickStart = contextPlan.personalizedQuickStart;
+      quickStart = { ...bridgeQuickStart, forcedBridge: plainQuickStart };
       if (contextPlan.bridgeBlock) {
         bridgeBlocks = [{ dashboardIndex: 1, ...contextPlan.bridgeBlock }];
       }
@@ -2843,8 +2854,10 @@ export const generateMonolithHostedStudyGuide = async ({
       // candidate topic as a weak bridge; the learner decides, not the model.
       metadataFlags.forcedBridgeAvailable = true;
       quickStart = {
-        ...quickStart,
-        forcedBridge: contextPlan.personalizedQuickStart,
+        ...plainQuickStart,
+        forcedBridge: contextPlan.reason
+          ? { ...bridgeQuickStart, weakFitReason: contextPlan.reason }
+          : bridgeQuickStart,
       };
     }
   }

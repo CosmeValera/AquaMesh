@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   buildStudyGuideKnownTopicPrefilterPrompt,
   parseStudyGuideKnownTopicPrefilterResult,
+  parseStudyGuideQuickStart,
+  parseStudyGuideQuickStartRelevanceDecision,
   resolveStudyGuideKnowledgeContextPlan,
   STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MAX,
 } from '../../../src/studyGuides/quickStart'
@@ -74,5 +76,83 @@ describe('parseStudyGuideKnownTopicPrefilterResult', () => {
         candidates,
       ),
     ).toEqual(candidates.slice(0, STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MAX))
+  })
+})
+
+describe('Quick Start bridge topics', () => {
+  it('keeps bridgeTopics when the AI response includes them', () => {
+    const quickStart = parseStudyGuideQuickStart(
+      JSON.stringify({
+        keyIdea: 'Kubernetes networking mirrors Docker container networking.',
+        quickSummary: 'First paragraph.\n\nSecond paragraph.',
+        bridgeTopics: ['Docker containers', 'Linux networking basics'],
+      }),
+    )
+
+    expect(quickStart?.bridgeTopics).toEqual([
+      'Docker containers',
+      'Linux networking basics',
+    ])
+  })
+
+  it('omits bridgeTopics entirely when none were provided', () => {
+    const quickStart = parseStudyGuideQuickStart(
+      JSON.stringify({
+        keyIdea: 'A neutral explanation with no learner-context bridge.',
+        quickSummary: 'First paragraph.\n\nSecond paragraph.',
+      }),
+    )
+
+    expect(quickStart?.bridgeTopics).toBeUndefined()
+  })
+
+  it('caps bridgeTopics at 2, matching the relevance-decision cap', () => {
+    const quickStart = parseStudyGuideQuickStart(
+      JSON.stringify({
+        keyIdea: 'A key idea.',
+        quickSummary: 'First paragraph.\n\nSecond paragraph.',
+        bridgeTopics: ['One', 'Two', 'Three'],
+      }),
+    )
+
+    expect(quickStart?.bridgeTopics).toEqual(['One', 'Two'])
+  })
+})
+
+describe('relevance decision weakFitReason', () => {
+  const candidates = ['Ansible notes']
+
+  it('keeps weakFitReason when bridgeStrength is weak', () => {
+    const decision = parseStudyGuideQuickStartRelevanceDecision(
+      JSON.stringify({
+        shouldUseKnownTopic: true,
+        knownTopicsForQuickStart: ['Ansible notes'],
+        knownTopicRelevanceReason: 'Loosely related config-management tooling.',
+        weakFitReason: 'Different domain, only shares vocabulary.',
+        targetTopicType: 'technical',
+        bridgeStrength: 'weak',
+        bridgeStrategy: 'light_reference',
+      }),
+      candidates,
+    )
+
+    expect(decision.weakFitReason).toBe('Different domain, only shares vocabulary.')
+  })
+
+  it('drops weakFitReason when bridgeStrength is strong', () => {
+    const decision = parseStudyGuideQuickStartRelevanceDecision(
+      JSON.stringify({
+        shouldUseKnownTopic: true,
+        knownTopicsForQuickStart: ['Ansible notes'],
+        knownTopicRelevanceReason: 'Directly comparable automation tooling.',
+        weakFitReason: 'This should be ignored for a strong bridge.',
+        targetTopicType: 'technical',
+        bridgeStrength: 'strong',
+        bridgeStrategy: 'direct_comparison',
+      }),
+      candidates,
+    )
+
+    expect(decision.weakFitReason).toBeUndefined()
   })
 })

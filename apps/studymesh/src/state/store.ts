@@ -43,6 +43,9 @@ export interface StudyPathDashboardItem {
 export interface StudyGuideQuickStartVariant {
   keyIdea: string
   quickSummary: string
+  bridgeTopics?: string[]
+  /** 6-12 words on why this bridge is not the best fit. Only set on a weak bridge. */
+  weakFitReason?: string
 }
 
 export interface StudyGuideQuickStart extends StudyGuideQuickStartVariant {

@@ -311,7 +311,7 @@ describe('Interactive Study Guide UX', () => {
     )
   })
 
-  it('shows learner context as an alternate Quick Start view', () => {
+  it('shows learner context as an alternate Quick Start view', async () => {
     const studyPath = {
       ...createStudyPath(),
       quickStart: {
@@ -320,6 +320,8 @@ describe('Interactive Study Guide UX', () => {
         forcedBridge: {
           keyIdea: 'Forced bridge key idea',
           quickSummary: 'Context summary paragraph.',
+          bridgeTopics: ['Ansible notes'],
+          weakFitReason: 'Only shares vocabulary, different underlying domain.',
         },
       },
     }
@@ -341,8 +343,16 @@ describe('Interactive Study Guide UX', () => {
 
     expect(screen.getByText('Default key idea')).toBeInTheDocument()
     expect(screen.queryByText('Forced bridge key idea')).not.toBeInTheDocument()
+    expect(screen.getByText('weak')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /use my context/i }))
+    fireEvent.mouseOver(screen.getByText('weak'))
+    await waitFor(() =>
+      expect(
+        screen.getByText('Only shares vocabulary, different underlying domain.'),
+      ).toBeInTheDocument(),
+    )
+
+    fireEvent.click(screen.getByRole('tab', { name: /via ansible notes/i }))
 
     expect(screen.getByText('Forced bridge key idea')).toBeInTheDocument()
     expect(screen.getByText('Context summary paragraph.')).toBeInTheDocument()
@@ -372,9 +382,7 @@ describe('Interactive Study Guide UX', () => {
     )
 
     expect(screen.getByText('Default key idea only')).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: /use my context/i }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText('Plain')).not.toBeInTheDocument()
   })
 
   it('removes duplicate page title before a knowledge-context bridge card', () => {
@@ -662,6 +670,67 @@ describe('Interactive Study Guide UX', () => {
     expect(
       screen.queryByTestId('study-guide-quick-start-card'),
     ).not.toBeInTheDocument()
+  })
+
+  it('pre-selects the Via-X segment and shows no caption on a strong match', () => {
+    const studyPath = {
+      ...createStudyPath(),
+      quickStart: {
+        keyIdea: 'Kubernetes networking mirrors Docker container networking.',
+        quickSummary: 'First paragraph.\n\nSecond paragraph.',
+        bridgeTopics: ['Docker containers', 'Linux networking basics'],
+        forcedBridge: {
+          keyIdea: 'A neutral explanation with no learner-context bridge.',
+          quickSummary: 'First paragraph.\n\nSecond paragraph.',
+        },
+      },
+    }
+
+    render(
+      <MemoryRouter>
+        <StudyPathWorkspaceView
+          studyPath={studyPath}
+          onStudyPathChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+
+    const quickStartCard = screen.getByTestId('study-guide-quick-start-card')
+    expect(
+      screen.getByRole('tab', {
+        name: 'Via Docker containers, Linux networking basics',
+      }),
+    ).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Plain' })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    )
+    expect(screen.queryByText('weak')).not.toBeInTheDocument()
+    expect(quickStartCard.textContent).toContain(
+      'Kubernetes networking mirrors Docker container networking.',
+    )
+  })
+
+  it('renders no toggle at all when the Quick Start has no alternate variant', () => {
+    const studyPath = {
+      ...createStudyPath(),
+      quickStart: {
+        keyIdea: 'A neutral explanation with no learner-context bridge.',
+        quickSummary: 'First paragraph.\n\nSecond paragraph.',
+      },
+    }
+
+    render(
+      <MemoryRouter>
+        <StudyPathWorkspaceView
+          studyPath={studyPath}
+          onStudyPathChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByText('Plain')).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Via /)).not.toBeInTheDocument()
   })
 
   it('uses an icon-only edit and preview toggle for editable pages', () => {

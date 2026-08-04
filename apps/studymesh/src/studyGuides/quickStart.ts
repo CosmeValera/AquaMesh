@@ -55,6 +55,8 @@ export interface StudyGuideQuickStartRelevanceDecision {
   targetTopicType: StudyGuideQuickStartTargetTopicType
   bridgeStrength: StudyGuideQuickStartBridgeStrength
   bridgeStrategy: StudyGuideQuickStartBridgeStrategy
+  /** 6-12 words on why the topic is not the best fit. Only set when bridgeStrength is 'weak'. */
+  weakFitReason?: string
 }
 
 export interface StudyGuideKnowledgeBridgeBlock {
@@ -118,6 +120,7 @@ export const STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA = {
       items: { type: 'STRING' },
     },
     knownTopicRelevanceReason: { type: 'STRING' },
+    weakFitReason: { type: 'STRING' },
     targetTopicType: {
       type: 'STRING',
       enum: [...quickStartTargetTopicTypes],
@@ -504,12 +507,18 @@ export const parseStudyGuideQuickStartRelevanceDecision = (
     }
   }
 
+  const weakFitReason =
+    bridgeStrength === 'weak'
+      ? trimTitleToWordBoundary(stringValue(record.weakFitReason), 90)
+      : ''
+
   return {
     shouldUseKnownTopic,
     knownTopicsForQuickStart: selectedTopics,
     knownTopicRelevanceReason:
       stringValue(record.knownTopicRelevanceReason).slice(0, 240) ||
       'Selected known topic is a direct cognitive bridge.',
+    ...(weakFitReason ? { weakFitReason } : {}),
     targetTopicType: isTargetTopicType(record.targetTopicType)
       ? record.targetTopicType
       : neutral.targetTopicType,
@@ -562,7 +571,21 @@ const sanitizeStudyGuideQuickStartVariant = (
     return null
   }
 
-  return { keyIdea, quickSummary }
+  const bridgeTopics = sanitizeUserKnownTopics(value?.bridgeTopics, {
+    maxTopics: 2,
+  })
+  const weakFitReason = bridgeTopics.length
+    ? trimTitleToWordBoundary(String(value?.weakFitReason || ''), 90)
+    : ''
+
+  return bridgeTopics.length
+    ? {
+        keyIdea,
+        quickSummary,
+        bridgeTopics,
+        ...(weakFitReason ? { weakFitReason } : {}),
+      }
+    : { keyIdea, quickSummary }
 }
 
 export const sanitizeStudyGuideQuickStart = (
@@ -761,6 +784,7 @@ Return strict JSON only with this shape:
   "shouldUseKnownTopic": boolean,
   "knownTopicsForQuickStart": string[],
   "knownTopicRelevanceReason": string,
+  "weakFitReason": string,
   "targetTopicType": "technical" | "human_management" | "general",
   "bridgeStrength": "none" | "weak" | "strong",
   "bridgeStrategy": "direct_comparison" | "analogy_skeleton" | "light_reference" | "none"
@@ -788,6 +812,7 @@ Decision rules:
 - Force mode: the user explicitly wants the closest useful bridge from their knowledge. Rank the provided known topics by usefulness and select the least-bad bridge, even when the bridge is only weak.
 - Force mode: do not return no bridge merely because every option is imperfect. Return no bridge only if every available comparison would actively mislead the learner, be unsafe, or be dehumanizing.
 - Force mode: if the bridge is weak but still useful as a contrast, select it with bridgeStrength "weak" and bridgeStrategy "light_reference"; explain in knownTopicRelevanceReason that it is imperfect.
+- When bridgeStrength is "weak", also set weakFitReason to 6-12 words stating specifically why this topic is not the best fit for the learner's prompt (e.g. "different domain, only shares vocabulary, not underlying mechanics"). Leave weakFitReason empty when bridgeStrength is "none" or "strong".
 - Force mode: interpret learner topic wording flexibly, but do not use hidden hardcoded topic-pair rules.
 - Do not write the Quick Start.
 

@@ -23,7 +23,14 @@ export interface ProfileContext {
 
 export const PROFILE_CONTEXT_RECOMMENDED_MIN_TOPICS = 3
 export const PROFILE_CONTEXT_RECOMMENDED_MAX_TOPICS = 5
-export const USER_KNOWN_TOPICS_MAX_FOR_AI = 8
+/** Above this count, callers should prefilter with an AI pass before the normal selection call. */
+export const USER_KNOWN_TOPICS_DIRECT_MAX = 50
+/**
+ * Hard ceiling on total stored known topics (broadKnowledge + specificKnowledge
+ * combined). Deliberately high and never surfaced as ambient UI copy — it only
+ * needs to matter for the rare user who keeps adding past it.
+ */
+export const USER_KNOWN_TOPICS_STORAGE_MAX = 500
 export const USER_KNOWN_TOPIC_MAX_CHARS = 40
 
 export const userKnowledgeRoles: Array<{
@@ -222,8 +229,16 @@ export const normalizeProfileContext = (
   const roles = rawRoles.filter((role): role is UserKnowledgeRoleId =>
     userKnowledgeRoles.some((item) => item.id === role),
   )
-  const broadKnowledge = sanitizeUserKnownTopics(record.broadKnowledge)
-  const specificKnowledge = sanitizeUserKnownTopics(record.specificKnowledge)
+  // specificKnowledge is capped first: addLearnedTopicToProfileContext leads
+  // it with the newest topic, so trimming broadKnowledge first would silently
+  // drop what the user just added instead of older, lower-signal entries.
+  const specificKnowledge = sanitizeUserKnownTopics(
+    record.specificKnowledge,
+  ).slice(0, USER_KNOWN_TOPICS_STORAGE_MAX)
+  const broadKnowledge = sanitizeUserKnownTopics(record.broadKnowledge).slice(
+    0,
+    Math.max(0, USER_KNOWN_TOPICS_STORAGE_MAX - specificKnowledge.length),
+  )
   const updatedAt =
     typeof record.updatedAt === 'string' && record.updatedAt.trim()
       ? record.updatedAt.trim()
@@ -293,6 +308,13 @@ export const writeProfileContextFromCloud = (value: unknown): void => {
   dispatchProfileContextChanged(next)
 }
 
+/**
+ * Direct-safe topics for a single AI selection call, newest first. Callers
+ * with more than USER_KNOWN_TOPICS_DIRECT_MAX total known topics (see
+ * getAllUserKnownTopics) should run an AI prefilter pass instead of truncating
+ * here, so a large profile still gets a topic-relevant shortlist rather than
+ * whichever topics happen to be newest.
+ */
 export const getUserKnownTopics = (
   profileContext = readProfileContext(),
 ): string[] =>
@@ -302,7 +324,7 @@ export const getUserKnownTopics = (
       ...(profileContext?.broadKnowledge || []),
     ],
     {
-      maxTopics: USER_KNOWN_TOPICS_MAX_FOR_AI,
+      maxTopics: USER_KNOWN_TOPICS_DIRECT_MAX,
     },
   )
 
@@ -338,8 +360,19 @@ export const addLearnedTopicToProfileContext = (
   }
 
   const key = nextTopic.toLowerCase()
+  const isAlreadyKnown = getAllUserKnownTopics(profileContext).some(
+    (known) => known.toLowerCase() === key,
+  )
+  if (
+    !isAlreadyKnown &&
+    getAllUserKnownTopics(profileContext).length >=
+      USER_KNOWN_TOPICS_STORAGE_MAX
+  ) {
+    return null
+  }
+
   // Newest first: getUserKnownTopics keeps only the leading
-  // USER_KNOWN_TOPICS_MAX_FOR_AI entries, so a topic the user just accepted has
+  // USER_KNOWN_TOPICS_DIRECT_MAX entries, so a topic the user just accepted has
   // to lead specificKnowledge or a full list would silently drop it.
   const specificKnowledge = [
     nextTopic,

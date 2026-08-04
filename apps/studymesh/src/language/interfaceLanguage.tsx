@@ -92,6 +92,8 @@ const translations = {
     'knowledgeContext.selectedCount': '{count} selected.',
     'knowledgeContext.recommendedOnboarding': 'Recommended: 3-5.',
     'knowledgeContext.recommendedSettings': 'Recommended: 5 or more.',
+    'knowledgeContext.limitReached':
+      "You've reached the {limit}-topic limit. Remove one to add another.",
     'knowledgeContext.skip': 'Skip',
     'knowledgeContext.accept': 'Accept',
     'knowledgeContext.close': 'Close',
@@ -621,6 +623,8 @@ const translations = {
     'knowledgeContext.selectedCount': '{count} seleccionados.',
     'knowledgeContext.recommendedOnboarding': 'Recomendado: 3-5.',
     'knowledgeContext.recommendedSettings': 'Recomendado: 5 o más.',
+    'knowledgeContext.limitReached':
+      'Llegaste al límite de {limit} temas. Elimina uno para añadir otro.',
     'knowledgeContext.skip': 'Omitir',
     'knowledgeContext.accept': 'Aceptar',
     'knowledgeContext.close': 'Cerrar',
@@ -1164,6 +1168,8 @@ const translationOverrides: Record<
     'knowledgeContext.selectedCount': '{count} sélectionnés.',
     'knowledgeContext.recommendedOnboarding': 'Recommandé : 3-5.',
     'knowledgeContext.recommendedSettings': 'Recommandé : 5 ou plus.',
+    'knowledgeContext.limitReached':
+      'Vous avez atteint la limite de {limit} sujets. Supprimez-en un pour en ajouter un autre.',
     'knowledgeContext.skip': 'Ignorer',
     'knowledgeContext.accept': 'Accepter',
     'knowledgeContext.close': 'Fermer',
@@ -1700,6 +1706,8 @@ const translationOverrides: Record<
     'knowledgeContext.selectedCount': '{count} ausgewählt.',
     'knowledgeContext.recommendedOnboarding': 'Empfohlen: 3-5.',
     'knowledgeContext.recommendedSettings': 'Empfohlen: 5 oder mehr.',
+    'knowledgeContext.limitReached':
+      'Du hast das Limit von {limit} Themen erreicht. Entferne eins, um ein weiteres hinzuzufügen.',
     'knowledgeContext.skip': 'Überspringen',
     'knowledgeContext.accept': 'Akzeptieren',
     'knowledgeContext.close': 'Schließen',

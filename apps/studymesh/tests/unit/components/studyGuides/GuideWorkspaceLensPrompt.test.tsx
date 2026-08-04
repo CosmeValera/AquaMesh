@@ -12,7 +12,7 @@ import {
   PROFILE_CONTEXT_STORAGE_KEY,
   readProfileContext,
   saveProfileContext,
-  USER_KNOWN_TOPICS_MAX_FOR_AI,
+  USER_KNOWN_TOPICS_DIRECT_MAX,
 } from '../../../../src/profileContext'
 
 vi.mock('../../../../src/auth/AuthProvider', () => ({
@@ -132,26 +132,23 @@ describe('learned topic lens prompt', () => {
   })
 
   it('keeps a newly learned topic inside the AI topic cap', () => {
+    const priorSpecificKnowledge = Array.from(
+      { length: USER_KNOWN_TOPICS_DIRECT_MAX },
+      (_, index) => `Topic ${index + 1}`,
+    )
     saveProfileContext({
       roles: ['software_it'],
       broadKnowledge: ['Backend', 'Databases'],
-      specificKnowledge: [
-        'MinIO',
-        'S3',
-        'Kafka',
-        'Redis',
-        'Postgres',
-        'Nginx',
-        'Docker',
-        'Terraform',
-      ],
+      specificKnowledge: priorSpecificKnowledge,
     })
 
     const next = addLearnedTopicToProfileContext('Bottlenecks')
 
     expect(next?.specificKnowledge[0]).toBe('Bottlenecks')
-    expect(next?.specificKnowledge).toHaveLength(9)
-    expect(getUserKnownTopics(next)).toHaveLength(USER_KNOWN_TOPICS_MAX_FOR_AI)
+    expect(next?.specificKnowledge).toHaveLength(
+      USER_KNOWN_TOPICS_DIRECT_MAX + 1,
+    )
+    expect(getUserKnownTopics(next)).toHaveLength(USER_KNOWN_TOPICS_DIRECT_MAX)
     expect(getUserKnownTopics(next)[0]).toBe('Bottlenecks')
   })
 

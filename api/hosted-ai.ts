@@ -15,7 +15,10 @@ import type {
   HostedAiSurface,
 } from "../apps/studymesh/src/quickCreate/ai/hostedCredits";
 import {
+  buildStudyGuideKnownTopicPrefilterPrompt,
+  parseStudyGuideKnownTopicPrefilterResult,
   parseStudyGuideQuickStart,
+  STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_SCHEMA,
   trimTitleToWordBoundary,
   trimToCompleteSentenceWithinChars,
 } from "../apps/studymesh/src/studyGuides/quickStart";
@@ -24,7 +27,10 @@ import {
   getContentLanguagePromptName,
   type StudyMeshLanguageCode,
 } from "../apps/studymesh/src/language/contentLanguagePrompt";
-import { sanitizeUserKnownTopics } from "../apps/studymesh/src/profileContext";
+import {
+  sanitizeUserKnownTopics,
+  USER_KNOWN_TOPICS_DIRECT_MAX,
+} from "../apps/studymesh/src/profileContext";
 
 loadLocalApiEnv();
 
@@ -226,6 +232,7 @@ const BLUEPRINT_OPENAI_STAGES = new Set<HostedAiStage>([
 
 const SUPPORT_OPENAI_STAGES = new Set<HostedAiStage>([
   "study_guide_main",
+  "study_guide_known_topic_prefilter",
   "quick_start_fallback",
   "quick_start_personalized",
   "quick_start_relevance_auto",
@@ -2752,9 +2759,37 @@ export const generateMonolithHostedStudyGuide = async ({
       requestText,
       "Folder name fallback if you cannot infer a better one",
     ) || titleFallback;
-  const safeKnownTopics = sanitizeUserKnownTopics(
+  let safeKnownTopics = sanitizeUserKnownTopics(
     usageRequest.quickStartOptions?.userKnownTopics,
   );
+
+  if (safeKnownTopics.length > USER_KNOWN_TOPICS_DIRECT_MAX) {
+    try {
+      const prefilterText = await callStage(
+        "study_guide_known_topic_prefilter",
+        {
+          ...usageRequest,
+          responseSchema: STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_SCHEMA,
+          parts: [
+            {
+              text: buildStudyGuideKnownTopicPrefilterPrompt({
+                title: titleFallback,
+                prompt: topic,
+                candidateTopics: safeKnownTopics,
+              }),
+            },
+          ],
+        },
+      );
+      safeKnownTopics = parseStudyGuideKnownTopicPrefilterResult(
+        prefilterText,
+        safeKnownTopics,
+      );
+    } catch {
+      metadataFlags.knownTopicPrefilterFailed = true;
+      safeKnownTopics = safeKnownTopics.slice(0, USER_KNOWN_TOPICS_DIRECT_MAX);
+    }
+  }
 
   const monolithRequest: HostedAiGatewayRequest = {
     ...usageRequest,
@@ -3276,6 +3311,9 @@ export default async function handler(
     );
   } catch (error) {
     const mapped = mapFailure(error);
+    if (mapped.statusCode >= 500) {
+      console.error("[hosted-ai] request failed", request.action, error);
+    }
     json(res, mapped.statusCode, mapped.response);
   }
 }

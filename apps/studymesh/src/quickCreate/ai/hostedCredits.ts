@@ -38,6 +38,7 @@ export type HostedAiStage =
   | 'study_guide_blueprint'
   | 'study_guide_page_expand'
   | 'study_guide_final_quiz'
+  | 'study_guide_known_topic_prefilter'
   | 'quick_start_fallback'
   | 'quick_start_personalized'
   | 'quick_start_relevance_auto'

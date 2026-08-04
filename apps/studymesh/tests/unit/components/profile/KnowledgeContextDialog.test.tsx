@@ -6,6 +6,7 @@ import KnowledgeContextDialog from '../../../../src/components/profile/Knowledge
 import { InterfaceLanguageProvider } from '../../../../src/language/interfaceLanguage'
 import { CONTENT_LANGUAGE_SETTINGS_KEY } from '../../../../src/language/contentLanguage'
 import type { InterfaceLanguageCode } from '../../../../src/language/contentLanguage'
+import { USER_KNOWN_TOPICS_STORAGE_MAX } from '../../../../src/profileContext'
 
 describe('KnowledgeContextDialog', () => {
   let storage: Record<string, string>
@@ -278,5 +279,42 @@ describe('KnowledgeContextDialog', () => {
       broadKnowledge: ['Backend'],
       specificKnowledge: ['MinIO'],
     })
+  })
+
+  it('blocks adding more topics once the storage limit is reached', () => {
+    const initialContext = {
+      version: 1 as const,
+      roles: [],
+      broadKnowledge: [],
+      specificKnowledge: Array.from(
+        { length: USER_KNOWN_TOPICS_STORAGE_MAX },
+        (_, index) => `Topic ${index + 1}`,
+      ),
+      confidence: 'self_reported' as const,
+      updatedAt: '2026-06-23T00:00:00.000Z',
+    }
+    render(
+      <KnowledgeContextDialog
+        open
+        surface="settings"
+        initialContext={initialContext}
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(
+      screen.getByText(
+        new RegExp(`${USER_KNOWN_TOPICS_STORAGE_MAX}-topic limit`, 'i'),
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^add$/i })).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText(/helpful things you know/i), {
+      target: { value: 'One more topic' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
+
+    expect(screen.queryByText('One more topic')).not.toBeInTheDocument()
+    expect(storage['studymesh-profile-context-v1']).toBeUndefined()
   })
 })

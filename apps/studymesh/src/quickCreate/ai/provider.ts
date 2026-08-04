@@ -27,18 +27,22 @@ import {
 } from './hostedClient'
 import {
   buildStudyGuideKnowledgeBridgeBlocksPrompt,
+  buildStudyGuideKnownTopicPrefilterPrompt,
   buildStudyGuideQuickStartPrompt,
   buildStudyGuideQuickStartRelevancePrompt,
   ensureForcedStudyGuideQuickStartRelevanceDecision,
   parseStudyGuideKnowledgeBridgeBlocks,
+  parseStudyGuideKnownTopicPrefilterResult,
   parseStudyGuideQuickStart,
   parseStudyGuideQuickStartRelevanceDecision,
   resolveStudyGuideKnowledgeContextPlan,
   sanitizeStudyGuideQuickStart,
   STUDY_GUIDE_KNOWLEDGE_BRIDGE_BLOCKS_SCHEMA,
+  STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_SCHEMA,
   STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA,
   STUDY_GUIDE_QUICK_START_SCHEMA,
 } from '../../studyGuides/quickStart'
+import { USER_KNOWN_TOPICS_DIRECT_MAX } from '../../profileContext'
 import type {
   StudyGuideBridgeMode,
   StudyGuideKnowledgeBridgeBlock,
@@ -310,7 +314,7 @@ export const generateStudyGuideQuickStartWithAi = async ({
   const source = studyPathDraftToQuickStartSource(draft, prompt)
   const knowledgeContextPlan =
     resolveStudyGuideKnowledgeContextPlan(userKnownTopics)
-  const safeKnownTopics = knowledgeContextPlan.topics
+  let safeKnownTopics = knowledgeContextPlan.topics
 
   if (provider === 'hosted') {
     throw new Error(
@@ -320,6 +324,33 @@ export const generateStudyGuideQuickStartWithAi = async ({
 
   if (!isStrongAiProvider(provider)) {
     throw new Error(`Unknown AI provider: ${provider}`)
+  }
+
+  if (knowledgeContextPlan.shouldRunKnownTopicPrefilter) {
+    try {
+      const prefilterText = await callStrongAiModel({
+        provider,
+        apiToken,
+        model,
+        parts: [
+          {
+            text: buildStudyGuideKnownTopicPrefilterPrompt({
+              title,
+              prompt: prompt || title,
+              candidateTopics: safeKnownTopics,
+            }),
+          },
+        ],
+        responseSchema: STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_SCHEMA,
+        timeoutMs: 60 * 1000,
+      })
+      safeKnownTopics = parseStudyGuideKnownTopicPrefilterResult(
+        prefilterText,
+        safeKnownTopics,
+      )
+    } catch {
+      safeKnownTopics = safeKnownTopics.slice(0, USER_KNOWN_TOPICS_DIRECT_MAX)
+    }
   }
 
   const getRelevanceDecision = async (bridgeMode: StudyGuideBridgeMode) => {

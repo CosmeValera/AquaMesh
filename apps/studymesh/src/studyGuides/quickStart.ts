@@ -6,7 +6,10 @@ import {
   createAiOutputLanguageInstruction,
   type StudyMeshLanguageCode,
 } from '../language/contentLanguagePrompt'
-import { sanitizeUserKnownTopics } from '../profileContext'
+import {
+  sanitizeUserKnownTopics,
+  USER_KNOWN_TOPICS_DIRECT_MAX,
+} from '../profileContext'
 
 export const STUDY_GUIDE_KEY_IDEA_MAX_WORDS = 35
 export const STUDY_GUIDE_QUICK_SUMMARY_MAX_WORDS = 120
@@ -67,6 +70,13 @@ export interface StudyGuideKnowledgeContextPlan {
   topics: string[]
   shouldRunAutoRelevance: boolean
   shouldRunForcedRelevanceSelector: boolean
+  /**
+   * True when there are more known topics than fit in one selection call.
+   * Callers should run the known-topic prefilter pass first and swap the
+   * plan's `topics` for its narrowed result before running the normal
+   * relevance-selection call.
+   */
+  shouldRunKnownTopicPrefilter: boolean
 }
 
 export const resolveStudyGuideKnowledgeContextPlan = (
@@ -81,7 +91,22 @@ export const resolveStudyGuideKnowledgeContextPlan = (
     topics,
     shouldRunAutoRelevance: topics.length > 0,
     shouldRunForcedRelevanceSelector: topics.length > 1,
+    shouldRunKnownTopicPrefilter: topics.length > USER_KNOWN_TOPICS_DIRECT_MAX,
   }
+}
+
+export const STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MIN = 20
+export const STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MAX = 30
+
+export const STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    selectedTopics: {
+      type: 'ARRAY',
+      items: { type: 'STRING' },
+    },
+  },
+  required: ['selectedTopics'],
 }
 
 export const STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA = {
@@ -203,6 +228,66 @@ const parseJsonObject = (text: string): unknown => {
 
 const stringValue = (value: unknown): string =>
   typeof value === 'string' ? value.trim() : ''
+
+export const buildStudyGuideKnownTopicPrefilterPrompt = ({
+  title,
+  prompt,
+  candidateTopics,
+}: {
+  title: string
+  prompt: string
+  candidateTopics: string[]
+}): string => `The learner has too many known topics to pass directly to the next step. Narrow the candidate list down before topic selection runs.
+
+Return strict JSON only:
+{ "selectedTopics": string[] }
+
+Rules:
+- Choose only from the candidate list below. Never invent a topic. Copy each selected topic exactly as written.
+- Select between ${STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MIN} and ${STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MAX} topics.
+- Prefer topics that are, or could plausibly be, related to the Study Guide topic below, even as a loose or cross-domain comparison. When in doubt, include a topic rather than drop it.
+- If fewer than ${STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MIN} candidates exist in total, return all of them.
+- Order selectedTopics with the most likely-relevant topics first.
+- Do not explain your choice. Do not write anything except the JSON object.
+
+Study Guide title: ${title}
+Learner prompt: ${prompt || title}
+
+Candidate known topics (${candidateTopics.length} total):
+${candidateTopics.join(', ')}`
+
+export const parseStudyGuideKnownTopicPrefilterResult = (
+  text: string,
+  candidateTopics: string[],
+): string[] => {
+  const fallback = candidateTopics.slice(0, STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MAX)
+  const candidateByLower = new Map(
+    candidateTopics.map((topic) => [topic.toLowerCase(), topic]),
+  )
+
+  let parsed: unknown
+  try {
+    parsed = parseJsonObject(text)
+  } catch {
+    return fallback
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return fallback
+  }
+
+  const record = parsed as Record<string, unknown>
+  const selected = Array.isArray(record.selectedTopics)
+    ? record.selectedTopics
+        .map((topic) => candidateByLower.get(stringValue(topic).toLowerCase()))
+        .filter((topic): topic is string => Boolean(topic))
+        .filter((topic, index, topics) => topics.indexOf(topic) === index)
+    : []
+
+  return selected.length
+    ? selected.slice(0, STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MAX)
+    : fallback
+}
 
 const stripTextLabels = (value: string): string =>
   value

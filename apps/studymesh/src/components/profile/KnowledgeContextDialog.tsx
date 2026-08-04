@@ -20,6 +20,7 @@ import {
   parseSpecificKnowledgeInput,
   ProfileContext,
   saveProfileContext,
+  USER_KNOWN_TOPICS_STORAGE_MAX,
   UserKnowledgeRoleId,
   userKnowledgeRoles,
 } from '../../profileContext'
@@ -586,6 +587,7 @@ const KnowledgeContextForm: React.FC<{
   })
   const newestSelectedKnowledge = getNewestSelectedKnowledge(selectedKnowledge)
   const selectedCount = selectedKnowledge.length
+  const atStorageLimit = selectedCount >= USER_KNOWN_TOPICS_STORAGE_MAX
   const recommendationText = getRecommendationText(surface, t)
   const specificKnowledgeInputExample = t('knowledgeContext.inputExamples')
 
@@ -615,12 +617,22 @@ const KnowledgeContextForm: React.FC<{
   )
 
   const toggleBroadKnowledge = (topic: string) => {
-    updateDraft((current) => ({
-      ...current,
-      broadKnowledge: current.broadKnowledge.includes(topic)
-        ? current.broadKnowledge.filter((item) => item !== topic)
-        : [...current.broadKnowledge, topic],
-    }))
+    updateDraft((current) => {
+      const isSelected = current.broadKnowledge.includes(topic)
+      if (
+        !isSelected &&
+        getSelectedKnowledgeCount(current) >= USER_KNOWN_TOPICS_STORAGE_MAX
+      ) {
+        return current
+      }
+
+      return {
+        ...current,
+        broadKnowledge: isSelected
+          ? current.broadKnowledge.filter((item) => item !== topic)
+          : [...current.broadKnowledge, topic],
+      }
+    })
   }
 
   const toggleRole = (role: UserKnowledgeRoleId) => {
@@ -648,7 +660,7 @@ const KnowledgeContextForm: React.FC<{
 
   const addSpecificKnowledge = () => {
     const topics = parseSpecificKnowledgeInput(specificKnowledgeInput)
-    if (!topics.length) {
+    if (!topics.length || atStorageLimit) {
       return
     }
 
@@ -657,7 +669,7 @@ const KnowledgeContextForm: React.FC<{
       specificKnowledge: mergeUniqueTopics([
         ...current.specificKnowledge,
         ...topics,
-      ]),
+      ]).slice(0, USER_KNOWN_TOPICS_STORAGE_MAX - current.broadKnowledge.length),
     }))
     setSpecificKnowledgeInput('')
     writeSpecificKnowledgeInputDraft(surface, '')
@@ -712,11 +724,20 @@ const KnowledgeContextForm: React.FC<{
           <Button
             variant="outlined"
             onClick={addSpecificKnowledge}
+            disabled={atStorageLimit}
             sx={{ minWidth: { sm: 88 }, alignSelf: { sm: 'flex-start' } }}
           >
             {t('knowledgeContext.add')}
           </Button>
         </Stack>
+        {atStorageLimit ? (
+          <Typography variant="caption" color="error">
+            {t('knowledgeContext.limitReached').replace(
+              '{limit}',
+              String(USER_KNOWN_TOPICS_STORAGE_MAX),
+            )}
+          </Typography>
+        ) : null}
       </Stack>
 
       {selectedCount ? (

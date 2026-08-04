@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  addLearnedTopicToProfileContext,
   getAllUserKnownTopics,
   getUserKnownTopics,
   normalizeProfileContext,
@@ -10,6 +11,7 @@ import {
   readProfileContext,
   sanitizeUserKnownTopics,
   saveProfileContext,
+  USER_KNOWN_TOPICS_STORAGE_MAX,
 } from '../../src/profileContext'
 
 describe('profile context', () => {
@@ -98,7 +100,7 @@ describe('profile context', () => {
     })
   })
 
-  it('returns AI topics specific-first and capped', () => {
+  it('returns AI topics specific-first, deduped, under the direct cap', () => {
     const context = {
       version: 1 as const,
       roles: ['software_it' as const],
@@ -116,18 +118,7 @@ describe('profile context', () => {
       confidence: 'self_reported' as const,
       updatedAt: '2026-06-23T00:00:00.000Z',
     }
-
-    expect(getUserKnownTopics(context)).toEqual([
-      'MinIO',
-      'S3',
-      'Databases',
-      'Backend',
-      'Cloud',
-      'APIs',
-      'Testing',
-      'DevOps',
-    ])
-    expect(getAllUserKnownTopics(context)).toEqual([
+    const expectedTopics = [
       'MinIO',
       'S3',
       'Databases',
@@ -138,6 +129,70 @@ describe('profile context', () => {
       'DevOps',
       'Security',
       'Frontend',
-    ])
+    ]
+
+    expect(getUserKnownTopics(context)).toEqual(expectedTopics)
+    expect(getAllUserKnownTopics(context)).toEqual(expectedTopics)
+  })
+
+  it('caps getUserKnownTopics at USER_KNOWN_TOPICS_DIRECT_MAX, leaving getAllUserKnownTopics uncapped', () => {
+    const specificKnowledge = Array.from(
+      { length: 55 },
+      (_, index) => `Topic ${index + 1}`,
+    )
+    const context = {
+      version: 1 as const,
+      roles: [],
+      broadKnowledge: [],
+      specificKnowledge,
+      confidence: 'self_reported' as const,
+      updatedAt: '2026-06-23T00:00:00.000Z',
+    }
+
+    expect(getUserKnownTopics(context)).toEqual(specificKnowledge.slice(0, 50))
+    expect(getAllUserKnownTopics(context)).toEqual(specificKnowledge)
+  })
+
+  it('caps total stored known topics at USER_KNOWN_TOPICS_STORAGE_MAX, keeping newest specific topics first', () => {
+    const specificKnowledge = Array.from(
+      { length: USER_KNOWN_TOPICS_STORAGE_MAX + 10 },
+      (_, index) => `Specific ${index + 1}`,
+    )
+    const normalized = normalizeProfileContext({
+      roles: [],
+      broadKnowledge: ['Backend', 'Databases'],
+      specificKnowledge,
+    })
+
+    expect(normalized?.specificKnowledge).toHaveLength(
+      USER_KNOWN_TOPICS_STORAGE_MAX,
+    )
+    expect(normalized?.specificKnowledge).toEqual(
+      specificKnowledge.slice(0, USER_KNOWN_TOPICS_STORAGE_MAX),
+    )
+    expect(normalized?.broadKnowledge).toEqual([])
+  })
+
+  it('refuses to add a new learned topic once the storage limit is reached, but still promotes a known one', () => {
+    const specificKnowledge = Array.from(
+      { length: USER_KNOWN_TOPICS_STORAGE_MAX },
+      (_, index) => `Topic ${index + 1}`,
+    )
+    const context = {
+      version: 1 as const,
+      roles: [],
+      broadKnowledge: [],
+      specificKnowledge,
+      confidence: 'self_reported' as const,
+      updatedAt: '2026-06-23T00:00:00.000Z',
+    }
+
+    expect(addLearnedTopicToProfileContext('Brand New Topic', context)).toBeNull()
+
+    const promoted = addLearnedTopicToProfileContext('Topic 500', context)
+    expect(promoted?.specificKnowledge[0]).toBe('Topic 500')
+    expect(promoted?.specificKnowledge).toHaveLength(
+      USER_KNOWN_TOPICS_STORAGE_MAX,
+    )
   })
 })

@@ -733,6 +733,9 @@ const DashboardChatPanel = ({
   const activeChatSession = chatSessions.find(
     (session) => session.id === activeChatId,
   )
+  const chatHistorySessions = chatSessions.filter(
+    (session) => !isEmptyChatSession(session),
+  )
   const userAddedSources = (activeChatSession?.externalSources || []).filter(
     isUserAddedSource,
   )
@@ -4190,7 +4193,7 @@ const DashboardChatPanel = ({
         }}
         MenuListProps={{ sx: { p: 0.75 } }}
       >
-        {chatSessions.map((session) => {
+        {chatHistorySessions.map((session) => {
           const selected = session.id === activeChatId
           const canDeleteSession = !isEmptyChatSession(session)
           const replyCount = session.messages.filter(

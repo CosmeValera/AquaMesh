@@ -672,7 +672,7 @@ describe('Interactive Study Guide UX', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('pre-selects the Via-X segment and shows no caption on a strong match', () => {
+  it('pre-selects the Via-X segment, shows no caption on the strong match, and tags the losing Plain alternate as generic', () => {
     const studyPath = {
       ...createStudyPath(),
       quickStart: {
@@ -701,10 +701,9 @@ describe('Interactive Study Guide UX', () => {
         name: 'Via Docker containers, Linux networking basics',
       }),
     ).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: 'Plain' })).toHaveAttribute(
-      'aria-selected',
-      'false',
-    )
+    const plainTab = screen.getByRole('tab', { name: /^Plain/ })
+    expect(plainTab).toHaveAttribute('aria-selected', 'false')
+    expect(within(plainTab).getByText('generic')).toBeInTheDocument()
     expect(screen.queryByText('weak')).not.toBeInTheDocument()
     expect(quickStartCard.textContent).toContain(
       'Kubernetes networking mirrors Docker container networking.',

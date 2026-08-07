@@ -44,9 +44,8 @@ import { hasFreeExplainAttempt } from '../../../src/studyGuides/mastery'
 
 const passResponse = JSON.stringify({
   verdict: 'pass',
-  feedback: 'That is the idea.',
+  feedback: '',
   corrections: [],
-  suggestion: '',
 })
 
 const explanationOf = (words: number) =>
@@ -151,17 +150,17 @@ describe('explain check', () => {
     expect(resolveExplainCheckCost('local', false)).toBe('free')
   })
 
-  it('reads a fenced answer and drops half-written corrections', () => {
+  it('reads a fenced answer, drops half-written corrections and caps at one', () => {
     const result = parseExplainCheckResult(
       '```json\n' +
         JSON.stringify({
           verdict: 'retry',
           feedback: 'Almost.',
           corrections: [
-            { quote: 'robots think', better: 'robots follow rules', why: 'no' },
-            { quote: 'only this', better: '', why: 'dropped' },
+            { quote: 'robots think', better: 'robots follow rules' },
+            { quote: 'only this', better: '' },
+            { quote: 'a second real one', better: 'should be dropped' },
           ],
-          suggestion: 'A robot senses, decides and acts.',
         }) +
         '\n```',
     )
@@ -169,7 +168,6 @@ describe('explain check', () => {
     expect(result.passed).toBe(false)
     expect(result.corrections).toHaveLength(1)
     expect(result.corrections[0].better).toBe('robots follow rules')
-    expect(result.suggestion).toBe('A robot senses, decides and acts.')
   })
 
   it('rejects an answer that is not an object', () => {

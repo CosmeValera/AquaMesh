@@ -180,7 +180,7 @@ create table if not exists public.hosted_ai_usage_events (
   completed_at timestamptz,
   unique (owner_id, request_id),
   constraint hosted_ai_usage_events_surface_check
-    check (surface in ('study-guide', 'quick-create', 'chat', 'podcast')),
+    check (surface in ('study-guide', 'quick-create', 'chat', 'podcast', 'mastery-check')),
   constraint hosted_ai_usage_events_status_check
     check (status in ('reserved', 'succeeded', 'failed')),
   constraint hosted_ai_usage_events_nonnegative_credits_check
@@ -636,6 +636,7 @@ as $$
     when 'quick-create' then 1
     when 'chat' then 1
     when 'podcast' then 1
+    when 'mastery-check' then 0
     else null
   end
 $$;

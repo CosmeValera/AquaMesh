@@ -30,20 +30,17 @@ export const countExplanationWords = (value: string): number =>
   value.trim() ? value.trim().split(/\s+/).length : 0
 
 export interface ExplainCorrection {
-  /** The learner's wording that is wrong or misleading. */
+  /** The learner's wording that is wrong or misleading, verbatim. */
   quote: string
-  /** The same thing said correctly, at roughly the same length. */
+  /** A minimal edit of quote — same opener, only the wrong words changed. */
   better: string
-  why: string
 }
 
 export interface ExplainCheckResult {
   passed: boolean
-  /** One or two sentences addressed to the learner. */
+  /** One short sentence addressed to the learner, empty on pass. */
   feedback: string
   corrections: ExplainCorrection[]
-  /** A tighter version of the whole explanation, same length, or empty. */
-  suggestion: string
 }
 
 export const EXPLAIN_CHECK_SCHEMA = {
@@ -58,14 +55,12 @@ export const EXPLAIN_CHECK_SCHEMA = {
         properties: {
           quote: { type: 'STRING' },
           better: { type: 'STRING' },
-          why: { type: 'STRING' },
         },
-        required: ['quote', 'better', 'why'],
+        required: ['quote', 'better'],
       },
     },
-    suggestion: { type: 'STRING' },
   },
-  required: ['verdict', 'feedback', 'corrections', 'suggestion'],
+  required: ['verdict', 'feedback', 'corrections'],
 }
 
 export const buildExplainCheckPrompt = ({
@@ -81,19 +76,18 @@ export const buildExplainCheckPrompt = ({
 }): string =>
   [
     `You are marking a short spoken-style explanation from a learner who just finished a study guide on "${topic}".`,
-    'Judge only whether the learner understands the idea. Marking is generous:',
-    '- Pass when the explanation is broadly right, even if it is informal, incomplete on details, or uses their own analogy.',
-    '- Ask for a retry only when it states something factually wrong about the topic, or is so vague it could describe anything.',
-    '- Never fail an explanation for style, spelling, grammar, or for being short.',
+    'Judge only whether the learner understands the idea. Marking is generous, and close counts:',
+    '- Pass when the explanation is broadly right, even if it is informal, incomplete on details, uses their own analogy, or is mostly the same idea worded loosely.',
+    '- Ask for a retry only when it states something factually wrong about the topic (describes a different thing, mixes up a key mechanism), or is so vague it could describe anything.',
+    '- Never fail an explanation for style, spelling, grammar, typos, or for being short.',
     '',
     'Return JSON with:',
     '- verdict: "pass" or "retry".',
-    '- feedback: one or two sentences addressed to the learner, saying what they got right and what to fix. Warm, never condescending.',
-    '- corrections: up to three items, each quoting the learner\'s own wording ("quote"), a replacement of roughly the same length ("better"), and a short "why". Empty when nothing is actually wrong.',
-    '- suggestion: the whole explanation rewritten sharper, at roughly the same length, or an empty string when theirs is already good.',
+    '- feedback: on retry, ONE short sentence naming the specific thing that is wrong. Empty string on pass. Warm, never condescending, never a restated lecture.',
+    '- corrections: on retry, at most one item for the single most important error, quoting the learner\'s own wording verbatim ("quote") and a "better" version that is a MINIMAL edit of it — same opening words, same sentence shape, change only the few words that are actually wrong, do not rewrite the whole sentence. Empty array on pass.',
     '',
     outputLanguage
-      ? `Write feedback, corrections and suggestion in this language code: ${outputLanguage}.`
+      ? `Write feedback and corrections in this language code: ${outputLanguage}.`
       : 'Write in the language the learner used.',
     '',
     'Study guide the learner read:',
@@ -141,18 +135,16 @@ export const parseExplainCheckResult = (text: string): ExplainCheckResult => {
           return {
             quote: stringValue(item.quote),
             better: stringValue(item.better),
-            why: stringValue(item.why),
           }
         })
         .filter((entry) => entry.quote && entry.better)
-        .slice(0, 3)
+        .slice(0, 1)
     : []
 
   return {
     passed: stringValue(record.verdict).toLowerCase() === 'pass',
     feedback: stringValue(record.feedback),
     corrections,
-    suggestion: stringValue(record.suggestion),
   }
 }
 

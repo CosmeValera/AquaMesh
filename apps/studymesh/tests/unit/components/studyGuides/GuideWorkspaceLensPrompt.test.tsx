@@ -9,7 +9,6 @@ import {
   addLearnedTopicToProfileContext,
   getUserKnownTopics,
   LEARNED_TOPIC_PROMPTS_STORAGE_KEY,
-  PROFILE_CONTEXT_STORAGE_KEY,
   readProfileContext,
   saveProfileContext,
   USER_KNOWN_TOPICS_MAX_FOR_AI,
@@ -40,8 +39,41 @@ vi.mock('../../../../src/components/Main', () => ({
   ),
 }))
 
+// The Quiz/Explain toggle and the "Add to what I know" flow now render inside
+// the last page's content (see GuideMasteryOffer), so this stub exposes just
+// enough of the masteryOffer contract to exercise GuideWorkspacePage's
+// eligibility logic and callbacks without pulling in real dashboard rendering.
 vi.mock('../../../../src/components/Dasboard/StudyPathWorkspaceView', () => ({
-  default: () => <div data-testid="study-guide-panel" />,
+  default: ({ masteryOffer }: { masteryOffer?: Record<string, any> }) => (
+    <div data-testid="study-guide-panel">
+      {masteryOffer ? (
+        masteryOffer.canClaimSkill ? (
+          masteryOffer.status === 'added' ? (
+            <div>
+              <p data-testid="added-confirmation">
+                {masteryOffer.topic} added
+              </p>
+              <button onClick={masteryOffer.onExpandOnThis}>
+                Expand on this
+              </button>
+              {masteryOffer.nextGuideIdeas.map((idea: any) => (
+                <button
+                  key={idea.id}
+                  onClick={() => masteryOffer.onStartNextGuide(idea)}
+                >
+                  {masteryOffer.nextGuideIdeaLabel(idea)}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <button onClick={masteryOffer.onAddSkill}>
+              Add to what I know
+            </button>
+          )
+        ) : null
+      ) : null}
+    </div>
+  ),
 }))
 
 vi.mock('../../../../src/components/Dasboard/StudyGuidePagesPanel', () => ({
@@ -190,7 +222,7 @@ describe('learned topic lens prompt', () => {
     renderWorkspace()
 
     expect(
-      await screen.findByText(/you just went through/i),
+      await screen.findByRole('button', { name: 'Add to what I know' }),
     ).toBeInTheDocument()
     expect(readProfileContext()).toBeNull()
 
@@ -202,27 +234,9 @@ describe('learned topic lens prompt', () => {
     expect(JSON.parse(storage[LEARNED_TOPIC_PROMPTS_STORAGE_KEY])).toEqual({
       'guide-1': 'added',
     })
-    expect(
-      screen.getByText(/is part of what you know now/i),
-    ).toBeInTheDocument()
-  })
-
-  it('does not offer the topic again once dismissed', async () => {
-    const firstRender = renderWorkspace()
-
-    fireEvent.click(await screen.findByRole('button', { name: 'Not now' }))
-
-    expect(screen.queryByText(/you just went through/i)).not.toBeInTheDocument()
-    expect(JSON.parse(storage[LEARNED_TOPIC_PROMPTS_STORAGE_KEY])).toEqual({
-      'guide-1': 'dismissed',
-    })
-    expect(storage[PROFILE_CONTEXT_STORAGE_KEY]).toBeUndefined()
-
-    firstRender.unmount()
-    renderWorkspace()
-
-    expect(await screen.findByTestId('study-guide-panel')).toBeInTheDocument()
-    expect(screen.queryByText(/you just went through/i)).not.toBeInTheDocument()
+    expect(screen.getByTestId('added-confirmation')).toHaveTextContent(
+      'Bottlenecks added',
+    )
   })
 
   it('stays quiet while pages are still unread', async () => {
@@ -233,59 +247,34 @@ describe('learned topic lens prompt', () => {
     renderWorkspace()
 
     expect(await screen.findByTestId('study-guide-panel')).toBeInTheDocument()
-    expect(screen.queryByText(/you just went through/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Add to what I know' }),
+    ).not.toBeInTheDocument()
   })
 
-  it('withholds the skill until the guide quiz is passed', async () => {
+  it('withholds the Add button until the guide quiz is passed', async () => {
     storage[STUDY_GUIDES_STORAGE_KEY] = JSON.stringify([
       createStoredGuide(['core', 'review'], quizLayout),
     ])
 
     renderWorkspace()
 
-    expect(await screen.findByText(/not a pass yet/i)).toBeInTheDocument()
+    await screen.findByTestId('study-guide-panel')
     expect(
       screen.queryByRole('button', { name: 'Add to what I know' }),
     ).not.toBeInTheDocument()
 
     completeQuizWith(40)
 
-    expect(await screen.findByText(/40%/)).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'Add to what I know' }),
     ).not.toBeInTheDocument()
-  })
-
-  it('offers the skill from half the quiz, with a review suggestion', async () => {
-    storage[STUDY_GUIDES_STORAGE_KEY] = JSON.stringify([
-      createStoredGuide(['core', 'review'], quizLayout),
-    ])
-
-    renderWorkspace()
-    await screen.findByText(/not a pass yet/i)
 
     completeQuizWith(55)
 
     expect(
       await screen.findByRole('button', { name: 'Add to what I know' }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/but a narrow one/i)).toBeInTheDocument()
-  })
-
-  it('drops the review suggestion on a comfortable pass', async () => {
-    storage[STUDY_GUIDES_STORAGE_KEY] = JSON.stringify([
-      createStoredGuide(['core', 'review'], quizLayout),
-    ])
-
-    renderWorkspace()
-    await screen.findByText(/not a pass yet/i)
-
-    completeQuizWith(80)
-
-    expect(
-      await screen.findByRole('button', { name: 'Add to what I know' }),
-    ).toBeInTheDocument()
-    expect(screen.queryByText(/but a narrow one/i)).not.toBeInTheDocument()
   })
 
   it('hands a next-guide prompt to the creation panel once the skill is added', async () => {
@@ -320,6 +309,8 @@ describe('learned topic lens prompt', () => {
     renderWorkspace()
 
     expect(await screen.findByTestId('study-guide-panel')).toBeInTheDocument()
-    expect(screen.queryByText(/you just went through/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Add to what I know' }),
+    ).not.toBeInTheDocument()
   })
 })

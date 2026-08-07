@@ -38,6 +38,12 @@ import StudyGuideLinearLayout from './StudyGuideLinearLayout'
 import StudyGuidePageEditor from './StudyGuidePageEditor'
 import { useNavigate } from 'react-router-dom'
 import StudyGuidePagesPanel from './StudyGuidePagesPanel'
+import {
+  GuideMasteryToggle,
+  GuideMasteryExplainOnly,
+  GuideMasterySkillClaim,
+  type StudyPathMasteryOffer,
+} from './GuideMasteryOffer'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 import { renderMarkdownInline } from '../study/StudyBlockView'
 import TextSelectionActionBar from '../workspace/TextSelectionActionBar'
@@ -89,6 +95,8 @@ interface StudyPathWorkspaceViewProps {
   onAskAi?: (question: string) => void
   /** Overrides the default "My guides" crumb, e.g. for the public /try demo. */
   breadcrumb?: { label: string; onClick: () => void }
+  /** Renders the Quiz/Explain toggle at the end of the last page, when eligible. */
+  masteryOffer?: StudyPathMasteryOffer
 }
 
 const quickSummaryParagraphs = (value: string): string[] =>
@@ -334,6 +342,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   onAddPage,
   onAskAi,
   breadcrumb,
+  masteryOffer,
 }) => {
   const { t } = useInterfaceText()
   const theme = useTheme()
@@ -359,6 +368,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
     Boolean(studyPath.quickStart?.keyIdea && studyPath.quickStart.quickSummary)
   const isEditingCurrentPage =
     currentPageEditable && currentPageKey === editingPageKey
+  const isLastPage = selectedIndex === studyPath.dashboards.length - 1
   const currentMarkdown = getStudyGuidePageMarkdown(currentLesson)
   const editorPageLinks = useMemo(
     () =>
@@ -374,10 +384,18 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
     () => sanitizeStudentLayout(currentLesson?.layout),
     [currentLesson?.layout],
   )
+  const pageMasteryOffer = isLastPage ? masteryOffer : undefined
+  const [masteryView, setMasteryView] = useState<'quiz' | 'explain'>('quiz')
 
   useEffect(() => {
     setQuickStartExpanded(true)
   }, [studyPath.pathId])
+
+  useEffect(() => {
+    if (!isLastPage) {
+      setMasteryView('quiz')
+    }
+  }, [isLastPage])
 
   useLayoutEffect(() => {
     if (lastPathIdRef.current === studyPath.pathId) {
@@ -663,6 +681,31 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                 key={currentLesson.dashboardKey}
                 layout={studentLayout}
                 onAskAi={onAskAi}
+                renderQuizGroup={
+                  pageMasteryOffer
+                    ? (quizGroup) => (
+                        <GuideMasteryToggle
+                          offer={pageMasteryOffer}
+                          view={masteryView}
+                          onViewChange={setMasteryView}
+                        >
+                          {quizGroup}
+                        </GuideMasteryToggle>
+                      )
+                    : undefined
+                }
+                renderPageEnd={
+                  pageMasteryOffer
+                    ? ({ quizGroupRendered }) => (
+                        <>
+                          {quizGroupRendered ? null : (
+                            <GuideMasteryExplainOnly offer={pageMasteryOffer} />
+                          )}
+                          <GuideMasterySkillClaim offer={pageMasteryOffer} />
+                        </>
+                      )
+                    : undefined
+                }
               />
             </>
           )}

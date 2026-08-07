@@ -543,6 +543,7 @@ const translations = {
     'mastery.notAPassYet':
       'Not a pass yet. Retake the quiz, or explain it in your own words.',
     'mastery.explainInstead': 'Explain it in your own words',
+    'mastery.quizTab': 'Quiz',
     'explainCheck.title': 'Explain it in your own words',
     'explainCheck.prompt': 'In your own words, what is',
     'explainCheck.placeholder': 'Say it the way you would say it to a friend.',
@@ -556,7 +557,6 @@ const translations = {
     'explainCheck.checking': 'Checking...',
     'explainCheck.passed': 'That works',
     'explainCheck.retry': 'Close, try again',
-    'explainCheck.suggestion': 'A sharper way to say it',
     'explainCheck.added': 'Added',
     'explainCheck.failed': 'Could not check the explanation.',
     'nextGuides.title': 'Where to go from here',
@@ -1115,6 +1115,7 @@ const translations = {
     'mastery.notAPassYet':
       'Todavía no está aprobado. Repite el quiz o explícalo con tus palabras.',
     'mastery.explainInstead': 'Explícalo con tus palabras',
+    'mastery.quizTab': 'Quiz',
     'explainCheck.title': 'Explícalo con tus palabras',
     'explainCheck.prompt': 'Con tus palabras, ¿qué es',
     'explainCheck.placeholder': 'Dilo como se lo dirías a un amigo.',
@@ -1128,7 +1129,6 @@ const translations = {
     'explainCheck.checking': 'Revisando...',
     'explainCheck.passed': 'Está bien explicado',
     'explainCheck.retry': 'Casi, inténtalo otra vez',
-    'explainCheck.suggestion': 'Una forma más precisa de decirlo',
     'explainCheck.added': 'Añadido',
     'explainCheck.failed': 'No se pudo revisar la explicación.',
     'nextGuides.title': 'Por dónde seguir',
@@ -1700,6 +1700,7 @@ const translationOverrides: Record<
     'mastery.notAPassYet':
       'Pas encore validé. Refaites le quiz, ou expliquez-le avec vos mots.',
     'mastery.explainInstead': 'Expliquez-le avec vos mots',
+    'mastery.quizTab': 'Quiz',
     'explainCheck.title': 'Expliquez-le avec vos mots',
     'explainCheck.prompt': 'Avec vos mots, qu’est-ce que',
     'explainCheck.placeholder': 'Dites-le comme à un ami.',
@@ -1714,7 +1715,6 @@ const translationOverrides: Record<
     'explainCheck.checking': 'Vérification...',
     'explainCheck.passed': 'C’est bon',
     'explainCheck.retry': 'Presque, réessayez',
-    'explainCheck.suggestion': 'Une façon plus précise de le dire',
     'explainCheck.added': 'Ajouté',
     'explainCheck.failed': 'Impossible de vérifier l’explication.',
     'nextGuides.title': 'Par où continuer',
@@ -2278,6 +2278,7 @@ const translationOverrides: Record<
     'mastery.notAPassYet':
       'Noch nicht bestanden. Wiederhole das Quiz oder erkläre es in eigenen Worten.',
     'mastery.explainInstead': 'In eigenen Worten erklären',
+    'mastery.quizTab': 'Quiz',
     'explainCheck.title': 'In eigenen Worten erklären',
     'explainCheck.prompt': 'Was ist, in deinen eigenen Worten,',
     'explainCheck.placeholder':
@@ -2293,7 +2294,6 @@ const translationOverrides: Record<
     'explainCheck.checking': 'Wird geprüft...',
     'explainCheck.passed': 'Das passt',
     'explainCheck.retry': 'Fast, versuch es nochmal',
-    'explainCheck.suggestion': 'Präziser gesagt',
     'explainCheck.added': 'Hinzugefügt',
     'explainCheck.failed': 'Die Erklärung konnte nicht geprüft werden.',
     'nextGuides.title': 'Wie es weitergeht',

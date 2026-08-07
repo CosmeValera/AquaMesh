@@ -148,12 +148,25 @@ const collectStudyGuideComponentNodes = (
   )
 }
 
+// Mirrors mastery.ts's QUIZ_BLOCK_TYPES — deliberately not imported, since
+// that set is about guide-wide mastery detection while this one is about
+// which card group in THIS page's linear layout is the quiz.
+const QUIZ_CARD_TYPES = new Set(['QuizCarouselBlock', 'FocusedQuizSessionBlock'])
+const isQuizGroup = (group: StudyGuideCardGroup): boolean =>
+  group.components.some((component) => QUIZ_CARD_TYPES.has(component.type))
+
 const StudyGuideLinearLayout = ({
   layout,
   onAskAi,
+  renderQuizGroup,
+  renderPageEnd,
 }: {
   layout?: DashboardLayout
   onAskAi?: (question: string) => void
+  /** Wraps the page's first quiz card, when there is one. */
+  renderQuizGroup?: (quizGroup: React.ReactNode) => React.ReactNode
+  /** Rendered as the last child of the page container. */
+  renderPageEnd?: (info: { quizGroupRendered: boolean }) => React.ReactNode
 }) => {
   const theme = useTheme()
   const compactView = useMediaQuery(theme.breakpoints.down('lg'))
@@ -190,8 +203,22 @@ const StudyGuideLinearLayout = ({
     flushTextGroup()
     return groups
   }, [components])
+  // First quiz group wins if a page somehow has two.
+  const quizGroupIndex = useMemo(
+    () => cardGroups.findIndex(isQuizGroup),
+    [cardGroups],
+  )
+  const quizGroupRendered = Boolean(renderQuizGroup) && quizGroupIndex !== -1
 
   if (components.length === 0) {
+    if (renderPageEnd) {
+      return (
+        <div className="studymesh-mobile-dashboard-layout">
+          {renderPageEnd({ quizGroupRendered: false })}
+        </div>
+      )
+    }
+
     return <div className="studymesh-mobile-dashboard-empty" />
   }
 
@@ -208,7 +235,7 @@ const StudyGuideLinearLayout = ({
           isKnowledgeBridgeGroup(cardGroups[groupIndex + 1])
         const isContextBridgeCard = isKnowledgeBridgeGroup(group)
         const title = pageContentTitle(group)
-        return (
+        const card = (
           <section
             key={group.id}
             className={
@@ -280,7 +307,18 @@ const StudyGuideLinearLayout = ({
             })}
           </section>
         )
+
+        if (renderQuizGroup && groupIndex === quizGroupIndex) {
+          return (
+            <React.Fragment key={group.id}>
+              {renderQuizGroup(card)}
+            </React.Fragment>
+          )
+        }
+
+        return card
       })}
+      {renderPageEnd?.({ quizGroupRendered })}
     </div>
   )
 }

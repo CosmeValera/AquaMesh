@@ -26,6 +26,7 @@ import {
   type QuickCreateActionInput,
 } from '../../quickCreate/quickCreateActions'
 import StudyPathWorkspaceView from '../Dasboard/StudyPathWorkspaceView'
+import type { StudyPathMasteryOffer } from '../Dasboard/GuideMasteryOffer'
 import StudyGuidePagesPanel from '../Dasboard/StudyGuidePagesPanel'
 import DashboardChatPanel, {
   type DashboardAnswerSourceRef,
@@ -78,7 +79,6 @@ import {
   setPendingCreationPrompt,
   type NextGuideIdea,
 } from '../../studyGuides/nextGuideIdeas'
-import ExplainItYourWayDialog from './ExplainItYourWayDialog'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 
 export const AI_CHAT_MIN_WIDTH = 310
@@ -198,10 +198,6 @@ const GuideWorkspacePage = () => {
   const [learnedTopicPrompt, setLearnedTopicPrompt] =
     useState<LearnedTopicPromptState | null>(null)
   const [mastery, setMastery] = useState<GuideMasteryRecord>({})
-  const [explainCheckOpen, setExplainCheckOpen] = useState(false)
-  // Hiding an offer the learner cannot accept yet must not be permanent: the
-  // banner comes back on its own once the quiz is passed.
-  const unprovenDismissedRef = useRef<string | null>(null)
   const pageScrollPositionsRef = useRef<Record<string, number>>({})
   const [mobileSection, setMobileSection] = useState<
     'pages' | 'study-guide' | 'ai-chat'
@@ -303,9 +299,7 @@ const GuideWorkspacePage = () => {
 
   useEffect(() => {
     pageScrollPositionsRef.current = {}
-    unprovenDismissedRef.current = null
     setLearnedTopicPrompt(null)
-    setExplainCheckOpen(false)
     setMastery(readGuideMastery(studyGuideId))
   }, [studyGuideId])
 
@@ -386,7 +380,6 @@ const GuideWorkspacePage = () => {
       !record ||
       !topic ||
       (!hasReadEveryPage(record) && !masteryProof.proven) ||
-      (unprovenDismissedRef.current === record.id && !canClaimSkill) ||
       isLearnedTopicPromptResolved(record.id) ||
       isUserKnownTopic(topic)
     ) {
@@ -408,16 +401,6 @@ const GuideWorkspacePage = () => {
     addLearnedTopicToProfileContext(learnedTopicPrompt.topic)
     resolveLearnedTopicPrompt(learnedTopicPrompt.studyGuideId, 'added')
     setLearnedTopicPrompt({ ...learnedTopicPrompt, status: 'added' })
-  }
-
-  const dismissLearnedTopicPrompt = () => {
-    if (learnedTopicPrompt?.status === 'offered' && canClaimSkill) {
-      resolveLearnedTopicPrompt(learnedTopicPrompt.studyGuideId, 'dismissed')
-    } else if (learnedTopicPrompt) {
-      unprovenDismissedRef.current = learnedTopicPrompt.studyGuideId
-    }
-
-    setLearnedTopicPrompt(null)
   }
 
   const persistStudyPath = (
@@ -738,26 +721,10 @@ const GuideWorkspacePage = () => {
     }
   }
 
-  const learnedTopicPalette =
-    learnedTopicPrompt?.status === 'added'
-      ? theme.palette.success
-      : theme.palette.info
   const nextGuideIdeas = useMemo(
     () => (record ? buildNextGuideIdeas(record) : []),
     [record],
   )
-  const nextStepButtonSx = {
-    textTransform: 'none',
-    fontWeight: 650,
-    borderRadius: 1.5,
-    color: theme.palette.mode === 'dark' ? 'success.light' : 'success.dark',
-    borderColor: alpha(theme.palette.success.main, 0.5),
-    bgcolor: alpha(theme.palette.success.main, 0.08),
-    '&:hover': {
-      bgcolor: alpha(theme.palette.success.main, 0.2),
-      borderColor: alpha(theme.palette.success.main, 0.7),
-    },
-  } as const
   const nextGuideIdeaLabel = (idea: NextGuideIdea): string =>
     idea.kind === 'apply'
       ? t('nextGuides.apply')
@@ -784,141 +751,24 @@ const GuideWorkspacePage = () => {
     setPendingCreationPrompt(`${known} ${ask}`)
     navigate('/workspace')
   }
-  const learnedTopicPromptAlert = learnedTopicPrompt ? (
-    <Alert
-      severity={learnedTopicPrompt.status === 'added' ? 'success' : 'info'}
-      action={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {learnedTopicPrompt.status === 'offered' && !canClaimSkill ? (
-            <Button
-              color="inherit"
-              size="small"
-              variant="outlined"
-              onClick={() => setExplainCheckOpen(true)}
-              sx={{
-                textTransform: 'none',
-                whiteSpace: 'nowrap',
-                fontWeight: 650,
-              }}
-            >
-              {t('mastery.explainInstead')}
-            </Button>
-          ) : null}
-          {learnedTopicPrompt.status === 'offered' && canClaimSkill ? (
-            <Button
-              color="inherit"
-              size="small"
-              variant="outlined"
-              onClick={addLearnedTopicToKnownTopics}
-              sx={{
-                textTransform: 'none',
-                whiteSpace: 'nowrap',
-                fontWeight: 650,
-              }}
-            >
-              {t('mastery.addSkill')}
-            </Button>
-          ) : null}
-          <IconButton
-            aria-label={
-              learnedTopicPrompt.status === 'added'
-                ? t('common.close')
-                : t('mastery.notNow')
-            }
-            size="small"
-            onClick={dismissLearnedTopicPrompt}
-            sx={{
-              flexShrink: 0,
-              color:
-                theme.palette.mode === 'dark'
-                  ? learnedTopicPalette.light
-                  : learnedTopicPalette.dark,
-              bgcolor: alpha(learnedTopicPalette.main, 0.08),
-              border: 1,
-              borderColor: alpha(learnedTopicPalette.main, 0.32),
-              '&:hover': {
-                bgcolor: alpha(learnedTopicPalette.main, 0.2),
-                borderColor: alpha(learnedTopicPalette.main, 0.48),
-              },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      }
-      sx={{
-        flex: '0 0 auto',
-        m: isMobile ? 0 : 1,
-        mb: isMobile ? 1 : 0,
-        alignItems: 'center',
-      }}
-    >
-      {learnedTopicPrompt.status === 'added' ? (
-        <Box>
-          <Typography variant="body2">
-            <Box component="span" sx={{ fontWeight: 700 }}>
-              {learnedTopicPrompt.topic}
-            </Box>{' '}
-            {t('mastery.added')}
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: 'block', mt: 1 }}
-          >
-            {t('nextGuides.title')}
-          </Typography>
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 0.75,
-              mt: 0.75,
-            }}
-          >
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => quickCreatePage('improvedNotes')}
-              sx={nextStepButtonSx}
-            >
-              {t('nextGuides.expandOnThis')}
-            </Button>
-            {nextGuideIdeas.map((idea) => (
-              <Button
-                key={idea.id}
-                size="small"
-                variant="outlined"
-                onClick={() => startNextGuide(idea)}
-                sx={nextStepButtonSx}
-              >
-                {nextGuideIdeaLabel(idea)}
-              </Button>
-            ))}
-          </Box>
-        </Box>
-      ) : (
-        <Typography variant="body2">
-          {t('mastery.wentThrough')}{' '}
-          <Box component="span" sx={{ fontWeight: 700 }}>
-            {learnedTopicPrompt.topic}
-          </Box>
-          .{' '}
-          {masteryProof.quizScorePercent !== undefined ? (
-            <Box component="span">
-              {t('mastery.scored')} {masteryProof.quizScorePercent}%{' '}
-              {t('mastery.onTheQuiz')}{' '}
-            </Box>
-          ) : null}
-          {!canClaimSkill
-            ? t('mastery.notAPassYet')
-            : masteryProof.band === 'borderline'
-              ? t('mastery.reviewFirst')
-              : t('mastery.addQuestion')}
-        </Typography>
-      )}
-    </Alert>
-  ) : null
+
+  const masteryOffer: StudyPathMasteryOffer | undefined =
+    record && learnedTopicPrompt
+      ? {
+          studyGuideId: record.id,
+          topic: learnedTopicPrompt.topic,
+          sourceText: getStudyGuideCreationSourceText(record.studyPath),
+          status: learnedTopicPrompt.status,
+          canClaimSkill,
+          onPassed: () =>
+            setMastery(recordGuideExplainResult(record.id, true)),
+          onAddSkill: addLearnedTopicToKnownTopics,
+          nextGuideIdeas,
+          nextGuideIdeaLabel,
+          onExpandOnThis: () => quickCreatePage('improvedNotes'),
+          onStartNextGuide: startNextGuide,
+        }
+      : undefined
 
   const startAiChatResize = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault()
@@ -974,6 +824,7 @@ const GuideWorkspacePage = () => {
         onEditingPageKeyChange={setEditingPageKey}
         onAddPage={addManualPage}
         onAskAi={askAiFromStudyBlock}
+        masteryOffer={masteryOffer}
       />
     </Paper>
   ) : null
@@ -1180,7 +1031,6 @@ const GuideWorkspacePage = () => {
                 {t('studyGuides.storageFullMessage')}
               </Alert>
             ) : null}
-            {learnedTopicPromptAlert}
             {isMobile ? (
               <>
                 <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
@@ -1355,17 +1205,6 @@ const GuideWorkspacePage = () => {
           </Box>
         ) : null}
       </Main>
-      {record && learnedTopicPrompt ? (
-        <ExplainItYourWayDialog
-          open={explainCheckOpen}
-          studyGuideId={record.id}
-          topic={learnedTopicPrompt.topic}
-          sourceText={getStudyGuideCreationSourceText(record.studyPath)}
-          onClose={() => setExplainCheckOpen(false)}
-          onPassed={() => setMastery(recordGuideExplainResult(record.id, true))}
-          onAddSkill={addLearnedTopicToKnownTopics}
-        />
-      ) : null}
     </Box>
   )
 }

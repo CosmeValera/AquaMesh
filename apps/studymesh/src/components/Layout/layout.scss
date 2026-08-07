@@ -257,6 +257,16 @@
   padding: 16px;
 }
 
+.studymesh-study-mastery-slot {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .studymesh-mobile-widget-card *,
 .studymesh-mobile-widget-card *::before,
 .studymesh-mobile-widget-card *::after {
@@ -324,6 +334,11 @@
     background: var(--surface-card, #fff);
     box-shadow: none;
     padding: 24px;
+  }
+
+  .studymesh-study-mastery-slot {
+    max-width: 960px;
+    gap: 16px;
   }
 }
 

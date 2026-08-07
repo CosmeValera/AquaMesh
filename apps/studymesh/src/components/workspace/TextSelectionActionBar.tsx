@@ -18,6 +18,7 @@ import { PREFILL_DASHBOARD_CHAT_EVENT } from './workspaceEvents'
 import {
   buildContainerTextIndex,
   buildSelectionAiPrompt,
+  CITATION_HIGHLIGHT_REGISTRY_NAME,
   clearPaintedHighlights,
   createHighlightId,
   describeSelection,
@@ -55,6 +56,15 @@ const highlightPaintStyles = (theme: Theme) => ({
         ? 'rgba(202, 138, 4, 0.55)'
         : 'rgba(250, 204, 21, 0.55)',
     color: theme.palette.mode === 'dark' ? '#FDF6DC' : '#111827',
+  },
+  // Distinct from the user's saved highlights: a chat citation jump is
+  // ephemeral, so it gets its own registry and a cooler, more "pointer" color.
+  [`::highlight(${CITATION_HIGHLIGHT_REGISTRY_NAME})`]: {
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(56, 189, 248, 0.45)'
+        : 'rgba(56, 189, 248, 0.4)',
+    color: theme.palette.mode === 'dark' ? '#F0F9FF' : '#0C2A3D',
   },
 })
 

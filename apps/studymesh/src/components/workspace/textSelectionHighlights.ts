@@ -464,6 +464,133 @@ export const clearPaintedHighlights = (): void => {
   highlightRegistry()?.delete(TEXT_HIGHLIGHT_REGISTRY_NAME)
 }
 
+export const CITATION_HIGHLIGHT_REGISTRY_NAME = 'studymesh-citation-highlight'
+
+const CITATION_QUOTE_MIN_WORD_COUNT = 4
+
+const MARKDOWN_SYNTAX_REPLACEMENTS: Array<[RegExp, string]> = [
+  [/!\[([^\]]*)]\([^)]*\)/g, '$1'],
+  [/\[([^\]]+)]\([^)]*\)/g, '$1'],
+  [/`{1,3}([^`]+)`{1,3}/g, '$1'],
+  [/\*\*\*([^*]+)\*\*\*/g, '$1'],
+  [/\*\*([^*]+)\*\*/g, '$1'],
+  [/\*([^*]+)\*/g, '$1'],
+  [/__([^_]+)__/g, '$1'],
+  [/(^|[^A-Za-z0-9])_([^_]+)_(?![A-Za-z0-9])/g, '$1$2'],
+  [/~~([^~]+)~~/g, '$1'],
+  [/^\s{0,3}#{1,6}\s+/gm, ''],
+  [/^\s{0,3}>\s?/gm, ''],
+  [/^\s{0,3}(?:[-+*]|\d{1,3}[.)])\s+/gm, ''],
+  [/\\([\\`*_{}[\]()#+\-.!])/g, '$1'],
+  [/\|/g, ' '],
+]
+
+/**
+ * Strips markdown syntax the page never renders. Chat source chunks are built
+ * from the raw `markdown` prop (see dashboardChat/contextBuilder), so a model
+ * asked to quote a source character-for-character hands back `**bold**`,
+ * `` `code` ``, list bullets and link syntax that appear nowhere in the
+ * rendered DOM text a highlight has to match against.
+ */
+export const stripMarkdownSyntax = (value: string): string =>
+  MARKDOWN_SYNTAX_REPLACEMENTS.reduce(
+    (text, [pattern, replacement]) => text.replace(pattern, replacement),
+    value,
+  )
+
+const findWindowedRange = (
+  index: ContainerTextIndex,
+  normalized: string,
+): Range | null => {
+  if (normalized.length < MIN_HIGHLIGHT_TEXT_LENGTH) {
+    return null
+  }
+
+  const words = normalized.split(' ')
+  const minWindow = Math.min(CITATION_QUOTE_MIN_WORD_COUNT, words.length)
+
+  for (let windowSize = words.length; windowSize >= minWindow; windowSize -= 1) {
+    for (let start = 0; start + windowSize <= words.length; start += 1) {
+      const candidate = words.slice(start, start + windowSize).join(' ')
+      if (candidate.length < MIN_HIGHLIGHT_TEXT_LENGTH) {
+        continue
+      }
+
+      const span = resolveHighlightSpan(index, { text: candidate, occurrence: 0 })
+      const range = span ? buildRangeForSpan(index, span) : null
+      if (range) {
+        return range
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Resolves a quote to a Range even when it isn't a perfect substring of the
+ * page text. Two things break an exact match: the quote is copied from raw
+ * markdown while the page shows rendered text, and an LLM asked to copy a
+ * source verbatim still drifts sometimes — a paraphrased lead-in, a trimmed
+ * trailing clause — anywhere in the quote, not just at the end. So the markdown
+ * is stripped first, then a failed full-quote match falls back to every
+ * contiguous word window, longest and earliest first, down to a minimum
+ * length, so any verbatim run inside the quote still anchors the highlight.
+ */
+export const resolveTransientHighlightRange = (
+  container: HTMLElement,
+  quote: string,
+): Range | null => {
+  const normalized = normalizeHighlightText(quote)
+  if (normalized.length < MIN_HIGHLIGHT_TEXT_LENGTH) {
+    return null
+  }
+
+  const index = buildContainerTextIndex(container)
+  // Strip before collapsing whitespace: heading, bullet and blockquote markers
+  // are line-anchored, so they only match while the quote still has newlines.
+  const withoutMarkdown = normalizeHighlightText(stripMarkdownSyntax(quote))
+
+  const candidates =
+    withoutMarkdown && withoutMarkdown !== normalized
+      ? [withoutMarkdown, normalized]
+      : [normalized]
+
+  for (const candidate of candidates) {
+    const range = findWindowedRange(index, candidate)
+    if (range) {
+      return range
+    }
+  }
+
+  return null
+}
+
+/**
+ * Paints a one-off highlight (e.g. a chat citation jump) under its own
+ * registry name so it never interferes with the user's saved highlights.
+ * Returns the resolved Range so the caller can scroll it into view, or null
+ * if the quote couldn't be found on the current page.
+ */
+export const paintTransientHighlight = (
+  container: HTMLElement,
+  quote: string,
+  registryName: string,
+): Range | null => {
+  const range = resolveTransientHighlightRange(container, quote)
+  const registry = highlightRegistry()
+
+  if (range && registry) {
+    registry.set(registryName, new Highlight(range))
+  }
+
+  return range
+}
+
+export const clearRegistryHighlight = (registryName: string): void => {
+  highlightRegistry()?.delete(registryName)
+}
+
 export const buildSelectionAiPrompt = (
   text: string,
   contextLabel?: string | null,

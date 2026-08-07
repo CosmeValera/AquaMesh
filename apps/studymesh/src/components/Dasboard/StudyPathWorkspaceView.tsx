@@ -43,6 +43,11 @@ import StudyGuidePagesPanel from './StudyGuidePagesPanel'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 import { renderMarkdownInline } from '../study/StudyBlockView'
 import TextSelectionActionBar from '../workspace/TextSelectionActionBar'
+import {
+  CITATION_HIGHLIGHT_REGISTRY_NAME,
+  clearRegistryHighlight,
+  paintTransientHighlight,
+} from '../workspace/textSelectionHighlights'
 
 type PageIconTone = 'primary' | 'error'
 
@@ -91,6 +96,14 @@ interface StudyPathWorkspaceViewProps {
   onAskAi?: (question: string) => void
   /** Overrides the default "My guides" crumb, e.g. for the public /try demo. */
   breadcrumb?: { label: string; onClick: () => void }
+  /** Set when an AI Chat citation with a source quote was just clicked. */
+  pendingCitationHighlight?: {
+    dashboardKey: string
+    quote: string
+    /** Source text to try when the model's quote is not on the page at all. */
+    fallbackQuote?: string
+    requestId: number
+  } | null
 }
 
 const quickSummaryParagraphs = (value: string): string[] =>
@@ -386,6 +399,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   onAddPage,
   onAskAi,
   breadcrumb,
+  pendingCitationHighlight,
 }) => {
   const { t } = useInterfaceText()
   const theme = useTheme()
@@ -396,6 +410,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   const pageScrollPositionsRef =
     externalPageScrollPositionsRef || internalPageScrollPositionsRef
   const lastPathIdRef = useRef(studyPath.pathId)
+  const handledCitationRequestIdRef = useRef<number | null>(null)
   const [quickStartExpanded, setQuickStartExpanded] = useState(true)
   const quickStartView =
     studyPath.quickStartView === 'context' ? 'context' : 'default'
@@ -451,6 +466,104 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
       pageScrollPositionsRef.current[currentPageKey] ?? 0,
     )
   }, [currentPageKey])
+
+  // A chat citation click already switched to this page (currentPageKey); once
+  // it finishes rendering, find the quoted sentence and scroll it into view.
+  // Runs after the scroll-restore effect above, so it refines that scroll
+  // rather than fighting it.
+  useEffect(() => {
+    if (
+      !pendingCitationHighlight ||
+      pendingCitationHighlight.dashboardKey !== currentPageKey ||
+      pendingCitationHighlight.requestId === handledCitationRequestIdRef.current
+    ) {
+      return undefined
+    }
+
+    let cancelled = false
+    let clearTimer: number | null = null
+    let frame: number | null = null
+
+    const attempt = (retriesLeft: number) => {
+      if (cancelled) {
+        return
+      }
+
+      const container = pageScrollContainerRef.current
+      if (!container) {
+        // The page subtree can still be mid-mount right after a citation
+        // click switches pages. Retry a few frames before giving up, instead
+        // of marking the request handled against a container that was never
+        // there to search.
+        if (retriesLeft > 0) {
+          frame = window.requestAnimationFrame(() => attempt(retriesLeft - 1))
+        } else {
+          handledCitationRequestIdRef.current = pendingCitationHighlight.requestId
+        }
+        return
+      }
+
+      // The caller never clears pendingCitationHighlight (clicking the same
+      // citation twice needs a second run, and nulling it out from here would
+      // race a fast second click), so the requestId comparison above is what
+      // stops re-runs — mark handled now that a real search actually ran.
+      handledCitationRequestIdRef.current = pendingCitationHighlight.requestId
+
+      // The model's quote can drift far enough to exist nowhere on the page.
+      // Falling back to the cited source's own text keeps the click useful
+      // instead of silently navigating with nothing highlighted.
+      const range = [
+        pendingCitationHighlight.quote,
+        pendingCitationHighlight.fallbackQuote,
+      ].reduce<Range | null>(
+        (found, candidate) =>
+          found ||
+          (candidate
+            ? paintTransientHighlight(
+              container,
+              candidate,
+              CITATION_HIGHLIGHT_REGISTRY_NAME,
+            )
+            : null),
+        null,
+      )
+
+      if (range) {
+        const anchor =
+          range.startContainer.nodeType === Node.ELEMENT_NODE
+            ? (range.startContainer as Element)
+            : range.startContainer.parentElement
+        anchor?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        clearTimer = window.setTimeout(() => {
+          clearRegistryHighlight(CITATION_HIGHLIGHT_REGISTRY_NAME)
+        }, 3000)
+        // eslint-disable-next-line no-undef
+      } else if (process.env.NODE_ENV === 'development') {
+        // Silent no-op otherwise: the page still navigated, so a quote that
+        // does not exist on the page is invisible without this.
+        console.warn(
+          '[citation-highlight] quote not found on page',
+          pendingCitationHighlight.quote,
+        )
+      }
+    }
+
+    // Let the page finish its render/layout pass after the switch before
+    // searching its text.
+    frame = window.requestAnimationFrame(() =>
+      window.requestAnimationFrame(() => attempt(3)),
+    )
+
+    return () => {
+      cancelled = true
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame)
+      }
+      if (clearTimer !== null) {
+        window.clearTimeout(clearTimer)
+      }
+    }
+  }, [pendingCitationHighlight, currentPageKey])
 
   const saveCurrentPageScroll = () => {
     if (!currentPageKey || !pageScrollContainerRef.current) {

@@ -496,6 +496,13 @@ const GuideWorkspacePage = () => {
     return true
   }
 
+  const [pendingCitationHighlight, setPendingCitationHighlight] = useState<{
+    dashboardKey: string
+    quote: string
+    fallbackQuote?: string
+    requestId: number
+  } | null>(null)
+
   const openStudyGuidePageKey = (dashboardKey: string) => {
     if (!record) {
       return
@@ -518,9 +525,21 @@ const GuideWorkspacePage = () => {
     setMobileSection('study-guide')
   }
 
+  const citationHighlightRequestIdRef = useRef(0)
+
   const openChatSource = (source: DashboardAnswerSourceRef) => {
     if (source.dashboardKey) {
       openStudyGuidePageKey(source.dashboardKey)
+      const quote = source.quote || source.textPreview
+      if (quote) {
+        citationHighlightRequestIdRef.current += 1
+        setPendingCitationHighlight({
+          dashboardKey: source.dashboardKey,
+          quote,
+          fallbackQuote: source.textPreview,
+          requestId: citationHighlightRequestIdRef.current,
+        })
+      }
       return
     }
 
@@ -808,6 +827,7 @@ const GuideWorkspacePage = () => {
         onEditingPageKeyChange={setEditingPageKey}
         onAddPage={addManualPage}
         onAskAi={askAiFromStudyBlock}
+        pendingCitationHighlight={pendingCitationHighlight}
       />
     </Paper>
   ) : null

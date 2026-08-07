@@ -59,6 +59,7 @@ export interface DashboardAnswerSourceRef {
   dashboardKey?: string
   dashboardTitle?: string
   dashboardIndex?: number
+  quote?: string
 }
 
 const STRONG_MODEL_CHAT_TIMEOUT_MS = 45000
@@ -196,6 +197,8 @@ ${answerStyleHint ? `- Extra answer style instruction: ${answerStyleHint}` : ''}
 - Do not say "as I said earlier" unless the student explicitly asks you to repeat or recall a prior answer.
 - Be concise, clear, student-friendly, and practical.
 - Use bullets, examples, and study tips only when the question actually calls for explanation — not on every answer.
+- After the full answer, on new lines, add one bookkeeping block for the citations you used: start with [[CITATION_QUOTES]], then one line per citation number formatted as "<number>: <quote>", then end with [[/CITATION_QUOTES]]. Each quote must be copied character-for-character from that source's context, not paraphrased or summarized, and short (one sentence or clause). Skip a citation's line entirely if you cannot find a short exact passage that supports it.
+- The citation-quotes block is internal bookkeeping. Never mention it, describe it, or refer to it inside the visible answer.
 
 Dashboard title: ${dashboardTitle}
 
@@ -373,6 +376,39 @@ const extractUsedCitationNumbers = (answer: string): Set<number> => {
   return numbers
 }
 
+const CITATION_QUOTES_BLOCK =
+  /\[\[CITATION_QUOTES]]([\s\S]*?)\[\[\/CITATION_QUOTES]]/i
+
+// Pulls the model's internal "which exact sentence backs which citation"
+// bookkeeping block out of the raw answer so the UI can highlight and scroll
+// to that text on the source page. Never shown to the student.
+const extractCitationQuotes = (
+  rawAnswer: string,
+): { answer: string; quotes: Map<number, string> } => {
+  const quotes = new Map<number, string>()
+  const match = rawAnswer.match(CITATION_QUOTES_BLOCK)
+
+  if (match) {
+    match[1].split('\n').forEach((line) => {
+      const lineMatch = line.match(/^\s*(\d{1,3})\s*:\s*(.+?)\s*$/)
+      if (!lineMatch) {
+        return
+      }
+
+      const citationNumber = Number(lineMatch[1])
+      const quote = lineMatch[2].replace(/^["'“‘]+|["'”’]+$/g, '').trim()
+      if (Number.isFinite(citationNumber) && quote) {
+        quotes.set(citationNumber, quote)
+      }
+    })
+  }
+
+  return {
+    answer: rawAnswer.replace(CITATION_QUOTES_BLOCK, '').trim(),
+    quotes,
+  }
+}
+
 const sourceRefFromChunk = (
   chunk: DashboardSourceChunk,
   sourceIndex: number,
@@ -462,7 +498,7 @@ export const askDashboardSources = async (
     memory: selectChatMemory(options.history, provider),
     outputLanguage: resolvedLanguage.language,
   })
-  let cleanedAnswer = cleanAnswer(
+  const firstPass = extractCitationQuotes(
     await callDashboardChatModel({
       prompt,
       outputLanguage: resolvedLanguage.language,
@@ -470,12 +506,14 @@ export const askDashboardSources = async (
       signal: options.signal,
     }),
   )
+  let cleanedAnswer = cleanAnswer(firstPass.answer)
+  let citationQuotes = firstPass.quotes
   const exactListCount = options.exactAnswerCount ?? null
   if (
     exactListCount &&
     !isValidExactListAnswer(cleanedAnswer, exactListCount)
   ) {
-    cleanedAnswer = cleanAnswer(
+    const repairPass = extractCitationQuotes(
       await callDashboardChatModel({
         prompt: buildExactListRepairPrompt(prompt, exactListCount),
         outputLanguage: resolvedLanguage.language,
@@ -485,6 +523,8 @@ export const askDashboardSources = async (
         signal: options.signal,
       }),
     )
+    cleanedAnswer = cleanAnswer(repairPass.answer)
+    citationQuotes = repairPass.quotes
   }
   const usedCitationNumbers = extractUsedCitationNumbers(cleanedAnswer)
   const sourceRefs = options.sourceChunks
@@ -499,6 +539,21 @@ export const askDashboardSources = async (
           (candidate) => candidate.citationNumber === sourceRef.citationNumber,
         ) === index
       )
+    })
+    .map((sourceRef) => {
+      const quote = citationQuotes.get(sourceRef.citationNumber)
+      if (quote) {
+        return { ...sourceRef, quote }
+      }
+      // The bookkeeping block is a soft instruction the model can skip. When it
+      // does, fall back to the chunk's own text so a citation-jump always has
+      // something verbatim to search the page for, instead of silently
+      // degrading to navigation with no highlight.
+      if (!sourceRef.dashboardKey) {
+        return sourceRef
+      }
+      const fallbackQuote = sourceRef.textPreview.replace(/\.\.\.$/, '').trim()
+      return fallbackQuote ? { ...sourceRef, quote: fallbackQuote } : sourceRef
     })
   const answerBasis = deriveAnswerBasis(
     sourceRefs,

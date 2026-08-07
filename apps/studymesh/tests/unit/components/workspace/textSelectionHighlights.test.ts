@@ -10,6 +10,7 @@ import {
   paintStoredHighlights,
   readStoredHighlights,
   resolveHighlightSpan,
+  resolveTransientHighlightRange,
   supportsTextHighlightPainting,
   writeStoredHighlights,
   type StoredTextHighlight,
@@ -232,6 +233,109 @@ describe('textSelectionHighlights storage', () => {
     writeStoredHighlights('guide-1:page-2', [])
 
     expect(readStoredHighlights('guide-1:page-2')).toEqual([])
+  })
+})
+
+describe('resolveTransientHighlightRange', () => {
+  it('resolves an exact verbatim quote to a Range', () => {
+    const container = renderContainer(
+      '<p>Kubernetes schedules containers across a cluster of worker nodes.</p>',
+    )
+
+    const range = resolveTransientHighlightRange(
+      container,
+      'Kubernetes schedules containers across a cluster of worker nodes.',
+    )
+
+    expect(range?.toString()).toBe(
+      'Kubernetes schedules containers across a cluster of worker nodes.',
+    )
+  })
+
+  it('falls back to a shorter leading phrase when the tail of the quote drifted', () => {
+    const container = renderContainer(
+      '<p>Kubernetes schedules containers across a cluster of worker nodes.</p>',
+    )
+
+    // The model kept the first clause verbatim but paraphrased the rest.
+    const range = resolveTransientHighlightRange(
+      container,
+      'Kubernetes schedules containers across a cluster, replacing failed pods as needed.',
+    )
+
+    expect(range?.toString()).toBe('Kubernetes schedules containers across a')
+  })
+
+  it('falls back to an inner phrase when the start of the quote drifted', () => {
+    const container = renderContainer(
+      '<p>It wraps one or more containers that share networking and storage.</p>',
+    )
+
+    // The model paraphrased the subject ("A Pod" instead of "It") but kept
+    // the rest of the sentence verbatim — a leading-only fallback would never
+    // find this since every prefix still starts with the paraphrased words.
+    const range = resolveTransientHighlightRange(
+      container,
+      'A Pod wraps one or more containers that share networking and storage.',
+    )
+
+    expect(range?.toString()).toBe(
+      'wraps one or more containers that share networking and storage.',
+    )
+  })
+
+  it('matches a quote copied out of the raw markdown of the page', () => {
+    // The page renders markdown; the chat context the model quotes from is the
+    // raw markdown prop, so its "verbatim" quote carries syntax the DOM has no
+    // text for.
+    const container = renderContainer(
+      '<h2>Control plane</h2><p>The control plane schedules pods onto worker nodes and keeps the cluster at its desired state.</p>',
+    )
+
+    const range = resolveTransientHighlightRange(
+      container,
+      '## Control plane\n\nThe **control plane** schedules `pods` onto [worker nodes](/nodes) and keeps the cluster at its *desired state*.',
+    )
+
+    expect(range?.toString()).toContain('schedules pods onto worker nodes')
+  })
+
+  it('matches a quote copied out of a markdown bullet list', () => {
+    const container = renderContainer(
+      '<ul><li>A Pod wraps one or more containers that share networking and storage.</li></ul>',
+    )
+
+    const range = resolveTransientHighlightRange(
+      container,
+      '- A **Pod** wraps one or more containers that share networking and storage.',
+    )
+
+    expect(range?.toString()).toBe(
+      'A Pod wraps one or more containers that share networking and storage.',
+    )
+  })
+
+  it('keeps underscores that belong to the text instead of stripping them', () => {
+    const container = renderContainer(
+      '<p>Set the node_selector field before scheduling the workload.</p>',
+    )
+
+    const range = resolveTransientHighlightRange(
+      container,
+      'Set the `node_selector` field before scheduling the workload.',
+    )
+
+    expect(range?.toString()).toBe(
+      'Set the node_selector field before scheduling the workload.',
+    )
+  })
+
+  it('returns null when nothing in the container resembles the quote', () => {
+    const container = renderContainer('<p>Docker builds container images.</p>')
+
+    expect(
+      resolveTransientHighlightRange(container, 'Kubernetes schedules containers.'),
+    ).toBeNull()
   })
 })
 

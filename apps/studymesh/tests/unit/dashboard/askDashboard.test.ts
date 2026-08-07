@@ -173,6 +173,76 @@ describe('askDashboardSources', () => {
     expect(callStrongAiModel).toHaveBeenCalledTimes(2)
   })
 
+  it('extracts the citation-quotes bookkeeping block and attaches quotes to their source refs', async () => {
+    vi.mocked(callStrongAiModel).mockResolvedValue(
+      `Kubernetes schedules containers across a cluster of worker nodes [1].
+
+[[CITATION_QUOTES]]
+1: Kubernetes schedules containers across a cluster of worker nodes.
+[[/CITATION_QUOTES]]`,
+    )
+
+    const result = await askDashboardSources({
+      dashboardTitle: 'DevOps',
+      contextText:
+        '[1] Kubernetes basics\nKubernetes schedules containers across a cluster of worker nodes.',
+      question: 'What does Kubernetes do?',
+      history: [],
+      sourceChunks: [
+        {
+          id: 'page-1',
+          title: 'Kubernetes basics',
+          type: 'study guide page',
+          text: 'Kubernetes schedules containers across a cluster of worker nodes.',
+          origin: 'dashboard',
+          dashboardKey: 'page-1-key',
+          dashboardIndex: 1,
+        },
+      ],
+    })
+
+    expect(result.answer).not.toContain('CITATION_QUOTES')
+    expect(result.answer).toContain('Kubernetes schedules containers')
+    expect(result.sourceRefs).toEqual([
+      expect.objectContaining({
+        citationNumber: 1,
+        quote: 'Kubernetes schedules containers across a cluster of worker nodes.',
+      }),
+    ])
+  })
+
+  it('falls back to the chunk text when the model omits a citation quote', async () => {
+    vi.mocked(callStrongAiModel).mockResolvedValue(
+      'A Pod wraps one or more containers that share networking and storage [1].',
+    )
+
+    const result = await askDashboardSources({
+      dashboardTitle: 'Kubernetes',
+      contextText:
+        '[1] Pods\nIt wraps one or more containers that share networking and storage.',
+      question: 'What is a pod?',
+      history: [],
+      sourceChunks: [
+        {
+          id: 'page-1',
+          title: 'Pods',
+          type: 'study guide page',
+          text: 'It wraps one or more containers that share networking and storage.',
+          origin: 'dashboard',
+          dashboardKey: 'page-1-key',
+          dashboardIndex: 1,
+        },
+      ],
+    })
+
+    expect(result.sourceRefs).toEqual([
+      expect.objectContaining({
+        citationNumber: 1,
+        quote: 'It wraps one or more containers that share networking and storage.',
+      }),
+    ])
+  })
+
   it('does not run exact-list repair without a planned exact count', async () => {
     vi.mocked(callStrongAiModel).mockResolvedValue(
       'The 3 main bones of the arm are the humerus, radius, and ulna, and each has a distinct role.',

@@ -178,7 +178,8 @@ interface DashboardChatPanelProps {
    */
   composerReadOnly?: boolean
   composerReadOnlyHint?: string
-  onComposerReadOnlyClick?: () => void
+  /** Hides Carrot costs, which mean nothing to a visitor without an account. */
+  hideCreditCosts?: boolean
   suggestionOverrides?: DashboardChatSuggestionOverride[]
   /** Resolves to an answer the panel shows without any network call, or null to fall through. */
   resolveCannedAnswer?: (question: string) => Promise<string | null>
@@ -609,7 +610,7 @@ const DashboardChatPanel = ({
   onQueuedDraftConsumed,
   composerReadOnly = false,
   composerReadOnlyHint,
-  onComposerReadOnlyClick,
+  hideCreditCosts = false,
   suggestionOverrides,
   resolveCannedAnswer,
 }: DashboardChatPanelProps) => {
@@ -682,7 +683,7 @@ const DashboardChatPanel = ({
   const chatSessionsRef = useRef<DashboardChatSession[]>([])
   const settings = readQuickCreateAiSettings()
   const currentAiProvider = settings.provider || 'hosted'
-  const isHostedAi = currentAiProvider === 'hosted'
+  const showCreditCosts = currentAiProvider === 'hosted' && !hideCreditCosts
   const isLocalAi = currentAiProvider === 'local'
   const context = useMemo(
     () =>
@@ -812,17 +813,6 @@ const DashboardChatPanel = ({
 
     event.preventDefault()
     draftInputRef.current?.focus()
-  }
-
-  const handleComposerReadOnlyClick = (
-    event: React.MouseEvent<HTMLDivElement>,
-  ) => {
-    const target = event.target as HTMLElement | null
-    if (target?.closest('button, a, [role="button"]')) {
-      return
-    }
-
-    onComposerReadOnlyClick?.()
   }
 
   const persistChatSessions = (nextSessions: DashboardChatSession[]) => {
@@ -3096,7 +3086,7 @@ const DashboardChatPanel = ({
                         >
                           {t(getQuickCreateActionLabelKey(action.id))}
                         </Typography>
-                        {isHostedAi ? (
+                        {showCreditCosts ? (
                           <StudyCreditCostLabel
                             amount={quickCreateCreditCost}
                             variant="badge"
@@ -3569,25 +3559,39 @@ const DashboardChatPanel = ({
           theme.palette.mode === 'dark'
             ? 'inset 0 1px 0 rgba(255,255,255,0.04)'
             : 'inset 0 1px 0 rgba(255,255,255,0.9)',
-        cursor: 'text',
+        // A read-only composer takes no input and no click, so it must not
+        // read as something you can type into or press.
+        cursor: composerReadOnly ? 'default' : 'text',
         transition:
           'border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease',
-        '&:hover': {
-          borderColor: alpha(theme.palette.primary.main, 0.42),
-        },
+        '&:hover': composerReadOnly
+          ? undefined
+          : {
+            borderColor: alpha(theme.palette.primary.main, 0.42),
+          },
         '&:focus-within': {
           borderColor: 'primary.main',
           boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.14)}`,
         },
+        // The locked hint is a placeholder on a disabled field, which MUI
+        // renders at an opacity too low to read as an intentional label.
+        ...(composerReadOnly
+          ? {
+            '& .MuiInputBase-input.Mui-disabled': {
+              WebkitTextFillColor: alpha(theme.palette.text.primary, 0.62),
+            },
+            '& .MuiInputBase-input::placeholder': {
+              color: alpha(theme.palette.text.primary, 0.62),
+              opacity: 1,
+            },
+          }
+          : {}),
       }) satisfies SxProps<Theme>,
-    [theme.palette.mode, theme.palette.primary.main],
+    [composerReadOnly, theme.palette.mode, theme.palette.primary.main],
   )
 
   const composerInputSx = useMemo<SxProps<Theme>>(
     () => ({
-      // A disabled field swallows its own clicks, so a locked composer lets
-      // them through to the surface handler that opens the signup nudge.
-      pointerEvents: composerReadOnly ? 'none' : undefined,
       flex:
         draftHasMultipleLines && chatComposerResized ? '1 1 auto' : '0 1 auto',
       minWidth: 0,
@@ -3613,7 +3617,7 @@ const DashboardChatPanel = ({
         lineHeight: 1.5,
       },
     }),
-    [chatComposerResized, composerReadOnly, draftHasMultipleLines],
+    [chatComposerResized, draftHasMultipleLines],
   )
 
   const composerActionButtonSx = {
@@ -5083,15 +5087,8 @@ const DashboardChatPanel = ({
           ) : null}
           <Box
             data-testid="dashboard-chat-composer"
-            onMouseDown={focusComposerFromSurface}
-            onClick={
-              composerReadOnly ? handleComposerReadOnlyClick : undefined
-            }
-            sx={[
-              composerSurfaceSx,
-              composerResizeSx,
-              composerReadOnly && { cursor: 'pointer' },
-            ]}
+            onMouseDown={composerReadOnly ? undefined : focusComposerFromSurface}
+            sx={[composerSurfaceSx, composerResizeSx]}
           >
             <InputBase
               inputRef={draftInputRef}
@@ -5164,7 +5161,7 @@ const DashboardChatPanel = ({
               <Stack direction="row" spacing={0.25} alignItems="center">
                 <Tooltip
                   title={
-                    isHostedAi ? (
+                    showCreditCosts ? (
                       <Stack direction="row" spacing={0.75} alignItems="center">
                         <span>Send -</span>
                         <StudyCreditCostLabel

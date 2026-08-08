@@ -19,8 +19,6 @@ type DemoTextKey = Parameters<ReturnType<typeof useInterfaceText>['t']>[0]
  * "sample", so a locked action always becomes an invitation.
  */
 export type DemoNudgeReason =
-  | 'lockedPrompt'
-  | 'lockedComposer'
   | 'askAi'
   | 'addPage'
   | 'expandOnThis'
@@ -29,8 +27,6 @@ export type DemoNudgeReason =
 // One shared title, one body per reason: the invitation is always the same,
 // only the thing being invited to changes.
 const reasonBodyKeys: Record<DemoNudgeReason, DemoTextKey> = {
-  lockedPrompt: 'demo.nudgeLockedPrompt',
-  lockedComposer: 'demo.nudgeLockedComposer',
   askAi: 'demo.nudgeAskAi',
   addPage: 'demo.nudgeAddPage',
   expandOnThis: 'demo.nudgeExpandOnThis',

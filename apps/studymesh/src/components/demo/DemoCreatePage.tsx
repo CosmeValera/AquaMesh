@@ -24,7 +24,6 @@ import LandingTopNav from '../landing/LandingTopNav'
 import StudyMeshFooter from '../landing/StudyMeshFooter'
 import { createStudyMeshTheme } from '../../theme'
 import { readStoredAccentColorId } from '../../theme/accentColors'
-import DemoSignupNudge from './DemoSignupNudge'
 
 /** The landing canvas, so the shared nav and footer sit on what they expect. */
 const DEMO_CANVAS = '#FBFDFE'
@@ -103,7 +102,6 @@ const DemoCreatePage = () => {
   const [matching, setMatching] = useState(false)
   const [startedAt, setStartedAt] = useState(0)
   const [now, setNow] = useState(0)
-  const [nudgeOpen, setNudgeOpen] = useState(false)
 
   const selectedGuide = useMemo(
     () => DEMO_GUIDES.find((guide) => guide.slug === selectedSlug) || null,
@@ -116,6 +114,10 @@ const DemoCreatePage = () => {
     [],
   )
   const generating = startedAt > 0
+  // The topic is picked and the match has settled, so Create guide is the only
+  // thing left to do. The button says so itself rather than adding a line of
+  // copy to a page this change is shortening.
+  const ctaReady = Boolean(selectedGuide) && !matching && !generating
   // The match is prepared data, so it would otherwise land instantly. The
   // ranking pass is the mechanism this page is about, so it gets shown running.
   const matchedGuide = matching ? null : selectedGuide
@@ -504,25 +506,6 @@ const DemoCreatePage = () => {
                       {matching ? t('demo.matching') : t('demo.matchPending')}
                     </Typography>
                   )}
-                  <Divider
-                    sx={(theme) => ({
-                      my: 1.5,
-                      borderColor: alpha(theme.palette.text.primary, 0.1),
-                    })}
-                  />
-                  <Typography
-                    variant="caption"
-                    sx={(theme) => ({
-                      display: 'block',
-                      lineHeight: 1.6,
-                      color:
-                    theme.palette.mode === 'dark'
-                      ? theme.palette.primary.light
-                      : theme.palette.primary.dark,
-                    })}
-                  >
-                    {t('demo.matchMechanism')}
-                  </Typography>
                 </Paper>
               </DemoStep>
 
@@ -534,13 +517,10 @@ const DemoCreatePage = () => {
                 helper={t('demo.pathHelper')}
               >
                 {/* The prompt is a fixed capture, so it renders as a read-only
-                panel rather than a field. The whole panel is the affordance
-                that explains why it cannot be edited here. */}
+                panel rather than a field. Nothing about it is interactive: the
+                helper line under Create guide already says it is a sample. */}
                 <Box
-                  component="button"
-                  type="button"
-                  aria-label={t('demo.promptLockedLabel')}
-                  onClick={() => setNudgeOpen(true)}
+                  data-testid="demo-prompt-panel"
                   sx={(theme) => ({
                     display: 'block',
                     width: '100%',
@@ -553,18 +533,6 @@ const DemoCreatePage = () => {
                       theme.palette.text.primary,
                       theme.palette.mode === 'dark' ? 0.06 : 0.03,
                     ),
-                    cursor: 'pointer',
-                    font: 'inherit',
-                    '&:hover': {
-                      borderColor: alpha(theme.palette.primary.main, 0.5),
-                    },
-                    '&:focus-visible': {
-                      outline: `3px solid ${alpha(
-                        theme.palette.primary.main,
-                        0.45,
-                      )}`,
-                      outlineOffset: 2,
-                    },
                   })}
                 >
                   <Typography
@@ -629,6 +597,7 @@ const DemoCreatePage = () => {
                     disableElevation
                     startIcon={<AutoAwesomeIcon />}
                     disabled={!selectedGuide || matching || generating}
+                    data-cta-ready={ctaReady ? 'true' : undefined}
                     onClick={startGeneration}
                     sx={(theme) => ({
                       px: 3,
@@ -640,6 +609,37 @@ const DemoCreatePage = () => {
                         color: alpha(theme.palette.text.primary, 0.45),
                         bgcolor: alpha(theme.palette.text.primary, 0.1),
                       },
+                      '@keyframes studymesh-demo-cta-ready': {
+                        '0%, 100%': {
+                          boxShadow: `0 0 0 0 ${alpha(
+                            theme.palette.primary.main,
+                            0.42,
+                          )}`,
+                        },
+                        '50%': {
+                          boxShadow: `0 0 0 9px ${alpha(
+                            theme.palette.primary.main,
+                            0,
+                          )}`,
+                        },
+                      },
+                      // Only box-shadow moves, so the button never changes size
+                      // while the status around it changes. Three pulses, then
+                      // a resting ring: it points at the next step once and
+                      // then stops asking for attention.
+                      ...(ctaReady
+                        ? {
+                          boxShadow: `0 0 0 3px ${alpha(
+                            theme.palette.primary.main,
+                            0.24,
+                          )}`,
+                          animation:
+                              'studymesh-demo-cta-ready 1600ms ease-out 3',
+                          '@media (prefers-reduced-motion: reduce)': {
+                            animation: 'none',
+                          },
+                        }
+                        : {}),
                     })}
                   >
                     {t('demo.createGuide')}
@@ -758,10 +758,6 @@ const DemoCreatePage = () => {
           </Stack>
         </Box>
         <StudyMeshFooter sectionHrefPrefix="/" />
-        <DemoSignupNudge
-          reason={nudgeOpen ? 'lockedPrompt' : null}
-          onClose={() => setNudgeOpen(false)}
-        />
       </Box>
     </ThemeProvider>
   )

@@ -2013,16 +2013,12 @@ describe('DashboardChatPanel demo props', () => {
   })
 
   it('locks the composer while leaving Quick Create usable', () => {
-    const onComposerReadOnlyClick = vi.fn()
     renderDemoPanel({
       composerReadOnly: true,
-      composerReadOnlyHint: 'Sign up to ask your own questions',
-      onComposerReadOnlyClick,
+      composerReadOnlyHint: 'Disabled for demo',
     })
 
-    expect(
-      screen.getByPlaceholderText('Sign up to ask your own questions'),
-    ).toBeDisabled()
+    expect(screen.getByPlaceholderText('Disabled for demo')).toBeDisabled()
     expect(screen.queryByPlaceholderText('Ask anything')).not.toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Send dashboard question' }),
@@ -2030,12 +2026,19 @@ describe('DashboardChatPanel demo props', () => {
     expect(screen.getByRole('button', { name: /^Add source$/i })).toBeDisabled()
     expect(screen.getByRole('button', { name: /^Create$/i })).toBeEnabled()
 
-    fireEvent.click(screen.getByTestId('dashboard-chat-composer'))
-    expect(onComposerReadOnlyClick).toHaveBeenCalledTimes(1)
-
-    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
-    expect(onComposerReadOnlyClick).toHaveBeenCalledTimes(1)
+    // The locked composer is a label, not an affordance: clicking it does
+    // nothing at all rather than opening something the demo cannot honour.
+    const composer = screen.getByTestId('dashboard-chat-composer')
+    expect(composer).not.toHaveAttribute('role')
+    fireEvent.click(composer)
+    expect(document.activeElement).not.toBe(
+      screen.getByPlaceholderText('Disabled for demo'),
+    )
   })
+
+  // `hideCreditCosts` only has anything to hide under the hosted provider, and
+  // this suite mocks the provider as Gemini. The assertion that matters lives
+  // in DemoGuidePage.test.tsx, which runs against the real hosted default.
 
   it('replaces the empty-state suggestions with the prepared questions', async () => {
     const resolveCannedAnswer = vi.fn().mockResolvedValue('Prepared answer.')

@@ -215,7 +215,7 @@ const DemoGuidePage = () => {
 
     // Never null: null falls through to the real network path, and the demo
     // must not be able to make a request.
-    return exchange?.answer || t('demo.nudgeLockedComposer')
+    return exchange?.answer || t('demo.chatUnknownQuestion')
   }
 
   const dashboard = useMemo<StateDashboard | undefined>(
@@ -354,7 +354,7 @@ const DemoGuidePage = () => {
         supportsStudyGuideCreateScope
         composerReadOnly
         composerReadOnlyHint={t('demo.composerLockedHint')}
-        onComposerReadOnlyClick={() => setNudgeReason('lockedComposer')}
+        hideCreditCosts
         suggestionOverrides={suggestionOverrides}
         resolveCannedAnswer={resolveCannedAnswer}
       />

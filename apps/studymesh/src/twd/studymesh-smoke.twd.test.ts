@@ -168,9 +168,7 @@ describe('RabbitHole TWD landing smoke', () => {
     // Stops at the topic picker: the prompt is locked because the demo runs on
     // prepared prompts, and opening a guide costs a 5s fake generation that
     // belongs in the Playwright spec, not in a smoke test.
-    const promptPanel = await screenDom.findByRole('button', {
-      name: /why is this prompt locked/i,
-    })
+    const promptPanel = await screenDom.findByTestId('demo-prompt-panel')
     expect(promptPanel.textContent || '').to.match(/pick a topic above/i)
 
     for (const label of demoChipLabels) {

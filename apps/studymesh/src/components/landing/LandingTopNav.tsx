@@ -174,13 +174,14 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
           ))}
         </Stack>
 
-        {/* A plain href like the other nav entries: /try is its own page, so
-            it loads fresh at the top rather than swapping in at the current
-            scroll position. */}
+        {/* The chrome CTA is for people who already have an account: the demo
+            is reached from the in-page CTAs instead. A plain href like the
+            other nav entries, so it loads fresh at the top rather than swapping
+            in at the current scroll position. */}
         <Button
           variant="outlined"
           endIcon={<ArrowForwardIcon />}
-          href="/try"
+          href="/login"
           sx={{
             justifySelf: 'end',
             minHeight: { xs: 44, sm: 52 },
@@ -206,10 +207,10 @@ const LandingTopNav = ({ sectionHrefPrefix = '' }: LandingTopNavProps) => {
           }}
         >
           <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-            Try it
+            Log in
           </Box>
           <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-            Try it
+            Log in
           </Box>
         </Button>
       </Container>

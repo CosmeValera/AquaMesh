@@ -479,7 +479,6 @@ const translations = {
       'Pick a topic above to see the prompt that produced its guide.',
     'demo.promptHelper':
       'Sample prompt only. When you sign up, you write your own prompt about anything and you define your own knowledge contexts.',
-    'demo.promptLockedLabel': 'Why is this prompt locked?',
     'demo.chooseTopic': 'Pick what you want to learn',
     'demo.chooseTopicHelper':
       'Five prepared prompts to show you how it works. In the app, you type your own prompt about anything you want to learn.',
@@ -491,8 +490,6 @@ const translations = {
     'demo.matchPending':
       'Pick a topic above. RabbitHole matches one of these contexts to it before it writes a single page.',
     'demo.matching': 'Ranking your contexts against this prompt...',
-    'demo.matchMechanism':
-      'This is the real mechanism, not a demo shortcut: RabbitHole reads your prompt, ranks every context in your library by how well its structure explains the concept, and uses the winner to build the analogies and links inside the guide.',
     'demo.pathTitle': 'This is the prompt you would write yourself',
     'demo.pathHelper':
       'In the real app, you type your own question or topic here. These five prompts are just examples so you can see how it feels, you could ask anything you want to understand.',
@@ -511,16 +508,11 @@ const translations = {
     'demo.endBody':
       'Your own guides work exactly like this one, on whatever you want to learn.',
     'demo.dismissBanner': 'Dismiss',
-    'demo.composerLockedHint':
-      'The composer is locked in this sample. Pick a prepared question, or sign up to ask your own.',
+    'demo.composerLockedHint': 'Disabled for demo',
     'demo.chatUnknownQuestion':
       'I only know this sample guide, so I can answer the prepared questions here. With an account I read your own guides and answer anything you ask about them.',
     'demo.nudgeTitle': 'Available with a free account',
     'demo.nudgeDismiss': 'Keep looking around',
-    'demo.nudgeLockedPrompt':
-      'The sample runs on five prepared prompts, so it needs no account and no waiting. Sign up to write your own prompt and get a guide built around it.',
-    'demo.nudgeLockedComposer':
-      'This sample answers three prepared questions. With an account the chat reads your whole guide and answers anything you ask about it.',
     'demo.nudgeAskAi':
       'In your own guides you can select any part of a page and ask about it. Sign up to try it on something you are actually studying.',
     'demo.nudgeAddPage':
@@ -1006,7 +998,6 @@ const translations = {
       'Elige un tema arriba para ver el prompt que generó su guía.',
     'demo.promptHelper':
       'Solo un prompt de muestra. Al registrarte escribes tu propio prompt sobre lo que quieras, y defines tus propios contextos de conocimiento.',
-    'demo.promptLockedLabel': '¿Por qué está bloqueado este prompt?',
     'demo.chooseTopic': 'Elige qué quieres aprender',
     'demo.chooseTopicHelper':
       'Cinco prompts preparados para enseñarte cómo funciona. En la app escribes tu propio prompt sobre lo que quieras aprender.',
@@ -1018,8 +1009,6 @@ const translations = {
     'demo.matchPending':
       'Elige un tema arriba. RabbitHole le empareja uno de estos contextos antes de escribir una sola página.',
     'demo.matching': 'Ordenando tus contextos según este prompt...',
-    'demo.matchMechanism':
-      'Este es el mecanismo real, no un atajo de la demo: RabbitHole lee tu prompt, ordena todos los contextos de tu biblioteca según lo bien que su estructura explica el concepto y usa el ganador para construir las analogías y los enlaces dentro de la guía.',
     'demo.pathTitle': 'Este es el prompt que escribirías tú',
     'demo.pathHelper':
       'En la app real, aquí escribes tu propia pregunta o tema. Estos cinco prompts son solo ejemplos para que veas cómo se siente: podrías preguntar cualquier cosa que quieras entender.',
@@ -1038,16 +1027,11 @@ const translations = {
     'demo.endBody':
       'Tus propias guías funcionan igual que esta, con lo que quieras aprender.',
     'demo.dismissBanner': 'Descartar',
-    'demo.composerLockedHint':
-      'El campo de mensaje está bloqueado en esta muestra. Elige una pregunta preparada o regístrate para hacer la tuya.',
+    'demo.composerLockedHint': 'Desactivado en la demo',
     'demo.chatUnknownQuestion':
       'Solo conozco esta guía de muestra, así que puedo responder las preguntas preparadas. Con una cuenta leo tus propias guías y respondo lo que sea sobre ellas.',
     'demo.nudgeTitle': 'Disponible con una cuenta gratuita',
     'demo.nudgeDismiss': 'Seguir mirando',
-    'demo.nudgeLockedPrompt':
-      'La muestra usa cinco prompts preparados, así que no necesita cuenta ni espera. Regístrate para escribir tu propio prompt y recibir una guía hecha a partir de él.',
-    'demo.nudgeLockedComposer':
-      'Esta muestra responde tres preguntas preparadas. Con una cuenta, el chat lee toda tu guía y responde lo que le preguntes sobre ella.',
     'demo.nudgeAskAi':
       'En tus propias guías puedes seleccionar cualquier parte de una página y preguntar sobre ella. Regístrate para probarlo con algo que estés estudiando de verdad.',
     'demo.nudgeAddPage':
@@ -1547,7 +1531,6 @@ const translationOverrides: Record<
       'Choisissez un sujet ci-dessus pour voir le prompt qui a produit son guide.',
     'demo.promptHelper':
       'Prompt d’exemple uniquement. En créant un compte, vous écrivez votre propre prompt sur ce que vous voulez, et vous définissez vos propres contextes de connaissance.',
-    'demo.promptLockedLabel': 'Pourquoi ce prompt est-il verrouillé ?',
     'demo.chooseTopic': 'Choisissez ce que vous voulez apprendre',
     'demo.chooseTopicHelper':
       'Cinq prompts préparés pour vous montrer comment ça marche. Dans l’app, vous tapez votre propre prompt sur ce que vous voulez apprendre.',
@@ -1559,8 +1542,6 @@ const translationOverrides: Record<
     'demo.matchPending':
       'Choisissez un sujet ci-dessus. RabbitHole lui relie un de ces contextes avant d’écrire la moindre page.',
     'demo.matching': 'Classement de vos contextes pour ce prompt...',
-    'demo.matchMechanism':
-      'C’est le mécanisme réel, pas un raccourci de démo : RabbitHole lit votre prompt, classe chaque contexte de votre bibliothèque selon la façon dont sa structure explique le concept, et utilise le gagnant pour construire les analogies et les liens à l’intérieur du guide.',
     'demo.pathTitle': 'Voici le prompt que vous écririez vous-même',
     'demo.pathHelper':
       'Dans la vraie app, vous tapez ici votre propre question ou sujet. Ces cinq prompts ne sont que des exemples pour vous donner le ressenti : vous pourriez demander tout ce que vous voulez comprendre.',
@@ -1579,16 +1560,11 @@ const translationOverrides: Record<
     'demo.endBody':
       'Vos propres guides fonctionnent exactement comme celui-ci, sur ce que vous voulez apprendre.',
     'demo.dismissBanner': 'Masquer',
-    'demo.composerLockedHint':
-      'Le champ de message est verrouillé dans cet exemple. Choisissez une question préparée, ou créez un compte pour poser la vôtre.',
+    'demo.composerLockedHint': 'Désactivé pour la démo',
     'demo.chatUnknownQuestion':
       'Je ne connais que ce guide d’exemple, je peux donc répondre aux questions préparées. Avec un compte, je lis vos propres guides et je réponds à tout ce que vous demandez dessus.',
     'demo.nudgeTitle': 'Disponible avec un compte gratuit',
     'demo.nudgeDismiss': 'Continuer à explorer',
-    'demo.nudgeLockedPrompt':
-      'L’exemple repose sur cinq prompts préparés, il ne demande donc ni compte ni attente. Créez un compte pour écrire votre propre prompt et obtenir un guide construit autour.',
-    'demo.nudgeLockedComposer':
-      'Cet exemple répond à trois questions préparées. Avec un compte, le chat lit tout votre guide et répond à tout ce que vous lui demandez.',
     'demo.nudgeAskAi':
       'Dans vos propres guides, vous pouvez sélectionner n’importe quelle partie d’une page et poser une question dessus. Créez un compte pour l’essayer sur ce que vous étudiez vraiment.',
     'demo.nudgeAddPage':
@@ -2082,7 +2058,6 @@ const translationOverrides: Record<
       'Wähle oben ein Thema, um den Prompt zu sehen, der seinen Leitfaden erzeugt hat.',
     'demo.promptHelper':
       'Nur ein Beispiel-Prompt. Mit einem Konto schreibst du deinen eigenen Prompt zu allem, was du willst, und legst deine eigenen Wissenskontexte fest.',
-    'demo.promptLockedLabel': 'Warum ist dieser Prompt gesperrt?',
     'demo.chooseTopic': 'Wähle, was du lernen willst',
     'demo.chooseTopicHelper':
       'Fünf vorbereitete Prompts, die dir zeigen, wie es funktioniert. In der App tippst du deinen eigenen Prompt zu allem, was du lernen willst.',
@@ -2094,8 +2069,6 @@ const translationOverrides: Record<
     'demo.matchPending':
       'Wähle oben ein Thema. RabbitHole ordnet ihm einen dieser Kontexte zu, bevor eine einzige Seite geschrieben wird.',
     'demo.matching': 'Deine Kontexte werden für diesen Prompt sortiert...',
-    'demo.matchMechanism':
-      'Das ist der echte Mechanismus, keine Demo-Abkürzung: RabbitHole liest deinen Prompt, sortiert jeden Kontext in deiner Bibliothek danach, wie gut seine Struktur das Konzept erklärt, und baut mit dem Gewinner die Analogien und Verknüpfungen im Leitfaden.',
     'demo.pathTitle': 'Das ist der Prompt, den du selbst schreiben würdest',
     'demo.pathHelper':
       'In der echten App tippst du hier deine eigene Frage oder dein Thema. Diese fünf Prompts sind nur Beispiele, damit du ein Gefühl dafür bekommst: du könntest nach allem fragen, was du verstehen willst.',
@@ -2114,16 +2087,11 @@ const translationOverrides: Record<
     'demo.endBody':
       'Deine eigenen Leitfäden funktionieren genau so, zu allem, was du lernen willst.',
     'demo.dismissBanner': 'Ausblenden',
-    'demo.composerLockedHint':
-      'Das Eingabefeld ist in diesem Beispiel gesperrt. Wähle eine vorbereitete Frage oder registriere dich, um eigene zu stellen.',
+    'demo.composerLockedHint': 'Für die Demo deaktiviert',
     'demo.chatUnknownQuestion':
       'Ich kenne nur diesen Beispiel-Leitfaden und kann deshalb die vorbereiteten Fragen beantworten. Mit einem Konto lese ich deine eigenen Leitfäden und beantworte alles dazu.',
     'demo.nudgeTitle': 'Mit einem kostenlosen Konto verfügbar',
     'demo.nudgeDismiss': 'Weiter umsehen',
-    'demo.nudgeLockedPrompt':
-      'Das Beispiel läuft auf fünf vorbereiteten Prompts, deshalb braucht es weder Konto noch Wartezeit. Registriere dich, um deinen eigenen Prompt zu schreiben und einen Leitfaden dazu zu bekommen.',
-    'demo.nudgeLockedComposer':
-      'Dieses Beispiel beantwortet drei vorbereitete Fragen. Mit einem Konto liest der Chat deinen ganzen Leitfaden und beantwortet alles, was du dazu fragst.',
     'demo.nudgeAskAi':
       'In deinen eigenen Leitfäden kannst du jede Stelle einer Seite markieren und dazu fragen. Registriere dich, um es an etwas auszuprobieren, das du wirklich lernst.',
     'demo.nudgeAddPage':
@@ -2155,12 +2123,22 @@ interface InterfaceLanguageContextValue {
 const InterfaceLanguageContext =
   React.createContext<InterfaceLanguageContextValue | null>(null)
 
+/**
+ * `forceLanguage` pins the whole tree to one language and makes `setLanguage` a
+ * no-op. The logged-out surfaces (landing, pricing) are hardcoded English, so
+ * the demo pins itself to English too rather than following the browser locale
+ * into a half-translated page. A pinned surface must not write the visitor's
+ * stored settings either: they never asked for the change.
+ */
 export const InterfaceLanguageProvider: React.FC<{
   children: React.ReactNode
-}> = ({ children }) => {
-  const [language, setLanguageState] = React.useState<InterfaceLanguageCode>(
-    () => readContentLanguageSettings().interfaceLanguage,
-  )
+  forceLanguage?: InterfaceLanguageCode
+}> = ({ children, forceLanguage }) => {
+  const [storedLanguage, setLanguageState] =
+    React.useState<InterfaceLanguageCode>(
+      () => readContentLanguageSettings().interfaceLanguage,
+    )
+  const language = forceLanguage || storedLanguage
 
   React.useEffect(() => {
     const refresh = () => {
@@ -2183,6 +2161,10 @@ export const InterfaceLanguageProvider: React.FC<{
     () => ({
       language,
       setLanguage: (nextLanguage) => {
+        if (forceLanguage) {
+          return
+        }
+
         setLanguageState(nextLanguage)
         saveContentLanguageSettings({
           ...readContentLanguageSettings(),
@@ -2191,7 +2173,7 @@ export const InterfaceLanguageProvider: React.FC<{
       },
       t: (key) => getInterfaceTranslation(language, key),
     }),
-    [language],
+    [forceLanguage, language],
   )
 
   return (

@@ -192,9 +192,11 @@ describe('StudyMeshLanding', () => {
     expect(
       within(footer).getByRole('link', { name: /see a guide/i }),
     ).toHaveAttribute('href', '/try')
+    // The footer's own CTA is for returning users; the demo is reached from
+    // the Start list above it and from the in-page CTAs.
     expect(
-      within(footer).getByRole('link', { name: /^try it$/i }),
-    ).toHaveAttribute('href', '/try')
+      within(footer).getByRole('link', { name: /^log in$/i }),
+    ).toHaveAttribute('href', '/login')
   })
 
   it('states honestly where a chat assistant wins and when to open RabbitHole', () => {

@@ -117,6 +117,14 @@ const AppShell = () => {
     }
   }, [location.pathname])
 
+  // The demo is English-only, like the landing and pricing pages it sits
+  // between. Pinned here rather than inside the route element because
+  // PodcastPlayerProvider renders its mini player above <Routes> and the demo
+  // plays podcasts, so a route-level pin would leave localized player chrome on
+  // an English page.
+  const isDemoRoute =
+    location.pathname === '/try' || location.pathname.startsWith('/try/')
+
   const accentColorContextValue = useMemo(
     () => ({
       accentColorId,
@@ -129,7 +137,7 @@ const AppShell = () => {
 
   return (
     <AccentColorProvider value={accentColorContextValue}>
-      <InterfaceLanguageProvider>
+      <InterfaceLanguageProvider forceLanguage={isDemoRoute ? 'en' : undefined}>
         <ThemeProvider theme={theme}>
           <PrimeReactProvider value={{ ripple: true }}>
             <CssBaseline />

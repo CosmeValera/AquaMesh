@@ -24,9 +24,10 @@ const PREPARED_CHAT_QUESTIONS = 3
 // on top of the 5s fake generation.
 const QUICK_CREATE_TIMEOUT_MS = 60_000
 
-// The demo renders its copy through the interface language layer, which follows
-// the browser locale.
-test.use({ locale: 'en-US' })
+// The demo is pinned to English whatever the browser locale is, because the
+// landing it sits behind and the captured guide content inside it are both
+// English only. A non-English locale is the honest check of that pin.
+test.use({ locale: 'es-ES' })
 
 let apiRequests: string[] = []
 

@@ -60,7 +60,7 @@ export const DEMO_GUIDES: DemoGuideDefinition[] = [
       'Teach me why I forget most of what I study, and how spaced repetition fixes it. Explain it through practising a musical instrument, which I already do.',
     lensSkill: 'Practising a musical instrument',
     lensExplanation:
-      'A piece you stop playing decays on a curve, and one return visit resets it further than an hour of cramming ever does. That curve is memory, which is exactly what spaced repetition is built around.',
+      'A piece you stop playing fades on a curve. Memory fades on that same curve.',
     title: 'Why you forget, and spaced repetition',
     emoji: '🎻',
     load: () =>
@@ -77,7 +77,7 @@ export const DEMO_GUIDES: DemoGuideDefinition[] = [
       'Teach me what deliberate practice is, and why repeating something over and over stops making me better. Explain it through competitive video games, which I already play.',
     lensSkill: 'Competitive video games',
     lensExplanation:
-      'Ranked play only moves you when you are held at the edge of what you can handle, with the scoreboard telling you what broke. That edge plus feedback is exactly what deliberate practice is.',
+      'Ranked play only moves you at the edge of what you can handle. So does practice.',
     title: 'Deliberate practice',
     emoji: '🎯',
     load: () =>
@@ -94,7 +94,7 @@ export const DEMO_GUIDES: DemoGuideDefinition[] = [
       'Teach me how to find the one thing that is actually holding my learning back, instead of working harder on everything. Explain it through working in a restaurant kitchen, which I already know well.',
     lensSkill: 'Working in a restaurant kitchen',
     lensExplanation:
-      'A kitchen is a throughput system: one slow station caps the whole pass. That is the theory of constraints, which is exactly what a learning bottleneck is.',
+      'One slow station caps the whole kitchen. One slow skill caps all your learning.',
     title: 'Bottlenecks in your own learning',
     emoji: '🍳',
     load: () =>
@@ -111,7 +111,7 @@ export const DEMO_GUIDES: DemoGuideDefinition[] = [
       'Teach me how compound interest actually works, and why starting early beats saving more later. Explain it through training at the gym, which I already do.',
     lensSkill: 'Training at the gym',
     lensExplanation:
-      'Every gym session adds a small overload on top of the gains the last one left behind, so the same effort keeps paying more. Compound interest is that same curve, with money in place of muscle.',
+      'Each session builds on the gains of the last. Money compounds the same way.',
     title: 'How compound interest actually works',
     emoji: '📈',
     load: () =>
@@ -128,7 +128,7 @@ export const DEMO_GUIDES: DemoGuideDefinition[] = [
       'Teach me how my immune system fights an infection, from first contact to recovery. Explain it through airport security, which I already understand.',
     lensSkill: 'Airport security',
     lensExplanation:
-      'Screening is layered: a fast generic check first, a specific check on whatever it flags, and a watchlist that remembers. Your immune system runs those same three layers in that same order.',
+      'A fast check, a specific check, a watchlist that remembers. Your immune system too.',
     title: 'How your immune system fights an infection',
     emoji: '🛡️',
     load: () =>

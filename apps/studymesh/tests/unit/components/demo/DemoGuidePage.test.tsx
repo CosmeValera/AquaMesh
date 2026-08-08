@@ -1,7 +1,7 @@
 /// <reference types="@testing-library/jest-dom" />
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 
 /**
@@ -229,6 +229,15 @@ describe('DemoGuidePage', () => {
       screen.getByRole('button', { name: /^03 Building the routine$/ }),
     ).toBeInTheDocument()
 
+    // The composer is a label, not an affordance: it says why it is off and
+    // takes no click, rather than opening something the demo cannot honour.
+    const composer = screen.getByTestId('dashboard-chat-composer')
+    expect(
+      within(composer).getByPlaceholderText('Disabled for demo'),
+    ).toBeDisabled()
+    fireEvent.click(composer)
+    expect(screen.queryByTestId('demo-signup-nudge')).not.toBeInTheDocument()
+
     // The whole point of the canned demo: zero API, zero auth.
     expect(fetchSpy).not.toHaveBeenCalled()
   })
@@ -256,6 +265,16 @@ describe('DemoGuidePage', () => {
     await findFirstLesson()
 
     fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
+
+    // Hosted AI is the default provider, so without the demo opt-out every
+    // action in this menu would price itself in Carrots the visitor cannot
+    // spend and does not have.
+    expect(
+      document.querySelectorAll(
+        'img[src="/images/study-credits/study-credit.png"]',
+      ),
+    ).toHaveLength(0)
+
     fireEvent.click(screen.getByRole('button', { name: /^Quiz$/i }))
 
     expect(
@@ -308,4 +327,5 @@ describe('DemoGuidePage', () => {
     )
     expect(screen.queryByTestId('demo-banner-sample')).not.toBeInTheDocument()
   })
+
 })

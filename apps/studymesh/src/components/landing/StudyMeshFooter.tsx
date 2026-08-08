@@ -277,7 +277,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 lineHeight: 1.25,
               }}
             >
-              Try it before you sign up.
+              Already have an account?
             </Typography>
             <Typography
               sx={{
@@ -287,12 +287,13 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 lineHeight: 1.5,
               }}
             >
-              Walk through a finished guide first. No account, nothing to
-              install.
+              Pick up where your guides left off. The demo is one click away
+              from anywhere on this page.
             </Typography>
-            {/* href, not a router link: /try is its own page load. */}
+            {/* The chrome CTA is for returning users. The demo is reached from
+                the in-page CTAs and the Start list above. */}
             <Button
-              href="/try"
+              href="/login"
               variant="contained"
               endIcon={<ArrowForwardIcon />}
               sx={{
@@ -314,7 +315,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 },
               }}
             >
-              Try it
+              Log in
             </Button>
           </Stack>
         </Box>

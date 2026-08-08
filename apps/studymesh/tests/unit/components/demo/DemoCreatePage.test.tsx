@@ -71,8 +71,8 @@ const renderDemoCreatePage = () =>
     </MemoryRouter>,
   )
 
-const getPromptPanel = () =>
-  screen.getByRole('button', { name: /why is this prompt locked/i })
+// The prompt panel takes no click, so it has no accessible name to query by.
+const getPromptPanel = () => screen.getByTestId('demo-prompt-panel')
 
 describe('DemoCreatePage', () => {
   beforeEach(() => {
@@ -212,22 +212,40 @@ describe('DemoCreatePage', () => {
     }).not.toThrow()
   })
 
-  it('opens the signup nudge when the locked prompt is clicked', () => {
+  it('leaves the prompt panel inert', () => {
     renderDemoCreatePage()
 
-    fireEvent.click(
-      screen.getByRole('button', { name: /why is this prompt locked/i }),
-    )
+    const panel = getPromptPanel()
+    expect(panel.tagName).toBe('DIV')
+    expect(panel).not.toHaveAttribute('role')
 
+    fireEvent.click(panel)
+
+    expect(screen.queryByTestId('demo-signup-nudge')).not.toBeInTheDocument()
     expect(
-      screen.getByText(/the sample runs on five prepared prompts/i),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /sign up free/i }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /keep looking around/i }),
-    ).toBeInTheDocument()
+      screen.queryByRole('button', { name: /sign up free/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('highlights Create guide only once the match has settled', () => {
+    vi.useFakeTimers()
+    renderDemoCreatePage()
+
+    const createButton = () =>
+      screen.getByRole('button', { name: /create guide/i })
+    expect(createButton()).not.toHaveAttribute('data-cta-ready')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sample two' }))
+    // Still ranking: pointing at Create before it works would be a dead end.
+    expect(createButton()).not.toHaveAttribute('data-cta-ready')
+
+    act(() => {
+      vi.advanceTimersByTime(DEMO_MATCH_MS)
+    })
+    expect(createButton()).toHaveAttribute('data-cta-ready', 'true')
+
+    fireEvent.click(createButton())
+    expect(createButton()).not.toHaveAttribute('data-cta-ready')
   })
 
   it('sends a signed-in visitor to their own guides', () => {

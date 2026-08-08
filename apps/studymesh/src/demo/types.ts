@@ -92,4 +92,4 @@ export const DEMO_DATA_VERSION = 1
 export const DEMO_GENERATION_MS = 5000
 
 /** Default dwell time for a canned chat answer. */
-export const DEMO_CHAT_ANSWER_DELAY_MS = 1400
+export const DEMO_CHAT_ANSWER_DELAY_MS = 2000

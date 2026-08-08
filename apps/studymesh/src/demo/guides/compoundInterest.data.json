@@ -2,7 +2,7 @@
   "bonusPages": [
     {
       "actionId": "quiz",
-      "durationMs": 9000,
+      "durationMs": 2000,
       "page": {
         "contentLanguage": "en",
         "contentLanguageSource": "detected",
@@ -374,7 +374,7 @@
     },
     {
       "actionId": "flashcards",
-      "durationMs": 6000,
+      "durationMs": 2000,
       "page": {
         "contentLanguage": "en",
         "contentLanguageSource": "detected",
@@ -930,7 +930,7 @@
     },
     {
       "actionId": "podcast",
-      "durationMs": 13000,
+      "durationMs": 2000,
       "page": {
         "contentLanguage": "en",
         "contentLanguageSource": "detected",

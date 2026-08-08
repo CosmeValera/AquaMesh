@@ -29,7 +29,6 @@ const whyYouForget: DemoGuideContent = {
         'What should I do with something that keeps failing no matter how often I come back to it?',
       answer:
         'Repeated failure usually means the target is too big, not that you need more reviews.\n\nThe flashcard rule applies here as well: one clear prompt, one concise answer. If the prompt is really asking for a whole chapter, or a whole page of music, a failure does not tell you which part broke, so each review repairs nothing in particular.\n\nDiagnose before you reschedule. Attempt it, check it against the source or the score, and name the exact detail that was missing. Something like "accurate after two days, rhythm uncertain" is a note you can act on. "Still cannot do it" is not.\n\nThen split it. Mark the difficult location, practice it on its own, and reconnect it to the nearby material so the skill transfers back into context. Keep the delay short while it is fragile and only stretch it out once it comes back accurate and relaxed.\n\nOne thing to watch: do not keep repeating the mistake at speed. The error can become the strongest pattern you retrieve. Slow down enough to clarify the coordination, then restore the intended tempo gradually.',
-      answerDelayMs: 1900,
     },
   ],
 }

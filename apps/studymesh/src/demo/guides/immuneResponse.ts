@@ -42,7 +42,6 @@ const immuneResponse: DemoGuideContent = {
         'Then it has to be scaled. A matched lymphocyte multiplies into a larger population aimed at the same target, and the B cells among them become plasma cells that release antibodies. One matching cell is not a defense; a population is.',
         'Which is exactly what the fast side is for. Inflammation, neutrophils, macrophages and complement all contribute to clearing an infection, but the job the guide credits them with in those first days is narrower: slowing the spread, and creating the time the three steps above need. Both halves are running the whole time; only one of them is ready on day one.',
       ].join('\n\n'),
-      answerDelayMs: 1800,
     },
   ],
 }

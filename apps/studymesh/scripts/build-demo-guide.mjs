@@ -59,9 +59,9 @@ Module._resolveFilename = function resolveWithEldAlias(request, ...rest) {
 /** One frozen timestamp for every captured record. */
 const FIXED_TIMESTAMP = '2026-08-02T10:00:00.000Z'
 const BONUS_DURATIONS_MS = {
-  quiz: 9000,
-  flashcards: 6000,
-  podcast: 13000,
+  quiz: 2000,
+  flashcards: 2000,
+  podcast: 2000,
 }
 /** Mirrors STUDY_BLOCK_TYPES in src/components/study/StudyBlockView.tsx. */
 const STUDY_BLOCK_TYPES = [

@@ -287,8 +287,7 @@ const StudyMeshFooter = ({ sectionHrefPrefix = '' }: StudyMeshFooterProps) => {
                 lineHeight: 1.5,
               }}
             >
-              Pick up where your guides left off. The demo is one click away
-              from anywhere on this page.
+              Sign back in and pick up where your guides left off.
             </Typography>
             {/* The chrome CTA is for returning users. The demo is reached from
                 the in-page CTAs and the Start list above. */}

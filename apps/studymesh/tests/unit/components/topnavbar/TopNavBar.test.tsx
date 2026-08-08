@@ -556,7 +556,7 @@ describe('TopNavBar Component', () => {
     expect(screen.getByTestId('accent-color-picker')).toBeInTheDocument()
   })
 
-  it('opens profile controls from application settings', async () => {
+  it('opens application settings with no profile card to fill in', async () => {
     render(
       <BrowserRouter>
         <TopNavBar />
@@ -571,11 +571,17 @@ describe('TopNavBar Component', () => {
     expect(
       await screen.findByRole('dialog', { name: /application settings/i }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Profile')).toBeInTheDocument()
-    expect(screen.getByLabelText(/user name/i)).toHaveValue('Admin User')
+    // Nothing displays a name or a photo, so nothing asks for one. The name
+    // field was also a dead end: it only wrote localStorage, which the auth
+    // provider re-derives from Supabase metadata on the next load.
+    expect(screen.queryByText('Profile')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/user name/i)).not.toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /save profile/i }),
-    ).toBeInTheDocument()
+      screen.queryByRole('button', { name: /save profile/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /upload image/i }),
+    ).not.toBeInTheDocument()
     expect(screen.queryByText(/workspace notices/i)).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /reset notices/i }),
@@ -584,34 +590,6 @@ describe('TopNavBar Component', () => {
     expect(
       screen.getByText(/permanently delete your rabbithole account/i),
     ).toBeInTheDocument()
-    expect(screen.queryByText(/profile row/i)).not.toBeInTheDocument()
-  })
-
-  it('saves profile name from application settings', async () => {
-    render(
-      <BrowserRouter>
-        <TopNavBar />
-      </BrowserRouter>,
-    )
-
-    openUserMenu()
-    fireEvent.click(
-      await screen.findByRole('menuitem', { name: /^settings$/i }),
-    )
-    fireEvent.change(await screen.findByLabelText(/user name/i), {
-      target: { value: 'Cosme Valera' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /save profile/i }))
-
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      'userData',
-      JSON.stringify({
-        id: 'admin',
-        name: 'Cosme Valera',
-        role: 'ADMIN_ROLE',
-      }),
-    )
-    expect(screen.getByText('Profile saved.')).toBeInTheDocument()
   })
 
   it('requires a second confirmation before deleting RabbitHole account data', async () => {
@@ -657,7 +635,6 @@ describe('TopNavBar Component', () => {
       </BrowserRouter>,
     )
 
-    // Click on the user menu button (avatar)
     const userButton = screen.getByRole('button', {
       name: /open user menu/i,
     })
@@ -672,6 +649,41 @@ describe('TopNavBar Component', () => {
     await waitFor(() =>
       expect(navigateMock).toHaveBeenCalledWith('/login', { replace: true }),
     )
+  })
+
+  describe('account menu', () => {
+    it('shows the name and the active AI mode without a profile picture', () => {
+      render(
+        <BrowserRouter>
+          <TopNavBar />
+        </BrowserRouter>,
+      )
+
+      expect(screen.getByText('Admin User')).toBeInTheDocument()
+      // The AI settings mock selects Gemini, so the subtitle tracks the
+      // provider rather than describing the person.
+      expect(screen.getByText('Own Gemini API token')).toBeInTheDocument()
+      // No photo to upload and no UUID initials to fall back to: the stored
+      // user id is `admin`, so `AD` would render if the avatar had survived.
+      expect(screen.queryByText('AD')).not.toBeInTheDocument()
+      expect(document.querySelector('.MuiAvatar-root')).toBeNull()
+    })
+
+    it('opens straight into the account actions with no identity header', async () => {
+      render(
+        <BrowserRouter>
+          <TopNavBar />
+        </BrowserRouter>,
+      )
+
+      openUserMenu()
+
+      await waitFor(() => {
+        expect(screen.getByText('Logout')).toBeInTheDocument()
+      })
+      expect(screen.queryByText('admin@example.com')).not.toBeInTheDocument()
+      expect(screen.queryByText(/signed in as/i)).not.toBeInTheDocument()
+    })
   })
 
   describe('known-topics pill and panel', () => {

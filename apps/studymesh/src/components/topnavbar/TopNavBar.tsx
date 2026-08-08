@@ -9,7 +9,6 @@ import {
   Menu,
   MenuItem,
   Divider,
-  Avatar,
   Drawer,
   IconButton,
   ListItemIcon,
@@ -18,6 +17,7 @@ import {
 } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import LogoutIcon from '@mui/icons-material/Logout'
 import ColorLensIcon from '@mui/icons-material/ColorLens'
@@ -41,13 +41,6 @@ import {
   QUICK_CREATE_AI_SETTINGS_CHANGED_EVENT,
   QuickCreateAiProvider,
 } from '../../quickCreate/ai'
-import {
-  createSquareAvatarDataUrl,
-  readUserAvatar,
-  removeUserAvatar,
-  saveUserAvatar,
-  USER_PROFILE_AVATAR_CHANGED_EVENT,
-} from '../../userProfile'
 import {
   dispatchWorkspaceCreationStatus,
   WORKSPACE_CREATION_STATUS_EVENT,
@@ -93,8 +86,6 @@ interface UserData {
   name: string
   role: string
 }
-
-const USER_ROLE_CHANGED_EVENT = 'studymesh-user-role-changed'
 
 const adminUser: UserData = {
   id: 'admin',
@@ -195,8 +186,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false)
   const [isAiModeOpen, setIsAiModeOpen] = useState(false)
   const [aiModeNotice, setAiModeNotice] = useState('')
-  const [userSettingsName, setUserSettingsName] = useState('')
-  const [userSettingsAvatarStatus, setUserSettingsAvatarStatus] = useState('')
   const [studyPathOpen, setStudyPathOpen] = useState(false)
   const creationTaskStatusesRef = useRef(initialCreationTaskStatuses)
   const [creationToast, setCreationToast] = useState<{
@@ -208,7 +197,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       () => readQuickCreateAiSettings().provider || 'hosted',
     )
   const [userData, setUserData] = useState<UserData>(adminUser)
-  const [avatarSrc, setAvatarSrc] = useState(() => readUserAvatar(adminUser.id))
   const [dashboardSelectorOpen, setDashboardSelectorOpen] = useState(false)
   const [knownTopicsOpen, setKnownTopicsOpen] = useState(false)
   const [knownTopicsCount, setKnownTopicsCount] = useState(
@@ -255,39 +243,11 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       try {
         const parsedUserData = JSON.parse(storedUserData)
         setUserData(parsedUserData)
-        setAvatarSrc(readUserAvatar(parsedUserData.id))
       } catch (error) {
         console.error('Failed to parse user data from localStorage', error)
       }
     }
   }, [])
-
-  useEffect(() => {
-    setAvatarSrc(readUserAvatar(userData.id))
-
-    const handleAvatarChanged = (event: Event) => {
-      const customEvent = event as CustomEvent<{
-        userId?: string
-        avatarDataUrl?: string
-      }>
-
-      if (customEvent.detail?.userId === userData.id) {
-        setAvatarSrc(customEvent.detail.avatarDataUrl || '')
-      }
-    }
-
-    window.addEventListener(
-      USER_PROFILE_AVATAR_CHANGED_EVENT,
-      handleAvatarChanged,
-    )
-
-    return () => {
-      window.removeEventListener(
-        USER_PROFILE_AVATAR_CHANGED_EVENT,
-        handleAvatarChanged,
-      )
-    }
-  }, [userData.id])
 
   useEffect(() => {
     const refreshAiProvider = () => {
@@ -489,60 +449,8 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   }
 
   const openSettings = () => {
-    setUserSettingsName(userData.name)
-    setUserSettingsAvatarStatus('')
     setIsSettingsOpen(true)
     handleClose()
-  }
-
-  const saveUserSettings = () => {
-    const nextUser = {
-      ...userData,
-      name: userSettingsName.trim() || userData.name,
-    }
-
-    localStorage.setItem('userData', JSON.stringify(nextUser))
-    setUserData(nextUser)
-    window.dispatchEvent(
-      new CustomEvent(USER_ROLE_CHANGED_EVENT, { detail: nextUser }),
-    )
-    setUserSettingsAvatarStatus(t('settings.profileSaved'))
-  }
-
-  const handleUserAvatarUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-
-    if (!file) {
-      return
-    }
-
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setUserSettingsAvatarStatus(t('settings.avatarFileType'))
-      return
-    }
-
-    try {
-      setUserSettingsAvatarStatus(t('settings.avatarPreparing'))
-      const avatarDataUrl = await createSquareAvatarDataUrl(file)
-      saveUserAvatar(userData.id, avatarDataUrl)
-      setAvatarSrc(avatarDataUrl)
-      setUserSettingsAvatarStatus(t('settings.avatarUpdated'))
-    } catch (error) {
-      setUserSettingsAvatarStatus(
-        error instanceof Error
-          ? error.message
-          : t('settings.avatarUpdateFailed'),
-      )
-    }
-  }
-
-  const handleRemoveUserAvatar = () => {
-    removeUserAvatar(userData.id)
-    setAvatarSrc('')
-    setUserSettingsAvatarStatus(t('settings.avatarRemoved'))
   }
 
   const reportStudyPathStatus = useCallback(
@@ -676,17 +584,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                   color: 'foreground.contrastPrimary',
                 }}
               >
-                <Avatar
-                  src={avatarSrc || undefined}
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    bgcolor: 'primary.main',
-                    fontSize: '0.9rem',
-                  }}
-                >
-                  {userData.id.substring(0, 2).toUpperCase()}
-                </Avatar>
+                <AccountCircleOutlinedIcon />
               </IconButton>
             </>
           ) : (
@@ -776,23 +674,13 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                     setIsAiModeOpen(true)
                   }}
                 />
-                {/* User Menu */}
+                {/* Account menu. The name and the active AI mode are worth the
+                    width; a profile picture is not, so the trigger carries text
+                    only. There is nothing to upload and nothing to invent. */}
                 {isPhone || isTablet ? (
                   <ButtonWithLabel
-                    icon={
-                      <Avatar
-                        src={avatarSrc || undefined}
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          bgcolor: 'primary.main',
-                          fontSize: '0.9rem',
-                        }}
-                      >
-                        {userData.id.substring(0, 2).toUpperCase()}
-                      </Avatar>
-                    }
-                    label={t('topnav.user')}
+                    icon={<AccountCircleOutlinedIcon />}
+                    label={t('topnav.account')}
                     aria-label="Open user menu"
                     onClick={handleUserMenuOpen}
                     sx={{ minWidth: '45px' }}
@@ -805,23 +693,11 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                       color: 'foreground.contrastPrimary',
                       textTransform: 'none',
                       minWidth: 'auto',
-                      px: 2,
+                      px: 1.5,
                       display: 'flex',
                     }}
                     endIcon={<KeyboardArrowDownIcon />}
                   >
-                    <Avatar
-                      src={avatarSrc || undefined}
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        bgcolor: 'primary.main',
-                        mr: 1,
-                        fontSize: '0.9rem',
-                      }}
-                    >
-                      {userData.id.substring(0, 2).toUpperCase()}
-                    </Avatar>
                     <Box sx={{ textAlign: 'left' }}>
                       <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
                         {userData.name}
@@ -853,23 +729,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
                     },
                   }}
                 >
-                  <Box
-                    sx={{
-                      px: 2,
-                      pt: 1.5,
-                      pb: 1,
-                      bgcolor: 'background.default',
-                      borderBottom: 1,
-                      borderColor: 'divider',
-                    }}
-                  >
-                    <Typography variant="subtitle2" fontWeight={600}>
-                      {userData.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {userModeLabel}
-                    </Typography>
-                  </Box>
                   <MenuItem
                     onClick={() => {
                       setIsAppearanceOpen(true)
@@ -941,23 +800,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
             },
           }}
         >
-          <Box
-            sx={{
-              px: 2,
-              pt: 1.5,
-              pb: 1,
-              bgcolor: 'background.default',
-              borderBottom: 1,
-              borderColor: 'divider',
-            }}
-          >
-            <Typography variant="subtitle2" fontWeight={600}>
-              {userData.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {userModeLabel}
-            </Typography>
-          </Box>
           <MenuItem
             onClick={() => {
               setIsAppearanceOpen(true)
@@ -1099,16 +941,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         title={t('settings.title')}
-        profileSettings={{
-          userId: userData.id,
-          userName: userSettingsName,
-          avatarSrc,
-          avatarStatus: userSettingsAvatarStatus,
-          onUserNameChange: setUserSettingsName,
-          onAvatarUpload: handleUserAvatarUpload,
-          onRemoveAvatar: handleRemoveUserAvatar,
-          onSaveProfile: saveUserSettings,
-        }}
         onDeleteStudyMeshProfile={handleDeleteStudyMeshProfile}
       />
       {creationHost === 'navbar' && (

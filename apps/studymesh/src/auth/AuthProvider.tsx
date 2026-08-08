@@ -13,9 +13,7 @@ import {
   createCloudRepository,
   clearLocalWorkspaceCache,
 } from '../cloud'
-import {
-  removeUserAvatar,
-} from '../userProfile'
+import { purgeLegacyUserAvatar } from '../userProfile'
 import {
   getSupabaseConfigError,
   isSupabaseConfigured,
@@ -75,6 +73,11 @@ const writeLegacyUserData = (user: User | null) => {
       window.dispatchEvent(new CustomEvent('studymesh-user-role-changed'))
       return
     }
+
+    // Profile pictures were removed with the rest of the user persona. Purging
+    // here means anyone who uploaded one before loses it on their next visit,
+    // rather than only if they delete their account.
+    purgeLegacyUserAvatar(user.id)
 
     const userData = {
       id: user.id,
@@ -155,7 +158,7 @@ export const deleteStudyMeshProfile = async (profileId: string) => {
   const { error } = await supabase.auth.signOut()
   mapAuthError(error)
   clearLocalWorkspaceCache()
-  removeUserAvatar(profileId)
+  purgeLegacyUserAvatar(profileId)
   localStorage.removeItem('userData')
   window.dispatchEvent(new CustomEvent('studymesh-user-role-changed'))
 }

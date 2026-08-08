@@ -1,6 +1,5 @@
 import React from 'react'
 import {
-  Avatar,
   Box,
   Button,
   Dialog,
@@ -15,7 +14,6 @@ import {
 } from '@mui/material'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 
 import { seedStudyMeshGuideStudyPath } from '../../studyGuides/studyMeshGuideSeed'
 import { STUDY_GUIDES_CHANGED_EVENT } from '../../studyGuides/storage'
@@ -26,22 +24,10 @@ import {
 } from '../../language/contentLanguage'
 import { useInterfaceText } from '../../language/interfaceLanguage'
 
-interface ProfileSettingsProps {
-  userId: string
-  userName: string
-  avatarSrc: string
-  avatarStatus: string
-  onUserNameChange: (name: string) => void
-  onAvatarUpload: (event: React.ChangeEvent<HTMLInputElement>) => void
-  onRemoveAvatar: () => void
-  onSaveProfile: () => void
-}
-
 interface SettingsDialogProps extends Record<string, unknown> {
   open: boolean
   onClose: () => void
   title?: string
-  profileSettings?: ProfileSettingsProps
   onDeleteStudyMeshProfile?: () => Promise<void>
 }
 
@@ -49,7 +35,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   open,
   onClose,
   title,
-  profileSettings,
   onDeleteStudyMeshProfile,
 }) => {
   const { t, setLanguage } = useInterfaceText()
@@ -120,84 +105,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         <DialogTitle>{title || t('settings.title')}</DialogTitle>
         <DialogContent dividers>
           <Box sx={{ display: 'grid', gap: 2 }}>
-            {profileSettings ? (
-              <Paper
-                elevation={0}
-                sx={{ p: 2, border: 1, borderColor: 'divider' }}
-              >
-                <Typography fontWeight={700} sx={{ mb: 1.5 }}>
-                  {t('settings.profile')}
-                </Typography>
-                <Stack spacing={2}>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar
-                      src={profileSettings.avatarSrc || undefined}
-                      sx={{
-                        width: 64,
-                        height: 64,
-                        bgcolor: 'primary.main',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {profileSettings.userId.substring(0, 2).toUpperCase()}
-                    </Avatar>
-                    <Stack
-                      spacing={1}
-                      direction="row"
-                      useFlexGap
-                      flexWrap="wrap"
-                    >
-                      <Button
-                        component="label"
-                        variant="outlined"
-                        size="small"
-                        startIcon={<PhotoCameraIcon />}
-                      >
-                        {t('settings.uploadImage')}
-                        <input
-                          hidden
-                          type="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          onChange={profileSettings.onAvatarUpload}
-                        />
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<DeleteOutlineIcon />}
-                        onClick={profileSettings.onRemoveAvatar}
-                        disabled={!profileSettings.avatarSrc}
-                      >
-                        {t('settings.remove')}
-                      </Button>
-                    </Stack>
-                  </Stack>
-                  {profileSettings.avatarStatus ? (
-                    <Typography variant="caption" color="text.secondary">
-                      {profileSettings.avatarStatus}
-                    </Typography>
-                  ) : null}
-                  <TextField
-                    label={t('settings.userName')}
-                    value={profileSettings.userName}
-                    onChange={(event) =>
-                      profileSettings.onUserNameChange(event.target.value)
-                    }
-                    fullWidth
-                  />
-                  <Box>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={profileSettings.onSaveProfile}
-                    >
-                      {t('settings.saveProfile')}
-                    </Button>
-                  </Box>
-                </Stack>
-              </Paper>
-            ) : null}
-
             <Paper
               elevation={0}
               sx={{ p: 2, border: 1, borderColor: 'divider' }}

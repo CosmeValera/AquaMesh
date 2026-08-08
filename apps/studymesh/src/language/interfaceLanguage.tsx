@@ -9,7 +9,7 @@ import {
 
 const translations = {
   en: {
-    'topnav.user': 'User',
+    'topnav.account': 'Account',
     'topnav.appearance': 'Appearance',
     'topnav.settings': 'Settings',
     'topnav.logout': 'Logout',
@@ -19,17 +19,6 @@ const translations = {
       'Switch the active dashboard or create a new one.',
     'topnav.openAiChat': 'Open AI Chat',
     'settings.title': 'Application Settings',
-    'settings.profile': 'Profile',
-    'settings.uploadImage': 'Upload image',
-    'settings.remove': 'Remove',
-    'settings.userName': 'User name',
-    'settings.saveProfile': 'Save profile',
-    'settings.profileSaved': 'Profile saved.',
-    'settings.avatarFileType': 'Use a PNG, JPG, or WebP image.',
-    'settings.avatarPreparing': 'Preparing profile picture...',
-    'settings.avatarUpdated': 'Profile picture updated.',
-    'settings.avatarUpdateFailed': 'Could not update profile picture.',
-    'settings.avatarRemoved': 'Profile picture removed.',
     'settings.noSignedInProfile':
       'No signed-in RabbitHole profile is available.',
     'settings.language': 'Language',
@@ -526,7 +515,7 @@ const translations = {
       'The sample includes one quiz, one deck and one podcast. Sign up to create as many as you like, on any page.',
   },
   es: {
-    'topnav.user': 'Usuario',
+    'topnav.account': 'Cuenta',
     'topnav.appearance': 'Apariencia',
     'topnav.settings': 'Ajustes',
     'topnav.logout': 'Cerrar sesión',
@@ -535,17 +524,6 @@ const translations = {
     'topnav.yourDashboardsHelp': 'Cambia el dashboard activo o crea uno nuevo.',
     'topnav.openAiChat': 'Abrir chat IA',
     'settings.title': 'Ajustes de la aplicación',
-    'settings.profile': 'Perfil',
-    'settings.uploadImage': 'Subir imagen',
-    'settings.remove': 'Quitar',
-    'settings.userName': 'Nombre de usuario',
-    'settings.saveProfile': 'Guardar perfil',
-    'settings.profileSaved': 'Perfil guardado.',
-    'settings.avatarFileType': 'Usa una imagen PNG, JPG o WebP.',
-    'settings.avatarPreparing': 'Preparando foto de perfil...',
-    'settings.avatarUpdated': 'Foto de perfil actualizada.',
-    'settings.avatarUpdateFailed': 'No se pudo actualizar la foto de perfil.',
-    'settings.avatarRemoved': 'Foto de perfil eliminada.',
     'settings.noSignedInProfile':
       'No hay un perfil de RabbitHole con sesión iniciada.',
     'settings.language': 'Idioma',
@@ -1056,7 +1034,7 @@ const translationOverrides: Record<
   Record<InterfaceTextKey, string>
 > = {
   fr: {
-    'topnav.user': 'Utilisateur',
+    'topnav.account': 'Compte',
     'topnav.appearance': 'Apparence',
     'topnav.settings': 'Paramètres',
     'topnav.logout': 'Déconnexion',
@@ -1066,18 +1044,6 @@ const translationOverrides: Record<
       'Changez de dashboard actif ou créez-en un nouveau.',
     'topnav.openAiChat': 'Ouvrir le chat IA',
     'settings.title': "Paramètres de l'application",
-    'settings.profile': 'Profil',
-    'settings.uploadImage': 'Importer une image',
-    'settings.remove': 'Supprimer',
-    'settings.userName': "Nom d'utilisateur",
-    'settings.saveProfile': 'Enregistrer le profil',
-    'settings.profileSaved': 'Profil enregistré.',
-    'settings.avatarFileType': 'Utilisez une image PNG, JPG ou WebP.',
-    'settings.avatarPreparing': 'Préparation de la photo de profil...',
-    'settings.avatarUpdated': 'Photo de profil mise à jour.',
-    'settings.avatarUpdateFailed':
-      'Impossible de mettre à jour la photo de profil.',
-    'settings.avatarRemoved': 'Photo de profil supprimée.',
     'settings.noSignedInProfile':
       'Aucun profil RabbitHole connecté n’est disponible.',
     'settings.language': 'Langue',
@@ -1584,7 +1550,7 @@ const translationOverrides: Record<
       'L’exemple contient un quiz, un jeu de cartes et un podcast. Créez un compte pour en générer autant que vous voulez, sur n’importe quelle page.',
   },
   de: {
-    'topnav.user': 'Benutzer',
+    'topnav.account': 'Konto',
     'topnav.appearance': 'Darstellung',
     'topnav.settings': 'Einstellungen',
     'topnav.logout': 'Abmelden',
@@ -1594,18 +1560,6 @@ const translationOverrides: Record<
       'Wechsle das aktive Dashboard oder erstelle ein neues.',
     'topnav.openAiChat': 'KI-Chat öffnen',
     'settings.title': 'Anwendungseinstellungen',
-    'settings.profile': 'Profil',
-    'settings.uploadImage': 'Bild hochladen',
-    'settings.remove': 'Entfernen',
-    'settings.userName': 'Benutzername',
-    'settings.saveProfile': 'Profil speichern',
-    'settings.profileSaved': 'Profil gespeichert.',
-    'settings.avatarFileType': 'Verwende ein PNG-, JPG- oder WebP-Bild.',
-    'settings.avatarPreparing': 'Profilbild wird vorbereitet...',
-    'settings.avatarUpdated': 'Profilbild aktualisiert.',
-    'settings.avatarUpdateFailed':
-      'Profilbild konnte nicht aktualisiert werden.',
-    'settings.avatarRemoved': 'Profilbild entfernt.',
     'settings.noSignedInProfile':
       'Kein angemeldetes RabbitHole-Profil verfügbar.',
     'settings.language': 'Sprache',

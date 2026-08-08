@@ -149,13 +149,16 @@ const StudyGuideQuickStartCard = ({
   const contextSegmentLabel = forcedBridge?.bridgeTopics?.length
     ? viaLabel(forcedBridge.bridgeTopics)
     : plainLabel
-  const renderTabLabel = (label: string, weakFitReason?: string) =>
-    weakFitReason ? (
+  const renderTabLabel = (
+    label: string,
+    badge?: { text: string; tooltip: string },
+  ) =>
+    badge ? (
       <Stack direction="row" spacing={0.75} alignItems="center">
         <span>{label}</span>
-        <Tooltip title={weakFitReason}>
+        <Tooltip title={badge.tooltip}>
           <Chip
-            label={t('workspace.weakBadge')}
+            label={badge.text}
             size="small"
             color="warning"
             variant="outlined"
@@ -166,6 +169,18 @@ const StudyGuideQuickStartCard = ({
     ) : (
       label
     )
+  // The default segment always leads as the stronger match, so it never
+  // needs a caveat badge of its own; only the alternate context segment can
+  // trail with either a weak-fit reason (topic bridge) or a generic-fit
+  // notice (plain explanation losing to a confident topic bridge).
+  const contextFitBadge = forcedBridge?.weakFitReason
+    ? { text: t('workspace.weakBadge'), tooltip: forcedBridge.weakFitReason }
+    : forcedBridge && !forcedBridge.bridgeTopics?.length
+      ? {
+        text: t('workspace.genericBadge'),
+        tooltip: t('workspace.genericBadgeReason'),
+      }
+      : undefined
 
   return (
     <Box
@@ -259,15 +274,17 @@ const StudyGuideQuickStartCard = ({
                     value="default"
                     label={renderTabLabel(
                       defaultSegmentLabel,
-                      quickStart.weakFitReason,
+                      quickStart.weakFitReason
+                        ? {
+                          text: t('workspace.weakBadge'),
+                          tooltip: quickStart.weakFitReason,
+                        }
+                        : undefined,
                     )}
                   />
                   <Tab
                     value="context"
-                    label={renderTabLabel(
-                      contextSegmentLabel,
-                      forcedBridge.weakFitReason,
-                    )}
+                    label={renderTabLabel(contextSegmentLabel, contextFitBadge)}
                   />
                 </Tabs>
               )}

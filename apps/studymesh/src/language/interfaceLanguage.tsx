@@ -231,6 +231,9 @@ const translations = {
     'workspace.plainQuickStart': 'Plain',
     'workspace.viaTopics': 'Via {topics}',
     'workspace.weakBadge': 'weak',
+    'workspace.genericBadge': 'generic',
+    'workspace.genericBadgeReason':
+      'General explanation, not tailored to a known topic.',
     'workspace.collapseQuickStart': 'Collapse Quick Start',
     'workspace.expandQuickStart': 'Expand Quick Start',
     'workspace.previousPage': 'Previous page',
@@ -747,6 +750,9 @@ const translations = {
     'workspace.plainQuickStart': 'Sencillo',
     'workspace.viaTopics': 'Vía {topics}',
     'workspace.weakBadge': 'débil',
+    'workspace.genericBadge': 'genérico',
+    'workspace.genericBadgeReason':
+      'Explicación general, no adaptada a un tema conocido.',
     'workspace.collapseQuickStart': 'Contraer inicio rápido',
     'workspace.expandQuickStart': 'Expandir inicio rápido',
     'workspace.previousPage': 'Página anterior',
@@ -1280,6 +1286,9 @@ const translationOverrides: Record<
     'workspace.plainQuickStart': 'Simple',
     'workspace.viaTopics': 'Via {topics}',
     'workspace.weakBadge': 'faible',
+    'workspace.genericBadge': 'générique',
+    'workspace.genericBadgeReason':
+      'Explication générale, non adaptée à un sujet connu.',
     'workspace.collapseQuickStart': 'Replier le démarrage rapide',
     'workspace.expandQuickStart': 'Déplier le démarrage rapide',
     'workspace.previousPage': 'Page précédente',
@@ -1805,6 +1814,9 @@ const translationOverrides: Record<
     'workspace.plainQuickStart': 'Einfach',
     'workspace.viaTopics': 'Über {topics}',
     'workspace.weakBadge': 'schwach',
+    'workspace.genericBadge': 'generisch',
+    'workspace.genericBadgeReason':
+      'Allgemeine Erklärung, nicht auf ein bekanntes Thema zugeschnitten.',
     'workspace.collapseQuickStart': 'Schnellstart einklappen',
     'workspace.expandQuickStart': 'Schnellstart ausklappen',
     'workspace.previousPage': 'Vorherige Seite',

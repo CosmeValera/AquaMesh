@@ -8,6 +8,12 @@ export interface DashboardExternalSource {
   title: string
   text: string
   originType?: DashboardExternalSourceOriginType
+  /**
+   * Set by /api/dashboard-source. "snippet" means page extraction failed and
+   * `text` is the search result summary: usable for grounding and citing an
+   * answer, but too thin to draft a Study Guide page from.
+   */
+  textOrigin?: 'extracted' | 'snippet'
   trimmed?: boolean
   guidePageDraft?: DashboardExternalSourcePageDraft
   guidePageDraftStatus?: 'pending' | 'ready' | 'failed'

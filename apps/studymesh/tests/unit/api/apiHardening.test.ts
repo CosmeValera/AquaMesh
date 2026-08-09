@@ -609,6 +609,463 @@ describe('API payment and hosted AI hardening', () => {
     })
   })
 
+  it('ranks the topic official site above an unrelated docs-shaped domain', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    // Both candidates match the same question term in title and snippet, and
+    // the decoy carries the higher Tavily score, so the official/docs domain
+    // bonus is the only thing left to separate them. developer.apple.com has
+    // nothing to do with Kubernetes but is shaped like a docs domain; a
+    // "looks official" bonus that ignores the term ranks it first.
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      if (String(url).includes('/extract')) {
+        const urls = JSON.parse(String(init?.body)).urls as string[]
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(
+            JSON.stringify({
+              results: urls.map((requestedUrl) => ({
+                url: requestedUrl,
+                raw_content: `Kubernetes is an open source platform for managing containerized workloads and services across a cluster. ${requestedUrl}`,
+              })),
+            }),
+          ),
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            results: [
+              {
+                title: 'Kubernetes on Apple platforms - Apple Developer',
+                url: 'https://developer.apple.com/kubernetes-guide',
+                content:
+                  'Kubernetes orchestration guidance for developers building containerized services.',
+                score: 0.95,
+              },
+              {
+                title: 'Kubernetes Documentation: Overview',
+                url: 'https://kubernetes.io/docs/concepts/overview',
+                content:
+                  'Kubernetes is a portable, extensible, open source platform for managing containerized workloads.',
+                score: 0.7,
+              },
+            ],
+          }),
+        ),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'what is kubernetes',
+          dashboardTitle: 'Container basics',
+          contextSummary: 'Notes about virtual machines and deployment.',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      source: { url: 'https://kubernetes.io/docs/concepts/overview' },
+    })
+  })
+
+  it('falls back to the search snippet when extraction returns nothing', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    // Extraction can fail on a paywalled or JS-only page even though the
+    // search snippet already answers the question. Discarding the candidate
+    // outright surfaced "web search failed" to the student instead.
+    const fetchMock = vi.fn((url: string) => {
+      if (String(url).includes('/extract')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(JSON.stringify({ results: [] })),
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            results: [
+              {
+                title: 'Cytokine storm overview',
+                url: 'https://www.nejm.org/cytokine-storm',
+                content:
+                  'A cytokine storm is an excessive immune response in which the body releases too many inflammatory cytokines too quickly, which can damage healthy tissue and cause organ failure in severe infection.',
+                score: 0.88,
+              },
+            ],
+          }),
+        ),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'What is a cytokine storm?',
+          dashboardTitle: 'Immune response',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      source: {
+        url: 'https://www.nejm.org/cytokine-storm',
+        text: expect.stringContaining('excessive immune response'),
+      },
+    })
+  })
+
+  it('collapses http and https copies of one page into a single candidate', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    // Tavily regularly returns both an http and an https copy of the same
+    // page. Keyed on the full URL they read as two candidates and burned two
+    // of the three extract slots on one page.
+    const fetchMock = vi.fn((url: string) => {
+      if (String(url).includes('/extract')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(
+            JSON.stringify({
+              results: [
+                {
+                  url: 'https://www.vetmed.wisc.edu/mrna-study',
+                  raw_content:
+                    'An mRNA vaccine study describing trained immunity responses in lung tissue after vaccination.',
+                },
+                {
+                  url: 'https://ufhealth.org/mrna-cancer',
+                  raw_content:
+                    'An mRNA cancer vaccine research programme describing immunity priming in patients.',
+                },
+              ],
+            }),
+          ),
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            results: [
+              {
+                title: 'mRNA study',
+                url: 'http://www.vetmed.wisc.edu/mrna-study',
+                content: 'An mRNA vaccine study on trained immunity.',
+                score: 0.87,
+              },
+              {
+                title: 'mRNA study',
+                url: 'https://www.vetmed.wisc.edu/mrna-study',
+                content: 'An mRNA vaccine study on trained immunity.',
+                score: 0.86,
+              },
+              {
+                title: 'mRNA cancer research',
+                url: 'https://ufhealth.org/mrna-cancer',
+                content: 'An mRNA cancer vaccine research programme.',
+                score: 0.74,
+              },
+            ],
+          }),
+        ),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'mRNA vaccine trained immunity research',
+          dashboardTitle: 'Immune response',
+        },
+      },
+      res,
+    )
+
+    const extractBody = JSON.parse(String(fetchMock.mock.calls[1][1]?.body))
+    expect(extractBody.urls).toHaveLength(2)
+    expect(
+      extractBody.urls.filter((value: string) =>
+        value.includes('vetmed.wisc.edu'),
+      ),
+    ).toHaveLength(1)
+    expect(response.statusCode).toBe(200)
+  })
+
+  it('keeps pricing pages when the student asked about pricing', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    // The low-quality-title penalty is meant to bury SEO listicles hijacking a
+    // plain factual question. Applied to a question that is itself about
+    // pricing, it buries the pages that actually answer it.
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      if (String(url).includes('/extract')) {
+        const urls = JSON.parse(String(init?.body)).urls as string[]
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(
+            JSON.stringify({
+              results: urls.map((requestedUrl) => ({
+                url: requestedUrl,
+                raw_content: `Docker Hub pricing plans and subscription tiers are described in detail for teams and individuals. ${requestedUrl}`,
+              })),
+            }),
+          ),
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            results: [
+              {
+                title: 'Docker Hub pricing and subscription plans',
+                url: 'https://www.docker.com/pricing',
+                content:
+                  'Docker Hub pricing tiers, subscription plans, and included features for personal and team accounts.',
+                score: 0.9,
+              },
+              {
+                title: 'Docker Hub general information page',
+                url: 'https://unrelatedblog.test/docker-hub-notes',
+                content:
+                  'Some general notes about Docker Hub usage and registries without any plan details.',
+                score: 0.55,
+              },
+            ],
+          }),
+        ),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'what is Docker Hub pricing',
+          dashboardTitle: 'Container basics',
+        },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({
+      ok: true,
+      source: { url: 'https://www.docker.com/pricing' },
+    })
+  })
+
+  it('does not retry a Tavily rate limit', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    // Retrying a 429 almost always returns 429 again and spends another call
+    // against a limited monthly quota.
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: false,
+        status: 429,
+        text: vi.fn().mockResolvedValue('{"error":"rate limited"}'),
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'What is Pulumi?',
+          dashboardTitle: 'Infrastructure',
+        },
+      },
+      res,
+    )
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(response.statusCode).toBe(502)
+  })
+
+  it('drops a second copy of the same article from one site', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    // Wikipedia returned two URLs both titled "Neapolitan chord" for one
+    // question and they took two of the three slots between them, so the model
+    // received one article twice instead of two independent views.
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      if (String(url).includes('/extract')) {
+        const urls = JSON.parse(String(init?.body)).urls as string[]
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(
+            JSON.stringify({
+              results: urls.map((requestedUrl) => ({
+                url: requestedUrl,
+                raw_content: `The Neapolitan sixth chord is a chromatic chord built on the lowered second scale degree. ${requestedUrl}`,
+              })),
+            }),
+          ),
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            results: [
+              {
+                title: 'Neapolitan chord - Wikipedia',
+                url: 'https://en.wikipedia.org/wiki/Neapolitan_chord',
+                content: 'The Neapolitan sixth chord explained.',
+                score: 0.85,
+              },
+              {
+                title: 'Neapolitan chord - Wikipedia',
+                url: 'https://en.wikipedia.org/wiki/Neapolitan_sixth',
+                content: 'The Neapolitan sixth chord explained.',
+                score: 0.84,
+              },
+              {
+                title: 'Neapolitan Sixth Chords - Open Music Theory',
+                url: 'https://viva.pressbooks.pub/openmusictheory/chapter/bii6',
+                content:
+                  'The Neapolitan sixth chord is a major triad built on the lowered second scale degree, usually in first inversion.',
+                score: 0.6,
+              },
+            ],
+          }),
+        ),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'what is a Neapolitan sixth chord',
+          dashboardTitle: 'Harmony basics',
+        },
+      },
+      res,
+    )
+
+    const extractBody = JSON.parse(String(fetchMock.mock.calls[1][1]?.body))
+    expect(
+      extractBody.urls.filter((value: string) => value.includes('wikipedia')),
+    ).toHaveLength(1)
+    expect(response.statusCode).toBe(200)
+  })
+
+  it('keeps the dashboard title out of an already specific question', async () => {
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('TAVILY_API_KEY', 'tavily-key')
+    // Appending the dashboard title to a question that already names its
+    // subject just adds off-topic words: "how does CRISPR Cas9 edit genes"
+    // plus "Molecular biology" matched pages on unrelated molecular-biology
+    // topics rather than how Cas9 works.
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      if (String(url).includes('/extract')) {
+        const urls = JSON.parse(String(init?.body)).urls as string[]
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(
+            JSON.stringify({
+              results: urls.map((requestedUrl) => ({
+                url: requestedUrl,
+                raw_content:
+                  'CRISPR Cas9 cuts target DNA at a site chosen by a guide RNA, and the cell then repairs the break, which is how genes are edited.',
+              })),
+            }),
+          ),
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(
+          JSON.stringify({
+            results: [
+              {
+                title: 'What are genome editing and CRISPR-Cas9?',
+                url: 'https://medlineplus.gov/genetics/understanding/genomicresearch/genomeediting',
+                content:
+                  'CRISPR Cas9 cuts DNA at a location specified by a guide RNA so that genes can be edited.',
+                score: 0.8,
+              },
+            ],
+          }),
+        ),
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeResponse()
+
+    await dashboardSourceHandler(
+      {
+        method: 'POST',
+        headers: {},
+        body: {
+          question: 'how does CRISPR Cas9 edit genes',
+          dashboardTitle: 'Molecular biology',
+        },
+      },
+      res,
+    )
+
+    const searchQuery = String(
+      JSON.parse(String(fetchMock.mock.calls[0][1]?.body)).query,
+    ).toLowerCase()
+    expect(searchQuery).toContain('crispr')
+    expect(searchQuery).not.toContain('molecular biology')
+    expect(response.statusCode).toBe(200)
+  })
+
   it('returns usable error when Tavily finds no readable source', async () => {
     vi.stubEnv('NODE_ENV', 'test')
     vi.stubEnv('TAVILY_API_KEY', 'tavily-key')

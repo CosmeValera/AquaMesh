@@ -23,6 +23,10 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
+import PauseRoundedIcon from '@mui/icons-material/PauseRounded'
+import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded'
+import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded'
 import BoltIcon from '@mui/icons-material/Bolt'
 import CameraAltOutlinedIcon from '@mui/icons-material/CameraAltOutlined'
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined'
@@ -88,30 +92,6 @@ const landingSurfaceBackground = [
   )}, transparent 20%)`,
   'linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 100%)',
 ].join(', ')
-
-const timelineItems = [
-  {
-    label: <>20 sec {'\u00b7'} Key idea</>,
-    body: 'The essence, in a glance.',
-    icon: <BoltIcon />,
-    tone: brand.mintSoft,
-    color: '#008A78',
-  },
-  {
-    label: <>60 sec {'\u00b7'} Idea summary</>,
-    body: 'The details, made simple.',
-    icon: <DescriptionOutlinedIcon />,
-    tone: brand.skySoft,
-    color: brand.blue,
-  },
-  {
-    label: <>5 pages {'\u00b7'} Full guide</>,
-    body: "Go deep when you're ready.",
-    icon: <MenuBookOutlinedIcon />,
-    tone: brand.lavender,
-    color: '#3444C8',
-  },
-]
 
 const growingGuideBenefits = [
   'Starts with 5 organized pages',
@@ -289,15 +269,18 @@ type AccessOption = {
 const accessOptions: AccessOption[] = [
   {
     id: 'guest',
+    // The guest tier is the /try demo: prepared guides you can read and click
+    // through, not generations you get to run. It saves nothing, so it must not
+    // promise guides to keep.
     eyebrow: 'No account',
-    title: 'Free',
-    body: 'Three Quick Guides straight away. Nothing to install, no card, no e-mail.',
+    title: 'Free demo',
+    body: 'Open a finished guide from five prepared topics and click through the real thing. Nothing to install, no card, no e-mail.',
     points: [
-      '3 free Quick Guides',
+      'Five prepared topics',
       'Nothing to configure',
-      'Sign up later to keep them',
+      'A demo, so nothing is saved',
     ],
-    ctaLabel: 'Try it now',
+    ctaLabel: 'Try the demo',
     ctaTo: '/try',
     icon: <RocketLaunchOutlinedIcon />,
   },
@@ -351,15 +334,15 @@ const faqItems: FaqItem[] = [
     id: 'why-account',
     question: 'Why should I register?',
     answer:
-      'You do not have to, to try it: three Quick Guides run with no account at all. Registering is what turns a one-off answer into a library. Your guides, dashboards and known-topics list are saved and synced across devices, and a free account starts with ' +
+      'You do not have to, to see it: the demo opens a finished guide with no account at all, though it is prepared content and nothing you do there is saved. Registering is what lets you generate your own guides from your own prompts, and turns a one-off answer into a library. Your guides, dashboards and known-topics list are saved and synced across devices, and a free account starts with ' +
       `${HOSTED_AI_INITIAL_FREE_CREDITS} ${STUDY_CREDITS_LABEL} plus a free daily refill.`,
   },
   {
     id: 'why-pay',
     question: 'Why would I pay for this if I already pay for a chat assistant?',
     answer:
-      'There is no RabbitHole subscription to stack on top of one. Bring your own Gemini or Cerebras key, or run on-device AI, and generation costs you nothing here. Hosted generation is there only if you do not want to manage a key, and it is pay-as-you-go: ' +
-      `packs start at ${starterPack.label} for ${starterPack.credits} ${STUDY_CREDITS_LABEL}.`,
+      'There is no RabbitHole subscription to stack on top. Bring your own Gemini or Cerebras key, or run on-device AI, and generation costs you nothing here. Hosted generation is there only if you do not want to manage a key, and it is pay-as-you-go: ' +
+      `packs start at ${starterPack.label}.`,
   },
   {
     id: 'known-topics',
@@ -975,11 +958,11 @@ const StudyMeshLanding = () => {
               </Stack>
 
               <HeroDifferentiator />
-
-              <HeroTimeline />
             </Stack>
           </Container>
         </Box>
+
+        <TrailerSection />
 
         <HonestComparisonSection />
 
@@ -1162,91 +1145,6 @@ const SectionHeading = ({
   </Stack>
 )
 
-const HeroTimeline = () => {
-  return (
-    <Box
-      aria-label="Study guide creation timeline"
-      sx={{
-        width: 'min(100%, 980px)',
-        pt: { xs: 2.3, md: 3.2 },
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
-        gap: { xs: 2.2, md: 3.2 },
-        alignItems: 'start',
-      }}
-    >
-      {timelineItems.map((item, index) => (
-        <Box key={`timeline-${index}`} sx={{ position: 'relative' }}>
-          {index < timelineItems.length - 1 && (
-            <Box
-              aria-hidden="true"
-              sx={{
-                display: { xs: 'none', sm: 'block' },
-                position: 'absolute',
-                top: 35,
-                left: '74%',
-                width: '54%',
-                height: 0,
-                borderTop: `2px dashed ${alpha(brand.faint, 0.64)}`,
-                '&::before, &::after': {
-                  content: '""',
-                  position: 'absolute',
-                  top: -5,
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  bgcolor: alpha(brand.faint, 0.8),
-                },
-                '&::before': { left: -5 },
-                '&::after': { right: -5 },
-              }}
-            />
-          )}
-          <Stack spacing={1.25} alignItems="center">
-            <Box
-              tabIndex={0}
-              sx={{
-                width: 70,
-                height: 70,
-                borderRadius: '50%',
-                display: 'grid',
-                placeItems: 'center',
-                bgcolor: item.tone,
-                color: item.color,
-                border: `1px solid ${alpha(item.color, 0.12)}`,
-                boxShadow: `0 10px 28px ${alpha(item.color, 0.12)}`,
-                '& svg': {
-                  fontSize: 33,
-                },
-                '&:focus-visible': {
-                  outline: `3px solid ${alpha(item.color, 0.34)}`,
-                  outlineOffset: 4,
-                },
-              }}
-            >
-              {item.icon}
-            </Box>
-            <Stack spacing={0.45} alignItems="center">
-              <Typography
-                sx={{
-                  color: brand.ink,
-                  fontWeight: 700,
-                  fontSize: '1rem',
-                }}
-              >
-                {item.label}
-              </Typography>
-              <Typography sx={{ color: brand.muted, fontSize: '0.92rem' }}>
-                {item.body}
-              </Typography>
-            </Stack>
-          </Stack>
-        </Box>
-      ))}
-    </Box>
-  )
-}
-
 const GrowingGuidesSection = () => (
   <Box
     sx={{
@@ -1374,6 +1272,258 @@ const GrowingGuidesSection = () => (
     </Container>
   </Box>
 )
+
+/**
+ * The trailer. Sits ahead of the numbered stages, so it deliberately does not
+ * use StageEyebrow: the sequence starts at 01 with the comparison section and
+ * numbering this would push every following step out by one.
+ *
+ * Autoplays muted and looping because that is the only form of autoplay
+ * browsers allow, and because a 10s silent loop reads as a moving screenshot
+ * rather than something demanding attention. Sound is available on request via
+ * the unmute control, and everything stops for prefers-reduced-motion.
+ */
+const TrailerSection = () => {
+  const videoRef = React.useRef<HTMLVideoElement | null>(null)
+  // Read directly instead of through useMediaQuery: this runs on the landing
+  // page, where matchMedia may be absent or stubbed, and the hook assumes the
+  // call always returns a MediaQueryList. A missing or partial implementation
+  // should degrade to "motion is fine", never throw and blank the page.
+  const prefersReducedMotion = React.useMemo(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return false
+    }
+
+    try {
+      return window.matchMedia('(prefers-reduced-motion: reduce)')?.matches === true
+    } catch {
+      return false
+    }
+  }, [])
+  const [isPlaying, setIsPlaying] = React.useState(!prefersReducedMotion)
+  const [isMuted, setIsMuted] = React.useState(true)
+
+  // play() only returns a promise on engines with the modern media API;
+  // elsewhere it returns undefined, and calling .catch() on that throws and
+  // blanks the whole landing page. Autoplay is also allowed to reject outright
+  // (power saving, an OS-level block), which is a normal outcome, not an error.
+  const startPlayback = React.useCallback((video: HTMLVideoElement) => {
+    const started = video.play() as Promise<void> | undefined
+
+    // No promise to observe means we fall back to the element's own play and
+    // pause events, which already drive the button state.
+    if (started && typeof started.catch === 'function') {
+      started.catch(() => setIsPlaying(false))
+    }
+  }, [])
+
+  // The autoPlay attribute alone is not dependable here: React assigns `muted`
+  // as a DOM property rather than an attribute, and an engine that checks the
+  // attribute to decide whether autoplay is allowed can refuse a video that is
+  // in fact muted. Asking once on mount covers that case.
+  React.useEffect(() => {
+    const video = videoRef.current
+    if (!video) {
+      return undefined
+    }
+
+    if (prefersReducedMotion) {
+      video.pause()
+      return undefined
+    }
+
+    video.muted = true
+    startPlayback(video)
+    return undefined
+  }, [prefersReducedMotion, startPlayback])
+
+  const togglePlay = () => {
+    const video = videoRef.current
+    if (!video) {
+      return
+    }
+
+    if (video.paused) {
+      startPlayback(video)
+      return
+    }
+
+    video.pause()
+  }
+
+  const toggleMute = () => {
+    const video = videoRef.current
+    if (!video) {
+      return
+    }
+
+    const nextMuted = !video.muted
+    video.muted = nextMuted
+    setIsMuted(nextMuted)
+  }
+
+  const overlayButtonSx = {
+    width: 38,
+    height: 38,
+    color: brand.ink,
+    bgcolor: alpha('#FFFFFF', 0.86),
+    border: `1px solid ${alpha(brand.ink, 0.1)}`,
+    backdropFilter: 'blur(6px)',
+    boxShadow: `0 6px 18px ${alpha(brand.ink, 0.18)}`,
+    '&:hover': {
+      bgcolor: '#FFFFFF',
+      borderColor: alpha(brand.blue, 0.42),
+      color: brand.blueDark,
+    },
+  }
+
+  return (
+    <Box
+      sx={{
+        position: 'relative',
+        bgcolor: 'transparent',
+        overflow: 'hidden',
+      }}
+    >
+      <Container maxWidth="lg" sx={{ position: 'relative' }}>
+        <Stack spacing={{ xs: 3, md: 4 }} alignItems="center">
+          <SectionHeading
+            eyebrow={
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{
+                  px: 1.5,
+                  py: 0.65,
+                  borderRadius: 999,
+                  border: `1px solid ${alpha(brand.blue, 0.16)}`,
+                  bgcolor: alpha(brand.sky, 0.08),
+                  color: brand.blueDark,
+                  fontWeight: 800,
+                  fontSize: '0.82rem',
+                  lineHeight: 1,
+                }}
+              >
+                <PlayArrowRoundedIcon sx={{ fontSize: 17 }} />
+                <Box component="span">00 · TRAILER</Box>
+              </Stack>
+            }
+            title={<>Watch one question become a five-page guide.</>}
+            maxWidth={860}
+          />
+
+          {/* Gradient ring drawn as padding on the wrapper: a plain border
+              cannot hold a gradient, and an ::after outline would sit above
+              the video's own rounded corners. */}
+          <Box
+            data-testid="landing-trailer"
+            sx={{
+              width: '100%',
+              maxWidth: 940,
+              p: { xs: '3px', md: '4px' },
+              borderRadius: { xs: 3.5, md: 5 },
+              background: `linear-gradient(135deg, ${alpha(
+                brand.sky,
+                0.55,
+              )}, ${alpha(brand.blue, 0.4)} 42%, ${alpha(brand.mint, 0.5)})`,
+              boxShadow: `0 26px 70px ${alpha(brand.ink, 0.16)}`,
+              position: 'relative',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                inset: -26,
+                borderRadius: 'inherit',
+                background: `radial-gradient(circle at 50% 50%, ${alpha(
+                  brand.sky,
+                  0.16,
+                )}, transparent 68%)`,
+                filter: 'blur(10px)',
+                zIndex: -1,
+                pointerEvents: 'none',
+              },
+            }}
+          >
+            <Box
+              sx={{
+                position: 'relative',
+                borderRadius: { xs: 3.2, md: 4.6 },
+                overflow: 'hidden',
+                bgcolor: brand.ink,
+                lineHeight: 0,
+              }}
+            >
+              <Box
+                component="video"
+                ref={videoRef}
+                src="/videos/trailer-attempt-3.mp4"
+                poster="/videos/trailer-poster.jpg"
+                muted={isMuted}
+                autoPlay={!prefersReducedMotion}
+                loop
+                playsInline
+                preload="auto"
+                controls={prefersReducedMotion}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                aria-label="RabbitHole product trailer"
+                sx={{
+                  display: 'block',
+                  width: '100%',
+                  // Matches the file's 848x478 so nothing is letterboxed or
+                  // cropped, and the block reserves its height before the
+                  // video loads instead of shifting the page.
+                  aspectRatio: '848 / 478',
+                  height: 'auto',
+                  objectFit: 'cover',
+                }}
+              />
+
+              {!prefersReducedMotion && (
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{
+                    position: 'absolute',
+                    right: { xs: 10, md: 14 },
+                    bottom: { xs: 10, md: 14 },
+                  }}
+                >
+                  <IconButton
+                    onClick={togglePlay}
+                    aria-label={
+                      isPlaying ? 'Pause the trailer' : 'Play the trailer'
+                    }
+                    sx={overlayButtonSx}
+                  >
+                    {isPlaying ? (
+                      <PauseRoundedIcon sx={{ fontSize: 21 }} />
+                    ) : (
+                      <PlayArrowRoundedIcon sx={{ fontSize: 21 }} />
+                    )}
+                  </IconButton>
+                  <IconButton
+                    onClick={toggleMute}
+                    aria-label={
+                      isMuted ? 'Unmute the trailer' : 'Mute the trailer'
+                    }
+                    sx={overlayButtonSx}
+                  >
+                    {isMuted ? (
+                      <VolumeOffRoundedIcon sx={{ fontSize: 20 }} />
+                    ) : (
+                      <VolumeUpRoundedIcon sx={{ fontSize: 20 }} />
+                    )}
+                  </IconButton>
+                </Stack>
+              )}
+            </Box>
+          </Box>
+        </Stack>
+      </Container>
+    </Box>
+  )
+}
 
 const HonestComparisonSection = () => (
   <Box

@@ -77,7 +77,11 @@ import {
   type DashboardChatSourcePlan,
 } from '../../dashboardChat/sourcePlanner'
 import { readQuickCreateAiSettings } from '../../quickCreate/ai'
-import { getHostedAiCreditCost } from '../../quickCreate/ai/hostedCredits'
+import {
+  getHostedAiCreditCost,
+  isCurrencyShortageMessage,
+  STUDY_CREDITS_LABEL,
+} from '../../quickCreate/ai/hostedCredits'
 import {
   quickCreateActionGroups,
   quickCreateActions,
@@ -557,6 +561,16 @@ const getQuickCreateEstimateSeconds = (
 
 const getDashboardChatFailureMessage = (error: unknown): string => {
   const message = error instanceof Error ? error.message : ''
+
+  // Running out of Carrots used to fall through to the generic message below,
+  // so an empty balance read as "the dashboard cannot answer this" - the one
+  // explanation that is not true, and the only one the student can act on.
+  if (isCurrencyShortageMessage(message)) {
+    return (
+      message ||
+      `You have run out of ${STUDY_CREDITS_LABEL}. Top up, switch AI provider, or add your own API key in Settings.`
+    )
+  }
 
   if (
     /sign in|session expired|unauthorized|rejected the request/i.test(message)
@@ -2047,6 +2061,12 @@ const DashboardChatPanel = ({
       .map(findExternalSourceById)
       .filter((source): source is DashboardExternalSource => Boolean(source))
       .filter((source) => !isUserAddedSource(source))
+      // A snippet-backed source carries a couple of sentences, not a page.
+      // Drafting asks the model for a 120-220 word page using only the source
+      // text, so from a snippet it either pads past what the source actually
+      // says or lands under the minimum and fails - and each attempt costs a
+      // hosted call. The snippet still grounds and cites the chat answer.
+      .filter((source) => source.textOrigin !== 'snippet')
       .filter(
         (source) =>
           source.guidePageDraftStatus !== 'ready' &&
@@ -2206,19 +2226,25 @@ const DashboardChatPanel = ({
     }))
   }
 
+  /**
+   * `plannerCharged` says whether the planner's hosted call completed, which
+   * is what pays this message's single chat credit. The answer call must then
+   * bill as a follow-up; otherwise one message is charged twice.
+   */
   const resolveSourcePlan = async (
     question: string,
     historyMessages: DashboardChatMessage[],
     selectedSources: DashboardChatSourceId[],
     signal?: AbortSignal,
-  ): Promise<DashboardChatSourcePlan> => {
+  ): Promise<{ plan: DashboardChatSourcePlan; plannerCharged: boolean }> => {
     const fallbackPlan = fallbackDashboardChatSourcePlan(
       question,
       selectedSources,
     )
 
+    // No planner call happens on this branch, so nothing has been charged yet.
     if (selectedSources.length > 0 && !selectedSources.includes('web')) {
-      return fallbackPlan
+      return { plan: fallbackPlan, plannerCharged: false }
     }
 
     try {
@@ -2233,17 +2259,22 @@ const DashboardChatPanel = ({
         signal,
       })
       return {
-        ...plan,
-        shouldSearchWeb: selectedSources.includes('web')
-          ? plan.selectedSources.includes('web')
-          : plan.shouldSearchWeb && plan.selectedSources.includes('web'),
+        plan: {
+          ...plan,
+          shouldSearchWeb: selectedSources.includes('web')
+            ? plan.selectedSources.includes('web')
+            : plan.shouldSearchWeb && plan.selectedSources.includes('web'),
+        },
+        plannerCharged: true,
       }
     } catch (error) {
       if (isAbortError(error) || signal?.aborted) {
         throw error
       }
 
-      return fallbackPlan
+      // The planner call did not complete, so it did not pay for this
+      // message and the answer call still has to.
+      return { plan: fallbackPlan, plannerCharged: false }
     }
   }
 
@@ -2266,7 +2297,7 @@ const DashboardChatPanel = ({
       historyMessages.length > 0 ? historyMessages : liveHistoryMessages
 
     try {
-      const sourcePlan = await resolveSourcePlan(
+      const { plan: sourcePlan, plannerCharged } = await resolveSourcePlan(
         question,
         effectiveHistoryMessages,
         options.selectedSources ?? [],
@@ -2298,6 +2329,8 @@ const DashboardChatPanel = ({
         exactAnswerCount: sourcePlan.exactAnswerCount,
         contentLanguage:
           dashboard?.contentLanguage || dashboard?.studyPath?.contentLanguage,
+        // The planner already charged this message's chat credit when it ran.
+        hostedSurface: plannerCharged ? 'chat-followup' : 'chat',
         signal,
       })
       const usedWebSourceIds = result.sourceRefs

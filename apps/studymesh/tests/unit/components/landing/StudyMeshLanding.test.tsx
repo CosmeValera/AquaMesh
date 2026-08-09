@@ -326,8 +326,17 @@ describe('StudyMeshLanding', () => {
     ).toBeInTheDocument()
 
     expect(
-      within(access).getByRole('link', { name: /try it now/i }),
+      within(access).getByRole('link', { name: /try the demo/i }),
     ).toHaveAttribute('href', '/try')
+    // The no-account tier is the prepared /try demo. It generates nothing and
+    // saves nothing, so the card must not offer free guides or imply that
+    // anything done there can be kept by signing up later.
+    expect(
+      within(access).getAllByText(/five prepared topics/i).length,
+    ).toBeGreaterThan(0)
+    expect(within(access).getByText(/nothing is saved/i)).toBeInTheDocument()
+    expect(within(access).queryByText(/free quick guides/i)).toBeNull()
+    expect(within(access).queryByText(/keep them/i)).toBeNull()
     expect(
       within(access).getByRole('link', { name: /create a free account/i }),
     ).toHaveAttribute('href', '/signup')

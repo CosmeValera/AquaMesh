@@ -11,6 +11,7 @@ import {
   readProfileContext,
   sanitizeUserKnownTopics,
   saveProfileContext,
+  USER_KNOWN_TOPICS_DIRECT_MAX,
   USER_KNOWN_TOPICS_STORAGE_MAX,
 } from '../../src/profileContext'
 
@@ -194,5 +195,36 @@ describe('profile context', () => {
     expect(promoted?.specificKnowledge).toHaveLength(
       USER_KNOWN_TOPICS_STORAGE_MAX,
     )
+  })
+
+  it('keeps a newly learned topic inside the AI topic cap', () => {
+    const priorSpecificKnowledge = Array.from(
+      { length: USER_KNOWN_TOPICS_DIRECT_MAX },
+      (_, index) => `Topic ${index + 1}`,
+    )
+    saveProfileContext({
+      roles: ['software_it'],
+      broadKnowledge: ['Backend', 'Databases'],
+      specificKnowledge: priorSpecificKnowledge,
+    })
+
+    const next = addLearnedTopicToProfileContext('Bottlenecks')
+
+    expect(next?.specificKnowledge[0]).toBe('Bottlenecks')
+    expect(next?.specificKnowledge).toHaveLength(USER_KNOWN_TOPICS_DIRECT_MAX + 1)
+    expect(getUserKnownTopics(next)).toHaveLength(USER_KNOWN_TOPICS_DIRECT_MAX)
+    expect(getUserKnownTopics(next)[0]).toBe('Bottlenecks')
+  })
+
+  it('promotes an already declared topic instead of duplicating it', () => {
+    saveProfileContext({
+      roles: [],
+      broadKnowledge: [],
+      specificKnowledge: ['MinIO', 'bottlenecks', 'S3'],
+    })
+
+    const next = addLearnedTopicToProfileContext('Bottlenecks')
+
+    expect(next?.specificKnowledge).toEqual(['Bottlenecks', 'MinIO', 'S3'])
   })
 })

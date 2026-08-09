@@ -150,16 +150,28 @@ const collectStudyGuideComponentNodes = (
 
 const StudyGuideLinearLayout = ({
   layout,
+  studyPathContext,
   onAskAi,
 }: {
   layout?: DashboardLayout
+  /**
+   * Which guide and page these blocks belong to. Supplied by the view rather
+   * than read out of the layout: blocks are only given this context at
+   * generation time, so guides created before a block started needing it would
+   * otherwise never get it. Blocks that carry their own copy keep it.
+   */
+  studyPathContext?: Record<string, unknown>
   onAskAi?: (question: string) => void
 }) => {
   const theme = useTheme()
   const compactView = useMediaQuery(theme.breakpoints.down('lg'))
   const components = useMemo(
-    () => collectStudyGuideComponentNodes(layout),
-    [layout],
+    () =>
+      collectStudyGuideComponentNodes(layout).map((component) => ({
+        ...component,
+        props: { ...studyPathContext, ...component.props },
+      })),
+    [layout, studyPathContext],
   )
   const cardGroups = useMemo<StudyGuideCardGroup[]>(() => {
     const groups: StudyGuideCardGroup[] = []

@@ -381,6 +381,7 @@ const createFocusedStudySessionWidget = (
     createdAt: string
     focusedResourceType: 'flashcards' | 'quiz'
     widgetIdPrefix: string
+    studyPath?: StudyPathDashboardContext
   },
   widgetName?: string,
 ): CustomWidget => {
@@ -407,6 +408,9 @@ const createFocusedStudySessionWidget = (
               : 'QuizCarouselBlock',
           title: pack.title,
           items: objects,
+          // The carousel owns the whole session, so it is the block that can
+          // offer the guide's topic once the quiz is scored.
+          ...createStudyPathProps(options.studyPath),
         },
       },
     ],
@@ -1133,6 +1137,7 @@ export const createQuickCreateWidgetsFromGroups = (
               getFocusedPracticeType(group.objects) ||
               'quiz',
             widgetIdPrefix: normalizedOptions.widgetIdPrefix,
+            studyPath: normalizedOptions.studyPath,
           },
           group.name,
         )

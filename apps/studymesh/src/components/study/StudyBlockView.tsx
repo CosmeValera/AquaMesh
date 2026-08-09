@@ -33,6 +33,12 @@ import {
   readStudyGuidePageHref,
 } from '../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
+import {
+  addLearnedTopicToProfileContext,
+  isLearnedTopicPromptResolved,
+  isUserKnownTopic,
+  resolveLearnedTopicPrompt,
+} from '../../profileContext'
 import { PREFILL_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
 import { type HostedAiPodcast } from '../../quickCreate/ai'
 import type { DashboardLayout } from '../../state/store'
@@ -43,6 +49,14 @@ import {
   createChecklistScopeId,
   usePersistentChecklistState,
 } from '../../studyGuides/checklistState'
+/**
+ * Score bands for offering the guide's topic as something the reader now
+ * knows. Below the floor nothing is offered at all; at or under the confident
+ * mark the offer comes with a nudge to revisit the pages first.
+ */
+const LEARNED_TOPIC_MIN_SCORE_PERCENT = 50
+const LEARNED_TOPIC_CONFIDENT_SCORE_PERCENT = 65
+
 interface StudyBlockViewProps {
   type: string
   props: Record<string, unknown>
@@ -1212,6 +1226,24 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   const [quizResultsOpen, setQuizResultsOpen] = useState(
     initialFocusedQuizSession.resultsOpen,
   )
+  const [learnedTopicAdded, setLearnedTopicAdded] = useState(false)
+  // The guide this block belongs to. Both are injected by
+  // `createStudyPathProps`, so they are only present on Study Guide pages,
+  // which is exactly where a topic is worth offering.
+  const learnedTopicName = String(props.studyPathTitle || '').trim()
+  const learnedTopicGuideId = String(props.studyPathId || '')
+  // Read once the results open rather than on every render: both helpers hit
+  // localStorage, and the answer cannot change while the score is on screen.
+  const canOfferLearnedTopic = useMemo(() => {
+    if (!quizResultsOpen || !learnedTopicName || !learnedTopicGuideId) {
+      return false
+    }
+
+    return (
+      !isLearnedTopicPromptResolved(learnedTopicGuideId) &&
+      !isUserKnownTopic(learnedTopicName)
+    )
+  }, [quizResultsOpen, learnedTopicGuideId, learnedTopicName])
   const [focusedFlashcardGrades, setFocusedFlashcardGrades] = useState<
     Record<number, 'known' | 'missed'>
   >(initialFocusedFlashcardSession.grades)
@@ -2500,6 +2532,71 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       writeStoredFocusedQuizSession(focusedQuizStorageKey, session)
     }
 
+    // The quiz is what earns the topic. Below the floor the reader has not
+    // shown they know it, so nothing is offered; in the band above it the
+    // offer stands but says the pages are worth another pass; above the
+    // confident mark the offer stands on its own.
+    const showLearnedTopicOffer =
+      canOfferLearnedTopic && scorePercent >= LEARNED_TOPIC_MIN_SCORE_PERCENT
+    const suggestRevisingPages =
+      scorePercent <= LEARNED_TOPIC_CONFIDENT_SCORE_PERCENT
+
+    const addLearnedTopicFromQuiz = () => {
+      addLearnedTopicToProfileContext(learnedTopicName)
+      resolveLearnedTopicPrompt(learnedTopicGuideId, 'added')
+      setLearnedTopicAdded(true)
+    }
+
+    const learnedTopicSection = learnedTopicAdded ? (
+      <Paper
+        variant="outlined"
+        sx={(theme) => ({
+          p: 2,
+          borderRadius: 2,
+          borderColor: alpha(theme.palette.success.main, 0.5),
+          bgcolor: alpha(theme.palette.success.main, 0.08),
+        })}
+      >
+        <Typography variant="body2">
+          <Box component="span" sx={{ fontWeight: 700 }}>
+            {learnedTopicName}
+          </Box>{' '}
+          {t('practice.topicAddedToKnown')}
+        </Typography>
+      </Paper>
+    ) : showLearnedTopicOffer ? (
+      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1.5}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          justifyContent="space-between"
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              {learnedTopicName}
+            </Typography>
+            {suggestRevisingPages ? (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mt: 0.25, lineHeight: 1.5 }}
+              >
+                {t('practice.addTopicRevisePages')}
+              </Typography>
+            ) : null}
+          </Box>
+          <Button
+            variant="contained"
+            onClick={addLearnedTopicFromQuiz}
+            sx={{ flexShrink: 0, textTransform: 'none', fontWeight: 700 }}
+          >
+            {t('practice.addTopicToKnown')}
+          </Button>
+        </Stack>
+      </Paper>
+    ) : null
+
     if (quizResultsOpen) {
       return (
         <Box
@@ -2590,6 +2687,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 </Stack>
               </Stack>
             </Paper>
+            {learnedTopicSection}
             <Stack direction="row" spacing={1.25} justifyContent="center">
               <Button
                 variant="outlined"

@@ -458,6 +458,25 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
     () => sanitizeStudentLayout(currentLesson?.layout),
     [currentLesson?.layout],
   )
+  // Which guide and page the blocks on screen belong to. Handed down so blocks
+  // that key off the guide work on every guide, not only ones generated after
+  // they started needing it.
+  const studyPathContext = useMemo(
+    () => ({
+      studyPathId: studyPath.pathId,
+      studyPathTitle: studyPath.title,
+      studyPathFolderName: studyPath.folderName,
+      studyPathDashboardKey: currentPageKey || undefined,
+      studyPathDashboardName: currentLesson?.name,
+    }),
+    [
+      currentLesson?.name,
+      currentPageKey,
+      studyPath.folderName,
+      studyPath.pathId,
+      studyPath.title,
+    ],
+  )
 
   useEffect(() => {
     setQuickStartExpanded(true)
@@ -844,6 +863,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
               <StudyGuideLinearLayout
                 key={currentLesson.dashboardKey}
                 layout={studentLayout}
+                studyPathContext={studyPathContext}
                 onAskAi={onAskAi}
               />
             </>

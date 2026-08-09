@@ -326,6 +326,42 @@ describe('DemoGuidePage', () => {
       "That's the whole sample.",
     )
     expect(screen.queryByTestId('demo-banner-sample')).not.toBeInTheDocument()
+
+    // Paging back to re-read something has not un-shown them the sample, so
+    // the closing message and its two ways out stay put.
+    fireEvent.click(screen.getByRole('button', { name: 'Previous page' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Previous page' }))
+
+    expect(screen.getByTestId('demo-banner-end')).toBeInTheDocument()
+    expect(screen.queryByTestId('demo-banner-sample')).not.toBeInTheDocument()
+  })
+
+  it('offers a way out only once the sample has been seen through', async () => {
+    renderDemoGuidePage()
+    await findFirstLesson()
+
+    expect(
+      screen.queryByTestId('demo-banner-try-another'),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByTestId('demo-banner-log-in')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+
+    fireEvent.click(screen.getByTestId('demo-banner-try-another'))
+    expect(screen.getByTestId('location')).toHaveTextContent('/try')
+  })
+
+  it('sends the closing log-in button to the login page', async () => {
+    renderDemoGuidePage()
+    await findFirstLesson()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+
+    fireEvent.click(screen.getByTestId('demo-banner-log-in'))
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/login')
   })
 
 })

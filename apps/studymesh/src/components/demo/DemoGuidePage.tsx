@@ -402,7 +402,9 @@ const DemoGuidePage = () => {
               overflow: 'hidden',
             }}
           >
-            <DemoConversionBanner isLastPage={isLastPage} />
+            {/* Keyed on the guide: opening a different sample is a fresh
+                visit, so the closing message starts unshown again. */}
+            <DemoConversionBanner key={demoSlug} isLastPage={isLastPage} />
             {isMobile ? (
               <>
                 <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>

@@ -269,15 +269,18 @@ type AccessOption = {
 const accessOptions: AccessOption[] = [
   {
     id: 'guest',
+    // The guest tier is the /try demo: prepared guides you can read and click
+    // through, not generations you get to run. It saves nothing, so it must not
+    // promise guides to keep.
     eyebrow: 'No account',
-    title: 'Free',
-    body: 'Three Quick Guides straight away. Nothing to install, no card, no e-mail.',
+    title: 'Free demo',
+    body: 'Open a finished guide from five prepared topics and click through the real thing. Nothing to install, no card, no e-mail.',
     points: [
-      '3 free Quick Guides',
+      'Five prepared topics',
       'Nothing to configure',
-      'Sign up later to keep them',
+      'A demo, so nothing is saved',
     ],
-    ctaLabel: 'Try it now',
+    ctaLabel: 'Try the demo',
     ctaTo: '/try',
     icon: <RocketLaunchOutlinedIcon />,
   },
@@ -331,15 +334,15 @@ const faqItems: FaqItem[] = [
     id: 'why-account',
     question: 'Why should I register?',
     answer:
-      'You do not have to, to try it: three Quick Guides run with no account at all. Registering is what turns a one-off answer into a library. Your guides, dashboards and known-topics list are saved and synced across devices, and a free account starts with ' +
+      'You do not have to, to see it: the demo opens a finished guide with no account at all, though it is prepared content and nothing you do there is saved. Registering is what lets you generate your own guides from your own prompts, and turns a one-off answer into a library. Your guides, dashboards and known-topics list are saved and synced across devices, and a free account starts with ' +
       `${HOSTED_AI_INITIAL_FREE_CREDITS} ${STUDY_CREDITS_LABEL} plus a free daily refill.`,
   },
   {
     id: 'why-pay',
     question: 'Why would I pay for this if I already pay for a chat assistant?',
     answer:
-      'There is no RabbitHole subscription to stack on top of one. Bring your own Gemini or Cerebras key, or run on-device AI, and generation costs you nothing here. Hosted generation is there only if you do not want to manage a key, and it is pay-as-you-go: ' +
-      `packs start at ${starterPack.label} for ${starterPack.credits} ${STUDY_CREDITS_LABEL}.`,
+      'There is no RabbitHole subscription to stack on top. Bring your own Gemini or Cerebras key, or run on-device AI, and generation costs you nothing here. Hosted generation is there only if you do not want to manage a key, and it is pay-as-you-go: ' +
+      `packs start at ${starterPack.label}.`,
   },
   {
     id: 'known-topics',

@@ -126,6 +126,8 @@ Use TypeScript/React patterns already present in each app. Components use Pascal
 
 RabbitHole workspace/settings UI should prefer MUI components and `@mui/icons-material`. PrimeReact styles remain globally loaded for legacy areas; do not introduce a second icon/UI system unless replacing a pattern globally.
 
+Also, when adding comments in the code, prefer use 1 line short comments as much as possible and only use 2-3 line comments when completely necessary. Avoid long comments whenever possible.
+
 ## UI Contrast Requirements
 
 Icon-only controls must not rely on default MUI `IconButton` colors. For toolbar/navigation/destructive icon buttons, always set explicit `color`, `bgcolor`, `borderColor`, hover styles, and disabled styles with readable contrast in both light and dark themes. This is required for page navigation, reorder, delete, close/open, resize-adjacent, and similar controls on desktop and phone/tablet. Disabled icons may be muted, but they must remain visibly intentional, not nearly invisible.

@@ -325,6 +325,62 @@ describe('DashboardChatPanel quick create menu', () => {
     await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
   })
 
+  it('bills the answer as a follow-up when the planner already charged', async () => {
+    // The planner call pays this message's single chat credit. If the answer
+    // call bills as 'chat' too, one message costs two Carrots.
+    renderPanel()
+    const input = screen.getByPlaceholderText('Ask anything')
+    fireEvent.change(input, { target: { value: 'What is photosynthesis?' } })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
+    expect(planDashboardChatSources).toHaveBeenCalled()
+    expect(vi.mocked(askDashboardSources).mock.calls[0][0]).toMatchObject({
+      hostedSurface: 'chat-followup',
+    })
+  })
+
+  it('bills the answer normally when the planner call failed', async () => {
+    // A planner that threw never charged, so the answer still has to.
+    vi.mocked(planDashboardChatSources).mockRejectedValueOnce(
+      new Error('planner unavailable'),
+    )
+    renderPanel()
+    const input = screen.getByPlaceholderText('Ask anything')
+    fireEvent.change(input, { target: { value: 'What is photosynthesis?' } })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    await waitFor(() => expect(askDashboardSources).toHaveBeenCalled())
+    expect(vi.mocked(askDashboardSources).mock.calls[0][0]).toMatchObject({
+      hostedSurface: 'chat',
+    })
+  })
+
+  it('says the balance is empty instead of blaming the dashboard', async () => {
+    // Running out of Carrots used to render as "I could not answer from this
+    // dashboard yet", which points the student at the wrong problem.
+    vi.mocked(askDashboardSources).mockRejectedValueOnce(
+      new Error('Not enough Carrots. This action needs 1 and you have 0.'),
+    )
+    renderPanel()
+    const input = screen.getByPlaceholderText('Ask anything')
+    fireEvent.change(input, { target: { value: 'What is photosynthesis?' } })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send dashboard question' }),
+    )
+
+    expect(
+      await screen.findByText(/not enough carrots/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(/could not answer from this dashboard/i),
+    ).not.toBeInTheDocument()
+  })
+
   it('replaces an existing draft when an explain prefill event arrives', async () => {
     renderPanel()
     const input = screen.getByPlaceholderText('Ask anything')

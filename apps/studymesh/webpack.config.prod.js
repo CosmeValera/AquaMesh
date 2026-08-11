@@ -136,15 +136,15 @@ module.exports = (_, argv) => ({
         // Dev serves public/ wholesale, prod only copies what is listed here.
         // The landing trailer and the demo podcast audio are both loaded by
         // absolute URL, so they 404 in production unless copied.
+        // No noErrorOnMissing here on purpose: a missing trailer is what made
+        // the landing hero a black box, and a failed build says so louder.
         {
           from: 'public/videos/trailer-attempt-3.mp4',
           to: './videos/trailer-attempt-3.mp4',
-          noErrorOnMissing: true,
         },
         {
           from: 'public/videos/trailer-poster.jpg',
           to: './videos/trailer-poster.jpg',
-          noErrorOnMissing: true,
         },
         { from: 'public/demo', to: './demo', noErrorOnMissing: true },
         {

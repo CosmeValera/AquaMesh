@@ -1470,10 +1470,10 @@ const TrailerSection = () => {
                 sx={{
                   display: 'block',
                   width: '100%',
-                  // Matches the file's 848x478 so nothing is letterboxed or
+                  // Matches the file's 1920x1080 so nothing is letterboxed or
                   // cropped, and the block reserves its height before the
                   // video loads instead of shifting the page.
-                  aspectRatio: '848 / 478',
+                  aspectRatio: '16 / 9',
                   height: 'auto',
                   objectFit: 'cover',
                 }}

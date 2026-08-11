@@ -1470,10 +1470,12 @@ const TrailerSection = () => {
                 sx={{
                   display: 'block',
                   width: '100%',
-                  // Matches the file's 1920x1080 so nothing is letterboxed or
-                  // cropped, and the block reserves its height before the
-                  // video loads instead of shifting the page.
-                  aspectRatio: '16 / 9',
+                  // The 1920x1080 file carries 2 black pixel columns on each
+                  // side, so this is the 1916x1080 picture ratio (same as the
+                  // poster) and objectFit cover trims them off. Do not "fix"
+                  // this to 16/9: that reveals the stripes. It also reserves
+                  // the block's height before the video loads.
+                  aspectRatio: '848 / 478',
                   height: 'auto',
                   objectFit: 'cover',
                 }}

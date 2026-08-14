@@ -101,12 +101,9 @@ describe('StudyMeshLanding', () => {
     expect(screen.getByText(/no account needed to try/i)).toHaveTextContent(
       /free to start/i,
     )
-    expect(screen.getAllByText(/20 sec/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/key idea/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/60 sec/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/idea summary/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/5 pages/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/full guide/i).length).toBeGreaterThan(0)
+    expect(screen.getByTestId('hero-differentiator')).toHaveTextContent(
+      /skim it in 20 seconds, or follow it for 3 pages/i,
+    )
     expect(
       screen.getByRole('heading', {
         name: /same question\. adapted answer\./i,
@@ -147,15 +144,14 @@ describe('StudyMeshLanding', () => {
     ).toBeInTheDocument()
     expect(
       screen.getByRole('heading', {
-        name: /your guide doesn't stop at page 5/i,
+        name: /your guide doesn't stop at page 3/i,
       }),
     ).toBeInTheDocument()
     expect(screen.getByText(/the water cycle/i)).toBeInTheDocument()
     expect(screen.getByText(/evaporation/i)).toBeInTheDocument()
     expect(screen.getByText(/condensation/i)).toBeInTheDocument()
-    expect(screen.getByText(/cloud growth/i)).toBeInTheDocument()
-    expect(screen.getByText(/precipitation/i)).toBeInTheDocument()
     expect(screen.getAllByText(/review pack/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/^04$/).length).toBeGreaterThan(0)
     expect(screen.getByText(/^new$/i)).toBeInTheDocument()
     expect(
       screen.getByText(/can you add more practice exercises on this topic/i),
@@ -231,7 +227,7 @@ describe('StudyMeshLanding', () => {
     ).toBeInTheDocument()
     expect(
       within(comparison).getByText(
-        /ask for more and the guide grows\. page 06 appears and stays/i,
+        /ask for more and the guide grows\. page 04 appears and stays/i,
       ),
     ).toBeInTheDocument()
 

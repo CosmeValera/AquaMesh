@@ -94,18 +94,19 @@ const landingSurfaceBackground = [
 ].join(', ')
 
 const growingGuideBenefits = [
-  'Starts with 5 organized pages',
+  'Starts with 3 organized pages',
   'Ask AI Chat for more',
   'New pages are added automatically',
 ]
 
+// Three starting pages, and the Review Pack is the one the chat adds, so it
+// has to stay last: GrowingGuideLayerStack renders the final entry as the new
+// page and the layer offsets are driven by index.
 const growingGuidePages = [
   '01 The Water Cycle',
   '02 Evaporation',
   '03 Condensation',
-  '04 Cloud Growth',
-  '05 Precipitation',
-  '06 Review Pack',
+  '04 Review Pack',
 ]
 
 type ComparisonRow = {
@@ -146,7 +147,7 @@ const comparisonRows: ComparisonRow[] = [
     id: 'going-deeper',
     label: 'Going deeper',
     chat: 'Ask again. Get a new answer that may contradict the last one.',
-    rabbithole: 'Ask for more and the guide grows. Page 06 appears and stays.',
+    rabbithole: 'Ask for more and the guide grows. Page 04 appears and stays.',
   },
   {
     id: 'what-it-costs',
@@ -158,7 +159,7 @@ const comparisonRows: ComparisonRow[] = [
 ]
 
 const heroDifferentiator =
-  'A chat gives you an answer. RabbitHole gives you a guide: skim it in 20 seconds, or follow it for 5 pages.'
+  'A chat gives you an answer. RabbitHole gives you a guide: skim it in 20 seconds, or follow it for 3 pages.'
 
 type StudyOutputItem = {
   id: string
@@ -173,7 +174,7 @@ const studyOutputItems: StudyOutputItem[] = [
   {
     id: 'pages',
     title: 'A guide with real pages',
-    body: 'Five ordered pages, each one building on the last, numbered so page 03 is still page 03 next week.',
+    body: 'Three ordered pages, each one building on the last, numbered so page 03 is still page 03 next week.',
     icon: <MenuBookOutlinedIcon />,
     color: '#3444C8',
     tone: brand.lavender,
@@ -1210,7 +1211,7 @@ const GrowingGuidesSection = () => (
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                5.
+                3.
               </Box>
             </Typography>
             <Typography
@@ -1221,7 +1222,7 @@ const GrowingGuidesSection = () => (
                 lineHeight: 1.62,
               }}
             >
-              Every guide starts with 5 focused pages. Ask for more depth,
+              Every guide starts with 3 focused pages. Ask for more depth,
               examples or exercises, and RabbitHole adds new content instantly.
             </Typography>
           </Stack>
@@ -1409,7 +1410,7 @@ const TrailerSection = () => {
                 <Box component="span">00 · TRAILER</Box>
               </Stack>
             }
-            title={<>Watch one question become a five-page guide.</>}
+            title={<>Watch one question become a three-page guide.</>}
             maxWidth={860}
           />
 
@@ -2745,7 +2746,7 @@ const GrowingGuideConversation = () => (
         >
           Done! I added{' '}
           <Box component="span" sx={{ color: '#008A78' }}>
-            06 Review Pack
+            04 Review Pack
           </Box>{' '}
           with quizzes, flashcards, and practice.
         </Typography>

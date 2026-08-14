@@ -34,9 +34,9 @@ test.describe('Landing tutorial page', () => {
     await expect(page.getByTestId('hero-differentiator')).toContainText(
       /a chat gives you an answer\. rabbithole gives you a guide/i,
     )
-    await expect(page.getByText(/20 sec . Key idea/)).toBeVisible()
-    await expect(page.getByText(/60 sec . Idea summary/)).toBeVisible()
-    await expect(page.getByText(/5 pages . Full guide/)).toBeVisible()
+    await expect(page.getByTestId('hero-differentiator')).toContainText(
+      /skim it in 20 seconds, or follow it for 3 pages/i,
+    )
   })
 
   test('should lead with the differentiation stages above the fold order', async ({

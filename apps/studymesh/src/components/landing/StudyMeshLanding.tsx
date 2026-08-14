@@ -1456,7 +1456,7 @@ const TrailerSection = () => {
               <Box
                 component="video"
                 ref={videoRef}
-                src="/videos/trailer-attempt-3.mp4"
+                src="/videos/trailer.mp4"
                 poster="/videos/trailer-poster.jpg"
                 muted={isMuted}
                 autoPlay={!prefersReducedMotion}

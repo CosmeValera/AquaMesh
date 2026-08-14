@@ -139,8 +139,8 @@ module.exports = (_, argv) => ({
         // No noErrorOnMissing here on purpose: a missing trailer is what made
         // the landing hero a black box, and a failed build says so louder.
         {
-          from: 'public/videos/trailer-attempt-3.mp4',
-          to: './videos/trailer-attempt-3.mp4',
+          from: 'public/videos/trailer.mp4',
+          to: './videos/trailer.mp4',
         },
         {
           from: 'public/videos/trailer-poster.jpg',

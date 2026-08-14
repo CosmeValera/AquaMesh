@@ -13,6 +13,7 @@ import {
   Button,
   Container,
   IconButton,
+  Slider,
   Stack,
   Typography,
 } from '@mui/material'
@@ -1284,6 +1285,17 @@ const GrowingGuidesSection = () => (
  * rather than something demanding attention. Sound is available on request via
  * the unmute control, and everything stops for prefers-reduced-motion.
  */
+// mm:ss for the trailer scrubber. The file is well under an hour, so hours are
+// never rendered and a missing duration reads as 0:00 rather than NaN.
+const formatTrailerTime = (seconds: number) => {
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return '0:00'
+  }
+
+  const total = Math.floor(seconds)
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+}
+
 const TrailerSection = () => {
   const videoRef = React.useRef<HTMLVideoElement | null>(null)
   // Read directly instead of through useMediaQuery: this runs on the landing
@@ -1303,6 +1315,11 @@ const TrailerSection = () => {
   }, [])
   const [isPlaying, setIsPlaying] = React.useState(!prefersReducedMotion)
   const [isMuted, setIsMuted] = React.useState(true)
+  const [duration, setDuration] = React.useState(0)
+  const [currentTime, setCurrentTime] = React.useState(0)
+  // While the pointer is down the slider owns the position; otherwise its own
+  // seeks would race the element's timeupdate events and make the thumb jitter.
+  const [isScrubbing, setIsScrubbing] = React.useState(false)
 
   // play() only returns a promise on engines with the modern media API;
   // elsewhere it returns undefined, and calling .catch() on that throws and
@@ -1361,6 +1378,28 @@ const TrailerSection = () => {
     const nextMuted = !video.muted
     video.muted = nextMuted
     setIsMuted(nextMuted)
+  }
+
+  const readSliderValue = (value: number | number[]) =>
+    Array.isArray(value) ? value[0] : value
+
+  const handleScrub = (_event: Event, value: number | number[]) => {
+    setIsScrubbing(true)
+    setCurrentTime(readSliderValue(value))
+  }
+
+  const commitScrub = (
+    _event: React.SyntheticEvent | Event,
+    value: number | number[],
+  ) => {
+    const video = videoRef.current
+    const next = readSliderValue(value)
+    setIsScrubbing(false)
+    setCurrentTime(next)
+
+    if (video) {
+      video.currentTime = next
+    }
   }
 
   const overlayButtonSx = {
@@ -1467,6 +1506,21 @@ const TrailerSection = () => {
                 controls={prefersReducedMotion}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
+                onLoadedMetadata={(
+                  event: React.SyntheticEvent<HTMLVideoElement>,
+                ) => setDuration(event.currentTarget.duration || 0)}
+                onDurationChange={(
+                  event: React.SyntheticEvent<HTMLVideoElement>,
+                ) => setDuration(event.currentTarget.duration || 0)}
+                onTimeUpdate={(
+                  event: React.SyntheticEvent<HTMLVideoElement>,
+                ) => {
+                  if (isScrubbing) {
+                    return
+                  }
+
+                  setCurrentTime(event.currentTarget.currentTime)
+                }}
                 aria-label="RabbitHole product trailer"
                 sx={{
                   display: 'block',
@@ -1482,14 +1536,29 @@ const TrailerSection = () => {
                 }}
               />
 
+              {/* A full-width bar rather than floating buttons: the trailer is
+                  long enough that people need to scrub it, and a scrubber has
+                  to span the frame to be worth dragging. */}
               {!prefersReducedMotion && (
                 <Stack
+                  data-testid="landing-trailer-controls"
                   direction="row"
-                  spacing={1}
+                  spacing={{ xs: 1, md: 1.5 }}
+                  alignItems="center"
                   sx={{
                     position: 'absolute',
-                    right: { xs: 10, md: 14 },
-                    bottom: { xs: 10, md: 14 },
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    // Inset from the frame so the round buttons clear the
+                    // video's own corner radius instead of tucking into it.
+                    px: { xs: 2, md: 3 },
+                    pb: { xs: 1.75, md: 2.25 },
+                    pt: { xs: 3, md: 4 },
+                    background: `linear-gradient(to top, ${alpha(
+                      brand.ink,
+                      0.72,
+                    )}, ${alpha(brand.ink, 0)})`,
                   }}
                 >
                   <IconButton
@@ -1505,6 +1574,50 @@ const TrailerSection = () => {
                       <PlayArrowRoundedIcon sx={{ fontSize: 21 }} />
                     )}
                   </IconButton>
+
+                  <Slider
+                    size="small"
+                    min={0}
+                    max={duration || 0.1}
+                    step={0.05}
+                    value={Math.min(currentTime, duration || 0.1)}
+                    onChange={handleScrub}
+                    onChangeCommitted={commitScrub}
+                    aria-label="Seek the trailer"
+                    getAriaValueText={formatTrailerTime}
+                    sx={{
+                      flex: 1,
+                      mx: { xs: 0.5, md: 1 },
+                      color: '#FFFFFF',
+                      '& .MuiSlider-rail': {
+                        opacity: 0.42,
+                        bgcolor: '#FFFFFF',
+                      },
+                      '& .MuiSlider-thumb': {
+                        width: 13,
+                        height: 13,
+                        boxShadow: `0 2px 8px ${alpha(brand.ink, 0.5)}`,
+                        '&:hover, &.Mui-focusVisible': {
+                          boxShadow: `0 0 0 7px ${alpha('#FFFFFF', 0.22)}`,
+                        },
+                      },
+                    }}
+                  />
+
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: '#FFFFFF',
+                      fontWeight: 700,
+                      fontVariantNumeric: 'tabular-nums',
+                      whiteSpace: 'nowrap',
+                      textShadow: `0 1px 6px ${alpha(brand.ink, 0.7)}`,
+                    }}
+                  >
+                    {formatTrailerTime(currentTime)} /{' '}
+                    {formatTrailerTime(duration)}
+                  </Typography>
+
                   <IconButton
                     onClick={toggleMute}
                     aria-label={

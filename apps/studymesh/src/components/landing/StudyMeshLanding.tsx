@@ -1452,11 +1452,11 @@ const TrailerSection = () => {
                 }}
               >
                 <PlayArrowRoundedIcon sx={{ fontSize: 17 }} />
-                <Box component="span">00 · TRAILER</Box>
+                <Box component="span">00 · RABBITHOLE TRAILER</Box>
               </Stack>
             }
-            title={<>Watch one question become a three-page guide.</>}
-            maxWidth={860}
+            title={<>Go as deep as you want.</>}
+            maxWidth={1260}
           />
 
           {/* Gradient ring drawn as padding on the wrapper: a plain border

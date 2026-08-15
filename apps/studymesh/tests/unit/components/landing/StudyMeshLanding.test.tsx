@@ -195,6 +195,43 @@ describe('StudyMeshLanding', () => {
     ).toHaveAttribute('href', '/login')
   })
 
+  it('names the stack it runs on without claiming more than it supports', () => {
+    renderLanding()
+
+    const section = screen.getByTestId('landing-runs-on')
+    expect(
+      within(section).getByRole('heading', {
+        name: /runs on ai you already trust/i,
+      }),
+    ).toBeInTheDocument()
+
+    // Each mark is rendered twice for the seamless loop, plus once in the
+    // hidden list a screen reader reads, so count instead of expecting one.
+    for (const label of [
+      'Gemini',
+      'Cerebras',
+      'Chrome built-in AI',
+      'OpenAI',
+      'Anthropic',
+      'Supabase',
+      'Vercel',
+      'Tavily',
+      'Unreal Speech',
+    ]) {
+      expect(within(section).getAllByText(label).length).toBeGreaterThan(0)
+    }
+
+    // Only the two providers that are not usable yet may carry the chip, and
+    // the visible strip renders every mark twice.
+    expect(within(section).getAllByText(/^soon$/i)).toHaveLength(4)
+    expect(
+      within(section).getAllByText(/\(coming soon\)/i).length,
+    ).toBeGreaterThan(0)
+    expect(
+      within(section).getByText(/logos belong to their owners/i),
+    ).toBeInTheDocument()
+  })
+
   it('states honestly where a chat assistant wins and when to open RabbitHole', () => {
     renderLanding()
 

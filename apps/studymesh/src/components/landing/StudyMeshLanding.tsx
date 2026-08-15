@@ -1296,25 +1296,14 @@ const formatTrailerTime = (seconds: number) => {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
 }
 
+const TRAILER_SEEK_STEP = 5
+
 const TrailerSection = () => {
   const videoRef = React.useRef<HTMLVideoElement | null>(null)
-  // Read directly instead of through useMediaQuery: this runs on the landing
-  // page, where matchMedia may be absent or stubbed, and the hook assumes the
-  // call always returns a MediaQueryList. A missing or partial implementation
-  // should degrade to "motion is fine", never throw and blank the page.
-  const prefersReducedMotion = React.useMemo(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-      return false
-    }
-
-    try {
-      return window.matchMedia('(prefers-reduced-motion: reduce)')?.matches === true
-    } catch {
-      return false
-    }
-  }, [])
-  const [isPlaying, setIsPlaying] = React.useState(!prefersReducedMotion)
-  const [isMuted, setIsMuted] = React.useState(true)
+  // Starts paused on the poster, which is also what lets it start unmuted:
+  // autoplay policies only block sound when playback was not user-initiated.
+  const [isPlaying, setIsPlaying] = React.useState(false)
+  const [isMuted, setIsMuted] = React.useState(false)
   const [duration, setDuration] = React.useState(0)
   const [currentTime, setCurrentTime] = React.useState(0)
   // While the pointer is down the slider owns the position; otherwise its own
@@ -1323,8 +1312,8 @@ const TrailerSection = () => {
 
   // play() only returns a promise on engines with the modern media API;
   // elsewhere it returns undefined, and calling .catch() on that throws and
-  // blanks the whole landing page. Autoplay is also allowed to reject outright
-  // (power saving, an OS-level block), which is a normal outcome, not an error.
+  // blanks the whole landing page. A rejected play is a normal outcome, not
+  // an error.
   const startPlayback = React.useCallback((video: HTMLVideoElement) => {
     const started = video.play() as Promise<void> | undefined
 
@@ -1334,26 +1323,6 @@ const TrailerSection = () => {
       started.catch(() => setIsPlaying(false))
     }
   }, [])
-
-  // The autoPlay attribute alone is not dependable here: React assigns `muted`
-  // as a DOM property rather than an attribute, and an engine that checks the
-  // attribute to decide whether autoplay is allowed can refuse a video that is
-  // in fact muted. Asking once on mount covers that case.
-  React.useEffect(() => {
-    const video = videoRef.current
-    if (!video) {
-      return undefined
-    }
-
-    if (prefersReducedMotion) {
-      video.pause()
-      return undefined
-    }
-
-    video.muted = true
-    startPlayback(video)
-    return undefined
-  }, [prefersReducedMotion, startPlayback])
 
   const togglePlay = () => {
     const video = videoRef.current
@@ -1367,6 +1336,43 @@ const TrailerSection = () => {
     }
 
     video.pause()
+  }
+
+  const seekBy = (seconds: number) => {
+    const video = videoRef.current
+    if (!video) {
+      return
+    }
+
+    const limit = Number.isFinite(video.duration) ? video.duration : 0
+    const next = Math.min(Math.max(video.currentTime + seconds, 0), limit)
+    video.currentTime = next
+    setCurrentTime(next)
+  }
+
+  // Space and the arrows would otherwise scroll the page, so every handled key
+  // swallows its default. Anything else falls through untouched.
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (
+      event.key === ' ' ||
+      event.key === 'Spacebar' ||
+      event.key === 'Enter'
+    ) {
+      event.preventDefault()
+      togglePlay()
+      return
+    }
+
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      seekBy(-TRAILER_SEEK_STEP)
+      return
+    }
+
+    if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      seekBy(TRAILER_SEEK_STEP)
+    }
   }
 
   const toggleMute = () => {
@@ -1484,13 +1490,25 @@ const TrailerSection = () => {
               },
             }}
           >
+            {/* The whole frame is the play/pause target, and it carries the
+                keyboard handling: space toggles, arrows jog by 5s. */}
             <Box
+              role="button"
+              tabIndex={0}
+              onClick={togglePlay}
+              onKeyDown={handleKeyDown}
+              aria-label={isPlaying ? 'Pause the trailer' : 'Play the trailer'}
               sx={{
                 position: 'relative',
                 borderRadius: { xs: 3.2, md: 4.6 },
                 overflow: 'hidden',
                 bgcolor: brand.ink,
                 lineHeight: 0,
+                cursor: 'pointer',
+                '&:focus-visible': {
+                  outline: `3px solid ${alpha(brand.sky, 0.9)}`,
+                  outlineOffset: 2,
+                },
               }}
             >
               <Box
@@ -1499,11 +1517,9 @@ const TrailerSection = () => {
                 src="/videos/trailer.mp4"
                 poster="/videos/trailer-poster.jpg"
                 muted={isMuted}
-                autoPlay={!prefersReducedMotion}
                 loop
                 playsInline
-                preload="auto"
-                controls={prefersReducedMotion}
+                preload="metadata"
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onLoadedMetadata={(
@@ -1525,114 +1541,147 @@ const TrailerSection = () => {
                 sx={{
                   display: 'block',
                   width: '100%',
-                  // The 1920x1080 file carries 2 black pixel columns on each
-                  // side, so this is the 1916x1080 picture ratio (same as the
-                  // poster) and objectFit cover trims them off. Do not "fix"
-                  // this to 16/9: that reveals the stripes. It also reserves
-                  // the block's height before the video loads.
-                  aspectRatio: '848 / 478',
+                  // The trailer build crops the intro's 2 black pixel columns
+                  // per side before scaling, so the picture is a true 16/9 and
+                  // needs no cover-trim. The poster matches at 1280x720. This
+                  // also reserves the block's height before the video loads.
+                  aspectRatio: '16 / 9',
                   height: 'auto',
                   objectFit: 'cover',
                 }}
               />
 
-              {/* A full-width bar rather than floating buttons: the trailer is
-                  long enough that people need to scrub it, and a scrubber has
-                  to span the frame to be worth dragging. */}
-              {!prefersReducedMotion && (
-                <Stack
-                  data-testid="landing-trailer-controls"
-                  direction="row"
-                  spacing={{ xs: 1, md: 1.5 }}
-                  alignItems="center"
+              {/* Purely decorative: the frame behind it owns the click, so a
+                  nested button here would toggle playback twice. */}
+              {!isPlaying && (
+                <Box
+                  aria-hidden
                   sx={{
                     position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    // Inset from the frame so the round buttons clear the
-                    // video's own corner radius instead of tucking into it.
-                    px: { xs: 2, md: 3 },
-                    pb: { xs: 1.75, md: 2.25 },
-                    pt: { xs: 3, md: 4 },
-                    background: `linear-gradient(to top, ${alpha(
-                      brand.ink,
-                      0.72,
-                    )}, ${alpha(brand.ink, 0)})`,
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    pointerEvents: 'none',
+                    bgcolor: alpha(brand.ink, 0.22),
                   }}
                 >
-                  <IconButton
-                    onClick={togglePlay}
-                    aria-label={
-                      isPlaying ? 'Pause the trailer' : 'Play the trailer'
-                    }
-                    sx={overlayButtonSx}
-                  >
-                    {isPlaying ? (
-                      <PauseRoundedIcon sx={{ fontSize: 21 }} />
-                    ) : (
-                      <PlayArrowRoundedIcon sx={{ fontSize: 21 }} />
-                    )}
-                  </IconButton>
-
-                  <Slider
-                    size="small"
-                    min={0}
-                    max={duration || 0.1}
-                    step={0.05}
-                    value={Math.min(currentTime, duration || 0.1)}
-                    onChange={handleScrub}
-                    onChangeCommitted={commitScrub}
-                    aria-label="Seek the trailer"
-                    getAriaValueText={formatTrailerTime}
+                  <Box
                     sx={{
-                      flex: 1,
-                      mx: { xs: 0.5, md: 1 },
-                      color: '#FFFFFF',
-                      '& .MuiSlider-rail': {
-                        opacity: 0.42,
-                        bgcolor: '#FFFFFF',
-                      },
-                      '& .MuiSlider-thumb': {
-                        width: 13,
-                        height: 13,
-                        boxShadow: `0 2px 8px ${alpha(brand.ink, 0.5)}`,
-                        '&:hover, &.Mui-focusVisible': {
-                          boxShadow: `0 0 0 7px ${alpha('#FFFFFF', 0.22)}`,
-                        },
-                      },
-                    }}
-                  />
-
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: '#FFFFFF',
-                      fontWeight: 700,
-                      fontVariantNumeric: 'tabular-nums',
-                      whiteSpace: 'nowrap',
-                      textShadow: `0 1px 6px ${alpha(brand.ink, 0.7)}`,
+                      width: { xs: 68, md: 88 },
+                      height: { xs: 68, md: 88 },
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: alpha('#FFFFFF', 0.94),
+                      boxShadow: `0 14px 40px ${alpha(brand.ink, 0.45)}`,
                     }}
                   >
-                    {formatTrailerTime(currentTime)} /{' '}
-                    {formatTrailerTime(duration)}
-                  </Typography>
-
-                  <IconButton
-                    onClick={toggleMute}
-                    aria-label={
-                      isMuted ? 'Unmute the trailer' : 'Mute the trailer'
-                    }
-                    sx={overlayButtonSx}
-                  >
-                    {isMuted ? (
-                      <VolumeOffRoundedIcon sx={{ fontSize: 20 }} />
-                    ) : (
-                      <VolumeUpRoundedIcon sx={{ fontSize: 20 }} />
-                    )}
-                  </IconButton>
-                </Stack>
+                    <PlayArrowRoundedIcon
+                      sx={{ fontSize: { xs: 40, md: 52 }, color: brand.ink }}
+                    />
+                  </Box>
+                </Box>
               )}
+
+              {/* A full-width bar rather than floating buttons: the trailer is
+                  long enough that people need to scrub it, and a scrubber has
+                  to span the frame to be worth dragging. Clicks stop here so
+                  the frame's play/pause toggle does not fire behind them. */}
+              <Stack
+                data-testid="landing-trailer-controls"
+                direction="row"
+                spacing={{ xs: 1, md: 1.5 }}
+                alignItems="center"
+                onClick={(event: React.MouseEvent) => event.stopPropagation()}
+                sx={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  // Inset from the frame so the round buttons clear the
+                  // video's own corner radius instead of tucking into it.
+                  px: { xs: 2, md: 3 },
+                  pb: { xs: 1.75, md: 2.25 },
+                  pt: { xs: 3, md: 4 },
+                  background: `linear-gradient(to top, ${alpha(
+                    brand.ink,
+                    0.72,
+                  )}, ${alpha(brand.ink, 0)})`,
+                }}
+              >
+                <IconButton
+                  onClick={togglePlay}
+                  aria-label={
+                    isPlaying ? 'Pause the trailer' : 'Play the trailer'
+                  }
+                  sx={overlayButtonSx}
+                >
+                  {isPlaying ? (
+                    <PauseRoundedIcon sx={{ fontSize: 21 }} />
+                  ) : (
+                    <PlayArrowRoundedIcon sx={{ fontSize: 21 }} />
+                  )}
+                </IconButton>
+
+                <Slider
+                  size="small"
+                  min={0}
+                  max={duration || 0.1}
+                  step={0.05}
+                  value={Math.min(currentTime, duration || 0.1)}
+                  onChange={handleScrub}
+                  onChangeCommitted={commitScrub}
+                  aria-label="Seek the trailer"
+                  getAriaValueText={formatTrailerTime}
+                  sx={{
+                    flex: 1,
+                    mx: { xs: 0.5, md: 1 },
+                    color: '#FFFFFF',
+                    '& .MuiSlider-rail': {
+                      opacity: 0.42,
+                      bgcolor: '#FFFFFF',
+                    },
+                    '& .MuiSlider-thumb': {
+                      width: 13,
+                      height: 13,
+                      boxShadow: `0 2px 8px ${alpha(brand.ink, 0.5)}`,
+                      '&:hover, &.Mui-focusVisible': {
+                        boxShadow: `0 0 0 7px ${alpha('#FFFFFF', 0.22)}`,
+                      },
+                    },
+                  }}
+                />
+
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: '#FFFFFF',
+                    fontWeight: 700,
+                    fontVariantNumeric: 'tabular-nums',
+                    whiteSpace: 'nowrap',
+                    textShadow: `0 1px 6px ${alpha(brand.ink, 0.7)}`,
+                  }}
+                >
+                  {formatTrailerTime(currentTime)} /{' '}
+                  {formatTrailerTime(duration)}
+                </Typography>
+
+                <IconButton
+                  onClick={toggleMute}
+                  aria-label={
+                    isMuted ? 'Unmute the trailer' : 'Mute the trailer'
+                  }
+                  sx={overlayButtonSx}
+                >
+                  {isMuted ? (
+                    <VolumeOffRoundedIcon sx={{ fontSize: 20 }} />
+                  ) : (
+                    <VolumeUpRoundedIcon sx={{ fontSize: 20 }} />
+                  )}
+                </IconButton>
+              </Stack>
             </Box>
           </Box>
         </Stack>

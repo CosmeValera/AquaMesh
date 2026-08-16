@@ -28,6 +28,8 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded'
 import PauseRoundedIcon from '@mui/icons-material/PauseRounded'
 import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded'
 import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded'
+import FullscreenRoundedIcon from '@mui/icons-material/FullscreenRounded'
+import FullscreenExitRoundedIcon from '@mui/icons-material/FullscreenExitRounded'
 import BoltIcon from '@mui/icons-material/Bolt'
 import CameraAltOutlinedIcon from '@mui/icons-material/CameraAltOutlined'
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined'
@@ -1246,6 +1248,10 @@ const TRAILER_SEEK_STEP = 5
 
 const TrailerSection = () => {
   const videoRef = React.useRef<HTMLVideoElement | null>(null)
+  // The frame goes fullscreen, not the video element: that keeps our own
+  // controls on screen instead of handing over to the browser's native chrome.
+  const frameRef = React.useRef<HTMLDivElement | null>(null)
+  const [isFullscreen, setIsFullscreen] = React.useState(false)
   // Starts paused on the poster, which is also what lets it start unmuted:
   // autoplay policies only block sound when playback was not user-initiated.
   const [isPlaying, setIsPlaying] = React.useState(false)
@@ -1318,6 +1324,19 @@ const TrailerSection = () => {
     if (event.key === 'ArrowRight') {
       event.preventDefault()
       seekBy(TRAILER_SEEK_STEP)
+      return
+    }
+
+    // Matched to the shortcuts people already know from video players.
+    if (event.key === 'f' || event.key === 'F') {
+      event.preventDefault()
+      toggleFullscreen()
+      return
+    }
+
+    if (event.key === 'm' || event.key === 'M') {
+      event.preventDefault()
+      toggleMute()
     }
   }
 
@@ -1331,6 +1350,40 @@ const TrailerSection = () => {
     video.muted = nextMuted
     setIsMuted(nextMuted)
   }
+
+  // Fullscreen is unavailable on iPhone Safari and can be refused by policy, so
+  // every call is guarded and the state is read back from the document rather
+  // than assumed.
+  const toggleFullscreen = React.useCallback(() => {
+    const frame = frameRef.current
+    if (!frame) {
+      return
+    }
+
+    if (document.fullscreenElement) {
+      const exited = document.exitFullscreen?.() as Promise<void> | undefined
+      if (exited && typeof exited.catch === 'function') {
+        exited.catch(() => undefined)
+      }
+      return
+    }
+
+    const entered = frame.requestFullscreen?.() as Promise<void> | undefined
+    if (entered && typeof entered.catch === 'function') {
+      entered.catch(() => undefined)
+    }
+  }, [])
+
+  // Leaving fullscreen with Escape never reaches our handler, so the button
+  // state comes from the document's own event.
+  React.useEffect(() => {
+    const syncFullscreen = () =>
+      setIsFullscreen(document.fullscreenElement === frameRef.current)
+
+    document.addEventListener('fullscreenchange', syncFullscreen)
+    return () =>
+      document.removeEventListener('fullscreenchange', syncFullscreen)
+  }, [])
 
   const readSliderValue = (value: number | number[]) =>
     Array.isArray(value) ? value[0] : value
@@ -1439,6 +1492,7 @@ const TrailerSection = () => {
             {/* The whole frame is the play/pause target, and it carries the
                 keyboard handling: space toggles, arrows jog by 5s. */}
             <Box
+              ref={frameRef}
               role="button"
               tabIndex={0}
               onClick={togglePlay}
@@ -1454,6 +1508,23 @@ const TrailerSection = () => {
                 '&:focus-visible': {
                   outline: `3px solid ${alpha(brand.sky, 0.9)}`,
                   outlineOffset: 2,
+                },
+                // Fullscreen makes this element the whole screen, which is
+                // taller than 16/9 on most displays: centre the video and let it
+                // size to the shorter axis rather than stretching the frame.
+                '&:fullscreen': {
+                  borderRadius: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: '#000000',
+                  '& video': {
+                    width: 'auto',
+                    height: 'auto',
+                    maxWidth: '100vw',
+                    maxHeight: '100vh',
+                    aspectRatio: 'auto',
+                  },
                 },
               }}
             >
@@ -1625,6 +1696,20 @@ const TrailerSection = () => {
                     <VolumeOffRoundedIcon sx={{ fontSize: 20 }} />
                   ) : (
                     <VolumeUpRoundedIcon sx={{ fontSize: 20 }} />
+                  )}
+                </IconButton>
+
+                <IconButton
+                  onClick={toggleFullscreen}
+                  aria-label={
+                    isFullscreen ? 'Exit fullscreen' : 'Play fullscreen'
+                  }
+                  sx={overlayButtonSx}
+                >
+                  {isFullscreen ? (
+                    <FullscreenExitRoundedIcon sx={{ fontSize: 21 }} />
+                  ) : (
+                    <FullscreenRoundedIcon sx={{ fontSize: 21 }} />
                   )}
                 </IconButton>
               </Stack>

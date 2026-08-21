@@ -59,13 +59,32 @@ describe('Study Guide knowledge bridges', () => {
       .mockResolvedValueOnce(
         geminiResponse(
           JSON.stringify({
-            shouldUseKnownTopic: true,
+            targetParts: ['record', 'producer', 'retention'],
             knownTopicsForQuickStart: ['Specific related concept'],
+            correspondences: [
+              {
+                knownSide: 'entry',
+                targetSide: 'record',
+                carries: 'the unit that gets stored',
+                kind: 'part',
+              },
+              {
+                knownSide: 'writer',
+                targetSide: 'producer',
+                carries: 'who appends new units',
+                kind: 'part',
+              },
+              {
+                knownSide: 'archival window',
+                targetSide: 'retention',
+                carries: 'how old units age out over time',
+                kind: 'process',
+              },
+            ],
             knownTopicRelevanceReason:
-              'The specific related concept is the direct bridge.',
+              'Lets the learner reuse how appended entries age out.',
+            breaksAt: 'replay has no counterpart on the known side',
             targetTopicType: 'technical',
-            bridgeStrength: 'strong',
-            bridgeStrategy: 'direct_comparison',
           }),
         ),
       )
@@ -74,7 +93,17 @@ describe('Study Guide knowledge bridges', () => {
           JSON.stringify({
             keyIdea: 'The target concept is a durable record-flow mechanism.',
             quickSummary:
-              'The target concept stores records so systems can write and read changes.\n\nThe comparison breaks when durability and replay matter more than simple dispatch.',
+              'The target concept stores records so systems can write and read changes.\n\nRetention decides how long a record stays readable.',
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        geminiResponse(
+          JSON.stringify({
+            keyIdea:
+              'Every write is an entry appended to a log that ages out on a schedule.',
+            quickSummary:
+              'A writer appends an entry and a reader picks it up later.\n\nThe archival window decides when an entry stops being readable.',
           }),
         ),
       )
@@ -121,25 +150,42 @@ describe('Study Guide knowledge bridges', () => {
       String(init?.body || ''),
     )
 
-    expect(fetchMock).toHaveBeenCalledTimes(4)
+    const bodyContaining = (needle: string) =>
+      requestBodies.find((body) => body.includes(needle)) || ''
+
+    // guide, audition, plain Quick Start, bridged Quick Start, bridge blocks
+    expect(fetchMock).toHaveBeenCalledTimes(5)
     expect(requestBodies[0]).not.toContain('Known topics')
     expect(requestBodies[0]).not.toContain('Specific related concept')
-    expect(requestBodies[1]).toContain(
-      'Known topics, strongest first: Broad category, Adjacent category, Specific related concept',
+    expect(
+      bodyContaining('Map the Study Guide topic onto one topic'),
+    ).toContain(
+      'Known topics, most recently learned first: Broad category, Adjacent category, Specific related concept',
     )
-    expect(requestBodies[2]).toContain(
-      'Candidate known topic bridge(s): Specific related concept',
+
+    const bridgeBody = bodyContaining(
+      'Explain this through what the learner already knows: Specific related concept',
     )
-    expect(requestBodies[3]).toContain(
+    expect(bridgeBody).toContain('Bridge strength: strong')
+    expect(bridgeBody).toContain('archival window -> retention')
+    expect(bridgeBody).toContain('Run at least three of those pairs')
+
+    const blocksBody = bodyContaining(
       'Create optional knowledge-context bridge note blocks',
     )
-    expect(requestBodies[3]).toContain('dashboardIndex: 2')
-    expect(requestBodies[3]).not.toContain('dashboardIndex: 0')
-    expect(requestBodies[3]).not.toContain('dashboardIndex: 1')
+    expect(blocksBody).toContain('dashboardIndex: 2')
+    expect(blocksBody).not.toContain('dashboardIndex: 0')
+    expect(blocksBody).not.toContain('dashboardIndex: 1')
+
+    // A mapped bridge leads, and the plain variant stays one tap away.
     expect(draft.quickStart?.keyIdea).toBe(
+      'Every write is an entry appended to a log that ages out on a schedule.',
+    )
+    expect(draft.quickStart?.bridgeTopics).toEqual(['Specific related concept'])
+    expect(draft.quickStart?.weakFitReason).toBeUndefined()
+    expect(draft.quickStart?.forcedBridge?.keyIdea).toBe(
       'The target concept is a durable record-flow mechanism.',
     )
-    expect(draft.quickStart?.forcedBridge).toBeUndefined()
     expect(draft.dashboards[0].objects).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -256,12 +302,12 @@ describe('Study Guide knowledge bridges', () => {
       .mockResolvedValueOnce(
         geminiResponse(
           JSON.stringify({
-            shouldUseKnownTopic: false,
+            targetParts: ['bucket', 'object'],
             knownTopicsForQuickStart: [],
-            knownTopicRelevanceReason: 'No clear direct bridge.',
+            correspondences: [],
+            knownTopicRelevanceReason: '',
+            breaksAt: '',
             targetTopicType: 'technical',
-            bridgeStrength: 'none',
-            bridgeStrategy: 'none',
           }),
         ),
       )
@@ -303,14 +349,18 @@ describe('Study Guide knowledge bridges', () => {
     expect(
       requestBodies.filter(
         (body) =>
-          body.includes('Choose whether any known topic') &&
+          body.includes('Map the Study Guide topic onto one topic') &&
           body.includes('Bridge mode: force'),
       ),
     ).toHaveLength(0)
     expect(requestBodies[3]).toContain(
-      'Candidate known topic bridge(s): Kubernetes',
+      'Explain this through what the learner already knows: Kubernetes',
     )
     expect(requestBodies[3]).toContain('Bridge mode: force')
+    // Nothing mapped, so the forced view must not claim a reason it helps.
+    expect(requestBodies[3]).not.toContain(
+      'What the mapping lets them reuse: No provided known topic',
+    )
     expect(draft.quickStart?.keyIdea).toBe(
       'Object storage keeps files behind bucket-style APIs.',
     )
@@ -319,7 +369,7 @@ describe('Study Guide knowledge bridges', () => {
     )
   })
 
-  it('still creates an alternate forced Quick Start when the force selector returns no bridge', async () => {
+  it('still creates an alternate forced Quick Start when nothing maps', async () => {
     const guide = {
       title: 'Kafka',
       folderName: 'Kafka',
@@ -332,12 +382,12 @@ describe('Study Guide knowledge bridges', () => {
       .mockResolvedValueOnce(
         geminiResponse(
           JSON.stringify({
-            shouldUseKnownTopic: false,
+            targetParts: ['partition', 'consumer'],
             knownTopicsForQuickStart: [],
-            knownTopicRelevanceReason: 'No clearly useful bridge.',
+            correspondences: [],
+            knownTopicRelevanceReason: '',
+            breaksAt: '',
             targetTopicType: 'technical',
-            bridgeStrength: 'none',
-            bridgeStrategy: 'none',
           }),
         ),
       )
@@ -353,22 +403,9 @@ describe('Study Guide knowledge bridges', () => {
       .mockResolvedValueOnce(
         geminiResponse(
           JSON.stringify({
-            shouldUseKnownTopic: false,
-            knownTopicsForQuickStart: [],
-            knownTopicRelevanceReason:
-              'Every provided bridge is imperfect for Kafka.',
-            targetTopicType: 'technical',
-            bridgeStrength: 'none',
-            bridgeStrategy: 'none',
-          }),
-        ),
-      )
-      .mockResolvedValueOnce(
-        geminiResponse(
-          JSON.stringify({
             keyIdea: 'Kafka is still best understood as a durable event log.',
             quickSummary:
-              'Among the available learner topics, web development is the least-bad contrast: Kafka connects systems by events, while web apps often connect requests directly. The comparison breaks because Kafka stores replayable streams.',
+              'A web app hands each request straight to whoever answers it. Kafka keeps the record instead, so a consumer can read it again later.',
           }),
         ),
       )
@@ -388,19 +425,18 @@ describe('Study Guide knowledge bridges', () => {
       String(init?.body || ''),
     )
 
-    expect(fetchMock).toHaveBeenCalledTimes(5)
-    expect(requestBodies[4]).toContain(
-      'Candidate known topic bridge(s): web development, valencian',
+    // One audition call covers every candidate, so there is no second selector.
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+    expect(requestBodies[3]).toContain(
+      'Explain this through what the learner already knows: web development',
     )
-    expect(requestBodies[4]).toContain(
-      'choose the single candidate that best reduces confusion',
-    )
+    expect(requestBodies[3]).toContain('Bridge mode: force')
     expect(draft.quickStart?.keyIdea).toBe(
       'Kafka is a durable event-streaming log.',
     )
-    expect(draft.quickStart?.forcedBridge?.quickSummary).toContain(
+    expect(draft.quickStart?.forcedBridge?.bridgeTopics).toEqual([
       'web development',
-    )
+    ])
     expect(draft.dashboards[1].objects).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({

@@ -24,23 +24,20 @@ const quickStartTargetTopicTypes = [
   'human_management',
   'general',
 ] as const
-const quickStartBridgeStrengths = ['none', 'weak', 'strong'] as const
-const quickStartBridgeStrategies = [
-  'direct_comparison',
-  'analogy_skeleton',
-  'light_reference',
-  'none',
-] as const
 const studyGuideBridgeModes = ['auto', 'force'] as const
 
 export type StudyGuideQuickStartTargetTopicType =
   (typeof quickStartTargetTopicTypes)[number]
 
-export type StudyGuideQuickStartBridgeStrength =
-  (typeof quickStartBridgeStrengths)[number]
+// Strength and strategy are derived in code now, so neither needs a runtime
+// enum array: nothing validates a model-supplied value against them.
+export type StudyGuideQuickStartBridgeStrength = 'none' | 'weak' | 'strong'
 
 export type StudyGuideQuickStartBridgeStrategy =
-  (typeof quickStartBridgeStrategies)[number]
+  | 'direct_comparison'
+  | 'analogy_skeleton'
+  | 'light_reference'
+  | 'none'
 
 export type StudyGuideBridgeMode = (typeof studyGuideBridgeModes)[number]
 
@@ -48,14 +45,152 @@ export const normalizeStudyGuideBridgeMode = (
   value: unknown,
 ): StudyGuideBridgeMode => (value === 'force' ? 'force' : 'auto')
 
+const bridgeCorrespondenceKinds = ['part', 'process'] as const
+
+export type StudyGuideBridgeCorrespondenceKind =
+  (typeof bridgeCorrespondenceKinds)[number]
+
+/** One mapped pair between a known topic and the new topic. */
+export interface StudyGuideBridgeCorrespondence {
+  knownSide: string
+  targetSide: string
+  carries: string
+  kind: StudyGuideBridgeCorrespondenceKind
+}
+
+export const STUDY_GUIDE_BRIDGE_STRONG_MIN_CORRESPONDENCES = 3
+export const STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES = 6
+const STUDY_GUIDE_BRIDGE_SIDE_MAX_CHARS = 80
+const STUDY_GUIDE_BRIDGE_CARRIES_MAX_CHARS = 120
+const STUDY_GUIDE_BRIDGE_CARRIES_MIN_CHARS = 8
+
+export const STUDY_GUIDE_BRIDGE_CORRESPONDENCE_SCHEMA = {
+  type: 'ARRAY',
+  items: {
+    type: 'OBJECT',
+    properties: {
+      knownSide: { type: 'STRING' },
+      targetSide: { type: 'STRING' },
+      carries: { type: 'STRING' },
+      kind: { type: 'STRING', enum: [...bridgeCorrespondenceKinds] },
+    },
+    required: ['knownSide', 'targetSide', 'carries', 'kind'],
+  },
+}
+
+const normalizeBridgeSide = (value: unknown, maxChars: number): string =>
+  (typeof value === 'string' ? value : '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxChars)
+
+/**
+ * Keeps only pairs that actually map two different things and say what the
+ * mapping carries. A pair whose sides are the same word shares vocabulary
+ * rather than mechanism, so it is dropped rather than counted.
+ */
+export const sanitizeStudyGuideBridgeCorrespondences = (
+  value: unknown,
+): StudyGuideBridgeCorrespondence[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const seenKnown = new Set<string>()
+  const seenTarget = new Set<string>()
+
+  return value
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+        return null
+      }
+
+      const record = entry as Record<string, unknown>
+      const knownSide = normalizeBridgeSide(
+        record.knownSide,
+        STUDY_GUIDE_BRIDGE_SIDE_MAX_CHARS,
+      )
+      const targetSide = normalizeBridgeSide(
+        record.targetSide,
+        STUDY_GUIDE_BRIDGE_SIDE_MAX_CHARS,
+      )
+      const carries = normalizeBridgeSide(
+        record.carries,
+        STUDY_GUIDE_BRIDGE_CARRIES_MAX_CHARS,
+      )
+      const kind: StudyGuideBridgeCorrespondenceKind =
+        record.kind === 'process' ? 'process' : 'part'
+
+      if (
+        !knownSide ||
+        !targetSide ||
+        carries.length < STUDY_GUIDE_BRIDGE_CARRIES_MIN_CHARS ||
+        knownSide.toLowerCase() === targetSide.toLowerCase()
+      ) {
+        return null
+      }
+
+      return { knownSide, targetSide, carries, kind }
+    })
+    .filter((entry): entry is StudyGuideBridgeCorrespondence => Boolean(entry))
+    .filter((entry) => {
+      const knownKey = entry.knownSide.toLowerCase()
+      const targetKey = entry.targetSide.toLowerCase()
+      if (seenKnown.has(knownKey) || seenTarget.has(targetKey)) {
+        return false
+      }
+
+      seenKnown.add(knownKey)
+      seenTarget.add(targetKey)
+      return true
+    })
+    .slice(0, STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES)
+}
+
+/**
+ * Strength is derived, never asserted by the model. Counting mapped parts is a
+ * listing task a small model does well; grading a bridge is a judgement task it
+ * does badly, and it answered "weak" for every candidate when asked directly.
+ */
+export const deriveStudyGuideBridgeStrength = (
+  correspondences: StudyGuideBridgeCorrespondence[],
+): StudyGuideQuickStartBridgeStrength => {
+  if (!correspondences.length) {
+    return 'none'
+  }
+
+  const carriesProcess = correspondences.some(
+    (entry) => entry.kind === 'process',
+  )
+
+  return correspondences.length >= STUDY_GUIDE_BRIDGE_STRONG_MIN_CORRESPONDENCES &&
+    carriesProcess
+    ? 'strong'
+    : 'weak'
+}
+
+export const deriveStudyGuideBridgeStrategy = (
+  strength: StudyGuideQuickStartBridgeStrength,
+): StudyGuideQuickStartBridgeStrategy =>
+  strength === 'strong'
+    ? 'analogy_skeleton'
+    : strength === 'weak'
+    ? 'direct_comparison'
+    : 'none'
+
 export interface StudyGuideQuickStartRelevanceDecision {
   shouldUseKnownTopic: boolean
   knownTopicsForQuickStart: string[]
+  /** Only ever a reason the bridge helps. Never a disclaimer. */
   knownTopicRelevanceReason: string
   targetTopicType: StudyGuideQuickStartTargetTopicType
   bridgeStrength: StudyGuideQuickStartBridgeStrength
   bridgeStrategy: StudyGuideQuickStartBridgeStrategy
-  /** 6-12 words on why the topic is not the best fit. Only set when bridgeStrength is 'weak'. */
+  /** Mechanism parts of the new topic the bridge has to attach to. */
+  targetParts: string[]
+  /** Mapped pairs. Strength is derived from these, not asserted. */
+  correspondences: StudyGuideBridgeCorrespondence[]
+  /** 6-12 words on where the mapping stops. Only set when bridgeStrength is 'weak'. */
   weakFitReason?: string
 }
 
@@ -114,33 +249,29 @@ export const STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_SCHEMA = {
 export const STUDY_GUIDE_QUICK_START_RELEVANCE_SCHEMA = {
   type: 'OBJECT',
   properties: {
-    shouldUseKnownTopic: { type: 'BOOLEAN' },
+    targetParts: {
+      type: 'ARRAY',
+      items: { type: 'STRING' },
+    },
     knownTopicsForQuickStart: {
       type: 'ARRAY',
       items: { type: 'STRING' },
     },
+    correspondences: STUDY_GUIDE_BRIDGE_CORRESPONDENCE_SCHEMA,
     knownTopicRelevanceReason: { type: 'STRING' },
-    weakFitReason: { type: 'STRING' },
+    breaksAt: { type: 'STRING' },
     targetTopicType: {
       type: 'STRING',
       enum: [...quickStartTargetTopicTypes],
     },
-    bridgeStrength: {
-      type: 'STRING',
-      enum: [...quickStartBridgeStrengths],
-    },
-    bridgeStrategy: {
-      type: 'STRING',
-      enum: [...quickStartBridgeStrategies],
-    },
   },
   required: [
-    'shouldUseKnownTopic',
+    'targetParts',
     'knownTopicsForQuickStart',
+    'correspondences',
     'knownTopicRelevanceReason',
+    'breaksAt',
     'targetTopicType',
-    'bridgeStrength',
-    'bridgeStrategy',
   ],
 }
 
@@ -177,12 +308,19 @@ export const createNeutralStudyGuideQuickStartRelevanceDecision =
     shouldUseKnownTopic: false,
     knownTopicsForQuickStart: [],
     knownTopicRelevanceReason:
-      'No provided known topic was selected as a clear cognitive bridge.',
+      'No provided known topic mapped onto the new topic.',
     targetTopicType: 'general',
     bridgeStrength: 'none',
     bridgeStrategy: 'none',
+    targetParts: [],
+    correspondences: [],
   })
 
+/**
+ * Force mode keeps whatever the audition found. It never downgrades a bridge to
+ * 'weak' on its own: strength comes from the mapped correspondences, so a real
+ * cross-domain match can still lead the Quick Start.
+ */
 export const ensureForcedStudyGuideQuickStartRelevanceDecision = (
   decision: StudyGuideQuickStartRelevanceDecision | undefined,
   userKnownTopics: string[] = [],
@@ -199,14 +337,24 @@ export const ensureForcedStudyGuideQuickStartRelevanceDecision = (
     return decision
   }
 
+  const base = decision || createNeutralStudyGuideQuickStartRelevanceDecision()
+  const correspondences = base.correspondences || []
+  const strength = deriveStudyGuideBridgeStrength(correspondences)
+
   return {
-    ...(decision || createNeutralStudyGuideQuickStartRelevanceDecision()),
+    ...base,
     shouldUseKnownTopic: true,
-    knownTopicsForQuickStart: safeTopics,
-    knownTopicRelevanceReason:
-      'Learner-context view requested. Choose the closest available learner context from these candidates, but frame the bridge as weak if the match is imperfect.',
-    bridgeStrength: 'weak',
-    bridgeStrategy: 'light_reference',
+    knownTopicsForQuickStart: base.knownTopicsForQuickStart.length
+      ? base.knownTopicsForQuickStart
+      : safeTopics.slice(0, 1),
+    // The base reason describes a declined bridge, so it must not survive into
+    // a field the generator reads as "why this helps".
+    knownTopicRelevanceReason: correspondences.length
+      ? base.knownTopicRelevanceReason
+      : 'Learner asked to see this topic through their own knowledge.',
+    bridgeStrength: strength === 'none' ? 'weak' : strength,
+    bridgeStrategy:
+      strength === 'none' ? 'light_reference' : deriveStudyGuideBridgeStrategy(strength),
   }
 }
 
@@ -435,21 +583,12 @@ const isTargetTopicType = (
     value as StudyGuideQuickStartTargetTopicType,
   )
 
-const isBridgeStrength = (
-  value: unknown,
-): value is StudyGuideQuickStartBridgeStrength =>
-  typeof value === 'string' &&
-  quickStartBridgeStrengths.includes(
-    value as StudyGuideQuickStartBridgeStrength,
-  )
-
-const isBridgeStrategy = (
-  value: unknown,
-): value is StudyGuideQuickStartBridgeStrategy =>
-  typeof value === 'string' &&
-  quickStartBridgeStrategies.includes(
-    value as StudyGuideQuickStartBridgeStrategy,
-  )
+const sanitizeTargetParts = (value: unknown): string[] =>
+  (Array.isArray(value) ? value : [])
+    .map((part) => normalizeBridgeSide(part, STUDY_GUIDE_BRIDGE_SIDE_MAX_CHARS))
+    .filter(Boolean)
+    .filter((part, index, parts) => parts.indexOf(part) === index)
+    .slice(0, 6)
 
 export const parseStudyGuideQuickStartRelevanceDecision = (
   text: string,
@@ -483,33 +622,27 @@ export const parseStudyGuideQuickStartRelevanceDecision = (
         .filter((topic, index, topics) => topics.indexOf(topic) === index)
         .slice(0, 2)
     : []
-  const bridgeStrength = isBridgeStrength(record.bridgeStrength)
-    ? record.bridgeStrength
-    : neutral.bridgeStrength
-  const bridgeStrategy = isBridgeStrategy(record.bridgeStrategy)
-    ? record.bridgeStrategy
-    : neutral.bridgeStrategy
+  const targetTopicType = isTargetTopicType(record.targetTopicType)
+    ? record.targetTopicType
+    : neutral.targetTopicType
+  const correspondences = sanitizeStudyGuideBridgeCorrespondences(
+    record.correspondences,
+  )
+  const bridgeStrength = deriveStudyGuideBridgeStrength(correspondences)
   const shouldUseKnownTopic =
-    record.shouldUseKnownTopic === true &&
-    selectedTopics.length > 0 &&
-    bridgeStrength !== 'none' &&
-    bridgeStrategy !== 'none'
+    selectedTopics.length > 0 && bridgeStrength !== 'none'
 
   if (!shouldUseKnownTopic) {
     return {
       ...neutral,
-      targetTopicType: isTargetTopicType(record.targetTopicType)
-        ? record.targetTopicType
-        : neutral.targetTopicType,
-      knownTopicRelevanceReason:
-        stringValue(record.knownTopicRelevanceReason).slice(0, 240) ||
-        neutral.knownTopicRelevanceReason,
+      targetTopicType,
+      targetParts: sanitizeTargetParts(record.targetParts),
     }
   }
 
   const weakFitReason =
     bridgeStrength === 'weak'
-      ? trimTitleToWordBoundary(stringValue(record.weakFitReason), 90)
+      ? trimTitleToWordBoundary(stringValue(record.breaksAt), 90)
       : ''
 
   return {
@@ -517,16 +650,13 @@ export const parseStudyGuideQuickStartRelevanceDecision = (
     knownTopicsForQuickStart: selectedTopics,
     knownTopicRelevanceReason:
       stringValue(record.knownTopicRelevanceReason).slice(0, 240) ||
-      'Selected known topic is a direct cognitive bridge.',
+      'The selected topic maps onto how the new topic works.',
     ...(weakFitReason ? { weakFitReason } : {}),
-    targetTopicType: isTargetTopicType(record.targetTopicType)
-      ? record.targetTopicType
-      : neutral.targetTopicType,
+    targetTopicType,
     bridgeStrength,
-    bridgeStrategy:
-      bridgeStrength === 'weak' && bridgeStrategy !== 'light_reference'
-        ? 'light_reference'
-        : bridgeStrategy,
+    bridgeStrategy: deriveStudyGuideBridgeStrategy(bridgeStrength),
+    targetParts: sanitizeTargetParts(record.targetParts),
+    correspondences,
   }
 }
 
@@ -728,31 +858,52 @@ Rules:
 - Explain the concept itself directly. Do not summarize the guide structure, sections, or page order.
 - Do not write "This guide teaches...", "This guide explains...", "This page explains...", "You will learn...", or similar framing.
 - Introduce at most 2-3 new technical terms. Prefer plain words for everything else.
-- Avoid cute, random, or decorative analogies when a direct explanation or direct comparison is clearer.
+- Avoid analogies that share only a label or a mood. An analogy earns its place by transferring a mechanism.
 - Bridge mode: ${mode}.
 ${
   shouldUseKnownTopic
-    ? `- Candidate known topic bridge(s): ${selectedTopics.join(', ')}.
-- Why this bridge helps: ${decision.knownTopicRelevanceReason}
+    ? `- Explain this through what the learner already knows: ${selectedTopics.join(
+        ', ',
+      )}.
+- What the mapping lets them reuse: ${decision.knownTopicRelevanceReason}
 - Bridge strength: ${decision.bridgeStrength}.
-- Bridge strategy: ${decision.bridgeStrategy}.
-- If bridge mode is force and multiple candidate topics are listed, choose the single candidate that best reduces confusion for this target topic; do not use the first candidate by default.
-- If bridge strength is strong, the selected known topic must lead the Quick Start. Do not save it for a final caveat.
-- If bridge mode is force and bridge strength is weak, keep keyIdea neutral, explain the topic directly first, then use the selected topic as a short contrast in quickSummary.
-- If bridge mode is force, state where the comparison breaks. Do not pretend a weak bridge is exact.
-- If bridge strategy is analogy_skeleton, start from the known topic, sustain the mapping through the explanation, then briefly say where the analogy breaks.
-- If bridge strategy is direct_comparison, compare the new concept directly with the selected known topic.
-- If bridge strategy is light_reference, use a normal explanation and mention the known topic at most once.
-- Include one brief caveat about where the comparison breaks in quickSummary.`
+${
+  decision.correspondences?.length
+    ? `- Use these mapped pairs. They are the explanation, not decoration:
+${decision.correspondences
+  .map(
+    (pair) =>
+      `  - ${pair.knownSide} -> ${pair.targetSide} (carries: ${pair.carries})`,
+  )
+  .join('\n')}
+- Run at least ${
+        decision.bridgeStrength === 'strong' ? 'three' : 'one'
+      } of those pairs inside quickSummary, in the known topic's own vocabulary.`
+    : `- No pairs were mapped in advance. Keep the known topic to one concrete mention.`
+}
+${
+  decision.bridgeStrength === 'strong'
+    ? `- keyIdea must be stated in the known topic's terms. The learner should meet the mapping in the first sentence, not at the end.
+- Do not hedge the mapping. It was verified before reaching you.`
+    : `- keyIdea stays neutral. Explain the topic directly first, then bring the known topic in as one concrete comparison.
+${
+  decision.weakFitReason
+    ? `- You may spend at most one short clause on where the mapping stops: ${decision.weakFitReason}`
+    : `- You may spend at most one short clause on where the mapping stops.`
+}`
+}
+- Write as if the mapping is simply true. Never write about the comparison itself: no "the comparison", "the analogy", "this comparison is limited", "the comparison breaks down", "provides only a limited comparison", "unlike the mechanisms involved in".
+- Never offer the two subjects being different kinds of thing as a limitation. Every explanation through a known topic crosses subjects; saying so teaches nothing.
+- Any caveat in quickSummary must be about the topic itself (a boundary, a common misconception, something the learner would get wrong), not about the known topic being imperfect.`
     : forcedBridge
-    ? `- Force bridge was requested, but no safe known topic was selected. Use a neutral beginner-friendly explanation.
-- Do not invent a bridge. Include one brief caveat, boundary, or common misconception in quickSummary.`
-    : `- No known topic was selected as clearly useful. Do not force a personalized analogy.
-- Use a neutral beginner-friendly explanation and include one brief caveat, boundary, or common misconception in quickSummary.`
+    ? `- Force bridge was requested, but no known topic mapped onto this one. Use a neutral beginner-friendly explanation.
+- Do not invent a bridge. Include one brief caveat, boundary, or common misconception about the topic in quickSummary.`
+    : `- No known topic mapped onto this one. Do not force a personalized analogy.
+- Use a neutral beginner-friendly explanation and include one brief caveat, boundary, or common misconception about the topic in quickSummary.`
 }
 - Target topic type: ${decision.targetTopicType}.
 - If this is a human or management topic, do not compare people to infrastructure, tools, machines, or deployment systems.
-- Good bridge shape: "The new topic is in the same family as the known topic, but differs in this one important boundary."
+- Good bridge shape: the known topic's parts do the same jobs as the new topic's parts, so the learner can predict how the new one behaves.
 - Bad bridge shape: starting with low-level internals, trivia, implementation mechanisms, or a comparison that only shares vocabulary.
 
 Final Study Guide content:
@@ -777,54 +928,53 @@ export const buildStudyGuideQuickStartRelevancePrompt = ({
   const safeTopics = sanitizeUserKnownTopics(userKnownTopics)
   const mode = normalizeStudyGuideBridgeMode(bridgeMode)
 
-  return `Choose whether any known topic should be used to explain the Study Guide topic in its Quick Start.
+  return `Map the Study Guide topic onto one topic the learner already knows. You are not writing the Quick Start and you are not rating the bridge. You are listing the parts that map.
 
 Return strict JSON only with this shape:
 {
-  "shouldUseKnownTopic": boolean,
+  "targetParts": string[],
   "knownTopicsForQuickStart": string[],
+  "correspondences": [
+    { "knownSide": "...", "targetSide": "...", "carries": "...", "kind": "part" | "process" }
+  ],
   "knownTopicRelevanceReason": string,
-  "weakFitReason": string,
-  "targetTopicType": "technical" | "human_management" | "general",
-  "bridgeStrength": "none" | "weak" | "strong",
-  "bridgeStrategy": "direct_comparison" | "analogy_skeleton" | "light_reference" | "none"
+  "breaksAt": string,
+  "targetTopicType": "technical" | "human_management" | "general"
 }
 
-Decision rules:
+Step 1 - targetParts:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
-- Bridge mode: ${mode}.
-- Goal: reduce learner cognitive effort, not personalize every Quick Start.
-- Choose only from provided known topics. Never invent a known topic.
-- Use at most 1 known topic. Use 2 only when both are clearly relevant and same-domain.
-- Prefer same-domain direct comparisons over creative metaphors.
-- A strong bridge means the Quick Start should be built through the selected known topic, not mention it as a footnote.
-- A weak bridge means the topic may be mentioned lightly once, but the Quick Start should mostly be neutral.
-- No useful bridge means ignore userKnownTopics completely.
-- Technical target + directly related technical known topic: select the best direct comparison.
-- Technical target + unrelated technical known topic: ignore it.
-- Use direct_comparison when the known topic and target topic share a domain, purpose, or problem space and the difference can be stated precisely.
-- Prefer specific topics over broad categories when both are provided and relevant.
-- Prefer a narrower domain bridge over a broad category bridge.
-- Use analogy_skeleton only when the known topic maps structurally to the new concept across multiple parts and the limits are easy to state.
-- Use light_reference only for weak but genuinely helpful bridges.
-- Human or management target: avoid infrastructure/tool analogies unless explicitly requested.
-- Auto mode: if no topic clearly helps, set shouldUseKnownTopic false, knownTopicsForQuickStart [], bridgeStrength "none", and bridgeStrategy "none".
-- Force mode: the user explicitly wants the closest useful bridge from their knowledge. Rank the provided known topics by usefulness and select the least-bad bridge, even when the bridge is only weak.
-- Force mode: do not return no bridge merely because every option is imperfect. Return no bridge only if every available comparison would actively mislead the learner, be unsafe, or be dehumanizing.
-- Force mode: if the bridge is weak but still useful as a contrast, select it with bridgeStrength "weak" and bridgeStrategy "light_reference"; explain in knownTopicRelevanceReason that it is imperfect.
-- When bridgeStrength is "weak", also set weakFitReason to 6-12 words stating specifically why this topic is not the best fit for the learner's prompt (e.g. "different domain, only shares vocabulary, not underlying mechanics"). Leave weakFitReason empty when bridgeStrength is "none" or "strong".
-- Force mode: interpret learner topic wording flexibly, but do not use hidden hardcoded topic-pair rules.
-- Do not write the Quick Start.
+- List 3-5 moving parts of the Study Guide topic: the things that act, the things acted on, and what changes over time.
+- Take them from the content excerpt below, not from general impressions of the subject.
+- Write each part as a short concrete noun phrase. No full sentences.
 
-Generic examples:
-- Target "specific tool or concept", known ["same-domain predecessor or alternative", "unrelated tool"]: select the same-domain predecessor or alternative only.
-- Target "process with parts and flow", known ["structurally similar process"]: select it only when the mapping helps more than a direct explanation.
-- Target "human or social topic", known ["infrastructure tool"]: select none unless the user explicitly asks for that metaphor.
-- Target "narrow domain topic", known ["broad category", "specific related topic"]: select the specific related topic only.
+Step 2 - pick one known topic:
+- Choose only from the provided known topics. Never invent one.
+- Pick the single candidate whose own moving parts line up with the most targetParts. Use 2 only when both add different mappings.
+- Cross-domain is allowed and often best. A locksmith's lock and key can map onto a molecular receptor; a household budget can map onto an energy balance. Do not reject a candidate for coming from a different field.
+- Judge candidates only on whether their parts map. Do not judge them on being broad, narrow, technical, everyday, or unrelated-sounding.
+
+Step 3 - correspondences (this is the real output):
+- Once you have chosen, map that candidate as completely as you can. List every pair that holds, not only the first one or two, and work through each targetPart in turn before stopping. Extra candidates must not cost the chosen one depth.
+- One entry per matched pair, up to ${STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES}.
+- knownSide: the specific part inside the known topic. targetSide: the part inside the Study Guide topic it maps to.
+- carries: what the pair transfers, in a few words. State the role or the causal job, not the resemblance.
+- kind: "process" when the pair transfers something that happens over time (a change, a build-up, a feedback, an adaptation); "part" when it transfers a fixed role or component.
+- A pair only counts when knowing the known side tells the learner something true about how the target side behaves.
+- Do not write a pair whose two sides are the same word, or that only shares a label, a mood, or a general theme.
+- Return [] when nothing genuinely maps. An empty list is a correct and useful answer.
+- Bridge mode: ${mode}. In force mode, still return [] rather than inventing pairs; the caller handles the empty case.
+
+Other fields:
+- knownTopicRelevanceReason: one short sentence on what the mapping lets the learner reuse. Only ever a reason it helps. Never a caveat, never a disclaimer, never a limitation.
+- breaksAt: 6-12 words naming the first place the mapping stops being true, in terms of the two topics' own parts.
+- breaksAt must never be "different fields", "one is physical and one is biological", "these are made of different things", or any variation on the two subjects being different kinds of thing. That is true of every mapping and says nothing.
+- targetTopicType: for human or management targets, do not map people onto machines, infrastructure, or tools.
+- Do not write the Quick Start. Do not explain the topic.
 
 Study Guide title: ${title}
 Learner prompt: ${prompt || title}
-Known topics, strongest first: ${
+Known topics, most recently learned first: ${
     safeTopics.length ? safeTopics.join(', ') : 'none'
   }
 
@@ -908,8 +1058,9 @@ Rules:
 - Keep body short, concrete, and note-like: under 85 words.
 - End each body with a complete sentence, never mid-thought.
 - Do not repeat the Quick Start.
-- Do not force analogies. If bridge is only weak, use at most one light reference.
-- Include one caveat when the comparison could mislead.
+- Do not force analogies. If bridge strength is weak, use at most one light reference.
+- Write as if the mapping is true. Do not write about the comparison itself, and never offer the two subjects being different kinds of thing as a limitation.
+- Add a caveat only when a learner would draw a specific wrong conclusion, and make it about the topic.
 - For topics involving identity, history, politics, culture, or people, keep the bridge factual and avoid reductive claims.
 
 Study Guide title: ${title}

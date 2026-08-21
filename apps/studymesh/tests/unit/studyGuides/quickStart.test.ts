@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildStudyGuideKnownTopicPrefilterPrompt,
+  deriveStudyGuideBridgeStrength,
   parseStudyGuideKnownTopicPrefilterResult,
   parseStudyGuideQuickStart,
   parseStudyGuideQuickStartRelevanceDecision,
   resolveStudyGuideKnowledgeContextPlan,
+  sanitizeStudyGuideBridgeCorrespondences,
   STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MAX,
 } from '../../../src/studyGuides/quickStart'
 import { USER_KNOWN_TOPICS_DIRECT_MAX } from '../../../src/profileContext'
@@ -119,40 +121,159 @@ describe('Quick Start bridge topics', () => {
   })
 })
 
-describe('relevance decision weakFitReason', () => {
-  const candidates = ['Ansible notes']
+const pair = (
+  knownSide: string,
+  targetSide: string,
+  kind: 'part' | 'process' = 'part',
+) => ({ knownSide, targetSide, carries: 'the same causal job', kind })
 
-  it('keeps weakFitReason when bridgeStrength is weak', () => {
-    const decision = parseStudyGuideQuickStartRelevanceDecision(
-      JSON.stringify({
-        shouldUseKnownTopic: true,
-        knownTopicsForQuickStart: ['Ansible notes'],
-        knownTopicRelevanceReason: 'Loosely related config-management tooling.',
-        weakFitReason: 'Different domain, only shares vocabulary.',
-        targetTopicType: 'technical',
-        bridgeStrength: 'weak',
-        bridgeStrategy: 'light_reference',
-      }),
-      candidates,
-    )
-
-    expect(decision.weakFitReason).toBe('Different domain, only shares vocabulary.')
+describe('bridge strength derivation', () => {
+  it('returns none for an empty mapping', () => {
+    expect(deriveStudyGuideBridgeStrength([])).toBe('none')
   })
 
-  it('drops weakFitReason when bridgeStrength is strong', () => {
+  it('returns weak when nothing transfers over time', () => {
+    expect(
+      deriveStudyGuideBridgeStrength(
+        sanitizeStudyGuideBridgeCorrespondences([
+          pair('lock', 'receptor'),
+          pair('key', 'adenosine'),
+          pair('decoy key', 'caffeine'),
+        ]),
+      ),
+    ).toBe('weak')
+  })
+
+  it('returns strong at three distinct pairs with one process', () => {
+    expect(
+      deriveStudyGuideBridgeStrength(
+        sanitizeStudyGuideBridgeCorrespondences([
+          pair('lock', 'receptor'),
+          pair('key', 'adenosine'),
+          pair('keys queuing at the door', 'sleep pressure', 'process'),
+        ]),
+      ),
+    ).toBe('strong')
+  })
+
+  it('returns weak when repeated pairs collapse below the threshold', () => {
+    expect(
+      deriveStudyGuideBridgeStrength(
+        sanitizeStudyGuideBridgeCorrespondences([
+          pair('lock', 'receptor'),
+          pair('lock', 'binding site'),
+          pair('cylinder', 'receptor', 'process'),
+        ]),
+      ),
+    ).toBe('weak')
+  })
+})
+
+describe('bridge correspondence sanitizing', () => {
+  it('drops pairs that only share a word', () => {
+    expect(
+      sanitizeStudyGuideBridgeCorrespondences([pair('memory', 'memory')]),
+    ).toEqual([])
+  })
+
+  it('drops pairs that never say what they carry', () => {
+    expect(
+      sanitizeStudyGuideBridgeCorrespondences([
+        { knownSide: 'lock', targetSide: 'receptor', carries: 'ok', kind: 'part' },
+      ]),
+    ).toEqual([])
+  })
+
+  it('defaults an unknown kind to part', () => {
+    expect(
+      sanitizeStudyGuideBridgeCorrespondences([
+        {
+          knownSide: 'lock',
+          targetSide: 'receptor',
+          carries: 'the same gating job',
+          kind: 'whatever',
+        },
+      ])[0].kind,
+    ).toBe('part')
+  })
+})
+
+describe('relevance decision', () => {
+  const candidates = ['Ansible notes']
+
+  it('derives strong from the mapping and drops the fit caveat', () => {
     const decision = parseStudyGuideQuickStartRelevanceDecision(
       JSON.stringify({
-        shouldUseKnownTopic: true,
+        targetParts: ['desired state', 'converge step', 'drift'],
         knownTopicsForQuickStart: ['Ansible notes'],
-        knownTopicRelevanceReason: 'Directly comparable automation tooling.',
-        weakFitReason: 'This should be ignored for a strong bridge.',
+        correspondences: [
+          pair('playbook', 'desired state'),
+          pair('task run', 'converge step', 'process'),
+          pair('idempotence', 'drift correction'),
+        ],
+        knownTopicRelevanceReason: 'Both describe converging to a declared state.',
+        breaksAt: 'this should be ignored for a strong bridge',
         targetTopicType: 'technical',
-        bridgeStrength: 'strong',
-        bridgeStrategy: 'direct_comparison',
       }),
       candidates,
     )
 
+    expect(decision.bridgeStrength).toBe('strong')
+    expect(decision.bridgeStrategy).toBe('analogy_skeleton')
+    expect(decision.shouldUseKnownTopic).toBe(true)
     expect(decision.weakFitReason).toBeUndefined()
+  })
+
+  it('keeps breaksAt as the fit caveat on a weak mapping', () => {
+    const decision = parseStudyGuideQuickStartRelevanceDecision(
+      JSON.stringify({
+        targetParts: ['desired state'],
+        knownTopicsForQuickStart: ['Ansible notes'],
+        correspondences: [pair('playbook', 'desired state')],
+        knownTopicRelevanceReason: 'Shares the declared-state idea.',
+        breaksAt: 'no rollback step exists on the target side',
+        targetTopicType: 'technical',
+      }),
+      candidates,
+    )
+
+    expect(decision.bridgeStrength).toBe('weak')
+    expect(decision.weakFitReason).toBe(
+      'no rollback step exists on the target side',
+    )
+  })
+
+  it('declines the bridge when nothing mapped', () => {
+    const decision = parseStudyGuideQuickStartRelevanceDecision(
+      JSON.stringify({
+        targetParts: ['desired state'],
+        knownTopicsForQuickStart: ['Ansible notes'],
+        correspondences: [],
+        knownTopicRelevanceReason: '',
+        breaksAt: '',
+        targetTopicType: 'technical',
+      }),
+      candidates,
+    )
+
+    expect(decision.shouldUseKnownTopic).toBe(false)
+    expect(decision.bridgeStrength).toBe('none')
+  })
+
+  it('ignores a strength the model tries to assert', () => {
+    const decision = parseStudyGuideQuickStartRelevanceDecision(
+      JSON.stringify({
+        targetParts: ['desired state'],
+        knownTopicsForQuickStart: ['Ansible notes'],
+        correspondences: [pair('playbook', 'desired state')],
+        knownTopicRelevanceReason: 'Shares the declared-state idea.',
+        breaksAt: 'no rollback step on the target side',
+        targetTopicType: 'technical',
+        bridgeStrength: 'strong',
+      }),
+      candidates,
+    )
+
+    expect(decision.bridgeStrength).toBe('weak')
   })
 })

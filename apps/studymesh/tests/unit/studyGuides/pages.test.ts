@@ -117,6 +117,36 @@ describe('appendStudyGuideMarkdownPage', () => {
 })
 
 describe('Study Guide Quick Start helpers', () => {
+  const decisionFixture = {
+    shouldUseKnownTopic: true,
+    knownTopicsForQuickStart: ['Known topic'],
+    knownTopicRelevanceReason: 'The known topic reuses the same waiting job.',
+    targetTopicType: 'technical' as const,
+    bridgeStrength: 'strong' as const,
+    bridgeStrategy: 'analogy_skeleton' as const,
+    targetParts: ['backlog', 'worker', 'throughput'],
+    correspondences: [
+      {
+        knownSide: 'queue',
+        targetSide: 'backlog',
+        carries: 'work waiting for capacity',
+        kind: 'part' as const,
+      },
+      {
+        knownSide: 'consumer',
+        targetSide: 'worker',
+        carries: 'who drains the waiting work',
+        kind: 'part' as const,
+      },
+      {
+        knownSide: 'backpressure',
+        targetSide: 'throughput',
+        carries: 'how the rate self-limits over time',
+        kind: 'process' as const,
+      },
+    ],
+  }
+
   it('sanitizes key idea and preserves quick summary paragraphs', () => {
     const quickStart = sanitizeStudyGuideQuickStart({
       keyIdea: `Key idea: ${Array.from(
@@ -193,24 +223,25 @@ describe('Study Guide Quick Start helpers', () => {
       title: 'Target concept',
       source: 'Target concept lesson notes.',
       relevanceDecision: {
-        shouldUseKnownTopic: true,
+        ...decisionFixture,
         knownTopicsForQuickStart: ['Specific related concept'],
         knownTopicRelevanceReason:
-          'Specific related concept gives a direct same-domain bridge for the target concept.',
+          'Specific related concept reuses the same coordination job.',
         targetTopicType: 'technical',
         bridgeStrength: 'strong',
-        bridgeStrategy: 'direct_comparison',
+        bridgeStrategy: 'analogy_skeleton',
       },
     })
 
     expect(prompt).toContain('"keyIdea"')
     expect(prompt).toContain('"quickSummary"')
-    expect(prompt).toContain('Candidate known topic bridge(s)')
+    expect(prompt).toContain('Explain this through what the learner already knows')
     expect(prompt).toContain('Specific related concept')
     expect(prompt).toContain('Bridge strength: strong')
-    expect(prompt).toContain('Bridge strategy: direct_comparison')
-    expect(prompt).toContain('the selected known topic must lead')
-    expect(prompt).toContain('where the comparison breaks')
+    expect(prompt).toContain('Use these mapped pairs')
+    expect(prompt).toContain('queue -> backlog')
+    expect(prompt).toContain("stated in the known topic's terms")
+    expect(prompt).toContain('Do not hedge the mapping')
     expect(prompt).toContain('keyIdea introduces at most 1 technical term')
     expect(prompt).toContain('Introduce at most 2-3 new technical terms')
     expect(prompt).toContain('Good bridge shape')
@@ -223,40 +254,38 @@ describe('Study Guide Quick Start helpers', () => {
     expect(prompt).toContain('finish the current sentence cleanly')
   })
 
-  it('upgrades a declined relevance decision for the forced context path', () => {
+  it('never grades a forced bridge down on its own', () => {
     const declined = {
+      ...decisionFixture,
       shouldUseKnownTopic: false,
       knownTopicsForQuickStart: [],
-      knownTopicRelevanceReason: 'No strong bridge.',
-      targetTopicType: 'technical' as const,
+      knownTopicRelevanceReason: 'Nothing mapped.',
       bridgeStrength: 'none' as const,
       bridgeStrategy: 'none' as const,
+      correspondences: [],
     }
 
     expect(
       ensureForcedStudyGuideQuickStartRelevanceDecision(declined, []),
     ).toBeUndefined()
 
-    const single = ensureForcedStudyGuideQuickStartRelevanceDecision(declined, [
+    // Nothing mapped, so the learner still gets a Via-X view, marked weak.
+    const empty = ensureForcedStudyGuideQuickStartRelevanceDecision(declined, [
       'Rundeck',
     ])
-    expect(single).toMatchObject({
+    expect(empty).toMatchObject({
       shouldUseKnownTopic: true,
       knownTopicsForQuickStart: ['Rundeck'],
       bridgeStrength: 'weak',
-      bridgeStrategy: 'light_reference',
     })
 
-    const multiple = ensureForcedStudyGuideQuickStartRelevanceDecision(
-      declined,
-      ['Rundeck', 'Docker', 'Ansible'],
+    // A real mapping survives force mode instead of being stamped weak.
+    const mapped = ensureForcedStudyGuideQuickStartRelevanceDecision(
+      { ...declined, correspondences: decisionFixture.correspondences },
+      ['Rundeck'],
     )
-    expect(multiple?.shouldUseKnownTopic).toBe(true)
-    expect(multiple?.knownTopicsForQuickStart).toEqual([
-      'Rundeck',
-      'Docker',
-      'Ansible',
-    ])
+    expect(mapped?.bridgeStrength).toBe('strong')
+    expect(mapped?.bridgeStrategy).toBe('analogy_skeleton')
 
     const accepted = {
       ...declined,
@@ -277,34 +306,58 @@ describe('Study Guide Quick Start helpers', () => {
       source: 'Data lake lesson notes.',
     })
 
-    expect(prompt).toContain('No known topic was selected as clearly useful')
+    expect(prompt).toContain('No known topic mapped onto this one')
     expect(prompt).toContain('Do not force a personalized analogy')
     expect(prompt).toContain('neutral beginner-friendly explanation')
   })
 
-  it('keeps forced weak bridges caveated and secondary in Quick Start prompt', () => {
+  it('keeps forced weak bridges secondary without licensing a disclaimer', () => {
     const prompt = buildStudyGuideQuickStartPrompt({
       title: 'New technical topic',
       source: 'The new technical topic coordinates work asynchronously.',
       bridgeMode: 'force',
       relevanceDecision: {
-        shouldUseKnownTopic: true,
+        ...decisionFixture,
         knownTopicsForQuickStart: ['Known request pattern'],
         knownTopicRelevanceReason:
-          'Known request pattern is only useful as a contrast.',
-        targetTopicType: 'technical',
+          'Known request pattern reuses the same waiting behaviour.',
         bridgeStrength: 'weak',
-        bridgeStrategy: 'light_reference',
+        bridgeStrategy: 'direct_comparison',
+        correspondences: decisionFixture.correspondences.slice(0, 1),
+        weakFitReason: 'no retry step exists on the target side',
       },
     })
 
     expect(prompt).toContain('Bridge mode: force')
-    expect(prompt).toContain('keep keyIdea neutral')
-    expect(prompt).toContain('explain the topic directly first')
-    expect(prompt).toContain('state where the comparison breaks')
+    expect(prompt).toContain('keyIdea stays neutral')
+    expect(prompt).toContain('Explain the topic directly first')
+    expect(prompt).toContain('no retry step exists on the target side')
+    expect(prompt).not.toContain('state where the comparison breaks')
   })
 
-  it('builds a strong-model relevance prompt with generic bridge rules', () => {
+  it('bans analogy meta-commentary in every bridged Quick Start prompt', () => {
+    for (const bridgeStrength of ['strong', 'weak'] as const) {
+      const prompt = buildStudyGuideQuickStartPrompt({
+        title: 'How does caffeine affect your brain?',
+        source: 'Adenosine builds up through the day and binds its receptors.',
+        relevanceDecision: {
+          ...decisionFixture,
+          knownTopicsForQuickStart: ['locksmithing'],
+          bridgeStrength,
+        },
+      })
+
+      expect(prompt).toContain(
+        'Never write about the comparison itself: no "the comparison"',
+      )
+      expect(prompt).toContain(
+        'Never offer the two subjects being different kinds of thing as a limitation',
+      )
+      expect(prompt).toContain('must be about the topic itself')
+    }
+  })
+
+  it('builds an audition prompt that asks for a mapping, not a grade', () => {
     const prompt = buildStudyGuideQuickStartRelevancePrompt({
       title: 'New topic',
       prompt: 'new topic',
@@ -312,21 +365,20 @@ describe('Study Guide Quick Start helpers', () => {
       userKnownTopics: ['Broad category', 'Specific related topic'],
     })
 
-    expect(prompt).toContain('Goal: reduce learner cognitive effort')
-    expect(prompt).toContain('Prefer same-domain direct comparisons')
-    expect(prompt).toContain('Prefer specific topics over broad categories')
-    expect(prompt).toContain('Generic examples')
-    expect(prompt).toContain(
-      'Target "narrow domain topic", known ["broad category", "specific related topic"]',
-    )
+    expect(prompt).toContain('You are not writing the Quick Start')
+    expect(prompt).toContain('you are not rating the bridge')
+    expect(prompt).toContain('"correspondences"')
+    expect(prompt).toContain('Cross-domain is allowed and often best')
+    expect(prompt).toContain('Return [] when nothing genuinely maps')
+    expect(prompt).not.toContain('Prefer same-domain direct comparisons')
+    expect(prompt).not.toContain('Prefer specific topics over broad categories')
+    expect(prompt).not.toContain('bridgeStrength')
     expect(prompt).not.toContain('Kafka')
     expect(prompt).not.toContain('Valencian')
-    expect(prompt).not.toContain('Catalan')
     expect(prompt).not.toContain('Vue')
-    expect(prompt).not.toContain('React')
   })
 
-  it('builds a forced relevance prompt without hardcoded topic pairs', () => {
+  it('forbids the substrate objection as a breaking point', () => {
     const prompt = buildStudyGuideQuickStartRelevancePrompt({
       title: 'New topic',
       prompt: 'new topic',
@@ -336,36 +388,34 @@ describe('Study Guide Quick Start helpers', () => {
     })
 
     expect(prompt).toContain('Bridge mode: force')
-    expect(prompt).toContain('the closest useful bridge')
-    expect(prompt).toContain('bridgeStrength "weak"')
-    expect(prompt).toContain('do not use hidden hardcoded topic-pair rules')
+    expect(prompt).toContain('still return [] rather than inventing pairs')
+    expect(prompt).toContain('breaksAt must never be "different fields"')
+    expect(prompt).toContain('That is true of every mapping and says nothing')
   })
 
   it.each([
-    ['New library', ['Known library'], ['Known library'], 'direct_comparison'],
+    ['New library', ['Known library'], ['Known library']],
     [
       'New protocol',
       ['Broad technical category', 'Specific related protocol'],
       ['Specific related protocol'],
-      'direct_comparison',
     ],
     [
       'New biological process',
       ['Known mechanical process'],
       ['Known mechanical process'],
-      'analogy_skeleton',
     ],
   ])(
-    'parses strong relevance decision for %s without inventing topics',
-    (_title, knownTopics, selectedTopics, bridgeStrategy) => {
+    'derives a strong bridge for %s without inventing topics',
+    (_title, knownTopics, selectedTopics) => {
       const decision = parseStudyGuideQuickStartRelevanceDecision(
         JSON.stringify({
-          shouldUseKnownTopic: true,
+          targetParts: ['backlog', 'worker', 'throughput'],
           knownTopicsForQuickStart: selectedTopics,
-          knownTopicRelevanceReason: 'Direct same-domain bridge.',
+          correspondences: decisionFixture.correspondences,
+          knownTopicRelevanceReason: 'Reuses the same waiting job.',
+          breaksAt: 'no retry step on the target side',
           targetTopicType: 'technical',
-          bridgeStrength: 'strong',
-          bridgeStrategy,
         }),
         knownTopics,
       )
@@ -373,27 +423,46 @@ describe('Study Guide Quick Start helpers', () => {
       expect(decision.shouldUseKnownTopic).toBe(true)
       expect(decision.knownTopicsForQuickStart).toEqual(selectedTopics)
       expect(decision.bridgeStrength).toBe('strong')
-      expect(decision.bridgeStrategy).toBe(bridgeStrategy)
+      expect(decision.bridgeStrategy).toBe('analogy_skeleton')
     },
   )
 
-  it('normalizes weak bridge decisions to light references', () => {
+  it('accepts a cross-domain mapping that the old rubric would have declined', () => {
     const decision = parseStudyGuideQuickStartRelevanceDecision(
       JSON.stringify({
-        shouldUseKnownTopic: true,
-        knownTopicsForQuickStart: ['Databases'],
+        targetParts: ['adenosine receptor', 'adenosine', 'sleep pressure'],
+        knownTopicsForQuickStart: ['locksmithing'],
+        correspondences: [
+          {
+            knownSide: 'lock',
+            targetSide: 'adenosine receptor',
+            carries: 'the slot that only one shape opens',
+            kind: 'part',
+          },
+          {
+            knownSide: 'working key',
+            targetSide: 'adenosine',
+            carries: 'the shape that actually turns the mechanism',
+            kind: 'part',
+          },
+          {
+            knownSide: 'keys queuing at a jammed door',
+            targetSide: 'sleep pressure',
+            carries: 'demand piling up while it cannot be served',
+            kind: 'process',
+          },
+        ],
         knownTopicRelevanceReason:
-          'Databases are only a light contrast for data lakes.',
-        targetTopicType: 'technical',
-        bridgeStrength: 'weak',
-        bridgeStrategy: 'direct_comparison',
+          'Lets the learner reuse how a filled keyway blocks a working key.',
+        breaksAt: 'receptors are rebuilt, locks are not',
+        targetTopicType: 'general',
       }),
-      ['Databases'],
+      ['locksmithing', 'budgeting'],
     )
 
-    expect(decision.shouldUseKnownTopic).toBe(true)
-    expect(decision.bridgeStrength).toBe('weak')
-    expect(decision.bridgeStrategy).toBe('light_reference')
+    expect(decision.bridgeStrength).toBe('strong')
+    expect(decision.knownTopicsForQuickStart).toEqual(['locksmithing'])
+    expect(decision.weakFitReason).toBeUndefined()
   })
 
   it('builds an analogy-skeleton Quick Start prompt for strong structural bridges', () => {
@@ -402,32 +471,29 @@ describe('Study Guide Quick Start helpers', () => {
       source:
         'The cornea bends light first, the crystalline lens changes shape, the pupil controls light entry, and the retina receives the image.',
       relevanceDecision: {
-        shouldUseKnownTopic: true,
+        ...decisionFixture,
         knownTopicsForQuickStart: ['photography'],
         knownTopicRelevanceReason:
           'Camera optics map clearly to eye optics and refractive errors.',
         targetTopicType: 'general',
-        bridgeStrength: 'strong',
-        bridgeStrategy: 'analogy_skeleton',
       },
     })
 
-    expect(prompt).toContain('Bridge strategy: analogy_skeleton')
-    expect(prompt).toContain('start from the known topic')
-    expect(prompt).toContain('sustain the mapping through the explanation')
-    expect(prompt).toContain('then briefly say where the analogy breaks')
+    expect(prompt).toContain('Use these mapped pairs')
+    expect(prompt).toContain('Run at least three of those pairs')
+    expect(prompt).toContain("in the known topic's own vocabulary")
+    expect(prompt).not.toContain('where the analogy breaks')
   })
 
   it('rejects invented or unsafe known-topic relevance selections', () => {
     const decision = parseStudyGuideQuickStartRelevanceDecision(
       JSON.stringify({
-        shouldUseKnownTopic: true,
+        targetParts: ['report', 'one to one'],
         knownTopicsForQuickStart: ['Docker'],
-        knownTopicRelevanceReason:
-          'Tool analogy would be forced for managing junior reports.',
+        correspondences: decisionFixture.correspondences,
+        knownTopicRelevanceReason: 'Tool analogy for managing junior reports.',
+        breaksAt: 'people are not containers',
         targetTopicType: 'human_management',
-        bridgeStrength: 'strong',
-        bridgeStrategy: 'direct_comparison',
       }),
       ['parenting toddlers'],
     )

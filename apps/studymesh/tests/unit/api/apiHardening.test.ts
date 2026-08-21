@@ -1864,9 +1864,30 @@ describe('API payment and hosted AI hardening', () => {
           'Start with the main idea.\n\nThen use the pages in order.',
       },
       contextPlan: {
-        useForDefault: true,
+        targetParts: ['rule', 'substitution', 'simplification'],
         selectedTopics: ['Algebra'],
-        reason: 'Algebra is the closest same-domain bridge.',
+        correspondences: [
+          {
+            knownSide: 'equation',
+            targetSide: 'rule',
+            carries: 'the statement that must stay balanced',
+            kind: 'part',
+          },
+          {
+            knownSide: 'variable',
+            targetSide: 'substitution',
+            carries: 'the placeholder that takes a value',
+            kind: 'part',
+          },
+          {
+            knownSide: 'solving step by step',
+            targetSide: 'simplification',
+            carries: 'how the form reduces over successive passes',
+            kind: 'process',
+          },
+        ],
+        reason: 'Lets the learner reuse how balanced statements reduce.',
+        breaksAt: 'no numeric solution exists on the target side',
         personalizedQuickStart: {
           keyIdea: 'Algebra gives the guide a personalized start.',
           quickSummary:
@@ -2920,9 +2941,30 @@ describe('API payment and hosted AI hardening', () => {
           'Backend systems receive requests and decide what work must happen.\n\nThey coordinate data, services, and reliability boundaries so user-facing apps can stay predictable.',
       },
       contextPlan: {
-        useForDefault: true,
+        targetParts: ['request', 'state', 'durable work'],
         selectedTopics: ['Backend'],
-        reason: 'Backend is the closest same-domain bridge.',
+        correspondences: [
+          {
+            knownSide: 'handler',
+            targetSide: 'request',
+            carries: 'what accepts the incoming unit of work',
+            kind: 'part',
+          },
+          {
+            knownSide: 'store',
+            targetSide: 'state',
+            carries: 'where the result is kept between calls',
+            kind: 'part',
+          },
+          {
+            knownSide: 'retry loop',
+            targetSide: 'durable work',
+            carries: 'how work survives a failure over time',
+            kind: 'process',
+          },
+        ],
+        reason: 'Lets the learner reuse how work survives a failed call.',
+        breaksAt: 'replayable log has no counterpart in a request handler',
         personalizedQuickStart: {
           keyIdea: 'Backend gives a useful short mental model.',
           quickSummary:
@@ -3047,7 +3089,12 @@ describe('API payment and hosted AI hardening', () => {
         },
       ],
     })
-    expect(response.body.quickStart).not.toHaveProperty('forcedBridge')
+    // A mapped bridge leads; the plain variant stays one tap away.
+    expect(response.body.quickStart).toHaveProperty('forcedBridge', {
+      keyIdea: 'Backend systems coordinate requests, state, and durable work.',
+      quickSummary:
+        'Backend systems receive requests and decide what work must happen.\n\nThey coordinate data, services, and reliability boundaries so user-facing apps can stay predictable.',
+    })
     const guide = JSON.parse(String(response.body.text)) as {
       dashboards: Array<{
         flashcards?: unknown[]
@@ -3060,7 +3107,8 @@ describe('API payment and hosted AI hardening', () => {
     expect(providerBodies).toHaveLength(2)
     expect(providerBodies[0].model).toBe(DEFAULT_OPENAI_STUDY_GUIDE_MODEL)
     expect(providerBodies[0].input).toBeDefined()
-    expect(providerBodies[0].reasoning).toMatchObject({ effort: 'none' })
+    // The monolith carries the known-topic mapping, so it gets a small budget.
+    expect(providerBodies[0].reasoning).toMatchObject({ effort: 'low' })
     expect(providerBodies[1].model).toBe(DEFAULT_OPENAI_FAST_MODEL)
     expect(JSON.stringify(providerBodies[0])).toContain(
       'Write a complete, final RabbitHole Study Guide',
@@ -3127,9 +3175,11 @@ describe('API payment and hosted AI hardening', () => {
           'Object storage stores data as named objects.\n\nIt is useful when applications need durable files without managing local disks.',
       },
       contextPlan: {
-        useForDefault: false,
-        selectedTopics: [],
-        reason: 'No candidate topic is a precise same-domain bridge.',
+        targetParts: ['bucket', 'object', 'access policy'],
+        selectedTopics: ['Kubernetes'],
+        correspondences: [],
+        reason: 'Closest available point of contact for stored bytes.',
+        breaksAt: 'Kubernetes schedules work, buckets only hold bytes',
         personalizedQuickStart: {
           keyIdea: 'Use Kubernetes as a loose mental bridge.',
           quickSummary:

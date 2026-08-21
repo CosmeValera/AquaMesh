@@ -16,8 +16,12 @@ import type {
 } from "../apps/studymesh/src/quickCreate/ai/hostedCredits";
 import {
   buildStudyGuideKnownTopicPrefilterPrompt,
+  deriveStudyGuideBridgeStrength,
   parseStudyGuideKnownTopicPrefilterResult,
   parseStudyGuideQuickStart,
+  sanitizeStudyGuideBridgeCorrespondences,
+  STUDY_GUIDE_BRIDGE_CORRESPONDENCE_SCHEMA,
+  STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES,
   STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_SCHEMA,
   trimTitleToWordBoundary,
   trimToCompleteSentenceWithinChars,
@@ -156,6 +160,7 @@ export const DEFAULT_OPENAI_STUDY_GUIDE_MODEL = "gpt-5.6-luna";
 export const DEFAULT_OPENAI_SUPPORT_MODEL = "gpt-5.6-luna";
 export const DEFAULT_OPENAI_FAST_MODEL = "gpt-5.6-luna";
 export const DEFAULT_OPENAI_REASONING_EFFORT = "none";
+export const DEFAULT_OPENAI_BRIDGE_REASONING_EFFORT = "low";
 const MAX_TEXT_CHARS = 120_000;
 const MIN_PODCAST_SOURCE_CHARS = 400;
 export const MAX_PODCAST_SOURCE_CHARS = 24_000;
@@ -265,8 +270,29 @@ export const getHostedOpenAiModelForStage = (stage: HostedAiStage): string => {
   );
 };
 
-export const getHostedOpenAiReasoningEffort = (): string =>
-  getEnv("HOSTED_OPENAI_REASONING_EFFORT") || DEFAULT_OPENAI_REASONING_EFFORT;
+// Stages that have to map a learner's known topic onto a new one. Counting and
+// mapping parts with effort "none" collapsed to a single canned answer, so
+// these get a small budget while every other stage stays at "none".
+const REASONING_OPENAI_STAGES = new Set<HostedAiStage>([
+  "study_guide_monolith",
+  "study_guide_blueprint",
+  "quick_start_relevance_auto",
+  "quick_start_relevance_force",
+]);
+
+export const getHostedOpenAiReasoningEffort = (
+  stage: HostedAiStage = "quick_create",
+): string => {
+  const override = getEnv("HOSTED_OPENAI_REASONING_EFFORT");
+  if (override) {
+    return override;
+  }
+
+  return REASONING_OPENAI_STAGES.has(stage)
+    ? getEnv("HOSTED_OPENAI_BRIDGE_REASONING_EFFORT") ||
+        DEFAULT_OPENAI_BRIDGE_REASONING_EFFORT
+    : DEFAULT_OPENAI_REASONING_EFFORT;
+};
 
 export const isOpenAiResponsesModel = (model: string): boolean =>
   model.includes("luna");
@@ -693,7 +719,7 @@ export const buildPrompt = (parts: HostedAiGatewayPart[]): string =>
 
 const textArraySchema = { type: "ARRAY", items: { type: "STRING" } };
 
-const ENHANCED_STUDY_GUIDE_QUIZ_SCHEMA = {
+export const ENHANCED_STUDY_GUIDE_QUIZ_SCHEMA = {
   type: "OBJECT",
   properties: {
     questions: {
@@ -817,7 +843,7 @@ const normalizeEnhancedQuizQuestions = (
   return normalized.map(shuffleQuizQuestionOptions);
 };
 
-const buildEnhancedGuideSource = ({
+export const buildEnhancedGuideSource = ({
   topic,
   blueprint,
   pages,
@@ -835,7 +861,7 @@ const buildEnhancedGuideSource = ({
     ),
   ].join("\n\n---\n\n");
 
-const buildEnhancedQuizPrompt = ({
+export const buildEnhancedQuizPrompt = ({
   topic,
   source,
   bridgeBlocks,
@@ -976,7 +1002,7 @@ const convertSchemaType = (type: unknown): string | undefined => {
   return lower === "number" ? "number" : lower;
 };
 
-const toJsonSchema = (
+export const toJsonSchema = (
   schema: unknown,
   options: { requireAllObjectProperties?: boolean } = {},
 ): unknown => {
@@ -1202,7 +1228,7 @@ export const callHostedTextModel = async (
     ? {
         model,
         input: prompt,
-        reasoning: { effort: getHostedOpenAiReasoningEffort() },
+        reasoning: { effort: getHostedOpenAiReasoningEffort(stage) },
         max_output_tokens: 8192,
       }
     : {
@@ -2501,7 +2527,9 @@ interface NormalizedMonolithGuide {
   quickStart: NonNullable<HostedAiGatewayResponse["quickStart"]>;
   pages: EnhancedStudyGuidePage[];
   contextPlan?: {
+    /** Derived from correspondences, never asserted by the model. */
     useForDefault: boolean;
+    bridgeStrength: "none" | "weak" | "strong";
     selectedTopics: string[];
     personalizedQuickStart?: NonNullable<HostedAiGatewayResponse["quickStart"]>;
     reason?: string;
@@ -2509,7 +2537,7 @@ interface NormalizedMonolithGuide {
   };
 }
 
-const createMonolithGuideSchema = (includeContext: boolean) => ({
+export const createMonolithGuideSchema = (includeContext: boolean) => ({
   type: "OBJECT",
   properties: {
     title: { type: "STRING" },
@@ -2528,9 +2556,11 @@ const createMonolithGuideSchema = (includeContext: boolean) => ({
           contextPlan: {
             type: "OBJECT",
             properties: {
-              useForDefault: { type: "BOOLEAN" },
+              targetParts: textArraySchema,
               selectedTopics: textArraySchema,
+              correspondences: STUDY_GUIDE_BRIDGE_CORRESPONDENCE_SCHEMA,
               reason: { type: "STRING" },
+              breaksAt: { type: "STRING" },
               personalizedQuickStart: {
                 type: "OBJECT",
                 properties: {
@@ -2549,9 +2579,11 @@ const createMonolithGuideSchema = (includeContext: boolean) => ({
               },
             },
             required: [
-              "useForDefault",
+              "targetParts",
               "selectedTopics",
+              "correspondences",
               "reason",
+              "breaksAt",
               "personalizedQuickStart",
               "bridgeBlock",
             ],
@@ -2581,7 +2613,7 @@ const createMonolithGuideSchema = (includeContext: boolean) => ({
   ],
 });
 
-const buildMonolithGuidePrompt = ({
+export const buildMonolithGuidePrompt = ({
   topic,
   titleFallback,
   folderNameFallback,
@@ -2604,9 +2636,11 @@ Return strict JSON only:
     userKnownTopics.length
       ? `
   "contextPlan": {
-    "useForDefault": true,
+    "targetParts": ["..."],
     "selectedTopics": ["..."],
+    "correspondences": [{ "knownSide": "...", "targetSide": "...", "carries": "...", "kind": "part" }],
     "reason": "...",
+    "breaksAt": "...",
     "personalizedQuickStart": { "keyIdea": "...", "quickSummary": "..." },
     "bridgeBlock": { "title": "...", "body": "..." }
   },`
@@ -2635,12 +2669,19 @@ Rules:
 - The learner already knows these candidate topics: ${userKnownTopics.join(
         ", ",
       )}.
-- contextPlan.selectedTopics: always rank the candidates and choose the 1 that best reduces confusion for this topic (2 only if both are clearly relevant and same-domain). Never invent topics. Do not return [] merely because every candidate is a weak or cross-domain match; return [] only if every candidate would actively mislead, be unsafe, or be dehumanizing.
-- contextPlan.useForDefault: true only when the selected candidate genuinely reduces cognitive effort through a precise, same-domain comparison; otherwise false. A weak but honest bridge still gets a selected topic with useForDefault false.
-- contextPlan.personalizedQuickStart: always write this variant. It is an opt-in view the learner opens themselves, so write it even when useForDefault is false; it never replaces the neutral Quick Start unless useForDefault is true. Build it through the selected topic. If the bridge is strong, the selected topic must lead. If it is weak or cross-domain, explain the topic neutrally first, use the selected topic as one short honest contrast, and say plainly where the comparison breaks. quickSummary 60-85 words, complete sentences.
-- If selectedTopics is [], still write personalizedQuickStart as a neutral beginner-friendly Quick Start with one caveat or common misconception, and invent no bridge.
-- contextPlan.bridgeBlock: one short study note connecting a concept from page 2 to the selected topic, with one caveat. body under 85 words, ending with a complete sentence.
-- contextPlan.reason: if useForDefault is false (a weak bridge), 6-12 words stating specifically why this topic is not the best fit for the learner's prompt (e.g. "different domain — only shares vocabulary, not underlying mechanics"). If useForDefault is true, one short sentence on why the selected topic was chosen.
+- contextPlan.targetParts: 3-5 moving parts of THIS topic, taken from the guide you just wrote: the things that act, the things acted on, and what changes over time. Short concrete noun phrases.
+- contextPlan.selectedTopics: pick the 1 candidate whose own moving parts line up with the most targetParts (2 only when both add different mappings). Never invent topics. Name the closest candidate even when the overlap is small; return [] only if every candidate would actively mislead, be unsafe, or be dehumanizing.
+- Cross-domain candidates are allowed and are often the best choice. A locksmith's lock and key can map onto a molecular receptor; a household budget can map onto an energy balance. Never reject a candidate for coming from a different field, for being broad, or for being everyday rather than technical.
+- Once you have chosen, map that candidate as completely as you can. List every pair that holds, not only the first one or two, and work through each targetPart in turn before stopping. Extra candidates must not cost the chosen one depth.
+- contextPlan.correspondences: up to ${STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES} matched pairs. knownSide is the part inside the candidate topic, targetSide the part inside this guide's topic. carries states the role or causal job the pair transfers, in a few words. kind is "process" when the pair transfers something happening over time (a change, a build-up, a feedback, an adaptation) and "part" when it transfers a fixed role.
+- A pair only counts when knowing the known side tells the learner something true about how the target side behaves. Never write a pair whose two sides are the same word, or that shares only a label, a mood, or a general theme. Return [] when nothing genuinely maps.
+- contextPlan.personalizedQuickStart: always write this variant, even when correspondences is []. It is an opt-in view the learner opens themselves. quickSummary 60-85 words, complete sentences.
+- Count your own correspondences. With 3 or more including at least one "process", the selected topic must LEAD personalizedQuickStart: state keyIdea in the known topic's vocabulary and run at least three pairs through quickSummary. With 1-2, explain the topic directly first and bring the known topic in as one concrete comparison. With none, explain the topic directly and mention the selected topic once as a concrete point of contact; if selectedTopics is [] write a neutral Quick Start and invent no bridge.
+- In personalizedQuickStart, write as if the mapping is simply true. Never write about the comparison itself: no "the comparison", "the analogy", "this comparison is limited", "the comparison breaks down", "provides only a limited comparison", "unlike the mechanisms involved in".
+- Never offer the two subjects being different kinds of thing as a limitation. Every explanation through a known topic crosses subjects; saying so teaches nothing. Any caveat must be about the topic itself: a boundary, or something a learner would get wrong.
+- contextPlan.bridgeBlock: one short study note connecting a concept from page 2 to the selected topic. body under 85 words, ending with a complete sentence.
+- contextPlan.reason: one short sentence on what the mapping lets the learner reuse. Only ever a reason it helps, never a caveat or a limitation.
+- contextPlan.breaksAt: 6-12 words naming the first place the mapping stops being true, in terms of the two topics' own parts. Never "different fields", never "one is physical and one is biological", never any variation on the two subjects being different kinds of thing.
 - For topics involving identity, history, politics, culture, or people, keep the bridge factual and avoid reductive claims. For human or management topics, do not compare people to infrastructure, tools, or machines.`
     : ""
 }
@@ -2650,7 +2691,7 @@ Folder fallback: ${folderNameFallback}
 Learner request/topic:
 ${topic}`;
 
-const normalizeMonolithGuide = (
+export const normalizeMonolithGuide = (
   value: unknown,
   titleFallback: string,
   folderNameFallback: string,
@@ -2710,12 +2751,31 @@ const normalizeMonolithGuide = (
       stringValue(bridgeRecord?.body),
       700,
     );
+    const correspondences = sanitizeStudyGuideBridgeCorrespondences(
+      planRecord.correspondences,
+    );
+    // Strength is counted from the pairs the model listed, never taken from a
+    // self-rating: asked to grade its own bridge, luna answered "weak" for
+    // every candidate, including same-field ones. A named topic with no pairs
+    // still keeps the opt-in view, marked weak, so the learner keeps the toggle.
+    const mappedStrength = deriveStudyGuideBridgeStrength(correspondences);
+    const bridgeStrength = !selectedTopics.length
+      ? "none"
+      : mappedStrength === "none"
+      ? "weak"
+      : mappedStrength;
+    const breaksAt = trimTitleToWordBoundary(
+      stringValue(planRecord.breaksAt),
+      90,
+    );
     const reason = trimTitleToWordBoundary(stringValue(planRecord.reason), 90);
     contextPlan = {
-      useForDefault: planRecord.useForDefault === true,
+      useForDefault: bridgeStrength === "strong",
+      bridgeStrength,
       selectedTopics,
       personalizedQuickStart,
-      reason: reason || undefined,
+      // Only a weak bridge shows a fit caveat; a strong one is not hedged.
+      reason: bridgeStrength === "weak" ? breaksAt || reason || undefined : undefined,
       bridgeBlock:
         bridgeTitle && bridgeBody
           ? { title: bridgeTitle, body: bridgeBody }
@@ -2843,6 +2903,7 @@ export const generateMonolithHostedStudyGuide = async ({
       ...contextPlan.personalizedQuickStart,
       bridgeTopics: contextPlan.selectedTopics,
     };
+    metadataFlags.bridgeStrength = contextPlan.bridgeStrength;
     if (contextPlan.useForDefault) {
       metadataFlags.quickStartPersonalizedRewriteUsed = true;
       quickStart = { ...bridgeQuickStart, forcedBridge: plainQuickStart };

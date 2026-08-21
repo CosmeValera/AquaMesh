@@ -447,27 +447,20 @@ export const generateStudyGuideQuickStartWithAi = async ({
     return await generatePlainOnly()
   }
 
-  // Auto mode already picked a confident bridge, or we still need to force
-  // one so the learner has a Via-X view to toggle to even on a weak match.
-  const autoAlreadyBridged =
-    relevanceDecision?.shouldUseKnownTopic &&
-    relevanceDecision.knownTopicsForQuickStart.length > 0
-  const bridgeDecision = autoAlreadyBridged
-    ? relevanceDecision
-    : ensureForcedStudyGuideQuickStartRelevanceDecision(
-        knowledgeContextPlan.shouldRunForcedRelevanceSelector
-          ? await getRelevanceDecision('force').catch(() => undefined)
-          : relevanceDecision,
-        safeKnownTopics,
-      )
+  // The audition already ranked every candidate in one call, so there is no
+  // second selector pass. When it mapped nothing we still force a Via-X view
+  // so the learner keeps the toggle, just without a lead position.
+  const bridgeDecision = ensureForcedStudyGuideQuickStartRelevanceDecision(
+    relevanceDecision,
+    safeKnownTopics,
+  )
 
   if (!bridgeDecision) {
     return await generatePlainOnly()
   }
 
-  const bridgeMode: StudyGuideBridgeMode = autoAlreadyBridged
-    ? 'auto'
-    : 'force'
+  const bridgeLeads = bridgeDecision.bridgeStrength === 'strong'
+  const bridgeMode: StudyGuideBridgeMode = bridgeLeads ? 'auto' : 'force'
 
   try {
     const [rawPlain, rawBridge] = await Promise.all([
@@ -484,7 +477,7 @@ export const generateStudyGuideQuickStartWithAi = async ({
 
     // Whichever variant is the stronger match leads by default; the other
     // stays one tap away as forcedBridge, never hidden entirely.
-    return autoAlreadyBridged
+    return bridgeLeads
       ? { ...bridge, forcedBridge: rawPlain }
       : { ...rawPlain, forcedBridge: bridge }
   } catch {

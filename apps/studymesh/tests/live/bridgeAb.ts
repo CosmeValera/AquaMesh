@@ -341,6 +341,65 @@ I want to understand burnout properly rather than just telling everyone to take 
     topic: 'how does caffeine affect your brain?',
     knownTopics: [],
   },
+  // Held-out set: predicted before running, then measured. Two obvious strongs,
+  // two that look far-fetched but transfer, two obvious weaks, and two that
+  // sound apt while the mechanism diverges.
+  {
+    name: 'water cycle x distilling',
+    group: 'userset',
+    topic: 'How does the water cycle work?',
+    knownTopics: ['distilling spirits'],
+    expect: 'strong',
+  },
+  {
+    name: 'TCP loss x registered post',
+    group: 'userset',
+    topic: 'How does TCP recover a lost packet?',
+    knownTopics: ['registered post'],
+    expect: 'strong',
+  },
+  {
+    name: 'placebo x stage magic',
+    group: 'userset',
+    topic: 'How does the placebo effect actually work?',
+    knownTopics: ['stage magic'],
+    expect: 'strong',
+  },
+  {
+    name: 'salty ocean x reducing a sauce',
+    group: 'userset',
+    topic: 'Why is the ocean salty when rivers are not?',
+    knownTopics: ['reducing a sauce'],
+    expect: 'strong',
+  },
+  {
+    name: 'red in chinese culture x spreadsheets',
+    group: 'userset',
+    topic: 'What does the colour red mean in Chinese culture?',
+    knownTopics: ['spreadsheet formulas'],
+    expect: 'weak',
+  },
+  {
+    name: 'bolivar x darts',
+    group: 'userset',
+    topic: 'Who was Simon Bolivar?',
+    knownTopics: ['playing darts'],
+    expect: 'weak',
+  },
+  {
+    name: 'stock market x poker',
+    group: 'userset',
+    topic: 'How does the stock market work?',
+    knownTopics: ['poker'],
+    expect: 'weak',
+  },
+  {
+    name: 'memory consolidation x phone backup',
+    group: 'userset',
+    topic: 'How does memory consolidation during sleep work?',
+    knownTopics: ['backing up your phone'],
+    expect: 'weak',
+  },
 ]
 
 const BANNED = [

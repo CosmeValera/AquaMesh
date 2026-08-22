@@ -56,6 +56,19 @@ export interface StudyGuideBridgeCorrespondence {
   targetSide: string
   carries: string
   kind: StudyGuideBridgeCorrespondenceKind
+  /**
+   * Swap test: another domain the same pair would fit, or "none". Measured and
+   * found too generous to gate on, because a model asked to name a domain names
+   * one. Kept because it is recorded per pair and `tests/live/sweepRules.ts`
+   * needs it to re-tune the thresholds against fresh runs.
+   */
+  alsoWorksFor: string
+  /** Diagnostic, not a gate: alsoWorksFor came back "none". */
+  passesSwapTest: boolean
+  /** Diagnostic, not a gate: neither side's head noun is a shared-property word. */
+  isConcrete: boolean
+  /** Diagnostic, not a gate: both of the above agree. */
+  isSpecific: boolean
 }
 
 export const STUDY_GUIDE_BRIDGE_STRONG_MIN_CORRESPONDENCES = 3
@@ -73,9 +86,58 @@ export const STUDY_GUIDE_BRIDGE_CORRESPONDENCE_SCHEMA = {
       targetSide: { type: 'STRING' },
       carries: { type: 'STRING' },
       kind: { type: 'STRING', enum: [...bridgeCorrespondenceKinds] },
+      alsoWorksFor: { type: 'STRING' },
     },
-    required: ['knownSide', 'targetSide', 'carries', 'kind'],
+    required: ['knownSide', 'targetSide', 'carries', 'kind', 'alsoWorksFor'],
   },
+}
+
+const genericSwapAnswers = new Set(['', 'none', 'n/a', 'na', 'nothing', '-'])
+
+/**
+ * Head nouns that name a shared property rather than a working part. A pair
+ * built on one of these ("budget categories -> grammar categories") says only
+ * that both things have categories, which is true of almost any two subjects.
+ */
+const abstractHeadNouns = new Set([
+  'approach',
+  'aspects',
+  'categories',
+  'category',
+  'choices',
+  'components',
+  'concepts',
+  'context',
+  'data',
+  'elements',
+  'framework',
+  'goals',
+  'information',
+  'management',
+  'method',
+  'organization',
+  'organisation',
+  'parts',
+  'patterns',
+  'planning',
+  'principles',
+  'process',
+  'resources',
+  'rules',
+  'standards',
+  'structure',
+  'system',
+  'systems',
+  'things',
+  'types',
+  'values',
+])
+
+const hasAbstractHeadNoun = (value: string): boolean => {
+  const words = value.toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean)
+  const head = words[words.length - 1]
+
+  return Boolean(head) && abstractHeadNouns.has(head)
 }
 
 const normalizeBridgeSide = (value: unknown, maxChars: number): string =>
@@ -120,6 +182,10 @@ export const sanitizeStudyGuideBridgeCorrespondences = (
       )
       const kind: StudyGuideBridgeCorrespondenceKind =
         record.kind === 'process' ? 'process' : 'part'
+      const alsoWorksFor = normalizeBridgeSide(
+        record.alsoWorksFor,
+        STUDY_GUIDE_BRIDGE_SIDE_MAX_CHARS,
+      )
 
       if (
         !knownSide ||
@@ -130,7 +196,24 @@ export const sanitizeStudyGuideBridgeCorrespondences = (
         return null
       }
 
-      return { knownSide, targetSide, carries, kind }
+      // Two independent filters: the model's own swap answer, and a purely
+      // mechanical check that neither side is built on a shared-property noun.
+      const passesSwapTest = genericSwapAnswers.has(
+        alsoWorksFor.toLowerCase().replace(/[.!]$/, ''),
+      )
+      const isConcrete =
+        !hasAbstractHeadNoun(knownSide) && !hasAbstractHeadNoun(targetSide)
+
+      return {
+        knownSide,
+        targetSide,
+        carries,
+        kind,
+        alsoWorksFor,
+        passesSwapTest,
+        isConcrete,
+        isSpecific: isConcrete && passesSwapTest,
+      }
     })
     .filter((entry): entry is StudyGuideBridgeCorrespondence => Boolean(entry))
     .filter((entry) => {
@@ -147,6 +230,32 @@ export const sanitizeStudyGuideBridgeCorrespondences = (
     .slice(0, STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES)
 }
 
+export interface StudyGuideBridgeStrengthRule {
+  minPairs: number
+  /** Pairs transferring something that happens over time. */
+  minProcessPairs: number
+}
+
+/**
+ * Tuned against three independent sweeps of 42 live guides each (64/74/74%
+ * strong, 14 of 15 labelled cases correct). Breadth is what separates a real
+ * mapping from a shared property: a topic that only shares a property with the
+ * target runs out of pairs after two or three, while a real one keeps going.
+ *
+ * Three alternatives were measured and rejected on the same data. Gating on the
+ * model's own "would this pair fit another domain?" answer collapsed to ~10%
+ * strong, because a model asked to name a domain always names one. Demanding a
+ * second *process* pair dropped to 57% and produced false weaks: caffeine ->
+ * locksmithing lists keyway, key cut, inserted key and jammed lock, all static
+ * roles, and a good structural analogy should not be punished for that. Raising
+ * only the pair count without any process requirement let purely static lists
+ * through.
+ */
+export const STUDY_GUIDE_BRIDGE_STRENGTH_RULE: StudyGuideBridgeStrengthRule = {
+  minPairs: 5,
+  minProcessPairs: 1,
+}
+
 /**
  * Strength is derived, never asserted by the model. Counting mapped parts is a
  * listing task a small model does well; grading a bridge is a judgement task it
@@ -154,17 +263,18 @@ export const sanitizeStudyGuideBridgeCorrespondences = (
  */
 export const deriveStudyGuideBridgeStrength = (
   correspondences: StudyGuideBridgeCorrespondence[],
+  rule: StudyGuideBridgeStrengthRule = STUDY_GUIDE_BRIDGE_STRENGTH_RULE,
 ): StudyGuideQuickStartBridgeStrength => {
   if (!correspondences.length) {
     return 'none'
   }
 
-  const carriesProcess = correspondences.some(
+  const processPairs = correspondences.filter(
     (entry) => entry.kind === 'process',
   )
 
-  return correspondences.length >= STUDY_GUIDE_BRIDGE_STRONG_MIN_CORRESPONDENCES &&
-    carriesProcess
+  return correspondences.length >= rule.minPairs &&
+    processPairs.length >= rule.minProcessPairs
     ? 'strong'
     : 'weak'
 }
@@ -553,6 +663,42 @@ export const trimToCompleteSentenceWithinChars = (
   return sentenceEnd ? sentenceEnd[0].trim() : value
 }
 
+/**
+ * A slug is every segment lowercase alphanumeric, so real hyphenated words
+ * survive: "e-commerce" and "x-ray" keep their one-letter part, and anything
+ * containing a space is already a written title.
+ */
+const isSlugShapedTitle = (value: string): boolean => {
+  if (!value || /\s/.test(value) || !/[-_]/.test(value)) {
+    return false
+  }
+
+  const segments = value.split(/[-_]/)
+
+  return (
+    segments.length > 1 &&
+    segments.every(
+      (segment) =>
+        /^[a-z0-9]+$/.test(segment) &&
+        (segment.length > 1 || /^[0-9]$/.test(segment)),
+    )
+  )
+}
+
+/**
+ * Model titles arrive as prose, Title Case, or slugs. Slug separators become
+ * spaces and only the first letter is forced, so whatever casing the model
+ * chose for the remaining words survives.
+ */
+export const normalizeStudyGuideTitle = (value: unknown): string => {
+  const raw = (typeof value === 'string' ? value : '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  const text = isSlugShapedTitle(raw) ? raw.split(/[-_]/).join(' ') : raw
+
+  return text ? `${text.charAt(0).toUpperCase()}${text.slice(1)}` : ''
+}
+
 export const trimTitleToWordBoundary = (
   value: string,
   maxChars: number,
@@ -935,7 +1081,7 @@ Return strict JSON only with this shape:
   "targetParts": string[],
   "knownTopicsForQuickStart": string[],
   "correspondences": [
-    { "knownSide": "...", "targetSide": "...", "carries": "...", "kind": "part" | "process" }
+    { "knownSide": "...", "targetSide": "...", "carries": "...", "kind": "part" | "process", "alsoWorksFor": "..." }
   ],
   "knownTopicRelevanceReason": string,
   "breaksAt": string,
@@ -960,8 +1106,12 @@ Step 3 - correspondences (this is the real output):
 - knownSide: the specific part inside the known topic. targetSide: the part inside the Study Guide topic it maps to.
 - carries: what the pair transfers, in a few words. State the role or the causal job, not the resemblance.
 - kind: "process" when the pair transfers something that happens over time (a change, a build-up, a feedback, an adaptation); "part" when it transfers a fixed role or component.
-- A pair only counts when knowing the known side tells the learner something true about how the target side behaves.
+- Label kind honestly. "process" only when something changes, accumulates, decays, or feeds back over time. A fixed role or component is "part". Never label a static role as a process to make the mapping look richer.
+- alsoWorksFor: does the knownSide depend on something that exists only in this known topic? If yes, answer "none". If the knownSide is a general idea that any subject could supply, name one other everyday domain that supplies it just as well.
+- Worked example. "budget categories -> grammar categories" leans on the general idea of having categories, which filing cabinets and wardrobes supply too, so alsoWorksFor is "filing cabinets". "a key's cut -> a verb ending" leans on a cut, which exists only in locks and keys, so alsoWorksFor is "none".
+- A pair only counts when knowing the known side lets the learner predict how the target side behaves. Naming a shared property is not predicting behaviour.
 - Do not write a pair whose two sides are the same word, or that only shares a label, a mood, or a general theme.
+- Prefer concrete nouns on the known side. Pairs built from abstract words like "categories", "choices", "resources", "structure", or "standards" are almost always swap-test failures.
 - Return [] when nothing genuinely maps. An empty list is a correct and useful answer.
 - Bridge mode: ${mode}. In force mode, still return [] rather than inventing pairs; the caller handles the empty case.
 

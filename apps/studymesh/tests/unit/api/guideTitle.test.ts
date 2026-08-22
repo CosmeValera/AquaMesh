@@ -7,22 +7,22 @@ import { humanizeGuideTitle } from '../../../../../api/hosted-ai'
 
 describe('humanizeGuideTitle', () => {
   it('humanises the kebab-case slugs the Study Guide model returns', () => {
-    expect(humanizeGuideTitle('spaced-repetition')).toBe('Spaced Repetition')
-    expect(humanizeGuideTitle('compound-interest')).toBe('Compound Interest')
+    expect(humanizeGuideTitle('spaced-repetition')).toBe('Spaced repetition')
+    expect(humanizeGuideTitle('compound-interest')).toBe('Compound interest')
     expect(humanizeGuideTitle('learning-bottleneck')).toBe(
-      'Learning Bottleneck',
+      'Learning bottleneck',
     )
-    expect(humanizeGuideTitle('why-you-forget')).toBe('Why You Forget')
+    expect(humanizeGuideTitle('why-you-forget')).toBe('Why you forget')
   })
 
   it('humanises snake_case and mixed separators', () => {
-    expect(humanizeGuideTitle('spaced_repetition')).toBe('Spaced Repetition')
-    expect(humanizeGuideTitle('deep_work-basics')).toBe('Deep Work Basics')
+    expect(humanizeGuideTitle('spaced_repetition')).toBe('Spaced repetition')
+    expect(humanizeGuideTitle('deep_work-basics')).toBe('Deep work basics')
   })
 
   it('treats a digit-only segment as part of the slug', () => {
-    expect(humanizeGuideTitle('python-3-basics')).toBe('Python 3 Basics')
-    expect(humanizeGuideTitle('http-2-explained')).toBe('Http 2 Explained')
+    expect(humanizeGuideTitle('python-3-basics')).toBe('Python 3 basics')
+    expect(humanizeGuideTitle('http-2-explained')).toBe('Http 2 explained')
   })
 
   it('leaves a title that already reads like a human title untouched', () => {
@@ -38,13 +38,13 @@ describe('humanizeGuideTitle', () => {
       'Cost-Benefit Analysis',
     )
     expect(humanizeGuideTitle('object-oriented programming')).toBe(
-      'object-oriented programming',
+      'Object-oriented programming',
     )
     // A single-letter part is a hyphenated word, not a slug of two words.
-    expect(humanizeGuideTitle('e-commerce')).toBe('e-commerce')
-    expect(humanizeGuideTitle('x-ray')).toBe('x-ray')
-    expect(humanizeGuideTitle('t-test')).toBe('t-test')
-    expect(humanizeGuideTitle('u-turn')).toBe('u-turn')
+    expect(humanizeGuideTitle('e-commerce')).toBe('E-commerce')
+    expect(humanizeGuideTitle('x-ray')).toBe('X-ray')
+    expect(humanizeGuideTitle('t-test')).toBe('T-test')
+    expect(humanizeGuideTitle('u-turn')).toBe('U-turn')
     // Any capital means the model already cased it deliberately.
     expect(humanizeGuideTitle('E-Commerce')).toBe('E-Commerce')
     expect(humanizeGuideTitle('Well-Being')).toBe('Well-Being')
@@ -53,10 +53,10 @@ describe('humanizeGuideTitle', () => {
 
   it('leaves anything that is not a clean slug untouched', () => {
     expect(humanizeGuideTitle('-leading')).toBe('-leading')
-    expect(humanizeGuideTitle('trailing-')).toBe('trailing-')
-    expect(humanizeGuideTitle('double--dash')).toBe('double--dash')
-    expect(humanizeGuideTitle('café-crème')).toBe('café-crème')
-    expect(humanizeGuideTitle('memory')).toBe('memory')
+    expect(humanizeGuideTitle('trailing-')).toBe('Trailing-')
+    expect(humanizeGuideTitle('double--dash')).toBe('Double--dash')
+    expect(humanizeGuideTitle('café-crème')).toBe('Café-crème')
+    expect(humanizeGuideTitle('memory')).toBe('Memory')
   })
 
   it('is safe for empty, blank and non-string values', () => {
@@ -70,13 +70,13 @@ describe('humanizeGuideTitle', () => {
 
   it('trims before deciding, so a padded slug is still humanised', () => {
     expect(humanizeGuideTitle('  spaced-repetition  ')).toBe(
-      'Spaced Repetition',
+      'Spaced repetition',
     )
   })
 
   it('is idempotent', () => {
     expect(humanizeGuideTitle(humanizeGuideTitle('spaced-repetition'))).toBe(
-      'Spaced Repetition',
+      'Spaced repetition',
     )
   })
 })

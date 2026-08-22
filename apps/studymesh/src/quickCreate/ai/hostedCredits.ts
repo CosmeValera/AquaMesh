@@ -187,6 +187,8 @@ export interface HostedAiGatewayResponse {
   text?: string
   quickStart?: StudyGuideQuickStart
   bridgeBlocks?: StudyGuideKnowledgeBridgeBlock[]
+  /** Skill names offered after the quiz, generated with the guide. */
+  learnedSkillOptions?: string[]
   podcast?: HostedAiPodcast
   status?: HostedAiStatus
   error?: {

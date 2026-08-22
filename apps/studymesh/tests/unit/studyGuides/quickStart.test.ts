@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildStudyGuideKnownTopicPrefilterPrompt,
   deriveStudyGuideBridgeStrength,
+  normalizeStudyGuideTitle,
   parseStudyGuideKnownTopicPrefilterResult,
   parseStudyGuideQuickStart,
   parseStudyGuideQuickStartRelevanceDecision,
@@ -125,35 +126,60 @@ const pair = (
   knownSide: string,
   targetSide: string,
   kind: 'part' | 'process' = 'part',
-) => ({ knownSide, targetSide, carries: 'the same causal job', kind })
+) => ({
+  knownSide,
+  targetSide,
+  carries: 'the same causal job',
+  kind,
+  alsoWorksFor: 'none',
+})
 
 describe('bridge strength derivation', () => {
   it('returns none for an empty mapping', () => {
     expect(deriveStudyGuideBridgeStrength([])).toBe('none')
   })
 
-  it('returns weak when nothing transfers over time', () => {
+  it('returns weak when the mapping runs out of pairs', () => {
     expect(
       deriveStudyGuideBridgeStrength(
         sanitizeStudyGuideBridgeCorrespondences([
           pair('lock', 'receptor'),
           pair('key', 'adenosine'),
           pair('decoy key', 'caffeine'),
+          pair('keys queuing at the door', 'sleep pressure', 'process'),
         ]),
       ),
     ).toBe('weak')
   })
 
-  it('returns strong at three distinct pairs with one process', () => {
+  // A mostly structural analogy still leads. Caffeine through locksmithing is
+  // four static roles plus one dynamic, and it is the strongest bridge we have.
+  it('returns strong for a broad mapping carrying one process', () => {
     expect(
       deriveStudyGuideBridgeStrength(
         sanitizeStudyGuideBridgeCorrespondences([
-          pair('lock', 'receptor'),
-          pair('key', 'adenosine'),
-          pair('keys queuing at the door', 'sleep pressure', 'process'),
+          pair("a lock's keyway", 'an adenosine receptor'),
+          pair("a key's cut", "caffeine's molecular shape"),
+          pair('an inserted key', 'caffeine occupying a receptor'),
+          pair('a jammed lock', 'blocked adenosine signalling'),
+          pair('repeated lock use', 'tolerance after repeated use', 'process'),
         ]),
       ),
     ).toBe('strong')
+  })
+
+  it('returns weak when nothing transfers over time at all', () => {
+    expect(
+      deriveStudyGuideBridgeStrength(
+        sanitizeStudyGuideBridgeCorrespondences([
+          pair('a', 'one'),
+          pair('b', 'two'),
+          pair('c', 'three'),
+          pair('d', 'four'),
+          pair('e', 'five'),
+        ]),
+      ),
+    ).toBe('weak')
   })
 
   it('returns weak when repeated pairs collapse below the threshold', () => {
@@ -166,6 +192,49 @@ describe('bridge strength derivation', () => {
         ]),
       ),
     ).toBe('weak')
+  })
+
+  // A topic sharing only a property runs out of pairs early; a real one keeps
+  // going. This is the budgeting-vs-Galician case that shipped as a false strong.
+  it('rejects a shared-property mapping that runs dry', () => {
+    expect(
+      deriveStudyGuideBridgeStrength(
+        sanitizeStudyGuideBridgeCorrespondences([
+          pair('budget categories', 'grammar categories'),
+          pair('tracked expenses', 'vocabulary choices'),
+          pair('monthly budget review', 'verb endings', 'process'),
+        ]),
+      ),
+    ).toBe('weak')
+  })
+})
+
+describe('study guide title normalizing', () => {
+  it('turns a slug into spaces and capitalizes only the first word', () => {
+    expect(normalizeStudyGuideTitle('caffeine-brain-effects')).toBe(
+      'Caffeine brain effects',
+    )
+    expect(normalizeStudyGuideTitle('spaced_repetition')).toBe(
+      'Spaced repetition',
+    )
+  })
+
+  it('keeps the model casing of every word after the first', () => {
+    expect(normalizeStudyGuideTitle('How Memory Works')).toBe('How Memory Works')
+    expect(normalizeStudyGuideTitle('how memory works')).toBe('How memory works')
+  })
+
+  it('leaves real hyphenated words alone', () => {
+    expect(normalizeStudyGuideTitle('e-commerce')).toBe('E-commerce')
+    expect(normalizeStudyGuideTitle('Cost-Benefit Analysis')).toBe(
+      'Cost-Benefit Analysis',
+    )
+  })
+
+  it('collapses whitespace and handles non-strings', () => {
+    expect(normalizeStudyGuideTitle('  spaced   out  ')).toBe('Spaced out')
+    expect(normalizeStudyGuideTitle(undefined)).toBe('')
+    expect(normalizeStudyGuideTitle(42)).toBe('')
   })
 })
 
@@ -209,6 +278,9 @@ describe('relevance decision', () => {
         correspondences: [
           pair('playbook', 'desired state'),
           pair('task run', 'converge step', 'process'),
+          pair('drift creeping back', 'drift', 'process'),
+          pair('inventory file', 'host list'),
+          pair('a failed run retried', 'reconvergence', 'process'),
           pair('idempotence', 'drift correction'),
         ],
         knownTopicRelevanceReason: 'Both describe converging to a declared state.',

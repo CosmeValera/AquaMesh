@@ -17,6 +17,7 @@ import type {
 import {
   buildStudyGuideKnownTopicPrefilterPrompt,
   deriveStudyGuideBridgeStrength,
+  normalizeStudyGuideTitle,
   parseStudyGuideKnownTopicPrefilterResult,
   parseStudyGuideQuickStart,
   sanitizeStudyGuideBridgeCorrespondences,
@@ -2469,62 +2470,17 @@ const mapFailure = (
   };
 };
 
-/**
- * The Study Guide model is asked for a human title but regularly answers with a
- * slug ("spaced-repetition"), which then becomes the library name, the
- * workspace heading and every derived page name ("Flashcards: spaced-repetition").
- *
- * A value only counts as a slug when every one of these holds, so that a real
- * hyphenated title is never touched:
- * - it carries no whitespace at all - a human title of several words has spaces,
- *   so "Cost-Benefit Analysis" is out on this alone;
- * - it is pure lowercase ASCII plus "-"/"_" separators, so any capital letter
- *   ("E-Commerce", "Well-Being") or accent keeps the value as written;
- * - it has at least two separator-delimited segments;
- * - every alphabetic segment is at least two characters, which is what keeps
- *   hyphenated single words with a one-letter part alive: "e-commerce",
- *   "x-ray", "t-test", "u-turn". Digit-only segments are exempt so that
- *   "python-3-basics" is still recognised as a slug.
- */
-const isSlugShapedTitle = (value: string): boolean => {
-  if (!value || /\s/.test(value) || !/[-_]/.test(value)) {
-    return false;
-  }
-
-  const segments = value.split(/[-_]/);
-
-  return (
-    segments.length > 1 &&
-    segments.every(
-      (segment) =>
-        /^[a-z0-9]+$/.test(segment) &&
-        (segment.length > 1 || /^[0-9]$/.test(segment)),
-    )
-  );
-};
-
-/**
- * Turns a slug-shaped guide title into Title Case and returns anything that
- * already reads like a human title completely unchanged.
- */
-export const humanizeGuideTitle = (value: unknown): string => {
-  const title = typeof value === "string" ? value.trim() : "";
-
-  if (!isSlugShapedTitle(title)) {
-    return title;
-  }
-
-  return title
-    .split(/[-_]/)
-    .map((segment) => `${segment.charAt(0).toUpperCase()}${segment.slice(1)}`)
-    .join(" ");
-};
+/** Shared with the BYO path so both normalize guide titles identically. */
+export const humanizeGuideTitle = (value: unknown): string =>
+  normalizeStudyGuideTitle(value);
 
 interface NormalizedMonolithGuide {
   title: string;
   folderName: string;
   emoji: string;
   quickStart: NonNullable<HostedAiGatewayResponse["quickStart"]>;
+  /** Names the learner can pick from when claiming the topic after the quiz. */
+  learnedSkillOptions: string[];
   pages: EnhancedStudyGuidePage[];
   contextPlan?: {
     /** Derived from correspondences, never asserted by the model. */
@@ -2551,6 +2507,7 @@ export const createMonolithGuideSchema = (includeContext: boolean) => ({
       },
       required: ["keyIdea", "quickSummary"],
     },
+    learnedSkillOptions: textArraySchema,
     ...(includeContext
       ? {
           contextPlan: {
@@ -2608,6 +2565,7 @@ export const createMonolithGuideSchema = (includeContext: boolean) => ({
     "folderName",
     "emoji",
     "quickStart",
+    "learnedSkillOptions",
     ...(includeContext ? ["contextPlan"] : []),
     "pages",
   ],
@@ -2632,13 +2590,14 @@ Return strict JSON only:
   "title": "...",
   "folderName": "...",
   "emoji": "one emoji",
-  "quickStart": { "keyIdea": "one sentence, max 35 words", "quickSummary": "two short paragraphs" },${
+  "quickStart": { "keyIdea": "one sentence, max 35 words", "quickSummary": "two short paragraphs" },
+  "learnedSkillOptions": ["...", "...", "..."],${
     userKnownTopics.length
       ? `
   "contextPlan": {
     "targetParts": ["..."],
     "selectedTopics": ["..."],
-    "correspondences": [{ "knownSide": "...", "targetSide": "...", "carries": "...", "kind": "part" }],
+    "correspondences": [{ "knownSide": "...", "targetSide": "...", "carries": "...", "kind": "part", "alsoWorksFor": "..." }],
     "reason": "...",
     "breaksAt": "...",
     "personalizedQuickStart": { "keyIdea": "...", "quickSummary": "..." },
@@ -2663,6 +2622,8 @@ Rules:
 - keyIdea: exactly one complete sentence, 20-35 words, ending in a period. Never write a second sentence and never run past 35 words, because keyIdea is hard-capped at 35 words downstream.
 - quickSummary: 60-85 words, 2 short paragraphs, every paragraph ends with a complete sentence.
 - Choose a concise, topic-specific folderName and exactly one topic-matching emoji.
+- learnedSkillOptions: exactly 3 ways to name what the learner will KNOW after finishing, for a list of topics they can claim. Name the reusable concept or ability, never the guide. Each is 2-4 words, sentence case, plain spaces, no hyphens, underscores, colons, or question marks.
+- Offer three different angles: the mechanism itself, the everyday ability it gives, and the wider field it belongs to. For a guide on caffeine and the brain: "Adenosine and sleep pressure", "Reading how stimulants work", "Basic neuropharmacology". Never "How caffeine affects your brain" and never a slug.
 - Do not include quiz questions inside rawNotes.${
   userKnownTopics.length
     ? `
@@ -2674,7 +2635,11 @@ Rules:
 - Cross-domain candidates are allowed and are often the best choice. A locksmith's lock and key can map onto a molecular receptor; a household budget can map onto an energy balance. Never reject a candidate for coming from a different field, for being broad, or for being everyday rather than technical.
 - Once you have chosen, map that candidate as completely as you can. List every pair that holds, not only the first one or two, and work through each targetPart in turn before stopping. Extra candidates must not cost the chosen one depth.
 - contextPlan.correspondences: up to ${STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES} matched pairs. knownSide is the part inside the candidate topic, targetSide the part inside this guide's topic. carries states the role or causal job the pair transfers, in a few words. kind is "process" when the pair transfers something happening over time (a change, a build-up, a feedback, an adaptation) and "part" when it transfers a fixed role.
-- A pair only counts when knowing the known side tells the learner something true about how the target side behaves. Never write a pair whose two sides are the same word, or that shares only a label, a mood, or a general theme. Return [] when nothing genuinely maps.
+- Label kind honestly. "process" only when something changes, accumulates, decays, or feeds back over time. A fixed role or component is "part". Never label a static role as a process to make the mapping look richer.
+- alsoWorksFor: does the knownSide depend on something that exists only in the selected topic? If yes, answer "none". If the knownSide is a general idea any subject could supply, name one other everyday domain that supplies it just as well.
+- Worked example. "budget categories -> grammar categories" leans on the general idea of having categories, which filing cabinets and wardrobes supply too, so alsoWorksFor is "filing cabinets". "a key's cut -> a verb ending" leans on a cut, which exists only in locks and keys, so alsoWorksFor is "none".
+- A pair only counts when knowing the known side lets the learner predict how the target side behaves. Naming a shared property is not predicting behaviour. Never write a pair whose two sides are the same word, or that shares only a label, a mood, or a general theme. Return [] when nothing genuinely maps.
+- Prefer concrete nouns on the known side. Pairs built from abstract words like "categories", "choices", "resources", "structure", or "standards" are almost always swap-test failures.
 - contextPlan.personalizedQuickStart: always write this variant, even when correspondences is []. It is an opt-in view the learner opens themselves. quickSummary 60-85 words, complete sentences.
 - Count your own correspondences. With 3 or more including at least one "process", the selected topic must LEAD personalizedQuickStart: state keyIdea in the known topic's vocabulary and run at least three pairs through quickSummary. With 1-2, explain the topic directly first and bring the known topic in as one concrete comparison. With none, explain the topic directly and mention the selected topic once as a concrete point of contact; if selectedTopics is [] write a neutral Quick Start and invent no bridge.
 - In personalizedQuickStart, write as if the mapping is simply true. Never write about the comparison itself: no "the comparison", "the analogy", "this comparison is limited", "the comparison breaks down", "provides only a limited comparison", "unlike the mechanisms involved in".
@@ -2783,8 +2748,19 @@ export const normalizeMonolithGuide = (
     };
   }
 
+  const learnedSkillOptions = (
+    Array.isArray(record.learnedSkillOptions) ? record.learnedSkillOptions : []
+  )
+    .map((option) =>
+      trimTitleToWordBoundary(normalizeStudyGuideTitle(option), 48),
+    )
+    .filter(Boolean)
+    .filter((option, index, options) => options.indexOf(option) === index)
+    .slice(0, 3);
+
   return {
     title: humanizeGuideTitle(stringValue(record.title) || titleFallback),
+    learnedSkillOptions,
     folderName: humanizeGuideTitle(
       stringValue(record.folderName) || folderNameFallback,
     ),
@@ -2810,6 +2786,7 @@ export const generateMonolithHostedStudyGuide = async ({
   text: string;
   quickStart: HostedAiGatewayResponse["quickStart"];
   bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"];
+  learnedSkillOptions: string[];
 }> => {
   metadataFlags.generationStrategy = "monolith_v1";
 
@@ -2980,6 +2957,7 @@ export const generateMonolithHostedStudyGuide = async ({
     }),
     quickStart,
     bridgeBlocks,
+    learnedSkillOptions: guide.learnedSkillOptions,
   };
 };
 

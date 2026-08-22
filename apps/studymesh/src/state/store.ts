@@ -63,6 +63,11 @@ export interface StudyPathContainerState {
   contentLanguageSource?: ContentLanguageSource
   quickStart?: StudyGuideQuickStart
   quickStartView?: StudyGuideQuickStartView
+  /**
+   * Names the learner can choose from when claiming this topic after the quiz.
+   * Generated with the guide, so the offer costs no extra model call.
+   */
+  learnedSkillOptions?: string[]
   dashboards: StudyPathDashboardItem[]
   selectedIndex: number
   pinnedDashboardKeys?: string[]

@@ -3,7 +3,7 @@
 // new mapping-based one. Costs real credits; not part of the unit suite.
 //   npx tsx apps/studymesh/tests/live/bridgeAb.ts
 // Env: LIVE_ARMS (old,new), LIVE_REPEATS (default 1), LIVE_EFFORT (default low).
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 import {
   buildMonolithGuidePrompt,
@@ -45,6 +45,7 @@ interface Case {
   group: string
   topic: string
   knownTopics: string[]
+  expect?: "strong" | "weak"
 }
 
 // Spread across subject families, prompt lengths, and skill counts, because the
@@ -189,12 +190,43 @@ I want to understand burnout properly rather than just telling everyone to take 
     group: 'null',
     topic: 'what is a matrix in linear algebra?',
     knownTopics: ['galician'],
+    expect: 'weak',
   },
   {
     name: 'baroque art x galician (null case)',
     group: 'null',
     topic: 'what defines Baroque painting?',
     knownTopics: ['galician'],
+    expect: 'weak',
+  },
+  // The two the user flagged. Budgeting only shares "things have categories"
+  // with a grammar; locksmithing genuinely transfers selective fit.
+  {
+    name: 'galician x budgeting (false strong)',
+    group: 'calibration',
+    topic: 'galician language',
+    knownTopics: ['budgeting'],
+    expect: 'weak',
+  },
+  {
+    name: 'galician x locksmithing (true medium)',
+    group: 'calibration',
+    topic: 'galician language',
+    knownTopics: ['locksmithing'],
+  },
+  {
+    name: 'galician x language learning (same field)',
+    group: 'calibration',
+    topic: 'galician language',
+    knownTopics: ['learning portuguese'],
+    expect: 'strong',
+  },
+  {
+    name: 'photosynthesis x knitting (should not map)',
+    group: 'calibration',
+    topic: 'how does photosynthesis actually work?',
+    knownTopics: ['knitting'],
+    expect: 'weak',
   },
   {
     name: 'difficult feedback x devops (safety)',
@@ -394,10 +426,17 @@ interface Row {
   leads: boolean
   strength: string
   pairs: number
+  specificPairs: number
+  concretePairs: number
+  swapPairs: number
   selected: string[]
   banned: string[]
   bridgeText: string
   costUsd: number
+  /** Full sanitized pairs, saved so threshold rules can be swept offline. */
+  correspondences: unknown[]
+  skillOptions: string[]
+  expect: string
 }
 
 const runOne = async (
@@ -456,12 +495,20 @@ const runOne = async (
       leads: strength === 'strong',
       strength,
       pairs: pairs.length,
+      specificPairs: pairs.filter((pair) => pair.isSpecific).length,
+      concretePairs: pairs.filter((pair) => pair.isConcrete).length,
+      swapPairs: pairs.filter((pair) => pair.passesSwapTest).length,
       selected,
       banned: BANNED.filter((phrase) =>
         bridgeText.toLowerCase().includes(phrase),
       ),
       bridgeText: bridgeText.replace(/\s+/g, ' ').trim(),
       costUsd: result.costUsd,
+      correspondences: pairs,
+      skillOptions: Array.isArray(raw.learnedSkillOptions)
+        ? raw.learnedSkillOptions
+        : [],
+      expect: testCase.expect || 'either',
     }
   } catch (error) {
     return {
@@ -473,10 +520,16 @@ const runOne = async (
       leads: false,
       strength: 'error',
       pairs: 0,
+      specificPairs: 0,
+      concretePairs: 0,
+      swapPairs: 0,
       selected: [],
       banned: [],
       bridgeText: String(error).slice(0, 200),
       costUsd: 0,
+      correspondences: [],
+      skillOptions: [],
+      expect: testCase.expect || "either",
     }
   }
 }
@@ -570,6 +623,12 @@ const main = async () => {
     }).join('  ')
     console.log(`  ${testCase.name.padEnd(40)} ${cells}`)
   }
+
+  const rawPath = `${process.env.LIVE_OUT_DIR || '.'}/bridge_raw_${
+    process.env.LIVE_TAG || 'run'
+  }.json`
+  writeFileSync(rawPath, JSON.stringify(rows, null, 2))
+  console.log(`\nraw pair data -> ${rawPath}`)
 
   if (DUMP) {
     console.log('\n===== FULL BRIDGE TEXT =====')

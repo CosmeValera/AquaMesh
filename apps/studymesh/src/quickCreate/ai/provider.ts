@@ -568,6 +568,7 @@ export const generateStudyPathWithAi = async (
     )
     let hostedQuickStart: StudyGuideQuickStart | null = null
     let hostedBridgeBlocks: StudyGuideKnowledgeBridgeBlock[] = []
+    let hostedLearnedSkillOptions: string[] = []
     const draft = await generateStudyPathWithGemini({
       ...options,
       apiToken: '',
@@ -585,6 +586,9 @@ export const generateStudyPathWithAi = async (
         onBridgeBlocks: (bridgeBlocks) => {
           hostedBridgeBlocks = bridgeBlocks
         },
+        onLearnedSkillOptions: (options) => {
+          hostedLearnedSkillOptions = options
+        },
       }),
     })
     const quickStart = sanitizeStudyGuideQuickStart(
@@ -595,7 +599,13 @@ export const generateStudyPathWithAi = async (
     }
 
     return applyKnowledgeBridgeBlocks(
-      { ...draft, quickStart },
+      {
+        ...draft,
+        quickStart,
+        ...(hostedLearnedSkillOptions.length
+          ? { learnedSkillOptions: hostedLearnedSkillOptions }
+          : {}),
+      },
       parseStudyGuideKnowledgeBridgeBlocks(
         JSON.stringify({ blocks: hostedBridgeBlocks }),
         draft.dashboards.length,

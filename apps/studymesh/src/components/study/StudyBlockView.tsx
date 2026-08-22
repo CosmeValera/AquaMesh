@@ -1230,8 +1230,23 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   // The guide this block belongs to. Both are injected by
   // `createStudyPathProps`, so they are only present on Study Guide pages,
   // which is exactly where a topic is worth offering.
-  const learnedTopicName = String(props.studyPathTitle || '').trim()
   const learnedTopicGuideId = String(props.studyPathId || '')
+  // Guides generated before skill options existed only have the title, which
+  // reads like something you read rather than something you know.
+  const learnedTopicOptions = useMemo(() => {
+    const offered = Array.isArray(props.studyPathLearnedSkillOptions)
+      ? props.studyPathLearnedSkillOptions
+          .map((option) => String(option || '').trim())
+          .filter(Boolean)
+          .slice(0, 3)
+      : []
+
+    return offered.length
+      ? offered
+      : [String(props.studyPathTitle || '').trim()].filter(Boolean)
+  }, [props.studyPathLearnedSkillOptions, props.studyPathTitle])
+  const [chosenTopicIndex, setChosenTopicIndex] = useState(0)
+  const learnedTopicName = learnedTopicOptions[chosenTopicIndex] || ''
   // Read once the results open rather than on every render: both helpers hit
   // localStorage, and the answer cannot change while the score is on screen.
   const canOfferLearnedTopic = useMemo(() => {
@@ -2573,9 +2588,30 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
           justifyContent="space-between"
         >
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" fontWeight={700}>
-              {learnedTopicName}
-            </Typography>
+            {learnedTopicOptions.length > 1 ? (
+              <Stack
+                direction="row"
+                spacing={0.75}
+                useFlexGap
+                sx={{ flexWrap: 'wrap', mb: 0.75 }}
+              >
+                {learnedTopicOptions.map((option, index) => (
+                  <Chip
+                    key={option}
+                    label={option}
+                    size="small"
+                    onClick={() => setChosenTopicIndex(index)}
+                    color={index === chosenTopicIndex ? 'primary' : 'default'}
+                    variant={index === chosenTopicIndex ? 'filled' : 'outlined'}
+                    sx={{ fontWeight: index === chosenTopicIndex ? 700 : 500 }}
+                  />
+                ))}
+              </Stack>
+            ) : (
+              <Typography variant="subtitle2" fontWeight={700}>
+                {learnedTopicName}
+              </Typography>
+            )}
             {suggestRevisingPages ? (
               <Typography
                 variant="caption"

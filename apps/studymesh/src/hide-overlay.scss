@@ -4,22 +4,40 @@ body {
   }
 }
 
-/* width */
+/* Scrollbars: track blends with the page, thumb is the visible handle */
+:root {
+  --scrollbar-track: #eef1f5;
+  --scrollbar-thumb: #b3bccb;
+  --scrollbar-thumb-hover: #8e9aad;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+:root[data-theme='dark'] {
+  --scrollbar-track: #0d131d;
+  --scrollbar-thumb: #3b4757;
+  --scrollbar-thumb-hover: #566579;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
-/* Track */
 ::-webkit-scrollbar-track {
-  background: #888;
+  background: var(--scrollbar-track);
 }
 
-/* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #f1f1f1;
+  background: var(--scrollbar-thumb);
+  border-radius: 8px;
 }
 
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #cacaca;
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
 }

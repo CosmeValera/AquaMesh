@@ -371,12 +371,15 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   // the guide list, so one listener covers the hop between them.
   useEffect(() => {
     const handleStartNextStudyGuide = (event: Event) => {
-      const prompt = (event as CustomEvent<{ prompt?: unknown }>).detail?.prompt
-      if (typeof prompt !== 'string' || !prompt.trim()) {
+      const detail = (event as CustomEvent<{ prompts?: unknown }>).detail
+      const prompts = (Array.isArray(detail?.prompts) ? detail.prompts : [])
+        .map((prompt) => String(prompt || '').trim())
+        .filter(Boolean)
+      if (!prompts.length) {
         return
       }
 
-      navigate('/study-guides', { state: { createGuidePrompt: prompt } })
+      navigate('/study-guides', { state: { createGuidePrompts: prompts } })
     }
 
     window.addEventListener(

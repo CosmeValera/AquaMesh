@@ -325,6 +325,8 @@ const StudyGuidesPage = () => {
   const [renameTitle, setRenameTitle] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [createGuidePrompt, setCreateGuidePrompt] = useState('')
+  const [multiCreateOpen, setMultiCreateOpen] = useState(false)
+  const [multiCreatePrompts, setMultiCreatePrompts] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [pendingGuides, setPendingGuides] = useState<PendingGuide[]>([])
@@ -385,18 +387,21 @@ const StudyGuidesPage = () => {
     }
   }, [])
 
-  // A follow-up guide started from a finished quiz arrives as router state.
-  // It is cleared right away so a reload does not reopen the dialog.
+  // Follow-up guides picked at the end of a quiz arrive as router state. The
+  // state is cleared right away so a reload does not reopen the dialog.
   useEffect(() => {
-    const handedOverPrompt = (
-      location.state as { createGuidePrompt?: unknown } | null
-    )?.createGuidePrompt
-    if (typeof handedOverPrompt !== 'string' || !handedOverPrompt.trim()) {
+    const handedOver = (
+      location.state as { createGuidePrompts?: unknown } | null
+    )?.createGuidePrompts
+    const prompts = (Array.isArray(handedOver) ? handedOver : [])
+      .map((prompt) => String(prompt || '').trim())
+      .filter(Boolean)
+    if (!prompts.length) {
       return
     }
 
-    setCreateGuidePrompt(handedOverPrompt)
-    setCreateOpen(true)
+    setMultiCreatePrompts(prompts)
+    setMultiCreateOpen(true)
     navigate(location.pathname, { replace: true, state: null })
   }, [location.pathname, location.state, navigate])
 
@@ -652,6 +657,14 @@ const StudyGuidesPage = () => {
     }
 
     enqueueCreateGuide(prompt)
+  }
+
+  // The queue runner already spreads jobs over its slots, so several guides
+  // only need several enqueues.
+  const submitMultiCreateGuides = () => {
+    multiCreatePrompts.forEach((prompt) => enqueueCreateGuide(prompt))
+    setMultiCreateOpen(false)
+    setMultiCreatePrompts([])
   }
 
   const openMenu = (
@@ -1840,6 +1853,66 @@ const StudyGuidesPage = () => {
               {getActiveAiProvider() === 'hosted' ? (
                 <StudyCreditCostLabel
                   amount={studyGuideCreditCost}
+                  variant="contained"
+                />
+              ) : null}
+            </Stack>
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={multiCreateOpen}
+        onClose={() => setMultiCreateOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 2 } }}
+      >
+        <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>
+          {t('studyGuides.multiCreateTitle').replace(
+            '{count}',
+            String(multiCreatePrompts.length),
+          )}
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5} sx={{ mt: 1 }}>
+            {multiCreatePrompts.map((prompt) => (
+              <Paper
+                key={prompt}
+                variant="outlined"
+                sx={{ p: 1.5, borderRadius: 2 }}
+              >
+                <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
+                  {prompt}
+                </Typography>
+              </Paper>
+            ))}
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setMultiCreateOpen(false)}>
+            {t('studyGuides.cancel')}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={submitMultiCreateGuides}
+            disabled={!multiCreatePrompts.length}
+          >
+            <Stack
+              component="span"
+              direction="row"
+              spacing={1}
+              alignItems="center"
+            >
+              <span>
+                {t('studyGuides.multiCreateConfirm').replace(
+                  '{count}',
+                  String(multiCreatePrompts.length),
+                )}
+              </span>
+              {getActiveAiProvider() === 'hosted' ? (
+                <StudyCreditCostLabel
+                  amount={studyGuideCreditCost * multiCreatePrompts.length}
                   variant="contained"
                 />
               ) : null}

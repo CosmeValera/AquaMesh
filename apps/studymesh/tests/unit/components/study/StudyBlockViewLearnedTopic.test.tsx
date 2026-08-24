@@ -260,6 +260,28 @@ describe('learned topic offer at the end of a quiz', () => {
   })
 })
 
+/** The cards carry both label and prompt, so the label alone locates them. */
+const findIdeaCard = async (label: string) => {
+  const heading = await screen.findByText(label)
+  const card = heading.closest('[role="button"]')
+  if (!card) {
+    throw new Error(`No idea card around "${label}"`)
+  }
+
+  return card
+}
+
+const promptsFromEvent = (listener: ReturnType<typeof vi.fn>): string[] =>
+  (listener.mock.calls[0][0] as CustomEvent<{ prompts: string[] }>).detail
+    .prompts
+
+const claimFlowConstraints = () =>
+  saveProfileContext({
+    roles: [],
+    broadKnowledge: [],
+    specificKnowledge: ['Flow constraints'],
+  })
+
 describe('follow-up guides offered after the topic is claimed', () => {
   beforeEach(() => {
     mockLocalStorage()
@@ -272,56 +294,72 @@ describe('follow-up guides offered after the topic is claimed', () => {
     expect(
       await screen.findByRole('button', { name: 'Add to what I know' }),
     ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Why queues stall' }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText('Why queues stall')).not.toBeInTheDocument()
   })
 
   it('is already on screen when the topic was claimed in an earlier session', async () => {
-    saveProfileContext({
-      roles: [],
-      broadKnowledge: [],
-      specificKnowledge: ['Flow constraints'],
-    })
+    claimFlowConstraints()
 
     renderQuiz()
     await completeQuiz(4)
 
-    expect(
-      await screen.findByRole('button', { name: 'Why queues stall' }),
-    ).toBeEnabled()
+    expect(await screen.findByText('Why queues stall')).toBeInTheDocument()
   })
 
-  it('asks for the next guide with the claimed skill named as the bridge', async () => {
-    const startNextGuide = vi.fn()
-    window.addEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
+  it('shows the whole prompt on the card instead of hiding it in a hover', async () => {
+    claimFlowConstraints()
 
     renderQuiz()
     await completeQuiz(4)
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'Add to what I know' }),
-    )
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'Why queues stall' }),
-    )
+
+    expect(
+      await screen.findByText('Teach me why queues stall.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Teach me how to measure throughput.'),
+    ).toBeInTheDocument()
+  })
+
+  it('selects on click rather than creating, and only creates on the button', async () => {
+    const startNextGuide = vi.fn()
+    window.addEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
+    claimFlowConstraints()
+
+    renderQuiz()
+    await completeQuiz(4)
+    fireEvent.click(await findIdeaCard('Why queues stall'))
+
+    expect(startNextGuide).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: /Create 1 guides/ }))
 
     expect(startNextGuide).toHaveBeenCalledTimes(1)
-    expect(
-      (startNextGuide.mock.calls[0][0] as CustomEvent<{ prompt: string }>).detail
-        .prompt,
-    ).toBe(
+    expect(promptsFromEvent(startNextGuide)).toEqual([
       'Teach me why queues stall.\n\nExplain it through Flow constraints, which I already know. Do not re-explain Flow constraints itself.',
-    )
+    ])
 
     window.removeEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
   })
 
-  it('disables an idea whose guide the reader already created', async () => {
-    saveProfileContext({
-      roles: [],
-      broadKnowledge: [],
-      specificKnowledge: ['Flow constraints'],
-    })
+  it('sends every selected idea in one event', async () => {
+    const startNextGuide = vi.fn()
+    window.addEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
+    claimFlowConstraints()
+
+    renderQuiz()
+    await completeQuiz(4)
+    fireEvent.click(await findIdeaCard('Why queues stall'))
+    fireEvent.click(await findIdeaCard('Measuring throughput'))
+    fireEvent.click(screen.getByRole('button', { name: /Create 2 guides/ }))
+
+    expect(startNextGuide).toHaveBeenCalledTimes(1)
+    expect(promptsFromEvent(startNextGuide)).toHaveLength(2)
+
+    window.removeEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
+  })
+
+  it('cannot select an idea whose guide the reader already created', async () => {
+    claimFlowConstraints()
 
     // The guide view resolves this against the guide store and hands it down.
     renderQuiz({
@@ -329,12 +367,14 @@ describe('follow-up guides offered after the topic is claimed', () => {
     })
     await completeQuiz(4)
 
+    const created = await findIdeaCard('Why queues stall')
+    expect(created).toHaveAttribute('aria-disabled', 'true')
+
+    fireEvent.click(created)
+
     expect(
-      await screen.findByRole('button', { name: 'Why queues stall' }),
+      screen.getByRole('button', { name: /Create 0 guides/ }),
     ).toBeDisabled()
-    expect(
-      screen.getByRole('button', { name: 'Measuring throughput' }),
-    ).toBeEnabled()
   })
 
   it('shows nothing extra for a guide generated without follow-up ideas', async () => {

@@ -11,6 +11,8 @@ import {
   resolveStudyGuideKnowledgeContextPlan,
   sanitizeStudyGuideBridgeCorrespondences,
   sanitizeStudyGuideLearnedSkillOptions,
+  STUDY_GUIDE_LEARNED_SKILL_FIELD_INSTRUCTION,
+  STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION,
   sanitizeStudyGuideNextIdeas,
   STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MAX,
 } from '../../../src/studyGuides/quickStart'
@@ -451,5 +453,34 @@ describe('follow-up guide ideas offered after the quiz', () => {
     ])
 
     expect(ideas).toEqual([{ label: 'Why runs drift', prompt: 'Teach me A.' }])
+  })
+})
+
+describe('claimable skill naming rules', () => {
+  it('demands the subject when the concept is not unique to it', () => {
+    // A React guide named its skill "Component state flow", which reads as Vue
+    // or Angular just as well once it sits in a list of known topics.
+    expect(STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION).toContain(
+      'identify its subject on its own',
+    )
+    expect(STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION).toContain(
+      'name the subject in it',
+    )
+  })
+
+  it('still refuses to name the guide rather than the concept', () => {
+    expect(STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION).toContain('never the guide')
+  })
+
+  it('shares one wording between the array field and the hosted string', () => {
+    expect(STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION).toContain(
+      'learnedSkillOptions:',
+    )
+    expect(STUDY_GUIDE_LEARNED_SKILL_FIELD_INSTRUCTION).toContain(
+      'learnedSkill: one string.',
+    )
+    expect(STUDY_GUIDE_LEARNED_SKILL_FIELD_INSTRUCTION).toContain(
+      'identify its subject on its own',
+    )
   })
 })

@@ -856,12 +856,46 @@ describe('StudyGuidesPage create flow', () => {
 
 })
 
-describe('follow-up guide handed over from a finished quiz', () => {
-  const renderWithHandoverState = (createGuidePrompt: unknown) =>
+describe('follow-up guides handed over from a finished quiz', () => {
+  const PROMPTS = [
+    'Teach me why queues stall.\n\nExplain it through Bottlenecks, which I already know.',
+    'Teach me how to measure throughput.\n\nExplain it through Bottlenecks, which I already know.',
+  ]
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    useHostedAiStatusMock.mockReturnValue({
+      status: null,
+      displayStudyCredits: 30,
+      loading: false,
+      error: '',
+      refresh: vi.fn(),
+    })
+    const storage = new Map<string, string>()
+    vi.mocked(window.localStorage.getItem).mockImplementation(
+      (key: string) => storage.get(key) ?? null,
+    )
+    vi.mocked(window.localStorage.setItem).mockImplementation(
+      (key: string, value: string) => {
+        storage.set(key, value)
+      },
+    )
+    vi.mocked(window.localStorage.removeItem).mockImplementation(
+      (key: string) => {
+        storage.delete(key)
+      },
+    )
+    vi.mocked(window.localStorage.clear).mockImplementation(() => {
+      storage.clear()
+    })
+    window.localStorage.clear()
+  })
+
+  const renderWithHandoverState = (createGuidePrompts: unknown) =>
     render(
       <MemoryRouter
         initialEntries={[
-          { pathname: '/study-guides', state: { createGuidePrompt } },
+          { pathname: '/study-guides', state: { createGuidePrompts } },
         ]}
       >
         <Routes>
@@ -878,34 +912,48 @@ describe('follow-up guide handed over from a finished quiz', () => {
       </MemoryRouter>,
     )
 
-  it('opens the create dialog with the handed-over prompt already written', async () => {
-    renderWithHandoverState(
-      'Teach me how queueing theory works.\n\nExplain it through Bottlenecks, which I know.',
-    )
+  it('opens the multi-create dialog listing every handed-over prompt', async () => {
+    renderWithHandoverState(PROMPTS)
 
-    const promptField = await screen.findByLabelText(/Quick Guide prompt/i)
-    expect(promptField).toHaveValue(
-      'Teach me how queueing theory works.\n\nExplain it through Bottlenecks, which I know.',
-    )
+    expect(await screen.findByText('Create 2 guides')).toBeInTheDocument()
+    expect(screen.getByText(/Teach me why queues stall/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Teach me how to measure throughput/),
+    ).toBeInTheDocument()
+  })
+
+  it('starts one creation per prompt on confirm', async () => {
+    renderWithHandoverState(PROMPTS)
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Create 2/ }))
+
+    // The queue drains as jobs finish, so the generator call is the signal.
+    await waitFor(() => {
+      expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(2)
+    })
+    expect(
+      vi
+        .mocked(generateStudyPathStateFromPrompt)
+        .mock.calls.map(([options]) => options.prompt)
+        .sort(),
+    ).toEqual([...PROMPTS].sort())
   })
 
   it('clears the router state so a reload does not reopen the dialog', async () => {
-    renderWithHandoverState('Teach me how queueing theory works.')
+    renderWithHandoverState(PROMPTS)
 
-    await screen.findByLabelText(/Quick Guide prompt/i)
+    await screen.findByText('Create 2 guides')
     await waitFor(() => {
       expect(screen.getByTestId('router-state')).toHaveTextContent('null')
     })
   })
 
   it('ignores a state that carries no usable prompt', async () => {
-    renderWithHandoverState('   ')
+    renderWithHandoverState(['   '])
 
     await waitFor(() => {
       expect(screen.getByTestId('router-state')).toBeInTheDocument()
     })
-    expect(
-      screen.queryByLabelText(/Quick Guide prompt/i),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Create \d+ guides$/)).not.toBeInTheDocument()
   })
 })

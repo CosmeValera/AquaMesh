@@ -129,6 +129,8 @@ const translations = {
     'studyGuides.promptField': 'Quick Guide prompt',
     'studyGuides.promptPlaceholder': 'What should RabbitHole teach?',
     'studyGuides.createGuide': 'Create Guide',
+    'studyGuides.multiCreateTitle': 'Create {count} guides',
+    'studyGuides.multiCreateConfirm': 'Create {count}',
     'studyGuides.defaultPrompt':
       'Study basic human anatomy focusing on organs and systems (cardiovascular, respiratory, digestive)',
     'studyGuides.promptExample':
@@ -455,6 +457,7 @@ const translations = {
     'practice.topicAddedToKnown':
       'is part of what you know now. New guides will explain things through it.',
     'practice.nextGuidesTitle': 'Learn something new on top of it',
+    'practice.createSelectedGuides': 'Create {count} guides',
     'practice.nextGuideBridge':
       'Explain it through {skill}, which I already know. Do not re-explain {skill} itself.',
     'practice.skillAlreadyKnown': 'You already have this skill',
@@ -647,6 +650,8 @@ const translations = {
     'studyGuides.promptField': 'Prompt de la guía rápida',
     'studyGuides.promptPlaceholder': '¿Qué debería enseñar RabbitHole?',
     'studyGuides.createGuide': 'Crear guía',
+    'studyGuides.multiCreateTitle': 'Crear {count} guías',
+    'studyGuides.multiCreateConfirm': 'Crear {count}',
     'studyGuides.defaultPrompt':
       'Estudia anatomía humana básica, centrándote en órganos y sistemas (cardiovascular, respiratorio, digestivo)',
     'studyGuides.promptExample':
@@ -977,6 +982,7 @@ const translations = {
     'practice.topicAddedToKnown':
       'ya forma parte de lo que sabes. Las guías nuevas te explicarán las cosas a través de ello.',
     'practice.nextGuidesTitle': 'Aprende algo nuevo apoyándote en ello',
+    'practice.createSelectedGuides': 'Crear {count} guías',
     'practice.nextGuideBridge':
       'Explícamelo a través de {skill}, que ya sé. No vuelvas a explicar {skill}.',
     'practice.skillAlreadyKnown': 'Ya tienes esta skill',
@@ -1181,6 +1187,8 @@ const translationOverrides: Record<
     'studyGuides.promptField': 'Prompt du guide rapide',
     'studyGuides.promptPlaceholder': 'Que doit enseigner RabbitHole ?',
     'studyGuides.createGuide': 'Créer le guide',
+    'studyGuides.multiCreateTitle': 'Créer {count} guides',
+    'studyGuides.multiCreateConfirm': 'Créer {count}',
     'studyGuides.defaultPrompt':
       'Étudie les bases de l’anatomie humaine en te concentrant sur les organes et systèmes (cardiovasculaire, respiratoire, digestif)',
     'studyGuides.promptExample':
@@ -1512,6 +1520,7 @@ const translationOverrides: Record<
     'practice.topicAddedToKnown':
       'fait maintenant partie de ce que vous savez. Les nouveaux guides expliqueront les choses à partir de là.',
     'practice.nextGuidesTitle': 'Apprendre autre chose en partant de là',
+    'practice.createSelectedGuides': 'Créer {count} guides',
     'practice.nextGuideBridge':
       'Explique-le-moi à partir de {skill}, que je connais déjà. Ne réexplique pas {skill}.',
     'practice.skillAlreadyKnown': 'Vous avez déjà cette compétence',
@@ -1707,6 +1716,8 @@ const translationOverrides: Record<
     'studyGuides.promptField': 'Prompt des Quick Guides',
     'studyGuides.promptPlaceholder': 'Was soll RabbitHole erklären?',
     'studyGuides.createGuide': 'Guide erstellen',
+    'studyGuides.multiCreateTitle': '{count} Leitfäden erstellen',
+    'studyGuides.multiCreateConfirm': '{count} erstellen',
     'studyGuides.defaultPrompt':
       'Lerne die Grundlagen der menschlichen Anatomie mit Fokus auf Organe und Systeme (Herz-Kreislauf, Atmung, Verdauung)',
     'studyGuides.promptExample':
@@ -2040,6 +2051,7 @@ const translationOverrides: Record<
     'practice.topicAddedToKnown':
       'gehört jetzt zu dem, was du weißt. Neue Leitfäden erklären Dinge darüber.',
     'practice.nextGuidesTitle': 'Lerne etwas Neues darauf aufbauend',
+    'practice.createSelectedGuides': '{count} Leitfäden erstellen',
     'practice.nextGuideBridge':
       'Erkläre es mir über {skill}, das ich schon kenne. Erkläre {skill} nicht noch einmal.',
     'practice.skillAlreadyKnown': 'Du hast diese Fähigkeit bereits',

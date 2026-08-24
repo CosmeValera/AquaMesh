@@ -1232,6 +1232,9 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     initialFocusedQuizSession.resultsOpen,
   )
   const [learnedTopicAdded, setLearnedTopicAdded] = useState(false)
+  // Several follow-up guides can be started in one go: finishing the quiz again
+  // just to queue a second one was the whole point of the multi-select.
+  const [selectedIdeaPrompts, setSelectedIdeaPrompts] = useState<string[]>([])
   // The guide this block belongs to. Both are injected by
   // `createStudyPathProps`, so they are only present on Study Guide pages,
   // which is exactly where a topic is worth offering.
@@ -2589,16 +2592,28 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     // the follow-up guides are offered after the claim, never beside it. The
     // top nav bar owns the route change: it is mounted on both the guide
     // workspace and the guide list, and this block is not always in a router.
-    const startNextGuide = (ideaPrompt: string) => {
-      const prompt = buildStudyGuideNextIdeaPrompt(
-        ideaPrompt,
-        t('practice.nextGuideBridge').split('{skill}').join(learnedTopicName),
-      )
-      if (prompt) {
+    const startSelectedNextGuides = () => {
+      const bridge = t('practice.nextGuideBridge')
+        .split('{skill}')
+        .join(learnedTopicName)
+      const prompts = nextGuideIdeas
+        .filter((idea) => selectedIdeaPrompts.includes(idea.prompt))
+        .map((idea) => buildStudyGuideNextIdeaPrompt(idea.prompt, bridge))
+        .filter(Boolean)
+
+      if (prompts.length) {
         window.dispatchEvent(
-          new CustomEvent(START_NEXT_STUDY_GUIDE_EVENT, { detail: { prompt } }),
+          new CustomEvent(START_NEXT_STUDY_GUIDE_EVENT, { detail: { prompts } }),
         )
       }
+    }
+
+    const toggleIdeaSelection = (ideaPrompt: string) => {
+      setSelectedIdeaPrompts((current) =>
+        current.includes(ideaPrompt)
+          ? current.filter((prompt) => prompt !== ideaPrompt)
+          : [...current, ideaPrompt],
+      )
     }
 
     const learnedTopicSection = !showLearnedTopicOffer ? null : (
@@ -2683,60 +2698,125 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
               {t('practice.nextGuidesTitle')}
             </Typography>
-            <Stack
-              direction="row"
-              spacing={1}
-              useFlexGap
-              sx={{ flexWrap: 'wrap' }}
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 1.5,
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: `repeat(${Math.min(nextGuideIdeas.length, 3)}, 1fr)`,
+                },
+              }}
             >
               {nextGuideIdeas.map((idea) => {
                 const alreadyCreated = createdNextIdeaPrompts.has(idea.prompt)
-
-                return (
-                  <Tooltip
-                    key={idea.label}
-                    title={
+                const selected = selectedIdeaPrompts.includes(idea.prompt)
+                const card = (
+                  <Paper
+                    variant="outlined"
+                    role="button"
+                    aria-pressed={selected}
+                    aria-disabled={alreadyCreated}
+                    tabIndex={alreadyCreated ? -1 : 0}
+                    onClick={
                       alreadyCreated
-                        ? t('practice.nextGuideAlreadyCreated')
-                        : idea.prompt
+                        ? undefined
+                        : () => toggleIdeaSelection(idea.prompt)
                     }
+                    onKeyDown={(event) => {
+                      if (
+                        alreadyCreated ||
+                        (event.key !== 'Enter' && event.key !== ' ')
+                      ) {
+                        return
+                      }
+
+                      event.preventDefault()
+                      toggleIdeaSelection(idea.prompt)
+                    }}
+                    sx={(theme) => ({
+                      height: '100%',
+                      borderRadius: 2,
+                      cursor: alreadyCreated ? 'default' : 'pointer',
+                      borderColor: alreadyCreated
+                        ? alpha(theme.palette.success.main, 0.5)
+                        : selected
+                          ? theme.palette.primary.main
+                          : alpha(theme.palette.text.primary, 0.25),
+                      // The padding pays back the thicker selected border, so
+                      // picking a card never nudges the row.
+                      borderWidth: selected ? 2 : 1,
+                      padding: selected ? '11px' : '12px',
+                      bgcolor: alreadyCreated
+                        ? alpha(theme.palette.success.main, 0.08)
+                        : selected
+                          ? alpha(theme.palette.primary.main, 0.1)
+                          : 'background.paper',
+                      '&:hover': alreadyCreated
+                        ? undefined
+                        : {
+                            borderColor: theme.palette.primary.main,
+                            bgcolor: alpha(theme.palette.primary.main, 0.06),
+                          },
+                    })}
                   >
-                    <Box component="span">
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        disabled={alreadyCreated}
-                        startIcon={
-                          alreadyCreated ? (
-                            <CheckIcon fontSize="small" />
-                          ) : undefined
-                        }
-                        onClick={() => startNextGuide(idea.prompt)}
-                        sx={(theme) => ({
-                          borderRadius: 2,
-                          textTransform: 'none',
-                          fontWeight: 600,
-                          color: 'text.primary',
-                          borderColor: alpha(theme.palette.text.primary, 0.3),
-                          bgcolor: 'background.paper',
-                          '&:hover': {
-                            borderColor: 'primary.main',
-                            bgcolor: alpha(theme.palette.primary.main, 0.1),
-                          },
-                          '&.Mui-disabled': {
-                            color: theme.palette.success.main,
-                            borderColor: alpha(theme.palette.success.main, 0.5),
-                            bgcolor: alpha(theme.palette.success.main, 0.08),
-                          },
-                        })}
+                    <Stack
+                      direction="row"
+                      spacing={0.75}
+                      alignItems="flex-start"
+                    >
+                      {alreadyCreated || selected ? (
+                        <CheckIcon
+                          fontSize="small"
+                          sx={{
+                            mt: '2px',
+                            color: alreadyCreated
+                              ? 'success.main'
+                              : 'primary.main',
+                          }}
+                        />
+                      ) : null}
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight={700}
+                        color={alreadyCreated ? 'success.main' : 'text.primary'}
                       >
                         {idea.label}
-                      </Button>
-                    </Box>
+                      </Typography>
+                    </Stack>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 0.5, lineHeight: 1.5 }}
+                    >
+                      {idea.prompt}
+                    </Typography>
+                  </Paper>
+                )
+
+                return alreadyCreated ? (
+                  <Tooltip
+                    key={idea.label}
+                    title={t('practice.nextGuideAlreadyCreated')}
+                  >
+                    <Box>{card}</Box>
                   </Tooltip>
+                ) : (
+                  <Box key={idea.label}>{card}</Box>
                 )
               })}
-            </Stack>
+            </Box>
+            <Button
+              variant="contained"
+              disabled={!selectedIdeaPrompts.length}
+              onClick={startSelectedNextGuides}
+              sx={{ mt: 1.5, textTransform: 'none', fontWeight: 700 }}
+            >
+              {t('practice.createSelectedGuides').replace(
+                '{count}',
+                String(selectedIdeaPrompts.length),
+              )}
+            </Button>
           </Paper>
         ) : null}
       </Stack>

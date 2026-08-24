@@ -97,7 +97,21 @@ export const STUDY_GUIDE_NEXT_IDEAS_SCHEMA = {
 const STUDY_GUIDE_LEARNED_SKILL_MAX = 1
 const STUDY_GUIDE_LEARNED_SKILL_MAX_CHARS = 48
 
-export const STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION = `learnedSkillOptions: exactly ${STUDY_GUIDE_LEARNED_SKILL_MAX} entry, naming what the learner will KNOW after finishing, for a list of topics they can claim. Name the reusable concept or ability, never the guide. For a guide on caffeine and the brain: "Adenosine and sleep pressure", never "How caffeine affects your brain". 2-4 words, sentence case, plain spaces, no hyphens, underscores, colons, or question marks.`
+/**
+ * The naming rules, without the field name, so the hosted single-string field
+ * and the array field the other providers fill share one wording.
+ *
+ * The subject rule is the one that matters: the name lands in a list beside
+ * topics from every other guide, and without it the model strips the subject
+ * along with the framing. "Component state flow" for a React guide reads as
+ * Vue or Angular just as easily.
+ */
+const STUDY_GUIDE_LEARNED_SKILL_RULES = `Name what the learner will KNOW after finishing, as a topic they can claim. Name the reusable concept or ability, never the guide: for a guide on caffeine and the brain, "Adenosine and sleep pressure", never "How caffeine affects your brain". The name must identify its subject on its own, because it joins a list next to topics from unrelated guides: when the concept also exists in other subjects, name the subject in it. For a guide on beginner React, "React component state", never "Component state flow". 2-5 words, sentence case, plain spaces, no hyphens, underscores, colons, or question marks.`
+
+export const STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION = `learnedSkillOptions: exactly ${STUDY_GUIDE_LEARNED_SKILL_MAX} entry. ${STUDY_GUIDE_LEARNED_SKILL_RULES}`
+
+/** Hosted names the skill in the final-quiz call, once the guide is written. */
+export const STUDY_GUIDE_LEARNED_SKILL_FIELD_INSTRUCTION = `learnedSkill: one string. ${STUDY_GUIDE_LEARNED_SKILL_RULES}`
 
 export const sanitizeStudyGuideLearnedSkillOptions = (
   value: unknown,

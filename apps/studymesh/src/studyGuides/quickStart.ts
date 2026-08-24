@@ -671,6 +671,7 @@ export {
   normalizeStudyGuideTitle,
   sanitizeStudyGuideLearnedSkillOptions,
   sanitizeStudyGuideNextIdeas,
+  STUDY_GUIDE_LEARNED_SKILL_FIELD_INSTRUCTION,
   STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEA_AXES,
   STUDY_GUIDE_NEXT_IDEA_MAX,

@@ -27,7 +27,7 @@ import {
   STUDY_GUIDE_BRIDGE_CORRESPONDENCE_SCHEMA,
   STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES,
   STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_SCHEMA,
-  STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION,
+  STUDY_GUIDE_LEARNED_SKILL_FIELD_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
   trimTitleToWordBoundary,
@@ -749,8 +749,11 @@ export const ENHANCED_STUDY_GUIDE_QUIZ_SCHEMA = {
         ],
       },
     },
+    // Named here rather than with the guide body: this stage runs once the
+    // whole guide is written, so the namer sees the finished subject.
+    learnedSkill: { type: "STRING" },
   },
-  required: ["questions"],
+  required: ["questions", "learnedSkill"],
 };
 
 const extractPromptField = (prompt: string, label: string): string => {
@@ -808,6 +811,16 @@ export const shuffleQuizQuestionOptions = (
     correctIndex: order.indexOf(question.correctIndex),
   };
 };
+
+/**
+ * The claimable skill rides the final-quiz response. Read apart from the quiz
+ * so a missing or unusable name never invalidates a good quiz: the guide title
+ * is a working fallback downstream, a broken quiz is not.
+ */
+const readEnhancedQuizLearnedSkill = (value: unknown): string[] =>
+  sanitizeStudyGuideLearnedSkillOptions([
+    isObject(value) ? value.learnedSkill : "",
+  ]);
 
 const normalizeEnhancedQuizQuestions = (
   value: unknown,
@@ -890,7 +903,8 @@ Return strict JSON only:
       "explanation": "...",
       "skillTested": "..."
     }
-  ]
+  ],
+  "learnedSkill": "..."
 }
 
 Rules:
@@ -902,6 +916,7 @@ Rules:
 - Do not ask "According to the page..." or "Which statement is directly stated...".
 - Every question must be answerable from the guide.
 - Keep explanations short and specific.
+- ${STUDY_GUIDE_LEARNED_SKILL_FIELD_INSTRUCTION}
 
 Topic: ${topic}
 
@@ -2485,8 +2500,6 @@ interface NormalizedMonolithGuide {
   folderName: string;
   emoji: string;
   quickStart: NonNullable<HostedAiGatewayResponse["quickStart"]>;
-  /** Names the learner can pick from when claiming the topic after the quiz. */
-  learnedSkillOptions: string[];
   /** Follow-up guides offered once the learner claims the topic. */
   nextGuideIdeas: StudyGuideNextIdea[];
   pages: EnhancedStudyGuidePage[];
@@ -2515,7 +2528,6 @@ export const createMonolithGuideSchema = (includeContext: boolean) => ({
       },
       required: ["keyIdea", "quickSummary"],
     },
-    learnedSkillOptions: textArraySchema,
     nextGuideIdeas: STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
     ...(includeContext
       ? {
@@ -2574,7 +2586,6 @@ export const createMonolithGuideSchema = (includeContext: boolean) => ({
     "folderName",
     "emoji",
     "quickStart",
-    "learnedSkillOptions",
     "nextGuideIdeas",
     ...(includeContext ? ["contextPlan"] : []),
     "pages",
@@ -2601,7 +2612,6 @@ Return strict JSON only:
   "folderName": "...",
   "emoji": "one emoji",
   "quickStart": { "keyIdea": "one sentence, max 35 words", "quickSummary": "two short paragraphs" },
-  "learnedSkillOptions": ["..."],
   "nextGuideIdeas": [{ "axis": "curiosity | utility | connection", "label": "...", "prompt": "..." }],${
     userKnownTopics.length
       ? `
@@ -2633,7 +2643,6 @@ Rules:
 - keyIdea: exactly one complete sentence, 20-35 words, ending in a period. Never write a second sentence and never run past 35 words, because keyIdea is hard-capped at 35 words downstream.
 - quickSummary: 60-85 words, 2 short paragraphs, every paragraph ends with a complete sentence.
 - Choose a concise, topic-specific folderName and exactly one topic-matching emoji.
-- ${STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION}
 - ${STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION}
 - Do not include quiz questions inside rawNotes.${
   userKnownTopics.length
@@ -2759,13 +2768,8 @@ export const normalizeMonolithGuide = (
     };
   }
 
-  const learnedSkillOptions = sanitizeStudyGuideLearnedSkillOptions(
-    record.learnedSkillOptions,
-  );
-
   return {
     title: humanizeGuideTitle(stringValue(record.title) || titleFallback),
-    learnedSkillOptions,
     nextGuideIdeas: sanitizeStudyGuideNextIdeas(record.nextGuideIdeas),
     folderName: humanizeGuideTitle(
       stringValue(record.folderName) || folderNameFallback,
@@ -2927,25 +2931,26 @@ export const generateMonolithHostedStudyGuide = async ({
     pages,
   });
   let questions: EnhancedStudyGuideQuizQuestion[];
+  let learnedSkillOptions: string[];
   try {
-    questions = normalizeEnhancedQuizQuestions(
-      parseJsonRecord(
-        await callStage("study_guide_final_quiz", {
-          ...usageRequest,
-          responseSchema: ENHANCED_STUDY_GUIDE_QUIZ_SCHEMA,
-          parts: [
-            {
-              text: buildEnhancedQuizPrompt({
-                topic,
-                source: sourceWithQuickStart,
-                bridgeBlocks,
-                outputLanguage: usageRequest.outputLanguage,
-              }),
-            },
-          ],
-        }),
-      ),
+    const quizRecord = parseJsonRecord(
+      await callStage("study_guide_final_quiz", {
+        ...usageRequest,
+        responseSchema: ENHANCED_STUDY_GUIDE_QUIZ_SCHEMA,
+        parts: [
+          {
+            text: buildEnhancedQuizPrompt({
+              topic,
+              source: sourceWithQuickStart,
+              bridgeBlocks,
+              outputLanguage: usageRequest.outputLanguage,
+            }),
+          },
+        ],
+      }),
     );
+    questions = normalizeEnhancedQuizQuestions(quizRecord);
+    learnedSkillOptions = readEnhancedQuizLearnedSkill(quizRecord);
   } catch (error) {
     metadataFlags.finalQuizUnusable = true;
     throw error;
@@ -2964,7 +2969,7 @@ export const generateMonolithHostedStudyGuide = async ({
     }),
     quickStart,
     bridgeBlocks,
-    learnedSkillOptions: guide.learnedSkillOptions,
+    learnedSkillOptions,
     nextGuideIdeas: guide.nextGuideIdeas,
   };
 };

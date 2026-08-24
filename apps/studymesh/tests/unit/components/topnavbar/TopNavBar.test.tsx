@@ -13,6 +13,7 @@ import {
 } from '../../../../src/quickCreate/ai'
 import { PROFILE_CONTEXT_STORAGE_KEY } from '../../../../src/profileContext'
 import { CLOUD_SYNC_STATUS_EVENT } from '../../../../src/cloud/CloudWorkspaceSync'
+import { START_NEXT_STUDY_GUIDE_EVENT } from '../../../../src/components/workspace/workspaceEvents'
 
 const KNOWN_TOPICS_PANEL_SEEN_KEY = 'studymesh-known-topics-panel-seen-v1'
 
@@ -799,6 +800,43 @@ describe('TopNavBar Component', () => {
         screen.queryByRole('heading', { name: /what you already know/i }),
       ).not.toBeInTheDocument()
       expect(storage[KNOWN_TOPICS_PANEL_SEEN_KEY]).toBeUndefined()
+    })
+  })
+
+  describe("follow-up guides from a finished quiz", () => {
+    it("carries every selected prompt to the guide list", async () => {
+      render(
+        <BrowserRouter>
+          <TopNavBar />
+        </BrowserRouter>,
+      )
+
+      window.dispatchEvent(
+        new CustomEvent(START_NEXT_STUDY_GUIDE_EVENT, {
+          detail: { prompts: ["Teach me A.", "  ", "Teach me B."] },
+        }),
+      )
+
+      // The blank one is dropped rather than queued as an empty guide.
+      await waitFor(() =>
+        expect(navigateMock).toHaveBeenCalledWith("/study-guides", {
+          state: { createGuidePrompts: ["Teach me A.", "Teach me B."] },
+        }),
+      )
+    })
+
+    it("ignores an event with nothing usable in it", () => {
+      render(
+        <BrowserRouter>
+          <TopNavBar />
+        </BrowserRouter>,
+      )
+
+      window.dispatchEvent(
+        new CustomEvent(START_NEXT_STUDY_GUIDE_EVENT, { detail: { prompts: [] } }),
+      )
+
+      expect(navigateMock).not.toHaveBeenCalled()
     })
   })
 })

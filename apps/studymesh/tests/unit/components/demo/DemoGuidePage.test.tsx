@@ -129,7 +129,9 @@ const demoFixture = vi.hoisted(() => {
         chip: 'How does this apply to guitar?',
         question: 'How does spaced repetition apply to practising guitar?',
         answer: 'Space your scale drills the way you space your reviews.',
-        answerDelayMs: 250,
+        // Long enough that the pending bubble is still on screen when the
+        // assertion first polls, even with the whole suite running in parallel.
+        answerDelayMs: 1500,
       },
     ],
   }

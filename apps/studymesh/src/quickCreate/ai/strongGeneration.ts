@@ -33,6 +33,7 @@ import {
   sanitizeStudyGuideLearnedSkillOptions,
   sanitizeStudyGuideNextIdeas,
   sanitizeStudyGuideQuickStart,
+  STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
 } from '../../studyGuides/quickStart'
@@ -2451,8 +2452,8 @@ Return exactly this structure:
     "keyIdea": "One compact mental model for the whole Study Guide",
     "quickSummary": "Two short paragraphs that help the learner start before opening page 1"
   },
-  "learnedSkillOptions": ["...", "...", "..."],
-  "nextGuideIdeas": [{ "label": "...", "prompt": "..." }],
+  "learnedSkillOptions": ["..."],
+  "nextGuideIdeas": [{ "axis": "curiosity | utility | connection", "label": "...", "prompt": "..." }],
   "dashboards": [
     {
       "title": "01 - Content 1",
@@ -2492,7 +2493,7 @@ Rules:
 - quickStart must explain the concept itself directly. Do not write "This guide teaches...", "This guide explains...", "This page explains...", "You will learn...", or similar guide-framing.
 - Choose a concise, topic-specific folderName for the Study Guide, such as "French B1 Subjunctive" or "Calculus Derivatives". Do not use a generic folderName like "Study Guide" unless the topic is truly unknown.
 - Choose exactly one topic-specific emoji for the Study Guide. It must be a single emoji character or emoji sequence, not text, and it should match the user's topic.
-- learnedSkillOptions: exactly 3 ways to name what the learner will KNOW after finishing, for a list of topics they can claim. Name the reusable concept or ability, never the guide. Each is 2-4 words, sentence case, plain spaces, no hyphens, underscores, colons, or question marks.
+- ${STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION}
 - ${STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION}
 - Create exactly ${dashboardCount} ordered lesson dashboards, grouped mentally into 1-3 modules. Give each dashboard a useful topic-specific title.
 ${isLeanStudyGuide ? '- Lean hosted profile: create exactly 3 dashboards. Do not choose more or fewer pages.\n- Lean hosted profile: rawNotes must be 180-260 words per dashboard.\n- Lean hosted profile: for programming languages, frameworks, CLIs, config tools, APIs, or infrastructure tools, include small fenced code/config blocks inside rawNotes when code is the clearest example. Prefer 1-2 short examples across the guide over prose-only explanations.\n- Lean hosted profile: only the final dashboard may include practice.multipleChoice.\n- Lean hosted profile: final dashboard must include exactly 3 multiple-choice questions, exactly 3 options per question, and short explanations only.\n- Lean hosted profile: base guide must not include flashcards, podcast material, supportArtifacts, glossary, contrastTable, discussionPrompts, answerKey, or checkpointRubric.\n- Lean hosted profile: sourceSummary and conceptRecap should be minimal compatibility fields only.' : ''}

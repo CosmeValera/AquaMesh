@@ -1473,7 +1473,7 @@ const localStudyPathPlannerPrompt = (
 Plan a Study Guide with exactly ${count} lesson dashboards for "${title}".
 
 Shape:
-{"title":"...","folderName":"...","emoji":"...","nextGuideIdeas":[{"label":"...","prompt":"..."}],"dashboards":[{"title":"01 - ...","goal":"...","sections":[{"title":"...","goal":"...","focus":"...; ...; ..."},{"title":"...","goal":"...","focus":"...; ...; ..."}],"avoid":"...; ..."}]}
+{"title":"...","folderName":"...","emoji":"...","nextGuideIdeas":[{"axis":"curiosity","label":"...","prompt":"..."}],"dashboards":[{"title":"01 - ...","goal":"...","sections":[{"title":"...","goal":"...","focus":"...; ...; ..."},{"title":"...","goal":"...","focus":"...; ...; ..."}],"avoid":"...; ..."}]}
 
 Topic:
 ${compactPrompt}

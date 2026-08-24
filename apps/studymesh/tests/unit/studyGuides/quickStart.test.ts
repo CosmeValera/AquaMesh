@@ -405,15 +405,51 @@ describe('follow-up guide ideas offered after the quiz', () => {
     expect(buildStudyGuideNextIdeaPrompt('  ', 'Explain it through X.')).toBe('')
   })
 
-  it('normalizes claimable skill names the same way for every provider', () => {
+  it('keeps a single claimable skill so a guide always shows the same one', () => {
     expect(
       sanitizeStudyGuideLearnedSkillOptions([
         '  ansible playbooks ',
-        'Ansible playbooks',
         'Idempotent runs',
         'Inventory files',
-        'Handlers',
       ]),
-    ).toEqual(['Ansible playbooks', 'Idempotent runs', 'Inventory files'])
+    ).toEqual(['Ansible playbooks'])
+  })
+
+  it('orders a labelled slate by axis and keeps one idea per axis', () => {
+    const ideas = sanitizeStudyGuideNextIdeas([
+      { axis: 'connection', label: 'Idempotent systems', prompt: 'Teach me A.' },
+      { axis: 'CURIOSITY', label: 'Why runs drift', prompt: 'Teach me B.' },
+      { axis: 'connection', label: 'Convergence loops', prompt: 'Teach me C.' },
+      { axis: 'utility', label: 'Debugging a run', prompt: 'Teach me D.' },
+    ])
+
+    expect(ideas.map((idea) => idea.axis)).toEqual([
+      'curiosity',
+      'utility',
+      'connection',
+    ])
+    // The second connection entry loses, not the first.
+    expect(ideas[2].label).toBe('Idempotent systems')
+  })
+
+  it('keeps the model order when the slate is not fully labelled', () => {
+    // Google local AI answers without a response schema, so it drops the axis.
+    const ideas = sanitizeStudyGuideNextIdeas([
+      { label: 'Debugging a run', prompt: 'Teach me A.' },
+      { axis: 'curiosity', label: 'Why runs drift', prompt: 'Teach me B.' },
+    ])
+
+    expect(ideas.map((idea) => idea.label)).toEqual([
+      'Debugging a run',
+      'Why runs drift',
+    ])
+  })
+
+  it('ignores an axis the model invented instead of dropping the idea', () => {
+    const ideas = sanitizeStudyGuideNextIdeas([
+      { axis: 'mechanism', label: 'Why runs drift', prompt: 'Teach me A.' },
+    ])
+
+    expect(ideas).toEqual([{ label: 'Why runs drift', prompt: 'Teach me A.' }])
   })
 })

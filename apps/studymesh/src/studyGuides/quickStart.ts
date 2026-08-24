@@ -1,8 +1,8 @@
 import type {
-  StudyGuideNextIdea,
   StudyGuideQuickStart,
   StudyGuideQuickStartVariant,
 } from '../state/store'
+import { trimTitleToWordBoundary } from './studyGuideTitles'
 import {
   createAiOutputLanguageInstruction,
   type StudyMeshLanguageCode,
@@ -664,162 +664,22 @@ export const trimToCompleteSentenceWithinChars = (
   return sentenceEnd ? sentenceEnd[0].trim() : value
 }
 
-/**
- * A slug is every segment lowercase alphanumeric, so real hyphenated words
- * survive: "e-commerce" and "x-ray" keep their one-letter part, and anything
- * containing a space is already a written title.
- */
-const isSlugShapedTitle = (value: string): boolean => {
-  if (!value || /\s/.test(value) || !/[-_]/.test(value)) {
-    return false
-  }
-
-  const segments = value.split(/[-_]/)
-
-  return (
-    segments.length > 1 &&
-    segments.every(
-      (segment) =>
-        /^[a-z0-9]+$/.test(segment) &&
-        (segment.length > 1 || /^[0-9]$/.test(segment)),
-    )
-  )
-}
-
-/**
- * Model titles arrive as prose, Title Case, or slugs. Slug separators become
- * spaces and only the first letter is forced, so whatever casing the model
- * chose for the remaining words survives.
- */
-export const normalizeStudyGuideTitle = (value: unknown): string => {
-  const raw = (typeof value === 'string' ? value : '')
-    .replace(/\s+/g, ' ')
-    .trim()
-  const text = isSlugShapedTitle(raw) ? raw.split(/[-_]/).join(' ') : raw
-
-  return text ? `${text.charAt(0).toUpperCase()}${text.slice(1)}` : ''
-}
-
-export const trimTitleToWordBoundary = (
-  value: string,
-  maxChars: number,
-): string => {
-  if (value.length <= maxChars) {
-    return value
-  }
-
-  return (
-    value
-      .slice(0, maxChars)
-      .replace(/\s+\S*$/, '')
-      .trim() || value
-  )
-}
-
-export type { StudyGuideNextIdea }
-
-export const STUDY_GUIDE_NEXT_IDEA_MAX = 3
-const STUDY_GUIDE_NEXT_IDEA_LABEL_MAX_CHARS = 48
-const STUDY_GUIDE_NEXT_IDEA_PROMPT_MAX_CHARS = 240
-
-export const STUDY_GUIDE_NEXT_IDEAS_SCHEMA = {
-  type: 'ARRAY',
-  items: {
-    type: 'OBJECT',
-    properties: {
-      label: { type: 'STRING' },
-      prompt: { type: 'STRING' },
-    },
-    required: ['label', 'prompt'],
-  },
-}
-
-const STUDY_GUIDE_LEARNED_SKILL_MAX = 3
-const STUDY_GUIDE_LEARNED_SKILL_MAX_CHARS = 48
-
-export const sanitizeStudyGuideLearnedSkillOptions = (
-  value: unknown,
-): string[] => {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  return value
-    .map((option) =>
-      trimTitleToWordBoundary(
-        normalizeStudyGuideTitle(option),
-        STUDY_GUIDE_LEARNED_SKILL_MAX_CHARS,
-      ),
-    )
-    .filter(Boolean)
-    .filter((option, index, options) => options.indexOf(option) === index)
-    .slice(0, STUDY_GUIDE_LEARNED_SKILL_MAX)
-}
-
-// One wording for all three providers so the offer reads the same everywhere.
-export const STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION = `nextGuideIdeas: exactly ${STUDY_GUIDE_NEXT_IDEA_MAX} follow-up guides the learner could start after finishing this one. Each must be a different topic from this guide, picked so that what this guide teaches works as a strong stepping stone into it. "label" names the topic in 2-5 words. "prompt" is one first-person sentence the learner could send straight to the guide creator, such as "Teach me how X works". Never suggest this guide's own topic again, and never mention RabbitHole, guides, pages, or quizzes inside the prompt.`
-
-// Shared by every provider: hosted, BYO strong and Google local AI all emit
-// nextGuideIdeas inside a call they already make, so they all land here.
-export const sanitizeStudyGuideNextIdeas = (
-  value: unknown,
-): StudyGuideNextIdea[] => {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  const seen = new Set<string>()
-  const ideas: StudyGuideNextIdea[] = []
-
-  for (const entry of value) {
-    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-      continue
-    }
-
-    const record = entry as Record<string, unknown>
-    const label = trimTitleToWordBoundary(
-      normalizeStudyGuideTitle(record.label),
-      STUDY_GUIDE_NEXT_IDEA_LABEL_MAX_CHARS,
-    )
-    const prompt = trimTitleToWordBoundary(
-      (typeof record.prompt === 'string' ? record.prompt : '')
-        .replace(/\s+/g, ' ')
-        .trim(),
-      STUDY_GUIDE_NEXT_IDEA_PROMPT_MAX_CHARS,
-    )
-    const key = label.toLowerCase()
-    if (!label || !prompt || seen.has(key)) {
-      continue
-    }
-
-    seen.add(key)
-    ideas.push({ label, prompt })
-    if (ideas.length >= STUDY_GUIDE_NEXT_IDEA_MAX) {
-      break
-    }
-  }
-
-  return ideas
-}
-
-/**
- * The idea prompt names the topic; the bridge sentence names the skill the
- * reader just claimed, so the relevance selector does not have to guess it out
- * of a known-topics list that can hold dozens of entries.
- */
-export const buildStudyGuideNextIdeaPrompt = (
-  ideaPrompt: string,
-  bridgeSentence: string,
-): string => {
-  const idea = ideaPrompt.trim()
-  const bridge = bridgeSentence.trim()
-
-  if (!idea) {
-    return ''
-  }
-
-  return bridge ? `${idea}\n\n${bridge}` : idea
-}
+// Re-exported so the prompt-side call sites, including the hosted API
+// function, keep importing everything Study Guide from one module.
+export {
+  buildStudyGuideNextIdeaPrompt,
+  normalizeStudyGuideTitle,
+  sanitizeStudyGuideLearnedSkillOptions,
+  sanitizeStudyGuideNextIdeas,
+  STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION,
+  STUDY_GUIDE_NEXT_IDEA_AXES,
+  STUDY_GUIDE_NEXT_IDEA_MAX,
+  STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION,
+  STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
+  trimTitleToWordBoundary,
+  type StudyGuideNextIdea,
+  type StudyGuideNextIdeaAxis,
+} from './studyGuideTitles'
 
 const normalizeParagraphs = (value: string): string[] =>
   stripTextLabels(value)

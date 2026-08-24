@@ -455,7 +455,10 @@ const translations = {
     'practice.topicAddedToKnown':
       'is part of what you know now. New guides will explain things through it.',
     'practice.nextGuidesTitle': 'Learn something new on top of it',
-    'practice.nextGuideBridge': 'Explain it through {skill}, which I know.',
+    'practice.nextGuideBridge':
+      'Explain it through {skill}, which I already know. Do not re-explain {skill} itself.',
+    'practice.skillAlreadyKnown': 'You already have this skill',
+    'practice.nextGuideAlreadyCreated': 'You already created this guide',
     'practice.practiceAgain': 'Practice again',
     'practice.retakeQuiz': 'Retake quiz',
     'practice.allCards': 'All cards',
@@ -974,7 +977,10 @@ const translations = {
     'practice.topicAddedToKnown':
       'ya forma parte de lo que sabes. Las guías nuevas te explicarán las cosas a través de ello.',
     'practice.nextGuidesTitle': 'Aprende algo nuevo apoyándote en ello',
-    'practice.nextGuideBridge': 'Explícamelo a través de {skill}, que ya sé.',
+    'practice.nextGuideBridge':
+      'Explícamelo a través de {skill}, que ya sé. No vuelvas a explicar {skill}.',
+    'practice.skillAlreadyKnown': 'Ya tienes esta skill',
+    'practice.nextGuideAlreadyCreated': 'Ya creaste esta guía',
     'practice.practiceAgain': 'Practicar otra vez',
     'practice.retakeQuiz': 'Repetir quiz',
     'practice.allCards': 'Todas las tarjetas',
@@ -1507,7 +1513,9 @@ const translationOverrides: Record<
       'fait maintenant partie de ce que vous savez. Les nouveaux guides expliqueront les choses à partir de là.',
     'practice.nextGuidesTitle': 'Apprendre autre chose en partant de là',
     'practice.nextGuideBridge':
-      'Explique-le-moi à partir de {skill}, que je connais.',
+      'Explique-le-moi à partir de {skill}, que je connais déjà. Ne réexplique pas {skill}.',
+    'practice.skillAlreadyKnown': 'Vous avez déjà cette compétence',
+    'practice.nextGuideAlreadyCreated': 'Vous avez déjà créé ce guide',
     'practice.practiceAgain': 'Recommencer',
     'practice.retakeQuiz': 'Refaire le quiz',
     'practice.allCards': 'Toutes les cartes',
@@ -2032,7 +2040,10 @@ const translationOverrides: Record<
     'practice.topicAddedToKnown':
       'gehört jetzt zu dem, was du weißt. Neue Leitfäden erklären Dinge darüber.',
     'practice.nextGuidesTitle': 'Lerne etwas Neues darauf aufbauend',
-    'practice.nextGuideBridge': 'Erkläre es mir über {skill}, das ich kenne.',
+    'practice.nextGuideBridge':
+      'Erkläre es mir über {skill}, das ich schon kenne. Erkläre {skill} nicht noch einmal.',
+    'practice.skillAlreadyKnown': 'Du hast diese Fähigkeit bereits',
+    'practice.nextGuideAlreadyCreated': 'Diesen Leitfaden hast du schon erstellt',
     'practice.practiceAgain': 'Noch einmal üben',
     'practice.retakeQuiz': 'Quiz wiederholen',
     'practice.allCards': 'Alle Karten',

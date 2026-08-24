@@ -36,12 +36,10 @@ import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
 import {
   buildStudyGuideNextIdeaPrompt,
   sanitizeStudyGuideNextIdeas,
-} from '../../studyGuides/quickStart'
+} from '../../studyGuides/studyGuideTitles'
 import {
   addLearnedTopicToProfileContext,
-  isLearnedTopicPromptResolved,
   isUserKnownTopic,
-  resolveLearnedTopicPrompt,
 } from '../../profileContext'
 import {
   PREFILL_DASHBOARD_CHAT_EVENT,
@@ -1238,19 +1236,17 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
   // `createStudyPathProps`, so they are only present on Study Guide pages,
   // which is exactly where a topic is worth offering.
   const learnedTopicGuideId = String(props.studyPathId || '')
-  // Guides generated before skill options existed only have the title, which
-  // reads like something you read rather than something you know.
-  const learnedTopicOptions = useMemo(() => {
+  // One claimable name per guide, always the same one. Guides generated before
+  // skill names existed only have the title, which reads like something you
+  // read rather than something you know.
+  const learnedTopicName = useMemo(() => {
     const offered = Array.isArray(props.studyPathLearnedSkillOptions)
       ? props.studyPathLearnedSkillOptions
           .map((option) => String(option || '').trim())
-          .filter(Boolean)
-          .slice(0, 3)
-      : []
+          .find(Boolean)
+      : ''
 
-    return offered.length
-      ? offered
-      : [String(props.studyPathTitle || '').trim()].filter(Boolean)
+    return offered || String(props.studyPathTitle || '').trim()
   }, [props.studyPathLearnedSkillOptions, props.studyPathTitle])
   // Generated with the guide, so the offer costs no extra model call. Guides
   // made before this existed, or providers that skipped the field, get none.
@@ -1258,20 +1254,33 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     () => sanitizeStudyGuideNextIdeas(props.studyPathNextGuideIdeas),
     [props.studyPathNextGuideIdeas],
   )
-  const [chosenTopicIndex, setChosenTopicIndex] = useState(0)
-  const learnedTopicName = learnedTopicOptions[chosenTopicIndex] || ''
-  // Read once the results open rather than on every render: both helpers hit
+  // Read once the results open rather than on every render: the helper hits
   // localStorage, and the answer cannot change while the score is on screen.
-  const canOfferLearnedTopic = useMemo(() => {
-    if (!quizResultsOpen || !learnedTopicName || !learnedTopicGuideId) {
-      return false
-    }
-
-    return (
-      !isLearnedTopicPromptResolved(learnedTopicGuideId) &&
-      !isUserKnownTopic(learnedTopicName)
-    )
-  }, [quizResultsOpen, learnedTopicGuideId, learnedTopicName])
+  // A topic the reader already holds is shown claimed, never hidden, so a
+  // guide always presents the same skill and the same follow-ups.
+  const alreadyKnownTopic = useMemo(
+    () =>
+      quizResultsOpen && learnedTopicName
+        ? isUserKnownTopic(learnedTopicName)
+        : false,
+    [quizResultsOpen, learnedTopicName],
+  )
+  const canOfferLearnedTopic = Boolean(
+    quizResultsOpen && learnedTopicName && learnedTopicGuideId,
+  )
+  // Handed down by the guide view, which already owns the guide store. Reading
+  // it here would pull the whole guide/creation-queue graph into every block.
+  const createdNextIdeaPrompts = useMemo(
+    () =>
+      new Set(
+        Array.isArray(props.studyPathCreatedNextIdeaPrompts)
+          ? props.studyPathCreatedNextIdeaPrompts.map((prompt) =>
+              String(prompt || ''),
+            )
+          : [],
+      ),
+    [props.studyPathCreatedNextIdeaPrompts],
+  )
   const [focusedFlashcardGrades, setFocusedFlashcardGrades] = useState<
     Record<number, 'known' | 'missed'>
   >(initialFocusedFlashcardSession.grades)
@@ -2561,7 +2570,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     }
 
     // The quiz is what earns the topic. Below the floor the reader has not
-    // shown they know it, so nothing is offered; in the band above it the
+    // shown they know it, so nothing is shown at all; in the band above it the
     // offer stands but says the pages are worth another pass; above the
     // confident mark the offer stands on its own.
     const showLearnedTopicOffer =
@@ -2569,9 +2578,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     const suggestRevisingPages =
       scorePercent <= LEARNED_TOPIC_CONFIDENT_SCORE_PERCENT
 
+    const topicIsClaimed = learnedTopicAdded || alreadyKnownTopic
+
     const addLearnedTopicFromQuiz = () => {
       addLearnedTopicToProfileContext(learnedTopicName)
-      resolveLearnedTopicPrompt(learnedTopicGuideId, 'added')
       setLearnedTopicAdded(true)
     }
 
@@ -2582,7 +2592,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     const startNextGuide = (ideaPrompt: string) => {
       const prompt = buildStudyGuideNextIdeaPrompt(
         ideaPrompt,
-        t('practice.nextGuideBridge').replace('{skill}', learnedTopicName),
+        t('practice.nextGuideBridge').split('{skill}').join(learnedTopicName),
       )
       if (prompt) {
         window.dispatchEvent(
@@ -2591,25 +2601,84 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       }
     }
 
-    const learnedTopicSection = learnedTopicAdded ? (
+    const learnedTopicSection = !showLearnedTopicOffer ? null : (
       <Stack spacing={1.5}>
-        <Paper
-          variant="outlined"
-          sx={(theme) => ({
-            p: 2,
-            borderRadius: 2,
-            borderColor: alpha(theme.palette.success.main, 0.5),
-            bgcolor: alpha(theme.palette.success.main, 0.08),
-          })}
-        >
-          <Typography variant="body2">
-            <Box component="span" sx={{ fontWeight: 700 }}>
-              {learnedTopicName}
-            </Box>{' '}
-            {t('practice.topicAddedToKnown')}
-          </Typography>
-        </Paper>
-        {nextGuideIdeas.length ? (
+        {topicIsClaimed ? (
+          <Paper
+            variant="outlined"
+            sx={(theme) => ({
+              p: 2,
+              borderRadius: 2,
+              borderColor: alpha(theme.palette.success.main, 0.5),
+              bgcolor: alpha(theme.palette.success.main, 0.08),
+            })}
+          >
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.5}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              justifyContent="space-between"
+            >
+              <Typography variant="body2" sx={{ minWidth: 0 }}>
+                <Box component="span" sx={{ fontWeight: 700 }}>
+                  {learnedTopicName}
+                </Box>{' '}
+                {t('practice.topicAddedToKnown')}
+              </Typography>
+              <Tooltip title={t('practice.skillAlreadyKnown')}>
+                <Box component="span" sx={{ flexShrink: 0 }}>
+                  <Button
+                    variant="outlined"
+                    disabled
+                    startIcon={<CheckIcon fontSize="small" />}
+                    sx={(theme) => ({
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      '&.Mui-disabled': {
+                        color: theme.palette.success.main,
+                        borderColor: alpha(theme.palette.success.main, 0.5),
+                      },
+                    })}
+                  >
+                    {t('practice.addTopicToKnown')}
+                  </Button>
+                </Box>
+              </Tooltip>
+            </Stack>
+          </Paper>
+        ) : (
+          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.5}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              justifyContent="space-between"
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  {learnedTopicName}
+                </Typography>
+                {suggestRevisingPages ? (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', mt: 0.25, lineHeight: 1.5 }}
+                  >
+                    {t('practice.addTopicRevisePages')}
+                  </Typography>
+                ) : null}
+              </Box>
+              <Button
+                variant="contained"
+                onClick={addLearnedTopicFromQuiz}
+                sx={{ flexShrink: 0, textTransform: 'none', fontWeight: 700 }}
+              >
+                {t('practice.addTopicToKnown')}
+              </Button>
+            </Stack>
+          </Paper>
+        )}
+        {topicIsClaimed && nextGuideIdeas.length ? (
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
               {t('practice.nextGuidesTitle')}
@@ -2620,85 +2689,58 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
               useFlexGap
               sx={{ flexWrap: 'wrap' }}
             >
-              {nextGuideIdeas.map((idea) => (
-                <Button
-                  key={idea.label}
-                  size="small"
-                  variant="outlined"
-                  onClick={() => startNextGuide(idea.prompt)}
-                  sx={(theme) => ({
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    color: 'text.primary',
-                    borderColor: alpha(theme.palette.text.primary, 0.3),
-                    bgcolor: 'background.paper',
-                    '&:hover': {
-                      borderColor: 'primary.main',
-                      bgcolor: alpha(theme.palette.primary.main, 0.1),
-                    },
-                  })}
-                >
-                  {idea.label}
-                </Button>
-              ))}
+              {nextGuideIdeas.map((idea) => {
+                const alreadyCreated = createdNextIdeaPrompts.has(idea.prompt)
+
+                return (
+                  <Tooltip
+                    key={idea.label}
+                    title={
+                      alreadyCreated
+                        ? t('practice.nextGuideAlreadyCreated')
+                        : idea.prompt
+                    }
+                  >
+                    <Box component="span">
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={alreadyCreated}
+                        startIcon={
+                          alreadyCreated ? (
+                            <CheckIcon fontSize="small" />
+                          ) : undefined
+                        }
+                        onClick={() => startNextGuide(idea.prompt)}
+                        sx={(theme) => ({
+                          borderRadius: 2,
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          color: 'text.primary',
+                          borderColor: alpha(theme.palette.text.primary, 0.3),
+                          bgcolor: 'background.paper',
+                          '&:hover': {
+                            borderColor: 'primary.main',
+                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          },
+                          '&.Mui-disabled': {
+                            color: theme.palette.success.main,
+                            borderColor: alpha(theme.palette.success.main, 0.5),
+                            bgcolor: alpha(theme.palette.success.main, 0.08),
+                          },
+                        })}
+                      >
+                        {idea.label}
+                      </Button>
+                    </Box>
+                  </Tooltip>
+                )
+              })}
             </Stack>
           </Paper>
         ) : null}
       </Stack>
-    ) : showLearnedTopicOffer ? (
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={1.5}
-          alignItems={{ xs: 'stretch', sm: 'center' }}
-          justifyContent="space-between"
-        >
-          <Box sx={{ minWidth: 0 }}>
-            {learnedTopicOptions.length > 1 ? (
-              <Stack
-                direction="row"
-                spacing={0.75}
-                useFlexGap
-                sx={{ flexWrap: 'wrap', mb: 0.75 }}
-              >
-                {learnedTopicOptions.map((option, index) => (
-                  <Chip
-                    key={option}
-                    label={option}
-                    size="small"
-                    onClick={() => setChosenTopicIndex(index)}
-                    color={index === chosenTopicIndex ? 'primary' : 'default'}
-                    variant={index === chosenTopicIndex ? 'filled' : 'outlined'}
-                    sx={{ fontWeight: index === chosenTopicIndex ? 700 : 500 }}
-                  />
-                ))}
-              </Stack>
-            ) : (
-              <Typography variant="subtitle2" fontWeight={700}>
-                {learnedTopicName}
-              </Typography>
-            )}
-            {suggestRevisingPages ? (
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: 'block', mt: 0.25, lineHeight: 1.5 }}
-              >
-                {t('practice.addTopicRevisePages')}
-              </Typography>
-            ) : null}
-          </Box>
-          <Button
-            variant="contained"
-            onClick={addLearnedTopicFromQuiz}
-            sx={{ flexShrink: 0, textTransform: 'none', fontWeight: 700 }}
-          >
-            {t('practice.addTopicToKnown')}
-          </Button>
-        </Stack>
-      </Paper>
-    ) : null
+    )
 
     if (quizResultsOpen) {
       return (

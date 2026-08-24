@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import StudyBlockView from '../../../../src/components/study/StudyBlockView'
 import StudyGuideLinearLayout from '../../../../src/components/Dasboard/StudyGuideLinearLayout'
 import {
-  LEARNED_TOPIC_PROMPTS_STORAGE_KEY,
   PROFILE_CONTEXT_STORAGE_KEY,
   readProfileContext,
   saveProfileContext,
@@ -14,8 +13,8 @@ import { START_NEXT_STUDY_GUIDE_EVENT } from '../../../../src/components/workspa
 
 /**
  * The guide's topic is earned at the end of a quiz rather than handed out for
- * having opened every page. These cover the three score bands and the two ways
- * the offer stays suppressed.
+ * having opened every page. A guide always shows the same single skill and the
+ * same follow-ups; what is already done is disabled, never hidden.
  *
  * Option labels are deliberately neutral: the quiz feedback copy includes the
  * strings "Right answer" and "Wrong answer", so using those as options would
@@ -24,8 +23,16 @@ import { START_NEXT_STUDY_GUIDE_EVENT } from '../../../../src/components/workspa
 const QUESTION_COUNT = 4
 
 const NEXT_GUIDE_IDEAS = [
-  { label: 'Queueing theory', prompt: 'Teach me how queueing theory works.' },
-  { label: 'Little law', prompt: 'Teach me how Little’s law works.' },
+  {
+    axis: 'curiosity',
+    label: 'Why queues stall',
+    prompt: 'Teach me why queues stall.',
+  },
+  {
+    axis: 'utility',
+    label: 'Measuring throughput',
+    prompt: 'Teach me how to measure throughput.',
+  },
 ]
 
 const quizProps = () => ({
@@ -33,6 +40,7 @@ const quizProps = () => ({
   studyPathId: 'guide-1',
   studyPathTitle: 'Bottlenecks',
   studyPathDashboardKey: 'review',
+  studyPathLearnedSkillOptions: ['Flow constraints'],
   studyPathNextGuideIdeas: NEXT_GUIDE_IDEAS,
   items: Array.from({ length: QUESTION_COUNT }, (_, index) => ({
     question: `Question ${index + 1}?`,
@@ -51,8 +59,13 @@ const completeQuiz = async (correctAnswers: number) => {
   }
 }
 
-const renderQuiz = () =>
-  render(<StudyBlockView type="QuizCarouselBlock" props={quizProps()} />)
+const renderQuiz = (overrides: Record<string, unknown> = {}) =>
+  render(
+    <StudyBlockView
+      type="QuizCarouselBlock"
+      props={{ ...quizProps(), ...overrides }}
+    />,
+  )
 
 /**
  * The real path a reader takes. Guides are generated with the quiz carousel
@@ -60,17 +73,22 @@ const renderQuiz = () =>
  * identity down or the offer never appears.
  */
 const renderQuizInsideGuidePage = () => {
-  const { studyPathId, studyPathTitle, studyPathDashboardKey, ...blockProps } =
-    quizProps()
+  const {
+    studyPathId,
+    studyPathTitle,
+    studyPathLearnedSkillOptions,
+    studyPathDashboardKey,
+    ...blockProps
+  } = quizProps()
   void studyPathId
-  void studyPathTitle
   void studyPathDashboardKey
 
   return render(
     <StudyGuideLinearLayout
       studyPathContext={{
         studyPathId: 'guide-1',
-        studyPathTitle: 'Bottlenecks',
+        studyPathTitle,
+        studyPathLearnedSkillOptions,
         studyPathDashboardKey: 'review',
       }}
       layout={{
@@ -102,22 +120,28 @@ const renderQuizInsideGuidePage = () => {
   )
 }
 
+const mockLocalStorage = () => {
+  const storage: Record<string, string> = {}
+  vi.mocked(localStorage.getItem).mockImplementation(
+    (key: string) => storage[key] ?? null,
+  )
+  vi.mocked(localStorage.setItem).mockImplementation(
+    (key: string, value: string) => {
+      storage[key] = value
+    },
+  )
+  vi.mocked(localStorage.removeItem).mockImplementation((key: string) => {
+    delete storage[key]
+  })
+
+  return storage
+}
+
 describe('learned topic offer at the end of a quiz', () => {
   let storage: Record<string, string>
 
   beforeEach(() => {
-    storage = {}
-    vi.mocked(localStorage.getItem).mockImplementation(
-      (key: string) => storage[key] ?? null,
-    )
-    vi.mocked(localStorage.setItem).mockImplementation(
-      (key: string, value: string) => {
-        storage[key] = value
-      },
-    )
-    vi.mocked(localStorage.removeItem).mockImplementation((key: string) => {
-      delete storage[key]
-    })
+    storage = mockLocalStorage()
     vi.mocked(window.matchMedia).mockImplementation((query) => ({
       matches: false,
       media: query,
@@ -146,10 +170,9 @@ describe('learned topic offer at the end of a quiz', () => {
     fireEvent.click(addButton)
 
     await waitFor(() => {
-      expect(readProfileContext()?.specificKnowledge).toEqual(['Bottlenecks'])
-    })
-    expect(JSON.parse(storage[LEARNED_TOPIC_PROMPTS_STORAGE_KEY])).toEqual({
-      'guide-1': 'added',
+      expect(readProfileContext()?.specificKnowledge).toEqual([
+        'Flow constraints',
+      ])
     })
     expect(screen.getByText(/is part of what you know now/i)).toBeInTheDocument()
   })
@@ -175,26 +198,41 @@ describe('learned topic offer at the end of a quiz', () => {
     expect(storage[PROFILE_CONTEXT_STORAGE_KEY]).toBeUndefined()
   })
 
-  it('stays quiet when the topic is already declared knowledge', async () => {
+  it('shows the claimed state instead of hiding a topic already known', async () => {
     saveProfileContext({
       roles: [],
       broadKnowledge: [],
-      specificKnowledge: ['bottlenecks'],
+      specificKnowledge: ['flow constraints'],
     })
 
     renderQuiz()
     await completeQuiz(4)
 
-    expect(await screen.findByText(/quiz complete/i)).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: 'Add to what I know' }),
-    ).not.toBeInTheDocument()
+      await screen.findByText(/is part of what you know now/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Add to what I know' }),
+    ).toBeDisabled()
   })
 
-  it('offers the topic for a quiz that carries no study path props of its own', async () => {
-    // Regression: generated guides build the quiz carousel without them, so
-    // reading the guide identity off the block alone showed nothing at all.
+  it('claims the skill the guide names, not the guide title', async () => {
     renderQuizInsideGuidePage()
+    await completeQuiz(4)
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Add to what I know' }),
+    )
+
+    await waitFor(() => {
+      expect(readProfileContext()?.specificKnowledge).toEqual([
+        'Flow constraints',
+      ])
+    })
+  })
+
+  it('falls back to the guide title for a guide generated without a skill', async () => {
+    renderQuiz({ studyPathLearnedSkillOptions: undefined })
     await completeQuiz(4)
 
     fireEvent.click(
@@ -206,37 +244,25 @@ describe('learned topic offer at the end of a quiz', () => {
     })
   })
 
-  it('stays quiet once the guide has already resolved its offer', async () => {
-    storage[LEARNED_TOPIC_PROMPTS_STORAGE_KEY] = JSON.stringify({
-      'guide-1': 'dismissed',
+  it('shows one skill even when an older guide carries several', async () => {
+    renderQuiz({
+      studyPathLearnedSkillOptions: [
+        'Flow constraints',
+        'Queue discipline',
+        'Throughput limits',
+      ],
     })
-
-    renderQuiz()
     await completeQuiz(4)
 
-    expect(await screen.findByText(/quiz complete/i)).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Add to what I know' }),
-    ).not.toBeInTheDocument()
+    expect(await screen.findByText('Flow constraints')).toBeInTheDocument()
+    expect(screen.queryByText('Queue discipline')).not.toBeInTheDocument()
+    expect(screen.queryByText('Throughput limits')).not.toBeInTheDocument()
   })
 })
 
 describe('follow-up guides offered after the topic is claimed', () => {
-  let storage: Record<string, string>
-
   beforeEach(() => {
-    storage = {}
-    vi.mocked(localStorage.getItem).mockImplementation(
-      (key: string) => storage[key] ?? null,
-    )
-    vi.mocked(localStorage.setItem).mockImplementation(
-      (key: string, value: string) => {
-        storage[key] = value
-      },
-    )
-    vi.mocked(localStorage.removeItem).mockImplementation((key: string) => {
-      delete storage[key]
-    })
+    mockLocalStorage()
   })
 
   it('stays hidden until the topic is claimed, because the bridge needs it', async () => {
@@ -247,8 +273,23 @@ describe('follow-up guides offered after the topic is claimed', () => {
       await screen.findByRole('button', { name: 'Add to what I know' }),
     ).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: 'Queueing theory' }),
+      screen.queryByRole('button', { name: 'Why queues stall' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('is already on screen when the topic was claimed in an earlier session', async () => {
+    saveProfileContext({
+      roles: [],
+      broadKnowledge: [],
+      specificKnowledge: ['Flow constraints'],
+    })
+
+    renderQuiz()
+    await completeQuiz(4)
+
+    expect(
+      await screen.findByRole('button', { name: 'Why queues stall' }),
+    ).toBeEnabled()
   })
 
   it('asks for the next guide with the claimed skill named as the bridge', async () => {
@@ -261,24 +302,43 @@ describe('follow-up guides offered after the topic is claimed', () => {
       await screen.findByRole('button', { name: 'Add to what I know' }),
     )
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Queueing theory' }),
+      await screen.findByRole('button', { name: 'Why queues stall' }),
     )
 
     expect(startNextGuide).toHaveBeenCalledTimes(1)
     expect(
-      (startNextGuide.mock.calls[0][0] as CustomEvent<{ prompt: string }>)
-        .detail.prompt,
+      (startNextGuide.mock.calls[0][0] as CustomEvent<{ prompt: string }>).detail
+        .prompt,
     ).toBe(
-      'Teach me how queueing theory works.\n\nExplain it through Bottlenecks, which I know.',
+      'Teach me why queues stall.\n\nExplain it through Flow constraints, which I already know. Do not re-explain Flow constraints itself.',
     )
 
     window.removeEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
   })
 
+  it('disables an idea whose guide the reader already created', async () => {
+    saveProfileContext({
+      roles: [],
+      broadKnowledge: [],
+      specificKnowledge: ['Flow constraints'],
+    })
+
+    // The guide view resolves this against the guide store and hands it down.
+    renderQuiz({
+      studyPathCreatedNextIdeaPrompts: ['Teach me why queues stall.'],
+    })
+    await completeQuiz(4)
+
+    expect(
+      await screen.findByRole('button', { name: 'Why queues stall' }),
+    ).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: 'Measuring throughput' }),
+    ).toBeEnabled()
+  })
+
   it('shows nothing extra for a guide generated without follow-up ideas', async () => {
-    const { studyPathNextGuideIdeas, ...props } = quizProps()
-    void studyPathNextGuideIdeas
-    render(<StudyBlockView type="QuizCarouselBlock" props={props} />)
+    renderQuiz({ studyPathNextGuideIdeas: undefined })
     await completeQuiz(4)
     fireEvent.click(
       await screen.findByRole('button', { name: 'Add to what I know' }),

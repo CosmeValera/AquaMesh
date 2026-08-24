@@ -27,6 +27,7 @@ import {
   STUDY_GUIDE_BRIDGE_CORRESPONDENCE_SCHEMA,
   STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES,
   STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_SCHEMA,
+  STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
   trimTitleToWordBoundary,
@@ -2600,8 +2601,8 @@ Return strict JSON only:
   "folderName": "...",
   "emoji": "one emoji",
   "quickStart": { "keyIdea": "one sentence, max 35 words", "quickSummary": "two short paragraphs" },
-  "learnedSkillOptions": ["...", "...", "..."],
-  "nextGuideIdeas": [{ "label": "...", "prompt": "..." }],${
+  "learnedSkillOptions": ["..."],
+  "nextGuideIdeas": [{ "axis": "curiosity | utility | connection", "label": "...", "prompt": "..." }],${
     userKnownTopics.length
       ? `
   "contextPlan": {
@@ -2632,9 +2633,8 @@ Rules:
 - keyIdea: exactly one complete sentence, 20-35 words, ending in a period. Never write a second sentence and never run past 35 words, because keyIdea is hard-capped at 35 words downstream.
 - quickSummary: 60-85 words, 2 short paragraphs, every paragraph ends with a complete sentence.
 - Choose a concise, topic-specific folderName and exactly one topic-matching emoji.
-- learnedSkillOptions: exactly 3 ways to name what the learner will KNOW after finishing, for a list of topics they can claim. Name the reusable concept or ability, never the guide. Each is 2-4 words, sentence case, plain spaces, no hyphens, underscores, colons, or question marks.
+- ${STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION}
 - ${STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION}
-- Offer three different angles: the mechanism itself, the everyday ability it gives, and the wider field it belongs to. For a guide on caffeine and the brain: "Adenosine and sleep pressure", "Reading how stimulants work", "Basic neuropharmacology". Never "How caffeine affects your brain" and never a slug.
 - Do not include quiz questions inside rawNotes.${
   userKnownTopics.length
     ? `

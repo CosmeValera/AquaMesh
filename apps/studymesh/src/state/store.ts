@@ -54,8 +54,16 @@ export interface StudyGuideQuickStart extends StudyGuideQuickStartVariant {
 
 export type StudyGuideQuickStartView = 'default' | 'context'
 
+/**
+ * Which kind of jump this idea makes away from the current guide. Kept on the
+ * idea so a slate can be checked for variety instead of trusted to be varied.
+ */
+export type StudyGuideNextIdeaAxis = 'curiosity' | 'utility' | 'connection'
+
 /** One follow-up guide the reader can start from what this guide taught. */
 export interface StudyGuideNextIdea {
+  /** Absent on guides from providers that answer without a response schema. */
+  axis?: StudyGuideNextIdeaAxis
   label: string
   prompt: string
 }

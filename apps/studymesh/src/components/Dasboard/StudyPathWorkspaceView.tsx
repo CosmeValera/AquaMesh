@@ -96,6 +96,11 @@ interface StudyPathWorkspaceViewProps {
   onAskAi?: (question: string) => void
   /** Overrides the default "My guides" crumb, e.g. for the public /try demo. */
   breadcrumb?: { label: string; onClick: () => void }
+  /**
+   * Follow-up ideas the reader already turned into a guide. Resolved by the
+   * page, which owns the guide store; the demo has no guides so it sends none.
+   */
+  createdNextIdeaPrompts?: string[]
   /** Set when an AI Chat citation with a source quote was just clicked. */
   pendingCitationHighlight?: {
     dashboardKey: string
@@ -416,6 +421,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   onAddPage,
   onAskAi,
   breadcrumb,
+  createdNextIdeaPrompts,
   pendingCitationHighlight,
 }) => {
   const { t } = useInterfaceText()
@@ -472,8 +478,10 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
       // before this existed still fall back to the title.
       studyPathLearnedSkillOptions: studyPath.learnedSkillOptions,
       studyPathNextGuideIdeas: studyPath.nextGuideIdeas,
+      studyPathCreatedNextIdeaPrompts: createdNextIdeaPrompts,
     }),
     [
+      createdNextIdeaPrompts,
       currentLesson?.name,
       currentPageKey,
       studyPath.folderName,

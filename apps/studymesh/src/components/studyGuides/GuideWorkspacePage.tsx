@@ -52,6 +52,7 @@ import {
   createStudyGuideRecord,
   isStudyGuidesStorageQuotaError,
 } from '../../studyGuides/storage'
+import { readCreatedNextIdeaPrompts } from '../../studyGuides/nextGuideIdeas'
 import {
   createStudyGuidePageHref,
   OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
@@ -248,6 +249,14 @@ const GuideWorkspacePage = () => {
   useEffect(() => {
     pageScrollPositionsRef.current = {}
   }, [studyGuideId])
+
+  // Resolved here because this page already owns the guide store. Re-read on
+  // every record change so a guide started from one of these ideas shows up as
+  // created when the reader comes back.
+  const createdNextIdeaPrompts = useMemo(
+    () => readCreatedNextIdeaPrompts(record?.studyPath.nextGuideIdeas || []),
+    [record],
+  )
 
   const dashboard = useMemo<StateDashboard | undefined>(() => {
     if (!record) {
@@ -685,6 +694,7 @@ const GuideWorkspacePage = () => {
         onEditingPageKeyChange={setEditingPageKey}
         onAddPage={addManualPage}
         onAskAi={askAiFromStudyBlock}
+        createdNextIdeaPrompts={createdNextIdeaPrompts}
         pendingCitationHighlight={pendingCitationHighlight}
       />
     </Paper>

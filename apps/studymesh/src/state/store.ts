@@ -54,6 +54,12 @@ export interface StudyGuideQuickStart extends StudyGuideQuickStartVariant {
 
 export type StudyGuideQuickStartView = 'default' | 'context'
 
+/** One follow-up guide the reader can start from what this guide taught. */
+export interface StudyGuideNextIdea {
+  label: string
+  prompt: string
+}
+
 export interface StudyPathContainerState {
   pathId: string
   title: string
@@ -68,6 +74,11 @@ export interface StudyPathContainerState {
    * Generated with the guide, so the offer costs no extra model call.
    */
   learnedSkillOptions?: string[]
+  /**
+   * Follow-up guides offered once the reader claims the topic. Generated with
+   * the guide, so the offer costs no extra model call.
+   */
+  nextGuideIdeas?: StudyGuideNextIdea[]
   dashboards: StudyPathDashboardItem[]
   selectedIndex: number
   pinnedDashboardKeys?: string[]

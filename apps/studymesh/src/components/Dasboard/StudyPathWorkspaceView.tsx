@@ -471,12 +471,14 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
       // Passed live rather than through per-page widget props so guides made
       // before this existed still fall back to the title.
       studyPathLearnedSkillOptions: studyPath.learnedSkillOptions,
+      studyPathNextGuideIdeas: studyPath.nextGuideIdeas,
     }),
     [
       currentLesson?.name,
       currentPageKey,
       studyPath.folderName,
       studyPath.learnedSkillOptions,
+      studyPath.nextGuideIdeas,
       studyPath.pathId,
       studyPath.title,
     ],

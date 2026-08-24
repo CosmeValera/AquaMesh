@@ -25,6 +25,11 @@ import {
   createAiOutputLanguageInstruction,
   isLocalAiContentLanguageSupported,
 } from '../../language/contentLanguage'
+import type { StudyGuideNextIdea } from '../../state/store'
+import {
+  sanitizeStudyGuideNextIdeas,
+  STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION,
+} from '../../studyGuides/quickStart'
 
 type LocalObjectKind =
   | 'markdown'
@@ -165,6 +170,8 @@ interface LocalStudyPathPlan {
   title: string
   folderName: string
   emoji?: string
+  /** Optional: the local model often omits it, and the guide still ships. */
+  nextGuideIdeas?: StudyGuideNextIdea[]
   dashboards: LocalStudyPathPlanItem[]
 }
 
@@ -1466,7 +1473,7 @@ const localStudyPathPlannerPrompt = (
 Plan a Study Guide with exactly ${count} lesson dashboards for "${title}".
 
 Shape:
-{"title":"...","folderName":"...","emoji":"...","dashboards":[{"title":"01 - ...","goal":"...","sections":[{"title":"...","goal":"...","focus":"...; ...; ..."},{"title":"...","goal":"...","focus":"...; ...; ..."}],"avoid":"...; ..."}]}
+{"title":"...","folderName":"...","emoji":"...","nextGuideIdeas":[{"label":"...","prompt":"..."}],"dashboards":[{"title":"01 - ...","goal":"...","sections":[{"title":"...","goal":"...","focus":"...; ...; ..."},{"title":"...","goal":"...","focus":"...; ...; ..."}],"avoid":"...; ..."}]}
 
 Topic:
 ${compactPrompt}
@@ -1476,6 +1483,7 @@ Rules:
 - Return exactly one JSON object.
 - dashboards must contain exactly ${count} dashboards.
 - emoji must be exactly one topic-specific emoji for the Study Guide.
+- ${STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION}
 - Every dashboard title must start with 01 -, 02 -, etc.
 - Each dashboard must have exactly 2 sections.
 - Each section has only title, goal, and focus.
@@ -2371,6 +2379,10 @@ const normalizeLocalStudyPathPlan = (
     )
   }
 
+  // Optional field: a local model that skips or mangles it loses the offer,
+  // never the guide, so it stays out of the repair and salvage paths.
+  const nextGuideIdeas = sanitizeStudyGuideNextIdeas(record.nextGuideIdeas)
+
   return {
     plan: {
       title: stringValue(record.title) || options.title || 'Quick Guide',
@@ -2380,6 +2392,7 @@ const normalizeLocalStudyPathPlan = (
         options.prompt,
       ),
       emoji: stringValue(record.emoji).trim() || undefined,
+      nextGuideIdeas: nextGuideIdeas.length ? nextGuideIdeas : undefined,
       dashboards,
     },
     warnings,
@@ -4057,6 +4070,7 @@ export const generateStudyPathWithLocalAi = async (
     title: plan.title || options.title,
     folderName: plan.folderName,
     emoji: plan.emoji,
+    nextGuideIdeas: plan.nextGuideIdeas,
     contentLanguage: options.outputLanguage,
     dashboards,
     warnings: [

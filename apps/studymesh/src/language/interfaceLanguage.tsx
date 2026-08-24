@@ -454,6 +454,8 @@ const translations = {
       'You got most of it. Another pass over the pages would not hurt.',
     'practice.topicAddedToKnown':
       'is part of what you know now. New guides will explain things through it.',
+    'practice.nextGuidesTitle': 'Learn something new on top of it',
+    'practice.nextGuideBridge': 'Explain it through {skill}, which I know.',
     'practice.practiceAgain': 'Practice again',
     'practice.retakeQuiz': 'Retake quiz',
     'practice.allCards': 'All cards',
@@ -971,6 +973,8 @@ const translations = {
       'Casi todo bien. Un repaso más a las páginas no vendría mal.',
     'practice.topicAddedToKnown':
       'ya forma parte de lo que sabes. Las guías nuevas te explicarán las cosas a través de ello.',
+    'practice.nextGuidesTitle': 'Aprende algo nuevo apoyándote en ello',
+    'practice.nextGuideBridge': 'Explícamelo a través de {skill}, que ya sé.',
     'practice.practiceAgain': 'Practicar otra vez',
     'practice.retakeQuiz': 'Repetir quiz',
     'practice.allCards': 'Todas las tarjetas',
@@ -1501,6 +1505,9 @@ const translationOverrides: Record<
       'Vous avez presque tout. Une relecture des pages ne ferait pas de mal.',
     'practice.topicAddedToKnown':
       'fait maintenant partie de ce que vous savez. Les nouveaux guides expliqueront les choses à partir de là.',
+    'practice.nextGuidesTitle': 'Apprendre autre chose en partant de là',
+    'practice.nextGuideBridge':
+      'Explique-le-moi à partir de {skill}, que je connais.',
     'practice.practiceAgain': 'Recommencer',
     'practice.retakeQuiz': 'Refaire le quiz',
     'practice.allCards': 'Toutes les cartes',
@@ -2024,6 +2031,8 @@ const translationOverrides: Record<
       'Fast alles richtig. Ein weiterer Durchgang durch die Seiten schadet nicht.',
     'practice.topicAddedToKnown':
       'gehört jetzt zu dem, was du weißt. Neue Leitfäden erklären Dinge darüber.',
+    'practice.nextGuidesTitle': 'Lerne etwas Neues darauf aufbauend',
+    'practice.nextGuideBridge': 'Erkläre es mir über {skill}, das ich kenne.',
     'practice.practiceAgain': 'Noch einmal üben',
     'practice.retakeQuiz': 'Quiz wiederholen',
     'practice.allCards': 'Alle Karten',

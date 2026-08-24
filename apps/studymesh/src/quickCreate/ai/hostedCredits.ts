@@ -1,4 +1,7 @@
-import type { StudyGuideQuickStart } from '../../state/store'
+import type {
+  StudyGuideNextIdea,
+  StudyGuideQuickStart,
+} from '../../state/store'
 import type { StudyMeshLanguageCode } from '../../language/contentLanguage'
 import type { StudyGuideKnowledgeBridgeBlock } from '../../studyGuides/quickStart'
 
@@ -189,6 +192,8 @@ export interface HostedAiGatewayResponse {
   bridgeBlocks?: StudyGuideKnowledgeBridgeBlock[]
   /** Skill names offered after the quiz, generated with the guide. */
   learnedSkillOptions?: string[]
+  /** Follow-up guides offered once the learner claims the topic. */
+  nextGuideIdeas?: StudyGuideNextIdea[]
   podcast?: HostedAiPodcast
   status?: HostedAiStatus
   error?: {

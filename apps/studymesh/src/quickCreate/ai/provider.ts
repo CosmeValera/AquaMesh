@@ -49,6 +49,7 @@ import type {
   StudyGuideQuickStartRelevanceDecision,
 } from '../../studyGuides/quickStart'
 import type {
+  StudyGuideNextIdea,
   StudyGuideQuickStart,
   StudyGuideQuickStartVariant,
 } from '../../state/store'
@@ -569,6 +570,7 @@ export const generateStudyPathWithAi = async (
     let hostedQuickStart: StudyGuideQuickStart | null = null
     let hostedBridgeBlocks: StudyGuideKnowledgeBridgeBlock[] = []
     let hostedLearnedSkillOptions: string[] = []
+    let hostedNextGuideIdeas: StudyGuideNextIdea[] = []
     const draft = await generateStudyPathWithGemini({
       ...options,
       apiToken: '',
@@ -589,6 +591,9 @@ export const generateStudyPathWithAi = async (
         onLearnedSkillOptions: (options) => {
           hostedLearnedSkillOptions = options
         },
+        onNextGuideIdeas: (ideas) => {
+          hostedNextGuideIdeas = ideas
+        },
       }),
     })
     const quickStart = sanitizeStudyGuideQuickStart(
@@ -604,6 +609,9 @@ export const generateStudyPathWithAi = async (
         quickStart,
         ...(hostedLearnedSkillOptions.length
           ? { learnedSkillOptions: hostedLearnedSkillOptions }
+          : {}),
+        ...(hostedNextGuideIdeas.length
+          ? { nextGuideIdeas: hostedNextGuideIdeas }
           : {}),
       },
       parseStudyGuideKnowledgeBridgeBlocks(

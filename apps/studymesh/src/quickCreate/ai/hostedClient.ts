@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from '../../auth/supabaseClient'
+import type { StudyGuideNextIdea } from '../../state/store'
 import type { StrongAiCallOptions } from './strongProviders'
 import {
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
@@ -363,6 +364,7 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
   onQuickStart,
   onBridgeBlocks,
   onLearnedSkillOptions,
+  onNextGuideIdeas,
 }: {
   userKnownTopics?: string[]
   outputLanguage?: StrongAiCallOptions['outputLanguage']
@@ -373,6 +375,7 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
     bridgeBlocks: NonNullable<HostedAiGatewayResponse['bridgeBlocks']>,
   ) => void
   onLearnedSkillOptions?: (options: string[]) => void
+  onNextGuideIdeas?: (ideas: StudyGuideNextIdea[]) => void
 }): HostedAiTransport => {
   return async ({
     model,
@@ -414,6 +417,7 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
       onQuickStart(payload.quickStart)
       onBridgeBlocks?.(payload.bridgeBlocks || [])
       onLearnedSkillOptions?.(payload.learnedSkillOptions || [])
+      onNextGuideIdeas?.(payload.nextGuideIdeas || [])
       return text
     } finally {
       dispatchHostedAiUsageChanged()

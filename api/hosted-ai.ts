@@ -21,9 +21,14 @@ import {
   parseStudyGuideKnownTopicPrefilterResult,
   parseStudyGuideQuickStart,
   sanitizeStudyGuideBridgeCorrespondences,
+  sanitizeStudyGuideLearnedSkillOptions,
+  sanitizeStudyGuideNextIdeas,
+  type StudyGuideNextIdea,
   STUDY_GUIDE_BRIDGE_CORRESPONDENCE_SCHEMA,
   STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES,
   STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_SCHEMA,
+  STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION,
+  STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
   trimTitleToWordBoundary,
   trimToCompleteSentenceWithinChars,
 } from "../apps/studymesh/src/studyGuides/quickStart";
@@ -2481,6 +2486,8 @@ interface NormalizedMonolithGuide {
   quickStart: NonNullable<HostedAiGatewayResponse["quickStart"]>;
   /** Names the learner can pick from when claiming the topic after the quiz. */
   learnedSkillOptions: string[];
+  /** Follow-up guides offered once the learner claims the topic. */
+  nextGuideIdeas: StudyGuideNextIdea[];
   pages: EnhancedStudyGuidePage[];
   contextPlan?: {
     /** Derived from correspondences, never asserted by the model. */
@@ -2508,6 +2515,7 @@ export const createMonolithGuideSchema = (includeContext: boolean) => ({
       required: ["keyIdea", "quickSummary"],
     },
     learnedSkillOptions: textArraySchema,
+    nextGuideIdeas: STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
     ...(includeContext
       ? {
           contextPlan: {
@@ -2566,6 +2574,7 @@ export const createMonolithGuideSchema = (includeContext: boolean) => ({
     "emoji",
     "quickStart",
     "learnedSkillOptions",
+    "nextGuideIdeas",
     ...(includeContext ? ["contextPlan"] : []),
     "pages",
   ],
@@ -2591,7 +2600,8 @@ Return strict JSON only:
   "folderName": "...",
   "emoji": "one emoji",
   "quickStart": { "keyIdea": "one sentence, max 35 words", "quickSummary": "two short paragraphs" },
-  "learnedSkillOptions": ["...", "...", "..."],${
+  "learnedSkillOptions": ["...", "...", "..."],
+  "nextGuideIdeas": [{ "label": "...", "prompt": "..." }],${
     userKnownTopics.length
       ? `
   "contextPlan": {
@@ -2623,6 +2633,7 @@ Rules:
 - quickSummary: 60-85 words, 2 short paragraphs, every paragraph ends with a complete sentence.
 - Choose a concise, topic-specific folderName and exactly one topic-matching emoji.
 - learnedSkillOptions: exactly 3 ways to name what the learner will KNOW after finishing, for a list of topics they can claim. Name the reusable concept or ability, never the guide. Each is 2-4 words, sentence case, plain spaces, no hyphens, underscores, colons, or question marks.
+- ${STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION}
 - Offer three different angles: the mechanism itself, the everyday ability it gives, and the wider field it belongs to. For a guide on caffeine and the brain: "Adenosine and sleep pressure", "Reading how stimulants work", "Basic neuropharmacology". Never "How caffeine affects your brain" and never a slug.
 - Do not include quiz questions inside rawNotes.${
   userKnownTopics.length
@@ -2748,19 +2759,14 @@ export const normalizeMonolithGuide = (
     };
   }
 
-  const learnedSkillOptions = (
-    Array.isArray(record.learnedSkillOptions) ? record.learnedSkillOptions : []
-  )
-    .map((option) =>
-      trimTitleToWordBoundary(normalizeStudyGuideTitle(option), 48),
-    )
-    .filter(Boolean)
-    .filter((option, index, options) => options.indexOf(option) === index)
-    .slice(0, 3);
+  const learnedSkillOptions = sanitizeStudyGuideLearnedSkillOptions(
+    record.learnedSkillOptions,
+  );
 
   return {
     title: humanizeGuideTitle(stringValue(record.title) || titleFallback),
     learnedSkillOptions,
+    nextGuideIdeas: sanitizeStudyGuideNextIdeas(record.nextGuideIdeas),
     folderName: humanizeGuideTitle(
       stringValue(record.folderName) || folderNameFallback,
     ),
@@ -2787,6 +2793,7 @@ export const generateMonolithHostedStudyGuide = async ({
   quickStart: HostedAiGatewayResponse["quickStart"];
   bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"];
   learnedSkillOptions: string[];
+  nextGuideIdeas: StudyGuideNextIdea[];
 }> => {
   metadataFlags.generationStrategy = "monolith_v1";
 
@@ -2958,6 +2965,7 @@ export const generateMonolithHostedStudyGuide = async ({
     quickStart,
     bridgeBlocks,
     learnedSkillOptions: guide.learnedSkillOptions,
+    nextGuideIdeas: guide.nextGuideIdeas,
   };
 };
 

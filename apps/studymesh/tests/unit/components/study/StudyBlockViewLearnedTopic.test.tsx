@@ -10,6 +10,7 @@ import {
   readProfileContext,
   saveProfileContext,
 } from '../../../../src/profileContext'
+import { START_NEXT_STUDY_GUIDE_EVENT } from '../../../../src/components/workspace/workspaceEvents'
 
 /**
  * The guide's topic is earned at the end of a quiz rather than handed out for
@@ -22,11 +23,17 @@ import {
  */
 const QUESTION_COUNT = 4
 
+const NEXT_GUIDE_IDEAS = [
+  { label: 'Queueing theory', prompt: 'Teach me how queueing theory works.' },
+  { label: 'Little law', prompt: 'Teach me how Little’s law works.' },
+]
+
 const quizProps = () => ({
   title: 'Bottlenecks quiz',
   studyPathId: 'guide-1',
   studyPathTitle: 'Bottlenecks',
   studyPathDashboardKey: 'review',
+  studyPathNextGuideIdeas: NEXT_GUIDE_IDEAS,
   items: Array.from({ length: QUESTION_COUNT }, (_, index) => ({
     question: `Question ${index + 1}?`,
     options: ['Alpha', 'Beta'],
@@ -210,6 +217,78 @@ describe('learned topic offer at the end of a quiz', () => {
     expect(await screen.findByText(/quiz complete/i)).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'Add to what I know' }),
+    ).not.toBeInTheDocument()
+  })
+})
+
+describe('follow-up guides offered after the topic is claimed', () => {
+  let storage: Record<string, string>
+
+  beforeEach(() => {
+    storage = {}
+    vi.mocked(localStorage.getItem).mockImplementation(
+      (key: string) => storage[key] ?? null,
+    )
+    vi.mocked(localStorage.setItem).mockImplementation(
+      (key: string, value: string) => {
+        storage[key] = value
+      },
+    )
+    vi.mocked(localStorage.removeItem).mockImplementation((key: string) => {
+      delete storage[key]
+    })
+  })
+
+  it('stays hidden until the topic is claimed, because the bridge needs it', async () => {
+    renderQuiz()
+    await completeQuiz(4)
+
+    expect(
+      await screen.findByRole('button', { name: 'Add to what I know' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Queueing theory' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('asks for the next guide with the claimed skill named as the bridge', async () => {
+    const startNextGuide = vi.fn()
+    window.addEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
+
+    renderQuiz()
+    await completeQuiz(4)
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Add to what I know' }),
+    )
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Queueing theory' }),
+    )
+
+    expect(startNextGuide).toHaveBeenCalledTimes(1)
+    expect(
+      (startNextGuide.mock.calls[0][0] as CustomEvent<{ prompt: string }>)
+        .detail.prompt,
+    ).toBe(
+      'Teach me how queueing theory works.\n\nExplain it through Bottlenecks, which I know.',
+    )
+
+    window.removeEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
+  })
+
+  it('shows nothing extra for a guide generated without follow-up ideas', async () => {
+    const { studyPathNextGuideIdeas, ...props } = quizProps()
+    void studyPathNextGuideIdeas
+    render(<StudyBlockView type="QuizCarouselBlock" props={props} />)
+    await completeQuiz(4)
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Add to what I know' }),
+    )
+
+    expect(
+      await screen.findByText(/is part of what you know now/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText('Learn something new on top of it'),
     ).not.toBeInTheDocument()
   })
 })

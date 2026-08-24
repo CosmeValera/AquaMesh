@@ -72,6 +72,13 @@ const LocationProbe = () => {
   )
 }
 
+const StateProbe = () => {
+  const location = useLocation()
+  return (
+    <div data-testid="router-state">{JSON.stringify(location.state)}</div>
+  )
+}
+
 const renderStudyGuidesPage = (initialEntry: string) =>
   render(
     <MemoryRouter initialEntries={[initialEntry]}>
@@ -847,4 +854,58 @@ describe('StudyGuidesPage create flow', () => {
     ).toThrow(STUDY_GUIDES_STORAGE_FULL_MESSAGE)
   })
 
+})
+
+describe('follow-up guide handed over from a finished quiz', () => {
+  const renderWithHandoverState = (createGuidePrompt: unknown) =>
+    render(
+      <MemoryRouter
+        initialEntries={[
+          { pathname: '/study-guides', state: { createGuidePrompt } },
+        ]}
+      >
+        <Routes>
+          <Route
+            path="/study-guides"
+            element={
+              <>
+                <StudyGuidesPage />
+                <StateProbe />
+              </>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+  it('opens the create dialog with the handed-over prompt already written', async () => {
+    renderWithHandoverState(
+      'Teach me how queueing theory works.\n\nExplain it through Bottlenecks, which I know.',
+    )
+
+    const promptField = await screen.findByLabelText(/Quick Guide prompt/i)
+    expect(promptField).toHaveValue(
+      'Teach me how queueing theory works.\n\nExplain it through Bottlenecks, which I know.',
+    )
+  })
+
+  it('clears the router state so a reload does not reopen the dialog', async () => {
+    renderWithHandoverState('Teach me how queueing theory works.')
+
+    await screen.findByLabelText(/Quick Guide prompt/i)
+    await waitFor(() => {
+      expect(screen.getByTestId('router-state')).toHaveTextContent('null')
+    })
+  })
+
+  it('ignores a state that carries no usable prompt', async () => {
+    renderWithHandoverState('   ')
+
+    await waitFor(() => {
+      expect(screen.getByTestId('router-state')).toBeInTheDocument()
+    })
+    expect(
+      screen.queryByLabelText(/Quick Guide prompt/i),
+    ).not.toBeInTheDocument()
+  })
 })

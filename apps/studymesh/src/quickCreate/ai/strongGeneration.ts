@@ -25,8 +25,17 @@ import {
   DEFAULT_STRONG_AI_PROVIDER,
 } from './strongProviders'
 import type { StrongAiCallOptions, StrongAiProviderId } from './strongProviders'
-import type { StudyGuideQuickStart } from '../../state/store'
-import { sanitizeStudyGuideQuickStart } from '../../studyGuides/quickStart'
+import type {
+  StudyGuideNextIdea,
+  StudyGuideQuickStart,
+} from '../../state/store'
+import {
+  sanitizeStudyGuideLearnedSkillOptions,
+  sanitizeStudyGuideNextIdeas,
+  sanitizeStudyGuideQuickStart,
+  STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION,
+  STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
+} from '../../studyGuides/quickStart'
 import {
   createAiOutputLanguageInstruction,
   detectContentLanguage,
@@ -161,6 +170,10 @@ export interface AiStudyPathDraft {
   emoji?: string
   contentLanguage?: StudyMeshLanguageCode
   quickStart?: StudyGuideQuickStart
+  /** Skill names offered after the quiz, generated with the guide. */
+  learnedSkillOptions?: string[]
+  /** Follow-up guides offered once the learner claims the topic. */
+  nextGuideIdeas?: StudyGuideNextIdea[]
   dashboards: AiStudyPathDashboardDraft[]
   warnings: string[]
   blueprint?: AiStudyPathBlueprint
@@ -532,6 +545,11 @@ const studyPathSchema = {
       },
       required: ['keyIdea', 'quickSummary'],
     },
+    learnedSkillOptions: {
+      type: 'ARRAY',
+      items: { type: 'STRING' },
+    },
+    nextGuideIdeas: STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
     dashboards: {
       type: 'ARRAY',
       items: {
@@ -601,7 +619,15 @@ const studyPathSchema = {
       },
     },
   },
-  required: ['title', 'folderName', 'emoji', 'quickStart', 'dashboards'],
+  required: [
+    'title',
+    'folderName',
+    'emoji',
+    'quickStart',
+    'learnedSkillOptions',
+    'nextGuideIdeas',
+    'dashboards',
+  ],
 }
 
 const studyPathBlueprintLessonSchema = {
@@ -2425,6 +2451,8 @@ Return exactly this structure:
     "keyIdea": "One compact mental model for the whole Study Guide",
     "quickSummary": "Two short paragraphs that help the learner start before opening page 1"
   },
+  "learnedSkillOptions": ["...", "...", "..."],
+  "nextGuideIdeas": [{ "label": "...", "prompt": "..." }],
   "dashboards": [
     {
       "title": "01 - Content 1",
@@ -2464,6 +2492,8 @@ Rules:
 - quickStart must explain the concept itself directly. Do not write "This guide teaches...", "This guide explains...", "This page explains...", "You will learn...", or similar guide-framing.
 - Choose a concise, topic-specific folderName for the Study Guide, such as "French B1 Subjunctive" or "Calculus Derivatives". Do not use a generic folderName like "Study Guide" unless the topic is truly unknown.
 - Choose exactly one topic-specific emoji for the Study Guide. It must be a single emoji character or emoji sequence, not text, and it should match the user's topic.
+- learnedSkillOptions: exactly 3 ways to name what the learner will KNOW after finishing, for a list of topics they can claim. Name the reusable concept or ability, never the guide. Each is 2-4 words, sentence case, plain spaces, no hyphens, underscores, colons, or question marks.
+- ${STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION}
 - Create exactly ${dashboardCount} ordered lesson dashboards, grouped mentally into 1-3 modules. Give each dashboard a useful topic-specific title.
 ${isLeanStudyGuide ? '- Lean hosted profile: create exactly 3 dashboards. Do not choose more or fewer pages.\n- Lean hosted profile: rawNotes must be 180-260 words per dashboard.\n- Lean hosted profile: for programming languages, frameworks, CLIs, config tools, APIs, or infrastructure tools, include small fenced code/config blocks inside rawNotes when code is the clearest example. Prefer 1-2 short examples across the guide over prose-only explanations.\n- Lean hosted profile: only the final dashboard may include practice.multipleChoice.\n- Lean hosted profile: final dashboard must include exactly 3 multiple-choice questions, exactly 3 options per question, and short explanations only.\n- Lean hosted profile: base guide must not include flashcards, podcast material, supportArtifacts, glossary, contrastTable, discussionPrompts, answerKey, or checkpointRubric.\n- Lean hosted profile: sourceSummary and conceptRecap should be minimal compatibility fields only.' : ''}
 - Treat this as a bounded learning sprint, not a complete course on everything. Include scope in lesson choices: what gets covered now, what waits for later.
@@ -2516,7 +2546,7 @@ ${prompt}`
 The previous response failed JSON formatting. Retry with a simpler response:
 - Return plain JSON only.
 - Return syntactically valid JSON with all commas and braces in place.
-- Use only the Study Guide fields: title, folderName, emoji, quickStart, dashboards, summary, rawNotes, dashboardPurpose, practiceType, layoutReason, sourceRefs, sourceSummary, conceptRecap, practice, flashcards.
+- Use only the Study Guide fields: title, folderName, emoji, quickStart, learnedSkillOptions, nextGuideIdeas, dashboards, summary, rawNotes, dashboardPurpose, practiceType, layoutReason, sourceRefs, sourceSummary, conceptRecap, practice, flashcards.
 - For normal lesson dashboards selected for quiz practice, keep practiceType quiz or mixed and include 3-6 multiple-choice questions. Use practiceType none for the other dashboards.
 - If lean hosted profile rules are present, preserve them: exactly 3 dashboards, no flashcards, and only final page has exactly 3 multiple-choice questions.
 - Do not use markdown code fences.
@@ -2966,6 +2996,12 @@ ${prompt}`
   warnings.push(
     ...finalPathIssues.map((issue) => `Study Guide quality scan: ${issue}`),
   )
+  // Hosted runs through this parser too, but delivers both lists over the
+  // transport callbacks instead, so an empty list here must stay undefined.
+  const learnedSkillOptions = sanitizeStudyGuideLearnedSkillOptions(
+    record.learnedSkillOptions,
+  )
+  const nextGuideIdeas = sanitizeStudyGuideNextIdeas(record.nextGuideIdeas)
 
   return {
     title:
@@ -2985,6 +3021,10 @@ ${prompt}`
       sanitizeStudyGuideQuickStart(
         record.quickStart as Partial<StudyGuideQuickStart> | null | undefined,
       ) || undefined,
+    learnedSkillOptions: learnedSkillOptions.length
+      ? learnedSkillOptions
+      : undefined,
+    nextGuideIdeas: nextGuideIdeas.length ? nextGuideIdeas : undefined,
     dashboards,
     warnings,
     blueprint,

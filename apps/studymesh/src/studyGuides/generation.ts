@@ -212,6 +212,8 @@ export const generateStudyPathStateFromPrompt = async ({
     contentLanguage: resolvedLanguage.language,
     contentLanguageSource: resolvedLanguage.source,
     quickStart: draft.quickStart,
+    learnedSkillOptions: draft.learnedSkillOptions,
+    nextGuideIdeas: draft.nextGuideIdeas,
     dashboards,
     selectedIndex: 0,
     pinnedDashboardKeys: [],

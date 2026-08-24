@@ -34,12 +34,19 @@ import {
 } from '../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
 import {
+  buildStudyGuideNextIdeaPrompt,
+  sanitizeStudyGuideNextIdeas,
+} from '../../studyGuides/quickStart'
+import {
   addLearnedTopicToProfileContext,
   isLearnedTopicPromptResolved,
   isUserKnownTopic,
   resolveLearnedTopicPrompt,
 } from '../../profileContext'
-import { PREFILL_DASHBOARD_CHAT_EVENT } from '../workspace/workspaceEvents'
+import {
+  PREFILL_DASHBOARD_CHAT_EVENT,
+  START_NEXT_STUDY_GUIDE_EVENT,
+} from '../workspace/workspaceEvents'
 import { type HostedAiPodcast } from '../../quickCreate/ai'
 import type { DashboardLayout } from '../../state/store'
 import { useInterfaceText } from '../../language/interfaceLanguage'
@@ -1245,6 +1252,12 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       ? offered
       : [String(props.studyPathTitle || '').trim()].filter(Boolean)
   }, [props.studyPathLearnedSkillOptions, props.studyPathTitle])
+  // Generated with the guide, so the offer costs no extra model call. Guides
+  // made before this existed, or providers that skipped the field, get none.
+  const nextGuideIdeas = useMemo(
+    () => sanitizeStudyGuideNextIdeas(props.studyPathNextGuideIdeas),
+    [props.studyPathNextGuideIdeas],
+  )
   const [chosenTopicIndex, setChosenTopicIndex] = useState(0)
   const learnedTopicName = learnedTopicOptions[chosenTopicIndex] || ''
   // Read once the results open rather than on every render: both helpers hit
@@ -2562,23 +2575,77 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       setLearnedTopicAdded(true)
     }
 
+    // The bridge only works once the topic is in the reader's known topics, so
+    // the follow-up guides are offered after the claim, never beside it. The
+    // top nav bar owns the route change: it is mounted on both the guide
+    // workspace and the guide list, and this block is not always in a router.
+    const startNextGuide = (ideaPrompt: string) => {
+      const prompt = buildStudyGuideNextIdeaPrompt(
+        ideaPrompt,
+        t('practice.nextGuideBridge').replace('{skill}', learnedTopicName),
+      )
+      if (prompt) {
+        window.dispatchEvent(
+          new CustomEvent(START_NEXT_STUDY_GUIDE_EVENT, { detail: { prompt } }),
+        )
+      }
+    }
+
     const learnedTopicSection = learnedTopicAdded ? (
-      <Paper
-        variant="outlined"
-        sx={(theme) => ({
-          p: 2,
-          borderRadius: 2,
-          borderColor: alpha(theme.palette.success.main, 0.5),
-          bgcolor: alpha(theme.palette.success.main, 0.08),
-        })}
-      >
-        <Typography variant="body2">
-          <Box component="span" sx={{ fontWeight: 700 }}>
-            {learnedTopicName}
-          </Box>{' '}
-          {t('practice.topicAddedToKnown')}
-        </Typography>
-      </Paper>
+      <Stack spacing={1.5}>
+        <Paper
+          variant="outlined"
+          sx={(theme) => ({
+            p: 2,
+            borderRadius: 2,
+            borderColor: alpha(theme.palette.success.main, 0.5),
+            bgcolor: alpha(theme.palette.success.main, 0.08),
+          })}
+        >
+          <Typography variant="body2">
+            <Box component="span" sx={{ fontWeight: 700 }}>
+              {learnedTopicName}
+            </Box>{' '}
+            {t('practice.topicAddedToKnown')}
+          </Typography>
+        </Paper>
+        {nextGuideIdeas.length ? (
+          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+              {t('practice.nextGuidesTitle')}
+            </Typography>
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{ flexWrap: 'wrap' }}
+            >
+              {nextGuideIdeas.map((idea) => (
+                <Button
+                  key={idea.label}
+                  size="small"
+                  variant="outlined"
+                  onClick={() => startNextGuide(idea.prompt)}
+                  sx={(theme) => ({
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    color: 'text.primary',
+                    borderColor: alpha(theme.palette.text.primary, 0.3),
+                    bgcolor: 'background.paper',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    },
+                  })}
+                >
+                  {idea.label}
+                </Button>
+              ))}
+            </Stack>
+          </Paper>
+        ) : null}
+      </Stack>
     ) : showLearnedTopicOffer ? (
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         <Stack

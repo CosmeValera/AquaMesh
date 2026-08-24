@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   appendAiPodcastPage,
   appendAiQuickCreatePage,
+  generateStudyPathStateFromPrompt,
 } from '../../../src/studyGuides/generation'
 import {
   generateHostedAiPodcast,
@@ -44,6 +45,32 @@ vi.mock('../../../src/quickCreate/ai', async (importOriginal) => {
       sourceTitle: 'Biology',
       sourceScope: 'studyGuide',
       createdAt: '2026-01-01T00:00:00.000Z',
+    }),
+    generateStudyPathWithAi: vi.fn().mockResolvedValue({
+      title: 'Terraform State',
+      folderName: 'Terraform State',
+      emoji: '🧱',
+      learnedSkillOptions: ['Terraform state', 'Remote backends'],
+      nextGuideIdeas: [
+        { label: 'Helm charts', prompt: 'Teach me how Helm charts work.' },
+      ],
+      dashboards: [
+        {
+          title: '01 - State files',
+          objects: [
+            {
+              id: 'note-1',
+              kind: 'markdown',
+              title: 'State files',
+              markdown: '# State files\n\nTerraform tracks resources.',
+              sourceLine: 1,
+              tags: [],
+            },
+          ],
+          warnings: [],
+        },
+      ],
+      warnings: [],
     }),
     readQuickCreateAiSettings: () => ({ provider: 'gemini' }),
     resolveQuickCreateAiCredentials: () => ({
@@ -128,5 +155,24 @@ describe('appendAiQuickCreatePage', () => {
     expect(next.dashboards).toHaveLength(1)
     expect(JSON.stringify(next.dashboards[0].layout)).toContain('PodcastBlock')
     expect(next.dashboards[0].createdBy).toBe('quickCreate')
+  })
+})
+
+describe('generateStudyPathStateFromPrompt', () => {
+  it('carries the claimable skills and follow-up ideas into the saved guide', async () => {
+    // Regression: both were generated with the guide and then dropped here, so
+    // the quiz fell back to the guide title and offered no follow-up guides.
+    const studyPath = await generateStudyPathStateFromPrompt({
+      id: 'guide-2',
+      prompt: 'Teach me Terraform state',
+    })
+
+    expect(studyPath.learnedSkillOptions).toEqual([
+      'Terraform state',
+      'Remote backends',
+    ])
+    expect(studyPath.nextGuideIdeas).toEqual([
+      { label: 'Helm charts', prompt: 'Teach me how Helm charts work.' },
+    ])
   })
 })

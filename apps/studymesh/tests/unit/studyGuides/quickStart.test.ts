@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildStudyGuideKnownTopicPrefilterPrompt,
+  buildStudyGuideNextIdeaPrompt,
   deriveStudyGuideBridgeStrength,
   normalizeStudyGuideTitle,
   parseStudyGuideKnownTopicPrefilterResult,
@@ -9,6 +10,8 @@ import {
   parseStudyGuideQuickStartRelevanceDecision,
   resolveStudyGuideKnowledgeContextPlan,
   sanitizeStudyGuideBridgeCorrespondences,
+  sanitizeStudyGuideLearnedSkillOptions,
+  sanitizeStudyGuideNextIdeas,
   STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MAX,
 } from '../../../src/studyGuides/quickStart'
 import { USER_KNOWN_TOPICS_DIRECT_MAX } from '../../../src/profileContext'
@@ -347,5 +350,70 @@ describe('relevance decision', () => {
     )
 
     expect(decision.bridgeStrength).toBe('weak')
+  })
+})
+
+describe('follow-up guide ideas offered after the quiz', () => {
+  it('keeps at most three complete ideas and drops duplicates by label', () => {
+    const ideas = sanitizeStudyGuideNextIdeas([
+      { label: 'Ansible roles', prompt: 'Teach me how Ansible roles work.' },
+      { label: 'ansible roles', prompt: 'Teach me roles again.' },
+      { label: 'Terraform state', prompt: 'Teach me how state files work.' },
+      { label: 'Helm charts', prompt: 'Teach me how Helm charts work.' },
+      { label: 'Kustomize', prompt: 'Teach me Kustomize overlays.' },
+    ])
+
+    expect(ideas.map((idea) => idea.label)).toEqual([
+      'Ansible roles',
+      'Terraform state',
+      'Helm charts',
+    ])
+  })
+
+  it('drops entries missing a label or a prompt instead of half-rendering them', () => {
+    expect(
+      sanitizeStudyGuideNextIdeas([
+        { label: 'Ansible roles' },
+        { prompt: 'Teach me something.' },
+        { label: '   ', prompt: 'Teach me something.' },
+        'Ansible roles',
+        null,
+      ]),
+    ).toEqual([])
+  })
+
+  it('returns nothing for a provider that skipped the field', () => {
+    expect(sanitizeStudyGuideNextIdeas(undefined)).toEqual([])
+    expect(sanitizeStudyGuideNextIdeas('Ansible roles')).toEqual([])
+  })
+
+  it('names the claimed skill under the idea so the bridge does not guess', () => {
+    expect(
+      buildStudyGuideNextIdeaPrompt(
+        'Teach me how Terraform state works.',
+        'Explain it through Ansible playbooks, which I know.',
+      ),
+    ).toBe(
+      'Teach me how Terraform state works.\n\nExplain it through Ansible playbooks, which I know.',
+    )
+  })
+
+  it('sends the idea alone when there is no skill to bridge from', () => {
+    expect(
+      buildStudyGuideNextIdeaPrompt('Teach me how Terraform state works.', ''),
+    ).toBe('Teach me how Terraform state works.')
+    expect(buildStudyGuideNextIdeaPrompt('  ', 'Explain it through X.')).toBe('')
+  })
+
+  it('normalizes claimable skill names the same way for every provider', () => {
+    expect(
+      sanitizeStudyGuideLearnedSkillOptions([
+        '  ansible playbooks ',
+        'Ansible playbooks',
+        'Idempotent runs',
+        'Inventory files',
+        'Handlers',
+      ]),
+    ).toEqual(['Ansible playbooks', 'Idempotent runs', 'Inventory files'])
   })
 })

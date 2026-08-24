@@ -42,7 +42,7 @@ import SearchIcon from '@mui/icons-material/Search'
 import ViewListIcon from '@mui/icons-material/ViewList'
 import ViewModuleIcon from '@mui/icons-material/ViewModule'
 import { nanoid } from 'nanoid'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import type { StudyGuideSummary } from '../../cloud/types'
 import {
@@ -310,6 +310,7 @@ const sortGuides = (
 const StudyGuidesPage = () => {
   const { t, language } = useInterfaceText()
   const navigate = useNavigate()
+  const location = useLocation()
   const theme = useTheme()
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'))
   const [guides, setGuides] = useState<StudyGuideSummary[]>([])
@@ -383,6 +384,21 @@ const StudyGuidesPage = () => {
       window.removeEventListener('storage', loadPendingGuides)
     }
   }, [])
+
+  // A follow-up guide started from a finished quiz arrives as router state.
+  // It is cleared right away so a reload does not reopen the dialog.
+  useEffect(() => {
+    const handedOverPrompt = (
+      location.state as { createGuidePrompt?: unknown } | null
+    )?.createGuidePrompt
+    if (typeof handedOverPrompt !== 'string' || !handedOverPrompt.trim()) {
+      return
+    }
+
+    setCreateGuidePrompt(handedOverPrompt)
+    setCreateOpen(true)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, location.state, navigate])
 
   useEffect(() => {
     if (!pendingGuides.some((guide) => guide.status === 'running')) {

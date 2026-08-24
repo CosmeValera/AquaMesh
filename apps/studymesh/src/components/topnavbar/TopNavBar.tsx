@@ -31,7 +31,10 @@ import {
   OPEN_STUDY_PATH_EVENT,
   useWorkspaceActions,
 } from '../../customHooks/useWorkspaceActions'
-import { WORKSPACE_DASHBOARD_TABS_SLOT_ID } from '../workspace/workspaceEvents'
+import {
+  START_NEXT_STUDY_GUIDE_EVENT,
+  WORKSPACE_DASHBOARD_TABS_SLOT_ID,
+} from '../workspace/workspaceEvents'
 import AppearanceDialog from '../settings/AppearanceDialog'
 import SettingsDialog from '../settings/SettingsDialog'
 import CreateStudyGuideModal from '../studyGuides/CreateStudyGuideModal'
@@ -362,6 +365,32 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
       window.removeEventListener(OPEN_STUDY_PATH_EVENT, handleOpenStudyPath)
     }
   }, [creationHost, userData])
+
+  // Sent by a finished quiz offering follow-up guides. Handled here rather than
+  // in the quiz block because the nav bar sits on both the guide workspace and
+  // the guide list, so one listener covers the hop between them.
+  useEffect(() => {
+    const handleStartNextStudyGuide = (event: Event) => {
+      const prompt = (event as CustomEvent<{ prompt?: unknown }>).detail?.prompt
+      if (typeof prompt !== 'string' || !prompt.trim()) {
+        return
+      }
+
+      navigate('/study-guides', { state: { createGuidePrompt: prompt } })
+    }
+
+    window.addEventListener(
+      START_NEXT_STUDY_GUIDE_EVENT,
+      handleStartNextStudyGuide,
+    )
+
+    return () => {
+      window.removeEventListener(
+        START_NEXT_STUDY_GUIDE_EVENT,
+        handleStartNextStudyGuide,
+      )
+    }
+  }, [navigate])
 
   useEffect(() => {
     const syncKnownTopics = () =>

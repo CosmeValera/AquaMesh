@@ -174,7 +174,9 @@ describe('learned topic offer at the end of a quiz', () => {
         'Flow constraints',
       ])
     })
-    expect(screen.getByText(/is part of what you know now/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/is part of what you know now/i),
+    ).toBeInTheDocument()
   })
 
   it('offers the topic with a revise note inside the middle band', async () => {
@@ -187,7 +189,7 @@ describe('learned topic offer at the end of a quiz', () => {
     expect(screen.getByText(/another pass over the pages/i)).toBeInTheDocument()
   })
 
-  it('offers nothing below the score floor', async () => {
+  it('offers no skill below the score floor', async () => {
     renderQuiz()
     await completeQuiz(1)
 
@@ -282,19 +284,75 @@ const claimFlowConstraints = () =>
     specificKnowledge: ['Flow constraints'],
   })
 
-describe('follow-up guides offered after the topic is claimed', () => {
+describe('follow-up guides offered beside the skill', () => {
   beforeEach(() => {
     mockLocalStorage()
   })
 
-  it('stays hidden until the topic is claimed, because the bridge needs it', async () => {
+  it('stands beside the un-claimed skill instead of waiting for it', async () => {
     renderQuiz()
     await completeQuiz(4)
 
     expect(
       await screen.findByRole('button', { name: 'Add to what I know' }),
     ).toBeInTheDocument()
-    expect(screen.queryByText('Why queues stall')).not.toBeInTheDocument()
+    expect(screen.getByText('Why queues stall')).toBeInTheDocument()
+  })
+
+  it('claims the skill when guides are created from the un-claimed state', async () => {
+    const startNextGuide = vi.fn()
+    window.addEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
+
+    renderQuiz()
+    await completeQuiz(4)
+    fireEvent.click(await findIdeaCard('Why queues stall'))
+    fireEvent.click(screen.getByRole('button', { name: /Create 1 guides/ }))
+
+    await waitFor(() => {
+      expect(readProfileContext()?.specificKnowledge).toEqual([
+        'Flow constraints',
+      ])
+    })
+    expect(promptsFromEvent(startNextGuide)[0]).toContain(
+      'Explain it through Flow constraints',
+    )
+    expect(
+      screen.getByText(/is part of what you know now/i),
+    ).toBeInTheDocument()
+
+    window.removeEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
+  })
+
+  it('offers the ideas below the score floor without claiming or bridging', async () => {
+    const startNextGuide = vi.fn()
+    window.addEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
+
+    renderQuiz()
+    await completeQuiz(1)
+    fireEvent.click(await findIdeaCard('Why queues stall'))
+    fireEvent.click(screen.getByRole('button', { name: /Create 1 guides/ }))
+
+    expect(promptsFromEvent(startNextGuide)).toEqual([
+      'Teach me why queues stall.',
+    ])
+    expect(readProfileContext()).toBeNull()
+
+    window.removeEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)
+  })
+
+  it('drops the auto-claim note once the skill is claimed', async () => {
+    renderQuiz()
+    await completeQuiz(4)
+
+    expect(
+      await screen.findByText(/also adds Flow constraints to what you know/i),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add to what I know' }))
+
+    expect(
+      screen.queryByText(/also adds Flow constraints to what you know/i),
+    ).not.toBeInTheDocument()
   })
 
   it('is already on screen when the topic was claimed in an earlier session', async () => {
@@ -380,12 +438,9 @@ describe('follow-up guides offered after the topic is claimed', () => {
   it('shows nothing extra for a guide generated without follow-up ideas', async () => {
     renderQuiz({ studyPathNextGuideIdeas: undefined })
     await completeQuiz(4)
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'Add to what I know' }),
-    )
 
     expect(
-      await screen.findByText(/is part of what you know now/i),
+      await screen.findByRole('button', { name: 'Add to what I know' }),
     ).toBeInTheDocument()
     expect(
       screen.queryByText('Learn something new on top of it'),

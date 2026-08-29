@@ -1549,10 +1549,6 @@ const detectPodcastScriptLanguage = (
       /\b(el|la|los|las|un|una|de|del|que|para|con|por|como|esto|esta|este|energía|células|lección)\b/g,
       /[áéíóúñ¿¡]/g,
     ]),
-    pt: countPodcastLanguageMarkers(normalized, [
-      /\b(o|a|os|as|um|uma|de|do|da|que|para|com|por|como|isso|essa|este|energia|células|lição)\b/g,
-      /[ãõç]/g,
-    ]),
     fr: countPodcastLanguageMarkers(normalized, [
       /\b(le|la|les|un|une|des|de|du|que|pour|avec|par|comme|cela|cette|énergie|cellules|leçon)\b/g,
       /[àâçéèêëîïôûùüÿœ]/g,

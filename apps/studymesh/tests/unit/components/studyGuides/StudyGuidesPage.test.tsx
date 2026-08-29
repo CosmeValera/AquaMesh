@@ -564,7 +564,10 @@ describe('StudyGuidesPage create flow', () => {
     ).toBeInTheDocument()
   })
 
-  it('auto-retries running jobs after a refresh', async () => {
+  it('never pays twice for a guide that is still generating', async () => {
+    // Remounting is not a refresh: the tab is still generating. Resuming here
+    // started a second paid request for a guide already charged, which is how
+    // a batch of three cost double.
     const resolvers: Array<(title: string) => void> = []
     vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
       ({ id }) =>
@@ -584,16 +587,12 @@ describe('StudyGuidesPage create flow', () => {
 
     expect(await screen.findByText('Creating')).toBeInTheDocument()
     expect(screen.getByText('Refresh-sensitive prompt')).toBeInTheDocument()
-    await waitFor(() => {
-      expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(2)
-    })
-    resolvers[1]('Retried Guide')
+    expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(1)
 
-    await waitFor(() => {
-      expect(
-        screen.getByTestId('newly-created-study-guide-card'),
-      ).toHaveTextContent('Retried Guide')
-    })
+    // The first request was never aborted, so its guide still lands.
+    resolvers[0]('Resumed Guide')
+
+    expect(await screen.findByText('Resumed Guide')).toBeInTheDocument()
   })
 
   it('auto-requeues retryable fetch failures without showing a failed card', async () => {
@@ -922,6 +921,13 @@ describe('follow-up guides handed over from a finished quiz', () => {
     ).toBeInTheDocument()
   })
 
+  it('prices the whole batch, not one guide', async () => {
+    renderWithHandoverState(PROMPTS)
+
+    const confirm = await screen.findByRole('button', { name: /^Create 2/ })
+    expect(confirm).toHaveTextContent('6')
+  })
+
   it('starts one creation per prompt on confirm', async () => {
     renderWithHandoverState(PROMPTS)
 
@@ -955,5 +961,73 @@ describe('follow-up guides handed over from a finished quiz', () => {
       expect(screen.getByTestId('router-state')).toBeInTheDocument()
     })
     expect(screen.queryByText(/^Create \d+ guides$/)).not.toBeInTheDocument()
+  })
+})
+
+describe('several tabs open on the guide list', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    useHostedAiStatusMock.mockReturnValue({
+      status: null,
+      displayStudyCredits: 30,
+      loading: false,
+      error: '',
+      refresh: vi.fn(),
+    })
+    const storage = new Map<string, string>()
+    vi.mocked(window.localStorage.getItem).mockImplementation(
+      (key: string) => storage.get(key) ?? null,
+    )
+    vi.mocked(window.localStorage.setItem).mockImplementation(
+      (key: string, value: string) => {
+        storage.set(key, value)
+      },
+    )
+    vi.mocked(window.localStorage.removeItem).mockImplementation(
+      (key: string) => {
+        storage.delete(key)
+      },
+    )
+    vi.mocked(window.localStorage.clear).mockImplementation(() => {
+      storage.clear()
+    })
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+  })
+
+  it('does not generate or pay for a guide another tab queued', async () => {
+    // The queue is shared through localStorage. Before jobs carried an owner,
+    // every open tab ran the same job, so one batch cost once per open tab.
+    StudyGuideCreationQueueStorage.upsert({
+      id: 'job-from-other-tab',
+      prompt: 'Queued by another tab',
+      provider: 'hosted',
+      status: 'queued',
+      estimateSeconds: 45,
+      autoRetryCount: 0,
+      startedAt: null,
+      finishedAt: null,
+      errorMessage: null,
+      resultStudyGuideId: null,
+      ownerTabId: 'some-other-tab',
+    })
+
+    renderStudyGuidesPage('/study-guides')
+
+    // It still shows the card, so the other tabs mirror the progress.
+    expect(await screen.findByText('Queued by another tab')).toBeInTheDocument()
+    expect(generateStudyPathStateFromPrompt).not.toHaveBeenCalled()
+  })
+
+  it('generates a guide it queued itself', async () => {
+    renderStudyGuidesPage('/study-guides')
+
+    await createGuideFromPrompt('Queued by this tab')
+
+    await waitFor(() => {
+      expect(generateStudyPathStateFromPrompt).toHaveBeenCalledWith(
+        expect.objectContaining({ prompt: 'Queued by this tab' }),
+      )
+    })
   })
 })

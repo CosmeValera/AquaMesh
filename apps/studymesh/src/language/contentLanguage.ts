@@ -8,7 +8,6 @@ export type StudyMeshLanguageCode =
   | 'fr'
   | 'de'
   | 'it'
-  | 'pt'
   | 'nl'
   | 'pl'
   | 'ru'
@@ -60,7 +59,6 @@ export const CONTENT_LANGUAGE_OPTIONS: ContentLanguageOption[] = [
   { code: 'fr', label: 'French' },
   { code: 'de', label: 'German' },
   { code: 'it', label: 'Italian' },
-  { code: 'pt', label: 'Portuguese' },
   { code: 'nl', label: 'Dutch' },
   { code: 'pl', label: 'Polish' },
   { code: 'ru', label: 'Russian' },
@@ -99,14 +97,11 @@ const explicitLanguagePatterns: Array<[StudyMeshLanguageCode, RegExp]> = [
     'it',
     /\b(?:answer|respond|write|generate|create)\s+in\s+italian\b|\b(?:rispondi|scrivi|crea)\s+in\s+italiano\b/i,
   ],
-  [
-    'pt',
-    /\b(?:answer|respond|write|generate|create)\s+in\s+portuguese\b|\b(?:responda|escreva|crie)\s+em\s+portugues\b/i,
-  ],
 ]
 
+// 'pt' scores here only to suppress a wrong neighbour match; it is not an output language
 const promptLanguageMarkers: Array<{
-  code: StudyMeshLanguageCode
+  code: StudyMeshLanguageCode | 'pt'
   patterns: Array<[RegExp, number]>
 }> = [
   {
@@ -168,6 +163,7 @@ const promptLanguageMarkers: Array<{
     code: 'pt',
     patterns: [
       [/\b(?:eu|me|meu|minha|que|o\s+que|como|por\s+que|porque)\b/g, 2],
+      [/\b(?:voce|nao|sao|tambem|entao|estou|preciso)\b/g, 3],
       [
         /\b(?:quero|ajude|aprender|estudar|entender|explica|explique|cria|criar)\b/g,
         3,
@@ -316,7 +312,7 @@ const countPatternMatches = (text: string, pattern: RegExp): number => {
 
 const detectPromptLanguageByMarkers = (
   text: string,
-): StudyMeshLanguageCode | null => {
+): StudyMeshLanguageCode | 'pt' | null => {
   const normalized = normalizeForLanguagePattern(text).toLowerCase()
   const scores = promptLanguageMarkers
     .map(({ code, patterns }) => ({
@@ -400,6 +396,11 @@ export const detectContentLanguage = (
   }
 
   const markerLanguage = detectPromptLanguageByMarkers(text)
+  // Portuguese output is disabled: fall back to settings instead of a neighbour language
+  if (markerLanguage === 'pt') {
+    return null
+  }
+
   if (markerLanguage) {
     return markerLanguage
   }

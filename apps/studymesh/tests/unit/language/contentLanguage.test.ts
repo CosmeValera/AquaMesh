@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   CONTENT_LANGUAGE_SETTINGS_KEY,
   detectContentLanguage,
+  isStudyMeshLanguageCode,
   readContentLanguageSettings,
   resolveContentLanguage,
   saveContentLanguageSettings,
@@ -110,7 +111,26 @@ describe('content language resolver', () => {
     })
   })
 
-  it('falls back to settings when ELD cannot separate short close languages', () => {
+  it('never resolves Portuguese and uses settings for Portuguese prompts', () => {
+    saveContentLanguageSettings({
+      interfaceLanguage: 'es',
+      defaultContentLanguage: 'es',
+      autoDetectAiLanguage: true,
+    })
+
+    const portuguesePrompt =
+      'Eu quero aprender sobre derivadas, voce pode criar um guia de estudo?'
+
+    expect(isStudyMeshLanguageCode('pt')).toBe(false)
+    expect(detectContentLanguage(portuguesePrompt)).toBeNull()
+    expect(resolveContentLanguage({ text: portuguesePrompt })).toEqual({
+      language: 'es',
+      source: 'settings',
+    })
+  })
+
+  // Used to land on settings because ELD could not split es from pt; pt is gone now
+  it('keeps short Spanish prompts in Spanish', () => {
     saveContentLanguageSettings({
       interfaceLanguage: 'es',
       defaultContentLanguage: 'es',
@@ -123,7 +143,7 @@ describe('content language resolver', () => {
       }),
     ).toEqual({
       language: 'es',
-      source: 'settings',
+      source: 'detected',
     })
   })
 

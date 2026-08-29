@@ -101,7 +101,6 @@ const EVAL_LANGUAGE = (process.env.PODCAST_EVAL_LANG?.trim() || 'en') as
   | 'es'
   | 'fr'
   | 'it'
-  | 'pt'
   | 'hi'
   | 'zh'
   | 'ja'

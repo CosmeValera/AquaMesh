@@ -66,6 +66,7 @@ import {
   HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT,
   HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
   STUDY_GUIDE_CREATION_QUEUE_CHANGED_EVENT,
+  getCreationTabId,
   StudyGuideCreationQueueStorage,
   isRetryableStudyGuideCreationError,
   type StudyGuideCreationJob,
@@ -82,6 +83,13 @@ type PendingGuide = StudyGuideCreationJob
 
 const MAX_HOSTED_BROWSER_CONCURRENCY = 3
 const MAX_LOCAL_BROWSER_CONCURRENCY = 1
+
+/**
+ * Jobs this tab is generating right now. Module scope on purpose: a remount
+ * gets a fresh ref, and the resume-after-refresh pass would then treat its own
+ * in-flight guides as abandoned and pay for each of them twice.
+ */
+const jobsRunningInThisTab = new Set<string>()
 
 const quickPromptOptions = [
   {
@@ -363,7 +371,10 @@ const StudyGuidesPage = () => {
   useEffect(() => {
     isMountedRef.current = true
     loadGuides()
-    StudyGuideCreationQueueStorage.requeueRetryableJobs()
+    StudyGuideCreationQueueStorage.requeueRetryableJobs({
+      tabId: getCreationTabId(),
+      activeJobIds: Array.from(jobsRunningInThisTab),
+    })
     loadPendingGuides()
     window.addEventListener(STUDY_GUIDES_CHANGED_EVENT, loadGuides)
     window.addEventListener(
@@ -373,10 +384,26 @@ const StudyGuidesPage = () => {
     window.addEventListener('storage', loadGuides)
     window.addEventListener('storage', loadPendingGuides)
 
+    // Closing the tab kills its requests, so park whatever it was generating
+    // for whichever tab opens next. Unmounting is not this: a guide keeps
+    // generating and saving when the user navigates inside the app.
+    const parkRunningJobs = () => {
+      StudyGuideCreationQueueStorage.markJobsInterrupted(
+        Array.from(jobsRunningInThisTab),
+      )
+    }
+
+    window.addEventListener('beforeunload', parkRunningJobs)
+    window.addEventListener('pagehide', parkRunningJobs)
+
     return () => {
+      window.removeEventListener('beforeunload', parkRunningJobs)
+      window.removeEventListener('pagehide', parkRunningJobs)
       isMountedRef.current = false
-      activeJobsRef.current.forEach((job) => job.controller.abort())
-      activeJobsRef.current.clear()
+      // Deliberately not aborting: the Carrots for an in-flight guide are
+      // already spent, so killing it here threw the money away and the resume
+      // pass then paid a second time for the same guide. `isMountedRef` is what
+      // keeps a finished job from touching state after unmount.
       window.removeEventListener(STUDY_GUIDES_CHANGED_EVENT, loadGuides)
       window.removeEventListener(
         STUDY_GUIDE_CREATION_QUEUE_CHANGED_EVENT,
@@ -465,6 +492,8 @@ const StudyGuidesPage = () => {
         finishedAt: null,
         errorMessage: null,
         resultStudyGuideId: null,
+        // The tab that pressed Create is the one that runs and pays for it.
+        ownerTabId: getCreationTabId(),
       })
     } catch (error) {
       const timestamp = new Date().toISOString()
@@ -554,6 +583,7 @@ const StudyGuidesPage = () => {
       controller: generationController,
       provider: job.provider,
     })
+    jobsRunningInThisTab.add(job.id)
     StudyGuideCreationQueueStorage.update(job.id, {
       status: 'running',
       startedAt,
@@ -608,6 +638,7 @@ const StudyGuidesPage = () => {
       })
     } finally {
       activeJobsRef.current.delete(job.id)
+      jobsRunningInThisTab.delete(job.id)
       loadPendingGuides()
     }
   }
@@ -621,8 +652,16 @@ const StudyGuidesPage = () => {
       MAX_HOSTED_BROWSER_CONCURRENCY -
       activeJobs.filter((job) => !isLocalProvider(job.provider)).length
 
+    // Only what this tab owns. The queue is shared through localStorage, so
+    // every open tab used to run the same job and the account paid once per
+    // tab. A job with no owner predates the field and stays adoptable.
+    const tabId = getCreationTabId()
     const queuedJobs = [...pendingGuides]
-      .filter((guide) => guide.status === 'queued')
+      .filter(
+        (guide) =>
+          guide.status === 'queued' &&
+          (!guide.ownerTabId || guide.ownerTabId === tabId),
+      )
       .sort(
         (first, second) =>
           Date.parse(first.createdAt || '') -

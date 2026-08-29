@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid'
 import type { QuickCreateAiProvider } from '../quickCreate/ai'
 import { getHostedAiCreditCost } from '../quickCreate/ai/hostedCredits'
 import {
@@ -28,6 +29,41 @@ export interface StudyGuideCreationJob {
   finishedAt?: string | null
   errorMessage?: string | null
   resultStudyGuideId?: string | null
+  /**
+   * The tab that pressed Create. The queue lives in localStorage, which every
+   * tab of the origin shares, so without an owner each open tab ran the same
+   * job and the account paid once per tab. Missing on jobs queued before this
+   * existed, which any tab may adopt.
+   */
+  ownerTabId?: string | null
+}
+
+const CREATION_TAB_ID_KEY = 'studymesh.studyGuides.creationTabId'
+
+/**
+ * Identifies this browser tab. Backed by sessionStorage, so it survives a
+ * refresh of this tab and no other tab can ever see it: that is what lets a tab
+ * reclaim its own interrupted work without letting anyone else pay for it again.
+ */
+export const getCreationTabId = (): string => {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  try {
+    const existing = window.sessionStorage.getItem(CREATION_TAB_ID_KEY)
+    if (existing) {
+      return existing
+    }
+
+    const tabId = nanoid()
+    window.sessionStorage.setItem(CREATION_TAB_ID_KEY, tabId)
+    return tabId
+  } catch {
+    // Without sessionStorage the tab cannot be told apart. An empty id owns
+    // nothing, so this tab only runs what it queued in this page life.
+    return ''
+  }
 }
 
 export const HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT = 1
@@ -124,6 +160,10 @@ const normalizeJob = (value: unknown): StudyGuideCreationJob | null => {
       typeof source.resultStudyGuideId === 'string'
         ? source.resultStudyGuideId
         : null,
+    ownerTabId:
+      typeof source.ownerTabId === 'string' && source.ownerTabId
+        ? source.ownerTabId
+        : null,
   }
 }
 
@@ -196,6 +236,7 @@ export const StudyGuideCreationQueueStorage = {
       finishedAt: job.finishedAt ?? existing?.finishedAt ?? null,
       errorMessage: job.errorMessage ?? null,
       resultStudyGuideId: job.resultStudyGuideId ?? null,
+      ownerTabId: job.ownerTabId ?? existing?.ownerTabId ?? null,
     }
 
     if (existing && jobMatches(existing, nextJob)) {
@@ -231,15 +272,32 @@ export const StudyGuideCreationQueueStorage = {
     writeQueue(readQueue().filter((item) => item.id !== id))
   },
 
-  requeueRetryableJobs(): StudyGuideCreationJob[] {
+  /**
+   * Resumes work a closed tab left behind, at mount time only.
+   *
+   * `tabId` is this tab and `activeJobIds` are the jobs it is generating in
+   * this page life. A job still running in another tab is never touched:
+   * resuming it would fire a second paid request for a guide already in
+   * flight, which is how one batch cost once per open tab.
+   */
+  requeueRetryableJobs({
+    tabId = '',
+    activeJobIds = [],
+  }: {
+    tabId?: string
+    activeJobIds?: readonly string[]
+  } = {}): StudyGuideCreationJob[] {
     const current = readQueue()
     let changed = false
     const next = current.map((job) => {
+      // A job with no owner predates this field, so any tab may adopt it.
+      const isOwn = !job.ownerTabId || job.ownerTabId === tabId
       const shouldRequeue =
-        job.status === 'running' ||
-        job.status === 'interrupted' ||
-        (job.status === 'failed' &&
-          isRetryableStudyGuideCreationError(job.errorMessage))
+        !activeJobIds.includes(job.id) &&
+        (job.status === 'interrupted' ||
+          (job.status === 'running' && isOwn) ||
+          (job.status === 'failed' &&
+            isRetryableStudyGuideCreationError(job.errorMessage)))
       if (!shouldRequeue) {
         return job
       }
@@ -266,6 +324,9 @@ export const StudyGuideCreationQueueStorage = {
         startedAt: null,
         finishedAt: null,
         errorMessage: null,
+        // The tab that adopts the work becomes the one that runs and pays for
+        // it, or the runner would skip a job it just requeued.
+        ownerTabId: tabId || null,
       }
     })
     if (changed) {
@@ -275,7 +336,35 @@ export const StudyGuideCreationQueueStorage = {
     return next
   },
 
-  markRunningJobsInterrupted(): StudyGuideCreationJob[] {
-    return this.requeueRetryableJobs()
+  markRunningJobsInterrupted(options?: {
+    tabId?: string
+    activeJobIds?: readonly string[]
+  }): StudyGuideCreationJob[] {
+    return this.requeueRetryableJobs(options)
+  },
+
+  /**
+   * Called as the tab closes. The request dies with the page, so the job is
+   * parked for whichever tab opens next rather than left looking alive.
+   */
+  markJobsInterrupted(jobIds: readonly string[]): void {
+    if (!jobIds.length) {
+      return
+    }
+
+    const current = readQueue()
+    let changed = false
+    const next = current.map((job) => {
+      if (!jobIds.includes(job.id) || job.status !== 'running') {
+        return job
+      }
+
+      changed = true
+      return { ...job, status: 'interrupted' as const, updatedAt: nowIso() }
+    })
+
+    if (changed) {
+      writeQueue(next)
+    }
   },
 }

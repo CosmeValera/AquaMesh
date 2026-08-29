@@ -83,12 +83,12 @@ describe('source page drafts', () => {
         'Answer in English: search information on the internet to compare a platypus to a dinosaur.',
       dashboardTitle: 'Animals',
       answer: 'The source can help compare animal traits.',
-      contentLanguage: 'pt',
+      contentLanguage: 'it',
     })
 
     const prompt = vi.mocked(callStrongAiModel).mock.calls[0][0].parts[0].text
     expect(prompt).toContain('Output language: English.')
-    expect(prompt).not.toContain('Output language: Portuguese.')
+    expect(prompt).not.toContain('Output language: Italian.')
     expect(draft.markdown.match(/^Source:/gim)).toHaveLength(1)
     expect(draft.markdown).not.toContain('Source: abdobooks.com')
   })

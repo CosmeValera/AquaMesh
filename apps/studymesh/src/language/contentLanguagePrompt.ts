@@ -4,7 +4,6 @@ export type StudyMeshLanguageCode =
   | 'fr'
   | 'de'
   | 'it'
-  | 'pt'
   | 'nl'
   | 'pl'
   | 'ru'
@@ -22,7 +21,6 @@ const contentLanguageLabels: Record<StudyMeshLanguageCode, string> = {
   fr: 'French',
   de: 'German',
   it: 'Italian',
-  pt: 'Portuguese',
   nl: 'Dutch',
   pl: 'Polish',
   ru: 'Russian',

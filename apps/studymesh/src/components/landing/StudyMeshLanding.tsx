@@ -1228,10 +1228,12 @@ const GrowingGuidesSection = () => (
  * use StageEyebrow: the sequence starts at 01 with the comparison section and
  * numbering this would push every following step out by one.
  *
- * Autoplays muted and looping because that is the only form of autoplay
- * browsers allow, and because a 10s silent loop reads as a moving screenshot
- * rather than something demanding attention. Sound is available on request via
- * the unmute control, and everything stops for prefers-reduced-motion.
+ * Starts paused on the poster and unmuted: autoplay policies only block sound
+ * when playback was not user-initiated, and a narrated cut this long is watched
+ * on purpose rather than glanced at like a moving screenshot. Custom controls
+ * replace the browser's chrome so the frame keeps its own styling.
+ *
+ * Storyboard, shot list and voice-over script: readme_docs/trailer/README.md.
  */
 // mm:ss for the trailer scrubber. The file is well under an hour, so hours are
 // never rendered and a missing duration reads as 0:00 rather than NaN.

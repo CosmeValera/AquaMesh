@@ -77,74 +77,88 @@ repo keeps.
 Finishing a guide's quiz hands the reader three follow-up guides, and every new
 guide is explained through the skill just earned. The trailer sold everything
 except that loop, so this beat goes in as the **climax: the last thing before the
-bunny outro**, 9.73 s at the 45.0 s seam. The cut is now 66.57 s.
+bunny outro**, 9.97 s at the 45.0 s seam. The cut is now 65.81 s.
 
-### It is designed, not recorded
+### One scene, not a slideshow
 
-A raw screenshot dropped edge to edge looks nothing like the rest of the trailer.
-The existing frames have a house style, kept here as
-`reference/style-19-trailer-card-frame.png` and
-`reference/style-20-trailer-gradient-slide.png`:
+Every element keeps its identity for the whole beat and moves; nothing cuts to a
+replacement frame. That is why the layout is a set of keyframes measured off the
+real DOM rather than a stack of separate slides, and why the section carries one
+chip, **RabbitHoles**, instead of a caption per shot.
 
-- app screenshots sit in a **rounded white card with real padding and a soft
-  shadow, on a periwinkle ground**, with a tilted chip label above the corner;
-- statements get their own **pastel gradient slide** with a bold dark headline and
-  white rows with a coloured accent bar.
+| Stage       | Kind      | What happens                                                                      |
+| ----------- | --------- | --------------------------------------------------------------------------------- |
+| `result`    | 1.6 s     | The quiz result alone, centred: the whole ring, right **and** wrong               |
+| `open`      | 20 frames | It slides left and shrinks; an arrow draws to the right; the three picks arrive   |
+| `pair`      | 1.0 s     | Held side by side                                                                 |
+| `promote`   | 22 frames | The result fades out; the picks travel to top centre and grow back to full size   |
+| `guide-1…3` | 2.2 s     | A coloured arrow and the guide it became, one at a time                           |
+| `open-a`    | 24 frames | The column slides left and shrinks; the first guide lights; its Quick Start lands |
+| `read-a`    | 1.5 s     | Held                                                                              |
+| `open-b`    | 16 frames | The second guide lights; its Quick Start lands underneath the first               |
+| `read-b`    | 2.0 s     | Held: picks, arrows, three guides, two connectors, two opened Quick Starts        |
 
-So every frame of this beat is an HTML slide rendered through headless Chromium
-(Playwright) at 1920x1080, holding the real screenshots. The palette was sampled
-out of those two frames with ffmpeg, not guessed:
+The final frame is the whole argument at once: three picks on top, a coloured
+arrow under each, the guide each became, and two of them opened on the right —
+different subjects, different key ideas, the same
+`Via Caffeine and adenosine signaling` tab on both. Each Quick Start carries its
+real key idea and a two-paragraph quick summary, set as type rather than pasted
+as a screenshot so it stays readable at this size.
 
-| Token            | Value                                                            |
-| ---------------- | ---------------------------------------------------------------- |
-| Ground           | `#C1D7FF`                                                        |
-| Chip             | `#90AEE2`, white 600-weight type, rotated -1.4°                  |
-| Ink              | `#1A1F30`                                                        |
-| Row accents      | `#1A56DB`, `#0F766E`, `#A21567`                                  |
-| Gradient corners | `#E3DCFB`, `#D2E8D1`, `#FEE1C1`, `#C5DEFF`, `#E5D5EB`, `#DDE6C9` |
+Details that matter if the layout is edited:
 
-Type is Readex Pro, the landing page's face.
+- Movement stages render **one PNG per frame**, not a dissolve between two end
+  states: a cross-fade looks like a cross-fade, and these elements are meant to
+  travel. Holds are single stills.
+- Keyframes come from a measuring pass — the quiz card, the column, the picks
+  card, each guide row's centre and each Quick Start's height are read off the
+  page, then the positions are computed. Retune `PAIR_MARGIN`, `COLUMN_LEFT_X`,
+  `SHIFT_SCALE` or `DETAIL` and everything re-derives, connectors included.
+- Connectors are **rounded right-angle elbows**, not beziers. A single curve over
+  that short horizontal run hooked back under its own arrowhead.
+- The hand-off arrow fades out in the first quarter of `promote`, because the
+  column travels back past the quiz and an arrow whose head ends up behind its
+  tail reads as a glitch.
+- `CUT` is two frames, not one. `xfade` with a single-frame duration silently
+  drops its second input, and the chain stops growing.
 
-### Shots
+### Where the beat sits
 
-| #   | Slide          | Hold  | Content                                                                                           |
-| --- | -------------- | ----- | ------------------------------------------------------------------------------------------------- |
-| 1   | `quiz`         | 1.8 s | Chip "Quiz complete"; the whole result ring, right **and** wrong, from `21-quiz-results-card.png` |
-| 2   | `ideas`        | 1.2 s | Chip "Three ways to go deeper"; the three follow-ups, none picked                                 |
-| 3   | `picked`       | 1.2 s | Same frame, **cut** not dissolved: all three ticked, button reads "Create 3 guides"               |
-| 4   | `building`     | 1.1 s | Chip "Building them for you"; **one** progress card, cropped out of the pair in the screenshot    |
-| 5   | `quickstart`   | 2.0 s | Chip "Every new guide"; a real Quick Start with the `Via <skill>` tab                             |
-| 6-8 | `message-1..3` | 3.9 s | Gradient slide: the headline, then one row landing every 0.5 s                                    |
-
-Consecutive card slides alternate their push, in then out, so five framed
-screenshots in a row do not read as a slideshow. Shot 4 shows a single progress
-card on purpose: the screenshot holds two, and two cards straight after a button
-that says "Create 3 guides" reads as a miscount.
-
-The message slide reads:
-
-> **Each one explained through what you already know.**
-> Caffeine and dreams · Plan caffeine timing · Receptor blockers — each `via
-Caffeine and adenosine signaling`
-
-Rows that have not arrived keep their space, so the three renders never reflow.
-
-The count has to hold across the beat, which is why the first shot uses the clean
-results card rather than the browser screenshot whose button said "Create 2
-guides". No modal and no Carrot cost: billing is not what this beat sells.
+`SEAM` is 45.0 s, the trailer's quietest point. `TAIL_START` is **46.0 s**, not
+45.0: the second between them is the previous gradient slide still holding, and
+resuming the tail there flashed a second of "Ask it something you have actually
+been wondering about" after the beat had already replaced that thought. Starting
+the tail at 46.0 s lands straight on the bunny outro.
 
 ### Voice-over
 
 Voice only, over silence, loudness-matched to `I=-16 TP=-1.5`:
 
-- `v0_16` at +0.3 s, across shots 1-3.
-- `v0_17` at +6.1 s, over the Quick Start and into the message slide.
+- `v0_16` at +0.3 s, over the result and the picks.
+- `v0_17` at +6.1 s, as the first Quick Start opens.
 
 **Do not add a music bed lifted out of `trailer.mp4`.** Its audio has the
 trailer's own narration baked in, so any slice of it drags another voice line
 ("RabbitHole, on your laptop or your phone…") into the beat. There are no stems.
-The 45.0 s seam is the trailer's quietest point, so the music fades under the
-0.3 s join and comes back with the bunny.
+The seam is quiet, so the music fades under the 0.3 s join and comes back with the
+bunny.
+
+### Palette
+
+Sampled out of the trailer's own frames with ffmpeg, kept as
+`reference/style-19-trailer-card-frame.png` and
+`reference/style-20-trailer-gradient-slide.png`:
+
+| Token          | Value                                           |
+| -------------- | ----------------------------------------------- |
+| Ground         | `#C1D7FF`                                       |
+| Chip           | `#90AEE2`, white 600-weight type, rotated -1.4° |
+| Ink            | `#1A1F30`                                       |
+| Accents        | `#1A56DB`, `#0F766E`, `#A21567`                 |
+| Hand-off arrow | `#5A6B99`                                       |
+
+Type is Readex Pro, the landing page's face. Cards are white, 20-22 px radius,
+with a soft shadow — the same frame the rest of the trailer puts the app in.
 
 ### Building it
 
@@ -154,17 +168,26 @@ node apps/studymesh/scripts/build-trailer-beat.mjs splice
 node apps/studymesh/scripts/build-trailer-beat.mjs install
 ```
 
-`beat` renders the slides and writes `trailer-beat.mp4` to
-`%TEMP%/rabbithole-trailer` (`TRAILER_BUILD_DIR` overrides it); the slide PNGs
-land there too, which is the fastest way to check a design change. `splice` cuts
-the trailer at 45.0 s, dissolves head → beat → tail with 0.3 s joins, and
-re-encodes once (CRF 22, preset slow, AAC 128k, ~7.2 MB). `install` then copies
-the result over `public/videos/trailer.mp4`.
+`beat` renders every frame through headless Chromium and writes
+`trailer-beat.mp4` to `%TEMP%/rabbithole-trailer` (`TRAILER_BUILD_DIR` overrides
+it). The PNGs land there too — `still-*.png` for the holds and `seq-<stage>-*.png`
+for the movement — which is the fastest way to check a design change. `splice`
+cuts at 45.0 s, dissolves head → beat → tail with 0.3 s joins and re-encodes once
+(CRF 22, preset slow, AAC 128k). `install` copies the result over
+`public/videos/trailer.mp4`.
 
-`splice` must run against the **original** 57.4 s trailer; on an already-spliced
-file it would insert the beat twice, so it refuses anything longer than 60 s.
-Restore the original with `git checkout -- apps/studymesh/public/videos/trailer.mp4`
-(or set `TRAILER_FORCE_SPLICE=1` if you really mean it).
+**Splice against the pre-beat cut, not the shipped one.** Once a spliced trailer
+is committed, the working copy already carries a beat and splicing it again
+stacks a second one, so `splice` refuses anything longer than 60 s. Point it at
+the base instead:
+
+```
+git show 5901b02:apps/studymesh/public/videos/trailer.mp4 > %TEMP%/rabbithole-trailer/trailer-base.mp4
+TRAILER_BASE=%TEMP%/rabbithole-trailer/trailer-base.mp4 node apps/studymesh/scripts/build-trailer-beat.mjs splice
+```
+
+`5901b02` ("Improve trailer 3") is the last cut without this beat, 57.43 s.
+`TRAILER_FORCE_SPLICE=1` overrides the guard if you really mean it.
 
 ## Recording checklist (for beats shot live)
 

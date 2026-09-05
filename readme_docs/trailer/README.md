@@ -77,7 +77,7 @@ repo keeps.
 Finishing a guide's quiz hands the reader three follow-up guides, and every new
 guide is explained through the skill just earned. The trailer sold everything
 except that loop, so this beat goes in as the **climax: the last thing before the
-bunny outro**, 9.97 s at the 45.0 s seam. The cut is now 65.81 s.
+bunny outro**, 11.47 s at the 45.0 s seam. The cut is now 67.77 s.
 
 ### One scene, not a slideshow
 
@@ -96,7 +96,7 @@ chip, **RabbitHoles**, instead of a caption per shot.
 | `open-a`    | 24 frames | The column slides left and shrinks; the first guide lights; its Quick Start lands |
 | `read-a`    | 1.5 s     | Held                                                                              |
 | `open-b`    | 16 frames | The second guide lights; its Quick Start lands underneath the first               |
-| `read-b`    | 2.0 s     | Held: picks, arrows, three guides, two connectors, two opened Quick Starts        |
+| `read-b`    | 3.5 s     | Held: picks, arrows, three guides, two connectors, two opened Quick Starts        |
 
 The result card is titled `QUIZ COMPLETE / Caffeine and adenosine signaling`
 (`QUIZ` in the script). The ring on its own says nothing about what was learned,
@@ -132,11 +132,21 @@ Details that matter if the layout is edited:
 
 ### Where the beat sits
 
-`SEAM` is 45.0 s, the trailer's quietest point. `TAIL_START` is **46.0 s**, not
-45.0: the second between them is the previous gradient slide still holding, and
-resuming the tail there flashed a second of "Ask it something you have actually
-been wondering about" after the beat had already replaced that thought. Starting
-the tail at 46.0 s lands straight on the bunny outro.
+`SEAM` is 45.0 s, the trailer's quietest point, and the head dissolves into the
+beat there over 0.3 s.
+
+`TAIL_START` is **45.83 s**, not 45.0: the half second after the seam is the
+previous gradient slide still holding, and resuming the tail there flashed
+"Ask it something you have actually been wondering about" back onto the screen
+after the beat had already replaced that thought. 45.83 is chosen precisely — the
+base cut has true digital silence from 45.55 to 45.82 and the outro's first voice
+line starts immediately after it, so the join lands in that gap without clipping a
+word, and the picture is already the bunny.
+
+The beat → tail join is a **hard cut on both streams**, unlike the head → beat
+join. Crossfading it ramped that first voice line up from silence over 0.3 s,
+which is audible however short the fade is. `concat` on video and audio keeps the
+two streams the same length, so nothing drifts.
 
 ### Voice-over
 
@@ -180,7 +190,7 @@ node apps/studymesh/scripts/build-trailer-beat.mjs install
 `trailer-beat.mp4` to `%TEMP%/rabbithole-trailer` (`TRAILER_BUILD_DIR` overrides
 it). The PNGs land there too — `still-*.png` for the holds and `seq-<stage>-*.png`
 for the movement — which is the fastest way to check a design change. `splice`
-cuts at 45.0 s, dissolves head → beat → tail with 0.3 s joins and re-encodes once
+cuts at 45.0 s, dissolves the head into the beat, hard-cuts into the tail, and re-encodes once
 (CRF 22, preset slow, AAC 128k). `install` copies the result over
 `public/videos/trailer.mp4`.
 

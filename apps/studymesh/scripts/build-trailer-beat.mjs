@@ -57,10 +57,12 @@ const CUT = 2 / FPS
 // The audio drops to -36 dBFS here, its quietest point outside head and tail,
 // so cutting in the trough hides the seam.
 const SEAM = 45.0
-// The tail picks up at the bunny outro rather than back at the seam: 45.0-46.0
-// is the previous slide holding, and resuming there flashed a second of it
-// after the beat had already replaced that thought.
-const TAIL_START = 46.0
+// The tail picks up at the bunny outro rather than back at the seam: 45.0-45.5
+// is the previous slide holding, and resuming there flashed a second of it after
+// the beat had already replaced that thought. 45.83 specifically: the base cut
+// has true digital silence from 45.55 to 45.82 and the outro's first voice line
+// starts right after it, so the join lands in the gap without clipping a word.
+const TAIL_START = 45.83
 const JOIN_FADE = 0.3
 // The trailer without this beat is 57.4s; anything past this already carries it.
 const SPLICED_MIN_DURATION = 60
@@ -640,8 +642,10 @@ const STAGES = [
     }),
   },
   {
+    // Long on purpose: the voice ends well before this does, and the closing
+    // frame is the one worth reading.
     name: 'read-b',
-    dur: 2.0,
+    dur: 3.5,
     state: () => ({
       split: 1,
       promote: 1,
@@ -1020,13 +1024,12 @@ const splice = () => {
     `[hv][bv]xfade=transition=fade:duration=${JOIN_FADE}:offset=${(
       SEAM - JOIN_FADE
     ).toFixed(3)}[j1]`,
-    `[j1][tv]xfade=transition=fade:duration=${JOIN_FADE}:offset=${(
-      SEAM +
-      beatDur -
-      2 * JOIN_FADE
-    ).toFixed(3)}[vout]`,
+    // Hard cut out of the beat, not a dissolve. The tail opens on a voice line,
+    // and crossfading it in ramped that line up from silence, which is audible
+    // however short the fade is.
+    `[j1][tv]concat=n=2:v=1:a=0[vout]`,
     `[ha][ba]acrossfade=d=${JOIN_FADE}[a1]`,
-    `[a1][ta]acrossfade=d=${JOIN_FADE}[aout]`,
+    `[a1][ta]concat=n=2:v=0:a=1[aout]`,
   ].join(';')
 
   ffmpeg([

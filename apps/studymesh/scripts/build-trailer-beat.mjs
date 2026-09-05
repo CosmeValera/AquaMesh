@@ -1,6 +1,6 @@
 /**
- * Builds the "one guide opens three more" trailer beat and splices it into the
- * landing trailer.
+ * Builds the "one guide opens three more" trailer beat, splices it into the
+ * landing trailer, and punches in on the trailer's opening shot.
  *
  * The beat is one designed scene, not a screen recording. Raw screenshots pasted
  * edge to edge looked nothing like the rest of the cut, which frames the app in
@@ -64,6 +64,16 @@ const SEAM = 45.0
 // starts right after it, so the join lands in the gap without clipping a word.
 const TAIL_START = 45.83
 const JOIN_FADE = 0.3
+// The punch-in on the opening modal. The logo card that opens the trailer is
+// left at 1:1 — the push starts under the dissolve that replaces it, so the
+// modal is already at full size by the time it is solid, and eases back before
+// the recording starts moving it up the screen.
+const OPENING_ZOOM = 1.5
+const OPENING_IN_START = 1.2
+const OPENING_IN_END = 1.8
+const OPENING_HOLD_END = 2.7
+const OPENING_SETTLE = 3.4
+const OPENING_END = 3.5
 // The trailer without this beat is 57.4s; anything past this already carries it.
 const SPLICED_MIN_DURATION = 60
 
@@ -1014,8 +1024,38 @@ const splice = () => {
     'aresample=48000,aformat=sample_rates=48000:channel_layouts=stereo,asettb=AVTB'
   // One encode for the whole cut: chaining xfades through intermediate files
   // would re-compress the untouched 57s twice over.
+  // The opening holds on the New Quick Guide modal, which sits dead centre at
+  // about a third of the frame width and read as a stamp. Punching in and
+  // easing back out gives it presence without touching the recording: the logo
+  // card is left at 1:1, the push happens under the dissolve that replaces it,
+  // and by the time the modal starts travelling up the zoom is back at 1:1, so
+  // the shot lands exactly where it always did. Only the first seconds go
+  // through zoompan — resampling the whole head would soften 40 s of text.
+  const frame = (seconds) => Math.round(seconds * FPS)
+  const smooth = (from, to) => {
+    const u = `((on-${frame(from)})/${frame(to) - frame(from)})`
+    return `(${u}*${u}*(3-2*${u}))`
+  }
+  const rise = OPENING_ZOOM - 1
+  const zoom = [
+    `if(lt(on,${frame(OPENING_IN_START)}),1,`,
+    `if(lt(on,${frame(OPENING_IN_END)}),1+${rise}*${smooth(
+      OPENING_IN_START,
+      OPENING_IN_END,
+    )},`,
+    `if(lt(on,${frame(OPENING_HOLD_END)}),${OPENING_ZOOM},`,
+    `if(lt(on,${frame(OPENING_SETTLE)}),${OPENING_ZOOM}-${rise}*${smooth(
+      OPENING_HOLD_END,
+      OPENING_SETTLE,
+    )},`,
+    '1))))',
+  ].join('')
+  const punchIn = `fps=${FPS},zoompan=z='${zoom}':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${CANVAS_W}x${CANVAS_H}:fps=${FPS}`
+
   const filter = [
-    `[0:v]trim=0:${SEAM},setpts=PTS-STARTPTS,${video}[hv]`,
+    `[0:v]trim=0:${OPENING_END},setpts=PTS-STARTPTS,${punchIn},${video}[h1]`,
+    `[0:v]trim=${OPENING_END}:${SEAM},setpts=PTS-STARTPTS,${video}[h2]`,
+    `[h1][h2]concat=n=2:v=1:a=0[hv]`,
     `[0:a]atrim=0:${SEAM},asetpts=PTS-STARTPTS,${audio}[ha]`,
     `[0:v]trim=${TAIL_START}:${trailerDur},setpts=PTS-STARTPTS,${video}[tv]`,
     `[0:a]atrim=${TAIL_START}:${trailerDur},asetpts=PTS-STARTPTS,${audio}[ta]`,

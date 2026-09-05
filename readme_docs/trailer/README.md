@@ -1,10 +1,10 @@
 # RabbitHole trailer
 
 The trailer is cut by hand in **Microsoft Clipchamp**, exported, and committed as
-a binary. The one exception is the "one guide opens three more" beat, which is
-built from stills by `apps/studymesh/scripts/build-trailer-beat.mjs` and spliced
-in with ffmpeg. This file is the storyboard and the asset inventory so the next
-cut does not start from zero.
+a binary. `apps/studymesh/scripts/build-trailer-beat.mjs` then does two things to
+that export with ffmpeg: it punches in on the opening, and it splices in the
+"one guide opens three more" beat. This file is the storyboard and the asset
+inventory so the next cut does not start from zero.
 
 ## Assets
 
@@ -129,6 +129,27 @@ Details that matter if the layout is edited:
   tail reads as a glitch.
 - `CUT` is two frames, not one. `xfade` with a single-frame duration silently
   drops its second input, and the chain stops growing.
+
+### The opening punch-in
+
+The first shot after the logo is the New Quick Guide modal, which the recording
+holds dead centre at about a third of the frame width — it read as a stamp on an
+empty gradient. `splice` pushes in to **1.5x** (`OPENING_ZOOM`), holds, then
+eases back to 1:1, both ramps smoothstepped.
+
+The **logo card stays at 1:1**. The push runs 1.2 → 1.8 s, under the slow
+dissolve that replaces the logo, so the modal is already at full size by the time
+it is solid and the logo never scales. It holds to 2.7 s and is back to 1:1 by
+3.4 s — before the recording itself starts sliding the modal up and bringing the
+workspace in. So both ends are untouched, measured against the base cut: PSNR
+≈ 67 dB over the logo and ≈ 51 dB from 3.4 s on, which is re-encode noise only.
+
+Only the first 3.5 s go through `zoompan`; the rest of the head is passed through
+untouched and the two are concatenated. Resampling the whole head would have
+softened 40 s of screencast text for the sake of three seconds.
+
+1.5x is a deliberate ceiling. The modal is ~705 px wide in the source, so filling
+80 % of the frame would mean a 2.15x blow-up, and the softness shows.
 
 ### Where the beat sits
 

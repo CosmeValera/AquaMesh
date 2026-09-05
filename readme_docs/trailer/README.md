@@ -88,7 +88,7 @@ chip, **RabbitHoles**, instead of a caption per shot.
 
 | Stage       | Kind      | What happens                                                                      |
 | ----------- | --------- | --------------------------------------------------------------------------------- |
-| `result`    | 1.6 s     | The quiz result alone, centred: the whole ring, right **and** wrong               |
+| `result`    | 1.6 s     | The quiz result alone, centred at 1.5x, titled with the skill it earned           |
 | `open`      | 20 frames | It slides left and shrinks; an arrow draws to the right; the three picks arrive   |
 | `pair`      | 1.0 s     | Held side by side                                                                 |
 | `promote`   | 22 frames | The result fades out; the picks travel to top centre and grow back to full size   |
@@ -97,6 +97,11 @@ chip, **RabbitHoles**, instead of a caption per shot.
 | `read-a`    | 1.5 s     | Held                                                                              |
 | `open-b`    | 16 frames | The second guide lights; its Quick Start lands underneath the first               |
 | `read-b`    | 2.0 s     | Held: picks, arrows, three guides, two connectors, two opened Quick Starts        |
+
+The result card is titled `QUIZ COMPLETE / Caffeine and adenosine signaling`
+(`QUIZ` in the script). The ring on its own says nothing about what was learned,
+and that skill is what the three follow-ups then bridge from, so naming it there
+makes the `via …` line under every guide land.
 
 The final frame is the whole argument at once: three picks on top, a coloured
 arrow under each, the guide each became, and two of them opened on the right —
@@ -112,8 +117,11 @@ Details that matter if the layout is edited:
   travel. Holds are single stills.
 - Keyframes come from a measuring pass — the quiz card, the column, the picks
   card, each guide row's centre and each Quick Start's height are read off the
-  page, then the positions are computed. Retune `PAIR_MARGIN`, `COLUMN_LEFT_X`,
-  `SHIFT_SCALE` or `DETAIL` and everything re-derives, connectors included.
+  page, then the positions are computed. Retune `RESULT_SCALE`, `PAIR_SCALE`,
+  `PAIR_MARGIN`, `COLUMN_LEFT_X`, `SHIFT_SCALE` or `DETAIL` and everything
+  re-derives, connectors included. The two opening stages are deliberately held
+  large: at 1:1 the result read as a stamp in the middle of an empty frame, and
+  the pair is sized to fill the width between thin margins.
 - Connectors are **rounded right-angle elbows**, not beziers. A single curve over
   that short horizontal run hooked back under its own arrowhead.
 - The hand-off arrow fades out in the first quarter of `promote`, because the

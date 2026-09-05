@@ -82,12 +82,23 @@ const CROPS = {
 // One label for the whole beat, because it is now one continuous scene rather
 // than a run of separate frames.
 const CHIP = 'RabbitHoles'
+// The result ring says nothing about what was learned, and the three follow-ups
+// under it all bridge from this skill, so the card names it.
+const QUIZ = {
+  eyebrow: 'Quiz complete',
+  title: 'Caffeine and adenosine signaling',
+}
 const LINK_INK = '#5A6B99'
 const ORIGIN = { left: 0, top: 0, scale: 1 }
 
-// Side by side while the result hands over to the follow-ups it opened.
-const PAIR_MARGIN = 205
-const PAIR_GAP = 92
+// The result opens the beat on its own, so it is held well above its natural
+// size: at 1:1 it read as a stamp floating in the middle of the frame.
+const RESULT_SCALE = 1.5
+// Side by side while the result hands over to the follow-ups it opened. Sized to
+// fill the width between thin margins rather than to a round number.
+const PAIR_SCALE = 0.75
+const PAIR_MARGIN = 68
+const PAIR_GAP = 80
 // Where the column ends up once it has made room for the opened guides.
 const COLUMN_LEFT_X = 65
 const SHIFT_SCALE = 0.72
@@ -369,11 +380,11 @@ const scene = (state, cropped, K) => {
     transform: rotate(-1.4deg);
     background: ${PALETTE.chip};
     color: #fff;
-    font-size: 32px;
+    font-size: 42px;
     font-weight: 600;
-    padding: 12px 30px 14px;
-    border-radius: 16px;
-    box-shadow: 0 10px 26px rgba(28, 40, 90, 0.18);
+    padding: 16px 38px 18px;
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(28, 40, 90, 0.2);
   }
   .quiz, .column {
     position: absolute;
@@ -399,6 +410,19 @@ const scene = (state, cropped, K) => {
     box-shadow: 0 22px 52px rgba(28, 40, 90, 0.18);
   }
   .quiz .card img { display: block; width: 1040px; height: auto; border-radius: 8px; }
+  .quiz .eyebrow {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #6B7690;
+    margin: 2px 0 0 6px;
+  }
+  .quiz-title {
+    font-size: 34px;
+    font-weight: 700;
+    margin: 4px 0 20px 6px;
+  }
   .column .card img { display: block; width: 1128px; height: auto; border-radius: 8px; }
   .arrows {
     display: grid;
@@ -467,10 +491,11 @@ const scene = (state, cropped, K) => {
 </style></head>
 <body><div class="stage">
   <div class="chip">${CHIP}</div>
-  <div class="quiz"><div class="card"><img src="${imageUrl(
-    'donut',
-    cropped,
-  )}"></div></div>
+  <div class="quiz"><div class="card">
+    <div class="eyebrow">${QUIZ.eyebrow}</div>
+    <div class="quiz-title">${QUIZ.title}</div>
+    <img src="${imageUrl('donut', cropped)}">
+  </div></div>
   <div class="column">
     <div class="card"><img src="${imageUrl(FLOW.panel, cropped)}"></div>
     <div class="arrows">${arrows}</div>
@@ -637,7 +662,7 @@ const STAGES = [
  */
 const keyframes = (measured) => {
   const { quiz, column, picksHeight, rowCenters, detailHeights } = measured
-  const asideScale = 0.62
+  const asideScale = PAIR_SCALE
   const topScale = Math.min(1, 1010 / column.height)
   const detailTotal = detailHeights[0] + DETAIL.gap + detailHeights[1]
   const detailTop = (CANVAS_H - detailTotal) / 2
@@ -649,9 +674,9 @@ const keyframes = (measured) => {
     detailHeights,
     detailTops: [detailTop, detailTop + detailHeights[0] + DETAIL.gap],
     quizHome: {
-      left: (CANVAS_W - quiz.width) / 2,
-      top: (CANVAS_H - quiz.height) / 2,
-      scale: 1,
+      left: (CANVAS_W - quiz.width * RESULT_SCALE) / 2,
+      top: (CANVAS_H - quiz.height * RESULT_SCALE) / 2,
+      scale: RESULT_SCALE,
     },
     quizAside: {
       left: PAIR_MARGIN,

@@ -461,6 +461,8 @@ const translations = {
       'is part of what you know now. New guides will explain things through it.',
     'practice.nextGuidesTitle': 'Learn something new on top of it',
     'practice.createSelectedGuides': 'Create {count} guides',
+    'practice.createGuidesAddsSkill':
+      'Creating these guides also adds {skill} to what you know.',
     'practice.skillAlreadyKnown': 'You already have this skill',
     'practice.nextGuideAlreadyCreated': 'You already created this guide',
     'practice.practiceAgain': 'Practice again',
@@ -987,6 +989,8 @@ const translations = {
       'ya forma parte de lo que sabes. Las guías nuevas te explicarán las cosas a través de ello.',
     'practice.nextGuidesTitle': 'Aprende algo nuevo apoyándote en ello',
     'practice.createSelectedGuides': 'Crear {count} guías',
+    'practice.createGuidesAddsSkill':
+      'Crear estas guías también añade {skill} a lo que sabes.',
     'practice.skillAlreadyKnown': 'Ya tienes esta skill',
     'practice.nextGuideAlreadyCreated': 'Ya creaste esta guía',
     'practice.practiceAgain': 'Practicar otra vez',
@@ -1526,6 +1530,8 @@ const translationOverrides: Record<
       'fait maintenant partie de ce que vous savez. Les nouveaux guides expliqueront les choses à partir de là.',
     'practice.nextGuidesTitle': 'Apprendre autre chose en partant de là',
     'practice.createSelectedGuides': 'Créer {count} guides',
+    'practice.createGuidesAddsSkill':
+      'Créer ces guides ajoute aussi {skill} à ce que vous savez.',
     'practice.skillAlreadyKnown': 'Vous avez déjà cette compétence',
     'practice.nextGuideAlreadyCreated': 'Vous avez déjà créé ce guide',
     'practice.practiceAgain': 'Recommencer',
@@ -2058,6 +2064,8 @@ const translationOverrides: Record<
       'gehört jetzt zu dem, was du weißt. Neue Leitfäden erklären Dinge darüber.',
     'practice.nextGuidesTitle': 'Lerne etwas Neues darauf aufbauend',
     'practice.createSelectedGuides': '{count} Leitfäden erstellen',
+    'practice.createGuidesAddsSkill':
+      'Diese Leitfäden zu erstellen fügt {skill} zu deinem Wissen hinzu.',
     'practice.skillAlreadyKnown': 'Du hast diese Fähigkeit bereits',
     'practice.nextGuideAlreadyCreated': 'Diesen Leitfaden hast du schon erstellt',
     'practice.practiceAgain': 'Noch einmal üben',

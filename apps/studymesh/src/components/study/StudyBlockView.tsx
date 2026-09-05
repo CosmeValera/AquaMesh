@@ -2571,9 +2571,10 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     }
 
     // The quiz is what earns the topic. Below the floor the reader has not
-    // shown they know it, so nothing is shown at all; in the band above it the
+    // shown they know it, so the skill card stays off; in the band above it the
     // offer stands but says the pages are worth another pass; above the
-    // confident mark the offer stands on its own.
+    // confident mark the offer stands on its own. The follow-up guides carry no
+    // such floor: a weak run is still a fine moment to branch off.
     const showLearnedTopicOffer =
       canOfferLearnedTopic && scorePercent >= LEARNED_TOPIC_MIN_SCORE_PERCENT
     const suggestRevisingPages =
@@ -2586,24 +2587,37 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       setLearnedTopicAdded(true)
     }
 
-    // The bridge only works once the topic is in the reader's known topics, so
-    // the follow-up guides are offered after the claim, never beside it. The
-    // top nav bar owns the route change: it is mounted on both the guide
+    // Both offers stand side by side, so creating a follow-up guide claims the
+    // skill on the way out: the bridge sentence says the reader already knows
+    // it, and that has to be true by the time the guide is queued.
+    const creatingGuidesClaimsSkill = showLearnedTopicOffer && !topicIsClaimed
+
+    // The top nav bar owns the route change: it is mounted on both the guide
     // workspace and the guide list, and this block is not always in a router.
     const startSelectedNextGuides = () => {
+      // Below the score floor there is no claim to bridge from, so the ideas go
+      // out without a known skill instead of asserting knowledge the reader has
+      // not shown.
+      const claimsSkill = topicIsClaimed || creatingGuidesClaimsSkill
       const prompts: StartNextStudyGuideRequest[] = nextGuideIdeas
         .filter((idea) => selectedIdeaPrompts.includes(idea.prompt))
         .map((idea) => ({
           prompt: idea.prompt.trim(),
-          knownSkill: learnedTopicName,
+          ...(claimsSkill ? { knownSkill: learnedTopicName } : {}),
         }))
         .filter((entry) => entry.prompt)
 
-      if (prompts.length) {
-        window.dispatchEvent(
-          new CustomEvent(START_NEXT_STUDY_GUIDE_EVENT, { detail: { prompts } }),
-        )
+      if (!prompts.length) {
+        return
       }
+
+      if (creatingGuidesClaimsSkill) {
+        addLearnedTopicFromQuiz()
+      }
+
+      window.dispatchEvent(
+        new CustomEvent(START_NEXT_STUDY_GUIDE_EVENT, { detail: { prompts } }),
+      )
     }
 
     const toggleIdeaSelection = (ideaPrompt: string) => {
@@ -2614,9 +2628,12 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
       )
     }
 
-    const learnedTopicSection = !showLearnedTopicOffer ? null : (
+    const showLearnedTopicSection =
+      showLearnedTopicOffer || nextGuideIdeas.length > 0
+
+    const learnedTopicSection = !showLearnedTopicSection ? null : (
       <Stack spacing={1.5}>
-        {topicIsClaimed ? (
+        {!showLearnedTopicOffer ? null : topicIsClaimed ? (
           <Paper
             variant="outlined"
             sx={(theme) => ({
@@ -2691,7 +2708,7 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
             </Stack>
           </Paper>
         )}
-        {topicIsClaimed && nextGuideIdeas.length ? (
+        {nextGuideIdeas.length ? (
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
               {t('practice.nextGuidesTitle')}
@@ -2815,6 +2832,17 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
                 String(selectedIdeaPrompts.length),
               )}
             </Button>
+            {creatingGuidesClaimsSkill ? (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mt: 0.75, lineHeight: 1.5 }}
+              >
+                {t('practice.createGuidesAddsSkill')
+                  .split('{skill}')
+                  .join(learnedTopicName)}
+              </Typography>
+            ) : null}
           </Paper>
         ) : null}
       </Stack>

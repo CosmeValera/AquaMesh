@@ -28,12 +28,20 @@ import type {
   StudyPathContainerState,
   StudyPathDashboardItem,
 } from '../state/store'
-import { resolveContentLanguage } from '../language/contentLanguage'
+import {
+  detectContentLanguage,
+  resolveContentLanguage,
+  type StudyMeshLanguageCode,
+} from '../language/contentLanguage'
 import {
   appendStudyGuideMarkdownPage,
   appendStudyGuideWidgetPage,
 } from './pages'
 import { getStudyGuideEmoji } from './storage'
+import {
+  buildStudyGuideKnownSkillInstruction,
+  buildStudyGuideNextIdeaPrompt,
+} from './studyGuideTitles'
 
 type CreatePathPayload = {
   folderName: string
@@ -113,20 +121,52 @@ const sourceTextForDashboard = (
   )
 }
 
+/**
+ * Flags a guide that came back in another language. Detection only: a repair
+ * call would spend Carrots again, so regenerating stays the reader's choice.
+ */
+const detectStudyGuideLanguageMismatch = (
+  draft: AiStudyPathDraft,
+  expected: StudyMeshLanguageCode,
+): StudyMeshLanguageCode | undefined => {
+  const text = [
+    draft.quickStart?.keyIdea,
+    draft.quickStart?.quickSummary,
+    draft.quickStart?.forcedBridge?.keyIdea,
+    draft.quickStart?.forcedBridge?.quickSummary,
+    draft.dashboards[0] && sourceTextForDashboard(draft.dashboards[0], ''),
+  ]
+    .filter(Boolean)
+    .join('\n\n')
+  const detected = text.trim() ? detectContentLanguage(text) : null
+  return detected && detected !== expected ? detected : undefined
+}
+
 export const generateStudyPathStateFromPrompt = async ({
   id,
   prompt,
+  knownSkill,
   signal,
   provider: providerOverride,
 }: {
   id: string
   prompt: string
+  knownSkill?: string | null
   signal?: AbortSignal
   provider?: QuickCreateAiProvider
 }): Promise<StudyPathContainerState> => {
   const settings = readQuickCreateAiSettings()
   const provider = providerOverride || settings.provider || 'hosted'
+  // Only the learner's own words pick the language; app-generated instructions
+  // are appended afterwards, in that same language.
   const resolvedLanguage = resolveContentLanguage({ text: prompt })
+  const modelPrompt = buildStudyGuideNextIdeaPrompt(
+    prompt,
+    buildStudyGuideKnownSkillInstruction(
+      knownSkill || '',
+      resolvedLanguage.language,
+    ),
+  )
   const credentials = isStrongAiProvider(provider)
     ? resolveQuickCreateAiCredentials(provider)
     : resolveQuickCreateAiCredentials()
@@ -136,7 +176,7 @@ export const generateStudyPathStateFromPrompt = async ({
     model: credentials.model,
     title: 'Study Guide',
     folderName: '',
-    prompt,
+    prompt: modelPrompt,
     outputLanguage: resolvedLanguage.language,
     signal,
     userKnownTopics: getAllUserKnownTopics(),
@@ -204,6 +244,11 @@ export const generateStudyPathStateFromPrompt = async ({
     },
   )
 
+  const languageMismatch = detectStudyGuideLanguageMismatch(
+    draft,
+    resolvedLanguage.language,
+  )
+
   return {
     pathId: id,
     title,
@@ -211,6 +256,7 @@ export const generateStudyPathStateFromPrompt = async ({
     emoji: draft.emoji || getStudyGuideEmoji(title),
     contentLanguage: resolvedLanguage.language,
     contentLanguageSource: resolvedLanguage.source,
+    ...(languageMismatch ? { contentLanguageMismatch: languageMismatch } : {}),
     quickStart: draft.quickStart,
     learnedSkillOptions: draft.learnedSkillOptions,
     nextGuideIdeas: draft.nextGuideIdeas,

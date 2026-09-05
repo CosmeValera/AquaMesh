@@ -18,7 +18,10 @@ export type StudyGuideCreationStatus =
 
 export interface StudyGuideCreationJob {
   id: string
+  /** Learner text only. Nothing app-generated, so it can decide the language. */
   prompt: string
+  /** Skill the reader claimed, turned into a model instruction at generation. */
+  knownSkill?: string | null
   provider: StudyGuideCreationProvider
   status: StudyGuideCreationStatus
   createdAt: string
@@ -139,6 +142,10 @@ const normalizeJob = (value: unknown): StudyGuideCreationJob | null => {
   return {
     id: source.id,
     prompt: source.prompt,
+    knownSkill:
+      typeof source.knownSkill === 'string' && source.knownSkill.trim()
+        ? source.knownSkill.trim()
+        : null,
     provider: source.provider,
     status: isCreationStatus(source.status) ? source.status : 'queued',
     createdAt:
@@ -229,6 +236,7 @@ export const StudyGuideCreationQueueStorage = {
     const existing = current.find((item) => item.id === job.id)
     const nextJob: StudyGuideCreationJob = {
       ...job,
+      knownSkill: job.knownSkill ?? existing?.knownSkill ?? null,
       createdAt: job.createdAt || existing?.createdAt || nowIso(),
       updatedAt: job.updatedAt || nowIso(),
       autoRetryCount: job.autoRetryCount ?? existing?.autoRetryCount ?? 0,

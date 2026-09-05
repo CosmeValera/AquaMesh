@@ -59,6 +59,7 @@ import {
   type OpenStudyGuidePageLinkDetail,
 } from '../../studyGuides/pageLinks'
 import { useInterfaceText } from '../../language/interfaceLanguage'
+import { getContentLanguageLabel } from '../../language/contentLanguage'
 
 export const AI_CHAT_MIN_WIDTH = 310
 const AI_CHAT_MAX_WIDTH = 720
@@ -900,6 +901,67 @@ const GuideWorkspacePage = () => {
                 }}
               >
                 {t('studyGuides.storageFullMessage')}
+              </Alert>
+            ) : null}
+            {record.studyPath.contentLanguageMismatch ? (
+              <Alert
+                severity="warning"
+                action={
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={() =>
+                        navigate('/study-guides', {
+                          state: {
+                            createGuidePrompts: [
+                              { prompt: record.description || record.title },
+                            ],
+                          },
+                        })
+                      }
+                    >
+                      {t('workspace.regenerateInLanguage').replace(
+                        '{language}',
+                        getContentLanguageLabel(
+                          record.studyPath.contentLanguage || 'en',
+                        ),
+                      )}
+                    </Button>
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={() =>
+                        persistStudyPath({
+                          ...record.studyPath,
+                          contentLanguageMismatch: undefined,
+                        })
+                      }
+                    >
+                      {t('settings.close')}
+                    </Button>
+                  </Box>
+                }
+                sx={{
+                  flex: '0 0 auto',
+                  m: isMobile ? 0 : 1,
+                  mb: isMobile ? 1 : 0,
+                  alignItems: 'center',
+                }}
+              >
+                {t('workspace.languageMismatch')
+                  .replace(
+                    '{detected}',
+                    getContentLanguageLabel(
+                      record.studyPath.contentLanguageMismatch,
+                    ),
+                  )
+                  .replace(
+                    '{expected}',
+                    getContentLanguageLabel(
+                      record.studyPath.contentLanguage || 'en',
+                    ),
+                  )}
               </Alert>
             ) : null}
             {isMobile ? (

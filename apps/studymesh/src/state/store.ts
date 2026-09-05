@@ -75,6 +75,12 @@ export interface StudyPathContainerState {
   emoji?: string
   contentLanguage?: StudyMeshLanguageCode
   contentLanguageSource?: ContentLanguageSource
+  /**
+   * Set when the finished guide reads as a different language than the one
+   * asked for. Detected locally; regenerating is the reader's call because it
+   * spends Carrots again.
+   */
+  contentLanguageMismatch?: StudyMeshLanguageCode
   quickStart?: StudyGuideQuickStart
   quickStartView?: StudyGuideQuickStartView
   /**

@@ -196,6 +196,9 @@ const translations = {
     'workspace.notFoundTitle': 'Quick Guide not found',
     'workspace.notFoundBody': 'This guide does not exist on this device.',
     'workspace.backToGuides': 'Back to My Quick Guides',
+    'workspace.languageMismatch':
+      'This guide came out in {detected}, not {expected}.',
+    'workspace.regenerateInLanguage': 'Regenerate in {language}',
     'workspace.myGuides': 'My Guides',
     'workspace.pageLabel': 'Page',
     'workspace.pages': 'Pages',
@@ -458,8 +461,6 @@ const translations = {
       'is part of what you know now. New guides will explain things through it.',
     'practice.nextGuidesTitle': 'Learn something new on top of it',
     'practice.createSelectedGuides': 'Create {count} guides',
-    'practice.nextGuideBridge':
-      'Explain it through {skill}, which I already know. Do not re-explain {skill} itself.',
     'practice.skillAlreadyKnown': 'You already have this skill',
     'practice.nextGuideAlreadyCreated': 'You already created this guide',
     'practice.practiceAgain': 'Practice again',
@@ -718,6 +719,9 @@ const translations = {
     'workspace.notFoundTitle': 'Guía rápida no encontrada',
     'workspace.notFoundBody': 'Esta guía no existe en este dispositivo.',
     'workspace.backToGuides': 'Volver a Mis guías rápidas',
+    'workspace.languageMismatch':
+      'Esta guía salió en {detected}, no en {expected}.',
+    'workspace.regenerateInLanguage': 'Regenerar en {language}',
     'workspace.myGuides': 'Mis guías',
     'workspace.pageLabel': 'Página',
     'workspace.pages': 'Páginas',
@@ -983,8 +987,6 @@ const translations = {
       'ya forma parte de lo que sabes. Las guías nuevas te explicarán las cosas a través de ello.',
     'practice.nextGuidesTitle': 'Aprende algo nuevo apoyándote en ello',
     'practice.createSelectedGuides': 'Crear {count} guías',
-    'practice.nextGuideBridge':
-      'Explícamelo a través de {skill}, que ya sé. No vuelvas a explicar {skill}.',
     'practice.skillAlreadyKnown': 'Ya tienes esta skill',
     'practice.nextGuideAlreadyCreated': 'Ya creaste esta guía',
     'practice.practiceAgain': 'Practicar otra vez',
@@ -1256,6 +1258,9 @@ const translationOverrides: Record<
     'workspace.notFoundTitle': 'Guide rapide introuvable',
     'workspace.notFoundBody': 'Ce guide n’existe pas sur cet appareil.',
     'workspace.backToGuides': 'Retour à mes guides rapides',
+    'workspace.languageMismatch':
+      'Ce guide est sorti en {detected}, pas en {expected}.',
+    'workspace.regenerateInLanguage': 'Régénérer en {language}',
     'workspace.myGuides': 'Mes guides',
     'workspace.pageLabel': 'Page',
     'workspace.pages': 'Pages',
@@ -1521,8 +1526,6 @@ const translationOverrides: Record<
       'fait maintenant partie de ce que vous savez. Les nouveaux guides expliqueront les choses à partir de là.',
     'practice.nextGuidesTitle': 'Apprendre autre chose en partant de là',
     'practice.createSelectedGuides': 'Créer {count} guides',
-    'practice.nextGuideBridge':
-      'Explique-le-moi à partir de {skill}, que je connais déjà. Ne réexplique pas {skill}.',
     'practice.skillAlreadyKnown': 'Vous avez déjà cette compétence',
     'practice.nextGuideAlreadyCreated': 'Vous avez déjà créé ce guide',
     'practice.practiceAgain': 'Recommencer',
@@ -1786,6 +1789,9 @@ const translationOverrides: Record<
     'workspace.notFoundTitle': 'Quick Guide nicht gefunden',
     'workspace.notFoundBody': 'Dieser Guide existiert auf diesem Gerät nicht.',
     'workspace.backToGuides': 'Zurück zu meinen Quick Guides',
+    'workspace.languageMismatch':
+      'Dieser Guide kam in {detected} heraus, nicht in {expected}.',
+    'workspace.regenerateInLanguage': 'Neu erstellen auf {language}',
     'workspace.myGuides': 'Meine Guides',
     'workspace.pageLabel': 'Seite',
     'workspace.pages': 'Seiten',
@@ -2052,8 +2058,6 @@ const translationOverrides: Record<
       'gehört jetzt zu dem, was du weißt. Neue Leitfäden erklären Dinge darüber.',
     'practice.nextGuidesTitle': 'Lerne etwas Neues darauf aufbauend',
     'practice.createSelectedGuides': '{count} Leitfäden erstellen',
-    'practice.nextGuideBridge':
-      'Erkläre es mir über {skill}, das ich schon kenne. Erkläre {skill} nicht noch einmal.',
     'practice.skillAlreadyKnown': 'Du hast diese Fähigkeit bereits',
     'practice.nextGuideAlreadyCreated': 'Diesen Leitfaden hast du schon erstellt',
     'practice.practiceAgain': 'Noch einmal üben',

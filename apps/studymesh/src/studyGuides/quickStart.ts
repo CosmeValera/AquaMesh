@@ -4,6 +4,7 @@ import type {
 } from '../state/store'
 import { trimTitleToWordBoundary } from './studyGuideTitles'
 import {
+  createAiOutputLanguageAnchor,
   createAiOutputLanguageInstruction,
   type StudyMeshLanguageCode,
 } from '../language/contentLanguagePrompt'
@@ -667,6 +668,7 @@ export const trimToCompleteSentenceWithinChars = (
 // Re-exported so the prompt-side call sites, including the hosted API
 // function, keep importing everything Study Guide from one module.
 export {
+  buildStudyGuideKnownSkillInstruction,
   buildStudyGuideNextIdeaPrompt,
   normalizeStudyGuideTitle,
   sanitizeStudyGuideLearnedSkillOptions,
@@ -1020,7 +1022,9 @@ ${
 - Bad bridge shape: starting with low-level internals, trivia, implementation mechanisms, or a comparison that only shares vocabulary.
 
 Final Study Guide content:
-${source.slice(0, 60000)}`
+${source.slice(0, 60000)}
+
+${createAiOutputLanguageAnchor(outputLanguage)}`
 }
 
 export const buildStudyGuideQuickStartRelevancePrompt = ({
@@ -1096,7 +1100,9 @@ Known topics, most recently learned first: ${
   }
 
 Study Guide content excerpt:
-${source.slice(0, 12000)}`
+${source.slice(0, 12000)}
+
+${createAiOutputLanguageAnchor(outputLanguage)}`
 }
 
 export const buildStudyGuideKnowledgeBridgeBlocksPrompt = ({
@@ -1184,5 +1190,7 @@ Study Guide title: ${title}
 Learner prompt: ${prompt || title}
 
 Dashboards:
-${dashboardExcerpt.slice(0, 16000)}`
+${dashboardExcerpt.slice(0, 16000)}
+
+${createAiOutputLanguageAnchor(outputLanguage)}`
 }

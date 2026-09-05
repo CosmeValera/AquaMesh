@@ -34,6 +34,7 @@ import {
   trimToCompleteSentenceWithinChars,
 } from "../apps/studymesh/src/studyGuides/quickStart";
 import {
+  createAiOutputLanguageAnchor,
   createAiOutputLanguageInstruction,
   getContentLanguagePromptName,
   type StudyMeshLanguageCode,
@@ -924,7 +925,9 @@ Guide:
 ${source.slice(0, 18000)}
 
 Context bridge notes:
-${JSON.stringify(bridgeBlocks || [], null, 2)}`;
+${JSON.stringify(bridgeBlocks || [], null, 2)}
+
+${createAiOutputLanguageAnchor(outputLanguage)}`;
 
 const createMinimalSourceSummary = (
   page: EnhancedStudyGuidePage,
@@ -2670,7 +2673,9 @@ Rules:
 Title fallback: ${titleFallback}
 Folder fallback: ${folderNameFallback}
 Learner request/topic:
-${topic}`;
+${topic}
+
+${createAiOutputLanguageAnchor(outputLanguage)}`;
 
 export const normalizeMonolithGuide = (
   value: unknown,

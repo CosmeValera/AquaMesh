@@ -271,9 +271,14 @@ const findIdeaCard = async (label: string) => {
   return card
 }
 
-const promptsFromEvent = (listener: ReturnType<typeof vi.fn>): string[] =>
-  (listener.mock.calls[0][0] as CustomEvent<{ prompts: string[] }>).detail
-    .prompts
+const promptsFromEvent = (
+  listener: ReturnType<typeof vi.fn>,
+): Array<{ prompt: string; knownSkill?: string }> =>
+  (
+    listener.mock.calls[0][0] as CustomEvent<{
+      prompts: Array<{ prompt: string; knownSkill?: string }>
+    }>
+  ).detail.prompts
 
 const claimFlowConstraints = () =>
   saveProfileContext({
@@ -334,8 +339,13 @@ describe('follow-up guides offered after the topic is claimed', () => {
     fireEvent.click(screen.getByRole('button', { name: /Create 1 guides/ }))
 
     expect(startNextGuide).toHaveBeenCalledTimes(1)
+    // The claimed skill travels beside the prompt, never inside it: only the
+    // learner's own words may decide the guide's language.
     expect(promptsFromEvent(startNextGuide)).toEqual([
-      'Teach me why queues stall.\n\nExplain it through Flow constraints, which I already know. Do not re-explain Flow constraints itself.',
+      {
+        prompt: 'Teach me why queues stall.',
+        knownSkill: 'Flow constraints',
+      },
     ])
 
     window.removeEventListener(START_NEXT_STUDY_GUIDE_EVENT, startNextGuide)

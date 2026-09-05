@@ -857,8 +857,11 @@ describe('StudyGuidesPage create flow', () => {
 
 describe('follow-up guides handed over from a finished quiz', () => {
   const PROMPTS = [
-    'Teach me why queues stall.\n\nExplain it through Bottlenecks, which I already know.',
-    'Teach me how to measure throughput.\n\nExplain it through Bottlenecks, which I already know.',
+    { prompt: 'Teach me why queues stall.', knownSkill: 'Bottlenecks' },
+    {
+      prompt: 'Teach me how to measure throughput.',
+      knownSkill: 'Bottlenecks',
+    },
   ]
 
   beforeEach(() => {
@@ -937,12 +940,21 @@ describe('follow-up guides handed over from a finished quiz', () => {
     await waitFor(() => {
       expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(2)
     })
+    // The claimed skill reaches generation as its own field, so the prompt
+    // that picks the guide's language stays the learner's own words.
     expect(
       vi
         .mocked(generateStudyPathStateFromPrompt)
-        .mock.calls.map(([options]) => options.prompt)
-        .sort(),
-    ).toEqual([...PROMPTS].sort())
+        .mock.calls.map(([options]) => ({
+          prompt: options.prompt,
+          knownSkill: options.knownSkill,
+        }))
+        .sort((left, right) => left.prompt.localeCompare(right.prompt)),
+    ).toEqual(
+      [...PROMPTS].sort((left, right) =>
+        left.prompt.localeCompare(right.prompt),
+      ),
+    )
   })
 
   it('clears the router state so a reload does not reopen the dialog', async () => {
@@ -955,7 +967,7 @@ describe('follow-up guides handed over from a finished quiz', () => {
   })
 
   it('ignores a state that carries no usable prompt', async () => {
-    renderWithHandoverState(['   '])
+    renderWithHandoverState([{ prompt: '   ' }])
 
     await waitFor(() => {
       expect(screen.getByTestId('router-state')).toBeInTheDocument()

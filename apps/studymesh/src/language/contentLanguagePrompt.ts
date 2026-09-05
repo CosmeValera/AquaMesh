@@ -35,6 +35,17 @@ export const getContentLanguagePromptName = (
   code: StudyMeshLanguageCode,
 ): string => contentLanguageLabels[code] || contentLanguageLabels.en
 
+/**
+ * Repeated at the very end of a prompt. The rules block sits far above the
+ * material, and a guide drifted into the language of the text quoted last.
+ */
+export const createAiOutputLanguageAnchor = (
+  code: StudyMeshLanguageCode | undefined,
+): string =>
+  `Write every string in ${getContentLanguagePromptName(
+    code || DEFAULT_CONTENT_LANGUAGE,
+  )}, whatever language the request, the known topics, or the material above use.`
+
 export const createAiOutputLanguageInstruction = (
   code: StudyMeshLanguageCode | undefined,
 ): string => {

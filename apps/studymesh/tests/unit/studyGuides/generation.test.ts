@@ -7,6 +7,7 @@ import {
 import {
   generateHostedAiPodcast,
   generateQuickCreateWithAi,
+  generateStudyPathWithAi,
 } from '../../../src/quickCreate/ai'
 import type { StudyPathContainerState } from '../../../src/state/store'
 
@@ -174,5 +175,72 @@ describe('generateStudyPathStateFromPrompt', () => {
     expect(studyPath.nextGuideIdeas).toEqual([
       { label: 'Helm charts', prompt: 'Teach me how Helm charts work.' },
     ])
+  })
+})
+
+describe('study guide language selection', () => {
+  it('resolves the language from the learner prompt and instructs in it', async () => {
+    // Regression: the claimed-skill sentence used to be interface-language text
+    // glued onto the prompt, so a Spanish interface pulled English guides into
+    // Spanish through both detection and the model.
+    await generateStudyPathStateFromPrompt({
+      id: 'guide-3',
+      prompt:
+        'Teach me how consent-based decision rules work in cooperatives, community groups, and other organizations.',
+      knownSkill: 'reviewing open-source contributions',
+    })
+
+    const call = vi.mocked(generateStudyPathWithAi).mock.calls.at(-1)?.[0]
+    expect(call?.outputLanguage).toBe('en')
+    expect(call?.prompt).toContain(
+      'Explain it through reviewing open-source contributions, which I already know.',
+    )
+    expect(call?.prompt).not.toContain('Explícamelo')
+  })
+
+  it('writes the claimed-skill instruction in the prompt language', async () => {
+    await generateStudyPathStateFromPrompt({
+      id: 'guide-4',
+      prompt:
+        'Quiero aprender cómo funcionan las reglas de consenso en cooperativas y otras organizaciones.',
+      knownSkill: 'revisar contribuciones',
+    })
+
+    const call = vi.mocked(generateStudyPathWithAi).mock.calls.at(-1)?.[0]
+    expect(call?.outputLanguage).toBe('es')
+    expect(call?.prompt).toContain('Explícamelo a través de revisar contribuciones')
+  })
+
+  it('flags a guide that came back in another language', async () => {
+    vi.mocked(generateStudyPathWithAi).mockResolvedValueOnce({
+      title: 'Consenso',
+      folderName: 'Consenso',
+      emoji: '🤝',
+      quickStart: {
+        keyIdea:
+          'Las colas de revisión reúnen propuestas y los permisos de escritura reservan la incorporación final a pocos mantenedores.',
+        quickSummary:
+          'Piensa en las colas de revisión: muchas personas pueden enviar cambios, pero el trabajo pendiente se acumula y debe priorizarse.',
+      },
+      dashboards: [
+        {
+          title: '01 - Consenso',
+          rawNotes:
+            'Las reglas de integración funcionan como un filtro estable para las propuestas de la comunidad.',
+          objects: [],
+          warnings: [],
+        },
+      ],
+      warnings: [],
+    } as never)
+
+    const studyPath = await generateStudyPathStateFromPrompt({
+      id: 'guide-5',
+      prompt:
+        'Teach me how consent-based decision rules work in cooperatives, community groups, and other organizations.',
+    })
+
+    expect(studyPath.contentLanguage).toBe('en')
+    expect(studyPath.contentLanguageMismatch).toBe('es')
   })
 })

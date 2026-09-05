@@ -32,6 +32,7 @@ import {
   useWorkspaceActions,
 } from '../../customHooks/useWorkspaceActions'
 import {
+  normalizeStartNextStudyGuideRequests,
   START_NEXT_STUDY_GUIDE_EVENT,
   WORKSPACE_DASHBOARD_TABS_SLOT_ID,
 } from '../workspace/workspaceEvents'
@@ -372,9 +373,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ creationHost = 'navbar' }) => {
   useEffect(() => {
     const handleStartNextStudyGuide = (event: Event) => {
       const detail = (event as CustomEvent<{ prompts?: unknown }>).detail
-      const prompts = (Array.isArray(detail?.prompts) ? detail.prompts : [])
-        .map((prompt) => String(prompt || '').trim())
-        .filter(Boolean)
+      const prompts = normalizeStartNextStudyGuideRequests(detail?.prompts)
       if (!prompts.length) {
         return
       }

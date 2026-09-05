@@ -33,10 +33,7 @@ import {
   readStudyGuidePageHref,
 } from '../../studyGuides/pageLinks'
 import { stripDuplicateStudyGuideMarkdownTitle } from '../../studyGuides/pages'
-import {
-  buildStudyGuideNextIdeaPrompt,
-  sanitizeStudyGuideNextIdeas,
-} from '../../studyGuides/studyGuideTitles'
+import { sanitizeStudyGuideNextIdeas } from '../../studyGuides/studyGuideTitles'
 import {
   addLearnedTopicToProfileContext,
   isUserKnownTopic,
@@ -44,6 +41,7 @@ import {
 import {
   PREFILL_DASHBOARD_CHAT_EVENT,
   START_NEXT_STUDY_GUIDE_EVENT,
+  type StartNextStudyGuideRequest,
 } from '../workspace/workspaceEvents'
 import { type HostedAiPodcast } from '../../quickCreate/ai'
 import type { DashboardLayout } from '../../state/store'
@@ -2593,13 +2591,13 @@ const StudyBlockView: React.FC<StudyBlockViewProps> = ({
     // top nav bar owns the route change: it is mounted on both the guide
     // workspace and the guide list, and this block is not always in a router.
     const startSelectedNextGuides = () => {
-      const bridge = t('practice.nextGuideBridge')
-        .split('{skill}')
-        .join(learnedTopicName)
-      const prompts = nextGuideIdeas
+      const prompts: StartNextStudyGuideRequest[] = nextGuideIdeas
         .filter((idea) => selectedIdeaPrompts.includes(idea.prompt))
-        .map((idea) => buildStudyGuideNextIdeaPrompt(idea.prompt, bridge))
-        .filter(Boolean)
+        .map((idea) => ({
+          prompt: idea.prompt.trim(),
+          knownSkill: learnedTopicName,
+        }))
+        .filter((entry) => entry.prompt)
 
       if (prompts.length) {
         window.dispatchEvent(

@@ -313,3 +313,37 @@ describe('who may resume a job when several tabs are open', () => {
     expect(statusNow()).toBe('interrupted')
   })
 })
+
+describe('claimed skill on a queued job', () => {
+  it('round-trips knownSkill and tolerates jobs stored without it', () => {
+    window.localStorage.setItem(
+      STUDY_GUIDE_CREATION_QUEUE_KEY,
+      JSON.stringify([
+        {
+          id: 'legacy',
+          prompt: 'Teach me consent rules',
+          provider: 'hosted',
+          status: 'queued',
+          estimateSeconds: 20,
+        },
+      ]),
+    )
+
+    expect(StudyGuideCreationQueueStorage.getAll()[0].knownSkill).toBeNull()
+
+    StudyGuideCreationQueueStorage.upsert({
+      id: 'with-skill',
+      prompt: 'Teach me consent rules',
+      knownSkill: 'reviewing open-source contributions',
+      provider: 'hosted',
+      status: 'queued',
+      estimateSeconds: 20,
+    })
+
+    expect(
+      StudyGuideCreationQueueStorage.getAll().find(
+        (job) => job.id === 'with-skill',
+      )?.knownSkill,
+    ).toBe('reviewing open-source contributions')
+  })
+})

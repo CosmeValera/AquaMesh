@@ -53,3 +53,31 @@ describe('where the claimable skill is named', () => {
     )
   })
 })
+
+/**
+ * The learner request is the last thing in the guide prompt, and a request
+ * carrying another language once pulled the whole guide with it. The output
+ * language is repeated after it so nothing sits between it and generation.
+ */
+describe('output language anchor', () => {
+  it('closes the guide and quiz prompts with the required language', () => {
+    const prompt = buildMonolithGuidePrompt({
+      topic: 'consent-based decision rules in cooperatives',
+      titleFallback: 'Consent',
+      folderNameFallback: 'Consent',
+      userKnownTopics: ['reviewing open-source contributions'],
+      outputLanguage: 'en',
+    })
+
+    expect(prompt.trimEnd().endsWith('material above use.')).toBe(true)
+    expect(prompt).toContain('Write every string in English')
+    expect(
+      buildEnhancedQuizPrompt({
+        topic: 'beginner React',
+        source: 'Pages about React components and state.',
+        bridgeBlocks: [],
+        outputLanguage: 'es',
+      }).trimEnd(),
+    ).toContain('Write every string in Spanish')
+  })
+})

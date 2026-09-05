@@ -53,6 +53,10 @@ import {
 } from '../../studyGuides/storage'
 import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
 import {
+  normalizeStartNextStudyGuideRequests,
+  type StartNextStudyGuideRequest,
+} from '../workspace/workspaceEvents'
+import {
   deleteHostedAiPodcastAudio,
   HOSTED_AI_INSUFFICIENT_CREDITS_EVENT,
   readQuickCreateAiSettings,
@@ -334,7 +338,9 @@ const StudyGuidesPage = () => {
   const [createOpen, setCreateOpen] = useState(false)
   const [createGuidePrompt, setCreateGuidePrompt] = useState('')
   const [multiCreateOpen, setMultiCreateOpen] = useState(false)
-  const [multiCreatePrompts, setMultiCreatePrompts] = useState<string[]>([])
+  const [multiCreatePrompts, setMultiCreatePrompts] = useState<
+    StartNextStudyGuideRequest[]
+  >([])
   const [searchQuery, setSearchQuery] = useState('')
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [pendingGuides, setPendingGuides] = useState<PendingGuide[]>([])
@@ -420,9 +426,7 @@ const StudyGuidesPage = () => {
     const handedOver = (
       location.state as { createGuidePrompts?: unknown } | null
     )?.createGuidePrompts
-    const prompts = (Array.isArray(handedOver) ? handedOver : [])
-      .map((prompt) => String(prompt || '').trim())
-      .filter(Boolean)
+    const prompts = normalizeStartNextStudyGuideRequests(handedOver)
     if (!prompts.length) {
       return
     }
@@ -475,7 +479,11 @@ const StudyGuidesPage = () => {
     setSortAnchor(null)
   }
 
-  const enqueueCreateGuide = (prompt: string, id = nanoid()) => {
+  const enqueueCreateGuide = (
+    prompt: string,
+    id = nanoid(),
+    knownSkill: string | null = null,
+  ) => {
     const provider = getActiveAiProvider()
     const estimateSeconds = getGenerationEstimateSeconds()
     let pendingGuide: PendingGuide
@@ -484,6 +492,7 @@ const StudyGuidesPage = () => {
       pendingGuide = StudyGuideCreationQueueStorage.upsert({
         id,
         prompt,
+        knownSkill,
         provider,
         status: 'queued',
         estimateSeconds,
@@ -500,6 +509,7 @@ const StudyGuidesPage = () => {
       pendingGuide = {
         id,
         prompt,
+        knownSkill,
         provider,
         status: 'failed',
         createdAt: timestamp,
@@ -552,7 +562,7 @@ const StudyGuidesPage = () => {
     }
 
     if (!updatedGuide) {
-      enqueueCreateGuide(guide.prompt, guide.id)
+      enqueueCreateGuide(guide.prompt, guide.id, guide.knownSkill ?? null)
       return
     }
 
@@ -594,6 +604,7 @@ const StudyGuidesPage = () => {
       const studyPath = await generateStudyPathStateFromPrompt({
         id: job.id,
         prompt: job.prompt,
+        knownSkill: job.knownSkill,
         provider: job.provider,
         signal: generationController.signal,
       })
@@ -701,7 +712,9 @@ const StudyGuidesPage = () => {
   // The queue runner already spreads jobs over its slots, so several guides
   // only need several enqueues.
   const submitMultiCreateGuides = () => {
-    multiCreatePrompts.forEach((prompt) => enqueueCreateGuide(prompt))
+    multiCreatePrompts.forEach((request) =>
+      enqueueCreateGuide(request.prompt, nanoid(), request.knownSkill || null),
+    )
     setMultiCreateOpen(false)
     setMultiCreatePrompts([])
   }
@@ -1915,14 +1928,14 @@ const StudyGuidesPage = () => {
         </DialogTitle>
         <DialogContent>
           <Stack spacing={1.5} sx={{ mt: 1 }}>
-            {multiCreatePrompts.map((prompt) => (
+            {multiCreatePrompts.map((request) => (
               <Paper
-                key={prompt}
+                key={request.prompt}
                 variant="outlined"
                 sx={{ p: 1.5, borderRadius: 2 }}
               >
                 <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
-                  {prompt}
+                  {request.prompt}
                 </Typography>
               </Paper>
             ))}

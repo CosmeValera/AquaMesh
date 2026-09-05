@@ -8,8 +8,8 @@ const normalizeForMatch = (value: string): string =>
 /**
  * Which follow-up ideas the reader already turned into a guide. Creation stores
  * the original prompt on the record (`description`) and on the queued job
- * (`prompt`), so an idea is matched by prefix: the prompt that was sent also
- * carries the bridge sentence, which varies with the interface language.
+ * (`prompt`), and matching stays prefix-based: a record's description can carry
+ * trailing text the job prompt does not.
  *
  * Called from the guide view rather than from the quiz block. This module
  * reaches the creation queue, which reaches the whole AI generation graph, and

@@ -219,10 +219,38 @@ export const sanitizeStudyGuideNextIdeas = (
 }
 
 /**
- * The idea prompt names the topic; the bridge sentence names the skill the
- * reader just claimed, so the relevance selector does not have to guess it out
- * of a known-topics list that can hold dozens of entries.
+ * Names the skill the reader just claimed, so the relevance selector does not
+ * have to guess it out of a known-topics list that can hold dozens of entries.
+ *
+ * Written in the guide's content language, never the interface language: this
+ * sentence is appended to the model prompt, and an interface-language sentence
+ * on an English prompt used to pull whole guides into the interface language.
  */
+const KNOWN_SKILL_INSTRUCTIONS: Record<string, (skill: string) => string> = {
+  en: (skill) =>
+    `Explain it through ${skill}, which I already know. Do not re-explain ${skill} itself.`,
+  es: (skill) =>
+    `Explícamelo a través de ${skill}, que ya sé. No vuelvas a explicar ${skill}.`,
+  fr: (skill) =>
+    `Explique-le-moi à travers ${skill}, que je connais déjà. Ne réexplique pas ${skill}.`,
+  de: (skill) =>
+    `Erkläre es mir über ${skill}, das ich schon kenne. Erkläre ${skill} nicht noch einmal.`,
+}
+
+export const buildStudyGuideKnownSkillInstruction = (
+  skillName: string,
+  language?: string,
+): string => {
+  const skill = skillName.trim()
+  if (!skill) {
+    return ''
+  }
+
+  const build = KNOWN_SKILL_INSTRUCTIONS[language || 'en']
+  return (build || KNOWN_SKILL_INSTRUCTIONS.en)(skill)
+}
+
+/** Joins the learner prompt with a model-facing instruction, prompt first. */
 export const buildStudyGuideNextIdeaPrompt = (
   ideaPrompt: string,
   bridgeSentence: string,

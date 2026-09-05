@@ -813,14 +813,25 @@ describe('TopNavBar Component', () => {
 
       window.dispatchEvent(
         new CustomEvent(START_NEXT_STUDY_GUIDE_EVENT, {
-          detail: { prompts: ["Teach me A.", "  ", "Teach me B."] },
+          detail: {
+            prompts: [
+              { prompt: "Teach me A.", knownSkill: "Queues" },
+              { prompt: "  " },
+              { prompt: "Teach me B." },
+            ],
+          },
         }),
       )
 
       // The blank one is dropped rather than queued as an empty guide.
       await waitFor(() =>
         expect(navigateMock).toHaveBeenCalledWith("/study-guides", {
-          state: { createGuidePrompts: ["Teach me A.", "Teach me B."] },
+          state: {
+            createGuidePrompts: [
+              { prompt: "Teach me A.", knownSkill: "Queues" },
+              { prompt: "Teach me B." },
+            ],
+          },
         }),
       )
     })

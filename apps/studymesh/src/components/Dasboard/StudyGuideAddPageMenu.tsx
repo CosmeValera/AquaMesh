@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import {
   Box,
   Button,
-  CircularProgress,
   Divider,
   Drawer,
   Popover,
@@ -27,7 +26,8 @@ interface StudyGuideAddPageMenuProps {
   anchorEl: HTMLElement | null
   open: boolean
   mobile: boolean
-  busy?: boolean
+  /** Lessons already being written, so the same one is not offered twice. */
+  busyLessonTitles?: string[]
   creditCost?: number
   onClose: () => void
   onGrow: (seed: StudyGuideGrowthSeed) => void
@@ -61,7 +61,7 @@ const StudyGuideAddPageMenu: React.FC<StudyGuideAddPageMenuProps> = ({
   anchorEl,
   open,
   mobile,
-  busy,
+  busyLessonTitles,
   creditCost,
   onClose,
   onGrow,
@@ -70,7 +70,9 @@ const StudyGuideAddPageMenu: React.FC<StudyGuideAddPageMenuProps> = ({
   const { t } = useInterfaceText()
   const [prompt, setPrompt] = useState('')
   const activePage = studyPath.dashboards[studyPath.selectedIndex]
-  const nextLesson = studyPath.plannedLessons?.[0]
+  const nextLesson = studyPath.plannedLessons?.find(
+    (lesson) => !(busyLessonTitles || []).includes(lesson.title),
+  )
   const pageIdeas = activePage
     ? deriveStudyGuidePageIdeas(studyPath, activePage.dashboardKey)
     : []
@@ -92,16 +94,12 @@ const StudyGuideAddPageMenu: React.FC<StudyGuideAddPageMenuProps> = ({
       sx={{ p: 1.5, width: mobile ? 'auto' : 332, maxWidth: '100%' }}
       data-testid="study-guide-add-page-menu"
     >
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Typography variant="subtitle2" fontWeight={700}>
-          {t('workspace.addPageMenuTitle')}
-        </Typography>
-        {busy ? <CircularProgress size={16} /> : null}
-      </Stack>
+      <Typography variant="subtitle2" fontWeight={700}>
+        {t('workspace.addPageMenuTitle')}
+      </Typography>
 
       {nextLesson ? (
         <Button
-          disabled={busy}
           onClick={() => grow({ kind: 'continue', lesson: nextLesson })}
           data-testid="study-guide-add-page-continue"
           sx={(theme) => ({
@@ -151,7 +149,7 @@ const StudyGuideAddPageMenu: React.FC<StudyGuideAddPageMenuProps> = ({
           {pageIdeas.map((idea) => (
             <Button
               key={idea.label}
-              disabled={busy || !activePage}
+              disabled={!activePage}
               onClick={() =>
                 activePage &&
                 grow({
@@ -198,20 +196,13 @@ const StudyGuideAddPageMenu: React.FC<StudyGuideAddPageMenuProps> = ({
         multiline
         minRows={2}
         value={prompt}
-        disabled={busy}
         placeholder={t('workspace.addPagePromptPlaceholder')}
         onChange={(event) => setPrompt(event.target.value)}
       />
       <Button
         variant="contained"
-        disabled={busy || !prompt.trim()}
-        onClick={() =>
-          grow({
-            kind: 'prompt',
-            sourcePageKey: activePage?.dashboardKey,
-            prompt: prompt.trim(),
-          })
-        }
+        disabled={!prompt.trim()}
+        onClick={() => grow({ kind: 'prompt', prompt: prompt.trim() })}
         sx={{ textTransform: 'none', fontWeight: 700 }}
       >
         <Stack direction="row" spacing={0.75} alignItems="center">
@@ -224,7 +215,6 @@ const StudyGuideAddPageMenu: React.FC<StudyGuideAddPageMenuProps> = ({
         <>
           <Divider />
           <Button
-            disabled={busy}
             onClick={() => {
               onAddBlankPage()
               onClose()

@@ -5,6 +5,7 @@ import {
   consumeStudyGuidePlannedLesson,
   deriveStudyGuidePageIdeas,
   parseStudyGuideGrowthPageResponse,
+  readStudyGuideGrowthLabel,
   readStudyGuideGrowthParentKey,
 } from '../../../src/studyGuides/pageGrowth'
 import {
@@ -82,13 +83,36 @@ describe('Study Guide growth seeds', () => {
         selection: 'adenosine',
       }),
     ).toBe('page-1')
+    // A page the reader asked for by name is its own lesson, so it goes last
+    // rather than into whichever page happened to be open.
     expect(
       readStudyGuideGrowthParentKey({
         kind: 'prompt',
-        sourcePageKey: 'page-2',
         prompt: 'tell me about naps',
       }),
-    ).toBe('page-2')
+    ).toBeUndefined()
+  })
+
+  it('labels the page being written from whichever seed started it', () => {
+    expect(
+      readStudyGuideGrowthLabel({
+        kind: 'continue',
+        lesson: { title: 'Sleep debt', summary: '' },
+      }),
+    ).toBe('Sleep debt')
+    expect(
+      readStudyGuideGrowthLabel({
+        kind: 'fragment',
+        sourcePageKey: 'page-1',
+        selection: '  adenosine   builds  up  ',
+      }),
+    ).toBe('adenosine builds up')
+    expect(
+      readStudyGuideGrowthLabel({
+        kind: 'prompt',
+        prompt: 'x'.repeat(80),
+      }),
+    ).toHaveLength(50)
   })
 
   it('lists the existing pages and bans repeating them', () => {

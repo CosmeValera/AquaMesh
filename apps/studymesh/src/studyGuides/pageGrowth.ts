@@ -43,21 +43,46 @@ const MIN_STUDY_PAGE_WORDS = 60
 export type StudyGuideGrowthSeed =
   | { kind: 'continue'; lesson: StudyGuidePlannedLesson }
   | { kind: 'fragment'; sourcePageKey: string; selection: string }
-  | { kind: 'prompt'; sourcePageKey?: string; prompt: string }
+  | { kind: 'prompt'; prompt: string }
 
 export interface StudyGuideGrowthPageDraft {
   title: string
   markdown: string
 }
 
+/** One page currently being written. Several can run at once. */
+export interface StudyGuideGrowthTask {
+  id: string
+  label: string
+  startedAt: number
+  /** Set by a continuation, so its lesson is not offered again while it runs. */
+  lessonTitle?: string
+}
+
 /**
- * A continuation is a new lesson at the end of the guide; the other two seeds
- * dig into a page and belong under it.
+ * Only a selected fragment belongs under the page it came from. A continuation
+ * and a page the reader asked for by name are both new lessons of their own,
+ * so they go last rather than into someone else's branch.
  */
 export const readStudyGuideGrowthParentKey = (
   seed: StudyGuideGrowthSeed,
 ): string | undefined =>
-  seed.kind === 'continue' ? undefined : seed.sourcePageKey
+  seed.kind === 'fragment' ? seed.sourcePageKey : undefined
+
+/** Short label for the page being written, for progress in the pages panel. */
+export const readStudyGuideGrowthLabel = (
+  seed: StudyGuideGrowthSeed,
+): string => {
+  if (seed.kind === 'continue') {
+    return seed.lesson.title
+  }
+
+  const text = (
+    seed.kind === 'fragment' ? seed.selection : seed.prompt
+  ).replace(/\s+/g, ' ')
+
+  return text.length > 48 ? `${text.slice(0, 47).trim()}...` : text.trim()
+}
 
 const wordCount = (value: string): number =>
   value.split(/\s+/).filter(Boolean).length
@@ -106,17 +131,16 @@ export const parseStudyGuideGrowthPageResponse = (
 }
 
 /** The page a seed digs into, when it digs into one. */
+// Only a fragment quotes a page, so only a fragment sends that page's text.
 const readSeedSourcePage = (
   studyPath: StudyPathContainerState,
   seed: StudyGuideGrowthSeed,
-) => {
-  const sourcePageKey = readStudyGuideGrowthParentKey(seed)
-  return sourcePageKey
+) =>
+  seed.kind === 'fragment'
     ? studyPath.dashboards.find(
-        (dashboard) => dashboard.dashboardKey === sourcePageKey,
+        (dashboard) => dashboard.dashboardKey === seed.sourcePageKey,
       )
     : undefined
-}
 
 const describeSeed = (seed: StudyGuideGrowthSeed): string => {
   if (seed.kind === 'continue') {
@@ -231,18 +255,6 @@ const callStudyPageModel = async (
   throw new Error('Choose a supported AI mode before adding a page.')
 }
 
-const seedFallbackTitle = (seed: StudyGuideGrowthSeed): string => {
-  if (seed.kind === 'continue') {
-    return seed.lesson.title
-  }
-
-  if (seed.kind === 'fragment') {
-    return seed.selection.replace(/\s+/g, ' ').trim().slice(0, 48)
-  }
-
-  return seed.prompt.replace(/\s+/g, ' ').trim().slice(0, 48)
-}
-
 export const createStudyGuideGrowthPageDraft = async (
   studyPath: StudyPathContainerState,
   seed: StudyGuideGrowthSeed,
@@ -260,7 +272,10 @@ export const createStudyGuideGrowthPageDraft = async (
     outputLanguage,
   )
 
-  return parseStudyGuideGrowthPageResponse(text, seedFallbackTitle(seed))
+  return parseStudyGuideGrowthPageResponse(
+    text,
+    readStudyGuideGrowthLabel(seed),
+  )
 }
 
 /**

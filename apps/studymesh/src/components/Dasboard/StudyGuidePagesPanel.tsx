@@ -1,7 +1,8 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Box,
   Button,
+  CircularProgress,
   IconButton,
   Stack,
   Tooltip,
@@ -22,7 +23,10 @@ import {
   getStudyGuidePageNumberLabels,
   reorderStudyGuidePage,
 } from '../../studyGuides/pages'
-import type { StudyGuideGrowthSeed } from '../../studyGuides/pageGrowth'
+import type {
+  StudyGuideGrowthSeed,
+  StudyGuideGrowthTask,
+} from '../../studyGuides/pageGrowth'
 import StudyGuideAddPageMenu from './StudyGuideAddPageMenu'
 import { collectPodcastAudioPathsFromPage } from '../../studyGuides/podcasts'
 import { deleteHostedAiPodcastAudio } from '../../quickCreate/ai'
@@ -51,7 +55,8 @@ interface StudyGuidePagesPanelProps {
   /** Absent on read-only hosts such as the demo guide. */
   onGrowPage?: (seed: StudyGuideGrowthSeed) => void
   growPageCreditCost?: number
-  growingPage?: boolean
+  /** Pages being written right now. Several can run at once. */
+  growingPages?: StudyGuideGrowthTask[]
 }
 
 const pageIconButtonSx =
@@ -90,7 +95,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
   variant,
   onGrowPage,
   growPageCreditCost,
-  growingPage,
+  growingPages,
 }) => {
   const { t } = useInterfaceText()
   const [open, setOpen] = useState(true)
@@ -98,6 +103,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [insertionIndex, setInsertionIndex] = useState<number | null>(null)
   const [addPageAnchor, setAddPageAnchor] = useState<HTMLElement | null>(null)
+  const [growNow, setGrowNow] = useState(0)
   const pageRowRefs = useRef<Array<HTMLDivElement | null>>([])
   const mobile = variant === 'mobile'
   const pageDepths = getStudyGuidePageDepths(studyPath)
@@ -106,6 +112,21 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
     Math.max(studyPath.selectedIndex || 0, 0),
     Math.max(studyPath.dashboards.length - 1, 0),
   )
+
+  const pendingPages = growingPages || []
+  // A page takes long enough that a still spinner reads as a hang, so a clock
+  // ticks while any page is being written.
+  useEffect(() => {
+    if (!pendingPages.length) {
+      setGrowNow(0)
+      return
+    }
+
+    const tick = () => setGrowNow(Date.now())
+    tick()
+    const timer = window.setInterval(tick, 1000)
+    return () => window.clearInterval(timer)
+  }, [pendingPages.length])
 
   const selectPage = (index: number) => {
     onStudyPathChange({ ...studyPath, selectedIndex: index })
@@ -547,11 +568,71 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
       </Box>
       {onAddPage || onGrowPage ? (
         <Box sx={{ p: 1.25, borderTop: 1, borderColor: 'divider' }}>
+          {pendingPages.length ? (
+            <Stack spacing={0.5} sx={{ mb: 1 }}>
+              {pendingPages.map((pending) => (
+                <Box
+                  key={pending.id}
+                  data-testid="study-guide-growing-page"
+                  sx={(theme) => ({
+                    px: 1,
+                    py: 0.75,
+                    borderRadius: 1,
+                    border: 1,
+                    borderColor: alpha(theme.palette.primary.main, 0.34),
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                  })}
+                >
+                  <CircularProgress size={14} />
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography
+                      variant="caption"
+                      fontWeight={700}
+                      noWrap
+                      display="block"
+                    >
+                      {t('workspace.growingPage')}
+                    </Typography>
+                    {pending.label ? (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        noWrap
+                        display="block"
+                        sx={{ fontSize: '0.7rem' }}
+                      >
+                        {pending.label}
+                      </Typography>
+                    ) : null}
+                  </Box>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      fontSize: '0.7rem',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {Math.max(
+                      0,
+                      Math.floor(
+                        ((growNow || pending.startedAt) - pending.startedAt) /
+                          1000,
+                      ),
+                    )}
+                    s
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+          ) : null}
           <Button
             fullWidth
             variant="outlined"
             startIcon={<AddIcon fontSize="small" />}
-            disabled={growingPage}
             onClick={(event) => {
               // Without growth wired up the button keeps its old behaviour of
               // dropping a blank page straight in.
@@ -574,7 +655,7 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
               },
             }}
           >
-            {growingPage ? t('workspace.growingPage') : t('workspace.addPage')}
+            {t('workspace.addPage')}
           </Button>
         </Box>
       ) : null}
@@ -584,7 +665,9 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
           anchorEl={addPageAnchor}
           open={Boolean(addPageAnchor)}
           mobile={mobile}
-          busy={growingPage}
+          busyLessonTitles={pendingPages
+            .map((pending) => pending.lessonTitle)
+            .filter((title): title is string => Boolean(title))}
           creditCost={growPageCreditCost}
           onClose={() => setAddPageAnchor(null)}
           onGrow={onGrowPage}

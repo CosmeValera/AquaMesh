@@ -38,7 +38,10 @@ import {
   updateStudyGuideMarkdownPage,
   getStudyGuidePageNumberLabels,
 } from '../../studyGuides/pages'
-import type { StudyGuideGrowthSeed } from '../../studyGuides/pageGrowth'
+import type {
+  StudyGuideGrowthSeed,
+  StudyGuideGrowthTask,
+} from '../../studyGuides/pageGrowth'
 import StudyGuideLinearLayout from './StudyGuideLinearLayout'
 import StudyGuidePageEditor from './StudyGuidePageEditor'
 import { useNavigate } from 'react-router-dom'
@@ -99,7 +102,7 @@ interface StudyPathWorkspaceViewProps {
   /** Absent on read-only hosts such as the demo guide. */
   onGrowPage?: (seed: StudyGuideGrowthSeed) => void
   growPageCreditCost?: number
-  growingPage?: boolean
+  growingPages?: StudyGuideGrowthTask[]
   onAskAi?: (question: string) => void
   /** Overrides the default "My guides" crumb, e.g. for the public /try demo. */
   breadcrumb?: { label: string; onClick: () => void }
@@ -432,7 +435,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   onAddPage,
   onGrowPage,
   growPageCreditCost,
-  growingPage,
+  growingPages,
   onAskAi,
   breadcrumb,
   createdNextIdeaPrompts,
@@ -910,7 +913,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
             variant="desktop"
             onGrowPage={onGrowPage ? handleGrowPage : undefined}
             growPageCreditCost={growPageCreditCost}
-            growingPage={growingPage}
+            growingPages={growingPages}
           />
         ) : null}
         <Box
@@ -964,7 +967,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
         contextLabel={currentLesson.name}
         onAskAi={onAskAi}
         onGrowPage={
-          onGrowPage && currentPageKey && !growingPage
+          onGrowPage && currentPageKey
             ? (selection) =>
                 handleGrowPage({
                   kind: 'fragment',

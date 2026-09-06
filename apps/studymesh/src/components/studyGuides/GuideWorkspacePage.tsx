@@ -58,8 +58,10 @@ import { readCreatedNextIdeaPrompts } from '../../studyGuides/nextGuideIdeas'
 import {
   consumeStudyGuidePlannedLesson,
   createStudyGuideGrowthPageDraft,
+  readStudyGuideGrowthLabel,
   readStudyGuideGrowthParentKey,
   type StudyGuideGrowthSeed,
+  type StudyGuideGrowthTask,
 } from '../../studyGuides/pageGrowth'
 import {
   createStudyGuidePageHref,
@@ -149,7 +151,7 @@ const GuideWorkspacePage = () => {
   const [messages, setMessages] = useState<DashboardChatMessage[]>([])
   const [editingPageKey, setEditingPageKey] = useState<string | null>(null)
   const [quickCreateError, setQuickCreateError] = useState('')
-  const [growingPage, setGrowingPage] = useState(false)
+  const [growingPages, setGrowingPages] = useState<StudyGuideGrowthTask[]>([])
   // Only hosted mode spends Carrots, so only hosted mode shows a price.
   const studyPageCreditCost =
     (readQuickCreateAiSettings().provider || 'hosted') === 'hosted'
@@ -391,28 +393,28 @@ const GuideWorkspacePage = () => {
     return true
   }
 
-  const growPage = async (seed: StudyGuideGrowthSeed) => {
-    if (!record || growingPage) {
-      return
-    }
+  // Pages are committed through the same serialized queue as Quick Create
+  // results, so two pages finishing at once cannot overwrite each other.
+  const enqueueGrowthPageCommit = (
+    draft: { title: string; markdown: string },
+    seed: StudyGuideGrowthSeed,
+  ) => {
+    const commit = quickCreateCommitQueueRef.current.then(() => {
+      const latestRecord =
+        quickCreateCommitRecordRef.current || recordRef.current
+      if (!latestRecord) {
+        return
+      }
 
-    setGrowingPage(true)
-    setQuickCreateError('')
-    try {
-      const draft = await createStudyGuideGrowthPageDraft(
-        record.studyPath,
-        seed,
-      )
-      // Commit against the newest guide, not the snapshot the model started
-      // from: chat or Quick Create may have added a page in the meantime.
-      const latestStudyPath = recordRef.current?.studyPath || record.studyPath
+      const latestStudyPath =
+        quickCreateCommitStudyPathRef.current || latestRecord.studyPath
       const grown = appendStudyGuideMarkdownPage(latestStudyPath, {
         title: draft.title,
         markdown: draft.markdown,
         source: 'expanded',
         parentPageKey: readStudyGuideGrowthParentKey(seed),
       })
-      persistStudyPath(
+      const nextRecord = persistStudyPath(
         seed.kind === 'continue'
           ? {
               ...grown,
@@ -422,7 +424,38 @@ const GuideWorkspacePage = () => {
               ),
             }
           : grown,
+        quickCreateCommitRecordRef.current || latestRecord,
       )
+      if (!nextRecord) {
+        return
+      }
+      quickCreateCommitRecordRef.current = nextRecord
+      quickCreateCommitStudyPathRef.current = nextRecord.studyPath
+    })
+
+    quickCreateCommitQueueRef.current = commit.catch(() => undefined)
+    return commit
+  }
+
+  const growPage = async (seed: StudyGuideGrowthSeed) => {
+    if (!record) {
+      return
+    }
+
+    const task: StudyGuideGrowthTask = {
+      id: `grow-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      label: readStudyGuideGrowthLabel(seed),
+      startedAt: Date.now(),
+      ...(seed.kind === 'continue' ? { lessonTitle: seed.lesson.title } : {}),
+    }
+    setGrowingPages((current) => [...current, task])
+    setQuickCreateError('')
+    try {
+      const draft = await createStudyGuideGrowthPageDraft(
+        recordRef.current?.studyPath || record.studyPath,
+        seed,
+      )
+      await enqueueGrowthPageCommit(draft, seed)
     } catch (error) {
       setQuickCreateError(
         error instanceof Error && error.message
@@ -430,7 +463,9 @@ const GuideWorkspacePage = () => {
           : t('workspace.growPageFailed'),
       )
     } finally {
-      setGrowingPage(false)
+      setGrowingPages((current) =>
+        current.filter((pending) => pending.id !== task.id),
+      )
     }
   }
 
@@ -745,7 +780,7 @@ const GuideWorkspacePage = () => {
         onAddPage={addManualPage}
         onGrowPage={(seed) => void growPage(seed)}
         growPageCreditCost={studyPageCreditCost}
-        growingPage={growingPage}
+        growingPages={growingPages}
         onAskAi={askAiFromStudyBlock}
         createdNextIdeaPrompts={createdNextIdeaPrompts}
         pendingCitationHighlight={pendingCitationHighlight}
@@ -783,7 +818,7 @@ const GuideWorkspacePage = () => {
           void growPage(seed)
         }}
         growPageCreditCost={studyPageCreditCost}
-        growingPage={growingPage}
+        growingPages={growingPages}
       />
     </Paper>
   ) : null
@@ -812,15 +847,7 @@ const GuideWorkspacePage = () => {
         }
         showCloseButton={!isMobile}
         onAddAssistantMessageToGuide={addAssistantMessageToGuide}
-        onGrowPage={(prompt) => {
-          void growPage({
-            kind: 'prompt',
-            sourcePageKey:
-              record.studyPath.dashboards[record.studyPath.selectedIndex]
-                ?.dashboardKey,
-            prompt,
-          })
-        }}
+        onGrowPage={(prompt) => void growPage({ kind: 'prompt', prompt })}
         onAddExternalSourceToGuide={addExternalSourceToGuide}
         onOpenSource={openChatSource}
         onQuickCreatePage={quickCreatePage}

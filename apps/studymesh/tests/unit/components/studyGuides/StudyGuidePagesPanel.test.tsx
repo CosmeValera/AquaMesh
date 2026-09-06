@@ -449,11 +449,70 @@ describe('StudyGuidePagesPanel growth', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: /Create page/ }))
 
+    // No source page: a page the reader asked for by name is a lesson of its
+    // own and goes last, not into the open page's branch.
     expect(onGrowPage).toHaveBeenCalledWith({
       kind: 'prompt',
-      sourcePageKey: 'core',
       prompt: 'How ion channels open',
     })
+  })
+
+  it('shows every page being written and stays open for more', () => {
+    render(
+      <StudyGuidePagesPanel
+        studyPath={createGrowableStudyPath()}
+        onStudyPathChange={vi.fn()}
+        onGrowPage={vi.fn()}
+        growingPages={[
+          {
+            id: 'grow-1',
+            label: 'Cell signalling',
+            startedAt: Date.now(),
+            lessonTitle: 'Cell signalling',
+          },
+          {
+            id: 'grow-2',
+            label: 'How ion channels open',
+            startedAt: Date.now(),
+          },
+        ]}
+        variant="desktop"
+      />,
+    )
+
+    const progress = screen.getAllByTestId('study-guide-growing-page')
+
+    expect(progress).toHaveLength(2)
+    expect(progress[0]).toHaveTextContent('Writing the new page...')
+    expect(progress[0]).toHaveTextContent('Cell signalling')
+    expect(progress[1]).toHaveTextContent('How ion channels open')
+    // Several pages can be queued at once, so the button never locks.
+    expect(screen.getByRole('button', { name: 'Add Page' })).not.toBeDisabled()
+  })
+
+  it('does not offer a planned lesson that is already being written', () => {
+    render(
+      <StudyGuidePagesPanel
+        studyPath={createGrowableStudyPath()}
+        onStudyPathChange={vi.fn()}
+        onGrowPage={vi.fn()}
+        growingPages={[
+          {
+            id: 'grow-1',
+            label: 'Cell signalling',
+            startedAt: Date.now(),
+            lessonTitle: 'Cell signalling',
+          },
+        ]}
+        variant="desktop"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Page' }))
+
+    expect(
+      screen.queryByTestId('study-guide-add-page-continue'),
+    ).not.toBeInTheDocument()
   })
 
   it('keeps the old blank-page behaviour when growth is not wired up', () => {

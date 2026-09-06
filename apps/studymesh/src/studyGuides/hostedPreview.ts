@@ -98,6 +98,53 @@ export const applyHostedPreviewEvent = (
     { expectedPages: current.expectedPages, expectsBridge: current.expectsBridge },
   )
 
+/** What a snapshot claims to have finished, so two of them can be compared. */
+export const hostedPreviewProgressCount = (
+  progress: HostedAiStudyGuideProgress | undefined,
+): number =>
+  progress
+    ? (progress.title ? 1 : 0) +
+      (progress.keyIdea ? 1 : 0) +
+      (progress.bridgeTopics?.length ? 1 : 0) +
+      (progress.pages || []).filter((page) => page.done).length +
+      (progress.stage === 'quiz' ? 1 : 0)
+    : 0
+
+/** The checklist as a snapshot, for storing it or comparing it to another. */
+export const toHostedProgressSnapshot = (
+  preview: HostedPreviewState,
+): HostedAiStudyGuideProgress => ({
+  title: preview.title,
+  emoji: preview.emoji,
+  keyIdea: preview.keyIdea,
+  bridgeTopics: preview.bridgeTopics,
+  pages: preview.pages,
+  stage: preview.stage,
+})
+
+/**
+ * Adopts a snapshot only when it knows at least as much as what is on screen.
+ *
+ * A gateway that cannot record progress answers with an empty snapshot every
+ * time, and letting that overwrite the checklist is what emptied the card on
+ * refresh. The fuller of the two wins; the clock always comes from the caller.
+ */
+export const mergeHostedPreviewSnapshot = (
+  current: HostedPreviewState | undefined,
+  snapshot: HostedAiStudyGuideProgress | undefined,
+  startedAt: number,
+  shape: HostedPreviewShape = {},
+): HostedPreviewState => {
+  if (!current) {
+    return makeHostedPreviewFromSnapshot(snapshot, startedAt, shape)
+  }
+
+  return hostedPreviewProgressCount(snapshot) >=
+    hostedPreviewProgressCount(toHostedProgressSnapshot(current))
+    ? makeHostedPreviewFromSnapshot(snapshot, startedAt, shape)
+    : { ...current, startedAt }
+}
+
 export interface HostedPreviewRow {
   id: string
   label: string

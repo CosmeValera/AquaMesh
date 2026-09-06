@@ -694,6 +694,10 @@ const jobFilter = (userId: string, clientJobId: string): string =>
 
 let degradedJobSelect = false;
 
+/** True once a read had to fall back to a select without `progress`. */
+export const isStudyGuideProgressUnavailable = (): boolean =>
+  degradedJobSelect;
+
 export const readStudyGuideJob = async (
   userId: string,
   clientJobId: string,
@@ -4292,6 +4296,9 @@ export default async function handler(
 
       json(res, 200, {
         ok: true,
+        ...(isStudyGuideProgressUnavailable()
+          ? { progressUnavailable: true }
+          : {}),
         job: job
           ? {
               clientJobId: job.client_job_id,

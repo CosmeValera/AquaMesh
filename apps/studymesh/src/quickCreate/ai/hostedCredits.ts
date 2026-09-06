@@ -254,6 +254,12 @@ export interface HostedAiGatewayResponse {
    * nothing may be concluded about the generation from this.
    */
   lookupFailed?: boolean
+  /**
+   * The gateway is answering without the `progress` column, so a resumed card
+   * gets no live checklist. Reported rather than hidden: the symptom is a
+   * checklist that never moves, which is impossible to diagnose from the UI.
+   */
+  progressUnavailable?: boolean
   job?: HostedAiStudyGuideJob
   quickStart?: StudyGuideQuickStart
   bridgeBlocks?: StudyGuideKnowledgeBridgeBlock[]

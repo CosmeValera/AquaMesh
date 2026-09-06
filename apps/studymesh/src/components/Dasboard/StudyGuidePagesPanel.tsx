@@ -576,6 +576,18 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
               </Typography>
             </Box>
           ))}
+          {/* One rough figure for the whole remainder, so the reader knows the
+              wait is short. Deliberately not a countdown. */}
+          {unwrittenPageCount > 0 ? (
+            <Typography
+              data-testid="study-guide-unwritten-pages-eta"
+              variant="caption"
+              color="text.disabled"
+              sx={{ px: 1.25, pb: 0.5 }}
+            >
+              {t('workspace.pagesReadySoon')}
+            </Typography>
+          ) : null}
           {!mobile ? (
             <Box
               data-testid="study-guide-page-end-slot"

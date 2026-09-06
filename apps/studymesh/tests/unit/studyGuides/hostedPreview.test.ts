@@ -10,6 +10,8 @@ import {
   splitHostedPreviewRows,
   makeHostedPreviewFromSnapshot,
   makeHostedPreview,
+  mergeHostedPreviewSnapshot,
+  toHostedProgressSnapshot,
 } from '../../../src/studyGuides/hostedPreview'
 import type { HostedAiPreviewEvent } from '../../../src/quickCreate/ai/hostedCredits'
 
@@ -370,6 +372,71 @@ describe('the checklist is shown in two groups', () => {
 
     expect([...rows.upToFirstPage, ...rows.remainder]).toEqual(
       buildHostedPreviewRows(preview, t),
+    )
+  })
+})
+
+describe('reconciling a snapshot with what is already on screen', () => {
+  const shape = { expectedPages: 3, expectsBridge: true }
+  const watched = replay(TIMELINE.slice(0, 4))
+
+  it('keeps the checklist when the gateway has nothing to say', () => {
+    // What a deployment without the progress column answers on every poll.
+    const merged = mergeHostedPreviewSnapshot(watched, undefined, 1000, shape)
+
+    expect(merged.title).toBe(watched.title)
+    expect(merged.keyIdea).toBe(watched.keyIdea)
+    expect(merged.startedAt).toBe(1000)
+  })
+
+  it('keeps the checklist when the gateway knows less than the tab does', () => {
+    const merged = mergeHostedPreviewSnapshot(
+      watched,
+      { title: watched.title },
+      1000,
+      shape,
+    )
+
+    expect(merged.keyIdea).toBe(watched.keyIdea)
+  })
+
+  it('adopts a snapshot that knows more', () => {
+    const merged = mergeHostedPreviewSnapshot(
+      watched,
+      {
+        title: watched.title,
+        keyIdea: watched.keyIdea,
+        bridgeTopics: ['cooking'],
+        pages: [{ title: 'Feeding schedules', done: true }],
+      },
+      1000,
+      shape,
+    )
+
+    expect(merged.pages).toEqual([{ title: 'Feeding schedules', done: true }])
+    expect(merged.expectedPages).toBe(3)
+  })
+
+  it('builds from the snapshot when nothing is on screen yet', () => {
+    const merged = mergeHostedPreviewSnapshot(
+      undefined,
+      { title: 'Restored' },
+      1000,
+      shape,
+    )
+
+    expect(merged.title).toBe('Restored')
+  })
+
+  it('round-trips a watched checklist through a stored snapshot', () => {
+    const restored = makeHostedPreviewFromSnapshot(
+      toHostedProgressSnapshot(watched),
+      watched.startedAt,
+      shape,
+    )
+
+    expect(buildHostedPreviewRows(restored, t)).toEqual(
+      buildHostedPreviewRows(watched, t),
     )
   })
 })

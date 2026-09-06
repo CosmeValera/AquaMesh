@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid'
 import type { QuickCreateAiProvider } from '../quickCreate/ai'
 import { getHostedAiCreditCost } from '../quickCreate/ai/hostedCredits'
+import type { HostedAiStudyGuideProgress } from '../quickCreate/ai/hostedCredits'
 import {
   STUDY_GUIDES_STORAGE_FULL_MESSAGE,
   isStudyGuidesStorageQuotaError,
@@ -44,6 +45,12 @@ export interface StudyGuideCreationJob {
    * existed, which any tab may adopt.
    */
   ownerTabId?: string | null
+  /**
+   * The checklist as this browser last saw it. Written while the guide streams
+   * so a refresh repaints immediately instead of waiting on the gateway, and
+   * still shows something when the gateway cannot record progress at all.
+   */
+  previewSnapshot?: HostedAiStudyGuideProgress | null
 }
 
 const CREATION_TAB_ID_KEY = 'studymesh.studyGuides.creationTabId'
@@ -75,6 +82,24 @@ export const getCreationTabId = (): string => {
 }
 
 export const HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT = 1
+/**
+ * Mirrors STUDY_GUIDE_JOB_STALE_MS in api/hosted-ai.ts.
+ *
+ * The gateway is the only thing that may declare a hosted generation gone, and
+ * it will not do so before this window. Until then a lookup that comes back
+ * without the job is a lookup problem, not a lost guide.
+ */
+export const HOSTED_STUDY_GUIDE_GATEWAY_STALE_MS = 5 * 60 * 1000
+
+export const isWithinHostedGatewayStaleWindow = (job: {
+  createdAt: string
+}): boolean => {
+  const createdAt = Date.parse(job.createdAt || '')
+  return (
+    Number.isFinite(createdAt) &&
+    Date.now() - createdAt < HOSTED_STUDY_GUIDE_GATEWAY_STALE_MS
+  )
+}
 export const HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE = `This guide stopped before it was finished. Retrying spends ${getHostedAiCreditCost(
   'study-guide',
 )} Carrots.`
@@ -177,6 +202,12 @@ const normalizeJob = (value: unknown): StudyGuideCreationJob | null => {
       typeof source.ownerTabId === 'string' && source.ownerTabId
         ? source.ownerTabId
         : null,
+    previewSnapshot:
+      source.previewSnapshot &&
+      typeof source.previewSnapshot === 'object' &&
+      !Array.isArray(source.previewSnapshot)
+        ? source.previewSnapshot
+        : null,
   }
 }
 
@@ -251,6 +282,8 @@ export const StudyGuideCreationQueueStorage = {
       errorMessage: job.errorMessage ?? null,
       resultStudyGuideId: job.resultStudyGuideId ?? null,
       ownerTabId: job.ownerTabId ?? existing?.ownerTabId ?? null,
+      previewSnapshot:
+        job.previewSnapshot ?? existing?.previewSnapshot ?? null,
     }
 
     if (existing && jobMatches(existing, nextJob)) {
@@ -328,7 +361,11 @@ export const StudyGuideCreationQueueStorage = {
           (job.status === 'running' && (isOwn || job.provider === 'hosted')) ||
           job.status === 'collecting' ||
           (job.status === 'failed' &&
-            isRetryableStudyGuideCreationError(job.errorMessage)))
+            (isRetryableStudyGuideCreationError(job.errorMessage) ||
+              // A card the queue gave up on can still be a guide the gateway
+              // went on to finish, and it was already charged for. Collecting
+              // it costs nothing; leaving it stranded costs the learner 3.
+              (job.provider === 'hosted' && resumableJobIds.includes(job.id)))))
       if (!shouldRequeue) {
         return job
       }

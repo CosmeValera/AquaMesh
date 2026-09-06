@@ -62,11 +62,13 @@ import {
   HOSTED_STUDY_GUIDE_PAGE_COUNT,
   HostedPreviewState,
   makeHostedPreviewFromSnapshot,
+  mergeHostedPreviewSnapshot,
 } from '../../studyGuides/hostedPreview'
 import type {
   HostedAiPreviewEvent,
   HostedAiStudyGuideProgress,
 } from '../../quickCreate/ai/hostedCredits'
+import { foldHostedStudyGuideProgress } from '../../quickCreate/ai/hostedCredits'
 import type { HostedStudyGuideJobLookup } from '../../quickCreate/ai/hostedClient'
 import {
   getHostedStudyGuideJobs,
@@ -108,6 +110,7 @@ import {
   getCreationTabId,
   StudyGuideCreationQueueStorage,
   isRetryableStudyGuideCreationError,
+  isWithinHostedGatewayStaleWindow,
   type StudyGuideCreationJob,
   type StudyGuideCreationProvider,
   type StudyGuideCreationStatus,
@@ -437,6 +440,14 @@ const StudyGuidesPage = () => {
   // far as anyone knows, so they keep their card and get asked about again.
   const [unresolvedJobIds, setUnresolvedJobIds] = useState<string[]>([])
   const unresolvedJobIdsRef = useRef<string[]>([])
+  // Jobs the gateway has answered for and said are not coming back, so they
+  // stop being asked about. Only a gateway answer ever puts a job in here.
+  const confirmedGoneJobIdsRef = useRef<Set<string>>(new Set())
+  // The checklist as folded in this page life, so it can be written to the
+  // queue and survive the refresh that throws this component's state away.
+  const previewSnapshotsRef = useRef<Record<string, HostedAiStudyGuideProgress>>(
+    {},
+  )
   // Only a click puts a job in here, and only that authorises the gateway to
   // start a fresh paid generation for it.
   const userRetryJobIdsRef = useRef<Set<string>>(new Set())
@@ -484,37 +495,33 @@ const StudyGuidesPage = () => {
   useEffect(() => {
     let cancelled = false
 
-    const askGateway = async (): Promise<HostedStudyGuideJobLookup> => {
-      const hostedJobIds = StudyGuideCreationQueueStorage.getAll()
-        .filter(
-          (job) =>
-            job.provider === 'hosted' &&
-            (job.status === 'running' ||
-              job.status === 'collecting' ||
-              job.status === 'interrupted' ||
-              job.status === 'queued'),
-        )
-        .map((job) => job.id)
-
-      return hostedJobIds.length
-        ? getHostedStudyGuideJobs(hostedJobIds)
-        : { jobs: {}, unresolvedIds: [] }
-    }
+    const askableHostedJobs = (): PendingGuide[] =>
+      StudyGuideCreationQueueStorage.getAll().filter(
+        (job) =>
+          job.provider === 'hosted' &&
+          (job.status === 'running' ||
+            job.status === 'collecting' ||
+            job.status === 'interrupted' ||
+            job.status === 'queued' ||
+            // A card the queue gave up on may still be a guide the gateway
+            // finished. Asking costs nothing, so it is asked about until the
+            // gateway itself says the generation is gone.
+            (job.status === 'failed' &&
+              !confirmedGoneJobIdsRef.current.has(job.id))),
+      )
 
     const reconcile = async () => {
+      const hostedJobs = askableHostedJobs()
       let lookup: HostedStudyGuideJobLookup = { jobs: {}, unresolvedIds: [] }
       try {
-        lookup = await askGateway()
+        lookup = hostedJobs.length
+          ? await getHostedStudyGuideJobs(hostedJobs.map((job) => job.id))
+          : { jobs: {}, unresolvedIds: [] }
       } catch {
         // Blocked storage, or the gateway could not be reached at all. Nothing
         // is concluded: the jobs stay exactly as they are until an answer
         // arrives, and the retry below asks again.
-        lookup = {
-          jobs: {},
-          unresolvedIds: StudyGuideCreationQueueStorage.getAll()
-            .filter((job) => job.provider === 'hosted')
-            .map((job) => job.id),
-        }
+        lookup = { jobs: {}, unresolvedIds: hostedJobs.map((job) => job.id) }
       }
 
       const jobs = lookup.jobs
@@ -527,6 +534,30 @@ const StudyGuidesPage = () => {
         const resumableJobIds = Object.values(jobs)
           .filter((job) => isResumableHostedStudyGuideJob(job))
           .map((job) => job.clientJobId)
+
+        // An answer of "no such job" is only worth acting on once the gateway
+        // would have called the generation dead itself. Before that it means a
+        // lookup did not land, and treating it as a lost guide is what turned a
+        // second refresh into a permanently failed card.
+        const waitingJobIds = [...lookup.unresolvedIds]
+        hostedJobs.forEach((job) => {
+          if (jobs[job.id] || lookup.unresolvedIds.includes(job.id)) {
+            return
+          }
+
+          if (isWithinHostedGatewayStaleWindow(job)) {
+            waitingJobIds.push(job.id)
+          } else {
+            confirmedGoneJobIdsRef.current.add(job.id)
+          }
+        })
+
+        // The gateway has spoken on these, so they stop being asked about.
+        Object.values(jobs).forEach((job) => {
+          if (job.status === 'dead' || job.status === 'failed') {
+            confirmedGoneJobIdsRef.current.add(job.clientJobId)
+          }
+        })
 
         // A guide that finished while the tab was shut is not "being created".
         // Marking it hides the card, so only the finished guide appears.
@@ -547,15 +578,43 @@ const StudyGuidesPage = () => {
           ),
         )
 
+        // Paint every card from what this browser last saw, refined by whatever
+        // the gateway recorded. Without the local half a refresh showed an
+        // empty checklist whenever the gateway had nothing to say.
+        setJobPreviews((current) => {
+          const next = { ...current }
+          hostedJobs.forEach((job) => {
+            const serverJob = jobs[job.id]
+            if (serverJob?.status === 'succeeded') {
+              return
+            }
+
+            const startedAt = resolveJobStartedAt(serverJob?.createdAt, job)
+            next[job.id] = mergeHostedPreviewSnapshot(
+              next[job.id] ||
+                makeHostedPreviewFromSnapshot(
+                  job.previewSnapshot || undefined,
+                  startedAt,
+                  previewShape(job),
+                ),
+              serverJob?.progress,
+              startedAt,
+              previewShape(job),
+            )
+          })
+
+          return next
+        })
+
         StudyGuideCreationQueueStorage.requeueRetryableJobs({
           tabId: getCreationTabId(),
           activeJobIds: Array.from(jobsRunningInThisTab),
           resumableJobIds,
-          unresolvedJobIds: lookup.unresolvedIds,
+          unresolvedJobIds: waitingJobIds,
         })
         loadPendingGuides()
-        unresolvedJobIdsRef.current = lookup.unresolvedIds
-        setUnresolvedJobIds(lookup.unresolvedIds)
+        unresolvedJobIdsRef.current = waitingJobIds
+        setUnresolvedJobIds(waitingJobIds)
       } finally {
         // Generation is gated on this, so it has to be set even on failure or
         // nothing would ever run again.
@@ -569,7 +628,13 @@ const StudyGuidesPage = () => {
     // model, so a gateway that comes back recovers the card on its own instead
     // of leaving the learner with a job frozen mid-generation.
     const retryTimer = window.setInterval(() => {
-      if (!cancelled && unresolvedJobIdsRef.current.length) {
+      // Also covers a card the queue failed: the generation it gave up on may
+      // still land, and only asking again turns that back into a guide.
+      if (
+        !cancelled &&
+        (unresolvedJobIdsRef.current.length ||
+          askableHostedJobs().some((job) => job.status === 'failed'))
+      ) {
         void reconcile()
       }
     }, UNRESOLVED_JOB_RECHECK_MS)
@@ -775,6 +840,9 @@ const StudyGuidesPage = () => {
       [guide.id]: { createdAt: new Date().toISOString() },
     }))
     userRetryJobIdsRef.current.add(guide.id)
+    // A retry is a fresh generation, so the old checklist must not survive it.
+    confirmedGoneJobIdsRef.current.delete(guide.id)
+    delete previewSnapshotsRef.current[guide.id]
 
     try {
       updatedGuide = StudyGuideCreationQueueStorage.update(guide.id, {
@@ -783,6 +851,7 @@ const StudyGuidesPage = () => {
         finishedAt: null,
         autoRetryCount: 0,
         errorMessage: null,
+        previewSnapshot: null,
       })
     } catch (error) {
       setPendingGuides((current) =>
@@ -879,14 +948,23 @@ const StudyGuidesPage = () => {
       errorMessage: null,
     })
     if (job.provider === 'hosted' && !isCollecting) {
-      // Seeded from whatever the gateway already recorded, so a resumed card
-      // shows the real checklist instead of an empty one that looks stuck.
+      // Seeded from what this browser last saw, then refined by whatever the
+      // gateway recorded, so a resumed card shows the real checklist instead of
+      // an empty one that looks stuck.
       const known = jobServerState[job.id]
+      const startedAt = resolveJobStartedAt(known?.createdAt, job)
+      previewSnapshotsRef.current[job.id] = job.previewSnapshot || {}
       setJobPreviews((current) => ({
         ...current,
-        [job.id]: makeHostedPreviewFromSnapshot(
+        [job.id]: mergeHostedPreviewSnapshot(
+          current[job.id] ||
+            makeHostedPreviewFromSnapshot(
+              job.previewSnapshot || undefined,
+              startedAt,
+              previewShape(job),
+            ),
           known?.progress,
-          resolveJobStartedAt(known?.createdAt, job),
+          startedAt,
           previewShape(job),
         ),
       }))
@@ -895,6 +973,17 @@ const StudyGuidesPage = () => {
     const handlePreview = (event: HostedAiPreviewEvent) => {
       if (generationController.signal.aborted) {
         return
+      }
+
+      // Kept in the queue so a refresh repaints the checklist from localStorage
+      // straight away, whether or not the gateway managed to record it.
+      const previousSnapshot = previewSnapshotsRef.current[job.id] || {}
+      const snapshot = foldHostedStudyGuideProgress(previousSnapshot, event)
+      if (snapshot !== previousSnapshot) {
+        previewSnapshotsRef.current[job.id] = snapshot
+        StudyGuideCreationQueueStorage.update(job.id, {
+          previewSnapshot: snapshot,
+        })
       }
 
       // Page 1 is written, so there is already a guide worth opening. Saving it
@@ -926,14 +1015,19 @@ const StudyGuidesPage = () => {
         ...current,
         [job.id]: { ...current[job.id], ...state },
       }))
+      const startedAt = resolveJobStartedAt(
+        state.createdAt || jobServerState[job.id]?.createdAt,
+        job,
+      )
       setJobPreviews((current) => ({
         ...current,
-        [job.id]: makeHostedPreviewFromSnapshot(
+        // Merged, never replaced: a gateway with no progress column answers
+        // with an empty snapshot every poll, and overwriting with it is what
+        // left the card showing a blank checklist for the whole generation.
+        [job.id]: mergeHostedPreviewSnapshot(
+          current[job.id],
           state.progress,
-          resolveJobStartedAt(
-            state.createdAt || jobServerState[job.id]?.createdAt,
-            job,
-          ),
+          startedAt,
           previewShape(job),
         ),
       }))

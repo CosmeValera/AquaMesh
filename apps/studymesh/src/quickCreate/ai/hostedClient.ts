@@ -482,6 +482,7 @@ export const getHostedStudyGuideJobs = async (
           action: 'studyGuideJob',
           clientJobId,
         })
+        warnIfProgressUnavailable(payload)
         // The gateway says it could not look, so neither can we.
         if (payload.lookupFailed) {
           return { clientJobId, unresolved: true as const }
@@ -528,6 +529,23 @@ export class HostedStudyGuideDeadJobError extends Error {
   }
 }
 
+/**
+ * The gateway answers this when it is running without the `progress` column,
+ * which shows up as a checklist that never advances after a refresh. Said once,
+ * loudly, because nothing about the symptom points at a missing migration.
+ */
+let warnedAboutMissingProgressColumn = false
+const warnIfProgressUnavailable = (payload: HostedAiGatewayResponse): void => {
+  if (!payload.progressUnavailable || warnedAboutMissingProgressColumn) {
+    return
+  }
+
+  warnedAboutMissingProgressColumn = true
+  console.warn(
+    '[hosted-ai] the gateway has no study guide progress column, so a resumed card cannot show live progress. Apply apps/studymesh/docs/supabase-hosted-study-guide-jobs-progress.sql.',
+  )
+}
+
 const STUDY_GUIDE_JOB_POLL_MS = 3000
 /** Comfortably past the gateway's own generation timeout. */
 const STUDY_GUIDE_JOB_POLL_TIMEOUT_MS = 5 * 60 * 1000
@@ -569,7 +587,7 @@ const awaitHostedStudyGuideJob = async (
         { action: 'studyGuideJob', clientJobId },
         signal,
       )
-      consecutiveFailures = 0
+      warnIfProgressUnavailable(payload)
     } catch (error) {
       // A blip while polling is not a lost guide. Only give up once the
       // gateway has been unreachable for a while.
@@ -583,22 +601,32 @@ const awaitHostedStudyGuideJob = async (
 
     const job = payload.job
 
-    if (job?.status === 'succeeded' && job.response) {
+    if (!job) {
+      // Either the gateway could not look, or the lookup landed without the
+      // row. Both are usually gone a poll later, so they get the same tolerance
+      // as an unreachable gateway rather than being read as a lost guide.
+      consecutiveFailures += 1
+      if (consecutiveFailures >= 4 || Date.now() > deadline) {
+        throw new Error('Hosted AI lost track of this Study Guide.')
+      }
+
+      continue
+    }
+
+    consecutiveFailures = 0
+
+    if (job.status === 'succeeded' && job.response) {
       return job.response
     }
 
-    if (job?.status === 'failed') {
+    if (job.status === 'failed') {
       throw new Error(
         job.errorMessage || 'Hosted AI could not finish this Study Guide.',
       )
     }
 
-    if (job?.status === 'dead') {
+    if (job.status === 'dead') {
       throw new HostedStudyGuideDeadJobError()
-    }
-
-    if (!job) {
-      throw new Error('Hosted AI lost track of this Study Guide.')
     }
 
     // Keeps the card's checklist moving while we wait on work we cannot see.

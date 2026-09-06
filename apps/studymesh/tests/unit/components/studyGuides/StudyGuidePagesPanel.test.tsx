@@ -554,6 +554,11 @@ describe('StudyGuidePagesPanel growth', () => {
     })
     // Nothing pretends to be a title.
     expect(screen.queryByText('02 - Manual note')).not.toBeInTheDocument()
+    // One rough figure for the whole remainder, so the reader knows the wait
+    // is short rather than open-ended.
+    expect(
+      screen.getByTestId('study-guide-unwritten-pages-eta'),
+    ).toHaveTextContent(/10 seconds/i)
   })
 
   it('shows no placeholders once every page is written', () => {
@@ -567,6 +572,9 @@ describe('StudyGuidePagesPanel growth', () => {
 
     expect(
       screen.queryByTestId('study-guide-unwritten-page-row'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByTestId('study-guide-unwritten-pages-eta'),
     ).not.toBeInTheDocument()
   })
 })

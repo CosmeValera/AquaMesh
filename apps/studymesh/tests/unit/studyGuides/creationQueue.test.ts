@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  HOSTED_STUDY_GUIDE_GATEWAY_STALE_MS,
   HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
   STUDY_GUIDE_CREATION_QUEUE_KEY,
   StudyGuideCreationQueueStorage,
+  isWithinHostedGatewayStaleWindow,
 } from '../../../src/studyGuides/creationQueue'
 import { STUDY_GUIDES_STORAGE_FULL_MESSAGE } from '../../../src/studyGuides/storage'
 
@@ -529,5 +531,143 @@ describe('a reload must not end a hosted generation', () => {
     })
 
     expect(job.status).toBe('queued')
+  })
+})
+
+describe('a hosted card the queue gave up on', () => {
+  beforeEach(() => {
+    const storage = new Map<string, string>()
+    vi.mocked(window.localStorage.getItem).mockImplementation(
+      (key: string) => storage.get(key) ?? null,
+    )
+    vi.mocked(window.localStorage.setItem).mockImplementation(
+      (key: string, value: string) => {
+        storage.set(key, value)
+      },
+    )
+    vi.mocked(window.localStorage.clear).mockImplementation(() => {
+      storage.clear()
+    })
+    window.localStorage.clear()
+
+    StudyGuideCreationQueueStorage.upsert({
+      id: 'given-up-job',
+      prompt: 'Study cardano',
+      provider: 'hosted',
+      status: 'failed',
+      estimateSeconds: 20,
+      errorMessage: HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
+    })
+  })
+
+  it('is collected once the gateway turns out to have the guide', () => {
+    // The generation was paid for and finished on the server. Picking it back
+    // up spends nothing, and leaving it failed strands a guide the learner owns.
+    const jobs = StudyGuideCreationQueueStorage.requeueRetryableJobs({
+      resumableJobIds: ['given-up-job'],
+    })
+
+    expect(jobs[0]).toMatchObject({
+      id: 'given-up-job',
+      status: 'queued',
+      errorMessage: null,
+      finishedAt: null,
+    })
+  })
+
+  it('stays failed while the gateway does not vouch for it', () => {
+    expect(
+      StudyGuideCreationQueueStorage.requeueRetryableJobs()[0],
+    ).toMatchObject({
+      id: 'given-up-job',
+      status: 'failed',
+      errorMessage: HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
+    })
+  })
+
+  it('is left untouched while the gateway cannot be asked', () => {
+    expect(
+      StudyGuideCreationQueueStorage.requeueRetryableJobs({
+        unresolvedJobIds: ['given-up-job'],
+      })[0],
+    ).toMatchObject({ id: 'given-up-job', status: 'failed' })
+  })
+})
+
+describe('the checklist a refresh has to survive', () => {
+  beforeEach(() => {
+    const storage = new Map<string, string>()
+    vi.mocked(window.localStorage.getItem).mockImplementation(
+      (key: string) => storage.get(key) ?? null,
+    )
+    vi.mocked(window.localStorage.setItem).mockImplementation(
+      (key: string, value: string) => {
+        storage.set(key, value)
+      },
+    )
+    vi.mocked(window.localStorage.clear).mockImplementation(() => {
+      storage.clear()
+    })
+    window.localStorage.clear()
+  })
+
+  it('stores a snapshot and hands it back after the page life ends', () => {
+    StudyGuideCreationQueueStorage.upsert({
+      id: 'watched-job',
+      prompt: 'Study ethereum',
+      provider: 'hosted',
+      status: 'running',
+      estimateSeconds: 20,
+    })
+    StudyGuideCreationQueueStorage.update('watched-job', {
+      previewSnapshot: {
+        title: 'Ethereum basics',
+        pages: [{ title: 'What a block is', done: true }],
+      },
+    })
+
+    // Re-read from storage, which is all a reloaded tab ever gets.
+    expect(StudyGuideCreationQueueStorage.getAll()[0].previewSnapshot).toEqual({
+      title: 'Ethereum basics',
+      pages: [{ title: 'What a block is', done: true }],
+    })
+  })
+
+  it('keeps the snapshot when the job is picked back up', () => {
+    StudyGuideCreationQueueStorage.upsert({
+      id: 'resumed-job',
+      prompt: 'Study ethereum',
+      provider: 'hosted',
+      status: 'running',
+      estimateSeconds: 20,
+      previewSnapshot: { title: 'Ethereum basics' },
+    })
+
+    const jobs = StudyGuideCreationQueueStorage.requeueRetryableJobs({
+      resumableJobIds: ['resumed-job'],
+    })
+
+    expect(jobs[0]).toMatchObject({
+      status: 'queued',
+      previewSnapshot: { title: 'Ethereum basics' },
+    })
+  })
+})
+
+describe('how long a hosted job is given before it counts as gone', () => {
+  it('waits while the gateway would still call the generation alive', () => {
+    expect(
+      isWithinHostedGatewayStaleWindow({ createdAt: new Date().toISOString() }),
+    ).toBe(true)
+  })
+
+  it('stops waiting once the gateway would have called it dead', () => {
+    expect(
+      isWithinHostedGatewayStaleWindow({
+        createdAt: new Date(
+          Date.now() - HOSTED_STUDY_GUIDE_GATEWAY_STALE_MS - 1000,
+        ).toISOString(),
+      }),
+    ).toBe(false)
   })
 })

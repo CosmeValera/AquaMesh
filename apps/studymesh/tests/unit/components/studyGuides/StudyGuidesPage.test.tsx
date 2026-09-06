@@ -727,6 +727,57 @@ describe('StudyGuidesPage create flow', () => {
     releaseGeneration?.()
   })
 
+  it('opens page 1 on a refreshed tab that never saw it streamed', async () => {
+    // The readableGuide event only reaches the tab that started the generation.
+    // A reloaded one has to take page 1 off the job row, or it watches the
+    // checklist complete with nothing to open.
+    StudyGuideCreationQueueStorage.upsert({
+      id: 'resumed-early-guide',
+      prompt: 'Resumed early prompt',
+      provider: 'hosted',
+      status: 'running',
+      estimateSeconds: 20,
+      startedAt: new Date(Date.now() - 18_000).toISOString(),
+      finishedAt: null,
+      errorMessage: null,
+      resultStudyGuideId: null,
+    })
+    getHostedStudyGuideJobsMock.mockResolvedValue({
+      jobs: {
+        'resumed-early-guide': {
+          clientJobId: 'resumed-early-guide',
+          status: 'running',
+          progress: {
+            title: 'Cardano basics',
+            keyIdea: 'A layered proof of stake network.',
+            pages: [{ title: 'The pieces', done: true }],
+            readableGuideText: '{"resumed":"guide"}',
+          },
+        },
+      },
+      unresolvedIds: [],
+    })
+    vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
+      () => new Promise(() => undefined),
+    )
+
+    renderStudyGuidesPage('/study-guides')
+
+    await waitFor(() => {
+      expect(buildReadableStudyPathState).toHaveBeenCalledWith(
+        expect.objectContaining({ guideText: '{"resumed":"guide"}' }),
+      )
+    })
+    expect(await screen.findByText('Early Page Guide')).toBeInTheDocument()
+
+    // The creating card stands down exactly as it does for a watched guide,
+    // and page 1 was never rebuilt more than once.
+    await waitFor(() => {
+      expect(screen.queryByText('Creating')).not.toBeInTheDocument()
+    })
+    expect(buildReadableStudyPathState).toHaveBeenCalledTimes(1)
+  })
+
   it('keeps showing the creating card before page 1 exists', async () => {
     vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
       () => new Promise(() => undefined),
@@ -1008,6 +1059,7 @@ describe('follow-up guides handed over from a finished quiz', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    getHostedStudyGuideJobsMock.mockImplementation(gatewayOwnsEveryJob)
     useHostedAiStatusMock.mockReturnValue({
       status: null,
       displayStudyCredits: 30,
@@ -1121,6 +1173,7 @@ describe('follow-up guides handed over from a finished quiz', () => {
 describe('several tabs open on the guide list', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getHostedStudyGuideJobsMock.mockImplementation(gatewayOwnsEveryJob)
     useHostedAiStatusMock.mockReturnValue({
       status: null,
       displayStudyCredits: 30,
